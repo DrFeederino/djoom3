@@ -45,14 +45,14 @@ class Quat {
         }
 
         //	float &			operator[]( int index );
-        fun Set(x: Float, y: Float, z: Float, w: Float) {
+        fun set(x: Float, y: Float, z: Float, w: Float) {
             this.x = x
             this.y = y
             this.z = z
             this.w = w
         }
 
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             return when (index) {
                 1 -> y
                 2 -> z
@@ -61,7 +61,7 @@ class Quat {
             }
         }
 
-        fun oSet(index: Int, value: Float) {
+        operator fun set(index: Int, value: Float) {
             when (index) {
                 1 -> y = value
                 2 -> z = value
@@ -70,11 +70,11 @@ class Quat {
             }
         }
 
-        fun oNegative(): idQuat {
+        operator fun unaryMinus(): idQuat {
             return idQuat(-x, -y, -z, -w)
         }
 
-        fun oSet(a: idQuat): idQuat {
+        fun set(a: idQuat): idQuat {
             x = a.x
             y = a.y
             z = a.z
@@ -82,11 +82,11 @@ class Quat {
             return this
         }
 
-        fun oPlus(a: idQuat): idQuat {
+        operator fun plus(a: idQuat): idQuat {
             return idQuat(x + a.x, y + a.y, z + a.z, w + a.w)
         }
 
-        fun oPluSet(a: idQuat): idQuat {
+        fun plusAssign(a: idQuat): idQuat {
             x += a.x
             y += a.y
             z += a.z
@@ -94,11 +94,11 @@ class Quat {
             return this
         }
 
-        fun oMinus(a: idQuat): idQuat {
+        operator fun minus(a: idQuat): idQuat {
             return idQuat(x - a.x, y - a.y, z - a.z, w - a.w)
         }
 
-        fun oMinSet(a: idQuat): idQuat {
+        fun minusAssign(a: idQuat): idQuat {
             x -= a.x
             y -= a.y
             z -= a.z
@@ -106,7 +106,7 @@ class Quat {
             return this
         }
 
-        fun oMultiply(a: idQuat): idQuat {
+        operator fun times(a: idQuat): idQuat {
             return idQuat(
                 w * a.x + x * a.w + y * a.z - z * a.y,
                 w * a.y + y * a.w + z * a.x - x * a.z,
@@ -115,7 +115,7 @@ class Quat {
             )
         }
 
-        fun oMultiply(a: idVec3): idVec3 {
+        operator fun times(a: idVec3): idVec3 {
 //#if 0
             // it's faster to do the conversion to a 3x3 matrix and multiply the vector by this 3x3 matrix
 //            return (ToMat3() * a);
@@ -137,17 +137,17 @@ class Quat {
             //#endif
         }
 
-        fun oMultiply(a: Float): idQuat {
+        operator fun times(a: Float): idQuat {
             return idQuat(x * a, y * a, z * a, w * a)
         }
 
         //
-        fun oMulSet(a: idQuat): idQuat {
-            this.oSet(this.oMultiply(a))
+        fun timesAssign(a: idQuat): idQuat {
+            this.set(this * a)
             return this
         }
 
-        fun oMulSet(a: Float): idQuat {
+        fun timesAssign(a: Float): idQuat {
             x *= a
             y *= a
             z *= a
@@ -250,7 +250,7 @@ class Quat {
             vec.z = z
             angle = idMath.ACos(w)
             if (angle == 0.0f) {
-                vec.Set(0.0f, 0.0f, 1.0f)
+                vec.set(0.0f, 0.0f, 1.0f)
             } else {
                 //vec *= (1.0f / sin( angle ));
                 vec.Normalize()
@@ -286,15 +286,15 @@ class Quat {
             wx = w * x2
             wy = w * y2
             wz = w * z2
-            mat.oSet(0, 0, 1.0f - (yy + zz))
-            mat.oSet(0, 1, xy - wz)
-            mat.oSet(0, 2, xz + wy)
-            mat.oSet(1, 0, xy + wz)
-            mat.oSet(1, 1, 1.0f - (xx + zz))
-            mat.oSet(1, 2, yz - wx)
-            mat.oSet(2, 0, xz - wy)
-            mat.oSet(2, 1, yz + wx)
-            mat.oSet(2, 2, 1.0f - (xx + yy))
+            mat.set(0, 0, 1.0f - (yy + zz))
+            mat.set(0, 1, xy - wz)
+            mat.set(0, 2, xz + wy)
+            mat.set(1, 0, xy + wz)
+            mat.set(1, 1, 1.0f - (xx + zz))
+            mat.set(1, 2, yz - wx)
+            mat.set(2, 0, xz - wy)
+            mat.set(2, 1, yz + wx)
+            mat.set(2, 2, 1.0f - (xx + yy))
             return mat
         }
 
@@ -314,7 +314,7 @@ class Quat {
             vec.y = y
             vec.z = z
             vec.Normalize()
-            return vec.times(idMath.ACos(w))
+            return vec * idMath.ACos(w)
         }
 
         //public 	const float *	ToFloatPtr( void ) const;
@@ -342,20 +342,20 @@ class Quat {
             var scale0: Float
             val scale1: Float
             if (t <= 0.0f) {
-                this.oSet(from)
+                this.set(from)
                 return this
             }
             if (t >= 1.0f) {
-                this.oSet(to)
+                this.set(to)
                 return this
             }
             if (from === to) {
-                this.oSet(to)
+                this.set(to)
                 return this
             }
             cosom = from.x * to.x + from.y * to.y + from.z * to.z + from.w * to.w
             if (cosom < 0.0f) {
-                this.oSet(to.oNegative())
+                this.set(to.unaryMinus())
                 cosom = -cosom
             } else {
                 temp = to
@@ -377,19 +377,19 @@ class Quat {
                 scale0 = 1.0f - t
                 scale1 = t
             }
-            this.oSet(from.oMultiply(scale0).oPlus(temp.oMultiply(scale1)))
+            this.set((from * scale0) + (temp * scale1))
             return this
         }
 
         companion object {
-            fun oMultiply(a: Float, b: idQuat): idQuat {
-                return b.oMultiply(a)
+            fun times(a: Float, b: idQuat): idQuat {
+                return b * a
             }
 
             //
             //	float			operator[]( int index ) const;
-            fun oMultiply(a: idVec3, b: idQuat): idVec3 {
-                return b.oMultiply(a)
+            fun times(a: idVec3, b: idQuat): idVec3 {
+                return b * a
             }
         }
     }
@@ -418,7 +418,7 @@ class Quat {
         }
 
         //
-        fun Set(x: Float, y: Float, z: Float) {
+        fun set(x: Float, y: Float, z: Float) {
             this.x = x
             this.y = y
             this.z = z
@@ -426,7 +426,7 @@ class Quat {
 
         //
         //	float			operator[]( int index ) const;
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             return when (index) {
                 1 -> y
                 2 -> z
@@ -435,7 +435,7 @@ class Quat {
         }
 
         //	float &			operator[]( int index );
-        fun oSet(index: Int, value: Float) {
+        operator fun set(index: Int, value: Float) {
             when (index) {
                 1 -> y = value
                 2 -> z = value

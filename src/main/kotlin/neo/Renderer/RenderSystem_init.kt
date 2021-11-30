@@ -898,27 +898,27 @@ object RenderSystem_init {
         val axis: Int
         var x: Int
         var y: Int
-        adir[0] = Math.abs(dir.oGet(0))
-        adir[1] = Math.abs(dir.oGet(1))
-        adir[2] = Math.abs(dir.oGet(2))
-        axis = if (dir.oGet(0) >= adir[1] && dir.oGet(0) >= adir[2]) {
+        adir[0] = Math.abs(dir.get(0))
+        adir[1] = Math.abs(dir.get(1))
+        adir[2] = Math.abs(dir.get(2))
+        axis = if (dir.get(0) >= adir[1] && dir.get(0) >= adir[2]) {
             0
-        } else if (-dir.oGet(0) >= adir[1] && -dir.oGet(0) >= adir[2]) {
+        } else if (-dir.get(0) >= adir[1] && -dir.get(0) >= adir[2]) {
             1
-        } else if (dir.oGet(1) >= adir[0] && dir.oGet(1) >= adir[2]) {
+        } else if (dir.get(1) >= adir[0] && dir.get(1) >= adir[2]) {
             2
-        } else if (-dir.oGet(1) >= adir[0] && -dir.oGet(1) >= adir[2]) {
+        } else if (-dir.get(1) >= adir[0] && -dir.get(1) >= adir[2]) {
             3
-        } else if (dir.oGet(2) >= adir[1] && dir.oGet(2) >= adir[2]) {
+        } else if (dir.get(2) >= adir[1] && dir.get(2) >= adir[2]) {
             4
         } else {
             5
         }
-        var fx = dir.times(RenderSystem_init.cubeAxis[axis].oGet(1)) / dir.times(
-            RenderSystem_init.cubeAxis[axis].oGet(0)
+        var fx = dir.times(RenderSystem_init.cubeAxis[axis].get(1)) / dir.times(
+            RenderSystem_init.cubeAxis[axis].get(0)
         )
-        var fy = dir.times(RenderSystem_init.cubeAxis[axis].oGet(2)) / dir.times(
-            RenderSystem_init.cubeAxis[axis].oGet(0)
+        var fy = dir.times(RenderSystem_init.cubeAxis[axis].get(2)) / dir.times(
+            RenderSystem_init.cubeAxis[axis].get(0)
         )
         fx = -fx
         fy = -fy
@@ -1502,24 +1502,24 @@ object RenderSystem_init {
             primary = viewDef_s(tr_local.tr.primaryView)
 
 //	memset( &axis, 0, sizeof( axis ) );
-            axis[0].oSet(0, 0, 1f)
-            axis[0].oSet(1, 2, 1f)
-            axis[0].oSet(2, 1, 1f)
-            axis[1].oSet(0, 0, -1f)
-            axis[1].oSet(1, 2, -1f)
-            axis[1].oSet(2, 1, 1f)
-            axis[2].oSet(0, 1, 1f)
-            axis[2].oSet(1, 0, -1f)
-            axis[2].oSet(2, 2, -1f)
-            axis[3].oSet(0, 1, -1f)
-            axis[3].oSet(1, 0, -1f)
-            axis[3].oSet(2, 2, 1f)
-            axis[4].oSet(0, 2, 1f)
-            axis[4].oSet(1, 0, -1f)
-            axis[4].oSet(2, 1, 1f)
-            axis[5].oSet(0, 2, -1f)
-            axis[5].oSet(1, 0, 1f)
-            axis[5].oSet(2, 1, 1f)
+            axis[0].set(0, 0, 1f)
+            axis[0].set(1, 2, 1f)
+            axis[0].set(2, 1, 1f)
+            axis[1].set(0, 0, -1f)
+            axis[1].set(1, 2, -1f)
+            axis[1].set(2, 1, 1f)
+            axis[2].set(0, 1, 1f)
+            axis[2].set(1, 0, -1f)
+            axis[2].set(2, 2, -1f)
+            axis[3].set(0, 1, -1f)
+            axis[3].set(1, 0, -1f)
+            axis[3].set(2, 2, 1f)
+            axis[4].set(0, 2, 1f)
+            axis[4].set(1, 0, -1f)
+            axis[4].set(2, 1, 1f)
+            axis[5].set(0, 2, -1f)
+            axis[5].set(1, 0, 1f)
+            axis[5].set(2, 1, 1f)
             i = 0
             while (i < 6) {
                 ref = renderView_s(primary.renderView)
@@ -1583,24 +1583,24 @@ object RenderSystem_init {
             }
 
 //	memset( &cubeAxis, 0, sizeof( cubeAxis ) );
-            cubeAxis.get(0).oSet(0, 0, 1f)
-            cubeAxis.get(0).oSet(1, 2, 1f)
-            cubeAxis.get(0).oSet(2, 1, 1f)
-            cubeAxis.get(1).oSet(0, 0, -1f)
-            cubeAxis.get(1).oSet(1, 2, -1f)
-            cubeAxis.get(1).oSet(2, 1, 1f)
-            cubeAxis.get(2).oSet(0, 1, 1f)
-            cubeAxis.get(2).oSet(1, 0, -1f)
-            cubeAxis.get(2).oSet(2, 2, -1f)
-            cubeAxis.get(3).oSet(0, 1, -1f)
-            cubeAxis.get(3).oSet(1, 0, -1f)
-            cubeAxis.get(3).oSet(2, 2, 1f)
-            cubeAxis.get(4).oSet(0, 2, 1f)
-            cubeAxis.get(4).oSet(1, 0, -1f)
-            cubeAxis.get(4).oSet(2, 1, 1f)
-            cubeAxis.get(5).oSet(0, 2, -1f)
-            cubeAxis.get(5).oSet(1, 0, 1f)
-            cubeAxis.get(5).oSet(2, 1, 1f)
+            cubeAxis.get(0).set(0, 0, 1f)
+            cubeAxis.get(0).set(1, 2, 1f)
+            cubeAxis.get(0).set(2, 1, 1f)
+            cubeAxis.get(1).set(0, 0, -1f)
+            cubeAxis.get(1).set(1, 2, -1f)
+            cubeAxis.get(1).set(2, 1, 1f)
+            cubeAxis.get(2).set(0, 1, 1f)
+            cubeAxis.get(2).set(1, 0, -1f)
+            cubeAxis.get(2).set(2, 2, -1f)
+            cubeAxis.get(3).set(0, 1, -1f)
+            cubeAxis.get(3).set(1, 0, -1f)
+            cubeAxis.get(3).set(2, 2, 1f)
+            cubeAxis.get(4).set(0, 2, 1f)
+            cubeAxis.get(4).set(1, 0, -1f)
+            cubeAxis.get(4).set(2, 1, 1f)
+            cubeAxis.get(5).set(0, 2, -1f)
+            cubeAxis.get(5).set(1, 0, 1f)
+            cubeAxis.get(5).set(2, 1, 1f)
 
             // read all of the images
             i = 0
@@ -1631,11 +1631,11 @@ object RenderSystem_init {
                         for (y in 0 until outSize) {
                             val dir = idVec3()
                             val total = FloatArray(3)
-                            dir.oSet(
-                                cubeAxis.get(i).oGet(0).oPlus(
-                                    cubeAxis.get(i).oGet(1).times(-(-1 + 2.0f * x / (outSize - 1)))
+                            dir.set(
+                                cubeAxis.get(i).get(0).oPlus(
+                                    cubeAxis.get(i).get(1).times(-(-1 + 2.0f * x / (outSize - 1)))
                                 ).oPlus(
-                                    cubeAxis.get(i).oGet(2).times(-(-1 + 2.0f * y / (outSize - 1)))
+                                    cubeAxis.get(i).get(2).times(-(-1 + 2.0f * y / (outSize - 1)))
                                 )
                             )
                             dir.Normalize()
@@ -1651,7 +1651,7 @@ object RenderSystem_init {
                                 val test = idVec3()
                                 while (true) {
                                     for (j in 0..2) {
-                                        test.oSet(j, -1 + 2 * (Math.random().toInt() and 0x7fff) / 0x7f)
+                                        test.set(j, -1 + 2 * (Math.random().toInt() and 0x7fff) / 0x7f)
                                     }
                                     if (test.Length() > 1.0) {
                                         continue
@@ -1894,7 +1894,7 @@ object RenderSystem_init {
             if (idStr.Companion.IsNumeric(args.Argv(1))) {
                 imageNum = args.Argv(1).toInt()
                 if (imageNum >= 0 && imageNum < Image.globalImages.images.Num()) {
-                    tr_local.tr.testImage = Image.globalImages.images.oGet(imageNum)
+                    tr_local.tr.testImage = Image.globalImages.images.get(imageNum)
                 }
             } else {
                 tr_local.tr.testImage = Image.globalImages.ImageFromFile(
@@ -2032,7 +2032,7 @@ object RenderSystem_init {
             var count = 0
             i = 0
             while (i < Image.globalImages.images.Num()) {
-                val image1 = Image.globalImages.images.oGet(i)
+                val image1 = Image.globalImages.images.get(i)
                 if (image1.isPartialImage) {
                     // ignore background loading stubs
                     i++
@@ -2057,7 +2057,7 @@ object RenderSystem_init {
                 val data1: ByteBuffer = R_LoadImageProgram(image1.imgName.toString(), w1, h1, null)
                 j = 0
                 while (j < i) {
-                    val image2 = Image.globalImages.images.oGet(j)
+                    val image2 = Image.globalImages.images.get(j)
                     if (image2.isPartialImage) {
                         j++
                         continue
@@ -2263,14 +2263,14 @@ object RenderSystem_init {
             val end = idVec3()
 
             // start far enough away that we don't hit the player model
-            start.oSet(
+            start.set(
                 tr_local.tr.primaryView.renderView.vieworg.oPlus(
-                    tr_local.tr.primaryView.renderView.viewaxis.oGet(
+                    tr_local.tr.primaryView.renderView.viewaxis.get(
                         0
                     ).times(16f)
                 )
             )
-            end.oSet(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.oGet(0).times(1000.0f)))
+            end.set(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.get(0).times(1000.0f)))
             if (!tr_local.tr.primaryWorld.Trace(mt, start, end, 0.0f, false)) {
                 return
             }

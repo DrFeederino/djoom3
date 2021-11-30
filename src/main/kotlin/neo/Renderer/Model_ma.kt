@@ -613,14 +613,14 @@ object Model_ma {
                     if (sharedFace[0] != -1) {
                         //Get the normal from the share
                         pMesh.faces.get(i).vertexNormals.get(j)
-                            .oSet(pMesh.faces.get(sharedFace[0]).vertexNormals.get(sharedVert[0]))
+                            .set(pMesh.faces.get(sharedFace[0]).vertexNormals.get(sharedVert[0]))
                     } else {
                         //The vertex is not shared so get the next normal
                         if (pMesh.nextNormal >= pMesh.numNormals) {
                             //We are using more normals than exist
                             throw idException(Str.va("Maya Loader '%s': Invalid Normals Index.", parser.GetFileName()))
                         }
-                        pMesh.faces.get(i).vertexNormals.get(j).oSet(pMesh.normals.get(pMesh.nextNormal))
+                        pMesh.faces.get(i).vertexNormals.get(j).set(pMesh.normals.get(pMesh.nextNormal))
                         pMesh.nextNormal++
                     }
                 }
@@ -633,8 +633,8 @@ object Model_ma {
             pMesh.faces.get(i).vertexNum.get(1) = pMesh.faces.get(i).vertexNum.get(2)
             pMesh.faces.get(i).vertexNum.get(2) = tmp
             val tmpVec = idVec3(pMesh.faces.get(i).vertexNormals.get(1))
-            pMesh.faces.get(i).vertexNormals.get(1).oSet(pMesh.faces.get(i).vertexNormals.get(2))
-            pMesh.faces.get(i).vertexNormals.get(2).oSet(tmpVec)
+            pMesh.faces.get(i).vertexNormals.get(1).set(pMesh.faces.get(i).vertexNormals.get(2))
+            pMesh.faces.get(i).vertexNormals.get(2).set(tmpVec)
             tmp = pMesh.faces.get(i).tVertexNum.get(1)
             pMesh.faces.get(i).tVertexNum.get(1) = pMesh.faces.get(i).tVertexNum.get(2)
             pMesh.faces.get(i).tVertexNum.get(2) = tmp
@@ -792,9 +792,9 @@ object Model_ma {
         if (srcType.Find("iog") != -1) {
             //Is this an attribute for one of our meshes
             for (i in 0 until Model_ma.maGlobal.model.objects.Num()) {
-                if (Model_ma.maGlobal.model.objects.oGet(i).name == srcName) {
+                if (Model_ma.maGlobal.model.objects.get(i).name == srcName) {
                     //maGlobal.model.objects.oGet(i).materialRef = MA_AddMaterial(destName);
-                    Model_ma.maGlobal.model.objects.oGet(i).materialName = destName.toString()
+                    Model_ma.maGlobal.model.objects.get(i).materialName = destName.toString()
                     break
                 }
             }
@@ -804,9 +804,9 @@ object Model_ma {
 
     fun MA_BuildScale(mat: idMat4?, x: Float, y: Float, z: Float) {
         mat.Identity()
-        mat.oGet(0).oSet(0, x)
-        mat.oGet(1).oSet(1, y)
-        mat.oGet(2).oSet(2, z)
+        mat.get(0).set(0, x)
+        mat.get(1).set(1, y)
+        mat.get(2).set(2, z)
     }
 
     fun MA_BuildAxisRotation(mat: idMat4?, ang: Float, axis: Int) {
@@ -815,29 +815,29 @@ object Model_ma {
         mat.Identity()
         when (axis) {
             0 -> {
-                mat.oGet(1).oSet(1, cosAng)
-                mat.oGet(1).oSet(2, sinAng)
-                mat.oGet(2).oSet(1, -sinAng)
-                mat.oGet(2).oSet(2, cosAng)
+                mat.get(1).set(1, cosAng)
+                mat.get(1).set(2, sinAng)
+                mat.get(2).set(1, -sinAng)
+                mat.get(2).set(2, cosAng)
             }
             1 -> {
-                mat.oGet(0).oSet(0, cosAng)
-                mat.oGet(0).oSet(2, -sinAng)
-                mat.oGet(2).oSet(0, sinAng)
-                mat.oGet(2).oSet(2, cosAng)
+                mat.get(0).set(0, cosAng)
+                mat.get(0).set(2, -sinAng)
+                mat.get(2).set(0, sinAng)
+                mat.get(2).set(2, cosAng)
             }
             2 -> {
-                mat.oGet(0).oSet(0, cosAng)
-                mat.oGet(0).oSet(1, sinAng)
-                mat.oGet(1).oSet(0, -sinAng)
-                mat.oGet(1).oSet(1, cosAng)
+                mat.get(0).set(0, cosAng)
+                mat.get(0).set(1, sinAng)
+                mat.get(1).set(0, -sinAng)
+                mat.get(1).set(1, cosAng)
             }
         }
     }
 
     fun MA_ApplyTransformation(model: maModel_s?) {
         for (i in 0 until model.objects.Num()) {
-            val mesh = model.objects.oGet(i).mesh
+            val mesh = model.objects.get(i).mesh
             var transform = mesh.transform
             while (transform != null) {
                 val rotx = idMat4()
@@ -860,11 +860,11 @@ object Model_ma {
 
                 //Apply the transformation to each vert
                 for (j in 0 until mesh.numVertexes) {
-                    mesh.vertexes.get(j).oSet(scale.times(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(rotx.times(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(rotz.times(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(roty.times(mesh.vertexes.get(j)))
-                    mesh.vertexes.get(j).oSet(mesh.vertexes.get(j).oPlus(transform.translate))
+                    mesh.vertexes.get(j).set(scale.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).set(rotx.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).set(rotz.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).set(roty.times(mesh.vertexes.get(j)))
+                    mesh.vertexes.get(j).set(mesh.vertexes.get(j).oPlus(transform.translate))
                 }
                 transform = transform.parent
             }
@@ -900,8 +900,8 @@ object Model_ma {
 
         //Resolve The Materials
         for (i in 0 until Model_ma.maGlobal.model.objects.Num()) {
-            Model_ma.maGlobal.model.objects.oGet(i).materialRef =
-                Model_ma.MA_AddMaterial(Model_ma.maGlobal.model.objects.oGet(i).materialName)
+            Model_ma.maGlobal.model.objects.get(i).materialRef =
+                Model_ma.MA_AddMaterial(Model_ma.maGlobal.model.objects.get(i).materialName)
         }
 
         //Apply Transformation

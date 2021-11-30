@@ -124,7 +124,7 @@ object ModelDecal {
                     fw.SetNumPoints(3)
                     if (localInfo.parallel) {
                         for (j in 0..2) {
-                            fw.oGet(j).oSet(stri.verts[stri.indexes[index + j]].xyz)
+                            fw.oGet(j).set(stri.verts[stri.indexes[index + j]].xyz)
                             fw.oGet(j).s = localInfo.textureAxis.get(0).Distance(fw.oGet(j).ToVec3())
                             fw.oGet(j).t = localInfo.textureAxis.get(1).Distance(fw.oGet(j).ToVec3())
                         }
@@ -132,11 +132,11 @@ object ModelDecal {
                         for (j in 0..2) {
                             val dir = idVec3()
                             val scale = CFloat()
-                            fw.oGet(j).oSet(stri.verts[stri.indexes[index + j]].xyz)
-                            dir.oSet(fw.oGet(j).ToVec3().oMinus(localInfo.projectionOrigin))
+                            fw.oGet(j).set(stri.verts[stri.indexes[index + j]].xyz)
+                            dir.set(fw.oGet(j).ToVec3().minus(localInfo.projectionOrigin))
                             localInfo.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 1)
                                 .RayIntersection(fw.oGet(j).ToVec3(), dir, scale)
-                            dir.oSet(fw.oGet(j).ToVec3().oPlus(dir.times(scale.getVal())))
+                            dir.set(fw.oGet(j).ToVec3().oPlus(dir.times(scale.getVal())))
                             fw.oGet(j).s = localInfo.textureAxis.get(0).Distance(dir)
                             fw.oGet(j).t = localInfo.textureAxis.get(1).Distance(dir)
                         }
@@ -146,7 +146,7 @@ object ModelDecal {
                     // clip the exact surface triangle to the projection volume
                     for (j in 0 until ModelDecal.NUM_DECAL_BOUNDING_PLANES) {
                         if (orBits and (1 shl j) != 0) {
-                            if (!fw.ClipInPlace(localInfo.boundingPlanes.get(j).oNegative())) {
+                            if (!fw.ClipInPlace(localInfo.boundingPlanes.get(j).unaryMinus())) {
                                 break
                             }
                         }
@@ -278,9 +278,9 @@ object ModelDecal {
                     }
                     fade = 1.0f - fade
                     vertDepthFade.get(tri.numVerts + i) = fade
-                    tri.verts[tri.numVerts + i].xyz.oSet(w.oGet(i).ToVec3())
-                    tri.verts[tri.numVerts + i].st.oSet(0, w.oGet(i).s)
-                    tri.verts[tri.numVerts + i].st.oSet(1, w.oGet(i).t)
+                    tri.verts[tri.numVerts + i].xyz.set(w.oGet(i).ToVec3())
+                    tri.verts[tri.numVerts + i].st.set(0, w.oGet(i).s)
+                    tri.verts[tri.numVerts + i].st.set(1, w.oGet(i).t)
                     for (k in 0..3) {
                         var icolor = idMath.FtoiFast(decalInfo.start[k] * fade * 255.0f)
                         if (icolor < 0) {
@@ -371,7 +371,7 @@ object ModelDecal {
                     return false
                 }
                 assert(material != null)
-                info.projectionOrigin.oSet(projectionOrigin)
+                info.projectionOrigin.set(projectionOrigin)
                 info.material = idMaterial(material)
                 info.parallel = parallel
                 info.fadeDepth = fadeDepth
@@ -395,7 +395,7 @@ object ModelDecal {
                 if (parallel) {
                     for (i in 0 until winding.GetNumPoints()) {
                         val edge =
-                            winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3().oMinus(winding.oGet(i).ToVec3())
+                            winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3().minus(winding.oGet(i).ToVec3())
                         info.boundingPlanes.get(i).Normal().Cross(windingPlane.Normal(), edge)
                         info.boundingPlanes.get(i).Normalize()
                         info.boundingPlanes.get(i).FitThroughPoint(winding.oGet(i).ToVec3())
@@ -409,15 +409,15 @@ object ModelDecal {
                         )
                     }
                 }
-                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 2).oSet(windingPlane)
-                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 2).oMinSet(3, depth)
-                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 1).oSet(windingPlane.oNegative())
+                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 2).set(windingPlane)
+                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 2).minusAssign(3, depth)
+                info.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 1).set(windingPlane.unaryMinus())
 
                 // fades will be from these plane
-                info.fadePlanes.get(0).oSet(windingPlane)
-                info.fadePlanes.get(0).oMinSet(3, fadeDepth)
-                info.fadePlanes.get(1).oSet(windingPlane.oNegative())
-                info.fadePlanes.get(1).oPluSet(3, depth - fadeDepth)
+                info.fadePlanes.get(0).set(windingPlane)
+                info.fadePlanes.get(0).minusAssign(3, fadeDepth)
+                info.fadePlanes.get(1).set(windingPlane.unaryMinus())
+                info.fadePlanes.get(1).plusAssign(3, depth - fadeDepth)
 
                 // calculate the texture vectors for the winding
                 var len: Float
@@ -429,28 +429,28 @@ object ModelDecal {
                 val a = winding.oGet(0)
                 val b = winding.oGet(1)
                 val c = winding.oGet(2)
-                d0.oSet(b.ToVec3().oMinus(a.ToVec3()))
+                d0.set(b.ToVec3().minus(a.ToVec3()))
                 d0.s = b.s - a.s
                 d0.t = b.t - a.t
-                d1.oSet(c.ToVec3().oMinus(a.ToVec3()))
+                d1.set(c.ToVec3().minus(a.ToVec3()))
                 d1.s = c.s - a.s
                 d1.t = c.t - a.t
-                texArea = d0.oGet(3) * d1.oGet(4) - d0.oGet(4) * d1.oGet(3)
+                texArea = d0.get(3) * d1.get(4) - d0.get(4) * d1.get(3)
                 inva = 1.0f / texArea
-                temp.oSet(0, (d0.oGet(0) * d1.oGet(4) - d0.oGet(4) * d1.oGet(0)) * inva)
-                temp.oSet(1, (d0.oGet(1) * d1.oGet(4) - d0.oGet(4) * d1.oGet(1)) * inva)
-                temp.oSet(2, (d0.oGet(2) * d1.oGet(4) - d0.oGet(4) * d1.oGet(2)) * inva)
+                temp.set(0, (d0.get(0) * d1.get(4) - d0.get(4) * d1.get(0)) * inva)
+                temp.set(1, (d0.get(1) * d1.get(4) - d0.get(4) * d1.get(1)) * inva)
+                temp.set(2, (d0.get(2) * d1.get(4) - d0.get(4) * d1.get(2)) * inva)
                 len = temp.Normalize()
                 info.textureAxis.get(0).SetNormal(temp.times(1.0f / len))
                 info.textureAxis.get(0)
-                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(0).Normal()))
-                temp.oSet(0, (d0.oGet(3) * d1.oGet(0) - d0.oGet(0) * d1.oGet(3)) * inva)
-                temp.oSet(1, (d0.oGet(3) * d1.oGet(1) - d0.oGet(1) * d1.oGet(3)) * inva)
-                temp.oSet(2, (d0.oGet(3) * d1.oGet(2) - d0.oGet(2) * d1.oGet(3)) * inva)
+                    .set(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(0).Normal()))
+                temp.set(0, (d0.get(3) * d1.get(0) - d0.get(0) * d1.get(3)) * inva)
+                temp.set(1, (d0.get(3) * d1.get(1) - d0.get(1) * d1.get(3)) * inva)
+                temp.set(2, (d0.get(3) * d1.get(2) - d0.get(2) * d1.get(3)) * inva)
                 len = temp.Normalize()
                 info.textureAxis.get(1).SetNormal(temp.times(1.0f / len))
                 info.textureAxis.get(1)
-                    .oSet(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(1).Normal()))
+                    .set(3, winding.oGet(0).s - winding.oGet(0).ToVec3().times(info.textureAxis.get(1).Normal()))
                 return true
             }
 

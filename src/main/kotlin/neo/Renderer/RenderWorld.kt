@@ -321,7 +321,7 @@ class RenderWorld {
             suppressShadowInViewID = shadow.suppressShadowInViewID.getVal()
             suppressShadowInLightID = shadow.suppressShadowInLightID.getVal()
             allowSurfaceInViewID = shadow.allowSurfaceInViewID.getVal()
-            origin.oSet(shadow.origin)
+            origin.set(shadow.origin)
             axis = shadow.axis
             customShader = shadow.customShader
             referenceShader = shadow.referenceShader
@@ -352,7 +352,7 @@ class RenderWorld {
             suppressShadowInViewID = newEntity.suppressShadowInViewID
             suppressShadowInLightID = newEntity.suppressShadowInLightID
             allowSurfaceInViewID = newEntity.allowSurfaceInViewID
-            origin.oSet(newEntity.origin)
+            origin.set(newEntity.origin)
             axis = newEntity.axis
             customShader = newEntity.customShader
             referenceShader = newEntity.referenceShader
@@ -570,20 +570,20 @@ class RenderWorld {
         //copy constructor
         constructor(other: renderLight_s?) {
             axis = idMat3(other.axis)
-            origin.oSet(other.origin)
+            origin.set(other.origin)
             suppressLightInViewID = other.suppressLightInViewID
             allowLightInViewID = other.allowLightInViewID
             noShadows = other.noShadows
             noSpecular = other.noSpecular
             pointLight = other.pointLight
             parallel = other.parallel
-            lightRadius.oSet(other.lightRadius)
-            lightCenter.oSet(other.lightCenter)
-            target.oSet(other.target)
-            right.oSet(other.right)
-            up.oSet(other.up)
-            start.oSet(other.start)
-            end.oSet(other.end)
+            lightRadius.set(other.lightRadius)
+            lightCenter.set(other.lightCenter)
+            target.set(other.target)
+            right.set(other.right)
+            up.set(other.up)
+            start.set(other.start)
+            end.set(other.end)
             prelightModel = other.prelightModel
             lightId = other.lightId
             shader = other.shader
@@ -594,20 +594,20 @@ class RenderWorld {
         fun clear() { //TODO:hardcoded values
             val temp = renderLight_s()
             axis = temp.axis
-            origin.oSet(temp.origin)
+            origin.set(temp.origin)
             suppressLightInViewID = temp.suppressLightInViewID
             allowLightInViewID = temp.allowLightInViewID
             noShadows = temp.noShadows
             noSpecular = temp.noSpecular
             pointLight = temp.pointLight
             parallel = temp.parallel
-            lightRadius.oSet(temp.lightRadius)
-            lightCenter.oSet(temp.lightCenter)
-            target.oSet(temp.target)
-            right.oSet(temp.right)
-            up.oSet(temp.up)
-            start.oSet(temp.start)
-            end.oSet(temp.end)
+            lightRadius.set(temp.lightRadius)
+            lightCenter.set(temp.lightCenter)
+            target.set(temp.target)
+            right.set(temp.right)
+            up.set(temp.up)
+            start.set(temp.start)
+            end.set(temp.end)
             prelightModel = temp.prelightModel
             lightId = temp.lightId
             shader = temp.shader
@@ -616,20 +616,20 @@ class RenderWorld {
 
         fun atomicSet(shadow: renderLightShadow?) {
             axis = shadow.axis
-            origin.oSet(shadow.origin)
+            origin.set(shadow.origin)
             suppressLightInViewID = shadow.suppressLightInViewID.getVal()
             allowLightInViewID = shadow.allowLightInViewID.getVal()
             noShadows = shadow.noShadows.isVal
             noSpecular = shadow.noSpecular.isVal
             pointLight = shadow.pointLight.isVal
             parallel = shadow.parallel.isVal
-            lightRadius.oSet(shadow.lightRadius)
-            lightCenter.oSet(shadow.lightCenter)
-            target.oSet(shadow.target)
-            right.oSet(shadow.right)
-            up.oSet(shadow.up)
-            start.oSet(shadow.start)
-            end.oSet(shadow.end)
+            lightRadius.set(shadow.lightRadius)
+            lightCenter.set(shadow.lightCenter)
+            target.set(shadow.target)
+            right.set(shadow.right)
+            up.set(shadow.up)
+            start.set(shadow.start)
+            end.set(shadow.end)
             prelightModel = shadow.prelightModel
             lightId = shadow.lightId.getVal()
             shader = shadow.shader
@@ -677,7 +677,7 @@ class RenderWorld {
             height = renderView.height
             fov_x = renderView.fov_x
             fov_y = renderView.fov_y
-            vieworg.oSet(renderView.vieworg)
+            vieworg.set(renderView.vieworg)
             viewaxis = idMat3(renderView.viewaxis)
             cramZNear = renderView.cramZNear
             forceUpdate = renderView.forceUpdate
@@ -693,7 +693,7 @@ class RenderWorld {
             height = shadow.height.getVal()
             fov_x = shadow.fov_x.getVal()
             fov_y = shadow.fov_y.getVal()
-            vieworg.oSet(shadow.vieworg)
+            vieworg.set(shadow.vieworg)
             viewaxis = idMat3(shadow.viewaxis)
             cramZNear = shadow.cramZNear.isVal
             forceUpdate = shadow.forceUpdate.isVal
@@ -1106,7 +1106,7 @@ class RenderWorld {
             var totalIntr = 0
             i = 0
             while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
-                ldef = tr_local.tr.primaryWorld.lightDefs.oGet(i)
+                ldef = tr_local.tr.primaryWorld.lightDefs.get(i)
                 if (null == ldef) {
                     idLib.common.Printf("%4d: FREED\n", i)
                     i++
@@ -1162,7 +1162,7 @@ class RenderWorld {
             var totalIntr = 0
             i = 0
             while (i < tr_local.tr.primaryWorld.entityDefs.Num()) {
-                mdef = tr_local.tr.primaryWorld.entityDefs.oGet(i)
+                mdef = tr_local.tr.primaryWorld.entityDefs.get(i)
                 if (null == mdef) {
                     idLib.common.Printf("%4d: FREED\n", i)
                     i++

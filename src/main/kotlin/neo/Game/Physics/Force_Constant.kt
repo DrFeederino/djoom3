@@ -42,14 +42,14 @@ class Force_Constant {
 
         // constant force
         fun SetForce(force: idVec3?) {
-            this.force.oSet(force)
+            this.force.set(force)
         }
 
         // set force position
         fun SetPosition(physics: idPhysics?, id: Int, point: idVec3?) {
             this.physics = physics
             this.id = id
-            this.point.oSet(point)
+            this.point.set(point)
         }
 
         fun SetPhysics(physics: idPhysics?) {
@@ -62,7 +62,7 @@ class Force_Constant {
             if (null == physics) {
                 return
             }
-            p.oSet(physics.GetOrigin(id).oPlus(point.times(physics.GetAxis(id))))
+            p.set(physics.GetOrigin(id).oPlus(point.times(physics.GetAxis(id))))
             physics.AddForce(id, p, force)
         }
 

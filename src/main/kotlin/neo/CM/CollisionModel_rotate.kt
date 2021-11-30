@@ -39,14 +39,14 @@ object CollisionModel_rotate {
         val v1 = idVec3()
         val v2 = idVec3()
         point.minusAssign(origin)
-        proj.oSet(axis.times(point.times(axis)))
-        v1.oSet(point - proj)
-        v2.oSet(axis.Cross(v1))
+        proj.set(axis.times(point.times(axis)))
+        v1.set(point - proj)
+        v2.set(axis.Cross(v1))
         val t: Double = (tanHalfAngle * tanHalfAngle).toDouble()
         val d: Double = 1.0f / (1.0f + t)
         val s: Double = 2.0f * tanHalfAngle * d
         val c: Double = (1.0f - t) * d
-        point.oSet(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        point.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
     }
 
     /*
@@ -69,14 +69,14 @@ object CollisionModel_rotate {
         s = 2.0f * tanHalfAngle._val * d
         c = (1.0f - t) * d
         start.minusAssign(origin)
-        proj.oSet(axis.times(start.times(axis)))
-        v1.oSet(start.minus(proj))
-        v2.oSet(axis.Cross(v1))
-        start.oSet(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        proj.set(axis.times(start.times(axis)))
+        v1.set(start.minus(proj))
+        v2.set(axis.Cross(v1))
+        start.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
         end.minusAssign(origin)
-        proj.oSet(axis.times(end.times(axis)))
-        v1.oSet(end.minus(proj))
-        v2.oSet(axis.Cross(v1))
-        end.oSet(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        proj.set(axis.times(end.times(axis)))
+        v1.set(end.minus(proj))
+        v2.set(axis.Cross(v1))
+        end.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
     }
 }

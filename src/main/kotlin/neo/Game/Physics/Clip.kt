@@ -77,13 +77,13 @@ object Clip {
         end: idVec3?,
         trmAxis: idMat3?
     ): Boolean {
-        if (mdl != null && end.oMinus(start).LengthSqr() > Math_h.Square(CollisionModel.CM_MAX_TRACE_DIST)) {
+        if (mdl != null && end.minus(start).LengthSqr() > Math_h.Square(CollisionModel.CM_MAX_TRACE_DIST)) {
             // assert (false);
             results.fraction = 0.0f
-            results.endpos.oSet(start)
-            results.endAxis.oSet(trmAxis)
+            results.endpos.set(start)
+            results.endAxis.set(trmAxis)
             results.c = contactInfo_t() //memset( results.c, 0, sizeof( results.c ) );
-            results.c.point.oSet(start)
+            results.c.point.set(start)
             results.c.entityNum = Game_local.ENTITYNUM_WORLD
             if (mdl.GetEntity() != null) {
                 Game_local.gameLocal.Printf(
@@ -190,10 +190,10 @@ object Clip {
             entity = model.entity
             id = model.id
             owner = model.owner
-            origin.oSet(model.origin)
-            axis.oSet(model.axis)
-            bounds.oSet(model.bounds)
-            absBounds.oSet(model.absBounds)
+            origin.set(model.origin)
+            axis.set(model.axis)
+            bounds.set(model.bounds)
+            absBounds.set(model.absBounds)
             material = model.material
             contents = model.contents
             collisionModelHandle = model.collisionModelHandle
@@ -234,7 +234,7 @@ object Clip {
                 FreeTraceModel(traceModelIndex)
             }
             traceModelIndex = AllocTraceModel(trm)
-            bounds.oSet(trm.bounds)
+            bounds.set(trm.bounds)
         }
 
         fun LoadModel(renderModelHandle: Int) {
@@ -243,7 +243,7 @@ object Clip {
             if (renderModelHandle != -1) {
                 val renderEntity = Game_local.gameRenderWorld.GetRenderEntity(renderModelHandle)
                 if (renderEntity != null) {
-                    bounds.oSet(renderEntity.bounds)
+                    bounds.set(renderEntity.bounds)
                 }
             }
             if (traceModelIndex != -1) {
@@ -295,7 +295,7 @@ object Clip {
             }
             traceModelIndex = savefile.ReadInt()
             if (traceModelIndex >= 0) {
-                Clip.traceModelCache.oGet(traceModelIndex).refCount++
+                Clip.traceModelCache.get(traceModelIndex).refCount++
             }
             renderModelHandle = savefile.ReadInt()
             savefile.ReadBool(linked)
@@ -328,13 +328,13 @@ object Clip {
                 absBounds.FromTransformedBounds(bounds, origin, axis)
             } else {
                 // normal
-                absBounds.oSet(0, bounds.oGet(0).oPlus(origin))
-                absBounds.oSet(1, bounds.oGet(1).oPlus(origin))
+                absBounds.set(0, bounds.get(0).oPlus(origin))
+                absBounds.set(1, bounds.get(1).oPlus(origin))
             }
 
             // because movement is clipped an epsilon away from an actual edge,
             // we must fully check even when bounding boxes don't quite touch
-            absBounds.oMinSet(0, Clip.vec3_boxEpsilon)
+            absBounds.minusAssign(0, Clip.vec3_boxEpsilon)
             absBounds.timesAssign(1, Clip.vec3_boxEpsilon)
             Link_r(clp.clipSectors.get(0)) //TODO:check if [0] is good enough. upd: seems it is
         }
@@ -350,13 +350,13 @@ object Clip {
         ) {
             entity = ent
             id = newId
-            origin.oSet(newOrigin)
-            axis.oSet(newAxis)
+            origin.set(newOrigin)
+            axis.set(newAxis)
             if (renderModelHandle != -1) {
                 this.renderModelHandle = renderModelHandle
                 val renderEntity = Game_local.gameRenderWorld.GetRenderEntity(renderModelHandle)
                 if (renderEntity != null) {
-                    bounds.oSet(renderEntity.bounds)
+                    bounds.set(renderEntity.bounds)
                 }
             }
             this.Link(clp)
@@ -383,8 +383,8 @@ object Clip {
             if (clipLinks != null) {
                 Unlink() // unlink from old position
             }
-            origin.oSet(newOrigin)
-            axis.oSet(newAxis)
+            origin.set(newOrigin)
+            axis.set(newAxis)
         }
 
         fun Translate(translation: idVec3?) {                            // unlinks the clip model
@@ -514,10 +514,10 @@ object Clip {
                     entity.name
                 )
             }
-            val entry: trmCache_s? = Clip.traceModelCache.oGet(traceModelIndex)
+            val entry: trmCache_s? = Clip.traceModelCache.get(traceModelIndex)
             mass.setVal(Math.abs(entry.volume * density)) // a hack-fix
-            centerOfMass.oSet(entry.centerOfMass)
-            inertiaTensor.oSet(entry.inertiaTensor.times(density))
+            centerOfMass.set(entry.centerOfMass)
+            inertiaTensor.set(entry.inertiaTensor.times(density))
         }
 
         // initialize(or does it?)
@@ -543,9 +543,9 @@ object Clip {
             var node = node
             val link: clipLink_s
             while (node.axis != -1) {
-                node = if (absBounds.oGet(0, node.axis) > node.dist) {
+                node = if (absBounds.get(0, node.axis) > node.dist) {
                     node.children.get(0)
-                } else if (absBounds.oGet(1, node.axis) < node.dist) {
+                } else if (absBounds.get(1, node.axis) < node.dist) {
                     node.children.get(1)
                 } else {
                     Link_r(node.children.get(0))
@@ -596,7 +596,7 @@ object Clip {
                 savefile.WriteInt(Clip.traceModelCache.Num())
                 i = 0
                 while (i < Clip.traceModelCache.Num()) {
-                    val entry: trmCache_s? = Clip.traceModelCache.oGet(i)
+                    val entry: trmCache_s? = Clip.traceModelCache.get(i)
                     savefile.WriteTraceModel(entry.trm)
                     savefile.WriteFloat(entry.volume)
                     savefile.WriteVec3(entry.centerOfMass)
@@ -619,7 +619,7 @@ object Clip {
                     savefile.ReadVec3(entry.centerOfMass)
                     savefile.ReadMat3(entry.inertiaTensor)
                     entry.refCount = 0
-                    Clip.traceModelCache.oSet(i, entry)
+                    Clip.traceModelCache.set(i, entry)
                     Clip.traceModelHash.Add(GetTraceModelHashKey(entry.trm), i)
                     i++
                 }
@@ -633,8 +633,8 @@ object Clip {
                 hashKey = GetTraceModelHashKey(trm)
                 i = Clip.traceModelHash.First(hashKey)
                 while (i >= 0) {
-                    if (Clip.traceModelCache.oGet(i).trm == trm) {
-                        Clip.traceModelCache.oGet(i).refCount++
+                    if (Clip.traceModelCache.get(i).trm == trm) {
+                        Clip.traceModelCache.get(i).refCount++
                         return i
                     }
                     i = Clip.traceModelHash.Next(i)
@@ -651,22 +651,22 @@ object Clip {
             }
 
             private fun FreeTraceModel(traceModelIndex: Int) {
-                if (traceModelIndex < 0 || traceModelIndex >= Clip.traceModelCache.Num() || Clip.traceModelCache.oGet(
+                if (traceModelIndex < 0 || traceModelIndex >= Clip.traceModelCache.Num() || Clip.traceModelCache.get(
                         traceModelIndex
                     ).refCount <= 0
                 ) {
                     Game_local.gameLocal.Warning("idClipModel::FreeTraceModel: tried to free uncached trace model")
                     return
                 }
-                Clip.traceModelCache.oGet(traceModelIndex).refCount--
+                Clip.traceModelCache.get(traceModelIndex).refCount--
             }
 
             private fun GetCachedTraceModel(traceModelIndex: Int): idTraceModel? {
-                return Clip.traceModelCache.oGet(traceModelIndex).trm
+                return Clip.traceModelCache.get(traceModelIndex).trm
             }
 
             private fun GetTraceModelHashKey(trm: idTraceModel?): Int {
-                val v = trm.bounds.oGet(0)
+                val v = trm.bounds.get(0)
                 return trm.type.ordinal shl 8 xor (trm.numVerts shl 4) xor (trm.numEdges shl 2) xor (trm.numPolys shl 0) xor idMath.FloatHash(
                     v.ToFloatPtr(),
                     v.GetDimension()
@@ -715,12 +715,12 @@ object Clip {
             CollisionModel_local.collisionModelManager.GetModelBounds(h, worldBounds)
             // create world sectors
             CreateClipSectors_r(0, worldBounds, maxSector)
-            size.oSet(worldBounds.oGet(1).oMinus(worldBounds.oGet(0)))
+            size.set(worldBounds.get(1).minus(worldBounds.get(0)))
             Game_local.gameLocal.Printf(
                 "map bounds are (%1.1f, %1.1f, %1.1f)\n",
-                size.oGet(0),
-                size.oGet(1),
-                size.oGet(2)
+                size.get(0),
+                size.get(1),
+                size.get(2)
             )
             Game_local.gameLocal.Printf(
                 "max clip sector is (%1.1f, %1.1f, %1.1f)\n",
@@ -798,14 +798,14 @@ object Clip {
                 }
             } else {
                 results.fraction = 1.0f
-                results.endpos.oSet(end)
-                results.endAxis.oSet(trmAxis)
+                results.endpos.set(end)
+                results.endAxis.set(trmAxis)
             }
             radius = if (null == trm) {
-                traceBounds.FromPointTranslation(start, results.endpos.oMinus(start))
+                traceBounds.FromPointTranslation(start, results.endpos.minus(start))
                 0.0f
             } else {
-                traceBounds.FromBoundsTranslation(trm.bounds, start, trmAxis, results.endpos.oMinus(start))
+                traceBounds.FromBoundsTranslation(trm.bounds, start, trmAxis, results.endpos.minus(start))
                 trm.bounds.GetRadius()
             }
             num = GetTraceClipModels(traceBounds, contentMask, passEntity, clipModelList)
@@ -880,8 +880,8 @@ object Clip {
             } else {
 //		memset( &results, 0, sizeof( results ) );
                 results.fraction = 1.0f
-                results.endpos.oSet(start)
-                results.endAxis.oSet(trmAxis.times(rotation.ToMat3()))
+                results.endpos.set(start)
+                results.endAxis.set(trmAxis.times(rotation.ToMat3()))
             }
             if (null == trm) {
                 traceBounds.FromPointRotation(start, rotation)
@@ -960,8 +960,8 @@ object Clip {
             } else {
                 // no motion
                 results.fraction = 1.0f
-                results.endpos.oSet(start)
-                results.endAxis.oSet(trmAxis)
+                results.endpos.set(start)
+                results.endAxis.set(trmAxis)
                 return false
             }
             trm = TraceModelForClipModel(mdl)
@@ -986,18 +986,18 @@ object Clip {
 //		memset( &translationalTrace, 0, sizeof( translationalTrace ) );
                 translationalTrace = trace_s()
                 translationalTrace.fraction = 1.0f
-                translationalTrace.endpos.oSet(end)
-                translationalTrace.endAxis.oSet(trmAxis)
+                translationalTrace.endpos.set(end)
+                translationalTrace.endAxis.set(trmAxis)
             }
             if (translationalTrace.fraction != 0.0f) {
                 traceBounds.FromBoundsRotation(trm.bounds, start, trmAxis, rotation)
-                dir.oSet(translationalTrace.endpos.oMinus(start))
+                dir.set(translationalTrace.endpos.minus(start))
                 i = 0
                 while (i < 3) {
-                    if (dir.oGet(i) < 0.0f) {
-                        traceBounds.oGet(0).plusAssign(i, dir.oGet(i))
+                    if (dir.get(i) < 0.0f) {
+                        traceBounds.get(0).plusAssign(i, dir.get(i))
                     } else {
-                        traceBounds.oGet(1).plusAssign(i, dir.oGet(i))
+                        traceBounds.get(1).plusAssign(i, dir.get(i))
                     }
                     i++
                 }
@@ -1039,7 +1039,7 @@ object Clip {
             } else {
                 num = -1
             }
-            endPosition.oSet(translationalTrace.endpos)
+            endPosition.set(translationalTrace.endpos)
             endRotation = idRotation(rotation)
             endRotation.SetOrigin(endPosition)
             if (null == passEntity || passEntity.entityNumber != Game_local.ENTITYNUM_WORLD) {
@@ -1062,8 +1062,8 @@ object Clip {
 //		memset( &rotationalTrace, 0, sizeof( rotationalTrace ) );
                 rotationalTrace = trace_s()
                 rotationalTrace.fraction = 1.0f
-                rotationalTrace.endpos.oSet(endPosition)
-                rotationalTrace.endAxis.oSet(trmAxis.times(rotation.ToMat3()))
+                rotationalTrace.endpos.set(endPosition)
+                rotationalTrace.endAxis.set(trmAxis.times(rotation.ToMat3()))
             }
             if (rotationalTrace.fraction != 0.0f) {
                 if (num == -1) {
@@ -1110,7 +1110,7 @@ object Clip {
                 results.oSet(rotationalTrace)
             } else {
                 results.oSet(translationalTrace)
-                results.endAxis.oSet(rotationalTrace.endAxis)
+                results.endAxis.set(rotationalTrace.endAxis)
             }
             results.fraction = Lib.Companion.Max(translationalTrace.fraction, rotationalTrace.fraction)
             return translationalTrace.fraction < 1.0f || rotationalTrace.fraction < 1.0f
@@ -1232,13 +1232,13 @@ object Clip {
                 0
             }
             if (null == trm) {
-                traceBounds.oSet(0, start)
-                traceBounds.oSet(1, start)
+                traceBounds.set(0, start)
+                traceBounds.set(1, start)
             } else if (trmAxis.IsRotated()) {
                 traceBounds.FromTransformedBounds(trm.bounds, start, trmAxis)
             } else {
-                traceBounds.oSet(0, trm.bounds.oGet(0).oPlus(start))
-                traceBounds.oSet(1, trm.bounds.oGet(1).oPlus(start))
+                traceBounds.set(0, trm.bounds.get(0).oPlus(start))
+                traceBounds.set(1, trm.bounds.get(1).oPlus(start))
             }
             num = GetTraceClipModels(traceBounds, -1, passEntity, clipModelList)
             i = 0
@@ -1435,13 +1435,13 @@ object Clip {
             }
             trm = TraceModelForClipModel(mdl)
             results.fraction = 1.0f
-            results.endpos.oSet(end)
-            results.endAxis.oSet(trmAxis)
+            results.endpos.set(end)
+            results.endAxis.set(trmAxis)
             radius = if (null == trm) {
-                traceBounds.FromPointTranslation(start, end.oMinus(start))
+                traceBounds.FromPointTranslation(start, end.minus(start))
                 0.0f
             } else {
-                traceBounds.FromBoundsTranslation(trm.bounds, start, trmAxis, end.oMinus(start))
+                traceBounds.FromBoundsTranslation(trm.bounds, start, trmAxis, end.minus(start))
                 trm.bounds.GetRadius()
             }
             num = GetTraceClipModels(traceBounds, contentMask, passEntity, clipModelList)
@@ -1592,17 +1592,17 @@ object Clip {
             maxCount: Int
         ): Int {
             val parms = listParms_s()
-            if (bounds.oGet(0, 0) > bounds.oGet(1, 0) || bounds.oGet(0, 1) > bounds.oGet(1, 1) || bounds.oGet(
+            if (bounds.get(0, 0) > bounds.get(1, 0) || bounds.get(0, 1) > bounds.get(1, 1) || bounds.get(
                     0,
                     2
-                ) > bounds.oGet(1, 2)
+                ) > bounds.get(1, 2)
             ) {
                 // we should not go through the tree for degenerate or backwards bounds
                 assert(false)
                 return 0
             }
-            parms.bounds.oSet(0, bounds.oGet(0).oMinus(Clip.vec3_boxEpsilon))
-            parms.bounds.oSet(1, bounds.oGet(1).oPlus(Clip.vec3_boxEpsilon))
+            parms.bounds.set(0, bounds.get(0).minus(Clip.vec3_boxEpsilon))
+            parms.bounds.set(1, bounds.get(1).oPlus(Clip.vec3_boxEpsilon))
             parms.contentMask = contentMask
             parms.list = clipModelList
             parms.count = 0
@@ -1676,19 +1676,19 @@ object Clip {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorCyan,
                     winding.oGet(0).ToVec3(),
-                    winding.oGet(0).ToVec3().oPlus(axis.oGet(0).times(2.0f)),
+                    winding.oGet(0).ToVec3().oPlus(axis.get(0).times(2.0f)),
                     lifetime
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    winding.oGet(0).ToVec3().oMinus( /*- 1.0f * */axis.oGet(1)),
-                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.oGet(1)),
+                    winding.oGet(0).ToVec3().minus( /*- 1.0f * */axis.get(1)),
+                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.get(1)),
                     lifetime
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    winding.oGet(0).ToVec3().oMinus( /*- 1.0f * */axis.oGet(2)),
-                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.oGet(2)),
+                    winding.oGet(0).ToVec3().minus( /*- 1.0f * */axis.get(2)),
+                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.get(2)),
                     lifetime
                 )
             } else {
@@ -1703,11 +1703,11 @@ object Clip {
                     i++
                 }
             }
-            axis.oSet(0, axis.oGet(0).oNegative())
-            axis.oSet(2, axis.oGet(2).oNegative())
+            axis.set(0, axis.get(0).oNegative())
+            axis.set(2, axis.get(2).oNegative())
             Game_local.gameRenderWorld.DrawText(
                 contact.material.GetName(),
-                winding.GetCenter().oMinus(axis.oGet(2).times(4.0f)),
+                winding.GetCenter().minus(axis.get(2).times(4.0f)),
                 0.1f,
                 Lib.Companion.colorWhite,
                 axis,
@@ -1738,25 +1738,25 @@ object Clip {
                 anode.children.get(0) = anode.children.get(1)
                 i = 0
                 while (i < 3) {
-                    if (bounds.oGet(1, i) - bounds.oGet(0, i) > maxSector.oGet(i)) {
-                        maxSector.oSet(i, bounds.oGet(1, i) - bounds.oGet(0, i))
+                    if (bounds.get(1, i) - bounds.get(0, i) > maxSector.get(i)) {
+                        maxSector.set(i, bounds.get(1, i) - bounds.get(0, i))
                     }
                     i++
                 }
                 return anode
             }
-            size.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)))
-            if (size.oGet(0) >= size.oGet(1) && size.oGet(0) >= size.oGet(2)) {
+            size.set(bounds.get(1).minus(bounds.get(0)))
+            if (size.get(0) >= size.get(1) && size.get(0) >= size.get(2)) {
                 anode.axis = 0
-            } else if (size.oGet(1) >= size.oGet(0) && size.oGet(1) >= size.oGet(2)) {
+            } else if (size.get(1) >= size.get(0) && size.get(1) >= size.get(2)) {
                 anode.axis = 1
             } else {
                 anode.axis = 2
             }
-            anode.dist = 0.5f * (bounds.oGet(1, anode.axis) + bounds.oGet(0, anode.axis))
+            anode.dist = 0.5f * (bounds.get(1, anode.axis) + bounds.get(0, anode.axis))
             front = idBounds(bounds)
             back = idBounds(bounds)
-            front.oSet(0, anode.axis, back.oSet(1, anode.axis, anode.dist))
+            front.set(0, anode.axis, back.set(1, anode.axis, anode.dist))
             anode.children.get(0) = CreateClipSectors_r(depth + 1, front, maxSector)
             anode.children.get(1) = CreateClipSectors_r(depth + 1, back, maxSector)
             return anode
@@ -1765,9 +1765,9 @@ object Clip {
         private fun ClipModelsTouchingBounds_r(node: clipSector_s?, parms: listParms_s?) {
             var node = node
             while (node.axis != -1) {
-                node = if (parms.bounds.oGet(0, node.axis) > node.dist) {
+                node = if (parms.bounds.get(0, node.axis) > node.dist) {
                     node.children.get(0)
-                } else if (parms.bounds.oGet(1, node.axis) < node.dist) {
+                } else if (parms.bounds.get(1, node.axis) < node.dist) {
                     node.children.get(1)
                 } else {
                     ClipModelsTouchingBounds_r(node.children.get(0), parms)
@@ -1797,16 +1797,16 @@ object Clip {
                 }
 
                 // if the bounds really do overlap
-                if (check.absBounds.oGet(0, 0) > parms.bounds.oGet(1, 0) || check.absBounds.oGet(
+                if (check.absBounds.get(0, 0) > parms.bounds.get(1, 0) || check.absBounds.get(
                         1,
                         0
-                    ) < parms.bounds.oGet(0, 0) || check.absBounds.oGet(0, 1) > parms.bounds.oGet(
+                    ) < parms.bounds.get(0, 0) || check.absBounds.get(0, 1) > parms.bounds.get(
                         1,
                         1
-                    ) || check.absBounds.oGet(1, 1) < parms.bounds.oGet(0, 1) || check.absBounds.oGet(
+                    ) || check.absBounds.get(1, 1) < parms.bounds.get(0, 1) || check.absBounds.get(
                         0,
                         2
-                    ) > parms.bounds.oGet(1, 2) || check.absBounds.oGet(1, 2) < parms.bounds.oGet(0, 2)
+                    ) > parms.bounds.get(1, 2) || check.absBounds.get(1, 2) < parms.bounds.get(0, 2)
                 ) {
                     link = link.nextInSector
                     continue
@@ -1912,11 +1912,11 @@ object Clip {
                 // test with exact render model and modify trace_t structure accordingly
                 if (Game_local.gameRenderWorld.ModelTrace(modelTrace, touch.renderModelHandle, start, end, radius)) {
                     trace.fraction = modelTrace.fraction
-                    trace.endAxis.oSet(axis)
-                    trace.endpos.oSet(modelTrace.point)
-                    trace.c.normal.oSet(modelTrace.normal)
+                    trace.endAxis.set(axis)
+                    trace.endpos.set(modelTrace.point)
+                    trace.c.normal.set(modelTrace.normal)
                     trace.c.dist = modelTrace.point.times(modelTrace.normal)
-                    trace.c.point.oSet(modelTrace.point)
+                    trace.c.point.set(modelTrace.point)
                     trace.c.type = contactType_t.CONTACT_TRMVERTEX
                     trace.c.modelFeature = 0
                     trace.c.trmFeature = 0

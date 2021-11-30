@@ -137,25 +137,25 @@ class DeclFX {
             //            final fx_enum[] values = fx_enum.values();
             Common.common.Printf("%d events\n", list.events.Num())
             for (i in 0 until list.events.Num()) {
-                when (list.events.oGet(i).type) {
-                    fx_enum.FX_LIGHT -> Common.common.Printf("FX_LIGHT %s\n", list.events.oGet(i).data.toString())
-                    fx_enum.FX_PARTICLE -> Common.common.Printf("FX_PARTICLE %s\n", list.events.oGet(i).data.toString())
-                    fx_enum.FX_MODEL -> Common.common.Printf("FX_MODEL %s\n", list.events.oGet(i).data.toString())
-                    fx_enum.FX_SOUND -> Common.common.Printf("FX_SOUND %s\n", list.events.oGet(i).data.toString())
-                    fx_enum.FX_DECAL -> Common.common.Printf("FX_DECAL %s\n", list.events.oGet(i).data.toString())
-                    fx_enum.FX_SHAKE -> Common.common.Printf("FX_SHAKE %s\n", list.events.oGet(i).data.toString())
+                when (list.events.get(i).type) {
+                    fx_enum.FX_LIGHT -> Common.common.Printf("FX_LIGHT %s\n", list.events.get(i).data.toString())
+                    fx_enum.FX_PARTICLE -> Common.common.Printf("FX_PARTICLE %s\n", list.events.get(i).data.toString())
+                    fx_enum.FX_MODEL -> Common.common.Printf("FX_MODEL %s\n", list.events.get(i).data.toString())
+                    fx_enum.FX_SOUND -> Common.common.Printf("FX_SOUND %s\n", list.events.get(i).data.toString())
+                    fx_enum.FX_DECAL -> Common.common.Printf("FX_DECAL %s\n", list.events.get(i).data.toString())
+                    fx_enum.FX_SHAKE -> Common.common.Printf("FX_SHAKE %s\n", list.events.get(i).data.toString())
                     fx_enum.FX_ATTACHLIGHT -> Common.common.Printf(
                         "FX_ATTACHLIGHT %s\n",
-                        list.events.oGet(i).data.toString()
+                        list.events.get(i).data.toString()
                     )
                     fx_enum.FX_ATTACHENTITY -> Common.common.Printf(
                         "FX_ATTACHENTITY %s\n",
-                        list.events.oGet(i).data.toString()
+                        list.events.get(i).data.toString()
                     )
-                    fx_enum.FX_LAUNCH -> Common.common.Printf("FX_LAUNCH %s\n", list.events.oGet(i).data.toString())
+                    fx_enum.FX_LAUNCH -> Common.common.Printf("FX_LAUNCH %s\n", list.events.get(i).data.toString())
                     fx_enum.FX_SHOCKWAVE -> Common.common.Printf(
                         "FX_SHOCKWAVE %s\n",
-                        list.events.oGet(i).data.toString()
+                        list.events.get(i).data.toString()
                     )
                 }
             }
@@ -191,8 +191,8 @@ class DeclFX {
             FXAction.rotate = 0.0f
             FXAction.random1 = 0.0f
             FXAction.random2 = 0.0f
-            FXAction.lightColor.oSet(Vector.getVec3_origin())
-            FXAction.offset.oSet(Vector.getVec3_origin())
+            FXAction.lightColor.set(Vector.getVec3_origin())
+            FXAction.offset.set(Vector.getVec3_origin())
             FXAction.axis = idMat3.Companion.getMat3_identity()
             FXAction.bindParticles = false
             FXAction.explicitAxis = false
@@ -289,18 +289,18 @@ class DeclFX {
                     src.ExpectTokenString(",")
                     v.z = src.ParseFloat()
                     v.Normalize()
-                    FXAction.axis.oSet(v.ToMat3())
+                    FXAction.axis.set(v.ToMat3())
                     FXAction.explicitAxis = true
                     continue
                 }
                 if (0 == token.Icmp("angle")) {
                     val a = idAngles()
-                    a.oSet(0, src.ParseFloat())
+                    a.set(0, src.ParseFloat())
                     src.ExpectTokenString(",")
-                    a.oSet(1, src.ParseFloat())
+                    a.set(1, src.ParseFloat())
                     src.ExpectTokenString(",")
-                    a.oSet(2, src.ParseFloat())
-                    FXAction.axis.oSet(a.ToMat3())
+                    a.set(2, src.ParseFloat())
+                    FXAction.axis.set(a.ToMat3())
                     FXAction.explicitAxis = true
                     continue
                 }
@@ -308,10 +308,10 @@ class DeclFX {
                     src.ReadToken(token)
                     FXAction.data.oSet(token)
                     for (i in 0 until events.Num()) {
-                        if (events.oGet(i).name.Icmp(FXAction.data.toString()) == 0) {
+                        if (events.get(i).name.Icmp(FXAction.data.toString()) == 0) {
                             FXAction.sibling = i
-                            FXAction.lightColor.oSet(events.oGet(i).lightColor)
-                            FXAction.lightRadius = events.oGet(i).lightRadius
+                            FXAction.lightColor.set(events.get(i).lightColor)
+                            FXAction.lightRadius = events.get(i).lightRadius
                         }
                     }
                     FXAction.type = fx_enum.FX_LIGHT
@@ -351,7 +351,7 @@ class DeclFX {
                     src.ReadToken(token)
                     FXAction.data.oSet(token)
                     for (i in 0 until events.Num()) {
-                        if (events.oGet(i).name.Icmp(FXAction.data) == 0) {
+                        if (events.get(i).name.Icmp(FXAction.data) == 0) {
                             FXAction.sibling = i
                         }
                     }
@@ -365,11 +365,11 @@ class DeclFX {
                     src.ReadToken(token)
                     FXAction.data.oSet(token)
                     src.ExpectTokenString(",")
-                    FXAction.lightColor.oSet(0, src.ParseFloat())
+                    FXAction.lightColor.set(0, src.ParseFloat())
                     src.ExpectTokenString(",")
-                    FXAction.lightColor.oSet(1, src.ParseFloat())
+                    FXAction.lightColor.set(1, src.ParseFloat())
                     src.ExpectTokenString(",")
-                    FXAction.lightColor.oSet(2, src.ParseFloat())
+                    FXAction.lightColor.set(2, src.ParseFloat())
                     src.ExpectTokenString(",")
                     FXAction.lightRadius = src.ParseFloat()
                     FXAction.type = fx_enum.FX_LIGHT

@@ -14,26 +14,26 @@ class idMat6 {
 
     constructor()
     constructor(v0: idVec6, v1: idVec6, v2: idVec6, v3: idVec6, v4: idVec6, v5: idVec6) {
-        mat[0].oSet(v0)
-        mat[1].oSet(v1)
-        mat[2].oSet(v2)
-        mat[3].oSet(v3)
-        mat[4].oSet(v4)
-        mat[5].oSet(v5)
+        mat[0].set(v0)
+        mat[1].set(v1)
+        mat[2].set(v2)
+        mat[3].set(v3)
+        mat[4].set(v4)
+        mat[5].set(v5)
     }
 
     constructor(m0: idMat3, m1: idMat3, m2: idMat3, m3: idMat3) {
-        mat[0].oSet(idVec6(m0.mat[0].x, m0.mat[0].y, m0.mat[0].z, m1.mat[0].x, m1.mat[0].y, m1.mat[0].z))
-        mat[1].oSet(idVec6(m0.mat[1].x, m0.mat[1].y, m0.mat[1].z, m1.mat[1].x, m1.mat[1].y, m1.mat[1].z))
-        mat[2].oSet(idVec6(m0.mat[2].x, m0.mat[2].y, m0.mat[2].z, m1.mat[2].x, m1.mat[2].y, m1.mat[2].z))
-        mat[3].oSet(idVec6(m2.mat[0].x, m2.mat[0].y, m2.mat[0].z, m3.mat[0].x, m3.mat[0].y, m3.mat[0].z))
-        mat[4].oSet(idVec6(m2.mat[1].x, m2.mat[1].y, m2.mat[1].z, m3.mat[1].x, m3.mat[1].y, m3.mat[1].z))
-        mat[5].oSet(idVec6(m2.mat[2].x, m2.mat[2].y, m2.mat[2].z, m3.mat[2].x, m3.mat[2].y, m3.mat[2].z))
+        mat[0].set(idVec6(m0.mat[0].x, m0.mat[0].y, m0.mat[0].z, m1.mat[0].x, m1.mat[0].y, m1.mat[0].z))
+        mat[1].set(idVec6(m0.mat[1].x, m0.mat[1].y, m0.mat[1].z, m1.mat[1].x, m1.mat[1].y, m1.mat[1].z))
+        mat[2].set(idVec6(m0.mat[2].x, m0.mat[2].y, m0.mat[2].z, m1.mat[2].x, m1.mat[2].y, m1.mat[2].z))
+        mat[3].set(idVec6(m2.mat[0].x, m2.mat[0].y, m2.mat[0].z, m3.mat[0].x, m3.mat[0].y, m3.mat[0].z))
+        mat[4].set(idVec6(m2.mat[1].x, m2.mat[1].y, m2.mat[1].z, m3.mat[1].x, m3.mat[1].y, m3.mat[1].z))
+        mat[5].set(idVec6(m2.mat[2].x, m2.mat[2].y, m2.mat[2].z, m3.mat[2].x, m3.mat[2].y, m3.mat[2].z))
     }
 
     constructor(src: Array<FloatArray>) {
 //	memcpy( mat, src, 6 * 6 * sizeof( float ) );
-        mat[0].oSet(
+        mat[0].set(
             idVec6(
                 src[0][0],
                 src[0][1],
@@ -43,7 +43,7 @@ class idMat6 {
                 src[0][5]
             )
         )
-        mat[1].oSet(
+        mat[1].set(
             idVec6(
                 src[1][0],
                 src[1][1],
@@ -53,7 +53,7 @@ class idMat6 {
                 src[1][5]
             )
         )
-        mat[2].oSet(
+        mat[2].set(
             idVec6(
                 src[2][0],
                 src[2][1],
@@ -63,7 +63,7 @@ class idMat6 {
                 src[2][5]
             )
         )
-        mat[3].oSet(
+        mat[3].set(
             idVec6(
                 src[3][0],
                 src[3][1],
@@ -73,7 +73,7 @@ class idMat6 {
                 src[3][5]
             )
         )
-        mat[4].oSet(
+        mat[4].set(
             idVec6(
                 src[4][0],
                 src[4][1],
@@ -83,7 +83,7 @@ class idMat6 {
                 src[4][5]
             )
         )
-        mat[5].oSet(
+        mat[5].set(
             idVec6(
                 src[5][0],
                 src[5][1],
@@ -96,7 +96,7 @@ class idMat6 {
     }
 
     constructor(m: idMat6) {
-        oSet(m)
+        set(m)
     }
 
     //public	idMat6			operator+( const idMat6 &a ) const;
@@ -156,7 +156,7 @@ class idMat6 {
         )
     }
 
-    fun times(vec: idVec6): idVec6 {
+    operator fun times(vec: idVec6): idVec6 {
         return idVec6(
             mat[0].p[0] * vec.p[0] + mat[0].p[1] * vec.p[1] + mat[0].p[2] * vec.p[2] + mat[0].p[3] * vec.p[3] + mat[0].p[4] * vec.p[4] + mat[0].p[5] * vec.p[5],
             mat[1].p[0] * vec.p[0] + mat[1].p[1] * vec.p[1] + mat[1].p[2] * vec.p[2] + mat[1].p[3] * vec.p[3] + mat[1].p[4] * vec.p[4] + mat[1].p[5] * vec.p[5],
@@ -247,7 +247,7 @@ class idMat6 {
 
     //public	idMat6 &		operator+=( const idMat6 &a );
     //public	idMat6			operator-( const idMat6 &a ) const;
-    fun oMinus(a: idMat6): idMat6 {
+    operator fun minus(a: idMat6): idMat6 {
         return idMat6(
             idVec6(
                 mat[0].p[0] - a.mat[0].p[0],
@@ -342,7 +342,7 @@ class idMat6 {
     }
 
     fun timesAssign(a: idMat6): idMat6 {
-        oSet(this.times(a))
+        set(times(a))
         return this
     }
 
@@ -388,7 +388,7 @@ class idMat6 {
     }
 
     //public	friend idVec6 &	operator*=( idVec6 &vec, const idMat6 &mat );
-    fun oMinSet(a: idMat6): idMat6 {
+    fun minusAssign(a: idMat6): idMat6 {
         mat[0].p[0] -= a.mat[0].p[0]
         mat[0].p[1] -= a.mat[0].p[1]
         mat[0].p[2] -= a.mat[0].p[2]
@@ -480,11 +480,11 @@ class idMat6 {
     }
 
     fun Zero() {
-        oSet(getMat6_zero())
+        set(getMat6_zero())
     }
 
     fun Identity() {
-        oSet(getMat6_zero())
+        set(getMat6_zero())
     }
 
     @JvmOverloads
@@ -1254,13 +1254,13 @@ class idMat6 {
     //public	const float *	ToFloatPtr( void ) const;
     //public	float *			ToFloatPtr( void );
     //public	const char *	ToString( int precision = 2 ) const;
-    private fun oSet(mat6: idMat6) {
-        mat[0].oSet(mat6.mat[0])
-        mat[1].oSet(mat6.mat[1])
-        mat[2].oSet(mat6.mat[2])
-        mat[3].oSet(mat6.mat[3])
-        mat[4].oSet(mat6.mat[4])
-        mat[5].oSet(mat6.mat[5])
+    private fun set(mat6: idMat6) {
+        mat[0].set(mat6.mat[0])
+        mat[1].set(mat6.mat[1])
+        mat[2].set(mat6.mat[2])
+        mat[3].set(mat6.mat[3])
+        mat[4].set(mat6.mat[4])
+        mat[5].set(mat6.mat[5])
     }
 
     fun reinterpret_cast(): FloatArray {
@@ -1300,17 +1300,17 @@ class idMat6 {
 
         //public	friend idMat6	operator*( const float a, const idMat6 &mat );
         fun times(a: Float, mat: idMat6): idMat6 {
-            return mat.times(a)
+            return mat * a
         }
 
         //public	idVec6			operator*( const idVec6 &vec ) const;
         fun times(vec: idVec6, mat: idMat6): idVec6 {
-            return mat.times(vec)
+            return mat * vec
         }
 
         //public	idMat6			operator*( const idMat6 &a ) const;
         fun timesAssign(vec: idVec6, mat: idMat6): idVec6 {
-            return mat.times(vec)
+            return mat * vec
         }
     }
 }

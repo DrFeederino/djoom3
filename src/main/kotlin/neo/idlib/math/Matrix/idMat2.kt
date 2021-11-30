@@ -40,7 +40,7 @@ class idMat2 {
 
     //public	const idVec2 &	operator[]( int index ) const;
     //public	idVec2 &		operator[]( int index );
-    fun oGet(index: Int): idVec2 {
+    operator fun get(index: Int): idVec2 {
         return mat[index]
     }
 
@@ -79,14 +79,14 @@ class idMat2 {
     }
 
     //public	idMat2			operator+( const idMat2 &a ) const;
-    fun oPlus(a: idMat2): idMat2 {
+    operator fun plus(a: idMat2): idMat2 {
         return idMat2(
             mat[0].x + a.mat[0].x, mat[0].y + a.mat[0].y,
             mat[1].x + a.mat[1].x, mat[1].y + a.mat[1].y
         )
     }
 
-    fun oMinus(a: idMat2): idMat2 {
+    operator fun minus(a: idMat2): idMat2 {
         return idMat2(
             mat[0].x - a.mat[0].x, mat[0].y - a.mat[0].y,
             mat[1].x - a.mat[1].x, mat[1].y - a.mat[1].y
@@ -94,7 +94,7 @@ class idMat2 {
     }
 
     //public	idMat2 &		operator*=( const float a );
-    fun oMulSet(a: Float): idMat2 {
+    fun timesAssign(a: Float): idMat2 {
         mat[0].x *= a
         mat[0].y *= a
         mat[1].x *= a
@@ -103,7 +103,7 @@ class idMat2 {
     }
 
     //public	idMat2 &		operator*=( const idMat2 &a );
-    fun oMulSet(a: idMat2): idMat2 {
+    fun timesAssign(a: idMat2): idMat2 {
         var x: Float
         var y: Float
         x = mat[0].x
@@ -118,7 +118,7 @@ class idMat2 {
     }
 
     //public	idMat2 &		operator+=( const idMat2 &a );
-    fun oPluSet(a: idMat2): idMat2 {
+    fun plusAssign(a: idMat2): idMat2 {
         mat[0].x += a.mat[0].x
         mat[0].y += a.mat[0].y
         mat[1].x += a.mat[1].x
@@ -127,7 +127,7 @@ class idMat2 {
     }
 
     //public	idMat2 &		operator-=( const idMat2 &a );
-    fun oMinSet(a: idMat2): idMat2 {
+    fun minusAssign(a: idMat2): idMat2 {
         mat[0].x -= a.mat[0].x
         mat[0].y -= a.mat[0].y
         mat[1].x -= a.mat[1].x
@@ -294,7 +294,7 @@ class idMat2 {
         val temp = FloatArray(size * size)
         for (x in 0 until size) {
             for (y in 0 until size) {
-                temp[x * size + y] = mat[x].oGet(y)
+                temp[x * size + y] = mat[x].get(y)
             }
         }
         return temp

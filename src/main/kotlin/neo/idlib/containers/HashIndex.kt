@@ -353,7 +353,7 @@ object HashIndex {
 
         // returns a key for a vector
         fun GenerateKey(v: idVec3): Int {
-            return v.oGet(0).toInt() + v.oGet(1).toInt() + v.oGet(2).toInt() and hashMask
+            return v.get(0).toInt() + v.get(1).toInt() + v.get(2).toInt() and hashMask
         }
 
         // returns a key for two integers

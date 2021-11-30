@@ -18,7 +18,7 @@ import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Simd
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL10
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -521,7 +521,7 @@ object snd_cache {
 
             // check to see if object is already in cache
             for (i in 0 until listCache.Num()) {
-                val def = listCache.oGet(i)
+                val def = listCache.get(i)
                 if (def != null && def.name == fname) {
                     def.levelLoadReferenced = true
                     if (def.purged && !loadOnDemandOnly) {
@@ -535,7 +535,7 @@ object snd_cache {
             val def = idSoundSample()
             var shandle = listCache.FindNull()
             if (shandle != -1) {
-                listCache.oSet(shandle, def)
+                listCache.set(shandle, def)
             } else {
                 shandle = listCache.Append(def)
             }
@@ -564,7 +564,7 @@ object snd_cache {
         fun GetObject(index: Int): idSoundSample? {
             return if (index < 0 || index > listCache.Num()) {
                 null
-            } else listCache.oGet(index)
+            } else listCache.get(index)
         }
 
         /*
@@ -578,7 +578,7 @@ object snd_cache {
             var i: Int
             i = 0
             while (i < listCache.Num()) {
-                val def = listCache.oGet(i)
+                val def = listCache.get(i)
                 def?.Reload(force)
                 i++
             }
@@ -597,7 +597,7 @@ object snd_cache {
         fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until listCache.Num()) {
-                val sample = listCache.oGet(i) ?: continue
+                val sample = listCache.get(i) ?: continue
                 if (Common.com_purgeAll.GetBool()) {
                     sample.PurgeSoundSample()
                 }
@@ -624,7 +624,7 @@ object snd_cache {
             useCount = 0
             purgeCount = 0
             for (i in 0 until listCache.Num()) {
-                val sample = listCache.oGet(i) ?: continue
+                val sample = listCache.get(i) ?: continue
                 if (sample.purged) {
                     continue
                 }
@@ -658,7 +658,7 @@ object snd_cache {
             // count
             i = 0
             while (i < listCache.Num()) {
-                if (null == listCache.oGet(i)) {
+                if (null == listCache.get(i)) {
                     break
                 }
                 i++
@@ -676,7 +676,7 @@ object snd_cache {
             while (i < num - 1) {
                 j = i + 1
                 while (j < num) {
-                    if (listCache.oGet(sortIndex[i]).objectMemSize < listCache.oGet(sortIndex[j]).objectMemSize) {
+                    if (listCache.get(sortIndex[i]).objectMemSize < listCache.get(sortIndex[j]).objectMemSize) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
                         sortIndex[j] = temp
@@ -689,7 +689,7 @@ object snd_cache {
             // print next
             i = 0
             while (i < num) {
-                val sample = listCache.oGet(sortIndex[i])
+                val sample = listCache.get(sortIndex[i])
 
                 // this is strange
                 if (null == sample) {

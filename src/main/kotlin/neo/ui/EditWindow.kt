@@ -274,7 +274,7 @@ object EditWindow {
                     if (idKeyInput.IsDown(KeyInput.K_CTRL) || cursorLine <= 0 || cursorLine >= breaks.Num()) {
                         cursorPos = 0
                     } else {
-                        cursorPos = breaks.oGet(cursorLine)
+                        cursorPos = breaks.get(cursorLine)
                     }
                     EnsureCursorVisible()
                     return ret
@@ -284,7 +284,7 @@ object EditWindow {
                         if (idKeyInput.IsDown(KeyInput.K_CTRL) || cursorLine < -1 || cursorLine >= breaks.Num() - 1) {
                             len
                         } else {
-                            breaks.oGet(cursorLine + 1) - 1
+                            breaks.get(cursorLine + 1) - 1
                         }
                     EnsureCursorVisible()
                     return ret
@@ -300,8 +300,8 @@ object EditWindow {
                         scroller.SetValue(scroller.GetValue() + 1.0f)
                     } else {
                         if (cursorLine < breaks.Num() - 1) {
-                            val offset = cursorPos - breaks.oGet(cursorLine)
-                            cursorPos = breaks.oGet(cursorLine + 1) + offset
+                            val offset = cursorPos - breaks.get(cursorLine)
+                            cursorPos = breaks.get(cursorLine + 1) + offset
                             EnsureCursorVisible()
                         }
                     }
@@ -311,8 +311,8 @@ object EditWindow {
                         scroller.SetValue(scroller.GetValue() - 1.0f)
                     } else {
                         if (cursorLine > 0) {
-                            val offset = cursorPos - breaks.oGet(cursorLine)
-                            cursorPos = breaks.oGet(cursorLine - 1) + offset
+                            val offset = cursorPos - breaks.get(cursorLine)
+                            cursorPos = breaks.get(cursorLine - 1) + offset
                             EnsureCursorVisible()
                         }
                     }
@@ -571,7 +571,7 @@ object EditWindow {
                 } else {
                     cursorLine = 0
                     for (i in 1 until breaks.Num()) {
-                        cursorLine = if (cursorPos >= breaks.oGet(i)) {
+                        cursorLine = if (cursorPos >= breaks.get(i)) {
                             i
                         } else {
                             break

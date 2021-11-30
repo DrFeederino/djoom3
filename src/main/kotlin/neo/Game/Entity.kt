@@ -308,7 +308,7 @@ object Entity {
                 if (i < 0 || i >= e.targets.Num()) {
                     idThread.Companion.ReturnEntity(null)
                 } else {
-                    idThread.Companion.ReturnEntity(e.targets.oGet(i).GetEntity())
+                    idThread.Companion.ReturnEntity(e.targets.get(i).GetEntity())
                 }
             }
 
@@ -328,7 +328,7 @@ object Entity {
                 if (ignore != null && !ignore.isEmpty() && e.targets.Num() > 1) {
                     i = 0
                     while (i < e.targets.Num()) {
-                        ent = e.targets.oGet(i).GetEntity()
+                        ent = e.targets.get(i).GetEntity()
                         if (ent != null && ent.name == ignore) {
                             ignoreNum = i
                             break
@@ -344,7 +344,7 @@ object Entity {
                 } else {
                     num = Game_local.gameLocal.random.RandomInt(e.targets.Num().toDouble())
                 }
-                ent = e.targets.oGet(num).GetEntity()
+                ent = e.targets.get(num).GetEntity()
                 idThread.Companion.ReturnEntity(ent)
             }
 
@@ -592,13 +592,13 @@ object Entity {
                     // just say it's really far away
                     idThread.Companion.ReturnFloat(Lib.Companion.MAX_WORLD_SIZE.toFloat())
                 } else {
-                    val dist = e.GetPhysics().GetOrigin().oMinus(ent.value.GetPhysics().GetOrigin()).LengthFast()
+                    val dist = e.GetPhysics().GetOrigin().minus(ent.value.GetPhysics().GetOrigin()).LengthFast()
                     idThread.Companion.ReturnFloat(dist)
                 }
             }
 
             private fun Event_DistanceToPoint(e: idEntity?, point: idEventArg<idVec3?>?) {
-                val dist = e.GetPhysics().GetOrigin().oMinus(point.value).LengthFast()
+                val dist = e.GetPhysics().GetOrigin().minus(point.value).LengthFast()
                 idThread.Companion.ReturnFloat(dist)
             }
 
@@ -1095,7 +1095,7 @@ object Entity {
 
             // go dormant within 5 frames so that when the map starts most monsters are dormant
             dormantStart = Game_local.gameLocal.time - Entity.DELAY_DORMANT_TIME + idGameLocal.Companion.msec * 5
-            origin.oSet(renderEntity.origin)
+            origin.set(renderEntity.origin)
             axis = idMat3(renderEntity.axis)
 
             // do the audio parsing the same way dmap and the editor do
@@ -1205,7 +1205,7 @@ object Entity {
             savefile.WriteInt(targets.Num())
             i = 0
             while (i < targets.Num()) {
-                targets.oGet(i).Save(savefile)
+                targets.get(i).Save(savefile)
                 i++
             }
             val flags = fl
@@ -1235,8 +1235,8 @@ object Entity {
                     savefile.WriteInt(signals.signal.get(i).Num())
                     j = 0
                     while (j < signals.signal.get(i).Num()) {
-                        savefile.WriteInt(signals.signal.get(i).oGet(j).threadnum)
-                        savefile.WriteString(signals.signal.get(i).oGet(j).function.Name())
+                        savefile.WriteInt(signals.signal.get(i).get(j).threadnum)
+                        savefile.WriteString(signals.signal.get(i).get(j).function.Name())
                         j++
                     }
                     i++
@@ -1270,7 +1270,7 @@ object Entity {
             targets.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                targets.oGet(i).Restore(savefile)
+                targets.get(i).Restore(savefile)
                 i++
             }
             savefile.Read(fl)
@@ -1301,10 +1301,10 @@ object Entity {
                     signals.signal.get(i).SetNum(num.getVal())
                     j = 0
                     while (j < num.getVal()) {
-                        signals.signal.get(i).oGet(j).threadnum = savefile.ReadInt()
+                        signals.signal.get(i).get(j).threadnum = savefile.ReadInt()
                         savefile.ReadString(funcname)
-                        signals.signal.get(i).oGet(j).function = Game_local.gameLocal.program.FindFunction(funcname)
-                        if (null == signals.signal.get(i).oGet(j).function) {
+                        signals.signal.get(i).get(j).function = Game_local.gameLocal.program.FindFunction(funcname)
+                        if (null == signals.signal.get(i).get(j).function) {
                             savefile.Error("Function '%s' not found", funcname.toString())
                         }
                         j++
@@ -1394,7 +1394,7 @@ object Entity {
                 renderView = renderView_s()
             }
             //	memset( renderView, 0, sizeof( *renderView ) );
-            renderView.vieworg.oSet(GetPhysics().GetOrigin())
+            renderView.vieworg.set(GetPhysics().GetOrigin())
             renderView.fov_x = 120f
             renderView.fov_y = 120f
             renderView.viewaxis = idMat3(GetPhysics().GetAxis())
@@ -1592,7 +1592,7 @@ object Entity {
             renderEntity.numJoints = 0
             renderEntity.joints = null
             if (renderEntity.hModel != null) {
-                renderEntity.bounds.oSet(renderEntity.hModel.Bounds(renderEntity))
+                renderEntity.bounds.set(renderEntity.hModel.Bounds(renderEntity))
             } else {
                 renderEntity.bounds.Zero()
             }
@@ -1625,29 +1625,29 @@ object Entity {
         }
 
         fun SetColor(color: idVec3?) {
-            SetColor(color.oGet(0), color.oGet(1), color.oGet(2))
+            SetColor(color.get(0), color.get(1), color.get(2))
             //	UpdateVisuals();
         }
 
         open fun GetColor(out: idVec3?) {
-            out.oSet(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.oSet(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.oSet(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out.set(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
+            out.set(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
+            out.set(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
         }
 
         open fun SetColor(color: idVec4?) {
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.oGet(3)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
             UpdateVisuals()
         }
 
         open fun GetColor(out: idVec4?) {
-            out.oSet(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.oSet(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.oSet(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
-            out.oSet(3, renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA])
+            out.set(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
+            out.set(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
+            out.set(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out.set(3, renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA])
         }
 
         open fun FreeModelDef() {
@@ -1703,11 +1703,11 @@ object Entity {
             val origin = idVec3()
             val axis = idMat3()
             if (GetPhysicsToVisualTransform(origin, axis)) {
-                renderEntity.axis.oSet(axis.times(GetPhysics().GetAxis()))
-                renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.times(renderEntity.axis)))
+                renderEntity.axis.set(axis.times(GetPhysics().GetAxis()))
+                renderEntity.origin.set(GetPhysics().GetOrigin().oPlus(origin.times(renderEntity.axis)))
             } else {
-                renderEntity.axis.oSet(GetPhysics().GetAxis())
-                renderEntity.origin.oSet(GetPhysics().GetOrigin())
+                renderEntity.axis.set(GetPhysics().GetAxis())
+                renderEntity.origin.set(GetPhysics().GetOrigin())
             }
         }
 
@@ -1731,20 +1731,20 @@ object Entity {
                 return
             }
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
-            axis.oSet(2, dir.oNegative())
-            axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-            axis.oSet(0, axistemp.oGet(0).times(c.getVal()).oPlus(axistemp.oGet(1).times(-s.getVal())))
-            axis.oSet(1, axistemp.oGet(0).times(-s.getVal()).oPlus(axistemp.oGet(1).times(-c.getVal())))
-            renderEntity.axis.ProjectVector(origin.oMinus(renderEntity.origin), localOrigin)
-            renderEntity.axis.ProjectVector(axis.oGet(0), localAxis[0])
-            renderEntity.axis.ProjectVector(axis.oGet(1), localAxis[1])
+            axis.set(2, dir.oNegative())
+            axis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
+            axis.set(0, axistemp.get(0).times(c.getVal()).oPlus(axistemp.get(1).times(-s.getVal())))
+            axis.set(1, axistemp.get(0).times(-s.getVal()).oPlus(axistemp.get(1).times(-c.getVal())))
+            renderEntity.axis.ProjectVector(origin.minus(renderEntity.origin), localOrigin)
+            renderEntity.axis.ProjectVector(axis.get(0), localAxis[0])
+            renderEntity.axis.ProjectVector(axis.get(1), localAxis[1])
             size = 1.0f / size
             localAxis[0].timesAssign(size)
             localAxis[1].timesAssign(size)
-            localPlane[0].oSet(localAxis[0])
-            localPlane[0].oSet(3, -localOrigin.times(localAxis[0]) + 0.5f)
-            localPlane[1].oSet(localAxis[1])
-            localPlane[1].oSet(3, -localOrigin.times(localAxis[1]) + 0.5f)
+            localPlane[0].set(localAxis[0])
+            localPlane[0].set(3, -localOrigin.times(localAxis[0]) + 0.5f)
+            localPlane[1].set(localAxis[1])
+            localPlane[1].set(3, -localOrigin.times(localAxis[1]) + 0.5f)
             val mtr: idMaterial? = DeclManager.declManager.FindMaterial(material)
 
             // project an overlay onto the model
@@ -1963,9 +1963,9 @@ object Entity {
                 val origin = idVec3()
                 val axis = idMat3()
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin.oSet(GetPhysics().GetOrigin().oPlus(origin.times(axis)))
+                    refSound.origin.set(GetPhysics().GetOrigin().oPlus(origin.times(axis)))
                 } else {
-                    refSound.origin.oSet(GetPhysics().GetOrigin())
+                    refSound.origin.set(GetPhysics().GetOrigin())
                 }
                 refSound.referenceSound.UpdateEmitter(refSound.origin, refSound.listenerId, refSound.parms)
             }
@@ -2289,7 +2289,7 @@ object Entity {
 
         fun ConvertLocalToWorldTransform(offset: idVec3?, axis: idMat3?) {
             UpdateModelTransform()
-            offset.oSet(renderEntity.origin.oPlus(offset.times(renderEntity.axis)))
+            offset.set(renderEntity.origin.oPlus(offset.times(renderEntity.axis)))
             axis.timesAssign(renderEntity.axis)
         }
 
@@ -2332,7 +2332,7 @@ object Entity {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             GetMasterPosition(masterOrigin, masterAxis)
-            masterAxis.ProjectVector(vec.oMinus(masterOrigin), pos)
+            masterAxis.ProjectVector(vec.minus(masterOrigin), pos)
             return pos
         }
 
@@ -2389,32 +2389,32 @@ object Entity {
                 if (bindJoint != Model.INVALID_JOINT) {
                     masterAnimator = bindMaster.GetAnimator()
                     if (null == masterAnimator) {
-                        masterOrigin.oSet(Vector.getVec3_origin())
-                        masterAxis.oSet(idMat3.Companion.getMat3_identity())
+                        masterOrigin.set(Vector.getVec3_origin())
+                        masterAxis.set(idMat3.Companion.getMat3_identity())
                         return false
                     } else {
                         masterAnimator.GetJointTransform(bindJoint, Game_local.gameLocal.time, masterOrigin, masterAxis)
                         masterAxis.timesAssign(bindMaster.renderEntity.axis)
-                        masterOrigin.oSet(bindMaster.renderEntity.origin.oPlus(masterOrigin.times(bindMaster.renderEntity.axis)))
+                        masterOrigin.set(bindMaster.renderEntity.origin.oPlus(masterOrigin.times(bindMaster.renderEntity.axis)))
                     }
                 } else if (bindBody >= 0 && bindMaster.GetPhysics() != null) {
-                    masterOrigin.oSet(bindMaster.GetPhysics().GetOrigin(bindBody))
-                    masterAxis.oSet(bindMaster.GetPhysics().GetAxis(bindBody))
+                    masterOrigin.set(bindMaster.GetPhysics().GetOrigin(bindBody))
+                    masterAxis.set(bindMaster.GetPhysics().GetAxis(bindBody))
                 } else {
-                    masterOrigin.oSet(bindMaster.renderEntity.origin)
-                    masterAxis.oSet(bindMaster.renderEntity.axis)
+                    masterOrigin.set(bindMaster.renderEntity.origin)
+                    masterAxis.set(bindMaster.renderEntity.axis)
                 }
                 true
             } else {
-                masterOrigin.oSet(Vector.getVec3_origin())
-                masterAxis.oSet(idMat3.Companion.getMat3_identity())
+                masterOrigin.set(Vector.getVec3_origin())
+                masterAxis.set(idMat3.Companion.getMat3_identity())
                 false
             }
         }
 
         fun GetWorldVelocities(linearVelocity: idVec3?, angularVelocity: idVec3?) {
-            linearVelocity.oSet(physics.GetLinearVelocity())
-            angularVelocity.oSet(physics.GetAngularVelocity())
+            linearVelocity.set(physics.GetLinearVelocity())
+            angularVelocity.set(physics.GetAngularVelocity())
             if (bindMaster != null) {
                 val masterOrigin = idVec3()
                 val masterLinearVelocity = idVec3()
@@ -2428,11 +2428,11 @@ object Entity {
                 bindMaster.GetWorldVelocities(masterLinearVelocity, masterAngularVelocity)
 
                 // linear velocity relative to master plus master linear and angular velocity
-                linearVelocity.oSet(
+                linearVelocity.set(
                     linearVelocity.times(masterAxis).oPlus(
                         masterLinearVelocity.oPlus(
                             masterAngularVelocity.Cross(
-                                GetPhysics().GetOrigin().oMinus(masterOrigin)
+                                GetPhysics().GetOrigin().minus(masterOrigin)
                             )
                         )
                     )
@@ -2634,7 +2634,7 @@ object Entity {
         // set the axis of the physics object (relative to bindMaster if not NULL)
         fun SetAxis(axis: idMat3?) {
             if (GetPhysics() is idPhysics_Actor) {
-                (this as idActor).viewAxis.oSet(axis)
+                (this as idActor).viewAxis.set(axis)
             } else {
                 GetPhysics().SetAxis(axis)
             }
@@ -2656,14 +2656,14 @@ object Entity {
             return if (!GetPhysics().HasGroundContacts()) {
                 GetPhysics().ClipTranslation(result, GetPhysics().GetGravityNormal().times(max_dist), null)
                 if (result.fraction < 1.0f) {
-                    floorpos.oSet(result.endpos)
+                    floorpos.set(result.endpos)
                     true
                 } else {
-                    floorpos.oSet(GetPhysics().GetOrigin())
+                    floorpos.set(GetPhysics().GetOrigin())
                     false
                 }
             } else {
-                floorpos.oSet(GetPhysics().GetOrigin())
+                floorpos.set(GetPhysics().GetOrigin())
                 true
             }
         }
@@ -2679,7 +2679,7 @@ object Entity {
         open fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
             // by default play the sound at the center of the bounding box of the first clip model
             if (GetPhysics().GetNumClipModels() > 0) {
-                origin.oSet(GetPhysics().GetBounds().GetCenter())
+                origin.set(GetPhysics().GetBounds().GetCenter())
                 axis.Identity()
                 return true
             }
@@ -2754,61 +2754,61 @@ object Entity {
 
             // use the midpoint of the bounds instead of the origin, because
             // bmodels may have their origin at 0,0,0
-            midpoint.oSet(
-                GetPhysics().GetAbsBounds().oGet(0).oPlus(GetPhysics().GetAbsBounds().oGet(1)).oMultiply(0.5f)
+            midpoint.set(
+                GetPhysics().GetAbsBounds().get(0).oPlus(GetPhysics().GetAbsBounds().get(1)).oMultiply(0.5f)
             )
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
 
             // this should probably check in the plane of projection, rather than in world coordinate
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.plusAssign(0, 15.0f)
             dest.plusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.plusAssign(0, 15.0f)
             dest.minusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.minusAssign(0, 15.0f)
             dest.plusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.minusAssign(0, 15.0f)
             dest.minusAssign(1, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.plusAssign(2, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
-            dest.oSet(midpoint)
+            dest.set(midpoint)
             dest.minusAssign(2, 15.0f)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
             if (tr.fraction.toDouble() == 1.0 || Game_local.gameLocal.GetTraceEntity(tr) === this) {
-                damagePoint.oSet(tr.endpos)
+                damagePoint.set(tr.endpos)
                 return true
             }
             return false
@@ -3045,8 +3045,8 @@ object Entity {
             num = signals.signal.get(_signalnum).Num()
             i = 0
             while (i < num) {
-                if (signals.signal.get(_signalnum).oGet(i).threadnum == threadnum) {
-                    signals.signal.get(_signalnum).oGet(i).function = function
+                if (signals.signal.get(_signalnum).get(i).threadnum == threadnum) {
+                    signals.signal.get(_signalnum).get(i).function = function
                     return
                 }
                 i++
@@ -3090,7 +3090,7 @@ object Entity {
             num = signals.signal.get(_signalnum).Num()
             i = 0
             while (i < num) {
-                if (signals.signal.get(_signalnum).oGet(i).threadnum == threadnum) {
+                if (signals.signal.get(_signalnum).get(i).threadnum == threadnum) {
                     signals.signal.get(_signalnum).RemoveIndex(i)
                     return
                 }
@@ -3125,7 +3125,7 @@ object Entity {
             num = signals.signal.get(signalnum).Num()
             i = 0
             while (i < num) {
-                sigs[i] = signals.signal.get(signalnum).oGet(i)
+                sigs[i] = signals.signal.get(signalnum).get(i)
                 i++
             }
 
@@ -3303,7 +3303,7 @@ object Entity {
                         var i: Int
                         i = 0
                         while (i < c) {
-                            targetEnt = entityGui.targets.oGet(i).GetEntity()
+                            targetEnt = entityGui.targets.get(i).GetEntity()
                             if (targetEnt != null && targetEnt.HandleSingleGuiCommand(entityGui, src)) {
                                 break
                             }
@@ -3348,7 +3348,7 @@ object Entity {
             // ensure that we don't target ourselves since that could cause an infinite loop when activating entities
             i = 0
             while (i < targets.Num()) {
-                if (targets.oGet(i).GetEntity() === this) {
+                if (targets.get(i).GetEntity() === this) {
                     idGameLocal.Companion.Error("Entity '%s' is targeting itself", name)
                 }
                 i++
@@ -3359,7 +3359,7 @@ object Entity {
             var i: Int
             i = targets.Num() - 1
             while (i >= 0) {
-                if (TempDump.NOT(targets.oGet(i).GetEntity())) {
+                if (TempDump.NOT(targets.get(i).GetEntity())) {
                     targets.RemoveIndex(i)
                 }
                 i--
@@ -3379,7 +3379,7 @@ object Entity {
             var j: Int
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -3426,8 +3426,8 @@ object Entity {
             val clipModels = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
             var ent: idEntity?
             val trace = trace_s() //memset( &trace, 0, sizeof( trace ) );
-            trace.endpos.oSet(GetPhysics().GetOrigin())
-            trace.endAxis.oSet(GetPhysics().GetAxis())
+            trace.endpos.set(GetPhysics().GetOrigin())
+            trace.endAxis.set(GetPhysics().GetAxis())
             numClipModels = Game_local.gameLocal.clip.ClipModelsTouchingBounds(
                 GetPhysics().GetAbsBounds(),
                 Material.CONTENTS_TRIGGER,
@@ -3625,10 +3625,10 @@ object Entity {
         fun ReadColorFromSnapshot(msg: idBitMsgDelta?) {
             val color = idVec4()
             Lib.Companion.UnpackColor(msg.ReadLong().toLong(), color)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.oGet(3)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
         }
 
         fun WriteGUIToSnapshot(msg: idBitMsgDelta?) {
@@ -3788,17 +3788,17 @@ object Entity {
                     val size = idVec3()
                     val bounds = idBounds()
                     var setClipModel = false
-                    if (spawnArgs.GetVector("mins", null, bounds.oGet(0))
-                        && spawnArgs.GetVector("maxs", null, bounds.oGet(1))
+                    if (spawnArgs.GetVector("mins", null, bounds.get(0))
+                        && spawnArgs.GetVector("maxs", null, bounds.get(1))
                     ) {
                         setClipModel = true
-                        if (bounds.oGet(0).oGet(0) > bounds.oGet(1).oGet(0) || bounds.oGet(0).oGet(1) > bounds.oGet(1)
-                                .oGet(1) || bounds.oGet(0).oGet(2) > bounds.oGet(1).oGet(2)
+                        if (bounds.get(0).oGet(0) > bounds.get(1).oGet(0) || bounds.get(0).oGet(1) > bounds.get(1)
+                                .oGet(1) || bounds.get(0).oGet(2) > bounds.get(1).oGet(2)
                         ) {
                             idGameLocal.Companion.Error(
                                 "Invalid bounds '%s'-'%s' on entity '%s'",
-                                bounds.oGet(0).ToString(),
-                                bounds.oGet(1).ToString(),
+                                bounds.get(0).ToString(),
+                                bounds.get(1).ToString(),
                                 name
                             )
                         }
@@ -3806,8 +3806,8 @@ object Entity {
                         if (size.x < 0.0f || size.y < 0.0f || size.z < 0.0f) {
                             idGameLocal.Companion.Error("Invalid size '%s' on entity '%s'", size.ToString(), name)
                         }
-                        bounds.oGet(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
-                        bounds.oGet(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
+                        bounds.get(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
+                        bounds.get(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
                         setClipModel = true
                     }
                     if (setClipModel) {
@@ -4134,7 +4134,7 @@ object Entity {
 
         private fun Event_GetAngles() {
             val ang = GetPhysics().GetAxis().ToAngles()
-            idThread.Companion.ReturnVector(idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2)))
+            idThread.Companion.ReturnVector(idVec3(ang.get(0), ang.get(1), ang.get(2)))
         }
 
         private fun Event_GetLinearVelocity() {
@@ -4148,15 +4148,15 @@ object Entity {
         private fun Event_GetSize() {
             val bounds: idBounds?
             bounds = GetPhysics().GetBounds()
-            idThread.Companion.ReturnVector(bounds.oGet(1).oMinus(bounds.oGet(0)))
+            idThread.Companion.ReturnVector(bounds.get(1).minus(bounds.get(0)))
         }
 
         private fun Event_GetMins() {
-            idThread.Companion.ReturnVector(GetPhysics().GetBounds().oGet(0))
+            idThread.Companion.ReturnVector(GetPhysics().GetBounds().get(0))
         }
 
         private fun Event_GetMaxs() {
-            idThread.Companion.ReturnVector(GetPhysics().GetBounds().oGet(1))
+            idThread.Companion.ReturnVector(GetPhysics().GetBounds().get(1))
         }
 
         private fun Event_RestorePosition() {
@@ -4170,9 +4170,9 @@ object Entity {
             if (spawnArgs.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", axis)) {
                 angles = axis.ToAngles()
             } else {
-                angles.oSet(0, 0f)
-                angles.oSet(1, spawnArgs.GetFloat("angle"))
-                angles.oSet(2, 0f)
+                angles.set(0, 0f)
+                angles.set(1, spawnArgs.GetFloat("angle"))
+                angles.set(2, 0f)
             }
             Teleport(org, angles, null)
             part = teamChain
@@ -4211,7 +4211,7 @@ object Entity {
                 while (kv != null) {
                     val ent: idEntity? = Game_local.gameLocal.FindEntity(kv.GetValue())
                     if (ent != null && idStr.Companion.Icmp(ent.GetEntityDefName(), "target_null") == 0) {
-                        dir.oSet(ent.GetPhysics().GetOrigin().oMinus(cameraTarget.GetPhysics().GetOrigin()))
+                        dir.set(ent.GetPhysics().GetOrigin().minus(cameraTarget.GetPhysics().GetOrigin()))
                         dir.Normalize()
                         cameraTarget.SetAxis(dir.ToMat3())
                         SetAxis(dir.ToMat3())
@@ -4517,7 +4517,7 @@ object Entity {
                     Game_local.gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name)
                 }
                 val ang = axis.ToAngles()
-                val vec = idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2))
+                val vec = idVec3(ang.get(0), ang.get(1), ang.get(2))
                 idThread.Companion.ReturnVector(vec)
             }
 
@@ -4730,8 +4730,8 @@ object Entity {
                 animator.ModelDef().GetVisualOffset(),
                 animator.RemoveOrigin()
             )
-            offset.oSet(frame[jointHandle].ToVec3())
-            axis.oSet(frame[jointHandle].ToMat3())
+            offset.set(frame[jointHandle].ToVec3())
+            axis.set(frame[jointHandle].ToMat3())
             return true
         }
 
@@ -4793,9 +4793,9 @@ object Entity {
             val dir = idVec3()
             val axis: idMat3?
             axis = renderEntity.joints[jointNum].ToMat3().times(renderEntity.axis)
-            origin.oSet(renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().times(renderEntity.axis)))
-            origin.oSet(origin.oPlus(localOrigin.times(axis)))
-            dir.oSet(localDir.times(axis))
+            origin.set(renderEntity.origin.oPlus(renderEntity.joints[jointNum].ToVec3().times(renderEntity.axis)))
+            origin.set(origin.oPlus(localOrigin.times(axis)))
+            dir.set(localDir.times(axis))
             var type: Int = collisionMaterial.GetSurfaceType().ordinal
             if (type == surfTypes_t.SURFTYPE_NONE.ordinal) {
                 type = GetDefaultSurfaceType()
@@ -4852,8 +4852,8 @@ object Entity {
                 de.next = damageEffects
                 damageEffects = de
                 de.jointNum = jointNum
-                de.localOrigin.oSet(localOrigin)
-                de.localNormal.oSet(localNormal)
+                de.localOrigin.set(localOrigin)
+                de.localNormal.set(localNormal)
                 de.type = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, bleed) as idDeclParticle
                 de.time = Game_local.gameLocal.time
             }
@@ -4887,8 +4887,8 @@ object Entity {
                 val axis = idMat3()
                 animator.GetJointTransform(de.jointNum, Game_local.gameLocal.time, origin, axis)
                 axis.timesAssign(renderEntity.axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
-                start.oSet(origin.oPlus(de.localOrigin.times(axis)))
+                origin.set(renderEntity.origin.oPlus(origin.times(renderEntity.axis)))
+                start.set(origin.oPlus(de.localOrigin.times(axis)))
                 if (!Game_local.gameLocal.smokeParticles.EmitSmoke(
                         de.type,
                         de.time,
@@ -4913,11 +4913,11 @@ object Entity {
             return when (event) {
                 EVENT_ADD_DAMAGE_EFFECT -> {
                     jointNum =  /*(jointHandle_s)*/msg.ReadShort()
-                    localOrigin.oSet(0, msg.ReadFloat())
-                    localOrigin.oSet(1, msg.ReadFloat())
-                    localOrigin.oSet(2, msg.ReadFloat())
-                    localNormal.oSet(msg.ReadDir(24))
-                    localDir.oSet(msg.ReadDir(24))
+                    localOrigin.set(0, msg.ReadFloat())
+                    localOrigin.set(1, msg.ReadFloat())
+                    localOrigin.set(2, msg.ReadFloat())
+                    localNormal.set(msg.ReadDir(24))
+                    localDir.set(msg.ReadDir(24))
                     damageDefIndex = Game_local.gameLocal.ClientRemapDecl(declType_t.DECL_ENTITYDEF, msg.ReadLong())
                     materialIndex = Game_local.gameLocal.ClientRemapDecl(declType_t.DECL_MATERIAL, msg.ReadLong())
                     val damageDef = DeclManager.declManager.DeclByIndex(

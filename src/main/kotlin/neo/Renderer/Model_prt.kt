@@ -89,7 +89,7 @@ object Model_prt {
             g.origin.Zero()
             g.axis.Identity()
             for (stageNum in 0 until particleSystem.stages.Num()) {
-                val stage = particleSystem.stages.oGet(stageNum)
+                val stage = particleSystem.stages.get(stageNum)
                 if (null == stage.material) {
                     continue
                 }
@@ -114,7 +114,7 @@ object Model_prt {
                 val surfaceNum = CInt()
                 var surf: modelSurface_s?
                 if (staticModel.FindSurfaceWithId(stageNum, surfaceNum)) {
-                    surf = staticModel.surfaces.oGet(surfaceNum.getVal())
+                    surf = staticModel.surfaces.get(surfaceNum.getVal())
                     tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry)
                 } else {
                     surf = staticModel.surfaces.Alloc()
@@ -199,7 +199,7 @@ object Model_prt {
                 surf.geometry.facePlanesCalculated = false
                 surf.geometry.numVerts = numVerts
                 surf.geometry.numIndexes = numIndexes
-                surf.geometry.bounds.oSet(stage.bounds) // just always draw the particles
+                surf.geometry.bounds.set(stage.bounds) // just always draw the particles
                 val a = 0
             }
             return staticModel

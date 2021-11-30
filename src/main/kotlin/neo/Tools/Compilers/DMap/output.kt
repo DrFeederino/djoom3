@@ -143,26 +143,26 @@ object output {
      ==============
      */
     fun MatchVert(a: idDrawVert?, b: idDrawVert?): Boolean {
-        if (Math.abs(a.xyz.oGet(0) - b.xyz.oGet(0)) > output.XYZ_EPSILON) {
+        if (Math.abs(a.xyz.get(0) - b.xyz.get(0)) > output.XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.xyz.oGet(1) - b.xyz.oGet(1)) > output.XYZ_EPSILON) {
+        if (Math.abs(a.xyz.get(1) - b.xyz.get(1)) > output.XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.xyz.oGet(2) - b.xyz.oGet(2)) > output.XYZ_EPSILON) {
+        if (Math.abs(a.xyz.get(2) - b.xyz.get(2)) > output.XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.st.oGet(0) - b.st.oGet(0)) > output.ST_EPSILON) {
+        if (Math.abs(a.st.get(0) - b.st.get(0)) > output.ST_EPSILON) {
             return false
         }
-        if (Math.abs(a.st.oGet(1) - b.st.oGet(1)) > output.ST_EPSILON) {
+        if (Math.abs(a.st.get(1) - b.st.get(1)) > output.ST_EPSILON) {
             return false
         }
 
         // if the normal is 0 (smoothed normals), consider it a match
-        return if (a.normal.oGet(0) == 0f && a.normal.oGet(1) == 0f && a.normal.oGet(2) == 0f && b.normal.oGet(0) == 0f && b.normal.oGet(
+        return if (a.normal.get(0) == 0f && a.normal.get(1) == 0f && a.normal.get(2) == 0f && b.normal.get(0) == 0f && b.normal.get(
                 1
-            ) == 0f && b.normal.oGet(2) == 0f
+            ) == 0f && b.normal.get(2) == 0f
         ) {
             true
         } else Vector.DotProduct(a.normal, b.normal) >= output.COSINE_EPSILON
@@ -210,10 +210,10 @@ object output {
                 }
                 if (j == numVerts) {
                     numVerts++
-                    uTri.verts[j].xyz.oSet(dv.xyz)
-                    uTri.verts[j].normal.oSet(dv.normal)
-                    uTri.verts[j].st.oSet(0, dv.st.oGet(0))
-                    uTri.verts[j].st.oSet(1, dv.st.oGet(1))
+                    uTri.verts[j].xyz.set(dv.xyz)
+                    uTri.verts[j].normal.set(dv.normal)
+                    uTri.verts[j].st.set(0, dv.st.get(0))
+                    uTri.verts[j].st.set(1, dv.st.get(1))
                 }
                 uTri.indexes[numIndexes++] = j
                 i++
@@ -264,14 +264,14 @@ object output {
             val vec = FloatArray(8)
             val dv: idDrawVert?
             dv = uTris.verts[i]
-            vec[0] = dv.xyz.oGet(0)
-            vec[1] = dv.xyz.oGet(1)
-            vec[2] = dv.xyz.oGet(2)
-            vec[3] = dv.st.oGet(0)
-            vec[4] = dv.st.oGet(1)
-            vec[5] = dv.normal.oGet(0)
-            vec[6] = dv.normal.oGet(1)
-            vec[7] = dv.normal.oGet(2)
+            vec[0] = dv.xyz.get(0)
+            vec[1] = dv.xyz.get(1)
+            vec[2] = dv.xyz.get(2)
+            vec[3] = dv.st.get(0)
+            vec[4] = dv.st.get(1)
+            vec[5] = dv.normal.get(0)
+            vec[6] = dv.normal.get(1)
+            vec[7] = dv.normal.get(2)
             output.Write1DMatrix(output.procFile, 8, vec)
             if (++col == 3) {
                 col = 0
@@ -513,7 +513,7 @@ object output {
             }
             i++
         }
-        val plane = dmap.dmapGlobals.mapPlanes.oGet(node.planenum)
+        val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
         output.procFile.WriteFloatString("/* node %d */ ", node.nodeNumber)
         output.Write1DMatrix(output.procFile, 4, plane.ToFloatPtr())
         output.procFile.WriteFloatString("%d %d\n", child[0], child[1])
@@ -656,7 +656,7 @@ object output {
         // write the shadow volumes
         i = 0
         while (i < dmap.dmapGlobals.mapLights.Num()) {
-            val light = dmap.dmapGlobals.mapLights.oGet(i)
+            val light = dmap.dmapGlobals.mapLights.get(i)
             if (TempDump.NOT(light.shadowTris)) {
                 i++
                 continue

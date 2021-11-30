@@ -508,7 +508,7 @@ object File_h {
             val buffer = ByteBuffer.allocate(idVec2.Companion.SIZE)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());//TODO:is this necessary?
-            vec.oSet(idVec2(buffer.float, buffer.float))
+            vec.set(idVec2(buffer.float, buffer.float))
             return result
         }
 
@@ -526,7 +526,7 @@ object File_h {
             val buffer = ByteBuffer.allocate(idVec3.Companion.SIZE)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
-            vec.oSet(idVec3(buffer.float, buffer.float, buffer.float))
+            vec.set(idVec3(buffer.float, buffer.float, buffer.float))
             return result
         }
 
@@ -544,7 +544,7 @@ object File_h {
             val buffer = ByteBuffer.allocate(idVec4.Companion.SIZE)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
-            vec.oSet(idVec4(buffer.float, buffer.float, buffer.float, buffer.float))
+            vec.set(idVec4(buffer.float, buffer.float, buffer.float, buffer.float))
             return result
         }
 
@@ -562,7 +562,7 @@ object File_h {
             val buffer = ByteBuffer.allocate(idVec6.Companion.SIZE)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
-            vec.oSet(
+            vec.set(
                 idVec6(
                     buffer.float, buffer.float, buffer.float,
                     buffer.float, buffer.float, buffer.float
@@ -585,7 +585,7 @@ object File_h {
             val buffer = ByteBuffer.allocate(idMat3.Companion.BYTES)
             val result = Read(buffer)
             //            LittleRevBytes(mat.ToFloatPtr(), mat.GetDimension());
-            mat.oSet(
+            mat.set(
                 idMat3(
                     buffer.float, buffer.float, buffer.float,
                     buffer.float, buffer.float, buffer.float,
@@ -600,9 +600,9 @@ object File_h {
 //            LittleRevBytes(v.ToFloatPtr(), v.GetDimension());
             val buffer = ByteBuffer.allocate(idMat3.Companion.BYTES)
             buffer.asFloatBuffer()
-                .put(mat.oGet(0).ToFloatPtr())
-                .put(mat.oGet(1).ToFloatPtr())
-                .put(mat.oGet(2).ToFloatPtr())
+                .put(mat.get(0).ToFloatPtr())
+                .put(mat.get(1).ToFloatPtr())
+                .put(mat.get(2).ToFloatPtr())
                 .flip()
             return Write(buffer)
         }

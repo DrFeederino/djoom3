@@ -123,7 +123,7 @@ object BrushBSP {
             frontNode?.let { RemoveFromNode(it) }
             backNode?.let { RemoveFromNode(it) }
             AddToNodes(frontNode, backNode)
-            plane.oSet(plane.oNegative())
+            plane.set(plane.unaryMinus())
             planeNum = planeNum xor 1
             winding.ReverseSelf()
         }
@@ -136,14 +136,14 @@ object BrushBSP {
             winding.Split(splitPlane, 0.1f, frontWinding, backWinding)
             if (!frontWinding.isNULL) {
                 front.oSet(idBrushBSPPortal())
-                front.plane.oSet(plane)
+                front.plane.set(plane)
                 front.planeNum = planeNum
                 front.flags = flags
                 front.winding = frontWinding
             }
             if (!backWinding.isNULL) {
                 back.oSet(idBrushBSPPortal())
-                back.plane.oSet(plane)
+                back.plane.set(plane)
                 back.planeNum = planeNum
                 back.flags = flags
                 back.winding = backWinding
@@ -324,7 +324,7 @@ object BrushBSP {
             val center = idVec3()
             var plane: idPlane?
             n = 0
-            center.oSet(Vector.getVec3_origin())
+            center.set(Vector.getVec3_origin())
             p = portals
             while (p != null) {
                 s = if (p.nodes.get(1) === this) 1 else 0
@@ -337,7 +337,7 @@ object BrushBSP {
             while (p != null) {
                 s = if (p.nodes.get(1) == this) 1 else 0
                 plane = if (s != 0) {
-                    p.GetPlane().oNegative()
+                    p.GetPlane().unaryMinus()
                 } else {
                     p.GetPlane()
                 }
@@ -442,7 +442,7 @@ object BrushBSP {
             while (p != null && mid != null) {
                 s = if (p.nodes.get(1) == this) 1 else 0
                 mid = if (s != 0) {
-                    mid.Clip(p.plane.oNegative(), 0.1f, false)
+                    mid.Clip(p.plane.unaryMinus(), 0.1f, false)
                 } else {
                     mid.Clip(p.plane, 0.1f, false)
                 }
@@ -485,7 +485,7 @@ object BrushBSP {
 
             // add seperating portal
             midPortal = idBrushBSPPortal()
-            midPortal.plane.oSet(splitPlane)
+            midPortal.plane.set(splitPlane)
             midPortal.planeNum = splitPlaneNum
             midPortal.winding = mid
             midPortal.AddToNodes(newNodes[0], newNodes[1])
@@ -493,7 +493,7 @@ object BrushBSP {
             // set new child nodes
             children.get(0) = newNodes[0]
             children.get(1) = newNodes[1]
-            plane.oSet(splitPlane)
+            plane.set(splitPlane)
             return true
         }
 
@@ -563,7 +563,7 @@ object BrushBSP {
             if (BrushBSP.OUPUT_BSP_STATS_PER_GRID_CELL) {
                 i = 0
                 while (i < gridCells.Num()) {
-                    ProcessGridCell(gridCells.oGet(i), skipContents)
+                    ProcessGridCell(gridCells.get(i), skipContents)
                     i++
                 }
             } else {
@@ -571,7 +571,7 @@ object BrushBSP {
                 i = 0
                 while (i < gridCells.Num()) {
                     Brush.DisplayRealTimeString("\r%6d", i * 100 / gridCells.Num())
-                    ProcessGridCell(gridCells.oGet(i), skipContents)
+                    ProcessGridCell(gridCells.get(i), skipContents)
                     i++
                 }
                 Common.common.Printf("\r%6d %%\n", 100)
@@ -669,13 +669,13 @@ object BrushBSP {
                     p = p.next.get( /*!s*/TempDump.SNOT(s.toDouble()))
                 }
                 node = nextNode
-                mid.oSet(nextPortal.winding.GetCenter())
-                lineFile.Printf("%f %f %f\n", mid.oGet(0), mid.oGet(1), mid.oGet(2))
+                mid.set(nextPortal.winding.GetCenter())
+                lineFile.Printf("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2))
                 count++
             }
 
             // add the origin of the entity from which the leak was found
-            lineFile.Printf("%f %f %f\n", leakOrigin.oGet(0), leakOrigin.oGet(1), leakOrigin.oGet(2))
+            lineFile.Printf("%f %f %f\n", leakOrigin.get(0), leakOrigin.get(1), leakOrigin.get(2))
             FileSystem_h.fileSystem.CloseFile(lineFile)
         }
 
@@ -731,7 +731,7 @@ object BrushBSP {
                         continue
                     }
                     plane = if (s1 != 0) {
-                        p1.plane.oNegative()
+                        p1.plane.unaryMinus()
                     } else {
                         p1.plane
                     }
@@ -908,7 +908,7 @@ object BrushBSP {
             var d_back: Float
             var brush_front: Float
             var brush_back: Float
-            plane = planeList.oGet(planeNum)
+            plane = planeList.get(planeNum)
 
             // get the plane side for the brush bounds
             s = brush.GetBounds().PlaneSide(plane, BrushBSP.SPLITTER_EPSILON)
@@ -1026,7 +1026,7 @@ object BrushBSP {
                     }
                     testedPlanes.get(planeNum xor 1) = true
                     testedPlanes.get(planeNum) = testedPlanes.get(planeNum xor 1)
-                    if (node.volume.Split(planeList.oGet(planeNum), planeNum, null, null) != Plane.PLANESIDE_CROSS) {
+                    if (node.volume.Split(planeList.get(planeNum), planeNum, null, null) != Plane.PLANESIDE_CROSS) {
                         i++
                         continue
                     }
@@ -1134,7 +1134,7 @@ object BrushBSP {
             SetSplitterUsed(node, planeNum)
 
             // set node split plane
-            node.plane.oSet(planeList.oGet(planeNum))
+            node.plane.set(planeList.get(planeNum))
 
             // allocate children
             node.children.get(0) = idBrushBSPNode()
@@ -1208,25 +1208,25 @@ object BrushBSP {
                 return
             }
             bounds = node.volume.GetBounds()
-            halfSize.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)).oMultiply(0.5f))
+            halfSize.set(bounds.get(1).minus(bounds.get(0)).oMultiply(0.5f))
             axis = 0
             while (axis < 3) {
-                dist = if (halfSize.oGet(axis) > BrushBSP.BSP_GRID_SIZE) {
+                dist = if (halfSize.get(axis) > BrushBSP.BSP_GRID_SIZE) {
                     (BrushBSP.BSP_GRID_SIZE * (Math.floor(
-                        ((bounds.oGet(
+                        ((bounds.get(
                             0,
                             axis
-                        ) + halfSize.oGet(axis)) / BrushBSP.BSP_GRID_SIZE).toDouble()
+                        ) + halfSize.get(axis)) / BrushBSP.BSP_GRID_SIZE).toDouble()
                     ) + 1)).toFloat()
                 } else {
                     (BrushBSP.BSP_GRID_SIZE * (Math.floor(
-                        (bounds.oGet(
+                        (bounds.get(
                             0,
                             axis
                         ) / BrushBSP.BSP_GRID_SIZE).toDouble()
                     ) + 1)).toFloat()
                 }
-                if (dist > bounds.oGet(0, axis) + 1.0f && dist < bounds.oGet(1, axis) - 1.0f) {
+                if (dist > bounds.get(0, axis) + 1.0f && dist < bounds.get(1, axis) - 1.0f) {
                     break
                 }
                 axis++
@@ -1236,8 +1236,8 @@ object BrushBSP {
                 return
             }
             numSplits++
-            normal.oSet(Vector.getVec3_origin())
-            normal.oSet(axis, 1.0f)
+            normal.set(Vector.getVec3_origin())
+            normal.set(axis, 1.0f)
             node.plane.SetNormal(normal)
             node.plane.SetDist(dist)
 
@@ -1320,7 +1320,7 @@ object BrushBSP {
             bounds = treeBounds.Expand(32f)
             i = 0
             while (i < 3) {
-                if (bounds.oGet(0, i) > bounds.oGet(1, i)) {
+                if (bounds.get(0, i) > bounds.get(1, i)) {
                     Common.common.Error("empty BSP tree")
                 }
                 i++
@@ -1337,10 +1337,10 @@ object BrushBSP {
                 j = 0
                 while (j < 2) {
                     p = idBrushBSPPortal()
-                    normal.oSet(Vector.getVec3_origin())
-                    normal.oSet(i, if (j != 0) -1 else 1.toFloat())
+                    normal.set(Vector.getVec3_origin())
+                    normal.set(i, if (j != 0) -1 else 1.toFloat())
                     p.plane.SetNormal(normal)
-                    p.plane.SetDist(if (j != 0) -bounds.oGet(j, i) else bounds.oGet(j, i))
+                    p.plane.SetDist(if (j != 0) -bounds.get(j, i) else bounds.get(j, i))
                     p.winding = idWinding(p.plane.Normal(), p.plane.Dist())
                     p.AddToNodes(root, outside)
                     n = j * 3 + i
@@ -1380,7 +1380,7 @@ object BrushBSP {
                     w.Clip(n.plane, BrushBSP.BASE_WINDING_EPSILON)
                 } else {
                     // take back
-                    w.Clip(n.plane.oNegative(), BrushBSP.BASE_WINDING_EPSILON)
+                    w.Clip(n.plane.unaryMinus(), BrushBSP.BASE_WINDING_EPSILON)
                 }
                 node = n
                 n = n.parent
@@ -1411,7 +1411,7 @@ object BrushBSP {
                     w = w.Clip(p.plane, 0.1f)
                 } else if (p.nodes.get(1) === node) {
                     side = 1
-                    w = w.Clip(p.plane.oNegative(), 0.1f)
+                    w = w.Clip(p.plane.unaryMinus(), 0.1f)
                 } else {
                     Common.common.Error("MakeNodePortal: mislinked portal")
                 }
@@ -1425,7 +1425,7 @@ object BrushBSP {
                 return
             }
             newPortal = idBrushBSPPortal()
-            newPortal.plane.oSet(node.plane)
+            newPortal.plane.set(node.plane)
             newPortal.winding = w
             newPortal.AddToNodes(node.children.get(0), node.children.get(1))
         }
@@ -1532,7 +1532,7 @@ object BrushBSP {
 //	}
             i = 0
             while (i < 3) {
-                if (bounds.oGet(0, i) < Lib.Companion.MIN_WORLD_COORD || bounds.oGet(
+                if (bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || bounds.get(
                         1,
                         i
                     ) > Lib.Companion.MAX_WORLD_COORD
@@ -1665,7 +1665,7 @@ object BrushBSP {
                     inside = true
                 }
                 if (outside.occupied != 0) {
-                    leakOrigin.oSet(origin)
+                    leakOrigin.set(origin)
                     break
                 }
                 i++
@@ -2028,14 +2028,14 @@ object BrushBSP {
                 }
                 p1.winding.GetBounds(bounds)
                 bounds.ExpandSelf(2 * BrushBSP.VERTEX_MELT_HASH_SIZE * BrushBSP.VERTEX_MELT_EPSILON)
-                vertexList.Init(bounds.oGet(0), bounds.oGet(1), BrushBSP.VERTEX_MELT_HASH_SIZE.toInt(), 128)
+                vertexList.Init(bounds.get(0), bounds.get(1), BrushBSP.VERTEX_MELT_HASH_SIZE.toInt(), 128)
 
                 // get all vertices to be considered
                 MeltFlood_r(node, skipContents, bounds, vertexList)
                 node.RemoveFlagFlood(BrushBSP.NODE_VISITED)
                 i = 0
                 while (i < vertexList.Num()) {
-                    if (p1.winding.InsertPointIfOnEdge(vertexList.oGet(i), p1.plane, 0.1f)) {
+                    if (p1.winding.InsertPointIfOnEdge(vertexList.get(i), p1.plane, 0.1f)) {
                         numInsertedPoints++
                     }
                     i++

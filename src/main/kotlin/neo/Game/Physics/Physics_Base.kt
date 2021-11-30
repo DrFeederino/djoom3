@@ -73,13 +73,13 @@ class Physics_Base {
             savefile.WriteInt(contacts.Num())
             i = 0
             while (i < contacts.Num()) {
-                savefile.WriteContactInfo(contacts.oGet(i))
+                savefile.WriteContactInfo(contacts.get(i))
                 i++
             }
             savefile.WriteInt(contactEntities.Num())
             i = 0
             while (i < contactEntities.Num()) {
-                contactEntities.oGet(i).Save(savefile)
+                contactEntities.get(i).Save(savefile)
                 i++
             }
         }
@@ -99,14 +99,14 @@ class Physics_Base {
             contacts.SetNum(num.getVal())
             i = 0
             while (i < contacts.Num()) {
-                savefile.ReadContactInfo(contacts.oGet(i))
+                savefile.ReadContactInfo(contacts.get(i))
                 i++
             }
             savefile.ReadInt(num)
             contactEntities.SetNum(num.getVal())
             i = 0
             while (i < contactEntities.Num()) {
-                contactEntities.oGet(i).Restore(savefile)
+                contactEntities.get(i).Restore(savefile)
                 i++
             }
         }
@@ -214,8 +214,8 @@ class Physics_Base {
         }
 
         override fun SetGravity(newGravity: idVec3?) {
-            gravityVector.oSet(newGravity)
-            gravityNormal.oSet(newGravity)
+            gravityVector.set(newGravity)
+            gravityNormal.set(newGravity)
             gravityNormal.Normalize()
         }
 
@@ -257,7 +257,7 @@ class Physics_Base {
         }
 
         override fun GetContact(num: Int): contactInfo_t? {
-            return contacts.oGet(num)
+            return contacts.get(num)
         }
 
         override fun ClearContacts() {
@@ -265,7 +265,7 @@ class Physics_Base {
             var ent: idEntity?
             i = 0
             while (i < contacts.Num()) {
-                ent = Game_local.gameLocal.entities[contacts.oGet(i).entityNum]
+                ent = Game_local.gameLocal.entities[contacts.get(i).entityNum]
                 ent?.RemoveContactEntity(self)
                 i++
             }
@@ -278,7 +278,7 @@ class Physics_Base {
             var found = false
             i = 0
             while (i < contactEntities.Num()) {
-                ent = contactEntities.oGet(i).GetEntity()
+                ent = contactEntities.get(i).GetEntity()
                 if (ent == null) {
                     contactEntities.RemoveIndex(i--)
                 }
@@ -297,7 +297,7 @@ class Physics_Base {
             var ent: idEntity?
             i = 0
             while (i < contactEntities.Num()) {
-                ent = contactEntities.oGet(i).GetEntity()
+                ent = contactEntities.get(i).GetEntity()
                 if (null == ent) {
                     contactEntities.RemoveIndex(i--)
                     i++
@@ -315,7 +315,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
+                if (contacts.get(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
                     return true
                 }
                 i++
@@ -327,7 +327,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
+                if (contacts.get(i).entityNum == entityNum && contacts.get(i).normal.times(gravityNormal.oNegative()) > 0.0f) {
                     return true
                 }
                 i++
@@ -339,7 +339,7 @@ class Physics_Base {
             var i: Int
             i = 0
             while (i < contacts.Num()) {
-                if (contacts.oGet(i).entityNum == entityNum && contacts.oGet(i).id == id && contacts.oGet(i).normal.times(
+                if (contacts.get(i).entityNum == entityNum && contacts.get(i).id == id && contacts.get(i).normal.times(
                         gravityNormal.oNegative()
                     ) > 0.0f
                 ) {
@@ -401,7 +401,7 @@ class Physics_Base {
                 self
             )
             for (i in 0 until num) {
-                contacts.oSet(index + i, contactz[i])
+                contacts.set(index + i, contactz[i])
             }
             contacts.SetNum(index + num, false)
         }
@@ -412,7 +412,7 @@ class Physics_Base {
             var ent: idEntity?
             i = 0
             while (i < contacts.Num()) {
-                ent = Game_local.gameLocal.entities[contacts.oGet(i).entityNum]
+                ent = Game_local.gameLocal.entities[contacts.get(i).entityNum]
                 if (ent != null && ent != self) {
                     ent.AddContactEntity(self)
                 }
@@ -426,7 +426,7 @@ class Physics_Base {
             var ent: idEntity?
             i = 0
             while (i < contactEntities.Num()) {
-                ent = contactEntities.oGet(i).GetEntity()
+                ent = contactEntities.get(i).GetEntity()
                 ent?.ActivatePhysics(self) ?: contactEntities.RemoveIndex(i--)
                 i++
             }
@@ -447,14 +447,14 @@ class Physics_Base {
             val axis: idMat3?
             var length: Float
             var a: Float
-            dir.oSet(GetLinearVelocity(id))
+            dir.set(GetLinearVelocity(id))
             dir.timesAssign(linearScale)
             if (dir.LengthSqr() > Math_h.Square(0.1f)) {
                 dir.Truncate(10.0f)
-                org.oSet(GetOrigin(id))
+                org.set(GetOrigin(id))
                 Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorRed, org, org.oPlus(dir), 1)
             }
-            dir.oSet(GetAngularVelocity(id))
+            dir.set(GetAngularVelocity(id))
             length = dir.Normalize()
             length *= angularScale
             if (length > 0.1f) {
@@ -464,22 +464,22 @@ class Physics_Base {
                     length = 360.0f
                 }
                 axis = GetAxis(id)
-                vec.oSet(axis.oGet(2))
+                vec.set(axis.get(2))
                 if (Math.abs(dir.times(vec)) > 0.99f) {
-                    vec.oSet(axis.oGet(0))
+                    vec.set(axis.get(0))
                 }
                 vec.minusAssign(vec.times(dir.times(vec)))
                 vec.Normalize()
                 vec.timesAssign(4.0f)
-                start.oSet(org.oPlus(vec))
+                start.set(org.oPlus(vec))
                 a = 20.0f
                 while (a < length) {
-                    end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -a).ToMat3().times(vec)))
+                    end.set(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -a).ToMat3().times(vec)))
                     Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorBlue, start, end, 1)
-                    start.oSet(end)
+                    start.set(end)
                     a += 20.0f
                 }
-                end.oSet(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -length).ToMat3().times(vec)))
+                end.set(org.oPlus(idRotation(Vector.getVec3_origin(), dir, -length).ToMat3().times(vec)))
                 Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 1)
             }
         }

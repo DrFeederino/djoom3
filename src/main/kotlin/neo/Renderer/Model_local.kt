@@ -56,21 +56,21 @@ object Model_local {
      */
     fun AddCubeFace(tri: srfTriangles_s?, v1: idVec3?, v2: idVec3?, v3: idVec3?, v4: idVec3?) {
         tri.verts[tri.numVerts + 0].Clear()
-        tri.verts[tri.numVerts + 0].xyz.oSet(v1.times(8f))
-        tri.verts[tri.numVerts + 0].st.oSet(0, 0f)
-        tri.verts[tri.numVerts + 0].st.oSet(1, 0f)
+        tri.verts[tri.numVerts + 0].xyz.set(v1.times(8f))
+        tri.verts[tri.numVerts + 0].st.set(0, 0f)
+        tri.verts[tri.numVerts + 0].st.set(1, 0f)
         tri.verts[tri.numVerts + 1].Clear()
-        tri.verts[tri.numVerts + 1].xyz.oSet(v2.times(8f))
-        tri.verts[tri.numVerts + 1].st.oSet(0, 1f)
-        tri.verts[tri.numVerts + 1].st.oSet(1, 0f)
+        tri.verts[tri.numVerts + 1].xyz.set(v2.times(8f))
+        tri.verts[tri.numVerts + 1].st.set(0, 1f)
+        tri.verts[tri.numVerts + 1].st.set(1, 0f)
         tri.verts[tri.numVerts + 2].Clear()
-        tri.verts[tri.numVerts + 2].xyz.oSet(v3.times(8f))
-        tri.verts[tri.numVerts + 2].st.oSet(0, 1f)
-        tri.verts[tri.numVerts + 2].st.oSet(1, 1f)
+        tri.verts[tri.numVerts + 2].xyz.set(v3.times(8f))
+        tri.verts[tri.numVerts + 2].st.set(0, 1f)
+        tri.verts[tri.numVerts + 2].st.set(1, 1f)
         tri.verts[tri.numVerts + 3].Clear()
-        tri.verts[tri.numVerts + 3].xyz.oSet(v4.times(8f))
-        tri.verts[tri.numVerts + 3].st.oSet(0, 0f)
-        tri.verts[tri.numVerts + 3].st.oSet(1, 1f)
+        tri.verts[tri.numVerts + 3].xyz.set(v4.times(8f))
+        tri.verts[tri.numVerts + 3].st.set(0, 0f)
+        tri.verts[tri.numVerts + 3].st.set(1, 1f)
         tri.indexes[tri.numIndexes + 0] = tri.numVerts + 0
         tri.indexes[tri.numIndexes + 1] = tri.numVerts + 1
         tri.indexes[tri.numIndexes + 2] = tri.numVerts + 2
@@ -162,7 +162,7 @@ object Model_local {
             var surf: modelSurface_s?
             i = 0
             while (i < surfaces.Num()) {
-                surf = surfaces.oGet(i)
+                surf = surfaces.get(i)
                 if (surf.geometry != null) {
                     tr_trisurf.R_FreeStaticTriSurf(surf.geometry)
                 }
@@ -192,7 +192,7 @@ object Model_local {
 
         override fun TouchData() {
             for (i in 0 until surfaces.Num()) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
 
                 // re-find the material to make sure it gets added to the
                 // level keep list
@@ -239,7 +239,7 @@ object Model_local {
                 bounds.Zero()
                 i = 0
                 while (i < surfaces.Num()) {
-                    val surf = surfaces.oGet(i)
+                    val surf = surfaces.get(i)
                     tr_trisurf.R_BoundTriSurf(surf.geometry)
                     bounds.AddBounds(surf.geometry.bounds)
                     i++
@@ -257,7 +257,7 @@ object Model_local {
             // make sure there aren't any NULL shaders or geometry
             i = 0
             while (i < numOriginalSurfaces) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
                 if (surf.geometry == null || surf.shader == null) {
                     MakeDefaultModel()
                     Common.common.Error("Model %s, surface %d had NULL geometry", name, i)
@@ -277,7 +277,7 @@ object Model_local {
             // tangent generation wouldn't like the acute shared edges
             i = 0
             while (i < numOriginalSurfaces) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
                 if (surf.shader.ShouldCreateBackSides()) {
                     var newTri: srfTriangles_s?
                     newTri = tr_trisurf.R_CopyStaticTriSurf(surf.geometry)
@@ -293,7 +293,7 @@ object Model_local {
             // clean the surfaces
             i = 0
             while (i < surfaces.Num()) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
                 tr_trisurf.R_CleanupTriangles(
                     surf.geometry,
                     surf.geometry.generateNormals,
@@ -310,7 +310,7 @@ object Model_local {
             // add up the total surface area for development information
             i = 0
             while (i < surfaces.Num()) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
                 val tri = surf.geometry
                 var j = 0
                 while (j < tri.numIndexes) {
@@ -331,7 +331,7 @@ object Model_local {
                 bounds.Clear()
                 i = 0
                 while (i < surfaces.Num()) {
-                    val surf = surfaces.oGet(i)
+                    val surf = surfaces.get(i)
 
                     // if the surface has a deformation, increase the bounds
                     // the amount here is somewhat arbitrary, designed to handle
@@ -341,15 +341,15 @@ object Model_local {
                     // at run time...
                     if (surf.shader.Deform() != deform_t.DFRM_NONE) {
                         val tri = surf.geometry
-                        val mid = idVec3(tri.bounds.oGet(1).oPlus(tri.bounds.oGet(0)).oMultiply(0.5f))
-                        var radius = tri.bounds.oGet(0).oMinus(mid).Length()
+                        val mid = idVec3(tri.bounds.get(1).oPlus(tri.bounds.get(0)).oMultiply(0.5f))
+                        var radius = tri.bounds.get(0).minus(mid).Length()
                         radius += 20.0f
-                        tri.bounds.oSet(0, 0, mid.oGet(0) - radius)
-                        tri.bounds.oSet(0, 1, mid.oGet(1) - radius)
-                        tri.bounds.oSet(0, 2, mid.oGet(2) - radius)
-                        tri.bounds.oSet(1, 0, mid.oGet(0) + radius)
-                        tri.bounds.oSet(1, 1, mid.oGet(1) + radius)
-                        tri.bounds.oSet(1, 2, mid.oGet(2) + radius)
+                        tri.bounds.set(0, 0, mid.oGet(0) - radius)
+                        tri.bounds.set(0, 1, mid.oGet(1) - radius)
+                        tri.bounds.set(0, 2, mid.oGet(2) - radius)
+                        tri.bounds.set(1, 0, mid.oGet(0) + radius)
+                        tri.bounds.set(1, 1, mid.oGet(1) + radius)
+                        tri.bounds.set(1, 2, mid.oGet(2) + radius)
                     }
 
                     // add to the model bounds
@@ -368,7 +368,7 @@ object Model_local {
          */
         override fun FreeVertexCache() {
             for (j in 0 until surfaces.Num()) {
-                val tri = surfaces.oGet(j).geometry ?: continue
+                val tri = surfaces.get(j).geometry ?: continue
                 if (tri.ambientCache != null) {
                     VertexCache.vertexCache.Free(tri.ambientCache)
                     tri.ambientCache = null
@@ -420,10 +420,10 @@ object Model_local {
             if (defaulted) {
                 Common.common.Printf(" (DEFAULTED)")
             }
-            if (bounds.oGet(0).oGet(0) >= bounds.oGet(1).oGet(0)) {
+            if (bounds.get(0).oGet(0) >= bounds.get(1).oGet(0)) {
                 Common.common.Printf(" (EMPTY BOUNDS)")
             }
-            if (bounds.oGet(1).oGet(0) - bounds.oGet(0).oGet(0) > 100000) {
+            if (bounds.get(1).oGet(0) - bounds.get(0).oGet(0) > 100000) {
                 Common.common.Printf(" (HUGE BOUNDS)")
             }
             Common.common.Printf("\n")
@@ -464,10 +464,10 @@ object Model_local {
             if (defaulted) {
                 Common.common.Printf(" (DEFAULTED)")
             }
-            if (bounds.oGet(0).oGet(0) >= bounds.oGet(1).oGet(0)) {
+            if (bounds.get(0).oGet(0) >= bounds.get(1).oGet(0)) {
                 Common.common.Printf(" (EMPTY BOUNDS)")
             }
-            if (bounds.oGet(1).oGet(0) - bounds.oGet(0).oGet(0) > 100000) {
+            if (bounds.get(1).oGet(0) - bounds.get(0).oGet(0) > 100000) {
                 Common.common.Printf(" (HUGE BOUNDS)")
             }
             Common.common.Printf("\n")
@@ -504,7 +504,7 @@ object Model_local {
         }
 
         override fun Surface(surfaceNum: Int): modelSurface_s? {
-            return surfaces.oGet(surfaceNum)
+            return surfaces.get(surfaceNum)
         }
 
         override fun AllocSurfaceTriangles(numVerts: Int, numIndexes: Int): srfTriangles_s? {
@@ -577,7 +577,7 @@ object Model_local {
         }
 
         override fun Bounds(ent: renderEntity_s?): idBounds? {
-            return idBounds(bounds.oGet(0), bounds.oGet(1))
+            return idBounds(bounds.get(0), bounds.get(1))
         }
 
         override fun Bounds(): idBounds? {
@@ -650,7 +650,7 @@ object Model_local {
             f.WriteInt(iData)
             i = 0
             while (i < surfaces.Num()) {
-                val surf = surfaces.oGet(i)
+                val surf = surfaces.get(i)
                 f.WriteHashString(surf.shader.GetName())
                 val tri = surf.geometry
                 f.WriteInt(tri.numIndexes)
@@ -860,11 +860,11 @@ object Model_local {
                 for (j in 0 until width) {
                     val v = i * width + j
                     tri.verts[v].Clear()
-                    tri.verts[v].xyz.oSet(0, (j * 10).toFloat()) // each sample is 10 meters
-                    tri.verts[v].xyz.oSet(1, (-i * 10).toFloat())
-                    tri.verts[v].xyz.oSet(2, data[(minY + i) * size + minX + j]) // height is in meters
-                    tri.verts[v].st.oSet(0, j.toFloat() / (width - 1))
-                    tri.verts[v].st.oSet(1, 1.0f - i.toFloat() / (height - 1))
+                    tri.verts[v].xyz.set(0, (j * 10).toFloat()) // each sample is 10 meters
+                    tri.verts[v].xyz.set(1, (-i * 10).toFloat())
+                    tri.verts[v].xyz.set(2, data[(minY + i) * size + minX + j]) // height is in meters
+                    tri.verts[v].st.set(0, j.toFloat() / (width - 1))
+                    tri.verts[v].st.set(1, 1.0f - i.toFloat() / (height - 1))
                 }
             }
             for (i in 0 until height - 1) {
@@ -972,8 +972,8 @@ object Model_local {
                 i = 0
                 while (i < ase.objects.Num()) {
                     mergeTo[i] = i
-                    `object` = ase.objects.oGet(i)
-                    material = ase.materials.oGet(`object`.materialRef)
+                    `object` = ase.objects.get(i)
+                    material = ase.materials.get(`object`.materialRef)
                     surf.shader = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))
                     surf.id = NumSurfaces()
                     AddSurface(surf)
@@ -983,8 +983,8 @@ object Model_local {
                 // search for material matches
                 i = 0
                 while (i < ase.objects.Num()) {
-                    `object` = ase.objects.oGet(i)
-                    material = ase.materials.oGet(`object`.materialRef)
+                    `object` = ase.objects.get(i)
+                    material = ase.materials.get(`object`.materialRef)
                     im1 = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))
                     if (im1.IsDiscrete()) {
                         // flares, autosprites, etc
@@ -992,7 +992,7 @@ object Model_local {
                     } else {
                         j = 0
                         while (j < NumSurfaces()) {
-                            modelSurf = surfaces.oGet(j)
+                            modelSurf = surfaces.get(j)
                             im2 = modelSurf.shader
                             if (im1 === im2) {
                                 // merge this
@@ -1018,9 +1018,9 @@ object Model_local {
             // build the surfaces
             objectNum = 0
             while (objectNum < ase.objects.Num()) {
-                `object` = ase.objects.oGet(objectNum)
+                `object` = ase.objects.get(objectNum)
                 mesh = `object`.mesh
-                material = ase.materials.oGet(`object`.materialRef)
+                material = ase.materials.get(`object`.materialRef)
                 im1 = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))
                 var normalsParsed = mesh.normalsParsed
 
@@ -1074,7 +1074,7 @@ object Model_local {
                     val maxs = idVec2()
                     Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes, mesh.numTVertexes)
                     mins.oMinSet(idVec2(expand, expand))
-                    maxs.oPluSet(idVec2(expand, expand))
+                    maxs.plusAssign(idVec2(expand, expand))
                     texCoordSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numTVertexes) {
@@ -1132,7 +1132,7 @@ object Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal.oSet(mesh.faces[j].vertexNormals[k])
+                            normal.set(mesh.faces[j].vertexNormals[k])
                         }
 
                         // we may or may not have colors to compare
@@ -1174,7 +1174,7 @@ object Model_local {
                             mv = mvTable[tri.numVerts]
                             mv.v = v
                             mv.tv = tv
-                            mv.normal.oSet(normal)
+                            mv.normal.set(normal)
                             System.arraycopy(color, 0, mv.color, 0, color.size)
                             mv.next = null
                             if (lastmv != null) {
@@ -1208,7 +1208,7 @@ object Model_local {
                     textureSin = 0.0f
                     textureCos = 1.0f
                 } else {
-                    material = ase.materials.oGet(`object`.materialRef)
+                    material = ase.materials.get(`object`.materialRef)
                     uOffset = -material.uOffset
                     vOffset = material.vOffset
                     uTiling = material.uTiling
@@ -1223,15 +1223,15 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts[j].Clear()
-                    tri.verts[j].xyz.oSet(mesh.vertexes[mv.v])
-                    tri.verts[j].normal.oSet(mv.normal)
+                    tri.verts[j].xyz.set(mesh.vertexes[mv.v])
+                    tri.verts[j].normal.set(mv.normal)
                     System.arraycopy(mv.color, 0, mv.color.also { tri.verts[j].color = it }, 0, mv.color.size)
                     if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {
                         val tv2 = mesh.tvertexes[mv.tv]
                         val u = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
-                        tri.verts[j].st.oSet(0, u * textureCos + V * textureSin)
-                        tri.verts[j].st.oSet(1, u * -textureSin + V * textureCos)
+                        tri.verts[j].st.set(0, u * textureCos + V * textureSin)
+                        tri.verts[j].st.set(1, u * -textureSin + V * textureCos)
                     }
                     j++
                 }
@@ -1242,7 +1242,7 @@ object Model_local {
 //                R_StaticFree(vRemap);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = surfaces.oGet(mergeTo[objectNum])
+                modelSurf = surfaces.get(mergeTo[objectNum])
                 val mergeTri = modelSurf.geometry
                 if (null == mergeTri) {
                     modelSurf.geometry = tri
@@ -1326,7 +1326,7 @@ object Model_local {
                     } else {
                         j = 0
                         while (j < NumSurfaces()) {
-                            modelSurf = surfaces.oGet(j)
+                            modelSurf = surfaces.get(j)
                             im2 = modelSurf.shader
                             if (im1 === im2) {
                                 // merge this
@@ -1362,7 +1362,7 @@ object Model_local {
                 idVec3.Companion.generateArray(layer.point.count) // R_StaticAlloc(layer.point.count /* sizeof( vList[0] ) */);
             j = 0
             while (j < layer.point.count) {
-                vList[j].oSet(
+                vList[j].set(
                     idVec3(
                         layer.point.pt[j].pos[0],
                         layer.point.pt[j].pos[2],
@@ -1450,7 +1450,7 @@ object Model_local {
                 val maxs = idVec2()
                 Simd.SIMDProcessor.MinMax(mins, maxs, tvList, numTVertexes)
                 mins.oMinSet(idVec2(expand, expand))
-                maxs.oPluSet(idVec2(expand, expand))
+                maxs.plusAssign(idVec2(expand, expand))
                 texCoordSubset.Init(mins, maxs, 32, 1024)
                 j = 0
                 while (j < numTVertexes) {
@@ -1588,7 +1588,7 @@ object Model_local {
                             mv = mvTable[tri.numVerts]
                             mv.v = v
                             mv.tv = tv
-                            mv.normal.oSet(normal)
+                            mv.normal.set(normal)
                             System.arraycopy(color, 0, mv.color, 0, color.size)
                             mv.next = null
                             if (lastmv != null) {
@@ -1619,9 +1619,9 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts[j].Clear()
-                    tri.verts[j].xyz.oSet(vList[mv.v])
+                    tri.verts[j].xyz.set(vList[mv.v])
                     tri.verts[j].st = tvList[mv.tv]
-                    tri.verts[j].normal.oSet(mv.normal)
+                    tri.verts[j].normal.set(mv.normal)
                     tri.verts[j].color = mv.color
                     j++
                 }
@@ -1630,7 +1630,7 @@ object Model_local {
 //                R_StaticFree(mvHash);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = surfaces.oGet(mergeTo[i])
+                modelSurf = surfaces.get(mergeTo[i])
                 val mergeTri = modelSurf.geometry
                 if (null == mergeTri) {
                     modelSurf.geometry = tri
@@ -1708,9 +1708,9 @@ object Model_local {
                 i = 0
                 while (i < ma.objects.Num()) {
                     mergeTo[i] = i
-                    `object` = ma.objects.oGet(i)
+                    `object` = ma.objects.get(i)
                     if (`object`.materialRef >= 0) {
-                        material = ma.materials.oGet(`object`.materialRef)
+                        material = ma.materials.get(`object`.materialRef)
                         surf.shader = DeclManager.declManager.FindMaterial(material.name)
                     } else {
                         surf.shader = tr_local.tr.defaultMaterial
@@ -1723,9 +1723,9 @@ object Model_local {
                 // search for material matches
                 i = 0
                 while (i < ma.objects.Num()) {
-                    `object` = ma.objects.oGet(i)
+                    `object` = ma.objects.get(i)
                     if (`object`.materialRef >= 0) {
-                        material = ma.materials.oGet(`object`.materialRef)
+                        material = ma.materials.get(`object`.materialRef)
                         im1 = DeclManager.declManager.FindMaterial(material.name)
                     } else {
                         im1 = tr_local.tr.defaultMaterial
@@ -1736,7 +1736,7 @@ object Model_local {
                     } else {
                         j = 0
                         while (j < NumSurfaces()) {
-                            modelSurf = surfaces.oGet(j)
+                            modelSurf = surfaces.get(j)
                             im2 = modelSurf.shader
                             if (im1 === im2) {
                                 // merge this
@@ -1762,10 +1762,10 @@ object Model_local {
             // build the surfaces
             objectNum = 0
             while (objectNum < ma.objects.Num()) {
-                `object` = ma.objects.oGet(objectNum)
+                `object` = ma.objects.get(objectNum)
                 mesh = `object`.mesh
                 if (`object`.materialRef >= 0) {
-                    material = ma.materials.oGet(`object`.materialRef)
+                    material = ma.materials.get(`object`.materialRef)
                     im1 = DeclManager.declManager.FindMaterial(material.name)
                 } else {
                     im1 = tr_local.tr.defaultMaterial
@@ -1822,7 +1822,7 @@ object Model_local {
                     val maxs = idVec2()
                     Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes, mesh.numTVertexes)
                     mins.oMinSet(idVec2(expand, expand))
-                    maxs.oPluSet(idVec2(expand, expand))
+                    maxs.plusAssign(idVec2(expand, expand))
                     texCoordSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numTVertexes) {
@@ -1879,7 +1879,7 @@ object Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal.oSet(mesh.faces[j].vertexNormals[k])
+                            normal.set(mesh.faces[j].vertexNormals[k])
                         }
 
                         //BSM: Todo: Fix the vertex colors
@@ -1920,7 +1920,7 @@ object Model_local {
                             mv = mvTable[tri.numVerts]
                             mv.v = v
                             mv.tv = tv
-                            mv.normal.oSet(normal)
+                            mv.normal.set(normal)
                             System.arraycopy(color, 0, mv.color, 0, color.size)
                             mv.next = null
                             if (lastmv != null) {
@@ -1970,15 +1970,15 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts[j].Clear()
-                    tri.verts[j].xyz.oSet(mesh.vertexes[mv.v])
-                    tri.verts[j].normal.oSet(mv.normal)
+                    tri.verts[j].xyz.set(mesh.vertexes[mv.v])
+                    tri.verts[j].normal.set(mv.normal)
                     tri.verts[j].color = mv.color
                     if (mesh.numTVertexes != 0) {
                         val tv2 = mesh.tvertexes[mv.tv]
                         val U = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
-                        tri.verts[j].st.oSet(0, U * textureCos + V * textureSin)
-                        tri.verts[j].st.oSet(1, U * -textureSin + V * textureCos)
+                        tri.verts[j].st.set(0, U * textureCos + V * textureSin)
+                        tri.verts[j].st.set(1, U * -textureSin + V * textureCos)
                     }
                     j++
                 }
@@ -1989,7 +1989,7 @@ object Model_local {
 //                R_StaticFree(vRemap);
 
                 // see if we need to merge with a previous surface of the same material
-                modelSurf = surfaces.oGet(mergeTo[objectNum])
+                modelSurf = surfaces.get(mergeTo[objectNum])
                 val mergeTri = modelSurf.geometry
                 if (null == mergeTri) {
                     modelSurf.geometry = tri
@@ -2180,8 +2180,8 @@ object Model_local {
             var i: Int
             i = 0
             while (i < surfaces.Num()) {
-                if (surfaces.oGet(i).id == id) {
-                    tr_trisurf.R_FreeStaticTriSurf(surfaces.oGet(i).geometry)
+                if (surfaces.get(i).id == id) {
+                    tr_trisurf.R_FreeStaticTriSurf(surfaces.get(i).geometry)
                     surfaces.RemoveIndex(i)
                     return true
                 }
@@ -2194,8 +2194,8 @@ object Model_local {
             var i: Int
             i = 0
             while (i < surfaces.Num()) {
-                if (surfaces.oGet(i).id < 0) {
-                    tr_trisurf.R_FreeStaticTriSurf(surfaces.oGet(i).geometry)
+                if (surfaces.get(i).id < 0) {
+                    tr_trisurf.R_FreeStaticTriSurf(surfaces.get(i).geometry)
                     surfaces.RemoveIndex(i)
                     i--
                 }
@@ -2207,7 +2207,7 @@ object Model_local {
             var i: Int
             i = 0
             while (i < surfaces.Num()) {
-                if (surfaces.oGet(i).id == id) {
+                if (surfaces.get(i).id == id) {
                     surfaceNum.setVal(i)
                     return true
                 }

@@ -320,7 +320,7 @@ object Window {
             //}
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).SetDC(d)
+                children.get(i).SetDC(d)
             }
         }
 
@@ -361,8 +361,8 @@ object Window {
             var last: idWindow? = null
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.oGet(i).flags and WIN_CAPTURE != 0) {
-                    last = children.oGet(i)
+                if (children.get(i).flags and WIN_CAPTURE != 0) {
+                    last = children.get(i)
                     //last.flags &= ~WIN_CAPTURE;
                     last.LoseCapture()
                     break
@@ -409,12 +409,12 @@ object Window {
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.oGet(i) == w) {
+                if (children.get(i) == w) {
                     // this is it move from i - 1 to 0 to i to 1 then shove this one into 0
                     for (j in i + 1 until c) {
-                        children.oSet(j - 1, children.oGet(j))
+                        children.set(j - 1, children.get(j))
                     }
-                    children.oSet(c - 1, w)
+                    children.set(c - 1, w)
                     break
                 }
             }
@@ -469,17 +469,17 @@ object Window {
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.oGet(i).win != null) {
-                    if (idStr.Companion.Icmp(drawWindows.oGet(i).win.name, _name) == 0) {
-                        return drawWindows.oGet(i)
+                if (drawWindows.get(i).win != null) {
+                    if (idStr.Companion.Icmp(drawWindows.get(i).win.name, _name) == 0) {
+                        return drawWindows.get(i)
                     }
-                    val win = drawWindows.oGet(i).win.FindChildByName(_name)
+                    val win = drawWindows.get(i).win.FindChildByName(_name)
                     if (win != null) {
                         return win
                     }
                 } else {
-                    if (idStr.Companion.Icmp(drawWindows.oGet(i).simp.name, _name) == 0) {
-                        return drawWindows.oGet(i)
+                    if (idStr.Companion.Icmp(drawWindows.get(i).simp.name, _name) == 0) {
+                        return drawWindows.get(i)
                     }
                 }
             }
@@ -509,7 +509,7 @@ object Window {
             val c = children.Num()
             var sz = 0
             for (i in 0 until c) {
-                sz += children.oGet(i).Size()
+                sz += children.get(i).Size()
             }
             sz += Allocated()
             return sz
@@ -524,7 +524,7 @@ object Window {
             c = definedVars.Num()
             i = 0
             while (i < c) {
-                sz += definedVars.oGet(i).Size()
+                sz += definedVars.get(i).Size()
                 i++
             }
             i = 0
@@ -549,7 +549,7 @@ object Window {
             c = drawWindows.Num()
             i = 0
             while (i < c) {
-                if (drawWindows.oGet(i).simp != null) {
+                if (drawWindows.get(i).simp != null) {
                     sz += 4
                 }
                 i++
@@ -621,10 +621,10 @@ object Window {
             for (i in 0 until c) {
                 if (idStr.Companion.Icmp(
                         _name,
-                        if (guiVar) Str.va("%s", definedVars.oGet(i).GetName()) else definedVars.oGet(i).GetName()
+                        if (guiVar) Str.va("%s", definedVars.get(i).GetName()) else definedVars.get(i).GetName()
                     ) == 0
                 ) {
-                    retVar = definedVars.oGet(i)
+                    retVar = definedVars.get(i)
                     break
                 }
             }
@@ -709,10 +709,10 @@ object Window {
                 return ret
             }
             for (i in 0 until drawWindows.Num()) {
-                ret = if (drawWindows.oGet(i).win != null) {
-                    drawWindows.oGet(i).win.GetWinVarOffset(wv, owner)
+                ret = if (drawWindows.get(i).win != null) {
+                    drawWindows.get(i).win.GetWinVarOffset(wv, owner)
                 } else {
-                    drawWindows.oGet(i).simp.GetWinVarOffset(wv, owner)
+                    drawWindows.get(i).simp.GetWinVarOffset(wv, owner)
                 }
                 if (ret != -1) {
                     break
@@ -830,7 +830,7 @@ object Window {
                 textRect.x += textAlignx
                 textRect.y += textAligny
             }
-            origin.Set(rect.x() + rect.w() / 2, rect.y() + rect.h() / 2)
+            origin.set(rect.x() + rect.w() / 2, rect.y() + rect.h() / 2)
         }
 
         private fun CommonInit() {
@@ -886,7 +886,7 @@ object Window {
             while (i < c) {
 
 //		delete drawWindows[i].simp;
-                drawWindows.oSet(i, null)
+                drawWindows.set(i, null)
                 i++
             }
 
@@ -918,15 +918,15 @@ object Window {
         fun DrawCaption(time: Int, x: Float, y: Float) {}
         fun SetupTransforms(x: Float, y: Float) {
             trans.Identity()
-            org.Set(origin.x + x, origin.y + y, 0f)
+            org.set(origin.x + x, origin.y + y, 0f)
             if (rotate.data != 0f) {
                 rot.Set(org, vec, rotate.data)
                 trans = rot.ToMat3()
             }
             if (shear.x != 0f || shear.y != 0f) {
                 smat.Identity()
-                smat.oSet(0, 1, shear.x)
-                smat.oSet(1, 0, shear.y)
+                smat.set(0, 1, shear.x)
+                smat.set(1, 0, shear.y)
                 trans.timesAssign(smat)
             }
             if (!trans.IsIdentity()) {
@@ -1375,11 +1375,11 @@ object Window {
                         }
                         var c = children.Num()
                         while (--c >= 0) {
-                            if (children.oGet(c).visible.data
-                                && children.oGet(c).Contains(children.oGet(c).drawRect, gui.CursorX(), gui.CursorY())
-                                && !children.oGet(c).noEvents.data
+                            if (children.get(c).visible.data
+                                && children.get(c).Contains(children.get(c).drawRect, gui.CursorX(), gui.CursorY())
+                                && !children.get(c).noEvents.data
                             ) {
-                                val child = children.oGet(c)
+                                val child = children.get(c)
                                 if (event.evValue2 != 0) {
                                     BringToTop(child)
                                     SetFocus(child)
@@ -1425,11 +1425,11 @@ object Window {
                         }
                         var c = children.Num()
                         while (--c >= 0) {
-                            if (children.oGet(c).visible.data
-                                && children.oGet(c).Contains(children.oGet(c).drawRect, gui.CursorX(), gui.CursorY())
-                                && !children.oGet(c).noEvents.data
+                            if (children.get(c).visible.data
+                                && children.get(c).Contains(children.get(c).drawRect, gui.CursorX(), gui.CursorY())
+                                && !children.get(c).noEvents.data
                             ) {
-                                val child = children.oGet(c)
+                                val child = children.get(c)
                                 if (event.evValue2 != 0) {
                                     BringToTop(child)
                                     SetFocus(child)
@@ -1457,10 +1457,10 @@ object Window {
                         if (gui_edit.GetBool()) {
                             val c = children.Num()
                             for (i in 0 until c) {
-                                if (children.oGet(i).drawRect.Contains(gui.CursorX(), gui.CursorY())) {
+                                if (children.get(i).drawRect.Contains(gui.CursorX(), gui.CursorY())) {
                                     if (event.evValue2 != 0) {
-                                        children.oGet(i).flags = children.oGet(i).flags xor WIN_SELECTED
-                                        if (children.oGet(i).flags and WIN_SELECTED != 0) {
+                                        children.get(i).flags = children.get(i).flags xor WIN_SELECTED
+                                        if (children.get(i).flags and WIN_SELECTED != 0) {
                                             flags = flags and WIN_SELECTED.inv()
                                             return "childsel"
                                         }
@@ -1598,8 +1598,8 @@ object Window {
             actualY = drawRect.y
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.oGet(i).win != null) {
-                    drawWindows.oGet(i).win.CalcRects(clientRect.x + xOffset, clientRect.y + yOffset)
+                if (drawWindows.get(i).win != null) {
+                    drawWindows.get(i).win.CalcRects(clientRect.x + xOffset, clientRect.y + yOffset)
                 }
             }
             drawRect.Offset(-x, -y)
@@ -1682,12 +1682,12 @@ object Window {
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.oGet(i).win != null) {
+                if (drawWindows.get(i).win != null) {
                     bla1++
-                    drawWindows.oGet(i).win.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
+                    drawWindows.get(i).win.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
                 } else {
                     bla2++
-                    drawWindows.oGet(i).simp.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
+                    drawWindows.get(i).simp.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
                 }
             }
 
@@ -1735,7 +1735,7 @@ object Window {
             //FIXME: rewrite without state
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).ArchiveToDictionary(dict)
+                children.get(i).ArchiveToDictionary(dict)
             }
         }
 
@@ -1744,7 +1744,7 @@ object Window {
             //FIXME: rewrite without state
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).InitFromDictionary(dict)
+                children.get(i).InitFromDictionary(dict)
             }
         }
 
@@ -1758,7 +1758,7 @@ object Window {
             RunScript(n)
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).Activate(activate, act)
+                children.get(i).Activate(activate, act)
             }
             if (act.Length() != 0) {
                 act.Append(" ; ")
@@ -1769,7 +1769,7 @@ object Window {
             RunScript(ON.ON_TRIGGER)
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).Trigger()
+                children.get(i).Trigger()
             }
             StateChanged(true)
         }
@@ -1886,7 +1886,7 @@ object Window {
             }
             var c = children.Num()
             while (c > 0) {
-                val child = children.oGet(--c)
+                val child = children.get(--c)
                 if (child.visible.data && !child.noEvents.data && child.Contains(
                         child.drawRect,
                         gui.CursorX(),
@@ -1940,10 +1940,10 @@ object Window {
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.oGet(i).win != null) {
-                    drawWindows.oGet(i).win.StateChanged(redraw)
+                if (drawWindows.get(i).win != null) {
+                    drawWindows.get(i).win.StateChanged(redraw)
                 } else {
-                    drawWindows.oGet(i).simp.StateChanged(redraw)
+                    drawWindows.get(i).simp.StateChanged(redraw)
                 }
             }
             if (redraw) {
@@ -2048,7 +2048,7 @@ object Window {
             // Defined Vars
             i = 0
             while (i < definedVars.Num()) {
-                definedVars.oGet(i).WriteToSaveGame(savefile)
+                definedVars.get(i).WriteToSaveGame(savefile)
                 i++
             }
             savefile.Write(textRect)
@@ -2074,11 +2074,11 @@ object Window {
             // TimeLine Events
             i = 0
             while (i < timeLineEvents.Num()) {
-                if (timeLineEvents.oGet(i) != null) {
-                    savefile.WriteBool(timeLineEvents.oGet(i).pending)
-                    savefile.WriteInt(timeLineEvents.oGet(i).time)
-                    if (timeLineEvents.oGet(i).event != null) {
-                        timeLineEvents.oGet(i).event.WriteToSaveGame(savefile)
+                if (timeLineEvents.get(i) != null) {
+                    savefile.WriteBool(timeLineEvents.get(i).pending)
+                    savefile.WriteInt(timeLineEvents.get(i).time)
+                    if (timeLineEvents.get(i).event != null) {
+                        timeLineEvents.get(i).event.WriteToSaveGame(savefile)
                     }
                 }
                 i++
@@ -2089,17 +2089,17 @@ object Window {
             savefile.WriteInt(num)
             i = 0
             while (i < transitions.Num()) {
-                WriteSaveGameTransition(transitions.oGet(i), savefile)
+                WriteSaveGameTransition(transitions.get(i), savefile)
                 i++
             }
 
             // Named Events
             i = 0
             while (i < namedEvents.Num()) {
-                if (namedEvents.oGet(i) != null) {
-                    WriteSaveGameString(namedEvents.oGet(i).mName.toString(), savefile)
-                    if (namedEvents.oGet(i).mEvent != null) {
-                        namedEvents.oGet(i).mEvent.WriteToSaveGame(savefile)
+                if (namedEvents.get(i) != null) {
+                    WriteSaveGameString(namedEvents.get(i).mName.toString(), savefile)
+                    if (namedEvents.get(i).mEvent != null) {
+                        namedEvents.get(i).mEvent.WriteToSaveGame(savefile)
                     }
                 }
                 i++
@@ -2111,7 +2111,7 @@ object Window {
             // Save children
             i = 0
             while (i < drawWindows.Num()) {
-                val window = drawWindows.oGet(i)
+                val window = drawWindows.get(i)
                 if (window.simp != null) {
                     window.simp.WriteToSaveGame(savefile)
                 } else if (window.win != null) {
@@ -2201,7 +2201,7 @@ object Window {
             // Defined Vars
             i = 0
             while (i < definedVars.Num()) {
-                definedVars.oGet(i).ReadFromSaveGame(savefile)
+                definedVars.get(i).ReadFromSaveGame(savefile)
                 i++
             }
             savefile.Read(textRect)
@@ -2211,24 +2211,24 @@ object Window {
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.oGet(i).childID == winID) {
-                    focusedChild = children.oGet(i)
+                if (children.get(i).childID == winID) {
+                    focusedChild = children.get(i)
                 }
                 i++
             }
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.oGet(i).childID == winID) {
-                    captureChild = children.oGet(i)
+                if (children.get(i).childID == winID) {
+                    captureChild = children.get(i)
                 }
                 i++
             }
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.oGet(i).childID == winID) {
-                    overChild = children.oGet(i)
+                if (children.get(i).childID == winID) {
+                    overChild = children.get(i)
                 }
                 i++
             }
@@ -2245,11 +2245,11 @@ object Window {
             // TimeLine Events
             i = 0
             while (i < timeLineEvents.Num()) {
-                if (timeLineEvents.oGet(i) != null) {
-                    timeLineEvents.oGet(i).pending = savefile.ReadBool()
-                    timeLineEvents.oGet(i).time = savefile.ReadInt()
-                    if (timeLineEvents.oGet(i).event != null) {
-                        timeLineEvents.oGet(i).event.ReadFromSaveGame(savefile)
+                if (timeLineEvents.get(i) != null) {
+                    timeLineEvents.get(i).pending = savefile.ReadBool()
+                    timeLineEvents.get(i).time = savefile.ReadInt()
+                    if (timeLineEvents.get(i).event != null) {
+                        timeLineEvents.get(i).event.ReadFromSaveGame(savefile)
                     }
                 }
                 i++
@@ -2272,10 +2272,10 @@ object Window {
             // Named Events
             i = 0
             while (i < namedEvents.Num()) {
-                if (namedEvents.oGet(i) != null) {
-                    ReadSaveGameString(namedEvents.oGet(i).mName, savefile)
-                    if (namedEvents.oGet(i).mEvent != null) {
-                        namedEvents.oGet(i).mEvent.ReadFromSaveGame(savefile)
+                if (namedEvents.get(i) != null) {
+                    ReadSaveGameString(namedEvents.get(i).mName, savefile)
+                    if (namedEvents.get(i).mEvent != null) {
+                        namedEvents.get(i).mEvent.ReadFromSaveGame(savefile)
                     }
                 }
                 i++
@@ -2287,7 +2287,7 @@ object Window {
             // Read children
             i = 0
             while (i < drawWindows.Num()) {
-                val window = drawWindows.oGet(i)
+                val window = drawWindows.get(i)
                 if (window.simp != null) {
                     window.simp.ReadFromSaveGame(savefile)
                 } else if (window.win != null) {
@@ -2305,9 +2305,9 @@ object Window {
             var c = transitions.Num()
             i = 0
             while (i < c) {
-                val dw = gui.GetDesktop().FindChildByName(transitions.oGet(i).data.c_str())
+                val dw = gui.GetDesktop().FindChildByName(transitions.get(i).data.c_str())
                 //		delete transitions[i].data;
-                transitions.oGet(i).data = null
+                transitions.get(i).data = null
                 if (dw != null && (dw.win != null || dw.simp != null)) { //TODO:
 //			if ( dw.win ) {
 //				if ( transitions.oGet(i).offset == (int)( ( idWindow  ) 0 ).rect ) {
@@ -2343,7 +2343,7 @@ object Window {
 //				}
 //			}
                 }
-                if (transitions.oGet(i).data == null) {
+                if (transitions.get(i).data == null) {
                     transitions.RemoveIndex(i)
                     i--
                     c--
@@ -2352,7 +2352,7 @@ object Window {
             }
             c = 0
             while (c < children.Num()) {
-                children.oGet(c).FixupTransitions()
+                children.get(c).FixupTransitions()
                 c++
             }
         }
@@ -2364,7 +2364,7 @@ object Window {
             var c = children.Num()
             i = 0
             while (i < c) {
-                children.oGet(i).FixupParms()
+                children.get(i).FixupParms()
                 i++
             }
             i = 0
@@ -2377,26 +2377,26 @@ object Window {
             c = timeLineEvents.Num()
             i = 0
             while (i < c) {
-                timeLineEvents.oGet(i).event.FixupParms(this)
+                timeLineEvents.get(i).event.FixupParms(this)
                 i++
             }
             c = namedEvents.Num()
             i = 0
             while (i < c) {
-                namedEvents.oGet(i).mEvent.FixupParms(this)
+                namedEvents.get(i).mEvent.FixupParms(this)
                 i++
             }
             c = ops.Num()
             i = 0
             while (i < c) {
-                if (ops.oGet(i).b == -2) {
+                if (ops.get(i).b == -2) {
                     // need to fix this up
-                    val p = ops.oGet(i).a.c_str()
+                    val p = ops.get(i).a.c_str()
                     val `var` = GetWinVarByName(p, true)
                     //                    System.out.println("=="+p);
 //			delete []p;
-                    ops.oGet(i).a =  /*(int)*/`var`
-                    ops.oGet(i).b = -1
+                    ops.get(i).a =  /*(int)*/`var`
+                    ops.get(i).b = -1
                 }
                 i++
             }
@@ -2444,8 +2444,8 @@ object Window {
             var c = timeLineEvents.Num()
             i = 0
             while (i < c) {
-                if (timeLineEvents.oGet(i).time >= t) {
-                    timeLineEvents.oGet(i).pending = true
+                if (timeLineEvents.get(i).time >= t) {
+                    timeLineEvents.get(i).pending = true
                 }
                 i++
             }
@@ -2453,7 +2453,7 @@ object Window {
             c = transitions.Num()
             i = 0
             while (i < c) {
-                val data = transitions.oGet(i)
+                val data = transitions.get(i)
                 if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
                     transitions.RemoveIndex(i)
                     i--
@@ -2472,7 +2472,7 @@ object Window {
         fun NumTransitions(): Int {
             var c = transitions.Num()
             for (i in 0 until children.Num()) {
-                c += children.oGet(i).NumTransitions()
+                c += children.get(i).NumTransitions()
             }
             return c
         }
@@ -2589,7 +2589,7 @@ object Window {
             var i: Int
             i = TempDump.etoi(wexpRegister_t.WEXP_REG_NUM_PREDEFINED)
             while (i < expressionRegisters.Num()) {
-                if (!registerIsTemporary.get(i) && expressionRegisters.oGet(i) == f) {
+                if (!registerIsTemporary.get(i) && expressionRegisters.get(i) == f) {
                     return i
                 }
                 i++
@@ -2637,7 +2637,7 @@ object Window {
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.oGet(i).Interactive()) {
+                if (children.get(i).Interactive()) {
                     return true
                 }
             }
@@ -2650,7 +2650,7 @@ object Window {
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.oGet(i).ContainsStateVars()) {
+                if (children.get(i).ContainsStateVars()) {
                     return true
                 }
             }
@@ -2701,7 +2701,7 @@ object Window {
             c = namedEvents.Num()
             i = 0
             while (i < c) {
-                if (namedEvents.oGet(i).mName.Icmp(eventName) != 0) {
+                if (namedEvents.get(i).mName.Icmp(eventName) != 0) {
                     i++
                     continue
                 }
@@ -2711,7 +2711,7 @@ object Window {
                 if (expressionRegisters.Num() != 0 && ops.Num() != 0) {
                     EvalRegs(-1, true)
                 }
-                RunScriptList(namedEvents.oGet(i).mEvent)
+                RunScriptList(namedEvents.get(i).mEvent)
                 break
                 i++
             }
@@ -2720,7 +2720,7 @@ object Window {
             c = children.Num()
             i = 0
             while (i < c) {
-                children.oGet(i).RunNamedEvent(eventName)
+                children.get(i).RunNamedEvent(eventName)
                 i++
             }
         }
@@ -2737,7 +2737,7 @@ object Window {
             var find: Int
             find = 0
             while (find < drawWindows.Num()) {
-                if (drawWindows.oGet(find).win === window) {
+                if (drawWindows.get(find).win === window) {
                     return find
                 }
                 find++
@@ -2758,7 +2758,7 @@ object Window {
 
         fun GetChild(index: Int): idWindow? {
             DBG_GetChild++
-            val win_t = drawWindows.oGet(index)
+            val win_t = drawWindows.get(index)
             val win = win_t.win
             if (win_t != null && win_t.DBG_index == 10670) {
                 val a = 0
@@ -2781,7 +2781,7 @@ object Window {
             children.Remove(win)
             find = 0
             while (find < drawWindows.Num()) {
-                if (drawWindows.oGet(find).win === win) {
+                if (drawWindows.get(find).win === win) {
                     drawWindows.RemoveIndex(find)
                     break
                 }
@@ -2907,7 +2907,7 @@ object Window {
                 return null
             }
             for (i in c - 1 downTo 0) {
-                val found = children.oGet(i).FindChildByPoint(x, y, below)
+                val found = children.get(i).FindChildByPoint(x, y, below)
                 if (found != null) {
                     if (below.get(0) != null) {
                         continue
@@ -2983,7 +2983,7 @@ object Window {
             val c = updateVars.Num()
             for (i in 0 until c) {
 //                System.out.printf("%d %s\n", DEBUG_Activate, updateVars.oGet(i).c_str());
-                updateVars.oGet(i).Update()
+                updateVars.get(i).Update()
             }
         }
 
@@ -2998,7 +2998,7 @@ object Window {
             var clear = true
             i = 0
             while (i < c) {
-                val data = transitions.oGet(i)
+                val data = transitions.get(i)
                 var r: idWinRectangle? = null
                 var `val`: idWinFloat? = null
                 var v4: idWinVec4? = null
@@ -3012,13 +3012,13 @@ object Window {
                 if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
                     if (v4 != null) {
                         v4.oSet(data.interp.GetEndValue())
-                    } else `val`?.oSet(data.interp.GetEndValue().oGet(0)) ?: r.oSet(data.interp.GetEndValue())
+                    } else `val`?.oSet(data.interp.GetEndValue().get(0)) ?: r.oSet(data.interp.GetEndValue())
                 } else {
                     clear = false
                     if (data.data != null) {
                         if (v4 != null) {
                             v4.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
-                        } else `val`?.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()).oGet(0))
+                        } else `val`?.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()).get(0))
                             ?: r.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
                     } else {
                         Common.common.Warning(
@@ -3047,9 +3047,9 @@ object Window {
             val c = timeLineEvents.Num()
             if (c > 0) {
                 for (i in 0 until c) {
-                    if (timeLineEvents.oGet(i).pending && gui.GetTime() - timeLine >= timeLineEvents.oGet(i).time) {
-                        timeLineEvents.oGet(i).pending = false
-                        RunScriptList(timeLineEvents.oGet(i).event)
+                    if (timeLineEvents.get(i).pending && gui.GetTime() - timeLine >= timeLineEvents.get(i).time) {
+                        timeLineEvents.get(i).pending = false
+                        RunScriptList(timeLineEvents.get(i).event)
                     }
                 }
             }
@@ -3077,7 +3077,7 @@ object Window {
             RunScript(ON.ON_FRAME)
             val c = children.Num()
             for (i in 0 until c) {
-                children.oGet(i).RunTimeEvents(time)
+                children.get(i).RunTimeEvents(time)
             }
             return true
         }
@@ -3132,12 +3132,12 @@ object Window {
         protected fun ExpressionOp(): wexpOp_t? {
             if (ops.Num() == precompiled.MAX_EXPRESSION_OPS) {
                 Common.common.Warning("expressionOp: gui %s hit MAX_EXPRESSION_OPS", gui.GetSourceFile())
-                return ops.oGet(0)
+                return ops.get(0)
             }
             val wop = wexpOp_t()
             //	memset(&wop, 0, sizeof(wexpOp_t));
             val i = ops.Append(wop)
-            return ops.oGet(i)
+            return ops.get(i)
         }
 
         protected fun EmitOp(
@@ -3377,7 +3377,7 @@ object Window {
             // copy the constants
             i = TempDump.etoi(wexpRegister_t.WEXP_REG_NUM_PREDEFINED)
             while (i < erc) {
-                registers.get(i) = expressionRegisters.oGet(i)
+                registers.get(i) = expressionRegisters.get(i)
                 i++
             }
 
@@ -3385,7 +3385,7 @@ object Window {
             registers.get(TempDump.etoi(wexpRegister_t.WEXP_REG_TIME)) = gui.GetTime()
             i = 0
             while (i < oc) {
-                op = ops.oGet(i)
+                op = ops.get(i)
                 if (op.b == -2) {
                     i++
                     continue
@@ -3437,7 +3437,7 @@ object Window {
                         if (op.b >= 0 && registers.get(op.b) >= 0 && registers.get(op.b) < 4) {
                             // grabs vector components
                             val `var` = op.a as idWinVec4?
-                            registers.get(op.c) = `var`.data.oGet(registers.get(op.b) as Int)
+                            registers.get(op.c) = `var`.data.get(registers.get(op.b) as Int)
                         } else {
                             registers.get(op.c) = op.a.x()
                         }

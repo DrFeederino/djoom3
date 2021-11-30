@@ -38,7 +38,7 @@ class ListGUILocal {
                 Append(s)
                 m_ids.Append(id)
             } else {
-                this.oSet(i, s)
+                this.set(i, s)
             }
             StateChanged()
         }
@@ -90,8 +90,8 @@ class ListGUILocal {
             if (sel >= m_ids.Num()) {
                 sel = 0
             }
-            m_pGUI.SetStateInt(Str.va("%s_selid_0", m_name), m_ids.oGet(sel))
-            return m_ids.oGet(sel)
+            m_pGUI.SetStateInt(Str.va("%s_selid_0", m_name), m_ids.get(sel))
+            return m_ids.get(sel)
         }
 
         override fun SetSelection(sel: Int) {
@@ -125,7 +125,7 @@ class ListGUILocal {
             }
             i = 0
             while (i < Num()) {
-                m_pGUI.SetStateString(Str.va("%s_item_%d", m_name, i), oGet(i).toString())
+                m_pGUI.SetStateString(Str.va("%s_item_%d", m_name, i), get(i).toString())
                 i++
             }
             i = Num()

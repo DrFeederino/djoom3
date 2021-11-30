@@ -331,7 +331,7 @@ object Moveable {
                     f = if (v > maxDamageVelocity) 1.0f else idMath.Sqrt(v - minDamageVelocity) * (1.0f / idMath.Sqrt(
                         maxDamageVelocity - minDamageVelocity
                     ))
-                    dir.oSet(velocity)
+                    dir.set(velocity)
                     dir.NormalizeFast()
                     ent.Damage(
                         this,
@@ -403,7 +403,7 @@ object Moveable {
             if (initialSpline != null) {
                 initialSpline.MakeUniform(initialSplineTime.toFloat())
                 initialSpline.ShiftTime(startTime - initialSpline.GetTime(0))
-                initialSplineDir.oSet(initialSpline.GetCurrentFirstDerivative(startTime.toFloat()))
+                initialSplineDir.set(initialSpline.GetCurrentFirstDerivative(startTime.toFloat()))
                 initialSplineDir.timesAssign(physicsObj.GetAxis().Transpose())
                 initialSplineDir.Normalize()
                 BecomeActive(Entity.TH_THINK)
@@ -416,7 +416,7 @@ object Moveable {
                     if (Game_local.gameLocal.time < initialSpline.GetTime(initialSpline.GetNumValues() - 1)) {
                         val splinePos = idVec3(initialSpline.GetCurrentValue(Game_local.gameLocal.time.toFloat()))
                         val linearVelocity =
-                            idVec3(splinePos.oMinus(physicsObj.GetOrigin()).oMultiply(UsercmdGen.USERCMD_HZ.toFloat()))
+                            idVec3(splinePos.minus(physicsObj.GetOrigin()).oMultiply(UsercmdGen.USERCMD_HZ.toFloat()))
                         physicsObj.SetLinearVelocity(linearVelocity)
                         val splineDir =
                             idVec3(initialSpline.GetCurrentFirstDerivative(Game_local.gameLocal.time.toFloat()))
@@ -555,11 +555,11 @@ object Moveable {
             val bounds = GetPhysics().GetBounds()
 
             // radius of the barrel cylinder
-            radius = (bounds.oGet(1, 0) - bounds.oGet(0, 0)) * 0.5f
+            radius = (bounds.get(1, 0) - bounds.get(0, 0)) * 0.5f
 
             // always a vertical barrel with cylinder axis parallel to the z-axis
             barrelAxis = 2
-            lastOrigin.oSet(GetPhysics().GetOrigin())
+            lastOrigin.set(GetPhysics().GetOrigin())
             lastAxis = GetPhysics().GetAxis()
             additionalRotation = 0.0f
             additionalAxis.Identity()
@@ -603,26 +603,26 @@ object Moveable {
 
                 // current physics state
                 onGround = GetPhysics().HasGroundContacts()
-                curOrigin.oSet(GetPhysics().GetOrigin())
+                curOrigin.set(GetPhysics().GetOrigin())
                 curAxis = GetPhysics().GetAxis()
 
                 // if the barrel is on the ground
                 if (onGround) {
-                    gravityNormal.oSet(GetPhysics().GetGravityNormal())
-                    dir.oSet(curOrigin.oMinus(lastOrigin))
+                    gravityNormal.set(GetPhysics().GetGravityNormal())
+                    dir.set(curOrigin.minus(lastOrigin))
                     dir.minusAssign(gravityNormal.times(dir.times(gravityNormal)))
                     movedDistance = dir.LengthSqr()
 
                     // if the barrel moved and the barrel is not aligned with the gravity direction
-                    if (movedDistance > 0.0f && Math.abs(gravityNormal.times(curAxis.oGet(barrelAxis))) < 0.7f) {
+                    if (movedDistance > 0.0f && Math.abs(gravityNormal.times(curAxis.get(barrelAxis))) < 0.7f) {
 
                         // barrel movement since last think frame orthogonal to the barrel axis
                         movedDistance = idMath.Sqrt(movedDistance)
                         dir.timesAssign(1.0f / movedDistance)
-                        movedDistance = (1.0f - Math.abs(dir.times(curAxis.oGet(barrelAxis)))) * movedDistance
+                        movedDistance = (1.0f - Math.abs(dir.times(curAxis.get(barrelAxis)))) * movedDistance
 
                         // get rotation about barrel axis since last think frame
-                        angle = lastAxis.oGet((barrelAxis + 1) % 3).times(curAxis.oGet((barrelAxis + 1) % 3))
+                        angle = lastAxis.get((barrelAxis + 1) % 3).times(curAxis.get((barrelAxis + 1) % 3))
                         angle = idMath.ACos(angle)
                         // distance along cylinder hull
                         rotatedDistance = angle * radius
@@ -633,20 +633,20 @@ object Moveable {
                             // additional rotation of the visual model to make it look
                             // like the barrel rolls instead of slides
                             angle = 180.0f * (movedDistance - rotatedDistance) / (radius * idMath.PI)
-                            if (gravityNormal.Cross(curAxis.oGet(barrelAxis)).times(dir) < 0.0f) {
+                            if (gravityNormal.Cross(curAxis.get(barrelAxis)).times(dir) < 0.0f) {
                                 additionalRotation += angle
                             } else {
                                 additionalRotation -= angle
                             }
-                            dir.oSet(Vector.getVec3_origin())
-                            dir.oSet(barrelAxis, 1.0f)
+                            dir.set(Vector.getVec3_origin())
+                            dir.set(barrelAxis, 1.0f)
                             additionalAxis = idRotation(Vector.getVec3_origin(), dir, additionalRotation).ToMat3()
                         }
                     }
                 }
 
                 // save state for next think
-                lastOrigin.oSet(curOrigin)
+                lastOrigin.set(curOrigin)
                 lastAxis = curAxis
             }
             Present()
@@ -662,8 +662,8 @@ object Moveable {
         }
 
         override fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?): Boolean {
-            origin.oSet(Vector.getVec3_origin())
-            axis.oSet(additionalAxis)
+            origin.set(Vector.getVec3_origin())
+            axis.set(additionalAxis)
             return true
         }
 
@@ -748,7 +748,7 @@ object Moveable {
             super.Spawn()
             health = spawnArgs.GetInt("health", "5")
             fl.takedamage = true
-            spawnOrigin.oSet(GetPhysics().GetOrigin())
+            spawnOrigin.set(GetPhysics().GetOrigin())
             spawnAxis = GetPhysics().GetAxis()
             state = explode_state_t.NORMAL
             particleModelDefHandle = -1
@@ -796,7 +796,7 @@ object Moveable {
                     if (pct > 1.0f) {
                         pct = 1.0f
                     }
-                    light.origin.oSet(physicsObj.GetAbsBounds().GetCenter())
+                    light.origin.set(physicsObj.GetAbsBounds().GetCenter())
                     light.axis = idMat3.Companion.getMat3_identity()
                     light.shaderParms[RenderWorld.SHADERPARM_RED] = pct
                     light.shaderParms[RenderWorld.SHADERPARM_GREEN] = pct
@@ -816,8 +816,8 @@ object Moveable {
                 return
             }
             if (particleModelDefHandle >= 0) {
-                particleRenderEntity.origin.oSet(physicsObj.GetAbsBounds().GetCenter())
-                particleRenderEntity.axis.oSet(idMat3.Companion.getMat3_identity())
+                particleRenderEntity.origin.set(physicsObj.GetAbsBounds().GetCenter())
+                particleRenderEntity.axis.set(idMat3.Companion.getMat3_identity())
                 Game_local.gameRenderWorld.UpdateEntityDef(particleModelDefHandle, particleRenderEntity)
             }
         }
@@ -878,7 +878,7 @@ object Moveable {
                     val dir2 = idVec3()
                     var debris: idDebris?
                     //if ( first ) {
-                    dir2.oSet(physicsObj.GetAxis().oGet(1))
+                    dir2.set(physicsObj.GetAxis().get(1))
                     //	first = false;
                     //} else {
                     dir2.x += Game_local.gameLocal.random.CRandomFloat() * 4.0f
@@ -956,8 +956,8 @@ object Moveable {
                     renderEntity_s() //TODO:remove memset0 function from whatever fucking class got it!!!
                 val modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, name) as idDeclModelDef
                 if (modelDef != null) {
-                    particleRenderEntity.origin.oSet(physicsObj.GetAbsBounds().GetCenter())
-                    particleRenderEntity.axis.oSet(idMat3.Companion.getMat3_identity())
+                    particleRenderEntity.origin.set(physicsObj.GetAbsBounds().GetCenter())
+                    particleRenderEntity.axis.set(idMat3.Companion.getMat3_identity())
                     particleRenderEntity.hModel = modelDef.ModelHandle()
                     val rgb = if (burn) 0.0f else 1.0f
                     particleRenderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = rgb
@@ -990,7 +990,7 @@ object Moveable {
             light.lightRadius.x = spawnArgs.GetFloat("light_radius")
             light.lightRadius.z = light.lightRadius.x
             light.lightRadius.y = light.lightRadius.z
-            light.origin.oSet(physicsObj.GetOrigin())
+            light.origin.set(physicsObj.GetOrigin())
             light.origin.z += 128f
             light.pointLight = true
             light.shader = DeclManager.declManager.FindMaterial(name)
@@ -1048,7 +1048,7 @@ object Moveable {
                         continue
                     }
                     val v = idVec3(
-                        Game_local.gameLocal.entities[i].GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin())
+                        Game_local.gameLocal.entities[i].GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
                     )
                     val dist = v.Length()
                     if (minDist < 0 || dist < minDist) {

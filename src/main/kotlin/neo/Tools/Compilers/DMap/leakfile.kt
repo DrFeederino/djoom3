@@ -83,14 +83,14 @@ object leakfile {
                         p = p.next[1 xor s]
                     }
                     node = nextnode
-                    mid.oSet(nextportal.winding.GetCenter())
-                    fprintf = String.format("%f %f %f\n", mid.oGet(0), mid.oGet(1), mid.oGet(2)).toByteArray()
+                    mid.set(nextportal.winding.GetCenter())
+                    fprintf = String.format("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2)).toByteArray()
                     linefile.write(ByteBuffer.wrap(fprintf))
                     count++
                 }
                 // add the occupant center
                 node.occupant.mapEntity.epairs.GetVector("origin", "", mid)
-                fprintf = String.format("%f %f %f\n", mid.oGet(0), mid.oGet(1), mid.oGet(2)).toByteArray()
+                fprintf = String.format("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2)).toByteArray()
                 linefile.write(ByteBuffer.wrap(fprintf))
                 Common.common.Printf("%5d point linefile\n", count + 1)
             }

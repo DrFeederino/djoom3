@@ -96,18 +96,18 @@ object tr_main {
     fun R_ScreenRectFromViewFrustumBounds(bounds: idBounds?): idScreenRect? {
         val screenRect = idScreenRect()
         screenRect.x1 =
-            idMath.FtoiFast(0.5f * (1.0f - bounds.oGet(1).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
+            idMath.FtoiFast(0.5f * (1.0f - bounds.get(1).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
         screenRect.x2 =
-            idMath.FtoiFast(0.5f * (1.0f - bounds.oGet(0).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
+            idMath.FtoiFast(0.5f * (1.0f - bounds.get(0).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
         screenRect.y1 =
-            idMath.FtoiFast(0.5f * (1.0f + bounds.oGet(0).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
+            idMath.FtoiFast(0.5f * (1.0f + bounds.get(0).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
         screenRect.y2 =
-            idMath.FtoiFast(0.5f * (1.0f + bounds.oGet(1).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
+            idMath.FtoiFast(0.5f * (1.0f + bounds.get(1).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
         if (RenderSystem_init.r_useDepthBoundsTest.GetInteger() != 0) {
             val zmin = CFloat(screenRect.zmin)
             val zmax = CFloat(screenRect.zmax)
-            tr_main.R_TransformEyeZToWin(-bounds.oGet(0).x, tr_local.tr.viewDef.projectionMatrix, zmin)
-            tr_main.R_TransformEyeZToWin(-bounds.oGet(1).x, tr_local.tr.viewDef.projectionMatrix, zmax)
+            tr_main.R_TransformEyeZToWin(-bounds.get(0).x, tr_local.tr.viewDef.projectionMatrix, zmin)
+            tr_main.R_TransformEyeZToWin(-bounds.get(1).x, tr_local.tr.viewDef.projectionMatrix, zmax)
             screenRect.zmin = zmin.getVal()
             screenRect.zmax = zmax.getVal()
         }
@@ -370,18 +370,18 @@ object tr_main {
 
     //==========================================================================
     fun R_AxisToModelMatrix(axis: idMat3?, origin: idVec3?, modelMatrix: FloatArray? /*[16]*/) {
-        modelMatrix.get(0) = axis.oGet(0, 0)
-        modelMatrix.get(4) = axis.oGet(1, 0)
-        modelMatrix.get(8) = axis.oGet(2, 0)
-        modelMatrix.get(12) = origin.oGet(0)
-        modelMatrix.get(1) = axis.oGet(0, 1)
-        modelMatrix.get(5) = axis.oGet(1, 1)
-        modelMatrix.get(9) = axis.oGet(2, 1)
-        modelMatrix.get(13) = origin.oGet(1)
-        modelMatrix.get(2) = axis.oGet(0, 2)
-        modelMatrix.get(6) = axis.oGet(1, 2)
-        modelMatrix.get(10) = axis.oGet(2, 2)
-        modelMatrix.get(14) = origin.oGet(2)
+        modelMatrix.get(0) = axis.get(0, 0)
+        modelMatrix.get(4) = axis.get(1, 0)
+        modelMatrix.get(8) = axis.get(2, 0)
+        modelMatrix.get(12) = origin.get(0)
+        modelMatrix.get(1) = axis.get(0, 1)
+        modelMatrix.get(5) = axis.get(1, 1)
+        modelMatrix.get(9) = axis.get(2, 1)
+        modelMatrix.get(13) = origin.get(1)
+        modelMatrix.get(2) = axis.get(0, 2)
+        modelMatrix.get(6) = axis.get(1, 2)
+        modelMatrix.get(10) = axis.get(2, 2)
+        modelMatrix.get(14) = origin.get(2)
         modelMatrix.get(3) = 0
         modelMatrix.get(7) = 0
         modelMatrix.get(11) = 0
@@ -419,15 +419,15 @@ object tr_main {
         // _mm_store_ss(&out[2], m2);
 // }else
         run {
-            out.oSet(
+            out.set(
                 idVec3(
-                    `in`.oGet(0) * modelMatrix.get(0) + `in`.oGet(1) * modelMatrix.get(4) + `in`.oGet(2) * modelMatrix.get(
+                    `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(
                         8
                     ) + modelMatrix.get(12),
-                    `in`.oGet(0) * modelMatrix.get(1) + `in`.oGet(1) * modelMatrix.get(5) + `in`.oGet(2) * modelMatrix.get(
+                    `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(
                         9
                     ) + modelMatrix.get(13),
-                    `in`.oGet(0) * modelMatrix.get(2) + `in`.oGet(1) * modelMatrix.get(6) + `in`.oGet(2) * modelMatrix.get(
+                    `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(
                         10
                     ) + modelMatrix.get(14)
                 )
@@ -437,27 +437,27 @@ object tr_main {
     }
 
     fun R_PointTimesMatrix(modelMatrix: FloatArray? /*[16]*/, `in`: idVec4?, out: idVec4?) {
-        out.oSet(
+        out.set(
             0,
-            `in`.oGet(0) * modelMatrix.get(0) + `in`.oGet(1) * modelMatrix.get(4) + `in`.oGet(2) * modelMatrix.get(8) + modelMatrix.get(
+            `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(8) + modelMatrix.get(
                 12
             )
         )
-        out.oSet(
+        out.set(
             1,
-            `in`.oGet(0) * modelMatrix.get(1) + `in`.oGet(1) * modelMatrix.get(5) + `in`.oGet(2) * modelMatrix.get(9) + modelMatrix.get(
+            `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(9) + modelMatrix.get(
                 13
             )
         )
-        out.oSet(
+        out.set(
             2,
-            `in`.oGet(0) * modelMatrix.get(2) + `in`.oGet(1) * modelMatrix.get(6) + `in`.oGet(2) * modelMatrix.get(10) + modelMatrix.get(
+            `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(10) + modelMatrix.get(
                 14
             )
         )
-        out.oSet(
+        out.set(
             3,
-            `in`.oGet(0) * modelMatrix.get(3) + `in`.oGet(1) * modelMatrix.get(7) + `in`.oGet(2) * modelMatrix.get(11) + modelMatrix.get(
+            `in`.get(0) * modelMatrix.get(3) + `in`.get(1) * modelMatrix.get(7) + `in`.get(2) * modelMatrix.get(11) + modelMatrix.get(
                 15
             )
         )
@@ -466,9 +466,9 @@ object tr_main {
     fun R_GlobalPointToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3?, out: idVec<*>?) {
         val temp = FloatArray(4)
         Vector.VectorSubtract(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 12, 16), temp)
-        out.oSet(0, Vector.DotProduct(temp, modelMatrix))
-        out.oSet(1, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.oSet(2, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12)))
+        out.set(0, Vector.DotProduct(temp, modelMatrix))
+        out.set(1, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 4, 8)))
+        out.set(2, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12)))
     }
 
     fun R_GlobalPointToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3?, out: FloatArray?) {
@@ -488,33 +488,33 @@ object tr_main {
     }
 
     fun R_LocalVectorToGlobal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3?, out: idVec3?) {
-        out.oSet(
+        out.set(
             0,
-            `in`.oGet(0) * modelMatrix.get(0) + `in`.oGet(1) * modelMatrix.get(4) + `in`.oGet(2) * modelMatrix.get(8)
+            `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(8)
         )
-        out.oSet(
+        out.set(
             1,
-            `in`.oGet(0) * modelMatrix.get(1) + `in`.oGet(1) * modelMatrix.get(5) + `in`.oGet(2) * modelMatrix.get(9)
+            `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(9)
         )
-        out.oSet(
+        out.set(
             2,
-            `in`.oGet(0) * modelMatrix.get(2) + `in`.oGet(1) * modelMatrix.get(6) + `in`.oGet(2) * modelMatrix.get(10)
+            `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(10)
         )
     }
 
     fun R_GlobalVectorToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3?, out: idVec3?) {
-        out.oSet(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
-        out.oSet(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.oSet(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
+        out.set(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
+        out.set(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
+        out.set(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
     }
 
     fun R_GlobalPlaneToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idPlane?, out: idPlane?) {
-        out.oSet(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
-        out.oSet(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.oSet(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
-        out.oSet(
+        out.set(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
+        out.set(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
+        out.set(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
+        out.set(
             3,
-            `in`.oGet(3) + modelMatrix.get(12) * `in`.oGet(0) + modelMatrix.get(13) * `in`.oGet(1) + modelMatrix.get(14) * `in`.oGet(
+            `in`.get(3) + modelMatrix.get(12) * `in`.get(0) + modelMatrix.get(13) * `in`.get(1) + modelMatrix.get(14) * `in`.get(
                 2
             )
         )
@@ -524,8 +524,8 @@ object tr_main {
         val offset: Float
         tr_main.R_LocalVectorToGlobal(modelMatrix, `in`.Normal(), out.Normal())
         offset =
-            modelMatrix.get(12) * out.oGet(0) + modelMatrix.get(13) * out.oGet(1) + modelMatrix.get(14) * out.oGet(2)
-        out.oSet(3, `in`.oGet(3) - offset)
+            modelMatrix.get(12) * out.get(0) + modelMatrix.get(13) * out.get(1) + modelMatrix.get(14) * out.get(2)
+        out.set(3, `in`.get(3) - offset)
     }
 
     // transform Z in eye coordinates to window coordinates
@@ -568,9 +568,9 @@ object tr_main {
         }
 
         // transform the surface bounds into world space
-        val localOrigin = idVec3(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
-        worldOrigin.oSet(tr_main.R_LocalPointToGlobal(modelMatrix, localOrigin))
-        worldRadius = bounds.oGet(0).oMinus(localOrigin).Length() // FIXME: won't be correct for scaled objects
+        val localOrigin = idVec3(bounds.get(0).oPlus(bounds.get(1)).oMultiply(0.5f))
+        worldOrigin.set(tr_main.R_LocalPointToGlobal(modelMatrix, localOrigin))
+        worldRadius = bounds.get(0).minus(localOrigin).Length() // FIXME: won't be correct for scaled objects
         i = 0
         while (i < numPlanes) {
             frust = planes.get(i)
@@ -605,10 +605,10 @@ object tr_main {
         // transform into world space
         i = 0
         while (i < 8) {
-            v.oSet(0, bounds.oGet(i shr 0 and 1, 0))
-            v.oSet(1, bounds.oGet(i shr 1 and 1, 1))
-            v.oSet(2, bounds.oGet(i shr 2 and 1, 2))
-            transformed[i].oSet(tr_main.R_LocalPointToGlobal(modelMatrix, v))
+            v.set(0, bounds.get(i shr 0 and 1, 0))
+            v.set(1, bounds.get(i shr 1 and 1, 1))
+            v.set(2, bounds.get(i shr 2 and 1, 2))
+            transformed[i].set(tr_main.R_LocalPointToGlobal(modelMatrix, v))
             i++
         }
 
@@ -677,9 +677,9 @@ object tr_main {
         var i: Int
         i = 0
         while (i < 4) {
-            eye.oSet(
+            eye.set(
                 i,
-                src.oGet(0) * modelMatrix.get(i + 0 * 4) + src.oGet(1) * modelMatrix.get(i + 1 * 4) + src.oGet(2) * modelMatrix.get(
+                src.get(0) * modelMatrix.get(i + 0 * 4) + src.get(1) * modelMatrix.get(i + 1 * 4) + src.get(2) * modelMatrix.get(
                     i + 2 * 4
                 ) + 1 * modelMatrix.get(i + 3 * 4)
             )
@@ -687,11 +687,11 @@ object tr_main {
         }
         i = 0
         while (i < 4) {
-            dst.oSet(
+            dst.set(
                 i,
-                eye.oGet(0) * projectionMatrix.get(i + 0 * 4) + eye.oGet(1) * projectionMatrix.get(i + 1 * 4) + eye.oGet(
+                eye.get(0) * projectionMatrix.get(i + 0 * 4) + eye.get(1) * projectionMatrix.get(i + 1 * 4) + eye.get(
                     2
-                ) * projectionMatrix.get(i + 2 * 4) + eye.oGet(3) * projectionMatrix.get(i + 3 * 4)
+                ) * projectionMatrix.get(i + 2 * 4) + eye.get(3) * projectionMatrix.get(i + 3 * 4)
             )
             i++
         }
@@ -713,9 +713,9 @@ object tr_main {
         if (null == tr_local.tr.viewDef) {
             i = 0
             while (i < 4) {
-                view.oSet(
+                view.set(
                     i,
-                    global.oGet(0) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 0 * 4] + global.oGet(1) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 1 * 4] + global.oGet(
+                    global.get(0) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 0 * 4] + global.get(1) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 1 * 4] + global.get(
                         2
                     ) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 3 * 4]
                 )
@@ -723,20 +723,20 @@ object tr_main {
             }
             i = 0
             while (i < 4) {
-                clip.oSet(
+                clip.set(
                     i,
-                    view.oGet(0) * tr_local.tr.primaryView.projectionMatrix[i + 0 * 4] + view.oGet(1) * tr_local.tr.primaryView.projectionMatrix[i + 1 * 4] + view.oGet(
+                    view.get(0) * tr_local.tr.primaryView.projectionMatrix[i + 0 * 4] + view.get(1) * tr_local.tr.primaryView.projectionMatrix[i + 1 * 4] + view.get(
                         2
-                    ) * tr_local.tr.primaryView.projectionMatrix[i + 2 * 4] + view.oGet(3) * tr_local.tr.primaryView.projectionMatrix[i + 3 * 4]
+                    ) * tr_local.tr.primaryView.projectionMatrix[i + 2 * 4] + view.get(3) * tr_local.tr.primaryView.projectionMatrix[i + 3 * 4]
                 )
                 i++
             }
         } else {
             i = 0
             while (i < 4) {
-                view.oSet(
+                view.set(
                     i,
-                    global.oGet(0) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 0 * 4] + global.oGet(1) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 1 * 4] + global.oGet(
+                    global.get(0) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 0 * 4] + global.get(1) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 1 * 4] + global.get(
                         2
                     ) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 3 * 4]
                 )
@@ -744,18 +744,18 @@ object tr_main {
             }
             i = 0
             while (i < 4) {
-                clip.oSet(
+                clip.set(
                     i,
-                    view.oGet(0) * tr_local.tr.viewDef.projectionMatrix[i + 0 * 4] + view.oGet(1) * tr_local.tr.viewDef.projectionMatrix[i + 1 * 4] + view.oGet(
+                    view.get(0) * tr_local.tr.viewDef.projectionMatrix[i + 0 * 4] + view.get(1) * tr_local.tr.viewDef.projectionMatrix[i + 1 * 4] + view.get(
                         2
-                    ) * tr_local.tr.viewDef.projectionMatrix[i + 2 * 4] + view.oGet(3) * tr_local.tr.viewDef.projectionMatrix[i + 3 * 4]
+                    ) * tr_local.tr.viewDef.projectionMatrix[i + 2 * 4] + view.get(3) * tr_local.tr.viewDef.projectionMatrix[i + 3 * 4]
                 )
                 i++
             }
         }
-        ndc.oSet(0, clip.oGet(0) / clip.oGet(3))
-        ndc.oSet(1, clip.oGet(1) / clip.oGet(3))
-        ndc.oSet(2, (clip.oGet(2) + clip.oGet(3)) / (2 * clip.oGet(3)))
+        ndc.set(0, clip.get(0) / clip.get(3))
+        ndc.set(1, clip.get(1) / clip.get(3))
+        ndc.set(2, (clip.get(2) + clip.get(3)) / (2 * clip.get(3)))
     }
 
     /*
@@ -766,9 +766,9 @@ object tr_main {
      ==========================
      */
     fun R_TransformClipToDevice(clip: idPlane?, view: viewDef_s?, normalized: idVec3?) {
-        normalized.oSet(0, clip.oGet(0) / clip.oGet(3))
-        normalized.oSet(1, clip.oGet(1) / clip.oGet(3))
-        normalized.oSet(2, clip.oGet(2) / clip.oGet(3))
+        normalized.set(0, clip.get(0) / clip.get(3))
+        normalized.set(1, clip.get(1) / clip.get(3))
+        normalized.set(2, clip.get(2) / clip.get(3))
     }
 
     /*
@@ -889,22 +889,22 @@ object tr_main {
         world.modelMatrix[2 * 4 + 2] = 1
 
         // transform by the camera placement
-        origin.oSet(viewDef.renderView.vieworg)
-        viewerMatrix[0] = viewDef.renderView.viewaxis.oGet(0, 0)
-        viewerMatrix[4] = viewDef.renderView.viewaxis.oGet(0, 1)
-        viewerMatrix[8] = viewDef.renderView.viewaxis.oGet(0, 2)
+        origin.set(viewDef.renderView.vieworg)
+        viewerMatrix[0] = viewDef.renderView.viewaxis.get(0, 0)
+        viewerMatrix[4] = viewDef.renderView.viewaxis.get(0, 1)
+        viewerMatrix[8] = viewDef.renderView.viewaxis.get(0, 2)
         viewerMatrix[12] =
-            -origin.oGet(0) * viewerMatrix[0] + -origin.oGet(1) * viewerMatrix[4] + -origin.oGet(2) * viewerMatrix[8]
-        viewerMatrix[1] = viewDef.renderView.viewaxis.oGet(1, 0)
-        viewerMatrix[5] = viewDef.renderView.viewaxis.oGet(1, 1)
-        viewerMatrix[9] = viewDef.renderView.viewaxis.oGet(1, 2)
+            -origin.get(0) * viewerMatrix[0] + -origin.get(1) * viewerMatrix[4] + -origin.get(2) * viewerMatrix[8]
+        viewerMatrix[1] = viewDef.renderView.viewaxis.get(1, 0)
+        viewerMatrix[5] = viewDef.renderView.viewaxis.get(1, 1)
+        viewerMatrix[9] = viewDef.renderView.viewaxis.get(1, 2)
         viewerMatrix[13] =
-            -origin.oGet(0) * viewerMatrix[1] + -origin.oGet(1) * viewerMatrix[5] + -origin.oGet(2) * viewerMatrix[9]
-        viewerMatrix[2] = viewDef.renderView.viewaxis.oGet(2, 0)
-        viewerMatrix[6] = viewDef.renderView.viewaxis.oGet(2, 1)
-        viewerMatrix[10] = viewDef.renderView.viewaxis.oGet(2, 2)
+            -origin.get(0) * viewerMatrix[1] + -origin.get(1) * viewerMatrix[5] + -origin.get(2) * viewerMatrix[9]
+        viewerMatrix[2] = viewDef.renderView.viewaxis.get(2, 0)
+        viewerMatrix[6] = viewDef.renderView.viewaxis.get(2, 1)
+        viewerMatrix[10] = viewDef.renderView.viewaxis.get(2, 2)
         viewerMatrix[14] =
-            -origin.oGet(0) * viewerMatrix[2] + -origin.oGet(1) * viewerMatrix[6] + -origin.oGet(2) * viewerMatrix[10]
+            -origin.get(0) * viewerMatrix[2] + -origin.get(1) * viewerMatrix[6] + -origin.get(2) * viewerMatrix[10]
         viewerMatrix[3] = 0
         viewerMatrix[7] = 0
         viewerMatrix[11] = 0
@@ -993,33 +993,33 @@ object tr_main {
         var ang: Float
         ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_x) * 0.5f
         idMath.SinCos(ang, xs, xc)
-        tr_local.tr.viewDef.frustum[0].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).times(xc.getVal()))
+        tr_local.tr.viewDef.frustum[0].set(
+            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs.getVal())
+                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.get(1).times(xc.getVal()))
         )
-        tr_local.tr.viewDef.frustum[1].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(1).times(xc.getVal()))
+        tr_local.tr.viewDef.frustum[1].set(
+            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs.getVal())
+                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.get(1).times(xc.getVal()))
         )
         ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_y) * 0.5f
         idMath.SinCos(ang, xs, xc)
-        tr_local.tr.viewDef.frustum[2].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).times(xc.getVal()))
+        tr_local.tr.viewDef.frustum[2].set(
+            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs.getVal())
+                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.get(2).times(xc.getVal()))
         )
-        tr_local.tr.viewDef.frustum[3].oSet(
-            tr_local.tr.viewDef.renderView.viewaxis.oGet(0).times(xs.getVal())
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.oGet(2).times(xc.getVal()))
+        tr_local.tr.viewDef.frustum[3].set(
+            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs.getVal())
+                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.get(2).times(xc.getVal()))
         )
 
         // plane four is the front clipping plane
-        tr_local.tr.viewDef.frustum[4].oSet( /* vec3_origin - */tr_local.tr.viewDef.renderView.viewaxis.oGet(0))
+        tr_local.tr.viewDef.frustum[4].set( /* vec3_origin - */tr_local.tr.viewDef.renderView.viewaxis.get(0))
         i = 0
         while (i < 5) {
 
             // flip direction so positive side faces out (FIXME: globally unify this)
-            tr_local.tr.viewDef.frustum[i].oSet(tr_local.tr.viewDef.frustum[i].Normal().oNegative())
-            tr_local.tr.viewDef.frustum[i].oSet(
+            tr_local.tr.viewDef.frustum[i].set(tr_local.tr.viewDef.frustum[i].Normal().oNegative())
+            tr_local.tr.viewDef.frustum[i].set(
                 3,
                 -tr_local.tr.viewDef.renderView.vieworg.times(tr_local.tr.viewDef.frustum[i].Normal())
             )

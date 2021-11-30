@@ -2,7 +2,7 @@ package neo.idlib.math.Matrix
 
 import neo.idlib.Text.Str.idStr
 import neo.idlib.math.Angles.idAngles
-import neo.idlib.math.Math_h
+import neo.idlib.math.Math_h.DEG2RAD
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Quat.idCQuat
 import neo.idlib.math.Quat.idQuat
@@ -69,24 +69,24 @@ class idMat3 {
 
     constructor(src: Array<FloatArray>) {
 //	memcpy( mat, src, 3 * 3 * sizeof( float ) );
-        mat[0].oSet(idVec3(src[0][0], src[0][1], src[0][2]))
-        mat[1].oSet(idVec3(src[1][0], src[1][1], src[1][2]))
-        mat[2].oSet(idVec3(src[2][0], src[2][1], src[2][2]))
+        mat[0].set(idVec3(src[0][0], src[0][1], src[0][2]))
+        mat[1].set(idVec3(src[1][0], src[1][1], src[1][2]))
+        mat[2].set(idVec3(src[2][0], src[2][1], src[2][2]))
     }
 
     //public	idVec3			operator*( const idVec3 &vec ) const;
-    fun oGet(index: Int): idVec3 {
+    operator fun get(index: Int): idVec3 {
         return mat[index]
     }
 
     //public	idMat3			operator*( const idMat3 &a ) const;
-    fun oGet(index1: Int, index2: Int): Float {
-        return mat[index1].oGet(index2)
+    operator fun get(index1: Int, index2: Int): Float {
+        return mat[index1][index2]
     }
 
     //public	idMat3			operator+( const idMat3 &a ) const;
-    fun oSet(index: Int, vec3: idVec3) {
-        mat[index].oSet(vec3)
+    operator fun set(index: Int, vec3: idVec3) {
+        mat[index].set(vec3)
     }
 
     //public	idMat3			operator-( const idMat3 &a ) const;
@@ -131,7 +131,7 @@ class idMat3 {
             while (j < 3) {
                 val value =
                     m1Ptr[i * 3 + 0] * m2Ptr[0 * 3 + j] + m1Ptr[i * 3 + 1] * m2Ptr[1 * 3 + j] + m1Ptr[i * 3 + 2] * m2Ptr[2 * 3 + j]
-                dst.oSet(i, j, value)
+                dst.set(i, j, value)
                 j++
             }
             i++
@@ -183,12 +183,12 @@ class idMat3 {
             j = 0
             while (j < 3) {
                 dst[j] =
-                    mat[i].x * a.mat[0].oGet(j) + mat[i].y * a.mat[1].oGet(j) + mat[i].z * a.mat[2].oGet(j)
+                    mat[i].x * a.mat[0][j] + mat[i].y * a.mat[1][j] + mat[i].z * a.mat[2][j]
                 j++
             }
-            this.oSet(i, 0, dst[0])
-            this.oSet(i, 1, dst[1])
-            this.oSet(i, 2, dst[2])
+            this.set(i, 0, dst[0])
+            this.set(i, 1, dst[1])
+            this.set(i, 2, dst[2])
             i++
         }
         return this
@@ -265,7 +265,7 @@ class idMat3 {
     }
 
     fun Identity() {
-        this.oSet(getMat3_identity())
+        this.set(getMat3_identity())
     }
 
     @JvmOverloads
@@ -298,13 +298,13 @@ class idMat3 {
     }
 
     fun ProjectVector(src: idVec3, dst: idVec3) {
-        dst.x = mat[0].times(src)
-        dst.y = mat[1].times(src)
-        dst.z = mat[2].times(src)
+        dst.x = src * mat[0]
+        dst.y = src * mat[1]
+        dst.z = src * mat[2]
     }
 
     fun UnprojectVector(src: idVec3, dst: idVec3) {
-        dst.oSet(
+        dst.set(
             mat[0] * src.x +
                     mat[1] * src.y +
                     mat[2] * src.z
@@ -444,7 +444,7 @@ class idMat3 {
     fun InertiaTranslate(mass: Float, centerOfMass: idVec3, translation: idVec3): idMat3 {
         val m = idMat3()
         val newCenter = idVec3()
-        newCenter.oSet(centerOfMass + translation)
+        newCenter.set(centerOfMass + translation)
         m.mat[0].x = mass * (centerOfMass.y * centerOfMass.y + centerOfMass.z * centerOfMass.z
                 - (newCenter.y * newCenter.y + newCenter.z * newCenter.z))
         m.mat[1].y = mass * (centerOfMass.x * centerOfMass.x + centerOfMass.z * centerOfMass.z
@@ -463,7 +463,7 @@ class idMat3 {
     fun InertiaTranslateSelf(mass: Float, centerOfMass: idVec3, translation: idVec3): idMat3 {
         val m = idMat3()
         val newCenter = idVec3()
-        newCenter.oSet(centerOfMass + translation)
+        newCenter.set(centerOfMass + translation)
         m.mat[0].x = mass * (centerOfMass.y * centerOfMass.y + centerOfMass.z * centerOfMass.z
                 - (newCenter.y * newCenter.y + newCenter.z * newCenter.z))
         m.mat[1].y = mass * (centerOfMass.x * centerOfMass.x + centerOfMass.z * centerOfMass.z
@@ -482,13 +482,13 @@ class idMat3 {
     fun InertiaRotate(rotation: idMat3): idMat3 {
         // NOTE: the rotation matrix is stored column-major
 //            return rotation.Transpose() * (*this) * rotation;
-        return rotation.Transpose().times(this).times(rotation)
+        return rotation.Transpose() * this * rotation
     }
 
     fun InertiaRotateSelf(rotation: idMat3): idMat3 {
         // NOTE: the rotation matrix is stored column-major
 //	*this = rotation.Transpose() * (*this) * rotation;
-        this.oSet(rotation.Transpose().times(this).times(rotation))
+        this.set(rotation.Transpose() * this * rotation)
         return this
     }
 
@@ -536,26 +536,26 @@ class idMat3 {
         if (trace > 0.0f) {
             t = trace + 1.0f
             s = idMath.InvSqrt(t) * 0.5f
-            q.oSet(3, s * t)
-            q.oSet(0, (mat[2].y - mat[1].z) * s)
-            q.oSet(1, (mat[0].z - mat[2].x) * s)
-            q.oSet(2, (mat[1].x - mat[0].y) * s)
+            q[3] = s * t
+            q[0] = (mat[2].y - mat[1].z) * s
+            q[1] = (mat[0].z - mat[2].x) * s
+            q[2] = (mat[1].x - mat[0].y) * s
         } else {
             i = 0
             if (mat[1].y > mat[0].x) {
                 i = 1
             }
-            if (mat[2].z > mat[i].oGet(i)) {
+            if (mat[2].z > mat[i][i]) {
                 i = 2
             }
             j = next[i]
             k = next[j]
-            t = mat[i].oGet(i) - (mat[j].oGet(j) + mat[k].oGet(k)) + 1.0f
+            t = mat[i][i] - (mat[j][j] + mat[k][k]) + 1.0f
             s = idMath.InvSqrt(t) * 0.5f
-            q.oSet(i, s * t)
-            q.oSet(3, (mat[k].oGet(j) - mat[j].oGet(k)) * s)
-            q.oSet(j, (mat[j].oGet(i) + mat[i].oGet(j)) * s)
-            q.oSet(k, (mat[k].oGet(i) + mat[i].oGet(k)) * s)
+            q[i] = s * t
+            q[3] = (mat[k][j] - mat[j][k]) * s
+            q[j] = (mat[j][i] + mat[i][j]) * s
+            q[k] = (mat[k][i] + mat[i][k]) * s
         }
         return q
     }
@@ -580,29 +580,29 @@ class idMat3 {
             t = trace + 1.0f
             s = idMath.InvSqrt(t) * 0.5f
             r.angle = s * t
-            r.vec.oSet(0, (mat[2].y - mat[1].z) * s)
-            r.vec.oSet(1, (mat[0].z - mat[2].x) * s)
-            r.vec.oSet(2, (mat[1].x - mat[0].y) * s)
+            r.vec[0] = (mat[2].y - mat[1].z) * s
+            r.vec[1] = (mat[0].z - mat[2].x) * s
+            r.vec[2] = (mat[1].x - mat[0].y) * s
         } else {
             i = 0
             if (mat[1].y > mat[0].x) {
                 i = 1
             }
-            if (mat[2].z > mat[i].oGet(i)) {
+            if (mat[2].z > mat[i][i]) {
                 i = 2
             }
             j = next[i]
             k = next[j]
-            t = mat[i].oGet(i) - (mat[j].oGet(j) + mat[k].oGet(k)) + 1.0f
+            t = mat[i][i] - (mat[j][j] + mat[k][k]) + 1.0f
             s = idMath.InvSqrt(t) * 0.5f
-            r.vec.oSet(i, s * t)
-            r.angle = (mat[k].oGet(j) - mat[j].oGet(k)) * s
-            r.vec.oSet(j, (mat[j].oGet(i) + mat[i].oGet(j)) * s)
-            r.vec.oSet(k, (mat[k].oGet(i) + mat[i].oGet(k)) * s)
+            r.vec[i] = s * t
+            r.angle = (mat[k][j] - mat[j][k]) * s
+            r.vec[j] = (mat[j][i] + mat[i][j]) * s
+            r.vec[k] = (mat[k][i] + mat[i][k]) * s
         }
         r.angle = idMath.ACos(r.angle)
         if (abs(r.angle) < 1e-10f) {
-            r.vec.Set(0.0f, 0.0f, 1.0f)
+            r.vec.set(0.0f, 0.0f, 1.0f)
             r.angle = 0.0f
         } else {
             //vec *= (1.0f / sin( angle ));
@@ -629,7 +629,7 @@ class idMat3 {
     //	public	float *			ToFloatPtr( void );
     fun ToAngularVelocity(): idVec3 {
         val rotation = ToRotation()
-        return rotation.GetVec().times(Math_h.DEG2RAD(rotation.GetAngle()))
+        return rotation.GetVec() * DEG2RAD(rotation.GetAngle())
     }
 
     /**
@@ -663,7 +663,7 @@ class idMat3 {
         mat[rowNumber] = idVec3(x, y, z)
     }
 
-    fun oSet(x: Int, y: Int, value: Float): Float {
+    fun set(x: Int, y: Int, value: Float): Float {
         return when (y) {
             1 -> value.also { mat[x].y = it }
             2 -> value.also { mat[x].z = it }
@@ -671,10 +671,10 @@ class idMat3 {
         }
     }
 
-    fun oSet(m: idMat3): idMat3 {
-        mat[0].oSet(m.mat[0])
-        mat[1].oSet(m.mat[1])
-        mat[2].oSet(m.mat[2])
+    fun set(m: idMat3): idMat3 {
+        mat[0].set(m.mat[0])
+        mat[1].set(m.mat[1])
+        mat[2].set(m.mat[2])
         return this
     }
 
@@ -714,7 +714,7 @@ class idMat3 {
         val temp = FloatArray(size * size)
         for (x in 0 until size) {
             for (y in 0 until size) {
-                temp[x * size + y] = mat[x].oGet(y)
+                temp[x * size + y] = mat[x][y]
             }
         }
         return temp
@@ -751,11 +751,11 @@ class idMat3 {
         //public	const idVec3 &	operator[]( int index ) const;
         //public	idVec3 &		operator[]( int index );
         fun times(a: Float, mat: idMat3): idMat3 {
-            return mat.times(a)
+            return mat * a
         }
 
         fun times(vec: idVec3, mat: idMat3): idVec3 {
-            return mat.times(vec)
+            return mat * vec
         }
 
         fun timesAssign(vec: idVec3, mat: idMat3): idVec3 {

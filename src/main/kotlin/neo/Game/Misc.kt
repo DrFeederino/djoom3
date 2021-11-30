@@ -326,7 +326,7 @@ object Misc {
 
                 // multiplayer hijacked this entity, so only push the player in multiplayer
                 if (Game_local.gameLocal.isMultiplayer) {
-                    player.GetPhysics().SetLinearVelocity(GetPhysics().GetAxis().oGet(0).times(pushVel))
+                    player.GetPhysics().SetLinearVelocity(GetPhysics().GetAxis().get(0).times(pushVel))
                 }
             }
         }
@@ -468,7 +468,7 @@ object Misc {
                 num = 0
                 i = 0
                 while (i < source.targets.Num()) {
-                    ent = source.targets.oGet(i).GetEntity()
+                    ent = source.targets.get(i).GetEntity()
                     if (ent != null && ent !== ignore && ent is idPathCorner) {
                         path[num++] = ent as idPathCorner?
                         if (num >= Game_local.MAX_GENTITIES) {
@@ -787,17 +787,17 @@ object Misc {
             if (thinkFlags and Entity.TH_THINK != 0) {
                 // evaluate force
                 spring.Evaluate(Game_local.gameLocal.time)
-                start.oSet(p1)
+                start.set(p1)
                 if (ent1.GetPhysics() != null) {
                     axis = ent1.GetPhysics().GetAxis()
-                    origin.oSet(ent1.GetPhysics().GetOrigin())
-                    start.oSet(origin.oPlus(start.times(axis)))
+                    origin.set(ent1.GetPhysics().GetOrigin())
+                    start.set(origin.oPlus(start.times(axis)))
                 }
-                end.oSet(p2)
+                end.set(p2)
                 if (ent2.GetPhysics() != null) {
                     axis = ent2.GetPhysics().GetAxis()
-                    origin.oSet(ent2.GetPhysics().GetOrigin())
-                    end.oSet(origin.oPlus(p2.times(axis)))
+                    origin.set(ent2.GetPhysics().GetOrigin())
+                    end.set(origin.oPlus(p2.times(axis)))
                 }
                 Game_local.gameRenderWorld.DebugLine(idVec4(1, 1, 0, 1), start, end, 0, true)
             }
@@ -950,7 +950,7 @@ object Misc {
             RemoveNullTargets()
             if (targets.Num() != 0) {
                 forceField.Uniform(
-                    targets.oGet(0).GetEntity().GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin())
+                    targets.get(0).GetEntity().GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
                 )
             }
         }
@@ -1149,7 +1149,7 @@ object Misc {
 
         override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
             animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
-            axis.oSet(renderEntity.axis)
+            axis.set(renderEntity.axis)
             return true
         }
 
@@ -1356,10 +1356,10 @@ object Misc {
             }
             StartSound("snd_missile", gameSoundChannel_t.SND_CHANNEL_WEAPON, 0, false, null)
             animator.GetJointTransform(launchjoint.value, Game_local.gameLocal.time, launchPos, axis)
-            launchPos.oSet(renderEntity.origin.oPlus(launchPos.times(renderEntity.axis)))
+            launchPos.set(renderEntity.origin.oPlus(launchPos.times(renderEntity.axis)))
             animator.GetJointTransform(targetjoint.value, Game_local.gameLocal.time, targetPos, axis)
-            targetPos.oSet(renderEntity.origin.oPlus(targetPos.times(renderEntity.axis)))
-            dir.oSet(targetPos.oMinus(launchPos))
+            targetPos.set(renderEntity.origin.oPlus(targetPos.times(renderEntity.axis)))
+            dir.set(targetPos.minus(launchPos))
             dir.Normalize()
             Game_local.gameLocal.SpawnEntityDef(projectileDef, ent, false)
             if (null == ent[0] || ent[0] !is idProjectile) {
@@ -1489,8 +1489,8 @@ object Misc {
                 renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     Game_local.gameLocal.random.RandomInt(32767.0)
             }
-            fadeFrom.Set(1f, 1f, 1f, 1f)
-            fadeTo.Set(1f, 1f, 1f, 1f)
+            fadeFrom.set(1f, 1f, 1f, 1f)
+            fadeTo.set(1f, 1f, 1f, 1f)
             fadeStart = 0
             fadeEnd = 0
 
@@ -1519,7 +1519,7 @@ object Misc {
 
         fun Fade(to: idVec4?, fadeTime: Float) {
             GetColor(fadeFrom)
-            fadeTo.oSet(to)
+            fadeTo.set(to)
             fadeStart = Game_local.gameLocal.time
             fadeEnd = (Game_local.gameLocal.time + Math_h.SEC2MS(fadeTime)).toInt()
             BecomeActive(Entity.TH_THINK)
@@ -1857,7 +1857,7 @@ object Misc {
                     val angle = spawnArgs.GetFloat("splatAngle", "0")
                     Game_local.gameLocal.ProjectDecal(
                         GetPhysics().GetOrigin(),
-                        GetPhysics().GetAxis().oGet(2),
+                        GetPhysics().GetAxis().get(2),
                         dist,
                         true,
                         size,
@@ -1923,11 +1923,11 @@ object Misc {
                     1
                 )
                 for (i in 0 until targets.Num()) {
-                    if (targets.oGet(i).GetEntity() != null) {
+                    if (targets.get(i).GetEntity() != null) {
                         Game_local.gameRenderWorld.DebugArrow(
                             Lib.Companion.colorBlue,
                             GetPhysics().GetOrigin(),
-                            targets.oGet(i).GetEntity().GetPhysics().GetOrigin(),
+                            targets.get(i).GetEntity().GetPhysics().GetOrigin(),
                             1
                         )
                     }
@@ -2216,7 +2216,7 @@ object Misc {
             targetBeam = null
             i = 0
             while (i < targets.Num()) {
-                targetEnt = targets.oGet(i).GetEntity()
+                targetEnt = targets.get(i).GetEntity()
                 if (targetEnt != null && targetEnt is idBeam) {
                     targetBeam = targetEnt
                     break
@@ -2885,7 +2885,7 @@ object Misc {
             }
             min_wait = Math_h.SEC2MS(spawnArgs.GetFloat("min_wait", "1")).toInt()
             max_wait = Math_h.SEC2MS(spawnArgs.GetFloat("max_wait", "3")).toInt()
-            shake_ang.oSet(spawnArgs.GetVector("shake_ang", "65 65 65"))
+            shake_ang.set(spawnArgs.GetVector("shake_ang", "65 65 65"))
             Hide()
             GetPhysics().SetContents(0)
         }
@@ -2903,12 +2903,12 @@ object Misc {
             savefile.WriteInt(targetTime.Num())
             i = 0
             while (i < targetTime.Num()) {
-                savefile.WriteInt(targetTime.oGet(i))
+                savefile.WriteInt(targetTime.get(i))
                 i++
             }
             i = 0
             while (i < lastTargetPos.Num()) {
-                savefile.WriteVec3(lastTargetPos.oGet(i))
+                savefile.WriteVec3(lastTargetPos.get(i))
                 i++
             }
         }
@@ -2931,20 +2931,20 @@ object Misc {
             lastTargetPos.SetNum(num)
             i = 0
             while (i < num) {
-                targetTime.oSet(i, savefile.ReadInt())
+                targetTime.set(i, savefile.ReadInt())
                 i++
             }
             if (savefile.GetBuildNumber() == SaveGame.INITIAL_RELEASE_BUILD_NUMBER) {
                 // these weren't saved out in the first release
                 i = 0
                 while (i < num) {
-                    lastTargetPos.oGet(i).Zero()
+                    lastTargetPos.get(i).Zero()
                     i++
                 }
             } else {
                 i = 0
                 while (i < num) {
-                    savefile.ReadVec3(lastTargetPos.oGet(i))
+                    savefile.ReadVec3(lastTargetPos.get(i))
                     i++
                 }
             }
@@ -2977,7 +2977,7 @@ object Misc {
             num = 0
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -2987,13 +2987,13 @@ object Misc {
                     i++
                     continue
                 }
-                if (0 == targetTime.oGet(i)) {
+                if (0 == targetTime.get(i)) {
                     // already threw this object
                     i++
                     continue
                 }
                 num++
-                time = Math_h.MS2SEC((targetTime.oGet(i) - Game_local.gameLocal.time).toFloat())
+                time = Math_h.MS2SEC((targetTime.get(i) - Game_local.gameLocal.time).toFloat())
                 if (time > shake_time) {
                     i++
                     continue
@@ -3002,12 +3002,12 @@ object Misc {
                 val entOrg = entPhys.GetOrigin()
                 Game_local.gameLocal.clip.TracePoint(tr, entOrg, toPos, Game_local.MASK_OPAQUE, ent)
                 if (tr.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(tr) == targetEnt) {
-                    lastTargetPos.oSet(i, toPos)
+                    lastTargetPos.set(i, toPos)
                 }
                 if (time < 0.0f) {
                     idAI.Companion.PredictTrajectory(
                         entPhys.GetOrigin(),
-                        lastTargetPos.oGet(i),
+                        lastTargetPos.get(i),
                         speed,
                         entPhys.GetGravity(),
                         entPhys.GetClipModel(),
@@ -3021,9 +3021,9 @@ object Misc {
                     vel.timesAssign(speed)
                     entPhys.SetLinearVelocity(vel)
                     if (0 == end_time) {
-                        targetTime.oSet(i, 0)
+                        targetTime.set(i, 0)
                     } else {
-                        targetTime.oSet(
+                        targetTime.set(
                             i,
                             Game_local.gameLocal.time + Game_local.gameLocal.random.RandomInt((max_wait - min_wait).toDouble()) + min_wait
                         )
@@ -3034,7 +3034,7 @@ object Misc {
                     }
                 } else {
                     // this is not the right way to set the angular velocity, but the effect is nice, so I'm keeping it. :)
-                    ang.Set(
+                    ang.set(
                         Game_local.gameLocal.random.CRandomFloat() * shake_ang.x,
                         Game_local.gameLocal.random.CRandomFloat() * shake_ang.y,
                         Game_local.gameLocal.random.CRandomFloat() * shake_ang.z
@@ -3077,8 +3077,8 @@ object Misc {
             time = 0.0f
             i = 0
             while (i < targetTime.Num()) {
-                targetTime.oSet(i, Math_h.SEC2MS(time))
-                lastTargetPos.oSet(i, toPos)
+                targetTime.set(i, Math_h.SEC2MS(time))
+                lastTargetPos.set(i, toPos)
                 frac = 1.0f - i.toFloat() / targetTime.Num().toFloat()
                 time += (Game_local.gameLocal.random.RandomFloat() + 1.0f) * 0.5f * frac + 0.1f
                 i++
@@ -3088,7 +3088,7 @@ object Misc {
             scale = throw_time / time
             i = 0
             while (i < targetTime.Num()) {
-                targetTime.oSet(i, Game_local.gameLocal.time + Math_h.SEC2MS(shake_time) + targetTime.oGet(i) * scale)
+                targetTime.set(i, Game_local.gameLocal.time + Math_h.SEC2MS(shake_time) + targetTime.get(i) * scale)
                 i++
             }
             BecomeActive(Entity.TH_THINK)

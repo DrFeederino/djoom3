@@ -110,7 +110,7 @@ object List {
 
         constructor(other: idList<T?>?) {
             list = null
-            this.oSet(other)
+            this.set(other)
         }
 
         //public					~idList<T>( );
@@ -213,7 +213,7 @@ object List {
          Copies the contents and size attributes of another list.
          ================
          */
-        fun oSet(other: idList<T?>?): idList<T?>? {
+        fun set(other: idList<T?>?): idList<T?>? {
             var i: Int
             Clear()
             num = other.num
@@ -239,7 +239,7 @@ object List {
          Release builds do no range checking.
          ================
          */
-        fun oGet(index: Int): T {
+        operator fun get(index: Int): T {
             assert(index >= 0)
             assert(index < num)
             return list!![index] as T
@@ -253,10 +253,10 @@ object List {
         //
         //            return list[index] = value;
         //        }
-        fun oSet(index: Int, value: Any?): T {
+        operator fun set(index: Int, value: T): T {
             assert(index >= 0)
             assert(index < num)
-            return value as T?. also { list.get(index) = it }
+            return list!!.set(index, value) as T
         }
 
         fun oPluSet(index: Int, value: T?): T? {
@@ -573,7 +573,7 @@ object List {
             }
             val n = other.Num()
             for (i in 0 until n) {
-                Append(other.oGet(i))
+                Append(other.get(i))
             }
             return Num()
         }

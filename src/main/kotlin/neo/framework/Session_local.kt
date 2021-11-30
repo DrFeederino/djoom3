@@ -4293,7 +4293,7 @@ object Session_local {
             loadGameList.setSize(fileList.size())
             i = 0
             while (i < fileList.size()) {
-                loadGameList.set(i, fileList[fileTimes.oGet(i).index])
+                loadGameList.set(i, fileList[fileTimes.get(i).index])
                 val src = idLexer(Lexer.LEXFL_NOERRORS or Lexer.LEXFL_NOSTRINGCONCAT)
                 if (src.LoadFile(Str.va("savegames/%s.txt", loadGameList.get(i)))) {
                     val tok = idToken()
@@ -4303,7 +4303,7 @@ object Session_local {
                     name = loadGameList.get(i)
                 }
                 name.Append("\t")
-                val date = sys_local.Sys_TimeStampToStr(fileTimes.oGet(i).timeStamp)
+                val date = sys_local.Sys_TimeStampToStr(fileTimes.get(i).timeStamp)
                 name.Append(date)
                 guiActive.SetStateString(Str.va("loadgame_item_%d", i), name.toString())
                 i++

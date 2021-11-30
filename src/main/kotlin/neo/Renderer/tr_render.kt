@@ -623,43 +623,43 @@ object tr_render {
     ) {
         image.get(0) = surfaceStage.texture.image[0]
         if (surfaceStage.texture.hasMatrix) {
-            matrix.get(0).oSet(0, surfaceRegs.get(surfaceStage.texture.matrix[0][0]))
-            matrix.get(0).oSet(1, surfaceRegs.get(surfaceStage.texture.matrix[0][1]))
-            matrix.get(0).oSet(2, 0f)
-            matrix.get(0).oSet(3, surfaceRegs.get(surfaceStage.texture.matrix[0][2]))
-            matrix.get(1).oSet(0, surfaceRegs.get(surfaceStage.texture.matrix[1][0]))
-            matrix.get(1).oSet(1, surfaceRegs.get(surfaceStage.texture.matrix[1][1]))
-            matrix.get(1).oSet(2, 0f)
-            matrix.get(1).oSet(3, surfaceRegs.get(surfaceStage.texture.matrix[1][2]))
+            matrix.get(0).set(0, surfaceRegs.get(surfaceStage.texture.matrix[0][0]))
+            matrix.get(0).set(1, surfaceRegs.get(surfaceStage.texture.matrix[0][1]))
+            matrix.get(0).set(2, 0f)
+            matrix.get(0).set(3, surfaceRegs.get(surfaceStage.texture.matrix[0][2]))
+            matrix.get(1).set(0, surfaceRegs.get(surfaceStage.texture.matrix[1][0]))
+            matrix.get(1).set(1, surfaceRegs.get(surfaceStage.texture.matrix[1][1]))
+            matrix.get(1).set(2, 0f)
+            matrix.get(1).set(3, surfaceRegs.get(surfaceStage.texture.matrix[1][2]))
 
             // we attempt to keep scrolls from generating incredibly large texture values, but
             // center rotations and center scales can still generate offsets that need to be > 1
-            if (matrix.get(0).oGet(3) < -40 || matrix.get(0).oGet(3) > 40) {
-                matrix.get(0).oMinSet(3, matrix.get(0).oGet(3).toInt().toFloat())
+            if (matrix.get(0).get(3) < -40 || matrix.get(0).get(3) > 40) {
+                matrix.get(0).minusAssign(3, matrix.get(0).get(3).toInt().toFloat())
             }
-            if (matrix.get(1).oGet(3) < -40 || matrix.get(1).oGet(3) > 40) {
-                matrix.get(1).oMinSet(3, matrix.get(1).oGet(3).toInt().toFloat())
+            if (matrix.get(1).get(3) < -40 || matrix.get(1).get(3) > 40) {
+                matrix.get(1).minusAssign(3, matrix.get(1).get(3).toInt().toFloat())
             }
         } else {
-            matrix.get(0).oSet(0, 1f)
-            matrix.get(0).oSet(1, 0f)
-            matrix.get(0).oSet(2, 0f)
-            matrix.get(0).oSet(3, 0f)
-            matrix.get(1).oSet(0, 0f)
-            matrix.get(1).oSet(1, 1f)
-            matrix.get(1).oSet(2, 0f)
-            matrix.get(1).oSet(3, 0f)
+            matrix.get(0).set(0, 1f)
+            matrix.get(0).set(1, 0f)
+            matrix.get(0).set(2, 0f)
+            matrix.get(0).set(3, 0f)
+            matrix.get(1).set(0, 0f)
+            matrix.get(1).set(1, 1f)
+            matrix.get(1).set(2, 0f)
+            matrix.get(1).set(3, 0f)
         }
         if (color != null) {
             for (i in 0..3) {
-                color.oSet(i, surfaceRegs.get(surfaceStage.color.registers[i]))
+                color.set(i, surfaceRegs.get(surfaceStage.color.registers[i]))
                 // clamp here, so card with greater range don't look different.
                 // we could perform overbrighting like we do for lights, but
                 // it doesn't currently look worth it.
-                if (color.oGet(i) < 0) {
-                    color.oSet(i, 0f)
-                } else if (color.oGet(i) > 1.0) {
-                    color.oSet(i, 1.0f)
+                if (color.get(i) < 0) {
+                    color.set(i, 0f)
+                } else if (color.get(i) > 1.0) {
+                    color.set(i, 1.0f)
                 }
             }
         }
@@ -680,8 +680,8 @@ object tr_render {
         }
 
         // if we wouldn't draw anything, don't call the Draw function
-        if ((din.diffuseColor.oGet(0) > 0 || din.diffuseColor.oGet(1) > 0 || din.diffuseColor.oGet(2) > 0) && din.diffuseImage !== Image.globalImages.blackImage
-            || (din.specularColor.oGet(0) > 0 || din.specularColor.oGet(1) > 0 || din.specularColor.oGet(2) > 0) && din.specularImage !== Image.globalImages.blackImage
+        if ((din.diffuseColor.get(0) > 0 || din.diffuseColor.get(1) > 0 || din.diffuseColor.get(2) > 0) && din.diffuseImage !== Image.globalImages.blackImage
+            || (din.specularColor.get(0) > 0 || din.specularColor.get(1) > 0 || din.specularColor.get(2) > 0) && din.specularImage !== Image.globalImages.blackImage
         ) {
             tr_render.DBG_RB_SubmittInteraction++
             drawInteraction.run(din)
@@ -746,8 +746,8 @@ object tr_render {
             tr_local.backEnd.viewDef.renderView.vieworg,
             inter.localViewOrigin
         )
-        inter.localLightOrigin.oSet(3, 0f)
-        inter.localViewOrigin.oSet(3, 1f)
+        inter.localLightOrigin.set(3, 0f)
+        inter.localViewOrigin.set(3, 1f)
         inter.ambientLight = TempDump.btoi(lightShader.IsAmbientLight())
 
         // the base projections may be modified by texture matrix on light stages
@@ -782,8 +782,8 @@ object tr_render {
             inter.bumpImage = null
             inter.specularImage = null
             inter.diffuseImage = null
-            inter.diffuseColor.Set(0f, 0f, 0f, 0f)
-            inter.specularColor.Set(0f, 0f, 0f, 0f)
+            inter.diffuseColor.set(0f, 0f, 0f, 0f)
+            inter.specularColor.set(0f, 0f, 0f, 0f)
             val lightColor = FloatArray(4)
 
             // backEnd.lightScale is calculated so that lightColor[] will never exceed
@@ -834,10 +834,10 @@ object tr_render {
                             )
                             inter.diffuseImage = diffuseImage[0]
                         }
-                        inter.diffuseColor.oMulSet(0, lightColor[0])
-                        inter.diffuseColor.oMulSet(2, lightColor[2])
-                        inter.diffuseColor.oMulSet(1, lightColor[1])
-                        inter.diffuseColor.oMulSet(3, lightColor[3])
+                        inter.diffuseColor.timesAssign(0, lightColor[0])
+                        inter.diffuseColor.timesAssign(2, lightColor[2])
+                        inter.diffuseColor.timesAssign(1, lightColor[1])
+                        inter.diffuseColor.timesAssign(3, lightColor[3])
                         inter.vertexColor = surfaceStage.vertexColor
                     }
                     stageLighting_t.SL_SPECULAR -> {
@@ -860,10 +860,10 @@ object tr_render {
                             )
                             inter.specularImage = specularImage[0]
                         }
-                        inter.specularColor.oMulSet(0, lightColor[0])
-                        inter.specularColor.oMulSet(1, lightColor[1])
-                        inter.specularColor.oMulSet(2, lightColor[2])
-                        inter.specularColor.oMulSet(3, lightColor[3])
+                        inter.specularColor.timesAssign(0, lightColor[0])
+                        inter.specularColor.timesAssign(1, lightColor[1])
+                        inter.specularColor.timesAssign(2, lightColor[2])
+                        inter.specularColor.timesAssign(3, lightColor[3])
                         inter.vertexColor = surfaceStage.vertexColor
                     }
                 }

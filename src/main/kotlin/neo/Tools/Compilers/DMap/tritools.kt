@@ -258,19 +258,19 @@ object tritools {
             c = idWinding.Companion.TriangleArea(tri.v[i].xyz, original.v[0].xyz, original.v[1].xyz) / denom
 
             // regenerate the interpolated values
-            tri.v[i].st.oSet(
+            tri.v[i].st.set(
                 0,
-                a * original.v[0].st.oGet(0) + b * original.v[1].st.oGet(0) + c * original.v[2].st.oGet(0)
+                a * original.v[0].st.get(0) + b * original.v[1].st.get(0) + c * original.v[2].st.get(0)
             )
-            tri.v[i].st.oSet(
+            tri.v[i].st.set(
                 1,
-                a * original.v[0].st.oGet(1) + b * original.v[1].st.oGet(1) + c * original.v[2].st.oGet(1)
+                a * original.v[0].st.get(1) + b * original.v[1].st.get(1) + c * original.v[2].st.get(1)
             )
             j = 0
             while (j < 3) {
-                tri.v[i].normal.oSet(
+                tri.v[i].normal.set(
                     j,
-                    a * original.v[0].normal.oGet(j) + b * original.v[1].normal.oGet(j) + c * original.v[2].normal.oGet(
+                    a * original.v[0].normal.get(j) + b * original.v[1].normal.get(j) + c * original.v[2].normal.get(
                         j
                     )
                 )
@@ -315,11 +315,11 @@ object tritools {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.oSet(w.oGet(0).ToVec3())
+                    vec.set(w.oGet(0).ToVec3())
                 } else if (j == 1) {
-                    vec.oSet(w.oGet(i - 1).ToVec3())
+                    vec.set(w.oGet(i - 1).ToVec3())
                 } else {
-                    vec.oSet(w.oGet(i).ToVec3())
+                    vec.set(w.oGet(i).ToVec3())
                 }
                 Vector.VectorCopy(vec, tri.v[j].xyz)
                 j++

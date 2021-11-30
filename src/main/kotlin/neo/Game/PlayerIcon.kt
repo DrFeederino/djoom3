@@ -85,8 +85,8 @@ object PlayerIcon {
 
 //	memset( &renderEnt, 0, sizeof( renderEnt ) );
             renderEnt = renderEntity_s()
-            renderEnt.origin.oSet(origin)
-            renderEnt.axis.oSet(axis)
+            renderEnt.origin.set(origin)
+            renderEnt.axis.set(axis)
             renderEnt.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
             renderEnt.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
             renderEnt.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
@@ -102,7 +102,7 @@ object PlayerIcon {
             renderEnt.noSelfShadow = true
             renderEnt.customShader = DeclManager.declManager.FindMaterial(mtr)
             renderEnt.referenceShader = null
-            renderEnt.bounds.oSet(renderEnt.hModel.Bounds(renderEnt))
+            renderEnt.bounds.set(renderEnt.hModel.Bounds(renderEnt))
             iconHandle = Game_local.gameRenderWorld.AddEntityDef(renderEnt)
             iconType = type
             return true
@@ -116,8 +116,8 @@ object PlayerIcon {
 
         fun UpdateIcon(player: idPlayer?, origin: idVec3?, axis: idMat3?) {
             assert(iconHandle >= 0)
-            renderEnt.origin.oSet(origin)
-            renderEnt.axis.oSet(axis)
+            renderEnt.origin.set(origin)
+            renderEnt.axis.set(axis)
             Game_local.gameRenderWorld.UpdateEntityDef(iconHandle, renderEnt)
         }
 

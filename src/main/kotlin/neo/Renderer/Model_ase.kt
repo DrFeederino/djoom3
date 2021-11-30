@@ -51,10 +51,10 @@ object Model_ase {
         }
         i = 0
         while (i < ase.objects.Num()) {
-            obj = ase.objects.oGet(i)
+            obj = ase.objects.get(i)
             j = 0
             while (j < obj.frames.Num()) {
-                mesh = obj.frames.oGet(j)
+                mesh = obj.frames.get(j)
                 if (mesh.vertexes != null) {
 //                    Mem_Free(mesh.vertexes);
                     mesh.vertexes = null
@@ -105,7 +105,7 @@ object Model_ase {
 
 //            material = ase.materials.oGet(i);
 //            Mem_Free(material);
-            ase.materials.oSet(i, null)
+            ase.materials.set(i, null)
             i++
         }
         ase.materials.Clear()
@@ -400,27 +400,27 @@ object Model_ase {
                     )
                 }
                 "*UVW_U_OFFSET" -> {
-                    material = Model_ase.ase.model.materials.oGet(Model_ase.ase.model.materials.Num() - 1)
+                    material = Model_ase.ase.model.materials.get(Model_ase.ase.model.materials.Num() - 1)
                     Model_ase.ASE_GetToken(false)
                     material.uOffset = Model_ase.ase.token.toFloat()
                 }
                 "*UVW_V_OFFSET" -> {
-                    material = Model_ase.ase.model.materials.oGet(Model_ase.ase.model.materials.Num() - 1)
+                    material = Model_ase.ase.model.materials.get(Model_ase.ase.model.materials.Num() - 1)
                     Model_ase.ASE_GetToken(false)
                     material.vOffset = Model_ase.ase.token.toFloat()
                 }
                 "*UVW_U_TILING" -> {
-                    material = Model_ase.ase.model.materials.oGet(Model_ase.ase.model.materials.Num() - 1)
+                    material = Model_ase.ase.model.materials.get(Model_ase.ase.model.materials.Num() - 1)
                     Model_ase.ASE_GetToken(false)
                     material.uTiling = Model_ase.ase.token.toFloat()
                 }
                 "*UVW_V_TILING" -> {
-                    material = Model_ase.ase.model.materials.oGet(Model_ase.ase.model.materials.Num() - 1)
+                    material = Model_ase.ase.model.materials.get(Model_ase.ase.model.materials.Num() - 1)
                     Model_ase.ASE_GetToken(false)
                     material.vTiling = Model_ase.ase.token.toFloat()
                 }
                 "*UVW_ANGLE" -> {
-                    material = Model_ase.ase.model.materials.oGet(Model_ase.ase.model.materials.Num() - 1)
+                    material = Model_ase.ase.model.materials.get(Model_ase.ase.model.materials.Num() - 1)
                     Model_ase.ASE_GetToken(false)
                     material.angle = Model_ase.ase.token.toFloat()
                 }
@@ -494,7 +494,7 @@ object Model_ase {
             i = 0
             while (i < 3 && j != -1) {
                 Model_ase.ASE_GetToken(false)
-                Model_ase.ase.currentObject.mesh.transform[j].oSet(i, Model_ase.ase.token.toFloat())
+                Model_ase.ase.currentObject.mesh.transform[j].set(i, Model_ase.ase.token.toFloat())
                 i++
             }
         }
@@ -625,11 +625,11 @@ object Model_ase {
 
                     // we flip the vertex order to change the face direction to our style
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(0) =
-                        (pMesh.cvertexes.get(a).oGet(0) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(0) * 255).toByte()
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(1) =
-                        (pMesh.cvertexes.get(a).oGet(1) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(1) * 255).toByte()
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(2) =
-                        (pMesh.cvertexes.get(a).oGet(2) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(2) * 255).toByte()
                 }
                 Model_ase.ase.currentFace++
             } else {
@@ -697,11 +697,11 @@ object Model_ase {
                     pMesh.cvertexes = idVec3.Companion.generateArray(pMesh.numCVertexes)
                 }
                 //pMesh.cvertexes[ase.currentVertex] = new idVec3();
-                pMesh.cvertexes.get(Model_ase.ase.currentVertex).oSet(0, Model_ase.atof(token))
+                pMesh.cvertexes.get(Model_ase.ase.currentVertex).set(0, Model_ase.atof(token))
                 Model_ase.ASE_GetToken(false)
-                pMesh.cvertexes.get(Model_ase.ase.currentVertex).oSet(1, Model_ase.atof(token))
+                pMesh.cvertexes.get(Model_ase.ase.currentVertex).set(1, Model_ase.atof(token))
                 Model_ase.ASE_GetToken(false)
-                pMesh.cvertexes.get(Model_ase.ase.currentVertex).oSet(2, Model_ase.atof(token))
+                pMesh.cvertexes.get(Model_ase.ase.currentVertex).set(2, Model_ase.atof(token))
                 Model_ase.ase.currentVertex++
                 if (Model_ase.ase.currentVertex > pMesh.numCVertexes) {
                     Common.common.Error("ase.currentVertex > pMesh.numCVertexes")
@@ -737,25 +737,25 @@ object Model_ase {
                     Common.common.Error("MESH_NORMALS face index != currentFace")
                 }
                 Model_ase.ASE_GetToken(false)
-                n.oSet(0, Model_ase.ase.token.toFloat())
+                n.set(0, Model_ase.ase.token.toFloat())
                 Model_ase.ASE_GetToken(false)
-                n.oSet(1, Model_ase.ase.token.toFloat())
+                n.set(1, Model_ase.ase.token.toFloat())
                 Model_ase.ASE_GetToken(false)
-                n.oSet(2, Model_ase.ase.token.toFloat())
-                f.faceNormal.oSet(
+                n.set(2, Model_ase.ase.token.toFloat())
+                f.faceNormal.set(
                     0,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(0) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(0) + n.oGet(2) * pMesh.transform.get(2).oGet(0)
+                    n.get(0) * pMesh.transform.get(0).get(0) + n.get(1) * pMesh.transform.get(1)
+                        .get(0) + n.get(2) * pMesh.transform.get(2).get(0)
                 )
-                f.faceNormal.oSet(
+                f.faceNormal.set(
                     1,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(1) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(1) + n.oGet(2) * pMesh.transform.get(2).oGet(1)
+                    n.get(0) * pMesh.transform.get(0).get(1) + n.get(1) * pMesh.transform.get(1)
+                        .get(1) + n.get(2) * pMesh.transform.get(2).get(1)
                 )
-                f.faceNormal.oSet(
+                f.faceNormal.set(
                     2,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(2) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(2) + n.oGet(2) * pMesh.transform.get(2).oGet(2)
+                    n.get(0) * pMesh.transform.get(0).get(2) + n.get(1) * pMesh.transform.get(1)
+                        .get(2) + n.get(2) * pMesh.transform.get(2).get(2)
                 )
                 f.faceNormal.Normalize()
                 Model_ase.ase.currentFace++
@@ -779,25 +779,25 @@ object Model_ase {
                     Common.common.Error("MESH_NORMALS vertex index doesn't match face")
                 }
                 Model_ase.ASE_GetToken(false)
-                n.oSet(0, Model_ase.ase.token.toFloat())
+                n.set(0, Model_ase.ase.token.toFloat())
                 Model_ase.ASE_GetToken(false)
-                n.oSet(1, Model_ase.ase.token.toFloat())
+                n.set(1, Model_ase.ase.token.toFloat())
                 Model_ase.ASE_GetToken(false)
-                n.oSet(2, Model_ase.ase.token.toFloat())
-                f.vertexNormals.get(v).oSet(
+                n.set(2, Model_ase.ase.token.toFloat())
+                f.vertexNormals.get(v).set(
                     0,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(0) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(0) + n.oGet(2) * pMesh.transform.get(2).oGet(0)
+                    n.get(0) * pMesh.transform.get(0).get(0) + n.get(1) * pMesh.transform.get(1)
+                        .get(0) + n.get(2) * pMesh.transform.get(2).get(0)
                 )
-                f.vertexNormals.get(v).oSet(
+                f.vertexNormals.get(v).set(
                     0,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(1) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(1) + n.oGet(2) * pMesh.transform.get(2).oGet(2)
+                    n.get(0) * pMesh.transform.get(0).get(1) + n.get(1) * pMesh.transform.get(1)
+                        .get(1) + n.get(2) * pMesh.transform.get(2).get(2)
                 )
-                f.vertexNormals.get(v).oSet(
+                f.vertexNormals.get(v).set(
                     0,
-                    n.oGet(0) * pMesh.transform.get(0).oGet(2) + n.oGet(1) * pMesh.transform.get(1)
-                        .oGet(2) + n.oGet(2) * pMesh.transform.get(2).oGet(1)
+                    n.get(0) * pMesh.transform.get(0).get(2) + n.get(1) * pMesh.transform.get(1)
+                        .get(2) + n.get(2) * pMesh.transform.get(2).get(1)
                 )
                 f.vertexNormals.get(v).Normalize()
             }
@@ -967,7 +967,7 @@ object Model_ase {
                     }
                     var i = 0
                     while (i < transform.size) {
-                        Model_ase.ase.currentMesh.transform[i].oSet(transform[i])
+                        Model_ase.ase.currentMesh.transform[i].set(transform[i])
                         i++
                     }
                     Model_ase.ASE_ParseBracedBlock(ASE_KeyMESH.getInstance())

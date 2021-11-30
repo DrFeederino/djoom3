@@ -343,14 +343,14 @@ object Game {
             gotRight = args.GetVector("light_right", "", renderLight.right)
             args.GetVector("light_start", "0 0 0", renderLight.start)
             if (!args.GetVector("light_end", "", renderLight.end)) {
-                renderLight.end.oSet(renderLight.target)
+                renderLight.end.set(renderLight.target)
             }
 
             // we should have all of the target/right/up or none of them
             if ((gotTarget || gotUp || gotRight) != (gotTarget && gotUp && gotRight)) {
                 Game_local.gameLocal.Printf(
                     "Light at (%f,%f,%f) has bad target info\n",
-                    renderLight.origin.oGet(0), renderLight.origin.oGet(1), renderLight.origin.oGet(2)
+                    renderLight.origin.get(0), renderLight.origin.get(1), renderLight.origin.get(2)
                 )
                 return
             }
@@ -364,9 +364,9 @@ object Game {
                 if (!args.GetVector("light_radius", "300 300 300", renderLight.lightRadius)) {
                     val radius = CFloat()
                     args.GetFloat("light", "300", radius)
-                    renderLight.lightRadius.oSet(
+                    renderLight.lightRadius.set(
                         0,
-                        renderLight.lightRadius.oSet(1, renderLight.lightRadius.oSet(2, radius.getVal()))
+                        renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius.getVal()))
                     )
                 }
             }
@@ -376,25 +376,25 @@ object Game {
             var mat: idMat3? = idMat3()
             if (!args.GetMatrix("light_rotation", "1 0 0 0 1 0 0 0 1", mat)) {
                 if (!args.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", mat)) {
-                    angles.oSet(1, args.GetFloat("angle", "0"))
-                    angles.oSet(0, 0f)
-                    angles.oSet(1, idMath.AngleNormalize360(angles.oGet(1)))
-                    angles.oSet(2, 0f)
+                    angles.set(1, args.GetFloat("angle", "0"))
+                    angles.set(0, 0f)
+                    angles.set(1, idMath.AngleNormalize360(angles.get(1)))
+                    angles.set(2, 0f)
                     mat = angles.ToMat3()
                 }
             }
 
             // fix degenerate identity matrices
-            mat.oGet(0).FixDegenerateNormal()
-            mat.oGet(1).FixDegenerateNormal()
-            mat.oGet(2).FixDegenerateNormal()
+            mat.get(0).FixDegenerateNormal()
+            mat.get(1).FixDegenerateNormal()
+            mat.get(2).FixDegenerateNormal()
             renderLight.axis = mat
 
             // check for other attributes
             args.GetVector("_color", "1 1 1", color)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMESCALE] = args.GetFloat("shaderParm3", "1")
             if (TempDump.NOT(
                     args.GetFloat("shaderParm4", "0")
@@ -446,7 +446,7 @@ object Game {
                 }
             }
             if (renderEntity.hModel != null) {
-                renderEntity.bounds.oSet(renderEntity.hModel.Bounds(renderEntity))
+                renderEntity.bounds.set(renderEntity.hModel.Bounds(renderEntity))
             } else {
                 renderEntity.bounds.Zero()
             }
@@ -466,7 +466,7 @@ object Game {
             if (!args.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", renderEntity.axis)) {
                 angle = args.GetFloat("angle")
                 if (angle != 0.0f) {
-                    renderEntity.axis.oSet(idAngles(0.0f, angle, 0.0f).ToMat3())
+                    renderEntity.axis.set(idAngles(0.0f, angle, 0.0f).ToMat3())
                 } else {
                     renderEntity.axis.Identity()
                 }
@@ -475,9 +475,9 @@ object Game {
 
             // get shader parms
             args.GetVector("_color", "1 1 1", color)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
             renderEntity.shaderParms[3] = args.GetFloat("shaderParm3", "1")
             renderEntity.shaderParms[4] = args.GetFloat("shaderParm4", "0")
             renderEntity.shaderParms[5] = args.GetFloat("shaderParm5", "0")
@@ -786,7 +786,7 @@ object Game {
                 }
                 md5anim = anim.MD5Anim(0)
                 ent.customSkin = modelDef.GetDefaultSkin()
-                offset.oSet(modelDef.GetVisualOffset())
+                offset.set(modelDef.GetVisualOffset())
             } else {
                 filename = idStr(animName.get(0))
                 filename.ExtractFileExtension(extension)
@@ -840,7 +840,7 @@ object Game {
             }
             yaw = player.viewAngles.yaw
             args.Set("angle", Str.va("%f", yaw + 180))
-            org.oSet(
+            org.set(
                 player.GetPhysics().GetOrigin()
                     .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
             )
@@ -1027,18 +1027,18 @@ object Game {
             // get the initial origin and axis for each AF body
             i = 0
             while (i < af.bodies.Num()) {
-                fb = af.bodies.oGet(i)
+                fb = af.bodies.get(i)
                 if (fb.modelType == traceModel_t.TRM_BONE) {
                     // axis of bone trace model
-                    axis.oSet(2, fb.v2.ToVec3().oMinus(fb.v1.ToVec3()))
-                    axis.oGet(2).Normalize()
-                    axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1))
-                    axis.oSet(1, axis.oGet(1).oNegative())
+                    axis.set(2, fb.v2.ToVec3().minus(fb.v1.ToVec3()))
+                    axis.get(2).Normalize()
+                    axis.get(2).NormalVectors(axis.get(0), axis.get(1))
+                    axis.set(1, axis.get(1).oNegative())
                 } else {
                     axis = fb.angles.ToMat3()
                 }
-                bodyOrigin[i].oSet(fb.origin.ToVec3())
-                newBodyOrigin[i].oSet(bodyOrigin[i])
+                bodyOrigin[i].set(fb.origin.ToVec3())
+                newBodyOrigin[i].set(bodyOrigin[i])
                 bodyAxis[i] = axis
                 newBodyAxis[i] = bodyAxis[i]
                 i++
@@ -1051,7 +1051,7 @@ object Game {
                 name.Strip("body ")
                 i = 0
                 while (i < af.bodies.Num()) {
-                    fb = af.bodies.oGet(i)
+                    fb = af.bodies.get(i)
                     if (fb.name.Icmp(name) == 0) {
                         break
                     }
@@ -1071,10 +1071,10 @@ object Game {
                 angles.roll = sscanf.nextFloat()
                 if (fb.jointName.Icmp("origin") == 0) {
                     meshAxis = bodyAxis[i].Transpose().times(angles.ToMat3())
-                    meshOrigin.oSet(origin.oMinus(bodyOrigin[i].times(meshAxis)))
+                    meshOrigin.set(origin.minus(bodyOrigin[i].times(meshAxis)))
                     poseIsSet.get(0) = true
                 } else {
-                    newBodyOrigin[i].oSet(origin)
+                    newBodyOrigin[i].set(origin)
                     newBodyAxis[i] = angles.ToMat3()
                 }
                 arg = args.MatchPrefix("body ", arg)
@@ -1100,7 +1100,7 @@ object Game {
             // get all the joint modifications
             i = 0
             while (i < af.bodies.Num()) {
-                fb = af.bodies.oGet(i)
+                fb = af.bodies.get(i)
                 if (fb.jointName.Icmp("origin") == 0) {
                     i++
                     continue
@@ -1118,7 +1118,7 @@ object Game {
                         bodyAxis[i].times(originalJoints[jointNum].ToMat3().Transpose()).Transpose()
                             .times(newBodyAxis[i].times(meshAxis.Transpose()))
                     // FIXME: calculate correct modifiedOrigin
-                    modifiedOrigin[jointNum].oSet(originalJoints[jointNum].ToVec3())
+                    modifiedOrigin[jointNum].set(originalJoints[jointNum].ToVec3())
                 }
                 i++
             }
@@ -1131,7 +1131,7 @@ object Game {
                 val parentAxis = originalJoints[parentNum].ToMat3()
                 val localm = originalJoints[i].ToMat3().times(parentAxis.Transpose())
                 val localt = idVec3(
-                    originalJoints[i].ToVec3().oMinus(originalJoints[parentNum].ToVec3())
+                    originalJoints[i].ToVec3().minus(originalJoints[parentNum].ToVec3())
                         .oMultiply(parentAxis.Transpose())
                 )
                 when (jointMod[i]) {
@@ -1242,13 +1242,13 @@ object Game {
         // Entity methods.
         fun EntityGetOrigin(ent: idEntity?, org: idVec3?) {
             if (ent != null) {
-                org.oSet(ent.GetPhysics().GetOrigin())
+                org.set(ent.GetPhysics().GetOrigin())
             }
         }
 
         fun EntityGetAxis(ent: idEntity?, axis: idMat3?) {
             if (ent != null) {
-                axis.oSet(ent.GetPhysics().GetAxis())
+                axis.set(ent.GetPhysics().GetAxis())
             }
         }
 
@@ -1311,19 +1311,19 @@ object Game {
         }
 
         fun PlayerGetOrigin(org: idVec3?) {
-            org.oSet(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
+            org.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
         }
 
         fun PlayerGetAxis(axis: idMat3?) {
-            axis.oSet(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetAxis())
+            axis.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetAxis())
         }
 
         fun PlayerGetViewAngles(angles: idAngles?) {
-            angles.oSet(Game_local.gameLocal.GetLocalPlayer().viewAngles)
+            angles.set(Game_local.gameLocal.GetLocalPlayer().viewAngles)
         }
 
         fun PlayerGetEyePosition(org: idVec3?) {
-            org.oSet(Game_local.gameLocal.GetLocalPlayer().GetEyePosition())
+            org.set(Game_local.gameLocal.GetLocalPlayer().GetEyePosition())
         }
 
         // In game map editing support.

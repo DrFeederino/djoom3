@@ -117,7 +117,7 @@ class DeclSkin {
             }
             i = 0
             while (i < mappings.Num()) {
-                val map = mappings.oGet(i)
+                val map = mappings.get(i)
 
                 // null = wildcard match
                 if (TempDump.NOT(map.from) || map.from == shader) {
@@ -142,7 +142,7 @@ class DeclSkin {
         }
 
         fun oSet(skin: idDeclSkin?) {
-            mappings.oSet(skin.mappings)
+            mappings.set(skin.mappings)
             associatedModels.set(skin.associatedModels)
         }
 

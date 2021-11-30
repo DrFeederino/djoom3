@@ -421,15 +421,15 @@ object DeclParticle {
                 when (distributionType) {
                     prtDistribution_t.PDIST_RECT -> {
                         // ( sizeX sizeY sizeZ )
-                        origin.oSet(
+                        origin.set(
                             0,
                             (if (randomDistribution) g.random.CRandomFloat() else 1.0f) * distributionParms.get(0)
                         )
-                        origin.oSet(
+                        origin.set(
                             1,
                             (if (randomDistribution) g.random.CRandomFloat() else 1.0f) * distributionParms.get(1)
                         )
-                        origin.oSet(
+                        origin.set(
                             2,
                             (if (randomDistribution) g.random.CRandomFloat() else 1.0f) * distributionParms.get(2)
                         )
@@ -440,13 +440,13 @@ object DeclParticle {
                         val origin2 = CFloat()
                         val origin3 = CFloat()
                         idMath.SinCos16(angle1, origin2, origin3)
-                        origin.oSet(0, origin2.getVal())
-                        origin.oSet(1, origin3.getVal())
-                        origin.oSet(2, if (randomDistribution) g.random.CRandomFloat() else 1.0f)
+                        origin.set(0, origin2.getVal())
+                        origin.set(1, origin3.getVal())
+                        origin.set(2, if (randomDistribution) g.random.CRandomFloat() else 1.0f)
 
                         // reproject points that are inside the ringFraction to the outer band
                         if (distributionParms.get(3) > 0.0f) {
-                            radiusSqr = origin.oGet(0) * origin.oGet(0) + origin.oGet(1) * origin.oGet(1)
+                            radiusSqr = origin.get(0) * origin.get(0) + origin.get(1) * origin.get(1)
                             if (radiusSqr < distributionParms.get(3) * distributionParms.get(3)) {
                                 // if we are inside the inner reject zone, rescale to put it out into the good zone
                                 val f = (Math.sqrt(radiusSqr.toDouble()) / distributionParms.get(3)).toFloat()
@@ -466,16 +466,16 @@ object DeclParticle {
                         // iterating with rejection is the only way to get an even distribution over a sphere
                         if (randomDistribution) {
                             do {
-                                origin.oSet(0, g.random.CRandomFloat())
-                                origin.oSet(1, g.random.CRandomFloat())
-                                origin.oSet(2, g.random.CRandomFloat())
+                                origin.set(0, g.random.CRandomFloat())
+                                origin.set(1, g.random.CRandomFloat())
+                                origin.set(2, g.random.CRandomFloat())
                                 radiusSqr =
-                                    origin.oGet(0) * origin.oGet(0) + origin.oGet(1) * origin.oGet(1) + origin.oGet(2) * origin.oGet(
+                                    origin.get(0) * origin.get(0) + origin.get(1) * origin.get(1) + origin.get(2) * origin.get(
                                         2
                                     )
                             } while (radiusSqr > 1.0f)
                         } else {
-                            origin.Set(1.0f, 1.0f, 1.0f)
+                            origin.set(1.0f, 1.0f, 1.0f)
                             radiusSqr = 3.0f
                         }
                         if (distributionParms.get(3) > 0.0f) {
@@ -516,12 +516,12 @@ object DeclParticle {
                         val c2 = CFloat()
                         idMath.SinCos16(angle1, s1, c1)
                         idMath.SinCos16(angle2, s2, c2)
-                        dir.oSet(0, s1.getVal() * c2.getVal())
-                        dir.oSet(1, s1.getVal() * s2.getVal())
-                        dir.oSet(2, c1.getVal())
+                        dir.set(0, s1.getVal() * c2.getVal())
+                        dir.set(1, s1.getVal() * s2.getVal())
+                        dir.set(2, c1.getVal())
                     }
                     prtDirection_t.PDIR_OUTWARD -> {
-                        dir.oSet(origin)
+                        dir.set(origin)
                         dir.Normalize()
                         dir.plusAssign(2, directionParms.get(0))
                     }
@@ -548,9 +548,9 @@ object DeclParticle {
                         val s1 = CFloat()
                         val c1 = CFloat()
                         idMath.SinCos16(angle1, s1, c1)
-                        origin.oSet(0, c1.getVal() * customPathParms.get(0))
-                        origin.oSet(1, s1.getVal() * customPathParms.get(1))
-                        origin.oSet(
+                        origin.set(0, c1.getVal() * customPathParms.get(0))
+                        origin.set(1, s1.getVal() * customPathParms.get(1))
+                        origin.set(
                             2,
                             g.random.RandomFloat() * customPathParms.get(2) + customPathParms.get(4) * speed2 * g.age
                         )
@@ -567,9 +567,9 @@ object DeclParticle {
                         val c2 = CFloat()
                         idMath.SinCos16(angle1, s1, c1)
                         idMath.SinCos16(angle2, s2, c2)
-                        origin.oSet(0, c1.getVal() * c2.getVal())
-                        origin.oSet(1, s1.getVal() * c2.getVal())
-                        origin.oSet(2, -s2.getVal())
+                        origin.set(0, c1.getVal() * c2.getVal())
+                        origin.set(1, s1.getVal() * c2.getVal())
+                        origin.set(2, -s2.getVal())
                         origin.times(customPathParms.get(2))
                     }
                     prtCustomPth_t.PPATH_ORBIT -> {
@@ -578,15 +578,15 @@ object DeclParticle {
                         val s1 = CFloat()
                         val c1 = CFloat()
                         idMath.SinCos16(angle1, s1, c1)
-                        origin.oSet(0, c1.getVal() * customPathParms.get(0))
-                        origin.oSet(1, s1.getVal() * customPathParms.get(0))
+                        origin.set(0, c1.getVal() * customPathParms.get(0))
+                        origin.set(1, s1.getVal() * customPathParms.get(0))
                         origin.ProjectSelfOntoSphere(customPathParms.get(0))
                     }
                     prtCustomPth_t.PPATH_DRIP -> {
                         // ( speed )
-                        origin.oSet(0, 0.0f)
-                        origin.oSet(1, 0.0f)
-                        origin.oSet(2, -(g.age * customPathParms.get(0)))
+                        origin.set(0, 0.0f)
+                        origin.set(1, 0.0f)
+                        origin.set(2, -(g.age * customPathParms.get(0)))
                     }
                     else -> {
                         Common.common.Error("idParticleStage.ParticleOrigin: bad customPathType")
@@ -638,26 +638,26 @@ object DeclParticle {
                     g.frac = g.age / particleLife
                     val oldOrigin = idVec3()
                     ParticleOrigin(g, oldOrigin)
-                    up.oSet(stepOrigin.oMinus(oldOrigin)) // along the direction of travel
+                    up.set(stepOrigin.minus(oldOrigin)) // along the direction of travel
                     val forwardDir = idVec3()
-                    g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(0), forwardDir)
+                    g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.get(0), forwardDir)
                     up.minusAssign(forwardDir.times(up.times(forwardDir)))
                     up.Normalize()
-                    left.oSet(up.Cross(forwardDir))
+                    left.set(up.Cross(forwardDir))
                     left.timesAssign(psize)
                     verts.get(verts_p + 0).oSet(verts.get(0))
                     verts.get(verts_p + 1).oSet(verts.get(1))
                     verts.get(verts_p + 2).oSet(verts.get(2))
                     verts.get(verts_p + 3).oSet(verts.get(3))
                     if (i == 0) {
-                        verts.get(verts_p + 0).xyz.oSet(stepOrigin.oMinus(left))
-                        verts.get(verts_p + 1).xyz.oSet(stepOrigin.oPlus(left))
+                        verts.get(verts_p + 0).xyz.set(stepOrigin.minus(left))
+                        verts.get(verts_p + 1).xyz.set(stepOrigin.oPlus(left))
                     } else {
-                        verts.get(verts_p + 0).xyz.oSet(stepOrigin.oMinus(stepLeft))
-                        verts.get(verts_p + 1).xyz.oSet(stepOrigin.oPlus(stepLeft))
+                        verts.get(verts_p + 0).xyz.set(stepOrigin.minus(stepLeft))
+                        verts.get(verts_p + 1).xyz.set(stepOrigin.oPlus(stepLeft))
                     }
-                    verts.get(verts_p + 2).xyz.oSet(oldOrigin.oMinus(left))
-                    verts.get(verts_p + 3).xyz.oSet(oldOrigin.oPlus(left))
+                    verts.get(verts_p + 2).xyz.set(oldOrigin.minus(left))
+                    verts.get(verts_p + 3).xyz.set(oldOrigin.oPlus(left))
 
                     // modify texcoords
                     verts.get(verts_p + 0).st.x = verts.get(0).st.x
@@ -670,8 +670,8 @@ object DeclParticle {
                     verts.get(verts_p + 3).st.y = t + height
                     t += height
                     verts_p += 4
-                    stepOrigin.oSet(oldOrigin)
-                    stepLeft.oSet(left)
+                    stepOrigin.set(oldOrigin)
+                    stepLeft.set(left)
                 }
                 g.random = idRandom(currentRandom)
                 g.age = currentAge
@@ -722,17 +722,17 @@ object DeclParticle {
                 // oriented in viewer space
                 val entityLeft = idVec3()
                 val entityUp = idVec3()
-                g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(1), entityLeft)
-                g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.oGet(2), entityUp)
-                left.oSet(entityLeft.times(c).oPlus(entityUp.times(s)))
-                up.oSet(entityUp.times(c).oMinus(entityLeft.times(s)))
+                g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.get(1), entityLeft)
+                g.renderEnt.axis.ProjectVector(g.renderView.viewaxis.get(2), entityUp)
+                left.set(entityLeft.times(c).oPlus(entityUp.times(s)))
+                up.set(entityUp.times(c).minus(entityLeft.times(s)))
             }
             left.timesAssign(psize)
             up.timesAssign(height)
-            verts.get(0).xyz.oSet(origin.oMinus(left).oPlus(up))
-            verts.get(1).xyz.oSet(origin.oPlus(left).oPlus(up))
-            verts.get(2).xyz.oSet(origin.oMinus(left).oMinus(up))
-            verts.get(3).xyz.oSet(origin.oPlus(left).oMinus(up))
+            verts.get(0).xyz.set(origin.minus(left).oPlus(up))
+            verts.get(1).xyz.set(origin.oPlus(left).oPlus(up))
+            verts.get(2).xyz.set(origin.minus(left).minus(up))
+            verts.get(3).xyz.set(origin.oPlus(left).oMinus(up))
             return 4
         }
 
@@ -760,14 +760,14 @@ object DeclParticle {
             }
             t = 0.0f
             height = 1.0f
-            verts.get(0).st.oSet(0, s)
-            verts.get(0).st.oSet(1, t)
-            verts.get(1).st.oSet(0, s + width)
-            verts.get(1).st.oSet(1, t)
-            verts.get(2).st.oSet(0, s)
-            verts.get(2).st.oSet(1, t + height)
-            verts.get(3).st.oSet(0, s + width)
-            verts.get(3).st.oSet(1, t + height)
+            verts.get(0).st.set(0, s)
+            verts.get(0).st.set(1, t)
+            verts.get(1).st.set(0, s + width)
+            verts.get(1).st.set(1, t)
+            verts.get(2).st.set(0, s)
+            verts.get(2).st.set(1, t + height)
+            verts.get(3).st.set(0, s + width)
+            verts.get(3).st.set(1, t + height)
         }
 
         fun ParticleColors(g: particleGen_t?, verts: Array<idDrawVert?>?) {
@@ -791,7 +791,7 @@ object DeclParticle {
             }
             for (i in 0..3) {
                 val fcolor =
-                    (if (entityColor) g.renderEnt.shaderParms[i] else color.oGet(i)) * fadeFraction + fadeColor.oGet(i) * (1.0f - fadeFraction)
+                    (if (entityColor) g.renderEnt.shaderParms[i] else color.get(i)) * fadeFraction + fadeColor.get(i) * (1.0f - fadeFraction)
                 var icolor = idMath.FtoiFast(fcolor * 255.0f)
                 if (icolor < 0) {
                     icolor = 0
@@ -868,7 +868,7 @@ object DeclParticle {
             customPathParms.get(5) = src.customPathParms.get(5)
             customPathParms.get(6) = src.customPathParms.get(6)
             customPathParms.get(7) = src.customPathParms.get(7)
-            offset.oSet(src.offset)
+            offset.set(src.offset)
             animationFrames = src.animationFrames
             animationRate = src.animationRate
             initialAngle = src.initialAngle
@@ -997,8 +997,8 @@ object DeclParticle {
             //
             bounds.Clear()
             for (i in 0 until stages.Num()) {
-                GetStageBounds(stages.oGet(i))
-                bounds.AddBounds(stages.oGet(i).bounds)
+                GetStageBounds(stages.get(i))
+                bounds.AddBounds(stages.get(i).bounds)
             }
             if (bounds.GetVolume() <= 0.1f) {
                 bounds = idBounds(Vector.getVec3_origin()).Expand(8.0f)
@@ -1037,7 +1037,7 @@ object DeclParticle {
                 f.WriteFloatString("\tdepthHack\t%f\n", depthHack)
             }
             for (i in 0 until stages.Num()) {
-                WriteStage(f, stages.oGet(i))
+                WriteStage(f, stages.get(i))
             }
             f.WriteFloatString("}")
             SetText(String(f.GetDataPtr().array()))
@@ -1051,13 +1051,13 @@ object DeclParticle {
             // this isn't absolutely guaranteed, but it should be close
             val g = particleGen_t()
             val renderEntity = renderEntity_s() //memset( &renderEntity, 0, sizeof( renderEntity ) );
-            renderEntity.axis.oSet(idMat3.Companion.getMat3_identity())
+            renderEntity.axis.set(idMat3.Companion.getMat3_identity())
             val renderView = renderView_s() //memset( &renderView, 0, sizeof( renderView ) );
-            renderView.viewaxis.oSet(idMat3.Companion.getMat3_identity())
+            renderView.viewaxis.set(idMat3.Companion.getMat3_identity())
             g.renderEnt = renderEntity
             g.renderView = renderView
-            g.origin.oSet(idVec3())
-            g.axis.oSet(idMat3.Companion.getMat3_identity())
+            g.origin.set(idVec3())
+            g.axis.set(idMat3.Companion.getMat3_identity())
             val steppingRandom = idRandom()
             steppingRandom.SetSeed(0)
 
@@ -1249,23 +1249,23 @@ object DeclParticle {
                     continue
                 }
                 if (0 == token.Icmp("color")) {
-                    stage.color.oSet(0, src.ParseFloat())
-                    stage.color.oSet(1, src.ParseFloat())
-                    stage.color.oSet(2, src.ParseFloat())
-                    stage.color.oSet(3, src.ParseFloat())
+                    stage.color.set(0, src.ParseFloat())
+                    stage.color.set(1, src.ParseFloat())
+                    stage.color.set(2, src.ParseFloat())
+                    stage.color.set(3, src.ParseFloat())
                     continue
                 }
                 if (0 == token.Icmp("fadeColor")) {
-                    stage.fadeColor.oSet(0, src.ParseFloat())
-                    stage.fadeColor.oSet(1, src.ParseFloat())
-                    stage.fadeColor.oSet(2, src.ParseFloat())
-                    stage.fadeColor.oSet(3, src.ParseFloat())
+                    stage.fadeColor.set(0, src.ParseFloat())
+                    stage.fadeColor.set(1, src.ParseFloat())
+                    stage.fadeColor.set(2, src.ParseFloat())
+                    stage.fadeColor.set(3, src.ParseFloat())
                     continue
                 }
                 if (0 == token.Icmp("offset")) {
-                    stage.offset.oSet(0, src.ParseFloat())
-                    stage.offset.oSet(1, src.ParseFloat())
-                    stage.offset.oSet(2, src.ParseFloat())
+                    stage.offset.set(0, src.ParseFloat())
+                    stage.offset.set(1, src.ParseFloat())
+                    stage.offset.set(2, src.ParseFloat())
                     continue
                 }
                 if (0 == token.Icmp("animationFrames")) {

@@ -95,7 +95,7 @@ object AI_Vagary {
                 }
                 val entPhys = ent.GetPhysics()
                 val entOrg = entPhys.GetOrigin()
-                dist = entOrg.oMinus(enemyEyePos).LengthFast()
+                dist = entOrg.minus(enemyEyePos).LengthFast()
                 if (dist < minDist.value) {
                     i++
                     index++
@@ -140,7 +140,7 @@ object AI_Vagary {
             entPhys = ent.GetPhysics()
             enemyEnt = enemy.GetEntity()
             if (TempDump.NOT(enemyEnt)) {
-                vel.oSet(viewAxis.oGet(0).times(physicsObj.GetGravityAxis()).times(speed))
+                vel.set(viewAxis.get(0).times(physicsObj.GetGravityAxis()).times(speed))
             } else {
                 idAI.Companion.PredictTrajectory(
                     entPhys.GetOrigin(),

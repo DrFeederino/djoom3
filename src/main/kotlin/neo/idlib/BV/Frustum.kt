@@ -48,21 +48,21 @@ object Frustum {
     private fun BoxToPoints(center: idVec3, extents: idVec3, axis: idMat3, points: Array<idVec3>) {
         val ax = idMat3()
         val temp: Array<idVec3> = idVec3.generateArray(4)
-        ax.oSet(0, axis.oGet(0).times(extents.oGet(0)))
-        ax.oSet(1, axis.oGet(1).times(extents.oGet(1)))
-        ax.oSet(2, axis.oGet(2).times(extents.oGet(2)))
-        temp[0].oSet(center.oMinus(ax.oGet(0)))
-        temp[1].oSet(center.oPlus(ax.oGet(0)))
-        temp[2].oSet(ax.oGet(1).oMinus(ax.oGet(2)))
-        temp[3].oSet(ax.oGet(1).oPlus(ax.oGet(2)))
-        points[0].oSet(temp[0].oMinus(temp[3]))
-        points[1].oSet(temp[1].oMinus(temp[3]))
-        points[2].oSet(temp[1].oPlus(temp[2]))
-        points[3].oSet(temp[0].oPlus(temp[2]))
-        points[4].oSet(temp[0].oMinus(temp[2]))
-        points[5].oSet(temp[1].oMinus(temp[2]))
-        points[6].oSet(temp[1].oPlus(temp[3]))
-        points[7].oSet(temp[0].oPlus(temp[3]))
+        ax[0] = axis[0].times(extents[0])
+        ax[1] = axis[1].times(extents[1])
+        ax[2] = axis[2].times(extents[2])
+        temp[0].set(center.minus(ax[0]))
+        temp[1].set(center.oPlus(ax[0]))
+        temp[2].set(ax[1].minus(ax[2]))
+        temp[3].set(ax[1].oPlus(ax[2]))
+        points[0].set(temp[0].minus(temp[3]))
+        points[1].set(temp[1].minus(temp[3]))
+        points[2].set(temp[1].oPlus(temp[2]))
+        points[3].set(temp[0].oPlus(temp[2]))
+        points[4].set(temp[0].minus(temp[2]))
+        points[5].set(temp[1].minus(temp[2]))
+        points[6].set(temp[1].oPlus(temp[3]))
+        points[7].set(temp[0].oPlus(temp[3]))
     }
 
     /*
@@ -109,11 +109,11 @@ object Frustum {
         }
 
         fun SetOrigin(origin: idVec3) {
-            this.origin.oSet(origin)
+            this.origin.set(origin)
         }
 
         fun SetAxis(axis: idMat3) {
-            this.axis.oSet(axis)
+            this.axis.set(axis)
         }
 
         fun SetSize(dNear: Float, dFar: Float, dLeft: Float, dUp: Float) {
@@ -159,7 +159,7 @@ object Frustum {
         }
 
         fun GetCenter(): idVec3 {                        // returns center of frustum
-            return origin.oPlus(axis.oGet(0).times((dFar - dNear) * 0.5f))
+            return origin.oPlus(axis[0].times((dFar - dNear) * 0.5f))
         }
 
         fun IsValid(): Boolean {                            // returns true if the frustum is valid
@@ -185,7 +185,7 @@ object Frustum {
 
         fun Expand(d: Float): idFrustum {                    // returns frustum expanded in all directions with the given value
             val f = idFrustum(this)
-            f.origin.minusAssign(f.axis.oGet(0).times(d))
+            f.origin.minusAssign(f.axis[0].times(d))
             f.dFar += 2.0f * d
             f.dLeft = f.dFar * dLeft * invFar
             f.dUp = f.dFar * dUp * invFar
@@ -194,7 +194,7 @@ object Frustum {
         }
 
         fun ExpandSelf(d: Float): idFrustum {                    // expands frustum in all directions with the given value
-            origin.minusAssign(axis.oGet(0).times(d))
+            origin.minusAssign(axis[0].times(d))
             dFar += 2.0f * d
             dLeft = dFar * dLeft * invFar
             dUp = dFar * dUp * invFar
@@ -229,11 +229,11 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             AxisProjection(plane.Normal(), min, max)
-            if (min._val + plane.oGet(3) > 0.0f) {
-                return min._val + plane.oGet(0)
+            if (min._val + plane.get(3) > 0.0f) {
+                return min._val + plane.get(0)
             }
-            return if (max._val + plane.oGet(3) < 0.0f) {
-                max._val + plane.oGet(3)
+            return if (max._val + plane.get(3) < 0.0f) {
+                max._val + plane.get(3)
             } else 0.0f
         }
 
@@ -243,10 +243,10 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             AxisProjection(plane.Normal(), min, max)
-            if (min._val + plane.oGet(3) > epsilon) {
+            if (min._val + plane.get(3) > epsilon) {
                 return Plane.PLANESIDE_FRONT
             }
-            return if (max._val + plane.oGet(3) < epsilon) {
+            return if (max._val + plane.get(3) < epsilon) {
                 Plane.PLANESIDE_BACK
             } else Plane.PLANESIDE_CROSS
         }
@@ -257,7 +257,7 @@ object Frustum {
             val scale: Float
 
             // transform point to frustum space
-            p.oSet(point.oMinus(origin).oMultiply(axis.Transpose()))
+            p.set(point.minus(origin).oMultiply(axis.Transpose()))
             // test whether or not the point is within the frustum
             if (p.x < dNear || p.x > dFar) {
                 return true
@@ -283,11 +283,11 @@ object Frustum {
             val center = idVec3()
             val extents = idVec3()
             val localAxis: idMat3
-            center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
-            extents.oSet(bounds.oGet(1).oMinus(center))
+            center.set(bounds[0].oPlus(bounds[1]).oMultiply(0.5f))
+            extents.set(bounds[1].minus(center))
 
             // transform the bounds into the space of this frustum
-            localOrigin.oSet(center.oMinus(origin).oMultiply(axis.Transpose()))
+            localOrigin.set(center.minus(origin).oMultiply(axis.Transpose()))
             localAxis = axis.Transpose()
             return CullLocalBox(localOrigin, extents, localAxis)
         }
@@ -307,7 +307,7 @@ object Frustum {
             val localAxis: idMat3
 
             // transform the box into the space of this frustum
-            localOrigin.oSet(box.GetCenter().oMinus(origin).oMultiply(axis.Transpose()))
+            localOrigin.set(box.GetCenter().minus(origin).oMultiply(axis.Transpose()))
             localAxis = box.GetAxis().times(axis.Transpose())
             return CullLocalBox(localOrigin, box.GetExtents(), localAxis)
         }
@@ -328,7 +328,7 @@ object Frustum {
             val rs: Float
             val sFar: Float
             val center = idVec3()
-            center.oSet(sphere.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
+            center.set(sphere.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
             r = sphere.GetRadius()
 
             // test near plane
@@ -372,8 +372,8 @@ object Frustum {
 
             // transform the given frustum into the space of this frustum
             localFrustum = idFrustum(frustum)
-            localFrustum.origin.oSet(frustum.origin.oMinus(origin).oMultiply(axis.Transpose()))
-            localFrustum.axis.oSet(frustum.axis.times(axis.Transpose()))
+            localFrustum.origin.set(frustum.origin.minus(origin).oMultiply(axis.Transpose()))
+            localFrustum.axis.set(frustum.axis.times(axis.Transpose()))
             localFrustum.ToIndexPointsAndCornerVecs(indexPoints, cornerVecs)
             return CullLocalFrustum(localFrustum, indexPoints, cornerVecs)
         }
@@ -387,7 +387,7 @@ object Frustum {
             transpose = axis.Transpose()
             i = 0
             while (i < winding.GetNumPoints()) {
-                localPoints[i].oSet(winding.oGet(i).ToVec3().oMinus(origin).oMultiply(transpose))
+                localPoints[i].set(winding.oGet(i).ToVec3().minus(origin).oMultiply(transpose))
                 i++
             }
             return CullLocalWinding(localPoints, winding.GetNumPoints(), pointCull)
@@ -403,9 +403,9 @@ object Frustum {
             val center = idVec3()
             val extents = idVec3()
             val localAxis: idMat3
-            center.oSet(bounds.oGet(0).oPlus(bounds.oGet(1)).oMultiply(0.5f))
-            extents.oSet(bounds.oGet(1).oMinus(center))
-            localOrigin.oSet(center.oMinus(origin).oMultiply(axis.Transpose()))
+            center.set(bounds[0].oPlus(bounds[1]).oMultiply(0.5f))
+            extents.set(bounds[1].minus(center))
+            localOrigin.set(center.minus(origin).oMultiply(axis.Transpose()))
             localAxis = axis.Transpose()
             if (CullLocalBox(localOrigin, extents, localAxis)) {
                 return false
@@ -428,7 +428,7 @@ object Frustum {
         fun IntersectsBox(box: idBox): Boolean {
             val localOrigin = idVec3()
             val localAxis: idMat3
-            localOrigin.oSet(box.GetCenter().oMinus(origin).oMultiply(axis.Transpose()))
+            localOrigin.set(box.GetCenter().minus(origin).oMultiply(axis.Transpose()))
             localAxis = box.GetAxis().times(axis.Transpose())
             if (CullLocalBox(localOrigin, box.GetExtents(), localAxis)) {
                 return false
@@ -437,8 +437,8 @@ object Frustum {
             val cornerVecs: Array<idVec3> = idVec3.generateArray(4)
             val localFrustum = idFrustum()
             localFrustum.oSet(this)
-            localFrustum.origin.oSet(origin.oMinus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))
-            localFrustum.axis.oSet(axis.times(box.GetAxis().Transpose()))
+            localFrustum.origin.set(origin.minus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))
+            localFrustum.axis.set(axis.times(box.GetAxis().Transpose()))
             localFrustum.ToIndexPointsAndCornerVecs(indexPoints, cornerVecs)
             if (BoundsCullLocalFrustum(
                     idBounds(box.GetExtents().oNegative(), box.GetExtents()),
@@ -480,7 +480,7 @@ object Frustum {
             y = z
             x = y
             dir.Zero()
-            p.oSet(sphere.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
+            p.set(sphere.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
             if (p.x <= dNear) {
                 scale = dNear * invFar
                 dir.y = abs(p.y) - dLeft * scale
@@ -572,8 +572,8 @@ object Frustum {
             val cornerVecs2: Array<idVec3> = idVec3.generateArray(4)
             val localFrustum2: idFrustum
             localFrustum2 = idFrustum(frustum)
-            localFrustum2.origin.oSet(frustum.origin.oMinus(origin).oMultiply(axis.Transpose()))
-            localFrustum2.axis.oSet(frustum.axis.times(axis.Transpose()))
+            localFrustum2.origin.set(frustum.origin.minus(origin).oMultiply(axis.Transpose()))
+            localFrustum2.axis.set(frustum.axis.times(axis.Transpose()))
             localFrustum2.ToIndexPointsAndCornerVecs(indexPoints2, cornerVecs2)
             if (CullLocalFrustum(localFrustum2, indexPoints2, cornerVecs2)) {
                 return false
@@ -581,8 +581,8 @@ object Frustum {
             val indexPoints1: Array<idVec3> = idVec3.generateArray(8)
             val cornerVecs1: Array<idVec3> = idVec3.generateArray(4)
             val localFrustum1 = idFrustum(this)
-            localFrustum1.origin.oSet(origin.oMinus(frustum.origin).oMultiply(frustum.axis.Transpose()))
-            localFrustum1.axis.oSet(axis.times(frustum.axis.Transpose()))
+            localFrustum1.origin.set(origin.minus(frustum.origin).oMultiply(frustum.axis.Transpose()))
+            localFrustum1.axis.set(axis.times(frustum.axis.Transpose()))
             localFrustum1.ToIndexPointsAndCornerVecs(indexPoints1, cornerVecs1)
             if (frustum.CullLocalFrustum(localFrustum1, indexPoints1, cornerVecs1)) {
                 return false
@@ -612,7 +612,7 @@ object Frustum {
             transpose = axis.Transpose()
             i = 0
             while (i < winding.GetNumPoints()) {
-                localPoints[i].oSet(winding.oGet(i).ToVec3().oMinus(origin).oMultiply(transpose))
+                localPoints[i].set(winding.oGet(i).ToVec3().minus(origin).oMultiply(transpose))
                 i++
             }
 
@@ -625,7 +625,7 @@ object Frustum {
             AxisProjection(indexPoints, cornerVecs, plane.Normal(), min, max)
 
             // if the frustum does not cross the winding plane
-            if (min._val + plane.oGet(3) > 0.0f || max._val + plane.oGet(3) < 0.0f) {
+            if (min._val + plane.get(3) > 0.0f || max._val + plane.get(3) < 0.0f) {
                 return false
             }
 
@@ -679,8 +679,8 @@ object Frustum {
          */
         fun LineIntersection(start: idVec3, end: idVec3): Boolean {
             return LocalLineIntersection(
-                start.oMinus(origin).oMultiply(axis.Transpose()),
-                end.oMinus(origin).oMultiply(axis.Transpose())
+                start.minus(origin).oMultiply(axis.Transpose()),
+                end.minus(origin).oMultiply(axis.Transpose())
             )
         }
 
@@ -695,7 +695,7 @@ object Frustum {
          */
         fun RayIntersection(start: idVec3, dir: idVec3, scale1: CFloat, scale2: CFloat): Boolean {
             return if (LocalRayIntersection(
-                    start.oMinus(origin).oMultiply(axis.Transpose()),
+                    start.minus(origin).oMultiply(axis.Transpose()),
                     dir.times(axis.Transpose()),
                     scale1,
                     scale2
@@ -738,17 +738,16 @@ object Frustum {
             invFar = 0.0f
             this.dFar = invFar
             dNear = this.dFar
-            dir.oSet(box.GetCenter().oMinus(projectionOrigin))
+            dir.set(box.GetCenter().minus(projectionOrigin))
             if (dir.Normalize() == 0.0f) {
                 return false
             }
             bestAxis = 0
-            bestValue = abs(box.GetAxis().oGet(0).times(dir))
+            bestValue = abs(box.GetAxis()[0].times(dir))
             i = 1
             while (i < 3) {
-                value = abs(box.GetAxis().oGet(i).times(dir))
-                if (value * box.GetExtents().oGet(bestAxis) * box.GetExtents()
-                        .oGet(bestAxis) < bestValue * box.GetExtents().oGet(i) * box.GetExtents().oGet(i)
+                value = abs(box.GetAxis()[i].times(dir))
+                if (value * box.GetExtents()[bestAxis] * box.GetExtents()[bestAxis] < bestValue * box.GetExtents()[i] * box.GetExtents()[i]
                 ) {
                     bestValue = value
                     bestAxis = i
@@ -771,16 +770,13 @@ object Frustum {
             minX = minY
             j = 0
             while (j < 2) {
-                axis.oSet(0, dir)
-                axis.oSet(
-                    1,
-                    box.GetAxis().oGet(bestAxis)
-                        .oMinus(axis.oGet(0).times(box.GetAxis().oGet(bestAxis).times(axis.oGet(0))))
-                )
-                axis.oGet(1).Normalize()
-                axis.oGet(2).Cross(axis.oGet(0), axis.oGet(1))
+                axis[0] = dir
+                axis[1] = box.GetAxis()[bestAxis]
+                    .minus(axis[0].times(box.GetAxis()[bestAxis].times(axis[0])))
+                axis[1].Normalize()
+                axis[2].Cross(axis[0], axis[1])
                 BoxToPoints(
-                    box.GetCenter().oMinus(projectionOrigin).oMultiply(axis.Transpose()),
+                    box.GetCenter().minus(projectionOrigin).oMultiply(axis.Transpose()),
                     box.GetExtents(),
                     box.GetAxis().times(axis.Transpose()),
                     points
@@ -815,7 +811,7 @@ object Frustum {
                 }
                 if (j == 0) {
                     dir.plusAssign(
-                        axis.oGet(1).times(
+                        axis[1].times(
                             idMath.Tan16(
                                 0.5f * (idMath.ATan16(points[minY].y, points[minY].x) + idMath.ATan16(
                                     points[maxY].y,
@@ -825,7 +821,7 @@ object Frustum {
                         )
                     )
                     dir.plusAssign(
-                        axis.oGet(2).times(
+                        axis[2].times(
                             idMath.Tan16(
                                 0.5f * (idMath.ATan16(points[minZ].z, points[minZ].x) + idMath.ATan16(
                                     points[maxZ].z,
@@ -838,7 +834,7 @@ object Frustum {
                 }
                 j++
             }
-            origin.oSet(projectionOrigin)
+            origin.set(projectionOrigin)
             dNear = points[minX].x
             this.dFar = dFar
             dLeft = Lib.Max(
@@ -869,7 +865,7 @@ object Frustum {
             val x: Float
             val y: Float
             assert(dFar > 0.0f)
-            dir.oSet(sphere.GetOrigin().oMinus(projectionOrigin))
+            dir.set(sphere.GetOrigin().minus(projectionOrigin))
             d = dir.Normalize()
             r = sphere.GetRadius()
             if (d <= r + 1.0f) {
@@ -878,8 +874,8 @@ object Frustum {
                 dNear = this.dFar
                 return false
             }
-            origin.oSet(projectionOrigin)
-            axis.oSet(dir.ToMat3())
+            origin.set(projectionOrigin)
+            axis.set(dir.ToMat3())
             s = idMath.Sqrt(d * d - r * r)
             x = r / d * s
             y = idMath.Sqrt(s * s - x * x)
@@ -903,8 +899,8 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             val newdFar: Float
-            bounds.AxisProjection(axis.oGet(0), min, max)
-            newdFar = max._val - origin.times(axis.oGet(0))
+            bounds.AxisProjection(axis[0], min, max)
+            newdFar = max._val - origin.times(axis[0])
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f)
                 return false
@@ -924,8 +920,8 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             val newdFar: Float
-            box.AxisProjection(axis.oGet(0), min, max)
-            newdFar = max._val - origin.times(axis.oGet(0))
+            box.AxisProjection(axis[0], min, max)
+            newdFar = max._val - origin.times(axis[0])
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f)
                 return false
@@ -945,8 +941,8 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             val newdFar: Float
-            sphere.AxisProjection(axis.oGet(0), min, max)
-            newdFar = max._val - origin.times(axis.oGet(0))
+            sphere.AxisProjection(axis[0], min, max)
+            newdFar = max._val - origin.times(axis[0])
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f)
                 return false
@@ -967,8 +963,8 @@ object Frustum {
             val min = CFloat()
             val max = CFloat()
             val newdFar: Float
-            frustum.AxisProjection(axis.oGet(0), min, max)
-            newdFar = max._val - origin.times(axis.oGet(0))
+            frustum.AxisProjection(axis[0], min, max)
+            newdFar = max._val - origin.times(axis[0])
             if (newdFar <= dNear) {
                 MoveFarDistance(dNear + 1.0f)
                 return false
@@ -988,19 +984,19 @@ object Frustum {
             var i: Int
             val scaled: Array<idVec3> = idVec3.generateArray(2)
             val points: Array<idVec3> = idVec3.generateArray(4)
-            planes[0].oNorSet(axis.oGet(0).oNegative())
+            planes[0].oNorSet(axis[0].oNegative())
             planes[0].SetDist(-dNear)
-            planes[1].oNorSet(axis.oGet(0))
+            planes[1].oNorSet(axis[0])
             planes[1].SetDist(dFar)
-            scaled[0].oSet(axis.oGet(1).times(dLeft))
-            scaled[1].oSet(axis.oGet(2).times(dUp))
-            points[0].oSet(scaled[0].oPlus(scaled[1]))
-            points[1].oSet(scaled[0].oPlus(scaled[1]).oNegative())
-            points[2].oSet(scaled[0].oMinus(scaled[1]).oNegative())
-            points[3].oSet(scaled[0].oMinus(scaled[1]))
+            scaled[0].set(axis[1].times(dLeft))
+            scaled[1].set(axis[2].times(dUp))
+            points[0].set(scaled[0].oPlus(scaled[1]))
+            points[1].set(scaled[0].oPlus(scaled[1]).oNegative())
+            points[2].set(scaled[0].minus(scaled[1]).oNegative())
+            points[3].set(scaled[0].minus(scaled[1]))
             i = 0
             while (i < 4) {
-                planes[i + 2].oNorSet(points[i].Cross(points[i + 1 and 3].oMinus(points[i])))
+                planes[i + 2].oNorSet(points[i].Cross(points[i + 1 and 3].minus(points[i])))
                 planes[i + 2].Normalize()
                 planes[i + 2].FitThroughPoint(points[i])
                 i++
@@ -1010,24 +1006,24 @@ object Frustum {
         //
         fun ToPoints(points: Array<idVec3>) {                // 8 corners of the frustum
             val scaled = idMat3()
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dNear)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft * dNear * invFar))
-            scaled.oSet(2, axis.oGet(2).times(dUp * dNear * invFar))
-            points[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            points[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            points[2].oSet(points[1].oMinus(scaled.oGet(2)))
-            points[3].oSet(points[0].oMinus(scaled.oGet(2)))
-            points[0].plusAssign(scaled.oGet(2))
-            points[1].plusAssign(scaled.oGet(2))
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dFar)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft))
-            scaled.oSet(2, axis.oGet(2).times(dUp))
-            points[4].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            points[5].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            points[6].oSet(points[5].oMinus(scaled.oGet(2)))
-            points[7].oSet(points[4].oMinus(scaled.oGet(2)))
-            points[4].plusAssign(scaled.oGet(2))
-            points[5].plusAssign(scaled.oGet(2))
+            scaled[0] = origin.oPlus(axis[0].times(dNear))
+            scaled[1] = axis[1].times(dLeft * dNear * invFar)
+            scaled[2] = axis[2].times(dUp * dNear * invFar)
+            points[0].set(scaled[0].oPlus(scaled[1]))
+            points[1].set(scaled[0].minus(scaled[1]))
+            points[2].set(points[1].minus(scaled[2]))
+            points[3].set(points[0].minus(scaled[2]))
+            points[0].plusAssign(scaled[2])
+            points[1].plusAssign(scaled[2])
+            scaled[0] = origin.oPlus(axis[0].times(dFar))
+            scaled[1] = axis[1].times(dLeft)
+            scaled[2] = axis[2].times(dUp)
+            points[4].set(scaled[0].oPlus(scaled[1]))
+            points[5].set(scaled[0].minus(scaled[1]))
+            points[6].set(points[5].minus(scaled[2]))
+            points[7].set(points[4].minus(scaled[2]))
+            points[4].plusAssign(scaled[2])
+            points[5].plusAssign(scaled[2])
         }
 
         /*
@@ -1056,22 +1052,22 @@ object Frustum {
         fun AxisProjection(ax: idMat3, bounds: idBounds) {
             val indexPoints: Array<idVec3> = idVec3.generateArray(8)
             val cornerVecs: Array<idVec3> = idVec3.generateArray(4)
-            val b00 = CFloat(bounds.oGet(0).oGet(0))
-            val b01 = CFloat(bounds.oGet(0).oGet(1))
-            val b02 = CFloat(bounds.oGet(0).oGet(2))
-            val b10 = CFloat(bounds.oGet(1).oGet(0))
-            val b11 = CFloat(bounds.oGet(1).oGet(1))
-            val b12 = CFloat(bounds.oGet(1).oGet(2))
+            val b00 = CFloat(bounds[0].oGet(0))
+            val b01 = CFloat(bounds[0].oGet(1))
+            val b02 = CFloat(bounds[0].oGet(2))
+            val b10 = CFloat(bounds[1].oGet(0))
+            val b11 = CFloat(bounds[1].oGet(1))
+            val b12 = CFloat(bounds[1].oGet(2))
             ToIndexPointsAndCornerVecs(indexPoints, cornerVecs)
-            AxisProjection(indexPoints, cornerVecs, ax.oGet(0), b00, b11)
-            AxisProjection(indexPoints, cornerVecs, ax.oGet(1), b01, b11)
-            AxisProjection(indexPoints, cornerVecs, ax.oGet(2), b02, b12)
-            bounds.oSet(0, 0, b00._val)
-            bounds.oSet(0, 1, b01._val)
-            bounds.oSet(0, 2, b02._val)
-            bounds.oSet(1, 0, b10._val)
-            bounds.oSet(1, 1, b11._val)
-            bounds.oSet(1, 2, b12._val)
+            AxisProjection(indexPoints, cornerVecs, ax[0], b00, b11)
+            AxisProjection(indexPoints, cornerVecs, ax[1], b01, b11)
+            AxisProjection(indexPoints, cornerVecs, ax[2], b02, b12)
+            bounds[0, 0] = b00._val
+            bounds[0, 1] = b01._val
+            bounds[0, 2] = b02._val
+            bounds[1, 0] = b10._val
+            bounds[1, 1] = b11._val
+            bounds[1, 2] = b12._val
         }
 
         // calculates the bounds for the projection in this frustum
@@ -1098,25 +1094,25 @@ object Frustum {
             val bounds = idBounds(box.GetExtents().oNegative(), box.GetExtents())
 
             // if the frustum origin is inside the bounds
-            if (bounds.ContainsPoint(origin.oMinus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))) {
+            if (bounds.ContainsPoint(origin.minus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))) {
                 // bounds that cover the whole frustum
                 val boxMin = CFloat()
                 val boxMax = CFloat()
                 val base: Float
-                base = origin.times(axis.oGet(0))
-                box.AxisProjection(axis.oGet(0), boxMin, boxMax)
-                projectionBounds.oSet(0, 0, boxMin._val - base)
-                projectionBounds.oSet(1, 0, boxMax._val - base)
-                projectionBounds.oSet(0, 1, -1.0f)
-                projectionBounds.oSet(0, 2, -1.0f)
-                projectionBounds.oSet(1, 1, 1.0f)
-                projectionBounds.oSet(1, 2, 1.0f)
+                base = origin.times(axis[0])
+                box.AxisProjection(axis[0], boxMin, boxMax)
+                projectionBounds[0, 0] = boxMin._val - base
+                projectionBounds[1, 0] = boxMax._val - base
+                projectionBounds[0, 1] = -1.0f
+                projectionBounds[0, 2] = -1.0f
+                projectionBounds[1, 1] = 1.0f
+                projectionBounds[1, 2] = 1.0f
                 return true
             }
             projectionBounds.Clear()
 
             // transform the bounds into the space of this frustum
-            localOrigin.oSet(box.GetCenter().oMinus(origin).oMultiply(axis.Transpose()))
+            localOrigin.set(box.GetCenter().minus(origin).oMultiply(axis.Transpose()))
             localAxis = box.GetAxis().times(axis.Transpose())
             BoxToPoints(localOrigin, box.GetExtents(), localAxis, points)
 
@@ -1179,18 +1175,18 @@ object Frustum {
 
             // if the bounds extend beyond two or more boundaries of this frustum
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
-                localOrigin.oSet(origin.oMinus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))
+                localOrigin.set(origin.minus(box.GetCenter()).oMultiply(box.GetAxis().Transpose()))
                 localScaled = axis.times(box.GetAxis().Transpose())
-                localScaled.oGet(0).timesAssign(dFar)
-                localScaled.oGet(1).timesAssign(dLeft)
-                localScaled.oGet(2).timesAssign(dUp)
+                localScaled[0].timesAssign(dFar)
+                localScaled[1].timesAssign(dLeft)
+                localScaled[2].timesAssign(dUp)
 
                 // test the outer edges of this frustum for intersection with the bounds
                 if (outside and 2 == 2 && outside and 8 == 8) {
                     BoundsRayIntersection(
                         bounds,
                         localOrigin,
-                        localScaled.oGet(0).oMinus(localScaled.oGet(1).oMinus(localScaled.oGet(2))),
+                        localScaled[0].minus(localScaled[1].minus(localScaled[2])),
                         scale1,
                         scale2
                     )
@@ -1203,7 +1199,7 @@ object Frustum {
                     BoundsRayIntersection(
                         bounds,
                         localOrigin,
-                        localScaled.oGet(0).oMinus(localScaled.oGet(1).oPlus(localScaled.oGet(2))),
+                        localScaled[0].minus(localScaled[1].oPlus(localScaled[2])),
                         scale1,
                         scale2
                     )
@@ -1216,7 +1212,7 @@ object Frustum {
                     BoundsRayIntersection(
                         bounds,
                         localOrigin,
-                        localScaled.oGet(0).oPlus(localScaled.oGet(1).oMinus(localScaled.oGet(2))),
+                        localScaled[0].oPlus(localScaled[1].minus(localScaled[2])),
                         scale1,
                         scale2
                     )
@@ -1229,7 +1225,7 @@ object Frustum {
                     BoundsRayIntersection(
                         bounds,
                         localOrigin,
-                        localScaled.oGet(0).oPlus(localScaled.oGet(1).oPlus(localScaled.oGet(2))),
+                        localScaled[0].oPlus(localScaled[1].oPlus(localScaled[2])),
                         scale1,
                         scale2
                     )
@@ -1249,7 +1245,7 @@ object Frustum {
             val sFar: Float
             val center = idVec3()
             projectionBounds.Clear()
-            center.oSet(sphere.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
+            center.set(sphere.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
             r = sphere.GetRadius()
             rs = r * r
             sFar = dFar * dFar
@@ -1267,12 +1263,12 @@ object Frustum {
             }
 
             // bounds that cover the whole frustum
-            projectionBounds.oGet(0).x = 0.0f
-            projectionBounds.oGet(1).x = dFar
-            projectionBounds.oGet(0).z = -1.0f
-            projectionBounds.oGet(0).y = projectionBounds.oGet(0).z
-            projectionBounds.oGet(1).z = 1.0f
-            projectionBounds.oGet(1).y = projectionBounds.oGet(1).z
+            projectionBounds[0].x = 0.0f
+            projectionBounds[1].x = dFar
+            projectionBounds[0].z = -1.0f
+            projectionBounds[0].y = projectionBounds[0].z
+            projectionBounds[1].z = 1.0f
+            projectionBounds[1].y = projectionBounds[1].z
             return true
         }
 
@@ -1296,22 +1292,22 @@ object Frustum {
                 val frustumMin = CFloat()
                 val frustumMax = CFloat()
                 val base: Float
-                base = origin.times(axis.oGet(0))
-                frustum.AxisProjection(axis.oGet(0), frustumMin, frustumMax)
-                projectionBounds.oGet(0).x = frustumMin._val - base
-                projectionBounds.oGet(1).x = frustumMax._val - base
-                projectionBounds.oGet(0).z = -1.0f
-                projectionBounds.oGet(0).y = projectionBounds.oGet(0).z
-                projectionBounds.oGet(1).z = 1.0f
-                projectionBounds.oGet(1).y = projectionBounds.oGet(1).z
+                base = origin.times(axis[0])
+                frustum.AxisProjection(axis[0], frustumMin, frustumMax)
+                projectionBounds[0].x = frustumMin._val - base
+                projectionBounds[1].x = frustumMax._val - base
+                projectionBounds[0].z = -1.0f
+                projectionBounds[0].y = projectionBounds[0].z
+                projectionBounds[1].z = 1.0f
+                projectionBounds[1].y = projectionBounds[1].z
                 return true
             }
             projectionBounds.Clear()
 
             // transform the given frustum into the space of this frustum
             localFrustum = idFrustum(frustum)
-            localFrustum.origin.oSet(frustum.origin.oMinus(origin).oMultiply(axis.Transpose()))
-            localFrustum.axis.oSet(frustum.axis.times(axis.Transpose()))
+            localFrustum.origin.set(frustum.origin.minus(origin).oMultiply(axis.Transpose()))
+            localFrustum.axis.set(frustum.axis.times(axis.Transpose()))
             localFrustum.ToPoints(points)
 
             // test outer four edges of the other frustum
@@ -1375,17 +1371,17 @@ object Frustum {
 
             // if the other frustum extends beyond two or more boundaries of this frustum
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
-                localOrigin.oSet(origin.oMinus(frustum.origin).oMultiply(frustum.axis.Transpose()))
+                localOrigin.set(origin.minus(frustum.origin).oMultiply(frustum.axis.Transpose()))
                 localScaled = axis.times(frustum.axis.Transpose())
-                localScaled.oGet(0).timesAssign(dFar)
-                localScaled.oGet(1).timesAssign(dLeft)
-                localScaled.oGet(2).timesAssign(dUp)
+                localScaled[0].timesAssign(dFar)
+                localScaled[1].timesAssign(dLeft)
+                localScaled[2].timesAssign(dUp)
 
                 // test the outer edges of this frustum for intersection with the other frustum
                 if (outside and 2 == 2 && outside and 8 == 8) {
                     frustum.LocalRayIntersection(
                         localOrigin,
-                        localScaled.oGet(0).oMinus(localScaled.oGet(1)).oMinus(localScaled.oGet(2)),
+                        localScaled[0].minus(localScaled[1]).minus(localScaled[2]),
                         scale1,
                         scale2
                     )
@@ -1397,7 +1393,7 @@ object Frustum {
                 if (outside and 2 == 2 && outside and 4 == 4) {
                     frustum.LocalRayIntersection(
                         localOrigin,
-                        localScaled.oGet(0).oMinus(localScaled.oGet(1)).oPlus(localScaled.oGet(2)),
+                        localScaled[0].minus(localScaled[1]).oPlus(localScaled[2]),
                         scale1,
                         scale2
                     )
@@ -1409,7 +1405,7 @@ object Frustum {
                 if (outside and 1 == 1 && outside and 8 == 8) {
                     frustum.LocalRayIntersection(
                         localOrigin,
-                        localScaled.oGet(0).oPlus(localScaled.oGet(1)).oMinus(localScaled.oGet(2)),
+                        localScaled[0].oPlus(localScaled[1]).oMinus(localScaled[2]),
                         scale1,
                         scale2
                     )
@@ -1421,7 +1417,7 @@ object Frustum {
                 if (outside and 1 == 1 && outside and 2 == 2) {
                     frustum.LocalRayIntersection(
                         localOrigin,
-                        localScaled.oGet(0).oPlus(localScaled.oGet(1)).oPlus(localScaled.oGet(2)),
+                        localScaled[0].oPlus(localScaled[1]).oPlus(localScaled[2]),
                         scale1,
                         scale2
                     )
@@ -1451,7 +1447,7 @@ object Frustum {
             transpose = axis.Transpose()
             i = 0
             while (i < winding.GetNumPoints()) {
-                localPoints[i].oSet(winding.oGet(0).ToVec3().oMinus(origin).oMultiply(transpose))
+                localPoints[i].set(winding.oGet(0).ToVec3().minus(origin).oMultiply(transpose))
                 i++
             }
 
@@ -1503,16 +1499,16 @@ object Frustum {
             // if the winding extends beyond two or more boundaries of this frustum
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
                 winding.GetPlane(plane)
-                scaled.oSet(0, axis.oGet(0).times(dFar))
-                scaled.oSet(1, axis.oGet(1).times(dLeft))
-                scaled.oSet(2, axis.oGet(2).times(dUp))
+                scaled[0] = axis[0].times(dFar)
+                scaled[1] = axis[1].times(dLeft)
+                scaled[2] = axis[2].times(dUp)
 
                 // test the outer edges of this frustum for intersection with the winding
                 if (outside and 2 == 2 && outside and 8 == 8) {
                     if (winding.RayIntersection(
                             plane,
                             origin,
-                            scaled.oGet(0).oMinus(scaled.oGet(1)).oMinus(scaled.oGet(2)),
+                            scaled[0].minus(scaled[1]).minus(scaled[2]),
                             scale
                         )
                     ) {
@@ -1523,7 +1519,7 @@ object Frustum {
                     if (winding.RayIntersection(
                             plane,
                             origin,
-                            scaled.oGet(0).oMinus(scaled.oGet(1)).oPlus(scaled.oGet(2)),
+                            scaled[0].minus(scaled[1]).oPlus(scaled[2]),
                             scale
                         )
                     ) {
@@ -1534,7 +1530,7 @@ object Frustum {
                     if (winding.RayIntersection(
                             plane,
                             origin,
-                            scaled.oGet(0).oPlus(scaled.oGet(1)).oMinus(scaled.oGet(2)),
+                            scaled[0].oPlus(scaled[1]).oMinus(scaled[2]),
                             scale
                         )
                     ) {
@@ -1545,7 +1541,7 @@ object Frustum {
                     if (winding.RayIntersection(
                             plane,
                             origin,
-                            scaled.oGet(0).oPlus(scaled.oGet(1)).oPlus(scaled.oGet(2)),
+                            scaled[0].oPlus(scaled[1]).oPlus(scaled[2]),
                             scale
                         )
                     ) {
@@ -1599,15 +1595,15 @@ object Frustum {
                 val frustumMin = CFloat()
                 val frustumMax = CFloat()
                 val base = CFloat()
-                base._val = (origin.times(axis.oGet(0)))
-                clipBox.AxisProjection(axis.oGet(0), clipBoxMin, clipBoxMax)
-                frustum.AxisProjection(axis.oGet(0), frustumMin, frustumMax)
-                projectionBounds.oGet(0).x = Lib.Max(clipBoxMin._val, frustumMin._val) - base._val
-                projectionBounds.oGet(1).x = Lib.Min(clipBoxMax._val, frustumMax._val) - base._val
-                projectionBounds.oGet(0).z = -1.0f
-                projectionBounds.oGet(0).y = projectionBounds.oGet(0).z
-                projectionBounds.oGet(1).z = 1.0f
-                projectionBounds.oGet(1).y = projectionBounds.oGet(1).z
+                base._val = (origin.times(axis[0]))
+                clipBox.AxisProjection(axis[0], clipBoxMin, clipBoxMax)
+                frustum.AxisProjection(axis[0], frustumMin, frustumMax)
+                projectionBounds[0].x = Lib.Max(clipBoxMin._val, frustumMin._val) - base._val
+                projectionBounds[1].x = Lib.Min(clipBoxMax._val, frustumMax._val) - base._val
+                projectionBounds[0].z = -1.0f
+                projectionBounds[0].y = projectionBounds[0].z
+                projectionBounds[1].z = 1.0f
+                projectionBounds[1].y = projectionBounds[1].z
                 return true
             }
             projectionBounds.Clear()
@@ -1618,11 +1614,11 @@ object Frustum {
                 clipPlanes[0]._val or clipPlanes[1]._val or clipPlanes[2]._val or clipPlanes[3]._val
 
             // transform the clipped frustum to the space of this frustum
-            transpose.oSet(axis)
+            transpose.set(axis)
             transpose.TransposeSelf()
             localFrustum = idFrustum(frustum)
-            localFrustum.origin.oSet(frustum.origin.oMinus(origin).oMultiply(transpose))
-            localFrustum.axis.oSet(frustum.axis.times(transpose))
+            localFrustum.origin.set(frustum.origin.minus(origin).oMultiply(transpose))
+            localFrustum.axis.set(frustum.axis.times(transpose))
             localFrustum.ToClippedPoints(clipFractions, clipPoints)
 
             // test outer four edges of the clipped frustum
@@ -1696,10 +1692,10 @@ object Frustum {
             ) {
 
                 // transform the clip box into the space of the other frustum
-                transpose.oSet(frustum.axis)
+                transpose.set(frustum.axis)
                 transpose.TransposeSelf()
-                localOrigin1.oSet(clipBox.GetCenter().oMinus(frustum.origin).oMultiply(transpose))
-                localAxis1.oSet(clipBox.GetAxis().times(transpose))
+                localOrigin1.set(clipBox.GetCenter().minus(frustum.origin).oMultiply(transpose))
+                localAxis1.set(clipBox.GetAxis().times(transpose))
                 BoxToPoints(localOrigin1, clipBox.GetExtents(), localAxis1, localPoints1)
 
                 // cull the box corners with the other frustum
@@ -1723,10 +1719,10 @@ object Frustum {
                 }
 
                 // transform the clip box into the space of this frustum
-                transpose.oSet(axis)
+                transpose.set(axis)
                 transpose.TransposeSelf()
-                localOrigin2.oSet(clipBox.GetCenter().oMinus(origin).oMultiply(transpose))
-                localAxis2.oSet(clipBox.GetAxis().times(transpose))
+                localOrigin2.set(clipBox.GetCenter().minus(origin).oMultiply(transpose))
+                localAxis2.set(clipBox.GetAxis().times(transpose))
                 BoxToPoints(localOrigin2, clipBox.GetExtents(), localAxis2, localPoints2)
 
                 // clip the edges of the clip bounds to the other frustum and add the clipped edges to the projection bounds
@@ -1832,30 +1828,30 @@ object Frustum {
             if (outside != 1 && outside != 2 && outside != 4 && outside != 8) {
 
                 // transform this frustum into the space of the other frustum
-                transpose.oSet(frustum.axis)
+                transpose.set(frustum.axis)
                 transpose.TransposeSelf()
-                localOrigin1.oSet(origin.oMinus(frustum.origin).oMultiply(transpose))
-                localAxis1.oSet(axis.times(transpose))
-                localAxis1.oGet(0).timesAssign(dFar)
-                localAxis1.oGet(1).timesAssign(dLeft)
-                localAxis1.oGet(2).timesAssign(dUp)
+                localOrigin1.set(origin.minus(frustum.origin).oMultiply(transpose))
+                localAxis1.set(axis.times(transpose))
+                localAxis1[0].timesAssign(dFar)
+                localAxis1[1].timesAssign(dLeft)
+                localAxis1[2].timesAssign(dUp)
 
                 // transform this frustum into the space of the clip bounds
-                transpose.oSet(clipBox.GetAxis())
+                transpose.set(clipBox.GetAxis())
                 transpose.TransposeSelf()
-                localOrigin2.oSet(origin.oMinus(clipBox.GetCenter()).oMultiply(transpose))
-                localAxis2.oSet(axis.times(transpose))
-                localAxis2.oGet(0).timesAssign(dFar)
-                localAxis2.oGet(1).timesAssign(dLeft)
-                localAxis2.oGet(2).timesAssign(dUp)
-                clipBounds.oSet(0, clipBox.GetExtents().oNegative())
-                clipBounds.oSet(1, clipBox.GetExtents())
+                localOrigin2.set(origin.minus(clipBox.GetCenter()).oMultiply(transpose))
+                localAxis2.set(axis.times(transpose))
+                localAxis2[0].timesAssign(dFar)
+                localAxis2[1].timesAssign(dLeft)
+                localAxis2[2].timesAssign(dUp)
+                clipBounds[0] = clipBox.GetExtents().oNegative()
+                clipBounds[1] = clipBox.GetExtents()
 
                 // test the outer edges of this frustum for intersection with both the other frustum and the clip bounds
                 if (outside and 2 != 0 && outside and 8 != 0) {
                     frustum.LocalRayIntersection(
                         localOrigin1,
-                        localAxis1.oGet(0).oMinus(localAxis1.oGet(1).oMinus(localAxis1.oGet(2))),
+                        localAxis1[0].minus(localAxis1[1].minus(localAxis1[2])),
                         s1,
                         s2
                     )
@@ -1863,7 +1859,7 @@ object Frustum {
                         BoundsRayIntersection(
                             clipBounds,
                             localOrigin2,
-                            localAxis2.oGet(0).oMinus(localAxis2.oGet(1).oMinus(localAxis2.oGet(2))),
+                            localAxis2[0].minus(localAxis2[1].minus(localAxis2[2])),
                             t1,
                             t2
                         )
@@ -1876,7 +1872,7 @@ object Frustum {
                 if (outside and 2 != 0 && outside and 4 != 0) {
                     frustum.LocalRayIntersection(
                         localOrigin1,
-                        localAxis1.oGet(0).oMinus(localAxis1.oGet(1).oPlus(localAxis1.oGet(2))),
+                        localAxis1[0].minus(localAxis1[1].oPlus(localAxis1[2])),
                         s1,
                         s2
                     )
@@ -1884,7 +1880,7 @@ object Frustum {
                         BoundsRayIntersection(
                             clipBounds,
                             localOrigin2,
-                            localAxis2.oGet(0).oMinus(localAxis2.oGet(1).oPlus(localAxis2.oGet(2))),
+                            localAxis2[0].minus(localAxis2[1].oPlus(localAxis2[2])),
                             t1,
                             t2
                         )
@@ -1897,7 +1893,7 @@ object Frustum {
                 if (outside and 1 != 0 && outside and 8 != 0) {
                     frustum.LocalRayIntersection(
                         localOrigin1,
-                        localAxis1.oGet(0).oPlus(localAxis1.oGet(1).oMinus(localAxis1.oGet(2))),
+                        localAxis1[0].oPlus(localAxis1[1].minus(localAxis1[2])),
                         s1,
                         s2
                     )
@@ -1905,7 +1901,7 @@ object Frustum {
                         BoundsRayIntersection(
                             clipBounds,
                             localOrigin2,
-                            localAxis2.oGet(0).oPlus(localAxis2.oGet(1).oMinus(localAxis2.oGet(2))),
+                            localAxis2[0].oPlus(localAxis2[1].minus(localAxis2[2])),
                             t1,
                             t2
                         )
@@ -1918,7 +1914,7 @@ object Frustum {
                 if (outside and 1 != 0 && outside and 2 != 0) {
                     frustum.LocalRayIntersection(
                         localOrigin1,
-                        localAxis1.oGet(0).oPlus(localAxis1.oGet(1).oPlus(localAxis1.oGet(2))),
+                        localAxis1[0].oPlus(localAxis1[1].oPlus(localAxis1[2])),
                         s1,
                         s2
                     )
@@ -1926,7 +1922,7 @@ object Frustum {
                         BoundsRayIntersection(
                             clipBounds,
                             localOrigin2,
-                            localAxis2.oGet(0).oPlus(localAxis2.oGet(1).oPlus(localAxis2.oGet(2))),
+                            localAxis2[0].oPlus(localAxis2[1].oPlus(localAxis2[2])),
                             t1,
                             t2
                         )
@@ -1958,9 +1954,9 @@ object Frustum {
 
             // near plane
             d1 = dNear - localOrigin.x
-            d2 = (abs(extents.oGet(0) * localAxis.oGet(0).oGet(0))
-                    + abs(extents.oGet(1) * localAxis.oGet(1).oGet(0))
-                    + abs(extents.oGet(2) * localAxis.oGet(2).oGet(0)))
+            d2 = (abs(extents[0] * localAxis[0][0])
+                    + abs(extents[1] * localAxis[1][0])
+                    + abs(extents[2] * localAxis[2][0]))
             if (d1 - d2 > 0.0f) {
                 return true
             }
@@ -1970,35 +1966,35 @@ object Frustum {
             if (d1 - d2 > 0.0f) {
                 return true
             }
-            testOrigin.oSet(localOrigin)
+            testOrigin.set(localOrigin)
             testAxis = idMat3(localAxis)
             if (testOrigin.y < 0.0f) {
                 testOrigin.y = -testOrigin.y
-                testAxis.oGet(0).oSet(1, -testAxis.oGet(0).oGet(1))
-                testAxis.oGet(1).oSet(1, -testAxis.oGet(1).oGet(1))
-                testAxis.oGet(0).oSet(1, -testAxis.oGet(2).oGet(1))
+                testAxis[0][1] = -testAxis[0][1]
+                testAxis[1][1] = -testAxis[1][1]
+                testAxis[0][1] = -testAxis[2][1]
             }
 
             // test left/right planes
             d1 = dFar * testOrigin.y - dLeft * testOrigin.x
-            d2 = (abs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(1) - dLeft * testAxis.oGet(0).oGet(0)))
-                    + abs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(1) - dLeft * testAxis.oGet(1).oGet(0)))
-                    + abs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(1) - dLeft * testAxis.oGet(2).oGet(0))))
+            d2 = (abs(extents[0] * (dFar * testAxis[0][1] - dLeft * testAxis[0][0]))
+                    + abs(extents[1] * (dFar * testAxis[1][1] - dLeft * testAxis[1][0]))
+                    + abs(extents[2] * (dFar * testAxis[2][1] - dLeft * testAxis[2][0])))
             if (d1 - d2 > 0.0f) {
                 return true
             }
             if (testOrigin.z < 0.0f) {
                 testOrigin.z = -testOrigin.z
-                testAxis.oGet(0).oSet(2, -testAxis.oGet(0).oGet(2))
-                testAxis.oGet(1).oSet(2, -testAxis.oGet(1).oGet(2))
-                testAxis.oGet(2).oSet(2, -testAxis.oGet(2).oGet(2))
+                testAxis[0][2] = -testAxis[0][2]
+                testAxis[1][2] = -testAxis[1][2]
+                testAxis[2][2] = -testAxis[2][2]
             }
 
             // test up/down planes
             d1 = dFar * testOrigin.z - dUp * testOrigin.x
-            d2 = (abs(extents.oGet(0) * (dFar * testAxis.oGet(0).oGet(2) - dUp * testAxis.oGet(0).oGet(0)))
-                    + abs(extents.oGet(1) * (dFar * testAxis.oGet(1).oGet(2) - dUp * testAxis.oGet(1).oGet(0)))
-                    + abs(extents.oGet(2) * (dFar * testAxis.oGet(2).oGet(2) - dUp * testAxis.oGet(2).oGet(0))))
+            d2 = (abs(extents[0] * (dFar * testAxis[0][2] - dUp * testAxis[0][0]))
+                    + abs(extents[1] * (dFar * testAxis[1][2] - dUp * testAxis[1][0]))
+                    + abs(extents[2] * (dFar * testAxis[2][2] - dUp * testAxis[2][0])))
             return d1 - d2 > 0.0f
         }
 
@@ -2025,8 +2021,8 @@ object Frustum {
             val upScale: Float
 
             // test near plane
-            dy = -localFrustum.axis.oGet(1).x
-            dz = -localFrustum.axis.oGet(2).x
+            dy = -localFrustum.axis[1].x
+            dz = -localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2035,8 +2031,8 @@ object Frustum {
             }
 
             // test far plane
-            dy = localFrustum.axis.oGet(1).x
-            dz = localFrustum.axis.oGet(2).x
+            dy = localFrustum.axis[1].x
+            dz = localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2046,8 +2042,8 @@ object Frustum {
             leftScale = dLeft * invFar
 
             // test left plane
-            dy = dFar * localFrustum.axis.oGet(1).y - dLeft * localFrustum.axis.oGet(1).x
-            dz = dFar * localFrustum.axis.oGet(2).y - dLeft * localFrustum.axis.oGet(2).x
+            dy = dFar * localFrustum.axis[1].y - dLeft * localFrustum.axis[1].x
+            dz = dFar * localFrustum.axis[2].y - dLeft * localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = dFar * cornerVecs[index].y - dLeft * cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2056,8 +2052,8 @@ object Frustum {
             }
 
             // test right plane
-            dy = -dFar * localFrustum.axis.oGet(1).y - dLeft * localFrustum.axis.oGet(1).x
-            dz = -dFar * localFrustum.axis.oGet(2).y - dLeft * localFrustum.axis.oGet(2).x
+            dy = -dFar * localFrustum.axis[1].y - dLeft * localFrustum.axis[1].x
+            dz = -dFar * localFrustum.axis[2].y - dLeft * localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -dFar * cornerVecs[index].y - dLeft * cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2067,8 +2063,8 @@ object Frustum {
             upScale = dUp * invFar
 
             // test up plane
-            dy = dFar * localFrustum.axis.oGet(1).z - dUp * localFrustum.axis.oGet(1).x
-            dz = dFar * localFrustum.axis.oGet(2).z - dUp * localFrustum.axis.oGet(2).x
+            dy = dFar * localFrustum.axis[1].z - dUp * localFrustum.axis[1].x
+            dz = dFar * localFrustum.axis[2].z - dUp * localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = dFar * cornerVecs[index].z - dUp * cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2077,8 +2073,8 @@ object Frustum {
             }
 
             // test down plane
-            dy = -dFar * localFrustum.axis.oGet(1).z - dUp * localFrustum.axis.oGet(1).x
-            dz = -dFar * localFrustum.axis.oGet(2).z - dUp * localFrustum.axis.oGet(2).x
+            dy = -dFar * localFrustum.axis[1].z - dUp * localFrustum.axis[1].x
+            dz = -dFar * localFrustum.axis[2].z - dUp * localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -dFar * cornerVecs[index].z - dUp * cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
@@ -2133,52 +2129,52 @@ object Frustum {
             var dx: Float
             var dy: Float
             var dz: Float
-            dy = -localFrustum.axis.oGet(1).x
-            dz = -localFrustum.axis.oGet(2).x
+            dy = -localFrustum.axis[1].x
+            dz = -localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            if (indexPoints[index].x < bounds.oGet(0).x) {
+            if (indexPoints[index].x < bounds[0].x) {
                 return true
             }
-            dy = localFrustum.axis.oGet(1).x
-            dz = localFrustum.axis.oGet(2).x
+            dy = localFrustum.axis[1].x
+            dz = localFrustum.axis[2].x
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = cornerVecs[index].x
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            if (indexPoints[index].x > bounds.oGet(1).x) {
+            if (indexPoints[index].x > bounds[1].x) {
                 return true
             }
-            dy = -localFrustum.axis.oGet(1).y
-            dz = -localFrustum.axis.oGet(2).y
+            dy = -localFrustum.axis[1].y
+            dz = -localFrustum.axis[2].y
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -cornerVecs[index].y
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            if (indexPoints[index].y < bounds.oGet(0).y) {
+            if (indexPoints[index].y < bounds[0].y) {
                 return true
             }
-            dy = localFrustum.axis.oGet(1).y
-            dz = localFrustum.axis.oGet(2).y
+            dy = localFrustum.axis[1].y
+            dz = localFrustum.axis[2].y
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = cornerVecs[index].y
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            if (indexPoints[index].y > bounds.oGet(1).y) {
+            if (indexPoints[index].y > bounds[1].y) {
                 return true
             }
-            dy = -localFrustum.axis.oGet(1).z
-            dz = -localFrustum.axis.oGet(2).z
+            dy = -localFrustum.axis[1].z
+            dz = -localFrustum.axis[2].z
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = -cornerVecs[index].z
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            if (indexPoints[index].z < bounds.oGet(0).z) {
+            if (indexPoints[index].z < bounds[0].z) {
                 return true
             }
-            dy = localFrustum.axis.oGet(1).z
-            dz = localFrustum.axis.oGet(2).z
+            dy = localFrustum.axis[1].z
+            dz = localFrustum.axis[2].z
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
             dx = cornerVecs[index].z
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            return indexPoints[index].z > bounds.oGet(1).z
+            return indexPoints[index].z > bounds[1].z
         }
 
         /*
@@ -2204,7 +2200,7 @@ object Frustum {
             var startInside = 1
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.oSet(end.oMinus(start))
+            dir.set(end.minus(start))
 
             // test near plane
             if (dNear > 0.0f) {
@@ -2335,7 +2331,7 @@ object Frustum {
             var startInside = 1
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            end.oSet(start.oPlus(dir))
+            end.set(start.oPlus(dir))
             scale1._val = (idMath.INFINITY)
             scale2._val = (-idMath.INFINITY)
 
@@ -2525,50 +2521,50 @@ object Frustum {
 
         private fun ToClippedPoints(fractions: Array<CFloat>, points: Array<idVec3>) {
             val scaled = idMat3()
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dNear)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft * dNear * invFar))
-            scaled.oSet(2, axis.oGet(2).times(dUp * dNear * invFar))
-            points[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            points[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            points[2].oSet(points[1].oMinus(scaled.oGet(2)))
-            points[3].oSet(points[0].oMinus(scaled.oGet(2)))
-            points[0].plusAssign(scaled.oGet(2))
-            points[1].plusAssign(scaled.oGet(2))
-            scaled.oSet(0, axis.oGet(0).times(dFar))
-            scaled.oSet(1, axis.oGet(1).times(dLeft))
-            scaled.oSet(2, axis.oGet(2).timesAssign(dUp))
-            points[4].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            points[5].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            points[6].oSet(points[5].oMinus(scaled.oGet(2)))
-            points[7].oSet(points[4].oMinus(scaled.oGet(2)))
-            points[4].plusAssign(scaled.oGet(2))
-            points[5].plusAssign(scaled.oGet(2))
-            points[4].oSet(origin.oPlus(points[4].times(fractions[0]._val)))
-            points[5].oSet(origin.oPlus(points[5].times(fractions[1]._val)))
-            points[6].oSet(origin.oPlus(points[6].times(fractions[2]._val)))
-            points[7].oSet(origin.oPlus(points[7].times(fractions[3]._val)))
+            scaled[0] = origin.oPlus(axis[0].times(dNear))
+            scaled[1] = axis[1].times(dLeft * dNear * invFar)
+            scaled[2] = axis[2].times(dUp * dNear * invFar)
+            points[0].set(scaled[0].oPlus(scaled[1]))
+            points[1].set(scaled[0].minus(scaled[1]))
+            points[2].set(points[1].minus(scaled[2]))
+            points[3].set(points[0].minus(scaled[2]))
+            points[0].plusAssign(scaled[2])
+            points[1].plusAssign(scaled[2])
+            scaled[0] = axis[0].times(dFar)
+            scaled[1] = axis[1].times(dLeft)
+            scaled[2] = axis[2].timesAssign(dUp)
+            points[4].set(scaled[0].oPlus(scaled[1]))
+            points[5].set(scaled[0].minus(scaled[1]))
+            points[6].set(points[5].minus(scaled[2]))
+            points[7].set(points[4].minus(scaled[2]))
+            points[4].plusAssign(scaled[2])
+            points[5].plusAssign(scaled[2])
+            points[4].set(origin.oPlus(points[4].times(fractions[0]._val)))
+            points[5].set(origin.oPlus(points[5].times(fractions[1]._val)))
+            points[6].set(origin.oPlus(points[6].times(fractions[2]._val)))
+            points[7].set(origin.oPlus(points[7].times(fractions[3]._val)))
         }
 
         private fun ToIndexPoints(indexPoints: Array<idVec3>) {
             val scaled = idMat3()
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dNear)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft * dNear * invFar))
-            scaled.oSet(2, axis.oGet(2).times(dUp * dNear * invFar))
-            indexPoints[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            indexPoints[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            indexPoints[1].oSet(indexPoints[0].oPlus(scaled.oGet(2)))
-            indexPoints[3].oSet(indexPoints[2].oPlus(scaled.oGet(2)))
-            indexPoints[0].minusAssign(scaled.oGet(2))
-            indexPoints[2].minusAssign(scaled.oGet(2))
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dFar)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft))
-            scaled.oSet(2, axis.oGet(2).timesAssign(dUp))
-            indexPoints[4].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            indexPoints[6].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            indexPoints[5].oSet(indexPoints[4].oPlus(scaled.oGet(2)))
-            indexPoints[7].oSet(indexPoints[6].oPlus(scaled.oGet(2)))
-            indexPoints[4].minusAssign(scaled.oGet(2))
-            indexPoints[6].minusAssign(scaled.oGet(2))
+            scaled[0] = origin.oPlus(axis[0].times(dNear))
+            scaled[1] = axis[1].times(dLeft * dNear * invFar)
+            scaled[2] = axis[2].times(dUp * dNear * invFar)
+            indexPoints[0].set(scaled[0].minus(scaled[1]))
+            indexPoints[2].set(scaled[0].oPlus(scaled[1]))
+            indexPoints[1].set(indexPoints[0].oPlus(scaled[2]))
+            indexPoints[3].set(indexPoints[2].oPlus(scaled[2]))
+            indexPoints[0].minusAssign(scaled[2])
+            indexPoints[2].minusAssign(scaled[2])
+            scaled[0] = origin.oPlus(axis[0].times(dFar))
+            scaled[1] = axis[1].times(dLeft)
+            scaled[2] = axis[2].timesAssign(dUp)
+            indexPoints[4].set(scaled[0].minus(scaled[1]))
+            indexPoints[6].set(scaled[0].oPlus(scaled[1]))
+            indexPoints[5].set(indexPoints[4].oPlus(scaled[2]))
+            indexPoints[7].set(indexPoints[6].oPlus(scaled[2]))
+            indexPoints[4].minusAssign(scaled[2])
+            indexPoints[6].minusAssign(scaled[2])
         }
 
         /*
@@ -2580,28 +2576,28 @@ object Frustum {
          */
         private fun ToIndexPointsAndCornerVecs(indexPoints: Array<idVec3>, cornerVecs: Array<idVec3>) {
             val scaled = idMat3()
-            scaled.oSet(0, origin.oPlus(axis.oGet(0).times(dNear)))
-            scaled.oSet(1, axis.oGet(1).times(dLeft * dNear * invFar))
-            scaled.oSet(2, axis.oGet(2).times(dUp * dNear * invFar))
-            indexPoints[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            indexPoints[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            indexPoints[1].oSet(indexPoints[0].oPlus(scaled.oGet(2)))
-            indexPoints[3].oSet(indexPoints[2].oPlus(scaled.oGet(2)))
-            indexPoints[0].minusAssign(scaled.oGet(2))
-            indexPoints[2].minusAssign(scaled.oGet(2))
-            scaled.oSet(0, axis.oGet(0).times(dFar))
-            scaled.oSet(1, axis.oGet(1).times(dLeft))
-            scaled.oSet(2, axis.oGet(2).times(dUp))
-            cornerVecs[0].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            cornerVecs[2].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            cornerVecs[1].oSet(cornerVecs[0].oPlus(scaled.oGet(2)))
-            cornerVecs[3].oSet(cornerVecs[2].oPlus(scaled.oGet(2)))
-            cornerVecs[0].minusAssign(scaled.oGet(2))
-            cornerVecs[2].minusAssign(scaled.oGet(2))
-            indexPoints[4].oSet(cornerVecs[0].oPlus(origin))
-            indexPoints[5].oSet(cornerVecs[1].oPlus(origin))
-            indexPoints[6].oSet(cornerVecs[2].oPlus(origin))
-            indexPoints[7].oSet(cornerVecs[3].oPlus(origin))
+            scaled[0] = origin.oPlus(axis[0].times(dNear))
+            scaled[1] = axis[1].times(dLeft * dNear * invFar)
+            scaled[2] = axis[2].times(dUp * dNear * invFar)
+            indexPoints[0].set(scaled[0].minus(scaled[1]))
+            indexPoints[2].set(scaled[0].oPlus(scaled[1]))
+            indexPoints[1].set(indexPoints[0].oPlus(scaled[2]))
+            indexPoints[3].set(indexPoints[2].oPlus(scaled[2]))
+            indexPoints[0].minusAssign(scaled[2])
+            indexPoints[2].minusAssign(scaled[2])
+            scaled[0] = axis[0].times(dFar)
+            scaled[1] = axis[1].times(dLeft)
+            scaled[2] = axis[2].times(dUp)
+            cornerVecs[0].set(scaled[0].minus(scaled[1]))
+            cornerVecs[2].set(scaled[0].oPlus(scaled[1]))
+            cornerVecs[1].set(cornerVecs[0].oPlus(scaled[2]))
+            cornerVecs[3].set(cornerVecs[2].oPlus(scaled[2]))
+            cornerVecs[0].minusAssign(scaled[2])
+            cornerVecs[2].minusAssign(scaled[2])
+            indexPoints[4].set(cornerVecs[0].oPlus(origin))
+            indexPoints[5].set(cornerVecs[1].oPlus(origin))
+            indexPoints[6].set(cornerVecs[2].oPlus(origin))
+            indexPoints[7].set(cornerVecs[3].oPlus(origin))
         }
 
         /*
@@ -2622,16 +2618,16 @@ object Frustum {
             val dy: Float
             val dz: Float
             var index: Int
-            dy = dir.x * axis.oGet(1).x + dir.y * axis.oGet(1).y + dir.z * axis.oGet(1).z
-            dz = dir.x * axis.oGet(2).x + dir.y * axis.oGet(2).y + dir.z * axis.oGet(2).z
+            dy = dir.x * axis[1].x + dir.y * axis[1].y + dir.z * axis[1].z
+            dz = dir.x * axis[2].x + dir.y * axis[2].y + dir.z * axis[2].z
             index = Math_h.FLOATSIGNBITSET(dy) shl 1 or Math_h.FLOATSIGNBITSET(dz)
-            dx = dir.x * cornerVecs.get(index).x + dir.y * cornerVecs.get(index).y + dir.z * cornerVecs.get(index).z
+            dx = dir.x * cornerVecs[index].x + dir.y * cornerVecs[index].y + dir.z * cornerVecs[index].z
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            min._val = (indexPoints.get(index).times(dir))
+            min._val = (indexPoints[index].times(dir))
             index = index.inv() and 3
-            dx = -dir.x * cornerVecs.get(index).x - dir.y * cornerVecs.get(index).y - dir.z * cornerVecs.get(index).z
+            dx = -dir.x * cornerVecs[index].x - dir.y * cornerVecs[index].y - dir.z * cornerVecs[index].z
             index = index or (Math_h.FLOATSIGNBITSET(dx) shl 2)
-            max._val = (indexPoints.get(index).times(dir))
+            max._val = (indexPoints[index].times(dir))
         }
 
         private fun AddLocalLineToProjectionBoundsSetCull(
@@ -2674,7 +2670,7 @@ object Frustum {
 //#endif
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.oSet(end.oMinus(start))
+            dir.set(end.minus(start))
             fstart = dFar * start.y
             fend = dFar * end.y
             lstart = dLeft * start.x
@@ -2777,11 +2773,11 @@ object Frustum {
                 p.z = end.z * dFar / (end.x * dUp)
                 bounds.AddPoint(p)
             }
-            if (start.x < bounds.oGet(0).x) {
-                bounds.oGet(0).x = if (start.x < 0.0f) 0.0f else start.x
+            if (start.x < bounds[0].x) {
+                bounds[0].x = if (start.x < 0.0f) 0.0f else start.x
             }
-            if (end.x < bounds.oGet(0).x) {
-                bounds.oGet(0).x = if (end.x < 0.0f) 0.0f else end.x
+            if (end.x < bounds[0].x) {
+                bounds[0].x = if (end.x < 0.0f) 0.0f else end.x
             }
             startCull._val = (cull1)
             endCull._val = (cull2)
@@ -2819,7 +2815,7 @@ object Frustum {
 //#endif
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.oSet(end.oMinus(start))
+            dir.set(end.minus(start))
             if (clip and (1 or 2) != 0) {
                 fstart = dFar * start.y
                 fend = dFar * end.y
@@ -2924,18 +2920,18 @@ object Frustum {
             if (pointClip < 0) {
                 return false
             }
-            p = capPointIndex.get(pointClip)
+            p = capPointIndex[pointClip]
             AddLocalLineToProjectionBoundsUseCull(
-                endPoints.get(endPointsOffset + p.get(0)),
+                endPoints[endPointsOffset + p[0]],
                 point,
-                endPointCull.get(endPointCullOffset + p.get(0))._val,
+                endPointCull[endPointCullOffset + p[0]]._val,
                 pointCull,
                 projectionBounds
             )
             AddLocalLineToProjectionBoundsUseCull(
-                endPoints.get(endPointsOffset + p.get(1)),
+                endPoints[endPointsOffset + p[1]],
                 point,
-                endPointCull.get(endPointCullOffset + p.get(1))._val,
+                endPointCull[endPointCullOffset + p[1]]._val,
                 pointCull,
                 projectionBounds
             )
@@ -2986,18 +2982,18 @@ object Frustum {
             var startInside = 1
             scale1._val = (idMath.INFINITY)
             scale2._val = (-idMath.INFINITY)
-            end.oSet(start.oPlus(dir))
+            end.set(start.oPlus(dir))
             i = 0
             while (i < 2) {
-                d1 = start.x - bounds.oGet(i).x
+                d1 = start.x - bounds[i].x
                 startInside = startInside and (Math_h.FLOATSIGNBITSET(d1) xor i)
-                d2 = end.x - bounds.oGet(i).x
+                d2 = end.x - bounds[i].x
                 if (d1 != d2) {
                     f = d1 / (d1 - d2)
                     p.y = start.y + f * dir.y
-                    if (bounds.oGet(0).y <= p.y && p.y <= bounds.oGet(1).y) {
+                    if (bounds[0].y <= p.y && p.y <= bounds[1].y) {
                         p.z = start.z + f * dir.z
-                        if (bounds.oGet(0).z <= p.z && p.z <= bounds.oGet(1).z) {
+                        if (bounds[0].z <= p.z && p.z <= bounds[1].z) {
                             if (f < scale1._val) {
                                 scale1._val = (f)
                             }
@@ -3007,15 +3003,15 @@ object Frustum {
                         }
                     }
                 }
-                d1 = start.y - bounds.oGet(i).y
+                d1 = start.y - bounds[i].y
                 startInside = startInside and (Math_h.FLOATSIGNBITSET(d1) xor i)
-                d2 = end.y - bounds.oGet(i).y
+                d2 = end.y - bounds[i].y
                 if (d1 != d2) {
                     f = d1 / (d1 - d2)
                     p.x = start.x + f * dir.x
-                    if (bounds.oGet(0).x <= p.x && p.x <= bounds.oGet(1).x) {
+                    if (bounds[0].x <= p.x && p.x <= bounds[1].x) {
                         p.z = start.z + f * dir.z
-                        if (bounds.oGet(0).z <= p.z && p.z <= bounds.oGet(1).z) {
+                        if (bounds[0].z <= p.z && p.z <= bounds[1].z) {
                             if (f < scale1._val) {
                                 scale1._val = (f)
                             }
@@ -3025,15 +3021,15 @@ object Frustum {
                         }
                     }
                 }
-                d1 = start.z - bounds.oGet(i).z
+                d1 = start.z - bounds[i].z
                 startInside = startInside and (Math_h.FLOATSIGNBITSET(d1) xor i)
-                d2 = end.z - bounds.oGet(i).z
+                d2 = end.z - bounds[i].z
                 if (d1 != d2) {
                     f = d1 / (d1 - d2)
                     p.x = start.x + f * dir.x
-                    if (bounds.oGet(0).x <= p.x && p.x <= bounds.oGet(1).x) {
+                    if (bounds[0].x <= p.x && p.x <= bounds[1].x) {
                         p.y = start.y + f * dir.y
-                        if (bounds.oGet(0).y <= p.y && p.y <= bounds.oGet(1).y) {
+                        if (bounds[0].y <= p.y && p.y <= bounds[1].y) {
                             if (f < scale1._val) {
                                 scale1._val = (f)
                             }
@@ -3068,42 +3064,42 @@ object Frustum {
             val bounds = idBounds()
             transpose = box.GetAxis()
             transpose.TransposeSelf()
-            localOrigin.oSet(origin.oMinus(box.GetCenter()).oMultiply(transpose))
+            localOrigin.set(origin.minus(box.GetCenter()).oMultiply(transpose))
             localAxis = axis.times(transpose)
-            scaled.oSet(0, localAxis.oGet(0).times(dFar))
-            scaled.oSet(1, localAxis.oGet(1).times(dLeft))
-            scaled.oSet(2, localAxis.oGet(2).times(dUp))
-            cornerVecs[0].oSet(scaled.oGet(0).oPlus(scaled.oGet(1)))
-            cornerVecs[1].oSet(scaled.oGet(0).oMinus(scaled.oGet(1)))
-            cornerVecs[2].oSet(cornerVecs[1].oMinus(scaled.oGet(2)))
-            cornerVecs[3].oSet(cornerVecs[0].oMinus(scaled.oGet(2)))
-            cornerVecs[0].plusAssign(scaled.oGet(2))
-            cornerVecs[1].plusAssign(scaled.oGet(2))
-            bounds.oSet(0, box.GetExtents().oNegative())
-            bounds.oSet(1, box.GetExtents())
+            scaled[0] = localAxis[0].times(dFar)
+            scaled[1] = localAxis[1].times(dLeft)
+            scaled[2] = localAxis[2].times(dUp)
+            cornerVecs[0].set(scaled[0].oPlus(scaled[1]))
+            cornerVecs[1].set(scaled[0].minus(scaled[1]))
+            cornerVecs[2].set(cornerVecs[1].minus(scaled[2]))
+            cornerVecs[3].set(cornerVecs[0].minus(scaled[2]))
+            cornerVecs[0].plusAssign(scaled[2])
+            cornerVecs[1].plusAssign(scaled[2])
+            bounds[0] = box.GetExtents().oNegative()
+            bounds[1] = box.GetExtents()
             minf = (dNear + 1.0f) * invFar
             i = 0
             while (i < 4) {
                 index = Math_h.FLOATSIGNBITNOTSET(cornerVecs[i].x)
-                f = (bounds.oGet(index).x - localOrigin.x) / cornerVecs[i].x
-                clipFractions.get(i)._val = (f)
-                clipPlanes.get(i)._val = (1 shl index)
+                f = (bounds[index].x - localOrigin.x) / cornerVecs[i].x
+                clipFractions[i]._val = (f)
+                clipPlanes[i]._val = (1 shl index)
                 index = Math_h.FLOATSIGNBITNOTSET(cornerVecs[i].y)
-                f = (bounds.oGet(index).y - localOrigin.y) / cornerVecs[i].y
-                if (f < clipFractions.get(i)._val) {
-                    clipFractions.get(i)._val = (f)
-                    clipPlanes.get(i)._val = (4 shl index)
+                f = (bounds[index].y - localOrigin.y) / cornerVecs[i].y
+                if (f < clipFractions[i]._val) {
+                    clipFractions[i]._val = (f)
+                    clipPlanes[i]._val = (4 shl index)
                 }
                 index = Math_h.FLOATSIGNBITNOTSET(cornerVecs[i].z)
-                f = (bounds.oGet(index).z - localOrigin.z) / cornerVecs[i].z
-                if (f < clipFractions.get(i)._val) {
-                    clipFractions.get(i)._val = (f)
-                    clipPlanes.get(i)._val = (16 shl index)
+                f = (bounds[index].z - localOrigin.z) / cornerVecs[i].z
+                if (f < clipFractions[i]._val) {
+                    clipFractions[i]._val = (f)
+                    clipPlanes[i]._val = (16 shl index)
                 }
 
                 // make sure the frustum is not clipped between the frustum origin and the near plane
-                if (clipFractions.get(i)._val < minf) {
-                    clipFractions.get(i)._val = (minf)
+                if (clipFractions[i]._val < minf) {
+                    clipFractions[i]._val = (minf)
                 }
                 i++
             }
@@ -3146,9 +3142,9 @@ object Frustum {
             val localDir = idVec3()
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            localStart.oSet(localPoints.get(startIndex))
-            localEnd.oSet(localPoints.get(endIndex))
-            localDir.oSet(localEnd.oMinus(localStart))
+            localStart.set(localPoints[startIndex])
+            localEnd.set(localPoints[endIndex])
+            localDir.set(localEnd.minus(localStart))
             startClip._val = (endClip._val - 1)
             scale1 = idMath.INFINITY
             scale2 = -idMath.INFINITY
@@ -3259,25 +3255,25 @@ object Frustum {
 
             // if completely inside
             if (0 == startCull or endCull) {
-                start.oSet(points.get(startIndex))
-                end.oSet(points.get(endIndex))
+                start.set(points[startIndex])
+                end.set(points[endIndex])
                 return true
             } else if (scale1 <= scale2) {
                 if (0 == startCull) {
-                    start.oSet(points.get(startIndex))
+                    start.set(points[startIndex])
                     startClip._val = (-1)
                 } else {
-                    start.oSet(
-                        points.get(startIndex).oPlus(points.get(endIndex).oMinus(points.get(startIndex)))
+                    start.set(
+                        points[startIndex].oPlus(points[endIndex].minus(points[startIndex]))
                             .oMultiply(scale1)
                     )
                 }
                 if (0 == endCull) {
-                    end.oSet(points.get(endIndex))
+                    end.set(points[endIndex])
                     endClip._val = (-1)
                 } else {
-                    end.oSet(
-                        points.get(startIndex).oPlus(points.get(endIndex).oMinus(points.get(startIndex)))
+                    end.set(
+                        points[startIndex].oPlus(points[endIndex].minus(points[startIndex]))
                             .oMultiply(scale2)
                     )
                 }
@@ -3287,8 +3283,8 @@ object Frustum {
         }
 
         private fun oSet(f: idFrustum) {
-            origin.oSet(f.origin)
-            axis.oSet(f.axis)
+            origin.set(f.origin)
+            axis.set(f.axis)
             dNear = f.dNear
             dFar = f.dFar
             dLeft = f.dLeft

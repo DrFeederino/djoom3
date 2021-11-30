@@ -136,15 +136,15 @@ object Model_md5 {
             while (i < texCoords.Num()) {
                 parser.ExpectTokenString("vert")
                 parser.ParseInt()
-                parser.Parse1DMatrix(2, texCoords.oSet(i, idVec2()))
-                firstWeightForVertex.oSet(i, parser.ParseInt())
-                numWeightsForVertex.oSet(i, parser.ParseInt())
-                if (0 == numWeightsForVertex.oGet(i)) {
+                parser.Parse1DMatrix(2, texCoords.set(i, idVec2()))
+                firstWeightForVertex.set(i, parser.ParseInt())
+                numWeightsForVertex.set(i, parser.ParseInt())
+                if (0 == numWeightsForVertex.get(i)) {
                     parser.Error("Vertex without any joint weights.")
                 }
-                numWeights += numWeightsForVertex.oGet(i)
-                if (numWeightsForVertex.oGet(i) + firstWeightForVertex.oGet(i) > maxweight) {
-                    maxweight = numWeightsForVertex.oGet(i) + firstWeightForVertex.oGet(i)
+                numWeights += numWeightsForVertex.get(i)
+                if (numWeightsForVertex.get(i) + firstWeightForVertex.get(i) > maxweight) {
+                    maxweight = numWeightsForVertex.get(i) + firstWeightForVertex.get(i)
                 }
                 i++
             }
@@ -163,9 +163,9 @@ object Model_md5 {
             while (i < count) {
                 parser.ExpectTokenString("tri")
                 parser.ParseInt()
-                tris.oSet(i * 3 + 0, parser.ParseInt())
-                tris.oSet(i * 3 + 1, parser.ParseInt())
-                tris.oSet(i * 3 + 2, parser.ParseInt())
+                tris.set(i * 3 + 0, parser.ParseInt())
+                tris.set(i * 3 + 1, parser.ParseInt())
+                tris.set(i * 3 + 2, parser.ParseInt())
                 i++
             }
 
@@ -189,10 +189,10 @@ object Model_md5 {
                 if (jointnum < 0 || jointnum >= numJoints) {
                     parser.Error("Joint Index out of range(%d): %d", numJoints, jointnum)
                 }
-                tempWeights.oSet(i, vertexWeight_s())
-                tempWeights.oGet(i).joint = jointnum
-                tempWeights.oGet(i).jointWeight = parser.ParseFloat()
-                parser.Parse1DMatrix(3, tempWeights.oGet(i).offset)
+                tempWeights.set(i, vertexWeight_s())
+                tempWeights.get(i).joint = jointnum
+                tempWeights.get(i).jointWeight = parser.ParseFloat()
+                parser.Parse1DMatrix(3, tempWeights.get(i).offset)
                 i++
             }
 
@@ -203,14 +203,14 @@ object Model_md5 {
             count = 0
             i = 0
             while (i < texCoords.Num()) {
-                num = firstWeightForVertex.oGet(i)
+                num = firstWeightForVertex.get(i)
                 j = 0
-                while (j < numWeightsForVertex.oGet(i)) {
+                while (j < numWeightsForVertex.get(i)) {
                     scaledWeights.get(count) = idVec4()
                     scaledWeights.get(count)
-                        .oSet(tempWeights.oGet(num).offset.times(tempWeights.oGet(num).jointWeight))
-                    scaledWeights.get(count).w = tempWeights.oGet(num).jointWeight
-                    weightIndex.get(count * 2 + 0) = tempWeights.oGet(num).joint * idJointMat.Companion.SIZE
+                        .set(tempWeights.get(num).offset.times(tempWeights.get(num).jointWeight))
+                    scaledWeights.get(count).w = tempWeights.get(num).jointWeight
+                    weightIndex.get(count * 2 + 0) = tempWeights.get(num).joint * idJointMat.Companion.SIZE
                     j++
                     num++
                     count++
@@ -242,7 +242,7 @@ object Model_md5 {
             while (i < texCoords.Num()) {
                 verts[i] = idDrawVert()
                 verts[i].Clear()
-                verts[i].st = texCoords.oGet(i)
+                verts[i].st = texCoords.get(i)
                 i++
             }
             TransformVerts(verts, joints)
@@ -292,7 +292,7 @@ object Model_md5 {
                 i = 0
                 while (i < deformInfo.numSourceVerts) {
                     tri.verts[i].Clear()
-                    tri.verts[i].st.oSet(texCoords.oGet(i))
+                    tri.verts[i].st.set(texCoords.get(i))
                     i++
                 }
             }
@@ -325,7 +325,7 @@ object Model_md5 {
             val bounds = idBounds()
             val verts = arrayOfNulls<idDrawVert?>(texCoords.Num())
             TransformVerts(verts, entJoints)
-            Simd.SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), verts, texCoords.Num())
+            Simd.SIMDProcessor.MinMax(bounds.get(0), bounds.get(1), verts, texCoords.Num())
             return bounds
         }
 
@@ -588,17 +588,17 @@ object Model_md5 {
             parser.ExpectTokenString("{")
             i = 0
             while (i < joints.Num()) {
-                val pose = defaultPose.oSet(i, idJointQuat())
-                val joint = joints.oSet(i, idMD5Joint())
+                val pose = defaultPose.set(i, idJointQuat())
+                val joint = joints.set(i, idMD5Joint())
                 ParseJoint(parser, joint, pose)
                 poseMat3[i] = idJointMat()
                 poseMat3[i].SetRotation(pose.q.ToMat3())
                 poseMat3[i].SetTranslation(pose.t)
                 if (joint.parent != null) {
                     parentNum = joints.Find(joint.parent)
-                    pose.q.oSet(poseMat3[i].ToMat3().times(poseMat3[parentNum].ToMat3().Transpose()).ToQuat())
-                    pose.t.oSet(
-                        poseMat3[i].ToVec3().oMinus(poseMat3[parentNum].ToVec3())
+                    pose.q.set(poseMat3[i].ToMat3().times(poseMat3[parentNum].ToMat3().Transpose()).ToQuat())
+                    pose.t.set(
+                        poseMat3[i].ToVec3().minus(poseMat3[parentNum].ToVec3())
                             .oMultiply(poseMat3[parentNum].ToMat3().Transpose())
                     )
                 }
@@ -607,7 +607,7 @@ object Model_md5 {
             parser.ExpectTokenString("}")
             i = 0
             while (i < meshes.Num()) {
-                val mesh = meshes.oSet(i, idMD5Mesh())
+                val mesh = meshes.set(i, idMD5Mesh())
                 parser.ExpectTokenString("mesh")
                 mesh.ParseMesh(parser, defaultPose.Num(), poseMat3)
                 i++
@@ -709,7 +709,7 @@ object Model_md5 {
                 var surf: modelSurface_s?
                 if (staticModel.FindSurfaceWithId(i, surfaceNum)) {
                     mesh.surfaceNum = surfaceNum.getVal()
-                    surf = staticModel.surfaces.oGet(surfaceNum.getVal())
+                    surf = staticModel.surfaces.get(surfaceNum.getVal())
                 } else {
 
                     // Remove Overlays before adding new surfaces
@@ -721,8 +721,8 @@ object Model_md5 {
                     surf.id = i
                 }
                 mesh.UpdateSurface(ent, ent.joints, surf)
-                staticModel.bounds.AddPoint(surf.geometry.bounds.oGet(0))
-                staticModel.bounds.AddPoint(surf.geometry.bounds.oGet(1))
+                staticModel.bounds.AddPoint(surf.geometry.bounds.get(0))
+                staticModel.bounds.AddPoint(surf.geometry.bounds.get(1))
                 val a = 0
             }
             return staticModel
@@ -750,7 +750,7 @@ object Model_md5 {
         override fun GetJointName(handle: Int): String? {
             return if (handle < 0 || handle >= joints.Num()) {
                 "<invalid joint>"
-            } else joints.oGet(handle).name.toString()
+            } else joints.get(handle).name.toString()
         }
 
         override fun GetDefaultPose(): Array<idJointQuat?>? {
@@ -774,7 +774,7 @@ object Model_md5 {
             bounds.Clear()
             i = 0
             while (i < meshes.Num()) {
-                bounds.AddBounds(meshes.oGet(i).CalcBounds(entJoints))
+                bounds.AddBounds(meshes.get(i).CalcBounds(entJoints))
                 val a = 0
                 ++i
             }
@@ -790,10 +790,10 @@ object Model_md5 {
             var parentNum: Int
             num = ent.numJoints
             joint = ent.joints[0]
-            md5Joint = joints.oGet(0)
+            md5Joint = joints.get(0)
             i = 0
             while (i < num) {
-                pos.oSet(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
+                pos.set(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
                 if (md5Joint.parent != null) {
 //                    parentNum = indexOf(md5Joint.parent, joints.Ptr());
                     parentNum = joints.IndexOf(md5Joint.parent)
@@ -806,26 +806,26 @@ object Model_md5 {
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorRed,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(0).times(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().get(0).times(2.0f).oMultiply(ent.axis))
                 )
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorGreen,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(1).times(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().get(1).times(2.0f).oMultiply(ent.axis))
                 )
                 Session.Companion.session.rw.DebugLine(
                     Lib.Companion.colorBlue,
                     pos,
-                    pos.oPlus(joint.ToMat3().oGet(2).times(2.0f).oMultiply(ent.axis))
+                    pos.oPlus(joint.ToMat3().get(2).times(2.0f).oMultiply(ent.axis))
                 )
                 joint = ent.joints[++i]
-                md5Joint = joints.oGet(i)
+                md5Joint = joints.get(i)
             }
             val bounds = idBounds()
             bounds.FromTransformedBounds(ent.bounds, Vector.getVec3_zero(), ent.axis)
             Session.Companion.session.rw.DebugBounds(Lib.Companion.colorMagenta, bounds, ent.origin)
             if (RenderSystem_init.r_jointNameScale.GetFloat() != 0.0f && bounds.Expand(128.0f)
-                    .ContainsPoint(view.renderView.vieworg.oMinus(ent.origin))
+                    .ContainsPoint(view.renderView.vieworg.minus(ent.origin))
             ) {
                 val offset = idVec3(0, 0, RenderSystem_init.r_jointNameOffset.GetFloat())
                 val scale: Float
@@ -834,9 +834,9 @@ object Model_md5 {
                 num = ent.numJoints
                 i = 0
                 while (i < num) {
-                    pos.oSet(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
+                    pos.set(ent.origin.oPlus(joint.ToVec3().times(ent.axis)))
                     Session.Companion.session.rw.DrawText(
-                        joints.oGet(i).name.toString(),
+                        joints.get(i).name.toString(),
                         pos.oPlus(offset),
                         scale,
                         Lib.Companion.colorWhite,
@@ -869,7 +869,7 @@ object Model_md5 {
                 if (num >= joints.Num() - 1) {
                     parser.Error("Invalid parent for joint '%s'", joint.name)
                 }
-                joint.parent = joints.oGet(num)
+                joint.parent = joints.get(num)
             }
 
             //

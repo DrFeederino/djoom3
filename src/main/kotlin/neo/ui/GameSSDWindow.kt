@@ -268,10 +268,10 @@ object GameSSDWindow {
             destroyed = false
             noHit = false
             noPlayerDamage = false
-            matColor.Set(1f, 1f, 1f, 1f)
+            matColor.set(1f, 1f, 1f, 1f)
             text = idStr("")
             textScale = 1.0f
-            foreColor.Set(1f, 1f, 1f, 1f)
+            foreColor.set(1f, 1f, 1f, 1f)
         }
 
         fun SetGame(_game: idGameSSDWindow?) {
@@ -285,7 +285,7 @@ object GameSSDWindow {
         }
 
         fun SetPosition(_position: idVec3?) {
-            position.oSet(_position) //TODO:is this by value, or by reference?
+            position.set(_position) //TODO:is this by value, or by reference?
         }
 
         fun SetSize(_size: idVec2?) {
@@ -337,15 +337,15 @@ object GameSSDWindow {
             val x: Float
             val y: Float
             val bounds = idBounds()
-            bounds.oSet(0, idVec3(position.x - size.x / 2.0f, position.y - size.y / 2.0f, position.z))
-            bounds.oSet(1, idVec3(position.x + size.x / 2.0f, position.y + size.y / 2.0f, position.z))
+            bounds.set(0, idVec3(position.x - size.x / 2.0f, position.y - size.y / 2.0f, position.z))
+            bounds.set(1, idVec3(position.x + size.x / 2.0f, position.y + size.y / 2.0f, position.z))
             val screenBounds = WorldToScreen(bounds)
-            persize.x = Math.abs(screenBounds.oGet(1).x - screenBounds.oGet(0).x)
-            persize.y = Math.abs(screenBounds.oGet(1).y - screenBounds.oGet(0).y)
+            persize.x = Math.abs(screenBounds.get(1).x - screenBounds.get(0).x)
+            persize.y = Math.abs(screenBounds.get(1).y - screenBounds.get(0).y)
 
 //	idVec3 center = screenBounds.GetCenter();
-            x = screenBounds.oGet(0).x
-            y = screenBounds.oGet(1).y
+            x = screenBounds.get(0).x
+            y = screenBounds.get(1).y
             dc.DrawMaterialRotated(x, y, persize.x, persize.y, material, matColor, 1.0f, 1.0f, Math_h.DEG2RAD(rotation))
             if (text.Length() > 0) {
                 val rect = idRectangle(x, y, DeviceContext.VIRTUAL_WIDTH, DeviceContext.VIRTUAL_HEIGHT)
@@ -360,8 +360,8 @@ object GameSSDWindow {
         open fun OnHit(key: Int) {}
         open fun OnStrikePlayer() {}
         fun WorldToScreen(worldBounds: idBounds?): idBounds? {
-            val screenMin = idVec3(WorldToScreen(worldBounds.oGet(0)))
-            val screenMax = idVec3(WorldToScreen(worldBounds.oGet(1)))
+            val screenMin = idVec3(WorldToScreen(worldBounds.get(0)))
+            val screenMax = idVec3(WorldToScreen(worldBounds.get(1)))
             return idBounds(screenMin, screenMax)
         }
 
@@ -371,7 +371,7 @@ object GameSSDWindow {
             //World To Camera Coordinates
             val cameraTrans = idVec3(0, 0, d)
             val cameraPos = idVec3()
-            cameraPos.oSet(worldPos.oPlus(cameraTrans))
+            cameraPos.set(worldPos.oPlus(cameraTrans))
 
             //Camera To Screen Coordinates
             val screenPos = idVec3()
@@ -420,7 +420,7 @@ object GameSSDWindow {
         }
 
         fun MoverInit(_speed: idVec3?, _rotationSpeed: Float) {
-            speed.oSet(_speed)
+            speed.set(_speed)
             rotationSpeed = _rotationSpeed
         }
 
@@ -470,7 +470,7 @@ object GameSSDWindow {
             SetSize(_size)
             SetRadius(Lib.Companion.Max(size.x, size.y), 0.3f)
             SetRotation(idGameSSDWindow.random.RandomInt(360.0).toFloat())
-            position.oSet(startPosition)
+            position.set(startPosition)
             health = _health
         }
 
@@ -551,7 +551,7 @@ object GameSSDWindow {
             SetSize(idVec2(256, 256))
             SetRadius(Lib.Companion.Max(size.x, size.y), 0.3f)
             SetRotation(idGameSSDWindow.random.RandomInt(360.0).toFloat())
-            position.oSet(startPosition)
+            position.set(startPosition)
             health = _health
         }
 
@@ -690,7 +690,7 @@ object GameSSDWindow {
 
             //Always set my position to my buddies position except change z to be on top
             if (followBuddy) {
-                position.oSet(buddy.position)
+                position.set(buddy.position)
                 position.z -= 50f
             } else {
                 //Only mess with the z if we are not following
@@ -831,19 +831,19 @@ object GameSSDWindow {
             for (i in 0 until text.Length()) {
                 width += game.GetDC().CharWidth(text.oGet(i), textScale).toFloat()
             }
-            size.Set(0f, 0f)
+            size.set(0f, 0f)
 
             //Set the start position at the top of the passed in entity
-            position.oSet(WorldToScreen(_ent.position))
-            position.oSet(ScreenToWorld(position))
+            position.set(WorldToScreen(_ent.position))
+            position.set(ScreenToWorld(position))
             position.z = 0f
             position.x -= width / 2.0f
-            beginPosition.oSet(position)
-            endPosition.oSet(beginPosition)
+            beginPosition.set(position)
+            endPosition.set(beginPosition)
             endPosition.y += _distance.toFloat()
 
             //beginColor.Set(0,1,0,1);
-            endColor.Set(1f, 1f, 1f, 0f)
+            endColor.set(1f, 1f, 1f, 0f)
             beginColor = color
             beginColor.w = 1f
             noPlayerDamage = true
@@ -950,10 +950,10 @@ object GameSSDWindow {
             EntityInit()
             SetGame(_game)
             SetMaterial(PROJECTILE_MATERIAL)
-            size.Set(_size, _size)
-            position.oSet(_beginPosition)
-            endPosition.oSet(_endPosition)
-            dir.oSet(_endPosition.oMinus(position))
+            size.set(_size, _size)
+            position.set(_beginPosition)
+            endPosition.set(_endPosition)
+            dir.set(_endPosition.minus(position))
             dir.Normalize()
 
             //speed.Zero();
@@ -1137,7 +1137,7 @@ object GameSSDWindow {
             startPosition.x = idGameSSDWindow.random.RandomInt(V_WIDTH.toDouble()) - V_WIDTH / 2.0f
             startPosition.y = idGameSSDWindow.random.RandomInt(V_HEIGHT.toDouble()) - V_HEIGHT / 2.0f
             startPosition.z = ENTITY_START_DIST.toFloat()
-            position.oSet(startPosition)
+            position.set(startPosition)
             //SetPosition(startPosition);
             powerupState = POWERUP_STATE_CLOSED
             powerupType = idGameSSDWindow.random.RandomInt((POWERUP_TYPE_MAX + 1).toDouble())
@@ -1442,14 +1442,14 @@ object GameSSDWindow {
             savefile.Write(screenBounds)
             savefile.WriteInt(levelCount)
             for (i in 0 until levelCount) {
-                savefile.Write(levelData.oGet(i))
-                savefile.Write(asteroidData.oGet(i))
-                savefile.Write(astronautData.oGet(i))
-                savefile.Write(powerupData.oGet(i))
+                savefile.Write(levelData.get(i))
+                savefile.Write(asteroidData.get(i))
+                savefile.Write(astronautData.get(i))
+                savefile.Write(powerupData.get(i))
             }
             savefile.WriteInt(weaponCount)
             for (i in 0 until weaponCount) {
-                savefile.Write(weaponData.oGet(i))
+                savefile.Write(weaponData.get(i))
             }
             savefile.WriteInt(superBlasterTimeout)
             savefile.Write(gameStats)
@@ -1464,8 +1464,8 @@ object GameSSDWindow {
             val entCount = entities.Num()
             savefile.WriteInt(entCount)
             for (i in 0 until entCount) {
-                savefile.WriteInt(entities.oGet(i).type)
-                savefile.WriteInt(entities.oGet(i).id)
+                savefile.WriteInt(entities.get(i).type)
+                savefile.WriteInt(entities.get(i).id)
             }
         }
 
@@ -1575,7 +1575,7 @@ object GameSSDWindow {
 
                 //Draw from back to front
                 for (i in entities.Num() - 1 downTo 0) {
-                    entities.oGet(i).Draw(dc)
+                    entities.get(i).Draw(dc)
                 }
 
                 //The last thing to draw is the crosshair
@@ -1619,22 +1619,22 @@ object GameSSDWindow {
 
             //Destory All Asteroids
             for (i in 0 until entities.Num()) {
-                if (entities.oGet(i).type == SSD.SSD_ENTITY_ASTEROID) {
+                if (entities.get(i).type == SSD.SSD_ENTITY_ASTEROID) {
 
                     //The asteroid has been destroyed
                     val explosion: SSDExplosion = GetNewExplosion(
                         this,
-                        entities.oGet(i).position,
-                        entities.oGet(i).size.oMultiply(2f),
+                        entities.get(i).position,
+                        entities.get(i).size.oMultiply(2f),
                         300,
                         SSDExplosion.EXPLOSION_NORMAL,
-                        entities.oGet(i)
+                        entities.get(i)
                     )
                     entities.Append(explosion)
-                    AddScore(entities.oGet(i), asteroidData.oGet(gameStats.currentLevel).asteroidPoints)
+                    AddScore(entities.get(i), asteroidData.get(gameStats.currentLevel).asteroidPoints)
 
                     //Don't let the player hit it anymore because
-                    entities.oGet(i).noHit = true
+                    entities.get(i).noHit = true
                     gameStats.levelStats.destroyedAsteroids++
                 }
             }
@@ -1652,8 +1652,8 @@ object GameSSDWindow {
 
             //Rescue All Astronauts
             for (i in 0 until entities.Num()) {
-                if (entities.oGet(i).type == SSD.SSD_ENTITY_ASTRONAUT) {
-                    AstronautStruckPlayer(entities.oGet(i) as SSDAstronaut?)
+                if (entities.get(i).type == SSD.SSD_ENTITY_ASTRONAUT) {
+                    AstronautStruckPlayer(entities.get(i) as SSDAstronaut?)
                 }
             }
         }
@@ -1776,61 +1776,61 @@ object GameSSDWindow {
             val parser = idParser()
             var token: idToken
             parser.LoadMemory(levelDataString.toString(), levelDataString.Length(), "LevelData")
-            levelData.oGet(level).spawnBuffer = parser.ParseFloat()
-            levelData.oGet(level).needToWin = parser.ParseInt() //Required Destroyed
+            levelData.get(level).spawnBuffer = parser.ParseFloat()
+            levelData.get(level).needToWin = parser.ParseInt() //Required Destroyed
         }
 
         private fun ParseAsteroidData(level: Int, asteroidDataString: idStr?) {
             val parser = idParser()
             var token: idToken
             parser.LoadMemory(asteroidDataString.toString(), asteroidDataString.Length(), "AsteroidData")
-            asteroidData.oGet(level).speedMin = parser.ParseFloat() //Speed Min 
-            asteroidData.oGet(level).speedMax = parser.ParseFloat() //Speed Max
-            asteroidData.oGet(level).sizeMin = parser.ParseFloat() //Size Min 
-            asteroidData.oGet(level).sizeMax = parser.ParseFloat() //Size Max
-            asteroidData.oGet(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second) 
-            asteroidData.oGet(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
-            asteroidData.oGet(level).spawnMin = parser.ParseInt() //Spawn Min
-            asteroidData.oGet(level).spawnMax = parser.ParseInt() //Spawn Max
-            asteroidData.oGet(level).asteroidHealth = parser.ParseInt() //Health of the asteroid
-            asteroidData.oGet(level).asteroidDamage = parser.ParseInt() //Asteroid Damage
-            asteroidData.oGet(level).asteroidPoints = parser.ParseInt() //Points awarded for destruction
+            asteroidData.get(level).speedMin = parser.ParseFloat() //Speed Min
+            asteroidData.get(level).speedMax = parser.ParseFloat() //Speed Max
+            asteroidData.get(level).sizeMin = parser.ParseFloat() //Size Min
+            asteroidData.get(level).sizeMax = parser.ParseFloat() //Size Max
+            asteroidData.get(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second)
+            asteroidData.get(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
+            asteroidData.get(level).spawnMin = parser.ParseInt() //Spawn Min
+            asteroidData.get(level).spawnMax = parser.ParseInt() //Spawn Max
+            asteroidData.get(level).asteroidHealth = parser.ParseInt() //Health of the asteroid
+            asteroidData.get(level).asteroidDamage = parser.ParseInt() //Asteroid Damage
+            asteroidData.get(level).asteroidPoints = parser.ParseInt() //Points awarded for destruction
         }
 
         private fun ParseWeaponData(weapon: Int, weaponDataString: idStr?) {
             val parser = idParser()
             var token: idToken
             parser.LoadMemory(weaponDataString.toString(), weaponDataString.Length(), "WeaponData")
-            weaponData.oGet(weapon).speed = parser.ParseFloat()
-            weaponData.oGet(weapon).damage = parser.ParseFloat().toInt()
-            weaponData.oGet(weapon).size = parser.ParseFloat().toInt()
+            weaponData.get(weapon).speed = parser.ParseFloat()
+            weaponData.get(weapon).damage = parser.ParseFloat().toInt()
+            weaponData.get(weapon).size = parser.ParseFloat().toInt()
         }
 
         private fun ParseAstronautData(level: Int, astronautDataString: idStr?) {
             val parser = idParser()
             var token: idToken
             parser.LoadMemory(astronautDataString.toString(), astronautDataString.Length(), "AstronautData")
-            astronautData.oGet(level).speedMin = parser.ParseFloat() //Speed Min 
-            astronautData.oGet(level).speedMax = parser.ParseFloat() //Speed Max
-            astronautData.oGet(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second) 
-            astronautData.oGet(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
-            astronautData.oGet(level).spawnMin = parser.ParseInt() //Spawn Min
-            astronautData.oGet(level).spawnMax = parser.ParseInt() //Spawn Max
-            astronautData.oGet(level).health = parser.ParseInt() //Health of the asteroid
-            astronautData.oGet(level).points = parser.ParseInt() //Asteroid Damage
-            astronautData.oGet(level).penalty = parser.ParseInt() //Points awarded for destruction
+            astronautData.get(level).speedMin = parser.ParseFloat() //Speed Min
+            astronautData.get(level).speedMax = parser.ParseFloat() //Speed Max
+            astronautData.get(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second)
+            astronautData.get(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
+            astronautData.get(level).spawnMin = parser.ParseInt() //Spawn Min
+            astronautData.get(level).spawnMax = parser.ParseInt() //Spawn Max
+            astronautData.get(level).health = parser.ParseInt() //Health of the asteroid
+            astronautData.get(level).points = parser.ParseInt() //Asteroid Damage
+            astronautData.get(level).penalty = parser.ParseInt() //Points awarded for destruction
         }
 
         private fun ParsePowerupData(level: Int, powerupDataString: idStr?) {
             val parser = idParser()
             var token: idToken
             parser.LoadMemory(powerupDataString.toString(), powerupDataString.Length(), "PowerupData")
-            powerupData.oGet(level).speedMin = parser.ParseFloat() //Speed Min 
-            powerupData.oGet(level).speedMax = parser.ParseFloat() //Speed Max
-            powerupData.oGet(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second) 
-            powerupData.oGet(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
-            powerupData.oGet(level).spawnMin = parser.ParseInt() //Spawn Min
-            powerupData.oGet(level).spawnMax = parser.ParseInt() //Spawn Max
+            powerupData.get(level).speedMin = parser.ParseFloat() //Speed Min
+            powerupData.get(level).speedMax = parser.ParseFloat() //Speed Max
+            powerupData.get(level).rotateMin = parser.ParseFloat() //Rotate Min (rotations per second)
+            powerupData.get(level).rotateMax = parser.ParseFloat() //Rotate Max (rotations per second)
+            powerupData.get(level).spawnMin = parser.ParseInt() //Spawn Min
+            powerupData.get(level).spawnMax = parser.ParseInt() //Spawn Max
         }
 
         private fun CommonInit() {
@@ -1885,7 +1885,7 @@ object GameSSDWindow {
         private fun ResetEntities() {
             //Destroy all of the entities
             for (i in 0 until entities.Num()) {
-                entities.oGet(i).DestroyEntity()
+                entities.get(i).DestroyEntity()
             }
             entities.Clear()
         }
@@ -1998,14 +1998,14 @@ object GameSSDWindow {
 
                 //Update from back to front
                 for (i in entities.Num() - 1 downTo 0) {
-                    entities.oGet(i).Update()
+                    entities.get(i).Update()
                 }
                 CheckForHits()
 
                 //Delete entities that need to be deleted
                 for (i in entities.Num() - 1 downTo 0) {
-                    if (entities.oGet(i).destroyed) {
-                        val ent = entities.oGet(i)
+                    if (entities.get(i).destroyed) {
+                        val ent = entities.get(i)
                         ent.DestroyEntity()
                         entities.RemoveIndex(i)
                     }
@@ -2026,7 +2026,7 @@ object GameSSDWindow {
 
             //See if the entity has gotten close enough
             for (i in 0 until entities.Num()) {
-                val ent = entities.oGet(i)
+                val ent = entities.get(i)
                 if (ent.position.z <= Z_NEAR) {
                     if (!ent.noPlayerDamage) {
 
@@ -2059,10 +2059,10 @@ object GameSSDWindow {
             for (i in entities.Num() - 1 downTo 0) {
                 var flipped = false
                 for (j in 0 until i) {
-                    if (entities.oGet(j).position.z > entities.oGet(j + 1).position.z) {
-                        val ent = entities.oGet(j)
-                        entities.oSet(j, entities.oGet(j + 1))
-                        entities.oSet(j + 1, ent)
+                    if (entities.get(j).position.z > entities.get(j + 1).position.z) {
+                        val ent = entities.get(j)
+                        entities.set(j, entities.get(j + 1))
+                        entities.set(j + 1, ent)
                         flipped = true
                     }
                 }
@@ -2082,34 +2082,34 @@ object GameSSDWindow {
 
             //Lets spawn it
             val startPosition = idVec3()
-            val spawnBuffer = levelData.oGet(gameStats.currentLevel).spawnBuffer * 2.0f
+            val spawnBuffer = levelData.get(gameStats.currentLevel).spawnBuffer * 2.0f
             startPosition.x = random.RandomInt((V_WIDTH + spawnBuffer).toDouble()) - (V_WIDTH / 2.0f + spawnBuffer)
             startPosition.y = random.RandomInt((V_HEIGHT + spawnBuffer).toDouble()) - (V_HEIGHT / 2.0f + spawnBuffer)
             startPosition.z = ENTITY_START_DIST.toFloat()
             val speed =
-                random.RandomInt((asteroidData.oGet(gameStats.currentLevel).speedMax - asteroidData.oGet(gameStats.currentLevel).speedMin).toDouble()) + asteroidData.oGet(
+                random.RandomInt((asteroidData.get(gameStats.currentLevel).speedMax - asteroidData.get(gameStats.currentLevel).speedMin).toDouble()) + asteroidData.get(
                     gameStats.currentLevel
                 ).speedMin
             val size =
-                random.RandomInt((asteroidData.oGet(gameStats.currentLevel).sizeMax - asteroidData.oGet(gameStats.currentLevel).sizeMin).toDouble()) + asteroidData.oGet(
+                random.RandomInt((asteroidData.get(gameStats.currentLevel).sizeMax - asteroidData.get(gameStats.currentLevel).sizeMin).toDouble()) + asteroidData.get(
                     gameStats.currentLevel
                 ).sizeMin
             val rotate =
-                random.RandomFloat() * (asteroidData.oGet(gameStats.currentLevel).rotateMax - asteroidData.oGet(
+                random.RandomFloat() * (asteroidData.get(gameStats.currentLevel).rotateMax - asteroidData.get(
                     gameStats.currentLevel
-                ).rotateMin) + asteroidData.oGet(gameStats.currentLevel).rotateMin
+                ).rotateMin) + asteroidData.get(gameStats.currentLevel).rotateMin
             val asteroid = SSDAsteroid.GetNewAsteroid(
                 this,
                 startPosition,
                 idVec2(size, size),
                 speed,
                 rotate,
-                asteroidData.oGet(gameStats.currentLevel).asteroidHealth
+                asteroidData.get(gameStats.currentLevel).asteroidHealth
             )
             entities.Append(asteroid)
             gameStats.levelStats.nextAsteroidSpawnTime = currentTime + random.RandomInt(
-                (asteroidData.oGet(gameStats.currentLevel).spawnMax - asteroidData.oGet(gameStats.currentLevel).spawnMin).toDouble()
-            ) + asteroidData.oGet(gameStats.currentLevel).spawnMin
+                (asteroidData.get(gameStats.currentLevel).spawnMax - asteroidData.get(gameStats.currentLevel).spawnMin).toDouble()
+            ) + asteroidData.get(gameStats.currentLevel).spawnMin
         }
 
         private fun FireWeapon(key: Int) {
@@ -2127,8 +2127,8 @@ object GameSSDWindow {
                         this,
                         idVec3(0, -180, 0),
                         gameStats.levelStats.targetEnt.position,
-                        weaponData.oGet(gameStats.currentWeapon).speed,
-                        weaponData.oGet(gameStats.currentWeapon).size.toFloat()
+                        weaponData.get(gameStats.currentWeapon).speed,
+                        weaponData.get(gameStats.currentWeapon).size.toFloat()
                     )
                     entities.Append(newProj)
                     //newProj = SSDProjectile::GetNewProjectile(this, idVec3(-320,-0,0), gameStats.levelStats.targetEnt.position, weaponData[gameStats.currentWeapon].speed, weaponData[gameStats.currentWeapon].size);
@@ -2154,8 +2154,8 @@ object GameSSDWindow {
                         this,
                         idVec3(0, -180, 0),
                         vec,
-                        weaponData.oGet(gameStats.currentWeapon).speed,
-                        weaponData.oGet(gameStats.currentWeapon).size.toFloat()
+                        weaponData.get(gameStats.currentWeapon).speed,
+                        weaponData.get(gameStats.currentWeapon).size.toFloat()
                     )
                     entities.Append(newProj)
                 }
@@ -2175,15 +2175,15 @@ object GameSSDWindow {
             for (i in 0 until entities.Num()) {
                 //Since we ZOrder the entities every frame we can stop at the first entity we hit.
                 //ToDo: Make sure this assumption is true
-                if (entities.oGet(i).HitTest(pt)) {
-                    return entities.oGet(i)
+                if (entities.get(i).HitTest(pt)) {
+                    return entities.get(i)
                 }
             }
             return null
         }
 
         private fun HitAsteroid(asteroid: SSDAsteroid?, key: Int) {
-            asteroid.health -= weaponData.oGet(gameStats.currentWeapon).damage
+            asteroid.health -= weaponData.get(gameStats.currentWeapon).damage
             if (asteroid.health <= 0) {
 
                 //The asteroid has been destroyed
@@ -2197,7 +2197,7 @@ object GameSSDWindow {
                 )
                 entities.Append(explosion)
                 PlaySound("arcade_explode")
-                AddScore(asteroid, asteroidData.oGet(gameStats.currentLevel).asteroidPoints)
+                AddScore(asteroid, asteroidData.get(gameStats.currentLevel).asteroidPoints)
 
                 //Don't let the player hit it anymore because 
                 asteroid.noHit = true
@@ -2224,7 +2224,7 @@ object GameSSDWindow {
         private fun AsteroidStruckPlayer(asteroid: SSDAsteroid?) {
             asteroid.noPlayerDamage = true
             asteroid.noHit = true
-            AddDamage(asteroidData.oGet(gameStats.currentLevel).asteroidDamage)
+            AddDamage(asteroidData.get(gameStats.currentLevel).asteroidDamage)
             val explosion: SSDExplosion = GetNewExplosion(
                 this,
                 asteroid.position,
@@ -2267,7 +2267,7 @@ object GameSSDWindow {
             gui.SetStateString("player_prebonusscore", Str.va("%d", gameStats.prebonusscore))
             gui.SetStateString(
                 "level_complete",
-                Str.va("%d/%d", gameStats.levelStats.savedAstronauts, levelData.oGet(gameStats.currentLevel).needToWin)
+                Str.va("%d/%d", gameStats.levelStats.savedAstronauts, levelData.get(gameStats.currentLevel).needToWin)
             )
             if (superBlasterTimeout != 0) {
                 val timeRemaining = (superBlasterTimeout - ssdTime) / 1000.0f
@@ -2299,29 +2299,29 @@ object GameSSDWindow {
             startPosition.y = random.RandomInt(V_HEIGHT.toDouble()) - V_HEIGHT / 2.0f
             startPosition.z = ENTITY_START_DIST.toFloat()
             val speed =
-                random.RandomInt((astronautData.oGet(gameStats.currentLevel).speedMax - astronautData.oGet(gameStats.currentLevel).speedMin).toDouble()) + astronautData.oGet(
+                random.RandomInt((astronautData.get(gameStats.currentLevel).speedMax - astronautData.get(gameStats.currentLevel).speedMin).toDouble()) + astronautData.get(
                     gameStats.currentLevel
                 ).speedMin
             val rotate =
-                random.RandomFloat() * (astronautData.oGet(gameStats.currentLevel).rotateMax - astronautData.oGet(
+                random.RandomFloat() * (astronautData.get(gameStats.currentLevel).rotateMax - astronautData.get(
                     gameStats.currentLevel
-                ).rotateMin) + astronautData.oGet(gameStats.currentLevel).rotateMin
+                ).rotateMin) + astronautData.get(gameStats.currentLevel).rotateMin
             val astronaut = SSDAstronaut.GetNewAstronaut(
                 this,
                 startPosition,
                 speed,
                 rotate,
-                astronautData.oGet(gameStats.currentLevel).health
+                astronautData.get(gameStats.currentLevel).health
             )
             entities.Append(astronaut)
             gameStats.levelStats.nextAstronautSpawnTime = currentTime + random.RandomInt(
-                (astronautData.oGet(gameStats.currentLevel).spawnMax - astronautData.oGet(gameStats.currentLevel).spawnMin).toDouble()
-            ) + astronautData.oGet(gameStats.currentLevel).spawnMin
+                (astronautData.get(gameStats.currentLevel).spawnMax - astronautData.get(gameStats.currentLevel).spawnMin).toDouble()
+            ) + astronautData.get(gameStats.currentLevel).spawnMin
         }
 
         private fun HitAstronaut(astronaut: SSDAstronaut?, key: Int) {
             if (key == KeyInput.K_MOUSE1) {
-                astronaut.health -= weaponData.oGet(gameStats.currentWeapon).damage
+                astronaut.health -= weaponData.get(gameStats.currentWeapon).damage
                 if (astronaut.health <= 0) {
                     gameStats.levelStats.killedAstronauts++
 
@@ -2338,7 +2338,7 @@ object GameSSDWindow {
                     PlaySound("arcade_explode")
 
                     //Add the penalty for killing the astronaut
-                    AddScore(astronaut, astronautData.oGet(gameStats.currentLevel).penalty)
+                    AddScore(astronaut, astronautData.get(gameStats.currentLevel).penalty)
 
                     //Don't let the player hit it anymore
                     astronaut.noHit = true
@@ -2377,8 +2377,8 @@ object GameSSDWindow {
             PlaySound("arcade_capture")
 
             //Give the player points for saving the astronaut
-            AddScore(astronaut, astronautData.oGet(gameStats.currentLevel).points)
-            if (gameStats.levelStats.savedAstronauts >= levelData.oGet(gameStats.currentLevel).needToWin) {
+            AddScore(astronaut, astronautData.get(gameStats.currentLevel).points)
+            if (gameStats.levelStats.savedAstronauts >= levelData.get(gameStats.currentLevel).needToWin) {
                 LevelComplete()
             }
         }
@@ -2391,18 +2391,18 @@ object GameSSDWindow {
                 return
             }
             val speed =
-                random.RandomInt((powerupData.oGet(gameStats.currentLevel).speedMax - powerupData.oGet(gameStats.currentLevel).speedMin).toDouble()) + powerupData.oGet(
+                random.RandomInt((powerupData.get(gameStats.currentLevel).speedMax - powerupData.get(gameStats.currentLevel).speedMin).toDouble()) + powerupData.get(
                     gameStats.currentLevel
                 ).speedMin
             val rotate =
-                random.RandomFloat() * (powerupData.oGet(gameStats.currentLevel).rotateMax - powerupData.oGet(gameStats.currentLevel).rotateMin) + powerupData.oGet(
+                random.RandomFloat() * (powerupData.get(gameStats.currentLevel).rotateMax - powerupData.get(gameStats.currentLevel).rotateMin) + powerupData.get(
                     gameStats.currentLevel
                 ).rotateMin
             val powerup = SSDPowerup.GetNewPowerup(this, speed, rotate)
             entities.Append(powerup)
             gameStats.levelStats.nextPowerupSpawnTime = currentTime + random.RandomInt(
-                (powerupData.oGet(gameStats.currentLevel).spawnMax - powerupData.oGet(gameStats.currentLevel).spawnMin).toDouble()
-            ) + powerupData.oGet(gameStats.currentLevel).spawnMin
+                (powerupData.get(gameStats.currentLevel).spawnMax - powerupData.get(gameStats.currentLevel).spawnMin).toDouble()
+            ) + powerupData.get(gameStats.currentLevel).spawnMin
         }
 
         private fun StartSuperBlaster() {

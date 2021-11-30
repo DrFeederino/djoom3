@@ -48,7 +48,7 @@ object tr_polytope {
                     j++
                     continue
                 }
-                if (!w.ClipInPlace(plane2.oNegative(), Plane.ON_EPSILON)) {
+                if (!w.ClipInPlace(plane2.unaryMinus(), Plane.ON_EPSILON)) {
                     break
                 }
                 j++
@@ -78,7 +78,7 @@ object tr_polytope {
             j = 0
             while (j < w.GetNumPoints()) {
                 tri.verts[tri.numVerts + j].Clear()
-                tri.verts[tri.numVerts + j].xyz.oSet(w.oGet(j).ToVec3())
+                tri.verts[tri.numVerts + j].xyz.set(w.oGet(j).ToVec3())
                 j++
             }
             j = 1

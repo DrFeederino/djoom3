@@ -318,20 +318,20 @@ class SimpleWindow {
                 textRect.x += textAlignx
                 textRect.y += textAligny
             }
-            origin.Set(rect.x() + rect.w() / 2, rect.y() + rect.h() / 2)
+            origin.set(rect.x() + rect.w() / 2, rect.y() + rect.h() / 2)
         }
 
         protected fun SetupTransforms(x: Float, y: Float) {
             trans.Identity()
-            org.Set(origin.x + x, origin.y + y, 0f)
+            org.set(origin.x + x, origin.y + y, 0f)
             if (rotate != null && rotate.data != 0f) {
                 rot.Set(org, vec, rotate.data)
                 trans = rot.ToMat3()
             }
             smat.Identity()
             if (shear.x() != 0f || shear.y() != 0f) {
-                smat.oSet(0, 1, shear.x())
-                smat.oSet(1, 0, shear.y())
+                smat.set(0, 1, shear.x())
+                smat.set(1, 0, shear.y())
                 trans.timesAssign(smat)
             }
             if (!trans.IsIdentity()) {

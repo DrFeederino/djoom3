@@ -54,7 +54,7 @@ object TraceModel {
         fun oSet(t: traceModelEdge_t) {
             v.get(0) = t.v.get(0)
             v.get(1) = t.v.get(1)
-            normal.oSet(t.normal)
+            normal.set(t.normal)
         }
     }
 
@@ -65,9 +65,9 @@ object TraceModel {
         val normal: idVec3 = idVec3()
         var numEdges = 0
         private fun oSet(t: traceModelPoly_t) {
-            normal.oSet(t.normal)
+            normal.set(t.normal)
             dist = t.dist
-            bounds.oSet(t.bounds)
+            bounds.set(t.bounds)
             numEdges = t.numEdges
             System.arraycopy(t.edges, 0, edges, 0, TraceModel.MAX_TRACEMODEL_POLYEDGES)
         }
@@ -118,35 +118,35 @@ object TraceModel {
                 InitBox()
             }
             // offset to center
-            offset.oSet(boxBounds.oGet(0).oPlus(boxBounds.oGet(1)).oMultiply(0.5f))
+            offset.set(boxBounds.get(0).oPlus(boxBounds.get(1)).oMultiply(0.5f))
             // set box vertices
             i = 0
             while (i < 8) {
-                verts[i].oSet(0, boxBounds.oGet(i xor (i shr 1) and 1).oGet(0))
-                verts[i].oSet(1, boxBounds.oGet(i shr 1 and 1).oGet(1))
-                verts[i].oSet(2, boxBounds.oGet(i shr 2 and 1).oGet(2))
+                verts[i].set(0, boxBounds.get(i xor (i shr 1) and 1).oGet(0))
+                verts[i].set(1, boxBounds.get(i shr 1 and 1).oGet(1))
+                verts[i].set(2, boxBounds.get(i shr 2 and 1).oGet(2))
                 i++
             }
             // set polygon plane distances
-            polys[0].dist = -boxBounds.oGet(0).oGet(2)
-            polys[1].dist = boxBounds.oGet(1).oGet(2)
-            polys[2].dist = -boxBounds.oGet(0).oGet(1)
-            polys[3].dist = boxBounds.oGet(1).oGet(0)
-            polys[4].dist = boxBounds.oGet(1).oGet(1)
-            polys[5].dist = -boxBounds.oGet(0).oGet(0)
+            polys[0].dist = -boxBounds.get(0).oGet(2)
+            polys[1].dist = boxBounds.get(1).oGet(2)
+            polys[2].dist = -boxBounds.get(0).oGet(1)
+            polys[3].dist = boxBounds.get(1).oGet(0)
+            polys[4].dist = boxBounds.get(1).oGet(1)
+            polys[5].dist = -boxBounds.get(0).oGet(0)
             // set polygon bounds
             i = 0
             while (i < 6) {
-                polys[i].bounds.oSet(boxBounds)
+                polys[i].bounds.set(boxBounds)
                 i++
             }
-            polys[0].bounds.oSet(1, 2, boxBounds.oGet(0).oGet(2))
-            polys[1].bounds.oSet(0, 2, boxBounds.oGet(1).oGet(2))
-            polys[2].bounds.oSet(1, 1, boxBounds.oGet(0).oGet(1))
-            polys[3].bounds.oSet(0, 0, boxBounds.oGet(1).oGet(0))
-            polys[4].bounds.oSet(0, 1, boxBounds.oGet(1).oGet(1))
-            polys[5].bounds.oSet(1, 0, boxBounds.oGet(0).oGet(0))
-            bounds.oSet(boxBounds)
+            polys[0].bounds.set(1, 2, boxBounds.get(0).oGet(2))
+            polys[1].bounds.set(0, 2, boxBounds.get(1).oGet(2))
+            polys[2].bounds.set(1, 1, boxBounds.get(0).oGet(1))
+            polys[3].bounds.set(0, 0, boxBounds.get(1).oGet(0))
+            polys[4].bounds.set(0, 1, boxBounds.get(1).oGet(1))
+            polys[5].bounds.set(1, 0, boxBounds.get(0).oGet(0))
+            bounds.set(boxBounds)
         }
 
         /*
@@ -160,8 +160,8 @@ object TraceModel {
             val boxBounds = idBounds()
             val halfSize: Float
             halfSize = size * 0.5f
-            boxBounds.oGet(0).Set(-halfSize, -halfSize, -halfSize)
-            boxBounds.oGet(1).Set(halfSize, halfSize, halfSize)
+            boxBounds.get(0).Set(-halfSize, -halfSize, -halfSize)
+            boxBounds.get(1).Set(halfSize, halfSize, halfSize)
             SetupBox(boxBounds)
         }
 
@@ -177,18 +177,18 @@ object TraceModel {
             if (type != traceModel_t.TRM_OCTAHEDRON) {
                 InitOctahedron()
             }
-            offset.oSet(octBounds.oGet(0).oPlus(octBounds.oGet(1)).oMultiply(0.5f))
-            v.oSet(0, octBounds.oGet(1).oGet(0) - offset.oGet(0))
-            v.oSet(1, octBounds.oGet(1).oGet(1) - offset.oGet(1))
-            v.oSet(2, octBounds.oGet(1).oGet(2) - offset.oGet(2))
+            offset.set(octBounds.get(0).oPlus(octBounds.get(1)).oMultiply(0.5f))
+            v.set(0, octBounds.get(1).oGet(0) - offset.get(0))
+            v.set(1, octBounds.get(1).oGet(1) - offset.get(1))
+            v.set(2, octBounds.get(1).oGet(2) - offset.get(2))
 
             // set vertices
-            verts[0].Set(offset.x + v.oGet(0), offset.y, offset.z)
-            verts[1].Set(offset.x - v.oGet(0), offset.y, offset.z)
-            verts[2].Set(offset.x, offset.y + v.oGet(1), offset.z)
-            verts[3].Set(offset.x, offset.y - v.oGet(1), offset.z)
-            verts[4].Set(offset.x, offset.y, offset.z + v.oGet(2))
-            verts[5].Set(offset.x, offset.y, offset.z - v.oGet(2))
+            verts[0].set(offset.x + v.get(0), offset.y, offset.z)
+            verts[1].set(offset.x - v.get(0), offset.y, offset.z)
+            verts[2].set(offset.x, offset.y + v.get(1), offset.z)
+            verts[3].set(offset.x, offset.y - v.get(1), offset.z)
+            verts[4].set(offset.x, offset.y, offset.z + v.get(2))
+            verts[5].set(offset.x, offset.y, offset.z - v.get(2))
 
             // set polygons
             i = 0
@@ -199,11 +199,11 @@ object TraceModel {
                 v1 = edges[Math.abs(e0)].v.get(Math_h.INTSIGNBITNOTSET(e0))
                 v2 = edges[Math.abs(e1)].v.get(Math_h.INTSIGNBITNOTSET(e1))
                 // polygon plane
-                polys[i].normal.oSet(verts[v1].oMinus(verts[v0]).Cross(verts[v2].oMinus(verts[v0])))
+                polys[i].normal.set(verts[v1].minus(verts[v0]).Cross(verts[v2].minus(verts[v0])))
                 polys[i].normal.Normalize()
                 polys[i].dist = polys[i].normal.times(verts[v0])
                 // polygon bounds
-                polys[i].bounds.oSet(0, polys[i].bounds.oSet(0, verts[v0]))
+                polys[i].bounds.set(0, polys[i].bounds.set(0, verts[v0]))
                 polys[i].bounds.AddPoint(verts[v1])
                 polys[i].bounds.AddPoint(verts[v2])
                 i++
@@ -225,8 +225,8 @@ object TraceModel {
             val octBounds = idBounds()
             val halfSize: Float
             halfSize = size * 0.5f
-            octBounds.oGet(0).Set(-halfSize, -halfSize, -halfSize)
-            octBounds.oGet(1).Set(halfSize, halfSize, halfSize)
+            octBounds.get(0).Set(-halfSize, -halfSize, -halfSize)
+            octBounds.get(1).Set(halfSize, halfSize, halfSize)
             SetupOctahedron(octBounds)
         }
 
@@ -259,42 +259,42 @@ object TraceModel {
             c.z = 0.9341723589627156f
             c.y = c.z
             c.x = c.y // ( ( 3.0f + ( 5.0f ) ^ 0.5f ) / 6.0f ) ^ 0.5f;
-            d = 0.5f / c.oGet(0)
-            s = (dodBounds.oGet(1).oGet(0) - dodBounds.oGet(0).oGet(0)) * d
+            d = 0.5f / c.get(0)
+            s = (dodBounds.get(1).oGet(0) - dodBounds.get(0).oGet(0)) * d
             a.x *= s
             b.x *= s
             c.x *= s
-            s = (dodBounds.oGet(1).oGet(1) - dodBounds.oGet(0).oGet(1)) * d
+            s = (dodBounds.get(1).oGet(1) - dodBounds.get(0).oGet(1)) * d
             a.y *= s
             b.y *= s
             c.y *= s
-            s = (dodBounds.oGet(1).oGet(2) - dodBounds.oGet(0).oGet(2)) * d
+            s = (dodBounds.get(1).oGet(2) - dodBounds.get(0).oGet(2)) * d
             a.z *= s
             b.z *= s
             c.z *= s
-            offset.oSet(dodBounds.oGet(0).oPlus(dodBounds.oGet(1)).oMultiply(0.5f))
+            offset.set(dodBounds.get(0).oPlus(dodBounds.get(1)).oMultiply(0.5f))
 
             // set vertices
-            verts[0].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2))
-            verts[1].Set(offset.x + a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2))
-            verts[2].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2))
-            verts[3].Set(offset.x + a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2))
-            verts[4].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z + a.oGet(2))
-            verts[5].Set(offset.x - a.oGet(0), offset.y + a.oGet(1), offset.z - a.oGet(2))
-            verts[6].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z + a.oGet(2))
-            verts[7].Set(offset.x - a.oGet(0), offset.y - a.oGet(1), offset.z - a.oGet(2))
-            verts[8].Set(offset.x + b.oGet(0), offset.y + c.oGet(1), offset.z /*        */)
-            verts[9].Set(offset.x - b.oGet(0), offset.y + c.oGet(1), offset.z /*        */)
-            verts[10].Set(offset.x + b.oGet(0), offset.y - c.oGet(1), offset.z /*        */)
-            verts[11].Set(offset.x - b.oGet(0), offset.y - c.oGet(1), offset.z /*        */)
-            verts[12].Set(offset.x + c.oGet(0), offset.y /*        */, offset.z + b.oGet(2))
-            verts[13].Set(offset.x + c.oGet(0), offset.y /*        */, offset.z - b.oGet(2))
-            verts[14].Set(offset.x - c.oGet(0), offset.y /*        */, offset.z + b.oGet(2))
-            verts[15].Set(offset.x - c.oGet(0), offset.y /*        */, offset.z - b.oGet(2))
-            verts[16].Set(offset.x /*        */, offset.y + b.oGet(1), offset.z + c.oGet(2))
-            verts[17].Set(offset.x /*        */, offset.y - b.oGet(1), offset.z + c.oGet(2))
-            verts[18].Set(offset.x /*        */, offset.y + b.oGet(1), offset.z - c.oGet(2))
-            verts[19].Set(offset.x /*        */, offset.y - b.oGet(1), offset.z - c.oGet(2))
+            verts[0].set(offset.x + a.get(0), offset.y + a.get(1), offset.z + a.get(2))
+            verts[1].set(offset.x + a.get(0), offset.y + a.get(1), offset.z - a.get(2))
+            verts[2].set(offset.x + a.get(0), offset.y - a.get(1), offset.z + a.get(2))
+            verts[3].set(offset.x + a.get(0), offset.y - a.get(1), offset.z - a.get(2))
+            verts[4].set(offset.x - a.get(0), offset.y + a.get(1), offset.z + a.get(2))
+            verts[5].set(offset.x - a.get(0), offset.y + a.get(1), offset.z - a.get(2))
+            verts[6].set(offset.x - a.get(0), offset.y - a.get(1), offset.z + a.get(2))
+            verts[7].set(offset.x - a.get(0), offset.y - a.get(1), offset.z - a.get(2))
+            verts[8].set(offset.x + b.get(0), offset.y + c.get(1), offset.z /*        */)
+            verts[9].set(offset.x - b.get(0), offset.y + c.get(1), offset.z /*        */)
+            verts[10].set(offset.x + b.get(0), offset.y - c.get(1), offset.z /*        */)
+            verts[11].set(offset.x - b.get(0), offset.y - c.get(1), offset.z /*        */)
+            verts[12].set(offset.x + c.get(0), offset.y /*        */, offset.z + b.get(2))
+            verts[13].set(offset.x + c.get(0), offset.y /*        */, offset.z - b.get(2))
+            verts[14].set(offset.x - c.get(0), offset.y /*        */, offset.z + b.get(2))
+            verts[15].set(offset.x - c.get(0), offset.y /*        */, offset.z - b.get(2))
+            verts[16].set(offset.x /*        */, offset.y + b.get(1), offset.z + c.get(2))
+            verts[17].set(offset.x /*        */, offset.y - b.get(1), offset.z + c.get(2))
+            verts[18].set(offset.x /*        */, offset.y + b.get(1), offset.z - c.get(2))
+            verts[19].set(offset.x /*        */, offset.y - b.get(1), offset.z - c.get(2))
 
             // set polygons
             i = 0
@@ -309,11 +309,11 @@ object TraceModel {
                 v3 = edges[Math.abs(e2)].v.get(Math_h.INTSIGNBITNOTSET(e2))
                 v4 = edges[Math.abs(e3)].v.get(Math_h.INTSIGNBITNOTSET(e3))
                 // polygon plane
-                polys[i].normal.oSet(verts[v1].oMinus(verts[v0]).Cross(verts[v2].oMinus(verts[v0])))
+                polys[i].normal.set(verts[v1].minus(verts[v0]).Cross(verts[v2].minus(verts[v0])))
                 polys[i].normal.Normalize()
                 polys[i].dist = polys[i].normal.times(verts[v0])
                 // polygon bounds
-                polys[i].bounds.oSet(0, polys[i].bounds.oSet(1, verts[v0]))
+                polys[i].bounds.set(0, polys[i].bounds.set(1, verts[v0]))
                 polys[i].bounds.AddPoint(verts[v1])
                 polys[i].bounds.AddPoint(verts[v2])
                 polys[i].bounds.AddPoint(verts[v3])
@@ -337,8 +337,8 @@ object TraceModel {
             val dodBounds = idBounds()
             val halfSize: Float
             halfSize = size * 0.5f
-            dodBounds.oGet(0).Set(-halfSize, -halfSize, -halfSize)
-            dodBounds.oGet(1).Set(halfSize, halfSize, halfSize)
+            dodBounds.get(0).Set(-halfSize, -halfSize, -halfSize)
+            dodBounds.get(1).Set(halfSize, halfSize, halfSize)
             SetupDodecahedron(dodBounds)
         }
 
@@ -370,8 +370,8 @@ object TraceModel {
             numVerts = n * 2
             numEdges = n * 3
             numPolys = n + 2
-            offset.oSet(cylBounds.oGet(0).oPlus(cylBounds.oGet(1)).oMultiply(0.5f))
-            halfSize.oSet(cylBounds.oGet(1).oMinus(offset))
+            offset.set(cylBounds.get(0).oPlus(cylBounds.get(1)).oMultiply(0.5f))
+            halfSize.set(cylBounds.get(1).minus(offset))
             i = 0
             while (i < n) {
 
@@ -411,29 +411,29 @@ object TraceModel {
             while (i < n) {
 
                 // vertical polygon plane
-                polys[i].normal.oSet(verts[(i + 1) % n].oMinus(verts[i]).Cross(verts[n + i].oMinus(verts[i])))
+                polys[i].normal.set(verts[(i + 1) % n].minus(verts[i]).Cross(verts[n + i].minus(verts[i])))
                 polys[i].normal.Normalize()
                 polys[i].dist = polys[i].normal.times(verts[i])
                 // vertical polygon bounds
                 polys[i].bounds.Clear()
                 polys[i].bounds.AddPoint(verts[i])
                 polys[i].bounds.AddPoint(verts[(i + 1) % n])
-                polys[i].bounds.oSet(0, 2, -halfSize.z + offset.z)
-                polys[i].bounds.oSet(1, 2, halfSize.z + offset.z)
+                polys[i].bounds.set(0, 2, -halfSize.z + offset.z)
+                polys[i].bounds.set(1, 2, halfSize.z + offset.z)
                 i++
             }
             // bottom and top polygon plane
-            polys[n].normal.Set(0.0f, 0.0f, -1.0f)
-            polys[n].dist = -cylBounds.oGet(0).oGet(2)
-            polys[n + 1].normal.Set(0.0f, 0.0f, 1.0f)
-            polys[n + 1].dist = cylBounds.oGet(1).oGet(2)
+            polys[n].normal.set(0.0f, 0.0f, -1.0f)
+            polys[n].dist = -cylBounds.get(0).oGet(2)
+            polys[n + 1].normal.set(0.0f, 0.0f, 1.0f)
+            polys[n + 1].dist = cylBounds.get(1).oGet(2)
             // trm bounds
             bounds = cylBounds
             // bottom and top polygon bounds
-            polys[n].bounds.oSet(bounds)
-            polys[n].bounds.oSet(1, 2, bounds.oGet(0).oGet(2))
-            polys[n + 1].bounds.oSet(bounds)
-            polys[n + 1].bounds.oSet(0, 2, bounds.oGet(1).oGet(2))
+            polys[n].bounds.set(bounds)
+            polys[n].bounds.set(1, 2, bounds.get(0).oGet(2))
+            polys[n + 1].bounds.set(bounds)
+            polys[n + 1].bounds.set(0, 2, bounds.get(1).oGet(2))
             // convex model
             isConvex = true
             GenerateEdgeNormals()
@@ -452,8 +452,8 @@ object TraceModel {
             val halfWidth: Float
             halfHeight = height * 0.5f
             halfWidth = width * 0.5f
-            cylBounds.oGet(0).Set(-halfWidth, -halfWidth, -halfHeight)
-            cylBounds.oGet(1).Set(halfWidth, halfWidth, halfHeight)
+            cylBounds.get(0).Set(-halfWidth, -halfWidth, -halfHeight)
+            cylBounds.get(1).Set(halfWidth, halfWidth, halfHeight)
             SetupCylinder(cylBounds, numSides)
         }
 
@@ -484,9 +484,9 @@ object TraceModel {
             numVerts = n + 1
             numEdges = n * 2
             numPolys = n + 1
-            offset.oSet(coneBounds.oGet(0).oPlus(coneBounds.oGet(1)).oMultiply(0.5f))
-            halfSize.oSet(coneBounds.oGet(1).oMinus(offset))
-            verts[n].Set(0.0f, 0.0f, halfSize.z + offset.z)
+            offset.set(coneBounds.get(0).oPlus(coneBounds.get(1)).oMultiply(0.5f))
+            halfSize.set(coneBounds.get(1).minus(offset))
+            verts[n].set(0.0f, 0.0f, halfSize.z + offset.z)
             i = 0
             while (i < n) {
 
@@ -518,7 +518,7 @@ object TraceModel {
             while (i < n) {
 
                 // polygon plane
-                polys[i].normal.oSet(verts[(i + 1) % n].oMinus(verts[i]).Cross(verts[n].oMinus(verts[i])))
+                polys[i].normal.set(verts[(i + 1) % n].minus(verts[i]).Cross(verts[n].minus(verts[i])))
                 polys[i].normal.Normalize()
                 polys[i].dist = polys[i].normal.times(verts[i])
                 // polygon bounds
@@ -529,13 +529,13 @@ object TraceModel {
                 i++
             }
             // bottom polygon plane
-            polys[n].normal.Set(0.0f, 0.0f, -1.0f)
-            polys[n].dist = -coneBounds.oGet(0).oGet(2)
+            polys[n].normal.set(0.0f, 0.0f, -1.0f)
+            polys[n].dist = -coneBounds.get(0).oGet(2)
             // trm bounds
             bounds = coneBounds
             // bottom polygon bounds
-            polys[n].bounds.oSet(bounds)
-            polys[n].bounds.oSet(1, 2, bounds.oGet(0).oGet(2))
+            polys[n].bounds.set(bounds)
+            polys[n].bounds.set(1, 2, bounds.get(0).oGet(2))
             // convex model
             isConvex = true
             GenerateEdgeNormals()
@@ -552,8 +552,8 @@ object TraceModel {
             val coneBounds = idBounds()
             val halfWidth: Float
             halfWidth = width * 0.5f
-            coneBounds.oGet(0).Set(-halfWidth, -halfWidth, -height)
-            coneBounds.oGet(1).Set(halfWidth, halfWidth, 0.0f)
+            coneBounds.get(0).Set(-halfWidth, -halfWidth, -height)
+            coneBounds.get(1).Set(halfWidth, halfWidth, 0.0f)
             SetupCone(coneBounds, numSides)
         }
 
@@ -573,25 +573,25 @@ object TraceModel {
                 InitBone()
             }
             // offset to center
-            offset.Set(0.0f, 0.0f, 0.0f)
+            offset.set(0.0f, 0.0f, 0.0f)
             // set vertices
-            verts[0].Set(0.0f, 0.0f, -halfLength)
-            verts[1].Set(0.0f, width * -0.5f, 0.0f)
-            verts[2].Set(width * 0.5f, width * 0.25f, 0.0f)
-            verts[3].Set(width * -0.5f, width * 0.25f, 0.0f)
-            verts[4].Set(0.0f, 0.0f, halfLength)
+            verts[0].set(0.0f, 0.0f, -halfLength)
+            verts[1].set(0.0f, width * -0.5f, 0.0f)
+            verts[2].set(width * 0.5f, width * 0.25f, 0.0f)
+            verts[3].set(width * -0.5f, width * 0.25f, 0.0f)
+            verts[4].set(0.0f, 0.0f, halfLength)
             // set bounds
-            bounds.oGet(0).Set(width * -0.5f, width * -0.5f, -halfLength)
-            bounds.oGet(1).Set(width * 0.5f, width * 0.25f, halfLength)
+            bounds.get(0).Set(width * -0.5f, width * -0.5f, -halfLength)
+            bounds.get(1).Set(width * 0.5f, width * 0.25f, halfLength)
             // poly plane normals
-            polys[0].normal.oSet(verts[2].oMinus(verts[0]).Cross(verts[1].oMinus(verts[0])))
+            polys[0].normal.set(verts[2].minus(verts[0]).Cross(verts[1].minus(verts[0])))
             polys[0].normal.Normalize()
-            polys[2].normal.Set(-polys[0].normal.oGet(0), polys[0].normal.oGet(1), polys[0].normal.oGet(2))
-            polys[3].normal.Set(polys[0].normal.oGet(0), polys[0].normal.oGet(1), -polys[0].normal.oGet(2))
-            polys[5].normal.Set(-polys[0].normal.oGet(0), polys[0].normal.oGet(1), -polys[0].normal.oGet(2))
-            polys[1].normal.oSet(verts[3].oMinus(verts[0]).Cross(verts[2].oMinus(verts[0])))
+            polys[2].normal.set(-polys[0].normal.get(0), polys[0].normal.get(1), polys[0].normal.get(2))
+            polys[3].normal.set(polys[0].normal.get(0), polys[0].normal.get(1), -polys[0].normal.get(2))
+            polys[5].normal.set(-polys[0].normal.get(0), polys[0].normal.get(1), -polys[0].normal.get(2))
+            polys[1].normal.set(verts[3].minus(verts[0]).Cross(verts[2].minus(verts[0])))
             polys[1].normal.Normalize()
-            polys[4].normal.Set(polys[1].normal.oGet(0), polys[1].normal.oGet(1), -polys[1].normal.oGet(2))
+            polys[4].normal.set(polys[1].normal.get(0), polys[1].normal.get(1), -polys[1].normal.get(2))
             // poly plane distances
             i = 0
             while (i < 6) {
@@ -624,25 +624,25 @@ object TraceModel {
             numPolys = 2
             // set polygon planes
             polys[0].numEdges = numEdges
-            polys[0].normal.oSet(v.get(1).oMinus(v.get(0)).Cross(v.get(2).oMinus(v.get(0))))
+            polys[0].normal.set(v.get(1).minus(v.get(0)).Cross(v.get(2).minus(v.get(0))))
             polys[0].normal.Normalize()
             polys[0].dist = polys[0].normal.times(v.get(0))
             polys[1].numEdges = numEdges
-            polys[1].normal.oSet(polys[0].normal.oNegative())
+            polys[1].normal.set(polys[0].normal.oNegative())
             polys[1].dist = -polys[0].dist
             // setup verts, edges and polygons
             polys[0].bounds.Clear()
-            mid.oSet(Vector.getVec3_origin())
+            mid.set(Vector.getVec3_origin())
             i = 0
             j = 1
             while (i < numVerts) {
                 if (j >= numVerts) {
                     j = 0
                 }
-                verts[i].oSet(v.get(i))
+                verts[i].set(v.get(i))
                 edges[i + 1].v.get(0) = i
                 edges[i + 1].v.get(1) = j
-                edges[i + 1].normal.oSet(polys[0].normal.Cross(v.get(i).oMinus(v.get(j))))
+                edges[i + 1].normal.set(polys[0].normal.Cross(v.get(i).minus(v.get(j))))
                 edges[i + 1].normal.Normalize()
                 polys[0].edges.get(i) = i + 1
                 polys[1].edges.get(i) = -(numVerts - i)
@@ -651,9 +651,9 @@ object TraceModel {
                 i++
                 j++
             }
-            polys[1].bounds.oSet(polys[0].bounds)
+            polys[1].bounds.set(polys[0].bounds)
             // offset to center
-            offset.oSet(mid.times(1.0f / numVerts))
+            offset.set(mid.times(1.0f / numVerts))
             // total bounds
             bounds = polys[0].bounds
             // considered non convex because the model has no volume
@@ -670,7 +670,7 @@ object TraceModel {
             ) //TODO: this is a temp hack, for some reason the math is fucked
             i = 0
             while (i < w.GetNumPoints()) {
-                verts[i].oSet(w.oGet(i).ToVec3())
+                verts[i].set(w.oGet(i).ToVec3())
                 i++
             }
             SetupPolygon(verts, w.GetNumPoints())
@@ -699,19 +699,19 @@ object TraceModel {
                 while (j < poly.numEdges) {
                     edgeNum = poly.edges.get(j)
                     edge = edges[Math.abs(edgeNum)]
-                    if (edge.normal.oGet(0) == 0.0f && edge.normal.oGet(1) == 0.0f && edge.normal.oGet(2) == 0.0f) {
-                        edge.normal.oSet(poly.normal)
+                    if (edge.normal.get(0) == 0.0f && edge.normal.get(1) == 0.0f && edge.normal.get(2) == 0.0f) {
+                        edge.normal.set(poly.normal)
                     } else {
                         dot = edge.normal.times(poly.normal)
                         // if the two planes make a very sharp edge
                         if (dot < SHARP_EDGE_DOT) {
                             // max length normal pointing outside both polygons
-                            dir.oSet(verts[edge.v.get(if (edgeNum > 0) 1 else 0)].oMinus(verts[edge.v.get(if (edgeNum < 0) 1 else 0)]))
-                            edge.normal.oSet(edge.normal.Cross(dir).oPlus(poly.normal.Cross(dir.oNegative())))
+                            dir.set(verts[edge.v.get(if (edgeNum > 0) 1 else 0)].minus(verts[edge.v.get(if (edgeNum < 0) 1 else 0)]))
+                            edge.normal.set(edge.normal.Cross(dir).oPlus(poly.normal.Cross(dir.oNegative())))
                             edge.normal.timesAssign(0.5f / (0.5f + 0.5f * SHARP_EDGE_DOT) / edge.normal.Length())
                             numSharpEdges++
                         } else {
-                            edge.normal.oSet(edge.normal.oPlus(poly.normal).oMultiply(0.5f / (0.5f + 0.5f * dot)))
+                            edge.normal.set(edge.normal.oPlus(poly.normal).oMultiply(0.5f / (0.5f + 0.5f * dot)))
                         }
                     }
                     j++
@@ -746,13 +746,13 @@ object TraceModel {
             var edgeNum: Int
             i = 0
             while (i < numVerts) {
-                verts[i].oSet(rotation.times(verts[i]))
+                verts[i].set(rotation.times(verts[i]))
                 i++
             }
             bounds.Clear()
             i = 0
             while (i < numPolys) {
-                polys[i].normal.oSet(rotation.times(polys[i].normal))
+                polys[i].normal.set(rotation.times(polys[i].normal))
                 polys[i].bounds.Clear()
                 edgeNum = 0
                 j = 0
@@ -781,8 +781,8 @@ object TraceModel {
                 while (i < numEdges) {
                     edgeNum = polys[0].edges.get(i)
                     edge = edges[Math.abs(edgeNum)]
-                    dir.oSet(
-                        verts[edge.v.get(Math_h.INTSIGNBITSET(edgeNum))].oMinus(
+                    dir.set(
+                        verts[edge.v.get(Math_h.INTSIGNBITSET(edgeNum))].minus(
                             verts[edge.v.get(
                                 Math_h.INTSIGNBITNOTSET(
                                     edgeNum
@@ -896,20 +896,20 @@ object TraceModel {
             }
             poly = polys[polyNum]
             total = 0.0f
-            base.oSet(verts[edges[Math.abs(poly.edges.get(0))].v.get(Math_h.INTSIGNBITSET(poly.edges.get(0)))])
+            base.set(verts[edges[Math.abs(poly.edges.get(0))].v.get(Math_h.INTSIGNBITSET(poly.edges.get(0)))])
             i = 0
             while (i < poly.numEdges) {
-                v1.oSet(
-                    verts[edges[Math.abs(poly.edges.get(i))].v.get(Math_h.INTSIGNBITSET(poly.edges.get(i)))].oMinus(
+                v1.set(
+                    verts[edges[Math.abs(poly.edges.get(i))].v.get(Math_h.INTSIGNBITSET(poly.edges.get(i)))].minus(
                         base
                     )
                 )
-                v2.oSet(
-                    verts[edges[Math.abs(poly.edges.get(i))].v.get(Math_h.INTSIGNBITNOTSET(poly.edges.get(i)))].oMinus(
+                v2.set(
+                    verts[edges[Math.abs(poly.edges.get(i))].v.get(Math_h.INTSIGNBITNOTSET(poly.edges.get(i)))].minus(
                         base
                     )
                 )
-                cross.oSet(v1.Cross(v2))
+                cross.set(v1.Cross(v2))
                 total += cross.Length()
                 i++
             }
@@ -930,7 +930,7 @@ object TraceModel {
             while (i < numPolys) {
                 poly = polys[i]
                 edgeNum = poly.edges.get(0)
-                dir.oSet(verts[edges[Math.abs(edgeNum)].v.get(Math_h.INTSIGNBITSET(edgeNum))].oMinus(projectionOrigin))
+                dir.set(verts[edges[Math.abs(edgeNum)].v.get(Math_h.INTSIGNBITSET(edgeNum))].minus(projectionOrigin))
                 if (dir.times(poly.normal) < 0.0f) {
                     j = 0
                     while (j < poly.numEdges) {
@@ -993,45 +993,45 @@ object TraceModel {
             // mass of model
             mass.setVal(density * integrals.T0)
             // center of mass
-            centerOfMass.oSet(integrals.T1.div(integrals.T0))
+            centerOfMass.set(integrals.T1.div(integrals.T0))
             // compute inertia tensor
-            inertiaTensor.oSet(0, 0, density * (integrals.T2.oGet(1) + integrals.T2.oGet(2)))
-            inertiaTensor.oSet(1, 1, density * (integrals.T2.oGet(2) + integrals.T2.oGet(0)))
-            inertiaTensor.oSet(2, 2, density * (integrals.T2.oGet(0) + integrals.T2.oGet(1)))
-            inertiaTensor.oSet(0, 1, -density * integrals.TP.oGet(0))
-            inertiaTensor.oSet(1, 0, -density * integrals.TP.oGet(0))
-            inertiaTensor.oSet(1, 2, -density * integrals.TP.oGet(1))
-            inertiaTensor.oSet(2, 1, -density * integrals.TP.oGet(1))
-            inertiaTensor.oSet(2, 0, -density * integrals.TP.oGet(2))
-            inertiaTensor.oSet(0, 2, -density * integrals.TP.oGet(2))
+            inertiaTensor.set(0, 0, density * (integrals.T2.get(1) + integrals.T2.get(2)))
+            inertiaTensor.set(1, 1, density * (integrals.T2.get(2) + integrals.T2.get(0)))
+            inertiaTensor.set(2, 2, density * (integrals.T2.get(0) + integrals.T2.get(1)))
+            inertiaTensor.set(0, 1, -density * integrals.TP.get(0))
+            inertiaTensor.set(1, 0, -density * integrals.TP.get(0))
+            inertiaTensor.set(1, 2, -density * integrals.TP.get(1))
+            inertiaTensor.set(2, 1, -density * integrals.TP.get(1))
+            inertiaTensor.set(2, 0, -density * integrals.TP.get(2))
+            inertiaTensor.set(0, 2, -density * integrals.TP.get(2))
             // translate inertia tensor to center of mass
             inertiaTensor.minusAssign(
                 0,
                 0,
-                mass.getVal() * (centerOfMass.oGet(1) * centerOfMass.oGet(1) + centerOfMass.oGet(2) * centerOfMass.oGet(
+                mass.getVal() * (centerOfMass.get(1) * centerOfMass.get(1) + centerOfMass.get(2) * centerOfMass.get(
                     2
                 ))
             )
             inertiaTensor.minusAssign(
                 1,
                 1,
-                mass.getVal() * (centerOfMass.oGet(2) * centerOfMass.oGet(2) + centerOfMass.oGet(0) * centerOfMass.oGet(
+                mass.getVal() * (centerOfMass.get(2) * centerOfMass.get(2) + centerOfMass.get(0) * centerOfMass.get(
                     0
                 ))
             )
             inertiaTensor.minusAssign(
                 2,
                 2,
-                mass.getVal() * (centerOfMass.oGet(0) * centerOfMass.oGet(0) + centerOfMass.oGet(1) * centerOfMass.oGet(
+                mass.getVal() * (centerOfMass.get(0) * centerOfMass.get(0) + centerOfMass.get(1) * centerOfMass.get(
                     1
                 ))
             )
-            inertiaTensor.plusAssign(0, 1, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
-            inertiaTensor.plusAssign(1, 0, mass.getVal() * centerOfMass.oGet(0) * centerOfMass.oGet(1))
-            inertiaTensor.plusAssign(1, 2, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
-            inertiaTensor.plusAssign(2, 1, mass.getVal() * centerOfMass.oGet(1) * centerOfMass.oGet(2))
-            inertiaTensor.plusAssign(2, 0, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
-            inertiaTensor.plusAssign(0, 2, mass.getVal() * centerOfMass.oGet(2) * centerOfMass.oGet(0))
+            inertiaTensor.plusAssign(0, 1, mass.getVal() * centerOfMass.get(0) * centerOfMass.get(1))
+            inertiaTensor.plusAssign(1, 0, mass.getVal() * centerOfMass.get(0) * centerOfMass.get(1))
+            inertiaTensor.plusAssign(1, 2, mass.getVal() * centerOfMass.get(1) * centerOfMass.get(2))
+            inertiaTensor.plusAssign(2, 1, mass.getVal() * centerOfMass.get(1) * centerOfMass.get(2))
+            inertiaTensor.plusAssign(2, 0, mass.getVal() * centerOfMass.get(2) * centerOfMass.get(0))
+            inertiaTensor.plusAssign(0, 2, mass.getVal() * centerOfMass.get(2) * centerOfMass.get(0))
         }
 
         //
@@ -1067,37 +1067,37 @@ object TraceModel {
             polys[0].edges.get(1) = -3
             polys[0].edges.get(2) = -2
             polys[0].edges.get(3) = -1
-            polys[0].normal.Set(0.0f, 0.0f, -1.0f)
+            polys[0].normal.set(0.0f, 0.0f, -1.0f)
             polys[1].numEdges = 4
             polys[1].edges.get(0) = 5
             polys[1].edges.get(1) = 6
             polys[1].edges.get(2) = 7
             polys[1].edges.get(3) = 8
-            polys[1].normal.Set(0.0f, 0.0f, 1.0f)
+            polys[1].normal.set(0.0f, 0.0f, 1.0f)
             polys[2].numEdges = 4
             polys[2].edges.get(0) = 1
             polys[2].edges.get(1) = 10
             polys[2].edges.get(2) = -5
             polys[2].edges.get(3) = -9
-            polys[2].normal.Set(0.0f, -1.0f, 0.0f)
+            polys[2].normal.set(0.0f, -1.0f, 0.0f)
             polys[3].numEdges = 4
             polys[3].edges.get(0) = 2
             polys[3].edges.get(1) = 11
             polys[3].edges.get(2) = -6
             polys[3].edges.get(3) = -10
-            polys[3].normal.Set(1.0f, 0.0f, 0.0f)
+            polys[3].normal.set(1.0f, 0.0f, 0.0f)
             polys[4].numEdges = 4
             polys[4].edges.get(0) = 3
             polys[4].edges.get(1) = 12
             polys[4].edges.get(2) = -7
             polys[4].edges.get(3) = -11
-            polys[4].normal.Set(0.0f, 1.0f, 0.0f)
+            polys[4].normal.set(0.0f, 1.0f, 0.0f)
             polys[5].numEdges = 4
             polys[5].edges.get(0) = 4
             polys[5].edges.get(1) = 9
             polys[5].edges.get(2) = -8
             polys[5].edges.get(3) = -12
-            polys[5].normal.Set(-1.0f, 0.0f, 0.0f)
+            polys[5].normal.set(-1.0f, 0.0f, 0.0f)
 
             // convex model
             isConvex = true
@@ -1394,7 +1394,7 @@ object TraceModel {
             type = trm.type
             numVerts = trm.numVerts
             for (i in 0 until numVerts) {
-                verts[i].oSet(trm.verts[i])
+                verts[i].set(trm.verts[i])
             }
             numEdges = trm.numEdges
             for (i in 0 until numEdges) {
@@ -1404,8 +1404,8 @@ object TraceModel {
             for (i in 0 until numPolys) {
                 polys[i].oSet(trm.polys[i])
             }
-            offset.oSet(trm.offset)
-            bounds.oSet(trm.bounds)
+            offset.set(trm.offset)
+            bounds.set(trm.bounds)
             isConvex = trm.isConvex
         }
 
@@ -1450,12 +1450,12 @@ object TraceModel {
             i = 0
             while (i < poly.numEdges) {
                 edgeNum = poly.edges.get(i)
-                v1.oSet(verts[edges[Math.abs(edgeNum)].v.get(if (edgeNum < 0) 1 else 0)])
-                v2.oSet(verts[edges[Math.abs(edgeNum)].v.get(if (edgeNum > 0) 1 else 0)])
-                a0 = v1.oGet(a)
-                b0 = v1.oGet(b)
-                a1 = v2.oGet(a)
-                b1 = v2.oGet(b)
+                v1.set(verts[edges[Math.abs(edgeNum)].v.get(if (edgeNum < 0) 1 else 0)])
+                v2.set(verts[edges[Math.abs(edgeNum)].v.get(if (edgeNum > 0) 1 else 0)])
+                a0 = v1.get(a)
+                b0 = v1.get(b)
+                a1 = v2.get(a)
+                b1 = v2.get(b)
                 da = a1 - a0
                 db = b1 - b0
                 a0_2 = a0 * a0
@@ -1514,39 +1514,39 @@ object TraceModel {
             val k3: Float
             val k4: Float
             ProjectionIntegrals(polyNum, a, b, pi)
-            n.oSet(polys[polyNum].normal)
+            n.set(polys[polyNum].normal)
             w = -polys[polyNum].dist
-            k1 = 1 / n.oGet(c)
+            k1 = 1 / n.get(c)
             k2 = k1 * k1
             k3 = k2 * k1
             k4 = k3 * k1
             integrals.Fa = k1 * pi.Pa
             integrals.Fb = k1 * pi.Pb
-            integrals.Fc = -k2 * (n.oGet(a) * pi.Pa + n.oGet(b) * pi.Pb + w * pi.P1)
+            integrals.Fc = -k2 * (n.get(a) * pi.Pa + n.get(b) * pi.Pb + w * pi.P1)
             integrals.Faa = k1 * pi.Paa
             integrals.Fbb = k1 * pi.Pbb
             integrals.Fcc =
-                k3 * (Math_h.Square(n.oGet(a)) * pi.Paa + 2 * n.oGet(a) * n.oGet(b) * pi.Pab + Math_h.Square(n.oGet(b)) * pi.Pbb + w * (2 * (n.oGet(
+                k3 * (Math_h.Square(n.get(a)) * pi.Paa + 2 * n.get(a) * n.get(b) * pi.Pab + Math_h.Square(n.get(b)) * pi.Pbb + w * (2 * (n.get(
                     a
-                ) * pi.Pa + n.oGet(b) * pi.Pb) + w * pi.P1))
+                ) * pi.Pa + n.get(b) * pi.Pb) + w * pi.P1))
             integrals.Faaa = k1 * pi.Paaa
             integrals.Fbbb = k1 * pi.Pbbb
             integrals.Fccc =
-                -k4 * (Math_h.Cube(n.oGet(a)) * pi.Paaa + 3 * Math_h.Square(n.oGet(a)) * n.oGet(b) * pi.Paab + 3 * n.oGet(
+                -k4 * (Math_h.Cube(n.get(a)) * pi.Paaa + 3 * Math_h.Square(n.get(a)) * n.get(b) * pi.Paab + 3 * n.get(
                     a
-                ) * Math_h.Square(n.oGet(b)) * pi.Pabb + Math_h.Cube(n.oGet(b)) * pi.Pbbb + 3 * w * (Math_h.Square(
-                    n.oGet(
+                ) * Math_h.Square(n.get(b)) * pi.Pabb + Math_h.Cube(n.get(b)) * pi.Pbbb + 3 * w * (Math_h.Square(
+                    n.get(
                         a
                     )
-                ) * pi.Paa + 2 * n.oGet(a) * n.oGet(b) * pi.Pab + Math_h.Square(n.oGet(b)) * pi.Pbb) + w * w * (3 * (n.oGet(
+                ) * pi.Paa + 2 * n.get(a) * n.get(b) * pi.Pab + Math_h.Square(n.get(b)) * pi.Pbb) + w * w * (3 * (n.get(
                     a
-                ) * pi.Pa + n.oGet(b) * pi.Pb) + w * pi.P1))
+                ) * pi.Pa + n.get(b) * pi.Pb) + w * pi.P1))
             integrals.Faab = k1 * pi.Paab
-            integrals.Fbbc = -k2 * (n.oGet(a) * pi.Pabb + n.oGet(b) * pi.Pbbb + w * pi.Pbb)
+            integrals.Fbbc = -k2 * (n.get(a) * pi.Pabb + n.get(b) * pi.Pbbb + w * pi.Pbb)
             integrals.Fcca =
-                k3 * (Math_h.Square(n.oGet(a)) * pi.Paaa + 2 * n.oGet(a) * n.oGet(b) * pi.Paab + Math_h.Square(n.oGet(b)) * pi.Pabb + w * (2 * (n.oGet(
+                k3 * (Math_h.Square(n.get(a)) * pi.Paaa + 2 * n.get(a) * n.get(b) * pi.Paab + Math_h.Square(n.get(b)) * pi.Pabb + w * (2 * (n.get(
                     a
-                ) * pi.Paa + n.oGet(b) * pi.Pab) + w * pi.Pa))
+                ) * pi.Paa + n.get(b) * pi.Pab) + w * pi.Pa))
         }
 
         private fun VolumeIntegrals(integrals: volumeIntegrals_t?) {
@@ -1568,9 +1568,9 @@ object TraceModel {
             i = 0
             while (i < numPolys) {
                 poly = polys[i]
-                nx = Math.abs(poly.normal.oGet(0))
-                ny = Math.abs(poly.normal.oGet(1))
-                nz = Math.abs(poly.normal.oGet(2))
+                nx = Math.abs(poly.normal.get(0))
+                ny = Math.abs(poly.normal.get(1))
+                nz = Math.abs(poly.normal.get(2))
                 c = if (nx > ny && nx > nz) {
                     0
                 } else {
@@ -1579,28 +1579,28 @@ object TraceModel {
                 a = (c + 1) % 3
                 b = (a + 1) % 3
                 PolygonIntegrals(i, a, b, c, pi)
-                T0 += poly.normal.oGet(0) * if (a == 0) pi.Fa else if (b == 0) pi.Fb else pi.Fc
-                T1[a] += poly.normal.oGet(a) * pi.Faa
-                T1[b] += poly.normal.oGet(b) * pi.Fbb
-                T1[c] += poly.normal.oGet(c) * pi.Fcc
-                T2[a] += poly.normal.oGet(a) * pi.Faaa
-                T2[b] += poly.normal.oGet(b) * pi.Fbbb
-                T2[c] += poly.normal.oGet(c) * pi.Fccc
-                TP[a] += poly.normal.oGet(a) * pi.Faab
-                TP[b] += poly.normal.oGet(b) * pi.Fbbc
-                TP[c] += poly.normal.oGet(c) * pi.Fcca
+                T0 += poly.normal.get(0) * if (a == 0) pi.Fa else if (b == 0) pi.Fb else pi.Fc
+                T1[a] += poly.normal.get(a) * pi.Faa
+                T1[b] += poly.normal.get(b) * pi.Fbb
+                T1[c] += poly.normal.get(c) * pi.Fcc
+                T2[a] += poly.normal.get(a) * pi.Faaa
+                T2[b] += poly.normal.get(b) * pi.Fbbb
+                T2[c] += poly.normal.get(c) * pi.Fccc
+                TP[a] += poly.normal.get(a) * pi.Faab
+                TP[b] += poly.normal.get(b) * pi.Fbbc
+                TP[c] += poly.normal.get(c) * pi.Fcca
                 i++
             }
             integrals.T0 = T0
-            integrals.T1.oSet(0, T1[0] * 0.5f)
-            integrals.T1.oSet(1, T1[1] * 0.5f)
-            integrals.T1.oSet(2, T1[2] * 0.5f)
-            integrals.T2.oSet(0, T2[0] * (1.0f / 3.0f))
-            integrals.T2.oSet(1, T2[1] * (1.0f / 3.0f))
-            integrals.T2.oSet(2, T2[2] * (1.0f / 3.0f))
-            integrals.TP.oSet(0, TP[0] * 0.5f)
-            integrals.TP.oSet(1, TP[1] * 0.5f)
-            integrals.TP.oSet(2, TP[2] * 0.5f)
+            integrals.T1.set(0, T1[0] * 0.5f)
+            integrals.T1.set(1, T1[1] * 0.5f)
+            integrals.T1.set(2, T1[2] * 0.5f)
+            integrals.T2.set(0, T2[0] * (1.0f / 3.0f))
+            integrals.T2.set(1, T2[1] * (1.0f / 3.0f))
+            integrals.T2.set(2, T2[2] * (1.0f / 3.0f))
+            integrals.TP.set(0, TP[0] * 0.5f)
+            integrals.TP.set(1, TP[1] * 0.5f)
+            integrals.TP.set(2, TP[2] * 0.5f)
         }
 
         private fun VolumeFromPolygon(trm: idTraceModel?, thickness: Float) {
@@ -1612,7 +1612,7 @@ object TraceModel {
             trm.numPolys = numEdges + 2
             i = 0
             while (i < numEdges) {
-                trm.verts[numVerts + i].oSet(verts[i].oMinus(polys[0].normal.times(thickness)))
+                trm.verts[numVerts + i].set(verts[i].minus(polys[0].normal.times(thickness)))
                 trm.edges[numEdges + i + 1].v.get(0) = numVerts + i
                 trm.edges[numEdges + i + 1].v.get(1) = numVerts + (i + 1) % numVerts
                 trm.edges[numEdges * 2 + i + 1].v.get(0) = i
@@ -1623,7 +1623,7 @@ object TraceModel {
                 trm.polys[2 + i].edges.get(1) = numEdges * 2 + i + 1
                 trm.polys[2 + i].edges.get(2) = numEdges + i + 1
                 trm.polys[2 + i].edges.get(3) = -(numEdges * 2 + (i + 1) % numEdges + 1)
-                trm.polys[2 + i].normal.oSet(verts[(i + 1) % numVerts].oMinus(verts[i]).Cross(polys[0].normal))
+                trm.polys[2 + i].normal.set(verts[(i + 1) % numVerts].minus(verts[i]).Cross(polys[0].normal))
                 trm.polys[2 + i].normal.Normalize()
                 trm.polys[2 + i].dist = trm.polys[2 + i].normal.times(verts[i])
                 i++

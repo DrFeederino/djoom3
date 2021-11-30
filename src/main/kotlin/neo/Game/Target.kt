@@ -101,7 +101,7 @@ object Target {
             var ent: idEntity?
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 ent?.PostEventMS(Class.EV_Remove, 0)
                 i++
             }
@@ -144,7 +144,7 @@ object Target {
             var ent: idEntity?
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 ent?.Show()
                 i++
             }
@@ -189,7 +189,7 @@ object Target {
             damage = spawnArgs.GetString("def_damage", "damage_generic")
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 ent?.Damage(this, this, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
                 i++
             }
@@ -415,8 +415,8 @@ object Target {
             if (spawnArgs.GetVector("_color", "1 1 1", color)) {
                 i = 0
                 while (i < targets.Num()) {
-                    ent = targets.oGet(i).GetEntity()
-                    ent?.SetColor(color.oGet(0), color.oGet(1), color.oGet(2))
+                    ent = targets.get(i).GetEntity()
+                    ent?.SetColor(color.get(0), color.get(1), color.get(2))
                     i++
                 }
             }
@@ -427,7 +427,7 @@ object Target {
                 if (spawnArgs.GetFloat(Str.va("shaderParm%d", parmnum), "0", value)) {
                     i = 0
                     while (i < targets.Num()) {
-                        ent = targets.oGet(i).GetEntity()
+                        ent = targets.get(i).GetEntity()
                         ent?.SetShaderParm(parmnum, value.getVal())
                         i++
                     }
@@ -478,7 +478,7 @@ object Target {
             time = -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (ent != null) {
                     ent.SetShaderParm(RenderWorld.SHADERPARM_TIMEOFFSET, time)
                     if (ent is idLight) {
@@ -552,7 +552,7 @@ object Target {
                 // set the color on the targets
                 i = 0
                 while (i < targets.Num()) {
-                    ent = targets.oGet(i).GetEntity()
+                    ent = targets.get(i).GetEntity()
                     ent?.SetColor(color)
                     i++
                 }
@@ -575,7 +575,7 @@ object Target {
 //	ent = this;
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (ent != null) {
                     ent.GetColor(fadeFrom)
                     break
@@ -635,7 +635,7 @@ object Target {
             //	ent = this;
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -691,7 +691,7 @@ object Target {
             //	ent = this;
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -849,7 +849,7 @@ object Target {
 
         private fun Event_Activate(activator: idEventArg<idEntity?>?) {
             for (i in 0 until targets.Num()) {
-                val ent = targets.oGet(i).GetEntity()
+                val ent = targets.get(i).GetEntity()
                 ent?.SetModel(spawnArgs.GetString("newmodel"))
             }
         }
@@ -913,25 +913,25 @@ object Target {
             savefile.WriteInt(lightList.Num())
             i = 0
             while (i < lightList.Num()) {
-                savefile.WriteInt(lightList.oGet(i))
+                savefile.WriteInt(lightList.get(i))
                 i++
             }
             savefile.WriteInt(guiList.Num())
             i = 0
             while (i < guiList.Num()) {
-                savefile.WriteInt(guiList.oGet(i))
+                savefile.WriteInt(guiList.get(i))
                 i++
             }
             savefile.WriteInt(soundList.Num())
             i = 0
             while (i < soundList.Num()) {
-                savefile.WriteInt(soundList.oGet(i))
+                savefile.WriteInt(soundList.get(i))
                 i++
             }
             savefile.WriteInt(genericList.Num())
             i = 0
             while (i < genericList.Num()) {
-                savefile.WriteInt(genericList.oGet(i))
+                savefile.WriteInt(genericList.get(i))
                 i++
             }
             savefile.WriteFloat(flashIn)
@@ -1075,20 +1075,20 @@ object Target {
             }
             i = 0
             while (i < genericList.Num()) {
-                ent = Game_local.gameLocal.entities.get(genericList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(genericList.get(i))
                 if (ent == null) {
                     i++
                     continue
                 }
                 generic = ent as idStaticEntity?
-                color.oSet(generic.spawnArgs.GetVector("color_demonic"))
-                colorTo.Set(color.x, color.y, color.z, 1.0f)
+                color.set(generic.spawnArgs.GetVector("color_demonic"))
+                colorTo.set(color.x, color.y, color.z, 1.0f)
                 generic.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
                 i++
             }
             i = 0
             while (i < lightList.Num()) {
-                ent = Game_local.gameLocal.entities.get(lightList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(lightList.get(i))
                 if (ent == null || ent !is idLight) {
                     i++
                     continue
@@ -1098,15 +1098,15 @@ object Target {
                 if (TempDump.isNotNullOrEmpty(parm)) {
                     light.SetShader(parm)
                 }
-                color.oSet(light.spawnArgs.GetVector("_color"))
-                color.oSet(light.spawnArgs.GetVector("color_demonic", color.ToString()))
-                colorTo.Set(color.x, color.y, color.z, 1.0f)
+                color.set(light.spawnArgs.GetVector("_color"))
+                color.set(light.spawnArgs.GetVector("color_demonic", color.ToString()))
+                colorTo.set(color.x, color.y, color.z, 1.0f)
                 light.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
                 i++
             }
             i = 0
             while (i < soundList.Num()) {
-                ent = Game_local.gameLocal.entities.get(soundList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(soundList.get(i))
                 if (ent == null || ent !is idSound) {
                     i++
                     continue
@@ -1125,7 +1125,7 @@ object Target {
             }
             i = 0
             while (i < guiList.Num()) {
-                ent = Game_local.gameLocal.entities.get(guiList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(guiList.get(i))
                 if (ent == null || ent.GetRenderEntity() == null) {
                     i++
                     continue
@@ -1193,19 +1193,19 @@ object Target {
             }
             i = 0
             while (i < genericList.Num()) {
-                ent = Game_local.gameLocal.entities.get(genericList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(genericList.get(i))
                 if (ent == null) {
                     i++
                     continue
                 }
                 generic = ent as idStaticEntity?
-                colorTo.Set(1.0f, 1.0f, 1.0f, 1.0f)
+                colorTo.set(1.0f, 1.0f, 1.0f, 1.0f)
                 generic.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
                 i++
             }
             i = 0
             while (i < lightList.Num()) {
-                ent = Game_local.gameLocal.entities.get(lightList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(lightList.get(i))
                 if (ent == null || ent !is idLight) {
                     i++
                     continue
@@ -1215,14 +1215,14 @@ object Target {
                     val texture = light.spawnArgs.GetString("texture", "lights/squarelight1")
                     light.SetShader(texture)
                 }
-                color.oSet(light.spawnArgs.GetVector("_color"))
-                colorTo.Set(color.x, color.y, color.z, 1.0f)
+                color.set(light.spawnArgs.GetVector("_color"))
+                colorTo.set(color.x, color.y, color.z, 1.0f)
                 light.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
                 i++
             }
             i = 0
             while (i < soundList.Num()) {
-                ent = Game_local.gameLocal.entities.get(soundList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(soundList.get(i))
                 if (ent == null || ent !is idSound) {
                     i++
                     continue
@@ -1234,7 +1234,7 @@ object Target {
             }
             i = 0
             while (i < guiList.Num()) {
-                ent = Game_local.gameLocal.entities.get(guiList.oGet(i))
+                ent = Game_local.gameLocal.entities.get(guiList.get(i))
                 if (ent == null || GetRenderEntity() == null) {
                     i++
                     continue
@@ -1297,7 +1297,7 @@ object Target {
                 listedEntities = targets.Num()
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i] = targets.oGet(i).GetEntity()
+                    entityList[i] = targets.get(i).GetEntity()
                     i++
                 }
             } else {
@@ -1434,7 +1434,7 @@ object Target {
             var n: Int
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (ent != null) {
                     kv = spawnArgs.MatchPrefix("keyval")
                     while (kv != null) {
@@ -1614,7 +1614,7 @@ object Target {
             lock = spawnArgs.GetInt("locked", "1")
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (ent != null && ent is idDoor) {
                     if ((ent as idDoor?).IsLocked() != 0) {
                         (ent as idDoor?).Lock(0)
@@ -1664,7 +1664,7 @@ object Target {
             funcName = spawnArgs.GetString("call")
             i = 0
             while (i < targets.Num()) {
-                ent = targets.oGet(i).GetEntity()
+                ent = targets.get(i).GetEntity()
                 if (ent != null && ent.scriptObject.HasObject()) {
                     func = ent.scriptObject.GetFunction(funcName)
                     if (TempDump.NOT(func)) {
@@ -1813,7 +1813,7 @@ object Target {
         private fun Event_TipOff() {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
-                val v = idVec3(player.GetPhysics().GetOrigin().oMinus(playerPos))
+                val v = idVec3(player.GetPhysics().GetOrigin().minus(playerPos))
                 if (v.Length() > 96.0f) {
                     player.HideTip()
                 } else {
@@ -1825,7 +1825,7 @@ object Target {
         private fun Event_GetPlayerPos() {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
-                playerPos.oSet(player.GetPhysics().GetOrigin())
+                playerPos.set(player.GetPhysics().GetOrigin())
                 PostEventMS(Target.EV_TipOff, 100)
             }
         }

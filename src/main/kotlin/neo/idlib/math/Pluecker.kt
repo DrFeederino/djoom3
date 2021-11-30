@@ -38,19 +38,19 @@ class Pluecker {
         }
 
         //public	float			operator[]( final int index ) final;
-        fun oGet(index: Int): Float {
+        fun get(index: Int): Float {
             return p[index]
         }
 
-        fun oNegative(): idPluecker { // flips the direction
+        operator fun unaryMinus(): idPluecker { // flips the direction
             return idPluecker(-p[0], -p[1], -p[2], -p[3], -p[4], -p[5])
         }
 
-        fun oMultiply(a: Float): idPluecker {
+        operator fun times(a: Float): idPluecker {
             return idPluecker(p[0] * a, p[1] * a, p[2] * a, p[3] * a, p[4] * a, p[5] * a)
         }
 
-        fun oDivide(a: Float): idPluecker {
+        operator fun div(a: Float): idPluecker {
             val inva: Float
             assert(a != 0.0f)
             inva = 1.0f / a
@@ -64,33 +64,33 @@ class Pluecker {
             )
         }
 
-        fun oMultiply(a: idPluecker): Float { // permuted inner product
+        operator fun times(a: idPluecker): Float { // permuted inner product
             return p[0] * a.p[4] + p[1] * a.p[5] + p[2] * a.p[3] + p[4] * a.p[0] + p[5] * a.p[1] + p[3] * a.p[2]
         }
 
-        fun oMinus(a: idPluecker): idPluecker {
+        operator fun minus(a: idPluecker): idPluecker {
             return idPluecker(
-                p[0] - a.oGet(0),
-                p[1] - a.oGet(1),
-                p[2] - a.oGet(2),
-                p[3] - a.oGet(3),
-                p[4] - a.oGet(4),
-                p[5] - a.oGet(5)
+                p[0] - a.get(0),
+                p[1] - a.get(1),
+                p[2] - a.get(2),
+                p[3] - a.get(3),
+                p[4] - a.get(4),
+                p[5] - a.get(5)
             )
         }
 
-        fun oPlus(a: idPluecker): idPluecker {
+        operator fun plus(a: idPluecker): idPluecker {
             return idPluecker(
-                p[0] + a.oGet(0),
-                p[1] + a.oGet(1),
-                p[2] + a.oGet(2),
-                p[3] + a.oGet(3),
-                p[4] + a.oGet(4),
-                p[5] + a.oGet(5)
+                p[0] + a.get(0),
+                p[1] + a.get(1),
+                p[2] + a.get(2),
+                p[3] + a.get(3),
+                p[4] + a.get(4),
+                p[5] + a.get(5)
             )
         }
 
-        fun oMulSet(a: Float): idPluecker {
+        fun timesAssign(a: Float): idPluecker {
             p[0] *= a
             p[1] *= a
             p[2] *= a
@@ -100,7 +100,7 @@ class Pluecker {
             return this
         }
 
-        fun oDivSet(a: Float): idPluecker {
+        fun divAssign(a: Float): idPluecker {
             val inva: Float
             assert(a != 0.0f)
             inva = 1.0f / a
@@ -113,23 +113,23 @@ class Pluecker {
             return this
         }
 
-        fun oPluSet(a: idPluecker): idPluecker {
-            p[0] += a.oGet(0)
-            p[1] += a.oGet(1)
-            p[2] += a.oGet(2)
-            p[3] += a.oGet(3)
-            p[4] += a.oGet(4)
-            p[5] += a.oGet(5)
+        fun plusAssign(a: idPluecker): idPluecker {
+            p[0] += a.get(0)
+            p[1] += a.get(1)
+            p[2] += a.get(2)
+            p[3] += a.get(3)
+            p[4] += a.get(4)
+            p[5] += a.get(5)
             return this
         }
 
-        fun oMinSet(a: idPluecker): idPluecker {
-            p[0] -= a.oGet(0)
-            p[1] -= a.oGet(1)
-            p[2] -= a.oGet(2)
-            p[3] -= a.oGet(3)
-            p[4] -= a.oGet(4)
-            p[5] -= a.oGet(5)
+        fun minusAssign(a: idPluecker): idPluecker {
+            p[0] -= a.get(0)
+            p[1] -= a.get(1)
+            p[2] -= a.get(2)
+            p[3] -= a.get(3)
+            p[4] -= a.get(4)
+            p[5] -= a.get(5)
             return this
         }
 
@@ -203,21 +203,21 @@ class Pluecker {
         }
 
         fun FromLine(start: idVec3, end: idVec3) { // pluecker from line{
-            p[0] = start.oGet(0) * end.oGet(1) - end.oGet(0) * start.oGet(1)
-            p[1] = start.oGet(0) * end.oGet(2) - end.oGet(0) * start.oGet(2)
-            p[2] = start.oGet(0) - end.oGet(0)
-            p[3] = start.oGet(1) * end.oGet(2) - end.oGet(1) * start.oGet(2)
-            p[4] = start.oGet(2) - end.oGet(2)
-            p[5] = end.oGet(1) - start.oGet(1)
+            p[0] = start[0] * end[1] - end[0] * start[1]
+            p[1] = start[0] * end[2] - end[0] * start[2]
+            p[2] = start[0] - end[0]
+            p[3] = start[1] * end[2] - end[1] * start[2]
+            p[4] = start[2] - end[2]
+            p[5] = end[1] - start[1]
         }
 
         fun FromRay(start: idVec3, dir: idVec3) { // pluecker from ray
-            p[0] = start.oGet(0) * dir.oGet(1) - dir.oGet(0) * start.oGet(1)
-            p[1] = start.oGet(0) * dir.oGet(2) - dir.oGet(0) * start.oGet(2)
-            p[2] = -dir.oGet(0)
-            p[3] = start.oGet(1) * dir.oGet(2) - dir.oGet(1) * start.oGet(2)
-            p[4] = -dir.oGet(2)
-            p[5] = dir.oGet(1)
+            p[0] = start[0] * dir[1] - dir[0] * start[1]
+            p[1] = start[0] * dir[2] - dir[0] * start[2]
+            p[2] = -dir[0]
+            p[3] = start[1] * dir[2] - dir[1] * start[2]
+            p[4] = -dir[2]
+            p[5] = dir[1]
         }
 
         /*
@@ -228,12 +228,12 @@ class Pluecker {
          ================
          */
         fun FromPlanes(p1: idPlane, p2: idPlane): Boolean { // pluecker from intersection of planes
-            p[0] = -(p1.oGet(2) * -p2.oGet(3) - p2.oGet(2) * -p1.oGet(3))
-            p[1] = -(p2.oGet(1) * -p1.oGet(3) - p1.oGet(1) * -p2.oGet(3))
-            p[2] = p1.oGet(1) * p2.oGet(2) - p2.oGet(1) * p1.oGet(2)
-            p[3] = -(p1.oGet(0) * -p2.oGet(3) - p2.oGet(0) * -p1.oGet(3))
-            p[4] = p1.oGet(0) * p2.oGet(1) - p2.oGet(0) * p1.oGet(1)
-            p[5] = p1.oGet(0) * p2.oGet(2) - p2.oGet(0) * p1.oGet(2)
+            p[0] = -(p1.get(2) * -p2.get(3) - p2.get(2) * -p1.get(3))
+            p[1] = -(p2.get(1) * -p1.get(3) - p1.get(1) * -p2.get(3))
+            p[2] = p1.get(1) * p2.get(2) - p2.get(1) * p1.get(2)
+            p[3] = -(p1.get(0) * -p2.get(3) - p2.get(0) * -p1.get(3))
+            p[4] = p1.get(0) * p2.get(1) - p2.get(0) * p1.get(1)
+            p[5] = p1.get(0) * p2.get(2) - p2.get(0) * p1.get(2)
             return p[2] != 0.0f || p[5] != 0.0f || p[4] != 0.0f
         }
 
@@ -242,18 +242,21 @@ class Pluecker {
             val dir1 = idVec3()
             val dir2 = idVec3()
             val d: Float
-            dir1.oSet(0, p[3])
-            dir1.oSet(1, -p[1])
-            dir1.oSet(2, p[0])
-            dir2.oSet(0, -p[2])
-            dir2.oSet(1, p[5])
-            dir2.oSet(2, -p[4])
-            d = dir2.times(dir2)
+            dir1[0] = p[3]
+            dir1[1] = -p[1]
+            dir1[2] = p[0]
+
+            dir2[0] = -p[2]
+            dir2[1] = p[5]
+            dir2[2] = -p[4]
+
+            d = dir2 * dir2
             if (d == 0.0f) {
                 return false // pluecker coordinate does not represent a line
             }
-            start.oSet(dir2.Cross(dir1) * (1.0f / d))
-            end.oSet(start + dir2)
+
+            start.set(dir2.Cross(dir1) * (1.0f / d))
+            end.set(start + dir2)
             return true
         }
 
@@ -261,24 +264,27 @@ class Pluecker {
         fun ToRay(start: idVec3, dir: idVec3): Boolean {
             val dir1 = idVec3()
             val d: Float
-            dir1.oSet(0, p[3])
-            dir1.oSet(1, -p[1])
-            dir1.oSet(2, p[0])
-            dir.oSet(0, -p[2])
-            dir.oSet(1, p[5])
-            dir.oSet(2, -p[4])
-            d = dir.times(dir)
+            dir1[0] = p[3]
+            dir1[1] = -p[1]
+            dir1[2] = p[0]
+
+            dir[0] = -p[2]
+            dir[1] = p[5]
+            dir[2] = -p[4]
+
+            d = dir * dir
             if (d == 0.0f) {
                 return false // pluecker coordinate does not represent a line
             }
-            start.oSet(dir.Cross(dir1).times(1.0f / d))
+
+            start.set(dir.Cross(dir1) * (1.0f / d))
             return true
         }
 
         fun ToDir(dir: idVec3) { // pluecker to direction{
-            dir.oSet(0, -p[2])
-            dir.oSet(1, p[5])
-            dir.oSet(2, -p[4])
+            dir[0] = -p[2]
+            dir[1] = p[5]
+            dir[2] = -p[4]
         }
 
         fun PermutedInnerProduct(a: idPluecker): Float { // pluecker permuted inner product
@@ -297,18 +303,17 @@ class Pluecker {
             val d: Float
             val s: Float
             val dir = idVec3()
-            dir.oSet(0, -a.p[5] * p[4] - a.p[4] * -p[5])
-            dir.oSet(1, a.p[4] * p[2] - a.p[2] * p[4])
-            dir.oSet(2, a.p[2] * -p[5] - -a.p[5] * p[2])
-            if (dir.oGet(0) == 0.0f && dir.oGet(1) == 0.0f && dir.oGet(2) == 0.0f) {
-                return -1.0f // FIXME: implement for parallel lines
+            dir[0] = -a.p[5] * p[4] - a.p[4] * -p[5]
+            dir[1] = a.p[4] * p[2] - a.p[2] * p[4]
+            dir[2] = a.p[2] * -p[5] - -a.p[5] * p[2]
+            if (dir[0] == 0.0f && dir[1] == 0.0f && dir[2] == 0.0f) {
+                return -1.0f    // FIXME: implement for parallel lines
             }
-            d =
-                a.p[4] * (p[2] * dir.oGet(1) - -p[5] * dir.oGet(0)) + a.p[5] * (p[2] * dir.oGet(2) - p[4] * dir.oGet(0)) + a.p[2] * (-p[5] * dir.oGet(
-                    2
-                ) - p[4] * dir.oGet(1))
+            d = a.p[4] * (p[2] * dir[1] - -p[5] * dir[0]) +
+                    a.p[5] * (p[2] * dir[2] - p[4] * dir[0]) +
+                    a.p[2] * (-p[5] * dir[2] - p[4] * dir[1])
             s = PermutedInnerProduct(a) / d
-            return dir.times(dir) * (s * s)
+            return (dir * dir) * (s * s)
         }
 
         fun Length(): Float { // pluecker length

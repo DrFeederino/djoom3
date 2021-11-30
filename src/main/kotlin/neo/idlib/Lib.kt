@@ -265,7 +265,7 @@ class Lib {
      ================
      */
         fun UnpackColor(color: Long, unpackedColor: idVec4?) {
-            unpackedColor.Set(
+            unpackedColor.set(
                 (color shr 0 and 255) * (1.0f / 255.0f),
                 (color shr 8 and 255) * (1.0f / 255.0f),
                 (color shr 16 and 255) * (1.0f / 255.0f),
@@ -294,7 +294,7 @@ class Lib {
      ================
      */
         fun UnpackColor(color: Long, unpackedColor: idVec3?) {
-            unpackedColor.Set(
+            unpackedColor.set(
                 (color shr 0 and 255) * (1.0f / 255.0f),
                 (color shr 8 and 255) * (1.0f / 255.0f),
                 (color shr 16 and 255) * (1.0f / 255.0f)
@@ -386,10 +386,10 @@ class Lib {
 
         fun LittleRevBytes(bounds: idBounds?) {
             if (Lib.Companion.SWAP_TEST) {
-                val a = idVec3(bounds.oGet(0))
-                val b = idVec3(bounds.oGet(1))
-                bounds.oSet(0, b)
-                bounds.oSet(1, a)
+                val a = idVec3(bounds.get(0))
+                val b = idVec3(bounds.get(1))
+                bounds.set(0, b)
+                bounds.set(1, a)
             }
         }
 

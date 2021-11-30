@@ -115,7 +115,7 @@ class snd_world {
             AVIClose()
             i = 0
             while (i < emitters.Num()) {
-                val sound = emitters.oGet(i)
+                val sound = emitters.get(i)
                 sound.Clear()
                 i++
             }
@@ -132,7 +132,7 @@ class snd_world {
          */
         override fun StopAllSounds() {
             for (i in 0 until emitters.Num()) {
-                val def = emitters.oGet(i)
+                val def = emitters.get(i)
                 def.StopSound(sound.SCHANNEL_ANY)
             }
         }
@@ -166,7 +166,7 @@ class snd_world {
             if (index >= emitters.Num()) {
                 Common.common.Error("idSoundWorldLocal::EmitterForIndex: %d > %d", index, emitters.Num())
             }
-            return emitters.oGet(index)
+            return emitters.get(index)
         }
 
         /*
@@ -185,7 +185,7 @@ class snd_world {
             }
             localTime = snd_system.soundSystemLocal.GetCurrent44kHzTime()
             for (i in 1 until emitters.Num()) {
-                val sound = emitters.oGet(i)
+                val sound = emitters.get(i)
                 if (!sound.hasShakes) {
                     continue
                 }
@@ -238,9 +238,9 @@ class snd_world {
                 idMath.FtoiFast(gameMsec * 0.001f * 44100.0f)
             }
             listenerPrivateId = listenerId
-            listenerQU.oSet(origin) // Doom units
-            listenerPos.oSet(origin.times(snd_shader.DOOM_TO_METERS)) // meters
-            listenerAxis.oSet(axis)
+            listenerQU.set(origin) // Doom units
+            listenerPos.set(origin.times(snd_shader.DOOM_TO_METERS)) // meters
+            listenerAxis.set(axis)
             listenerAreaName.oSet(areaName)
             listenerAreaName.ToLower()
             listenerArea = if (rw != null) {
@@ -368,7 +368,7 @@ class snd_world {
                         def = idSoundEmitterLocal()
                         emitters.Append(def)
                     }
-                    def = emitters.oGet(index)
+                    def = emitters.get(index)
                     def.Clear()
                     def.index = index
                     def.removeStatus = snd_emitter.REMOVE_STATUS_ALIVE
@@ -620,7 +620,7 @@ class snd_world {
             savefile.WriteInt(num)
             i = 1
             while (i < emitters.Num()) {
-                val def = emitters.oGet(i)
+                val def = emitters.get(i)
                 if (def.removeStatus != snd_emitter.REMOVE_STATUS_ALIVE) {
                     val skip = -1
                     //                    savefile.Write(skip, sizeof(skip));
@@ -731,7 +731,7 @@ class snd_world {
                 if (handle != i) {
                     Common.common.Error("idSoundWorldLocal::ReadFromSaveGame: index mismatch")
                 }
-                def = emitters.oGet(i)
+                def = emitters.get(i)
                 def.removeStatus = snd_emitter.REMOVE_STATUS_ALIVE
                 def.playing = true // may be reset by the first UpdateListener
                 savefile.ReadVec3(def.origin)
@@ -896,9 +896,9 @@ class snd_world {
             AVIClose()
             i = 0
             while (i < emitters.Num()) {
-                if (emitters.oGet(i) != null) {
+                if (emitters.get(i) != null) {
 //			delete emitters[i];
-                    emitters.oSet(i, null)
+                    emitters.set(i, null)
                 }
                 i++
             }
@@ -986,7 +986,7 @@ class snd_world {
             //
             j = 1
             while (j < emitters.Num()) {
-                def = emitters.oGet(j)
+                def = emitters.get(j)
                 if (def.removeStatus >= snd_emitter.REMOVE_STATUS_SAMPLEFINISHED) {
                     j++
                     continue
@@ -1086,13 +1086,13 @@ class snd_world {
             var j: Int
             i = 0
             while (i < emitters.Num()) {
-                if (emitters.oGet(i) == null) {
+                if (emitters.get(i) == null) {
                     i++
                     continue
                 }
                 j = 0
                 while (j < snd_local.SOUND_MAX_CHANNELS) {
-                    val chan = emitters.oGet(i).channels[j]
+                    val chan = emitters.get(i).channels[j]
                     if (!chan.triggerState) {
                         j++
                         continue
@@ -1113,7 +1113,7 @@ class snd_world {
             // never use the 0 index spot
             i = 1
             while (i < emitters.Num()) {
-                def = emitters.oGet(i)
+                def = emitters.get(i)
 
                 // check for a completed and freed spot
                 if (def.removeStatus >= snd_emitter.REMOVE_STATUS_SAMPLEFINISHED) {
@@ -1152,11 +1152,11 @@ class snd_world {
             ears: FloatArray? /*[6]*/,
             spatialize: Float
         ) {
-            val svec = idVec3(spatializedOrigin.oMinus(listenerPos))
+            val svec = idVec3(spatializedOrigin.minus(listenerPos))
             val ovec = idVec3(
-                svec.oMultiply(listenerAxis.oGet(0)),
-                svec.oMultiply(listenerAxis.oGet(1)),
-                svec.oMultiply(listenerAxis.oGet(2))
+                svec.oMultiply(listenerAxis.get(0)),
+                svec.oMultiply(listenerAxis.get(1)),
+                svec.oMultiply(listenerAxis.get(2))
             )
             ovec.Normalize()
             if (numSpeakers == 6) {
@@ -1280,11 +1280,11 @@ class snd_world {
                 val dlen: Float
                 dlen = if (noOcclusion) {
                     // use the real origin and distance
-                    spatializedOriginInMeters.oSet(sound.origin.times(snd_shader.DOOM_TO_METERS))
+                    spatializedOriginInMeters.set(sound.origin.times(snd_shader.DOOM_TO_METERS))
                     sound.realDistance
                 } else {
                     // use the possibly portal-occluded origin and distance
-                    spatializedOriginInMeters.oSet(sound.spatializedOrigin.times(snd_shader.DOOM_TO_METERS))
+                    spatializedOriginInMeters.set(sound.spatializedOrigin.times(snd_shader.DOOM_TO_METERS))
                     sound.distance
                 }
 
@@ -1634,12 +1634,12 @@ class snd_world {
                 listenerPosition[1] = listenerPos.z
                 listenerPosition[2] = -listenerPos.x
                 val listenerOrientation = BufferUtils.createFloatBuffer(6)
-                listenerOrientation.put(0, -listenerAxis.oGet(0).y)
-                listenerOrientation.put(1, +listenerAxis.oGet(0).z)
-                listenerOrientation.put(2, -listenerAxis.oGet(0).x)
-                listenerOrientation.put(3, -listenerAxis.oGet(2).y)
-                listenerOrientation.put(4, +listenerAxis.oGet(2).z)
-                listenerOrientation.put(5, -listenerAxis.oGet(2).x)
+                listenerOrientation.put(0, -listenerAxis.get(0).y)
+                listenerOrientation.put(1, +listenerAxis.get(0).z)
+                listenerOrientation.put(2, -listenerAxis.get(0).x)
+                listenerOrientation.put(3, -listenerAxis.get(2).y)
+                listenerOrientation.put(4, +listenerAxis.get(2).z)
+                listenerOrientation.put(5, -listenerAxis.get(2).x)
                 AL10.alListenerf(AL10.AL_GAIN, 1.0f)
                 AL10.alListener3f(AL10.AL_POSITION, listenerPosition[0], listenerPosition[1], listenerPosition[2])
                 AL10.alListenerfv(AL10.AL_ORIENTATION, listenerOrientation) //SO6874122
@@ -1678,7 +1678,7 @@ class snd_world {
 
             // debugging option to mute all but a single soundEmitter
             if (idSoundSystemLocal.Companion.s_singleEmitter.GetInteger() > 0 && idSoundSystemLocal.Companion.s_singleEmitter.GetInteger() < emitters.Num()) {
-                sound = emitters.oGet(idSoundSystemLocal.Companion.s_singleEmitter.GetInteger())
+                sound = emitters.get(idSoundSystemLocal.Companion.s_singleEmitter.GetInteger())
                 if (sound != null && sound.playing) {
                     // run through all the channels
                     j = 0
@@ -1699,7 +1699,7 @@ class snd_world {
             }
             i = 1
             while (i < emitters.Num()) {
-                sound = emitters.oGet(i)
+                sound = emitters.get(i)
                 if (null == sound) {
                     i++
                     continue
@@ -1789,10 +1789,10 @@ class snd_world {
                 return
             }
             if (soundArea == listenerArea) {
-                val fullDist = dist + soundOrigin.oMinus(listenerQU).LengthFast()
+                val fullDist = dist + soundOrigin.minus(listenerQU).LengthFast()
                 if (fullDist < def.distance) {
                     def.distance = fullDist
-                    def.spatializedOrigin.oSet(soundOrigin)
+                    def.spatializedOrigin.set(soundOrigin)
                 }
                 return
             }
@@ -1843,19 +1843,19 @@ class snd_world {
                 val pl = idPlane()
                 re.w.GetPlane(pl)
                 val scale = CFloat()
-                val dir = idVec3(listenerQU.oMinus(soundOrigin))
+                val dir = idVec3(listenerQU.minus(soundOrigin))
                 if (!pl.RayIntersection(soundOrigin, dir, scale)) {
-                    source.oSet(re.w.GetCenter())
+                    source.set(re.w.GetCenter())
                 } else {
-                    source.oSet(soundOrigin.oPlus(dir.oMultiply(scale.getVal())))
+                    source.set(soundOrigin.oPlus(dir.oMultiply(scale.getVal())))
 
                     // if this point isn't inside the portal edges, slide it in
                     for (i in 0 until re.w.GetNumPoints()) {
                         val j = (i + 1) % re.w.GetNumPoints()
-                        val edgeDir = idVec3(re.w.oGet(j).ToVec3().oMinus(re.w.oGet(i).ToVec3()))
+                        val edgeDir = idVec3(re.w.oGet(j).ToVec3().minus(re.w.oGet(i).ToVec3()))
                         val edgeNormal = idVec3()
                         edgeNormal.Cross(pl.Normal(), edgeDir)
-                        val fromVert = idVec3(source.oMinus(re.w.oGet(j).ToVec3()))
+                        val fromVert = idVec3(source.minus(re.w.oGet(j).ToVec3()))
                         var d = edgeNormal.times(fromVert)
                         if (d > 0) {
                             // move it in
@@ -1865,7 +1865,7 @@ class snd_world {
                         }
                     }
                 }
-                val tlen = idVec3(source.oMinus(soundOrigin))
+                val tlen = idVec3(source.minus(soundOrigin))
                 val tlenLength = tlen.LengthFast()
                 ResolveOrigin(stackDepth + 1, newStack, otherArea, dist + tlenLength + occlusionDistance, source, def)
             }
@@ -1892,7 +1892,7 @@ class snd_world {
             }
             if (listenerPosition != null) {
                 // this doesn't do the portal spatialization
-                val dist = idVec3(sound.origin.oMinus(listenerPosition))
+                val dist = idVec3(sound.origin.minus(listenerPosition))
                 dlen = dist.Length()
                 dlen *= snd_shader.DOOM_TO_METERS
             } else {

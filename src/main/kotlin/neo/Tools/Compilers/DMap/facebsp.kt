@@ -33,7 +33,7 @@ object facebsp {
         var node = node
         var d: Float
         while (node.planenum != dmap.PLANENUM_LEAF) {
-            val plane = dmap.dmapGlobals.mapPlanes.oGet(node.planenum)
+            val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
             d = plane.Distance(origin)
             node = if (d >= 0) {
                 node.children[0]
@@ -128,10 +128,10 @@ object facebsp {
             }
             return
         }
-        val plane = dmap.dmapGlobals.mapPlanes.oGet(node.planenum)
+        val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
         Common.common.Printf(
             "#%d (%5.2f %5.2f %5.2f %5.2f)\n", node.planenum,
-            plane.oGet(0), plane.oGet(1), plane.oGet(2), plane.oGet(3)
+            plane.get(0), plane.get(1), plane.get(2), plane.get(3)
         )
         facebsp.PrintTree_r(node.children[0], depth + 1)
         facebsp.PrintTree_r(node.children[1], depth + 1)
@@ -187,27 +187,27 @@ object facebsp {
         // if it is crossing a 1k block boundary, force a split
         // this prevents epsilon problems from extending an
         // arbitrary distance across the map
-        halfSize.oSet(node.bounds.oGet(1).oMinus(node.bounds.oGet(0)).oMultiply(0.5f))
+        halfSize.set(node.bounds.get(1).minus(node.bounds.get(0)).oMultiply(0.5f))
         for (axis in 0..2) {
-            dist = if (halfSize.oGet(axis) > facebsp.BLOCK_SIZE) {
+            dist = if (halfSize.get(axis) > facebsp.BLOCK_SIZE) {
                 (facebsp.BLOCK_SIZE * (Math.floor(
-                    ((node.bounds.oGet(
+                    ((node.bounds.get(
                         0,
                         axis
-                    ) + halfSize.oGet(axis)) / facebsp.BLOCK_SIZE).toDouble()
+                    ) + halfSize.get(axis)) / facebsp.BLOCK_SIZE).toDouble()
                 ) + 1.0f)).toFloat()
             } else {
                 (facebsp.BLOCK_SIZE * (Math.floor(
-                    (node.bounds.oGet(
+                    (node.bounds.get(
                         0,
                         axis
                     ) / facebsp.BLOCK_SIZE).toDouble()
                 ) + 1.0f)).toFloat()
             }
-            if (dist > node.bounds.oGet(0, axis) + 1.0f && dist < node.bounds.oGet(1, axis) - 1.0f) {
-                plane.oSet(0, plane.oSet(1, plane.oSet(2, 0.0f)))
-                plane.oSet(axis, 1.0f)
-                plane.oSet(3, -dist)
+            if (dist > node.bounds.get(0, axis) + 1.0f && dist < node.bounds.get(1, axis) - 1.0f) {
+                plane.set(0, plane.set(1, plane.set(2, 0.0f)))
+                plane.set(axis, 1.0f)
+                plane.set(3, -dist)
                 planenum = FindFloatPlane(plane)
                 return planenum
             }
@@ -238,7 +238,7 @@ object facebsp {
                 split = split.next
                 continue
             }
-            val mapPlane = dmap.dmapGlobals.mapPlanes.oGet(split.planenum)
+            val mapPlane = dmap.dmapGlobals.mapPlanes.get(split.planenum)
             splits = 0
             facing = 0
             front = 0
@@ -301,7 +301,7 @@ object facebsp {
 
         // partition the list
         node.planenum = splitPlaneNum
-        val plane = dmap.dmapGlobals.mapPlanes.oGet(splitPlaneNum)
+        val plane = dmap.dmapGlobals.mapPlanes.get(splitPlaneNum)
         childLists[0] = null
         childLists[1] = null
         split = list
@@ -352,9 +352,9 @@ object facebsp {
         // split the bounds if we have a nice axial plane
         i = 0
         while (i < 3) {
-            if (Math.abs(plane.oGet(i) - 1.0f) < 0.001) {
-                node.children[0].bounds.oSet(0, i, plane.Dist())
-                node.children[1].bounds.oSet(1, i, plane.Dist())
+            if (Math.abs(plane.get(i) - 1.0f) < 0.001) {
+                node.children[0].bounds.set(0, i, plane.Dist())
+                node.children[1].bounds.set(1, i, plane.Dist())
                 break
             }
             i++

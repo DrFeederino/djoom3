@@ -248,7 +248,7 @@ object SecurityCamera {
             rv.fov_x = scanFov
             rv.fov_y = scanFov
             rv.viewaxis = GetAxis().ToAngles().ToMat3()
-            rv.vieworg.oSet(GetPhysics().GetOrigin().oPlus(viewOffset))
+            rv.vieworg.set(GetPhysics().GetOrigin().oPlus(viewOffset))
             return rv
         }
 
@@ -350,7 +350,7 @@ object SecurityCamera {
                     i++
                     continue
                 }
-                dir.oSet(ent.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
+                dir.set(ent.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
                 dist = dir.Normalize()
                 if (dist > scanDist) {
                     i++
@@ -361,7 +361,7 @@ object SecurityCamera {
                     continue
                 }
                 val eye = idVec3()
-                eye.oSet(ent.EyeOffset())
+                eye.set(ent.EyeOffset())
                 Game_local.gameLocal.clip.TracePoint(
                     tr,
                     GetPhysics().GetOrigin(),
@@ -407,41 +407,41 @@ object SecurityCamera {
             dir.NormalVectors(right, up)
             radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
             halfRadius = radius * 0.5f
-            lastPoint.oSet(dir.oPlus(up.times(radius)))
+            lastPoint.set(dir.oPlus(up.times(radius)))
             lastPoint.Normalize()
-            lastPoint.oSet(GetPhysics().GetOrigin().oPlus(lastPoint.times(scanDist)))
-            lastHalfPoint.oSet(dir.oPlus(up.times(halfRadius)))
+            lastPoint.set(GetPhysics().GetOrigin().oPlus(lastPoint.times(scanDist)))
+            lastHalfPoint.set(dir.oPlus(up.times(halfRadius)))
             lastHalfPoint.Normalize()
-            lastHalfPoint.oSet(GetPhysics().GetOrigin().oPlus(lastHalfPoint.times(scanDist)))
-            center.oSet(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
+            lastHalfPoint.set(GetPhysics().GetOrigin().oPlus(lastHalfPoint.times(scanDist)))
+            center.set(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
             i = 1
             while (i < 12) {
                 a = idMath.TWO_PI * i / 12.0f
                 idMath.SinCos(a, s, c)
-                point.oSet(dir.oPlus(right.times(s.getVal() * radius).oPlus(up.times(c.getVal() * radius))))
+                point.set(dir.oPlus(right.times(s.getVal() * radius).oPlus(up.times(c.getVal() * radius))))
                 point.Normalize()
-                point.oSet(GetPhysics().GetOrigin().oPlus(point.times(scanDist)))
+                point.set(GetPhysics().GetOrigin().oPlus(point.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color, lastPoint, point)
                 Game_local.gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point)
-                lastPoint.oSet(point)
-                halfPoint.oSet(
+                lastPoint.set(point)
+                halfPoint.set(
                     dir.oPlus(
                         right.times(s.getVal() * halfRadius).oPlus(up.times(c.getVal() * halfRadius))
                     )
                 )
                 halfPoint.Normalize()
-                halfPoint.oSet(GetPhysics().GetOrigin().oPlus(halfPoint.times(scanDist)))
+                halfPoint.set(GetPhysics().GetOrigin().oPlus(halfPoint.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color2, point, halfPoint)
                 Game_local.gameRenderWorld.DebugLine(color2, lastHalfPoint, halfPoint)
-                lastHalfPoint.oSet(halfPoint)
+                lastHalfPoint.set(halfPoint)
                 Game_local.gameRenderWorld.DebugLine(color2, halfPoint, center)
                 i++
             }
         }
 
         private fun GetAxis(): idVec3? {
-            return if (flipAxis) GetPhysics().GetAxis().oGet(modelAxis).oNegative() else GetPhysics().GetAxis()
-                .oGet(modelAxis)
+            return if (flipAxis) GetPhysics().GetAxis().get(modelAxis).oNegative() else GetPhysics().GetAxis()
+                .get(modelAxis)
         }
 
         private fun SweepSpeed(): Float {
@@ -497,24 +497,24 @@ object SecurityCamera {
             val radius: Float
             val lightOffset = idVec3()
             val spotLight: idLight
-            dir.oSet(GetAxis())
+            dir.set(GetAxis())
             dir.NormalVectors(right, up)
-            target.oSet(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
+            target.set(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
             radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
-            up.oSet(dir.oPlus(up.times(radius)))
+            up.set(dir.oPlus(up.times(radius)))
             up.Normalize()
-            up.oSet(GetPhysics().GetOrigin().oPlus(up.times(scanDist)))
+            up.set(GetPhysics().GetOrigin().oPlus(up.times(scanDist)))
             up.minusAssign(target)
-            right.oSet(dir.oPlus(right.times(radius)))
+            right.set(dir.oPlus(right.times(radius)))
             right.Normalize()
-            right.oSet(GetPhysics().GetOrigin().oPlus(right.times(scanDist)))
+            right.set(GetPhysics().GetOrigin().oPlus(right.times(scanDist)))
             right.minusAssign(target)
             spawnArgs.GetVector("lightOffset", "0 0 0", lightOffset)
             args.Set("origin", GetPhysics().GetOrigin().oPlus(lightOffset).ToString())
             args.Set("light_target", target.ToString())
             args.Set("light_right", right.ToString())
             args.Set("light_up", up.ToString())
-            args.SetFloat("angle", GetPhysics().GetAxis().oGet(0).ToYaw())
+            args.SetFloat("angle", GetPhysics().GetAxis().get(0).ToYaw())
             spotLight = Game_local.gameLocal.SpawnEntityType(idLight::class.java, args) as idLight
             spotLight.Bind(this, true)
             spotLight.UpdateVisuals()

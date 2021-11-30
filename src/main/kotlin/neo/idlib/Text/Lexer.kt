@@ -873,7 +873,7 @@ object Lexer {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                v.oSet(i, m[i])
+                v.set(i, m[i])
             }
             return result
         }
@@ -883,7 +883,7 @@ object Lexer {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                p.oSet(i, m[i])
+                p.set(i, m[i])
             }
             return result
         }
@@ -894,7 +894,7 @@ object Lexer {
             val result = Parse1DMatrix(x, n)
             for (i in 0..2) {
                 for (j in 0..2) {
-                    m.oSet(i, j, n[i * 3 + j])
+                    m.set(i, j, n[i * 3 + j])
                 }
             }
             return result
@@ -905,7 +905,7 @@ object Lexer {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                q.oSet(i, m[i])
+                q.set(i, m[i])
             }
             return result
         }
@@ -915,7 +915,7 @@ object Lexer {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                q.oSet(i, m[i])
+                q.set(i, m[i])
             }
             return result
         }

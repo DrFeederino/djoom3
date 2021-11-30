@@ -56,10 +56,10 @@ class Force_Spring {
         fun SetPosition(physics1: idPhysics?, id1: Int, p1: idVec3?, physics2: idPhysics?, id2: Int, p2: idVec3?) {
             this.physics1 = physics1
             this.id1 = id1
-            this.p1.oSet(p1)
+            this.p1.set(p1)
             this.physics2 = physics2
             this.id2 = id2
-            this.p2.oSet(p2)
+            this.p2.set(p2)
         }
 
         // common force interface
@@ -73,32 +73,32 @@ class Force_Spring {
             val force = idVec3()
             val dampingForce = idVec3()
             var info: impactInfo_s? = impactInfo_s()
-            pos1.oSet(p1)
-            pos2.oSet(p2)
-            velocity2.oSet(Vector.getVec3_origin())
-            velocity1.oSet(Vector.getVec3_origin())
+            pos1.set(p1)
+            pos2.set(p2)
+            velocity2.set(Vector.getVec3_origin())
+            velocity1.set(Vector.getVec3_origin())
             if (physics1 != null) {
                 axis = physics1.GetAxis(id1)
-                pos1.oSet(physics1.GetOrigin(id1))
+                pos1.set(physics1.GetOrigin(id1))
                 pos1.plusAssign(p1.times(axis))
                 if (damping > 0.0f) {
                     info = physics1.GetImpactInfo(id1, pos1)
-                    velocity1.oSet(info.velocity)
+                    velocity1.set(info.velocity)
                 }
             }
             if (physics2 != null) {
                 axis = physics2.GetAxis(id2)
-                pos2.oSet(physics2.GetOrigin(id2))
+                pos2.set(physics2.GetOrigin(id2))
                 pos2.plusAssign(p2.times(axis))
                 if (damping > 0.0f) {
                     info = physics2.GetImpactInfo(id2, pos2)
-                    velocity2.oSet(info.velocity)
+                    velocity2.set(info.velocity)
                 }
             }
-            force.oSet(pos2.oMinus(pos1))
-            dampingForce.oSet(
+            force.set(pos2.minus(pos1))
+            dampingForce.set(
                 force.times(
-                    damping * (velocity2.oMinus(velocity1).oMultiply(force) / force.times(
+                    damping * (velocity2.minus(velocity1).oMultiply(force) / force.times(
                         force
                     ))
                 )
@@ -108,7 +108,7 @@ class Force_Spring {
             // if the spring is stretched
             if (length > restLength) {
                 if (Kstretch > 0.0f) {
-                    force.oSet(force.times(Math_h.Square(length - restLength) * Kstretch).oMinus(dampingForce))
+                    force.set(force.times(Math_h.Square(length - restLength) * Kstretch).minus(dampingForce))
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force)
                     }
@@ -118,7 +118,7 @@ class Force_Spring {
                 }
             } else {
                 if (Kcompress > 0.0f) {
-                    force.oSet(force.times(Math_h.Square(length - restLength) * Kcompress).minusAssign(dampingForce))
+                    force.set(force.times(Math_h.Square(length - restLength) * Kcompress).minusAssign(dampingForce))
                     if (physics1 != null) {
                         physics1.AddForce(id1, pos1, force.oNegative())
                     }

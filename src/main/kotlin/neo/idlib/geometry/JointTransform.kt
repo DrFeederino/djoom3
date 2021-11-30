@@ -63,42 +63,42 @@ class JointTransform {
 
         fun SetRotation(m: idMat3) {
             // NOTE: idMat3 is transposed because it is column-major
-            mat[0 * 4 + 0] = m.oGet(0).oGet(0)
-            mat[0 * 4 + 1] = m.oGet(1).oGet(0)
-            mat[0 * 4 + 2] = m.oGet(2).oGet(0)
-            mat[1 * 4 + 0] = m.oGet(0).oGet(1)
-            mat[1 * 4 + 1] = m.oGet(1).oGet(1)
-            mat[1 * 4 + 2] = m.oGet(2).oGet(1)
-            mat[2 * 4 + 0] = m.oGet(0).oGet(2)
-            mat[2 * 4 + 1] = m.oGet(1).oGet(2)
-            mat[2 * 4 + 2] = m.oGet(2).oGet(2)
+            mat[0 * 4 + 0] = m.get(0).get(0)
+            mat[0 * 4 + 1] = m.get(1).get(0)
+            mat[0 * 4 + 2] = m.get(2).get(0)
+            mat[1 * 4 + 0] = m.get(0).get(1)
+            mat[1 * 4 + 1] = m.get(1).get(1)
+            mat[1 * 4 + 2] = m.get(2).get(1)
+            mat[2 * 4 + 0] = m.get(0).get(2)
+            mat[2 * 4 + 1] = m.get(1).get(2)
+            mat[2 * 4 + 2] = m.get(2).get(2)
         }
 
         fun SetTranslation(t: idVec3?) {
-            mat[0 * 4 + 3] = t.oGet(0)
-            mat[1 * 4 + 3] = t.oGet(1)
-            mat[2 * 4 + 3] = t.oGet(2)
+            mat[0 * 4 + 3] = t.get(0)
+            mat[1 * 4 + 3] = t.get(1)
+            mat[2 * 4 + 3] = t.get(2)
         }
 
         // only rotate
         operator fun times(v: idVec3): idVec3 {
             return idVec3(
-                mat[0 * 4 + 0] * v.oGet(0) + mat[0 * 4 + 1] * v.oGet(1) + mat[0 * 4 + 2] * v.oGet(2),
-                mat[1 * 4 + 0] * v.oGet(0) + mat[1 * 4 + 1] * v.oGet(1) + mat[1 * 4 + 2] * v.oGet(2),
-                mat[2 * 4 + 0] * v.oGet(0) + mat[2 * 4 + 1] * v.oGet(1) + mat[2 * 4 + 2] * v.oGet(2)
+                mat[0 * 4 + 0] * v.get(0) + mat[0 * 4 + 1] * v.get(1) + mat[0 * 4 + 2] * v.get(2),
+                mat[1 * 4 + 0] * v.get(0) + mat[1 * 4 + 1] * v.get(1) + mat[1 * 4 + 2] * v.get(2),
+                mat[2 * 4 + 0] * v.get(0) + mat[2 * 4 + 1] * v.get(1) + mat[2 * 4 + 2] * v.get(2)
             )
         }
 
         // rotate and translate
         operator fun times(v: idVec4): idVec3 {
             return idVec3(
-                mat[0 * 4 + 0] * v.oGet(0) + mat[0 * 4 + 1] * v.oGet(1) + mat[0 * 4 + 2] * v.oGet(2) + mat[0 * 4 + 3] * v.oGet(
+                mat[0 * 4 + 0] * v.get(0) + mat[0 * 4 + 1] * v.get(1) + mat[0 * 4 + 2] * v.get(2) + mat[0 * 4 + 3] * v.get(
                     3
                 ),
-                mat[1 * 4 + 0] * v.oGet(0) + mat[1 * 4 + 1] * v.oGet(1) + mat[1 * 4 + 2] * v.oGet(2) + mat[1 * 4 + 3] * v.oGet(
+                mat[1 * 4 + 0] * v.get(0) + mat[1 * 4 + 1] * v.get(1) + mat[1 * 4 + 2] * v.get(2) + mat[1 * 4 + 3] * v.get(
                     3
                 ),
-                mat[2 * 4 + 0] * v.oGet(0) + mat[2 * 4 + 1] * v.oGet(1) + mat[2 * 4 + 2] * v.oGet(2) + mat[2 * 4 + 3] * v.oGet(
+                mat[2 * 4 + 0] * v.get(0) + mat[2 * 4 + 1] * v.get(1) + mat[2 * 4 + 2] * v.get(2) + mat[2 * 4 + 3] * v.get(
                     3
                 )
             )
@@ -268,10 +268,10 @@ class JointTransform {
             if (trace > 0.0f) {
                 t = trace + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
-                jq.q.oSet(3, s * t)
-                jq.q.oSet(0, (mat[1 * 4 + 2] - mat[2 * 4 + 1]) * s)
-                jq.q.oSet(1, (mat[2 * 4 + 0] - mat[0 * 4 + 2]) * s)
-                jq.q.oSet(2, (mat[0 * 4 + 1] - mat[1 * 4 + 0]) * s)
+                jq.q.set(3, s * t)
+                jq.q.set(0, (mat[1 * 4 + 2] - mat[2 * 4 + 1]) * s)
+                jq.q.set(1, (mat[2 * 4 + 0] - mat[0 * 4 + 2]) * s)
+                jq.q.set(2, (mat[0 * 4 + 1] - mat[1 * 4 + 0]) * s)
             } else {
                 i = 0
                 if (mat[1 * 4 + 1] > mat[0 * 4 + 0]) {
@@ -284,14 +284,14 @@ class JointTransform {
                 k = next[j]
                 t = mat[i * 4 + i] - (mat[j * 4 + j] + mat[k * 4 + k]) + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
-                jq.q.oSet(i, s * t)
-                jq.q.oSet(3, (mat[j * 4 + k] - mat[k * 4 + j]) * s)
-                jq.q.oSet(j, (mat[i * 4 + j] + mat[j * 4 + i]) * s)
-                jq.q.oSet(k, (mat[i * 4 + k] + mat[k * 4 + i]) * s)
+                jq.q.set(i, s * t)
+                jq.q.set(3, (mat[j * 4 + k] - mat[k * 4 + j]) * s)
+                jq.q.set(j, (mat[i * 4 + j] + mat[j * 4 + i]) * s)
+                jq.q.set(k, (mat[i * 4 + k] + mat[k * 4 + i]) * s)
             }
-            jq.t.oSet(0, mat[0 * 4 + 3])
-            jq.t.oSet(1, mat[1 * 4 + 3])
-            jq.t.oSet(2, mat[2 * 4 + 3])
+            jq.t.set(0, mat[0 * 4 + 3])
+            jq.t.set(1, mat[1 * 4 + 3])
+            jq.t.set(2, mat[2 * 4 + 3])
             return jq
         }
 

@@ -21,7 +21,8 @@ class Curve {
      *
      * ===============================================================================
      */
-    internal open class idCurve<T : idVec<T>>(protected val clazz: Class<T>) {
+    // TODO: creating instances via clazz is bad, there is a better way
+    open class idCurve<T : idVec<T>>(protected val clazz: Class<T>) {
         protected var changed: Boolean
         protected var currentIndex // cached index for fast lookup
                 : Int
@@ -70,9 +71,9 @@ class Curve {
             val i: Int
             i = IndexForTime(time)
             return if (i >= values.Num()) {
-                values.oGet(values.Num() - 1)
+                values[values.Num() - 1]
             } else {
-                values.oGet(i)
+                values[i]
             }
         }
 
@@ -84,7 +85,7 @@ class Curve {
          ====================
          */
         open fun GetCurrentFirstDerivative(time: Float): T {
-            return values.oGet(0) - values.oGet(0)
+            return values[0] - values[0]
         }
 
         /*
@@ -95,11 +96,11 @@ class Curve {
          ====================
          */
         open fun GetCurrentSecondDerivative(time: Float): T {
-            return values.oGet(0) - values.oGet(0)
+            return values[0] - values[0]
         }
 
         open fun IsDone(time: Float): Boolean {
-            return time >= times.oGet(times.Num() - 1)
+            return time >= times[times.Num() - 1]
         }
 
         fun GetNumValues(): Int {
@@ -107,29 +108,29 @@ class Curve {
         }
 
         fun SetValue(index: Int, value: T) {
-            values.oSet(index, value)
+            values[index] = value
             changed = true
         }
 
         fun GetValue(index: Int): T {
-            return values.oGet(index)
+            return values[index]
         }
 
         fun GetValueAddress(index: Int): T { //TODO:pointer
-            return values.oGet(index)
+            return values[index]
         }
 
         fun GetTime(index: Int): Float {
-            return times.oGet(index)
+            return times[index]
         }
 
         fun GetLengthForTime(time: Float): Float {
             var length = 0.0f
             val index = IndexForTime(time)
             for (i in 0 until index) {
-                length += RombergIntegral(times.oGet(i), times.oGet(i + 1), 5)
+                length += RombergIntegral(times[i], times[i + 1], 5)
             }
-            length += RombergIntegral(times.oGet(index), time, 5)
+            length += RombergIntegral(times[index], time, 5)
             return length
         }
 
@@ -144,7 +145,7 @@ class Curve {
             var t: Float
             var diff: Float
             if (length <= 0.0f) {
-                return times.oGet(0)
+                return times[0]
             }
             accumLength =
                 FloatArray(values.Num()) //	accumLength = (float *) _alloca16( values.Num() * sizeof( float ) );
@@ -159,7 +160,7 @@ class Curve {
                 index++
             }
             if (index >= values.Num() - 1) {
-                return times.oGet(times.Num() - 1)
+                return times[times.Num() - 1]
             }
             if (index == 0) {
                 len0 = length
@@ -170,23 +171,23 @@ class Curve {
             }
 
             // invert the arc length integral using Newton's method
-            t = (times.oGet(index + 1) - times.oGet(index)) * len0 / len1
+            t = (times[index + 1] - times[index]) * len0 / len1
             i = 0
             while (i < 32) {
-                diff = RombergIntegral(times.oGet(index), times.oGet(index) + t, 5) - len0
+                diff = RombergIntegral(times[index], times[index] + t, 5) - len0
                 if (Math.abs(diff) <= epsilon) {
-                    return times.oGet(index) + t
+                    return times[index] + t
                 }
-                t -= diff / GetSpeed(times.oGet(index) + t)
+                t -= diff / GetSpeed(times[index] + t)
                 i++
             }
-            return times.oGet(index) + t
+            return times[index] + t
         }
 
         fun GetLengthBetweenKnots(i0: Int, i1: Int): Float {
             var length = 0.0f
             for (i in i0 until i1) {
-                length += RombergIntegral(times.oGet(i), times.oGet(i + 1), 5)
+                length += RombergIntegral(times[i], times[i + 1], 5)
             }
             return length
         }
@@ -197,7 +198,7 @@ class Curve {
             n = times.Num() - 1
             i = 0
             while (i <= n) {
-                times.oSet(i, i * totalTime / n)
+                times[i] = i * totalTime / n
                 i++
             }
             changed = true
@@ -221,24 +222,24 @@ class Curve {
             t = 0.0f
             i = 0
             while (i < times.Num() - 1) {
-                times.oSet(i, t)
+                times[i] = t
                 t += scale * length[i]
                 i++
             }
-            times.oSet(times.Num() - 1, totalTime)
+            times[times.Num() - 1] = totalTime
             changed = true
         }
 
         fun ShiftTime(deltaTime: Float) {
             for (i in 0 until times.Num()) {
-                times.oSet(i, times.oGet(i) + deltaTime)
+                times[i] = times[i] + deltaTime
             }
             changed = true
         }
 
         fun Translate(translation: T) {
             for (i in 0 until values.Num()) {
-                values.oSet(i, values.oGet(i) + translation)
+                values[i] = values[i] + translation
 
             }
             changed = true
@@ -259,18 +260,16 @@ class Curve {
             if (currentIndex >= 0 && currentIndex <= times.Num()) {
                 // use the cached index if it is still valid
                 if (currentIndex == 0) {
-                    if (time <= times.oGet(currentIndex)) {
+                    if (time <= times[currentIndex]) {
                         return currentIndex
                     }
                 } else if (currentIndex == times.Num()) {
-                    if (time > times.oGet(currentIndex - 1)) {
+                    if (time > times[currentIndex - 1]) {
                         return currentIndex
                     }
-                } else if (time > times.oGet(currentIndex - 1) && time <= times.oGet(currentIndex)) {
+                } else if (time > times[currentIndex - 1] && time <= times[currentIndex]) {
                     return currentIndex
-                } else if (time > times.oGet(currentIndex) && (currentIndex + 1 == times.Num() || time <= times.oGet(
-                        currentIndex + 1
-                    ))
+                } else if (time > times[currentIndex] && (currentIndex + 1 == times.Num() || time <= times[currentIndex + 1])
                 ) {
                     // use the next index
                     currentIndex++
@@ -286,9 +285,9 @@ class Curve {
                 > 0
             ) {
                 mid = len shr 1
-                if (time == times.oGet(offset + mid)) {
+                if (time == times[offset + mid]) {
                     return offset + mid
-                } else if (time > times.oGet(offset + mid)) {
+                } else if (time > times[offset + mid]) {
                     offset += mid
                     len -= mid
                     res = 1
@@ -311,12 +310,12 @@ class Curve {
         protected open fun TimeForIndex(index: Int): Float {
             val n = times.Num() - 1
             if (index < 0) {
-                return (times.oGet(0)
-                        + index * (times.oGet(1) - times.oGet(0)))
+                return (times[0]
+                        + index * (times[1] - times[0]))
             } else if (index > n) {
-                return times.oGet(n) + (index - n) * (times.oGet(n) - times.oGet(n - 1))
+                return times[n] + (index - n) * (times[n] - times[n - 1])
             }
-            return times.oGet(index)
+            return times[index]
         }
 
         /*
@@ -329,11 +328,11 @@ class Curve {
         protected open fun ValueForIndex(index: Int): T {
             val n = values.Num() - 1
             if (index < 0) {
-                return values.oGet(0).oPlus(values.oGet(1).oMinus(values.oGet(0)).oMultiply(index.toFloat()))
+                return values[0] + (values[1] - values[0]) * index
             } else if (index > n) {
-                return values.oGet(n).oPlus(values.oGet(n).oMinus(values.oGet(n - 1)).oMultiply((index - n).toFloat()))
+                return values[n] + (values[n] - values[n - 1]) * (index - n)
             }
-            return values.oGet(index)
+            return values[index]
         }
 
         protected fun GetSpeed(time: Float): Float {
@@ -344,7 +343,7 @@ class Curve {
             speed = 0.0f
             i = 0
             while (i < value.GetDimension()) {
-                speed += value.oGet(i) * value.oGet(i)
+                speed += value[i] * value[i]
                 i++
             }
             return idMath.Sqrt(speed)
@@ -437,12 +436,12 @@ class Curve {
                 val bvals: FloatArray
                 val v = this.newInstance()
                 bvals =
-                    FloatArray(this.values.Num()) //	bvals = (float *) _alloca16( this->values.Num() * sizeof( float ) );
+                    FloatArray(this.values.Num()) //	bvals = (float *) _alloca16( values.Num() * sizeof( float ) );
                 Basis(this.values.Num(), time, bvals)
-                v.oSet(this.values.oGet(0) * bvals[0])
+                v.set(this.values[0] * bvals[0])
                 i = 1
                 while (i < this.values.Num()) {
-                    v.plusAssign(this.values.oGet(i) * bvals[i])
+                    v.plusAssign(this.values[i] * bvals[i])
                     i++
                 }
                 return v
@@ -461,16 +460,16 @@ class Curve {
             val bvals: FloatArray
             val d: Float
             val v = newInstance()
-            bvals = FloatArray(values.Num()) //	bvals = (float *) _alloca16( this->values.Num() * sizeof( float ) );
+            bvals = FloatArray(values.Num()) //	bvals = (float *) _alloca16( values.Num() * sizeof( float ) );
             BasisFirstDerivative(values.Num(), time, bvals)
-            v.oSet(values.oGet(0) * bvals[0])
+            v.set(values[0] * bvals[0])
             i = 1
             while (i < values.Num()) {
-                v.plusAssign(values.oGet(i) * bvals[i])
+                v.plusAssign(values[i] * bvals[i])
                 i++
             }
-            d = times.oGet(times.Num() - 1) - times.oGet(0)
-            return v.oMultiply((values.Num() - 1) / d) as T
+            d = times[times.Num() - 1] - times[0]
+            return v * ((values.Num() - 1) / d)
         }
 
         /*
@@ -485,16 +484,16 @@ class Curve {
             val bvals: FloatArray
             val d: Float
             val v = newInstance()
-            bvals = FloatArray(values.Num()) //	bvals = (float *) _alloca16( this->values.Num() * sizeof( float ) );
+            bvals = FloatArray(values.Num()) //	bvals = (float *) _alloca16( values.Num() * sizeof( float ) );
             BasisSecondDerivative(values.Num(), time, bvals)
-            v.oSet(values.oGet(0).oMultiply(bvals[0]))
+            v.set(values[0] * bvals[0])
             i = 1
             while (i < values.Num()) {
-                v.oPluSet(values.oGet(i).oMultiply(bvals[i]))
+                v.plusAssign(values[i] * bvals[i])
                 i++
             }
-            d = times.oGet(times.Num() - 1) - times.oGet(0)
-            return v.oMultiply((values.Num() - 2) * (values.Num() - 1) / (d * d)) as T
+            d = times[times.Num() - 1] - times[0]
+            return v * ((values.Num() - 2) * (values.Num() - 1) / (d * d))
         }
 
         /*
@@ -521,7 +520,7 @@ class Curve {
                 return
             }
             c = FloatArray(d + 1) //	c = (float *) _alloca16( (d+1) * sizeof( float ) );
-            s = (t - times.oGet(0)) / (times.oGet(times.Num() - 1) - times.oGet(0))
+            s = (t - times[0]) / (times[times.Num() - 1] - times[0])
             o = 1.0f - s
             ps = s
             po = o
@@ -616,9 +615,7 @@ class Curve {
             val bvals = FloatArray(3)
             assert(values.Num() == 3)
             Basis(time, bvals)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2])
         }
 
         /*
@@ -633,11 +630,8 @@ class Curve {
             val d: Float
             assert(values.Num() == 3)
             BasisFirstDerivative(time, bvals)
-            d = times.oGet(2) - times.oGet(0)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
-                .oDivide(d)
+            d = times[2] - times[0]
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2]) / d;
         }
 
         /*
@@ -652,11 +646,8 @@ class Curve {
             val d: Float
             assert(values.Num() == 3)
             BasisSecondDerivative(time, bvals)
-            d = times.oGet(2) - times.oGet(0)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
-                .oDivide(d * d)
+            d = times[2] - times[0]
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2]) / (d * d)
         }
 
         /*
@@ -667,7 +658,7 @@ class Curve {
          ====================
          */
         protected fun Basis(t: Float, bvals: FloatArray) {
-            val s1 = (t - times.oGet(0)) / (times.oGet(2) - times.oGet(0))
+            val s1 = (t - times[0]) / (times[2] - times[0])
             val s2 = s1 * s1
             bvals[0] = s2 - 2.0f * s1 + 1.0f
             bvals[1] = -2.0f * s2 + 2.0f * s1
@@ -682,7 +673,7 @@ class Curve {
          ====================
          */
         protected fun BasisFirstDerivative(t: Float, bvals: FloatArray) {
-            val s1 = (t - times.oGet(0)) / (times.oGet(2) - times.oGet(0))
+            val s1 = (t - times[0]) / (times[2] - times[0])
             bvals[0] = 2.0f * s1 - 2.0f
             bvals[1] = -4.0f * s1 + 2.0f
             bvals[2] = 2.0f * s1
@@ -696,7 +687,7 @@ class Curve {
          ====================
          */
         protected fun BasisSecondDerivative(t: Float, bvals: FloatArray) {
-//	float s1 = (float) ( t - this->times.oGet(0] ) / ( this->times.oGet(2] - this->times.oGet(0] );
+//	float s1 = (float) ( t - times.oGet(0] ) / ( times.oGet(2] - times.oGet(0] );
             bvals[0] = 2.0f
             bvals[1] = -4.0f
             bvals[2] = 2.0f
@@ -712,7 +703,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    internal class idCurve_CubicBezier<T : idVec<*>>(clazz: Class<T>) : idCurve<T>(clazz) {
+    internal class idCurve_CubicBezier<T : idVec<T>>(clazz: Class<T>) : idCurve<T>(clazz) {
         /*
          ====================
          idCurve_CubicBezier::GetCurrentValue
@@ -724,10 +715,7 @@ class Curve {
             val bvals = FloatArray(4)
             assert(values.Num() == 4)
             Basis(time, bvals)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
-                .oPlus(values.oGet(3).oMultiply(bvals[3]))
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2] + values[3] * bvals[3])
         }
 
         /*
@@ -742,12 +730,8 @@ class Curve {
             val d: Float
             assert(values.Num() == 4)
             BasisFirstDerivative(time, bvals)
-            d = times.oGet(3) - times.oGet(0)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
-                .oPlus(values.oGet(3).oMultiply(bvals[3]))
-                .oDivide(d)
+            d = times[3] - times[0]
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2] + values[3] * bvals[3]) / d
         }
 
         /*
@@ -762,12 +746,8 @@ class Curve {
             val d: Float
             assert(values.Num() == 4)
             BasisSecondDerivative(time, bvals)
-            d = times.oGet(3) - times.oGet(0)
-            return values.oGet(0).oMultiply(bvals[0])
-                .oPlus(values.oGet(1).oMultiply(bvals[1]))
-                .oPlus(values.oGet(2).oMultiply(bvals[2]))
-                .oPlus(values.oGet(3).oMultiply(bvals[3]))
-                .oDivide(d * d)
+            d = times[3] - times[0]
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2] + values[3] * bvals[3]) / (d * d)
         }
 
         /*
@@ -778,7 +758,7 @@ class Curve {
          ====================
          */
         protected fun Basis(t: Float, bvals: FloatArray) {
-            val s1 = (t - times.oGet(0)) / (times.oGet(3) - times.oGet(0))
+            val s1 = (t - times[0]) / (times[3] - times[0])
             val s2 = s1 * s1
             val s3 = s2 * s1
             bvals[0] = -s3 + 3.0f * s2 - 3.0f * s1 + 1.0f
@@ -795,7 +775,7 @@ class Curve {
          ====================
          */
         protected fun BasisFirstDerivative(t: Float, bvals: FloatArray) {
-            val s1 = (t - times.oGet(0)) / (times.oGet(3) - times.oGet(0))
+            val s1 = (t - times[0]) / (times[3] - times[0])
             val s2 = s1 * s1
             bvals[0] = -3.0f * s2 + 6.0f * s1 - 3.0f
             bvals[1] = 9.0f * s2 - 12.0f * s1 + 3.0f
@@ -811,7 +791,7 @@ class Curve {
          ====================
          */
         protected fun BasisSecondDerivative(t: Float, bvals: FloatArray) {
-            val s1 = (t - times.oGet(0)) / (times.oGet(3) - times.oGet(0))
+            val s1 = (t - times[0]) / (times[3] - times[0])
             bvals[0] = -6.0f * s1 + 6.0f
             bvals[1] = 18.0f * s1 - 12.0f
             bvals[2] = -18.0f * s1 + 6.0f
@@ -828,11 +808,11 @@ class Curve {
      *
      * ===============================================================================
      */
-    open class idCurve_Spline<T : idVec<*>>(clazz: Class<T>) : idCurve<T>(clazz) {
+    open class idCurve_Spline<T : idVec<T>>(clazz: Class<T>) : idCurve<T>(clazz) {
         protected var boundaryT: Int
         protected var closeTime: Float
         override fun IsDone(time: Float): Boolean {
-            return boundaryT != BT_CLOSED && time >= times.oGet(times.Num() - 1)
+            return boundaryT != BT_CLOSED && time >= times[times.Num() - 1]
         }
 
         fun SetBoundaryT(boundary_t: Int) {
@@ -864,18 +844,18 @@ class Curve {
             val n = values.Num() - 1
             if (index < 0) {
                 return if (boundaryT == BT_CLOSED) {
-                    values.oGet(values.Num() + index % values.Num())
+                    values[values.Num() + index % values.Num()]
                 } else {
-                    values.oGet(0).oPlus(values.oGet(1).oMinus(values.oGet(0)).oMultiply(index.toFloat()))
+                    values[0] + (values[1] - values[0]) * index
                 }
             } else if (index > n) {
                 return if (boundaryT == BT_CLOSED) {
-                    values.oGet(index % values.Num())
+                    values[index % values.Num()]
                 } else {
-                    values.oGet(n).oPlus(values.oGet(n).oMinus(values.oGet(n - 1)).oMultiply((index - n).toFloat()))
+                    return values[n] + (values[n] - values[n - 1]) * (index - n)
                 }
             }
-            return values.oGet(index)
+            return values[index]
         }
 
         /*
@@ -889,18 +869,18 @@ class Curve {
             val n = times.Num() - 1
             if (index < 0) {
                 return if (boundaryT == BT_CLOSED) {
-                    index / times.Num() * (times.oGet(n) + closeTime) - (times.oGet(n) + closeTime - times.oGet(times.Num() + index % times.Num()))
+                    index / times.Num() * (times[n] + closeTime) - (times[n] + closeTime - times[times.Num() + index % times.Num()])
                 } else {
-                    times.oGet(0) + index * (times.oGet(1) - times.oGet(0))
+                    times[0] + index * (times[1] - times[0])
                 }
             } else if (index > n) {
                 return if (boundaryT == BT_CLOSED) {
-                    index / times.Num() * (times.oGet(n) + closeTime) + times.oGet(index % times.Num())
+                    index / times.Num() * (times[n] + closeTime) + times[index % times.Num()]
                 } else {
-                    times.oGet(n) + (index - n) * (times.oGet(n) - times.oGet(n - 1))
+                    times[n] + (index - n) * (times[n] - times[n - 1])
                 }
             }
-            return times.oGet(index)
+            return times[index]
         }
 
         /*
@@ -912,10 +892,10 @@ class Curve {
          */
         protected fun ClampedTime(t: Float): Float {
             if (boundaryT == BT_CLAMPED) {
-                if (t < times.oGet(0)) {
-                    return times.oGet(0)
-                } else if (t >= times.oGet(times.Num() - 1)) {
-                    return times.oGet(times.Num() - 1)
+                if (t < times[0]) {
+                    return times[0]
+                } else if (t >= times[times.Num() - 1]) {
+                    return times[times.Num() - 1]
                 }
             }
             return t
@@ -946,7 +926,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    internal class idCurve_NaturalCubicSpline<T : idVec<*>>(clazz: Class<T>) : idCurve_Spline<T>(clazz) {
+    internal class idCurve_NaturalCubicSpline<T : idVec<T>>(clazz: Class<T>) : idCurve_Spline<T>(clazz) {
         protected val b: idList<T> = idList()
         protected val c: idList<T> = idList()
         protected val d: idList<T> = idList()
@@ -970,10 +950,7 @@ class Curve {
             val i = IndexForTime(clampedTime)
             val s = time - TimeForIndex(i)
             Setup()
-            val d: T = d.oGet(i).oMultiply(s)
-            val c: T = c.oGet(i).oPlus(d)
-            val b: T = b.oGet(i).oPlus(c).oMultiply(s)
-            return values.oGet(i).oPlus(b)
+            return (values[i] + (b[i] + (c[i] + d[i] * s) * s) * s)
         }
 
         /*
@@ -988,9 +965,7 @@ class Curve {
             val i = IndexForTime(clampedTime)
             val s = time - TimeForIndex(i)
             Setup()
-            val c: T = c.oGet(i).oMultiply(2.0f)
-            val d: T = d.oGet(i).oMultiply(3.0f * s)
-            return b.oGet(i).oPlus(c.oPlus(d).oMultiply(s))
+            return (b[i] + (c[i] * 2.0f + d[i] * 3.0f * s) * s)
         }
 
         /*
@@ -1005,9 +980,7 @@ class Curve {
             val i = IndexForTime(clampedTime)
             val s = time - TimeForIndex(i)
             Setup()
-            val c: T = c.oGet(i).oMultiply(2.0f)
-            val d: T = d.oGet(i).oMultiply(6.0f * s)
-            return c.oPlus(d) as T
+            return (c[i] * 2.0f + d[i] * 6.0f * s)
         }
 
         protected fun Setup() {
@@ -1038,55 +1011,44 @@ class Curve {
             delta = arrayOfNulls<Any>(values.Num()) as Array<T>
             i = 0
             while (i < values.Num() - 1) {
-                d0[i] = times.oGet(i + 1) - times.oGet(i)
+                d0[i] = times[i + 1] - times[i]
                 i++
             }
             i = 1
             while (i < values.Num() - 1) {
-                d1[i] = times.oGet(i + 1) - times.oGet(i - 1)
+                d1[i] = times[i + 1] - times[i - 1]
                 i++
             }
             i = 1
             while (i < values.Num() - 1) {
-                val sum: T = values.oGet(i + 1).oMultiply(d0[i - 1])
-                    .oMinus(
-                        values.oGet(i).oMultiply(d1[i])
-                            .oPlus(values.oGet(i - 1).oMultiply(d0[i]))
-                    )
-                    .oMultiply(3.0f)
+                val sum: T = (values[i + 1] * d0[i - 1] - values[i] * d1[i] + values[i - 1] * d0[i]) * 3.0f
                 inv = 1.0f / (d0[i - 1] * d0[i])
-                alpha[i] = sum.oMultiply(inv) as T
+                alpha[i] = sum * inv
                 i++
             }
             beta[0] = 1.0f
             gamma[0] = 0.0f
-            delta[0] = values.oGet(0).oMinus(values.oGet(0)) as T
+            delta[0] = values[0] - values[0]
             i = 1
             while (i < values.Num() - 1) {
                 beta[i] = 2.0f * d1[i] - d0[i - 1] * gamma[i - 1]
                 inv = 1.0f / beta[i]
                 gamma[i] = inv * d0[i]
-                delta[i] = alpha[i].oMinus(delta[i - 1].oMultiply(d0[i - 1])).oMultiply(inv) as T
+                delta[i] = (alpha[i] - delta[i - 1] * d0[i - 1]) * inv
                 i++
             }
             beta[values.Num() - 1] = 1.0f
-            delta[values.Num() - 1] = values.oGet(0).oMinus(values.oGet(0)) as T
+            delta[values.Num() - 1] = values[0] - values[0]
             b.AssureSize(values.Num())
             c.AssureSize(values.Num())
             d.AssureSize(values.Num())
-            c.oSet(values.Num() - 1, values.oGet(0).oMinus(values.oGet(0)))
+            c[values.Num() - 1] = values[0] - values[0]
             i = values.Num() - 2
             while (i >= 0) {
-                c.oSet(i, delta[i].oMinus(c.oGet(i + 1).oMultiply(gamma[i])))
+                c[i] = delta[i] - c[i + 1] * gamma[i]
                 inv = 1.0f / d0[i]
-                b.oSet(
-                    i, values.oGet(i + 1).oMinus(values.oGet(i)).oMultiply(inv)
-                        .oMinus(
-                            c.oGet(i + 1).oPlus(c.oGet(i).oMultiply(2.0f))
-                                .oMultiply(1.0f / 3.0f * d0[i])
-                        )
-                )
-                d.oSet(i, c.oGet(i + 1).oMinus(c.oGet(i)).oMultiply(1.0f / 3.0f * inv))
+                b[i] = (values[i + 1] - values[i]) * inv - (c[i + 1] + c[i] * 2.0f) * (1.0f / 3.0f) * d0[i]
+                d[i] = (c[i + 1] - c[i]) * (1.0f / 3.0f) * inv
                 i--
             }
         }
@@ -1108,57 +1070,50 @@ class Curve {
             delta = arrayOfNulls<Any>(values.Num()) as Array<T>
             i = 0
             while (i < values.Num() - 1) {
-                d0[i] = times.oGet(i + 1) - times.oGet(i)
+                d0[i] = times[i + 1] - times[i]
                 i++
             }
             i = 1
             while (i < values.Num() - 1) {
-                d1[i] = times.oGet(i + 1) - times.oGet(i - 1)
+                d1[i] = times[i + 1] - times[i - 1]
                 i++
             }
             inv = 1.0f / d0[0]
-            alpha[0] = values.oGet(1).oMinus(values.oGet(0)).oMultiply(3.0f * (inv - 1.0f)) as T
+            alpha[0] = (values[1] - values[0]) * 3.0f * (inv - 1.0f)
             inv = 1.0f / d0[values.Num() - 2]
-            alpha[values.Num() - 1] = values.oGet(values.Num() - 1).oMinus(values.oGet(values.Num() - 2))
-                .oMultiply(3.0f * 1.0f - 3.0f * inv) as T
+            alpha[values.Num() - 1] = (values[values.Num() - 1] - values[values.Num() - 2]) * 3.0f * (1.0f - inv)
             i = 1
             while (i < values.Num() - 1) {
-                val sum: T = values.oGet(i + 1).oMultiply(d0[i - 1])
-                    .oMinus(values.oGet(i).oMultiply(d1[i]))
-                    .oPlus(values.oGet(i - 1).oMultiply(d0[i])).oMultiply(3.0f)
+                val sum: T = (values[i + 1] * d0[i - 1] - values[i] * d1[i] + values[i - 1] * d0[i]) * 3.0f
                 inv = 1.0f / (d0[i - 1] * d0[i])
-                alpha[i] = sum.oMultiply(inv) as T
+                alpha[i] = sum * inv
                 i++
             }
             beta[0] = 2.0f * d0[0]
             gamma[0] = 0.5f
             inv = 1.0f / beta[0]
-            delta[0] = alpha[0].oMultiply(inv) as T
+            delta[0] = alpha[0] * inv
             i = 1
             while (i < values.Num() - 1) {
                 beta[i] = 2.0f * d1[i] - d0[i - 1] * gamma[i - 1]
                 inv = 1.0f / beta[i]
                 gamma[i] = inv * d0[i]
-                delta[i] = alpha[i].oMinus(delta[i - 1].oMultiply(d0[i - 1])).oMultiply(inv) as T
+                delta[i] = (alpha[i] - delta[i - 1] * d0[i - 1]) * inv
                 i++
             }
             beta[values.Num() - 1] = d0[values.Num() - 2] * (2.0f - gamma[values.Num() - 2])
             inv = 1.0f / beta[values.Num() - 1]
-            delta[values.Num() - 1] = alpha[values.Num() - 1]
-                .oMinus(delta[values.Num() - 2].oMultiply(d0[values.Num() - 2])).oMultiply(inv) as T
+            delta[values.Num() - 1] = (alpha[values.Num() - 1] - delta[values.Num() - 2] * d0[values.Num() - 2]) * inv
             b.AssureSize(values.Num())
             c.AssureSize(values.Num())
             d.AssureSize(values.Num())
-            c.oSet(values.Num() - 1, delta[values.Num() - 1])
+            c[values.Num() - 1] = delta[values.Num() - 1]
             i = values.Num() - 2
             while (i >= 0) {
-                c.oSet(i, delta[i].oMinus(c.oGet(i + 1).oMultiply(gamma[i])))
+                c[i] = delta[i] - c[i + 1] * gamma[i]
                 inv = 1.0f / d0[i]
-                b.oSet(
-                    i, values.oGet(i + 1).oMinus(values.oGet(i)).oMultiply(inv)
-                        .oMinus(c.oGet(i + 1).oPlus(c.oGet(i).oMultiply(2.0f)).oMultiply(1.0f / 3.0f * d0[i]))
-                )
-                d.oSet(i, c.oGet(i + 1).oMinus(c.oGet(i)).oMultiply(1.0f / 3.0f * inv))
+                b[i] = (values[i + 1] - values[i]) * inv - (c[i + 1] + c[i] * 2.0f) * (1.0f / 3.0f) * d0[i]
+                d[i] = (c[i + 1] - c[i]) * (1.0f / 3.0f) * inv
                 i--
             }
         }
@@ -1179,56 +1134,50 @@ class Curve {
             d.AssureSize(values.Num())
             i = 0
             while (i < values.Num() - 1) {
-                d0[i] = times.oGet(i + 1) - times.oGet(i)
+                d0[i] = times[i + 1] - times[i]
                 i++
             }
 
             // matrix of system
-            mat.oSet(0, 0, 1.0f)
-            mat.oSet(0, values.Num() - 1, -1.0f)
+            mat[0, 0] = 1.0f
+            mat[0, values.Num() - 1] = -1.0f
             i = 1
             while (i <= values.Num() - 2) {
-                mat.oSet(i, i - 1, d0[i - 1])
-                mat.oSet(i, i, 2.0f * (d0[i - 1] + d0[i]))
-                mat.oSet(i, i + 1, d0[i])
+                mat[i, i - 1] = d0[i - 1]
+                mat[i, i] = 2.0f * (d0[i - 1] + d0[i])
+                mat[i, i + 1] = d0[i]
                 i++
             }
-            mat.oSet(values.Num() - 1, values.Num() - 2, d0[values.Num() - 2])
-            mat.oSet(values.Num() - 1, 0, 2.0f * (d0[values.Num() - 2] + d0[0]))
-            mat.oSet(values.Num() - 1, 1, d0[0])
+            mat[values.Num() - 1, values.Num() - 2] = d0[values.Num() - 2]
+            mat[values.Num() - 1, 0] = 2.0f * (d0[values.Num() - 2] + d0[0])
+            mat[values.Num() - 1, 1] = d0[0]
 
             // right-hand side
-            c.oGet(0).Zero()
+            c[0].Zero()
             i = 1
             while (i <= values.Num() - 2) {
                 c0 = 1.0f / d0[i]
                 c1 = 1.0f / d0[i - 1]
-                c.oSet(
-                    i, values.oGet(i + 1).oMinus(values.oGet(i)).oMultiply(c0)
-                        .oMinus(values.oGet(i).oMinus(values.oGet(i - 1)).oMultiply(c1)).oMultiply(3.0f)
-                )
+                c[i] = ((values[i + 1] - values[i]) * c0 - (values[i] - values[i - 1]) * c1) * 3.0f
                 i++
             }
             c0 = 1.0f / d0[0]
             c1 = 1.0f / d0[values.Num() - 2]
-            c.oSet(
-                values.Num() - 1, values.oGet(1).oMinus(values.oGet(0)).oMultiply(c0)
-                    .oMinus(values.oGet(0).oMinus(values.oGet(values.Num() - 2)).oMultiply(c1)).oMultiply(3.0f)
-            )
+            c[values.Num() - 1] = ((values[1] - values[0]) * c0 - (values[0] - values[values.Num() - 2]) * c1) * 3.0f
 
             // solve system for each dimension
             mat.LU_Factor(null)
             i = 0
-            while (i < values.oGet(0).GetDimension()) {
+            while (i < values[0].GetDimension()) {
                 j = 0
                 while (j < values.Num()) {
-                    x.p[j] = c.oGet(j).oGet(i)
+                    x.p[j] = c[j][i]
                     j++
                 }
                 mat.LU_Solve(x, x, null)
                 j = 0
                 while (j < values.Num()) {
-                    c.oGet(j).oSet(i, x.oGet(j))
+                    c[j][i] = x.get(j)
                     j++
                 }
                 i++
@@ -1236,11 +1185,8 @@ class Curve {
             i = 0
             while (i < values.Num() - 1) {
                 c0 = 1.0f / d0[i]
-                b.oSet(
-                    i, values.oGet(i + 1).oMinus(values.oGet(i)).oMultiply(c0)
-                        .oMinus(c.oGet(i + 1).oPlus(c.oGet(i).oMultiply(2.0f)).oMultiply(1.0f / 3.0f).oMultiply(d0[i]))
-                )
-                d.oSet(i, c.oGet(i + 1).oMinus(c.oGet(i)).oMultiply(1.0f / 3.0f * c0))
+                b[i] = (values[i + 1] - values[i]) * c0 - (c[i + 1] + c[i] * 2.0f) * (1.0f / 3.0f) * d0[i]
+                d[i] = (c[i + 1] - c[i]) * (1.0f / 3.0f) * c0
                 i++
             }
         }
@@ -1256,7 +1202,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    class idCurve_CatmullRomSpline<T : idVec<*>>(clazz: Class<T>) : idCurve_Spline<T>(clazz) {
+    class idCurve_CatmullRomSpline<T : idVec<T>>(clazz: Class<T>) : idCurve_Spline<T>(clazz) {
         /*
          ====================
          idCurve_CatmullRomSpline::GetCurrentValue
@@ -1272,16 +1218,16 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             Basis(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             return v
@@ -1303,20 +1249,20 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisFirstDerivative(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d) as T
+            return v / d
         }
 
         /*
@@ -1335,20 +1281,20 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisSecondDerivative(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d * d) as T
+            return v / (d * d)
         }
 
         /*
@@ -1408,7 +1354,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    internal class idCurve_KochanekBartelsSpline<T : idVec<*>>(clazz: Class<T>) :
+    internal class idCurve_KochanekBartelsSpline<T : idVec<T>>(clazz: Class<T>) :
         idCurve_Spline<T>(clazz) {
         protected val bias: idList<Float> = idList()
         protected val continuity: idList<Float> = idList()
@@ -1480,20 +1426,20 @@ class Curve {
             val i: Int
             val bvals = FloatArray(4)
             val clampedTime: Float
-            val t0 = arrayOfNulls<Any>(1) as Array<T>
-            val t1 = arrayOfNulls<Any>(1) as Array<T>
+            val t0 = newInstance()
+            val t1 = newInstance()
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             TangentsForIndex(i - 1, t0, t1)
             Basis(i - 1, clampedTime, bvals)
-            v.oSet(ValueForIndex(i - 1).oMultiply(bvals[0]))
-            v.oPluSet(ValueForIndex(i).oMultiply(bvals[1]))
-            v.oPluSet(t0[0].oMultiply(bvals[2]))
-            v.oPluSet(t1[0].oMultiply(bvals[3]))
+            v.set(ValueForIndex(i - 1) * bvals[0])
+            v.plusAssign(ValueForIndex(i) * bvals[1])
+            v.plusAssign(t0 * bvals[2])
+            v.plusAssign(t1 * bvals[3])
             return v
         }
 
@@ -1509,22 +1455,22 @@ class Curve {
             val bvals = FloatArray(4)
             val d: Float
             val clampedTime: Float
-            val t0 = arrayOfNulls<Any>(1) as Array<T>
-            val t1 = arrayOfNulls<Any>(1) as Array<T>
+            val t0 = newInstance()
+            val t1 = newInstance()
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             TangentsForIndex(i - 1, t0, t1)
             Basis(i - 1, clampedTime, bvals)
-            v.oSet(ValueForIndex(i - 1).oMultiply(bvals[0]))
-            v.oPluSet(ValueForIndex(i).oMultiply(bvals[1]))
-            v.oPluSet(t0[0].oMultiply(bvals[2]))
-            v.oPluSet(t1[0].oMultiply(bvals[3]))
+            v.set(ValueForIndex(i - 1) * bvals[0])
+            v.plusAssign(ValueForIndex(i) * bvals[1])
+            v.plusAssign(t0 * bvals[2])
+            v.plusAssign(t1 * bvals[3])
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d) as T
+            return v / d
         }
 
         /*
@@ -1539,25 +1485,25 @@ class Curve {
             val bvals = FloatArray(4)
             val d: Float
             val clampedTime: Float
-            val t0 = arrayOfNulls<Any>(1) as Array<T>
-            val t1 = arrayOfNulls<Any>(1) as Array<T>
+            val t0 = newInstance()
+            val t1 = newInstance()
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             TangentsForIndex(i - 1, t0, t1)
             Basis(i - 1, clampedTime, bvals)
-            v.oSet(ValueForIndex(i - 1).oMultiply(bvals[0]))
-            v.oPluSet(ValueForIndex(i).oMultiply(bvals[1]))
-            v.oPluSet(t0[0].oMultiply(bvals[2]))
-            v.oPluSet(t1[0].oMultiply(bvals[3]))
+            v.set(ValueForIndex(i - 1) * bvals[0])
+            v.plusAssign(ValueForIndex(i) * bvals[1])
+            v.plusAssign(t0 * bvals[2])
+            v.plusAssign(t1 * bvals[3])
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d * d) as T
+            return v / (d * d)
         }
 
-        protected fun TangentsForIndex(index: Int, t0: Array<T>, t1: Array<T>) {
+        protected fun TangentsForIndex(index: Int, t0: T, t1: T) {
             val dt: Float
             var omt: Float
             var omc: Float
@@ -1568,32 +1514,30 @@ class Curve {
             var s0: Float
             var s1: Float
             val delta: T
-            delta = ValueForIndex(index + 1).oMinus(ValueForIndex(index)) as T
+            delta = ValueForIndex(index + 1) - ValueForIndex(index)
             dt = TimeForIndex(index + 1) - TimeForIndex(index)
-            omt = 1.0f - tension.oGet(index)
-            omc = 1.0f - continuity.oGet(index)
-            opc = 1.0f + continuity.oGet(index)
-            omb = 1.0f - bias.oGet(index)
-            opb = 1.0f + bias.oGet(index)
+            omt = 1.0f - tension[index]
+            omc = 1.0f - continuity[index]
+            opc = 1.0f + continuity[index]
+            omb = 1.0f - bias[index]
+            opb = 1.0f + bias[index]
             adj = 2.0f * dt / (TimeForIndex(index + 1) - TimeForIndex(index - 1))
             s0 = 0.5f * adj * omt * opc * opb
             s1 = 0.5f * adj * omt * omc * omb
 
             // outgoing tangent at first point
-            t0[0] = delta.oMultiply(s1)
-                .oPlus(ValueForIndex(index).oMinus(ValueForIndex(index - 1)).oMultiply(s0))
-            omt = 1.0f - tension.oGet(index + 1)
-            omc = 1.0f - continuity.oGet(index + 1)
-            opc = 1.0f + continuity.oGet(index + 1)
-            omb = 1.0f - bias.oGet(index + 1)
-            opb = 1.0f + bias.oGet(index + 1)
+            t0.set(delta * s1 + (ValueForIndex(index) - ValueForIndex(index - 1)) * s0)
+            omt = 1.0f - tension[index + 1]
+            omc = 1.0f - continuity[index + 1]
+            opc = 1.0f + continuity[index + 1]
+            omb = 1.0f - bias[index + 1]
+            opb = 1.0f + bias[index + 1]
             adj = 2.0f * dt / (TimeForIndex(index + 2) - TimeForIndex(index))
             s0 = 0.5f * adj * omt * omc * opb
             s1 = 0.5f * adj * omt * opc * omb
 
             // incoming tangent at second point
-            t1[0] = ValueForIndex(index + 2).oMinus(ValueForIndex(index + 1)).oMultiply(s1)
-                .oPlus(delta.oMultiply(s0))
+            t1.set((ValueForIndex(index + 2) - ValueForIndex(index + 1)) * s1 + delta * s0)
         }
 
         /*
@@ -1652,7 +1596,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    open class idCurve_BSpline<T : idVec<*>>     // default to cubic
+    open class idCurve_BSpline<T : idVec<T>>     // default to cubic
         (clazz: Class<T>) : idCurve_Spline<T>(clazz) {
         protected var order = 4
         fun GetOrder(): Int {
@@ -1678,15 +1622,15 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(Basis(k - 2, order, clampedTime)))
+                v.plusAssign(ValueForIndex(k) * Basis(k - 2, order, clampedTime))
                 j++
             }
             return v
@@ -1706,15 +1650,15 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(BasisFirstDerivative(k - 2, order, clampedTime)))
+                v.plusAssign(ValueForIndex(k) * BasisFirstDerivative(k - 2, order, clampedTime))
                 j++
             }
             return v
@@ -1734,15 +1678,15 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(BasisSecondDerivative(k - 2, order, clampedTime)))
+                v.plusAssign(ValueForIndex(k) * BasisSecondDerivative(k - 2, order, clampedTime))
                 j++
             }
             return v
@@ -1784,8 +1728,9 @@ class Curve {
          ====================
          */
         protected fun BasisFirstDerivative(index: Int, order: Int, t: Float): Float {
-            return Basis(index, order - 1, t) - Basis(index + 1, order - 1, t)
-            * (order - 1).toFloat() / (TimeForIndex(index + (order - 1) - 2) - TimeForIndex(index - 2))
+            return Basis(index, order - 1, t) - Basis(index + 1, order - 1, t) * (order - 1).toFloat() / (TimeForIndex(
+                index + (order - 1) - 2
+            ) - TimeForIndex(index - 2))
         }
 
         /*
@@ -1796,8 +1741,11 @@ class Curve {
          ====================
          */
         protected fun BasisSecondDerivative(index: Int, order: Int, t: Float): Float {
-            return BasisFirstDerivative(index, order - 1, t) - BasisFirstDerivative(index + 1, order - 1, t)
-            * (order - 1).toFloat() / (TimeForIndex(index + (order - 1) - 2) - TimeForIndex(index - 2))
+            return BasisFirstDerivative(index, order - 1, t) - BasisFirstDerivative(
+                index + 1,
+                order - 1,
+                t
+            ) * (order - 1).toFloat() / (TimeForIndex(index + (order - 1) - 2) - TimeForIndex(index - 2))
         }
     }
 
@@ -1810,7 +1758,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    internal class idCurve_UniformCubicBSpline<T : idVec<*>>(clazz: Class<T>) : idCurve_BSpline<T>(clazz) {
+    internal class idCurve_UniformCubicBSpline<T : idVec<T>>(clazz: Class<T>) : idCurve_BSpline<T>(clazz) {
         /*
          ====================
          idCurve_UniformCubicBSpline::GetCurrentValue
@@ -1826,16 +1774,16 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             Basis(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             return v
@@ -1857,20 +1805,20 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisFirstDerivative(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d) as T
+            return v / d
         }
 
         /*
@@ -1889,20 +1837,20 @@ class Curve {
             val clampedTime: Float
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisSecondDerivative(i - 1, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < 4) {
                 k = i + j - 2
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             d = TimeForIndex(i) - TimeForIndex(i - 1)
-            return v.oDivide(d * d) as T
+            return v / (d * d)
         }
 
         /*
@@ -1964,7 +1912,7 @@ class Curve {
      *
      * ===============================================================================
      */
-    open class idCurve_NonUniformBSpline<T : idVec<*>>(clazz: Class<T>) : idCurve_BSpline<T>(clazz) {
+    open class idCurve_NonUniformBSpline<T : idVec<T>>(clazz: Class<T>) : idCurve_BSpline<T>(clazz) {
         /*
          ====================
          idCurve_NonUniformBSpline::GetCurrentValue
@@ -1980,16 +1928,16 @@ class Curve {
             val v = newInstance()
             val bvals = FloatArray(order) //	float *bvals = (float *) _alloca16( this.order * sizeof(float) );
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             Basis(i - 1, order, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             return v
@@ -2010,16 +1958,16 @@ class Curve {
             val v = newInstance()
             val bvals = FloatArray(order) //	float *bvals = (float *) _alloca16( this.order * sizeof(float) );
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisFirstDerivative(i - 1, order, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             return v
@@ -2040,16 +1988,16 @@ class Curve {
             val v = newInstance()
             val bvals = FloatArray(order) //	float *bvals = (float *) _alloca16( this.order * sizeof(float) );
             if (times.Num() == 1) {
-                return values.oGet(0).oMinus(values.oGet(0))
+                return values[0] - values[0]
             }
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             BasisSecondDerivative(i - 1, order, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
-                v.oPluSet(ValueForIndex(k).oMultiply(bvals[j]))
+                v.plusAssign(ValueForIndex(k) * bvals[j])
                 j++
             }
             return v
@@ -2136,7 +2084,7 @@ class Curve {
 
      ===============================================================================
      */
-    class idCurve_NURBS<T : idVec<*>>(clazz: Class<T>) : idCurve_NonUniformBSpline<T>(clazz) {
+    class idCurve_NURBS<T : idVec<T>>(clazz: Class<T>) : idCurve_NonUniformBSpline<T>(clazz) {
         protected val weights: idList<Float> = idList()
 
         /*
@@ -2203,23 +2151,23 @@ class Curve {
             val bvals: FloatArray
             val v = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             bvals = FloatArray(order)
             clampedTime = ClampedTime(time)
             i = IndexForTime(clampedTime)
             this.Basis(i - 1, order, clampedTime, bvals)
-            v.oSet(values.oGet(0).oMinus(values.oGet(0)))
+            v.set(values[0] - values[0])
             w = 0.0f
             j = 0
             while (j < order) {
                 k = i + j - (order shr 1)
                 b = bvals[j] * WeightForIndex(k)
                 w += b
-                v.oPluSet(ValueForIndex(k).oMultiply(b))
+                v.plusAssign(ValueForIndex(k) * b)
                 j++
             }
-            return v.oDivide(w) as T
+            return v / w
         }
 
         /*
@@ -2245,7 +2193,7 @@ class Curve {
             val vb = newInstance()
             val vd1 = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             bvals = FloatArray(order) //	bvals = (float *) _alloca16( this.order * sizeof(float) );
             d1vals = FloatArray(order) //	d1vals = (float *) _alloca16( this.order * sizeof(float) );
@@ -2253,7 +2201,7 @@ class Curve {
             i = IndexForTime(clampedTime)
             this.Basis(i - 1, order, clampedTime, bvals)
             this.BasisFirstDerivative(i - 1, order, clampedTime, d1vals)
-            vb.oSet(vd1.oSet(values.oGet(0).oMinus(values.oGet(0))))
+            vb.set(vd1.set(values[0] - values[0]))
             wd1 = 0.0f
             wb = wd1
             j = 0
@@ -2264,12 +2212,12 @@ class Curve {
                 d1 = d1vals[j] * w
                 wb += b
                 wd1 += d1
-                v.oSet(ValueForIndex(k))
-                vb.oPluSet(v.oMultiply(b))
-                vd1.oPluSet(v.oMultiply(d1))
+                v.set(ValueForIndex(k))
+                vb.plusAssign(v * b)
+                vd1.plusAssign(v * d1)
                 j++
             }
-            return vd1.oMultiply(wb).oMinus(vb.oMultiply(wd1)).oDivide(wb * wb)
+            return (vd1 * wb - vb * wd1) / (wb * wb)
         }
 
         /*
@@ -2299,7 +2247,7 @@ class Curve {
             val vd1 = newInstance()
             val vd2 = newInstance()
             if (times.Num() == 1) {
-                return values.oGet(0)
+                return values[0]
             }
             bvals = FloatArray(order)
             d1vals = FloatArray(order)
@@ -2309,7 +2257,7 @@ class Curve {
             this.Basis(i - 1, order, clampedTime, bvals)
             this.BasisFirstDerivative(i - 1, order, clampedTime, d1vals)
             this.BasisSecondDerivative(i - 1, order, clampedTime, d2vals)
-            vb.oSet(vd1.oSet(vd2.oSet(values.oGet(0).oMinus(values.oGet(0)))))
+            vb.set(vd1.set(vd2.set(values[0] - values[0])))
             wd2 = 0.0f
             wd1 = wd2
             wb = wd1
@@ -2323,35 +2271,32 @@ class Curve {
                 wb += b
                 wd1 += d1
                 wd2 += d2
-                v.oSet(ValueForIndex(k))
-                vb.oPluSet(v.oMultiply(b))
-                vd1.oPluSet(v.oMultiply(d1))
-                vd2.oPluSet(v.oMultiply(d2))
+                v.set(ValueForIndex(k))
+                vb.plusAssign(v * b)
+                vd1.plusAssign(v * d1)
+                vd2.plusAssign(v * d2)
                 j++
             }
-            val bla1: T =
-                vd2.oMultiply(wb).oMinus(vb.oMultiply(wd2)).oMultiply(wb * wb) //( wb * wb ) * ( wb * vd2 - vb * wd2 )
-            val bla2: T = vd1.oMultiply(wb).oMinus(vb.oMultiply(wd1))
-                .oMultiply(2.0f * wb * wd1) //( wb * vd1 - vb * wd1 ) * 2.0f * wb * wd1
-            return bla1.oMinus(bla2).oDivide(wb * wb * wb * wb)
+
+            return ((vd2 * wb - vb * wd2) * (wb * wb) - (vd1 * wb - vb * wd1) * 2.0f * wb * wd1) / (wb * wb * wb * wb)
         }
 
         protected fun WeightForIndex(index: Int): Float {
             val n = weights.Num() - 1
             if (index < 0) {
                 return if (boundaryT == BT_CLOSED) {
-                    weights.oGet(weights.Num() + index % weights.Num())
+                    weights[weights.Num() + index % weights.Num()]
                 } else {
-                    weights.oGet(0) + index * (weights.oGet(1) - weights.oGet(0))
+                    weights[0] + index * (weights[1] - weights[0])
                 }
             } else if (index > n) {
                 return if (boundaryT == BT_CLOSED) {
-                    weights.oGet(index % weights.Num())
+                    weights[index % weights.Num()]
                 } else {
-                    weights.oGet(n) + (index - n) * (weights.oGet(n) - weights.oGet(n - 1))
+                    weights[n] + (index - n) * (weights[n] - weights[n - 1])
                 }
             }
-            return weights.oGet(index)
+            return weights[index]
         }
     }
 }

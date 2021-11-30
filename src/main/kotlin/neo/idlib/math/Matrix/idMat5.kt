@@ -16,35 +16,35 @@ class idMat5 {
     }
 
     constructor(v0: idVec5, v1: idVec5, v2: idVec5, v3: idVec5, v4: idVec5) {
-        mat[0].oSet(v0)
-        mat[1].oSet(v1)
-        mat[2].oSet(v2)
-        mat[3].oSet(v3)
-        mat[4].oSet(v4)
+        mat[0].set(v0)
+        mat[1].set(v1)
+        mat[2].set(v2)
+        mat[3].set(v3)
+        mat[4].set(v4)
     }
 
     constructor(src: Array<FloatArray>) {
         mat[0]
-            .oSet(idVec5(src[0][0], src[0][1], src[0][2], src[0][3], src[0][4]))
+            .set(idVec5(src[0][0], src[0][1], src[0][2], src[0][3], src[0][4]))
         mat[1]
-            .oSet(idVec5(src[1][0], src[1][1], src[1][2], src[1][3], src[1][4]))
+            .set(idVec5(src[1][0], src[1][1], src[1][2], src[1][3], src[1][4]))
         mat[2]
-            .oSet(idVec5(src[2][0], src[2][1], src[2][2], src[2][3], src[2][4]))
+            .set(idVec5(src[2][0], src[2][1], src[2][2], src[2][3], src[2][4]))
         mat[3]
-            .oSet(idVec5(src[3][0], src[3][1], src[3][2], src[3][3], src[3][4]))
+            .set(idVec5(src[3][0], src[3][1], src[3][2], src[3][3], src[3][4]))
         mat[4]
-            .oSet(idVec5(src[4][0], src[4][1], src[4][2], src[4][3], src[4][4]))
+            .set(idVec5(src[4][0], src[4][1], src[4][2], src[4][3], src[4][4]))
     }
 
     constructor(m: idMat5) {
-        oSet(m)
+        set(m)
     }
 
     //public	idMat5			operator+( const idMat5 &a ) const;
     //	public const idVec5 &	operator[]( int index ) const;
     //public	idVec5 &		operator[]( int index );
     //public	idMat5			operator*( const float a ) const;
-    fun times(a: Float): idMat5 {
+    operator fun times(a: Float): idMat5 {
         return idMat5(
             idVec5(mat[0].x * a, mat[0].y * a, mat[0].z * a, mat[0].s * a, mat[0].t * a),
             idVec5(mat[1].x * a, mat[1].y * a, mat[1].z * a, mat[1].s * a, mat[1].t * a),
@@ -202,7 +202,7 @@ class idMat5 {
     }
 
     fun timesAssign(a: idMat5): idMat5 {
-        oSet(this.times(a))
+        set(times(a))
         return this
     }
 
@@ -320,11 +320,11 @@ class idMat5 {
     }
 
     fun Zero() {
-        oSet(getMat5_zero())
+        set(getMat5_zero())
     }
 
     fun Identity() {
-        oSet(getMat5_identity())
+        set(getMat5_identity())
     }
 
     @JvmOverloads
@@ -336,7 +336,7 @@ class idMat5 {
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 1..4) {
             for (j in 0 until i) {
-                if (Math.abs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
+                if (Math.abs(mat[i].get(j) - mat[j].get(i)) > epsilon) {
                     return false
                 }
             }
@@ -348,7 +348,7 @@ class idMat5 {
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 0..4) {
             for (j in 0..4) {
-                if (i != j && Math.abs(mat[i].oGet(j)) > epsilon) {
+                if (i != j && Math.abs(mat[i].get(j)) > epsilon) {
                     return false
                 }
             }
@@ -405,11 +405,11 @@ class idMat5 {
     fun Transpose(): idMat5 { // returns transpose
         val transpose = idMat5()
         var j: Int
-        var i: Int = 0
+        var i = 0
         while (i < 5) {
             j = 0
             while (j < 5) {
-                transpose.mat[i].oSet(j, mat[j].oGet(i))
+                transpose.mat[i].set(j, mat[j].get(i))
                 j++
             }
             i++
@@ -420,13 +420,13 @@ class idMat5 {
     fun TransposeSelf(): idMat5 {
         var temp: Float
         var j: Int
-        var i: Int = 0
+        var i = 0
         while (i < 5) {
             j = i + 1
             while (j < 5) {
-                temp = mat[i].oGet(j)
-                mat[i].oSet(j, mat[j].oGet(i))
-                mat[j].oSet(i, temp)
+                temp = mat[i].get(j)
+                mat[i].set(j, mat[j].get(i))
+                mat[j].set(i, temp)
                 j++
             }
             i++
@@ -694,37 +694,37 @@ class idMat5 {
         r2[1].z = matt[4 * 5 + 0] * r0[0].z + matt[4 * 5 + 1] * r0[1].z + matt[4 * 5 + 2] * r0[2].z
 
         // m2 = r3 * r2;		// 2x3 = 2x2 * 2x3
-        mat[3].oSet(0, r3[0].x * r2[0].x + r3[0].y * r2[1].x)
-        mat[3].oSet(1, r3[0].x * r2[0].y + r3[0].y * r2[1].y)
-        mat[3].oSet(2, r3[0].x * r2[0].z + r3[0].y * r2[1].z)
-        mat[4].oSet(0, r3[1].x * r2[0].x + r3[1].y * r2[1].x)
-        mat[4].oSet(1, r3[1].x * r2[0].y + r3[1].y * r2[1].y)
-        mat[4].oSet(2, r3[1].x * r2[0].z + r3[1].y * r2[1].z)
+        mat[3].set(0, r3[0].x * r2[0].x + r3[0].y * r2[1].x)
+        mat[3].set(1, r3[0].x * r2[0].y + r3[0].y * r2[1].y)
+        mat[3].set(2, r3[0].x * r2[0].z + r3[0].y * r2[1].z)
+        mat[4].set(0, r3[1].x * r2[0].x + r3[1].y * r2[1].x)
+        mat[4].set(1, r3[1].x * r2[0].y + r3[1].y * r2[1].y)
+        mat[4].set(2, r3[1].x * r2[0].z + r3[1].y * r2[1].z)
 
         // m0 = r0 - r1 * m2;	// 3x3 = 3x3 - 3x2 * 2x3
-        mat[0].oSet(0, r0[0].x - r1[0].x * mat[3].oGet(0) - r1[0].y * mat[4].oGet(0))
-        mat[0].oSet(1, r0[0].y - r1[0].x * mat[3].oGet(1) - r1[0].y * mat[4].oGet(1))
-        mat[0].oSet(2, r0[0].z - r1[0].x * mat[3].oGet(2) - r1[0].y * mat[4].oGet(2))
-        mat[1].oSet(0, r0[1].x - r1[1].x * mat[3].oGet(0) - r1[1].y * mat[4].oGet(0))
-        mat[1].oSet(1, r0[1].y - r1[1].x * mat[3].oGet(1) - r1[1].y * mat[4].oGet(1))
-        mat[1].oSet(2, r0[1].z - r1[1].x * mat[3].oGet(2) - r1[1].y * mat[4].oGet(2))
-        mat[2].oSet(0, r0[2].x - r1[2].x * mat[3].oGet(0) - r1[2].y * mat[4].oGet(0))
-        mat[2].oSet(1, r0[2].y - r1[2].x * mat[3].oGet(1) - r1[2].y * mat[4].oGet(1))
-        mat[2].oSet(2, r0[2].z - r1[2].x * mat[3].oGet(2) - r1[2].y * mat[4].oGet(2))
+        mat[0].set(0, r0[0].x - r1[0].x * mat[3].get(0) - r1[0].y * mat[4].get(0))
+        mat[0].set(1, r0[0].y - r1[0].x * mat[3].get(1) - r1[0].y * mat[4].get(1))
+        mat[0].set(2, r0[0].z - r1[0].x * mat[3].get(2) - r1[0].y * mat[4].get(2))
+        mat[1].set(0, r0[1].x - r1[1].x * mat[3].get(0) - r1[1].y * mat[4].get(0))
+        mat[1].set(1, r0[1].y - r1[1].x * mat[3].get(1) - r1[1].y * mat[4].get(1))
+        mat[1].set(2, r0[1].z - r1[1].x * mat[3].get(2) - r1[1].y * mat[4].get(2))
+        mat[2].set(0, r0[2].x - r1[2].x * mat[3].get(0) - r1[2].y * mat[4].get(0))
+        mat[2].set(1, r0[2].y - r1[2].x * mat[3].get(1) - r1[2].y * mat[4].get(1))
+        mat[2].set(2, r0[2].z - r1[2].x * mat[3].get(2) - r1[2].y * mat[4].get(2))
 
         // m1 = r1 * r3;		// 3x2 = 3x2 * 2x2
-        mat[0].oSet(3, r1[0].x * r3[0].x + r1[0].y * r3[1].x)
-        mat[0].oSet(4, r1[0].x * r3[0].y + r1[0].y * r3[1].y)
-        mat[1].oSet(3, r1[1].x * r3[0].x + r1[1].y * r3[1].x)
-        mat[1].oSet(4, r1[1].x * r3[0].y + r1[1].y * r3[1].y)
-        mat[2].oSet(3, r1[2].x * r3[0].x + r1[2].y * r3[1].x)
-        mat[2].oSet(4, r1[2].x * r3[0].y + r1[2].y * r3[1].y)
+        mat[0].set(3, r1[0].x * r3[0].x + r1[0].y * r3[1].x)
+        mat[0].set(4, r1[0].x * r3[0].y + r1[0].y * r3[1].y)
+        mat[1].set(3, r1[1].x * r3[0].x + r1[1].y * r3[1].x)
+        mat[1].set(4, r1[1].x * r3[0].y + r1[1].y * r3[1].y)
+        mat[2].set(3, r1[2].x * r3[0].x + r1[2].y * r3[1].x)
+        mat[2].set(4, r1[2].x * r3[0].y + r1[2].y * r3[1].y)
 
         // m3 = -r3;			// 2x2 = - 2x2
-        mat[3].oSet(3, -r3[0].x)
-        mat[3].oSet(4, -r3[0].y)
-        mat[4].oSet(3, -r3[1].x)
-        mat[4].oSet(4, -r3[1].y)
+        mat[3].set(3, -r3[0].x)
+        mat[3].set(4, -r3[0].y)
+        mat[4].set(3, -r3[1].x)
+        mat[4].set(4, -r3[1].y)
         return true
         //#endif
     }
@@ -736,12 +736,12 @@ class idMat5 {
     //public	const float *	ToFloatPtr( void ) const;
     //public	float *			ToFloatPtr( void );
     //public	const char *	ToString( int precision = 2 ) const;
-    private fun oSet(mat5: idMat5) {
-        mat[0].oSet(mat5.mat[0])
-        mat[1].oSet(mat5.mat[1])
-        mat[2].oSet(mat5.mat[2])
-        mat[3].oSet(mat5.mat[3])
-        mat[4].oSet(mat5.mat[4])
+    private fun set(mat5: idMat5) {
+        mat[0].set(mat5.mat[0])
+        mat[1].set(mat5.mat[1])
+        mat[2].set(mat5.mat[2])
+        mat[3].set(mat5.mat[3])
+        mat[4].set(mat5.mat[4])
     }
 
     fun reinterpret_cast(): FloatArray {
@@ -749,7 +749,7 @@ class idMat5 {
         val temp = FloatArray(size * size)
         for (x in 0 until size) {
             for (y in 0 until size) {
-                temp[x * size + y] = mat[x].oGet(y)
+                temp[x * size + y] = mat[x].get(y)
             }
         }
         return temp
@@ -781,19 +781,17 @@ class idMat5 {
 
         //public	friend idMat5	operator*( const float a, const idMat5 &mat );
         fun times(a: Float, mat: idMat5): idMat5 {
-            return mat.times(a)
+            return mat * a
         }
 
         //public	idVec5			operator*( const idVec5 &vec ) const;
         fun times(vec: idVec5, mat: idMat5): idVec5 {
-            return mat.times(vec)
+            return mat * vec
         }
 
         //public	idMat5			operator*( const idMat5 &a ) const;
         fun timesAssign(vec: idVec5, mat: idMat5): idVec5 {
-            var vec = vec
-            vec = mat.times(vec)
-            return vec
+            return vec.set(mat * vec)
         }
     }
 }

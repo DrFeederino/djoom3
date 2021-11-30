@@ -287,10 +287,10 @@ object tr_deform {
             Common.common.Warning("R_AutospriteDeform: autosprite had odd index count")
             return
         }
-        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.viewaxis.oGet(1), leftDir)
-        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.viewaxis.oGet(2), upDir)
+        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.viewaxis.get(1), leftDir)
+        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.viewaxis.get(2), upDir)
         if (tr_local.tr.viewDef.isMirror) {
-            leftDir.oSet(Vector.getVec3_origin().oMinus(leftDir))
+            leftDir.set(Vector.getVec3_origin().oMinus(leftDir))
         }
 
         // this srfTriangles_t and all its indexes and caches are in frame
@@ -309,25 +309,25 @@ object tr_deform {
             val v1 = tri.verts[i + 1]
             val v2 = tri.verts[i + 2]
             val v3 = tri.verts[i + 3]
-            mid.oSet(0, 0.25f * (v.xyz.oGet(0) + v1.xyz.oGet(0) + v2.xyz.oGet(0) + v3.xyz.oGet(0)))
-            mid.oSet(1, 0.25f * (v.xyz.oGet(1) + v1.xyz.oGet(1) + v2.xyz.oGet(1) + v3.xyz.oGet(1)))
-            mid.oSet(2, 0.25f * (v.xyz.oGet(2) + v1.xyz.oGet(2) + v2.xyz.oGet(2) + v3.xyz.oGet(2)))
-            delta.oSet(v.xyz.oMinus(mid))
+            mid.set(0, 0.25f * (v.xyz.get(0) + v1.xyz.get(0) + v2.xyz.get(0) + v3.xyz.get(0)))
+            mid.set(1, 0.25f * (v.xyz.get(1) + v1.xyz.get(1) + v2.xyz.get(1) + v3.xyz.get(1)))
+            mid.set(2, 0.25f * (v.xyz.get(2) + v1.xyz.get(2) + v2.xyz.get(2) + v3.xyz.get(2)))
+            delta.set(v.xyz.minus(mid))
             radius = delta.Length() * 0.707f // / sqrt(2)
-            left.oSet(leftDir.times(radius))
-            up.oSet(upDir.times(radius))
-            ac[i + 0].xyz.oSet(mid.oPlus(left.oPlus(up)))
-            ac[i + 0].st.oSet(0, 0f)
-            ac[i + 0].st.oSet(1, 0f)
-            ac[i + 1].xyz.oSet(mid.oMinus(left.oPlus(up)))
-            ac[i + 1].st.oSet(0, 1f)
-            ac[i + 1].st.oSet(1, 0f)
-            ac[i + 2].xyz.oSet(mid.oMinus(left.oMinus(up)))
-            ac[i + 2].st.oSet(0, 1f)
-            ac[i + 2].st.oSet(1, 1f)
-            ac[i + 3].xyz.oSet(mid.oPlus(left.oMinus(up)))
-            ac[i + 3].st.oSet(0, 0f)
-            ac[i + 3].st.oSet(1, 1f)
+            left.set(leftDir.times(radius))
+            up.set(upDir.times(radius))
+            ac[i + 0].xyz.set(mid.oPlus(left.oPlus(up)))
+            ac[i + 0].st.set(0, 0f)
+            ac[i + 0].st.set(1, 0f)
+            ac[i + 1].xyz.set(mid.minus(left.oPlus(up)))
+            ac[i + 1].st.set(0, 1f)
+            ac[i + 1].st.set(1, 0f)
+            ac[i + 2].xyz.set(mid.minus(left.minus(up)))
+            ac[i + 2].st.set(0, 1f)
+            ac[i + 2].st.set(1, 1f)
+            ac[i + 3].xyz.set(mid.oPlus(left.minus(up)))
+            ac[i + 3].st.set(0, 0f)
+            ac[i + 3].st.set(1, 1f)
             newTri.indexes[6 * (i shr 2) + 0] = i
             newTri.indexes[6 * (i shr 2) + 1] = i + 1
             newTri.indexes[6 * (i shr 2) + 2] = i + 2
@@ -397,7 +397,7 @@ object tr_deform {
                 var l: Float
                 v1 = tri.verts[tri.indexes[i + tr_deform.edgeVerts[j][0]]]
                 v2 = tri.verts[tri.indexes[i + tr_deform.edgeVerts[j][1]]]
-                l = v1.xyz.oMinus(v2.xyz).Length()
+                l = v1.xyz.minus(v2.xyz).Length()
                 if (l < lengths[0]) {
                     nums[1] = nums[0]
                     lengths[1] = lengths[0]
@@ -416,18 +416,18 @@ object tr_deform {
             while (j < 2) {
                 v1 = tri.verts[tri.indexes[i + tr_deform.edgeVerts[nums[j]][0]]]
                 v2 = tri.verts[tri.indexes[i + tr_deform.edgeVerts[nums[j]][1]]]
-                mid[j].oSet(
+                mid[j].set(
                     idVec3(
-                        0.5f * (v1.xyz.oGet(0) + v2.xyz.oGet(0)),
-                        0.5f * (v1.xyz.oGet(1) + v2.xyz.oGet(1)),
-                        0.5f * (v1.xyz.oGet(2) + v2.xyz.oGet(2))
+                        0.5f * (v1.xyz.get(0) + v2.xyz.get(0)),
+                        0.5f * (v1.xyz.get(1) + v2.xyz.get(1)),
+                        0.5f * (v1.xyz.get(2) + v2.xyz.get(2))
                     )
                 )
                 j++
             }
 
             // find the vector of the major axis
-            major.oSet(mid[1].oMinus(mid[0]))
+            major.set(mid[1].minus(mid[0]))
 
             // re-project the points
             j = 0
@@ -444,15 +444,15 @@ object tr_deform {
                 l = 0.5f * lengths[j]
 
                 // cross this with the view direction to get minor axis
-                val dir = idVec3(mid[j].oMinus(localView))
+                val dir = idVec3(mid[j].minus(localView))
                 minor.Cross(major, dir)
                 minor.Normalize()
                 if (j != 0) {
-                    av1.xyz.oSet(mid[j].oMinus(minor.times(l)))
-                    av2.xyz.oSet(mid[j].oPlus(minor.times(l)))
+                    av1.xyz.set(mid[j].minus(minor.times(l)))
+                    av2.xyz.set(mid[j].oPlus(minor.times(l)))
                 } else {
-                    av1.xyz.oSet(mid[j].oPlus(minor.times(l)))
-                    av2.xyz.oSet(mid[j].oMinus(minor.times(l)))
+                    av1.xyz.set(mid[j].oPlus(minor.times(l)))
+                    av2.xyz.set(mid[j].minus(minor.times(l)))
                 }
                 j++
             }
@@ -587,21 +587,21 @@ object tr_deform {
 
         // if viewer is behind the plane, draw nothing
         tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, tr_local.tr.viewDef.renderView.vieworg, localViewer)
-        val distFromPlane = localViewer.times(plane.Normal()) + plane.oGet(3)
+        val distFromPlane = localViewer.times(plane.Normal()) + plane.get(3)
         if (distFromPlane <= 0) {
             newTri.numIndexes = 0
             surf.geo = newTri
             return
         }
         val center = idVec3()
-        center.oSet(tri.verts[0].xyz)
+        center.set(tri.verts[0].xyz)
         j = 1
         while (j < tri.numVerts) {
             center.plusAssign(tri.verts[j].xyz)
             j++
         }
         center.timesAssign(1.0f / tri.numVerts)
-        val dir = idVec3(localViewer.oMinus(center))
+        val dir = idVec3(localViewer.minus(center))
         dir.Normalize()
         dot = dir.oMultiply(plane.Normal())
 
@@ -632,74 +632,74 @@ object tr_deform {
         // calculate vector directions
         i = 0
         while (i < 4) {
-            ac[i].xyz.oSet(tri.verts[indexes[i]].xyz)
-            ac[i].st.oSet(0, ac[i].st.oSet(1, 0.5f))
-            val toEye = idVec3(tri.verts[indexes[i]].xyz.oMinus(localViewer))
+            ac[i].xyz.set(tri.verts[indexes[i]].xyz)
+            ac[i].st.set(0, ac[i].st.set(1, 0.5f))
+            val toEye = idVec3(tri.verts[indexes[i]].xyz.minus(localViewer))
             toEye.Normalize()
-            val d1 = idVec3(tri.verts[indexes[(i + 1) % 4]].xyz.oMinus(localViewer))
+            val d1 = idVec3(tri.verts[indexes[(i + 1) % 4]].xyz.minus(localViewer))
             d1.Normalize()
             edgeDir[i].get(1).Cross(toEye, d1)
             edgeDir[i].get(1).Normalize()
-            edgeDir[i].get(1).oSet(Vector.getVec3_origin().oMinus(edgeDir[i].get(1)))
-            val d2 = idVec3(tri.verts[indexes[(i + 3) % 4]].xyz.oMinus(localViewer))
+            edgeDir[i].get(1).set(Vector.getVec3_origin().oMinus(edgeDir[i].get(1)))
+            val d2 = idVec3(tri.verts[indexes[(i + 3) % 4]].xyz.minus(localViewer))
             d2.Normalize()
             edgeDir[i].get(0).Cross(toEye, d2)
             edgeDir[i].get(0).Normalize()
-            edgeDir[i].get(2).oSet(edgeDir[i].get(0).oPlus(edgeDir[i].get(1)))
+            edgeDir[i].get(2).set(edgeDir[i].get(0).oPlus(edgeDir[i].get(1)))
             edgeDir[i].get(2).Normalize()
             i++
         }
 
         // build all the points
-        ac[4].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(0).times(spread)))
-        ac[4].st.oSet(0, 0f)
-        ac[4].st.oSet(1, 0.5f)
-        ac[5].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(2).times(spread)))
-        ac[5].st.oSet(0, 0f)
-        ac[5].st.oSet(1, 0f)
-        ac[6].xyz.oSet(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(1).times(spread)))
-        ac[6].st.oSet(0, 0.5f)
-        ac[6].st.oSet(1, 0f)
-        ac[7].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(0).times(spread)))
-        ac[7].st.oSet(0, 0.5f)
-        ac[7].st.oSet(1, 0f)
-        ac[8].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(2).times(spread)))
-        ac[8].st.oSet(0, 1f)
-        ac[8].st.oSet(1, 0f)
-        ac[9].xyz.oSet(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(1).times(spread)))
-        ac[9].st.oSet(0, 1f)
-        ac[9].st.oSet(1, 0.5f)
-        ac[10].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(0).times(spread)))
-        ac[10].st.oSet(0, 1f)
-        ac[10].st.oSet(1, 0.5f)
-        ac[11].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(2).times(spread)))
-        ac[11].st.oSet(0, 1f)
-        ac[11].st.oSet(1, 1f)
-        ac[12].xyz.oSet(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(1).times(spread)))
-        ac[12].st.oSet(0, 0.5f)
-        ac[12].st.oSet(1, 1f)
-        ac[13].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(0).times(spread)))
-        ac[13].st.oSet(0, 0.5f)
-        ac[13].st.oSet(1, 1f)
-        ac[14].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(2).times(spread)))
-        ac[14].st.oSet(0, 0f)
-        ac[14].st.oSet(1, 1f)
-        ac[15].xyz.oSet(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(1).times(spread)))
-        ac[15].st.oSet(0, 0f)
-        ac[15].st.oSet(1, 0.5f)
+        ac[4].xyz.set(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(0).times(spread)))
+        ac[4].st.set(0, 0f)
+        ac[4].st.set(1, 0.5f)
+        ac[5].xyz.set(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(2).times(spread)))
+        ac[5].st.set(0, 0f)
+        ac[5].st.set(1, 0f)
+        ac[6].xyz.set(tri.verts[indexes[0]].xyz.oPlus(edgeDir[0].get(1).times(spread)))
+        ac[6].st.set(0, 0.5f)
+        ac[6].st.set(1, 0f)
+        ac[7].xyz.set(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(0).times(spread)))
+        ac[7].st.set(0, 0.5f)
+        ac[7].st.set(1, 0f)
+        ac[8].xyz.set(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(2).times(spread)))
+        ac[8].st.set(0, 1f)
+        ac[8].st.set(1, 0f)
+        ac[9].xyz.set(tri.verts[indexes[1]].xyz.oPlus(edgeDir[1].get(1).times(spread)))
+        ac[9].st.set(0, 1f)
+        ac[9].st.set(1, 0.5f)
+        ac[10].xyz.set(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(0).times(spread)))
+        ac[10].st.set(0, 1f)
+        ac[10].st.set(1, 0.5f)
+        ac[11].xyz.set(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(2).times(spread)))
+        ac[11].st.set(0, 1f)
+        ac[11].st.set(1, 1f)
+        ac[12].xyz.set(tri.verts[indexes[2]].xyz.oPlus(edgeDir[2].get(1).times(spread)))
+        ac[12].st.set(0, 0.5f)
+        ac[12].st.set(1, 1f)
+        ac[13].xyz.set(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(0).times(spread)))
+        ac[13].st.set(0, 0.5f)
+        ac[13].st.set(1, 1f)
+        ac[14].xyz.set(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(2).times(spread)))
+        ac[14].st.set(0, 0f)
+        ac[14].st.set(1, 1f)
+        ac[15].xyz.set(tri.verts[indexes[3]].xyz.oPlus(edgeDir[3].get(1).times(spread)))
+        ac[15].st.set(0, 0f)
+        ac[15].st.set(1, 0.5f)
         i = 4
         while (i < 16) {
-            dir.oSet(ac[i].xyz.oMinus(localViewer))
+            dir.oSet(ac[i].xyz.minus(localViewer))
             val len = dir.Normalize()
             val ang = dir.oMultiply(plane.Normal())
 
 //		ac[i].xyz -= dir * spread * 2;
             val newLen = -(distFromPlane / ang)
             if (newLen > 0 && newLen < len) {
-                ac[i].xyz.oSet(localViewer.oPlus(dir.oMultiply(newLen)))
+                ac[i].xyz.set(localViewer.oPlus(dir.oMultiply(newLen)))
             }
-            ac[i].st.oSet(0, 0f)
-            ac[i].st.oSet(1, 0.5f)
+            ac[i].st.set(0, 0f)
+            ac[i].st.set(1, 0.5f)
             i++
         }
 
@@ -745,7 +745,7 @@ object tr_deform {
         i = 0
         while (i < tri.numVerts) {
             ac[i] = tri.verts[i]
-            ac[i].xyz.oSet(tri.verts[i].xyz.oPlus(tri.verts[i].normal.times(dist)))
+            ac[i].xyz.set(tri.verts[i].xyz.oPlus(tri.verts[i].normal.times(dist)))
             i++
         }
         tr_deform.R_FinishDeform(surf, newTri, ac)
@@ -810,12 +810,12 @@ object tr_deform {
         i = 0
         while (i < tri.numVerts) {
             var f =
-                tri.verts[i].xyz.oGet(0) * 0.003f + tri.verts[i].xyz.oGet(1) * 0.007f + tri.verts[i].xyz.oGet(2) * 0.011f
+                tri.verts[i].xyz.get(0) * 0.003f + tri.verts[i].xyz.get(1) * 0.007f + tri.verts[i].xyz.get(2) * 0.011f
             f = timeOfs + domain * f
             f += timeOfs
             ac[i] = tri.verts[i]
-            ac[i].st.oPluSet(0, range * table.TableLookup(f))
-            ac[i].st.oPluSet(1, range * table.TableLookup(f + tOfs))
+            ac[i].st.plusAssign(0, range * table.TableLookup(f))
+            ac[i].st.plusAssign(1, range * table.TableLookup(f + tOfs))
             i++
         }
         tr_deform.R_FinishDeform(surf, newTri, ac)
@@ -917,7 +917,7 @@ object tr_deform {
         // decide which islands are the eyes and points
         i = 0
         while (i < numIslands) {
-            islands[i].mid.oSet(islands[i].bounds.GetCenter())
+            islands[i].mid.set(islands[i].bounds.GetCenter())
             i++
         }
         i = 0
@@ -937,7 +937,7 @@ object tr_deform {
             val sortOrder = IntArray(tr_deform.MAX_EYEBALL_ISLANDS)
             j = 0
             while (j < numIslands) {
-                val dir = idVec3(islands[j].mid.oMinus(island.mid))
+                val dir = idVec3(islands[j].mid.minus(island.mid))
                 dist[j] = dir.Length()
                 sortOrder[j] = j
                 k = j - 1
@@ -955,18 +955,18 @@ object tr_deform {
                 j++
             }
             originIsland = sortOrder[1]
-            origin.oSet(islands[originIsland].mid)
-            focus.oSet(islands[sortOrder[2]].mid)
+            origin.set(islands[originIsland].mid)
+            focus.set(islands[sortOrder[2]].mid)
 
             // determine the projection directions based on the origin island triangle
-            val dir = idVec3(focus.oMinus(origin))
+            val dir = idVec3(focus.minus(origin))
             dir.Normalize()
             val p1 = tri.verts[tri.indexes[islands[originIsland].tris.get(0) + 0]].xyz
             val p2 = tri.verts[tri.indexes[islands[originIsland].tris.get(0) + 1]].xyz
             val p3 = tri.verts[tri.indexes[islands[originIsland].tris.get(0) + 2]].xyz
-            val v1 = idVec3(p2.oMinus(p1))
+            val v1 = idVec3(p2.minus(p1))
             v1.Normalize()
-            val v2 = idVec3(p3.oMinus(p1))
+            val v2 = idVec3(p3.minus(p1))
             v2.Normalize()
 
             // texVec[0] will be the normal to the origin triangle
@@ -988,10 +988,10 @@ object tr_deform {
                     var index = islands[i].tris.get(j) * 3
                     index = tri.indexes[index + k]
                     newTri.indexes[newTri.numIndexes++] = index
-                    ac[index].xyz.oSet(tri.verts[index].xyz)
-                    val local = idVec3(tri.verts[index].xyz.oMinus(origin))
-                    ac[index].st.oSet(0, 0.5f + local.oMultiply(texVec[0]))
-                    ac[index].st.oSet(1, 0.5f + local.oMultiply(texVec[1]))
+                    ac[index].xyz.set(tri.verts[index].xyz)
+                    val local = idVec3(tri.verts[index].xyz.minus(origin))
+                    ac[index].st.set(0, 0.5f + local.oMultiply(texVec[0]))
+                    ac[index].st.set(1, 0.5f + local.oMultiply(texVec[1]))
                     k++
                 }
                 j++
@@ -1056,10 +1056,10 @@ object tr_deform {
         g.renderEnt = renderEntity
         g.renderView = viewDef.renderView
         g.origin.Zero()
-        g.axis.oSet(idMat3.Companion.getMat3_identity())
+        g.axis.set(idMat3.Companion.getMat3_identity())
         for (currentTri in 0 until if (useArea) 1 else numSourceTris) {
             for (stageNum in 0 until particleSystem.stages.Num()) {
-                val stage = particleSystem.stages.oGet(stageNum)
+                val stage = particleSystem.stages.get(stageNum)
                 if (null == stage.material) {
                     continue
                 }
@@ -1085,7 +1085,7 @@ object tr_deform {
                 tri.indexes = IntArray(tri.numIndexes) // R_FrameAlloc(tri.numIndexes);
 
                 // just always draw the particles
-                tri.bounds.oSet(stage.bounds)
+                tri.bounds.set(stage.bounds)
                 tri.numVerts = 0
                 val steppingRandom = idRandom()
                 val steppingRandom2 = idRandom()
@@ -1164,18 +1164,18 @@ object tr_deform {
                     f1 *= ft
                     f2 *= ft
                     f3 *= ft
-                    g.origin.oSet(v1.xyz.times(f1).oPlus(v2.xyz.times(f2).oPlus(v3.xyz.times(f3))))
-                    g.axis.oSet(
+                    g.origin.set(v1.xyz.times(f1).oPlus(v2.xyz.times(f2).oPlus(v3.xyz.times(f3))))
+                    g.axis.set(
                         0,
                         v1.tangents[0].times(f1)
                             .oPlus(v2.tangents[0].times(f2).oPlus(v3.tangents[0].times(f3)))
                     )
-                    g.axis.oSet(
+                    g.axis.set(
                         1,
                         v1.tangents[1].times(f1)
                             .oPlus(v2.tangents[1].times(f2).oPlus(v3.tangents[1].times(f3)))
                     )
-                    g.axis.oSet(
+                    g.axis.set(
                         2,
                         v1.normal.times(f1).oPlus(v2.normal.times(f2).oPlus(v3.normal.times(f3)))
                     )

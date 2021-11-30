@@ -136,7 +136,7 @@ object GameBearShootWindow {
             }
 
             // Move the entity
-            position.oPluSet(velocity.oMultiply(timeslice))
+            position.plusAssign(velocity.oMultiply(timeslice))
 
             // Rotate Entity
             rotation += rotationSpeed * timeslice
@@ -259,7 +259,7 @@ object GameBearShootWindow {
             val numberOfEnts = entities.Num()
             savefile.WriteInt(numberOfEnts)
             for (i in 0 until numberOfEnts) {
-                entities.oGet(i).WriteToSaveGame(savefile)
+                entities.get(i).WriteToSaveGame(savefile)
             }
             var index: Int
             index = entities.FindIndex(turret)
@@ -309,17 +309,17 @@ object GameBearShootWindow {
             }
             var index: Int
             index = savefile.ReadInt()
-            turret = entities.oGet(index)
+            turret = entities.get(index)
             index = savefile.ReadInt()
-            bear = entities.oGet(index)
+            bear = entities.get(index)
             index = savefile.ReadInt()
-            helicopter = entities.oGet(index)
+            helicopter = entities.get(index)
             index = savefile.ReadInt()
-            goal = entities.oGet(index)
+            goal = entities.get(index)
             index = savefile.ReadInt()
-            wind = entities.oGet(index)
+            wind = entities.get(index)
             index = savefile.ReadInt()
-            gunblast = entities.oGet(index)
+            gunblast = entities.get(index)
         }
 
         override fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
@@ -347,7 +347,7 @@ object GameBearShootWindow {
             UpdateGame()
             i = entities.Num() - 1
             while (i >= 0) {
-                entities.oGet(i).Draw(dc)
+                entities.get(i).Draw(dc)
                 i--
             }
         }
@@ -597,7 +597,7 @@ object GameBearShootWindow {
             val angle: Float
             pt.x = gui.CursorX()
             pt.y = gui.CursorY()
-            turretOrig.Set(80f, 348f)
+            turretOrig.set(80f, 348f)
             pt = pt.oMinus(turretOrig)
             pt.NormalizeFast()
             right.x = 1f
@@ -697,7 +697,7 @@ object GameBearShootWindow {
                 }
                 i = 0
                 while (i < entities.Num()) {
-                    entities.oGet(i).Update(timeSlice)
+                    entities.get(i).Update(timeSlice)
                     i++
                 }
 

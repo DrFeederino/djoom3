@@ -533,7 +533,7 @@ object Actor {
             spawnArgs.GetVector("offsetModel", "0 0 0", modelOffset)
             spawnArgs.GetBool("use_combat_bbox", "0", use_combat_bbox)
             this.use_combat_bbox = use_combat_bbox.isVal
-            viewAxis.oSet(GetPhysics().GetAxis())
+            viewAxis.set(GetPhysics().GetAxis())
             spawnArgs.GetFloat("fov", "90", fovDegrees)
             SetFOV(fovDegrees.getVal())
             pain_debounce_time = 0
@@ -684,7 +684,7 @@ object Actor {
             savefile.WriteInt(damageScale.Num())
             i = 0
             while (i < damageScale.Num()) {
-                savefile.WriteFloat(damageScale.oGet(i))
+                savefile.WriteFloat(damageScale.get(i))
                 i++
             }
             savefile.WriteBool(use_combat_bbox)
@@ -692,9 +692,9 @@ object Actor {
             savefile.WriteInt(copyJoints.Num())
             i = 0
             while (i < copyJoints.Num()) {
-                savefile.WriteInt(TempDump.etoi(copyJoints.oGet(i).mod))
-                savefile.WriteJoint(copyJoints.oGet(i).from.getVal())
-                savefile.WriteJoint(copyJoints.oGet(i).to.getVal())
+                savefile.WriteInt(TempDump.etoi(copyJoints.get(i).mod))
+                savefile.WriteJoint(copyJoints.get(i).from.getVal())
+                savefile.WriteJoint(copyJoints.get(i).to.getVal())
                 i++
             }
             savefile.WriteJoint(leftEyeJoint)
@@ -720,8 +720,8 @@ object Actor {
             savefile.WriteInt(attachments.Num())
             i = 0
             while (i < attachments.Num()) {
-                attachments.oGet(i).ent.Save(savefile)
-                savefile.WriteInt(attachments.oGet(i).channel)
+                attachments.get(i).ent.Save(savefile)
+                savefile.WriteInt(attachments.get(i).channel)
                 i++
             }
             savefile.WriteBool(finalBoss)
@@ -791,7 +791,7 @@ object Actor {
             damageScale.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                damageScale.oSet(i, savefile.ReadFloat())
+                damageScale.set(i, savefile.ReadFloat())
                 i++
             }
             use_combat_bbox = savefile.ReadBool()
@@ -802,9 +802,9 @@ object Actor {
             while (i < num.getVal()) {
                 val `val` = CInt()
                 savefile.ReadInt(`val`)
-                copyJoints.oGet(i).mod = jointModTransform_t.values()[`val`.getVal()]
-                savefile.ReadJoint(copyJoints.oGet(i).from)
-                savefile.ReadJoint(copyJoints.oGet(i).to)
+                copyJoints.get(i).mod = jointModTransform_t.values()[`val`.getVal()]
+                savefile.ReadJoint(copyJoints.get(i).from)
+                savefile.ReadJoint(copyJoints.get(i).to)
                 i++
             }
             leftEyeJoint = savefile.ReadJoint()
@@ -938,11 +938,11 @@ object Actor {
                         headEnt.GetAnimator().GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
                         headEnt.GetAnimator().ClearAllAnims(Game_local.gameLocal.time, 0)
                         headEnt.GetAnimator().ForceUpdate()
-                        pos.plusAssign(headEnt.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
-                        eyeOffset.oSet(pos.oPlus(modelOffset))
+                        pos.plusAssign(headEnt.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
+                        eyeOffset.set(pos.oPlus(modelOffset))
                     } else {
                         // just base it off the bounding box size
-                        eyeOffset.z = GetPhysics().GetBounds().oGet(1).z - 6
+                        eyeOffset.z = GetPhysics().GetBounds().get(1).z - 6
                     }
                 }
                 headAnim.Init(this, headEnt.GetAnimator(), Anim.ANIMCHANNEL_ALL)
@@ -963,10 +963,10 @@ object Actor {
                         animator.GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
                         animator.ClearAllAnims(Game_local.gameLocal.time, 0)
                         animator.ForceUpdate()
-                        eyeOffset.oSet(pos.oPlus(modelOffset))
+                        eyeOffset.set(pos.oPlus(modelOffset))
                     } else {
                         // just base it off the bounding box size
-                        eyeOffset.z = GetPhysics().GetBounds().oGet(1).z - 6
+                        eyeOffset.z = GetPhysics().GetBounds().get(1).z - 6
                     }
                 }
                 headAnim.Init(this, animator, Anim.ANIMCHANNEL_HEAD)
@@ -998,8 +998,8 @@ object Actor {
                 af.GetPhysicsToVisualTransform(origin, axis)
                 return true
             }
-            origin.oSet(modelOffset)
-            axis.oSet(viewAxis)
+            origin.set(modelOffset)
+            axis.set(viewAxis)
             return true
         }
 
@@ -1007,9 +1007,9 @@ object Actor {
             if (soundJoint != Model.INVALID_JOINT) {
                 animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
                 origin.plusAssign(modelOffset)
-                axis.oSet(viewAxis)
+                axis.set(viewAxis)
             } else {
-                origin.oSet(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
+                origin.set(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
                 axis.Identity()
             }
             return true
@@ -1173,8 +1173,8 @@ object Actor {
         }
 
         open fun GetViewPos(origin: idVec3?, axis: idMat3?) {
-            origin.oSet(GetEyePosition())
-            axis.oSet(viewAxis)
+            origin.set(GetEyePosition())
+            axis.set(viewAxis)
         }
 
         fun SetFOV(fov: Float) {
@@ -1187,7 +1187,7 @@ object Actor {
             }
             val dot: Float
             val delta = idVec3()
-            delta.oSet(pos.oMinus(GetEyePosition()))
+            delta.set(pos.minus(GetEyePosition()))
 
             // get our gravity normal
             val gravityDir = GetPhysics().GetGravityNormal()
@@ -1195,7 +1195,7 @@ object Actor {
             // infinite vertical vision, so project it onto our orientation plane
             delta.minusAssign(gravityDir.times(gravityDir.times(delta)))
             delta.Normalize()
-            dot = viewAxis.oGet(0).times(delta)
+            dot = viewAxis.get(0).times(delta)
             return dot >= fovDot
         }
 
@@ -1207,14 +1207,14 @@ object Actor {
                 return false
             }
             if (ent is idActor) {
-                toPos.oSet((ent as idActor?).GetEyePosition())
+                toPos.set((ent as idActor?).GetEyePosition())
             } else {
-                toPos.oSet(ent.GetPhysics().GetOrigin())
+                toPos.set(ent.GetPhysics().GetOrigin())
             }
             if (useFOV && !CheckFOV(toPos)) {
                 return false
             }
-            eye.oSet(GetEyePosition())
+            eye.set(GetEyePosition())
             Game_local.gameLocal.clip.TracePoint(tr, eye, toPos, Game_local.MASK_OPAQUE, this)
             return tr.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(tr) === ent
         }
@@ -1223,8 +1223,8 @@ object Actor {
             val results = trace_s()
             val start = idVec3()
             val end = idVec3()
-            start.oSet(GetEyePosition())
-            end.oSet(point)
+            start.set(GetEyePosition())
+            end.set(point)
             end.plusAssign(2, 1.0f)
             Game_local.gameLocal.clip.TracePoint(results, start, end, Game_local.MASK_OPAQUE, this)
             return results.fraction >= 1.0f
@@ -1238,8 +1238,8 @@ object Actor {
          =====================
          */
         open fun GetAIAimTargets(lastSightPos: idVec3?, headPos: idVec3?, chestPos: idVec3?) {
-            headPos.oSet(lastSightPos.oPlus(EyeOffset()))
-            chestPos.oSet(headPos.oPlus(lastSightPos).oPlus(GetPhysics().GetBounds().GetCenter()).oMultiply(0.5f))
+            headPos.set(lastSightPos.oPlus(EyeOffset()))
+            chestPos.set(headPos.oPlus(lastSightPos).oPlus(GetPhysics().GetBounds().GetCenter()).oMultiply(0.5f))
         }
 
         /* **********************************************************************
@@ -1284,7 +1284,7 @@ object Actor {
             damageScale.SetNum(animator.NumJoints())
             i = 0
             while (i < damageScale.Num()) {
-                damageScale.oSet(i, 1.0f)
+                damageScale.set(i, 1.0f)
                 i++
             }
 
@@ -1297,7 +1297,7 @@ object Actor {
                 i = 0
                 while (i < damageScale.Num()) {
                     if (groupname == damageGroups.get(i)) {
-                        damageScale.oSet(i, scale)
+                        damageScale.set(i, scale)
                     }
                     i++
                 }
@@ -1383,7 +1383,7 @@ object Actor {
         fun GetDamageForLocation(damage: Int, location: Int): Int {
             return if (location < 0 || location >= damageScale.Num()) {
                 damage
-            } else Math.ceil((damage * damageScale.oGet(location)).toDouble()).toInt()
+            } else Math.ceil((damage * damageScale.get(location)).toDouble()).toInt()
         }
 
         fun GetDamageGroup(location: Int): String? {
@@ -1647,7 +1647,7 @@ object Actor {
                     ent = ent.enemyNode.Next()
                     continue
                 }
-                delta.oSet(ent.GetPhysics().GetOrigin().oMinus(pos))
+                delta.set(ent.GetPhysics().GetOrigin().minus(pos))
                 distSquared = delta.LengthSqr()
                 if (distSquared < bestDistSquared) {
                     bestEnt = ent
@@ -1686,10 +1686,10 @@ object Actor {
                 areaNum.setVal(0)
                 return
             }
-            size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1))
-            bounds.oSet(0, size.oNegative())
+            size.set(aas.GetSettings().boundingBoxes[0].get(1))
+            bounds.set(0, size.oNegative())
             size.z = 32.0f
-            bounds.oSet(1, size)
+            bounds.set(1, size)
             areaNum.setVal(aas.PointReachableAreaNum(pos, bounds, AASFile.AREA_REACHABLE_WALK))
             if (areaNum.getVal() != 0) {
                 aas.PushPointIntoAreaNum(areaNum.getVal(), pos)
@@ -1715,7 +1715,7 @@ object Actor {
                 )
             }
             angleOffset = ent.spawnArgs.GetAngles("angles")
-            originOffset.oSet(ent.spawnArgs.GetVector("origin"))
+            originOffset.set(ent.spawnArgs.GetVector("origin"))
             attach.channel = animator.GetChannelForJoint(joint)
             GetJointWorldTransform(joint, Game_local.gameLocal.time, origin, axis)
             attach.ent.oSet(ent)
@@ -1741,7 +1741,7 @@ object Actor {
         override fun GetRenderView(): renderView_s? {
             val rv = super.GetRenderView() //TODO:super.super....
             rv.viewaxis = idMat3(viewAxis)
-            rv.vieworg.oSet(GetEyePosition())
+            rv.vieworg.set(GetEyePosition())
             return rv
         }
 
@@ -1890,7 +1890,7 @@ object Actor {
             // remove any attached entities
             i = 0
             while (i < attachments.Num()) {
-                ent = attachments.oGet(i).ent.GetEntity()
+                ent = attachments.get(i).ent.GetEntity()
                 if (ent != null && ent.spawnArgs.GetBool("remove")) {
                     ent.PostEventMS(Class.EV_Remove, 0)
                 }
@@ -1914,25 +1914,25 @@ object Actor {
             // copy the animation from the body to the head
             i = 0
             while (i < copyJoints.Num()) {
-                if (copyJoints.oGet(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
+                if (copyJoints.get(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose()
-                    GetJointWorldTransform(copyJoints.oGet(i).from.getVal(), Game_local.gameLocal.time, pos, axis)
+                    GetJointWorldTransform(copyJoints.get(i).from.getVal(), Game_local.gameLocal.time, pos, axis)
                     pos.minusAssign(headEnt.GetPhysics().GetOrigin())
-                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos.times(mat))
+                    headAnimator.SetJointPos(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, pos.times(mat))
                     headAnimator.SetJointAxis(
-                        copyJoints.oGet(i).to.getVal(),
-                        copyJoints.oGet(i).mod,
+                        copyJoints.get(i).to.getVal(),
+                        copyJoints.get(i).mod,
                         axis.times(mat)
                     )
                 } else {
                     animator.GetJointLocalTransform(
-                        copyJoints.oGet(i).from.getVal(),
+                        copyJoints.get(i).from.getVal(),
                         Game_local.gameLocal.time,
                         pos,
                         axis
                     )
-                    headAnimator.SetJointPos(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, pos)
-                    headAnimator.SetJointAxis(copyJoints.oGet(i).to.getVal(), copyJoints.oGet(i).mod, axis)
+                    headAnimator.SetJointPos(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, pos)
+                    headAnimator.SetJointAxis(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, axis)
                 }
                 i++
             }
@@ -2052,7 +2052,7 @@ object Actor {
                 val attach = attachments.Alloc()
                 attach.channel = animator.GetChannelForJoint(joint)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.oSet(renderEntity.origin.oPlus(origin.oPlus(modelOffset).oMultiply(renderEntity.axis)))
+                origin.set(renderEntity.origin.oPlus(origin.oPlus(modelOffset).oMultiply(renderEntity.axis)))
                 //attach.ent.oSet(new idEntityPtr<>());
                 attach.ent.oSet(headEnt)
                 headEnt.SetOrigin(origin)
@@ -2806,7 +2806,7 @@ object Actor {
             // remove any attached entities
             i = 0
             while (i < attachments.Num()) {
-                ent = attachments.oGet(i).ent.GetEntity()
+                ent = attachments.get(i).ent.GetEntity()
                 ent?.PostEventMS(Class.EV_Remove, 0)
                 i++
             }

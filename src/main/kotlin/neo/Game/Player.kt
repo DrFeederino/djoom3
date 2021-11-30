@@ -312,7 +312,7 @@ object Player {
             savefile.WriteInt(items.Num())
             i = 0
             while (i < items.Num()) {
-                savefile.WriteDict(items.oGet(i))
+                savefile.WriteDict(items.get(i))
                 i++
             }
             savefile.WriteInt(pdasViewed.get(0))
@@ -355,23 +355,23 @@ object Player {
             savefile.WriteInt(pickupItemNames.Num())
             i = 0
             while (i < pickupItemNames.Num()) {
-                savefile.WriteString(pickupItemNames.oGet(i).icon)
-                savefile.WriteString(pickupItemNames.oGet(i).name)
+                savefile.WriteString(pickupItemNames.get(i).icon)
+                savefile.WriteString(pickupItemNames.get(i).name)
                 i++
             }
             savefile.WriteInt(objectiveNames.Num())
             i = 0
             while (i < objectiveNames.Num()) {
-                savefile.WriteString(objectiveNames.oGet(i).screenshot)
-                savefile.WriteString(objectiveNames.oGet(i).text)
-                savefile.WriteString(objectiveNames.oGet(i).title)
+                savefile.WriteString(objectiveNames.get(i).screenshot)
+                savefile.WriteString(objectiveNames.get(i).text)
+                savefile.WriteString(objectiveNames.get(i).title)
                 i++
             }
             savefile.WriteInt(levelTriggers.Num())
             i = 0
             while (i < levelTriggers.Num()) {
-                savefile.WriteString(levelTriggers.oGet(i).levelName)
-                savefile.WriteString(levelTriggers.oGet(i).triggerName)
+                savefile.WriteString(levelTriggers.get(i).levelName)
+                savefile.WriteString(levelTriggers.get(i).triggerName)
                 i++
             }
             savefile.WriteBool(ammoPulse)
@@ -601,7 +601,7 @@ object Player {
             num = 0
             i = 0
             while (i < items.Num()) {
-                item = items.oGet(i)
+                item = items.get(i)
 
                 // copy all keys with "inv_"
                 kv = item.MatchPrefix("inv_")
@@ -663,9 +663,9 @@ object Player {
             i = 0
             while (i < levelTriggers.Num()) {
                 key = String.format("levelTrigger_Level_%d", i)
-                dict.Set(key, levelTriggers.oGet(i).levelName)
+                dict.Set(key, levelTriggers.get(i).levelName)
                 key = String.format("levelTrigger_Trigger_%d", i)
-                dict.Set(key, levelTriggers.oGet(i).triggerName)
+                dict.Set(key, levelTriggers.get(i).triggerName)
                 i++
             }
         }
@@ -705,7 +705,7 @@ object Player {
             i = 0
             while (i < num) {
                 item = idDict()
-                items.oSet(i, item)
+                items.set(i, item)
                 itemname = String.format("item_%d ", i)
                 kv = dict.MatchPrefix(itemname)
                 while (kv != null) {
@@ -1006,7 +1006,7 @@ object Player {
         fun AddPickupName(name: String?, icon: String?) {
             val num: Int
             num = pickupItemNames.Num()
-            if (num == 0 || pickupItemNames.oGet(num - 1).name.Icmp(name) != 0) {
+            if (num == 0 || pickupItemNames.get(num - 1).name.Icmp(name) != 0) {
                 val info = pickupItemNames.Alloc()
                 if (idStr.Companion.Cmpn(name, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
                     info.name = idStr(Common.common.GetLanguageDict().GetString(name))
@@ -1688,15 +1688,15 @@ object Player {
                 val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.oSet(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
-                acc.dir.oSet(1, acc.dir.oSet(2, 0f))
+                acc.dir.set(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
+                acc.dir.set(1, acc.dir.set(2, 0f))
             }
             if (usercmd.rightmove != oldCmd.rightmove) {
                 val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.oSet(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
-                acc.dir.oSet(1, acc.dir.oSet(2, 0f))
+                acc.dir.set(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
+                acc.dir.set(1, acc.dir.set(2, 0f))
             }
 
             // freelook centering
@@ -1931,8 +1931,8 @@ object Player {
             savefile.WriteInt(aasLocation.Num())
             i = 0
             while (i < aasLocation.Num()) {
-                savefile.WriteInt(aasLocation.oGet(i).areaNum)
-                savefile.WriteVec3(aasLocation.oGet(i).pos)
+                savefile.WriteInt(aasLocation.get(i).areaNum)
+                savefile.WriteVec3(aasLocation.get(i).pos)
                 i++
             }
             savefile.WriteInt(bobFoot)
@@ -2124,8 +2124,8 @@ object Player {
             aasLocation.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                aasLocation.oGet(i).areaNum = savefile.ReadInt()
-                savefile.ReadVec3(aasLocation.oGet(i).pos)
+                aasLocation.get(i).areaNum = savefile.ReadInt()
+                savefile.ReadVec3(aasLocation.get(i).pos)
                 i++
             }
             bobFoot = savefile.ReadInt()
@@ -2535,12 +2535,12 @@ object Player {
 
             // activate the spawn locations targets
             spot.PostEventMS(Entity.EV_ActivateTargets, 0f, this)
-            origin.oSet(spot.GetPhysics().GetOrigin())
+            origin.set(spot.GetPhysics().GetOrigin())
             origin.plusAssign(
                 2,
                 4.0f + CollisionModel.CM_BOX_EPSILON
             ) // move up to make sure the player is at least an epsilon above the floor
-            angles.oSet(spot.GetPhysics().GetAxis().ToAngles())
+            angles.set(spot.GetPhysics().GetAxis().ToAngles())
         }
 
         /*
@@ -2591,7 +2591,7 @@ object Player {
             if (!spectating) {
                 SetOrigin(spawn_origin)
             } else {
-                spec_origin.oSet(spawn_origin)
+                spec_origin.set(spawn_origin)
                 spec_origin.plusAssign(2, SysCvar.pm_normalheight.GetFloat())
                 spec_origin.plusAssign(2, Player.SPECTATE_RAISE.toFloat())
                 SetOrigin(spec_origin)
@@ -2658,8 +2658,8 @@ object Player {
             if (spectating) {
                 bounds = idBounds(Vector.getVec3_origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
             } else {
-                bounds.oGet(0).Set(-SysCvar.pm_bboxwidth.GetFloat() * 0.5f, -SysCvar.pm_bboxwidth.GetFloat() * 0.5f, 0f)
-                bounds.oGet(1).Set(
+                bounds.get(0).Set(-SysCvar.pm_bboxwidth.GetFloat() * 0.5f, -SysCvar.pm_bboxwidth.GetFloat() * 0.5f, 0f)
+                bounds.get(1).Set(
                     SysCvar.pm_bboxwidth.GetFloat() * 0.5f,
                     SysCvar.pm_bboxwidth.GetFloat() * 0.5f,
                     SysCvar.pm_normalheight.GetFloat()
@@ -2912,7 +2912,7 @@ object Player {
             val sidespeed: Float
 
             // minus the push velocity to avoid playing the walking animation and sounds when riding a mover
-            velocity.oSet(physicsObj.GetLinearVelocity().oMinus(physicsObj.GetPushedLinearVelocity()))
+            velocity.set(physicsObj.GetLinearVelocity().minus(physicsObj.GetPushedLinearVelocity()))
             fallspeed = velocity.times(physicsObj.GetGravityNormal())
             if (influenceActive != 0) {
                 AI_FORWARD.underscore(false)
@@ -2920,8 +2920,8 @@ object Player {
                 AI_STRAFE_LEFT.underscore(false)
                 AI_STRAFE_RIGHT.underscore(false)
             } else if (Game_local.gameLocal.time - lastDmgTime < 500) {
-                forwardspeed = velocity.times(viewAxis.oGet(0))
-                sidespeed = velocity.times(viewAxis.oGet(1))
+                forwardspeed = velocity.times(viewAxis.get(0))
+                sidespeed = velocity.times(viewAxis.get(1))
                 AI_FORWARD.underscore(AI_ONGROUND.underscore() && forwardspeed > 20.01f)
                 AI_BACKWARD.underscore(AI_ONGROUND.underscore() && forwardspeed < -20.01f)
                 AI_STRAFE_LEFT.underscore(AI_ONGROUND.underscore() && sidespeed > 20.01f)
@@ -2955,7 +2955,7 @@ object Player {
             // set the delta angle
             val delta = idAngles()
             for (i in 0..2) {
-                delta.oSet(i, angles.oGet(i) - Math_h.SHORT2ANGLE(usercmd.angles[i]))
+                delta.set(i, angles.get(i) - Math_h.SHORT2ANGLE(usercmd.angles[i]))
             }
             SetDeltaViewAngles(delta)
         }
@@ -2987,15 +2987,15 @@ object Player {
                 i = 0
                 while (i < aasLocation.Num()) {
                     if (aas === Game_local.gameLocal.GetAAS(i)) {
-                        areaNum.setVal(aasLocation.oGet(i).areaNum)
-                        pos.oSet(aasLocation.oGet(i).pos)
+                        areaNum.setVal(aasLocation.get(i).areaNum)
+                        pos.set(aasLocation.get(i).pos)
                         return
                     }
                     i++
                 }
             }
             areaNum.setVal(0)
-            pos.oSet(physicsObj.GetOrigin())
+            pos.set(physicsObj.GetOrigin())
         }
 
         /*
@@ -3009,11 +3009,11 @@ object Player {
             val offset = idVec3()
             val axis = idMat3()
             val origin = idVec3()
-            origin.oSet(lastSightPos.oMinus(physicsObj.GetOrigin()))
+            origin.set(lastSightPos.minus(physicsObj.GetOrigin()))
             GetJointWorldTransform(chestJoint, Game_local.gameLocal.time, offset, axis)
-            headPos.oSet(offset.oPlus(origin))
+            headPos.set(offset.oPlus(origin))
             GetJointWorldTransform(headJoint, Game_local.gameLocal.time, offset, axis)
-            chestPos.oSet(offset.oPlus(origin))
+            chestPos.set(offset.oPlus(origin))
         }
 
         /*
@@ -3194,7 +3194,7 @@ object Player {
                 } else {
                     attackerPushScale.setVal(1.0f)
                 }
-                kick.oSet(dir)
+                kick.set(dir)
                 kick.Normalize()
                 kick.timesAssign(SysCvar.g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200)
                 physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity().oPlus(kick))
@@ -3226,7 +3226,7 @@ object Player {
             }
 
             // move the world direction vector to local coordinates
-            damage_from.oSet(dir)
+            damage_from.set(dir)
             damage_from.Normalize()
             viewAxis.ProjectVector(damage_from, localDamageVector)
 
@@ -3284,7 +3284,7 @@ object Player {
                 }
             }
             lastDamageDef = damageDef.Index()
-            lastDamageDir.oSet(damage_from)
+            lastDamageDir.set(damage_from)
             lastDamageLocation = location
         }
 
@@ -3396,7 +3396,7 @@ object Player {
                     killer = attacker
                     if (health < -20 || killer.PowerUpActive(Player.BERSERK)) {
                         gibDeath = true
-                        gibsDir.oSet(dir)
+                        gibsDir.set(dir)
                         gibsLaunched = false
                     }
                 }
@@ -3418,7 +3418,7 @@ object Player {
                 return
             }
             if (GetAnimator().GetJointTransform(jointHandle, Game_local.gameLocal.time, offset, axis)) {
-                offset.oSet(GetPhysics().GetOrigin().oPlus(offset.times(GetPhysics().GetAxis())))
+                offset.set(GetPhysics().GetOrigin().oPlus(offset.times(GetPhysics().GetAxis())))
                 axis = axis.times(GetPhysics().GetAxis())
             }
             idEntityFx.Companion.StartFx(fx, offset, axis, this, true)
@@ -3476,7 +3476,7 @@ object Player {
                 }
             } else {
                 if (SysCvar.g_stopTime.GetBool()) {
-                    renderView.vieworg.oSet(firstPersonViewOrigin)
+                    renderView.vieworg.set(firstPersonViewOrigin)
                     renderView.viewaxis = idMat3(firstPersonViewAxis)
                     if (!SysCvar.pm_thirdPerson.GetBool()) {
                         // set the viewID to the clientNum + 1, so we can suppress the right player bodies and
@@ -3495,7 +3495,7 @@ object Player {
                         if (Game_local.gameLocal.time < minRespawnTime) (Game_local.gameLocal.time + Player.RAGDOLL_DEATH_TIME - minRespawnTime) * (120 / Player.RAGDOLL_DEATH_TIME) else 120.toFloat()
                     OffsetThirdPersonView(0f, 20 + range, 0f, false)
                 } else {
-                    renderView.vieworg.oSet(firstPersonViewOrigin)
+                    renderView.vieworg.set(firstPersonViewOrigin)
                     renderView.viewaxis = idMat3(firstPersonViewAxis)
 
                     // set the viewID to the clientNum + 1, so we can suppress the right player bodies and
@@ -3536,10 +3536,10 @@ object Player {
                 val origin = idVec3()
                 val ang: idAngles?
                 ang = viewBobAngles.plus(playerView.AngleOffset())
-                ang.yaw += viewAxis.oGet(0).ToYaw()
+                ang.yaw += viewAxis.get(0).ToYaw()
                 val joint = animator.GetJointHandle("camera")
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                firstPersonViewOrigin.oSet(
+                firstPersonViewOrigin.set(
                     origin.oPlus(modelOffset).oMultiply(viewAxis.times(physicsObj.GetGravityAxis()))
                         .oPlus(physicsObj.GetOrigin()).oPlus(viewBob)
                 )
@@ -3671,7 +3671,7 @@ object Player {
 
             // as the player changes direction, the gun will take a small lag
             val gunOfs = idVec3(GunAcceleratingOffset())
-            origin.oSet(viewOrigin.oPlus(gunpos.oPlus(gunOfs).oMultiply(viewAxis)))
+            origin.set(viewOrigin.oPlus(gunpos.oPlus(gunOfs).oMultiply(viewAxis)))
 
             // on odd legs, invert some angles
             scale = if (bobCycle and 128 != 0) {
@@ -3710,7 +3710,7 @@ object Player {
             angles.roll += fracsin
             angles.yaw += fracsin
             angles.pitch += fracsin
-            axis.oSet(angles.ToMat3().times(viewAxis))
+            axis.set(angles.ToMat3().times(viewAxis))
         }
 
         override fun GetEyePosition(): idVec3? {
@@ -3718,9 +3718,9 @@ object Player {
 
             // use the smoothed origin if spectating another player in multiplayer
             if (Game_local.gameLocal.isClient && entityNumber != Game_local.gameLocal.localClientNum) {
-                org.oSet(smoothedOrigin)
+                org.set(smoothedOrigin)
             } else {
-                org.oSet(GetPhysics().GetOrigin())
+                org.set(GetPhysics().GetOrigin())
             }
             return org.oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
@@ -3733,18 +3733,18 @@ object Player {
                 angles.yaw = viewAngles.yaw
                 angles.roll = 40f
                 angles.pitch = -15f
-                axis.oSet(angles.ToMat3()) //TODO:null check
-                origin.oSet(GetEyePosition())
+                axis.set(angles.ToMat3()) //TODO:null check
+                origin.set(GetEyePosition())
             } else {
-                origin.oSet(GetEyePosition().oPlus(viewBob))
+                origin.set(GetEyePosition().oPlus(viewBob))
                 angles = viewAngles.plus(viewBobAngles).plus(playerView.AngleOffset())
-                axis.oSet(angles.ToMat3().times(physicsObj.GetGravityAxis()))
+                axis.set(angles.ToMat3().times(physicsObj.GetGravityAxis()))
 
                 // adjust the origin based on the camera nodal distance (eye distance from neck)
                 origin.plusAssign(physicsObj.GetGravityNormal().times(SysCvar.g_viewNodalZ.GetFloat()))
                 origin.plusAssign(
-                    axis.oGet(0).times(SysCvar.g_viewNodalX.GetFloat())
-                        .oPlus(axis.oGet(2).times(SysCvar.g_viewNodalZ.GetFloat()))
+                    axis.get(0).times(SysCvar.g_viewNodalX.GetFloat())
+                        .oPlus(axis.get(2).times(SysCvar.g_viewNodalZ.GetFloat()))
                 )
             }
         }
@@ -3770,40 +3770,40 @@ object Player {
                     angles.pitch = 0f
                 }
             }
-            focusPoint.oSet(origin.oPlus(angles.ToForward().times(Player.THIRD_PERSON_FOCUS_DISTANCE)))
+            focusPoint.set(origin.oPlus(angles.ToForward().times(Player.THIRD_PERSON_FOCUS_DISTANCE)))
             focusPoint.z += height
-            view.oSet(origin)
+            view.set(origin)
             view.z += 8 + height
             angles.pitch *= 0.5f
             renderView.viewaxis = angles.ToMat3().times(physicsObj.GetGravityAxis())
             idMath.SinCos(Math_h.DEG2RAD(angle), sideScale, forwardScale)
-            view.minusAssign(renderView.viewaxis.oGet(0).times(range * forwardScale.getVal()))
-            view.plusAssign(renderView.viewaxis.oGet(1).times(range * sideScale.getVal()))
+            view.minusAssign(renderView.viewaxis.get(0).times(range * forwardScale.getVal()))
+            view.plusAssign(renderView.viewaxis.get(1).times(range * sideScale.getVal()))
             if (clip) {
                 // trace a ray from the origin to the viewpoint to make sure the view isn't
                 // in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
                 bounds = idBounds(idVec3(-4, -4, -4), idVec3(4, 4, 4))
                 Game_local.gameLocal.clip.TraceBounds(trace, origin, view, bounds, Game_local.MASK_SOLID, this)
                 if (trace.fraction != 1.0f) {
-                    view.oSet(trace.endpos)
+                    view.set(trace.endpos)
                     view.z += (1.0f - trace.fraction) * 32.0f
 
                     // try another trace to this position, because a tunnel may have the ceiling
                     // close enough that this is poking out
                     Game_local.gameLocal.clip.TraceBounds(trace, origin, view, bounds, Game_local.MASK_SOLID, this)
-                    view.oSet(trace.endpos)
+                    view.set(trace.endpos)
                 }
             }
 
             // select pitch to look at focus point from vieword
             focusPoint.minusAssign(view)
-            focusDist = idMath.Sqrt(focusPoint.oGet(0) * focusPoint.oGet(0) + focusPoint.oGet(1) * focusPoint.oGet(1))
+            focusDist = idMath.Sqrt(focusPoint.get(0) * focusPoint.get(0) + focusPoint.get(1) * focusPoint.get(1))
             if (focusDist < 1.0f) {
                 focusDist = 1.0f // should never happen
             }
             angles.pitch = -Vector.RAD2DEG(Math.atan2(focusPoint.z.toDouble(), focusDist.toDouble()))
             angles.yaw -= angle
-            renderView.vieworg.oSet(view)
+            renderView.vieworg.set(view)
             renderView.viewaxis = angles.ToMat3().timesAssign(physicsObj.GetGravityAxis())
             renderView.viewID = 0
         }
@@ -3975,10 +3975,10 @@ object Player {
 
         fun FindInventoryItem(name: String?): idDict? {
             for (i in 0 until inventory.items.Num()) {
-                val iname = inventory.items.oGet(i).GetString("inv_name")
+                val iname = inventory.items.get(i).GetString("inv_name")
                 if (iname != null && !iname.isEmpty()) {
                     if (idStr.Companion.Icmp(name, iname) == 0) {
-                        return inventory.items.oGet(i)
+                        return inventory.items.get(i)
                     }
                 }
             }
@@ -4089,7 +4089,7 @@ object Player {
         fun CompleteObjective(title: String?) {
             val c = inventory.objectiveNames.Num()
             for (i in 0 until c) {
-                if (idStr.Companion.Icmp(inventory.objectiveNames.oGet(i).title.toString(), title) == 0) {
+                if (idStr.Companion.Icmp(inventory.objectiveNames.get(i).title.toString(), title) == 0) {
                     inventory.objectiveNames.RemoveIndex(i)
                     break
                 }
@@ -5041,7 +5041,7 @@ object Player {
                 }
                 j = 0
                 while (j < c) {
-                    val item = inventory.items.oGet(j)
+                    val item = inventory.items.get(j)
                     if (!item.GetBool("inv_pda")) {
                         val iname = item.GetString("inv_name")
                         val iicon = item.GetString("inv_icon")
@@ -5123,11 +5123,11 @@ object Player {
                     while (i < 5 && i < c) {
                         hud.SetStateString(
                             Str.va("itemtext%d", inventory.nextItemNum),
-                            inventory.pickupItemNames.oGet(0).name.toString()
+                            inventory.pickupItemNames.get(0).name.toString()
                         )
                         hud.SetStateString(
                             Str.va("itemicon%d", inventory.nextItemNum),
-                            inventory.pickupItemNames.oGet(0).icon.toString()
+                            inventory.pickupItemNames.get(0).icon.toString()
                         )
                         hud.HandleNamedEvent(Str.va("itemPickup%d", inventory.nextItemNum++))
                         inventory.pickupItemNames.RemoveIndex(0)
@@ -5555,9 +5555,9 @@ object Player {
         override fun WriteToSnapshot(msg: idBitMsgDelta?) {
             physicsObj.WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
-            msg.WriteDeltaFloat(0f, deltaViewAngles.oGet(0))
-            msg.WriteDeltaFloat(0f, deltaViewAngles.oGet(1))
-            msg.WriteDeltaFloat(0f, deltaViewAngles.oGet(2))
+            msg.WriteDeltaFloat(0f, deltaViewAngles.get(0))
+            msg.WriteDeltaFloat(0f, deltaViewAngles.get(1))
+            msg.WriteDeltaFloat(0f, deltaViewAngles.get(2))
             msg.WriteShort(health)
             msg.WriteBits(
                 Game_local.gameLocal.ServerRemapDecl(-1, declType_t.DECL_ENTITYDEF, lastDamageDef),
@@ -5587,15 +5587,15 @@ object Player {
             oldHealth = health
             physicsObj.ReadFromSnapshot(msg)
             ReadBindFromSnapshot(msg)
-            deltaViewAngles.oSet(0, msg.ReadDeltaFloat(0f))
-            deltaViewAngles.oSet(1, msg.ReadDeltaFloat(0f))
-            deltaViewAngles.oSet(2, msg.ReadDeltaFloat(0f))
+            deltaViewAngles.set(0, msg.ReadDeltaFloat(0f))
+            deltaViewAngles.set(1, msg.ReadDeltaFloat(0f))
+            deltaViewAngles.set(2, msg.ReadDeltaFloat(0f))
             health = msg.ReadShort()
             lastDamageDef = Game_local.gameLocal.ClientRemapDecl(
                 declType_t.DECL_ENTITYDEF,
                 msg.ReadBits(Game_local.gameLocal.entityDefBits)
             )
-            lastDamageDir.oSet(msg.ReadDir(9))
+            lastDamageDir.set(msg.ReadDir(9))
             lastDamageLocation = msg.ReadShort()
             newIdealWeapon = msg.ReadBits(idMath.BitsForInteger(Player.MAX_WEAPONS))
             inventory.weapons = msg.ReadBits(Player.MAX_WEAPONS)
@@ -5778,15 +5778,15 @@ object Player {
                             renderOrigin.ToVec2_oMinSet(originDiff.oMultiply(Game_local.gameLocal.clientSmoothing))
                         }
                     }
-                    smoothedOrigin.oSet(renderOrigin)
+                    smoothedOrigin.set(renderOrigin)
                     smoothedFrame = Game_local.gameLocal.framenum
                     smoothedOriginUpdated = true
                 }
-                axis.oSet(idAngles(0, smoothedAngles.yaw, 0).ToMat3())
-                origin.oSet(axis.Transpose().times(smoothedOrigin.oMinus(GetPhysics().GetOrigin())))
+                axis.set(idAngles(0, smoothedAngles.yaw, 0).ToMat3())
+                origin.set(axis.Transpose().times(smoothedOrigin.minus(GetPhysics().GetOrigin())))
             } else {
-                axis.oSet(viewAxis)
-                origin.oSet(modelOffset)
+                axis.set(viewAxis)
+                origin.set(modelOffset)
             }
             return true
         }
@@ -5803,8 +5803,8 @@ object Player {
 
 //		memset( &view, 0, sizeof( view ) );
                 camera.GetViewParms(view)
-                origin.oSet(view.vieworg)
-                axis.oSet(view.viewaxis)
+                origin.set(view.vieworg)
+                axis.set(view.viewaxis)
                 true
             } else {
                 super.GetPhysicsToSoundTransform(origin, axis)
@@ -5947,7 +5947,7 @@ object Player {
             } else {
                 0
             }
-            colorBar.oSet(colorBarTable.get(colorBarIndex))
+            colorBar.set(colorBarTable.get(colorBarIndex))
             if (PowerUpActive(Player.BERSERK)) {
                 powerUpSkin.oSet(DeclManager.declManager.FindSkin(baseSkinName.toString() + "_berserk"))
             }
@@ -5990,11 +5990,11 @@ object Player {
         private fun LookAtKiller(inflictor: idEntity?, attacker: idEntity?) {
             val dir = idVec3()
             if (this != attacker) {
-                dir.oSet(attacker.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
+                dir.set(attacker.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
             } else if (this != inflictor) {
-                dir.oSet(inflictor.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin()))
+                dir.set(inflictor.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
             } else {
-                dir.oSet(viewAxis.oGet(0))
+                dir.set(viewAxis.get(0))
             }
             val ang = idAngles(0, dir.ToYaw(), 0)
             SetViewAngles(ang)
@@ -6017,7 +6017,7 @@ object Player {
             }
             if (SysCvar.g_editEntityMode.GetInteger() != 0) {
                 GetViewPos(muzzle, axis)
-                if (Game_local.gameLocal.editEntities.SelectEntity(muzzle, axis.oGet(0), this)) {
+                if (Game_local.gameLocal.editEntities.SelectEntity(muzzle, axis.get(0), this)) {
                     return
                 }
             }
@@ -6261,7 +6261,7 @@ object Player {
             if (force || Game_local.gameLocal.time > lastSpectateChange) {
                 spectator = entityNumber
                 if (player != null && player !== this && !player.spectating && !player.IsInTeleport()) {
-                    newOrig.oSet(player.GetPhysics().GetOrigin())
+                    newOrig.set(player.GetPhysics().GetOrigin())
                     if (player.physicsObj.IsCrouching()) {
                         newOrig.plusAssign(2, SysCvar.pm_crouchviewheight.GetFloat())
                     } else {
@@ -6277,7 +6277,7 @@ object Player {
                     newOrig.Lerp(start, newOrig, t.fraction)
                     SetOrigin(newOrig)
                     val angle = player.viewAngles
-                    angle.oSet(2, 0f)
+                    angle.set(2, 0f)
                     SetViewAngles(angle)
                 } else {
                     SelectInitialSpawnPoint(spawn_origin, spawn_angles)
@@ -6336,19 +6336,19 @@ object Player {
             for (j in 1 until weaponAngleOffsetAverages.getVal()) {
                 val a2 = loggedViewAngles.get(Game_local.gameLocal.framenum - j and NUM_LOGGED_VIEW_ANGLES - 1)
                 val delta = a2.minus(current)
-                if (delta.oGet(1) > 180) {
+                if (delta.get(1) > 180) {
                     delta.minusAssign(1, 360f)
-                } else if (delta.oGet(1) < -180) {
+                } else if (delta.get(1) < -180) {
                     delta.plusAssign(1, 360f)
                 }
                 av.plusAssign(delta.times(1.0f / weaponAngleOffsetAverages.getVal()))
             }
             a = av.minus(current).times(weaponAngleOffsetScale.getVal())
             for (i in 0..2) {
-                if (a.oGet(i) < -weaponAngleOffsetMax.getVal()) {
-                    a.oSet(i, -weaponAngleOffsetMax.getVal())
-                } else if (a.oGet(i) > weaponAngleOffsetMax.getVal()) {
-                    a.oSet(i, weaponAngleOffsetMax.getVal())
+                if (a.get(i) < -weaponAngleOffsetMax.getVal()) {
+                    a.set(i, -weaponAngleOffsetMax.getVal())
+                } else if (a.get(i) > weaponAngleOffsetMax.getVal()) {
+                    a.set(i, weaponAngleOffsetMax.getVal())
                 }
             }
             return a
@@ -6422,7 +6422,7 @@ object Player {
             if (!physicsObj.HasGroundContacts()) {
                 return
             }
-            gravityNormal.oSet(physicsObj.GetGravityNormal())
+            gravityNormal.set(physicsObj.GetGravityNormal())
 
             // if the player wasn't going down
             if (oldVelocity.times(gravityNormal.oNegative()) >= 0) {
@@ -6445,11 +6445,11 @@ object Player {
                     break
                 }
             }
-            origin.oSet(GetPhysics().GetOrigin())
-            gravityVector.oSet(physicsObj.GetGravity())
+            origin.set(GetPhysics().GetOrigin())
+            gravityVector.set(physicsObj.GetGravity())
 
             // calculate the exact velocity on landing
-            dist = origin.oMinus(oldOrigin).oMultiply(gravityNormal.oNegative())
+            dist = origin.minus(oldOrigin).oMultiply(gravityNormal.oNegative())
             vel = oldVelocity.times(gravityNormal.oNegative())
             acc = -gravityVector.Length()
             a = acc / 2.0f
@@ -6535,9 +6535,9 @@ object Player {
             // calculate speed and cycle to be used for
             // all cyclic walking effects
             //
-            velocity.oSet(physicsObj.GetLinearVelocity().oMinus(pushVelocity))
-            gravityDir.oSet(physicsObj.GetGravityNormal())
-            vel.oSet(velocity.oMinus(gravityDir.times(velocity.times(gravityDir))))
+            velocity.set(physicsObj.GetLinearVelocity().minus(pushVelocity))
+            gravityDir.set(physicsObj.GetGravityNormal())
+            vel.set(velocity.minus(gravityDir.times(velocity.times(gravityDir))))
             xyspeed = vel.LengthFast()
 
             // do not evaluate the bob for other clients
@@ -6578,9 +6578,9 @@ object Player {
             viewaxis = viewAngles.ToMat3().times(physicsObj.GetGravityAxis())
 
             // add angles based on velocity
-            delta = velocity.times(viewaxis.oGet(0))
+            delta = velocity.times(viewaxis.get(0))
             viewBobAngles.pitch += delta * SysCvar.pm_runpitch.GetFloat()
-            delta = velocity.times(viewaxis.oGet(1))
+            delta = velocity.times(viewaxis.get(1))
             viewBobAngles.roll -= delta * SysCvar.pm_runroll.GetFloat()
 
             // add angles based on bob
@@ -6668,7 +6668,7 @@ object Player {
             // circularly clamp the angles with deltas
             i = 0
             while (i < 3) {
-                cmdAngles.oSet(i, Math_h.SHORT2ANGLE(usercmd.angles[i]))
+                cmdAngles.set(i, Math_h.SHORT2ANGLE(usercmd.angles[i]))
                 if (influenceActive == Player.INFLUENCE_LEVEL3) {
                     viewAngles.plusAssign(
                         i,
@@ -6677,15 +6677,15 @@ object Player {
                             1.0f,
                             idMath.AngleDelta(
                                 idMath.AngleNormalize180(
-                                    Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i)
-                                ), viewAngles.oGet(i)
+                                    Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.get(i)
+                                ), viewAngles.get(i)
                             )
                         )
                     )
                 } else {
-                    viewAngles.oSet(
+                    viewAngles.set(
                         i,
-                        idMath.AngleNormalize180(Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.oGet(i))
+                        idMath.AngleNormalize180(Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.get(i))
                     )
                 }
                 i++
@@ -6900,16 +6900,16 @@ object Player {
             aasLocation.SetNum(num)
             i = 0
             while (i < aasLocation.Num()) {
-                aasLocation.oSet(i, aasLocation_t())
-                aasLocation.oGet(i).areaNum = 0
-                aasLocation.oGet(i).pos.oSet(origin)
+                aasLocation.set(i, aasLocation_t())
+                aasLocation.get(i).areaNum = 0
+                aasLocation.get(i).pos.set(origin)
                 aas = Game_local.gameLocal.GetAAS(i)
                 if (aas != null && aas.GetSettings() != null) {
-                    size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1))
-                    bounds.oSet(0, size.oNegative())
+                    size.set(aas.GetSettings().boundingBoxes[0].get(1))
+                    bounds.set(0, size.oNegative())
                     size.z = 32.0f
-                    bounds.oSet(1, size)
-                    aasLocation.oGet(i).areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
+                    bounds.set(1, size)
+                    aasLocation.get(i).areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
                 }
                 i++
             }
@@ -6932,14 +6932,14 @@ object Player {
                     i++
                     continue
                 }
-                size.oSet(aas.GetSettings().boundingBoxes[0].oGet(1))
-                bounds.oSet(0, size.oNegative())
+                size.set(aas.GetSettings().boundingBoxes[0].get(1))
+                bounds.set(0, size.oNegative())
                 size.z = 32.0f
-                bounds.oSet(1, size)
+                bounds.set(1, size)
                 areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
                 if (areaNum != 0) {
-                    aasLocation.oGet(i).pos.oSet(origin)
-                    aasLocation.oGet(i).areaNum = areaNum
+                    aasLocation.get(i).pos.set(origin)
+                    aasLocation.get(i).areaNum = areaNum
                 }
                 i++
             }
@@ -6952,9 +6952,9 @@ object Player {
             val pushVelocity = idVec3()
 
             // save old origin and velocity for crashlanding
-            oldOrigin.oSet(physicsObj.GetOrigin())
-            oldVelocity.oSet(physicsObj.GetLinearVelocity())
-            pushVelocity.oSet(physicsObj.GetPushedLinearVelocity())
+            oldOrigin.set(physicsObj.GetOrigin())
+            oldVelocity.set(physicsObj.GetLinearVelocity())
+            pushVelocity.set(physicsObj.GetPushedLinearVelocity())
 
             // set physics variables
             physicsObj.SetMaxStepHeight(SysCvar.pm_stepsize.GetFloat())
@@ -7026,7 +7026,7 @@ object Player {
                 if (groundEnt is idAI) {
                     val vel = idVec3(physicsObj.GetLinearVelocity())
                     if (vel.ToVec2().LengthSqr() < 0.1f) {
-                        vel.oSet(
+                        vel.set(
                             physicsObj.GetOrigin().ToVec2()
                                 .oMinus(groundEnt.GetPhysics().GetAbsBounds().GetCenter().ToVec2())
                         )
@@ -7044,8 +7044,8 @@ object Player {
                 val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.oSet(2, 200f)
-                acc.dir.oSet(0, acc.dir.oSet(1, 0f))
+                acc.dir.set(2, 200f)
+                acc.dir.set(0, acc.dir.set(1, 0f))
             }
             if (AI_ONLADDER.underscore()) {
                 val old_rung = (oldOrigin.z / Player.LADDER_RUNG_DISTANCE).toInt()
@@ -7164,7 +7164,7 @@ object Player {
 
         private fun SetSpectateOrigin() {
             val neworig = idVec3()
-            neworig.oSet(GetPhysics().GetOrigin())
+            neworig.set(GetPhysics().GetOrigin())
             neworig.plusAssign(2, EyeHeight())
             neworig.plusAssign(2, 25f)
             SetOrigin(neworig)
@@ -7235,8 +7235,8 @@ object Player {
             if (spectating) {
                 return
             }
-            start.oSet(GetEyePosition())
-            end.oSet(start.oPlus(viewAngles.ToForward().times(80.0f)))
+            start.set(GetEyePosition())
+            end.set(start.oPlus(viewAngles.ToForward().times(80.0f)))
 
             // player identification . names to the hud
             if (Game_local.gameLocal.isMultiplayer && entityNumber == Game_local.gameLocal.localClientNum) {
@@ -7361,7 +7361,7 @@ object Player {
                         focusUI.SetStateInt("inv_count", inventory.items.Num())
                         j = 0
                         while (j < inventory.items.Num()) {
-                            val item = inventory.items.oGet(j)
+                            val item = inventory.items.get(j)
                             val iname = item.GetString("inv_name")
                             val iicon = item.GetString("inv_icon")
                             val itext = item.GetString("inv_text")
@@ -7703,15 +7703,15 @@ object Player {
                 objectiveSystem.SetStateString(Str.va("objective%d", i + 1), "1")
                 objectiveSystem.SetStateString(
                     Str.va("objectivetitle%d", i + 1),
-                    inventory.objectiveNames.oGet(i).title.toString()
+                    inventory.objectiveNames.get(i).title.toString()
                 )
                 objectiveSystem.SetStateString(
                     Str.va("objectivetext%d", i + 1),
-                    inventory.objectiveNames.oGet(i).text.toString()
+                    inventory.objectiveNames.get(i).text.toString()
                 )
                 objectiveSystem.SetStateString(
                     Str.va("objectiveshot%d", i + 1),
-                    inventory.objectiveNames.oGet(i).screenshot.toString()
+                    inventory.objectiveNames.get(i).screenshot.toString()
                 )
             }
             objectiveSystem.StateChanged(Game_local.gameLocal.time)
@@ -7726,8 +7726,8 @@ object Player {
                 Show()
                 (GetBindMaster() as idAFEntity_Vehicle).Use(this)
             } else {
-                start.oSet(GetEyePosition())
-                end.oSet(start.oPlus(viewAngles.ToForward().times(80.0f)))
+                start.set(GetEyePosition())
+                end.set(start.oPlus(viewAngles.ToForward().times(80.0f)))
                 Game_local.gameLocal.clip.TracePoint(trace, start, end, Game_local.MASK_SHOT_RENDERMODEL, this)
                 if (trace.fraction < 1.0f) {
                     ent = Game_local.gameLocal.entities[trace.c.entityNum]
@@ -7749,7 +7749,7 @@ object Player {
         }
 
         private fun Event_GetViewAngles() {
-            idThread.Companion.ReturnVector(idVec3(viewAngles.oGet(0), viewAngles.oGet(1), viewAngles.oGet(2)))
+            idThread.Companion.ReturnVector(idVec3(viewAngles.get(0), viewAngles.get(1), viewAngles.get(2)))
         }
 
         private fun Event_StopFxFov() {
@@ -7861,7 +7861,7 @@ object Player {
             // setup origin and push according to the exit target
             SetOrigin(exitEnt.GetPhysics().GetOrigin().oPlus(idVec3(0, 0, CollisionModel.CM_CLIP_EPSILON)))
             SetViewAngles(exitEnt.GetPhysics().GetAxis().ToAngles())
-            physicsObj.SetLinearVelocity(exitEnt.GetPhysics().GetAxis().oGet(0).times(pushVel))
+            physicsObj.SetLinearVelocity(exitEnt.GetPhysics().GetAxis().get(0).times(pushVel))
             physicsObj.ClearPushedVelocity()
             // teleport fx
             playerView.Flash(Lib.Companion.colorWhite, 120)
@@ -7897,8 +7897,8 @@ object Player {
             mapName.StripPath()
             mapName.StripFileExtension()
             for (i in inventory.levelTriggers.Num() - 1 downTo 0) {
-                if (idStr.Companion.Icmp(mapName, inventory.levelTriggers.oGet(i).levelName) == 0) {
-                    val ent = Game_local.gameLocal.FindEntity(inventory.levelTriggers.oGet(i).triggerName)
+                if (idStr.Companion.Icmp(mapName, inventory.levelTriggers.get(i).levelName) == 0) {
+                    val ent = Game_local.gameLocal.FindEntity(inventory.levelTriggers.get(i).triggerName)
                     ent?.PostEventMS(Entity.EV_Activate, 1f, this)
                 }
             }

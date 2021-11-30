@@ -52,7 +52,7 @@ class StrPool {
             size = pool.Allocated() + poolHash.Allocated()
             i = 0
             while (i < pool.Num()) {
-                size += pool.oGet(i).Allocated()
+                size += pool.get(i).Allocated()
                 i++
             }
             return size
@@ -64,14 +64,14 @@ class StrPool {
             size = pool.Size() + poolHash.Size()
             i = 0
             while (i < pool.Num()) {
-                size += pool.oGet(i).Size()
+                size += pool.get(i).Size()
                 i++
             }
             return size
         }
 
         fun oGet(index: Int): idPoolStr? {
-            return pool.oGet(index)
+            return pool.get(index)
         }
 
         fun AllocString(string: String?): idPoolStr? {
@@ -82,19 +82,19 @@ class StrPool {
             if (caseSensitive) {
                 i = poolHash.First(hash)
                 while (i != -1) {
-                    if (pool.oGet(i).Cmp(string) == 0) {
-                        pool.oGet(i).numUsers++
-                        return pool.oGet(i)
+                    if (pool.get(i).Cmp(string) == 0) {
+                        pool.get(i).numUsers++
+                        return pool.get(i)
                     }
                     i = poolHash.Next(i)
                 }
             } else {
                 i = poolHash.First(hash)
                 while (i != -1) {
-                    if (pool.oGet(i).Icmp(string) == 0) {
-                        pool.oGet(i).numUsers++
+                    if (pool.get(i).Icmp(string) == 0) {
+                        pool.get(i).numUsers++
                         //                        System.out.printf("AllocString, i = %d\n", i);
-                        return pool.oGet(i)
+                        return pool.get(i)
                     }
                     i = poolHash.Next(i)
                 }
@@ -118,7 +118,7 @@ class StrPool {
                 if (caseSensitive) {
                     i = poolHash.First(hash)
                     while (i != -1) {
-                        if (pool.oGet(i).Cmp(poolStr.toString()) == 0) {
+                        if (pool.get(i).Cmp(poolStr.toString()) == 0) {
                             break
                         }
                         i = poolHash.Next(i)
@@ -126,14 +126,14 @@ class StrPool {
                 } else {
                     i = poolHash.First(hash)
                     while (i != -1) {
-                        if (pool.oGet(i).Icmp(poolStr.toString()) == 0) {
+                        if (pool.get(i).Icmp(poolStr.toString()) == 0) {
                             break
                         }
                         i = poolHash.Next(i)
                     }
                 }
                 assert(i != -1)
-                assert(pool.oGet(i) === poolStr)
+                assert(pool.get(i) === poolStr)
                 //		delete pool[i];
                 pool.RemoveIndex(i)
                 poolHash.RemoveIndex(hash, i)
@@ -156,7 +156,7 @@ class StrPool {
             var i: Int
             i = 0
             while (i < pool.Num()) {
-                pool.oGet(i).numUsers = 0
+                pool.get(i).numUsers = 0
                 i++
             }
             pool.DeleteContents(true)

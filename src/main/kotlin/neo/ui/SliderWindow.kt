@@ -205,12 +205,12 @@ class SliderWindow {
             thumbRect.w = thumbWidth
             thumbRect.h = thumbHeight
             if (hover && !noEvents.oCastBoolean() && Contains(gui.CursorX(), gui.CursorY())) {
-                color.oSet(hoverColor.data)
+                color.set(hoverColor.data)
             } else {
                 hover = false
             }
             if (flags and Window.WIN_CAPTURE != 0) {
-                color.oSet(hoverColor.data)
+                color.set(hoverColor.data)
                 hover = true
             }
             dc.DrawMaterial(thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat, color)

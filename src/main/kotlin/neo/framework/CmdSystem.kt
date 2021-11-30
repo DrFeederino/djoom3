@@ -592,7 +592,7 @@ object CmdSystem {
                 val bla = String(text)
                 txt = bla.substring(0, i) //do not use ctos!
                 if (0 == idStr.Cmp(txt, "_execTokenized")) {
-                    args = tokenizedCmds.oGet(0)
+                    args = tokenizedCmds.get(0)
                     tokenizedCmds.RemoveIndex(0)
                 } else {
                     args.TokenizeString(txt, false)
@@ -1142,7 +1142,7 @@ object CmdSystem {
                 cmdList.Sort()
                 i = 0
                 while (i < cmdList.Num()) {
-                    cmd = cmdList.oGet(i)
+                    cmd = cmdList.get(i)
                     idLib.common.Printf("  %-21s %s\n", cmd.name, cmd.description)
                     i++
                 }

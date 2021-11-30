@@ -2141,7 +2141,7 @@ object MultiplayerGame {
         // updates the passed gui with current score information
         private fun UpdateRankColor(gui: idUserInterface?, mask: String?, i: Int, vec: idVec3?) {
             for (j in 1..3) {
-                gui.SetStateFloat(Str.va(mask, i, j), vec.oGet(j - 1))
+                gui.SetStateFloat(Str.va(mask, i, j), vec.get(j - 1))
             }
         }
 

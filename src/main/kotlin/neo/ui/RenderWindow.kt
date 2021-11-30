@@ -72,7 +72,7 @@ class RenderWindow {
 
 //            memset(refdef, 0, sizeof(refdef));
             refdef = renderView_s()
-            refdef.vieworg.oSet(viewOffset.ToVec3())
+            refdef.vieworg.set(viewOffset.ToVec3())
             //refdef.vieworg.Set(-128, 0, 0);
             refdef.viewaxis.Identity()
             refdef.shaderParms[0] = 1
@@ -148,7 +148,7 @@ class RenderWindow {
          * @param time
          */
         private fun Render(time: Int) {
-            rLight.origin.oSet(lightOrigin.ToVec3()) //TODO:ref?
+            rLight.origin.set(lightOrigin.ToVec3()) //TODO:ref?
             rLight.shaderParms[RenderWorld.SHADERPARM_RED] = lightColor.x()
             rLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = lightColor.y()
             rLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = lightColor.z()
@@ -171,7 +171,7 @@ class RenderWindow {
                         false
                     )
                 }
-                worldEntity.axis.oSet(idAngles(modelRotate.x(), modelRotate.y(), modelRotate.z()).ToMat3())
+                worldEntity.axis.set(idAngles(modelRotate.x(), modelRotate.y(), modelRotate.z()).ToMat3())
                 //                System.out.printf("x=%f, y=%f, z=%f\n", modelRotate.x(), modelRotate.y(), modelRotate.z());
                 world.UpdateEntityDef(modelDef, worldEntity)
             }
@@ -198,7 +198,7 @@ class RenderWindow {
                 GameEdit.gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, worldEntity)
                 if (worldEntity.hModel != null) {
                     val v = idVec3(modelRotate.ToVec3())
-                    worldEntity.axis.oSet(v.ToMat3())
+                    worldEntity.axis.set(v.ToMat3())
                     worldEntity.shaderParms[0] = 1
                     worldEntity.shaderParms[1] = 1
                     worldEntity.shaderParms[2] = 1

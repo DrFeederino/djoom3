@@ -99,7 +99,7 @@ object SaveGame {
             idClipModel.Companion.SaveTraceModels(this)
             i = 1
             while (i < objects.Num()) {
-                CallSave_r(objects.oGet(i).GetType(), objects.oGet(i))
+                CallSave_r(objects.get(i).GetType(), objects.get(i))
                 i++
             }
             objects.Clear()
@@ -120,7 +120,7 @@ object SaveGame {
             WriteInt(objects.Num() - 1)
             i = 1
             while (i < objects.Num()) {
-                WriteString(objects.oGet(i).GetClassname())
+                WriteString(objects.get(i).GetClassname())
                 i++
             }
         }
@@ -595,7 +595,7 @@ object SaveGame {
                 if (null == type) {
                     Error("idRestoreGame::CreateObjects: Unknown class '%s'", className.toString())
                 }
-                objects.oSet(i, type.CreateInstance.run())
+                objects.set(i, type.CreateInstance.run())
                 i++
             }
         }
@@ -610,15 +610,15 @@ object SaveGame {
             // restore all the objects
             i = 1
             while (i < objects.Num()) {
-                CallRestore_r(objects.oGet(i).GetType(), objects.oGet(i))
+                CallRestore_r(objects.get(i).GetType(), objects.get(i))
                 i++
             }
 
             // regenerate render entities and render lights because are not saved
             i = 1
             while (i < objects.Num()) {
-                if (objects.oGet(i) is idEntity) {
-                    val ent = objects.oGet(i) as idEntity?
+                if (objects.get(i) is idEntity) {
+                    val ent = objects.get(i) as idEntity?
                     ent.UpdateVisuals()
                     ent.Present()
                 }

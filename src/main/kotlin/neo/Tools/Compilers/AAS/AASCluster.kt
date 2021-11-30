@@ -53,7 +53,7 @@ class AASCluster {
             Common.common.Printf("\r%6d portals\n", file.portals.Num())
             Common.common.Printf("%6d clusters\n", file.clusters.Num())
             for (i in 0 until file.clusters.Num()) {
-                Common.common.Printf("%6d reachable areas in cluster %d\n", file.clusters.oGet(i).numReachableAreas, i)
+                Common.common.Printf("%6d reachable areas in cluster %d\n", file.clusters.get(i).numReachableAreas, i)
             }
             file.ReportRoutingEfficiency()
             return true
@@ -75,9 +75,9 @@ class AASCluster {
             // give all reachable areas in the cluster a number
             i = 0
             while (i < file.areas.Num()) {
-                file.areas.oGet(i).cluster = file.clusters.Num().toShort()
-                if (file.areas.oGet(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
-                    file.areas.oGet(i).clusterAreaNum = cluster.numReachableAreas++.toShort()
+                file.areas.get(i).cluster = file.clusters.Num().toShort()
+                if (file.areas.get(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
+                    file.areas.get(i).clusterAreaNum = cluster.numReachableAreas++.toShort()
                 }
                 i++
             }
@@ -85,11 +85,11 @@ class AASCluster {
             numAreas = cluster.numReachableAreas
             i = 0
             while (i < file.areas.Num()) {
-                if (file.areas.oGet(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
+                if (file.areas.get(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
                     i++
                     continue
                 }
-                file.areas.oGet(i).clusterAreaNum = numAreas++.toShort()
+                file.areas.get(i).clusterAreaNum = numAreas++.toShort()
                 i++
             }
             file.clusters.Append(cluster)
@@ -97,7 +97,7 @@ class AASCluster {
             Common.common.Printf("%6d clusters\n", file.clusters.Num())
             i = 0
             while (i < file.clusters.Num()) {
-                Common.common.Printf("%6d reachable areas in cluster %d\n", file.clusters.oGet(i).numReachableAreas, i)
+                Common.common.Printf("%6d reachable areas in cluster %d\n", file.clusters.get(i).numReachableAreas, i)
                 i++
             }
             file.ReportRoutingEfficiency()
@@ -111,7 +111,7 @@ class AASCluster {
             // find the portal for this area
             portalNum = 1
             while (portalNum < file.portals.Num()) {
-                if (file.portals.oGet(portalNum).areaNum.toInt() == areaNum) {
+                if (file.portals.get(portalNum).areaNum.toInt() == areaNum) {
                     break
                 }
                 portalNum++
@@ -120,7 +120,7 @@ class AASCluster {
                 Common.common.Error("no portal for area %d", areaNum)
                 return true
             }
-            portal = file.portals.oGet(portalNum)
+            portal = file.portals.get(portalNum)
 
             // if the portal is already fully updated
             if (portal.clusters[0] == clusterNum) {
@@ -137,17 +137,17 @@ class AASCluster {
                 portal.clusters[1] = clusterNum.toShort()
             } else {
                 // remove the cluster portal flag contents
-                file.areas.oGet(areaNum).contents =
-                    file.areas.oGet(areaNum).contents and AASFile.AREACONTENTS_CLUSTERPORTAL.inv()
+                file.areas.get(areaNum).contents =
+                    file.areas.get(areaNum).contents and AASFile.AREACONTENTS_CLUSTERPORTAL.inv()
                 return false
             }
 
             // set the area cluster number to the negative portal number
-            file.areas.oGet(areaNum).cluster = -portalNum.toShort()
+            file.areas.get(areaNum).cluster = -portalNum.toShort()
 
             // add the portal to the cluster using the portal index
             file.portalIndex.Append(portalNum)
-            file.clusters.oGet(clusterNum).numPortals++
+            file.clusters.get(clusterNum).numPortals++
             return true
         }
 
@@ -157,7 +157,7 @@ class AASCluster {
             var faceNum: Int
             var i: Int
             var reach: idReachability?
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
 
             // if the area is already part of a cluster
             if (area.cluster > 0) {
@@ -168,7 +168,7 @@ class AASCluster {
                 Common.common.Error(
                     "cluster %d touched cluster %d at area %d\r\n",
                     clusterNum,
-                    file.areas.oGet(areaNum).cluster,
+                    file.areas.get(areaNum).cluster,
                     areaNum
                 )
                 return false
@@ -185,8 +185,8 @@ class AASCluster {
                 // use area faces to flood into adjacent areas
                 i = 0
                 while (i < area.numFaces) {
-                    faceNum = Math.abs(file.faceIndex.oGet(area.firstFace + i))
-                    face = file.faces.oGet(faceNum)
+                    faceNum = Math.abs(file.faceIndex.get(area.firstFace + i))
+                    face = file.faces.get(faceNum)
                     if (face.areas[0] == areaNum) {
                         if (face.areas[1] != 0) {
                             if (!FloodClusterAreas_r(face.areas[1], clusterNum)) {
@@ -205,7 +205,7 @@ class AASCluster {
             }
 
             // use the reachabilities to flood into other areas
-            reach = file.areas.oGet(areaNum).reach
+            reach = file.areas.get(areaNum).reach
             while (reach != null) {
                 if (!FloodClusterAreas_r(reach.toAreaNum.toInt(), clusterNum)) {
                     return false
@@ -214,7 +214,7 @@ class AASCluster {
             }
 
             // use the reversed reachabilities to flood into other areas
-            reach = file.areas.oGet(areaNum).rev_reach
+            reach = file.areas.get(areaNum).rev_reach
             while (reach != null) {
                 if (!FloodClusterAreas_r(reach.fromAreaNum.toInt(), clusterNum)) {
                     return false
@@ -228,7 +228,7 @@ class AASCluster {
             var i: Int
             i = 1
             while (i < file.areas.Num()) {
-                file.areas.oGet(i).cluster = 0
+                file.areas.get(i).cluster = 0
                 i++
             }
         }
@@ -238,22 +238,22 @@ class AASCluster {
             var portalNum: Int
             val cluster: aasCluster_s?
             var portal: aasPortal_s?
-            cluster = file.clusters.oGet(clusterNum)
+            cluster = file.clusters.get(clusterNum)
             cluster.numAreas = 0
             cluster.numReachableAreas = 0
 
             // number all areas in this cluster WITH reachabilities
             i = 1
             while (i < file.areas.Num()) {
-                if (file.areas.oGet(i).cluster.toInt() != clusterNum) {
+                if (file.areas.get(i).cluster.toInt() != clusterNum) {
                     i++
                     continue
                 }
-                if (0 == file.areas.oGet(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
+                if (0 == file.areas.get(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
                     i++
                     continue
                 }
-                file.areas.oGet(i).clusterAreaNum = cluster.numAreas++.toShort()
+                file.areas.get(i).clusterAreaNum = cluster.numAreas++.toShort()
                 cluster.numReachableAreas++
                 i++
             }
@@ -261,9 +261,9 @@ class AASCluster {
             // number all portals in this cluster WITH reachabilities
             i = 0
             while (i < cluster.numPortals) {
-                portalNum = file.portalIndex.oGet(cluster.firstPortal + i)
-                portal = file.portals.oGet(portalNum)
-                if (0 == file.areas.oGet(portal.areaNum.toInt()).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
+                portalNum = file.portalIndex.get(cluster.firstPortal + i)
+                portal = file.portals.get(portalNum)
+                if (0 == file.areas.get(portal.areaNum.toInt()).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
                     i++
                     continue
                 }
@@ -279,24 +279,24 @@ class AASCluster {
             // number all areas in this cluster WITHOUT reachabilities
             i = 1
             while (i < file.areas.Num()) {
-                if (file.areas.oGet(i).cluster.toInt() != clusterNum) {
+                if (file.areas.get(i).cluster.toInt() != clusterNum) {
                     i++
                     continue
                 }
-                if (file.areas.oGet(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
+                if (file.areas.get(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
                     i++
                     continue
                 }
-                file.areas.oGet(i).clusterAreaNum = cluster.numAreas++.toShort()
+                file.areas.get(i).clusterAreaNum = cluster.numAreas++.toShort()
                 i++
             }
 
             // number all portals in this cluster WITHOUT reachabilities
             i = 0
             while (i < cluster.numPortals) {
-                portalNum = file.portalIndex.oGet(cluster.firstPortal + i)
-                portal = file.portals.oGet(portalNum)
-                if (file.areas.oGet(portal.areaNum.toInt()).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
+                portalNum = file.portalIndex.get(cluster.firstPortal + i)
+                portal = file.portals.get(portalNum)
+                if (file.areas.get(portal.areaNum.toInt()).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) != 0) {
                     i++
                     continue
                 }
@@ -318,21 +318,21 @@ class AASCluster {
             while (i < file.areas.Num()) {
 
                 // if the area is already part of a cluster
-                if (file.areas.oGet(i).cluster.toInt() != 0) {
+                if (file.areas.get(i).cluster.toInt() != 0) {
                     i++
                     continue
                 }
 
                 // if not flooding through faces only use areas that have reachabilities
                 if (noFaceFlood) {
-                    if (0 == file.areas.oGet(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
+                    if (0 == file.areas.get(i).flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY)) {
                         i++
                         continue
                     }
                 }
 
                 // if the area is a cluster portal
-                if (file.areas.oGet(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
+                if (file.areas.get(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
                     i++
                     continue
                 }
@@ -362,7 +362,7 @@ class AASCluster {
             while (i < file.areas.Num()) {
 
                 // if the area is a cluster portal
-                if (file.areas.oGet(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
+                if (file.areas.get(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
                     portal.areaNum = i.toShort()
                     portal.clusters[1] = 0
                     portal.clusters[0] = portal.clusters[1]
@@ -384,8 +384,8 @@ class AASCluster {
             ok = true
             i = 1
             while (i < file.portals.Num()) {
-                portal = file.portals.oGet(i)
-                area = file.areas.oGet(portal.areaNum.toInt())
+                portal = file.portals.get(i)
+                area = file.areas.get(portal.areaNum.toInt())
 
                 // if this portal was already removed
                 if (0 == area.contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
@@ -396,7 +396,7 @@ class AASCluster {
                 // may not removed this portal if it has a reachability to a removed portal
                 reach = area.reach
                 while (reach != null) {
-                    area2 = file.areas.oGet(reach.toAreaNum.toInt())
+                    area2 = file.areas.get(reach.toAreaNum.toInt())
                     if (area2.contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
                         reach = reach.next
                         continue
@@ -414,7 +414,7 @@ class AASCluster {
                 // may not removed this portal if it has a reversed reachability to a removed portal
                 reach = area.rev_reach
                 while (reach != null) {
-                    area2 = file.areas.oGet(reach.toAreaNum.toInt())
+                    area2 = file.areas.get(reach.toAreaNum.toInt())
                     if (area2.contents and AASFile.AREACONTENTS_CLUSTERPORTAL != 0) {
                         reach = reach.rev_next
                         continue
@@ -446,7 +446,7 @@ class AASCluster {
                 // this portal may not have reachabilities to a portal that doesn't seperate the same clusters
                 reach = area.reach
                 while (reach != null) {
-                    area2 = file.areas.oGet(reach.toAreaNum.toInt())
+                    area2 = file.areas.get(reach.toAreaNum.toInt())
                     if (0 == area2.contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
                         reach = reach.next
                         continue
@@ -457,7 +457,7 @@ class AASCluster {
                         reach = reach.next
                         continue
                     }
-                    portal2 = file.portals.oGet(-file.areas.oGet(reach.toAreaNum.toInt()).cluster.toInt())
+                    portal2 = file.portals.get(-file.areas.get(reach.toAreaNum.toInt()).cluster.toInt())
                     if (portal2.clusters[0] != portal.clusters[0] && portal2.clusters[0] != portal.clusters[1]
                         || portal2.clusters[1] != portal.clusters[0] && portal2.clusters[1] != portal.clusters[1]
                     ) {
@@ -487,15 +487,15 @@ class AASCluster {
             numInvalidPortals = 0
             i = 0
             while (i < file.areas.Num()) {
-                if (0 == file.areas.oGet(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
+                if (0 == file.areas.get(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
                     i++
                     continue
                 }
                 numOpenAreas = 0
                 j = 0
-                while (j < file.areas.oGet(i).numFaces) {
-                    face1Num = file.faceIndex.oGet(file.areas.oGet(i).firstFace + j)
-                    face1 = file.faces.oGet(Math.abs(face1Num))
+                while (j < file.areas.get(i).numFaces) {
+                    face1Num = file.faceIndex.get(file.areas.get(i).firstFace + j)
+                    face1 = file.faces.get(Math.abs(face1Num))
                     otherAreaNum = face1.areas.get(if (face1Num < 0) 1 else 0)
                     if (0 == otherAreaNum) {
                         j++
@@ -503,8 +503,8 @@ class AASCluster {
                     }
                     k = 0
                     while (k < j) {
-                        face2Num = file.faceIndex.oGet(file.areas.oGet(i).firstFace + k)
-                        face2 = file.faces.oGet(Math.abs(face2Num))
+                        face2Num = file.faceIndex.get(file.areas.get(i).firstFace + k)
+                        face2 = file.faces.get(Math.abs(face2Num))
                         if (otherAreaNum == face2.areas[if (face2Num < 0) 1 else 0]) {
                             break
                         }
@@ -514,13 +514,13 @@ class AASCluster {
                         j++
                         continue
                     }
-                    if (0 == file.areas.oGet(otherAreaNum).contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
+                    if (0 == file.areas.get(otherAreaNum).contents and AASFile.AREACONTENTS_CLUSTERPORTAL) {
                         numOpenAreas++
                     }
                     j++
                 }
                 if (numOpenAreas <= 1) {
-                    file.areas.oGet(i).contents = file.areas.oGet(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL
+                    file.areas.get(i).contents = file.areas.get(i).contents and AASFile.AREACONTENTS_CLUSTERPORTAL
                     numInvalidPortals++
                 }
                 i++

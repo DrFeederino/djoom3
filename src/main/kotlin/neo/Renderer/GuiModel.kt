@@ -64,29 +64,29 @@ class GuiModel {
             demo.WriteInt(i)
             j = 0
             while (j < i) {
-                demo.WriteVec3(verts.oGet(j).xyz)
-                demo.WriteVec2(verts.oGet(j).st)
-                demo.WriteVec3(verts.oGet(j).normal)
-                demo.WriteVec3(verts.oGet(j).tangents[0])
-                demo.WriteVec3(verts.oGet(j).tangents[1])
-                demo.WriteUnsignedChar(verts.oGet(j).color[0] as Char)
-                demo.WriteUnsignedChar(verts.oGet(j).color[1] as Char)
-                demo.WriteUnsignedChar(verts.oGet(j).color[2] as Char)
-                demo.WriteUnsignedChar(verts.oGet(j).color[3] as Char)
+                demo.WriteVec3(verts.get(j).xyz)
+                demo.WriteVec2(verts.get(j).st)
+                demo.WriteVec3(verts.get(j).normal)
+                demo.WriteVec3(verts.get(j).tangents[0])
+                demo.WriteVec3(verts.get(j).tangents[1])
+                demo.WriteUnsignedChar(verts.get(j).color[0] as Char)
+                demo.WriteUnsignedChar(verts.get(j).color[1] as Char)
+                demo.WriteUnsignedChar(verts.get(j).color[2] as Char)
+                demo.WriteUnsignedChar(verts.get(j).color[3] as Char)
                 j++
             }
             i = indexes.Num()
             demo.WriteInt(i)
             j = 0
             while (j < i) {
-                demo.WriteInt(indexes.oGet(j))
+                demo.WriteInt(indexes.get(j))
                 j++
             }
             i = surfaces.Num()
             demo.WriteInt(i)
             j = 0
             while (j < i) {
-                val surf = surfaces.oGet(j)
+                val surf = surfaces.get(j)
 
 //                demo.WriteInt((int) surf.material);
                 demo.Write(surf.material)
@@ -113,19 +113,19 @@ class GuiModel {
             verts.SetNum(i.getVal(), false)
             j = 0
             while (j < i.getVal()) {
-                demo.ReadVec3(verts.oGet(j).xyz)
-                demo.ReadVec2(verts.oGet(j).st)
-                demo.ReadVec3(verts.oGet(j).normal)
-                demo.ReadVec3(verts.oGet(j).tangents[0])
-                demo.ReadVec3(verts.oGet(j).tangents[1])
+                demo.ReadVec3(verts.get(j).xyz)
+                demo.ReadVec2(verts.get(j).st)
+                demo.ReadVec3(verts.get(j).normal)
+                demo.ReadVec3(verts.get(j).tangents[0])
+                demo.ReadVec3(verts.get(j).tangents[1])
                 demo.ReadUnsignedChar(color)
-                verts.oGet(j).color[0] = color[0] as Byte
+                verts.get(j).color[0] = color[0] as Byte
                 demo.ReadUnsignedChar(color)
-                verts.oGet(j).color[1] = color[0] as Byte
+                verts.get(j).color[1] = color[0] as Byte
                 demo.ReadUnsignedChar(color)
-                verts.oGet(j).color[2] = color[0] as Byte
+                verts.get(j).color[2] = color[0] as Byte
                 demo.ReadUnsignedChar(color)
-                verts.oGet(j).color[3] = color[0] as Byte
+                verts.get(j).color[3] = color[0] as Byte
                 j++
             }
             i.setVal(indexes.Num())
@@ -134,7 +134,7 @@ class GuiModel {
             j = 0
             while (j < i.getVal()) {
                 demo.ReadInt(k)
-                indexes.oSet(j, k.getVal())
+                indexes.set(j, k.getVal())
                 j++
             }
             i.setVal(surfaces.Num())
@@ -142,7 +142,7 @@ class GuiModel {
             surfaces.SetNum(i.getVal(), false)
             j = 0
             while (j < i.getVal()) {
-                val surf = surfaces.oGet(j)
+                val surf = surfaces.get(j)
 
 //                demo.ReadInt((int) surf.material);
                 demo.Read(surf.material) //TODO:serialize?
@@ -166,7 +166,7 @@ class GuiModel {
                 modelViewMatrix
             )
             for (i in 0 until surfaces.Num()) {
-                EmitSurface(surfaces.oGet(i), modelMatrix, modelViewMatrix, depthHack)
+                EmitSurface(surfaces.get(i), modelMatrix, modelViewMatrix, depthHack)
             }
         }
 
@@ -179,7 +179,7 @@ class GuiModel {
          */
         fun EmitFullScreen() {
             val viewDef: viewDef_s
-            if (surfaces.oGet(0).numVerts == 0) {
+            if (surfaces.get(0).numVerts == 0) {
                 return
             }
             viewDef = viewDef_s() //R_ClearedFrameAlloc(sizeof(viewDef));
@@ -233,9 +233,9 @@ class GuiModel {
             // add the surfaces to this view
             for (i in 0 until surfaces.Num()) {
                 if (i == 33) {
-                    surfaces.oGet(i).material.DBG_BALLS = i
+                    surfaces.get(i).material.DBG_BALLS = i
                 }
-                EmitSurface(surfaces.oGet(i), viewDef.worldSpace.modelMatrix, viewDef.worldSpace.modelViewMatrix, false)
+                EmitSurface(surfaces.get(i), viewDef.worldSpace.modelMatrix, viewDef.worldSpace.modelViewMatrix, false)
             }
             tr_local.tr.viewDef = oldViewDef
 
@@ -373,15 +373,15 @@ class GuiModel {
                     verts.SetNum(numVerts + w.GetNumPoints(), false)
                     j = 0
                     while (j < w.GetNumPoints()) {
-                        val dv = verts.oGet(numVerts + j)
+                        val dv = verts.get(numVerts + j)
                         dv.xyz.x = w.oGet(j).x
                         dv.xyz.y = w.oGet(j).y
                         dv.xyz.z = w.oGet(j).z
                         dv.st.x = w.oGet(j).s
                         dv.st.y = w.oGet(j).t
-                        dv.normal.Set(0f, 0f, 1f)
-                        dv.tangents[0].Set(1f, 0f, 0f)
-                        dv.tangents[1].Set(0f, 1f, 0f)
+                        dv.normal.set(0f, 0f, 1f)
+                        dv.tangents[0].set(1f, 0f, 0f)
+                        dv.tangents[1].set(0f, 1f, 0f)
                         j++
                     }
                     surf.numVerts += w.GetNumPoints()
@@ -405,12 +405,12 @@ class GuiModel {
                 surf.numVerts += vertCount
                 surf.numIndexes += indexCount
                 for (i in 0 until indexCount) {
-                    indexes.oSet(numIndexes + i, numVerts + dIndexes[i] - surf.firstVert)
+                    indexes.set(numIndexes + i, numVerts + dIndexes[i] - surf.firstVert)
                 }
 
                 //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
                 for (i in 0 until vertCount) {
-                    verts.oSet(i + numVerts, idDrawVert(dVerts[i]))
+                    verts.set(i + numVerts, idDrawVert(dVerts[i]))
                 }
                 //                }
             }
@@ -486,62 +486,62 @@ class GuiModel {
             indexes[3] = 2
             indexes[4] = 0
             indexes[5] = 1
-            verts[0].xyz.oSet(0, x)
-            verts[0].xyz.oSet(1, y)
-            verts[0].xyz.oSet(2, 0f)
-            verts[0].st.oSet(0, s1)
-            verts[0].st.oSet(1, t1)
-            verts[0].normal.oSet(0, 0f)
-            verts[0].normal.oSet(1, 0f)
-            verts[0].normal.oSet(2, 1f)
-            verts[0].tangents[0].oSet(0, 1f)
-            verts[0].tangents[0].oSet(1, 0f)
-            verts[0].tangents[0].oSet(2, 0f)
-            verts[0].tangents[1].oSet(0, 0f)
-            verts[0].tangents[1].oSet(1, 1f)
-            verts[0].tangents[1].oSet(2, 0f)
-            verts[1].xyz.oSet(0, x + w)
-            verts[1].xyz.oSet(1, y)
-            verts[1].xyz.oSet(2, 0f)
-            verts[1].st.oSet(0, s2)
-            verts[1].st.oSet(1, t1)
-            verts[1].normal.oSet(0, 0f)
-            verts[1].normal.oSet(1, 0f)
-            verts[1].normal.oSet(2, 1f)
-            verts[1].tangents[0].oSet(0, 1f)
-            verts[1].tangents[0].oSet(1, 0f)
-            verts[1].tangents[0].oSet(2, 0f)
-            verts[1].tangents[1].oSet(0, 0f)
-            verts[1].tangents[1].oSet(1, 1f)
-            verts[1].tangents[1].oSet(2, 0f)
-            verts[2].xyz.oSet(0, x + w)
-            verts[2].xyz.oSet(1, y + h)
-            verts[2].xyz.oSet(2, 0f)
-            verts[2].st.oSet(0, s2)
-            verts[2].st.oSet(1, t2)
-            verts[2].normal.oSet(0, 0f)
-            verts[2].normal.oSet(1, 0f)
-            verts[2].normal.oSet(2, 1f)
-            verts[2].tangents[0].oSet(0, 1f)
-            verts[2].tangents[0].oSet(1, 0f)
-            verts[2].tangents[0].oSet(2, 0f)
-            verts[2].tangents[1].oSet(0, 0f)
-            verts[2].tangents[1].oSet(1, 1f)
-            verts[2].tangents[1].oSet(2, 0f)
-            verts[3].xyz.oSet(0, x)
-            verts[3].xyz.oSet(1, y + h)
-            verts[3].xyz.oSet(2, 0f)
-            verts[3].st.oSet(0, s1)
-            verts[3].st.oSet(1, t2)
-            verts[3].normal.oSet(0, 0f)
-            verts[3].normal.oSet(1, 0f)
-            verts[3].normal.oSet(2, 1f)
-            verts[3].tangents[0].oSet(0, 1f)
-            verts[3].tangents[0].oSet(1, 0f)
-            verts[3].tangents[0].oSet(2, 0f)
-            verts[3].tangents[1].oSet(0, 0f)
-            verts[3].tangents[1].oSet(1, 1f)
-            verts[3].tangents[1].oSet(2, 0f)
+            verts[0].xyz.set(0, x)
+            verts[0].xyz.set(1, y)
+            verts[0].xyz.set(2, 0f)
+            verts[0].st.set(0, s1)
+            verts[0].st.set(1, t1)
+            verts[0].normal.set(0, 0f)
+            verts[0].normal.set(1, 0f)
+            verts[0].normal.set(2, 1f)
+            verts[0].tangents[0].set(0, 1f)
+            verts[0].tangents[0].set(1, 0f)
+            verts[0].tangents[0].set(2, 0f)
+            verts[0].tangents[1].set(0, 0f)
+            verts[0].tangents[1].set(1, 1f)
+            verts[0].tangents[1].set(2, 0f)
+            verts[1].xyz.set(0, x + w)
+            verts[1].xyz.set(1, y)
+            verts[1].xyz.set(2, 0f)
+            verts[1].st.set(0, s2)
+            verts[1].st.set(1, t1)
+            verts[1].normal.set(0, 0f)
+            verts[1].normal.set(1, 0f)
+            verts[1].normal.set(2, 1f)
+            verts[1].tangents[0].set(0, 1f)
+            verts[1].tangents[0].set(1, 0f)
+            verts[1].tangents[0].set(2, 0f)
+            verts[1].tangents[1].set(0, 0f)
+            verts[1].tangents[1].set(1, 1f)
+            verts[1].tangents[1].set(2, 0f)
+            verts[2].xyz.set(0, x + w)
+            verts[2].xyz.set(1, y + h)
+            verts[2].xyz.set(2, 0f)
+            verts[2].st.set(0, s2)
+            verts[2].st.set(1, t2)
+            verts[2].normal.set(0, 0f)
+            verts[2].normal.set(1, 0f)
+            verts[2].normal.set(2, 1f)
+            verts[2].tangents[0].set(0, 1f)
+            verts[2].tangents[0].set(1, 0f)
+            verts[2].tangents[0].set(2, 0f)
+            verts[2].tangents[1].set(0, 0f)
+            verts[2].tangents[1].set(1, 1f)
+            verts[2].tangents[1].set(2, 0f)
+            verts[3].xyz.set(0, x)
+            verts[3].xyz.set(1, y + h)
+            verts[3].xyz.set(2, 0f)
+            verts[3].st.set(0, s1)
+            verts[3].st.set(1, t2)
+            verts[3].normal.set(0, 0f)
+            verts[3].normal.set(1, 0f)
+            verts[3].normal.set(2, 1f)
+            verts[3].tangents[0].set(0, 1f)
+            verts[3].tangents[0].set(1, 0f)
+            verts[3].tangents[0].set(2, 0f)
+            verts[3].tangents[1].set(0, 0f)
+            verts[3].tangents[1].set(1, 1f)
+            verts[3].tangents[1].set(2, 0f)
             this.DrawStretchPic(verts /*[0]*/, indexes /*[0]*/, 4, 6, hShader, false, 0.0f, 0.0f, 640.0f, 480.0f)
             bla99++
         }
@@ -576,48 +576,48 @@ class GuiModel {
             tempIndexes[0] = 1
             tempIndexes[1] = 0
             tempIndexes[2] = 2
-            tempVerts[0].xyz.oSet(0, p1.x)
-            tempVerts[0].xyz.oSet(1, p1.y)
-            tempVerts[0].xyz.oSet(2, 0f)
-            tempVerts[0].st.oSet(0, t1.x)
-            tempVerts[0].st.oSet(1, t1.y)
-            tempVerts[0].normal.oSet(0, 0f)
-            tempVerts[0].normal.oSet(1, 0f)
-            tempVerts[0].normal.oSet(2, 1f)
-            tempVerts[0].tangents[0].oSet(0, 1f)
-            tempVerts[0].tangents[0].oSet(1, 0f)
-            tempVerts[0].tangents[0].oSet(2, 0f)
-            tempVerts[0].tangents[1].oSet(0, 0f)
-            tempVerts[0].tangents[1].oSet(1, 1f)
-            tempVerts[0].tangents[1].oSet(2, 0f)
-            tempVerts[1].xyz.oSet(0, p2.x)
-            tempVerts[1].xyz.oSet(1, p2.y)
-            tempVerts[1].xyz.oSet(2, 0f)
-            tempVerts[1].st.oSet(0, t2.x)
-            tempVerts[1].st.oSet(1, t2.y)
-            tempVerts[1].normal.oSet(0, 0f)
-            tempVerts[1].normal.oSet(1, 0f)
-            tempVerts[1].normal.oSet(2, 1f)
-            tempVerts[1].tangents[0].oSet(0, 1f)
-            tempVerts[1].tangents[0].oSet(1, 0f)
-            tempVerts[1].tangents[0].oSet(2, 0f)
-            tempVerts[1].tangents[1].oSet(0, 0f)
-            tempVerts[1].tangents[1].oSet(1, 1f)
-            tempVerts[1].tangents[1].oSet(2, 0f)
-            tempVerts[2].xyz.oSet(0, p3.x)
-            tempVerts[2].xyz.oSet(1, p3.y)
-            tempVerts[2].xyz.oSet(2, 0f)
-            tempVerts[2].st.oSet(0, t3.x)
-            tempVerts[2].st.oSet(1, t3.y)
-            tempVerts[2].normal.oSet(0, 0f)
-            tempVerts[2].normal.oSet(1, 0f)
-            tempVerts[2].normal.oSet(2, 1f)
-            tempVerts[2].tangents[0].oSet(0, 1f)
-            tempVerts[2].tangents[0].oSet(1, 0f)
-            tempVerts[2].tangents[0].oSet(2, 0f)
-            tempVerts[2].tangents[1].oSet(0, 0f)
-            tempVerts[2].tangents[1].oSet(1, 1f)
-            tempVerts[2].tangents[1].oSet(2, 0f)
+            tempVerts[0].xyz.set(0, p1.x)
+            tempVerts[0].xyz.set(1, p1.y)
+            tempVerts[0].xyz.set(2, 0f)
+            tempVerts[0].st.set(0, t1.x)
+            tempVerts[0].st.set(1, t1.y)
+            tempVerts[0].normal.set(0, 0f)
+            tempVerts[0].normal.set(1, 0f)
+            tempVerts[0].normal.set(2, 1f)
+            tempVerts[0].tangents[0].set(0, 1f)
+            tempVerts[0].tangents[0].set(1, 0f)
+            tempVerts[0].tangents[0].set(2, 0f)
+            tempVerts[0].tangents[1].set(0, 0f)
+            tempVerts[0].tangents[1].set(1, 1f)
+            tempVerts[0].tangents[1].set(2, 0f)
+            tempVerts[1].xyz.set(0, p2.x)
+            tempVerts[1].xyz.set(1, p2.y)
+            tempVerts[1].xyz.set(2, 0f)
+            tempVerts[1].st.set(0, t2.x)
+            tempVerts[1].st.set(1, t2.y)
+            tempVerts[1].normal.set(0, 0f)
+            tempVerts[1].normal.set(1, 0f)
+            tempVerts[1].normal.set(2, 1f)
+            tempVerts[1].tangents[0].set(0, 1f)
+            tempVerts[1].tangents[0].set(1, 0f)
+            tempVerts[1].tangents[0].set(2, 0f)
+            tempVerts[1].tangents[1].set(0, 0f)
+            tempVerts[1].tangents[1].set(1, 1f)
+            tempVerts[1].tangents[1].set(2, 0f)
+            tempVerts[2].xyz.set(0, p3.x)
+            tempVerts[2].xyz.set(1, p3.y)
+            tempVerts[2].xyz.set(2, 0f)
+            tempVerts[2].st.set(0, t3.x)
+            tempVerts[2].st.set(1, t3.y)
+            tempVerts[2].normal.set(0, 0f)
+            tempVerts[2].normal.set(1, 0f)
+            tempVerts[2].normal.set(2, 1f)
+            tempVerts[2].tangents[0].set(0, 1f)
+            tempVerts[2].tangents[0].set(1, 0f)
+            tempVerts[2].tangents[0].set(2, 0f)
+            tempVerts[2].tangents[1].set(0, 0f)
+            tempVerts[2].tangents[1].set(1, 1f)
+            tempVerts[2].tangents[1].set(2, 0f)
 
             // break the current surface if we are changing to a new material
             if (material !== surf.material) {
@@ -637,12 +637,12 @@ class GuiModel {
             surf.numVerts += vertCount
             surf.numIndexes += indexCount
             for (i in 0 until indexCount) {
-                indexes.oSet(numIndexes + i, numVerts + tempIndexes[i] - surf.firstVert)
+                indexes.set(numIndexes + i, numVerts + tempIndexes[i] - surf.firstVert)
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
             for (i in 0 until vertCount) {
-                verts.oSet(i, idDrawVert(tempVerts[i]))
+                verts.set(i, idDrawVert(tempVerts[i]))
             }
         }
 
@@ -667,7 +667,7 @@ class GuiModel {
             s.numVerts = 0
             s.firstVert = verts.Num()
             surfaces.Append(s)
-            surf = surfaces.oGet(surfaces.Num() - 1)
+            surf = surfaces.get(surfaces.Num() - 1)
             //            TempDump.printCallStack(bla555 + "");
             val bla0 = setColorTotal
             val bla1 = setColor
@@ -698,7 +698,7 @@ class GuiModel {
                 var s = surf.firstIndex
                 var d = 0
                 while (d < tri.numIndexes) {
-                    tri.indexes[d] = indexes.oGet(s)
+                    tri.indexes[d] = indexes.get(s)
                     s++
                     d++
                 }
@@ -713,7 +713,7 @@ class GuiModel {
             var s = surf.firstVert
             var d = 0
             while (d < tri.numVerts) {
-                tri.verts[d] = idDrawVert(verts.oGet(s))
+                tri.verts[d] = idDrawVert(verts.get(s))
                 s++
                 d++
             }

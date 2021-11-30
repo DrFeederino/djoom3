@@ -193,8 +193,8 @@ object AASFile {
         fun CopyBase(reach: idReachability?) {
             travelType = reach.travelType
             toAreaNum = reach.toAreaNum
-            start.oSet(reach.start)
-            end.oSet(reach.end)
+            start.set(reach.start)
+            end.set(reach.end)
             edgeNum = reach.edgeNum
             travelTime = reach.travelTime
         }
@@ -436,9 +436,9 @@ object AASFile {
                     fileExtension = token
                 } else if (token == "gravity") {
                     ParseVector(src, gravity)
-                    gravityDir.oSet(gravity)
+                    gravityDir.set(gravity)
                     gravityValue = gravityDir.Normalize()
-                    invGravityDir.oSet(gravityDir.oNegative())
+                    invGravityDir.set(gravityDir.oNegative())
                 } else if (token == "maxStepHeight") {
                     if (!ParseFloat(src, maxStepHeight)) {
                         return false
@@ -487,10 +487,10 @@ object AASFile {
 
         fun FromDict(name: String?, dict: idDict?): Boolean {
             val bounds = idBounds()
-            if (!dict.GetVector("mins", "0 0 0", bounds.oGet(0))) {
+            if (!dict.GetVector("mins", "0 0 0", bounds.get(0))) {
                 Common.common.Error("Missing 'mins' in entityDef '%s'", name)
             }
-            if (!dict.GetVector("maxs", "0 0 0", bounds.oGet(1))) {
+            if (!dict.GetVector("maxs", "0 0 0", bounds.get(1))) {
                 Common.common.Error("Missing 'maxs' in entityDef '%s'", name)
             }
             numBoundingBoxes = 1
@@ -516,9 +516,9 @@ object AASFile {
             if (!dict.GetVector("gravity", "0 0 -1066", gravity)) {
                 Common.common.Error("Missing 'gravity' in entityDef '%s'", name)
             }
-            gravityDir.oSet(gravity)
+            gravityDir.set(gravity)
             gravityValue = gravityDir.Normalize()
-            invGravityDir.oSet(gravityDir.oNegative())
+            invGravityDir.set(gravityDir.oNegative())
             if (!dict.GetFloat("maxStepHeight", "0", maxStepHeight)) {
                 Common.common.Error("Missing 'maxStepHeight' in entityDef '%s'", name)
             }
@@ -557,8 +557,8 @@ object AASFile {
             while (i < numBoundingBoxes) {
                 fp.WriteFloatString(
                     "\t\t(%f %f %f)-(%f %f %f)\n",
-                    boundingBoxes.get(i).oGet(0).x, boundingBoxes.get(i).oGet(0).y, boundingBoxes.get(i).oGet(0).z,
-                    boundingBoxes.get(i).oGet(1).x, boundingBoxes.get(i).oGet(1).y, boundingBoxes.get(i).oGet(1).z
+                    boundingBoxes.get(i).get(0).x, boundingBoxes.get(i).get(0).y, boundingBoxes.get(i).get(0).z,
+                    boundingBoxes.get(i).get(1).x, boundingBoxes.get(i).get(1).y, boundingBoxes.get(i).get(1).z
                 )
                 i++
             }
@@ -587,10 +587,10 @@ object AASFile {
             var i: Int
             i = 0
             while (i < 3) {
-                if (bounds.oGet(0, i) < boundingBoxes.get(0).oGet(0, i)) {
+                if (bounds.get(0, i) < boundingBoxes.get(0).get(0, i)) {
                     return false
                 }
-                if (bounds.oGet(1, i) > boundingBoxes.get(0).oGet(1, i)) {
+                if (bounds.get(1, i) > boundingBoxes.get(0).get(1, i)) {
                     return false
                 }
                 i++
@@ -614,11 +614,11 @@ object AASFile {
                     use_aas
                 ) && TempDump.NOT(fileExtension.Icmp(use_aas).toDouble())
             ) {
-                if (decl.dict.GetVector("mins", null, bounds.oGet(0))) {
-                    decl.dict.GetVector("maxs", null, bounds.oGet(1))
+                if (decl.dict.GetVector("mins", null, bounds.get(0))) {
+                    decl.dict.GetVector("maxs", null, bounds.get(1))
                 } else if (decl.dict.GetVector("size", null, size)) {
-                    bounds.oGet(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
-                    bounds.oGet(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
+                    bounds.get(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
+                    bounds.get(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
                 }
                 if (!ValidForBounds(bounds)) {
                     Common.common.Error("%s cannot use %s\n", classname, fileExtension)
@@ -670,11 +670,11 @@ object AASFile {
                     return true
                 }
                 src.UnreadToken(token)
-                src.Parse1DMatrix(3, bounds.oGet(0))
+                src.Parse1DMatrix(3, bounds.get(0))
                 if (!src.ExpectTokenString("-")) {
                     return false
                 }
-                src.Parse1DMatrix(3, bounds.oGet(1))
+                src.Parse1DMatrix(3, bounds.get(1))
                 boundingBoxes.get(numBoundingBoxes++) = bounds
             }
             return false
@@ -763,7 +763,7 @@ object AASFile {
         }
 
         fun GetPlane(index: Int): idPlane? {
-            return planeList.oGet(index)
+            return planeList.get(index)
         }
 
         fun GetNumVertices(): Int {
@@ -771,7 +771,7 @@ object AASFile {
         }
 
         fun  /*aasVertex_t*/GetVertex(index: Int): idVec3? {
-            return vertices.oGet(index)
+            return vertices.get(index)
         }
 
         fun GetNumEdges(): Int {
@@ -779,7 +779,7 @@ object AASFile {
         }
 
         fun GetEdge(index: Int): aasEdge_s? {
-            return edges.oGet(index)
+            return edges.get(index)
         }
 
         fun GetNumEdgeIndexes(): Int {
@@ -787,7 +787,7 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetEdgeIndex(index: Int): Int {
-            return edgeIndex.oGet(index)
+            return edgeIndex.get(index)
         }
 
         fun GetNumFaces(): Int {
@@ -795,7 +795,7 @@ object AASFile {
         }
 
         fun GetFace(index: Int): aasFace_s? {
-            return faces.oGet(index)
+            return faces.get(index)
         }
 
         fun GetNumFaceIndexes(): Int {
@@ -803,7 +803,7 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetFaceIndex(index: Int): Int {
-            return faceIndex.oGet(index)
+            return faceIndex.get(index)
         }
 
         fun GetNumAreas(): Int {
@@ -811,7 +811,7 @@ object AASFile {
         }
 
         fun GetArea(index: Int): aasArea_s? {
-            return areas.oGet(index)
+            return areas.get(index)
         }
 
         fun GetNumNodes(): Int {
@@ -819,7 +819,7 @@ object AASFile {
         }
 
         fun GetNode(index: Int): aasNode_s? {
-            return nodes.oGet(index)
+            return nodes.get(index)
         }
 
         fun GetNumPortals(): Int {
@@ -827,7 +827,7 @@ object AASFile {
         }
 
         fun GetPortal(index: Int): aasPortal_s? {
-            return portals.oGet(index)
+            return portals.get(index)
         }
 
         fun GetNumPortalIndexes(): Int {
@@ -835,7 +835,7 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetPortalIndex(index: Int): Int {
-            return portalIndex.oGet(index)
+            return portalIndex.get(index)
         }
 
         fun GetNumClusters(): Int {
@@ -843,7 +843,7 @@ object AASFile {
         }
 
         fun GetCluster(index: Int): aasCluster_s? {
-            return clusters.oGet(index)
+            return clusters.get(index)
         }
 
         fun GetSettings(): idAASSettings? {
@@ -851,15 +851,15 @@ object AASFile {
         }
 
         fun SetPortalMaxTravelTime(index: Int, time: Int) {
-            portals.oGet(index).maxAreaTravelTime = time
+            portals.get(index).maxAreaTravelTime = time
         }
 
         fun SetAreaTravelFlag(index: Int, flag: Int) {
-            areas.oGet(index).travelFlags = areas.oGet(index).travelFlags or flag
+            areas.get(index).travelFlags = areas.get(index).travelFlags or flag
         }
 
         fun RemoveAreaTravelFlag(index: Int, flag: Int) {
-            areas.oGet(index).travelFlags = areas.oGet(index).travelFlags and flag.inv()
+            areas.get(index).travelFlags = areas.get(index).travelFlags and flag.inv()
         }
 
         abstract fun EdgeCenter(edgeNum: Int): idVec3?

@@ -446,8 +446,8 @@ class AAS_local {
                 return
             }
             val v = file.GetEdge(Math.abs(edgeNum)).vertexNum
-            start.oSet(file.GetVertex(v[Math_h.INTSIGNBITSET(edgeNum)]))
-            end.oSet(file.GetVertex(v[Math_h.INTSIGNBITNOTSET(edgeNum)]))
+            start.set(file.GetVertex(v[Math_h.INTSIGNBITSET(edgeNum)]))
+            end.set(file.GetVertex(v[Math_h.INTSIGNBITNOTSET(edgeNum)]))
         }
 
         override fun SetAreaState(bounds: idBounds?, areaContents: Int, disabled: Boolean): Boolean {
@@ -455,8 +455,8 @@ class AAS_local {
             if (TempDump.NOT(file)) {
                 return false
             }
-            expBounds.oSet(0, bounds.oGet(0).oMinus(file.GetSettings().boundingBoxes[0].oGet(1)))
-            expBounds.oSet(1, bounds.oGet(1).oMinus(file.GetSettings().boundingBoxes[0].oGet(0)))
+            expBounds.set(0, bounds.get(0).minus(file.GetSettings().boundingBoxes[0].get(1)))
+            expBounds.set(1, bounds.get(1).minus(file.GetSettings().boundingBoxes[0].get(0)))
 
             // find all areas within or touching the bounds with the given contents and disable/enable them for routing
             return SetAreaState_r(1, expBounds, areaContents, disabled)
@@ -468,8 +468,8 @@ class AAS_local {
                 return -1
             }
             obstacle = idRoutingObstacle()
-            obstacle.bounds.oSet(0, bounds.oGet(0).oMinus(file.GetSettings().boundingBoxes[0].oGet(1)))
-            obstacle.bounds.oSet(1, bounds.oGet(1).oMinus(file.GetSettings().boundingBoxes[0].oGet(0)))
+            obstacle.bounds.set(0, bounds.get(0).minus(file.GetSettings().boundingBoxes[0].get(1)))
+            obstacle.bounds.set(1, bounds.get(1).minus(file.GetSettings().boundingBoxes[0].get(0)))
             GetBoundsAreas_r(1, obstacle.bounds, obstacle.areas)
             SetObstacleState(obstacle, true)
             obstacleList.Append(obstacle)
@@ -481,7 +481,7 @@ class AAS_local {
                 return
             }
             if (handle >= 0 && handle < obstacleList.Num()) {
-                SetObstacleState(obstacleList.oGet(handle), false)
+                SetObstacleState(obstacleList.get(handle), false)
 
 //		delete obstacleList[handle];
                 obstacleList.RemoveIndex(handle)
@@ -495,7 +495,7 @@ class AAS_local {
             }
             i = 0
             while (i < obstacleList.Num()) {
-                SetObstacleState(obstacleList.oGet(i), false)
+                SetObstacleState(obstacleList.get(i), false)
                 i++
             }
             obstacleList.Clear()
@@ -701,12 +701,12 @@ class AAS_local {
             val reach = arrayOf<idReachability?>(null)
             val endPos = idVec3()
             path.type = AAS.PATHTYPE_WALK
-            path.moveGoal.oSet(origin)
+            path.moveGoal.set(origin)
             path.moveAreaNum = areaNum
-            path.secondaryGoal.oSet(origin)
+            path.secondaryGoal.set(origin)
             path.reachability = null
             if (file == null || areaNum == goalAreaNum) {
-                path.moveGoal.oSet(goalOrigin)
+                path.moveGoal.set(goalOrigin)
                 return true
             }
             lastAreas[3] = areaNum
@@ -727,9 +727,9 @@ class AAS_local {
                 // no need to check through the first area
                 if (areaNum != curAreaNum) {
                     // only optimize a limited distance ahead
-                    if (reach[0].start.oMinus(origin).LengthSqr() > Math_h.Square(AAS_pathing.maxWalkPathDistance)) {
+                    if (reach[0].start.minus(origin).LengthSqr() > Math_h.Square(AAS_pathing.maxWalkPathDistance)) {
                         if (AAS_pathing.SUBSAMPLE_WALK_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleWalkPath(
                                     areaNum,
                                     origin,
@@ -745,7 +745,7 @@ class AAS_local {
                     }
                     if (!WalkPathValid(areaNum, origin, 0, reach[0].start, travelFlags, endPos, endAreaNum)) {
                         if (AAS_pathing.SUBSAMPLE_WALK_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleWalkPath(
                                     areaNum,
                                     origin,
@@ -760,7 +760,7 @@ class AAS_local {
                         return true
                     }
                 }
-                path.moveGoal.oSet(reach[0].start)
+                path.moveGoal.set(reach[0].start)
                 path.moveAreaNum = curAreaNum
                 if (reach[0].travelType != AASFile.TFL_WALK) {
                     break
@@ -768,12 +768,12 @@ class AAS_local {
                 if (!WalkPathValid(areaNum, origin, 0, reach[0].end, travelFlags, endPos, endAreaNum)) {
                     return true
                 }
-                path.moveGoal.oSet(reach[0].end)
+                path.moveGoal.set(reach[0].end)
                 path.moveAreaNum = reach[0].toAreaNum.toInt()
                 if (reach[0].toAreaNum.toInt() == goalAreaNum) {
                     if (!WalkPathValid(areaNum, origin, 0, goalOrigin, travelFlags, endPos, endAreaNum)) {
                         if (AAS_pathing.SUBSAMPLE_WALK_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleWalkPath(
                                     areaNum,
                                     origin,
@@ -787,7 +787,7 @@ class AAS_local {
                         }
                         return true
                     }
-                    path.moveGoal.oSet(goalOrigin)
+                    path.moveGoal.set(goalOrigin)
                     path.moveAreaNum = goalAreaNum
                     return true
                 }
@@ -810,17 +810,17 @@ class AAS_local {
             when (reach[0].travelType) {
                 AASFile.TFL_WALKOFFLEDGE -> {
                     path.type = AAS.PATHTYPE_WALKOFFLEDGE
-                    path.secondaryGoal.oSet(reach[0].end)
+                    path.secondaryGoal.set(reach[0].end)
                     path.reachability = reach[0]
                 }
                 AASFile.TFL_BARRIERJUMP -> {
                     path.type = path.type or AAS.PATHTYPE_BARRIERJUMP
-                    path.secondaryGoal.oSet(reach[0].end)
+                    path.secondaryGoal.set(reach[0].end)
                     path.reachability = reach[0]
                 }
                 AASFile.TFL_JUMP -> {
                     path.type = path.type or AAS.PATHTYPE_JUMP
-                    path.secondaryGoal.oSet(reach[0].end)
+                    path.secondaryGoal.set(reach[0].end)
                     path.reachability = reach[0]
                 }
                 else -> {}
@@ -856,7 +856,7 @@ class AAS_local {
             val p = idVec3()
             val dir = idVec3()
             if (file == null) {
-                endPos.oSet(goalOrigin)
+                endPos.set(goalOrigin)
                 endAreaNum.setVal(0)
                 return true
             }
@@ -865,10 +865,10 @@ class AAS_local {
             lastAreas[1] = lastAreas[2]
             lastAreas[0] = lastAreas[1]
             lastAreaIndex = 0
-            pathPlane.SetNormal(goalOrigin.oMinus(origin).Cross(file.GetSettings().gravityDir))
+            pathPlane.SetNormal(goalOrigin.minus(origin).Cross(file.GetSettings().gravityDir))
             pathPlane.Normalize()
             pathPlane.FitThroughPoint(origin)
-            frontPlane.SetNormal(goalOrigin.oMinus(origin))
+            frontPlane.SetNormal(goalOrigin.minus(origin))
             frontPlane.Normalize()
             frontPlane.FitThroughPoint(origin)
             farPlane.SetNormal(frontPlane.Normal())
@@ -879,7 +879,7 @@ class AAS_local {
 
                 // find the furthest floor face split point on the path
                 if (!FloorEdgeSplitPoint(endPos, curAreaNum, pathPlane, frontPlane, false)) {
-                    endPos.oSet(origin)
+                    endPos.set(origin)
                 }
 
                 // if we found a point near or further than the goal we're done
@@ -925,9 +925,9 @@ class AAS_local {
                     }
 
                     // direction parallel to gravity
-                    dir.oSet(
+                    dir.set(
                         file.GetSettings().gravityDir.times(endPos.times(file.GetSettings().gravityDir))
-                            .oMinus(file.GetSettings().gravityDir.times(p.times(file.GetSettings().gravityDir)))
+                            .minus(file.GetSettings().gravityDir.times(p.times(file.GetSettings().gravityDir)))
                     )
                     if (dir.LengthSqr() > Math_h.Square(file.GetSettings().maxStepHeight.getVal())) {
                         reach = reach.next
@@ -935,7 +935,7 @@ class AAS_local {
                     }
 
                     // direction orthogonal to gravity
-                    dir.oSet(endPos.oMinus(p.oMinus(dir)))
+                    dir.set(endPos.minus(p.minus(dir)))
                     if (dir.LengthSqr() > Math_h.Square(0.2f)) {
                         reach = reach.next
                         continue
@@ -979,12 +979,12 @@ class AAS_local {
             val reach = arrayOf<idReachability?>(null)
             val endPos = idVec3()
             path.type = AAS.PATHTYPE_WALK
-            path.moveGoal.oSet(origin)
+            path.moveGoal.set(origin)
             path.moveAreaNum = areaNum
-            path.secondaryGoal.oSet(origin)
+            path.secondaryGoal.set(origin)
             path.reachability = null
             if (file == null || areaNum == goalAreaNum) {
-                path.moveGoal.oSet(goalOrigin)
+                path.moveGoal.set(goalOrigin)
                 return true
             }
             lastAreas[3] = areaNum
@@ -1004,9 +1004,9 @@ class AAS_local {
 
                 // no need to check through the first area
                 if (areaNum != curAreaNum) {
-                    if (reach[0].start.oMinus(origin).LengthSqr() > Math_h.Square(AAS_pathing.maxFlyPathDistance)) {
+                    if (reach[0].start.minus(origin).LengthSqr() > Math_h.Square(AAS_pathing.maxFlyPathDistance)) {
                         if (AAS_pathing.SUBSAMPLE_FLY_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleFlyPath(
                                     areaNum,
                                     origin,
@@ -1022,7 +1022,7 @@ class AAS_local {
                     }
                     if (!FlyPathValid(areaNum, origin, 0, reach[0].start, travelFlags, endPos, endAreaNum)) {
                         if (AAS_pathing.SUBSAMPLE_FLY_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleFlyPath(
                                     areaNum,
                                     origin,
@@ -1037,17 +1037,17 @@ class AAS_local {
                         return true
                     }
                 }
-                path.moveGoal.oSet(reach[0].start)
+                path.moveGoal.set(reach[0].start)
                 path.moveAreaNum = curAreaNum
                 if (!FlyPathValid(areaNum, origin, 0, reach[0].end, travelFlags, endPos, endAreaNum)) {
                     return true
                 }
-                path.moveGoal.oSet(reach[0].end)
+                path.moveGoal.set(reach[0].end)
                 path.moveAreaNum = reach[0].toAreaNum.toInt()
                 if (reach[0].toAreaNum.toInt() == goalAreaNum) {
                     if (!FlyPathValid(areaNum, origin, 0, goalOrigin, travelFlags, endPos, endAreaNum)) {
                         if (AAS_pathing.SUBSAMPLE_FLY_PATH != 0) {
-                            path.moveGoal.oSet(
+                            path.moveGoal.set(
                                 SubSampleFlyPath(
                                     areaNum,
                                     origin,
@@ -1061,7 +1061,7 @@ class AAS_local {
                         }
                         return true
                     }
-                    path.moveGoal.oSet(goalOrigin)
+                    path.moveGoal.set(goalOrigin)
                     path.moveAreaNum = goalAreaNum
                     return true
                 }
@@ -1099,12 +1099,12 @@ class AAS_local {
         ): Boolean {
             val trace = aasTrace_s()
             if (file == null) {
-                endPos.oSet(goalOrigin)
+                endPos.set(goalOrigin)
                 endAreaNum.setVal(0)
                 return true
             }
             file.Trace(trace, origin, goalOrigin)
-            endPos.oSet(trace.endpos)
+            endPos.set(trace.endpos)
             endAreaNum.setVal(trace.lastAreaNum)
             return trace.fraction >= 1.0f
         }
@@ -1121,7 +1121,7 @@ class AAS_local {
             if (TempDump.NOT(file)) {
                 return
             }
-            org.oSet(origin)
+            org.set(origin)
             areaNum = PointReachableAreaNum(org, DefaultSearchBounds(), AASFile.AREA_REACHABLE_WALK)
             PushPointIntoAreaNum(areaNum, org)
             curAreaNum = areaNum
@@ -1147,7 +1147,7 @@ class AAS_local {
                     break
                 }
                 curAreaNum = reach[0].toAreaNum.toInt()
-                org.oSet(reach[0].end)
+                org.set(reach[0].end)
                 i++
             }
             if (WalkPathToGoal(path, areaNum, origin, goalAreaNum, goalOrigin, AASFile.TFL_WALK or AASFile.TFL_AIR)) {
@@ -1167,7 +1167,7 @@ class AAS_local {
             if (TempDump.NOT(file)) {
                 return
             }
-            org.oSet(origin)
+            org.set(origin)
             areaNum = PointReachableAreaNum(org, DefaultSearchBounds(), AASFile.AREA_REACHABLE_FLY)
             PushPointIntoAreaNum(areaNum, org)
             curAreaNum = areaNum
@@ -1193,7 +1193,7 @@ class AAS_local {
                     break
                 }
                 curAreaNum = reach[0].toAreaNum.toInt()
-                org.oSet(reach[0].end)
+                org.set(reach[0].end)
                 i++
             }
             if (FlyPathToGoal(
@@ -1241,39 +1241,39 @@ class AAS_local {
             var dist: Float
             if (file == null || areaNum <= 0) {
                 goal.areaNum = areaNum
-                goal.origin.oSet(origin)
+                goal.origin.set(origin)
                 return false
             }
 
             // if the first area is valid goal, just return the origin
             if (callback.TestArea(this, areaNum)) {
                 goal.areaNum = areaNum
-                goal.origin.oSet(origin)
+                goal.origin.set(origin)
                 return true
             }
 
             // setup obstacles
             k = 0
             while (k < numObstacles) {
-                obstacles.get(k).expAbsBounds.oSet(
+                obstacles.get(k).expAbsBounds.set(
                     0,
-                    obstacles.get(k).absBounds.oGet(0).oMinus(file.GetSettings().boundingBoxes[0].oGet(1))
+                    obstacles.get(k).absBounds.get(0).minus(file.GetSettings().boundingBoxes[0].get(1))
                 )
-                obstacles.get(k).expAbsBounds.oSet(
+                obstacles.get(k).expAbsBounds.set(
                     1,
-                    obstacles.get(k).absBounds.oGet(1).oMinus(file.GetSettings().boundingBoxes[0].oGet(0))
+                    obstacles.get(k).absBounds.get(1).minus(file.GetSettings().boundingBoxes[0].get(0))
                 )
                 k++
             }
             badTravelFlags = travelFlags.inv()
             Simd.SIMDProcessor.Memset(goalAreaTravelTimes, 0, file.GetNumAreas() /*sizeof(unsigned short )*/)
-            targetDist = target.oMinus(origin).Length()
+            targetDist = target.minus(origin).Length()
 
             // initialize first update
             curUpdate = areaUpdate.get(areaNum)
             curUpdate.areaNum = areaNum
             curUpdate.tmpTravelTime = 0
-            curUpdate.start.oSet(origin)
+            curUpdate.start.set(origin)
             curUpdate.next = null
             curUpdate.prev = null
             updateListStart = curUpdate
@@ -1323,25 +1323,25 @@ class AAS_local {
                             + reach.travelTime)
 
                     // project target origin onto movement vector through the area
-                    v1.oSet(reach.end.oMinus(curUpdate.start))
+                    v1.set(reach.end.minus(curUpdate.start))
                     v1.Normalize()
-                    v2.oSet(target.oMinus(curUpdate.start))
-                    p.oSet(curUpdate.start.oPlus(v1.times(v2.times(v1))))
+                    v2.set(target.minus(curUpdate.start))
+                    p.set(curUpdate.start.oPlus(v1.times(v2.times(v1))))
 
                     // get the point on the path closest to the target
                     j = 0
                     while (j < 3) {
-                        if (p.oGet(j) > curUpdate.start.oGet(j) + 0.1f && p.oGet(j) > reach.end.oGet(j) + 0.1f
-                            || p.oGet(j) < curUpdate.start.oGet(j) - 0.1f && p.oGet(j) < reach.end.oGet(j) - 0.1f
+                        if (p.get(j) > curUpdate.start.get(j) + 0.1f && p.get(j) > reach.end.get(j) + 0.1f
+                            || p.get(j) < curUpdate.start.get(j) - 0.1f && p.get(j) < reach.end.get(j) - 0.1f
                         ) {
                             break
                         }
                         j++
                     }
                     dist = if (j >= 3) {
-                        target.oMinus(p).Length()
+                        target.minus(p).Length()
                     } else {
-                        target.oMinus(reach.end).Length()
+                        target.minus(reach.end).Length()
                     }
 
                     // avoid moving closer to the target
@@ -1382,7 +1382,7 @@ class AAS_local {
                     nextUpdate = areaUpdate.get(nextAreaNum)
                     nextUpdate.areaNum = nextAreaNum
                     nextUpdate.tmpTravelTime = t
-                    nextUpdate.start.oSet(reach.end)
+                    nextUpdate.start.set(reach.end)
 
                     // if we are not allowed to fly
                     if (badTravelFlags and AASFile.TFL_FLY != 0) {
@@ -1422,7 +1422,7 @@ class AAS_local {
             }
             if (bestAreaNum != 0) {
                 goal.areaNum = bestAreaNum
-                goal.origin.oSet(AreaCenter(bestAreaNum))
+                goal.origin.set(AreaCenter(bestAreaNum))
                 return true
             }
             return false
@@ -1442,7 +1442,7 @@ class AAS_local {
 
         private /*unsigned short*/   fun AreaTravelTime(areaNum: Int, start: idVec3?, end: idVec3?): Int {
             var dist: Float
-            dist = end.oMinus(start).Length()
+            dist = end.minus(start).Length()
             dist *= if (file.GetArea(areaNum).travelFlags and AASFile.TFL_CROUCH != 0) {
                 100.0f / 100.0f
             } else if (file.GetArea(areaNum).travelFlags and AASFile.TFL_WATER != 0) {
@@ -2154,8 +2154,8 @@ class AAS_local {
             var inside: Boolean
             i = 0
             while (i < obstacle.areas.Num()) {
-                RemoveRoutingCacheUsingArea(obstacle.areas.oGet(i))
-                area = file.GetArea(obstacle.areas.oGet(i))
+                RemoveRoutingCacheUsingArea(obstacle.areas.get(i))
+                area = file.GetArea(obstacle.areas.get(i))
                 rev_reach = area.rev_reach
                 while (rev_reach != null) {
                     if (rev_reach.travelType and AASFile.TFL_INVALID != 0) {
@@ -2209,8 +2209,8 @@ class AAS_local {
             val d1: Float
             val d2: Float
             edge = file.GetEdge(edgeNum)
-            v1.oSet(file.GetVertex(edge.vertexNum[0]))
-            v2.oSet(file.GetVertex(edge.vertexNum[1]))
+            v1.set(file.GetVertex(edge.vertexNum[0]))
+            v2.set(file.GetVertex(edge.vertexNum[1]))
             d1 = v1.times(plane.Normal()) - plane.Dist()
             d2 = v2.times(plane.Normal()) - plane.Dist()
 
@@ -2218,7 +2218,7 @@ class AAS_local {
             if (Math_h.FLOATSIGNBITSET(d1) == Math_h.FLOATSIGNBITSET(d2)) {
                 return false
             }
-            split.oSet(v1.oPlus(v2.oMinus(v1).oMultiply(d1 / (d1 - d2))))
+            split.set(v1.oPlus(v2.minus(v1).oMultiply(d1 / (d1 - d2))))
             return true
         }
 
@@ -2271,12 +2271,12 @@ class AAS_local {
                     if (closest) {
                         if (dist >= -0.1f && dist < bestDist) {
                             bestDist = dist
-                            bestSplit.oSet(split)
+                            bestSplit.set(split)
                         }
                     } else {
                         if (dist > bestDist) {
                             bestDist = dist
-                            bestSplit.oSet(split)
+                            bestSplit.set(split)
                         }
                     }
                     j++
@@ -2305,19 +2305,19 @@ class AAS_local {
             val point = idVec3()
             val nextPoint = idVec3()
             val endPos = idVec3()
-            dir.oSet(end.oMinus(start))
+            dir.set(end.minus(start))
             numSamples = (dir.Length() / AAS_pathing.walkPathSampleDistance).toInt() + 1
-            point.oSet(start)
+            point.set(start)
             i = 1
             while (i < numSamples) {
-                nextPoint.oSet(start.oPlus(dir.times(i.toFloat() / numSamples)))
-                if (point.oMinus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxWalkPathDistance)) {
+                nextPoint.set(start.oPlus(dir.times(i.toFloat() / numSamples)))
+                if (point.minus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxWalkPathDistance)) {
                     return point
                 }
                 if (!WalkPathValid(areaNum, origin, 0, nextPoint, travelFlags, endPos, curAreaNum)) {
                     return point
                 }
-                point.oSet(nextPoint)
+                point.set(nextPoint)
                 endAreaNum.setVal(curAreaNum.getVal())
                 i++
             }
@@ -2339,19 +2339,19 @@ class AAS_local {
             val point = idVec3()
             val nextPoint = idVec3()
             val endPos = idVec3()
-            dir.oSet(end.oMinus(start))
+            dir.set(end.minus(start))
             numSamples = (dir.Length() / AAS_pathing.flyPathSampleDistance).toInt() + 1
-            point.oSet(start)
+            point.set(start)
             i = 1
             while (i < numSamples) {
-                nextPoint.oSet(start.oPlus(dir.times(i.toFloat() / numSamples)))
-                if (point.oMinus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxFlyPathDistance)) {
+                nextPoint.set(start.oPlus(dir.times(i.toFloat() / numSamples)))
+                if (point.minus(nextPoint).LengthSqr() > Math_h.Square(AAS_pathing.maxFlyPathDistance)) {
                     return point
                 }
                 if (!FlyPathValid(areaNum, origin, 0, nextPoint, travelFlags, endPos, curAreaNum)) {
                     return point
                 }
-                point.oSet(nextPoint)
+                point.set(nextPoint)
                 endAreaNum.setVal(curAreaNum.getVal())
                 i++
             }
@@ -2370,26 +2370,26 @@ class AAS_local {
             val top = idVec3()
             val p = idVec3()
             val lastp = idVec3()
-            axis.oSet(2, dir)
-            axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1))
-            axis.oSet(1, axis.oGet(1).oNegative())
-            center.oSet(origin.oPlus(dir))
-            top.oSet(center.oPlus(dir.times(3.0f * radius)))
-            lastp.oSet(center.oPlus(axis.oGet(1).times(radius)))
+            axis.set(2, dir)
+            axis.get(2).NormalVectors(axis.get(0), axis.get(1))
+            axis.set(1, axis.get(1).oNegative())
+            center.set(origin.oPlus(dir))
+            top.set(center.oPlus(dir.times(3.0f * radius)))
+            lastp.set(center.oPlus(axis.get(1).times(radius)))
             i = 20
             while (i <= 360) {
-                p.oSet(
+                p.set(
                     center.oPlus(
-                        axis.oGet(0).times((Math.sin(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
+                        axis.get(0).times((Math.sin(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
                             .oPlus(
-                                axis.oGet(1)
+                                axis.get(1)
                                     .times((Math.cos(Math_h.DEG2RAD(i.toFloat()).toDouble()) * radius).toFloat())
                             )
                     )
                 )
                 Game_local.gameRenderWorld.DebugLine(color, lastp, p, 0)
                 Game_local.gameRenderWorld.DebugLine(color, p, top, 0)
-                lastp.oSet(p)
+                lastp.set(p)
                 i += 20
             }
         }
@@ -2432,7 +2432,7 @@ class AAS_local {
             face = file.GetFace(faceNum)
             numEdges = face.numEdges
             firstEdge = face.firstEdge
-            mid.oSet(Vector.getVec3_origin())
+            mid.set(Vector.getVec3_origin())
             i = 0
             while (i < numEdges) {
                 DrawEdge(Math.abs(file.GetEdgeIndex(firstEdge + i)), face.flags and AASFile.FACE_FLOOR != 0)
@@ -2442,9 +2442,9 @@ class AAS_local {
             }
             mid.divAssign(numEdges.toFloat())
             if (side) {
-                end.oSet(mid.oMinus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
+                end.set(mid.minus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
             } else {
-                end.oSet(mid.oPlus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
+                end.set(mid.oPlus(file.GetPlane(file.GetFace(faceNum).planeNum).Normal().times(5.0f)))
             }
             Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, mid, end, 1)
         }
@@ -2508,7 +2508,7 @@ class AAS_local {
                 DefaultSearchBounds(),
                 AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY
             )
-            org.oSet(origin)
+            org.set(origin)
             PushPointIntoAreaNum(areaNum, org)
             if (SysCvar.aas_goalArea.GetInteger() != 0) {
                 val travelTime = CInt()
@@ -2550,7 +2550,7 @@ class AAS_local {
             }
             if (org != origin) {
                 val bnds = file.GetSettings().boundingBoxes[0]
-                bnds.oGet(1).z = bnds.oGet(0).z
+                bnds.get(1).z = bnds.get(0).z
                 Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorYellow, bnds, org)
             }
             DrawArea(areaNum)
@@ -2601,10 +2601,10 @@ class AAS_local {
                 DefaultSearchBounds(),
                 AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY
             )
-            target.oSet(AreaCenter(targetAreaNum))
+            target.set(AreaCenter(targetAreaNum))
 
             // consider the target an obstacle
-            obstacles[0].absBounds.oSet(idBounds(target).Expand(16f))
+            obstacles[0].absBounds.set(idBounds(target).Expand(16f))
             numObstacles = 1
             DrawCone(target, idVec3(0, 0, 1), 16.0f, Lib.Companion.colorYellow)
             val findCover = idAASFindCover(target)
@@ -2646,7 +2646,7 @@ class AAS_local {
                 DefaultSearchBounds(),
                 AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY
             )
-            areaCenter.oSet(AreaCenter(toAreaNum))
+            areaCenter.set(AreaCenter(toAreaNum))
             if (player.GetPhysics().GetAbsBounds().Expand(8f).ContainsPoint(areaCenter)) {
                 return false
             }
@@ -2659,17 +2659,17 @@ class AAS_local {
                     AASFile.TFL_WALK or AASFile.TFL_AIR
                 )
             ) {
-                dir.oSet(path.moveGoal.oMinus(origin))
+                dir.set(path.moveGoal.minus(origin))
                 dir.timesAssign(2, 0.5f)
                 dir.Normalize()
                 delta = dir.ToAngles().minus(player.cmdAngles.minus(player.GetDeltaViewAngles()))
                 delta.Normalize180()
                 player.SetDeltaViewAngles(player.GetDeltaViewAngles().plus(delta.times(0.1f)))
-                dir.oSet(2, 0.0f)
+                dir.set(2, 0.0f)
                 dir.Normalize()
                 dir.timesAssign(100.0f)
-                vel.oSet(physics.GetLinearVelocity())
-                dir.oSet(2, vel.oGet(2))
+                vel.set(physics.GetLinearVelocity())
+                dir.set(2, vel.get(2))
                 physics.SetLinearVelocity(dir)
                 true
             } else {
@@ -2703,7 +2703,7 @@ class AAS_local {
         private fun ShowPushIntoArea(origin: idVec3?) {
             val areaNum: Int
             val target = idVec3()
-            target.oSet(origin)
+            target.set(origin)
             areaNum = PointReachableAreaNum(
                 target,
                 DefaultSearchBounds(),

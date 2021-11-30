@@ -44,7 +44,7 @@ object RenderWorld_portals {
             next = p.next
             rect = idScreenRect(p.rect)
             for (i in portalPlanes.indices) {
-                portalPlanes.get(i).oSet(p.portalPlanes.get(i))
+                portalPlanes.get(i).set(p.portalPlanes.get(i))
             }
         }
     }

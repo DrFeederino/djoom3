@@ -154,12 +154,12 @@ class Dict_h {
                 return this
             }
             Clear()
-            args.oSet(other.args)
+            args.set(other.args)
             argHash.oSet(other.argHash)
             i = 0
             while (i < args.Num()) {
-                args.oGet(i).key = globalKeys.CopyString(args.oGet(i).key)
-                args.oGet(i).value = globalValues.CopyString(args.oGet(i).value)
+                args.get(i).key = globalKeys.CopyString(args.get(i).key)
+                args.get(i).value = globalValues.CopyString(args.get(i).value)
                 i++
             }
             return this
@@ -189,7 +189,7 @@ class Dict_h {
                 found = IntArray(other.args.Num())
                 i = 0
                 while (i < n) {
-                    found[i] = FindKeyIndex(other.args.oGet(i).GetKey().toString() + "")
+                    found[i] = FindKeyIndex(other.args.get(i).GetKey().toString() + "")
                     i++
                 }
             } else {
@@ -199,12 +199,12 @@ class Dict_h {
             while (i < n) {
                 if (found != null && found[i] != -1) {
                     // first set the new value and then free the old value to allow proper self copying
-                    val oldValue = args.oGet(found[i]).value
-                    args.oGet(found[i]).value = globalValues.CopyString(other.args.oGet(i).value)
+                    val oldValue = args.get(found[i]).value
+                    args.get(found[i]).value = globalValues.CopyString(other.args.get(i).value)
                     globalValues.FreeString(oldValue)
                 } else {
-                    kv.key = globalKeys.CopyString(other.args.oGet(i).key)
-                    kv.value = globalValues.CopyString(other.args.oGet(i).value)
+                    kv.key = globalKeys.CopyString(other.args.get(i).key)
+                    kv.value = globalValues.CopyString(other.args.get(i).value)
                     argHash.Add(argHash.GenerateKey(kv.GetKey().toString() + "", false), args.Append(kv))
                 }
                 i++
@@ -226,7 +226,7 @@ class Dict_h {
             if (this === other) {
                 return
             }
-            if (other.args.Num() != 0 && other.args.oGet(0).key.GetPool() !== globalKeys) {
+            if (other.args.Num() != 0 && other.args.get(0).key.GetPool() !== globalKeys) {
                 Common.common.FatalError("idDict::TransferKeyValues: can't transfer values across a DLL boundary")
                 return
             }
@@ -236,7 +236,7 @@ class Dict_h {
             try {
                 i = 0
                 while (i < n) {
-                    args.oSet(i, other.args.oGet(i).clone())
+                    args.set(i, other.args.get(i).clone())
                     i++
                 }
             } catch (ex: CloneNotSupportedException) {
@@ -280,7 +280,7 @@ class Dict_h {
         fun SetDefaults(dict: idDict?) {
             val n = dict.args.Num()
             for (i in 0 until n) {
-                val def = dict.args.oGet(i)
+                val def = dict.args.get(i)
                 val kv = FindKey(def.GetKey().toString() + "") //TODO:override toString?
                 val newkv = idKeyValue()
                 if (null == kv) {
@@ -296,8 +296,8 @@ class Dict_h {
             var i: Int
             i = 0
             while (i < args.Num()) {
-                globalKeys.FreeString(args.oGet(i).key)
-                globalValues.FreeString(args.oGet(i).value)
+                globalKeys.FreeString(args.get(i).key)
+                globalValues.FreeString(args.get(i).value)
                 i++
             }
             args.Clear()
@@ -312,7 +312,7 @@ class Dict_h {
             n = args.Num()
             i = 0
             while (i < n) {
-                idLib.common.Printf("%s = %s\n", args.oGet(i).GetKey().toString(), args.oGet(i).GetValue().toString())
+                idLib.common.Printf("%s = %s\n", args.get(i).GetKey().toString(), args.get(i).GetValue().toString())
                 i++
             }
         }
@@ -323,7 +323,7 @@ class Dict_h {
             size = (args.Allocated() + argHash.Allocated()).toLong()
             i = 0
             while (i < args.Num()) {
-                size += args.oGet(i).Size()
+                size += args.get(i).Size()
                 i++
             }
             return size
@@ -357,8 +357,8 @@ class Dict_h {
             i = FindKeyIndex(key)
             if (i != -1) {
                 // first set the new value and then free the old value to allow proper self copying
-                val oldValue = args.oGet(i).value
-                args.oGet(i).value = globalValues.AllocString(value)
+                val oldValue = args.get(i).value
+                args.get(i).value = globalValues.AllocString(value)
                 globalValues.FreeString(oldValue)
             } else {
                 kv.key = globalKeys.AllocString(key)
@@ -533,7 +533,7 @@ class Dict_h {
             out.Zero()
             val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.oSet(i, TempDump.atof(sscanf[i]))
+                out.set(i, TempDump.atof(sscanf[i]))
             }
             return found
         }
@@ -550,7 +550,7 @@ class Dict_h {
             out.Zero()
             val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.oSet(i, TempDump.atof(sscanf[i]))
+                out.set(i, TempDump.atof(sscanf[i]))
             }
             return found
         }
@@ -567,7 +567,7 @@ class Dict_h {
             out.Zero()
             val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.oSet(i, TempDump.atof(sscanf[i]))
+                out.set(i, TempDump.atof(sscanf[i]))
             }
             return found
         }
@@ -584,7 +584,7 @@ class Dict_h {
             out.Zero()
             val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.oSet(i, TempDump.atof(sscanf[i]))
+                out.set(i, TempDump.atof(sscanf[i]))
             }
             return found
         }
@@ -605,7 +605,7 @@ class Dict_h {
             var index = 0
             while (i < halfSize) {
                 for (j in 0 until halfSize) {
-                    out.oSet(i, j, TempDump.atof(sscanf[index++]))
+                    out.set(i, j, TempDump.atof(sscanf[index++]))
                 }
                 i++
             }
@@ -618,7 +618,7 @@ class Dict_h {
 
         fun GetKeyVal(index: Int): idKeyValue? {
             return if (index >= 0 && index < args.Num()) {
-                args.oGet(index)
+                args.get(index)
             } else null
         }
 
@@ -635,8 +635,8 @@ class Dict_h {
             hash = argHash.GenerateKey(key, false)
             i = argHash.First(hash)
             while (i != -1) {
-                if (args.oGet(i).GetKey().Icmp(key) == 0) {
-                    return args.oGet(i)
+                if (args.get(i).GetKey().Icmp(key) == 0) {
+                    return args.get(i)
                 }
                 i = argHash.Next(i)
             }
@@ -659,7 +659,7 @@ class Dict_h {
             val hash = argHash.GenerateKey(key, false)
             var i = argHash.First(hash)
             while (i != -1) {
-                if (args.oGet(i).GetKey().Icmp(key) == 0) {
+                if (args.get(i).GetKey().Icmp(key) == 0) {
                     return i
                 }
                 i = argHash.Next(i)
@@ -676,9 +676,9 @@ class Dict_h {
             hash = argHash.GenerateKey(key, false)
             i = argHash.First(hash)
             while (i != -1) {
-                if (args.oGet(i).GetKey().Icmp(key) == 0) {
-                    globalKeys.FreeString(args.oGet(i).key)
-                    globalValues.FreeString(args.oGet(i).value)
+                if (args.get(i).GetKey().Icmp(key) == 0) {
+                    globalKeys.FreeString(args.get(i).key)
+                    globalValues.FreeString(args.get(i).value)
                     args.RemoveIndex(i)
                     argHash.RemoveIndex(hash, i)
                     break
@@ -717,8 +717,8 @@ class Dict_h {
             }
             i = start + 1
             while (i < args.Num()) {
-                if (0 == args.oGet(i).GetKey().Icmpn(prefix, len)) {
-                    return args.oGet(i)
+                if (0 == args.get(i).GetKey().Icmpn(prefix, len)) {
+                    return args.get(i)
                 }
                 i++
             }
@@ -747,8 +747,8 @@ class Dict_h {
             val c: Int = Lib.Companion.LittleLong(args.Num())
             f.WriteInt(c) //, sizeof(c));
             for (i in 0 until args.Num()) {    // don't loop on the swapped count use the original
-                WriteString(args.oGet(i).GetKey().toString(), f)
-                WriteString(args.oGet(i).GetValue().toString(), f)
+                WriteString(args.get(i).GetKey().toString(), f)
+                WriteString(args.get(i).GetValue().toString(), f)
             }
         }
 
@@ -782,13 +782,13 @@ class Dict_h {
             while (i < n) {
                 CRC32.Companion.CRC32_UpdateChecksum(
                     ret,
-                    sorted.oGet(i).GetKey().c_str(),
-                    sorted.oGet(i).GetKey().Length()
+                    sorted.get(i).GetKey().c_str(),
+                    sorted.get(i).GetKey().Length()
                 )
                 CRC32.Companion.CRC32_UpdateChecksum(
                     ret,
-                    sorted.oGet(i).GetValue().c_str(),
-                    sorted.oGet(i).GetValue().Length()
+                    sorted.get(i).GetValue().c_str(),
+                    sorted.get(i).GetValue().Length()
                 )
                 i++
             }
@@ -824,7 +824,7 @@ class Dict_h {
                 keyStrings.Sort()
                 i = 0
                 while (i < keyStrings.Num()) {
-                    idLib.common.Printf("%s\n", keyStrings.oGet(i))
+                    idLib.common.Printf("%s\n", keyStrings.get(i))
                     i++
                 }
                 idLib.common.Printf("%5d keys\n", keyStrings.Num())
@@ -851,7 +851,7 @@ class Dict_h {
                 valueStrings.Sort()
                 i = 0
                 while (i < valueStrings.Num()) {
-                    idLib.common.Printf("%s\n", valueStrings.oGet(i))
+                    idLib.common.Printf("%s\n", valueStrings.get(i))
                     i++
                 }
                 idLib.common.Printf("%5d values\n", valueStrings.Num())

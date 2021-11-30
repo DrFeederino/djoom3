@@ -105,7 +105,6 @@ import neo.Game.WorldSpawn.idWorldspawn
 import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.framework.CmdSystem.cmdFunction_t
-import neo.framework.DeclAF.idAFVector.type
 import neo.idlib.*
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
@@ -390,8 +389,8 @@ object Class {
                 num = 0
                 c = neo.Game.GameSys.Class.typelist
                 while (c != null) {
-                    types.oSet(num, c)
-                    typenums.oSet(c.typeNum, c)
+                    types.set(num, c)
+                    typenums.set(c.typeNum, c)
                     c = c.next
                     num++
                 }
@@ -574,7 +573,7 @@ object Class {
                         c = c.next
                     }
                 } else if (typeNum >= 0 && typeNum < types.Num()) {
-                    return typenums.oGet(typeNum)
+                    return typenums.get(typeNum)
                 }
                 return null
             }
@@ -1225,7 +1224,7 @@ object Class {
                 Game_local.gameLocal.Printf("----------------------------------------------------------------------\n")
                 i = 0
                 while (i < types.Num()) {
-                    type = types.oGet(i)
+                    type = types.get(i)
                     Game_local.gameLocal.Printf(
                         "%-24s %-24s %6d %6d\n",
                         type.classname,

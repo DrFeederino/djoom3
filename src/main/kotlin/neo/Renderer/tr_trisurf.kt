@@ -724,7 +724,7 @@ object tr_trisurf {
      =================
      */
     fun R_BoundTriSurf(tri: srfTriangles_s?) {
-        Simd.SIMDProcessor.MinMax(tri.bounds.oGet(0), tri.bounds.oGet(1), tri.verts, tri.numVerts)
+        Simd.SIMDProcessor.MinMax(tri.bounds.get(0), tri.bounds.get(1), tri.verts, tri.numVerts)
     }
 
     /*
@@ -762,7 +762,7 @@ object tr_trisurf {
             j = hash.First(hashKey)
             while (j >= 0) {
                 v2 = tri.verts[j]
-                if (v2.xyz.oGet(0) == v1.xyz.oGet(0) && v2.xyz.oGet(1) == v1.xyz.oGet(1) && v2.xyz.oGet(2) == v1.xyz.oGet(
+                if (v2.xyz.get(0) == v1.xyz.get(0) && v2.xyz.get(1) == v1.xyz.get(1) && v2.xyz.get(2) == v1.xyz.get(
                         2
                     )
                 ) {
@@ -909,7 +909,7 @@ object tr_trisurf {
         // normalize and replicate from silIndexes to all indexes
         i = 0
         while (i < tri.numIndexes) {
-            tri.verts[tri.indexes[i]].normal.oSet(tri.verts[tri.silIndexes[i]].normal)
+            tri.verts[tri.indexes[i]].normal.set(tri.verts[tri.silIndexes[i]].normal)
             tri.verts[tri.indexes[i]].normal.Normalize()
             i++
         }
@@ -1102,10 +1102,10 @@ object tr_trisurf {
         a = tri.verts[tri.indexes[firstIndex + 0]]
         b = tri.verts[tri.indexes[firstIndex + 1]]
         c = tri.verts[tri.indexes[firstIndex + 2]]
-        d0[3] = b.st.oGet(0) - a.st.oGet(0)
-        d0[4] = b.st.oGet(1) - a.st.oGet(1)
-        d1[3] = c.st.oGet(0) - a.st.oGet(0)
-        d1[4] = c.st.oGet(1) - a.st.oGet(1)
+        d0[3] = b.st.get(0) - a.st.get(0)
+        d0[4] = b.st.get(1) - a.st.get(1)
+        d1[3] = c.st.get(0) - a.st.get(0)
+        d1[4] = c.st.get(1) - a.st.get(1)
         area = d0[3] * d1[4] - d0[4] * d1[3]
         return area < 0
     }
@@ -1136,16 +1136,16 @@ object tr_trisurf {
             a = tri.verts[tri.indexes[i + 0]]
             b = tri.verts[tri.indexes[i + 1]]
             c = tri.verts[tri.indexes[i + 2]]
-            d0[0] = b.xyz.oGet(0) - a.xyz.oGet(0)
-            d0[1] = b.xyz.oGet(1) - a.xyz.oGet(1)
-            d0[2] = b.xyz.oGet(2) - a.xyz.oGet(2)
-            d0[3] = b.st.oGet(0) - a.st.oGet(0)
-            d0[4] = b.st.oGet(1) - a.st.oGet(1)
-            d1[0] = c.xyz.oGet(0) - a.xyz.oGet(0)
-            d1[1] = c.xyz.oGet(1) - a.xyz.oGet(1)
-            d1[2] = c.xyz.oGet(2) - a.xyz.oGet(2)
-            d1[3] = c.st.oGet(0) - a.st.oGet(0)
-            d1[4] = c.st.oGet(1) - a.st.oGet(1)
+            d0[0] = b.xyz.get(0) - a.xyz.get(0)
+            d0[1] = b.xyz.get(1) - a.xyz.get(1)
+            d0[2] = b.xyz.get(2) - a.xyz.get(2)
+            d0[3] = b.st.get(0) - a.st.get(0)
+            d0[4] = b.st.get(1) - a.st.get(1)
+            d1[0] = c.xyz.get(0) - a.xyz.get(0)
+            d1[1] = c.xyz.get(1) - a.xyz.get(1)
+            d1[2] = c.xyz.get(2) - a.xyz.get(2)
+            d1[3] = c.st.get(0) - a.st.get(0)
+            d1[4] = c.st.get(1) - a.st.get(1)
             area = d0[3] * d1[4] - d0[4] * d1[3]
             if (Math.abs(area) < 1e-20f) {
                 ft.negativePolarity = false
@@ -1166,7 +1166,7 @@ object tr_trisurf {
             ft.degenerate = false
             if (tr_trisurf.USE_INVA) {
                 val inva: Float = if (area < .0f) -1 else 1.toFloat() // was = 1.0f / area;
-                temp.oSet(
+                temp.set(
                     idVec3(
                         (d0[0] * d1[4] - d0[4] * d1[0]) * inva,
                         (d0[1] * d1[4] - d0[4] * d1[1]) * inva,
@@ -1174,8 +1174,8 @@ object tr_trisurf {
                     )
                 )
                 temp.Normalize()
-                ft.tangents.get(0).oSet(temp)
-                temp.oSet(
+                ft.tangents.get(0).set(temp)
+                temp.set(
                     idVec3(
                         (d0[3] * d1[0] - d0[0] * d1[3]) * inva,
                         (d0[3] * d1[1] - d0[1] * d1[3]) * inva,
@@ -1183,9 +1183,9 @@ object tr_trisurf {
                     )
                 )
                 temp.Normalize()
-                ft.tangents.get(1).oSet(temp)
+                ft.tangents.get(1).set(temp)
             } else {
-                temp.oSet(
+                temp.set(
                     idVec3(
                         d0[0] * d1[4] - d0[4] * d1[0],
                         d0[1] * d1[4] - d0[4] * d1[1],
@@ -1193,8 +1193,8 @@ object tr_trisurf {
                     )
                 )
                 temp.Normalize()
-                ft.tangents.get(0).oSet(temp)
-                temp.oSet(
+                ft.tangents.get(0).set(temp)
+                temp.set(
                     idVec3(
                         d0[3] * d1[0] - d0[0] * d1[3],
                         d0[3] * d1[1] - d0[1] * d1[3],
@@ -1202,7 +1202,7 @@ object tr_trisurf {
                     )
                 )
                 temp.Normalize()
-                ft.tangents.get(1).oSet(temp)
+                ft.tangents.get(1).set(temp)
             }
             i += 3
         }
@@ -1359,7 +1359,7 @@ object tr_trisurf {
             while (j < 2) {
                 var d: Float
                 d = vert.tangents[j].times(vert.normal)
-                vert.tangents[j] = vert.tangents[j].oMinus(vert.normal.times(d))
+                vert.tangents[j] = vert.tangents[j].minus(vert.normal.times(d))
                 vert.tangents[j].Normalize()
                 j++
             }
@@ -1370,10 +1370,10 @@ object tr_trisurf {
 
     fun  /*ID_INLINE*/VectorNormalizeFast2(v: idVec3?, out: idVec3?) {
         val length: Float
-        length = idMath.RSqrt(v.oGet(0) * v.oGet(0) + v.oGet(1) * v.oGet(1) + v.oGet(2) * v.oGet(2))
-        out.oSet(0, v.oGet(0) * length)
-        out.oSet(1, v.oGet(1) * length)
-        out.oSet(2, v.oGet(2) * length)
+        length = idMath.RSqrt(v.get(0) * v.get(0) + v.get(1) * v.get(1) + v.get(2) * v.get(2))
+        out.set(0, v.get(0) * length)
+        out.set(1, v.get(1) * length)
+        out.set(2, v.get(2) * length)
     }
 
     fun R_BuildDominantTris(tri: srfTriangles_s?) {
@@ -1413,19 +1413,19 @@ object tr_trisurf {
                 a = tri.verts[i1]
                 b = tri.verts[i2]
                 c = tri.verts[i3]
-                d0[0] = b.xyz.oGet(0) - a.xyz.oGet(0)
-                d0[1] = b.xyz.oGet(1) - a.xyz.oGet(1)
-                d0[2] = b.xyz.oGet(2) - a.xyz.oGet(2)
-                d0[3] = b.st.oGet(0) - a.st.oGet(0)
-                d0[4] = b.st.oGet(1) - a.st.oGet(1)
-                d1[0] = c.xyz.oGet(0) - a.xyz.oGet(0)
-                d1[1] = c.xyz.oGet(1) - a.xyz.oGet(1)
-                d1[2] = c.xyz.oGet(2) - a.xyz.oGet(2)
-                d1[3] = c.st.oGet(0) - a.st.oGet(0)
-                d1[4] = c.st.oGet(1) - a.st.oGet(1)
-                normal.oSet(0, d1[1] * d0[2] - d1[2] * d0[1])
-                normal.oSet(1, d1[2] * d0[0] - d1[0] * d0[2])
-                normal.oSet(2, d1[0] * d0[1] - d1[1] * d0[0])
+                d0[0] = b.xyz.get(0) - a.xyz.get(0)
+                d0[1] = b.xyz.get(1) - a.xyz.get(1)
+                d0[2] = b.xyz.get(2) - a.xyz.get(2)
+                d0[3] = b.st.get(0) - a.st.get(0)
+                d0[4] = b.st.get(1) - a.st.get(1)
+                d1[0] = c.xyz.get(0) - a.xyz.get(0)
+                d1[1] = c.xyz.get(1) - a.xyz.get(1)
+                d1[2] = c.xyz.get(2) - a.xyz.get(2)
+                d1[3] = c.st.get(0) - a.st.get(0)
+                d1[4] = c.st.get(1) - a.st.get(1)
+                normal.set(0, d1[1] * d0[2] - d1[2] * d0[1])
+                normal.set(1, d1[2] * d0[0] - d1[0] * d0[2])
+                normal.set(2, d1[0] * d0[1] - d1[1] * d0[0])
                 var area = normal.Length()
 
                 // if this is smaller than what we already have, skip it
@@ -1453,17 +1453,17 @@ object tr_trisurf {
 
                 // texture area
                 area = d0[3] * d1[4] - d0[4] * d1[3]
-                tangent.oSet(0, d0[0] * d1[4] - d0[4] * d1[0])
-                tangent.oSet(1, d0[1] * d1[4] - d0[4] * d1[1])
-                tangent.oSet(2, d0[2] * d1[4] - d0[4] * d1[2])
+                tangent.set(0, d0[0] * d1[4] - d0[4] * d1[0])
+                tangent.set(1, d0[1] * d1[4] - d0[4] * d1[1])
+                tangent.set(2, d0[2] * d1[4] - d0[4] * d1[2])
                 len = tangent.Length()
                 if (len < 0.001f) {
                     len = 0.001f
                 }
                 dt[vertNum].normalizationScale[0] = (if (area > 0) 1 else -1) / len // tangents[0]
-                bitangent.oSet(0, d0[3] * d1[0] - d0[0] * d1[3])
-                bitangent.oSet(1, d0[3] * d1[1] - d0[1] * d1[3])
-                bitangent.oSet(2, d0[3] * d1[2] - d0[2] * d1[3])
+                bitangent.set(0, d0[3] * d1[0] - d0[0] * d1[3])
+                bitangent.set(1, d0[3] * d1[1] - d0[1] * d1[3])
+                bitangent.set(2, d0[3] * d1[2] - d0[2] * d1[3])
                 len = bitangent.Length()
                 if (len < 0.001f) {
                     len = 0.001f
@@ -1635,7 +1635,7 @@ object tr_trisurf {
             // copy vertex normals to duplicated vertices
             i = 0
             while (i < tri.numDupVerts) {
-                verts[dupVerts[i * 2 + 1]].normal.oSet(verts[dupVerts[i * 2 + 0]].normal)
+                verts[dupVerts[i * 2 + 1]].normal.set(verts[dupVerts[i * 2 + 0]].normal)
                 i++
             }
         }
@@ -1956,7 +1956,7 @@ object tr_trisurf {
         // but if it has explicit normals, this will keep it on the correct side
         i = 0
         while (i < tri.numVerts) {
-            tri.verts[i].normal.oSet(Vector.getVec3_origin().oMinus(tri.verts[i].normal))
+            tri.verts[i].normal.set(Vector.getVec3_origin().oMinus(tri.verts[i].normal))
             i++
         }
 
@@ -2094,7 +2094,7 @@ object tr_trisurf {
         // don't memcpy, so we can change the index type from int to short without changing the interface
         i = 0
         while (i < tri.numIndexes) {
-            tri.indexes[i] = indexes.oGet(i)
+            tri.indexes[i] = indexes.get(i)
             i++
         }
         tr_trisurf.R_RangeCheckIndexes(tri)

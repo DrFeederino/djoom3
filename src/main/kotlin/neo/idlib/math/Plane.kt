@@ -72,7 +72,7 @@ object Plane {
         }
 
         constructor(normal: idVec3, dist: Float) {
-            abc.oSet(normal)
+            abc.set(normal)
             d = -dist
         }
 
@@ -90,7 +90,7 @@ object Plane {
             d = plane.d
         }
 
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             return when (index) {
                 0 -> abc.x
                 1 -> abc.y
@@ -99,7 +99,7 @@ object Plane {
             }
         }
 
-        fun oSet(index: Int, value: Float): Float {
+        operator fun set(index: Int, value: Float): Float {
             return when (index) {
                 0 -> value.also { abc.x = it }
                 1 -> value.also { abc.y = it }
@@ -108,7 +108,7 @@ object Plane {
             }
         }
 
-        fun oPluSet(index: Int, value: Float): Float {
+        fun plusAssign(index: Int, value: Float): Float {
             return when (index) {
                 0 -> value.let { abc.x += it; abc.x }
                 1 -> value.let { abc.y += it; abc.y }
@@ -117,7 +117,7 @@ object Plane {
             }
         }
 
-        fun oMinSet(index: Int, value: Float): Float {
+        fun minusAssign(index: Int, value: Float): Float {
             return when (index) {
                 0 -> value.let { abc.x -= it; abc.x }
                 1 -> value.let { abc.y -= it; abc.y }
@@ -127,7 +127,7 @@ object Plane {
         }
 
         //public	idPlane			operator-() const;						// flips plane
-        fun oDivSet(index: Int, value: Float): Float {
+        fun divAssign(index: Int, value: Float): Float {
             return when (index) {
                 0 -> value.let { abc.x /= it; abc.x }
                 1 -> value.let { abc.y /= it; abc.y }
@@ -138,38 +138,38 @@ object Plane {
 
         //public	idPlane &		operator=( const idVec3 &v );			// sets normal and sets idPlane::d to zero
         // flips plane
-        fun oNegative(): idPlane {
+        operator fun unaryMinus(): idPlane {
             return idPlane(-abc.x, -abc.y, -abc.z, -d)
         }
 
         // sets normal and sets idPlane::d to zero
-        fun oSet(v: idVec3): idPlane {
-            abc.oSet(v)
+        fun set(v: idVec3): idPlane {
+            abc.set(v)
             d = 0f
             return this
         }
 
         //public	idPlane			operator+( const idPlane &p ) const;	// add plane equations
-        fun oSet(p: idPlane): idPlane {
-            abc.oSet(p.abc)
+        fun set(p: idPlane): idPlane {
+            abc.set(p.abc)
             d = p.d
             return this
         }
 
         //public	idPlane			operator-( const idPlane &p ) const;	// subtract plane equations
         // add plane equations
-        fun oPlus(p: idPlane): idPlane {
+        operator fun plus(p: idPlane): idPlane {
             return idPlane(abc.x + p.abc.x, abc.y + p.abc.y, abc.z + p.abc.z, d + p.d)
         }
 
         //public	idPlane &		operator*=( const idMat3 &m );			// Normal() *= m
         // subtract plane equations
-        fun oMinus(p: idPlane): idPlane {
+        operator fun minus(p: idPlane): idPlane {
             return idPlane(abc.x - p.abc.x, abc.y - p.abc.y, abc.z - p.abc.z, d - p.d)
         }
 
         // Normal() *= m
-        fun oMulSet(m: idMat3): idPlane {
+        fun timesAssign(m: idMat3): idPlane {
             Normal().timesAssign(m)
             return this
         }
@@ -239,7 +239,7 @@ object Plane {
 
         // sets the normal
         fun SetNormal(normal: idVec3) {
-            abc.oSet(normal)
+            abc.set(normal)
         }
 
         // reference to const normal
@@ -263,7 +263,7 @@ object Plane {
          * sets the normal **ONLY**; a, b and c. d is ignored.
          */
         fun oNorSet(v: idVec3): idPlane {
-            abc.oSet(v)
+            abc.set(v)
             return this
         }
 
@@ -275,7 +275,7 @@ object Plane {
             val length = vec3.Normalize()
             run {
                 val oldD = d //save old d
-                this.oSet(vec3) //set normalized values
+                this.set(vec3) //set normalized values
                 d = oldD //replace the zeroed d with its original value
             }
             if (fixDegenerate) {
@@ -290,7 +290,7 @@ object Plane {
             val fixedNormal = vec3.FixDegenerateNormal()
             run {
                 val oldD = d //save old d
-                this.oSet(vec3) //set new values
+                this.set(vec3) //set new values
                 d = oldD //replace the zeroed d with its original value
             }
             return fixedNormal
@@ -320,21 +320,21 @@ object Plane {
 
         // returns plane type
         fun Type(): Int {
-            return if (Normal().oGet(0) == 0.0f) {
-                if (Normal().oGet(1) == 0.0f) {
-                    if (Normal().oGet(2) > 0.0f) PLANETYPE_Z else PLANETYPE_NEGZ
-                } else if (Normal().oGet(2) == 0.0f) {
-                    if (Normal().oGet(1) > 0.0f) PLANETYPE_Y else PLANETYPE_NEGY
+            return if (Normal()[0] == 0.0f) {
+                if (Normal()[1] == 0.0f) {
+                    if (Normal()[2] > 0.0f) PLANETYPE_Z else PLANETYPE_NEGZ
+                } else if (Normal()[2] == 0.0f) {
+                    if (Normal()[1] > 0.0f) PLANETYPE_Y else PLANETYPE_NEGY
                 } else {
                     PLANETYPE_ZEROX
                 }
-            } else if (Normal().oGet(1) == 0.0f) {
-                if (Normal().oGet(2) == 0.0f) {
-                    if (Normal().oGet(0) > 0.0f) PLANETYPE_X else PLANETYPE_NEGX
+            } else if (Normal()[1] == 0.0f) {
+                if (Normal()[2] == 0.0f) {
+                    if (Normal()[0] > 0.0f) PLANETYPE_X else PLANETYPE_NEGX
                 } else {
                     PLANETYPE_ZEROY
                 }
-            } else if (Normal().oGet(2) == 0.0f) {
+            } else if (Normal()[2] == 0.0f) {
                 PLANETYPE_ZEROZ
             } else {
                 PLANETYPE_NONAXIAL
@@ -343,7 +343,7 @@ object Plane {
 
         @JvmOverloads
         fun FromPoints(p1: idVec3, p2: idVec3, p3: idVec3, fixDegenerate: Boolean = true): Boolean {
-            Normal().oSet((p1 - p2).Cross(p3 - p2))
+            Normal().set((p1 - p2).Cross(p3 - p2))
             if (Normalize(fixDegenerate) == 0.0f) {
                 return false
             }
@@ -353,10 +353,10 @@ object Plane {
 
         @JvmOverloads
         fun FromVecs(dir1: idVec3, dir2: idVec3, p: idVec3, fixDegenerate: Boolean = true): Boolean {
-            val vec3 = idVec3(Normal().oSet(dir1.Cross(dir2)))
+            val vec3 = idVec3(Normal().set(dir1.Cross(dir2)))
             run {
                 val oldD = d //save old d
-                this.oSet(vec3) //set new values
+                this.set(vec3) //set new values
                 d = oldD //replace the zeroed d with its original value
             }
             if (Normalize(fixDegenerate) == 0.0f) {
@@ -389,15 +389,15 @@ object Plane {
                 return true
             }
             if (numPoints == 2) {
-                dir.oSet(points[1] - points[0])
+                dir.set(points[1] - points[0])
                 //		Normal() = dir.Cross( idVec3( 0, 0, 1 ) ).Cross( dir );
                 run {
                     val oldD = d //save old d
-                    this.oSet(dir.Cross(idVec3(0f, 0f, 1f)).Cross(dir))
+                    this.set(dir.Cross(idVec3(0f, 0f, 1f)).Cross(dir))
                     d = oldD //replace the zeroed d with its original value
                 }
                 Normalize()
-                d = -Normal().times(points[0])
+                d = -Normal() * points[0]
                 return true
             }
             sum.Zero()
@@ -406,10 +406,10 @@ object Plane {
                 sum.plusAssign(points[i])
                 i++
             }
-            average.oSet(sum.div(numPoints.toFloat()))
+            average.set(sum / numPoints)
             i = 0
             while (i < numPoints) {
-                dir.oSet(points[i] - average)
+                dir.set(points[i] - average)
                 sumXX += dir.x * dir.x
                 sumXY += dir.x * dir.y
                 sumXZ += dir.x * dir.z
@@ -421,8 +421,8 @@ object Plane {
             if (!m.InverseSelf()) {
                 return false
             }
-            abc.x = -sumXZ * m.oGet(0).x - sumYZ * m.oGet(0).y
-            abc.y = -sumXZ * m.oGet(1).x - sumYZ * m.oGet(1).y
+            abc.x = -sumXZ * m[0].x - sumYZ * m[0].y
+            abc.y = -sumXZ * m[1].x - sumYZ * m[1].y
             abc.z = 1.0f
             Normalize()
             d = -(abc.x * average.x + abc.y * average.y + abc.z * average.z)
@@ -430,29 +430,32 @@ object Plane {
         }
 
         fun Translate(translation: idVec3): idPlane {
-            return idPlane(abc.x, abc.y, abc.z, d - translation.times(Normal()))
+            return idPlane(abc.x, abc.y, abc.z, d - translation * Normal())
         }
 
         fun TranslateSelf(translation: idVec3): idPlane {
-            d -= translation.times(Normal())
+            d -= translation * Normal()
             return this
         }
 
         fun Rotate(origin: idVec3, axis: idMat3): idPlane {
             val p = idPlane()
-            p.oSet(axis.times(Normal()))
-            p.d = d + origin.times(Normal()) - origin.times(p.Normal())
+            p.Normal().set(Normal() * axis)
+            p.d = d + origin * Normal() - origin * p.Normal()
             return p
         }
 
         fun RotateSelf(origin: idVec3, axis: idMat3): idPlane {
-            d += origin.times(Normal())
-            run {
-                val oldD = d //save old d
-                this.oSet(axis.times(Normal())) //set new values
-                d = oldD //replace the zeroed d with its original value
-            }
-            d -= origin.times(Normal())
+            d += origin * Normal()
+            Normal().timesAssign(axis)
+            d -= origin * Normal()
+//           what is this about?
+//            run {
+//                val oldD = d //save old d
+//                this.set(axis.times(Normal())) //set new values
+//                d = oldD //replace the zeroed d with its original value
+//            }
+//            d -= origin.times(Normal())
             return this
         }
 
@@ -476,8 +479,8 @@ object Plane {
             val d1: Float
             val d2: Float
             val fraction: Float
-            d1 = Normal().times(start + d)
-            d2 = Normal().times(end + d)
+            d1 = Normal() * start + d
+            d2 = Normal() * end + d
             if (d1 == d2) {
                 return false
             }
@@ -488,15 +491,15 @@ object Plane {
                 return false
             }
             fraction = d1 / (d1 - d2)
-            return fraction >= 0.0f && fraction <= 1.0f
+            return fraction in 0.0f..1.0f
         }
 
         // intersection point is start + dir * scale
         fun RayIntersection(start: idVec3, dir: idVec3, scale: CFloat): Boolean {
             val d1: Float
             val d2: Float
-            d1 = Normal().times(start + d)
-            d2 = Normal().times(dir)
+            d1 = Normal() * start + d
+            d2 = Normal() * dir
             if (d2 == 0.0f) {
                 return false
             }
@@ -512,24 +515,26 @@ object Plane {
             val invDet: Float
             val f0: Float
             val f1: Float
+
             n00 = Normal().LengthSqr()
-            n01 = Normal().times(plane.Normal())
+            n01 = Normal() * plane.Normal()
             n11 = plane.Normal().LengthSqr()
             det = n00 * n11 - n01 * n01
+
             if (abs(det) < 1e-6f) {
                 return false
             }
             invDet = 1.0f / det
             f0 = (n01 * plane.d - n11 * d) * invDet
             f1 = (n01 * d - n00 * plane.d) * invDet
-            dir.oSet(Normal().Cross(plane.Normal()))
-            //            start = f0 * Normal() + f1 * plane.Normal();
-            start.oSet(Normal() * f0 + plane.Normal() * f1)
+            dir.set(Normal().Cross(plane.Normal()))
+            //            start = f0 * Normal() + f1 * plane.Normal()
+            start.set(Normal() * f0 + plane.Normal() * f1)
             return true
         }
 
         //
-        //public	const idVec4 &	ToVec4( void ) const;
+        //public	const idVec4 &	ToVec4( void ) const
         fun GetDimension(): Int {
             return 4
         }
@@ -553,7 +558,7 @@ object Plane {
             abc.Normalize()
         }
 
-        //public	float *			ToFloatPtr( void );
+        //public	float *			ToFloatPtr( void )
         fun ToFloatPtr(): FloatArray {
             return floatArrayOf(abc.x, abc.y, abc.z, d)
         }
@@ -570,8 +575,8 @@ object Plane {
             val BYTES: Int = idVec3.BYTES + java.lang.Float.BYTES
 
             //
-            //public	float			operator[]( int index ) const;
-            //public	float &			operator[]( int index );
+            //public	float			operator[]( int index ) const
+            //public	float &			operator[]( int index )
             fun generateArray(length: Int): Array<idPlane> {
                 val arr = arrayOf<idPlane>()
                 for (i in 0..length) {

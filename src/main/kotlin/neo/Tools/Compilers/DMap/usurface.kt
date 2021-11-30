@@ -61,7 +61,7 @@ object usurface {
                 while (i < 2) {
                     j = 0
                     while (j < 3) {
-                        if (Math.abs(texVec.v[i].oGet(j) - group.texVec.v[i].oGet(j)) > usurface.TEXTURE_VECTOR_EQUAL_EPSILON) {
+                        if (Math.abs(texVec.v[i].get(j) - group.texVec.v[i].get(j)) > usurface.TEXTURE_VECTOR_EQUAL_EPSILON) {
                             break
                         }
                         j++
@@ -69,7 +69,7 @@ object usurface {
                     if (j != 3) {
                         break
                     }
-                    if (Math.abs(texVec.v[i].oGet(3) - group.texVec.v[i].oGet(3)) > usurface.TEXTURE_OFFSET_EQUAL_EPSILON) {
+                    if (Math.abs(texVec.v[i].get(3) - group.texVec.v[i].get(3)) > usurface.TEXTURE_OFFSET_EQUAL_EPSILON) {
                         break
                     }
                     i++
@@ -113,30 +113,30 @@ object usurface {
         a = tri.v[0]
         b = tri.v[1]
         c = tri.v[2]
-        d0.oSet(0, b.xyz.oGet(0) - a.xyz.oGet(0))
-        d0.oSet(1, b.xyz.oGet(1) - a.xyz.oGet(1))
-        d0.oSet(2, b.xyz.oGet(2) - a.xyz.oGet(2))
-        d0.oSet(3, b.st.oGet(0) - a.st.oGet(0))
-        d0.oSet(4, b.st.oGet(1) - a.st.oGet(1))
-        d1.oSet(0, c.xyz.oGet(0) - a.xyz.oGet(0))
-        d1.oSet(1, c.xyz.oGet(1) - a.xyz.oGet(1))
-        d1.oSet(2, c.xyz.oGet(2) - a.xyz.oGet(2))
-        d1.oSet(3, c.st.oGet(0) - a.st.oGet(0))
-        d1.oSet(4, c.st.oGet(1) - a.st.oGet(1))
-        area = d0.oGet(3) * d1.oGet(4) - d0.oGet(4) * d1.oGet(3)
+        d0.set(0, b.xyz.get(0) - a.xyz.get(0))
+        d0.set(1, b.xyz.get(1) - a.xyz.get(1))
+        d0.set(2, b.xyz.get(2) - a.xyz.get(2))
+        d0.set(3, b.st.get(0) - a.st.get(0))
+        d0.set(4, b.st.get(1) - a.st.get(1))
+        d1.set(0, c.xyz.get(0) - a.xyz.get(0))
+        d1.set(1, c.xyz.get(1) - a.xyz.get(1))
+        d1.set(2, c.xyz.get(2) - a.xyz.get(2))
+        d1.set(3, c.st.get(0) - a.st.get(0))
+        d1.set(4, c.st.get(1) - a.st.get(1))
+        area = d0.get(3) * d1.get(4) - d0.get(4) * d1.get(3)
         inva = 1.0f / area
-        temp.oSet(0, (d0.oGet(0) * d1.oGet(4) - d0.oGet(4) * d1.oGet(0)) * inva)
-        temp.oSet(1, (d0.oGet(1) * d1.oGet(4) - d0.oGet(4) * d1.oGet(1)) * inva)
-        temp.oSet(2, (d0.oGet(2) * d1.oGet(4) - d0.oGet(4) * d1.oGet(2)) * inva)
+        temp.set(0, (d0.get(0) * d1.get(4) - d0.get(4) * d1.get(0)) * inva)
+        temp.set(1, (d0.get(1) * d1.get(4) - d0.get(4) * d1.get(1)) * inva)
+        temp.set(2, (d0.get(2) * d1.get(4) - d0.get(4) * d1.get(2)) * inva)
         temp.Normalize()
-        texVec.v[0].oSet(temp)
-        texVec.v[0].oSet(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(0))
-        temp.oSet(0, (d0.oGet(3) * d1.oGet(0) - d0.oGet(0) * d1.oGet(3)) * inva)
-        temp.oSet(1, (d0.oGet(3) * d1.oGet(1) - d0.oGet(1) * d1.oGet(3)) * inva)
-        temp.oSet(2, (d0.oGet(3) * d1.oGet(2) - d0.oGet(2) * d1.oGet(3)) * inva)
+        texVec.v[0].set(temp)
+        texVec.v[0].set(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.get(0))
+        temp.set(0, (d0.get(3) * d1.get(0) - d0.get(0) * d1.get(3)) * inva)
+        temp.set(1, (d0.get(3) * d1.get(1) - d0.get(1) * d1.get(3)) * inva)
+        temp.set(2, (d0.get(3) * d1.get(2) - d0.get(2) * d1.get(3)) * inva)
         temp.Normalize()
-        texVec.v[1].oSet(temp)
-        texVec.v[1].oSet(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.oGet(1))
+        texVec.v[1].set(temp)
+        texVec.v[1].set(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.get(1))
     }
 
     /*
@@ -179,11 +179,11 @@ object usurface {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.oSet(w.oGet(0).ToVec3())
+                    vec.set(w.oGet(0).ToVec3())
                 } else if (j == 1) {
-                    vec.oSet(w.oGet(i - 1).ToVec3())
+                    vec.set(w.oGet(i - 1).ToVec3())
                 } else {
-                    vec.oSet(w.oGet(i).ToVec3())
+                    vec.set(w.oGet(i).ToVec3())
                 }
                 dv = tri.v[j]
                 //#if 0
@@ -196,11 +196,11 @@ object usurface {
                 //#endif
 
                 // calculate texture s/t from brush primitive texture matrix
-                dv.st.oSet(0, Vector.DotProduct(dv.xyz, s.texVec.v[0]) + s.texVec.v[0].oGet(3))
-                dv.st.oSet(1, Vector.DotProduct(dv.xyz, s.texVec.v[1]) + s.texVec.v[1].oGet(3))
+                dv.st.set(0, Vector.DotProduct(dv.xyz, s.texVec.v[0]) + s.texVec.v[0].get(3))
+                dv.st.set(1, Vector.DotProduct(dv.xyz, s.texVec.v[1]) + s.texVec.v[1].get(3))
 
                 // copy normal
-                dv.normal.oSet(dmap.dmapGlobals.mapPlanes.oGet(s.planenum).Normal())
+                dv.normal.set(dmap.dmapGlobals.mapPlanes.get(s.planenum).Normal())
                 if (dv.normal.Length() < 0.9 || dv.normal.Length() > 1.1) {
                     Common.common.Error("Bad normal in TriListForSide")
                 }
@@ -282,7 +282,7 @@ object usurface {
                 usurface.ClipSideByTree_r(w, side, node.children[1])
                 return
             }
-            w.Split(dmap.dmapGlobals.mapPlanes.oGet(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
             //		delete w;
             usurface.ClipSideByTree_r(front, side, node.children[0])
             usurface.ClipSideByTree_r(back, side, node.children[1])
@@ -294,7 +294,7 @@ object usurface {
             if (TempDump.NOT(side.visibleHull)) {
                 side.visibleHull = w.Copy()
             } else {
-                side.visibleHull.AddToConvexHull(w, dmap.dmapGlobals.mapPlanes.oGet(side.planenum).Normal())
+                side.visibleHull.AddToConvexHull(w, dmap.dmapGlobals.mapPlanes.get(side.planenum).Normal())
             }
         }
 
@@ -366,7 +366,7 @@ object usurface {
             return
         }
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            w.Split(dmap.dmapGlobals.mapPlanes.oGet(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
             //		delete w;
             usurface.ClipTriIntoTree_r(front, originalTri, e, node.children[0])
             usurface.ClipTriIntoTree_r(back, originalTri, e, node.children[1])
@@ -417,7 +417,7 @@ object usurface {
             //			return CheckWindingInAreas_r( w, node.children[1] );
             //		}
             //#endif
-            w.Split(dmap.dmapGlobals.mapPlanes.oGet(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
             a1 = usurface.CheckWindingInAreas_r(front, node.children[0])
             //		delete front;
             a2 = usurface.CheckWindingInAreas_r(back, node.children[1])
@@ -478,7 +478,7 @@ object usurface {
                     return
                 }
             }
-            w.Split(dmap.dmapGlobals.mapPlanes.oGet(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
             usurface.PutWindingIntoAreas_r(e, front, side, node.children[0])
             //		if ( front ) {
             //			delete front;
@@ -637,8 +637,8 @@ object usurface {
                     while (j < tri2.numIndexes) {
                         for (k in 0..2) {
                             val v = idVec3(tri2.verts[tri2.indexes[j + k]].xyz)
-                            mapTri.v[k].xyz.oSet(v.times(axis).oPlus(origin))
-                            mapTri.v[k].normal.oSet(tri2.verts[tri2.indexes[j + k]].normal.times(axis))
+                            mapTri.v[k].xyz.set(v.times(axis).oPlus(origin))
+                            mapTri.v[k].normal.set(tri2.verts[tri2.indexes[j + k]].normal.times(axis))
                             mapTri.v[k].st = tri2.verts[tri2.indexes[j + k]].st
                         }
                         usurface.AddMapTriToAreas(mapTri, e)
@@ -792,7 +792,7 @@ object usurface {
 
                     // if the group doesn't face away from the light, it
                     // won't contribute to the shadow volume
-                    if (dmap.dmapGlobals.mapPlanes.oGet(group.planeNum).Distance(lightOrigin) > 0) {
+                    if (dmap.dmapGlobals.mapPlanes.get(group.planeNum).Distance(lightOrigin) > 0) {
                         group = group.nextGroup
                         continue
                     }
@@ -910,7 +910,7 @@ object usurface {
                 if (group.numGroupLights == dmap.MAX_GROUP_LIGHTS) {
                     Common.common.Error(
                         "MAX_GROUP_LIGHTS around %f %f %f",
-                        group.triList.v[0].xyz.oGet(0), group.triList.v[0].xyz.oGet(1), group.triList.v[0].xyz.oGet(2)
+                        group.triList.v[0].xyz.get(0), group.triList.v[0].xyz.get(1), group.triList.v[0].xyz.get(2)
                     )
                 }
 
@@ -918,7 +918,7 @@ object usurface {
                 // it won't get carved at all
                 if (!light.def.lightShader.LightEffectsBackSides()
                     && !group.material.ReceivesLightingOnBackSides()
-                    && dmap.dmapGlobals.mapPlanes.oGet(group.planeNum).Distance(light.def.parms.origin) <= 0
+                    && dmap.dmapGlobals.mapPlanes.get(group.planeNum).Distance(light.def.parms.origin) <= 0
                 ) {
                     group.nextGroup = carvedGroups
                     carvedGroups = group
@@ -1002,7 +1002,7 @@ object usurface {
             }
             i = 0
             while (i < dmap.dmapGlobals.mapLights.Num()) {
-                light = dmap.dmapGlobals.mapLights.oGet(i)
+                light = dmap.dmapGlobals.mapLights.get(i)
                 usurface.BuildLightShadows(e, light)
                 i++
             }
@@ -1016,7 +1016,7 @@ object usurface {
             // each light that illuminates them
             i = 0
             while (i < dmap.dmapGlobals.mapLights.Num()) {
-                light = dmap.dmapGlobals.mapLights.oGet(i)
+                light = dmap.dmapGlobals.mapLights.get(i)
                 usurface.CarveGroupsByLight(e, light)
                 i++
             }

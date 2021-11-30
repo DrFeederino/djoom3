@@ -165,7 +165,7 @@ object DemoFile {
                 Close()
                 Common.common.Error("demo hash index out of range")
             }
-            return demoStrings.oGet(index.getVal()).toString() //TODO:return c_str?
+            return demoStrings.get(index.getVal()).toString() //TODO:return c_str?
         }
 
         fun WriteHashString(str: String?) {
@@ -175,7 +175,7 @@ object DemoFile {
             }
             // see if it is already in the has table
             for (i in 0 until demoStrings.Num()) {
-                if (demoStrings.oGet(i).toString() == str) {
+                if (demoStrings.get(i).toString() == str) {
                     WriteInt(i)
                     return
                 }

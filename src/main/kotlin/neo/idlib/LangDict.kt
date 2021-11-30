@@ -92,13 +92,13 @@ class LangDict {
             val outFile = idLib.fileSystem.OpenFileWrite(fileName)
             outFile.WriteFloatString("// string table\n// english\n//\n\n{\n")
             for (j in 0 until args.Num()) {
-                outFile.WriteFloatString("\t\"%s\"\t\"", args.oGet(j).key)
-                val l = args.oGet(j).value.Length()
+                outFile.WriteFloatString("\t\"%s\"\t\"", args.get(j).key)
+                val l = args.get(j).value.Length()
                 val slash: Char = '\\'
                 val tab: Char = 't'
                 val nl: Char = 'n'
                 for (k in 0 until l) {
-                    val ch: Char = args.oGet(j).value.toString()[k]
+                    val ch: Char = args.get(j).value.toString()[k]
                     if (ch == '\t') {
                         outFile.WriteChar(slash)
                         outFile.WriteChar(tab)
@@ -121,8 +121,8 @@ class LangDict {
             }
             var c = args.Num()
             for (j in 0 until c) {
-                if (idStr.Companion.Cmp(args.oGet(j).value.toString(), str) == 0) {
-                    return args.oGet(j).key.toString()
+                if (idStr.Companion.Cmp(args.get(j).value.toString(), str) == 0) {
+                    return args.get(j).key.toString()
                 }
             }
             val id = GetNextId()
@@ -134,7 +134,7 @@ class LangDict {
             c = args.Append(kv)
             assert(kv.key.Cmpn(Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0)
             hash.Add(GetHashKey(kv.key), c)
-            return args.oGet(c).key.toString()
+            return args.get(c).key.toString()
         }
 
         @Throws(idException::class)
@@ -152,8 +152,8 @@ class LangDict {
             val hashKey = GetHashKey(str)
             var i = hash.First(hashKey)
             while (i != -1) {
-                if (args.oGet(i).key.Cmp(str) == 0) {
-                    return args.oGet(i).value.toString()
+                if (args.get(i).key.Cmp(str) == 0) {
+                    return args.get(i).value.toString()
                 }
                 i = hash.Next(i)
             }
@@ -180,7 +180,7 @@ class LangDict {
         }
 
         fun GetKeyVal(i: Int): idLangKeyValue? {
-            return args.oGet(i)
+            return args.get(i)
         }
 
         fun SetBaseID(id: Int) {
@@ -225,7 +225,7 @@ class LangDict {
             }
             var work: idStr?
             for (j in 0 until c) {
-                work = args.oGet(j).key
+                work = args.get(j).key
                 work.StripLeading(Common.STRTABLE_ID)
                 val test = work.toString().toInt()
                 if (test > id) {

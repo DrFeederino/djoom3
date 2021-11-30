@@ -57,7 +57,7 @@ object Trigger {
             private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
             fun DrawDebugInfo() {
                 val axis = Game_local.gameLocal.GetLocalPlayer().viewAngles.ToMat3()
-                val up = idVec3(axis.oGet(2).times(5.0f))
+                val up = idVec3(axis.get(2).times(5.0f))
                 val viewTextBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
                 val viewBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
                 val box = idBounds(idVec3(-4.0f, -4.0f, -4.0f), idVec3(4.0f, 4.0f, 4.0f))
@@ -77,7 +77,7 @@ object Trigger {
                         if (!show) {
                             i = 0
                             while (i < ent.targets.Num()) {
-                                target = ent.targets.oGet(i).GetEntity()
+                                target = ent.targets.get(i).GetEntity()
                                 if (target != null && viewBounds.IntersectsBounds(target.GetPhysics().GetAbsBounds())) {
                                     show = true
                                     break
@@ -118,7 +118,7 @@ object Trigger {
                             if (func != null) {
                                 Game_local.gameRenderWorld.DrawText(
                                     Str.va("call script '%s'", func.Name()),
-                                    ent.GetPhysics().GetAbsBounds().GetCenter().oMinus(up),
+                                    ent.GetPhysics().GetAbsBounds().GetCenter().minus(up),
                                     0.1f,
                                     Lib.Companion.colorWhite,
                                     axis,
@@ -128,7 +128,7 @@ object Trigger {
                         }
                         i = 0
                         while (i < ent.targets.Num()) {
-                            target = ent.targets.oGet(i).GetEntity()
+                            target = ent.targets.get(i).GetEntity()
                             if (target != null) {
                                 Game_local.gameRenderWorld.DebugArrow(
                                     Lib.Companion.colorYellow,
@@ -404,7 +404,7 @@ object Trigger {
                     return true
                 }
                 val player = activator as idPlayer?
-                val dot = player.viewAngles.ToForward().times(GetPhysics().GetAxis().oGet(0))
+                val dot = player.viewAngles.ToForward().times(GetPhysics().GetAxis().get(0))
                 val angle = Vector.RAD2DEG(idMath.ACos(dot))
                 return angle <= spawnArgs.GetFloat("angleLimit", "30")
             }

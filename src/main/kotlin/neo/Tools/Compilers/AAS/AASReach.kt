@@ -61,7 +61,7 @@ object AASReach {
             FlagReachableAreas(file)
             i = 1
             while (i < file.areas.Num()) {
-                if (0 == file.areas.oGet(i).flags and AASFile.AREA_REACHABLE_WALK) {
+                if (0 == file.areas.get(i).flags and AASFile.AREA_REACHABLE_WALK) {
                     i++
                     continue
                 }
@@ -74,7 +74,7 @@ object AASReach {
             lastPercent = -1
             i = 1
             while (i < file.areas.Num()) {
-                if (0 == file.areas.oGet(i).flags and AASFile.AREA_REACHABLE_WALK) {
+                if (0 == file.areas.get(i).flags and AASFile.AREA_REACHABLE_WALK) {
                     i++
                     continue
                 }
@@ -84,7 +84,7 @@ object AASReach {
                         j++
                         continue
                     }
-                    if (0 == file.areas.oGet(j).flags and AASFile.AREA_REACHABLE_WALK) {
+                    if (0 == file.areas.get(j).flags and AASFile.AREA_REACHABLE_WALK) {
                         j++
                         continue
                     }
@@ -123,13 +123,13 @@ object AASReach {
             numReachableAreas = 0
             i = 1
             while (i < file.areas.Num()) {
-                if (file.areas.oGet(i).flags and (AASFile.AREA_FLOOR or AASFile.AREA_LADDER) != 0
-                    || file.areas.oGet(i).contents and AASFile.AREACONTENTS_WATER != 0
+                if (file.areas.get(i).flags and (AASFile.AREA_FLOOR or AASFile.AREA_LADDER) != 0
+                    || file.areas.get(i).contents and AASFile.AREACONTENTS_WATER != 0
                 ) {
-                    file.areas.oGet(i).flags = file.areas.oGet(i).flags or AASFile.AREA_REACHABLE_WALK
+                    file.areas.get(i).flags = file.areas.get(i).flags or AASFile.AREA_REACHABLE_WALK
                 }
                 if (file.GetSettings().allowFlyReachabilities.isVal) {
-                    file.areas.oGet(i).flags = file.areas.oGet(i).flags or AASFile.AREA_REACHABLE_FLY
+                    file.areas.get(i).flags = file.areas.get(i).flags or AASFile.AREA_REACHABLE_FLY
                 }
                 numReachableAreas++
                 i++
@@ -140,7 +140,7 @@ object AASReach {
         private fun ReachabilityExists(fromAreaNum: Int, toAreaNum: Int): Boolean {
             val area: aasArea_s?
             var reach: idReachability?
-            area = file.areas.oGet(fromAreaNum)
+            area = file.areas.get(fromAreaNum)
             reach = area.reach
             while (reach != null) {
                 if (reach.toAreaNum.toInt() == toAreaNum) {
@@ -152,20 +152,20 @@ object AASReach {
         }
 
         private fun CanSwimInArea(areaNum: Int): Boolean {
-            return file.areas.oGet(areaNum).contents and AASFile.AREACONTENTS_WATER != 0
+            return file.areas.get(areaNum).contents and AASFile.AREACONTENTS_WATER != 0
         }
 
         private fun AreaHasFloor(areaNum: Int): Boolean {
-            return file.areas.oGet(areaNum).flags and AASFile.AREA_FLOOR != 0
+            return file.areas.get(areaNum).flags and AASFile.AREA_FLOOR != 0
         }
 
         private fun AreaIsClusterPortal(areaNum: Int): Boolean {
-            return file.areas.oGet(areaNum).flags and AASFile.AREACONTENTS_CLUSTERPORTAL != 0
+            return file.areas.get(areaNum).flags and AASFile.AREACONTENTS_CLUSTERPORTAL != 0
         }
 
         private fun AddReachabilityToArea(reach: idReachability?, areaNum: Int) {
             val area: aasArea_s?
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
             reach.next = area.reach
             area.reach = reach
             numReachabilities++
@@ -178,11 +178,11 @@ object AASReach {
             val area: aasArea_s?
             var face: aasFace_s?
             var reach: idReachability_Fly
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
             i = 0
             while (i < area.numFaces) {
-                faceNum = file.faceIndex.oGet(area.firstFace + i)
-                face = file.faces.oGet(Math.abs(faceNum))
+                faceNum = file.faceIndex.get(area.firstFace + i)
+                face = file.faces.get(Math.abs(faceNum))
                 otherAreaNum = face.areas[Math_h.INTSIGNBITNOTSET(faceNum)]
                 if (otherAreaNum == 0) {
                     i++
@@ -200,17 +200,17 @@ object AASReach {
                 reach.fromAreaNum = areaNum.toShort()
                 reach.edgeNum = 0
                 reach.travelTime = 1
-                reach.start.oSet(file.FaceCenter(Math.abs(faceNum)))
+                reach.start.set(file.FaceCenter(Math.abs(faceNum)))
                 if (faceNum < 0) {
-                    reach.end.oSet(
+                    reach.end.set(
                         reach.start.oPlus(
-                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
+                            file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
                         )
                     )
                 } else {
-                    reach.end.oSet(
-                        reach.start.oMinus(
-                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
+                    reach.end.set(
+                        reach.start.minus(
+                            file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_FLYEND)
                         )
                     )
                 }
@@ -229,11 +229,11 @@ object AASReach {
             if (!CanSwimInArea(areaNum)) {
                 return
             }
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
             i = 0
             while (i < area.numFaces) {
-                faceNum = file.faceIndex.oGet(area.firstFace + i)
-                face = file.faces.oGet(Math.abs(faceNum))
+                faceNum = file.faceIndex.get(area.firstFace + i)
+                face = file.faces.get(Math.abs(faceNum))
                 otherAreaNum = face.areas[Math_h.INTSIGNBITNOTSET(faceNum)]
                 if (otherAreaNum == 0) {
                     i++
@@ -255,17 +255,17 @@ object AASReach {
                 reach.fromAreaNum = areaNum.toShort()
                 reach.edgeNum = 0
                 reach.travelTime = 1
-                reach.start.oSet(file.FaceCenter(Math.abs(faceNum)))
+                reach.start.set(file.FaceCenter(Math.abs(faceNum)))
                 if (faceNum < 0) {
-                    reach.end.oSet(
+                    reach.end.set(
                         reach.start.oPlus(
-                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
+                            file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                         )
                     )
                 } else {
-                    reach.end.oSet(
-                        reach.start.oMinus(
-                            file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
+                    reach.end.set(
+                        reach.start.minus(
+                            file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                         )
                     )
                 }
@@ -295,39 +295,39 @@ object AASReach {
             if (!AreaHasFloor(areaNum)) {
                 return
             }
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
             i = 0
             while (i < area.numFaces) {
-                faceNum = file.faceIndex.oGet(area.firstFace + i)
-                face = file.faces.oGet(Math.abs(faceNum))
+                faceNum = file.faceIndex.get(area.firstFace + i)
+                face = file.faces.get(Math.abs(faceNum))
                 otherAreaNum = face.areas[Math_h.INTSIGNBITNOTSET(faceNum)]
                 if (!AreaHasFloor(otherAreaNum)) {
                     i++
                     continue
                 }
-                otherArea = file.areas.oGet(otherAreaNum)
+                otherArea = file.areas.get(otherAreaNum)
                 k = 0
                 while (k < area.numFaces) {
-                    face1Num = file.faceIndex.oGet(area.firstFace + k)
-                    face1 = file.faces.oGet(Math.abs(face1Num))
+                    face1Num = file.faceIndex.get(area.firstFace + k)
+                    face1 = file.faces.get(Math.abs(face1Num))
                     if (0 == face1.flags and AASFile.FACE_FLOOR) {
                         k++
                         continue
                     }
                     l = 0
                     while (l < otherArea.numFaces) {
-                        face2Num = file.faceIndex.oGet(otherArea.firstFace + l)
-                        face2 = file.faces.oGet(Math.abs(face2Num))
+                        face2Num = file.faceIndex.get(otherArea.firstFace + l)
+                        face2 = file.faces.get(Math.abs(face2Num))
                         if (0 == face2.flags and AASFile.FACE_FLOOR) {
                             l++
                             continue
                         }
                         m = 0
                         while (m < face1.numEdges) {
-                            edge1Num = Math.abs(file.edgeIndex.oGet(face1.firstEdge + m))
+                            edge1Num = Math.abs(file.edgeIndex.get(face1.firstEdge + m))
                             n = 0
                             while (n < face2.numEdges) {
-                                edge2Num = Math.abs(file.edgeIndex.oGet(face2.firstEdge + n))
+                                edge2Num = Math.abs(file.edgeIndex.get(face2.firstEdge + n))
                                 if (edge1Num == edge2Num) {
                                     break
                                 }
@@ -356,17 +356,17 @@ object AASReach {
                     reach.fromAreaNum = areaNum.toShort()
                     reach.edgeNum = Math.abs(edge1Num)
                     reach.travelTime = 1
-                    reach.start.oSet(file.EdgeCenter(edge1Num))
+                    reach.start.set(file.EdgeCenter(edge1Num))
                     if (faceNum < 0) {
-                        reach.end.oSet(
+                        reach.end.set(
                             reach.start.oPlus(
-                                file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_WALKEND)
+                                file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_WALKEND)
                             )
                         )
                     } else {
-                        reach.end.oSet(
-                            reach.start.oMinus(
-                                file.planeList.oGet(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
+                        reach.end.set(
+                            reach.start.minus(
+                                file.planeList.get(face.planeNum).Normal().times(AASReach.INSIDEUNITS_SWIMEND)
                             )
                         )
                     }
@@ -457,16 +457,16 @@ object AASReach {
             if (!AreaHasFloor(toAreaNum) && !CanSwimInArea(toAreaNum)) {
                 return false
             }
-            area1 = file.areas.oGet(fromAreaNum)
-            area2 = file.areas.oGet(toAreaNum)
+            area1 = file.areas.get(fromAreaNum)
+            area2 = file.areas.get(toAreaNum)
 
             // if the areas are not near anough in the x-y direction
             i = 0
             while (i < 2) {
-                if (area1.bounds.oGet(0, i) > area2.bounds.oGet(1, i) + 2.0f) {
+                if (area1.bounds.get(0, i) > area2.bounds.get(1, i) + 2.0f) {
                     return false
                 }
-                if (area1.bounds.oGet(1, i) < area2.bounds.oGet(0, i) - 2.0f) {
+                if (area1.bounds.get(1, i) < area2.bounds.get(0, i) - 2.0f) {
                     return false
                 }
                 i++
@@ -481,9 +481,9 @@ object AASReach {
             water_bestArea2FloorEdgeNum = 0
             i = 0
             while (i < area1.numFaces) {
-                floorFace1Num = file.faceIndex.oGet(area1.firstFace + i)
+                floorFace1Num = file.faceIndex.get(area1.firstFace + i)
                 faceSide1 = floorFace1Num < 0
-                floorFace1 = file.faces.oGet(Math.abs(floorFace1Num))
+                floorFace1 = file.faces.get(Math.abs(floorFace1Num))
 
                 // if this isn't a floor face
                 if (0 == floorFace1.flags and AASFile.FACE_FLOOR) {
@@ -492,7 +492,7 @@ object AASReach {
                     if (CanSwimInArea(fromAreaNum)) {
 
                         // face plane must be more or less horizontal
-                        plane = file.planeList.oGet(floorFace1.planeNum xor if (!faceSide1) 1 else 0)
+                        plane = file.planeList.get(floorFace1.planeNum xor if (!faceSide1) 1 else 0)
                         if (plane.Normal()
                                 .times(file.settings.invGravityDir) < file.settings.minFloorCos.getVal()
                         ) {
@@ -507,7 +507,7 @@ object AASReach {
                 }
                 k = 0
                 while (k < floorFace1.numEdges) {
-                    edge1Num = file.edgeIndex.oGet(floorFace1.firstEdge + k)
+                    edge1Num = file.edgeIndex.get(floorFace1.firstEdge + k)
                     side1 = TempDump.btoi(edge1Num < 0)
                     // NOTE: for water faces we must take the side area 1 is on into
                     // account because the face is shared and doesn't have to be oriented correctly
@@ -515,21 +515,21 @@ object AASReach {
                         side1 = TempDump.btoi(TempDump.itob(side1) == faceSide1)
                     }
                     edge1Num = Math.abs(edge1Num)
-                    edge1 = file.edges.oGet(edge1Num)
+                    edge1 = file.edges.get(edge1Num)
                     // vertices of the edge
-                    v1.oSet(file.vertices.oGet(edge1.vertexNum[TempDump.SNOT(side1.toDouble())]))
-                    v2.oSet(file.vertices.oGet(edge1.vertexNum[side1]))
+                    v1.set(file.vertices.get(edge1.vertexNum[TempDump.SNOT(side1.toDouble())]))
+                    v2.set(file.vertices.get(edge1.vertexNum[side1]))
                     // get a vertical plane through the edge
                     // NOTE: normal is pointing into area 2 because the face edges are stored counter clockwise
-                    edgeVec.oSet(v2.oMinus(v1))
-                    normal.oSet(edgeVec.Cross(file.settings.invGravityDir))
+                    edgeVec.set(v2.minus(v1))
+                    normal.set(edgeVec.Cross(file.settings.invGravityDir))
                     normal.Normalize()
                     dist = normal.times(v1)
 
                     // check the faces from the second area
                     j = 0
                     while (j < area2.numFaces) {
-                        floorFace2 = file.faces.oGet(Math.abs(file.faceIndex.oGet(area2.firstFace + j)))
+                        floorFace2 = file.faces.get(Math.abs(file.faceIndex.get(area2.firstFace + j)))
                         // must be a ground face
                         if (0 == floorFace2.flags and AASFile.FACE_FLOOR) {
                             j++
@@ -538,11 +538,11 @@ object AASReach {
                         // check the edges of this ground face
                         l = 0
                         while (l < floorFace2.numEdges) {
-                            edge2Num = Math.abs(file.edgeIndex.oGet(floorFace2.firstEdge + l))
-                            edge2 = file.edges.oGet(edge2Num)
+                            edge2Num = Math.abs(file.edgeIndex.get(floorFace2.firstEdge + l))
+                            edge2 = file.edges.get(edge2Num)
                             // vertices of the edge
-                            v3.oSet(file.vertices.oGet(edge2.vertexNum[0]))
-                            v4.oSet(file.vertices.oGet(edge2.vertexNum[1]))
+                            v3.set(file.vertices.get(edge2.vertexNum[0]))
+                            v4.set(file.vertices.get(edge2.vertexNum[1]))
                             // check the distance between the two points and the vertical plane through the edge of area1
                             diff = normal.times(v3) - dist
                             if (diff < -0.2f || diff > 0.2f) {
@@ -559,15 +559,15 @@ object AASReach {
                             // and calculate the shortest distance between the two
                             // edges if they overlap in the direction orthogonal to
                             // the gravity direction
-                            orthogonal.oSet(file.settings.invGravityDir.Cross(normal))
+                            orthogonal.set(file.settings.invGravityDir.Cross(normal))
                             invGravityDot = file.settings.invGravityDir.times(file.settings.invGravityDir)
                             orthogonalDot = orthogonal.times(orthogonal)
                             // projection into the step plane
                             // NOTE: since gravity is vertical this is just the z coordinate
-                            y1 = v1.oGet(2) //(v1 * file->settings.invGravity) / invGravityDot;
-                            y2 = v2.oGet(2) //(v2 * file->settings.invGravity) / invGravityDot;
-                            y3 = v3.oGet(2) //(v3 * file->settings.invGravity) / invGravityDot;
-                            y4 = v4.oGet(2) //(v4 * file->settings.invGravity) / invGravityDot;
+                            y1 = v1.get(2) //(v1 * file->settings.invGravity) / invGravityDot;
+                            y2 = v2.get(2) //(v2 * file->settings.invGravity) / invGravityDot;
+                            y3 = v3.get(2) //(v3 * file->settings.invGravity) / invGravityDot;
+                            y4 = v4.get(2) //(v4 * file->settings.invGravity) / invGravityDot;
                             x1 = v1.times(orthogonal) / orthogonalDot
                             x2 = v2.times(orthogonal) / orthogonalDot
                             x3 = v3.times(orthogonal) / orthogonalDot
@@ -579,9 +579,9 @@ object AASReach {
                                 tmp = y1
                                 y1 = y2
                                 y2 = tmp
-                                tmpv.oSet(v1)
-                                v1.oSet(v2)
-                                v2.oSet(tmpv)
+                                tmpv.set(v1)
+                                v1.set(v2)
+                                v2.set(tmpv)
                             }
                             if (x3 > x4) {
                                 tmp = x3
@@ -590,9 +590,9 @@ object AASReach {
                                 tmp = y3
                                 y3 = y4
                                 y4 = tmp
-                                tmpv.oSet(v3)
-                                v3.oSet(v4)
-                                v4.oSet(tmpv)
+                                tmpv.set(v3)
+                                v3.set(v4)
+                                v4.set(tmpv)
                             }
                             // if the two projected edge lines have no overlap
                             if (x2 <= x3 || x4 <= x1) {
@@ -603,66 +603,66 @@ object AASReach {
                             if (x1 - 0.5f < x3 && x4 < x2 + 0.5f && x3 - 0.5f < x1 && x2 < x4 + 0.5f) {
                                 dist1 = y3 - y1
                                 dist2 = y4 - y2
-                                p1area1.oSet(v1)
-                                p2area1.oSet(v2)
-                                p1area2.oSet(v3)
-                                p2area2.oSet(v4)
+                                p1area1.set(v1)
+                                p2area1.set(v2)
+                                p1area2.set(v3)
+                                p2area2.set(v4)
                             } else {
                                 // if the points are equal
                                 if (x1 > x3 - 0.1f && x1 < x3 + 0.1f) {
                                     dist1 = y3 - y1
-                                    p1area1.oSet(v1)
-                                    p1area2.oSet(v3)
+                                    p1area1.set(v1)
+                                    p1area2.set(v3)
                                 } else if (x1 < x3) {
                                     y = y1 + (x3 - x1) * (y2 - y1) / (x2 - x1)
                                     dist1 = y3 - y
-                                    p1area1.oSet(v3)
-                                    p1area1.oSet(2, y)
-                                    p1area2.oSet(v3)
+                                    p1area1.set(v3)
+                                    p1area1.set(2, y)
+                                    p1area2.set(v3)
                                 } else {
                                     y = y3 + (x1 - x3) * (y4 - y3) / (x4 - x3)
                                     dist1 = y - y1
-                                    p1area1.oSet(v1)
-                                    p1area2.oSet(v1)
-                                    p1area2.oSet(2, y)
+                                    p1area1.set(v1)
+                                    p1area2.set(v1)
+                                    p1area2.set(2, y)
                                 }
                                 // if the points are equal
                                 if (x2 > x4 - 0.1f && x2 < x4 + 0.1f) {
                                     dist2 = y4 - y2
-                                    p2area1.oSet(v2)
-                                    p2area2.oSet(v4)
+                                    p2area1.set(v2)
+                                    p2area2.set(v4)
                                 } else if (x2 < x4) {
                                     y = y3 + (x2 - x3) * (y4 - y3) / (x4 - x3)
                                     dist2 = y - y2
-                                    p2area1.oSet(v2)
-                                    p2area2.oSet(v2)
-                                    p2area2.oSet(2, y)
+                                    p2area1.set(v2)
+                                    p2area2.set(v2)
+                                    p2area2.set(2, y)
                                 } else {
                                     y = y1 + (x4 - x1) * (y2 - y1) / (x2 - x1)
                                     dist2 = y4 - y
-                                    p2area1.oSet(v4)
-                                    p2area1.oSet(2, y)
-                                    p2area2.oSet(v4)
+                                    p2area1.set(v4)
+                                    p2area1.set(2, y)
+                                    p2area2.set(v4)
                                 }
                             }
 
                             // if both distances are pretty much equal then we take the middle of the points
                             if (dist1 > dist2 - 1.0f && dist1 < dist2 + 1.0f) {
                                 dist = dist1
-                                start.oSet(p1area1.oPlus(p2area1).oMultiply(0.5f))
-                                end.oSet(p1area2.oPlus(p2area2).oMultiply(0.5f))
+                                start.set(p1area1.oPlus(p2area1).oMultiply(0.5f))
+                                end.set(p1area2.oPlus(p2area2).oMultiply(0.5f))
                             } else if (dist1 < dist2) {
                                 dist = dist1
-                                start.oSet(p1area1)
-                                end.oSet(p1area2)
+                                start.set(p1area1)
+                                end.set(p1area2)
                             } else {
                                 dist = dist2
-                                start.oSet(p2area1)
-                                end.oSet(p2area2)
+                                start.set(p2area1)
+                                end.set(p2area2)
                             }
 
                             // get the length of the overlapping part of the edges of the two areas
-                            length = p2area2.oMinus(p1area2).Length()
+                            length = p2area2.minus(p1area2).Length()
                             if (floorFace1.flags and AASFile.FACE_FLOOR != 0) {
                                 // if the vertical distance is smaller
                                 if (dist < floor_bestDist
@@ -676,9 +676,9 @@ object AASReach {
                                     floor_bestArea1FloorEdgeNum = edge1Num
                                     floor_bestArea2FloorEdgeNum = edge2Num
                                     floor_bestFace1 = floorFace1
-                                    floor_bestStart.oSet(start)
-                                    floor_bestNormal.oSet(normal)
-                                    floor_bestEnd.oSet(end)
+                                    floor_bestStart.set(start)
+                                    floor_bestNormal.set(normal)
+                                    floor_bestEnd.set(end)
                                 }
                             } else {
                                 // if the vertical distance is smaller
@@ -693,9 +693,9 @@ object AASReach {
                                     water_bestArea1FloorEdgeNum = edge1Num
                                     water_bestArea2FloorEdgeNum = edge2Num
                                     water_bestFace1 = floorFace1
-                                    water_bestStart.oSet(start) // best start point in area1
-                                    water_bestNormal.oSet(normal) // normal is pointing into area2
-                                    water_bestEnd.oSet(end) // best point towards area2
+                                    water_bestStart.set(start) // best start point in area1
+                                    water_bestNormal.set(normal) // normal is pointing into area2
+                                    water_bestEnd.set(end) // best point towards area2
                                 }
                             }
                             l++
@@ -734,8 +734,8 @@ object AASReach {
                     walkReach.travelType = AASFile.TFL_WALK
                     walkReach.toAreaNum = toAreaNum.toShort()
                     walkReach.fromAreaNum = fromAreaNum.toShort()
-                    walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
-                    walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
+                    walkReach.start.set(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                    walkReach.end.set(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                     walkReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                     walkReach.travelTime = 0
                     if (area2.flags and AASFile.AREA_CROUCH != 0) {
@@ -766,7 +766,7 @@ object AASReach {
             // check for a waterjump reachability
             if (water_foundReach != 0) {
                 // get a test point a little bit towards area1
-                testPoint.oSet(water_bestEnd.oMinus(water_bestNormal.times(AASReach.INSIDEUNITS)))
+                testPoint.set(water_bestEnd.minus(water_bestNormal.times(AASReach.INSIDEUNITS)))
                 // go down the maximum waterjump height
                 testPoint.minusAssign(2, file.settings.maxWaterJumpHeight.getVal())
                 // if there IS water the sv_maxwaterjump height below the bestend point
@@ -780,8 +780,8 @@ object AASReach {
                             waterJumpReach.travelType = AASFile.TFL_WATERJUMP
                             waterJumpReach.toAreaNum = toAreaNum.toShort()
                             waterJumpReach.fromAreaNum = fromAreaNum.toShort()
-                            waterJumpReach.start.oSet(water_bestStart)
-                            waterJumpReach.end.oSet(water_bestEnd.oPlus(water_bestNormal.times(AASReach.INSIDEUNITS_WATERJUMP)))
+                            waterJumpReach.start.set(water_bestStart)
+                            waterJumpReach.end.set(water_bestEnd.oPlus(water_bestNormal.times(AASReach.INSIDEUNITS_WATERJUMP)))
                             waterJumpReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                             waterJumpReach.travelTime = file.settings.tt_waterJump.getVal()
                             AddReachabilityToArea(waterJumpReach, fromAreaNum)
@@ -820,8 +820,8 @@ object AASReach {
                             barrierJumpReach.travelType = AASFile.TFL_BARRIERJUMP
                             barrierJumpReach.toAreaNum = toAreaNum.toShort()
                             barrierJumpReach.fromAreaNum = fromAreaNum.toShort()
-                            barrierJumpReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
-                            barrierJumpReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
+                            barrierJumpReach.start.set(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                            barrierJumpReach.end.set(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                             barrierJumpReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                             barrierJumpReach.travelTime = file.settings.tt_barrierJump.getVal()
                             AddReachabilityToArea(barrierJumpReach, fromAreaNum)
@@ -860,8 +860,8 @@ object AASReach {
                         walkReach.travelType = AASFile.TFL_WALK
                         walkReach.toAreaNum = toAreaNum.toShort()
                         walkReach.fromAreaNum = fromAreaNum.toShort()
-                        walkReach.start.oSet(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
-                        walkReach.end.oSet(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
+                        walkReach.start.set(floor_bestStart.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKSTART)))
+                        walkReach.end.set(floor_bestEnd.oPlus(floor_bestNormal.times(AASReach.INSIDEUNITS_WALKEND)))
                         walkReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                         walkReach.travelTime = 1
                         AddReachabilityToArea(walkReach, fromAreaNum)
@@ -871,9 +871,9 @@ object AASReach {
                     if (0f == file.settings.maxFallHeight.getVal() || Math.abs(floor_bestDist) < file.settings.maxFallHeight.getVal()) {
                         // trace a bounding box vertically to check for solids
                         floor_bestEnd.plusAssign(floor_bestNormal.times(AASReach.INSIDEUNITS))
-                        start.oSet(floor_bestEnd)
-                        start.oSet(2, floor_bestStart.oGet(2))
-                        end.oSet(floor_bestEnd)
+                        start.set(floor_bestEnd)
+                        start.set(2, floor_bestStart.get(2))
+                        end.set(floor_bestEnd)
                         end.plusAssign(2, 4f)
                         trace.areas = areas
                         trace.maxAreas = areas.size
@@ -896,8 +896,8 @@ object AASReach {
                                     walkOffLedgeReach.travelType = AASFile.TFL_WALKOFFLEDGE
                                     walkOffLedgeReach.toAreaNum = toAreaNum.toShort()
                                     walkOffLedgeReach.fromAreaNum = fromAreaNum.toShort()
-                                    walkOffLedgeReach.start.oSet(floor_bestStart)
-                                    walkOffLedgeReach.end.oSet(floor_bestEnd)
+                                    walkOffLedgeReach.start.set(floor_bestStart)
+                                    walkOffLedgeReach.end.set(floor_bestEnd)
                                     walkOffLedgeReach.edgeNum = Math.abs(floor_bestArea1FloorEdgeNum)
                                     walkOffLedgeReach.travelTime =
                                         (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(floor_bestDist) * 50 / file.settings.gravityValue).toInt()
@@ -935,11 +935,11 @@ object AASReach {
             if (!AreaHasFloor(areaNum) || CanSwimInArea(areaNum)) {
                 return
             }
-            area = file.areas.oGet(areaNum)
+            area = file.areas.get(areaNum)
             i = 0
             while (i < area.numFaces) {
-                faceNum = file.faceIndex.oGet(area.firstFace + i)
-                face = file.faces.oGet(Math.abs(faceNum))
+                faceNum = file.faceIndex.get(area.firstFace + i)
+                face = file.faces.get(Math.abs(faceNum))
 
                 // face must be a floor face
                 if (0 == face.flags and AASFile.FACE_FLOOR) {
@@ -948,22 +948,22 @@ object AASReach {
                 }
                 j = 0
                 while (j < face.numEdges) {
-                    edgeNum = file.edgeIndex.oGet(face.firstEdge + j)
-                    edge = file.edges.oGet(Math.abs(edgeNum))
+                    edgeNum = file.edgeIndex.get(face.firstEdge + j)
+                    edge = file.edges.get(Math.abs(edgeNum))
 
                     //if ( !(edge.flags & EDGE_LEDGE) ) {
                     //	continue;
                     //}
                     side = TempDump.btoi(edgeNum < 0)
-                    v1.oSet(file.vertices.oGet(edge.vertexNum[side]))
-                    v2.oSet(file.vertices.oGet(edge.vertexNum[TempDump.SNOT(side.toDouble())]))
-                    plane = file.planeList.oGet(face.planeNum xor Math_h.INTSIGNBITSET(faceNum))
+                    v1.set(file.vertices.get(edge.vertexNum[side]))
+                    v2.set(file.vertices.get(edge.vertexNum[TempDump.SNOT(side.toDouble())]))
+                    plane = file.planeList.get(face.planeNum xor Math_h.INTSIGNBITSET(faceNum))
 
                     // get the direction into the other area
-                    dir.oSet(plane.Normal().Cross(v2.oMinus(v1)))
+                    dir.set(plane.Normal().Cross(v2.minus(v1)))
                     dir.Normalize()
-                    mid.oSet(v1.oPlus(v2).oMultiply(0.5f))
-                    testEnd.oSet(mid.oPlus(dir.times(AASReach.INSIDEUNITS_WALKEND)))
+                    mid.set(v1.oPlus(v2).oMultiply(0.5f))
+                    testEnd.set(mid.oPlus(dir.times(AASReach.INSIDEUNITS_WALKEND)))
                     testEnd.minusAssign(2, file.settings.maxFallHeight.getVal() + 1.0f)
                     trace.areas = areas
                     trace.maxAreas = areas.size
@@ -973,7 +973,7 @@ object AASReach {
                         j++
                         continue
                     }
-                    if (Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) > file.settings.maxFallHeight.getVal()) {
+                    if (Math.abs(mid.get(2) - trace.endpos.get(2)) > file.settings.maxFallHeight.getVal()) {
                         j++
                         continue
                     }
@@ -1001,11 +1001,11 @@ object AASReach {
                     reach.travelType = AASFile.TFL_WALKOFFLEDGE
                     reach.toAreaNum = reachAreaNum.toShort()
                     reach.fromAreaNum = areaNum.toShort()
-                    reach.start.oSet(mid)
-                    reach.end.oSet(trace.endpos)
+                    reach.start.set(mid)
+                    reach.end.set(trace.endpos)
                     reach.edgeNum = Math.abs(edgeNum)
                     reach.travelTime =
-                        (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(mid.oGet(2) - trace.endpos.oGet(2)) * 50 / file.settings.gravityValue).toInt()
+                        (file.settings.tt_startWalkOffLedge.getVal() + Math.abs(mid.get(2) - trace.endpos.get(2)) * 50 / file.settings.gravityValue).toInt()
                     AddReachabilityToArea(reach, areaNum)
                     j++
                 }

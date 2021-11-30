@@ -55,7 +55,7 @@ class Force {
                 var i: Int
                 i = 0
                 while (i < forceList.Num()) {
-                    forceList.oGet(i).RemovePhysics(phys)
+                    forceList.get(i).RemovePhysics(phys)
                     i++
                 }
             }

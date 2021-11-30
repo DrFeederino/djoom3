@@ -157,7 +157,7 @@ class Timer {
         fun Reset() {
             assert(timers.Num() == names.size())
             for (i in 0 until timers.Num()) {
-                timers.oGet(i).Clear()
+                timers.get(i).Clear()
             }
         }
 
@@ -168,8 +168,8 @@ class Timer {
             idLib.common.Printf("-------------------------------\n")
             var total = 0.0f
             for (i in 0 until names.size()) {
-                idLib.common.Printf("%s consumed %5.2f seconds\n", names.get(i), timers.oGet(i).Milliseconds() * 0.001f)
-                total += timers.oGet(i).Milliseconds().toFloat()
+                idLib.common.Printf("%s consumed %5.2f seconds\n", names.get(i), timers.get(i).Milliseconds() * 0.001f)
+                total += timers.get(i).Milliseconds().toFloat()
             }
             idLib.common.Printf(
                 "Total time for report %s was %5.2f\n\n",
@@ -192,7 +192,7 @@ class Timer {
             if (i == names.size()) {
                 val index = AddReport(name)
                 if (index >= 0) {
-                    timers.oGet(index).Clear()
+                    timers.get(index).Clear()
                     timers.oPluSet(index, time)
                 }
             }

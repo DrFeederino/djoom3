@@ -93,20 +93,20 @@ object Push {
             clipModel = pusher.GetPhysics().GetClipModel()
             totalMass = 0.0f
             results.fraction = 1.0f
-            results.endpos.oSet(newOrigin)
-            results.endAxis.oSet(clipModel.GetAxis())
+            results.endpos.set(newOrigin)
+            results.endAxis.set(clipModel.GetAxis())
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODO:
             if (translation == Vector.getVec3_origin()) {
                 return totalMass
             }
-            dir.oSet(translation)
+            dir.set(translation)
             dir.Normalize()
             dir.z += 1.0f
             dir.timesAssign(10.0f)
 
             // get bounds for the whole movement
             bounds = clipModel.GetBounds()
-            if (bounds.oGet(0).x >= bounds.oGet(1).x) {
+            if (bounds.get(0).x >= bounds.get(1).x) {
                 return totalMass
             }
             pushBounds.FromBoundsTranslation(bounds, clipModel.GetOrigin(), clipModel.GetAxis(), translation)
@@ -152,18 +152,18 @@ object Push {
                     }
                     return totalMass
                 }
-                clipMove.oSet(results.endpos.oMinus(clipModel.GetOrigin()))
-                clipOrigin.oSet(results.endpos)
+                clipMove.set(results.endpos.minus(clipModel.GetOrigin()))
+                clipOrigin.set(results.endpos)
             } else {
-                clipMove.oSet(translation)
-                clipOrigin.oSet(newOrigin)
+                clipMove.set(translation)
+                clipOrigin.set(newOrigin)
             }
 
             // we have to enable the clip model because we use it during pushing
             clipModel.Enable()
 
             // save pusher old position
-            oldOrigin.oSet(clipModel.GetOrigin())
+            oldOrigin.set(clipModel.GetOrigin())
 
             // try to push the entities
             i = 0
@@ -201,7 +201,7 @@ object Push {
 
                     // wake up this object
                     if (flags and Push.PUSHFL_APPLYIMPULSE != 0) {
-                        impulse.oSet(dir.times(physics.GetMass()))
+                        impulse.set(dir.times(physics.GetMass()))
                     } else {
                         impulse.Zero()
                     }
@@ -253,8 +253,8 @@ object Push {
                 // blocked
                 results = pushResults
                 results.fraction = 0.0f
-                results.endAxis.oSet(clipModel.GetAxis())
-                results.endpos.oSet(clipModel.GetOrigin())
+                results.endAxis.set(clipModel.GetAxis())
+                results.endpos.set(clipModel.GetOrigin())
                 results.c.entityNum = check.entityNumber
                 results.c.id = 0
                 if (!wasEnabled) {
@@ -301,8 +301,8 @@ object Push {
             clipModel = pusher.GetPhysics().GetClipModel()
             totalMass = 0.0f
             results.fraction = 1.0f
-            results.endpos.oSet(clipModel.GetOrigin())
-            results.endAxis.oSet(newAxis)
+            results.endpos.set(clipModel.GetOrigin())
+            results.endAxis.set(newAxis)
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
             if (0f == rotation.GetAngle()) {
                 return totalMass
@@ -310,7 +310,7 @@ object Push {
 
             // get bounds for the whole movement
             bounds = clipModel.GetBounds()
-            if (bounds.oGet(0).x >= bounds.oGet(1).x) {
+            if (bounds.get(0).x >= bounds.get(1).x) {
                 return totalMass
             }
             pushBounds.FromBoundsRotation(bounds, clipModel.GetOrigin(), clipModel.GetAxis(), rotation)
@@ -452,8 +452,8 @@ object Push {
                 // blocked
                 results = pushResults
                 results.fraction = 0.0f
-                results.endAxis.oSet(clipModel.GetAxis())
-                results.endpos.oSet(clipModel.GetOrigin())
+                results.endAxis.set(clipModel.GetAxis())
+                results.endpos.set(clipModel.GetOrigin())
                 results.c.entityNum = check.entityNumber
                 results.c.id = 0
                 if (!wasEnabled) {
@@ -489,23 +489,23 @@ object Push {
             var mass: Float
             mass = 0.0f
             results.fraction = 1.0f
-            results.endpos.oSet(newOrigin)
-            results.endAxis.oSet(newAxis)
+            results.endpos.set(newOrigin)
+            results.endAxis.set(newAxis)
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // translational push
-            translation.oSet(newOrigin.oMinus(oldOrigin))
+            translation.set(newOrigin.minus(oldOrigin))
 
             // if the pusher translates
             if (translation != Vector.getVec3_origin()) {
                 mass += ClipTranslationalPush(results, pusher, flags, newOrigin, translation)
                 if (results.fraction < 1.0f) {
-                    newOrigin.oSet(oldOrigin)
-                    newAxis.oSet(oldAxis)
+                    newOrigin.set(oldOrigin)
+                    newAxis.set(oldAxis)
                     return mass
                 }
             } else {
-                newOrigin.oSet(oldOrigin)
+                newOrigin.set(oldOrigin)
             }
 
             // rotational push
@@ -518,19 +518,19 @@ object Push {
             if (rotation.GetAngle() != 0.0f) {
 
                 // recalculate new axis to avoid floating point rounding problems
-                newAxis.oSet(oldAxis.times(rotation.ToMat3()))
+                newAxis.set(oldAxis.times(rotation.ToMat3()))
                 newAxis.OrthoNormalizeSelf()
                 newAxis.FixDenormals()
                 newAxis.FixDegeneracies()
                 pusher.GetPhysics().GetClipModel().SetPosition(newOrigin, oldAxis)
                 mass += ClipRotationalPush(results, pusher, flags, newAxis, rotation)
                 if (results.fraction < 1.0f) {
-                    newOrigin.oSet(oldOrigin)
-                    newAxis.oSet(oldAxis)
+                    newOrigin.set(oldOrigin)
+                    newAxis.set(oldAxis)
                     return mass
                 }
             } else {
-                newAxis.oSet(oldAxis)
+                newAxis.set(oldAxis)
             }
             return mass
         }
@@ -640,7 +640,7 @@ object Push {
                     physics.SetAxis(trace.endAxis)
                 }
                 // next rotate around collision point
-                rotationPoint.oSet(trace.c.point)
+                rotationPoint.set(trace.c.point)
                 i++
             }
             return false
@@ -713,8 +713,8 @@ object Push {
             // }
 // #endif
             results.fraction = 1.0f
-            results.endpos.oSet(newOrigin)
-            results.endAxis.oSet(clipModel.GetAxis())
+            results.endpos.set(newOrigin)
+            results.endAxis.set(clipModel.GetAxis())
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
@@ -724,14 +724,14 @@ object Push {
                 // if there is a collision
                 if (trace.fraction < 1.0f) {
                     // vector along which the entity is pushed
-                    checkMove.oSet(move.times(trace.fraction))
+                    checkMove.set(move.times(trace.fraction))
                     // test if the entity can stay at it's partly pushed position by moving the entity in reverse only colliding with pusher
-                    ClipEntityTranslation(results, check, clipModel, null, move.oMinus(checkMove).oNegative())
+                    ClipEntityTranslation(results, check, clipModel, null, move.minus(checkMove).oNegative())
                     // if there is a collision
                     if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results.c.normal.oSet(results.c.normal.oNegative())
+                        results.c.normal.set(results.c.normal.oNegative())
                         results.c.dist = -results.c.dist
 
                         // the entity will be crushed between the pusher and some other entity
@@ -739,7 +739,7 @@ object Push {
                     }
                 } else {
                     // vector along which the entity is pushed
-                    checkMove.oSet(move)
+                    checkMove.set(move)
                 }
             } else {
                 // move entity in reverse only colliding with pusher
@@ -749,12 +749,12 @@ object Push {
                     return Push.PUSH_NO
                 }
                 // vector along which the entity is pushed
-                checkMove.oSet(move.times(1.0f - results.fraction))
+                checkMove.set(move.times(1.0f - results.fraction))
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, checkMove)
                 // if there is a collisions
                 if (trace.fraction < 1.0f) {
-                    results.c.normal.oSet(results.c.normal.oNegative())
+                    results.c.normal.set(results.c.normal.oNegative())
                     results.c.dist = -results.c.dist
 
                     // FIXME: try to push the blocking entity as well ?
@@ -833,8 +833,8 @@ object Push {
             // }
 // #endif
             results.fraction = 1.0f
-            results.endpos.oSet(clipModel.GetOrigin())
-            results.endAxis.oSet(newAxis)
+            results.endpos.set(clipModel.GetOrigin())
+            results.endAxis.set(newAxis)
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
@@ -853,7 +853,7 @@ object Push {
                     if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results.c.normal.oSet(results.c.normal.oNegative())
+                        results.c.normal.set(results.c.normal.oNegative())
                         results.c.dist = -results.c.dist
 
                         // the entity will be crushed between the pusher and some other entity
@@ -864,7 +864,7 @@ object Push {
                     checkAngle = rotation.GetAngle()
                 }
                 // point to rotate entity bbox around back to axial
-                rotationPoint.oSet(physics.GetOrigin())
+                rotationPoint.set(physics.GetOrigin())
             } else {
                 // rotate entity in reverse only colliding with pusher
                 newRotation = rotation
@@ -885,7 +885,7 @@ object Push {
                     return Push.PUSH_NO
                 }
                 // get point to rotate bbox around back to axial
-                rotationPoint.oSet(results.c.point)
+                rotationPoint.set(results.c.point)
                 // angle along which the entity will be pushed
                 checkAngle = rotation.GetAngle() * (1.0f - results.fraction)
                 // rotate the entity colliding with all other entities except the pusher itself
@@ -895,7 +895,7 @@ object Push {
                 if (trace.fraction < 1.0f) {
 
                     // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                    results.c.normal.oSet(results.c.normal.oNegative())
+                    results.c.normal.set(results.c.normal.oNegative())
                     results.c.dist = -results.c.dist
 
                     // the entity will be crushed between the pusher and some other entity
@@ -953,7 +953,7 @@ object Push {
                     // rotate actor view
                     val actor = check as idActor?
                     val delta = actor.GetDeltaViewAngles()
-                    delta.yaw += newRotation.ToMat3().oGet(0).ToYaw()
+                    delta.yaw += newRotation.ToMat3().get(0).ToYaw()
                     actor.SetDeltaViewAngles(delta)
                 }
             }

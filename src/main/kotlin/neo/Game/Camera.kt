@@ -130,9 +130,9 @@ object Camera {
             } else {
                 this
             }
-            view.vieworg.oSet(ent.GetPhysics().GetOrigin())
+            view.vieworg.set(ent.GetPhysics().GetOrigin())
             if (attachedView != null) {
-                dir.oSet(attachedView.GetPhysics().GetOrigin().oMinus(view.vieworg))
+                dir.set(attachedView.GetPhysics().GetOrigin().minus(view.vieworg))
                 dir.Normalize()
                 view.viewaxis = dir.ToMat3()
             } else {
@@ -271,7 +271,7 @@ object Camera {
         override fun Spawn() {
             super.Spawn()
             if (spawnArgs.GetVector("old_origin", "0 0 0", offset)) {
-                offset.oSet(GetPhysics().GetOrigin().oMinus(offset))
+                offset.set(GetPhysics().GetOrigin().minus(offset))
             } else {
                 offset.Zero()
             }
@@ -317,7 +317,7 @@ object Camera {
             cut = 0
             i = 0
             while (i < cameraCuts.Num()) {
-                if (frame < cameraCuts.oGet(i)) {
+                if (frame < cameraCuts.get(i)) {
                     break
                 }
                 frame++
@@ -332,7 +332,7 @@ object Camera {
                 prevCut = 0
                 i = 0
                 while (i < cameraCuts.Num()) {
-                    if (prevFrame < cameraCuts.oGet(i)) {
+                    if (prevFrame < cameraCuts.get(i)) {
                         break
                     }
                     prevFrame++
@@ -347,9 +347,9 @@ object Camera {
             // clamp to the first frame.  also check if this is a one frame anim.  one frame anims would end immediately,
             // but since they're mainly used for static cams anyway, just stay on it infinitely.
             if (frame < 0 || camera.Num() < 2) {
-                view.viewaxis = camera.oGet(0).q.ToQuat().ToMat3()
-                view.vieworg.oSet(camera.oGet(0).t.oPlus(offset))
-                view.fov_x = camera.oGet(0).fov
+                view.viewaxis = camera.get(0).q.ToQuat().ToMat3()
+                view.vieworg.set(camera.get(0).t.oPlus(offset))
+                view.fov_x = camera.get(0).fov
             } else if (frame > camera.Num() - 2) {
                 if (cycle > 0) {
                     cycle--
@@ -367,25 +367,25 @@ object Camera {
                     return
                 } else {
                     // just use our last frame
-                    camFrame = camera.oGet(camera.Num() - 1)
+                    camFrame = camera.get(camera.Num() - 1)
                     view.viewaxis = camFrame.q.ToQuat().ToMat3()
-                    view.vieworg.oSet(camFrame.t.oPlus(offset))
+                    view.vieworg.set(camFrame.t.oPlus(offset))
                     view.fov_x = camFrame.fov
                 }
             } else if (lerp == 0.0f) {
-                camFrame = camera.oGet(frame)
+                camFrame = camera.get(frame)
                 view.viewaxis = camFrame /*[ 0 ]*/.q.ToMat3()
-                view.vieworg.oSet(camFrame /*[ 0 ]*/.t.oPlus(offset))
+                view.vieworg.set(camFrame /*[ 0 ]*/.t.oPlus(offset))
                 view.fov_x = camFrame /*[ 0 ]*/.fov
             } else {
-                camFrame = camera.oGet(frame)
-                val nextFrame = camera.oGet(frame + 1)
+                camFrame = camera.get(frame)
+                val nextFrame = camera.get(frame + 1)
                 invlerp = 1.0f - lerp
-                q1.oSet(camFrame /*[ 0 ]*/.q.ToQuat())
-                q2.oSet(nextFrame.q.ToQuat())
+                q1.set(camFrame /*[ 0 ]*/.q.ToQuat())
+                q2.set(nextFrame.q.ToQuat())
                 q3.Slerp(q1, q2, lerp)
                 view.viewaxis = q3.ToMat3()
-                view.vieworg.oSet(
+                view.vieworg.set(
                     camFrame /*[ 0 ]*/.t.times(invlerp).oPlus(nextFrame.t.times(lerp).oPlus(offset))
                 )
                 view.fov_x = camFrame /*[ 0 ]*/.fov * invlerp + nextFrame.fov * lerp
@@ -548,8 +548,8 @@ object Camera {
             cameraCuts.SetNum(numCuts)
             i = 0
             while (i < numCuts) {
-                cameraCuts.oSet(i, parser.ParseInt())
-                if (cameraCuts.oGet(i) < 1 || cameraCuts.oGet(i) >= numFrames) {
+                cameraCuts.set(i, parser.ParseInt())
+                if (cameraCuts.get(i) < 1 || cameraCuts.get(i) >= numFrames) {
                     parser.Error("Invalid camera cut")
                 }
                 i++
@@ -566,7 +566,7 @@ object Camera {
                 parser.Parse1DMatrix(3, cam.t)
                 parser.Parse1DMatrix(3, cam.q)
                 cam.fov = parser.ParseFloat()
-                camera.oSet(i, cam)
+                camera.set(i, cam)
                 i++
             }
             parser.ExpectTokenString("}")

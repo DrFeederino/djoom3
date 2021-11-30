@@ -944,7 +944,7 @@ object tr_local {
             worldSpace = viewEntity_s(v.worldSpace)
             renderWorld = v.renderWorld
             floatTime = v.floatTime
-            initialViewAreaOrigin.oSet(v.initialViewAreaOrigin)
+            initialViewAreaOrigin.set(v.initialViewAreaOrigin)
             isSubview = v.isSubview
             isMirror = v.isMirror
             isXraySubview = v.isXraySubview
@@ -952,7 +952,7 @@ object tr_local {
             numClipPlanes = v.numClipPlanes
             clipPlanes = arrayOfNulls<idPlane?>(tr_local.MAX_CLIP_PLANES)
             for (i in 0 until tr_local.MAX_CLIP_PLANES) {
-                if (v.clipPlanes.get(i) != null) clipPlanes[i].oSet(v.clipPlanes.get(i))
+                if (v.clipPlanes.get(i) != null) clipPlanes[i].set(v.clipPlanes.get(i))
             }
             viewport = idScreenRect(v.viewport)
             scissor = idScreenRect(v.scissor)
@@ -1512,10 +1512,10 @@ object tr_local {
             viewCount = 1 // so cleared structures never match viewCount
             // we used to memset tr, but now that it is a class, we can't, so
             // there may be other state we need to reset
-            ambientLightVector.oSet(0, 0.5f)
-            ambientLightVector.oSet(1, 0.5f - 0.385f)
-            ambientLightVector.oSet(2, 0.8925f)
-            ambientLightVector.oSet(3, 1.0f)
+            ambientLightVector.set(0, 0.5f)
+            ambientLightVector.set(1, 0.5f - 0.385f)
+            ambientLightVector.set(2, 0.8925f)
+            ambientLightVector.set(3, 1.0f)
 
 //            memset(backEnd, 0, sizeof(backEnd));
             tr_local.backEnd = backEndState_t()
@@ -1908,7 +1908,7 @@ object tr_local {
          =============
          */
         override fun SetColor(rgba: idVec4?) {
-            SetColor4(rgba.oGet(0), rgba.oGet(1), rgba.oGet(2), rgba.oGet(3))
+            SetColor4(rgba.get(0), rgba.get(1), rgba.get(2), rgba.get(3))
         }
 
         override fun SetColor4(r: Float, g: Float, b: Float, a: Float) {
@@ -2061,7 +2061,7 @@ object tr_local {
                             SetColor(setColor)
                         } else {
                             color = idStr.Companion.ColorForIndex(string.get(s + 1))
-                            color.oSet(3, setColor.oGet(3))
+                            color.set(3, setColor.get(3))
                             SetColor(color)
                         }
                     }
@@ -2140,7 +2140,7 @@ object tr_local {
                             SetColor(setColor)
                         } else {
                             color = idStr.Companion.ColorForIndex(string.get(s + 1).code)
-                            color.oSet(3, setColor.oGet(3))
+                            color.set(3, setColor.get(3))
                             SetColor(color)
                         }
                     }

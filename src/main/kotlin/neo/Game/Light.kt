@@ -148,13 +148,13 @@ object Light {
             GameEdit.gameEdit.ParseSpawnArgsToRenderLight(spawnArgs, renderLight)
 
             // we need the origin and axis relative to the physics origin/axis
-            localLightOrigin.oSet(
-                renderLight.origin.oMinus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose())
+            localLightOrigin.set(
+                renderLight.origin.minus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose())
             )
             localLightAxis = renderLight.axis.times(GetPhysics().GetAxis().Transpose())
 
             // set the base color from the shader parms
-            baseColor.Set(
+            baseColor.set(
                 renderLight.shaderParms[RenderWorld.SHADERPARM_RED],
                 renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN],
                 renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE]
@@ -197,8 +197,8 @@ object Light {
             breakOnTrigger = spawnArgs.GetBool("break", "0")
             count = spawnArgs.GetInt("count", "1")
             triggercount = 0
-            fadeFrom.Set(1f, 1f, 1f, 1f)
-            fadeTo.Set(1f, 1f, 1f, 1f)
+            fadeFrom.set(1f, 1f, 1f, 1f)
+            fadeTo.set(1f, 1f, 1f, 1f)
             fadeStart = 0
             fadeEnd = 0
 
@@ -364,8 +364,8 @@ object Light {
         }
 
         override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
-            origin.oSet(localLightOrigin.oPlus(renderLight.lightCenter))
-            axis.oSet(localLightAxis.times(GetPhysics().GetAxis()))
+            origin.set(localLightOrigin.oPlus(renderLight.lightCenter))
+            axis.set(localLightAxis.times(GetPhysics().GetAxis()))
             return true
         }
 
@@ -379,8 +379,8 @@ object Light {
             super.Present()
 
             // current transformation
-            renderLight.axis.oSet(localLightAxis.times(GetPhysics().GetAxis()))
-            renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().times(localLightOrigin)))
+            renderLight.axis.set(localLightAxis.times(GetPhysics().GetAxis()))
+            renderLight.origin.set(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().times(localLightOrigin)))
 
             // reference the sound for shader synced effects
             if (lightParent != null) {
@@ -412,28 +412,28 @@ object Light {
         }
 
         override fun SetColor(red: Float, green: Float, blue: Float) {
-            baseColor.Set(red, green, blue)
+            baseColor.set(red, green, blue)
             SetLightLevel()
         }
 
         override fun SetColor(color: idVec4?) {
-            baseColor.oSet(color.ToVec3())
-            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.oGet(3)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.oGet(3)
+            baseColor.set(color.ToVec3())
+            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
             SetLightLevel()
         }
 
         override fun GetColor(out: idVec3?) {
-            out.oSet(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.oSet(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.oSet(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
+            out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
+            out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
         }
 
         override fun GetColor(out: idVec4?) {
-            out.oSet(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.oSet(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.oSet(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
-            out.oSet(3, renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA])
+            out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
+            out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
+            out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out.set(3, renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA])
         }
 
         fun GetBaseColor(): idVec3? {
@@ -468,14 +468,14 @@ object Light {
         }
 
         fun SetRadiusXYZ(x: Float, y: Float, z: Float) {
-            renderLight.lightRadius.oSet(0, x)
-            renderLight.lightRadius.oSet(1, y)
-            renderLight.lightRadius.oSet(2, z)
+            renderLight.lightRadius.set(0, x)
+            renderLight.lightRadius.set(1, y)
+            renderLight.lightRadius.set(2, z)
             PresentLightDefChange()
         }
 
         fun SetRadius(radius: Float) {
-            renderLight.lightRadius.oSet(0, renderLight.lightRadius.oSet(1, renderLight.lightRadius.oSet(2, radius)))
+            renderLight.lightRadius.set(0, renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius)))
             PresentLightDefChange()
         }
 
@@ -520,7 +520,7 @@ object Light {
             val color4 = idVec4()
             currentLevel = levels.getVal()
             spawnArgs.GetVector("_color", "1 1 1", color)
-            color4.Set(color.x, color.y, color.z, 1.0f)
+            color4.set(color.x, color.y, color.z, 1.0f)
             Fade(color4, time)
         }
 
@@ -598,13 +598,13 @@ object Light {
             val color = idVec3()
             val intensity: Float
             intensity = currentLevel.toFloat() / levels.getVal().toFloat()
-            color.oSet(baseColor.times(intensity))
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.oGet(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.oGet(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.oGet(2)
+            color.set(baseColor.times(intensity))
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
             PresentLightDefChange()
             PresentModelDefChange()
         }
@@ -636,9 +636,9 @@ object Light {
              msg.WriteLong( fadeEnd );
              */
             // FIXME: send renderLight.shader
-            msg.WriteFloat(renderLight.lightRadius.oGet(0), 5, 10)
-            msg.WriteFloat(renderLight.lightRadius.oGet(1), 5, 10)
-            msg.WriteFloat(renderLight.lightRadius.oGet(2), 5, 10)
+            msg.WriteFloat(renderLight.lightRadius.get(0), 5, 10)
+            msg.WriteFloat(renderLight.lightRadius.get(1), 5, 10)
+            msg.WriteFloat(renderLight.lightRadius.get(2), 5, 10)
             msg.WriteLong(
                 Lib.Companion.PackColor(
                     idVec4(
@@ -683,14 +683,14 @@ object Light {
              fadeEnd = msg.ReadLong();
              */
             // FIXME: read renderLight.shader
-            renderLight.lightRadius.oSet(0, msg.ReadFloat(5, 10))
-            renderLight.lightRadius.oSet(1, msg.ReadFloat(5, 10))
-            renderLight.lightRadius.oSet(2, msg.ReadFloat(5, 10))
+            renderLight.lightRadius.set(0, msg.ReadFloat(5, 10))
+            renderLight.lightRadius.set(1, msg.ReadFloat(5, 10))
+            renderLight.lightRadius.set(2, msg.ReadFloat(5, 10))
             Lib.Companion.UnpackColor(msg.ReadLong().toLong(), shaderColor)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = shaderColor.oGet(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = shaderColor.oGet(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = shaderColor.oGet(2)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = shaderColor.oGet(3)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = shaderColor.get(0)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = shaderColor.get(1)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = shaderColor.get(2)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = shaderColor.get(3)
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMESCALE] = msg.ReadFloat(5, 10)
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadLong()
             //renderLight.shaderParms[SHADERPARM_DIVERSITY] = msg.ReadFloat();
@@ -833,7 +833,7 @@ object Light {
             }
             i = 0
             while (i < targets.Num()) {
-                targetEnt = targets.oGet(i).GetEntity()
+                targetEnt = targets.get(i).GetEntity()
                 if (targetEnt != null && targetEnt is idLight) {
                     val light = targetEnt as idLight?
                     light.lightParent = this

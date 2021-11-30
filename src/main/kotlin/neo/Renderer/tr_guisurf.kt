@@ -55,7 +55,7 @@ object tr_guisurf {
         while (i < tri.numVerts) {
             j = 0
             while (j < 2) {
-                v = tri.verts[i].st.oGet(j)
+                v = tri.verts[i].st.get(j)
                 if (v < bounds[0].get(j)) {
                     bounds[0].get(j) = v
                 }
@@ -78,11 +78,11 @@ object tr_guisurf {
         b = tri.verts[tri.indexes[1]]
         c = tri.verts[tri.indexes[2]]
         Vector.VectorSubtract(b.xyz, a.xyz, d0)
-        d0[3] = b.st.oGet(0) - a.st.oGet(0)
-        d0[4] = b.st.oGet(1) - a.st.oGet(1)
+        d0[3] = b.st.get(0) - a.st.get(0)
+        d0[4] = b.st.get(1) - a.st.get(1)
         Vector.VectorSubtract(c.xyz, a.xyz, d1)
-        d1[3] = c.st.oGet(0) - a.st.oGet(0)
-        d1[4] = c.st.oGet(1) - a.st.oGet(1)
+        d1[3] = c.st.get(0) - a.st.get(0)
+        d1[4] = c.st.get(1) - a.st.get(1)
         area = d0[3] * d1[4] - d0[4] * d1[3]
         if (area.toDouble() == 0.0) {
             axis.get(0).Zero()
@@ -91,21 +91,21 @@ object tr_guisurf {
             return  // degenerate
         }
         inva = 1.0f / area
-        axis.get(0).oSet(0, (d0[0] * d1[4] - d0[4] * d1[0]) * inva)
-        axis.get(0).oSet(1, (d0[1] * d1[4] - d0[4] * d1[1]) * inva)
-        axis.get(0).oSet(2, (d0[2] * d1[4] - d0[4] * d1[2]) * inva)
-        axis.get(1).oSet(0, (d0[3] * d1[0] - d0[0] * d1[3]) * inva)
-        axis.get(1).oSet(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva)
-        axis.get(1).oSet(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva)
+        axis.get(0).set(0, (d0[0] * d1[4] - d0[4] * d1[0]) * inva)
+        axis.get(0).set(1, (d0[1] * d1[4] - d0[4] * d1[1]) * inva)
+        axis.get(0).set(2, (d0[2] * d1[4] - d0[4] * d1[2]) * inva)
+        axis.get(1).set(0, (d0[3] * d1[0] - d0[0] * d1[3]) * inva)
+        axis.get(1).set(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva)
+        axis.get(1).set(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva)
         val plane = idPlane()
         plane.FromPoints(a.xyz, b.xyz, c.xyz)
-        axis.get(2).oSet(0, plane.oGet(0))
-        axis.get(2).oSet(1, plane.oGet(1))
-        axis.get(2).oSet(2, plane.oGet(2))
+        axis.get(2).set(0, plane.get(0))
+        axis.get(2).set(1, plane.get(1))
+        axis.get(2).set(2, plane.get(2))
 
         // take point 0 and project the vectors to the texture origin
-        Vector.VectorMA(a.xyz, boundsOrg[0] - a.st.oGet(0), axis.get(0), origin)
-        Vector.VectorMA(origin, boundsOrg[1] - a.st.oGet(1), axis.get(1), origin)
+        Vector.VectorMA(a.xyz, boundsOrg[0] - a.st.get(0), axis.get(0), origin)
+        Vector.VectorMA(origin, boundsOrg[1] - a.st.get(1), axis.get(1), origin)
     }
 
     /*
@@ -135,18 +135,18 @@ object tr_guisurf {
         tr_guisurf.R_SurfaceToTextureAxis(drawSurf.geo, origin, axis)
         val guiModelMatrix = FloatArray(16)
         val modelMatrix = FloatArray(16)
-        guiModelMatrix[0] = axis[0].oGet(0) / 640.0f
-        guiModelMatrix[4] = axis[1].oGet(0) / 480.0f
-        guiModelMatrix[8] = axis[2].oGet(0)
-        guiModelMatrix[12] = origin.oGet(0)
-        guiModelMatrix[1] = axis[0].oGet(1) / 640.0f
-        guiModelMatrix[5] = axis[1].oGet(1) / 480.0f
-        guiModelMatrix[9] = axis[2].oGet(1)
-        guiModelMatrix[13] = origin.oGet(1)
-        guiModelMatrix[2] = axis[0].oGet(2) / 640.0f
-        guiModelMatrix[6] = axis[1].oGet(2) / 480.0f
-        guiModelMatrix[10] = axis[2].oGet(2)
-        guiModelMatrix[14] = origin.oGet(2)
+        guiModelMatrix[0] = axis[0].get(0) / 640.0f
+        guiModelMatrix[4] = axis[1].get(0) / 480.0f
+        guiModelMatrix[8] = axis[2].get(0)
+        guiModelMatrix[12] = origin.get(0)
+        guiModelMatrix[1] = axis[0].get(1) / 640.0f
+        guiModelMatrix[5] = axis[1].get(1) / 480.0f
+        guiModelMatrix[9] = axis[2].get(1)
+        guiModelMatrix[13] = origin.get(1)
+        guiModelMatrix[2] = axis[0].get(2) / 640.0f
+        guiModelMatrix[6] = axis[1].get(2) / 480.0f
+        guiModelMatrix[10] = axis[2].get(2)
+        guiModelMatrix[14] = origin.get(2)
         guiModelMatrix[3] = 0
         guiModelMatrix[7] = 0
         guiModelMatrix[11] = 0

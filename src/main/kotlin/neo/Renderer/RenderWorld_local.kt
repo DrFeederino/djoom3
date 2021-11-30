@@ -228,7 +228,7 @@ object RenderWorld_local {
             while (entityHandle >= entityDefs.Num()) {
                 entityDefs.Append(null as idRenderEntityLocal?)
             }
-            var def = entityDefs.oGet(entityHandle)
+            var def = entityDefs.get(entityHandle)
             if (def != null) {
                 if (0 == re.forceUpdate) {
 
@@ -265,7 +265,7 @@ object RenderWorld_local {
             } else {
                 // creating a new one
                 def = idRenderEntityLocal()
-                entityDefs.oSet(entityHandle, def)
+                entityDefs.set(entityHandle, def)
                 def.world = this
                 def.index = entityHandle
             }
@@ -302,7 +302,7 @@ object RenderWorld_local {
                 Common.common.Printf("idRenderWorld::FreeEntityDef: handle %d > %d\n", entityHandle, entityDefs.Num())
                 return
             }
-            def = entityDefs.oGet(entityHandle)
+            def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 Common.common.Printf("idRenderWorld::FreeEntityDef: handle %d is NULL\n", entityHandle)
                 return
@@ -320,7 +320,7 @@ object RenderWorld_local {
             def.parms.gui[2] = null
 
 //	delete def;
-            entityDefs.oSet(entityHandle, null)
+            entityDefs.set(entityHandle, null)
         }
 
         override fun GetRenderEntity(entityHandle: Int): renderEntity_s? {
@@ -333,7 +333,7 @@ object RenderWorld_local {
                 )
                 return null
             }
-            def = entityDefs.oGet(entityHandle)
+            def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 Common.common.Printf("idRenderWorld::GetRenderEntity: handle %d is NULL\n", entityHandle)
                 return null
@@ -378,7 +378,7 @@ object RenderWorld_local {
                 lightDefs.Append(null as idRenderLightLocal?)
             }
             var justUpdate = false
-            var light = lightDefs.oGet(lightHandle)
+            var light = lightDefs.get(lightHandle)
             if (light != null) {
                 // if the shape of the light stays the same, we don't need to dump
                 // any of our derived data, because shader parms are calculated every frame
@@ -392,7 +392,7 @@ object RenderWorld_local {
             } else {
                 // create a new one
                 light = idRenderLightLocal()
-                lightDefs.oSet(lightHandle, light)
+                lightDefs.set(lightHandle, light)
                 light.world = this
                 light.index = lightHandle
             }
@@ -430,7 +430,7 @@ object RenderWorld_local {
                 )
                 return
             }
-            light = lightDefs.oGet(lightHandle)
+            light = lightDefs.get(lightHandle)
             if (TempDump.NOT(light)) {
                 Common.common.Printf("idRenderWorld::FreeLightDef: handle %d is NULL\n", lightHandle)
                 return
@@ -441,7 +441,7 @@ object RenderWorld_local {
             }
 
             //delete light;
-            lightDefs.oSet(lightHandle, null)
+            lightDefs.set(lightHandle, null)
         }
 
         override fun GetRenderLight(lightHandle: Int): renderLight_s? {
@@ -450,7 +450,7 @@ object RenderWorld_local {
                 Common.common.Printf("idRenderWorld::GetRenderLight: handle %d > %d\n", lightHandle, lightDefs.Num())
                 return null
             }
-            def = lightDefs.oGet(lightHandle)
+            def = lightDefs.get(lightHandle)
             if (null == def) {
                 Common.common.Printf("idRenderWorld::GetRenderLight: handle %d is NULL\n", lightHandle)
                 return null
@@ -498,7 +498,7 @@ object RenderWorld_local {
             // try and do any view specific optimizations
             tr_local.tr.viewDef = null
             for (i in 0 until lightDefs.Num()) {
-                val ldef = lightDefs.oGet(i)
+                val ldef = lightDefs.get(i)
                 if (TempDump.NOT(ldef)) {
                     continue
                 }
@@ -520,7 +520,7 @@ object RenderWorld_local {
                 interactionTable = arrayOfNulls<idInteraction?>(size) // R_ClearedStaticAlloc(size);
                 var count = 0
                 for (i in 0 until lightDefs.Num()) {
-                    val ldef = lightDefs.oGet(i)
+                    val ldef = lightDefs.get(i)
                     if (TempDump.NOT(ldef)) {
                         continue
                     }
@@ -641,7 +641,7 @@ object RenderWorld_local {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
-            val def = entityDefs.oGet(entityHandle)
+            val def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 return
             }
@@ -683,7 +683,7 @@ object RenderWorld_local {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
-            val def = entityDefs.oGet(entityHandle)
+            val def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 return
             }
@@ -704,7 +704,7 @@ object RenderWorld_local {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
-            val def = entityDefs.oGet(entityHandle)
+            val def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 return
             }
@@ -779,7 +779,7 @@ object RenderWorld_local {
                 parms.scissor.x2 = parms.viewport.x2 - parms.viewport.x1
                 parms.scissor.y2 = parms.viewport.y2 - parms.viewport.y1
                 parms.isSubview = false
-                parms.initialViewAreaOrigin.oSet(renderView.vieworg)
+                parms.initialViewAreaOrigin.set(renderView.vieworg)
                 parms.floatTime = parms.renderView.time * 0.001f
                 parms.renderWorld = this
 
@@ -790,8 +790,8 @@ object RenderWorld_local {
                 // see if the view needs to reverse the culling sense in mirrors
                 // or environment cube sides
                 val cross = idVec3()
-                cross.oSet(parms.renderView.viewaxis.oGet(1).Cross(parms.renderView.viewaxis.oGet(2)))
-                parms.isMirror = cross.times(parms.renderView.viewaxis.oGet(0)) <= 0
+                cross.set(parms.renderView.viewaxis.get(1).Cross(parms.renderView.viewaxis.get(2)))
+                parms.isMirror = cross.times(parms.renderView.viewaxis.get(0)) <= 0
                 if (RenderSystem_init.r_lockSurfaces.GetBool()) {
                     RenderSystem.R_LockSurfaceScene(parms)
                     return
@@ -856,7 +856,7 @@ object RenderWorld_local {
             }
             node = areaNodes.get(0)
             while (true) {
-                d = node.plane.Normal().times(point) + node.plane.oGet(3)
+                d = node.plane.Normal().times(point) + node.plane.get(3)
                 nodeNum = if (d > 0) {
                     node.children.get(0)
                 } else {
@@ -890,12 +890,12 @@ object RenderWorld_local {
             val numAreas = IntArray(1)
             assert(areas != null)
             assert(
-                bounds.oGet(0).oGet(0) <= bounds.oGet(1).oGet(0) && bounds.oGet(0).oGet(1) <= bounds.oGet(1)
-                    .oGet(1) && bounds.oGet(0).oGet(2) <= bounds.oGet(1).oGet(2)
+                bounds.get(0).oGet(0) <= bounds.get(1).oGet(0) && bounds.get(0).oGet(1) <= bounds.get(1)
+                    .oGet(1) && bounds.get(0).oGet(2) <= bounds.get(1).oGet(2)
             )
             assert(
-                bounds.oGet(1).oGet(0) - bounds.oGet(0).oGet(0) < 1e4f && bounds.oGet(1).oGet(1) - bounds.oGet(0)
-                    .oGet(1) < 1e4f && bounds.oGet(1).oGet(2) - bounds.oGet(0).oGet(2) < 1e4f
+                bounds.get(1).oGet(0) - bounds.get(0).oGet(0) < 1e4f && bounds.get(1).oGet(1) - bounds.get(0)
+                    .oGet(1) < 1e4f && bounds.get(1).oGet(2) - bounds.get(0).oGet(2) < 1e4f
             )
             if (null == areaNodes) {
                 return 0
@@ -977,7 +977,7 @@ object RenderWorld_local {
                 Common.common.Printf("idRenderWorld::GuiTrace: invalid handle %d\n", entityHandle)
                 return pt
             }
-            val def = entityDefs.oGet(entityHandle)
+            val def = entityDefs.get(entityHandle)
             if (TempDump.NOT(def)) {
                 Common.common.Printf("idRenderWorld::GuiTrace: handle %d is NULL\n", entityHandle)
                 return pt
@@ -1017,7 +1017,7 @@ object RenderWorld_local {
                     val cursor = idVec3()
                     val axisLen = FloatArray(2)
                     tr_guisurf.R_SurfaceToTextureAxis(tri, origin, axis)
-                    cursor.oSet(local.point.oMinus(origin))
+                    cursor.set(local.point.minus(origin))
                     axisLen[0] = axis[0].Length()
                     axisLen[1] = axis[1].Length()
                     pt.x = cursor.times(axis[0]) / (axisLen[0] * axisLen[0])
@@ -1051,7 +1051,7 @@ object RenderWorld_local {
 //		common.Error( "idRenderWorld::ModelTrace: index = %i", entityHandle );
                 return false
             }
-            val def = entityDefs.oGet(entityHandle) ?: return false
+            val def = entityDefs.get(entityHandle) ?: return false
             val refEnt = def.parms
             model = tr_light.R_EntityDefDynamicModel(def)
             if (null == model) {
@@ -1102,8 +1102,8 @@ object RenderWorld_local {
                 localTrace = tr_trace.R_LocalTrace(localStart, localEnd, radius, surf.geometry)
                 if (localTrace.fraction < trace.fraction) {
                     trace.fraction = localTrace.fraction
-                    trace.point.oSet(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
-                    trace.normal.oSet(localTrace.normal.times(refEnt.axis))
+                    trace.point.set(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
+                    trace.normal.set(localTrace.normal.times(refEnt.axis))
                     trace.material = shader
                     trace.entity = def.parms
                     trace.jointNumber = refEnt.hModel.NearestJoint(
@@ -1144,7 +1144,7 @@ object RenderWorld_local {
             val localEnd = idVec3()
             var shader: idMaterial?
             trace.fraction = 1.0f
-            trace.point.oSet(end)
+            trace.point.set(end)
 
             // bounds for the whole trace
             traceBounds.Clear()
@@ -1255,8 +1255,8 @@ object RenderWorld_local {
                         localTrace = tr_trace.R_LocalTrace(localStart, localEnd, radius, surf.geometry)
                         if (localTrace.fraction < trace.fraction) {
                             trace.fraction = localTrace.fraction
-                            trace.point.oSet(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
-                            trace.normal.oSet(localTrace.normal.times(def.parms.axis))
+                            trace.point.set(tr_main.R_LocalPointToGlobal(modelMatrix, localTrace.point))
+                            trace.normal.set(localTrace.normal.times(def.parms.axis))
                             trace.material = shader
                             trace.entity = def.parms
                             trace.jointNumber = model.NearestJoint(
@@ -1267,7 +1267,7 @@ object RenderWorld_local {
                             )
                             traceBounds.Clear()
                             traceBounds.AddPoint(start)
-                            traceBounds.AddPoint(start.oPlus(end.oMinus(start).oMultiply(trace.fraction)))
+                            traceBounds.AddPoint(start.oPlus(end.minus(start).oMultiply(trace.fraction)))
                         }
                         j++
                     }
@@ -1326,22 +1326,22 @@ object RenderWorld_local {
                 arrowSin.get(i) = arrowSin.get(0)
             }
             // draw a nice arrow
-            forward.oSet(end.oMinus(start))
+            forward.set(end.minus(start))
             forward.Normalize()
             forward.NormalVectors(right, up)
             i = 0
             a = 0f
             while (a < 360.0f) {
                 s = 0.5f * size * arrowCos.get(i)
-                v1.oSet(end.oMinus(forward.times(size.toFloat())))
-                v1.oSet(v1.oPlus(right.times(s)))
+                v1.set(end.minus(forward.times(size.toFloat())))
+                v1.set(v1.oPlus(right.times(s)))
                 s = 0.5f * size * arrowSin.get(i)
-                v1.oSet(v1.oPlus(up.times(s)))
+                v1.set(v1.oPlus(up.times(s)))
                 s = 0.5f * size * arrowCos.get(i + 1)
-                v2.oSet(end.oMinus(forward.times(size.toFloat())))
-                v2.oSet(v2.oPlus(right.times(s)))
+                v2.set(end.minus(forward.times(size.toFloat())))
+                v2.set(v2.oPlus(right.times(s)))
                 s = 0.5f * size * arrowSin.get(i + 1)
-                v2.oSet(v2.oPlus(up.times(s)))
+                v2.set(v2.oPlus(up.times(s)))
                 DebugLine(color, v1, end, lifetime)
                 DebugLine(color, v1, v2, lifetime)
                 a += arrowStep.toFloat()
@@ -1363,12 +1363,12 @@ object RenderWorld_local {
             if (w.GetNumPoints() < 2) {
                 return
             }
-            lastPoint.oSet(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().times(axis)))
+            lastPoint.set(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().times(axis)))
             i = 0
             while (i < w.GetNumPoints()) {
-                point.oSet(origin.oPlus(w.oGet(i).ToVec3().times(axis)))
+                point.set(origin.oPlus(w.oGet(i).ToVec3().times(axis)))
                 DebugLine(color, lastPoint, point, lifetime, depthTest)
-                lastPoint.oSet(point)
+                lastPoint.set(point)
                 i++
             }
         }
@@ -1391,13 +1391,13 @@ object RenderWorld_local {
             dir.OrthogonalBasis(left, up)
             left.timesAssign(radius)
             up.timesAssign(radius)
-            lastPoint.oSet(origin.oPlus(up))
+            lastPoint.set(origin.oPlus(up))
             i = 1
             while (i <= numSteps) {
                 a = idMath.TWO_PI * i / numSteps
-                point.oSet(origin.oPlus(left.times(idMath.Sin16(a)).oPlus(up.times(idMath.Cos16(a)))))
+                point.set(origin.oPlus(left.times(idMath.Sin16(a)).oPlus(up.times(idMath.Cos16(a)))))
                 DebugLine(color, lastPoint, point, lifetime, depthTest)
-                lastPoint.oSet(point)
+                lastPoint.set(point)
                 i++
             }
         }
@@ -1413,35 +1413,35 @@ object RenderWorld_local {
             val lastp = idVec3()
             num = 360 / 15
             val lastArray: Array<idVec3?> = idVec3.Companion.generateArray(num)
-            lastArray[0].oSet(sphere.GetOrigin().oPlus(idVec3(0, 0, sphere.GetRadius())))
+            lastArray[0].set(sphere.GetOrigin().oPlus(idVec3(0, 0, sphere.GetRadius())))
             n = 1
             while (n < num) {
-                lastArray[n].oSet(lastArray[0])
+                lastArray[n].set(lastArray[0])
                 n++
             }
             i = 15
             while (i <= 360) {
                 s = idMath.Sin16(Math_h.DEG2RAD(i.toFloat()))
                 c = idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))
-                lastp.oSet(0, sphere.GetOrigin().oGet(0))
-                lastp.oSet(1, sphere.GetOrigin().oGet(1) + sphere.GetRadius() * s)
-                lastp.oSet(2, sphere.GetOrigin().oGet(2) + sphere.GetRadius() * c)
+                lastp.set(0, sphere.GetOrigin().get(0))
+                lastp.set(1, sphere.GetOrigin().get(1) + sphere.GetRadius() * s)
+                lastp.set(2, sphere.GetOrigin().get(2) + sphere.GetRadius() * c)
                 n = 0
                 j = 15
                 while (j <= 360) {
-                    p.oSet(
+                    p.set(
                         0,
-                        sphere.GetOrigin().oGet(0) + idMath.Sin16(Math_h.DEG2RAD(j.toFloat())) * sphere.GetRadius() * s
+                        sphere.GetOrigin().get(0) + idMath.Sin16(Math_h.DEG2RAD(j.toFloat())) * sphere.GetRadius() * s
                     )
-                    p.oSet(
+                    p.set(
                         1,
-                        sphere.GetOrigin().oGet(1) + idMath.Cos16(Math_h.DEG2RAD(j.toFloat())) * sphere.GetRadius() * s
+                        sphere.GetOrigin().get(1) + idMath.Cos16(Math_h.DEG2RAD(j.toFloat())) * sphere.GetRadius() * s
                     )
-                    p.oSet(2, lastp.oGet(2))
+                    p.set(2, lastp.get(2))
                     DebugLine(color, lastp, p, lifetime, depthTest)
                     DebugLine(color, lastp, lastArray[n], lifetime, depthTest)
-                    lastArray[n].oSet(lastp)
-                    lastp.oSet(p)
+                    lastArray[n].set(lastp)
+                    lastp.set(p)
                     j += 15
                     n++
                 }
@@ -1457,9 +1457,9 @@ object RenderWorld_local {
             }
             i = 0
             while (i < 8) {
-                v[i].oSet(0, org.oGet(0) + bounds.oGet(i xor (i shr 1) and 1).oGet(0))
-                v[i].oSet(1, org.oGet(1) + bounds.oGet(i shr 1 and 1).oGet(1))
-                v[i].oSet(2, org.oGet(2) + bounds.oGet(i shr 2 and 1).oGet(2))
+                v[i].set(0, org.get(0) + bounds.get(i xor (i shr 1) and 1).oGet(0))
+                v[i].set(1, org.get(1) + bounds.get(i shr 1 and 1).oGet(1))
+                v[i].set(2, org.get(2) + bounds.get(i shr 2 and 1).oGet(2))
                 i++
             }
             i = 0
@@ -1535,40 +1535,40 @@ object RenderWorld_local {
             val lastp1 = idVec3()
             val lastp2 = idVec3()
             val d = idVec3()
-            axis.oSet(2, dir)
-            axis.oGet(2).Normalize()
-            axis.oGet(2).NormalVectors(axis.oGet(0), axis.oGet(1))
-            axis.oSet(1, axis.oGet(1).oNegative())
-            top.oSet(apex.oPlus(dir))
-            lastp2.oSet(top.oPlus(axis.oGet(1).times(radius2)))
+            axis.set(2, dir)
+            axis.get(2).Normalize()
+            axis.get(2).NormalVectors(axis.get(0), axis.get(1))
+            axis.set(1, axis.get(1).oNegative())
+            top.set(apex.oPlus(dir))
+            lastp2.set(top.oPlus(axis.get(1).times(radius2)))
             if (radius1 == 0.0f) {
                 i = 20
                 while (i <= 360) {
-                    d.oSet(
-                        axis.oGet(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
-                            .oPlus(axis.oGet(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
+                    d.set(
+                        axis.get(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
+                            .oPlus(axis.get(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
                     )
-                    p2.oSet(top.oPlus(d.times(radius2)))
+                    p2.set(top.oPlus(d.times(radius2)))
                     DebugLine(color, lastp2, p2, lifetime)
                     DebugLine(color, p2, apex, lifetime)
-                    lastp2.oSet(p2)
+                    lastp2.set(p2)
                     i += 20
                 }
             } else {
-                lastp1.oSet(apex.oPlus(axis.oGet(1).times(radius1)))
+                lastp1.set(apex.oPlus(axis.get(1).times(radius1)))
                 i = 20
                 while (i <= 360) {
-                    d.oSet(
-                        axis.oGet(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
-                            .oPlus(axis.oGet(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
+                    d.set(
+                        axis.get(0).times(idMath.Sin16(Math_h.DEG2RAD(i.toFloat())))
+                            .oPlus(axis.get(1).times(idMath.Cos16(Math_h.DEG2RAD(i.toFloat()))))
                     )
-                    p1.oSet(apex.oPlus(d.times(radius1)))
-                    p2.oSet(top.oPlus(d.times(radius2)))
+                    p1.set(apex.oPlus(d.times(radius1)))
+                    p2.set(top.oPlus(d.times(radius2)))
                     DebugLine(color, lastp1, p1, lifetime)
                     DebugLine(color, lastp2, p2, lifetime)
                     DebugLine(color, p1, p2, lifetime)
-                    lastp1.oSet(p1)
-                    lastp2.oSet(p2)
+                    lastp1.set(p1)
+                    lastp2.set(p2)
                     i += 20
                 }
             }
@@ -1589,24 +1589,24 @@ object RenderWorld_local {
             dScale = RenderSystem_init.r_znear.GetFloat() + 1.0f
             hScale = dScale * idMath.Tan16(Math_h.DEG2RAD(viewDef.renderView.fov_x * 0.5f))
             vScale = dScale * idMath.Tan16(Math_h.DEG2RAD(viewDef.renderView.fov_y * 0.5f))
-            bounds.oSet(
+            bounds.set(
                 0, 0,
-                bounds.oSet(1, 0, dScale)
+                bounds.set(1, 0, dScale)
             )
-            bounds.oSet(0, 1, -(rect.x1 - centerx) / centerx * hScale)
-            bounds.oSet(1, 1, -(rect.x2 - centerx) / centerx * hScale)
-            bounds.oSet(0, 2, (rect.y1 - centery) / centery * vScale)
-            bounds.oSet(1, 2, (rect.y2 - centery) / centery * vScale)
+            bounds.set(0, 1, -(rect.x1 - centerx) / centerx * hScale)
+            bounds.set(1, 1, -(rect.x2 - centerx) / centerx * hScale)
+            bounds.set(0, 2, (rect.y1 - centery) / centery * vScale)
+            bounds.set(1, 2, (rect.y2 - centery) / centery * vScale)
             i = 0
             while (i < 4) {
-                p[i].oSet(
+                p[i].set(
                     idVec3(
-                        bounds.oGet(0).oGet(0),
-                        bounds.oGet(i xor (i shr 1) and 1).y,
-                        bounds.oGet(i shr 1 and 1).z
+                        bounds.get(0).oGet(0),
+                        bounds.get(i xor (i shr 1) and 1).y,
+                        bounds.get(i shr 1 and 1).z
                     )
                 )
-                p[i].oSet(viewDef.renderView.vieworg.oPlus(p[i].times(viewDef.renderView.viewaxis)))
+                p[i].set(viewDef.renderView.vieworg.oPlus(p[i].times(viewDef.renderView.viewaxis)))
                 i++
             }
             i = 0
@@ -1618,17 +1618,17 @@ object RenderWorld_local {
 
         override fun DebugAxis(origin: idVec3?, axis: idMat3?) {
             val start = idVec3(origin)
-            val end = idVec3(start.oPlus(axis.oGet(0).times(20.0f)))
+            val end = idVec3(start.oPlus(axis.get(0).times(20.0f)))
             DebugArrow(Lib.Companion.colorWhite, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(0).times(-20.0f)))
+            end.oSet(start.oPlus(axis.get(0).times(-20.0f)))
             DebugArrow(Lib.Companion.colorWhite, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(1).times(20.0f)))
+            end.oSet(start.oPlus(axis.get(1).times(20.0f)))
             DebugArrow(Lib.Companion.colorGreen, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(1).times(-20.0f)))
+            end.oSet(start.oPlus(axis.get(1).times(-20.0f)))
             DebugArrow(Lib.Companion.colorGreen, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(2).times(20.0f)))
+            end.oSet(start.oPlus(axis.get(2).times(20.0f)))
             DebugArrow(Lib.Companion.colorBlue, start, end, 2)
-            end.oSet(start.oPlus(axis.oGet(2).times(-20.0f)))
+            end.oSet(start.oPlus(axis.get(2).times(-20.0f)))
             DebugArrow(Lib.Companion.colorBlue, start, end, 2)
         }
 
@@ -1688,14 +1688,14 @@ object RenderWorld_local {
                 while (j < tri.numVerts) {
                     val vec = FloatArray(8)
                     src.Parse1DMatrix(8, vec)
-                    tri.verts[j].xyz.oSet(0, vec[0])
-                    tri.verts[j].xyz.oSet(1, vec[1])
-                    tri.verts[j].xyz.oSet(2, vec[2])
-                    tri.verts[j].st.oSet(0, vec[3])
-                    tri.verts[j].st.oSet(1, vec[4])
-                    tri.verts[j].normal.oSet(0, vec[5])
-                    tri.verts[j].normal.oSet(1, vec[6])
-                    tri.verts[j].normal.oSet(2, vec[7])
+                    tri.verts[j].xyz.set(0, vec[0])
+                    tri.verts[j].xyz.set(1, vec[1])
+                    tri.verts[j].xyz.set(2, vec[2])
+                    tri.verts[j].st.set(0, vec[3])
+                    tri.verts[j].st.set(1, vec[4])
+                    tri.verts[j].normal.set(0, vec[5])
+                    tri.verts[j].normal.set(1, vec[6])
+                    tri.verts[j].normal.set(2, vec[7])
                     j++
                 }
                 tr_trisurf.R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
@@ -1743,10 +1743,10 @@ object RenderWorld_local {
             while (j < tri.numVerts) {
                 val vec = FloatArray(8)
                 src.Parse1DMatrix(3, vec)
-                tri.shadowVertexes[j].xyz.oSet(0, vec[0])
-                tri.shadowVertexes[j].xyz.oSet(1, vec[1])
-                tri.shadowVertexes[j].xyz.oSet(2, vec[2])
-                tri.shadowVertexes[j].xyz.oSet(3, 1f) // no homogenous value
+                tri.shadowVertexes[j].xyz.set(0, vec[0])
+                tri.shadowVertexes[j].xyz.set(1, vec[1])
+                tri.shadowVertexes[j].xyz.set(2, vec[2])
+                tri.shadowVertexes[j].xyz.set(3, 1f) // no homogenous value
                 tri.bounds.AddPoint(tri.shadowVertexes[j].xyz.ToVec3())
                 val a = 0
                 j++
@@ -1818,8 +1818,8 @@ object RenderWorld_local {
                 while (j < numPoints) {
                     src.Parse1DMatrix(3, w.oGet(j))
                     // no texture coordinates
-                    w.oGet(j).oSet(3, 0f)
-                    w.oGet(j).oSet(4, 0f)
+                    w.oGet(j).set(3, 0f)
+                    w.oGet(j).set(4, 0f)
                     j++
                 }
 
@@ -1941,7 +1941,7 @@ object RenderWorld_local {
             // free all the inline idRenderModels
             i = 0
             while (i < localModels.Num()) {
-                ModelManager.renderModelManager.RemoveModel(localModels.oGet(i))
+                ModelManager.renderModelManager.RemoveModel(localModels.get(i))
                 localModels.RemoveIndex(i)
                 i++
             }
@@ -1970,7 +1970,7 @@ object RenderWorld_local {
             // that has both children pointing at it so we don't need to
             //
             areaNodes = arrayOf(areaNode_t()) // R_ClearedStaticAlloc(sizeof(areaNodes[0]));
-            areaNodes.get(0).plane.oSet(3, 1f)
+            areaNodes.get(0).plane.set(3, 1f)
             areaNodes.get(0).children.get(0) = -1
             areaNodes.get(0).children.get(1) = -1
         }
@@ -1994,10 +1994,10 @@ object RenderWorld_local {
             i = 0
             while (i < lightDefs.Num()) {
                 var light: idRenderLightLocal?
-                light = lightDefs.oGet(i)
+                light = lightDefs.get(i)
                 if (light != null && light.world == this) {
                     FreeLightDef(i)
-                    lightDefs.oSet(i, null)
+                    lightDefs.set(i, null)
                 }
                 i++
             }
@@ -2006,10 +2006,10 @@ object RenderWorld_local {
             i = 0
             while (i < entityDefs.Num()) {
                 var mod: idRenderEntityLocal?
-                mod = entityDefs.oGet(i)
+                mod = entityDefs.get(i)
                 if (mod != null && mod.world == this) {
                     FreeEntityDef(i)
-                    entityDefs.oSet(i, null)
+                    entityDefs.set(i, null)
                 }
                 i++
             }
@@ -2019,7 +2019,7 @@ object RenderWorld_local {
             var i: Int
             i = 0
             while (i < localModels.Num()) {
-                ModelManager.renderModelManager.CheckModel(localModels.oGet(i).Name())
+                ModelManager.renderModelManager.CheckModel(localModels.get(i).Name())
                 i++
             }
         }
@@ -2041,7 +2041,7 @@ object RenderWorld_local {
                 if (index == -1) {
                     index = entityDefs.Append(def)
                 } else {
-                    entityDefs.oSet(index, def)
+                    entityDefs.set(index, def)
                 }
                 def.index = index
                 def.world = this
@@ -2056,10 +2056,10 @@ object RenderWorld_local {
                         def.needsPortalSky = true
                     }
                 }
-                def.referenceBounds.oSet(def.parms.hModel.Bounds())
-                def.parms.axis.oSet(0, 0, 1f)
-                def.parms.axis.oSet(1, 1, 1f)
-                def.parms.axis.oSet(2, 2, 1f)
+                def.referenceBounds.set(def.parms.hModel.Bounds())
+                def.parms.axis.set(0, 0, 1f)
+                def.parms.axis.set(1, 1, 1f)
+                def.parms.axis.set(2, 2, 1f)
                 tr_main.R_AxisToModelMatrix(def.parms.axis, def.parms.origin, def.modelMatrix)
 
                 // in case an explicit shader is used on the world, we don't
@@ -2229,12 +2229,12 @@ object RenderWorld_local {
             r.Clear()
             i = 0
             while (i < w.GetNumPoints()) {
-                v.oSet(tr_main.R_LocalPointToGlobal(space.modelMatrix, w.oGet(i).ToVec3()))
+                v.set(tr_main.R_LocalPointToGlobal(space.modelMatrix, w.oGet(i).ToVec3()))
                 tr_main.R_GlobalToNormalizedDeviceCoordinates(v, ndc)
                 windowX =
-                    0.5f * (1.0f + ndc.oGet(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
+                    0.5f * (1.0f + ndc.get(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
                 windowY =
-                    0.5f * (1.0f + ndc.oGet(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
+                    0.5f * (1.0f + ndc.get(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
                 r.AddPoint(windowX, windowY)
                 i++
             }
@@ -2268,10 +2268,10 @@ object RenderWorld_local {
                 // otherwise, distance = alpha color
                 -0.5f / alpha
             }
-            forward.oSet(0, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[2])
-            forward.oSet(1, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[6])
-            forward.oSet(2, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[10])
-            forward.oSet(3, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[14])
+            forward.set(0, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[2])
+            forward.set(1, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[6])
+            forward.set(2, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[10])
+            forward.set(3, a * tr_local.tr.viewDef.worldSpace.modelViewMatrix[14])
             w = p.w
             i = 0
             while (i < w.GetNumPoints()) {
@@ -2355,7 +2355,7 @@ object RenderWorld_local {
                 w = idFixedWinding(p.w)
                 j = 0
                 while (j < ps.numPortalPlanes) {
-                    if (!w.ClipInPlace(ps.portalPlanes[j].oNegative(), 0f)) {
+                    if (!w.ClipInPlace(ps.portalPlanes[j].unaryMinus(), 0f)) {
                         break
                     }
                     j++
@@ -2395,8 +2395,8 @@ object RenderWorld_local {
                     if (j == w.GetNumPoints()) {
                         j = 0
                     }
-                    v1.oSet(origin.oMinus(w.oGet(i).ToVec3()))
-                    v2.oSet(origin.oMinus(w.oGet(j).ToVec3()))
+                    v1.set(origin.minus(w.oGet(i).ToVec3()))
+                    v2.set(origin.minus(w.oGet(j).ToVec3()))
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1)
 
                     // if it is degenerate, skip the plane
@@ -2524,7 +2524,7 @@ object RenderWorld_local {
                 w = idFixedWinding(p.w)
                 j = 0
                 while (j < ps.numPortalPlanes) {
-                    if (!w.ClipInPlace(ps.portalPlanes[j].oNegative(), 0f)) {
+                    if (!w.ClipInPlace(ps.portalPlanes[j].unaryMinus(), 0f)) {
                         break
                     }
                     j++
@@ -2537,7 +2537,7 @@ object RenderWorld_local {
                 // necessarily extending to infinitiy like a view frustum
                 j = 0
                 while (j < firstPortalStack.numPortalPlanes) {
-                    if (!w.ClipInPlace(firstPortalStack.portalPlanes[j].oNegative(), 0f)) {
+                    if (!w.ClipInPlace(firstPortalStack.portalPlanes[j].unaryMinus(), 0f)) {
                         break
                     }
                     j++
@@ -2564,8 +2564,8 @@ object RenderWorld_local {
                     if (j == w.GetNumPoints()) {
                         j = 0
                     }
-                    v1.oSet(light.globalLightOrigin.oMinus(w.oGet(i).ToVec3()))
-                    v2.oSet(light.globalLightOrigin.oMinus(w.oGet(j).ToVec3()))
+                    v1.set(light.globalLightOrigin.minus(w.oGet(i).ToVec3()))
+                    v2.set(light.globalLightOrigin.minus(w.oGet(j).ToVec3()))
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1)
 
                     // if it is degenerate, skip the plane
@@ -2659,14 +2659,14 @@ object RenderWorld_local {
                 // get the bounds for the portal winding projected in the frustum
                 frustum.ProjectionBounds(p.w, newBounds)
                 newBounds.IntersectSelf(bounds)
-                if (newBounds.oGet(0).oGet(0) > newBounds.oGet(1).oGet(0) || newBounds.oGet(0).oGet(1) > newBounds.oGet(
+                if (newBounds.get(0).oGet(0) > newBounds.get(1).oGet(0) || newBounds.get(0).oGet(1) > newBounds.get(
                         1
-                    ).oGet(1) || newBounds.oGet(0).oGet(2) > newBounds.oGet(1).oGet(2)
+                    ).oGet(1) || newBounds.get(0).oGet(2) > newBounds.get(1).oGet(2)
                 ) {
                     p = p.next
                     continue
                 }
-                newBounds.oSet(1, 0, frustum.GetFarDistance())
+                newBounds.set(1, 0, frustum.GetFarDistance())
                 a = areaNumRef_s() //areaNumRefAllocator.Alloc();
                 a.areaNum = p.intoArea
                 a.next = areas
@@ -2691,8 +2691,8 @@ object RenderWorld_local {
             var a: areaNumRef_s?
 
             // bounds that cover the whole frustum
-            bounds.oGet(0).Set(frustum.GetNearDistance(), -1.0f, -1.0f)
-            bounds.oGet(1).Set(frustum.GetFarDistance(), 1.0f, 1.0f)
+            bounds.get(0).Set(frustum.GetNearDistance(), -1.0f, -1.0f)
+            bounds.get(1).Set(frustum.GetFarDistance(), 1.0f, 1.0f)
             a = areas
             while (a != null) {
                 areas = FloodFrustumAreas_r(frustum, a.areaNum, bounds, areas)
@@ -2824,7 +2824,7 @@ object RenderWorld_local {
                     // now check the winding against each of the portalStack planes
                     j = 0
                     while (j < ps.numPortalPlanes - 1) {
-                        if (!w.ClipInPlace(ps.portalPlanes[j].oNegative())) {
+                        if (!w.ClipInPlace(ps.portalPlanes[j].unaryMinus())) {
                             break
                         }
                         j++
@@ -3213,15 +3213,15 @@ object RenderWorld_local {
             // clear the archive counter on all defs
             i = 0
             while (i < lightDefs.Num()) {
-                if (lightDefs.oGet(i) != null) {
-                    lightDefs.oGet(i).archived = false
+                if (lightDefs.get(i) != null) {
+                    lightDefs.get(i).archived = false
                 }
                 i++
             }
             i = 0
             while (i < entityDefs.Num()) {
-                if (entityDefs.oGet(i) != null) {
-                    entityDefs.oGet(i).archived = false
+                if (entityDefs.get(i) != null) {
+                    entityDefs.get(i).archived = false
                 }
                 i++
             }
@@ -3583,8 +3583,8 @@ object RenderWorld_local {
             Session.Companion.session.writeDemo.Write(ent.hModel)
             Session.Companion.session.writeDemo.WriteInt(ent.entityNum)
             Session.Companion.session.writeDemo.WriteInt(ent.bodyId)
-            Session.Companion.session.writeDemo.WriteVec3(ent.bounds.oGet(0))
-            Session.Companion.session.writeDemo.WriteVec3(ent.bounds.oGet(1))
+            Session.Companion.session.writeDemo.WriteVec3(ent.bounds.get(0))
+            Session.Companion.session.writeDemo.WriteVec3(ent.bounds.get(1))
             //            session.writeDemo.WriteInt((int) ent.callback);
             Session.Companion.session.writeDemo.Write(ent.callback)
             //            session.writeDemo.WriteInt((int) ent.callbackData);
@@ -3699,8 +3699,8 @@ object RenderWorld_local {
             Session.Companion.session.readDemo.Read(shadow.hModel)
             Session.Companion.session.readDemo.ReadInt(shadow.entityNum)
             Session.Companion.session.readDemo.ReadInt(shadow.bodyId)
-            Session.Companion.session.readDemo.ReadVec3(shadow.bounds.oGet(0))
-            Session.Companion.session.readDemo.ReadVec3(shadow.bounds.oGet(1))
+            Session.Companion.session.readDemo.ReadVec3(shadow.bounds.get(0))
+            Session.Companion.session.readDemo.ReadVec3(shadow.bounds.get(1))
             //            session.readDemo.ReadInt((int) shadow.callback);
 //            session.readDemo.ReadInt((int) shadow.callbackData);
             Session.Companion.session.readDemo.Read(shadow.callback)
@@ -3959,17 +3959,17 @@ object RenderWorld_local {
             if (nodeNum == 0) {
                 if (parentNodeNum != -1) {
                     results.fraction = p1f
-                    results.point.oSet(p1)
+                    results.point.set(p1)
                     node = areaNodes.get(parentNodeNum)
-                    results.normal.oSet(node.plane.Normal())
+                    results.normal.set(node.plane.Normal())
                     return
                 }
             }
             node = areaNodes.get(nodeNum)
 
             // distance from plane for trace start and end
-            t1 = node.plane.Normal().times(p1) + node.plane.oGet(3)
-            t2 = node.plane.Normal().times(p2) + node.plane.oGet(3)
+            t1 = node.plane.Normal().times(p1) + node.plane.get(3)
+            t2 = node.plane.Normal().times(p2) + node.plane.get(3)
             if (t1 >= 0.0f && t2 >= 0.0f) {
                 RecurseProcBSP_r(results, nodeNum, node.children.get(0), p1f, p2f, p1, p2)
                 return
@@ -3981,9 +3981,9 @@ object RenderWorld_local {
             side = if (t1 < t2) 1 else 0
             frac = t1 / (t1 - t2)
             midf = p1f + frac * (p2f - p1f)
-            mid.oSet(0, p1.oGet(0) + frac * (p2.oGet(0) - p1.oGet(0)))
-            mid.oSet(1, p1.oGet(1) + frac * (p2.oGet(1) - p1.oGet(1)))
-            mid.oSet(2, p1.oGet(2) + frac * (p2.oGet(2) - p1.oGet(2)))
+            mid.set(0, p1.get(0) + frac * (p2.get(0) - p1.get(0)))
+            mid.set(1, p1.get(1) + frac * (p2.get(1) - p1.get(1)))
+            mid.set(2, p1.get(2) + frac * (p2.get(2) - p1.get(2)))
             RecurseProcBSP_r(results, nodeNum, node.children.get(side), p1f, midf, p1, mid)
             RecurseProcBSP_r(results, nodeNum, node.children.get(side xor 1), midf, p2f, mid, p2)
         }
@@ -4036,7 +4036,7 @@ object RenderWorld_local {
             var def: idRenderEntityLocal?
             i = 0
             while (i < entityDefs.Num()) {
-                def = entityDefs.oGet(i)
+                def = entityDefs.get(i)
                 if (TempDump.NOT(def)) {
                     i++
                     continue
@@ -4180,7 +4180,7 @@ object RenderWorld_local {
                 i = 0
                 while (i < numPoints) {
                     var d: Float
-                    d = points.get(i).times(node.plane.Normal()) + node.plane.oGet(3)
+                    d = points.get(i).times(node.plane.Normal()) + node.plane.get(3)
                     if (d >= 0.0f) {
                         front = true
                     } else if (d <= 0.0f) {
@@ -4232,7 +4232,7 @@ object RenderWorld_local {
             radSquared = 0f
             i = 0
             while (i < numPoints) {
-                dir.oSet(points.get(i).oMinus(mid))
+                dir.set(points.get(i).minus(mid))
                 lr = dir.times(dir)
                 if (lr > radSquared) {
                     radSquared = lr

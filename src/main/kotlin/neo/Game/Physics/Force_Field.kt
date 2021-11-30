@@ -88,7 +88,7 @@ class Force_Field {
         //	virtual				~idForce_Field( void );
         // uniform constant force
         fun Uniform(force: idVec3?) {
-            dir.oSet(force)
+            dir.set(force)
             magnitude = dir.Normalize()
             type = forceFieldType.FORCEFIELD_UNIFORM
         }
@@ -188,14 +188,14 @@ class Force_Field {
                 }
                 when (type) {
                     forceFieldType.FORCEFIELD_UNIFORM -> {
-                        force.oSet(dir)
+                        force.set(dir)
                     }
                     forceFieldType.FORCEFIELD_EXPLOSION -> {
-                        force.oSet(cm.GetOrigin().oMinus(clipModel.GetOrigin()))
+                        force.set(cm.GetOrigin().minus(clipModel.GetOrigin()))
                         force.Normalize()
                     }
                     forceFieldType.FORCEFIELD_IMPLOSION -> {
-                        force.oSet(clipModel.GetOrigin().oMinus(cm.GetOrigin()))
+                        force.set(clipModel.GetOrigin().minus(cm.GetOrigin()))
                         force.Normalize()
                     }
                     else -> {
@@ -203,11 +203,11 @@ class Force_Field {
                     }
                 }
                 if (randomTorque != 0.0f) {
-                    torque.oSet(0, Game_local.gameLocal.random.CRandomFloat())
-                    torque.oSet(1, Game_local.gameLocal.random.CRandomFloat())
-                    torque.oSet(2, Game_local.gameLocal.random.CRandomFloat())
+                    torque.set(0, Game_local.gameLocal.random.CRandomFloat())
+                    torque.set(1, Game_local.gameLocal.random.CRandomFloat())
+                    torque.set(2, Game_local.gameLocal.random.CRandomFloat())
                     if (torque.Normalize() == 0.0f) {
-                        torque.oSet(2, 1.0f)
+                        torque.set(2, 1.0f)
                     }
                 }
                 when (applyType) {
@@ -231,7 +231,7 @@ class Force_Field {
                     forceFieldApplyType.FORCEFIELD_APPLY_VELOCITY -> {
                         physics.SetLinearVelocity(force.times(magnitude), cm.GetId())
                         if (randomTorque != 0.0f) {
-                            angularVelocity.oSet(physics.GetAngularVelocity(cm.GetId()))
+                            angularVelocity.set(physics.GetAngularVelocity(cm.GetId()))
                             physics.SetAngularVelocity(
                                 angularVelocity.oPlus(torque.times(randomTorque)).oMultiply(0.5f), cm.GetId()
                             )

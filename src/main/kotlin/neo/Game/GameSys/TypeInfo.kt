@@ -1400,7 +1400,7 @@ object TypeInfo {
             }
             i = 0
             while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
-                j = index.oGet(i)
+                j = index.get(i)
                 Common.common.Printf(
                     "%-32s : %-32s %d\n",
                     NoGameTypeInfo.classTypeInfo[j].typeName,

@@ -236,9 +236,9 @@ object shadowopt3 {
                 if (!back.isNULL) {
                     // recursively clip these triangles to all subsequent triangles
                     for (k in 2 until back.GetNumPoints()) {
-                        tri.v.get(0).oSet(back.oGet(0).ToVec3())
-                        tri.v.get(1).oSet(back.oGet(k - 1).ToVec3())
-                        tri.v.get(2).oSet(back.oGet(k).ToVec3())
+                        tri.v.get(0).set(back.oGet(0).ToVec3())
+                        tri.v.get(1).set(back.oGet(k - 1).ToVec3())
+                        tri.v.get(2).set(back.oGet(k).ToVec3())
                         shadowopt3.CreateEdgesForTri(tri)
                         shadowopt3.ClipTriangle_r(tri, i + 1, skipTri, numTris, tris)
                     }
@@ -284,14 +284,14 @@ object shadowopt3 {
             tri = tris[i]
 
             // the indexes are in reversed order from tr_stencilshadow
-            tri.v.get(0).oSet(verts.get(indexes.get(i * 3 + 2)).ToVec3().oMinus(projectionOrigin))
-            tri.v.get(1).oSet(verts.get(indexes.get(i * 3 + 1)).ToVec3().oMinus(projectionOrigin))
-            tri.v.get(2).oSet(verts.get(indexes.get(i * 3 + 0)).ToVec3().oMinus(projectionOrigin))
-            val d1 = idVec3(tri.v.get(1).oMinus(tri.v.get(0)))
-            val d2 = idVec3(tri.v.get(2).oMinus(tri.v.get(0)))
+            tri.v.get(0).set(verts.get(indexes.get(i * 3 + 2)).ToVec3().minus(projectionOrigin))
+            tri.v.get(1).set(verts.get(indexes.get(i * 3 + 1)).ToVec3().minus(projectionOrigin))
+            tri.v.get(2).set(verts.get(indexes.get(i * 3 + 0)).ToVec3().minus(projectionOrigin))
+            val d1 = idVec3(tri.v.get(1).minus(tri.v.get(0)))
+            val d2 = idVec3(tri.v.get(2).minus(tri.v.get(0)))
             tri.plane.ToVec4_ToVec3_Cross(d2, d1)
             tri.plane.ToVec4_ToVec3_Normalize()
-            tri.plane.oSet(3, tri.v.get(0).times(tri.plane.ToVec4().ToVec3()))
+            tri.plane.set(3, tri.v.get(0).times(tri.plane.ToVec4().ToVec3()))
 
             // get the plane number before any clipping
             // we should avoid polluting the regular dmap planes with these
@@ -375,9 +375,9 @@ object shadowopt3 {
 
             // create a mapTri for the optGroup
             val mtri = mapTri_s() // Mem_ClearedAlloc(sizeof(mtri));
-            mtri.v[0].xyz.oSet(tri.v.get(0))
-            mtri.v[1].xyz.oSet(tri.v.get(1))
-            mtri.v[2].xyz.oSet(tri.v.get(2))
+            mtri.v[0].xyz.set(tri.v.get(0))
+            mtri.v[1].xyz.set(tri.v.get(1))
+            mtri.v[2].xyz.set(tri.v.get(2))
             mtri.next = checkGroup.triList
             checkGroup.triList = mtri
             i++
@@ -390,9 +390,9 @@ object shadowopt3 {
             while (mtri != null) {
                 val tri: shadowTri_t? = shadowopt3.outputTris[shadowopt3.numOutputTris]
                 shadowopt3.numOutputTris++
-                tri.v.get(0).oSet(mtri.v[0].xyz)
-                tri.v.get(1).oSet(mtri.v[1].xyz)
-                tri.v.get(2).oSet(mtri.v[2].xyz)
+                tri.v.get(0).set(mtri.v[0].xyz)
+                tri.v.get(1).set(mtri.v[1].xyz)
+                tri.v.get(2).set(mtri.v[2].xyz)
                 mtri = mtri.next
             }
             checkGroup = checkGroup.nextGroup
@@ -606,7 +606,7 @@ object shadowopt3 {
                 // if the other point on check isn't on the negative side of the plane,
                 // flip the plane
                 if (shadowopt3.uniqued[check.index.get( /*!i*/1 xor i)].times(plane) > 0) {
-                    plane.oSet(plane.oNegative())
+                    plane.set(plane.oNegative())
                 }
                 val d1 = shadowopt3.uniqued[quad.nearV.get(0)].times(plane)
                 val d2 = shadowopt3.uniqued[quad.nearV.get(1)].times(plane)
@@ -656,10 +656,10 @@ object shadowopt3 {
 
             // make a plane through the line of check
             val separate = idPlane()
-            val dir = idVec3(shadowopt3.uniqued[check.index.get(1)].oMinus(shadowopt3.uniqued[check.index.get(0)]))
+            val dir = idVec3(shadowopt3.uniqued[check.index.get(1)].minus(shadowopt3.uniqued[check.index.get(0)]))
             separate.Normal().Cross(dir, silPlane.normal)
             separate.Normal().Normalize()
-            separate.oSet(3, -shadowopt3.uniqued[check.index.get(1)].times(separate.Normal()))
+            separate.set(3, -shadowopt3.uniqued[check.index.get(1)].times(separate.Normal()))
 
             // this may miss a needed separation when the quad would be
             // clipped into a triangle and a quad
@@ -750,8 +750,8 @@ object shadowopt3 {
             //		memset( &groups, 0, sizeof( groups ) );
             val planes: Array<idPlane?> = idPlane.Companion.generateArray(2)
             planes[0].SetNormal(sil.normal) //TODO:reinterpret cast
-            planes[0].oSet(3, 0f)
-            planes[1].oSet(planes[0].oNegative())
+            planes[0].set(3, 0f)
+            planes[1].set(planes[0].unaryMinus())
             groups[0].planeNum = FindFloatPlane(planes[0])
             groups[1].planeNum = FindFloatPlane(planes[1])
 
@@ -779,11 +779,11 @@ object shadowopt3 {
                     val v2 = idVec3()
                     val normal = idVec3()
                     mtri = mapTri_s() // Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz.oSet(shadowopt3.uniqued[f1.nearV.get(0)])
-                    mtri.v[1].xyz.oSet(shadowopt3.uniqued[f1.nearV.get(1)])
-                    mtri.v[2].xyz.oSet(shadowopt3.uniqued[f1.farV.get(1)])
-                    v1.oSet(mtri.v[1].xyz.oMinus(mtri.v[0].xyz))
-                    v2.oSet(mtri.v[2].xyz.oMinus(mtri.v[0].xyz))
+                    mtri.v[0].xyz.set(shadowopt3.uniqued[f1.nearV.get(0)])
+                    mtri.v[1].xyz.set(shadowopt3.uniqued[f1.nearV.get(1)])
+                    mtri.v[2].xyz.set(shadowopt3.uniqued[f1.farV.get(1)])
+                    v1.set(mtri.v[1].xyz.minus(mtri.v[0].xyz))
+                    v2.set(mtri.v[2].xyz.minus(mtri.v[0].xyz))
                     normal.Cross(v2, v1)
                     gr = if (normal.times(planes[0].Normal()) > 0) {
                         groups[0]
@@ -793,9 +793,9 @@ object shadowopt3 {
                     mtri.next = gr.triList
                     gr.triList = mtri
                     mtri = mapTri_s() // Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz.oSet(shadowopt3.uniqued[f1.farV.get(0)])
-                    mtri.v[1].xyz.oSet(shadowopt3.uniqued[f1.nearV.get(0)])
-                    mtri.v[2].xyz.oSet(shadowopt3.uniqued[f1.farV.get(1)])
+                    mtri.v[0].xyz.set(shadowopt3.uniqued[f1.farV.get(0)])
+                    mtri.v[1].xyz.set(shadowopt3.uniqued[f1.nearV.get(0)])
+                    mtri.v[2].xyz.set(shadowopt3.uniqued[f1.farV.get(1)])
                     mtri.next = gr.triList
                     gr.triList = mtri
 
@@ -886,8 +886,8 @@ object shadowopt3 {
         k = 0
         while (k < shadowopt3.numUniqued) {
             val check = shadowopt3.uniqued[k]
-            if (Math.abs(v.oGet(0) - check.oGet(0)) < shadowopt3.UNIQUE_EPSILON && Math.abs(v.oGet(1) - check.oGet(1)) < shadowopt3.UNIQUE_EPSILON && Math.abs(
-                    v.oGet(2) - check.oGet(2)
+            if (Math.abs(v.get(0) - check.get(0)) < shadowopt3.UNIQUE_EPSILON && Math.abs(v.get(1) - check.get(1)) < shadowopt3.UNIQUE_EPSILON && Math.abs(
+                    v.get(2) - check.get(2)
                 ) < shadowopt3.UNIQUE_EPSILON
             ) {
                 return k
@@ -954,12 +954,12 @@ object shadowopt3 {
             var w: Float
             var oow: Float
             val out = idVec3()
-            w = `in`.oMultiply(mat[3].ToVec3()) + mat[3].oGet(3)
+            w = `in`.oMultiply(mat[3].ToVec3()) + mat[3].get(3)
             oow = 1.0f / w
-            out.x = (`in`.oMultiply(mat[0].ToVec3()) + mat[0].oGet(3)) * oow
-            out.y = (`in`.oMultiply(mat[1].ToVec3()) + mat[1].oGet(3)) * oow
-            out.z = (`in`.oMultiply(mat[2].ToVec3()) + mat[2].oGet(3)) * oow
-            shadowopt3.uniqued[shadowopt3.numUniqued + i] = out.oMinus(projectionOrigin)
+            out.x = (`in`.oMultiply(mat[0].ToVec3()) + mat[0].get(3)) * oow
+            out.y = (`in`.oMultiply(mat[1].ToVec3()) + mat[1].get(3)) * oow
+            out.z = (`in`.oMultiply(mat[2].ToVec3()) + mat[2].get(3)) * oow
+            shadowopt3.uniqued[shadowopt3.numUniqued + i] = out.minus(projectionOrigin)
         }
         shadowopt3.numUniqued *= 2
     }
@@ -1047,7 +1047,7 @@ object shadowopt3 {
         shadowopt3.ret.verts = idVec3.Companion.generateArray(shadowopt3.ret.numVerts) // Mem_Alloc(ret.numVerts);
         for (i in 0 until shadowopt3.numUniqued) {
             // put the vert back in global space, instead of light centered space
-            shadowopt3.ret.verts[i].oSet(shadowopt3.uniqued[i].oPlus(projectionOrigin))
+            shadowopt3.ret.verts[i].set(shadowopt3.uniqued[i].oPlus(projectionOrigin))
         }
 
         // set the final index count
@@ -1133,8 +1133,8 @@ object shadowopt3 {
         tri.numVerts = shadowopt3.numUniqued
         i = 0
         while (i < tri.numVerts) {
-            tri.shadowVertexes[i].xyz.oSet(shadowopt3.uniqued[i])
-            tri.shadowVertexes[i].xyz.oSet(3, 1f)
+            tri.shadowVertexes[i].xyz.set(shadowopt3.uniqued[i])
+            tri.shadowVertexes[i].xyz.set(3, 1f)
             i++
         }
         i = 0

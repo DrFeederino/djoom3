@@ -4,6 +4,7 @@ import neo.TempDump.SERiAL
 import neo.TempDump.TODO_Exception
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CFloat
+import neo.idlib.math.Math_h.DEG2RAD
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMat4
@@ -57,7 +58,7 @@ object Angles {
             roll = a.roll
         }
 
-        fun Set(pitch: Float, yaw: Float, roll: Float) {
+        fun set(pitch: Float, yaw: Float, roll: Float) {
             this.pitch = pitch
             this.yaw = yaw
             this.roll = roll
@@ -76,7 +77,7 @@ object Angles {
             return this
         }
 
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             assert(index in 0..2)
             return when (index) {
                 1 -> yaw
@@ -86,7 +87,7 @@ object Angles {
         }
 
         //public	float &			operator[]( int index );
-        fun oSet(index: Int, value: Float) {
+        operator fun set(index: Int, value: Float) {
             when (index) {
                 1 -> yaw = value
                 2 -> roll = value
@@ -115,7 +116,7 @@ object Angles {
         }
 
         //public	idAngles &		operator=( final  idAngles &a );
-        fun oSet(a: idAngles): idAngles {
+        fun set(a: idAngles): idAngles {
             pitch = a.pitch
             yaw = a.yaw
             roll = a.roll
@@ -224,12 +225,12 @@ object Angles {
             var i: Int
             i = 0
             while (i < 3) {
-                if (oGet(i) >= 360.0f || oGet(i) < 0.0f) {
-                    this.plusAssign(i, -Math.floor((oGet(i) / 360.0f).toDouble()).toFloat() * 360.0f)
-                    if (oGet(i) >= 360.0f) {
+                if (get(i) >= 360.0f || get(i) < 0.0f) {
+                    this.plusAssign(i, -Math.floor((get(i) / 360.0f).toDouble()).toFloat() * 360.0f)
+                    if (get(i) >= 360.0f) {
                         this.plusAssign(i, -360.0f)
                     }
-                    if (oGet(i) < 0.0f) {
+                    if (get(i) < 0.0f) {
                         this.plusAssign(i, 360.0f)
                     }
                 }
@@ -295,13 +296,13 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp)
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr)
-            forward.Set(cp._val * cy._val, cp._val * sy._val, -sp._val)
-            right?.Set(
+            forward.set(cp._val * cy._val, cp._val * sy._val, -sp._val)
+            right?.set(
                 -sr._val * sp._val * cy._val + cr._val * sy._val,
                 -sr._val * sp._val * sy._val + -cr._val * cy._val,
                 -sr._val * cp._val
             )
-            up?.Set(
+            up?.set(
                 cr._val * sp._val * cy._val + -sr._val * -sy._val,
                 cr._val * sp._val * sy._val + -sr._val * cy._val,
                 cr._val * cp._val
@@ -381,7 +382,7 @@ object Angles {
             w = cxcy * cz._val + sxsy * sz._val
             angle = idMath.ACos(w)
             if (angle == 0.0f) {
-                vec.Set(0.0f, 0.0f, 1.0f)
+                vec.set(0.0f, 0.0f, 1.0f)
             } else {
                 //vec *= (1.0f / sin( angle ));
                 vec.Normalize()
@@ -424,7 +425,7 @@ object Angles {
 
         fun ToAngularVelocity(): idVec3 {
             val rotation = ToRotation()
-            return rotation.GetVec().times(Math_h.DEG2RAD(rotation.GetAngle()))
+            return rotation.GetVec() * DEG2RAD(rotation.GetAngle())
         }
 
         fun ToFloatPtr(): FloatArray {

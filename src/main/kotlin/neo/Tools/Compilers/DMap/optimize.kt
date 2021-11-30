@@ -189,7 +189,7 @@ object optimize {
         // should we match based on the t-junction fixing hash verts?
         i = 0
         while (i < optimize.numOptVerts) {
-            if (optimize.optVerts[i].pv.oGet(0) == x && optimize.optVerts[i].pv.oGet(1) == y) {
+            if (optimize.optVerts[i].pv.get(0) == x && optimize.optVerts[i].pv.get(1) == y) {
                 return optimize.optVerts[i]
             }
             i++
@@ -203,9 +203,9 @@ object optimize {
         vert = optimize.optVerts[i]
         //	memset( vert, 0, sizeof( *vert ) );
         vert.v = v
-        vert.pv.oSet(0, x)
-        vert.pv.oSet(1, y)
-        vert.pv.oSet(2, 0f)
+        vert.pv.set(0, x)
+        vert.pv.set(1, y)
+        vert.pv.set(2, 0f)
         optimize.optBounds.AddPoint(vert.pv)
         return vert
     }
@@ -304,8 +304,8 @@ object optimize {
         val d1 = idVec3()
         val d2 = idVec3()
         val d: Float
-        d1.oSet(p1.pv.oMinus(v1.pv))
-        d2.oSet(p1.pv.oMinus(v2.pv))
+        d1.set(p1.pv.minus(v1.pv))
+        d2.set(p1.pv.minus(v2.pv))
         d = d1.times(d2)
         return d < 0
     }
@@ -335,25 +335,25 @@ object optimize {
         val dir2 = idVec3()
         val cross1 = idVec3()
         val cross2 = idVec3()
-        dir1.oSet(p1.pv.oMinus(l1.pv))
-        dir2.oSet(p1.pv.oMinus(l2.pv))
-        cross1.oSet(dir1.Cross(dir2))
-        dir1.oSet(p2.pv.oMinus(l1.pv))
-        dir2.oSet(p2.pv.oMinus(l2.pv))
-        cross2.oSet(dir1.Cross(dir2))
-        if (cross1.oGet(2) - cross2.oGet(2) == 0f) {
+        dir1.set(p1.pv.minus(l1.pv))
+        dir2.set(p1.pv.minus(l2.pv))
+        cross1.set(dir1.Cross(dir2))
+        dir1.set(p2.pv.minus(l1.pv))
+        dir2.set(p2.pv.minus(l2.pv))
+        cross2.set(dir1.Cross(dir2))
+        if (cross1.get(2) - cross2.get(2) == 0f) {
             return null
         }
-        f = cross1.oGet(2) / (cross1.oGet(2) - cross2.oGet(2))
+        f = cross1.get(2) / (cross1.get(2) - cross2.get(2))
 
         // FIXME: how are we freeing this, since it doesn't belong to a tri?
         v = idDrawVert() // Mem_Alloc(sizeof(v));
         //	memset( v, 0, sizeof( *v ) );
-        v.xyz.oSet(p1.v.xyz.times(1.0f - f).oPlus(p2.v.xyz.times(f)))
-        v.normal.oSet(p1.v.normal.times(1.0f - f).oPlus(p2.v.normal.times(f)))
+        v.xyz.set(p1.v.xyz.times(1.0f - f).oPlus(p2.v.xyz.times(f)))
+        v.normal.set(p1.v.normal.times(1.0f - f).oPlus(p2.v.normal.times(f)))
         v.normal.Normalize()
-        v.st.oSet(0, p1.v.st.oGet(0) * (1.0f - f) + p2.v.st.oGet(0) * f)
-        v.st.oSet(1, p1.v.st.oGet(1) * (1.0f - f) + p2.v.st.oGet(1) * f)
+        v.st.set(0, p1.v.st.get(0) * (1.0f - f) + p2.v.st.get(0) * f)
+        v.st.set(1, p1.v.st.get(1) * (1.0f - f) + p2.v.st.get(1) * f)
         return optimize.FindOptVertex(v, opt)
     }
 
@@ -378,10 +378,10 @@ object optimize {
             val s4: Float
             val positive: Boolean
             val negative: Boolean
-            s1 = p1.pv.oMinus(l1.pv).oMultiply(l2.pv.oMinus(l1.pv))
-            s2 = p2.pv.oMinus(l1.pv).oMultiply(l2.pv.oMinus(l1.pv))
-            s3 = p1.pv.oMinus(l2.pv).oMultiply(l2.pv.oMinus(l1.pv))
-            s4 = p2.pv.oMinus(l2.pv).oMultiply(l2.pv.oMinus(l1.pv))
+            s1 = p1.pv.minus(l1.pv).oMultiply(l2.pv.minus(l1.pv))
+            s2 = p2.pv.minus(l1.pv).oMultiply(l2.pv.minus(l1.pv))
+            s3 = p1.pv.minus(l2.pv).oMultiply(l2.pv.minus(l1.pv))
+            s4 = p2.pv.minus(l2.pv).oMultiply(l2.pv.minus(l1.pv))
             positive = s1 > 0 || s2 > 0 || s3 > 0 || s4 > 0
             negative = s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0
             positive && negative
@@ -510,7 +510,7 @@ object optimize {
                 }
                 lengths[numLengths].v1 = vert
                 lengths[numLengths].v2 = vert2
-                dir.oSet(vert.pv.oMinus(vert2.pv))
+                dir.set(vert.pv.minus(vert2.pv))
                 lengths[numLengths].length = dir.Length()
                 numLengths++
                 vert2 = vert2.islandLink
@@ -610,7 +610,7 @@ object optimize {
         }
 
         // they must point in opposite directions
-        dist = v3.pv.oMinus(v2.pv).oMultiply(v1.pv.oMinus(v2.pv))
+        dist = v3.pv.minus(v2.pv).oMultiply(v1.pv.minus(v2.pv))
         if (dist >= 0) {
             return
         }
@@ -751,22 +751,22 @@ object optimize {
         val d1 = idVec3()
         val d2 = idVec3()
         val normal = idVec3()
-        d1.oSet(v2.pv.oMinus(v1.pv))
-        d2.oSet(v3.pv.oMinus(v1.pv))
-        normal.oSet(d1.Cross(d2))
-        if (normal.oGet(2) <= 0) {
+        d1.set(v2.pv.minus(v1.pv))
+        d2.set(v3.pv.minus(v1.pv))
+        normal.set(d1.Cross(d2))
+        if (normal.get(2) <= 0) {
             return false
         }
-        d1.oSet(v3.pv.oMinus(v2.pv))
-        d2.oSet(v1.pv.oMinus(v2.pv))
-        normal.oSet(d1.Cross(d2))
-        if (normal.oGet(2) <= 0) {
+        d1.set(v3.pv.minus(v2.pv))
+        d2.set(v1.pv.minus(v2.pv))
+        normal.set(d1.Cross(d2))
+        if (normal.get(2) <= 0) {
             return false
         }
-        d1.oSet(v1.pv.oMinus(v3.pv))
-        d2.oSet(v2.pv.oMinus(v3.pv))
-        normal.oSet(d1.Cross(d2))
-        return normal.oGet(2) > 0
+        d1.set(v1.pv.minus(v3.pv))
+        d2.set(v2.pv.minus(v3.pv))
+        normal.set(d1.Cross(d2))
+        return normal.get(2) > 0
     }
 
     /*
@@ -781,10 +781,10 @@ object optimize {
         val d1 = idVec3()
         val d2 = idVec3()
         val normal = idVec3()
-        d1.oSet(v2.pv.oMinus(v1.pv))
-        d2.oSet(v3.pv.oMinus(v1.pv))
-        normal.oSet(d1.Cross(d2))
-        return normal.oGet(2) == 0f
+        d1.set(v2.pv.minus(v1.pv))
+        d2.set(v3.pv.minus(v1.pv))
+        normal.set(d1.Cross(d2))
+        return normal.get(2) == 0f
         //#else
 //	return (bool)!IsTriangleValid( v1, v2, v3 );
 //#endif
@@ -804,22 +804,22 @@ object optimize {
 
         // the normal[2] == 0 case is not uncommon when a square is triangulated in
         // the opposite manner to the original
-        d1.oSet(tri.optVert[0].pv.oMinus(p))
-        d2.oSet(tri.optVert[1].pv.oMinus(p))
-        normal.oSet(d1.Cross(d2))
-        if (normal.oGet(2) < 0) {
+        d1.set(tri.optVert[0].pv.minus(p))
+        d2.set(tri.optVert[1].pv.minus(p))
+        normal.set(d1.Cross(d2))
+        if (normal.get(2) < 0) {
             return false
         }
-        d1.oSet(tri.optVert[1].pv.oMinus(p))
-        d2.oSet(tri.optVert[2].pv.oMinus(p))
-        normal.oSet(d1.Cross(d2))
-        if (normal.oGet(2) < 0) {
+        d1.set(tri.optVert[1].pv.minus(p))
+        d2.set(tri.optVert[2].pv.minus(p))
+        normal.set(d1.Cross(d2))
+        if (normal.get(2) < 0) {
             return false
         }
-        d1.oSet(tri.optVert[2].pv.oMinus(p))
-        d2.oSet(tri.optVert[0].pv.oMinus(p))
-        normal.oSet(d1.Cross(d2))
-        return normal.oGet(2) >= 0
+        d1.set(tri.optVert[2].pv.minus(p))
+        d2.set(tri.optVert[0].pv.minus(p))
+        normal.set(d1.Cross(d2))
+        return normal.get(2) >= 0
     }
 
     //==================================================================
@@ -931,7 +931,7 @@ object optimize {
         optTri.v.get(0) = first
         optTri.v.get(1) = second
         optTri.v.get(2) = third
-        optTri.midpoint.oSet(
+        optTri.midpoint.set(
             optTri.v.get(0).pv.oPlus(optTri.v.get(1).pv.oPlus(optTri.v.get(2).pv)).oMultiply(1.0f / 3.0f)
         )
         optTri.next = island.tris
@@ -987,17 +987,17 @@ object optimize {
         var ov: optVertex_s?
         var d: Float
         val vec = idVec3()
-        Common.common.Printf("verts near 0x%p (%f, %f)\n", v, v.pv.oGet(0), v.pv.oGet(1))
+        Common.common.Printf("verts near 0x%p (%f, %f)\n", v, v.pv.get(0), v.pv.get(1))
         ov = island.verts
         while (ov != null) {
             if (ov === v) {
                 ov = ov.islandLink
                 continue
             }
-            vec.oSet(ov.pv.oMinus(v.pv))
+            vec.set(ov.pv.minus(v.pv))
             d = vec.Length()
             if (d < 1) {
-                Common.common.Printf("0x%p = (%f, %f)\n", ov, ov.pv.oGet(0), ov.pv.oGet(1))
+                Common.common.Printf("0x%p = (%f, %f)\n", ov, ov.pv.get(0), ov.pv.get(1))
             }
             ov = ov.islandLink
         }
@@ -1182,7 +1182,7 @@ object optimize {
             tri.v[2] = optTri.v.get(2).v
             val plane = idPlane()
             tritools.PlaneForTri(tri, plane)
-            if (plane.Normal().times(dmap.dmapGlobals.mapPlanes.oGet(island.group.planeNum).Normal()) <= 0) {
+            if (plane.Normal().times(dmap.dmapGlobals.mapPlanes.get(island.group.planeNum).Normal()) <= 0) {
                 // this can happen reasonably when a triangle is nearly degenerate in
                 // optimization planar space, and winds up being degenerate in 3D space
                 Common.common.Printf("WARNING: backwards triangle generated!\n")
@@ -1405,10 +1405,10 @@ object optimize {
 
         // debug drawing bounds
         dmap.dmapGlobals.drawBounds = optimize.optBounds
-        dmap.dmapGlobals.drawBounds.oGet(0).minusAssign(0, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(0).minusAssign(1, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(1).plusAssign(0, -2f)
-        dmap.dmapGlobals.drawBounds.oGet(1).plusAssign(1, -2f)
+        dmap.dmapGlobals.drawBounds.get(0).minusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds.get(0).minusAssign(1, -2f)
+        dmap.dmapGlobals.drawBounds.get(1).plusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds.get(1).plusAssign(1, -2f)
 
         // generate crossing points between all the original edges
         crossings = arrayOfNulls<edgeCrossing_s?>(optimize.numOriginalEdges) // Mem_ClearedAlloc(numOriginalEdges);
@@ -1797,7 +1797,7 @@ object optimize {
         if (!opt.material.IsDrawn()) {
             return false
         }
-        p.oSet(idVec3(x, y, z))
+        p.set(idVec3(x, y, z))
         tri = opt.triList
         while (tri != null) {
             b.Clear()
@@ -1829,7 +1829,7 @@ object optimize {
         opt.nextGroup = oldNext
 
         // create the 2D vectors
-        dmap.dmapGlobals.mapPlanes.oGet(opt.planeNum).Normal().NormalVectors(opt.axis[0], opt.axis[1])
+        dmap.dmapGlobals.mapPlanes.get(opt.planeNum).Normal().NormalVectors(opt.axis[0], opt.axis[1])
         optimize.AddOriginalEdges(opt)
         optimize.SplitOriginalEdgesAtCrossings(opt)
 

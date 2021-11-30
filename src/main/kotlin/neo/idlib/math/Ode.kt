@@ -1,5 +1,7 @@
 package neo.idlib.math
 
+import kotlin.math.abs
+
 /*
  ===============================================================================
 
@@ -11,7 +13,7 @@ class Ode {
     abstract class deriveFunction_t {
         abstract fun run(
             t: Float,
-            userData: Any?,
+            userData: Any,
             state: FloatArray,
             derivatives: FloatArray
         ) //TODO:quadruple check the pointers
@@ -23,14 +25,14 @@ class Ode {
     //
     //===============================================================
     abstract class idODE {
-        protected var derive // derive function
-                : deriveFunction_t? = null
+        protected lateinit var derive // derive function
+                : deriveFunction_t
 
         //public					~idODE( void ) {}
         protected var dimension // dimension in floats allocated for
                 = 0
-        protected var userData // client data
-                : Any? = null
+        protected lateinit var userData // client data
+                : Any
 
         abstract fun Evaluate(state: FloatArray, newState: FloatArray, t0: Float, t1: Float): Float
     }
@@ -46,8 +48,8 @@ class Ode {
 
         //	virtual				~idODE_Euler( void );
         override fun Evaluate(
-            state: FloatArray?,
-            newState: FloatArray?,
+            state: FloatArray,
+            newState: FloatArray,
             t0: Float,
             t1: Float
         ): Float { //TODO:replace float[] input with rigidBodyIState_s.
@@ -57,14 +59,12 @@ class Ode {
             delta = t1 - t0
             i = 0
             while (i < dimension) {
-                newState.get(i) = state.get(i) + delta * derivatives.get(i)
+                newState[i] = state[i] + delta * derivatives[i]
                 i++
             }
             return delta
         }
 
-        //
-        //
         init {
             dimension = dim
             derivatives = FloatArray(dim)
@@ -78,13 +78,13 @@ class Ode {
     //	idODE_Midpoint
     //
     //===============================================================
-    internal inner class idODE_Midpoint(dim: Int, dr: deriveFunction_t?, ud: Any?) : idODE() {
+    internal inner class idODE_Midpoint(dim: Int, dr: deriveFunction_t, ud: Any) : idODE() {
         protected var derivatives // space to store derivatives
-                : FloatArray?
-        protected var tmpState: FloatArray?
+                : FloatArray
+        protected var tmpState: FloatArray
 
         //public	virtual				~idODE_Midpoint( void );
-        override fun Evaluate(state: FloatArray?, newState: FloatArray?, t0: Float, t1: Float): Float {
+        override fun Evaluate(state: FloatArray, newState: FloatArray, t0: Float, t1: Float): Float {
             val delta: Float
             val halfDelta: Float
             var i: Int
@@ -94,14 +94,14 @@ class Ode {
             derive.run(t0, userData, state, derivatives)
             i = 0
             while (i < dimension) {
-                tmpState.get(i) = state.get(i) + halfDelta * derivatives.get(i)
+                tmpState[i] = state[i] + halfDelta * derivatives[i]
                 i++
             }
             // second step
             derive.run(t0 + halfDelta, userData, tmpState, derivatives)
             i = 0
             while (i < dimension) {
-                newState.get(i) = state.get(i) + delta * derivatives.get(i)
+                newState[i] = state[i] + delta * derivatives[i]
                 i++
             }
             return delta
@@ -123,16 +123,16 @@ class Ode {
     //	idODE_RK4
     //
     //===============================================================
-    internal inner class idODE_RK4(dim: Int, dr: deriveFunction_t?, ud: Any?) : idODE() {
+    internal inner class idODE_RK4(dim: Int, dr: deriveFunction_t, ud: Any) : idODE() {
         protected var d1 // derivatives
-                : FloatArray?
-        protected var d2: FloatArray?
-        protected var d3: FloatArray?
-        protected var d4: FloatArray?
-        protected var tmpState: FloatArray?
+                : FloatArray
+        protected var d2: FloatArray
+        protected var d3: FloatArray
+        protected var d4: FloatArray
+        protected var tmpState: FloatArray
 
         //	virtual				~idODE_RK4( void );//TODO:experiment with overriding finalize
-        override fun Evaluate(state: FloatArray?, newState: FloatArray?, t0: Float, t1: Float): Float {
+        override fun Evaluate(state: FloatArray, newState: FloatArray, t0: Float, t1: Float): Float {
             val delta: Float
             val halfDelta: Float
             val sixthDelta: Float
@@ -143,21 +143,21 @@ class Ode {
             derive.run(t0, userData, state, d1)
             i = 0
             while (i < dimension) {
-                tmpState.get(i) = state.get(i) + halfDelta * d1.get(i)
+                tmpState[i] = state[i] + halfDelta * d1[i]
                 i++
             }
             // second step
             derive.run(t0 + halfDelta, userData, tmpState, d2)
             i = 0
             while (i < dimension) {
-                tmpState.get(i) = state.get(i) + halfDelta * d2.get(i)
+                tmpState[i] = state[i] + halfDelta * d2[i]
                 i++
             }
             // third step
             derive.run(t0 + halfDelta, userData, tmpState, d3)
             i = 0
             while (i < dimension) {
-                tmpState.get(i) = state.get(i) + delta * d3.get(i)
+                tmpState[i] = state[i] + delta * d3[i]
                 i++
             }
             // fourth step
@@ -165,7 +165,7 @@ class Ode {
             sixthDelta = delta * (1.0f / 6.0f)
             i = 0
             while (i < dimension) {
-                newState.get(i) = state.get(i) + sixthDelta * (d1.get(i) + 2.0f * (d2.get(i) + d3.get(i)) + d4.get(i))
+                newState[i] = state[i] + sixthDelta * (d1[i] + 2.0f * (d2[i] + d3[i]) + d4[i])
                 i++
             }
             return delta
@@ -190,19 +190,19 @@ class Ode {
     //	idODE_RK4Adaptive
     //
     //===============================================================
-    internal inner class idODE_RK4Adaptive(dim: Int, dr: deriveFunction_t?, ud: Any?) : idODE() {
+    internal inner class idODE_RK4Adaptive(dim: Int, dr: deriveFunction_t, ud: Any) : idODE() {
         protected var d1 // derivatives
-                : FloatArray?
-        protected var d1half: FloatArray?
-        protected var d2: FloatArray?
-        protected var d3: FloatArray?
-        protected var d4: FloatArray?
+                : FloatArray
+        protected var d1half: FloatArray
+        protected var d2: FloatArray
+        protected var d3: FloatArray
+        protected var d4: FloatArray
         protected var maxError // maximum allowed error
                 : Float
-        protected var tmpState: FloatArray?
+        protected var tmpState: FloatArray
 
         //	virtual				~idODE_RK4Adaptive( void );
-        override fun Evaluate(state: FloatArray?, newState: FloatArray?, t0: Float, t1: Float): Float {
+        override fun Evaluate(state: FloatArray, newState: FloatArray, t0: Float, t1: Float): Float {
             var delta: Float
             var halfDelta: Float
             var fourthDelta: Float
@@ -221,21 +221,21 @@ class Ode {
                 derive.run(t0, userData, state, d1)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + fourthDelta * d1.get(i)
+                    tmpState[i] = state[i] + fourthDelta * d1[i]
                     i++
                 }
                 // second step of first half delta
                 derive.run(t0 + fourthDelta, userData, tmpState, d2)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + fourthDelta * d2.get(i)
+                    tmpState[i] = state[i] + fourthDelta * d2[i]
                     i++
                 }
                 // third step of first half delta
                 derive.run(t0 + fourthDelta, userData, tmpState, d3)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + halfDelta * d3.get(i)
+                    tmpState[i] = state[i] + halfDelta * d3[i]
                     i++
                 }
                 // fourth step of first half delta
@@ -243,8 +243,8 @@ class Ode {
                 sixthDelta = halfDelta * (1.0f / 6.0f)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) =
-                        state.get(i) + sixthDelta * (d1.get(i) + 2.0f * (d2.get(i) + d3.get(i)) + d4.get(i))
+                    tmpState[i] =
+                        state[i] + sixthDelta * (d1[i] + 2.0f * (d2[i] + d3[i]) + d4[i])
                     i++
                 }
 
@@ -252,21 +252,21 @@ class Ode {
                 derive.run(t0 + halfDelta, userData, tmpState, d1half)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + fourthDelta * d1half.get(i)
+                    tmpState[i] = state[i] + fourthDelta * d1half[i]
                     i++
                 }
                 // second step of second half delta
                 derive.run(t0 + halfDelta + fourthDelta, userData, tmpState, d2)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + fourthDelta * d2.get(i)
+                    tmpState[i] = state[i] + fourthDelta * d2[i]
                     i++
                 }
                 // third step of second half delta
                 derive.run(t0 + halfDelta + fourthDelta, userData, tmpState, d3)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + halfDelta * d3.get(i)
+                    tmpState[i] = state[i] + halfDelta * d3[i]
                     i++
                 }
                 // fourth step of second half delta
@@ -274,29 +274,29 @@ class Ode {
                 sixthDelta = halfDelta * (1.0f / 6.0f)
                 i = 0
                 while (i < dimension) {
-                    newState.get(i) =
-                        state.get(i) + sixthDelta * (d1.get(i) + 2.0f * (d2.get(i) + d3.get(i)) + d4.get(i))
+                    newState[i] =
+                        state[i] + sixthDelta * (d1[i] + 2.0f * (d2[i] + d3[i]) + d4[i])
                     i++
                 }
 
                 // first step of full delta
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + halfDelta * d1.get(i)
+                    tmpState[i] = state[i] + halfDelta * d1[i]
                     i++
                 }
                 // second step of full delta
                 derive.run(t0 + halfDelta, userData, tmpState, d2)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + halfDelta * d2.get(i)
+                    tmpState[i] = state[i] + halfDelta * d2[i]
                     i++
                 }
                 // third step of full delta
                 derive.run(t0 + halfDelta, userData, tmpState, d3)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) = state.get(i) + delta * d3.get(i)
+                    tmpState[i] = state[i] + delta * d3[i]
                     i++
                 }
                 // fourth step of full delta
@@ -304,8 +304,8 @@ class Ode {
                 sixthDelta = delta * (1.0f / 6.0f)
                 i = 0
                 while (i < dimension) {
-                    tmpState.get(i) =
-                        state.get(i) + sixthDelta * (d1.get(i) + 2.0f * (d2.get(i) + d3.get(i)) + d4.get(i))
+                    tmpState[i] =
+                        state[i] + sixthDelta * (d1[i] + 2.0f * (d2[i] + d3[i]) + d4[i])
                     i++
                 }
 
@@ -313,7 +313,7 @@ class Ode {
                 max = 0.0f
                 i = 0
                 while (i < dimension) {
-                    error = Math.abs((newState.get(i) - tmpState.get(i)) / (delta * d1.get(i) + 1e-10f))
+                    error = abs((newState[i] - tmpState[i]) / (delta * d1[i] + 1e-10f))
                     if (error > max) {
                         max = error
                     }

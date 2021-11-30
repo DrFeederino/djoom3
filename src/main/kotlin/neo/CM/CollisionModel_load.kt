@@ -41,7 +41,7 @@ object CollisionModel_load {
         var forceSplit = false
         i = 0
         while (i < 3) {
-            size[i] = bounds.oGet(1, i) - bounds.oGet(0, i)
+            size[i] = bounds.get(1, i) - bounds.get(0, i)
             axis[i] = i
             i++
         }
@@ -90,14 +90,14 @@ object CollisionModel_load {
                 while (bref != null) {
                     j = 0
                     while (j < 2) {
-                        dist = bref.b!!.bounds.oGet(j, type)
+                        dist = bref.b!!.bounds.get(j, type)
                         // if the splitter is already used or outside node bounds
-                        if (dist >= bounds.oGet(1, type) || dist <= bounds.oGet(0, type)) {
+                        if (dist >= bounds.get(1, type) || dist <= bounds.get(0, type)) {
                             j++
                             continue
                         }
                         // find the most centered splitter
-                        t = Math.abs(bounds.oGet(1, type) - dist - (dist - bounds.oGet(0, type)))
+                        t = Math.abs(bounds.get(1, type) - dist - (dist - bounds.get(0, type)))
                         if (t < bestt) {
                             bestt = t
                             planeType._val = (type)
@@ -117,14 +117,14 @@ object CollisionModel_load {
                 while (pref != null) {
                     j = 0
                     while (j < 2) {
-                        dist = pref.p!!.bounds.oGet(j, type)
+                        dist = pref.p!!.bounds.get(j, type)
                         // if the splitter is already used or outside node bounds
-                        if (dist >= bounds.oGet(1, type) || dist <= bounds.oGet(0, type)) {
+                        if (dist >= bounds.get(1, type) || dist <= bounds.get(0, type)) {
                             j++
                             continue
                         }
                         // find the most centered splitter
-                        t = Math.abs(bounds.oGet(1, type) - dist - (dist - bounds.oGet(0, type)))
+                        t = Math.abs(bounds.get(1, type) - dist - (dist - bounds.get(0, type)))
                         if (t < bestt) {
                             bestt = t
                             planeType._val = (type)
@@ -143,11 +143,11 @@ object CollisionModel_load {
                     return true
                 }
                 // don't create splitters real close to the bounds
-                if (bounds.oGet(
+                if (bounds.get(
                         1,
                         type
                     ) - planeDist._val > Companion.MIN_NODE_SIZE * 0.5f
-                    && planeDist._val - bounds.oGet(
+                    && planeDist._val - bounds.get(
                         0,
                         type
                     ) > Companion.MIN_NODE_SIZE * 0.5f
@@ -167,10 +167,10 @@ object CollisionModel_load {
      */
     fun CM_R_InsideAllChildren(node: cm_node_s, bounds: idBounds): Boolean {
         if (node.planeType != -1) {
-            if (bounds.oGet(0, node.planeType) >= node.planeDist) {
+            if (bounds.get(0, node.planeType) >= node.planeDist) {
                 return false
             }
-            if (bounds.oGet(1, node.planeType) <= node.planeDist) {
+            if (bounds.get(1, node.planeType) <= node.planeDist) {
                 return false
             }
             return if (!CM_R_InsideAllChildren(node.children[0]!!, bounds)) {
@@ -251,14 +251,14 @@ object CollisionModel_load {
         while (true) {
             pref = currentNode.polygons
             while (pref != null) {
-                bounds.AddPoint(pref.p!!.bounds.oGet(0))
-                bounds.AddPoint(pref.p!!.bounds.oGet(1))
+                bounds.AddPoint(pref.p!!.bounds.get(0))
+                bounds.AddPoint(pref.p!!.bounds.get(1))
                 pref = pref.next
             }
             bref = currentNode.brushes
             while (bref != null) {
-                bounds.AddPoint(bref.b!!.bounds.oGet(0))
-                bounds.AddPoint(bref.b!!.bounds.oGet(1))
+                bounds.AddPoint(bref.b!!.bounds.get(0))
+                bounds.AddPoint(bref.b!!.bounds.get(1))
                 bref = bref.next
             }
             if (currentNode.planeType == -1) {

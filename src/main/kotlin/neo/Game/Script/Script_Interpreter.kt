@@ -333,7 +333,7 @@ object Script_Interpreter {
                     )
                     else -> Error("Invalid arg format string for '%s' event.", evdef.GetName())
                 }
-                pos += func.parmSize.oGet(j++)
+                pos += func.parmSize.get(j++)
                 i++
             }
             popParms = argsize
@@ -403,7 +403,7 @@ object Script_Interpreter {
                     )
                     else -> Error("Invalid arg format string for '%s' event.", evdef.GetName())
                 }
-                pos += func.parmSize.oGet(j++)
+                pos += func.parmSize.get(j++)
                 i++
             }
 
@@ -906,7 +906,7 @@ object Script_Interpreter {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
                         var_c = GetVariable(st.c)
-                        var_c.setVectorPtr(var_a.getVectorPtr().oMinus(var_b.getVectorPtr()))
+                        var_c.setVectorPtr(var_a.getVectorPtr().minus(var_b.getVectorPtr()))
                     }
                     Script_Compiler.OP_MUL_F -> {
                         var_a = GetVariable(st.a)
@@ -930,7 +930,7 @@ object Script_Interpreter {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
                         var_c = GetVariable(st.c)
-                        var_c.getVectorPtr().oSet(var_a.getVectorPtr().times(var_b.getFloatPtr()))
+                        var_c.getVectorPtr().set(var_a.getVectorPtr().times(var_b.getFloatPtr()))
                     }
                     Script_Compiler.OP_DIV_F -> {
                         var_a = GetVariable(st.a)
@@ -1163,7 +1163,7 @@ object Script_Interpreter {
                     Script_Compiler.OP_USUB_V -> {
                         var_a = GetVariable(st.a)
                         var_b = GetVariable(st.b)
-                        var_b.setVectorPtr(var_b.getVectorPtr().oMinus(var_a.getVectorPtr()))
+                        var_b.setVectorPtr(var_b.getVectorPtr().minus(var_a.getVectorPtr()))
                     }
                     Script_Compiler.OP_UMUL_F -> {
                         var_a = GetVariable(st.a)

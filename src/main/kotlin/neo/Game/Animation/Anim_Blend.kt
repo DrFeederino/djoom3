@@ -236,7 +236,7 @@ object Anim_Blend {
 
         fun GetOriginRotation(rotation: idQuat?, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
             if (null == anims.get(animNum)) {
-                rotation.Set(0.0f, 0.0f, 0.0f, 1.0f)
+                rotation.set(0.0f, 0.0f, 0.0f, 1.0f)
                 return false
             }
             anims.get(animNum).GetOriginRotation(rotation, currentTime, cyclecount)
@@ -1129,7 +1129,7 @@ object Anim_Blend {
             }
             Collections.copy(jointParents, def.jointParents)
             Collections.copy(joints, def.joints)
-            offset.oSet(def.offset)
+            offset.set(def.offset)
             modelHandle = def.modelHandle
         }
 
@@ -1467,7 +1467,7 @@ object Anim_Blend {
 
 
             // get the bounds of the default pose
-            frameBounds.oSet(modelHandle.Bounds(null))
+            frameBounds.set(modelHandle.Bounds(null))
             return list
         }
 
@@ -1710,7 +1710,7 @@ object Anim_Blend {
         private fun CopyDecl(decl: idDeclModelDef?) {
             var i: Int
             FreeData()
-            offset.oSet(decl.offset)
+            offset.set(decl.offset)
             modelHandle = decl.modelHandle
             skin = decl.skin
 
@@ -2240,7 +2240,7 @@ object Anim_Blend {
                     }
                 }
                 if (anim.GetAnimFlags().anim_turn) {
-                    jointFrame.get(0).q.Set(-0.70710677f, 0.0f, 0.0f, 0.70710677f)
+                    jointFrame.get(0).q.set(-0.70710677f, 0.0f, 0.0f, 0.70710677f)
                 }
             }
             if (0f == blendWeight.getVal()) {
@@ -2251,8 +2251,8 @@ object Anim_Blend {
                     i = 0
                     while (i < num) {
                         val j: Int = index.get(i)
-                        blendFrame.get(j).t.oSet(jointFrame.get(j).t)
-                        blendFrame.get(j).q.oSet(jointFrame.get(j).q)
+                        blendFrame.get(j).t.set(jointFrame.get(j).t)
+                        blendFrame.get(j).q.set(jointFrame.get(j).q)
                         i++
                     }
                 }
@@ -2322,11 +2322,11 @@ object Anim_Blend {
                 i++
             }
             if (0f == blendWeight.getVal()) {
-                blendPos.oSet(pos)
+                blendPos.set(pos)
                 blendWeight.setVal(weight)
             } else {
                 lerp = weight / (blendWeight.getVal() + weight)
-                blendPos.plusAssign(pos.oMinus(blendPos).oMultiply(lerp))
+                blendPos.plusAssign(pos.minus(blendPos).oMultiply(lerp))
                 blendWeight.setVal(blendWeight.getVal() + weight)
             }
         }
@@ -2365,13 +2365,13 @@ object Anim_Blend {
                 pos2.plusAssign(animpos.times(animWeights.get(i)))
                 i++
             }
-            delta.oSet(pos2.oMinus(pos1))
+            delta.set(pos2.minus(pos1))
             if (0f == blendWeight.getVal()) {
-                blendDelta.oSet(delta)
+                blendDelta.set(delta)
                 blendWeight.setVal(weight)
             } else {
                 lerp = weight / (blendWeight.getVal() + weight)
-                blendDelta.plusAssign(delta.oMinus(blendDelta).oMultiply(lerp))
+                blendDelta.plusAssign(delta.minus(blendDelta).oMultiply(lerp))
                 blendWeight.setVal(blendWeight.getVal() + weight)
             }
         }
@@ -2402,8 +2402,8 @@ object Anim_Blend {
             if (time2 < time1) {
                 time2 += Length()
             }
-            q1.Set(0.0f, 0.0f, 0.0f, 1.0f)
-            q2.Set(0.0f, 0.0f, 0.0f, 1.0f)
+            q1.set(0.0f, 0.0f, 0.0f, 1.0f)
+            q2.set(0.0f, 0.0f, 0.0f, 1.0f)
             mixWeight = 0.0f
             num = anim.NumAnims()
             i = 0
@@ -2423,9 +2423,9 @@ object Anim_Blend {
                 }
                 i++
             }
-            q3.oSet(q1.Inverse().oMultiply(q2))
+            q3.set(q1.Inverse().times(q2))
             if (0f == blendWeight.getVal()) {
-                blendDelta.oSet(q3)
+                blendDelta.set(q3)
                 blendWeight.setVal(weight)
             } else {
                 lerp = weight / (blendWeight.getVal() + weight)
@@ -3552,7 +3552,7 @@ object Anim_Blend {
                 }
             }
             return if (blendWeight.getVal() > 0.0f) {
-                delta.oSet(q.ToMat3())
+                delta.set(q.ToMat3())
                 true
             } else {
                 delta.Identity()
@@ -3597,7 +3597,7 @@ object Anim_Blend {
                 return false
             }
             count = if (AFPoseJoints.size != 0) {
-                bounds.oSet(AFPoseBounds)
+                bounds.set(AFPoseBounds)
                 1
             } else {
                 bounds.Clear()
@@ -3616,7 +3616,7 @@ object Anim_Blend {
             }
             if (0 == count) {
                 return if (!frameBounds.IsCleared()) {
-                    bounds.oSet(frameBounds)
+                    bounds.set(frameBounds)
                     true
                 } else {
                     bounds.Zero()
@@ -3625,26 +3625,26 @@ object Anim_Blend {
             }
             bounds.TranslateSelf(modelDef.GetVisualOffset())
             if (SysCvar.g_debugBounds.GetBool()) {
-                if (bounds.oGet(1, 0) - bounds.oGet(0, 0) > 2048 || bounds.oGet(1, 1) - bounds.oGet(0, 1) > 2048) {
+                if (bounds.get(1, 0) - bounds.get(0, 0) > 2048 || bounds.get(1, 1) - bounds.get(0, 1) > 2048) {
                     if (entity != null) {
                         Game_local.gameLocal.Warning(
                             "big frameBounds on entity '%s' with model '%s': %f,%f",
                             entity.name,
                             modelDef.ModelHandle().Name(),
-                            bounds.oGet(1, 0) - bounds.oGet(0, 0),
-                            bounds.oGet(1, 1) - bounds.oGet(0, 1)
+                            bounds.get(1, 0) - bounds.get(0, 0),
+                            bounds.get(1, 1) - bounds.get(0, 1)
                         )
                     } else {
                         Game_local.gameLocal.Warning(
                             "big frameBounds on model '%s': %f,%f",
                             modelDef.ModelHandle().Name(),
-                            bounds.oGet(1, 0) - bounds.oGet(0, 0),
-                            bounds.oGet(1, 1) - bounds.oGet(0, 1)
+                            bounds.get(1, 0) - bounds.get(0, 0),
+                            bounds.get(1, 1) - bounds.get(0, 1)
                         )
                     }
                 }
             }
-            frameBounds.oSet(bounds)
+            frameBounds.set(bounds)
             return true
         }
 
@@ -3769,7 +3769,7 @@ object Anim_Blend {
                     jointMods.set(i, jointMod)
                 }
             }
-            jointMod.pos.oSet(pos)
+            jointMod.pos.set(pos)
             jointMod.transform_pos = transform_type
             if (entity != null) {
                 entity.BecomeActive(Entity.TH_ANIMATE)
@@ -3805,7 +3805,7 @@ object Anim_Blend {
                     jointMods.set(i, jointMod)
                 }
             }
-            jointMod.mat.oSet(mat)
+            jointMod.mat.set(mat)
             jointMod.transform_axis = transform_type
             if (entity != null) {
                 entity.BecomeActive(Entity.TH_ANIMATE)
@@ -3875,8 +3875,8 @@ object Anim_Blend {
                 AFPoseJointMods.set(jointNum, idAFPoseJointMod())
             }
             AFPoseJointMods.get(jointNum).mod = mod
-            AFPoseJointMods.get(jointNum).axis.oSet(axis)
-            AFPoseJointMods.get(jointNum).origin.oSet(origin)
+            AFPoseJointMods.get(jointNum).axis.set(axis)
+            AFPoseJointMods.get(jointNum).origin.set(origin)
             val index =
                 BinSearch.idBinSearch_GreaterEqual<Any?>(AFPoseJoints.toTypedArray(), AFPoseJoints.size, jointNum)
             if (index >= AFPoseJoints.size || jointNum != AFPoseJoints.get(index)) {
@@ -4018,7 +4018,7 @@ object Anim_Blend {
                 }
                 i++
             }
-            AFPoseBounds.oSet(bounds)
+            AFPoseBounds.set(bounds)
             AFPoseTime = time
             ForceUpdate()
         }
@@ -4098,8 +4098,8 @@ object Anim_Blend {
                 return false
             }
             CreateFrame(currentTime, false)
-            offset.oSet(joints.get(jointHandle).ToVec3())
-            axis.oSet(joints.get(jointHandle).ToMat3())
+            offset.set(joints.get(jointHandle).ToVec3())
+            axis.set(joints.get(jointHandle).ToMat3())
             return true
         }
 
@@ -4119,14 +4119,14 @@ object Anim_Blend {
             // FIXME: overkill
             CreateFrame(currentTime, false)
             if (jointHandle == 0) {
-                offset.oSet(joints.get(jointHandle).ToVec3())
-                axis.oSet(joints.get(jointHandle).ToMat3())
+                offset.set(joints.get(jointHandle).ToVec3())
+                axis.set(joints.get(jointHandle).ToMat3())
                 return true
             }
             val m = idJointMat(joints.get(jointHandle))
             m.oDivSet(joints.get(modelJoints.get(jointHandle).parentNum))
-            offset.oSet(m.ToVec3())
-            axis.oSet(m.ToMat3())
+            offset.set(m.ToVec3())
+            axis.set(m.ToMat3())
             return true
         }
 

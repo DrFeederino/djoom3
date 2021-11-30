@@ -128,7 +128,7 @@ object GameBustOutWindow {
             }
 
             // Move the entity
-            position.oPluSet(velocity.oMultiply(timeslice))
+            position.plusAssign(velocity.oMultiply(timeslice))
 
             // Fade out the ent
             if (fadeOut) {
@@ -235,7 +235,7 @@ object GameBustOutWindow {
             isBroken = savefile.ReadBool()
             val index: Int
             index = savefile.ReadInt()
-            ent = game.entities.oGet(index)
+            ent = game.entities.get(index)
         }
 
         fun SetColor(bcolor: idVec4?) {
@@ -443,7 +443,7 @@ object GameBustOutWindow {
             savefile.WriteInt(numberOfEnts)
             i = 0
             while (i < numberOfEnts) {
-                entities.oGet(i).WriteToSaveGame(savefile)
+                entities.get(i).WriteToSaveGame(savefile)
                 i++
             }
 
@@ -452,7 +452,7 @@ object GameBustOutWindow {
             savefile.WriteInt(numberOfEnts)
             i = 0
             while (i < numberOfEnts) {
-                val ballIndex = entities.FindIndex(balls.oGet(i))
+                val ballIndex = entities.FindIndex(balls.get(i))
                 savefile.WriteInt(ballIndex)
                 i++
             }
@@ -462,7 +462,7 @@ object GameBustOutWindow {
             savefile.WriteInt(numberOfEnts)
             i = 0
             while (i < numberOfEnts) {
-                val powerIndex = entities.FindIndex(powerUps.oGet(i))
+                val powerIndex = entities.FindIndex(powerUps.get(i))
                 savefile.WriteInt(powerIndex)
                 i++
             }
@@ -478,7 +478,7 @@ object GameBustOutWindow {
                 savefile.WriteInt(numberOfEnts)
                 i = 0
                 while (i < numberOfEnts) {
-                    board.get(row).oGet(i).WriteToSaveGame(savefile)
+                    board.get(row).get(i).WriteToSaveGame(savefile)
                     i++
                 }
                 row++
@@ -532,7 +532,7 @@ object GameBustOutWindow {
             while (i < numberOfEnts) {
                 var ballIndex: Int
                 ballIndex = savefile.ReadInt()
-                balls.Append(entities.oGet(ballIndex))
+                balls.Append(entities.get(ballIndex))
                 i++
             }
 
@@ -542,7 +542,7 @@ object GameBustOutWindow {
             while (i < numberOfEnts) {
                 var powerIndex: Int
                 powerIndex = savefile.ReadInt()
-                balls.Append(entities.oGet(powerIndex))
+                balls.Append(entities.get(powerIndex))
                 i++
             }
 
@@ -601,7 +601,7 @@ object GameBustOutWindow {
             UpdateGame()
             i = entities.Num() - 1
             while (i >= 0) {
-                entities.oGet(i).Draw(dc)
+                entities.get(i).Draw(dc)
                 i--
             }
         }
@@ -690,7 +690,7 @@ object GameBustOutWindow {
             while (i < BOARD_ROWS) {
                 j = 0
                 while (j < board.get(i).Num()) {
-                    val brick = board.get(i).oGet(j)
+                    val brick = board.get(i).get(j)
                     brick.ent.removed = true
                     j++
                 }
@@ -701,14 +701,14 @@ object GameBustOutWindow {
 
         private fun ClearPowerups() {
             while (powerUps.Num() != 0) {
-                powerUps.oGet(0).removed = true
+                powerUps.get(0).removed = true
                 powerUps.RemoveIndex(0)
             }
         }
 
         private fun ClearBalls() {
             while (balls.Num() != 0) {
-                balls.oGet(0).removed = true
+                balls.get(0).removed = true
                 balls.RemoveIndex(0)
             }
             ballsInPlay = 0
@@ -827,15 +827,15 @@ object GameBustOutWindow {
                 UpdatePowerups()
                 i = 0
                 while (i < entities.Num()) {
-                    entities.oGet(i).Update(timeSlice, gui.GetTime())
+                    entities.get(i).Update(timeSlice, gui.GetTime())
                     i++
                 }
 
                 // Delete entities that need to be deleted
                 i = entities.Num() - 1
                 while (i >= 0) {
-                    if (entities.oGet(i).removed) {
-                        val ent = entities.oGet(i)
+                    if (entities.get(i).removed) {
+                        val ent = entities.get(i)
                         //				delete ent;
                         entities.RemoveIndex(i)
                     }
@@ -851,7 +851,7 @@ object GameBustOutWindow {
         private fun UpdatePowerups() {
             val pos = idVec2()
             for (i in 0 until powerUps.Num()) {
-                val pUp = powerUps.oGet(i)
+                val pUp = powerUps.get(i)
 
                 // Check for powerup falling below screen
                 if (pUp.position.y > 480) {
@@ -873,8 +873,8 @@ object GameBustOutWindow {
                             var b = 0
                             while (b < 2) {
                                 ball = CreateNewBall()
-                                ball.position = balls.oGet(0).position
-                                ball.velocity = balls.oGet(0).velocity
+                                ball.position = balls.get(0).position
+                                ball.velocity = balls.get(0).velocity
                                 if (b == 0) {
                                     ball.velocity.x -= 35f
                                 } else {
@@ -930,7 +930,7 @@ object GameBustOutWindow {
             }
             ballnum = 0
             while (ballnum < balls.Num()) {
-                val ball = balls.oGet(ballnum)
+                val ball = balls.get(ballnum)
 
                 // Check for ball going below screen, lost ball
                 if (ball.position.y > 480f) {
@@ -972,7 +972,7 @@ object GameBustOutWindow {
                         }
                         ball.velocity.y = -ball.velocity.y
                         paddleVec.x += (ball.position.x - centerX) * 2
-                        ball.velocity.oPluSet(paddleVec)
+                        ball.velocity.plusAssign(paddleVec)
                         ball.velocity.NormalizeFast()
                         ball.velocity.oMulSet(ballSpeed)
                         playSoundBounce = true
@@ -991,7 +991,7 @@ object GameBustOutWindow {
                     val num = board.get(i).Num()
                     j = 0
                     while (j < num) {
-                        val brick = board.get(i).oGet(j)
+                        val brick = board.get(i).get(j)
                         collision = brick.checkCollision(ballCenter, ball.velocity)
                         if (collision != null) {
                             // Now break the brick if there was a collision
@@ -1041,7 +1041,7 @@ object GameBustOutWindow {
             // Check to see if any balls were removed from play
             ballnum = 0
             while (ballnum < balls.Num()) {
-                if (balls.oGet(ballnum).removed) {
+                if (balls.get(ballnum).removed) {
                     ballsInPlay--
                     balls.RemoveIndex(ballnum)
                 }

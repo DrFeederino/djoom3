@@ -20,275 +20,6 @@ import neo.ui.Window.idWindow
 import java.util.*
 
 neo.framework.*
-import neo.framework.Async.MsgChannel
-import neo.framework.Compressor.idCompressor
-import neo.framework.Async.MsgChannel.idMsgQueue
-import neo.sys.sys_public.idPort
-import neo.framework.File_h.idFile_BitMsg
-import neo.framework.Async.ServerScan.idServerScan
-import neo.framework.Async.AsyncNetwork
-import neo.framework.Async.ServerScan.networkServer_t
-import neo.framework.Async.ServerScan.inServer_t
-import neo.framework.Async.ServerScan.serverSort_t
-import neo.framework.Async.ServerScan.scan_state_t
-import neo.framework.Async.ServerScan
-import neo.framework.Async.ServerScan.idServerScan.Cmp
-import neo.framework.Async.MsgChannel.idMsgChannel
-import neo.framework.Async.AsyncClient.clientState_t
-import neo.framework.Async.AsyncClient.pakDlEntry_t
-import neo.framework.FileSystem_h.dlMime_t
-import neo.framework.Async.AsyncClient.clientUpdateState_t
-import neo.framework.Async.AsyncClient.idAsyncClient.HandleGuiCommand
-import neo.framework.Session.msgBoxType_t
-import neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE
-import neo.framework.Async.AsyncClient
-import neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_RELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_PRINT
-import neo.framework.Async.AsyncClient.authKeyMsg_t
-import neo.framework.Async.AsyncClient.authBadKeyStatus_t
-import neo.framework.FileSystem_h.fsPureReply_t
-import neo.framework.File_h.idFile_Permanent
-import neo.framework.FileSystem_h.dlStatus_t
-import neo.framework.Async.AsyncNetwork.SERVER_DL
-import neo.framework.Async.AsyncNetwork.SERVER_PAK
-import neo.framework.Session.HandleGuiCommand_t
-import neo.framework.Async.AsyncServer.authReply_t
-import neo.framework.Async.AsyncServer.authReplyMsg_t
-import neo.framework.Async.AsyncServer.authState_t
-import neo.framework.Async.AsyncServer.serverClientState_t
-import neo.framework.Async.AsyncServer.idAsyncServer
-import neo.framework.Async.AsyncServer.challenge_s
-import neo.framework.Async.AsyncServer
-import neo.framework.Async.AsyncServer.serverClient_s
-import neo.framework.FileSystem_h.findFile_t
-import neo.framework.Async.AsyncServer.RConRedirect
-import neo.framework.Async.AsyncClient.idAsyncClient
-import neo.framework.Async.AsyncNetwork.master_s
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.SpawnServer_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.Connect_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.Reconnect_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.GetServerInfo_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.GetLANServers_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.ListServers_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.RemoteConsole_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.Heartbeat_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.Kick_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.CheckNewVersion_f
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork.UpdateUI_f
-import neo.framework.UsercmdGen.inhibit_t
-import neo.framework.Unzip.tm_unz
-import neo.framework.Common.version_s
-import kotlin.jvm.Volatile
-import neo.framework.Common.idCommonLocal
-import neo.framework.Common.ListHash
-import neo.idlib.LangDict.idLangDict
-import neo.framework.Common.idCommonLocal.asyncStats_t
-import neo.framework.Common.errorParm_t
-import neo.framework.Common.Com_ExecMachineSpec_f
-import neo.framework.Common.Com_Error_f
-import neo.framework.Common.Com_Crash_f
-import neo.framework.Common.Com_Freeze_f
-import neo.framework.Common.Com_Quit_f
-import neo.framework.Common.Com_WriteConfig_f
-import neo.framework.Common.Com_ReloadEngine_f
-import neo.framework.Common.Com_SetMachineSpec_f
-import neo.framework.Common.Com_Editor_f
-import neo.framework.Common.Com_EditLights_f
-import neo.framework.Common.Com_EditSounds_f
-import neo.framework.Common.Com_EditDecls_f
-import neo.framework.Common.Com_EditAFs_f
-import neo.framework.Common.Com_EditParticles_f
-import neo.framework.Common.Com_EditScripts_f
-import neo.framework.Common.Com_EditGUIs_f
-import neo.framework.Common.Com_EditPDAs_f
-import neo.framework.Common.Com_ScriptDebugger_f
-import neo.framework.Common.Com_MaterialEditor_f
-import neo.framework.Common.Com_LocalizeGuis_f
-import neo.framework.Common.Com_LocalizeMaps_f
-import neo.framework.Common.Com_ReloadLanguage_f
-import neo.framework.Common.Com_LocalizeGuiParmsTest_f
-import neo.framework.Common.Com_LocalizeMapsTest_f
-import neo.framework.Common.Com_StartBuild_f
-import neo.framework.Common.Com_FinishBuild_f
-import neo.framework.Common.Com_Help_f
-import neo.framework.DeclAF.idAFVector
-import neo.framework.DeclAF.idAFVector.type
-import neo.idlib.containers.CLong
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import neo.framework.File_h.idFile_InZip
-import neo.framework.Console.idConsoleLocal
-import neo.framework.Console.idConsole
-import neo.framework.Console.Con_Clear_f
-import neo.framework.Console.Con_Dump_f
-import neo.framework.Session.Session_RescanSI_f
-import neo.framework.Session.Session_Map_f
-import neo.framework.Session.Session_DevMap_f
-import neo.framework.Session.Session_TestMap_f
-import neo.framework.Session.Sess_WritePrecache_f
-import neo.framework.Session.Session_PromptKey_f
-import neo.framework.Session.Session_DemoShot_f
-import neo.framework.Session.Session_RecordDemo_f
-import neo.framework.Session.Session_CompressDemo_f
-import neo.framework.Session.Session_StopRecordingDemo_f
-import neo.framework.Session.Session_PlayDemo_f
-import neo.framework.Session.Session_TimeDemo_f
-import neo.framework.Session_local.timeDemo_t
-import neo.framework.Session.Session_TimeDemoQuit_f
-import neo.framework.Session.Session_AVIDemo_f
-import neo.framework.Session.Session_AVIGame_f
-import neo.framework.Session.Session_AVICmdDemo_f
-import neo.framework.Session.Session_WriteCmdDemo_f
-import neo.framework.Session.Session_PlayCmdDemo_f
-import neo.framework.Session.Session_TimeCmdDemo_f
-import neo.framework.Session.Session_Disconnect_f
-import neo.framework.Session.Session_EndOfDemo_f
-import neo.framework.Session.Session_ExitCmdDemo_f
-import neo.framework.Session.Session_TestGUI_f
-import neo.framework.Session.LoadGame_f
-import neo.framework.Session.SaveGame_f
-import neo.framework.Session.TakeViewNotes_f
-import neo.framework.Session.TakeViewNotes2_f
-import neo.framework.Session.Session_Hitch_f
-import neo.framework.Session_local.idSessionLocal
-import neo.framework.Session.idSession
-import neo.framework.DeclSkin.skinMapping_t
-import neo.framework.KeyInput.keyname_t
-import neo.framework.KeyInput.idKey
-import neo.framework.KeyInput.Key_Bind_f
-import neo.framework.KeyInput.idKeyInput.ArgCompletion_KeyName
-import neo.framework.KeyInput.Key_BindUnBindTwo_f
-import neo.framework.KeyInput.Key_Unbind_f
-import neo.framework.KeyInput.Key_Unbindall_f
-import neo.framework.KeyInput.Key_ListBinds_f
-import neo.framework.CmdSystem.idCmdSystemLocal
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Boolean
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_FileName
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_ConfigName
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_SaveGame
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_DemoName
-import neo.framework.CmdSystem.idCmdSystemLocal.SystemList_f
-import neo.framework.CmdSystem.idCmdSystemLocal.RendererList_f
-import neo.framework.CmdSystem.idCmdSystemLocal.SoundList_f
-import neo.framework.CmdSystem.idCmdSystemLocal.GameList_f
-import neo.framework.CmdSystem.idCmdSystemLocal.ToolList_f
-import neo.framework.CmdSystem.idCmdSystemLocal.Exec_f
-import neo.framework.CmdSystem.idCmdSystemLocal.Vstr_f
-import neo.framework.CmdSystem.idCmdSystemLocal.Echo_f
-import neo.framework.CmdSystem.idCmdSystemLocal.Parse_f
-import neo.framework.CmdSystem.idCmdSystemLocal.Wait_f
-import neo.framework.EditField.autoComplete_s
-import neo.framework.EditField.FindMatches
-import neo.framework.EditField.FindIndexMatch
-import neo.framework.EditField.PrintMatches
-import neo.framework.EditField.PrintCvarMatches
-import neo.framework.EventLoop.idEventLoop
-import neo.framework.Compressor.idCompressor_None
-import neo.framework.Compressor.idCompressor_BitStream
-import neo.framework.Compressor.idCompressor_RunLength
-import neo.framework.Compressor.idCompressor_RunLength_ZeroBased
-import neo.framework.Compressor.idCompressor_Huffman
-import neo.framework.Compressor.idCompressor_Arithmetic
-import neo.framework.Compressor.idCompressor_LZSS
-import neo.framework.Compressor.idCompressor_LZSS_WordAligned
-import neo.framework.Compressor.idCompressor_LZW
-import neo.framework.Compressor.huffmanNode_t
-import neo.framework.Compressor.nodetype
-import neo.framework.Compressor.idCompressor_Arithmetic.acProbs_t
-import neo.framework.Compressor.idCompressor_Arithmetic.acSymbol_t
-import neo.framework.Compressor.idCompressor_Arithmetic.acProbs_s
-import neo.framework.Compressor.idCompressor_Arithmetic.acSymbol_s
-import neo.framework.Compressor.idCompressor_LZW.dictionary
-import neo.framework.CVarSystem.idCVarSystemLocal
-import neo.framework.CVarSystem.idCVarSystemLocal.Toggle_f
-import neo.framework.CVarSystem.idCVarSystemLocal.Set_f
-import neo.framework.CVarSystem.idCVarSystemLocal.SetS_f
-import neo.framework.CVarSystem.idCVarSystemLocal.SetU_f
-import neo.framework.CVarSystem.idCVarSystemLocal.SetT_f
-import neo.framework.CVarSystem.idCVarSystemLocal.SetA_f
-import neo.framework.CVarSystem.idCVarSystemLocal.Reset_f
-import neo.framework.CVarSystem.idCVarSystemLocal.Restart_f
-import neo.framework.CVarSystem.idCVarSystemLocal.show
-import neo.framework.FileSystem_h.idFileSystemLocal
-import neo.framework.UsercmdGen.idUsercmdGenLocal
-import neo.framework.UsercmdGen.userCmdString_t
-import neo.framework.UsercmdGen.usercmdButton_t
-import neo.framework.UsercmdGen.idUsercmdGen
-import neo.framework.UsercmdGen.idUsercmdGenLocal.KeyboardCallback
-import neo.framework.UsercmdGen.idUsercmdGenLocal.MouseButtonCallback
-import neo.framework.UsercmdGen.idUsercmdGenLocal.MouseCursorCallback
-import neo.framework.UsercmdGen.idUsercmdGenLocal.MouseScrollCallback
-import neo.sys.sys_public.joystickAxis_t
-import neo.framework.UsercmdGen.buttonState_t
-import org.lwjgl.glfw.GLFWCursorPosCallback
-import org.lwjgl.glfw.GLFWScrollCallback
-import org.lwjgl.glfw.GLFWMouseButtonCallback
-import org.lwjgl.glfw.GLFWKeyCallback
-import neo.framework.DeclManager.huffmanCode_s
-import neo.framework.DeclManager.huffmanNode_s
-import neo.framework.DeclManager.idDeclManagerLocal
-import java.lang.NoSuchMethodException
-import java.lang.SecurityException
-import neo.framework.DeclManager.idDeclBase
-import neo.framework.DeclManager.idDeclLocal
-import neo.framework.DeclManager.idDeclFile
-import java.lang.IllegalArgumentException
-import java.lang.reflect.InvocationTargetException
-import neo.framework.DeclManager.idDeclType
-import neo.framework.DeclManager.idDeclFolder
-import neo.framework.DeclManager.idDeclManagerLocal.ListDecls_f
-import neo.framework.DeclManager.idDeclManagerLocal.ReloadDecls_f
-import neo.framework.DeclManager.idDeclManagerLocal.TouchDecl_f
-import neo.framework.DeclManager.ListHuffmanFrequencies_f
-import neo.framework.DeclParticle.ParticleParmDesc
-import neo.framework.DeclParticle.idParticleParm
-import neo.framework.DeclParticle.prtCustomPth_t
-import neo.framework.DeclParticle.prtDirection_t
-import neo.framework.DeclParticle.prtDistribution_t
-import neo.framework.DeclParticle.prtOrientation_t
-import neo.framework.FileSystem_h.pureExclusion_s
-import neo.framework.FileSystem_h.excludeExtension
-import neo.framework.FileSystem_h.excludePathPrefixAndExtension
-import neo.framework.FileSystem_h.excludeFullName
-import neo.framework.FileSystem_h.idInitExclusions
-import neo.framework.FileSystem_h.urlDownload_s
-import neo.framework.FileSystem_h.fileDownload_s
-import neo.framework.FileSystem_h.idModList
-import neo.framework.FileSystem_h.pureExclusionFunc_t
-import neo.framework.FileSystem_h.fileInPack_s
-import neo.framework.FileSystem_h.addonInfo_t
-import neo.framework.FileSystem_h.binaryStatus_t
-import neo.framework.FileSystem_h.pureStatus_t
-import neo.framework.FileSystem_h.directory_t
-import neo.framework.FileSystem_h.searchpath_s
-import neo.framework.FileSystem_h.pack_t
-import neo.framework.FileSystem_h.idDEntry
-import neo.framework.FileSystem_h.idFileSystemLocal.BackgroundDownloadThread
-import java.nio.file.InvalidPathException
-import java.util.UUID
-import java.nio.file.Files
-import java.nio.file.LinkOption
-import neo.framework.FileSystem_h.idFileSystemLocal.Dir_f
-import neo.framework.FileSystem_h.idFileSystemLocal.DirTree_f
-import neo.framework.FileSystem_h.idFileSystemLocal.Path_f
-import neo.framework.FileSystem_h.idFileSystemLocal.TouchFile_f
-import neo.framework.FileSystem_h.idFileSystemLocal.TouchFileList_f
-import neo.framework.Session_local.fileTIME_T
-import neo.framework.Session_local.logCmd_t
-import neo.framework.Session_local.mapSpawnData_t
-import neo.framework.Session_local.idSessionLocal.cdKeyState_t
-import neo.framework.Session_menu.idListSaveGameCompare
-import java.util.stream.IntStream
-import java.util.function.IntUnaryOperator
-import java.nio.file.StandardOpenOption
-import java.util.HashSet
-import java.nio.LongBuffer
-import java.lang.StackTraceElement
-import java.lang.NoSuchFieldException
-import javax.swing.undo.CannotUndoException
-import org.junit.Before
 
 /**
  *
@@ -347,7 +78,7 @@ class MarkerWindow {
                 var i: Int
                 i = 0
                 while (i < c) {
-                    val md = markerTimes.oGet(i)
+                    val md = markerTimes.get(i)
                     if (md.rect.Contains(gui.CursorX(), gui.CursorY())) {
                         currentMarker = i
                         gui.SetStateInt("currentMarker", md.time)
@@ -406,7 +137,7 @@ class MarkerWindow {
                 val c = markerTimes.Num()
                 if (c > 0) {
                     for (i in 0 until c) {
-                        val md = markerTimes.oGet(i)
+                        val md = markerTimes.get(i)
                         if (md.rect.w == 0f) {
                             md.rect.x = r.x + r.w * (md.time.toFloat() / len) - 8
                             md.rect.y = r.y + r.h - 20
@@ -455,7 +186,7 @@ class MarkerWindow {
             }
             i = 0
             while (i < c) {
-                val md = markerTimes.oGet(i)
+                val md = markerTimes.get(i)
                 if (md.rect.Contains(gui.CursorY(), gui.CursorX())) {
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
@@ -469,7 +200,7 @@ class MarkerWindow {
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
                 } else {
-                    val md = markerTimes.oGet(currentMarker)
+                    val md = markerTimes.get(currentMarker)
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
                     gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")

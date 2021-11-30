@@ -89,7 +89,7 @@ class DeclEntityDef {
 
             // now copy over the inherited key / value pairs
             for (i in 0 until defList.Num()) {
-                dict.SetDefaults(defList.oGet(i).dict)
+                dict.SetDefaults(defList.get(i).dict)
             }
 
             // precache all referenced media

@@ -319,7 +319,7 @@ object Mover {
             move_speed = spawnArgs.GetFloat("move_speed", "0")
             spawnArgs.GetFloat("damage", "0", damage)
             this.damage = damage.getVal()
-            dest_position.oSet(GetPhysics().GetOrigin())
+            dest_position.set(GetPhysics().GetOrigin())
             dest_angles = GetPhysics().GetAxis().ToAngles()
             physicsObj.SetSelf(this)
             physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
@@ -402,7 +402,7 @@ object Mover {
             savefile.WriteInt(guiTargets.Num())
             i = 0
             while (i < guiTargets.Num()) {
-                guiTargets.oGet(i).Save(savefile)
+                guiTargets.get(i).Save(savefile)
                 i++
             }
             if (splineEnt.GetEntity() != null && splineEnt.GetEntity().GetSpline() != null) {
@@ -464,7 +464,7 @@ object Mover {
             guiTargets.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                guiTargets.oGet(i).Restore(savefile)
+                guiTargets.get(i).Restore(savefile)
                 i++
             }
             savefile.ReadBool(hasSpline)
@@ -585,7 +585,7 @@ object Mover {
         }
 
         protected fun MoveToPos(pos: idVec3?) {
-            dest_position.oSet(GetLocalCoordinates(pos))
+            dest_position.set(GetLocalCoordinates(pos))
             BeginMove(null)
         }
 
@@ -656,7 +656,7 @@ object Mover {
         protected fun SetGuiState(key: String?, `val`: String?) {
             Game_local.gameLocal.Printf("Setting %s to %s\n", key, `val`)
             for (i in 0 until guiTargets.Num()) {
-                val ent = guiTargets.oGet(i).GetEntity()
+                val ent = guiTargets.get(i).GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
@@ -705,7 +705,7 @@ object Mover {
             lastCommand = moverCommand_t.MOVER_MOVING
             move_thread = 0
             physicsObj.GetLocalOrigin(org)
-            move_delta.oSet(dest_position.oMinus(org))
+            move_delta.set(dest_position.minus(org))
             if (move_delta.Compare(Vector.getVec3_zero())) {
                 DoneMoving()
                 return
@@ -752,12 +752,12 @@ object Mover {
                 at = idPhysics.Companion.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
                 dt = move_time - at
             }
-            move_delta.oSet(move_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f)))
+            move_delta.set(move_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f)))
             move.stage = stage
             move.acceleration = at
             move.movetime = move_time - at - dt
             move.deceleration = dt
-            move.dir.oSet(move_delta)
+            move.dir.set(move_delta)
             ProcessEvent(Mover.EV_ReachedPos)
         }
 
@@ -829,37 +829,37 @@ object Mover {
         private fun VectorForDir(dir: Float, vec: idVec3?) {
             val ang = idAngles()
             when (dir.toInt()) {
-                DIR_UP -> vec.Set(0f, 0f, 1f)
-                DIR_DOWN -> vec.Set(0f, 0f, -1f)
+                DIR_UP -> vec.set(0f, 0f, 1f)
+                DIR_DOWN -> vec.set(0f, 0f, -1f)
                 DIR_LEFT -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.pitch = 0f
                     ang.roll = 0f
                     ang.yaw += 90f
-                    vec.oSet(ang.ToForward())
+                    vec.set(ang.ToForward())
                 }
                 DIR_RIGHT -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.pitch = 0f
                     ang.roll = 0f
                     ang.yaw -= 90f
-                    vec.oSet(ang.ToForward())
+                    vec.set(ang.ToForward())
                 }
                 DIR_FORWARD -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.pitch = 0f
                     ang.roll = 0f
-                    vec.oSet(ang.ToForward())
+                    vec.set(ang.ToForward())
                 }
                 DIR_BACK -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.pitch = 0f
                     ang.roll = 0f
                     ang.yaw += 180f
-                    vec.oSet(ang.ToForward())
+                    vec.set(ang.ToForward())
                 }
-                DIR_REL_UP -> vec.Set(0f, 0f, 1f)
-                DIR_REL_DOWN -> vec.Set(0f, 0f, -1f)
+                DIR_REL_UP -> vec.set(0f, 0f, 1f)
+                DIR_REL_DOWN -> vec.set(0f, 0f, -1f)
                 DIR_REL_LEFT -> {
                     physicsObj.GetLocalAngles(ang)
                     ang.ToVectors(null, vec)
@@ -871,15 +871,15 @@ object Mover {
                 }
                 DIR_REL_FORWARD -> {
                     physicsObj.GetLocalAngles(ang)
-                    vec.oSet(ang.ToForward())
+                    vec.set(ang.ToForward())
                 }
                 DIR_REL_BACK -> {
                     physicsObj.GetLocalAngles(ang)
-                    vec.oSet(ang.ToForward().times(-1f))
+                    vec.set(ang.ToForward().times(-1f))
                 }
                 else -> {
-                    ang.Set(0f, dir, 0f)
-                    vec.oSet(GetWorldVector(ang.ToForward()))
+                    ang.set(0f, dir, 0f)
+                    vec.set(GetWorldVector(ang.ToForward()))
                 }
             }
         }
@@ -1112,12 +1112,12 @@ object Mover {
             if (null == ent.value) {
                 Game_local.gameLocal.Warning("Entity not found")
             }
-            dest_position.oSet(GetLocalCoordinates(ent.value.GetPhysics().GetOrigin()))
+            dest_position.set(GetLocalCoordinates(ent.value.GetPhysics().GetOrigin()))
             BeginMove(idThread.Companion.CurrentThread())
         }
 
         private fun Event_MoveToPos(pos: idEventArg<idVec3?>?) {
-            dest_position.oSet(GetLocalCoordinates(pos.value))
+            dest_position.set(GetLocalCoordinates(pos.value))
             BeginMove(null)
         }
 
@@ -1126,7 +1126,7 @@ object Mover {
             val org = idVec3()
             physicsObj.GetLocalOrigin(org)
             VectorForDir(angle.value, dir)
-            dest_position.oSet(org.oPlus(dir.times(distance.value)))
+            dest_position.set(org.oPlus(dir.times(distance.value)))
             BeginMove(idThread.Companion.CurrentThread())
         }
 
@@ -1138,7 +1138,7 @@ object Mover {
             if (time.value < 0) {
                 idGameLocal.Companion.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.")
             }
-            dir.oSet(physicsObj.GetLinearVelocity())
+            dir.set(physicsObj.GetLinearVelocity())
             v = dir.Normalize()
 
             // if not moving already
@@ -1177,7 +1177,7 @@ object Mover {
             if (time.value < 0) {
                 idGameLocal.Companion.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.")
             }
-            dir.oSet(physicsObj.GetLinearVelocity())
+            dir.set(physicsObj.GetLinearVelocity())
             v = dir.Normalize()
 
             // if not moving already
@@ -1215,8 +1215,8 @@ object Mover {
                 idGameLocal.Companion.Error("Invalid axis")
             }
             physicsObj.GetLocalAngles(ang)
-            dest_angles.oSet(axis, angle.value)
-            if (dest_angles.oGet(axis) > ang.oGet(axis)) {
+            dest_angles.set(axis, angle.value)
+            if (dest_angles.get(axis) > ang.get(axis)) {
                 dest_angles.minusAssign(axis, 360f)
             }
             BeginRotation(idThread.Companion.CurrentThread(), true)
@@ -1229,15 +1229,15 @@ object Mover {
                 idGameLocal.Companion.Error("Invalid axis")
             }
             physicsObj.GetLocalAngles(ang)
-            dest_angles.oSet(axis, angle.value)
-            if (dest_angles.oGet(axis) < ang.oGet(axis)) {
+            dest_angles.set(axis, angle.value)
+            if (dest_angles.get(axis) < ang.get(axis)) {
                 dest_angles.plusAssign(axis, 360f)
             }
             BeginRotation(idThread.Companion.CurrentThread(), true)
         }
 
         private fun Event_RotateTo(angles: idEventArg<idAngles?>?) {
-            dest_angles.oSet(angles.value)
+            dest_angles.set(angles.value)
             BeginRotation(idThread.Companion.CurrentThread(), true)
         }
 
@@ -1283,7 +1283,7 @@ object Mover {
             physicsObj.GetLocalAngles(ang)
             assert(speed.value > 0.0f)
             duration =
-                idMath.Sqrt(depth.oGet(0) * depth.oGet(0) + depth.oGet(1) * depth.oGet(1) + depth.oGet(2) * depth.oGet(2)) / speed.value
+                idMath.Sqrt(depth.get(0) * depth.get(0) + depth.get(1) * depth.get(1) + depth.get(2) * depth.get(2)) / speed.value
             angSpeed = depth.div(duration * idMath.SQRT_1OVER2)
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_DECELSINE or Extrapolate.EXTRAPOLATION_NOSTOP,
@@ -1565,7 +1565,7 @@ object Mover {
                 val fi = floorInfo_s()
                 fi.floor = str.toString().toInt()
                 fi.door = idStr(spawnArgs.GetString(Str.va("floorDoor_%d", fi.floor)))
-                fi.pos.oSet(spawnArgs.GetVector(kv.GetKey().toString()))
+                fi.pos.set(spawnArgs.GetVector(kv.GetKey().toString()))
                 floorInfo.Append(fi)
                 kv = spawnArgs.MatchPrefix("floorPos_", kv)
             }
@@ -1582,9 +1582,9 @@ object Mover {
             savefile.WriteInt(floorInfo.Num())
             i = 0
             while (i < floorInfo.Num()) {
-                savefile.WriteVec3(floorInfo.oGet(i).pos)
-                savefile.WriteString(floorInfo.oGet(i).door.toString())
-                savefile.WriteInt(floorInfo.oGet(i).floor)
+                savefile.WriteVec3(floorInfo.get(i).pos)
+                savefile.WriteString(floorInfo.get(i).door.toString())
+                savefile.WriteInt(floorInfo.get(i).floor)
                 i++
             }
             savefile.WriteInt(currentFloor)
@@ -1671,8 +1671,8 @@ object Mover {
 
         fun GetFloorInfo(floor: Int): floorInfo_s? {
             for (i in 0 until floorInfo.Num()) {
-                if (floorInfo.oGet(i).floor == floor) {
-                    return floorInfo.oGet(i)
+                if (floorInfo.get(i).floor == floor) {
+                    return floorInfo.get(i)
                 }
             }
             return null
@@ -1781,7 +1781,7 @@ object Mover {
                     doorEnt.spawnArgs.Set("snd_opened", "")
                 }
                 for (i in 0 until floorInfo.Num()) {
-                    val door = GetDoor(floorInfo.oGet(i).door.toString())
+                    val door = GetDoor(floorInfo.get(i).door.toString())
                     door?.SetCompanion(doorEnt)
                 }
                 Event_GotoFloor(idEventArg.Companion.toArg(pendingFloor))
@@ -1823,7 +1823,7 @@ object Mover {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Close()
             for (i in 0 until floorInfo.Num()) {
-                door = GetDoor(floorInfo.oGet(i).door.toString())
+                door = GetDoor(floorInfo.get(i).door.toString())
                 door?.Close()
             }
         }
@@ -1832,7 +1832,7 @@ object Mover {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(false)
             for (i in 0 until floorInfo.Num()) {
-                door = GetDoor(floorInfo.oGet(i).door.toString())
+                door = GetDoor(floorInfo.get(i).door.toString())
                 door?.Enable(false)
             }
         }
@@ -1841,8 +1841,8 @@ object Mover {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(true)
             for (i in 0 until floorInfo.Num()) {
-                if (floorInfo.oGet(i).floor == currentFloor) {
-                    door = GetDoor(floorInfo.oGet(i).door.toString())
+                if (floorInfo.get(i).floor == currentFloor) {
+                    door = GetDoor(floorInfo.get(i).door.toString())
                     if (door != null) {
                         door.Enable(true)
                         break
@@ -1931,11 +1931,11 @@ object Mover {
          */
             protected fun GetMovedir(dir: Float, movedir: idVec3?) {
                 if (dir == -1f) {
-                    movedir.Set(0f, 0f, 1f)
+                    movedir.set(0f, 0f, 1f)
                 } else if (dir == -2f) {
-                    movedir.Set(0f, 0f, -1f)
+                    movedir.set(0f, 0f, -1f)
                 } else {
-                    movedir.oSet(idAngles(0, dir, 0).ToForward())
+                    movedir.set(idAngles(0, dir, 0).ToForward())
                 }
             }
 
@@ -2097,7 +2097,7 @@ object Mover {
                 soundOrigin.timesAssign(slave.GetPhysics().GetAbsBounds())
                 slave = slave.activateChain
             }
-            moveMaster.refSound.origin.oSet(soundOrigin.GetCenter())
+            moveMaster.refSound.origin.set(soundOrigin.GetCenter())
             if (spawnArgs.MatchPrefix("guiTarget") != null) {
                 if (Game_local.gameLocal.GameState() == Game_local.gameState_t.GAMESTATE_STARTUP) {
                     PostEventMS(Mover.EV_FindGuiTargets, 0)
@@ -2146,7 +2146,7 @@ object Mover {
             savefile.WriteInt(guiTargets.Num())
             i = 0
             while (i < guiTargets.Num()) {
-                guiTargets.oGet(i).Save(savefile)
+                guiTargets.get(i).Save(savefile)
                 i++
             }
         }
@@ -2197,19 +2197,19 @@ object Mover {
             guiTargets.SetNum(num)
             i = 0
             while (i < num) {
-                guiTargets.oGet(i).Restore(savefile)
+                guiTargets.get(i).Restore(savefile)
                 i++
             }
         }
 
         override fun PreBind() {
-            pos1.oSet(GetWorldCoordinates(pos1))
-            pos2.oSet(GetWorldCoordinates(pos2))
+            pos1.set(GetWorldCoordinates(pos1))
+            pos2.set(GetWorldCoordinates(pos2))
         }
 
         override fun PostBind() {
-            pos1.oSet(GetLocalCoordinates(pos1))
-            pos2.oSet(GetLocalCoordinates(pos2))
+            pos1.set(GetLocalCoordinates(pos1))
+            pos2.set(GetLocalCoordinates(pos2))
         }
 
         fun Enable(b: Boolean) {
@@ -2227,14 +2227,14 @@ object Mover {
             val move = idVec3()
             val distance: Float
             val speed: Float
-            pos1.oSet(mpos1)
-            pos2.oSet(mpos2)
+            pos1.set(mpos1)
+            pos2.set(mpos2)
             accelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
             decelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
             speed = if (mspeed != 0f) mspeed else 100
 
             // calculate time to reach second position from speed
-            move.oSet(pos2.oMinus(pos1))
+            move.set(pos2.minus(pos1))
             distance = move.Length()
             duration = idPhysics.Companion.SnapTimeToPhysicsFrame((distance * 1000 / speed).toInt())
             if (duration <= 0) {
@@ -2262,8 +2262,8 @@ object Mover {
          ================
          */
         fun InitTime(mpos1: idVec3?, mpos2: idVec3?, mtime: Float, maccelTime: Float, mdecelTime: Float) {
-            pos1.oSet(mpos1)
-            pos2.oSet(mpos2)
+            pos1.set(mpos1)
+            pos2.set(mpos2)
             accelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
             decelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
             duration = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mtime).toInt())
@@ -2605,7 +2605,7 @@ object Mover {
                         time,
                         duration,
                         pos1,
-                        pos2.oMinus(pos1).oMultiply(1000.0f).oDivide(duration.toFloat()),
+                        pos2.minus(pos1).oMultiply(1000.0f).oDivide(duration.toFloat()),
                         Vector.getVec3_origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
@@ -2621,7 +2621,7 @@ object Mover {
                         time,
                         duration,
                         pos2,
-                        pos1.oMinus(pos2).oMultiply(1000.0f).oDivide(duration.toFloat()),
+                        pos1.minus(pos2).oMultiply(1000.0f).oDivide(duration.toFloat()),
                         Vector.getVec3_origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
@@ -2652,7 +2652,7 @@ object Mover {
             var i: Int
             i = 0
             while (i < guiTargets.Num()) {
-                val ent = guiTargets.oGet(i).GetEntity()
+                val ent = guiTargets.get(i).GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
@@ -2973,15 +2973,15 @@ object Mover {
             fl.solidForTeam = true
 
             // first position at start
-            pos1.oSet(GetPhysics().GetOrigin())
+            pos1.set(GetPhysics().GetOrigin())
 
             // calculate second position
-            abs_movedir.oSet(0, Math.abs(moveDir.oGet(0)))
-            abs_movedir.oSet(1, Math.abs(moveDir.oGet(1)))
-            abs_movedir.oSet(2, Math.abs(moveDir.oGet(2)))
-            size.oSet(GetPhysics().GetAbsBounds().oGet(1).oMinus(GetPhysics().GetAbsBounds().oGet(0)))
+            abs_movedir.set(0, Math.abs(moveDir.get(0)))
+            abs_movedir.set(1, Math.abs(moveDir.get(1)))
+            abs_movedir.set(2, Math.abs(moveDir.get(2)))
+            size.set(GetPhysics().GetAbsBounds().get(1).minus(GetPhysics().GetAbsBounds().get(0)))
             distance = abs_movedir.times(size) - lip.getVal()
-            pos2.oSet(pos1.oPlus(moveDir.times(distance)))
+            pos2.set(pos1.oPlus(moveDir.times(distance)))
 
             // if "start_open", reverse position 1 and 2
             if (start_open.isVal) {
@@ -3260,7 +3260,7 @@ object Mover {
                 return
             }
             GetMasterPosition(origin, axis)
-            localTriggerOrigin.oSet(trigger.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
+            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
             localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
@@ -3277,7 +3277,7 @@ object Mover {
             var best: Int
 
             // find the bounds of everything on the team
-            bounds.oSet(GetPhysics().GetAbsBounds())
+            bounds.set(GetPhysics().GetAbsBounds())
             fl.takedamage = true
             other = activateChain
             while (other != null) {
@@ -3295,15 +3295,15 @@ object Mover {
             best = 0
             i = 1
             while (i < 3) {
-                if (bounds.oGet(1, i) - bounds.oGet(0, i) < bounds.oGet(1, best) - bounds.oGet(0, best)) {
+                if (bounds.get(1, i) - bounds.get(0, i) < bounds.get(1, best) - bounds.get(0, best)) {
                     best = i
                 }
                 i++
             }
             normalAxisIndex = best
-            bounds.oGet(0).minusAssign(best, size)
-            bounds.oGet(1).plusAssign(best, size)
-            bounds.oMinSet(GetPhysics().GetOrigin())
+            bounds.get(0).minusAssign(best, size)
+            bounds.get(1).plusAssign(best, size)
+            bounds.minusAssign(GetPhysics().GetOrigin())
         }
 
         override fun Event_Reached_BinaryMover() {
@@ -3418,8 +3418,8 @@ object Mover {
             val speed = CFloat()
 
             // if "start_open", reverse position 1 and 2
-            pos1.oSet(pos2)
-            pos2.oSet(GetPhysics().GetOrigin())
+            pos1.set(pos2)
+            pos2.set(GetPhysics().GetOrigin())
             spawnArgs.GetFloat("speed", "400", speed)
             if (spawnArgs.GetFloat("time", "1", time)) {
                 InitTime(pos1, pos2, time.getVal(), 0f, 0f)
@@ -3550,19 +3550,19 @@ object Mover {
             if (trigger != null && !IsOpen()) {
                 // teleport to the other side, center to the middle of the trigger brush
                 bounds = trigger.GetAbsBounds()
-                contact.oSet(trace.value.endpos.oMinus(bounds.GetCenter()))
-                translate.oSet(bounds.GetCenter())
+                contact.set(trace.value.endpos.minus(bounds.GetCenter()))
+                translate.set(bounds.GetCenter())
                 normal.Zero()
-                normal.oSet(normalAxisIndex, 1.0f)
+                normal.set(normalAxisIndex, 1.0f)
                 if (normal.times(contact) > 0) {
                     translate.plusAssign(
                         normalAxisIndex,
-                        (bounds.oGet(0, normalAxisIndex) - translate.oGet(normalAxisIndex)) * 0.5f
+                        (bounds.get(0, normalAxisIndex) - translate.get(normalAxisIndex)) * 0.5f
                     )
                 } else {
                     translate.plusAssign(
                         normalAxisIndex,
-                        (bounds.oGet(1, normalAxisIndex) - translate.oGet(normalAxisIndex)) * 0.5f
+                        (bounds.get(1, normalAxisIndex) - translate.get(normalAxisIndex)) * 0.5f
                     )
                 }
                 p.SetOrigin(translate)
@@ -3694,13 +3694,13 @@ object Mover {
 
             // create second position
             if (!spawnArgs.GetFloat("height", "0", height)) {
-                height.setVal(GetPhysics().GetBounds().oGet(1, 2) - GetPhysics().GetBounds().oGet(0, 2) - lip.getVal())
+                height.setVal(GetPhysics().GetBounds().get(1, 2) - GetPhysics().GetBounds().get(0, 2) - lip.getVal())
             }
             spawnArgs.GetBool("no_touch", "0", noTouch)
 
             // pos1 is the rest (bottom) position, pos2 is the top
-            pos2.oSet(GetPhysics().GetOrigin())
-            pos1.oSet(pos2)
+            pos2.set(GetPhysics().GetOrigin())
+            pos1.set(pos2)
             pos1.minusAssign(2, height.getVal())
             if (spawnArgs.GetFloat("time", "1", time)) {
                 InitTime(pos1, pos2, time.getVal(), accel.getVal(), decel.getVal())
@@ -3761,7 +3761,7 @@ object Mover {
                 return
             }
             GetMasterPosition(origin, axis)
-            localTriggerOrigin.oSet(trigger.GetOrigin().oMinus(origin).oMultiply(axis.Transpose()))
+            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
             localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
@@ -3773,19 +3773,19 @@ object Mover {
             // the middle trigger will be a thin trigger just
             // above the starting position
             bounds = GetPhysics().GetBounds()
-            tmin.oSet(0, bounds.oGet(0, 0) + 33)
-            tmin.oSet(1, bounds.oGet(0, 1) + 33)
-            tmin.oSet(2, bounds.oGet(0, 2))
-            tmax.oSet(0, bounds.oGet(1, 0) - 33)
-            tmax.oSet(1, bounds.oGet(1, 1) - 33)
-            tmax.oSet(2, bounds.oGet(1, 2) + 8)
-            if (tmax.oGet(0) <= tmin.oGet(0)) {
-                tmin.oSet(0, (bounds.oGet(0, 0) + bounds.oGet(1, 0)) * 0.5f)
-                tmax.oSet(0, tmin.oGet(0) + 1)
+            tmin.set(0, bounds.get(0, 0) + 33)
+            tmin.set(1, bounds.get(0, 1) + 33)
+            tmin.set(2, bounds.get(0, 2))
+            tmax.set(0, bounds.get(1, 0) - 33)
+            tmax.set(1, bounds.get(1, 1) - 33)
+            tmax.set(2, bounds.get(1, 2) + 8)
+            if (tmax.get(0) <= tmin.get(0)) {
+                tmin.set(0, (bounds.get(0, 0) + bounds.get(1, 0)) * 0.5f)
+                tmax.set(0, tmin.get(0) + 1)
             }
-            if (tmax.oGet(1) <= tmin.oGet(1)) {
-                tmin.oSet(0, (bounds.oGet(0, 1) + bounds.oGet(1, 1)) * 0.5f)
-                tmax.oSet(0, tmin.oGet(1) + 1)
+            if (tmax.get(1) <= tmin.get(1)) {
+                tmin.set(0, (bounds.get(0, 1) + bounds.get(1, 1)) * 0.5f)
+                tmax.set(0, tmin.get(1) + 1)
             }
             trigger = idClipModel(idTraceModel(idBounds(tmin, tmax)))
             trigger.Link(
@@ -4029,11 +4029,11 @@ object Mover {
 
                 // set the axis of rotation
                 if (x_axis.isVal) {
-                    delta.oSet(2, speed.getVal())
+                    delta.set(2, speed.getVal())
                 } else if (y_axis.isVal) {
-                    delta.oSet(0, speed.getVal())
+                    delta.set(0, speed.getVal())
                 } else {
-                    delta.oSet(1, speed.getVal())
+                    delta.set(1, speed.getVal())
                 }
             } else {
                 spawnArgs.Set("rotate", "0")
@@ -4083,13 +4083,13 @@ object Mover {
             spawnArgs.GetBool("y_axis", "0", y_axis)
 
             // set the axis of bobbing
-            delta.oSet(Vector.getVec3_origin())
+            delta.set(Vector.getVec3_origin())
             if (x_axis.isVal) {
-                delta.oSet(0, height.getVal())
+                delta.set(0, height.getVal())
             } else if (y_axis.isVal) {
-                delta.oSet(1, height.getVal())
+                delta.set(1, height.getVal())
             } else {
-                delta.oSet(2, height.getVal())
+                delta.set(2, height.getVal())
             }
             physicsObj.SetSelf(this)
             physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
@@ -4136,7 +4136,7 @@ object Mover {
                 }
             } else {
                 // find pendulum length
-                length.setVal(Math.abs(GetPhysics().GetBounds().oGet(0, 2)))
+                length.setVal(Math.abs(GetPhysics().GetBounds().get(0, 2)))
                 if (length.getVal() < 8) {
                     length.setVal(8f)
                 }
@@ -4227,8 +4227,8 @@ object Mover {
                 val delta = idVec3()
                 spawnArgs.GetFloat("time", "4", time)
                 spawnArgs.GetFloat("height", "32", height)
-                delta.oSet(Vector.getVec3_origin())
-                delta.oSet(2, height.getVal())
+                delta.set(Vector.getVec3_origin())
+                delta.set(2, height.getVal())
                 physicsObj.SetLinearExtrapolation(
                     Extrapolate.EXTRAPOLATION_LINEAR,
                     Game_local.gameLocal.time,

@@ -1,7 +1,6 @@
 package neo.framework
 
 import neo.Renderer.Material
-import neo.framework.DeclAF.idDeclAF_Constraint
 import neo.framework.DeclManager.idDecl
 import neo.framework.File_h.idFile
 import neo.framework.File_h.idFile_Memory
@@ -145,7 +144,7 @@ class DeclAF {
                         Common.common.Warning("invalid joint %s in bonecenter() in '%s'", joint2.toString(), fileName)
                         end.Zero()
                     }
-                    vec.oSet(start.oPlus(end).oMultiply(0.5f))
+                    vec.set(start.oPlus(end).oMultiply(0.5f))
                 }
                 type.VEC_BONEDIR -> {
                     if (!GetJointTransform.run(model, frame, joint1, start, axis)) {
@@ -156,14 +155,14 @@ class DeclAF {
                         Common.common.Warning("invalid joint %s in bonedir() in '%s'", joint2.toString(), fileName)
                         end.Zero()
                     }
-                    vec.oSet(end.oMinus(start))
+                    vec.set(end.minus(start))
                 }
                 else -> {
                     vec.Zero()
                 }
             }
             if (negate) {
-                vec.oSet(vec.oNegative())
+                vec.set(vec.oNegative())
             }
             return true
         }
@@ -326,7 +325,7 @@ class DeclAF {
             name.oSet("noname")
             type = declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT
             if (file.bodies.Num() != 0) {
-                body1.oSet(file.bodies.oGet(0).name)
+                body1.oSet(file.bodies.get(0).name)
             } else {
                 body1.oSet("world")
             }
@@ -334,14 +333,14 @@ class DeclAF {
             friction = file.defaultConstraintFriction
             anchor = idAFVector()
             anchor2 = idAFVector()
-            axis.ToVec3().Set(1.0f, 0.0f, 0.0f)
-            shaft.get(0).ToVec3().Set(0.0f, 0.0f, -1.0f)
-            shaft.get(1).ToVec3().Set(0.0f, 0.0f, 1.0f)
+            axis.ToVec3().set(1.0f, 0.0f, 0.0f)
+            shaft.get(0).ToVec3().set(0.0f, 0.0f, -1.0f)
+            shaft.get(1).ToVec3().set(0.0f, 0.0f, 1.0f)
             limit = LIMIT_NONE
             limitAngles.get(2) = 0.0f
             limitAngles.get(1) = limitAngles.get(2)
             limitAngles.get(0) = limitAngles.get(1)
-            limitAxis.ToVec3().Set(0.0f, 0.0f, -1.0f)
+            limitAxis.ToVec3().set(0.0f, 0.0f, -1.0f)
         }
 
         companion object {
@@ -463,8 +462,8 @@ class DeclAF {
                 // check for multiple bodies with the same name
                 j = i + 1
                 while (j < bodies.Num()) {
-                    if (bodies.oGet(i).name === bodies.oGet(j).name) {
-                        src.Error("two bodies with the same name \"%s\"", bodies.oGet(i).name)
+                    if (bodies.get(i).name === bodies.get(j).name) {
+                        src.Error("two bodies with the same name \"%s\"", bodies.get(i).name)
                     }
                     j++
                 }
@@ -476,17 +475,17 @@ class DeclAF {
                 // check for multiple constraints with the same name
                 j = i + 1
                 while (j < constraints.Num()) {
-                    if (constraints.oGet(i).name === constraints.oGet(j).name) {
-                        src.Error("two constraints with the same name \"%s\"", constraints.oGet(i).name)
+                    if (constraints.get(i).name === constraints.get(j).name) {
+                        src.Error("two constraints with the same name \"%s\"", constraints.get(i).name)
                     }
                     j++
                 }
                 // check if there are two valid bodies set
-                if (constraints.oGet(i).body1.IsEmpty()) {
-                    src.Error("no valid body1 specified for constraint '%s'", constraints.oGet(i).name)
+                if (constraints.get(i).body1.IsEmpty()) {
+                    src.Error("no valid body1 specified for constraint '%s'", constraints.get(i).name)
                 }
-                if (constraints.oGet(i).body2.IsEmpty()) {
-                    src.Error("no valid body2 specified for constraint '%s'", constraints.oGet(i).name)
+                if (constraints.get(i).body2.IsEmpty()) {
+                    src.Error("no valid body2 specified for constraint '%s'", constraints.get(i).name)
                 }
                 i++
             }
@@ -494,11 +493,11 @@ class DeclAF {
             // make sure the body which modifies the origin comes first
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.oGet(i).jointName == "origin") {
+                if (bodies.get(i).jointName == "origin") {
                     if (i != 0) {
-                        val b = bodies.oGet(0)
-                        bodies.oSet(0, bodies.oGet(i))
-                        bodies.oSet(i, b)
+                        val b = bodies.get(0)
+                        bodies.set(0, bodies.get(i))
+                        bodies.set(i, b)
                     }
                     break
                 }
@@ -514,8 +513,8 @@ class DeclAF {
             defaultContactFriction = 0.8f
             defaultConstraintFriction = 0.5f
             totalMass = -1f
-            suspendVelocity.Set(20.0f, 30.0f)
-            suspendAcceleration.Set(40.0f, 60.0f)
+            suspendVelocity.set(20.0f, 30.0f)
+            suspendAcceleration.set(40.0f, 60.0f)
             noMoveTime = 1.0f
             noMoveTranslation = 10.0f
             noMoveRotation = 10.0f
@@ -537,7 +536,7 @@ class DeclAF {
             val name = GetName()
             i = 0
             while (i < bodies.Num()) {
-                val body = bodies.oGet(i)
+                val body = bodies.get(i)
                 body.v1.Finish(name, GetJointTransform, frame, model)
                 body.v2.Finish(name, GetJointTransform, frame, model)
                 body.origin.Finish(name, GetJointTransform, frame, model)
@@ -547,7 +546,7 @@ class DeclAF {
             }
             i = 0
             while (i < constraints.Num()) {
-                val constraint = constraints.oGet(i)
+                val constraint = constraints.get(i)
                 constraint.anchor.Finish(name, GetJointTransform, frame, model)
                 constraint.anchor2.Finish(name, GetJointTransform, frame, model)
                 constraint.shaft.get(0).Finish(name, GetJointTransform, frame, model)
@@ -587,18 +586,18 @@ class DeclAF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.oGet(i).name.Icmp(oldName) == 0) {
-                    bodies.oGet(i).name.oSet(newName)
+                if (bodies.get(i).name.Icmp(oldName) == 0) {
+                    bodies.get(i).name.oSet(newName)
                     break
                 }
                 i++
             }
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).body1.Icmp(oldName) == 0) {
-                    constraints.oGet(i).body1.oSet(newName)
-                } else if (constraints.oGet(i).body2.Icmp(oldName) == 0) {
-                    constraints.oGet(i).body2.oSet(newName)
+                if (constraints.get(i).body1.Icmp(oldName) == 0) {
+                    constraints.get(i).body1.oSet(newName)
+                } else if (constraints.get(i).body2.Icmp(oldName) == 0) {
+                    constraints.get(i).body2.oSet(newName)
                 }
                 i++
             }
@@ -617,7 +616,7 @@ class DeclAF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.oGet(i).name.Icmp(name) == 0) {
+                if (bodies.get(i).name.Icmp(name) == 0) {
 //			delete bodies.oGet(i);
                     bodies.RemoveIndex(i)
                     break
@@ -626,8 +625,8 @@ class DeclAF {
             }
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).body1.Icmp(name) == 0
-                    || constraints.oGet(i).body2.Icmp(name) == 0
+                if (constraints.get(i).body1.Icmp(name) == 0
+                    || constraints.get(i).body2.Icmp(name) == 0
                 ) {
 //			delete constraints.oGet(i);
                     constraints.RemoveIndex(i)
@@ -650,8 +649,8 @@ class DeclAF {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).name.Icmp(oldName) == 0) {
-                    constraints.oGet(i).name.oSet(newName)
+                if (constraints.get(i).name.Icmp(oldName) == 0) {
+                    constraints.get(i).name.oSet(newName)
                     return
                 }
                 i++
@@ -662,7 +661,7 @@ class DeclAF {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).name.Icmp(name) == 0) {
+                if (constraints.get(i).name.Icmp(name) == 0) {
 //			delete constraints.oGet(i);
                     constraints.RemoveIndex(i)
                     return
@@ -1220,19 +1219,19 @@ class DeclAF {
                 } else if (0 == token.Icmp("totalMass")) {
                     totalMass = src.ParseFloat()
                 } else if (0 == token.Icmp("suspendSpeed")) {
-                    suspendVelocity.oSet(0, src.ParseFloat())
+                    suspendVelocity.set(0, src.ParseFloat())
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendVelocity.oSet(1, src.ParseFloat())
+                    suspendVelocity.set(1, src.ParseFloat())
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendAcceleration.oSet(0, src.ParseFloat())
+                    suspendAcceleration.set(0, src.ParseFloat())
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendAcceleration.oSet(1, src.ParseFloat())
+                    suspendAcceleration.set(1, src.ParseFloat())
                 } else if (0 == token.Icmp("noMoveTime")) {
                     noMoveTime = src.ParseFloat()
                 } else if (0 == token.Icmp("noMoveTranslation")) {
@@ -1321,9 +1320,9 @@ class DeclAF {
                 val ic = body.inertiaScale
                 f.WriteFloatString(
                     "\tinertiaScale (%f %f %f %f %f %f %f %f %f)\n",
-                    ic.oGet(0).oGet(0), ic.oGet(0).oGet(1), ic.oGet(0).oGet(2),
-                    ic.oGet(1).oGet(0), ic.oGet(1).oGet(1), ic.oGet(1).oGet(2),
-                    ic.oGet(2).oGet(0), ic.oGet(2).oGet(1), ic.oGet(2).oGet(2)
+                    ic.get(0).get(0), ic.get(0).get(1), ic.get(0).get(2),
+                    ic.get(1).get(0), ic.get(1).get(1), ic.get(1).get(2),
+                    ic.get(2).get(0), ic.get(2).get(1), ic.get(2).get(2)
                 )
             }
             if (body.linearFriction != -1f) {
@@ -1491,10 +1490,10 @@ class DeclAF {
             )
             f.WriteFloatString(
                 "\tsuspendSpeed %f, %f, %f, %f\n",
-                suspendVelocity.oGet(0),
-                suspendVelocity.oGet(1),
-                suspendAcceleration.oGet(0),
-                suspendAcceleration.oGet(1)
+                suspendVelocity.get(0),
+                suspendVelocity.get(1),
+                suspendAcceleration.get(0),
+                suspendAcceleration.get(1)
             )
             f.WriteFloatString("\tnoMoveTime %f\n", noMoveTime)
             f.WriteFloatString("\tnoMoveTranslation %f\n", noMoveTranslation)
@@ -1528,14 +1527,14 @@ class DeclAF {
             }
             i = 0
             while (i < bodies.Num()) {
-                if (!WriteBody(f, bodies.oGet(i))) {
+                if (!WriteBody(f, bodies.get(i))) {
                     return false
                 }
                 i++
             }
             i = 0
             while (i < constraints.Num()) {
-                if (!WriteConstraint(f, constraints.oGet(i))) {
+                if (!WriteConstraint(f, constraints.get(i))) {
                     return false
                 }
                 i++

@@ -5,7 +5,7 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.List.idList
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -31,8 +31,8 @@ class snd_efxfile {
             var i: Int
             i = 0
             while (i < effects.Num()) {
-                if (effects.oGet(i) != null && effects.oGet(i).name == name) {
-                    effect.get(0) = effects.oGet(i)
+                if (effects.get(i) != null && effects.get(i).name == name) {
+                    effect.get(0) = effects.get(i)
                     index.get(0) = i
                     return true
                 }

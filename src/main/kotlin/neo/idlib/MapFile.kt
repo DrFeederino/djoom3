@@ -56,19 +56,19 @@ object MapFile {
         val n = idVec3()
 
         // do some cleaning
-        n.oSet(0, if (Math.abs(normal.oGet(0)) < 1e-6f) 0.0f else normal.oGet(0))
-        n.oSet(1, if (Math.abs(normal.oGet(1)) < 1e-6f) 0.0f else normal.oGet(1))
-        n.oSet(2, if (Math.abs(normal.oGet(2)) < 1e-6f) 0.0f else normal.oGet(2))
-        RotY = -Math.atan2(n.oGet(2).toDouble(), idMath.Sqrt(n.oGet(1) * n.oGet(1) + n.oGet(0) * n.oGet(0)).toDouble())
-        RotZ = Math.atan2(n.oGet(1).toDouble(), n.oGet(0).toDouble())
+        n.set(0, if (Math.abs(normal.get(0)) < 1e-6f) 0.0f else normal.get(0))
+        n.set(1, if (Math.abs(normal.get(1)) < 1e-6f) 0.0f else normal.get(1))
+        n.set(2, if (Math.abs(normal.get(2)) < 1e-6f) 0.0f else normal.get(2))
+        RotY = -Math.atan2(n.get(2).toDouble(), idMath.Sqrt(n.get(1) * n.get(1) + n.get(0) * n.get(0)).toDouble())
+        RotZ = Math.atan2(n.get(1).toDouble(), n.get(0).toDouble())
         // rotate (0,1,0) and (0,0,1) to compute texS and texT
-        texS.oSet(0, -Math.sin(RotZ).toFloat())
-        texS.oSet(1, Math.cos(RotZ).toFloat())
-        texS.oSet(2, 0f)
+        texS.set(0, -Math.sin(RotZ).toFloat())
+        texS.set(1, Math.cos(RotZ).toFloat())
+        texS.set(2, 0f)
         // the texT vector is along -Z ( T texture coorinates axis )
-        texT.oSet(0, (-Math.sin(RotY) * Math.cos(RotZ)).toFloat())
-        texT.oSet(1, (-Math.sin(RotY) * Math.sin(RotZ)).toFloat())
-        texT.oSet(2, -Math.cos(RotY).toFloat())
+        texT.set(0, (-Math.sin(RotY) * Math.cos(RotZ)).toFloat())
+        texT.set(1, (-Math.sin(RotY) * Math.sin(RotZ)).toFloat())
+        texT.set(2, -Math.cos(RotY).toFloat())
     }
 
     private fun FloatCRC(f: Float): Long {
@@ -131,17 +131,17 @@ object MapFile {
         }
 
         fun SetPlane(p: idPlane) {
-            plane.oSet(p)
+            plane.set(p)
         }
 
         fun SetTextureMatrix(mat: Array<idVec3?>?) {
-            texMat.get(0).oSet(mat.get(0))
-            texMat.get(1).oSet(mat.get(1))
+            texMat.get(0).set(mat.get(0))
+            texMat.get(1).set(mat.get(1))
         }
 
         fun GetTextureMatrix(mat1: Array<idVec3?>?, mat2: Array<idVec3?>?) {
-            mat1.get(0).oSet(texMat.get(0))
-            mat2.get(0).oSet(texMat.get(1))
+            mat1.get(0).set(texMat.get(0))
+            mat2.get(0).set(texMat.get(1))
         }
 
         fun GetTextureVectors(v: Array<idVec4?>?) {
@@ -151,10 +151,10 @@ object MapFile {
             MapFile.ComputeAxisBase(plane.Normal(), texX, texY)
             i = 0
             while (i < 2) {
-                v.get(i).oSet(0, texX.oGet(0) * texMat.get(i).oGet(0) + texY.oGet(0) * texMat.get(i).oGet(1))
-                v.get(i).oSet(1, texX.oGet(1) * texMat.get(i).oGet(0) + texY.oGet(1) * texMat.get(i).oGet(1))
-                v.get(i).oSet(2, texX.oGet(2) * texMat.get(i).oGet(0) + texY.oGet(2) * texMat.get(i).oGet(1))
-                v.get(i).oSet(3, texMat.get(i).oGet(2) + origin.times(v.get(i).ToVec3()))
+                v.get(i).set(0, texX.get(0) * texMat.get(i).get(0) + texY.get(0) * texMat.get(i).get(1))
+                v.get(i).set(1, texX.get(1) * texMat.get(i).get(0) + texY.get(1) * texMat.get(i).get(1))
+                v.get(i).set(2, texX.get(2) * texMat.get(i).get(0) + texY.get(2) * texMat.get(i).get(1))
+                v.get(i).set(3, texMat.get(i).get(2) + origin.times(v.get(i).ToVec3()))
                 i++
             }
         }
@@ -188,15 +188,15 @@ object MapFile {
                 side = GetSide(i)
                 fp.WriteFloatString(
                     "  ( %f %f %f %f ) ",
-                    side.plane.oGet(0),
-                    side.plane.oGet(1),
-                    side.plane.oGet(2),
-                    side.plane.oGet(3)
+                    side.plane.get(0),
+                    side.plane.get(1),
+                    side.plane.get(2),
+                    side.plane.get(3)
                 )
                 fp.WriteFloatString(
                     "( ( %f %f %f ) ( %f %f %f ) ) \"%s\" 0 0 0\n",
-                    side.texMat.get(0).oGet(0), side.texMat.get(0).oGet(1), side.texMat.get(0).oGet(2),
-                    side.texMat.get(1).oGet(0), side.texMat.get(1).oGet(1), side.texMat.get(1).oGet(2),
+                    side.texMat.get(0).get(0), side.texMat.get(0).get(1), side.texMat.get(0).get(2),
+                    side.texMat.get(1).get(0), side.texMat.get(1).get(1), side.texMat.get(1).get(2),
                     side.material
                 )
                 i++
@@ -214,7 +214,7 @@ object MapFile {
         }
 
         fun GetSide(i: Int): idMapBrushSide {
-            return sides.oGet(i)
+            return sides.get(i)
         }
 
         fun GetGeometryCRC(): Int {
@@ -228,7 +228,7 @@ object MapFile {
                 mapSide = GetSide(i)
                 j = 0
                 while (j < 4) {
-                    crc = crc xor MapFile.FloatCRC(mapSide.GetPlane().oGet(j))
+                    crc = crc xor MapFile.FloatCRC(mapSide.GetPlane().get(j))
                     j++
                 }
                 crc = crc xor MapFile.StringCRC(mapSide.GetMaterial().toString())
@@ -320,7 +320,7 @@ object MapFile {
                         sides.DeleteContents(true)
                         return null
                     }
-                    side.origin.oSet(origin)
+                    side.origin.set(origin)
 
                     // read the material
                     if (!src.ReadTokenOnLine(token)) {
@@ -351,7 +351,7 @@ object MapFile {
                 val brush = idMapBrush()
                 i = 0
                 while (i < sides.Num()) {
-                    brush.AddSide(sides.oGet(i))
+                    brush.AddSide(sides.get(i))
                     i++
                 }
                 brush.epairs = epairs
@@ -406,9 +406,9 @@ object MapFile {
                     rotate = src.ParseInt()
                     scale[0] = src.ParseFloat()
                     scale[1] = src.ParseFloat()
-                    side.texMat.get(0).oSet(idVec3(0.03125f, 0.0f, 0.0f))
-                    side.texMat.get(1).oSet(idVec3(0.0f, 0.03125f, 0.0f))
-                    side.origin.oSet(origin)
+                    side.texMat.get(0).set(idVec3(0.03125f, 0.0f, 0.0f))
+                    side.texMat.get(1).set(idVec3(0.0f, 0.03125f, 0.0f))
+                    side.origin.set(origin)
 
                     // Q2 allowed override of default flags and values, but we don't any more
                     if (src.ReadTokenOnLine(token)) {
@@ -421,7 +421,7 @@ object MapFile {
                 val brush = idMapBrush()
                 i = 0
                 while (i < sides.Num()) {
-                    brush.AddSide(sides.oGet(i))
+                    brush.AddSide(sides.get(i))
                     i++
                 }
                 brush.epairs = epairs
@@ -517,14 +517,14 @@ object MapFile {
                 fp.WriteFloatString("   ( ")
                 j = 0
                 while (j < GetHeight()) {
-                    v = verts.oGet(j * GetWidth() + i)
+                    v = verts.get(j * GetWidth() + i)
                     fp.WriteFloatString(
                         " ( %f %f %f %f %f )",
-                        v.xyz.oGet(0) + origin.oGet(0),
-                        v.xyz.oGet(1) + origin.oGet(1),
-                        v.xyz.oGet(2) + origin.oGet(2),
-                        v.st.oGet(0),
-                        v.st.oGet(1)
+                        v.xyz.get(0) + origin.get(0),
+                        v.xyz.get(1) + origin.get(1),
+                        v.xyz.get(2) + origin.get(2),
+                        v.st.get(0),
+                        v.st.get(1)
                     )
                     j++
                 }
@@ -576,9 +576,9 @@ object MapFile {
             while (i < GetWidth()) {
                 j = 0
                 while (j < GetHeight()) {
-                    crc = crc xor MapFile.FloatCRC(verts.oGet(j * GetWidth() + i).xyz.x)
-                    crc = crc xor MapFile.FloatCRC(verts.oGet(j * GetWidth() + i).xyz.y)
-                    crc = crc xor MapFile.FloatCRC(verts.oGet(j * GetWidth() + i).xyz.z)
+                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.x)
+                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.y)
+                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.z)
                     j++
                 }
                 i++
@@ -677,12 +677,12 @@ object MapFile {
                         }
 
 //                    vert = patch.oGet(i * patch.GetWidth() + j);
-                        vert = patch.verts.oSet(i * patch.GetWidth() + j, idDrawVert())
-                        vert.xyz.oSet(0, v[0] - origin.oGet(0))
-                        vert.xyz.oSet(1, v[1] - origin.oGet(1))
-                        vert.xyz.oSet(2, v[2] - origin.oGet(2))
-                        vert.st.oSet(0, v[3])
-                        vert.st.oSet(1, v[4])
+                        vert = patch.verts.set(i * patch.GetWidth() + j, idDrawVert())
+                        vert.xyz.set(0, v[0] - origin.get(0))
+                        vert.xyz.set(1, v[1] - origin.get(1))
+                        vert.xyz.set(2, v[2] - origin.get(2))
+                        vert.st.set(0, v[3])
+                        vert.st.set(1, v[4])
                         i++
                     }
                     if (!src.ExpectTokenString(")")) {
@@ -755,7 +755,7 @@ object MapFile {
         }
 
         fun GetPrimitive(i: Int): idMapPrimitive {
-            return primitives.oGet(i)
+            return primitives.get(i)
         }
 
         fun AddPrimitive(p: idMapPrimitive?) {
@@ -973,18 +973,18 @@ object MapFile {
             if (entities.Num() != 0) {
 
                 // "removeEntities" "classname" can be set in the worldspawn to remove all entities with the given classname
-                var removeEntities = entities.oGet(0).epairs.MatchPrefix("removeEntities", null)
+                var removeEntities = entities.get(0).epairs.MatchPrefix("removeEntities", null)
                 while (removeEntities != null) {
                     RemoveEntities(removeEntities.GetValue().toString())
-                    removeEntities = entities.oGet(0).epairs.MatchPrefix("removeEntities", removeEntities)
+                    removeEntities = entities.get(0).epairs.MatchPrefix("removeEntities", removeEntities)
                 }
 
                 // "overrideMaterial" "material" can be set in the worldspawn to reset all materials
                 val material = idStr()
-                if (entities.oGet(0).epairs.GetString("overrideMaterial", "", material)) {
+                if (entities.get(0).epairs.GetString("overrideMaterial", "", material)) {
                     i = 0
                     while (i < entities.Num()) {
-                        mapEnt = entities.oGet(i)
+                        mapEnt = entities.get(i)
                         j = 0
                         while (j < mapEnt.GetNumPrimitives()) {
                             val mapPrimitive = mapEnt.GetPrimitive(j)
@@ -1006,10 +1006,10 @@ object MapFile {
                 }
 
                 // force all entities to have a name key/value pair
-                if (entities.oGet(0).epairs.GetBool("forceEntityNames")) {
+                if (entities.get(0).epairs.GetBool("forceEntityNames")) {
                     i = 1
                     while (i < entities.Num()) {
-                        mapEnt = entities.oGet(i)
+                        mapEnt = entities.get(i)
                         if (null == mapEnt.epairs.FindKey("name")) {
                             mapEnt.epairs.Set(
                                 "name",
@@ -1021,12 +1021,12 @@ object MapFile {
                 }
 
                 // move the primitives of any func_group entities to the worldspawn
-                if (entities.oGet(0).epairs.GetBool("moveFuncGroups")) {
+                if (entities.get(0).epairs.GetBool("moveFuncGroups")) {
                     i = 1
                     while (i < entities.Num()) {
-                        mapEnt = entities.oGet(i)
+                        mapEnt = entities.get(i)
                         if (idStr.Companion.Icmp(mapEnt.epairs.GetString("classname"), "func_group") == 0) {
-                            entities.oGet(0).primitives.Append(mapEnt.primitives)
+                            entities.get(0).primitives.Append(mapEnt.primitives)
                             mapEnt.primitives.Clear()
                         }
                         i++
@@ -1063,7 +1063,7 @@ object MapFile {
             fp.WriteFloatString("Version %f\n", MapFile.CURRENT_MAP_VERSION)
             i = 0
             while (i < entities.Num()) {
-                entities.oGet(i).Write(fp, i)
+                entities.get(i).Write(fp, i)
                 i++
             }
             idLib.fileSystem.CloseFile(fp)
@@ -1077,7 +1077,7 @@ object MapFile {
 
         // get the specified entity
         fun GetEntity(i: Int): idMapEntity {
-            return entities.oGet(i)
+            return entities.get(i)
         }
 
         // get the name without file extension
@@ -1120,7 +1120,7 @@ object MapFile {
         @Throws(idException::class)
         fun FindEntity(name: String?): idMapEntity? {
             for (i in 0 until entities.Num()) {
-                val ent = entities.oGet(i)
+                val ent = entities.get(i)
                 if (idStr.Companion.Icmp(ent.epairs.GetString("name"), name) == 0) {
                     return ent
                 }
@@ -1142,7 +1142,7 @@ object MapFile {
         fun RemoveEntities(classname: String?) {
             var i = 0
             while (i < entities.Num()) {
-                val ent = entities.oGet(i)
+                val ent = entities.get(i)
                 if (idStr.Companion.Icmp(ent.epairs.GetString("classname"), classname) == 0) {
 //			delete entities[i];
                     entities.RemoveIndex(i)
@@ -1159,7 +1159,7 @@ object MapFile {
 
         fun RemovePrimitiveData() {
             for (i in 0 until entities.Num()) {
-                val ent = entities.oGet(i)
+                val ent = entities.get(i)
                 ent.RemovePrimitiveData()
             }
             hasPrimitiveData = false
@@ -1174,7 +1174,7 @@ object MapFile {
             geometryCRC = 0
             i = 0
             while (i < entities.Num()) {
-                geometryCRC = geometryCRC xor entities.oGet(i).GetGeometryCRC()
+                geometryCRC = geometryCRC xor entities.get(i).GetGeometryCRC()
                 i++
             }
         }

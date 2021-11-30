@@ -104,11 +104,11 @@ abstract class AbstractCollisionModel_local {
         }
 
         fun oSet(p: cm_polygon_s) {
-            bounds.oSet(p.bounds)
+            bounds.set(p.bounds)
             checkcount = p.checkcount
             contents = p.contents
             material = p.material
-            plane.oSet(p.plane)
+            plane.set(p.plane)
             numEdges = p.numEdges
             edges[0] = p.edges[0]
         }

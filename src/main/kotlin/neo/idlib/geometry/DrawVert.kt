@@ -77,20 +77,20 @@ object DrawVert {
         }
 
         fun oSet(dv: idDrawVert?) {
-            xyz.oSet(dv.xyz)
-            st.oSet(dv.st)
-            normal.oSet(dv.normal)
-            tangents.get(0).oSet(dv.tangents.get(0))
-            tangents.get(1).oSet(dv.tangents.get(1))
+            xyz.set(dv.xyz)
+            st.set(dv.st)
+            normal.set(dv.normal)
+            tangents.get(0).set(dv.tangents.get(0))
+            tangents.get(1).set(dv.tangents.get(1))
         }
 
         fun oGet(index: Int): Float {
             when (index) {
-                0, 1, 2 -> return xyz.oGet(index)
-                3, 4 -> return st.oGet(index - 3)
-                5, 6, 7 -> return normal.oGet(index - 5)
-                8, 9, 10 -> return tangents.get(0).oGet(index - 8)
-                11, 12, 13 -> return tangents.get(1).oGet(index - 11)
+                0, 1, 2 -> return xyz.get(index)
+                3, 4 -> return st.get(index - 3)
+                5, 6, 7 -> return normal.get(index - 5)
+                8, 9, 10 -> return tangents.get(0).get(index - 8)
+                11, 12, 13 -> return tangents.get(1).get(index - 11)
                 14, 15, 16, 17 -> return color.get(index - 14)
             }
             return -1
@@ -109,16 +109,16 @@ object DrawVert {
         }
 
         fun Lerp(a: idDrawVert?, b: idDrawVert?, f: Float) {
-            xyz.oSet(a.xyz.oPlus(b.xyz.oMinus(a.xyz).oMultiply(f)))
-            st.oSet(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
+            xyz.set(a.xyz.oPlus(b.xyz.minus(a.xyz).oMultiply(f)))
+            st.set(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
         }
 
         fun LerpAll(a: idDrawVert?, b: idDrawVert?, f: Float) {
-            xyz.oSet(a.xyz.oPlus(b.xyz.oMinus(a.xyz).oMultiply(f)))
-            st.oSet(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
-            normal.oSet(a.normal.oPlus(b.normal.oMinus(a.normal).oMultiply(f)))
-            tangents.get(0).oSet(a.tangents.get(0).oPlus(b.tangents.get(0).oMinus(a.tangents.get(0)).oMultiply(f)))
-            tangents.get(1).oSet(a.tangents.get(1).oPlus(b.tangents.get(1).oMinus(a.tangents.get(1)).oMultiply(f)))
+            xyz.set(a.xyz.oPlus(b.xyz.minus(a.xyz).oMultiply(f)))
+            st.set(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
+            normal.set(a.normal.oPlus(b.normal.minus(a.normal).oMultiply(f)))
+            tangents.get(0).set(a.tangents.get(0).oPlus(b.tangents.get(0).minus(a.tangents.get(0)).oMultiply(f)))
+            tangents.get(1).set(a.tangents.get(1).oPlus(b.tangents.get(1).minus(a.tangents.get(1)).oMultiply(f)))
             color.get(0) = (a.color.get(0) + f * (b.color.get(0) - a.color.get(0))).toInt().toByte()
             color.get(1) = (a.color.get(1) + f * (b.color.get(1) - a.color.get(1))).toInt().toByte()
             color.get(2) = (a.color.get(2) + f * (b.color.get(2) - a.color.get(2))).toInt().toByte()
@@ -172,18 +172,18 @@ object DrawVert {
                 VBO_OFFSET = buffer.getInt(0)
                 return
             }
-            xyz.oSet(0, buffer.float)
-            xyz.oSet(1, buffer.float)
-            xyz.oSet(2, buffer.float)
-            st.oSet(0, buffer.float)
-            st.oSet(1, buffer.float)
-            normal.oSet(0, buffer.float)
-            normal.oSet(1, buffer.float)
-            normal.oSet(2, buffer.float)
+            xyz.set(0, buffer.float)
+            xyz.set(1, buffer.float)
+            xyz.set(2, buffer.float)
+            st.set(0, buffer.float)
+            st.set(1, buffer.float)
+            normal.set(0, buffer.float)
+            normal.set(1, buffer.float)
+            normal.set(2, buffer.float)
             for (tan in tangents) {
-                tan.oSet(0, buffer.float)
-                tan.oSet(1, buffer.float)
-                tan.oSet(2, buffer.float)
+                tan.set(0, buffer.float)
+                tan.set(1, buffer.float)
+                tan.set(2, buffer.float)
             }
             for (c in color.indices) {
                 color.get(c) = buffer.get()
@@ -193,18 +193,18 @@ object DrawVert {
         override fun Write(): ByteBuffer {
             val data = ByteBuffer.allocate(BYTES)
             data.order(ByteOrder.LITTLE_ENDIAN) //very importante.
-            data.putFloat(xyz.oGet(0))
-            data.putFloat(xyz.oGet(1))
-            data.putFloat(xyz.oGet(2))
-            data.putFloat(st.oGet(0))
-            data.putFloat(st.oGet(1))
-            data.putFloat(normal.oGet(0))
-            data.putFloat(normal.oGet(1))
-            data.putFloat(normal.oGet(2))
+            data.putFloat(xyz.get(0))
+            data.putFloat(xyz.get(1))
+            data.putFloat(xyz.get(2))
+            data.putFloat(st.get(0))
+            data.putFloat(st.get(1))
+            data.putFloat(normal.get(0))
+            data.putFloat(normal.get(1))
+            data.putFloat(normal.get(2))
             for (tan in tangents) {
-                data.putFloat(tan.oGet(0))
-                data.putFloat(tan.oGet(1))
-                data.putFloat(tan.oGet(2))
+                data.putFloat(tan.get(0))
+                data.putFloat(tan.get(1))
+                data.putFloat(tan.get(2))
             }
             for (colour in color) {
                 data.put(Math.abs(colour.toByte().toInt()).toByte())

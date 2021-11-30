@@ -126,9 +126,9 @@ object tr_lightrun {
         // if the entity hasn't been fully specified due to expensive animation calcs
         // for md5 and particles, use the provided conservative bounds.
         if (def.parms.callback != null) {
-            def.referenceBounds.oSet(def.parms.bounds)
+            def.referenceBounds.set(def.parms.bounds)
         } else {
-            def.referenceBounds.oSet(def.parms.hModel.Bounds(def.parms))
+            def.referenceBounds.set(def.parms.hModel.Bounds(def.parms))
         }
 
         // some models, like empty particles, may not need to be added at all
@@ -136,20 +136,20 @@ object tr_lightrun {
             return
         }
         if (RenderSystem_init.r_showUpdates.GetBool()
-            && (def.referenceBounds.oGet(1, 0) - def.referenceBounds.oGet(0, 0) > 1024
-                    || def.referenceBounds.oGet(1, 1) - def.referenceBounds.oGet(0, 1) > 1024)
+            && (def.referenceBounds.get(1, 0) - def.referenceBounds.get(0, 0) > 1024
+                    || def.referenceBounds.get(1, 1) - def.referenceBounds.get(0, 1) > 1024)
         ) {
             Common.common.Printf(
-                "big entityRef: %f,%f\n", def.referenceBounds.oGet(1, 0) - def.referenceBounds.oGet(0, 0),
-                def.referenceBounds.oGet(1, 1) - def.referenceBounds.oGet(0, 1)
+                "big entityRef: %f,%f\n", def.referenceBounds.get(1, 0) - def.referenceBounds.get(0, 0),
+                def.referenceBounds.get(1, 1) - def.referenceBounds.get(0, 1)
             )
         }
         i = 0
         while (i < 8) {
-            v.oSet(0, def.referenceBounds.oGet(i shr 0 and 1, 0))
-            v.oSet(1, def.referenceBounds.oGet(i shr 1 and 1, 1))
-            v.oSet(2, def.referenceBounds.oGet(i shr 2 and 1, 2))
-            transformed[i].oSet(tr_main.R_LocalPointToGlobal(def.modelMatrix, v))
+            v.set(0, def.referenceBounds.get(i shr 0 and 1, 0))
+            v.set(1, def.referenceBounds.get(i shr 1 and 1, 1))
+            v.set(2, def.referenceBounds.get(i shr 2 and 1, 2))
+            transformed[i].set(tr_main.R_LocalPointToGlobal(def.modelMatrix, v))
             i++
         }
 
@@ -192,32 +192,32 @@ object tr_lightrun {
         val up = idVec3()
         val startGlobal = idVec3()
         val targetGlobal = idVec4()
-        right.oSet(rightVector)
+        right.set(rightVector)
         rLen = right.Normalize()
-        up.oSet(upVector)
+        up.set(upVector)
         uLen = up.Normalize()
-        normal.oSet(up.Cross(right))
+        normal.set(up.Cross(right))
         //normal = right.Cross( up );
         normal.Normalize()
         dist = target.times(normal) //  - ( origin * normal );
         if (dist < 0) {
             dist = -dist
-            normal.oSet(normal.oNegative())
+            normal.set(normal.oNegative())
         }
         scale = 0.5f * dist / rLen
         right.timesAssign(scale)
         scale = -(0.5f * dist) / uLen
         up.timesAssign(scale)
-        lightProject.get(2).oSet(normal)
-        lightProject.get(2).oSet(3, -origin.times(lightProject.get(2).Normal()))
-        lightProject.get(0).oSet(right)
-        lightProject.get(0).oSet(3, -origin.times(lightProject.get(0).Normal()))
-        lightProject.get(1).oSet(up)
-        lightProject.get(1).oSet(3, -origin.times(lightProject.get(1).Normal()))
+        lightProject.get(2).set(normal)
+        lightProject.get(2).set(3, -origin.times(lightProject.get(2).Normal()))
+        lightProject.get(0).set(right)
+        lightProject.get(0).set(3, -origin.times(lightProject.get(0).Normal()))
+        lightProject.get(1).set(up)
+        lightProject.get(1).set(3, -origin.times(lightProject.get(1).Normal()))
 
         // now offset to center
-        targetGlobal.oSet(target.oPlus(origin))
-        targetGlobal.oSet(3, 1f)
+        targetGlobal.set(target.oPlus(origin))
+        targetGlobal.set(3, 1f)
         ofs = 0.5f - targetGlobal.times(lightProject.get(0).ToVec4()) / targetGlobal.times(
             lightProject.get(2).ToVec4()
         )
@@ -228,14 +228,14 @@ object tr_lightrun {
         lightProject.get(1).ToVec4_oPluSet(lightProject.get(2).ToVec4().times(ofs))
 
         // set the falloff vector
-        normal.oSet(stop.oMinus(start))
+        normal.set(stop.minus(start))
         dist = normal.Normalize()
         if (dist <= 0) {
             dist = 1f
         }
-        lightProject.get(3).oSet(normal.times(1.0f / dist))
-        startGlobal.oSet(start.oPlus(origin))
-        lightProject.get(3).oSet(3, -startGlobal.times(lightProject.get(3).Normal()))
+        lightProject.get(3).set(normal.times(1.0f / dist))
+        startGlobal.set(start.oPlus(origin))
+        lightProject.get(3).set(3, -startGlobal.times(lightProject.get(3).Normal()))
     }
 
     /*
@@ -252,20 +252,20 @@ object tr_lightrun {
         // we want the planes of s=0, s=q, t=0, and t=q
         frustum.get(0) = idPlane(lightProject.get(0))
         frustum.get(1) = idPlane(lightProject.get(1))
-        frustum.get(2) = lightProject.get(2).oMinus(lightProject.get(0))
-        frustum.get(3) = lightProject.get(2).oMinus(lightProject.get(1))
+        frustum.get(2) = lightProject.get(2).minus(lightProject.get(0))
+        frustum.get(3) = lightProject.get(2).minus(lightProject.get(1))
 
         // we want the planes of s=0 and s=1 for front and rear clipping planes
         frustum.get(4) = idPlane(lightProject.get(3))
         frustum.get(5) = idPlane(lightProject.get(3))
-        frustum.get(5).oMinSet(3, 1.0f)
-        frustum.get(5) = frustum.get(5).oNegative()
+        frustum.get(5).minusAssign(3, 1.0f)
+        frustum.get(5) = frustum.get(5).unaryMinus()
         i = 0
         while (i < 6) {
             var f: Float
-            frustum.get(i) = frustum.get(i).oNegative()
+            frustum.get(i) = frustum.get(i).unaryMinus()
             f = frustum.get(i).Normalize()
-            frustum.get(i).oDivSet(3, f)
+            frustum.get(i).divAssign(3, f)
             i++
         }
     }
@@ -345,13 +345,13 @@ object tr_lightrun {
             for (l in light.lightProject.indices) {
                 light.lightProject[l] = idPlane()
             }
-            light.lightProject[0].oSet(0, 0.5f / light.parms.lightRadius.oGet(0))
-            light.lightProject[1].oSet(1, 0.5f / light.parms.lightRadius.oGet(1))
-            light.lightProject[3].oSet(2, 0.5f / light.parms.lightRadius.oGet(2))
-            light.lightProject[0].oSet(3, 0.5f)
-            light.lightProject[1].oSet(3, 0.5f)
-            light.lightProject[2].oSet(3, 1.0f)
-            light.lightProject[3].oSet(3, 0.5f)
+            light.lightProject[0].set(0, 0.5f / light.parms.lightRadius.get(0))
+            light.lightProject[1].set(1, 0.5f / light.parms.lightRadius.get(1))
+            light.lightProject[3].set(2, 0.5f / light.parms.lightRadius.get(2))
+            light.lightProject[0].set(3, 0.5f)
+            light.lightProject[1].set(3, 0.5f)
+            light.lightProject[2].set(3, 1.0f)
+            light.lightProject[3].set(3, 0.5f)
         }
 
         // set the frustum planes
@@ -362,14 +362,14 @@ object tr_lightrun {
         i = 0
         while (i < 6) {
             val temp = idPlane()
-            temp.oSet(light.frustum[i])
+            temp.set(light.frustum[i])
             tr_main.R_LocalPlaneToGlobal(light.modelMatrix, temp, light.frustum[i])
             i++
         }
         i = 0
         while (i < 4) {
             val temp = idPlane()
-            temp.oSet(light.lightProject[i])
+            temp.set(light.lightProject[i])
             tr_main.R_LocalPlaneToGlobal(light.modelMatrix, temp, light.lightProject[i])
             i++
         }
@@ -378,14 +378,14 @@ object tr_lightrun {
         // we are just faking parallel by making it a very far off center for now
         if (light.parms.parallel) {
             val dir = idVec3()
-            dir.oSet(light.parms.lightCenter)
+            dir.set(light.parms.lightCenter)
             if (0f == dir.Normalize()) {
                 // make point straight up if not specified
-                dir.oSet(2, 1f)
+                dir.set(2, 1f)
             }
-            light.globalLightOrigin.oSet(light.parms.origin.oPlus(dir.times(100000f)))
+            light.globalLightOrigin.set(light.parms.origin.oPlus(dir.times(100000f)))
         } else {
-            light.globalLightOrigin.oSet(light.parms.origin.oPlus(light.parms.axis.times(light.parms.lightCenter)))
+            light.globalLightOrigin.set(light.parms.origin.oPlus(light.parms.axis.times(light.parms.lightCenter)))
         }
         tr_lightrun.R_FreeLightDefFrustum(light)
         light.frustumTris = tr_polytope.R_PolytopeSurface(6, light.frustum, light.frustumWindings)
@@ -408,16 +408,16 @@ object tr_lightrun {
         }
         i = 0
         while (i < tri.numVerts) {
-            points[i].oSet(tri.verts[i].xyz)
+            points[i].set(tri.verts[i].xyz)
             i++
         }
-        if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds.oGet(1, 0) - tri.bounds.oGet(0, 0) > 1024
-                    || tri.bounds.oGet(1, 1) - tri.bounds.oGet(0, 1) > 1024)
+        if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds.get(1, 0) - tri.bounds.get(0, 0) > 1024
+                    || tri.bounds.get(1, 1) - tri.bounds.get(0, 1) > 1024)
         ) {
             Common.common.Printf(
                 "big lightRef: %f,%f\n",
-                tri.bounds.oGet(1, 0) - tri.bounds.oGet(0, 0),
-                tri.bounds.oGet(1, 1) - tri.bounds.oGet(0, 1)
+                tri.bounds.get(1, 0) - tri.bounds.get(0, 0),
+                tri.bounds.get(1, 1) - tri.bounds.get(0, 1)
             )
         }
 
@@ -479,7 +479,7 @@ object tr_lightrun {
             j = 0
             while (j < 6) {
                 var d: Float
-                d = w.oGet(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].oGet(3)
+                d = w.oGet(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].get(3)
                 if (d > 0) {
                     return false
                 }
@@ -715,10 +715,10 @@ object tr_lightrun {
         var light: idRenderLightLocal?
         j = 0
         while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.oGet(j)
+            rw = tr_local.tr.worlds.get(j)
             i = 0
             while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.oGet(i)
+                def = rw.entityDefs.get(i)
                 if (null == def) {
                     i++
                     continue
@@ -728,7 +728,7 @@ object tr_lightrun {
             }
             i = 0
             while (i < rw.lightDefs.Num()) {
-                light = rw.lightDefs.oGet(i)
+                light = rw.lightDefs.get(i)
                 if (null == light) {
                     i++
                     continue
@@ -752,10 +752,10 @@ object tr_lightrun {
         var def: idRenderEntityLocal?
         j = 0
         while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.oGet(j)
+            rw = tr_local.tr.worlds.get(j)
             i = 0
             while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.oGet(i)
+                def = rw.entityDefs.get(i)
                 if (null == def) {
                     i++
                     continue
@@ -791,10 +791,10 @@ object tr_lightrun {
         tr_local.tr.viewDef = null
         j = 0
         while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.oGet(j)
+            rw = tr_local.tr.worlds.get(j)
             i = 0
             while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.oGet(i)
+                def = rw.entityDefs.get(i)
                 if (null == def) {
                     i++
                     continue
@@ -810,7 +810,7 @@ object tr_lightrun {
             }
             i = 0
             while (i < rw.lightDefs.Num()) {
-                light = rw.lightDefs.oGet(i)
+                light = rw.lightDefs.get(i)
                 if (null == light) {
                     i++
                     continue
@@ -859,7 +859,7 @@ object tr_lightrun {
             i = 0
             while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
                 var light: idRenderLightLocal?
-                light = tr_local.tr.primaryWorld.lightDefs.oGet(i)
+                light = tr_local.tr.primaryWorld.lightDefs.get(i)
                 if (light != null) {
                     count++
                     for (j in 0..2) {

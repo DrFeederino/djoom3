@@ -1495,7 +1495,7 @@ object FileSystem_h {
                 var checks: String? = ""
                 i = 0
                 while (i < serverPaks.Num()) {
-                    checks += Str.va("%x ", serverPaks.oGet(i).checksum)
+                    checks += Str.va("%x ", serverPaks.get(i).checksum)
                     i++
                 }
                 idLib.common.Printf("set pure list - %d paks ( %s)\n", serverPaks.Num(), checks)
@@ -1617,7 +1617,7 @@ object FileSystem_h {
             i = 0
             j = 0
             while (pureChecksums.get(i) != 0) {
-                if (j < serverPaks.Num() && serverPaks.oGet(j).checksum == pureChecksums.get(i)) {
+                if (j < serverPaks.Num() && serverPaks.get(j).checksum == pureChecksums.get(i)) {
                     canPrepend = false // once you start matching into the list there is no prepending anymore
                     i++
                     j++ // the pak is matched, is in the right order, continue..
@@ -1700,8 +1700,8 @@ object FileSystem_h {
                 if (fs_debug.GetBool()) {
                     idLib.common.Printf(
                         "pak %s checksumed 0x%x is an extra reference at the end of local pure list\n",
-                        serverPaks.oGet(j).pakFilename.toString(),
-                        serverPaks.oGet(j).checksum
+                        serverPaks.get(j).pakFilename.toString(),
+                        serverPaks.get(j).checksum
                     )
                 }
                 j++
@@ -1780,7 +1780,7 @@ object FileSystem_h {
             var i: Int
             i = 0
             while (i < serverPaks.Num()) {
-                checksums.get(i) = serverPaks.oGet(i).checksum
+                checksums.get(i) = serverPaks.get(i).checksum
                 i++
             }
             checksums.get(i) = 0
@@ -2891,7 +2891,7 @@ object FileSystem_h {
                     }
                     // each addon may have a bunch of map decls
                     if (idecl < search.pack.addon_info.mapDecls.Num()) {
-                        mapDict = search.pack.addon_info.mapDecls.oGet(idecl)
+                        mapDict = search.pack.addon_info.mapDecls.get(idecl)
                         return mapDict
                     }
                     idecl -= search.pack.addon_info.mapDecls.Num()
@@ -3637,14 +3637,14 @@ object FileSystem_h {
                                     checks.Clear()
                                     i = 0
                                     while (i < serverPaks.Num()) {
-                                        checks.Append(Str.va("%p ", serverPaks.oGet(i)))
+                                        checks.Append(Str.va("%p ", serverPaks.get(i)))
                                         i++
                                     }
                                     idLib.common.Printf("%d pure paks - %s \n", serverPaks.Num(), checks.toString())
                                     checks.Clear()
                                     i = 0
                                     while (i < restartChecksums.Num()) {
-                                        checks.Append(Str.va("%x ", restartChecksums.oGet(i)))
+                                        checks.Append(Str.va("%x ", restartChecksums.get(i)))
                                         i++
                                     }
                                     idLib.common.Printf(
@@ -3677,14 +3677,14 @@ object FileSystem_h {
                         checks.Clear()
                         i = 0
                         while (i < serverPaks.Num()) {
-                            checks.Append(Str.va("%p ", serverPaks.oGet(i)))
+                            checks.Append(Str.va("%p ", serverPaks.get(i)))
                             i++
                         }
                         idLib.common.Printf("%d pure paks - %s \n", serverPaks.Num(), checks)
                         checks.Clear()
                         i = 0
                         while (i < restartChecksums.Num()) {
-                            checks.Append(Str.va("%x ", restartChecksums.oGet(i)))
+                            checks.Append(Str.va("%x ", restartChecksums.get(i)))
                             i++
                         }
                         idLib.common.Printf("%d paks left - %s\n", restartChecksums.Num(), checks)
@@ -4196,7 +4196,7 @@ object FileSystem_h {
             val num = pak.addon_info.depends.Num()
             i = 0
             while (i < num) {
-                val deppak = GetPackForChecksum(pak.addon_info.depends.oGet(i), true)
+                val deppak = GetPackForChecksum(pak.addon_info.depends.get(i), true)
                 if (deppak != null) {
                     // make sure it hasn't been marked for search already
                     if (!deppak.addon_search) {
@@ -4220,7 +4220,7 @@ object FileSystem_h {
                         "Addon pk4 %s 0x%x depends on unknown pak 0x%x\n",
                         pak.pakFilename.toString(),
                         pak.checksum,
-                        pak.addon_info.depends.oGet(i)
+                        pak.addon_info.depends.get(i)
                     )
                 }
                 i++

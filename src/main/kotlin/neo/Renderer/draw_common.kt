@@ -61,31 +61,31 @@ object draw_common {
     ) {
         val genMatrix = FloatArray(16)
         val finale = FloatArray(16)
-        genMatrix[0] = lightProject.get(0).oGet(0)
-        genMatrix[4] = lightProject.get(0).oGet(1)
-        genMatrix[8] = lightProject.get(0).oGet(2)
-        genMatrix[12] = lightProject.get(0).oGet(3)
-        genMatrix[1] = lightProject.get(1).oGet(0)
-        genMatrix[5] = lightProject.get(1).oGet(1)
-        genMatrix[9] = lightProject.get(1).oGet(2)
-        genMatrix[13] = lightProject.get(1).oGet(3)
+        genMatrix[0] = lightProject.get(0).get(0)
+        genMatrix[4] = lightProject.get(0).get(1)
+        genMatrix[8] = lightProject.get(0).get(2)
+        genMatrix[12] = lightProject.get(0).get(3)
+        genMatrix[1] = lightProject.get(1).get(0)
+        genMatrix[5] = lightProject.get(1).get(1)
+        genMatrix[9] = lightProject.get(1).get(2)
+        genMatrix[13] = lightProject.get(1).get(3)
         genMatrix[2] = 0
         genMatrix[6] = 0
         genMatrix[10] = 0
         genMatrix[14] = 0
-        genMatrix[3] = lightProject.get(2).oGet(0)
-        genMatrix[7] = lightProject.get(2).oGet(1)
-        genMatrix[11] = lightProject.get(2).oGet(2)
-        genMatrix[15] = lightProject.get(2).oGet(3)
+        genMatrix[3] = lightProject.get(2).get(0)
+        genMatrix[7] = lightProject.get(2).get(1)
+        genMatrix[11] = lightProject.get(2).get(2)
+        genMatrix[15] = lightProject.get(2).get(3)
         tr_main.myGlMultMatrix(genMatrix, tr_local.backEnd.lightTextureMatrix, finale)
-        lightProject.get(0).oSet(0, finale[0])
-        lightProject.get(0).oSet(1, finale[4])
-        lightProject.get(0).oSet(2, finale[8])
-        lightProject.get(0).oSet(3, finale[12])
-        lightProject.get(1).oSet(0, finale[1])
-        lightProject.get(1).oSet(1, finale[5])
-        lightProject.get(1).oSet(2, finale[9])
-        lightProject.get(1).oSet(3, finale[13])
+        lightProject.get(0).set(0, finale[0])
+        lightProject.get(0).set(1, finale[4])
+        lightProject.get(0).set(2, finale[8])
+        lightProject.get(0).set(3, finale[12])
+        lightProject.get(1).set(0, finale[1])
+        lightProject.get(1).set(1, finale[5])
+        lightProject.get(1).set(2, finale[9])
+        lightProject.get(1).set(3, finale[13])
     }
 
     /*
@@ -448,9 +448,9 @@ object draw_common {
         //
         // set eye position in global space
         //
-        parm.put(0, tr_local.backEnd.viewDef.renderView.vieworg.oGet(0))
-        parm.put(1, tr_local.backEnd.viewDef.renderView.vieworg.oGet(1))
-        parm.put(2, tr_local.backEnd.viewDef.renderView.vieworg.oGet(2))
+        parm.put(0, tr_local.backEnd.viewDef.renderView.vieworg.get(0))
+        parm.put(1, tr_local.backEnd.viewDef.renderView.vieworg.get(1))
+        parm.put(2, tr_local.backEnd.viewDef.renderView.vieworg.get(2))
         parm.put(3, 1f)
         qgl.qglProgramEnvParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 1, parm)
     }
@@ -1079,14 +1079,14 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
         qgl.qglTexCoord2f(0.5f, 0.5f) // make sure Q is set
-        draw_common.fogPlanes[0].oSet(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2])
-        draw_common.fogPlanes[0].oSet(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6])
-        draw_common.fogPlanes[0].oSet(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10])
-        draw_common.fogPlanes[0].oSet(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14])
-        draw_common.fogPlanes[1].oSet(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0])
-        draw_common.fogPlanes[1].oSet(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4])
-        draw_common.fogPlanes[1].oSet(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8])
-        draw_common.fogPlanes[1].oSet(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12])
+        draw_common.fogPlanes[0].set(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2])
+        draw_common.fogPlanes[0].set(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6])
+        draw_common.fogPlanes[0].set(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10])
+        draw_common.fogPlanes[0].set(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14])
+        draw_common.fogPlanes[1].set(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0])
+        draw_common.fogPlanes[1].set(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4])
+        draw_common.fogPlanes[1].set(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8])
+        draw_common.fogPlanes[1].set(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12])
 
         // texture 1 is the entering plane fade correction
         tr_backend.GL_SelectTexture(1)
@@ -1096,20 +1096,20 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
 
         // T will get a texgen for the fade plane, which is always the "top" plane on unrotated lights
-        draw_common.fogPlanes[2].oSet(0, 0.001f * tr_local.backEnd.vLight.fogPlane.oGet(0))
-        draw_common.fogPlanes[2].oSet(1, 0.001f * tr_local.backEnd.vLight.fogPlane.oGet(1))
-        draw_common.fogPlanes[2].oSet(2, 0.001f * tr_local.backEnd.vLight.fogPlane.oGet(2))
-        draw_common.fogPlanes[2].oSet(3, 0.001f * tr_local.backEnd.vLight.fogPlane.oGet(3))
+        draw_common.fogPlanes[2].set(0, 0.001f * tr_local.backEnd.vLight.fogPlane.get(0))
+        draw_common.fogPlanes[2].set(1, 0.001f * tr_local.backEnd.vLight.fogPlane.get(1))
+        draw_common.fogPlanes[2].set(2, 0.001f * tr_local.backEnd.vLight.fogPlane.get(2))
+        draw_common.fogPlanes[2].set(3, 0.001f * tr_local.backEnd.vLight.fogPlane.get(3))
 
         // S is based on the view origin
         val s =
-            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2].oGet(
+            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2].get(
                 3
             )
-        draw_common.fogPlanes[3].oSet(0, 0f)
-        draw_common.fogPlanes[3].oSet(1, 0f)
-        draw_common.fogPlanes[3].oSet(2, 0f)
-        draw_common.fogPlanes[3].oSet(3, tr_local.FOG_ENTER + s)
+        draw_common.fogPlanes[3].set(0, 0f)
+        draw_common.fogPlanes[3].set(1, 0f)
+        draw_common.fogPlanes[3].set(2, 0f)
+        draw_common.fogPlanes[3].set(3, tr_local.FOG_ENTER + s)
         qgl.qglTexCoord2f(tr_local.FOG_ENTER + s, tr_local.FOG_ENTER)
 
         // draw it
@@ -1327,7 +1327,7 @@ object draw_common {
                 tr_backend.GL_SelectTexture(1)
                 val plane = idPlane()
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, tr_local.backEnd.viewDef.clipPlanes[0], plane)
-                plane.oPluSet(3, 0.5f) // the notch is in the middle
+                plane.plusAssign(3, 0.5f) // the notch is in the middle
                 qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
                 tr_backend.GL_SelectTexture(0)
             }
@@ -1704,18 +1704,18 @@ object draw_common {
                 val local = idPlane()
                 tr_backend.GL_SelectTexture(0)
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[0], local)
-                local.oPluSet(3, 0.5f)
+                local.plusAssign(3, 0.5f)
                 qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
 
 //		R_GlobalPlaneToLocal( surf.space.modelMatrix, fogPlanes[1], local );
 //		local[3] += 0.5;
-                local.oSet(0, local.oSet(1, local.oSet(2, local.oSet(3, 0.5f))))
+                local.set(0, local.set(1, local.set(2, local.set(3, 0.5f))))
                 qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
                 tr_backend.GL_SelectTexture(1)
 
                 // GL_S is constant per viewer
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[2], local)
-                local.oPluSet(3, tr_local.FOG_ENTER)
+                local.plusAssign(3, tr_local.FOG_ENTER)
                 qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[3], local)
                 qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())

@@ -478,7 +478,7 @@ object tr_backend {
         start = win_shared.Sys_Milliseconds()
         i = 0
         while (i < Image.globalImages.images.Num()) {
-            image = Image.globalImages.images.oGet(i)
+            image = Image.globalImages.images.get(i)
             if (image.texNum == idImage.Companion.TEXTURE_NOT_LOADED && image.partialImage == null) {
                 i++
                 continue

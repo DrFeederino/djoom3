@@ -850,7 +850,7 @@ object Winvar {
             z: Float,
             w: Float
         ) : this() { //TODO: check whether the int to pointer cast works like this.
-            data.oSet(idVec4(x, y, z, w))
+            data.set(idVec4(x, y, z, w))
         }
 
         //copy constructor
@@ -863,7 +863,7 @@ object Winvar {
         override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
-                data.oSet(guiDict.GetVec4(GetName()))
+                data.set(guiDict.GetVec4(GetName()))
             }
         }
 
@@ -889,12 +889,12 @@ object Winvar {
 
         fun oSet(other: idWinVec4?): idWinVec4? {
             super.oSet(other)
-            data.oSet(other.data)
+            data.set(other.data)
             return this
         }
 
         fun oSet(other: idVec4?): idVec4? {
-            data.oSet(other)
+            data.set(other)
             if (guiDict != null) {
                 guiDict.SetVec4(GetName(), data)
             }
@@ -961,7 +961,7 @@ object Winvar {
         override fun Update() {
             val s = GetName()
             if (guiDict != null && s.get(0) != '\u0000') {
-                data.oSet(guiDict.GetVec4(s))
+                data.set(guiDict.GetVec4(s))
             }
         }
 
@@ -1005,14 +1005,14 @@ object Winvar {
         //copy constructor
         constructor(winVec3: idWinVec3?) {
             super.oSet(winVec3)
-            data.oSet(winVec3.data)
+            data.set(winVec3.data)
         }
 
         //	~idWinVec3() {};
         override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
-                data.oSet(guiDict.GetVector(GetName()))
+                data.set(guiDict.GetVector(GetName()))
             }
         }
 
@@ -1038,12 +1038,12 @@ object Winvar {
 
         fun oSet(other: idWinVec3?): idWinVec3? {
             super.oSet(other)
-            data.oSet(other.data)
+            data.set(other.data)
             return this
         }
 
         fun oSet(other: idVec3?): idVec3? {
-            data.oSet(other)
+            data.set(other)
             if (guiDict != null) {
                 guiDict.SetVector(GetName(), data)
             }
@@ -1087,7 +1087,7 @@ object Winvar {
         override fun Update() {
             val s = GetName()
             if (guiDict != null && s.get(0) != '\u0000') {
-                data.oSet(guiDict.GetVector(s))
+                data.set(guiDict.GetVector(s))
             }
         }
 
@@ -1261,19 +1261,19 @@ object Winvar {
     internal class idMultiWinVar : idList<idWinVar?>() {
         fun Set(`val`: String?) {
             for (i in 0 until Num()) {
-                oGet(i).Set(`val`)
+                get(i).Set(`val`)
             }
         }
 
         fun Update() {
             for (i in 0 until Num()) {
-                oGet(i).Update()
+                get(i).Update()
             }
         }
 
         fun SetGuiInfo(dict: idDict?) {
             for (i in 0 until Num()) {
-                oGet(i).SetGuiInfo(dict, oGet(i).c_str())
+                get(i).SetGuiInfo(dict, get(i).c_str())
             }
         }
     }

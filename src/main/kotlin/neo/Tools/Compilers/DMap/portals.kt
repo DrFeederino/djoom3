@@ -200,9 +200,9 @@ object portals {
         // pad with some space so there will never be null volume leafs
         i = 0
         while (i < 3) {
-            bounds.oSet(0, i, tree.bounds.oGet(0, i) - portals.SIDESPACE)
-            bounds.oSet(1, i, tree.bounds.oGet(1, i) - portals.SIDESPACE)
-            if (bounds.oGet(0, i) >= bounds.oGet(1, i)) {
+            bounds.set(0, i, tree.bounds.get(0, i) - portals.SIDESPACE)
+            bounds.set(1, i, tree.bounds.get(1, i) - portals.SIDESPACE)
+            if (bounds.get(0, i) >= bounds.get(1, i)) {
                 Common.common.Error("Backwards tree volume")
             }
             i++
@@ -217,13 +217,13 @@ object portals {
                 val pl = bplanes[n]
                 //			memset (pl, 0, sizeof(*pl));
                 if (j != 0) {
-                    pl.oSet(i, -1f)
-                    pl.oSet(3, bounds.oGet(j, i))
+                    pl.set(i, -1f)
+                    pl.set(3, bounds.get(j, i))
                 } else {
-                    pl.oSet(i, 1f)
-                    pl.oSet(3, -bounds.oGet(j, i))
+                    pl.set(i, 1f)
+                    pl.set(3, -bounds.get(j, i))
                 }
-                p.plane.oSet(pl)
+                p.plane.set(pl)
                 p.winding = idWinding(pl)
                 portals.AddPortalToNodes(p, node, tree.outside_node)
                 j++
@@ -257,18 +257,18 @@ object portals {
         var node = node
         var w: idWinding?
         var n: node_s?
-        w = idWinding(dmap.dmapGlobals.mapPlanes.oGet(node.planenum))
+        w = idWinding(dmap.dmapGlobals.mapPlanes.get(node.planenum))
 
         // clip by all the parents
         n = node.parent
         while (n != null && w != null) {
-            val plane = dmap.dmapGlobals.mapPlanes.oGet(n.planenum)
+            val plane = dmap.dmapGlobals.mapPlanes.get(n.planenum)
             w = if (n.children[0] == node) {
                 // take front
                 w.Clip(plane, portals.BASE_WINDING_EPSILON)
             } else {
                 // take back
-                val back = idPlane(plane.oNegative())
+                val back = idPlane(plane.unaryMinus())
                 w.Clip(back, portals.BASE_WINDING_EPSILON)
             }
             node = n
@@ -298,10 +298,10 @@ object portals {
             val plane = idPlane()
             if (p.nodes[0] == node) {
                 side = 0
-                plane.oSet(p.plane)
+                plane.set(p.plane)
             } else if (p.nodes[1] === node) {
                 side = 1
-                plane.oSet(p.plane.oNegative())
+                plane.set(p.plane.unaryMinus())
             } else {
                 Common.common.Error("CutNodePortals_r: mislinked portal")
                 side = 0 // quiet a compiler warning
@@ -318,7 +318,7 @@ object portals {
             return
         }
         new_portal = portals.AllocPortal()
-        new_portal.plane.oSet(dmap.dmapGlobals.mapPlanes.oGet(node.planenum))
+        new_portal.plane.set(dmap.dmapGlobals.mapPlanes.get(node.planenum))
         new_portal.onnode = node
         new_portal.winding = w
         portals.AddPortalToNodes(new_portal, node.children[0], node.children[1])
@@ -343,7 +343,7 @@ object portals {
         var side: Int
         var frontwinding: idWinding? = idWinding()
         var backwinding: idWinding? = idWinding()
-        val plane = dmap.dmapGlobals.mapPlanes.oGet(node.planenum)
+        val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
         f = node.children[0]
         b = node.children[1]
         p = node.portals
@@ -450,12 +450,12 @@ object portals {
     fun MakeTreePortals_r(node: node_s?) {
         var i: Int
         portals.CalcNodeBounds(node)
-        if (node.bounds.oGet(0, 0) >= node.bounds.oGet(1, 0)) {
+        if (node.bounds.get(0, 0) >= node.bounds.get(1, 0)) {
             Common.common.Warning("node without a volume")
         }
         i = 0
         while (i < 3) {
-            if (node.bounds.oGet(0, i) < Lib.Companion.MIN_WORLD_COORD || node.bounds.oGet(
+            if (node.bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || node.bounds.get(
                     1,
                     i
                 ) > Lib.Companion.MAX_WORLD_COORD
@@ -529,7 +529,7 @@ object portals {
         // find the leaf to start in
         node = headnode
         while (node.planenum != dmap.PLANENUM_LEAF) {
-            val plane = dmap.dmapGlobals.mapPlanes.oGet(node.planenum)
+            val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
             d = plane.Distance(origin)
             node = if (d >= 0.0f) {
                 node.children[0]

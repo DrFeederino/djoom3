@@ -93,12 +93,12 @@ class Physics_Actor {
         // align the clip model with the gravity direction
         fun SetClipModelAxis() {
             // align clip model to gravity direction
-            if (gravityNormal.oGet(2) == -1.0f || gravityNormal == Vector.getVec3_zero()) {
+            if (gravityNormal.get(2) == -1.0f || gravityNormal == Vector.getVec3_zero()) {
                 clipModelAxis.Identity()
             } else {
-                clipModelAxis.oSet(2, gravityNormal.oNegative())
-                clipModelAxis.oGet(2).NormalVectors(clipModelAxis.oGet(0), clipModelAxis.oGet(1))
-                clipModelAxis.oSet(1, clipModelAxis.oGet(1).oNegative())
+                clipModelAxis.set(2, gravityNormal.oNegative())
+                clipModelAxis.get(2).NormalVectors(clipModelAxis.get(0), clipModelAxis.get(1))
+                clipModelAxis.set(1, clipModelAxis.get(1).oNegative())
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, clipModel.GetOrigin(), clipModelAxis)

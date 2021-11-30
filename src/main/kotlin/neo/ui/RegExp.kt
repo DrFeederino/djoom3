@@ -81,23 +81,23 @@ class RegExp {
                 }
                 REGTYPE.VEC2 -> {
                     v2 = (`var` as idWinVec2?).data
-                    v.oSet(0, v2.oGet(0))
-                    v.oSet(1, v2.oGet(1))
+                    v.set(0, v2.get(0))
+                    v.set(1, v2.get(1))
                 }
                 REGTYPE.VEC3 -> {
-                    v3.oSet((`var` as idWinVec3?).data)
-                    v.oSet(0, v3.oGet(0))
-                    v.oSet(1, v3.oGet(1))
-                    v.oSet(2, v3.oGet(2))
+                    v3.set((`var` as idWinVec3?).data)
+                    v.set(0, v3.get(0))
+                    v.set(1, v3.get(1))
+                    v.set(2, v3.get(2))
                 }
                 REGTYPE.FLOAT -> {
-                    v.oSet(0, (`var` as idWinFloat?).data)
+                    v.set(0, (`var` as idWinFloat?).data)
                 }
                 REGTYPE.INT -> {
-                    v.oSet(0, (`var` as idWinInt?).data.toFloat())
+                    v.set(0, (`var` as idWinInt?).data.toFloat())
                 }
                 REGTYPE.BOOL -> {
-                    v.oSet(0, TempDump.btoi((`var` as idWinBool?).data).toFloat())
+                    v.set(0, TempDump.btoi((`var` as idWinBool?).data).toFloat())
                 }
                 else -> {
                     Common.common.FatalError("idRegister::SetToRegs: bad reg type")
@@ -105,7 +105,7 @@ class RegExp {
             }
             i = 0
             while (i < regCount) {
-                if (java.lang.Float.isInfinite(v.oGet(i).also { registers.get(regs.get(i)) = it })) {
+                if (java.lang.Float.isInfinite(v.get(i).also { registers.get(regs.get(i)) = it })) {
                     val bla = 111
                 }
                 i++
@@ -120,7 +120,7 @@ class RegExp {
                 return
             }
             for (i in 0 until regCount) {
-                v.oSet(i, registers.get(regs.get(i)))
+                v.set(i, registers.get(regs.get(i)))
             }
             when (REGTYPE.values()[type.toInt()]) {
                 REGTYPE.VEC4 -> {
@@ -140,13 +140,13 @@ class RegExp {
                     (`var` as idWinVec3?).oSet(v.ToVec3())
                 }
                 REGTYPE.FLOAT -> {
-                    (`var` as idWinFloat?).data = v.oGet(0)
+                    (`var` as idWinFloat?).data = v.get(0)
                 }
                 REGTYPE.INT -> {
-                    (`var` as idWinInt?).data = v.oGet(0).toInt()
+                    (`var` as idWinInt?).data = v.get(0).toInt()
                 }
                 REGTYPE.BOOL -> {
-                    (`var` as idWinBool?).data = v.oGet(0) != 0.0f
+                    (`var` as idWinBool?).data = v.get(0) != 0.0f
                 }
                 else -> {
                     Common.common.FatalError("idRegister::GetFromRegs: bad reg type")
@@ -272,7 +272,7 @@ class RegExp {
                 val reg = idRegister(name, type)
                 reg.`var` = `var`
                 for (i in 0 until numRegs) {
-                    reg.regs.get(i) = win.ExpressionConstant(data.oGet(i)).toShort()
+                    reg.regs.get(i) = win.ExpressionConstant(data.get(i)).toShort()
                 }
                 val hash = regHash.GenerateKey(name, false)
                 regHash.Add(hash, regs.Append(reg))
@@ -283,9 +283,9 @@ class RegExp {
             val hash = regHash.GenerateKey(name, false)
             var i = regHash.First(hash)
             while (i != -1) {
-                if (regs.oGet(i).name.Icmp(name) == 0) {
+                if (regs.get(i).name.Icmp(name) == 0) {
 //                    System.out.println(regs.oGet(i));
-                    return regs.oGet(i)
+                    return regs.get(i)
                 }
                 i = regHash.Next(i)
             }
@@ -296,14 +296,14 @@ class RegExp {
             var i: Int
             i = 0
             while (i < regs.Num()) {
-                regs.oGet(i).SetToRegs(registers)
+                regs.get(i).SetToRegs(registers)
                 i++
             }
         }
 
         fun GetFromRegs(registers: FloatArray?) {
             for (i in 0 until regs.Num()) {
-                regs.oGet(i).GetFromRegs(registers)
+                regs.get(i).GetFromRegs(registers)
             }
         }
 
@@ -327,7 +327,7 @@ class RegExp {
             val c = regs.Num()
             f.WriteInt(c)
             for (i in 0 until c) {
-                regs.oGet(i).WriteToDemoFile(f)
+                regs.get(i).WriteToDemoFile(f)
             }
         }
 
@@ -338,7 +338,7 @@ class RegExp {
             savefile.WriteInt(num)
             i = 0
             while (i < num) {
-                regs.oGet(i).WriteToSaveGame(savefile)
+                regs.get(i).WriteToSaveGame(savefile)
                 i++
             }
         }
@@ -349,7 +349,7 @@ class RegExp {
             num = savefile.ReadInt()
             i = 0
             while (i < num) {
-                regs.oGet(i).ReadFromSaveGame(savefile)
+                regs.get(i).ReadFromSaveGame(savefile)
                 i++
             }
         }

@@ -216,15 +216,15 @@ object map {
             while (i < b.numsides) {
                 val plane = idPlane()
                 s = b.sides[i]
-                plane.oSet(dmap.dmapGlobals.mapPlanes.oGet(s.planenum))
-                plane.oPluSet(3, plane.Normal().times(ent.origin))
+                plane.set(dmap.dmapGlobals.mapPlanes.get(s.planenum))
+                plane.plusAssign(3, plane.Normal().times(ent.origin))
                 s.planenum = FindFloatPlane(plane)
                 s.texVec.v[0].plusAssign(3, Vector.DotProduct(ent.origin, s.texVec.v[0]))
                 s.texVec.v[1].plusAssign(3, Vector.DotProduct(ent.origin, s.texVec.v[1]))
 
                 // remove any integral shift
-                s.texVec.v[0].oMinSet(3, Math.floor(s.texVec.v[0].oGet(3).toDouble()).toFloat())
-                s.texVec.v[1].oMinSet(3, Math.floor(s.texVec.v[1].oGet(3).toDouble()).toFloat())
+                s.texVec.v[0].minusAssign(3, Math.floor(s.texVec.v[0].get(3).toDouble()).toFloat())
+                s.texVec.v[1].minusAssign(3, Math.floor(s.texVec.v[1].get(3).toDouble()).toFloat())
                 i++
             }
             ubrush.CreateBrushWindings(b)
@@ -320,8 +320,8 @@ object map {
             s.material = DeclManager.declManager.FindMaterial(ms.GetMaterial())
             ms.GetTextureVectors(s.texVec.v)
             // remove any integral shift, which will help with grouping
-            s.texVec.v[0].oMinSet(3, Math.floor(s.texVec.v[0].oGet(3).toDouble()).toFloat())
-            s.texVec.v[1].oMinSet(3, Math.floor(s.texVec.v[1].oGet(3).toDouble()).toFloat())
+            s.texVec.v[0].minusAssign(3, Math.floor(s.texVec.v[0].get(3).toDouble()).toFloat())
+            s.texVec.v[1].minusAssign(3, Math.floor(s.texVec.v[1].get(3).toDouble()).toFloat())
             i++
         }
 
@@ -470,7 +470,7 @@ object map {
         if (TempDump.NOT(light.name[0])) {
             Common.common.Error(
                 "Light at (%f,%f,%f) didn't have a name",
-                light.def.parms.origin.oGet(0), light.def.parms.origin.oGet(1), light.def.parms.origin.oGet(2)
+                light.def.parms.origin.get(0), light.def.parms.origin.get(1), light.def.parms.origin.get(2)
             )
         }
         dmap.dmapGlobals.mapLights.Append(light)
@@ -562,8 +562,8 @@ object map {
         Common.common.Printf("%5d areaportals\n", map.c_areaportals)
         Common.common.Printf(
             "size: %5.0f,%5.0f,%5.0f to %5.0f,%5.0f,%5.0f\n",
-            mapBounds.oGet(0, 0), mapBounds.oGet(0, 1), mapBounds.oGet(0, 2),
-            mapBounds.oGet(1, 0), mapBounds.oGet(1, 1), mapBounds.oGet(1, 2)
+            mapBounds.get(0, 0), mapBounds.get(0, 1), mapBounds.get(0, 2),
+            mapBounds.get(1, 0), mapBounds.get(1, 1), mapBounds.get(1, 2)
         )
         return true
     }
@@ -639,7 +639,7 @@ object map {
         // free the map lights
         i = 0
         while (i < dmap.dmapGlobals.mapLights.Num()) {
-            tr_lightrun.R_FreeLightDefDerivedData(dmap.dmapGlobals.mapLights.oGet(i).def)
+            tr_lightrun.R_FreeLightDefDerivedData(dmap.dmapGlobals.mapLights.get(i).def)
             i++
         }
         dmap.dmapGlobals.mapLights.DeleteContents(true)

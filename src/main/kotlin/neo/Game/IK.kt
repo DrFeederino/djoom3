@@ -137,7 +137,7 @@ object IK /*ea*/ {
                 )
                 return false
             }
-            this.modelOffset.oSet(modelOffset)
+            this.modelOffset.set(modelOffset)
             return true
         }
 
@@ -161,32 +161,32 @@ object IK /*ea*/ {
             val y: Float
             val vec0 = idVec3()
             val vec1 = idVec3()
-            vec0.oSet(endPos.oMinus(startPos))
+            vec0.set(endPos.minus(startPos))
             lengthSqr = vec0.LengthSqr()
             lengthInv = idMath.InvSqrt(lengthSqr)
             length = lengthInv * lengthSqr
 
             // if the start and end position are too far out or too close to each other
             if (length > len0 + len1 || length < Math.abs(len0 - len1)) {
-                jointPos.oSet(startPos.oPlus(vec0.times(0.5f)))
+                jointPos.set(startPos.oPlus(vec0.times(0.5f)))
                 return false
             }
             vec0.timesAssign(lengthInv)
-            vec1.oSet(dir.oMinus(vec0.times(dir.times(vec0))))
+            vec1.set(dir.minus(vec0.times(dir.times(vec0))))
             vec1.Normalize()
             x = (length * length + len0 * len0 - len1 * len1) * (0.5f * lengthInv)
             y = idMath.Sqrt(len0 * len0 - x * x)
-            jointPos.oSet(startPos.oPlus(vec0.times(x).oPlus(vec1.times(y))))
+            jointPos.set(startPos.oPlus(vec0.times(x).oPlus(vec1.times(y))))
             return true
         }
 
         fun GetBoneAxis(startPos: idVec3?, endPos: idVec3?, dir: idVec3?, axis: idMat3?): Float {
             val length: Float
-            axis.oSet(0, endPos.oMinus(startPos))
-            length = axis.oGet(0).Normalize()
-            axis.oSet(1, dir.oMinus(axis.oGet(0).times(dir.times(axis.oGet(0)))))
-            axis.oGet(1).Normalize()
-            axis.oGet(2).Cross(axis.oGet(1), axis.oGet(0))
+            axis.set(0, endPos.minus(startPos))
+            length = axis.get(0).Normalize()
+            axis.set(1, dir.minus(axis.get(0).times(dir.times(axis.get(0)))))
+            axis.get(1).Normalize()
+            axis.get(2).Cross(axis.get(1), axis.get(0))
             return length
         }
 
@@ -512,21 +512,21 @@ object IK /*ea*/ {
             while (i < numLegs) {
                 oldAnkleHeights.get(i) = 0
                 ankleAxis = joints[ankleJoints.get(i)].ToMat3()
-                ankleOrigin.oSet(joints[ankleJoints.get(i)].ToVec3())
+                ankleOrigin.set(joints[ankleJoints.get(i)].ToVec3())
                 kneeAxis = joints[kneeJoints.get(i)].ToMat3()
-                kneeOrigin.oSet(joints[kneeJoints.get(i)].ToVec3())
+                kneeOrigin.set(joints[kneeJoints.get(i)].ToVec3())
                 hipAxis = joints[hipJoints.get(i)].ToMat3()
-                hipOrigin.oSet(joints[hipJoints.get(i)].ToVec3())
+                hipOrigin.set(joints[hipJoints.get(i)].ToVec3())
 
                 // get the IK direction
                 if (dirJoints.get(i) != Model.INVALID_JOINT) {
-                    dirOrigin.oSet(joints[dirJoints.get(i)].ToVec3())
-                    dir.oSet(dirOrigin.oMinus(kneeOrigin))
+                    dirOrigin.set(joints[dirJoints.get(i)].ToVec3())
+                    dir.set(dirOrigin.minus(kneeOrigin))
                 } else {
-                    dir.Set(1.0f, 0f, 0f)
+                    dir.set(1.0f, 0f, 0f)
                 }
-                hipForward.get(i).oSet(dir.times(hipAxis.Transpose()))
-                kneeForward.get(i).oSet(dir.times(kneeAxis.Transpose()))
+                hipForward.get(i).set(dir.times(hipAxis.Transpose()))
+                kneeForward.get(i).set(dir.times(kneeAxis.Transpose()))
 
                 // conversion from upper leg bone axis to hip joint axis
                 upperLegLength.get(i) = GetBoneAxis(hipOrigin, kneeOrigin, dir, axis)
@@ -553,7 +553,7 @@ object IK /*ea*/ {
             if (footSize > 0) {
                 i = 0
                 while (i < 4) {
-                    verts[i].oSet(footWinding.get(i).times(footSize))
+                    verts[i].set(footWinding.get(i).times(footSize))
                     i++
                 }
                 trm.SetupPolygon(verts, 4)
@@ -604,8 +604,8 @@ object IK /*ea*/ {
             if (0 == enabledLegs) { //TODO:make booleans out of ints that are boolean anyways. damn you C programmers!!
                 return
             }
-            normal.oSet(self.GetPhysics().GetGravityNormal().oNegative())
-            modelOrigin.oSet(self.GetPhysics().GetOrigin())
+            normal.set(self.GetPhysics().GetGravityNormal().oNegative())
+            modelOrigin.set(self.GetPhysics().GetOrigin())
             modelAxis = self.GetRenderEntity().axis
             modelHeight = modelOrigin.times(normal)
             modelOrigin.plusAssign(modelOffset.times(modelAxis))
@@ -618,7 +618,7 @@ object IK /*ea*/ {
             i = 0
             while (i < numLegs) {
                 animator.GetJointTransform(footJoints.get(i), Game_local.gameLocal.time, footOrigin, axis)
-                jointOrigins[i].oSet(modelOrigin.oPlus(footOrigin.times(modelAxis)))
+                jointOrigins[i].set(modelOrigin.oPlus(footOrigin.times(modelAxis)))
                 jointHeight = jointOrigins[i].times(normal)
                 if (jointHeight < lowestHeight) {
                     lowestHeight = jointHeight
@@ -627,18 +627,18 @@ object IK /*ea*/ {
                 i++
             }
             if (usePivot) {
-                newPivotYaw = modelAxis.oGet(0).ToYaw()
+                newPivotYaw = modelAxis.get(0).ToYaw()
 
                 // change pivot foot
                 if (newPivotFoot != pivotFoot || Math.abs(idMath.AngleNormalize180(newPivotYaw - pivotYaw)) > 30.0f) {
                     pivotFoot = newPivotFoot
                     pivotYaw = newPivotYaw
                     animator.GetJointTransform(footJoints.get(pivotFoot), Game_local.gameLocal.time, footOrigin, axis)
-                    pivotPos.oSet(modelOrigin.oPlus(footOrigin.times(modelAxis)))
+                    pivotPos.set(modelOrigin.oPlus(footOrigin.times(modelAxis)))
                 }
 
                 // keep pivot foot in place
-                jointOrigins[pivotFoot].oSet(pivotPos)
+                jointOrigins[pivotFoot].set(pivotPos)
             }
 
             // get the floor heights for the feet
@@ -648,8 +648,8 @@ object IK /*ea*/ {
                     i++
                     continue
                 }
-                start.oSet(jointOrigins[i].oPlus(normal.times(footUpTrace)))
-                end.oSet(jointOrigins[i].oMinus(normal.times(footDownTrace)))
+                start.set(jointOrigins[i].oPlus(normal.times(footUpTrace)))
+                end.set(jointOrigins[i].minus(normal.times(footDownTrace)))
                 Game_local.gameLocal.clip.Translation(
                     results,
                     start,
@@ -716,15 +716,15 @@ object IK /*ea*/ {
                 i++
             }
             animator.GetJointTransform(waistJoint, Game_local.gameLocal.time, waistOrigin, waistAxis)
-            waistOrigin.oSet(modelOrigin.oPlus(waistOrigin.times(modelAxis)))
+            waistOrigin.set(modelOrigin.oPlus(waistOrigin.times(modelAxis)))
 
             // adjust position of the waist
-            waistOffset.oSet(normal.times(smallestShift + waistShift))
+            waistOffset.set(normal.times(smallestShift + waistShift))
 
             // if the waist should be at least a certain distance above the floor
             if (minWaistFloorDist > 0 && waistOffset.times(normal) < 0) {
-                start.oSet(waistOrigin)
-                end.oSet(waistOrigin.oPlus(waistOffset.oMinus(normal.times(minWaistFloorDist))))
+                start.set(waistOrigin)
+                end.set(waistOrigin.oPlus(waistOffset.minus(normal.times(minWaistFloorDist))))
                 Game_local.gameLocal.clip.Translation(
                     results,
                     start,
@@ -734,7 +734,7 @@ object IK /*ea*/ {
                     Material.CONTENTS_SOLID or Material.CONTENTS_IKCLIP,
                     self
                 )
-                height = waistOrigin.oPlus(waistOffset.oMinus(results.endpos)).oMultiply(normal)
+                height = waistOrigin.oPlus(waistOffset.minus(results.endpos)).oMultiply(normal)
                 if (height < minWaistFloorDist) {
                     waistOffset.plusAssign(normal.times(minWaistFloorDist - height))
                 }
@@ -768,12 +768,12 @@ object IK /*ea*/ {
 
                 // get the position of the hip in world space
                 animator.GetJointTransform(hipJoints.get(i), Game_local.gameLocal.time, hipOrigin, axis)
-                hipOrigin.oSet(modelOrigin.oPlus(waistOffset.oPlus(hipOrigin.times(modelAxis))))
-                hipDir.oSet(hipForward.get(i).times(axis.times(modelAxis)))
+                hipOrigin.set(modelOrigin.oPlus(waistOffset.oPlus(hipOrigin.times(modelAxis))))
+                hipDir.set(hipForward.get(i).times(axis.times(modelAxis)))
 
                 // get the IK bend direction
                 animator.GetJointTransform(kneeJoints.get(i), Game_local.gameLocal.time, kneeOrigin, axis)
-                kneeDir.oSet(kneeForward.get(i).times(axis.times(modelAxis)))
+                kneeDir.set(kneeForward.get(i).times(axis.times(modelAxis)))
 
                 // solve IK and calculate knee position
                 SolveTwoBones(
@@ -814,7 +814,7 @@ object IK /*ea*/ {
             animator.SetJointPos(
                 waistJoint,
                 jointModTransform_t.JOINTMOD_WORLD_OVERRIDE,
-                waistOrigin.oPlus(waistOffset.oMinus(modelOrigin)).oMultiply(modelAxis.Transpose())
+                waistOrigin.oPlus(waistOffset.minus(modelOrigin)).oMultiply(modelAxis.Transpose())
             )
             i = 0
             while (i < numLegs) {
@@ -1141,21 +1141,21 @@ object IK /*ea*/ {
             i = 0
             while (i < numArms) {
                 handAxis = joints[handJoints.get(i)].ToMat3()
-                handOrigin.oSet(joints[handJoints.get(i)].ToVec3())
+                handOrigin.set(joints[handJoints.get(i)].ToVec3())
                 elbowAxis = joints[elbowJoints.get(i)].ToMat3()
-                elbowOrigin.oSet(joints[elbowJoints.get(i)].ToVec3())
+                elbowOrigin.set(joints[elbowJoints.get(i)].ToVec3())
                 shoulderAxis = joints[shoulderJoints.get(i)].ToMat3()
-                shoulderOrigin.oSet(joints[shoulderJoints.get(i)].ToVec3())
+                shoulderOrigin.set(joints[shoulderJoints.get(i)].ToVec3())
 
                 // get the IK direction
                 if (dirJoints.get(i) != Model.INVALID_JOINT) {
-                    dirOrigin.oSet(joints[dirJoints.get(i)].ToVec3())
-                    dir.oSet(dirOrigin.oMinus(elbowOrigin))
+                    dirOrigin.set(joints[dirJoints.get(i)].ToVec3())
+                    dir.set(dirOrigin.minus(elbowOrigin))
                 } else {
-                    dir.Set(-1.0f, 0.0f, 0.0f)
+                    dir.set(-1.0f, 0.0f, 0.0f)
                 }
-                shoulderForward.get(i).oSet(dir.times(shoulderAxis.Transpose()))
-                elbowForward.get(i).oSet(dir.times(elbowAxis.Transpose()))
+                shoulderForward.get(i).set(dir.times(shoulderAxis.Transpose()))
+                elbowForward.get(i).set(dir.times(elbowAxis.Transpose()))
 
                 // conversion from upper arm bone axis to should joint axis
                 upperArmLength.get(i) = GetBoneAxis(shoulderOrigin, elbowOrigin, dir, axis)
@@ -1183,7 +1183,7 @@ object IK /*ea*/ {
             val shoulderAxis = arrayOfNulls<idMat3?>(MAX_ARMS)
             val elbowAxis = arrayOfNulls<idMat3?>(MAX_ARMS)
             val trace = trace_s()
-            modelOrigin.oSet(self.GetRenderEntity().origin)
+            modelOrigin.set(self.GetRenderEntity().origin)
             modelAxis = self.GetRenderEntity().axis
 
             // solve IK
@@ -1193,20 +1193,20 @@ object IK /*ea*/ {
 
                 // get the position of the shoulder in world space
                 animator.GetJointTransform(shoulderJoints.get(i), Game_local.gameLocal.time, shoulderOrigin, axis)
-                shoulderOrigin.oSet(modelOrigin.oPlus(shoulderOrigin.times(modelAxis)))
-                shoulderDir.oSet(shoulderForward.get(i).times(axis.times(modelAxis)))
+                shoulderOrigin.set(modelOrigin.oPlus(shoulderOrigin.times(modelAxis)))
+                shoulderDir.set(shoulderForward.get(i).times(axis.times(modelAxis)))
 
                 // get the position of the hand in world space
                 animator.GetJointTransform(handJoints.get(i), Game_local.gameLocal.time, handOrigin, axis)
-                handOrigin.oSet(modelOrigin.oPlus(handOrigin.times(modelAxis)))
+                handOrigin.set(modelOrigin.oPlus(handOrigin.times(modelAxis)))
 
                 // get first collision going from shoulder to hand
                 Game_local.gameLocal.clip.TracePoint(trace, shoulderOrigin, handOrigin, Material.CONTENTS_SOLID, self)
-                handOrigin.oSet(trace.endpos)
+                handOrigin.set(trace.endpos)
 
                 // get the IK bend direction
                 animator.GetJointTransform(elbowJoints.get(i), Game_local.gameLocal.time, elbowOrigin, axis)
-                elbowDir.oSet(elbowForward.get(i).times(axis.times(modelAxis)))
+                elbowDir.set(elbowForward.get(i).times(axis.times(modelAxis)))
 
                 // solve IK and calculate elbow position
                 SolveTwoBones(

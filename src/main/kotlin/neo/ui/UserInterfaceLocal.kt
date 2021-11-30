@@ -284,7 +284,7 @@ class UserInterfaceLocal {
             var add = true
             val c = UserInterface.uiManagerLocal.demoGuis.Num()
             for (i in 0 until c) {
-                if (UserInterface.uiManagerLocal.demoGuis.oGet(i) == this) {
+                if (UserInterface.uiManagerLocal.demoGuis.get(i) == this) {
                     add = false
                     break
                 }
@@ -530,7 +530,7 @@ class UserInterfaceLocal {
         override fun WritePrecacheCommands(f: idFile?) {
             val c = guis.Num()
             for (i in 0 until c) {
-                val str = String.format("touchGui %s\n", guis.oGet(i).Name())
+                val str = String.format("touchGui %s\n", guis.get(i).Name())
                 Common.common.Printf("%s", str)
                 f.Printf("%s", str)
             }
@@ -543,8 +543,8 @@ class UserInterfaceLocal {
         override fun BeginLevelLoad() {
             val c = guis.Num()
             for (i in 0 until c) {
-                if (guis.oGet(i).GetDesktop().GetFlags() and Window.WIN_MENUGUI == 0) {
-                    guis.oGet(i).ClearRefs()
+                if (guis.get(i).GetDesktop().GetFlags() and Window.WIN_MENUGUI == 0) {
+                    guis.get(i).ClearRefs()
                     /*
                      delete guis[ i ];
                      guis.RemoveIndex( i );
@@ -558,7 +558,7 @@ class UserInterfaceLocal {
             var c = guis.Num()
             var i = 0
             while (i < c) {
-                if (guis.oGet(i).GetRefs() == 0) {
+                if (guis.get(i).GetRefs() == 0) {
                     //common.Printf( "purging %s.\n", guis[i].GetSourceFile() );
 
                     // use this to make sure no materials still reference this gui
@@ -566,7 +566,7 @@ class UserInterfaceLocal {
                     for (j in 0 until DeclManager.declManager.GetNumDecls(declType_t.DECL_MATERIAL)) {
                         val material =
                             DeclManager.declManager.DeclByIndex(declType_t.DECL_MATERIAL, j, false) as idMaterial
-                        if (material.GlobalGui() === guis.oGet(i)) {
+                        if (material.GlobalGui() === guis.get(i)) {
                             remove = false
                             break
                         }
@@ -587,13 +587,13 @@ class UserInterfaceLocal {
             val c = guis.Num()
             for (i in 0 until c) {
                 if (!all) {
-                    FileSystem_h.fileSystem.ReadFile(guis.oGet(i).GetSourceFile(), null, ts)
-                    if (ts[0] <= guis.oGet(i).GetTimeStamp().get(0)) {
+                    FileSystem_h.fileSystem.ReadFile(guis.get(i).GetSourceFile(), null, ts)
+                    if (ts[0] <= guis.get(i).GetTimeStamp().get(0)) {
                         continue
                     }
                 }
-                guis.oGet(i).InitFromFile(guis.oGet(i).GetSourceFile())
-                Common.common.Printf("reloading %s.\n", guis.oGet(i).GetSourceFile())
+                guis.get(i).InitFromFile(guis.get(i).GetSourceFile())
+                Common.common.Printf("reloading %s.\n", guis.get(i).GetSourceFile())
             }
         }
 
@@ -604,8 +604,8 @@ class UserInterfaceLocal {
             var copies = 0
             var unique = 0
             for (i in 0 until c) {
-                val gui = guis.oGet(i)
-                val isUnique = guis.oGet(i).interactive
+                val gui = guis.get(i)
+                val isUnique = guis.get(i).interactive
                 if (isUnique) {
                     unique++
                 } else {
@@ -614,10 +614,10 @@ class UserInterfaceLocal {
                 Common.common.Printf(
                     "%6.1fk %4d (%s) %s ( %d transitions )\n",
                     0 / 1024.0f,
-                    guis.oGet(i).GetRefs(),
+                    guis.get(i).GetRefs(),
                     if (isUnique) "unique" else "copy",
-                    guis.oGet(i).GetSourceFile(),
-                    guis.oGet(i).desktop.NumTransitions()
+                    guis.get(i).GetSourceFile(),
+                    guis.get(i).desktop.NumTransitions()
                 )
                 total += 0
             }
@@ -647,7 +647,7 @@ class UserInterfaceLocal {
             if (gui != null) {
                 val c = guis.Num()
                 for (i in 0 until c) {
-                    if (guis.oGet(i) === gui) {
+                    if (guis.get(i) === gui) {
 //				delete guis[i];
                         guis.RemoveIndex(i)
                         return
@@ -665,12 +665,12 @@ class UserInterfaceLocal {
             val c = guis.Num()
             for (i in 0 until c) {
 //		idUserInterfaceLocal gui = guis.oGet(i);
-                if (0 == idStr.Companion.Icmp(guis.oGet(i).GetSourceFile(), qpath)) {
-                    if (!forceUnique && (needInteractive || guis.oGet(i).IsInteractive())) {
+                if (0 == idStr.Companion.Icmp(guis.get(i).GetSourceFile(), qpath)) {
+                    if (!forceUnique && (needInteractive || guis.get(i).IsInteractive())) {
                         break
                     }
-                    guis.oGet(i).AddRef()
-                    return guis.oGet(i)
+                    guis.get(i).AddRef()
+                    return guis.get(i)
                 }
             }
             if (autoLoad) {
@@ -688,8 +688,8 @@ class UserInterfaceLocal {
         override fun FindDemoGui(qpath: String?): idUserInterface? {
             val c = demoGuis.Num()
             for (i in 0 until c) {
-                if (0 == idStr.Companion.Icmp(demoGuis.oGet(i).GetSourceFile(), qpath)) {
-                    return demoGuis.oGet(i)
+                if (0 == idStr.Companion.Icmp(demoGuis.get(i).GetSourceFile(), qpath)) {
+                    return demoGuis.get(i)
                 }
             }
             return null

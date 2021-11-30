@@ -299,8 +299,8 @@ object Anim {
                 } else {
                     bounds[i] = bound
                 }
-                parser.Parse1DMatrix(3, bound.oGet(0))
-                parser.Parse1DMatrix(3, bound.oGet(1))
+                parser.Parse1DMatrix(3, bound.get(0))
+                parser.Parse1DMatrix(3, bound.get(1))
                 i++
             }
             parser.ExpectTokenString("}")
@@ -321,7 +321,7 @@ object Anim {
                 }
                 parser.Parse1DMatrix(3, frame.t)
                 parser.Parse1DMatrix(3, q)
-                baseFrame[i].q.oSet(q.ToQuat())
+                baseFrame[i].q.set(q.ToQuat())
                 i++
             }
             parser.ExpectTokenString("}")
@@ -496,7 +496,7 @@ object Anim {
                     jf1_ptr = f1_ptr + infoPtr.firstComponent
                     jf2_ptr = f2_ptr + infoPtr.firstComponent
                     when (animBits and (Anim.ANIM_TX or Anim.ANIM_TY or Anim.ANIM_TZ)) {
-                        0 -> blendPtr.t.oSet(jointPtr.t)
+                        0 -> blendPtr.t.set(jointPtr.t)
                         Anim.ANIM_TX -> {
                             jointPtr.t.x = jointframe1[jf1_ptr + 0]
                             blendPtr.t.x = jointframe2[jf2_ptr + 0]
@@ -560,7 +560,7 @@ object Anim {
                         }
                     }
                     when (animBits and (Anim.ANIM_QX or Anim.ANIM_QY or Anim.ANIM_QZ)) {
-                        0 -> blendPtr.q.oSet(jointPtr.q)
+                        0 -> blendPtr.q.set(jointPtr.q)
                         Anim.ANIM_QX -> {
                             jointPtr.q.x = jointframe1[jf1_ptr + 0]
                             blendPtr.q.x = jointframe2[jf2_ptr + 0]
@@ -763,7 +763,7 @@ object Anim {
 
         fun GetOrigin(offset: idVec3?, time: Int, cyclecount: Int) {
             val frame = frameBlend_t()
-            offset.oSet(baseFrame[0].t)
+            offset.set(baseFrame[0].t)
             if (0 == jointInfo[0].animBits and (Anim.ANIM_TX or Anim.ANIM_TY or Anim.ANIM_TZ)) {
                 // just use the baseframe
                 return
@@ -796,7 +796,7 @@ object Anim {
             val animBits: Int = jointInfo[0].animBits
             if (TempDump.NOT((animBits and (Anim.ANIM_QX or Anim.ANIM_QY or Anim.ANIM_QZ)).toDouble())) {
                 // just use the baseframe
-                rotation.oSet(baseFrame[0].q)
+                rotation.set(baseFrame[0].q)
                 return
             }
             ConvertTimeToFrame(time, cyclecount, frame)
@@ -899,11 +899,11 @@ object Anim {
             var c1_ptr: Int
             var c2_ptr: Int
             ConvertTimeToFrame(time, cyclecount, frame)
-            bnds.oSet(bounds[frame.frame1])
+            bnds.set(bounds[frame.frame1])
             bnds.AddBounds(bounds[frame.frame2])
 
             // origin position
-            offset.oSet(baseFrame[0].t)
+            offset.set(baseFrame[0].t)
             if (jointInfo[0].animBits and (Anim.ANIM_TX or Anim.ANIM_TY or Anim.ANIM_TZ) != 0) {
                 val componentPtr1 = componentFrames.toArray(IntFunction<Array<Float?>?> { _Dummy_.__Array__() })
                 c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo[0].firstComponent
@@ -923,7 +923,7 @@ object Anim {
                     offset.z = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp
                 }
             }
-            bnds.oMinSet(offset)
+            bnds.minusAssign(offset)
         }
 
         //

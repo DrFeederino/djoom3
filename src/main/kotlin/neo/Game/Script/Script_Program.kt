@@ -293,9 +293,9 @@ object Script_Program {
             name = other.name
             size = other.size
             auxType = other.auxType
-            parmTypes.oSet(other.parmTypes)
+            parmTypes.set(other.parmTypes)
             parmNames = other.parmNames
-            functions.oSet(other.functions)
+            functions.set(other.functions)
         }
 
         fun  /*size_t*/Allocated(): Int {
@@ -355,7 +355,7 @@ object Script_Program {
             }
             i = 0
             while (i < matchtype.parmTypes.Num()) {
-                if (parmTypes.oGet(i) != matchtype.parmTypes.oGet(i)) {
+                if (parmTypes.get(i) != matchtype.parmTypes.get(i)) {
                     return false
                 }
                 i++
@@ -382,13 +382,13 @@ object Script_Program {
                 return false
             }
             if (parmTypes.Num() > 0) {
-                if (!parmTypes.oGet(0).Inherits(matchfunc.parmTypes.oGet(0))) {
+                if (!parmTypes.get(0).Inherits(matchfunc.parmTypes.get(0))) {
                     return false
                 }
             }
             i = 1
             while (i < matchfunc.parmTypes.Num()) {
-                if (parmTypes.oGet(i) != matchfunc.parmTypes.oGet(i)) {
+                if (parmTypes.get(i) != matchfunc.parmTypes.get(i)) {
                     return false
                 }
                 i++
@@ -554,7 +554,7 @@ object Script_Program {
         fun GetParmType(parmNumber: Int): idTypeDef? {
             assert(parmNumber >= 0)
             assert(parmNumber < parmTypes.Num())
-            return parmTypes.oGet(parmNumber)
+            return parmTypes.get(parmNumber)
         }
 
         fun GetParmName(parmNumber: Int): String? {
@@ -571,7 +571,7 @@ object Script_Program {
             var i: Int
             i = 0
             while (i < functions.Num()) {
-                if (functions.oGet(i) == func) {
+                if (functions.get(i) == func) {
                     return i
                 }
                 i++
@@ -582,16 +582,16 @@ object Script_Program {
         fun GetFunction(funcNumber: Int): function_t? {
             assert(funcNumber >= 0)
             assert(funcNumber < functions.Num())
-            return functions.oGet(funcNumber)
+            return functions.get(funcNumber)
         }
 
         fun AddFunction(func: function_t?) {
             var i: Int
             i = 0
             while (i < functions.Num()) {
-                if (functions.oGet(i).def.Name() == func.def.Name()) {
-                    if (func.def.TypeDef().MatchesVirtualFunction(functions.oGet(i).def.TypeDef())) {
-                        functions.oSet(i, func)
+                if (functions.get(i).def.Name() == func.def.Name()) {
+                    if (func.def.TypeDef().MatchesVirtualFunction(functions.get(i).def.TypeDef())) {
+                        functions.set(i, func)
                         return
                     }
                 }
@@ -986,9 +986,9 @@ object Script_Program {
         }
 
         fun getVectorPtr(): idVec3? {
-            vectorPtr.oSet(0, primitive.getFloat(0))
-            vectorPtr.oSet(1, primitive.getFloat(4))
-            vectorPtr.oSet(2, primitive.getFloat(8))
+            vectorPtr.set(0, primitive.getFloat(0))
+            vectorPtr.set(1, primitive.getFloat(4))
+            vectorPtr.set(2, primitive.getFloat(8))
             return vectorPtr
         }
 
@@ -997,7 +997,7 @@ object Script_Program {
         }
 
         fun setVectorPtr(vector: FloatArray?) {
-            vectorPtr.oSet(idVec3(vector))
+            vectorPtr.set(idVec3(vector))
             primitive.putFloat(0, vector.get(0))
             primitive.putFloat(4, vector.get(1))
             primitive.putFloat(8, vector.get(2))

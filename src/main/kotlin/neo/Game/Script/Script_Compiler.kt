@@ -317,7 +317,7 @@ object Script_Compiler {
             var int_c = 0
             val vectorPtr = idVec3()
             if (var_a != null) {
-                vectorPtr.oSet(var_a.value.getVectorPtr())
+                vectorPtr.set(var_a.value.getVectorPtr())
             }
             when (TempDump.indexOf(op, opcodes)) {
                 Script_Compiler.OP_ADD_F -> {
@@ -325,7 +325,7 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_ADD_V -> {
-                    vec_c.oSet(vectorPtr.oPlus(var_b.value.getVectorPtr()))
+                    vec_c.set(vectorPtr.oPlus(var_b.value.getVectorPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_SUB_F -> {
@@ -333,7 +333,7 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_SUB_V -> {
-                    vec_c.oSet(vectorPtr.oMinus(var_b.value.getVectorPtr()))
+                    vec_c.set(vectorPtr.minus(var_b.value.getVectorPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_MUL_F -> {
@@ -345,11 +345,11 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_MUL_FV -> {
-                    vec_c.oSet(var_b.value.getVectorPtr().times(var_a.value.getFloatPtr()))
+                    vec_c.set(var_b.value.getVectorPtr().times(var_a.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_MUL_VF -> {
-                    vec_c.oSet(vectorPtr.times(var_b.value.getFloatPtr()))
+                    vec_c.set(vectorPtr.times(var_b.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_DIV_F -> {
@@ -411,7 +411,7 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 Script_Compiler.OP_NEG_V -> {
-                    vec_c.oSet(vectorPtr.oNegative())
+                    vec_c.set(vectorPtr.oNegative())
                     type = Script_Program.type_vector
                 }
                 Script_Compiler.OP_INT_F -> {
@@ -2074,11 +2074,11 @@ object Script_Compiler {
             while (i < numParms) {
                 parmType = type.GetParmType(i)
                 if (parmType.Inherits(Script_Program.type_object)) {
-                    func.parmSize.oSet(i, Script_Program.type_object.Size())
+                    func.parmSize.set(i, Script_Program.type_object.Size())
                 } else {
-                    func.parmSize.oSet(i, parmType.Size())
+                    func.parmSize.set(i, parmType.Size())
                 }
-                func.parmTotal += func.parmSize.oGet(i)
+                func.parmTotal += func.parmSize.get(i)
                 i++
             }
 
@@ -2338,7 +2338,7 @@ object Script_Compiler {
                 while (i < num) {
                     argType = newtype.GetParmType(i)
                     func.parmTotal += argType.Size()
-                    func.parmSize.oSet(i, argType.Size())
+                    func.parmSize.set(i, argType.Size())
                     i++
                 }
 

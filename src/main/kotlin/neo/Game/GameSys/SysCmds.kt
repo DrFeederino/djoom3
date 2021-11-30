@@ -218,16 +218,16 @@ object SysCmds {
                     //
                     if (SysCmds.debugLines[i].arrow) {
                         // draw a nice arrow
-                        forward.oSet(SysCmds.debugLines[i].end.oMinus(SysCmds.debugLines[i].start))
+                        forward.set(SysCmds.debugLines[i].end.minus(SysCmds.debugLines[i].start))
                         l = forward.Normalize() * 0.2f
                         forward.NormalVectors(right, up)
                         if (l > 3.0f) {
                             l = 3.0f
                         }
-                        p1.oSet(SysCmds.debugLines[i].end.oMinus(forward.times(l).oPlus(right.times(l * 0.4f))))
-                        p2.oSet(
-                            SysCmds.debugLines[i].end.oMinus(
-                                forward.times(l).oMinus(right.times(l * 0.4f))
+                        p1.set(SysCmds.debugLines[i].end.minus(forward.times(l).oPlus(right.times(l * 0.4f))))
+                        p2.set(
+                            SysCmds.debugLines[i].end.minus(
+                                forward.times(l).minus(right.times(l * 0.4f))
                             )
                         )
                         Game_local.gameRenderWorld.DebugLine(color, SysCmds.debugLines[i].end, p1)
@@ -802,7 +802,7 @@ object SysCmds {
             }
             name = args.Argv(1)
             player.spawnArgs.Set("model", name)
-            pos.oSet(player.GetPhysics().GetOrigin())
+            pos.set(player.GetPhysics().GetOrigin())
             ang = idAngles(player.viewAngles)
             player.SpawnToPoint(pos, ang)
         }
@@ -925,10 +925,10 @@ object SysCmds {
             }
             val view = player.GetRenderView()
             if (view != null) {
-                Game_local.gameLocal.Printf("(%s) %.1f\n", view.vieworg.ToString(), view.viewaxis.oGet(0).ToYaw())
+                Game_local.gameLocal.Printf("(%s) %.1f\n", view.vieworg.ToString(), view.viewaxis.get(0).ToYaw())
             } else {
                 player.GetViewPos(origin, axis)
-                Game_local.gameLocal.Printf("(%s) %.1f\n", origin.ToString(), axis.oGet(0).ToYaw())
+                Game_local.gameLocal.Printf("(%s) %.1f\n", origin.ToString(), axis.get(0).ToYaw())
             }
         }
 
@@ -965,7 +965,7 @@ object SysCmds {
             }
             i = 0
             while (i < 3) {
-                origin.oSet(i, args.Argv(i + 1).toFloat())
+                origin.set(i, args.Argv(i + 1).toFloat())
                 i++
             }
             origin.z -= SysCvar.pm_normalviewheight.GetFloat() - 0.25f
@@ -1005,8 +1005,8 @@ object SysCmds {
                 return
             }
             angles.Zero()
-            angles.yaw = ent.GetPhysics().GetAxis().oGet(0).ToYaw()
-            origin.oSet(ent.GetPhysics().GetOrigin())
+            angles.yaw = ent.GetPhysics().GetAxis().get(0).ToYaw()
+            origin.set(ent.GetPhysics().GetOrigin())
             player.Teleport(origin, angles, ent)
         }
 
@@ -1081,7 +1081,7 @@ object SysCmds {
             value = args.Argv(1)
             dict.Set("classname", value)
             dict.Set("angle", Str.va("%f", yaw + 180))
-            org.oSet(
+            org.set(
                 player.GetPhysics().GetOrigin()
                     .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
             )
@@ -1198,11 +1198,11 @@ object SysCmds {
             val fov = Math.tan((idMath.M_DEG2RAD * rv.fov_x / 2).toDouble()).toFloat()
             dict.SetMatrix("rotation", idMat3.Companion.getMat3_default())
             dict.SetVector("origin", rv.vieworg)
-            dict.SetVector("light_target", rv.viewaxis.oGet(0))
-            dict.SetVector("light_right", rv.viewaxis.oGet(1).times(-fov))
-            dict.SetVector("light_up", rv.viewaxis.oGet(2).times(fov))
-            dict.SetVector("light_start", rv.viewaxis.oGet(0).times(16f))
-            dict.SetVector("light_end", rv.viewaxis.oGet(0).times(1000f))
+            dict.SetVector("light_target", rv.viewaxis.get(0))
+            dict.SetVector("light_right", rv.viewaxis.get(1).times(-fov))
+            dict.SetVector("light_up", rv.viewaxis.get(2).times(fov))
+            dict.SetVector("light_start", rv.viewaxis.get(0).times(16f))
+            dict.SetVector("light_end", rv.viewaxis.get(0).times(1000f))
             if (args.Argc() >= 2) {
                 value = args.Argv(1)
                 filename.oSet(args.Argv(1))
@@ -1405,7 +1405,7 @@ object SysCmds {
                 return
             }
             name = args.Argv(1)
-            offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
+            offset.set(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
             dict.Set("origin", offset.ToString())
             dict.Set("test", "1")
             dict.Set("fx", name)
@@ -1872,9 +1872,9 @@ object SysCmds {
                 val d1 = CFloat()
                 val d0 = CFloat()
                 idMath.SinCos(Math_h.DEG2RAD(angle), d1, d0)
-                dir.oSet(idVec3(d0.getVal(), d1.getVal(), 0))
+                dir.set(idVec3(d0.getVal(), d1.getVal(), 0))
             } else {
-                dir.oSet(idVec3())
+                dir.set(idVec3())
                 //            dir.Zero();
             }
 
@@ -1940,7 +1940,7 @@ object SysCmds {
             val d1 = CFloat()
             val d0 = CFloat()
             idMath.SinCos(Math_h.DEG2RAD(45.0f), d1, d0)
-            dir.oSet(idVec3(d0.getVal(), d1.getVal(), 0))
+            dir.set(idVec3(d0.getVal(), d1.getVal(), 0))
             SysCvar.g_testDeath.SetBool(true)
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, Model.INVALID_JOINT)
             if (args.Argc() >= 2) {
@@ -2709,9 +2709,9 @@ object SysCmds {
             }
             assert(geom.facePlanes != null)
             modelMatrix = idMat4(renderEnt.axis, renderEnt.origin)
-            normal.oSet(geom.facePlanes[0].Normal().times(renderEnt.axis))
-            center.oSet(geom.bounds.GetCenter().times(modelMatrix))
-            origin.oSet(center.oPlus(normal.times(32.0f)))
+            normal.set(geom.facePlanes[0].Normal().times(renderEnt.axis))
+            center.set(geom.bounds.GetCenter().times(modelMatrix))
+            origin.set(center.oPlus(normal.times(32.0f)))
             origin.z -= player.EyeHeight()
             normal.timesAssign(-1.0f)
             angles = normal.ToAngles()

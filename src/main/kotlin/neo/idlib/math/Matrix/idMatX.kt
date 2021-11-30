@@ -53,7 +53,7 @@ class idMatX {
 
     //#define MATX_SIMD
     constructor(matX: idMatX) {
-        this.oSet(matX)
+        this.set(matX)
     }
 
     fun MATX_CLEAREND() {
@@ -63,21 +63,21 @@ class idMatX {
         }
     }
 
-    fun Set(rows: Int, columns: Int, src: FloatArray) {
+    operator fun set(rows: Int, columns: Int, src: FloatArray) {
         SetSize(rows, columns)
         //	memcpy( this->mat, src, rows * columns * sizeof( float ) );
         System.arraycopy(src, 0, mat, 0, src.size)
     }
 
-    fun Set(m1: idMat3, m2: idMat3) {
+    fun set(m1: idMat3, m2: idMat3) {
         var j: Int
         SetSize(3, 6)
         var i = 0
         while (i < 3) {
             j = 0
             while (j < 3) {
-                mat[(i + 0) * numColumns + (j + 0)] = m1.mat[i].oGet(j)
-                mat[(i + 0) * numColumns + (j + 3)] = m2.mat[i].oGet(j)
+                mat[(i + 0) * numColumns + (j + 0)] = m1.mat[i][j]
+                mat[(i + 0) * numColumns + (j + 3)] = m2.mat[i][j]
                 j++
             }
             i++
@@ -85,17 +85,17 @@ class idMatX {
     }
 
     //public	idMatX			operator*( const float a ) const;
-    fun Set(m1: idMat3, m2: idMat3, m3: idMat3, m4: idMat3) {
+    fun set(m1: idMat3, m2: idMat3, m3: idMat3, m4: idMat3) {
         var j: Int
         SetSize(6, 6)
         var i = 0
         while (i < 3) {
             j = 0
             while (j < 3) {
-                mat[(i + 0) * numColumns + (j + 0)] = m1.mat[i].oGet(j)
-                mat[(i + 0) * numColumns + (j + 3)] = m2.mat[i].oGet(j)
-                mat[(i + 3) * numColumns + (j + 0)] = m3.mat[i].oGet(j)
-                mat[(i + 3) * numColumns + (j + 3)] = m4.mat[i].oGet(j)
+                mat[(i + 0) * numColumns + (j + 0)] = m1.mat[i][j]
+                mat[(i + 0) * numColumns + (j + 3)] = m2.mat[i][j]
+                mat[(i + 3) * numColumns + (j + 0)] = m3.mat[i][j]
+                mat[(i + 3) * numColumns + (j + 3)] = m4.mat[i][j]
                 j++
             }
             i++
@@ -105,14 +105,13 @@ class idMatX {
     //public	idVecX			operator*( const idVecX &vec ) const;
     //public	const float *	operator[]( int index ) const;
     //public	float *			operator[]( int index );
-    @Deprecated("")
-    fun oGet(index: Int): FloatArray { ////TODO:by sub array by reference
+    operator fun get(index: Int): FloatArray { ////TODO:by sub array by reference
         return mat.copyOfRange(index * numColumns, mat.size)
     }
 
     //public	idMatX			operator*( const idMatX &a ) const;
     //public	idMatX &		operator=( const idMatX &a );
-    fun oSet(a: idMatX): idMatX {
+    fun set(a: idMatX): idMatX {
         SetSize(a.numRows, a.numColumns)
         //#ifdef MATX_SIMD
 //	SIMDProcessor->Copy16( mat, a.mat, a.numRows * a.numColumns );
@@ -125,7 +124,7 @@ class idMatX {
     }
 
     //public	idMatX			operator+( const idMatX &a ) const;
-    fun oMultiply(a: Float): idMatX {
+    operator fun times(a: Float): idMatX {
         val m = idMatX()
         m.SetTempSize(numRows, numColumns)
         if (MATX_SIMD) {
@@ -142,27 +141,27 @@ class idMatX {
     }
 
     //public	idMatX			operator-( const idMatX &a ) const;
-    fun oMultiply(vec: idVecX): idVecX {
+    operator fun times(vec: idVecX): idVecX {
         val dst = idVecX()
         assert(numColumns == vec.GetSize())
         dst.SetTempSize(numRows)
         if (MATX_SIMD) {
             Simd.SIMDProcessor.MatX_MultiplyVecX(dst, this, vec)
         } else {
-            Multiply(dst, vec)
+            times(dst, vec)
         }
         return dst
     }
 
     //public	idMatX &		operator*=( const float a );
-    fun oMultiply(a: idMatX): idMatX {
+    operator fun times(a: idMatX): idMatX {
         val dst = idMatX()
         assert(numColumns == a.numRows)
         dst.SetTempSize(numRows, a.numColumns)
         if (MATX_SIMD) {
             Simd.SIMDProcessor.MatX_MultiplyMatX(dst, this, a)
         } else {
-            Multiply(dst, a)
+            times(dst, a)
         }
         return dst
     }
@@ -219,7 +218,7 @@ class idMatX {
     }
 
     fun timesAssign(a: idMatX): idMatX {
-        this.oSet(this.oMultiply(a))
+        this.set(this * a)
         tempIndex = 0
         return this
     }
@@ -340,7 +339,7 @@ class idMatX {
                 Arrays.fill(mat, 0, alloc, 0f)
             }
             alloced = alloc
-            if (oldMat != null) { //TODO:wthfuck
+            if (oldMat.isNotEmpty()) { //TODO:wthfuck
                 val minRow: Int = Lib.Min(numRows, rows)
                 val minColumn: Int = Lib.Min(numColumns, columns)
                 for (i in 0 until minRow) {
@@ -433,7 +432,7 @@ class idMatX {
     fun Diag(v: idVecX) {
         Zero(v.GetSize(), v.GetSize())
         for (i in 0 until v.GetSize()) {
-            mat[i * numColumns + i] = v.oGet(i)
+            mat[i * numColumns + i] = v.get(i)
         }
     }
 
@@ -681,7 +680,7 @@ class idMatX {
         assert(numRows == numColumns)
         for (i in 0 until numRows) {
             for (j in 0 until numColumns) {
-                if (i != j && abs(oGet(i, j)) > epsilon) {
+                if (i != j && abs(get(i, j)) > epsilon) {
                     return false
                 }
             }
@@ -697,10 +696,10 @@ class idMatX {
         }
         for (i in 0 until numRows - 2) {
             for (j in i + 2 until numColumns) {
-                if (abs(oGet(i, j)) > epsilon) {
+                if (abs(get(i, j)) > epsilon) {
                     return false
                 }
-                if (abs(oGet(j, i)) > epsilon) {
+                if (abs(get(j, i)) > epsilon) {
                     return false
                 }
             }
@@ -817,7 +816,7 @@ class idMatX {
         if (numRows <= 0) {
             return true
         }
-        if (oGet(0, 0) <= epsilon) {
+        if (get(0, 0) <= epsilon) {
             return false
         }
         if (numRows <= 1) {
@@ -830,7 +829,7 @@ class idMatX {
         while (i < numRows) {
             j = 1
             while (j < numColumns) {
-                m.oSet(i - 1, j - 1, oGet(i, j))
+                m[i - 1, j - 1] = get(i, j)
                 j++
             }
             i++
@@ -840,10 +839,10 @@ class idMatX {
         }
         i = 1
         while (i < numRows) {
-            d = oGet(i, 0) / oGet(0, 0)
+            d = get(i, 0) / get(0, 0)
             j = 1
             while (j < numColumns) {
-                m.oSet(i - 1, j - 1, oGet(i, j) - d * oGet(0, j))
+                m[i - 1, j - 1] = get(i, j) - d * get(0, j)
                 j++
             }
             i++
@@ -875,7 +874,7 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < numColumns) {
-                if (oGet(i, j) > epsilon && i != j) {
+                if (get(i, j) > epsilon && i != j) {
                     return false
                 }
                 j++
@@ -908,7 +907,7 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < numColumns) {
-                m.plusAssign(i, j, oGet(j, i))
+                m.plusAssign(i, j, get(j, i))
                 j++
             }
             i++
@@ -919,19 +918,19 @@ class idMatX {
         while (i < numRows) {
             j = i
             while (j < numColumns) {
-                if (oGet(j, j) <= epsilon) {
+                if (get(j, j) <= epsilon) {
                     return false
                 }
                 j++
             }
-            d = 1.0f / m.oGet(i, i)
+            d = 1.0f / m[i, i]
             j = i + 1
             while (j < numColumns) {
-                s = d * m.oGet(j, i)
-                m.oSet(i, j, 0.0f)
+                s = d * m[j, i]
+                m[i, j] = 0.0f
                 k = i + 1
                 while (k < numRows) {
-                    m.minusAssign(j, k, s * m.oGet(i, k))
+                    m.minusAssign(j, k, s * m[i, k])
                     k++
                 }
                 j++
@@ -997,7 +996,7 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < numColumns) {
-                m.plusAssign(i, j, this.oGet(j, i))
+                m.plusAssign(i, j, this[j, i])
                 j++
             }
             i++
@@ -1008,37 +1007,37 @@ class idMatX {
         while (i < numRows) {
             j = i
             while (j < numColumns) {
-                if (m.oGet(j, j) < -epsilon) {
+                if (m[j, j] < -epsilon) {
                     return false
                 }
-                if (m.oGet(j, j) > epsilon) {
+                if (m[j, j] > epsilon) {
                     j++
                     continue
                 }
                 k = 0
                 while (k < numRows) {
-                    if (abs(m.oGet(k, j)) > epsilon) {
+                    if (abs(m[k, j]) > epsilon) {
                         return false
                     }
-                    if (abs(m.oGet(j, k)) > epsilon) {
+                    if (abs(m[j, k]) > epsilon) {
                         return false
                     }
                     k++
                 }
                 j++
             }
-            if (m.oGet(i, i) <= epsilon) {
+            if (m[i, i] <= epsilon) {
                 i++
                 continue
             }
-            d = 1.0f / m.oGet(i, i)
+            d = 1.0f / m[i, i]
             j = i + 1
             while (j < numColumns) {
-                s = d * m.oGet(j, i)
-                m.oSet(j, i, 0.0f)
+                s = d * m[j, i]
+                m[j, i] = 0.0f
                 k = i + 1
                 while (k < numRows) {
-                    m.minusAssign(j, k, s * m.oGet(i, k))
+                    m.minusAssign(j, k, s * m[i, k])
                     k++
                 }
                 j++
@@ -1104,7 +1103,7 @@ class idMatX {
 
     // transposes the matrix itself
     fun TransposeSelf(): idMatX {
-        this.oSet(Transpose())
+        this.set(Transpose())
         return this
     }
 
@@ -1282,22 +1281,22 @@ class idMatX {
         var sum: Double
         var i: Int = 0
         while (i < numRows) {
-            d = this.oGet(i, i).toDouble()
+            d = this[i, i].toDouble()
             //                System.out.println("1:" + d);
             if (d == 0.0) {
                 return false
             }
-            this.oSet(i, i, (1.0f / d.also { d = it }).toFloat())
+            this[i, i] = (1.0f / d.also { d = it }).toFloat()
             //                System.out.println("2:" + d);
             j = 0
             while (j < i) {
                 sum = 0.0
                 k = j
                 while (k < i) {
-                    sum -= (this.oGet(i, k) * this.oGet(k, j)).toDouble()
+                    sum -= (this[i, k] * this[k, j]).toDouble()
                     k++
                 }
-                this.oSet(i, j, (sum * d).toFloat())
+                this[i, j] = (sum * d).toFloat()
                 j++
             }
             i++
@@ -1318,20 +1317,20 @@ class idMatX {
         var sum: Double
         var i: Int = numRows - 1
         while (i >= 0) {
-            d = this.oGet(i, i).toDouble()
+            d = this[i, i].toDouble()
             if (d == 0.0) {
                 return false
             }
-            this.oSet(i, i, (1.0f / d.also { d = it }).toFloat())
+            this[i, i] = (1.0f / d.also { d = it }).toFloat()
             j = numRows - 1
             while (j > i) {
                 sum = 0.0
                 k = j
                 while (k > i) {
-                    sum -= (this.oGet(i, k) * this.oGet(k, j)).toDouble()
+                    sum -= (this[i, k] * this[k, j]).toDouble()
                     k--
                 }
-                this.oSet(i, j, (sum * d).toFloat())
+                this[i, j] = (sum * d).toFloat()
                 j--
             }
             i--
@@ -1339,17 +1338,6 @@ class idMatX {
         return true
     }
 
-    fun Multiply(vec: idVecX): idVecX { // (*this) * vec
-        val dst = idVecX()
-        assert(numColumns == vec.GetSize())
-        dst.SetTempSize(numRows)
-        if (MATX_SIMD) {
-            Simd.SIMDProcessor.MatX_MultiplyVecX(dst, this, vec)
-        } else {
-            Multiply(dst, vec)
-        }
-        return dst
-    }
 
     fun TransposeMultiply(vec: idVecX): idVecX { // this->Transpose() * vec
         val dst = idVecX()
@@ -1370,7 +1358,7 @@ class idMatX {
         if (MATX_SIMD) {
             Simd.SIMDProcessor.MatX_MultiplyMatX(dst, this, a)
         } else {
-            Multiply(dst, a)
+            times(dst, a)
         }
         return dst
     }
@@ -1387,7 +1375,7 @@ class idMatX {
         return dst
     }
 
-    fun Multiply(dst: idVecX, vec: idVecX) { // dst = (*this) * vec
+    fun times(dst: idVecX, vec: idVecX) { // dst = (*this) * vec
         if (MATX_SIMD) {
             Simd.SIMDProcessor.MatX_MultiplyVecX(dst, this, vec)
         } else {
@@ -1531,7 +1519,7 @@ class idMatX {
         }
     }
 
-    fun Multiply(dst: idMatX, a: idMatX) { // dst = (*this) * a
+    fun times(dst: idMatX, a: idMatX) { // dst = (*this) * a
         if (MATX_SIMD) {
             Simd.SIMDProcessor.MatX_MultiplyMatX(dst, this, a)
         } else {
@@ -1758,7 +1746,7 @@ class idMatX {
             this.plusAssign(r, i, v.p[i])
             i++
         }
-        this.oSet(r, r, this.oGet(r, r) + v.p[r])
+        this[r, r] = this[r, r] + v.p[r]
         i = r + 1
         while (i < numRows) {
             this.plusAssign(i, r, v.p[i])
@@ -1788,12 +1776,12 @@ class idMatX {
         ChangeSize(numRows + 1, numColumns + 1, false)
         var i: Int = 0
         while (i < numRows) {
-            this.oSet(i, numColumns - 1, v.p[i])
+            this[i, numColumns - 1] = v.p[i]
             i++
         }
         i = 0
         while (i < numColumns - 1) {
-            this.oSet(numRows - 1, i, w.p[i])
+            this[numRows - 1, i] = w.p[i]
             i++
         }
     }
@@ -1817,12 +1805,12 @@ class idMatX {
         ChangeSize(numRows + 1, numColumns + 1, false)
         var i: Int = 0
         while (i < numRows - 1) {
-            this.oSet(i, numColumns - 1, v.p[i])
+            this[i, numColumns - 1] = v.p[i]
             i++
         }
         i = 0
         while (i < numColumns) {
-            this.oSet(numRows - 1, i, v.p[i])
+            this[numRows - 1, i] = v.p[i]
             i++
         }
     }
@@ -1879,7 +1867,7 @@ class idMatX {
                     k = 0
                     while (k < numRows) {
                         if (!pivot[k]) {
-                            d = abs(this.oGet(j, k))
+                            d = abs(this[j, k])
                             if (d > max) {
                                 max = d
                                 r = j
@@ -1907,8 +1895,8 @@ class idMatX {
             columnIndex[i] = c
 
             // scale the row to make the pivot entry equal to 1
-            d = 1.0f / this.oGet(c, c)
-            this.oSet(c, c, 1.0f)
+            d = 1.0f / this[c, c]
+            this[c, c] = 1.0f
             k = 0
             while (k < numRows) {
                 this.timesAssign(c, k, d)
@@ -1919,11 +1907,11 @@ class idMatX {
             j = 0
             while (j < numRows) {
                 if (j != c) {
-                    d = this.oGet(j, c)
-                    this.oSet(j, c, 0.0f)
+                    d = this[j, c]
+                    this[j, c] = 0.0f
                     k = 0
                     while (k < numRows) {
-                        this.minusAssign(j, k, this.oGet(c, k) * d)
+                        this.minusAssign(j, k, this[c, k] * d)
                         k++
                     }
                 }
@@ -1938,9 +1926,9 @@ class idMatX {
             if (rowIndex[j] != columnIndex[j]) {
                 k = 0
                 while (k < numRows) {
-                    d = this.oGet(k, rowIndex[j])
-                    this.oSet(k, rowIndex[j], this.oGet(k, columnIndex[j]))
-                    this.oSet(k, columnIndex[j], d)
+                    d = this[k, rowIndex[j]]
+                    this[k, rowIndex[j]] = this[k, columnIndex[j]]
+                    this[k, columnIndex[j]] = d
                     k++
                 }
             }
@@ -1961,9 +1949,9 @@ class idMatX {
         assert(w.GetSize() >= numRows)
         y.SetData(numRows, FloatArray(numRows))
         z.SetData(numRows, FloatArray(numRows))
-        Multiply(y, v)
+        times(y, v)
         TransposeMultiply(z, w)
-        beta = 1.0f + w.times(y)
+        beta = 1.0f + (w * y)
         if (beta == 0.0f) {
             return false
         }
@@ -2008,7 +1996,7 @@ class idMatX {
         assert(w.p[r] == 0.0f)
         s.SetData(Lib.Max(numRows, numColumns), FloatArray(Lib.Max(numRows, numColumns)))
         s.Zero()
-        s.oSet(r, 1.0f)
+        s[r] = 1.0f
         if (!Inverse_UpdateRankOne(v, s, 1.0f)) {
             return false
         }
@@ -2035,10 +2023,10 @@ class idMatX {
         assert(v.GetSize() >= numRows + 1)
         assert(w.GetSize() >= numColumns + 1)
         ChangeSize(numRows + 1, numColumns + 1, true)
-        this.oSet(numRows - 1, numRows - 1, 1.0f)
+        this[numRows - 1, numRows - 1] = 1.0f
         v2.SetData(numRows, FloatArray(numRows))
         v2 = v
-        v2.oSet(numRows - 1, v.oGet(numRows - 1) - 1.0f) //v2.p[numRows - 1] -= 1.0f;
+        v2[numRows - 1] = v.get(numRows - 1) - 1.0f //v2.p[numRows - 1] -= 1.0f;
         return Inverse_UpdateRowColumn(v2, w, numRows - 1)
     }
 
@@ -2061,8 +2049,8 @@ class idMatX {
         w1.SetData(numRows, idVecX.VECX_ALLOCA(numRows))
 
         // update the row and column to identity
-        v1.oSet(v.unaryMinus())
-        w1.oSet(w.unaryMinus())
+        v1.set(v.unaryMinus())
+        w1.set(w.unaryMinus())
         v1.p[r] += 1.0f
         w1.p[r] = 0.0f
         if (!Inverse_UpdateRowColumn(v1, w1, r)) {
@@ -2081,7 +2069,7 @@ class idMatX {
      * Solve Ax = b with A inverted ============
      */
     fun Inverse_Solve(x: idVecX, b: idVecX) {
-        Multiply(x, b)
+        times(x, b)
     }
 
     /*
@@ -2121,12 +2109,12 @@ class idMatX {
         i = 0
         while (i < min) {
             newi = i
-            s = abs(this.oGet(i, i)).toDouble()
+            s = abs(this[i, i]).toDouble()
             if (index != null) {
                 // find the largest absolute pivot
                 j = i + 1
                 while (j < numRows) {
-                    t = abs(this.oGet(j, i)).toDouble()
+                    t = abs(this[j, i]).toDouble()
                     //                    System.out.println(t);
                     if (t > s) {
                         newi = j
@@ -2149,14 +2137,14 @@ class idMatX {
                 // swap rows
                 j = 0
                 while (j < numColumns) {
-                    t = this.oGet(newi, j).toDouble()
-                    this.oSet(newi, j, this.oGet(i, j))
-                    this.oSet(i, j, t.toFloat())
+                    t = this[newi, j].toDouble()
+                    this[newi, j] = this[i, j]
+                    this[i, j] = t.toFloat()
                     j++
                 }
             }
             if (i < numRows) {
-                d = (1.0f / this.oGet(i, i)).toDouble()
+                d = (1.0f / this[i, i]).toDouble()
                 j = i + 1
                 while (j < numRows) {
                     this.timesAssign(j, i, d)
@@ -2166,10 +2154,10 @@ class idMatX {
             if (i < min - 1) {
                 j = i + 1
                 while (j < numRows) {
-                    d = this.oGet(j, i).toDouble()
+                    d = this[j, i].toDouble()
                     k = i + 1
                     while (k < numColumns) {
-                        this.minusAssign(j, k, d * this.oGet(i, k))
+                        this.minusAssign(j, k, d * this[i, k])
                         k++
                     }
                     j++
@@ -2180,7 +2168,7 @@ class idMatX {
         if (det != null) {
             i = 0
             while (i < numRows) {
-                w *= this.oGet(i, i).toDouble()
+                w *= this[i, i].toDouble()
                 i++
             }
             det[0] = w.toFloat() //TODO:check back ref
@@ -2229,7 +2217,7 @@ class idMatX {
         val max: Int = Lib.Min(numRows, numColumns)
         i = 0
         while (i < max) {
-            diag = this.oGet(i, i)
+            diag = this[i, i]
             p0 = y[i]
             p1 = z[i]
             diag += p0 * p1
@@ -2237,21 +2225,21 @@ class idMatX {
                 return false
             }
             beta = p1 / diag
-            this.oSet(i, i, diag)
+            this[i, i] = diag
             j = i + 1
             while (j < numColumns) {
-                d = this.oGet(i, j)
+                d = this[i, j]
                 d += p0 * z[j]
                 z[j] -= beta * d
-                this.oSet(i, j, d)
+                this[i, j] = d
                 j++
             }
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i)
+                d = this[j, i]
                 y[j] -= p0 * d
                 d += beta * y[j]
-                this.oSet(j, i, d)
+                this[j, i] = d
                 j++
             }
             i++
@@ -2328,16 +2316,16 @@ class idMatX {
         i = 0
         while (i < min) {
             p0 = y0[i]
-            beta1 = (z1[i] / this.oGet(i, i))
+            beta1 = (z1[i] / this[i, i])
             this.plusAssign(i, r, p0)
             j = i + 1
             while (j < numColumns) {
-                z1[j] -= beta1 * this.oGet(i, j)
+                z1[j] -= beta1 * this[i, j]
                 j++
             }
             j = i + 1
             while (j < numRows) {
-                y0[j] -= p0 * this.oGet(j, i)
+                y0[j] -= p0 * this[j, i]
                 j++
             }
             this.plusAssign(rp, i, beta1)
@@ -2348,7 +2336,7 @@ class idMatX {
         val max: Int = Lib.Min(numRows, numColumns)
         i = min
         while (i < max) {
-            diag = this.oGet(i, i)
+            diag = this[i, i]
             p0 = y0[i]
             p1 = z0[i]
             diag += p0 * p1
@@ -2363,25 +2351,25 @@ class idMatX {
                 return false
             }
             beta1 = q1 / diag
-            this.oSet(i, i, diag)
+            this[i, i] = diag
             j = i + 1
             while (j < numColumns) {
-                d = this.oGet(i, j)
+                d = this[i, j]
                 d += p0 * z0[j]
                 z0[j] -= beta0 * d
                 d += q0 * z1[j]
                 z1[j] -= beta1 * d
-                this.oSet(i, j, d)
+                this[i, j] = d
                 j++
             }
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i)
+                d = this[j, i]
                 y0[j] -= p0 * d
                 d += beta0 * y0[j]
                 y1[j] -= q0 * d
                 d += beta1 * y1[j]
-                this.oSet(j, i, d)
+                this[j, i] = d
                 j++
             }
             i++
@@ -2416,10 +2404,10 @@ class idMatX {
             sum = w.p[i]
             j = 0
             while (j < i) {
-                sum -= this.oGet(numRows - 1, j) * this.oGet(j, i)
+                sum -= this[numRows - 1, j] * this[j, i]
                 j++
             }
-            this.oSet(numRows - 1, i, sum / this.oGet(i, i))
+            this[numRows - 1, i] = sum / this[i, i]
             i++
         }
 
@@ -2438,10 +2426,10 @@ class idMatX {
             }
             j = 0
             while (j < i) {
-                sum -= this.oGet(i, j) * this.oGet(j, numRows - 1)
+                sum -= this[i, j] * this[j, numRows - 1]
                 j++
             }
-            this.oSet(i, numRows - 1, sum)
+            this[i, numRows - 1] = sum
             i++
         }
         return true
@@ -2555,7 +2543,7 @@ class idMatX {
             }
             j = 0
             while (j < i) {
-                sum -= (this.oGet(i, j) * x.p[j])
+                sum -= (this[i, j] * x.p[j])
                 j++
             }
             x.p[i] = sum
@@ -2568,10 +2556,10 @@ class idMatX {
             sum = x.p[i]
             j = i + 1
             while (j < numRows) {
-                sum -= (this.oGet(i, j) * x.p[j])
+                sum -= (this[i, j] * x.p[j])
                 j++
             }
-            x.p[i] = (sum / this.oGet(i, i))
+            x.p[i] = (sum / this[i, i])
             i--
         }
     }
@@ -2598,7 +2586,7 @@ class idMatX {
             LU_Solve(x, b, index)
             j = 0
             while (j < numRows) {
-                inv.oSet(j, i, x.p[j])
+                inv[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -2620,13 +2608,13 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < i) {
-                L.oSet(i, j, this.oGet(i, j))
+                L[i, j] = this[i, j]
                 j++
             }
-            L.oSet(i, i, 1.0f)
+            L[i, i] = 1.0f
             j = i
             while (j < numColumns) {
-                U.oSet(i, j, this.oGet(i, j))
+                U[i, j] = this[i, j]
                 j++
             }
             i++
@@ -2658,16 +2646,16 @@ class idMatX {
             i = 0
             while (i < numColumns) {
                 sum = if (i >= r) {
-                    this.oGet(r, i).toDouble()
+                    this[r, i].toDouble()
                 } else {
                     0.0
                 }
                 j = 0
                 while (j <= i && j < r) {
-                    sum += (this.oGet(r, j) * this.oGet(j, i)).toDouble()
+                    sum += (this[r, j] * this[j, i]).toDouble()
                     j++
                 }
-                m.oSet(rp, i, sum.toFloat())
+                m[rp, i] = sum.toFloat()
                 i++
             }
             r++
@@ -2699,7 +2687,7 @@ class idMatX {
             scale = 0.0
             i = k
             while (i < numRows) {
-                s = abs(this.oGet(i, k)).toDouble()
+                s = abs(this[i, k]).toDouble()
                 if (s > scale) {
                     scale = s
                 }
@@ -2719,29 +2707,29 @@ class idMatX {
                 sum = 0.0
                 i = k
                 while (i < numRows) {
-                    s = this.oGet(i, k).toDouble()
+                    s = this[i, k].toDouble()
                     sum += s * s
                     i++
                 }
                 s = idMath.Sqrt(sum.toFloat()).toDouble()
-                if (this.oGet(k, k) < 0.0f) {
+                if (this[k, k] < 0.0f) {
                     s = -s
                 }
                 this.plusAssign(k, k, s)
-                c.p[k] = (s * this.oGet(k, k)).toFloat()
+                c.p[k] = (s * this[k, k]).toFloat()
                 d.p[k] = (-scale * s).toFloat()
                 j = k + 1
                 while (j < numRows) {
                     sum = 0.0
                     i = k
                     while (i < numRows) {
-                        sum += (this.oGet(i, k) * this.oGet(i, j)).toDouble()
+                        sum += (this[i, k] * this[i, j]).toDouble()
                         i++
                     }
                     t = sum / c.p[k]
                     i = k
                     while (i < numRows) {
-                        this.minusAssign(i, j, t * this.oGet(i, k))
+                        this.minusAssign(i, j, t * this[i, k])
                         i++
                     }
                     j++
@@ -2749,7 +2737,7 @@ class idMatX {
             }
             k++
         }
-        d.p[numRows - 1] = this.oGet(numRows - 1, numRows - 1)
+        d.p[numRows - 1] = this[numRows - 1, numRows - 1]
         if (d.p[numRows - 1] == 0.0f) {
             singular = true
         }
@@ -2800,7 +2788,7 @@ class idMatX {
         }
         i = 0
         while (i < k) {
-            QR_Rotate(R, i, -R.oGet(i, i), R.oGet(i + 1, i))
+            QR_Rotate(R, i, -R[i, i], R[i + 1, i])
             i++
         }
         return true
@@ -2859,9 +2847,9 @@ class idMatX {
         assert(v.GetSize() >= numRows + 1)
         assert(w.GetSize() >= numColumns + 1)
         ChangeSize(numRows + 1, numColumns + 1, true)
-        this.oSet(numRows - 1, numRows - 1, 1.0f)
+        this[numRows - 1, numRows - 1] = 1.0f
         R.ChangeSize(R.numRows + 1, R.numColumns + 1, true)
-        R.oSet(R.numRows - 1, R.numRows - 1, 1.0f)
+        R[R.numRows - 1, R.numRows - 1] = 1.0f
         v2.SetData(numRows, idVecX.VECX_ALLOCA(numRows))
         v2 = v
         v2.p[numRows - 1] -= 1.0f
@@ -2920,13 +2908,13 @@ class idMatX {
             sum = 0.0f
             j = i
             while (j < numRows) {
-                sum += (this.oGet(j, i) * x.p[j])
+                sum += (this[j, i] * x.p[j])
                 j++
             }
             t = sum / c.p[i]
             j = i
             while (j < numRows) {
-                x.p[j] -= t * this.oGet(j, i)
+                x.p[j] -= t * this[j, i]
                 j++
             }
             i++
@@ -2938,7 +2926,7 @@ class idMatX {
             sum = x.p[i]
             j = i + 1
             while (j < numRows) {
-                sum -= (this.oGet(i, j) * x.p[j])
+                sum -= (this[i, j] * x.p[j])
                 j++
             }
             x.p[i] = (sum / d.p[i])
@@ -2966,10 +2954,10 @@ class idMatX {
             sum = x.p[i]
             j = i + 1
             while (j < numRows) {
-                sum -= (R.oGet(i, j) * x.p[j])
+                sum -= (R[i, j] * x.p[j])
                 j++
             }
-            x.p[i] = (sum / R.oGet(i, i))
+            x.p[i] = (sum / R[i, i])
             i--
         }
     }
@@ -2996,7 +2984,7 @@ class idMatX {
             QR_Solve(x, b, c, d)
             j = 0
             while (j < numRows) {
-                inv.oSet(j, i, x.p[j])
+                inv[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -3026,13 +3014,13 @@ class idMatX {
                 sum = 0.0f
                 k = i
                 while (k < numColumns) {
-                    sum += (this.oGet(k, i) * Q.oGet(j, k))
+                    sum += (this[k, i] * Q[j, k])
                     k++
                 }
                 sum /= c.p[i]
                 k = i
                 while (k < numColumns) {
-                    Q.minusAssign(j, k, sum * this.oGet(k, i))
+                    Q.minusAssign(j, k, sum * this[k, i])
                     k++
                 }
                 j++
@@ -3042,10 +3030,10 @@ class idMatX {
         R.Zero(numRows, numColumns)
         i = 0
         while (i < numRows) {
-            R.oSet(i, i, d.p[i])
+            R[i, i] = d.p[i]
             j = i + 1
             while (j < numColumns) {
-                R.oSet(i, j, this.oGet(i, j))
+                R[i, j] = this[i, j]
                 j++
             }
             i++
@@ -3076,13 +3064,13 @@ class idMatX {
                 sum = 0.0f
                 k = i
                 while (k < numColumns) {
-                    sum += (this.oGet(k, i) * Q.oGet(j, k))
+                    sum += (this[k, i] * Q[j, k])
                     k++
                 }
                 sum /= c.p[i]
                 k = i
                 while (k < numColumns) {
-                    Q.minusAssign(j, k, sum * this.oGet(k, i))
+                    Q.minusAssign(j, k, sum * this[k, i])
                     k++
                 }
                 j++
@@ -3093,13 +3081,13 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < numColumns) {
-                sum = (Q.oGet(i, j) * d.p[i])
+                sum = (Q[i, j] * d.p[i])
                 k = 0
                 while (k < i) {
-                    sum += (Q.oGet(i, k) * this.oGet(j, k))
+                    sum += (Q[i, k] * this[j, k])
                     k++
                 }
-                m.oSet(i, j, sum)
+                m[i, j] = sum
                 j++
             }
             i++
@@ -3178,10 +3166,10 @@ class idMatX {
                             s = -f * h
                             j = 0
                             while (j < numRows) {
-                                y = this.oGet(j, nm)
-                                z = this.oGet(j, i)
-                                this.oSet(j, nm, (y * c + z * s))
-                                this.oSet(j, i, (z * c - y * s))
+                                y = this[j, nm]
+                                z = this[j, i]
+                                this[j, nm] = (y * c + z * s)
+                                this[j, i] = (z * c - y * s)
                                 j++
                             }
                         }
@@ -3231,10 +3219,10 @@ class idMatX {
                     y = y * c
                     jj = 0
                     while (jj < numColumns) {
-                        x = V.oGet(jj, j)
-                        z = V.oGet(jj, i)
-                        V.oSet(jj, j, (x * c + z * s))
-                        V.oSet(jj, i, (z * c - x * s))
+                        x = V[jj, j]
+                        z = V[jj, i]
+                        V[jj, j] = (x * c + z * s)
+                        V[jj, i] = (z * c - x * s)
                         jj++
                     }
                     z = Pythag(f, h)
@@ -3248,10 +3236,10 @@ class idMatX {
                     x = c * y - s * g
                     jj = 0
                     while (jj < numRows) {
-                        y = this.oGet(jj, j)
-                        z = this.oGet(jj, i)
-                        this.oSet(jj, j, (y * c + z * s))
-                        this.oSet(jj, i, (z * c - y * s))
+                        y = this[jj, j]
+                        z = this[jj, i]
+                        this[jj, j] = (y * c + z * s)
+                        this[jj, i] = (z * c - y * s)
                         jj++
                     }
                     j++
@@ -3293,7 +3281,7 @@ class idMatX {
             if (w.p[i] >= idMath.FLT_EPSILON) {
                 j = 0
                 while (j < numRows) {
-                    sum += (this.oGet(j, i) * b.p[j])
+                    sum += (this[j, i] * b.p[j])
                     j++
                 }
                 sum /= w.p[i]
@@ -3306,7 +3294,7 @@ class idMatX {
             sum = 0.0f
             j = 0
             while (j < numColumns) {
-                sum += (V.oGet(i, j) * tmp.p[j])
+                sum += (V[i, j] * tmp.p[j])
                 j++
             }
             x.p[i] = sum
@@ -3340,13 +3328,13 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < numColumns) {
-                sum = (V2.oGet(i, 0) * this.oGet(j, 0))
+                sum = (V2[i, 0] * this[j, 0])
                 k = 1
                 while (k < numColumns) {
-                    sum += (V2.oGet(i, k) * this.oGet(j, k))
+                    sum += (V2[i, k] * this[j, k])
                     k++
                 }
-                inv.oSet(i, j, sum)
+                inv[i, j] = sum
                 j++
             }
             i++
@@ -3375,16 +3363,16 @@ class idMatX {
                     sum = 0.0f
                     j = 0
                     while (j < numColumns) {
-                        sum += (this.oGet(r, j) * V.oGet(i, j))
+                        sum += (this[r, j] * V[i, j])
                         j++
                     }
-                    m.oSet(r, i, (sum * w.p[r]))
+                    m[r, i] = (sum * w.p[r])
                     i++
                 }
             } else {
                 i = 0
                 while (i < V.GetNumRows()) {
-                    m.oSet(r, i, 0.0f)
+                    m[r, i] = 0.0f
                     i++
                 }
             }
@@ -3412,26 +3400,26 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < i) {
-                sum = this.oGet(i, j)
+                sum = this[i, j]
                 k = 0
                 while (k < j) {
-                    sum -= (this.oGet(i, k) * this.oGet(j, k))
+                    sum -= (this[i, k] * this[j, k])
                     k++
                 }
-                this.oSet(i, j, (sum * invSqrt[j]))
+                this[i, j] = (sum * invSqrt[j])
                 j++
             }
-            sum = this.oGet(i, i)
+            sum = this[i, i]
             k = 0
             while (k < i) {
-                sum -= (this.oGet(i, k) * this.oGet(i, k))
+                sum -= (this[i, k] * this[i, k])
                 k++
             }
             if (sum <= 0.0f) {
                 return false
             }
             invSqrt[i] = idMath.InvSqrt(sum)
-            this.oSet(i, i, (invSqrt[i] * sum))
+            this[i, i] = (invSqrt[i] * sum)
             i++
         }
         return true
@@ -3467,23 +3455,23 @@ class idMatX {
         var i: Int = offset
         while (i < numColumns) {
             p = y[i]
-            diag = this.oGet(i, i)
+            diag = this[i, i]
             invDiag = 1.0f / diag
             diagSqr = diag * diag
             newDiagSqr = diagSqr + alpha * p * p
             if (newDiagSqr <= 0.0f) {
                 return false
             }
-            this.oSet(i, i, idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat())
+            this[i, i] = idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat()
             alpha /= newDiagSqr
             beta = p * alpha
             alpha *= diagSqr
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i) * invDiag
+                d = this[j, i] * invDiag
                 y[j] -= p * d
                 d += beta * y[j]
-                this.oSet(j, i, (d * newDiag))
+                this[j, i] = (d * newDiag)
                 j++
             }
             i++
@@ -3520,13 +3508,13 @@ class idMatX {
         if (r == 0) {
             if (numColumns == 1) {
                 val v0 = v.p[0]
-                sum = this.oGet(0, 0)
+                sum = this[0, 0]
                 sum *= sum
                 sum += v0
                 if (sum <= 0.0f) {
                     return false
                 }
-                this.oSet(0, 0, idMath.Sqrt(sum))
+                this[0, 0] = idMath.Sqrt(sum)
                 return true
             }
             i = 0
@@ -3547,7 +3535,7 @@ class idMatX {
                 sum = 0.0f
                 j = 0
                 while (j <= i) {
-                    sum += (this.oGet(r, j) * this.oGet(i, j))
+                    sum += (this[r, j] * this[i, j])
                     j++
                 }
                 original[i] = sum
@@ -3560,10 +3548,10 @@ class idMatX {
                 sum = (original[i] + v.p[i])
                 j = 0
                 while (j < i) {
-                    sum -= (this.oGet(r, j) * this.oGet(i, j))
+                    sum -= (this[r, j] * this[i, j])
                     j++
                 }
-                this.oSet(r, i, (sum / this.oGet(i, i)))
+                this[r, i] = (sum / this[i, i])
                 i++
             }
 
@@ -3573,13 +3561,13 @@ class idMatX {
                 sum = (original[r] + v.p[r])
                 j = 0
                 while (j < r) {
-                    sum -= (this.oGet(r, j) * this.oGet(r, j))
+                    sum -= (this[r, j] * this[r, j])
                     j++
                 }
                 if (sum <= 0.0f) {
                     return false
                 }
-                this.oSet(r, r, idMath.Sqrt(sum))
+                this[r, r] = idMath.Sqrt(sum)
                 return true
             }
 
@@ -3589,7 +3577,7 @@ class idMatX {
                 sum = 0.0f
                 j = 0
                 while (j <= r) {
-                    sum += (this.oGet(r, j) * this.oGet(i, j))
+                    sum += (this[r, j] * this[i, j])
                     j++
                 }
                 addSub.p[i] = (v.p[i] - (sum - original[i]))
@@ -3630,7 +3618,7 @@ class idMatX {
         i = r
         while (i < numColumns) {
             p1 = v1[i]
-            diag = this.oGet(i, i)
+            diag = this[i, i]
             invDiag = 1.0f / diag
             diagSqr = diag * diag
             newDiagSqr = diagSqr + alpha1 * p1 * p1
@@ -3646,18 +3634,18 @@ class idMatX {
             if (newDiagSqr <= 0.0f) {
                 return false
             }
-            this.oSet(i, i, idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat())
+            this[i, i] = idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat()
             alpha2 /= newDiagSqr
             beta2 = p2 * alpha2
             alpha2 *= diagSqr
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i) * invDiag
+                d = this[j, i] * invDiag
                 v1[j] -= p1 * d
                 d += beta1 * v1[j]
                 v2[j] -= p2 * d
                 d += beta2 * v2[j]
-                this.oSet(j, i, (d * newDiag))
+                this[j, i] = (d * newDiag)
                 j++
             }
             i++
@@ -3697,10 +3685,10 @@ class idMatX {
             sum = v.p[i]
             j = 0
             while (j < i) {
-                sum -= (this.oGet(i, j) * x[j])
+                sum -= (this[i, j] * x[j])
                 j++
             }
-            x[i] = (sum / this.oGet(i, i))
+            x[i] = (sum / this[i, i])
             i++
         }
 
@@ -3708,7 +3696,7 @@ class idMatX {
         sum = v.p[numRows - 1]
         i = 0
         while (i < numRows - 1) {
-            this.oSet(numRows - 1, i, x[i])
+            this[numRows - 1, i] = x[i]
             sum -= (x[i] * x[i])
             i++
         }
@@ -3717,7 +3705,7 @@ class idMatX {
         }
 
         // store the diagonal entry
-        this.oSet(numRows - 1, numRows - 1, idMath.Sqrt(sum))
+        this[numRows - 1, numRows - 1] = idMath.Sqrt(sum)
         return true
     }
 
@@ -3774,10 +3762,10 @@ class idMatX {
             sum = b.p[i]
             j = 0
             while (j < i) {
-                sum -= (this.oGet(i, j) * x.p[j])
+                sum -= (this[i, j] * x.p[j])
                 j++
             }
-            x.p[i] = (sum / this.oGet(i, i))
+            x.p[i] = (sum / this[i, i])
             i++
         }
 
@@ -3787,10 +3775,10 @@ class idMatX {
             sum = x.p[i]
             j = i + 1
             while (j < numRows) {
-                sum -= (this.oGet(j, i) * x.p[j])
+                sum -= (this[j, i] * x.p[j])
                 j++
             }
-            x.p[i] = (sum / this.oGet(i, i))
+            x.p[i] = (sum / this[i, i])
             i--
         }
     }
@@ -3817,7 +3805,7 @@ class idMatX {
             Cholesky_Solve(x, b)
             j = 0
             while (j < numRows) {
-                inv.oSet(j, i, x.p[j])
+                inv[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -3845,10 +3833,10 @@ class idMatX {
                 sum = 0.0
                 j = 0
                 while (j <= i && j <= r) {
-                    sum += (this.oGet(r, j) * this.oGet(i, j)).toDouble()
+                    sum += (this[r, j] * this[i, j]).toDouble()
                     j++
                 }
-                m.oSet(r, i, sum.toFloat())
+                m[r, i] = sum.toFloat()
                 i++
             }
             r++
@@ -3878,28 +3866,28 @@ class idMatX {
         val v: FloatArray = FloatArray(numRows)
         var i: Int = 0
         while (i < numRows) {
-            sum = this.oGet(i, i).toDouble()
+            sum = this[i, i].toDouble()
             j = 0
             while (j < i) {
-                d = this.oGet(i, j).toDouble()
-                v[j] = (this.oGet(j, j) * d).toFloat()
+                d = this[i, j].toDouble()
+                v[j] = (this[j, j] * d).toFloat()
                 sum -= v[j] * d
                 j++
             }
             if (sum == 0.0) {
                 return false
             }
-            this.oSet(i, i, sum.toFloat())
+            this[i, i] = sum.toFloat()
             d = 1.0f / sum
             j = i + 1
             while (j < numRows) {
-                sum = this.oGet(j, i).toDouble()
+                sum = this[j, i].toDouble()
                 k = 0
                 while (k < i) {
-                    sum -= (this.oGet(j, k) * v[k]).toDouble()
+                    sum -= (this[j, k] * v[k]).toDouble()
                     k++
                 }
-                this.oSet(j, i, (sum * d).toFloat())
+                this[j, i] = (sum * d).toFloat()
                 j++
             }
             i++
@@ -3933,8 +3921,8 @@ class idMatX {
         var i: Int = offset
         while (i < numColumns) {
             p = y[i]
-            diag = this.oGet(i, i)
-            this.oSet(i, i, (diag + alpha * p * p.also { newDiag = it }))
+            diag = this[i, i]
+            this[i, i] = (diag + alpha * p * p.also { newDiag = it })
             if (newDiag == 0.0f) {
                 return false
             }
@@ -3943,10 +3931,10 @@ class idMatX {
             alpha *= diag
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i)
+                d = this[j, i]
                 y[j] -= p * d
                 d += beta * y[j]
-                this.oSet(j, i, d)
+                this[j, i] = d
                 j++
             }
             i++
@@ -4007,21 +3995,21 @@ class idMatX {
             // calculate original row/column of matrix
             i = 0
             while (i < r) {
-                y[i] = this.oGet(r, i) * this.oGet(i, i)
+                y[i] = this[r, i] * this[i, i]
                 i++
             }
             i = 0
             while (i < numColumns) {
                 sum = if (i < r) {
-                    (this.oGet(i, i) * this.oGet(r, i)).toDouble()
+                    (this[i, i] * this[r, i]).toDouble()
                 } else if (i == r) {
-                    this.oGet(r, r).toDouble()
+                    this[r, r].toDouble()
                 } else {
-                    (this.oGet(r, r) * this.oGet(i, r)).toDouble()
+                    (this[r, r] * this[i, r]).toDouble()
                 }
                 j = 0
                 while (j < i && j < r) {
-                    sum += (this.oGet(i, j) * y[j]).toDouble()
+                    sum += (this[i, j] * y[j]).toDouble()
                     j++
                 }
                 original[i] = sum.toFloat()
@@ -4034,7 +4022,7 @@ class idMatX {
                 sum = (original[i] + v.p[i]).toDouble()
                 j = 0
                 while (j < i) {
-                    sum -= (this.oGet(i, j) * y[j]).toDouble()
+                    sum -= (this[i, j] * y[j]).toDouble()
                     j++
                 }
                 y[i] = sum.toFloat()
@@ -4044,7 +4032,7 @@ class idMatX {
             // calculate new row of L
             i = 0
             while (i < r) {
-                this.oSet(r, i, y[i] / this.oGet(i, i))
+                this[r, i] = y[i] / this[i, i]
                 i++
             }
 
@@ -4054,32 +4042,32 @@ class idMatX {
                 sum = (original[r] + v.p[r]).toDouble()
                 j = 0
                 while (j < r) {
-                    sum -= (this.oGet(r, j) * y[j]).toDouble()
+                    sum -= (this[r, j] * y[j]).toDouble()
                     j++
                 }
                 if (sum == 0.0) {
                     return false
                 }
-                this.oSet(r, r, sum.toFloat())
+                this[r, r] = sum.toFloat()
                 return true
             }
 
             // calculate the row/column to be added to the lower right sub matrix starting at (r, r)
             i = 0
             while (i < r) {
-                y[i] = this.oGet(r, i) * this.oGet(i, i)
+                y[i] = this[r, i] * this[i, i]
                 i++
             }
             i = r
             while (i < numColumns) {
                 sum = if (i == r) {
-                    this.oGet(r, r).toDouble()
+                    this[r, r].toDouble()
                 } else {
-                    (this.oGet(r, r) * this.oGet(i, r)).toDouble()
+                    (this[r, r] * this[i, r]).toDouble()
                 }
                 j = 0
                 while (j < r) {
-                    sum += (this.oGet(i, j) * y[j]).toDouble()
+                    sum += (this[i, j] * y[j]).toDouble()
                     j++
                 }
                 addSub.p[i] = (v.p[i] - (sum - original[i])).toFloat()
@@ -4113,7 +4101,7 @@ class idMatX {
         // simultaneous update/downdate of the sub matrix starting at (r, r)
         i = r
         while (i < numColumns) {
-            diag = this.oGet(i, i)
+            diag = this[i, i]
             p1 = v1[i]
             newDiag = diag + alpha1 * p1 * p1
             if (newDiag == 0.0f) {
@@ -4131,15 +4119,15 @@ class idMatX {
             alpha2 /= newDiag
             beta2 = p2 * alpha2
             alpha2 *= diag
-            this.oSet(i, i, newDiag)
+            this[i, i] = newDiag
             j = i + 1
             while (j < numRows) {
-                d = this.oGet(j, i)
+                d = this[j, i]
                 v1[j] -= p1 * d
                 d += beta1 * v1[j]
                 v2[j] -= p2 * d
                 d += beta2 * v2[j]
-                this.oSet(j, i, d)
+                this[j, i] = d
                 j++
             }
             i++
@@ -4164,7 +4152,7 @@ class idMatX {
             sum = v.p[i]
             j = 0
             while (j < i) {
-                sum -= (this.oGet(i, j) * x[j])
+                sum -= (this[i, j] * x[j])
                 j++
             }
             x[i] = sum.toFloat()
@@ -4175,7 +4163,7 @@ class idMatX {
         sum = v.p[numRows - 1]
         i = 0
         while (i < numRows - 1) {
-            this.oSet(numRows - 1, i, x[i] / this.oGet(i, i).also { d = it })
+            this[numRows - 1, i] = x[i] / this[i, i].also { d = it }
             sum -= d * x[i]
             i++
         }
@@ -4184,7 +4172,7 @@ class idMatX {
         }
 
         // store the diagonal entry
-        this.oSet(numRows - 1, numRows - 1, sum.toFloat())
+        this[numRows - 1, numRows - 1] = sum.toFloat()
         return true
     }
 
@@ -4241,7 +4229,7 @@ class idMatX {
             sum = b.p[i]
             j = 0
             while (j < i) {
-                sum -= (this.oGet(i, j) * x.p[j])
+                sum -= (this[i, j] * x.p[j])
                 j++
             }
             x.p[i] = sum.toFloat()
@@ -4251,7 +4239,7 @@ class idMatX {
         // solve D
         i = 0
         while (i < numRows) {
-            x.p[i] /= this.oGet(i, i)
+            x.p[i] /= this[i, i]
             i++
         }
 
@@ -4261,7 +4249,7 @@ class idMatX {
             sum = x.p[i]
             j = i + 1
             while (j < numRows) {
-                sum -= (this.oGet(j, i) * x.p[j])
+                sum -= (this[j, i] * x.p[j])
                 j++
             }
             x.p[i] = sum.toFloat()
@@ -4291,7 +4279,7 @@ class idMatX {
             LDLT_Solve(x, b)
             j = 0
             while (j < numRows) {
-                inv.oSet(j, i, x.p[j])
+                inv[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -4314,11 +4302,11 @@ class idMatX {
         while (i < numRows) {
             j = 0
             while (j < i) {
-                L.oSet(i, j, this.oGet(i, j))
+                L[i, j] = this[i, j]
                 j++
             }
-            L.oSet(i, i, 1.0f)
-            D.oSet(i, i, this.oGet(i, i))
+            L[i, i] = 1.0f
+            D[i, i] = this[i, i]
             i++
         }
     }
@@ -4343,24 +4331,24 @@ class idMatX {
             // calculate row of matrix
             i = 0
             while (i < r) {
-                v[i] = this.oGet(r, i) * this.oGet(i, i)
+                v[i] = this[r, i] * this[i, i]
                 i++
             }
             i = 0
             while (i < numColumns) {
                 sum = if (i < r) {
-                    (this.oGet(i, i) * this.oGet(r, i))
+                    (this[i, i] * this[r, i])
                 } else if (i == r) {
-                    this.oGet(r, r)
+                    this[r, r]
                 } else {
-                    (this.oGet(r, r) * this.oGet(i, r))
+                    (this[r, r] * this[i, r])
                 }
                 j = 0
                 while (j < i && j < r) {
-                    sum += (this.oGet(i, j) * v[j])
+                    sum += (this[i, j] * v[j])
                     j++
                 }
-                m.oSet(r, i, sum.toFloat())
+                m[r, i] = sum.toFloat()
                 i++
             }
             r++
@@ -4374,8 +4362,8 @@ class idMatX {
         while (i < numRows - 2) {
             j = i + 2
             while (j < numColumns) {
-                this.oSet(i, j, 0.0f)
-                this.oSet(j, i, 0.0f)
+                this[i, j] = 0.0f
+                this[j, i] = 0.0f
                 j++
             }
             i++
@@ -4394,7 +4382,7 @@ class idMatX {
         assert(numRows == numColumns)
         assert(x.GetSize() >= numRows && b.GetSize() >= numRows)
         tmp.SetData(numRows, idVecX.VECX_ALLOCA(numRows))
-        d = this.oGet(0, 0)
+        d = this[0, 0]
         if (d == 0.0f) {
             return false
         }
@@ -4402,13 +4390,13 @@ class idMatX {
         x.p[0] = b.p[0] * d
         var i: Int = 1
         while (i < numRows) {
-            tmp.p[i] = this.oGet(i - 1, i) * d
-            d = this.oGet(i, i) - this.oGet(i, i - 1) * tmp.p[i]
+            tmp.p[i] = this[i - 1, i] * d
+            d = this[i, i] - this[i, i - 1] * tmp.p[i]
             if (d == 0.0f) {
                 return false
             }
             d = 1.0f / d
-            x.p[i] = (b.p[i] - this.oGet(i, i - 1) * x.p[i - 1]) * d
+            x.p[i] = (b.p[i] - this[i, i - 1] * x.p[i - 1]) * d
             i++
         }
         i = numRows - 2
@@ -4440,7 +4428,7 @@ class idMatX {
             TriDiagonal_Solve(x, b)
             j = 0
             while (j < numRows) {
-                inv.oSet(j, i, x.p[j])
+                inv[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -4474,11 +4462,11 @@ class idMatX {
         eigenValues.SetSize(numRows)
         var i: Int = 0
         while (i < numRows - 1) {
-            eigenValues.p[i] = this.oGet(i, i)
-            subd.p[i] = this.oGet(i + 1, i)
+            eigenValues.p[i] = this[i, i]
+            subd.p[i] = this[i + 1, i]
             i++
         }
-        eigenValues.p[numRows - 1] = this.oGet(numRows - 1, numRows - 1)
+        eigenValues.p[numRows - 1] = this[numRows - 1, numRows - 1]
         Identity()
         return QL(eigenValues, subd)
     }
@@ -4506,7 +4494,7 @@ class idMatX {
         assert(numRows == numColumns)
         realEigenValues.SetSize(numRows)
         imaginaryEigenValues.SetSize(numRows)
-        H.oSet(this)
+        H.set(this)
 
         // reduce to Hessenberg form
         HessenbergReduction(H)
@@ -4611,7 +4599,7 @@ class idMatX {
             tmp.LU_Solve(x, b, index)
             j = 0
             while (j < numRows) {
-                this.oSet(j, i, x.p[j])
+                this[j, i] = x.p[j]
                 j++
             }
             b.p[i] = 0.0f
@@ -4653,18 +4641,18 @@ class idMatX {
         }
         var j: Int = i
         while (j < numRows) {
-            y = R.oGet(i, j)
-            w = R.oGet(i + 1, j)
-            R.oSet(i, j, c * y - s * w)
-            R.oSet(i + 1, j, s * y + c * w)
+            y = R[i, j]
+            w = R[i + 1, j]
+            R[i, j] = c * y - s * w
+            R[i + 1, j] = s * y + c * w
             j++
         }
         j = 0
         while (j < numRows) {
-            y = this.oGet(j, i)
-            w = this.oGet(j, i + 1)
-            this.oSet(j, i, c * y - s * w)
-            this.oSet(j, i + 1, s * y + c * w)
+            y = this[j, i]
+            w = this[j, i + 1]
+            this[j, i] = c * y - s * w
+            this[j, i + 1] = s * y + c * w
             j++
         }
     }
@@ -4716,36 +4704,36 @@ class idMatX {
             if (i < numRows) {
                 k = i
                 while (k < numRows) {
-                    scale += abs(this.oGet(k, i)).toDouble()
+                    scale += abs(this[k, i]).toDouble()
                     k++
                 }
                 if (scale != 0.0) {
                     k = i
                     while (k < numRows) {
                         this.divAssign(k, i, scale)
-                        s += (this.oGet(k, i) * this.oGet(k, i)).toDouble()
+                        s += (this[k, i] * this[k, i]).toDouble()
                         k++
                     }
-                    f = this.oGet(i, i).toDouble()
+                    f = this[i, i].toDouble()
                     g = idMath.Sqrt(s.toFloat()).toDouble()
                     if (f >= 0.0f) {
                         g = -g
                     }
                     h = f * g - s
-                    this.oSet(i, i, (f - g).toFloat())
+                    this[i, i] = (f - g).toFloat()
                     if (i != numColumns - 1) {
                         j = l
                         while (j < numColumns) {
                             s = 0.0
                             k = i
                             while (k < numRows) {
-                                s += (this.oGet(k, i) * this.oGet(k, j)).toDouble()
+                                s += (this[k, i] * this[k, j]).toDouble()
                                 k++
                             }
                             f = s / h
                             k = i
                             while (k < numRows) {
-                                this.plusAssign(k, j, f * this.oGet(k, i))
+                                this.plusAssign(k, j, f * this[k, i])
                                 k++
                             }
                             j++
@@ -4765,26 +4753,26 @@ class idMatX {
             if (i < numRows && i != numColumns - 1) {
                 k = l
                 while (k < numColumns) {
-                    scale += abs(this.oGet(i, k)).toDouble()
+                    scale += abs(this[i, k]).toDouble()
                     k++
                 }
                 if (scale != 0.0) {
                     k = l
                     while (k < numColumns) {
                         this.divAssign(i, k, scale) //TODO:add oDivSit
-                        s += (this.oGet(i, k) * this.oGet(i, k)).toDouble()
+                        s += (this[i, k] * this[i, k]).toDouble()
                         k++
                     }
-                    f = this.oGet(i, l).toDouble()
+                    f = this[i, l].toDouble()
                     g = idMath.Sqrt(s.toFloat()).toDouble()
                     if (f >= 0.0f) {
                         g = -g
                     }
                     h = 1.0f / (f * g - s)
-                    this.oSet(i, l, (f - g).toFloat())
+                    this[i, l] = (f - g).toFloat()
                     k = l
                     while (k < numColumns) {
-                        rv1.p[k] = (this.oGet(i, k) * h).toFloat()
+                        rv1.p[k] = (this[i, k] * h).toFloat()
                         k++
                     }
                     if (i != numRows - 1) {
@@ -4793,7 +4781,7 @@ class idMatX {
                             s = 0.0
                             k = l
                             while (k < numColumns) {
-                                s += (this.oGet(j, k) * this.oGet(i, k)).toDouble()
+                                s += (this[j, k] * this[i, k]).toDouble()
                                 k++
                             }
                             k = l
@@ -4834,7 +4822,7 @@ class idMatX {
                 if (g != 0.0f) {
                     j = l
                     while (j < numColumns) {
-                        V.oSet(j, i, (this.oGet(i, j) / this.oGet(i, l) / g).toFloat())
+                        V[j, i] = (this[i, j] / this[i, l] / g).toFloat()
                         j++
                     }
                     // double division to reduce underflow
@@ -4843,12 +4831,12 @@ class idMatX {
                         s = 0.0f
                         k = l
                         while (k < numColumns) {
-                            s += (this.oGet(i, k) * V.oGet(k, j))
+                            s += (this[i, k] * V[k, j])
                             k++
                         }
                         k = l
                         while (k < numColumns) {
-                            V.plusAssign(k, j, s * V.oGet(k, i))
+                            V.plusAssign(k, j, s * V[k, i])
                             k++
                         }
                         j++
@@ -4856,11 +4844,11 @@ class idMatX {
                 }
                 j = l
                 while (j < numColumns) {
-                    V.oSet(j, i, V.oSet(i, j, 0.0f))
+                    V[j, i] = V.set(i, j, 0.0f)
                     j++
                 }
             }
-            V.oSet(i, i, 1.0f)
+            V[i, i] = 1.0f
             g = rv1.p[i]
             i--
         }
@@ -4871,7 +4859,7 @@ class idMatX {
             if (i < numColumns - 1) {
                 j = l
                 while (j < numColumns) {
-                    this.oSet(i, j, 0.0f)
+                    this[i, j] = 0.0f
                     j++
                 }
             }
@@ -4883,13 +4871,13 @@ class idMatX {
                         s = 0.0f
                         k = l
                         while (k < numRows) {
-                            s += (this.oGet(k, i) * this.oGet(k, j))
+                            s += (this[k, i] * this[k, j])
                             k++
                         }
-                        f = s / this.oGet(i, i) * g
+                        f = s / this[i, i] * g
                         k = i
                         while (k < numRows) {
-                            this.plusAssign(k, j, f * this.oGet(k, i))
+                            this.plusAssign(k, j, f * this[k, i])
                             k++
                         }
                         j++
@@ -4903,7 +4891,7 @@ class idMatX {
             } else {
                 j = i
                 while (j < numRows) {
-                    this.oSet(j, i, 0.0f)
+                    this[j, i] = 0.0f
                     j++
                 }
             }
@@ -4944,63 +4932,63 @@ class idMatX {
             if (i3 > 0) {
                 i2 = 0
                 while (i2 <= i3) {
-                    scale += abs(this.oGet(i0, i2))
+                    scale += abs(this[i0, i2])
                     i2++
                 }
                 if (scale == 0f) {
-                    subd.p[i0] = this.oGet(i0, i3)
+                    subd.p[i0] = this[i0, i3]
                 } else {
                     invScale = 1.0f / scale
                     i2 = 0
                     while (i2 <= i3) {
                         this.timesAssign(i0, i2, invScale)
-                        h += this.oGet(i0, i2) * this.oGet(i0, i2)
+                        h += this[i0, i2] * this[i0, i2]
                         i2++
                     }
-                    f = this.oGet(i0, i3)
+                    f = this[i0, i3]
                     g = idMath.Sqrt(h)
                     if (f > 0.0f) {
                         g = -g
                     }
                     subd.p[i0] = scale * g
                     h -= f * g
-                    this.oSet(i0, i3, f - g)
+                    this[i0, i3] = f - g
                     f = 0.0f
                     invH = 1.0f / h
                     i1 = 0
                     while (i1 <= i3) {
-                        this.oSet(i1, i0, this.oGet(i0, i1) * invH)
+                        this[i1, i0] = this[i0, i1] * invH
                         g = 0.0f
                         i2 = 0
                         while (i2 <= i1) {
-                            g += this.oGet(i1, i2) * this.oGet(i0, i2)
+                            g += this[i1, i2] * this[i0, i2]
                             i2++
                         }
                         i2 = i1 + 1
                         while (i2 <= i3) {
-                            g += this.oGet(i2, i1) * this.oGet(i0, i2)
+                            g += this[i2, i1] * this[i0, i2]
                             i2++
                         }
                         subd.p[i1] = g * invH
-                        f += subd.p[i1] * this.oGet(i0, i1)
+                        f += subd.p[i1] * this[i0, i1]
                         i1++
                     }
                     halfFdivH = 0.5f * f * invH
                     i1 = 0
                     while (i1 <= i3) {
-                        f = this.oGet(i0, i1)
+                        f = this[i0, i1]
                         g = subd.p[i1] - halfFdivH * f
                         subd.p[i1] = g
                         i2 = 0
                         while (i2 <= i1) {
-                            this.minusAssign(i1, i2, f * subd.p[i2] + g * this.oGet(i0, i2))
+                            this.minusAssign(i1, i2, f * subd.p[i2] + g * this[i0, i2])
                             i2++
                         }
                         i1++
                     }
                 }
             } else {
-                subd.p[i0] = this.oGet(i0, i3)
+                subd.p[i0] = this[i0, i3]
             }
             diag.p[i0] = h
             i0--
@@ -5017,23 +5005,23 @@ class idMatX {
                     sum = 0.0f
                     i2 = 0
                     while (i2 <= i3) {
-                        sum += this.oGet(i0, i2) * this.oGet(i2, i1)
+                        sum += this[i0, i2] * this[i2, i1]
                         i2++
                     }
                     i2 = 0
                     while (i2 <= i3) {
-                        this.minusAssign(i2, i1, sum * this.oGet(i2, i0))
+                        this.minusAssign(i2, i1, sum * this[i2, i0])
                         i2++
                     }
                     i1++
                 }
             }
-            diag.p[i0] = this.oGet(i0, i0)
-            this.oSet(i0, i0, 1.0f)
+            diag.p[i0] = this[i0, i0]
+            this[i0, i0] = 1.0f
             i1 = 0
             while (i1 <= i3) {
-                this.oSet(i1, i0, 0.0f)
-                this.oSet(i0, i1, 0.0f)
+                this[i1, i0] = 0.0f
+                this[i0, i1] = 0.0f
                 i1++
             }
             i0++
@@ -5127,9 +5115,9 @@ class idMatX {
                     diag.p[i3 + 1] = g + p
                     g = c * r - b
                     for (i4 in 0 until numRows) {
-                        f = this.oGet(i4, i3 + 1)
-                        this.oSet(i4, i3 + 1, s * this.oGet(i4, i3) + c * f)
-                        this.oSet(i4, i3, c * this.oGet(i4, i3) - s * f)
+                        f = this[i4, i3 + 1]
+                        this[i4, i3 + 1] = s * this[i4, i3] + c * f
+                        this[i4, i3] = c * this[i4, i3] - s * f
                     }
                     i3--
                 }
@@ -5170,7 +5158,7 @@ class idMatX {
             scale = 0.0f
             i = m
             while (i <= high) {
-                scale = scale + abs(H.oGet(i, m - 1))
+                scale = scale + abs(H[i, m - 1])
                 i++
             }
             if (scale != 0.0f) {
@@ -5179,7 +5167,7 @@ class idMatX {
                 h = 0.0f
                 i = high
                 while (i >= m) {
-                    v.p[i] = H.oGet(i, m - 1) / scale
+                    v.p[i] = H[i, m - 1] / scale
                     h += v.p[i] * v.p[i]
                     i--
                 }
@@ -5197,7 +5185,7 @@ class idMatX {
                     f = 0.0f
                     i = high
                     while (i >= m) {
-                        f += v.p[i] * H.oGet(i, j)
+                        f += v.p[i] * H[i, j]
                         i--
                     }
                     f = f / h
@@ -5213,7 +5201,7 @@ class idMatX {
                     f = 0.0f
                     j = high
                     while (j >= m) {
-                        f += v.p[j] * H.oGet(i, j)
+                        f += v.p[j] * H[i, j]
                         j--
                     }
                     f = f / h
@@ -5225,7 +5213,7 @@ class idMatX {
                     i++
                 }
                 v.p[m] = scale * v.p[m]
-                H.oSet(m, m - 1, scale * g)
+                H[m, m - 1] = scale * g
             }
             m++
         }
@@ -5234,10 +5222,10 @@ class idMatX {
         Identity()
         m = high - 1
         while (m >= low + 1) {
-            if (H.oGet(m, m - 1) != 0.0f) {
+            if (H[m, m - 1] != 0.0f) {
                 i = m + 1
                 while (i <= high) {
-                    v.p[i] = H.oGet(i, m - 1)
+                    v.p[i] = H[i, m - 1]
                     i++
                 }
                 j = m
@@ -5245,11 +5233,11 @@ class idMatX {
                     g = 0.0f
                     i = m
                     while (i <= high) {
-                        g += v.p[i] * this.oGet(i, j)
+                        g += v.p[i] * this[i, j]
                         i++
                     }
                     // float division to avoid possible underflow
-                    g = g / v.p[m] / H.oGet(m, m - 1)
+                    g = g / v.p[m] / H[m, m - 1]
                     i = m
                     while (i <= high) {
                         this.plusAssign(i, j, g * v.p[i])
@@ -5314,12 +5302,12 @@ class idMatX {
         i = 0
         while (i < numRows) {
             if (i < low || i > high) {
-                realEigenValues.p[i] = H.oGet(i, i)
+                realEigenValues.p[i] = H[i, i]
                 imaginaryEigenValues.p[i] = 0.0f
             }
             j = Lib.Max(i - 1, 0)
             while (j < numRows) {
-                norm = norm + abs(H.oGet(i, j))
+                norm = norm + abs(H[i, j])
                 j++
             }
             i++
@@ -5330,11 +5318,11 @@ class idMatX {
             // look for single small sub-diagonal element
             var l = n
             while (l > low) {
-                s = abs(H.oGet(l - 1, l - 1)) + abs(H.oGet(l, l))
+                s = abs(H[l - 1, l - 1]) + abs(H[l, l])
                 if (s == 0.0f) {
                     s = norm
                 }
-                if (abs(H.oGet(l, l - 1)) < eps * s) {
+                if (abs(H[l, l - 1]) < eps * s) {
                     break
                 }
                 l--
@@ -5343,18 +5331,18 @@ class idMatX {
             // check for convergence
             if (l == n) {            // one root found
                 H.plusAssign(n, n, exshift)
-                realEigenValues.p[n] = H.oGet(n, n)
+                realEigenValues.p[n] = H[n, n]
                 imaginaryEigenValues.p[n] = 0.0f
                 n--
                 iter = 0
             } else if (l == n - 1) {    // two roots found
-                w = H.oGet(n, n - 1) * H.oGet(n - 1, n)
-                p = (H.oGet(n - 1, n - 1) - H.oGet(n, n)) / 2.0f
+                w = H[n, n - 1] * H[n - 1, n]
+                p = (H[n - 1, n - 1] - H[n, n]) / 2.0f
                 q = p * p + w
                 z = idMath.Sqrt(abs(q))
                 H.plusAssign(n, n, exshift)
                 H.plusAssign(n - 1, n - 1, exshift)
-                x = H.oGet(n, n)
+                x = H[n, n]
                 if (q >= 0.0f) {        // real pair
                     z = if (p >= 0.0f) {
                         p + z
@@ -5368,7 +5356,7 @@ class idMatX {
                     }
                     imaginaryEigenValues.p[n - 1] = 0.0f
                     imaginaryEigenValues.p[n] = 0.0f
-                    x = H.oGet(n, n - 1)
+                    x = H[n, n - 1]
                     s = abs(x) + abs(z)
                     p = x / s
                     q = z / s
@@ -5379,27 +5367,27 @@ class idMatX {
                     // modify row
                     j = n - 1
                     while (j < numRows) {
-                        z = H.oGet(n - 1, j)
-                        H.oSet(n - 1, j, q * z + p * H.oGet(n, j))
-                        H.oSet(n, j, q * H.oGet(n, j) - p * z)
+                        z = H[n - 1, j]
+                        H[n - 1, j] = q * z + p * H[n, j]
+                        H[n, j] = q * H[n, j] - p * z
                         j++
                     }
 
                     // modify column
                     i = 0
                     while (i <= n) {
-                        z = H.oGet(i, n - 1)
-                        H.oSet(i, n - 1, q * z + p * H.oGet(i, n))
-                        H.oSet(i, n, q * H.oGet(i, n) - p * z)
+                        z = H[i, n - 1]
+                        H[i, n - 1] = q * z + p * H[i, n]
+                        H[i, n] = q * H[i, n] - p * z
                         i++
                     }
 
                     // accumulate transformations
                     i = low
                     while (i <= high) {
-                        z = this.oGet(i, n - 1)
-                        this.oSet(i, n - 1, q * z + p * this.oGet(i, n))
-                        this.oSet(i, n, q * this.oGet(i, n) - p * z)
+                        z = this[i, n - 1]
+                        this[i, n - 1] = q * z + p * this[i, n]
+                        this[i, n] = q * this[i, n] - p * z
                         i++
                     }
                 } else {        // complex pair
@@ -5413,12 +5401,12 @@ class idMatX {
             } else {    // no convergence yet
 
                 // form shift
-                x = H.oGet(n, n)
+                x = H[n, n]
                 y = 0.0f
                 w = 0.0f
                 if (l < n) {
-                    y = H.oGet(n - 1, n - 1)
-                    w = H.oGet(n, n - 1) * H.oGet(n - 1, n)
+                    y = H[n - 1, n - 1]
+                    w = H[n, n - 1] * H[n - 1, n]
                 }
 
                 // Wilkinson's original ad hoc shift
@@ -5429,7 +5417,7 @@ class idMatX {
                         H.minusAssign(i, i, x)
                         i++
                     }
-                    s = abs(H.oGet(n, n - 1)) + abs(H.oGet(n - 1, n - 2))
+                    s = abs(H[n, n - 1]) + abs(H[n - 1, n - 2])
                     y = 0.75f * s
                     x = y
                     w = -0.4375f * s * s
@@ -5461,12 +5449,12 @@ class idMatX {
                 // look for two consecutive small sub-diagonal elements
                 var m: Int = n - 2
                 while (m >= l) {
-                    z = H.oGet(m, m)
+                    z = H[m, m]
                     r = x - z
                     s = y - z
-                    p = (r * s - w) / H.oGet(m + 1, m) + H.oGet(m, m + 1)
-                    q = H.oGet(m + 1, m + 1) - z - r - s
-                    r = H.oGet(m + 2, m + 1)
+                    p = (r * s - w) / H[m + 1, m] + H[m, m + 1]
+                    q = H[m + 1, m + 1] - z - r - s
+                    r = H[m + 2, m + 1]
                     s = abs(p) + abs(q) + abs(r)
                     p = p / s
                     q = q / s
@@ -5474,12 +5462,9 @@ class idMatX {
                     if (m == l) {
                         break
                     }
-                    if (abs(H.oGet(m, m - 1)) * (abs(q) + abs(r))
-                        < eps * (abs(p) * (abs(H.oGet(m - 1, m - 1)) + abs(z) + abs(
-                            H.oGet(
-                                m + 1,
-                                m + 1
-                            )
+                    if (abs(H[m, m - 1]) * (abs(q) + abs(r))
+                        < eps * (abs(p) * (abs(H[m - 1, m - 1]) + abs(z) + abs(
+                            H[m + 1, m + 1]
                         )))
                     ) {
                         break
@@ -5488,9 +5473,9 @@ class idMatX {
                 }
                 i = m + 2
                 while (i <= n) {
-                    H.oSet(i, i - 2, 0.0f)
+                    H[i, i - 2] = 0.0f
                     if (i > m + 2) {
-                        H.oSet(i, i - 3, 0.0f)
+                        H[i, i - 3] = 0.0f
                     }
                     i++
                 }
@@ -5500,9 +5485,9 @@ class idMatX {
                 while (k <= n - 1) {
                     val notlast = k != n - 1
                     if (k != m) {
-                        p = H.oGet(k, k - 1)
-                        q = H.oGet(k + 1, k - 1)
-                        r = if (notlast) H.oGet(k + 2, k - 1) else 0.0f
+                        p = H[k, k - 1]
+                        q = H[k + 1, k - 1]
+                        r = if (notlast) H[k + 2, k - 1] else 0.0f
                         x = abs(p) + abs(q) + abs(r)
                         if (x != 0.0f) {
                             p = p / x
@@ -5519,9 +5504,9 @@ class idMatX {
                     }
                     if (s != 0.0f) {
                         if (k != m) {
-                            H.oSet(k, k - 1, -s * x)
+                            H[k, k - 1] = -s * x
                         } else if (l != m) {
-                            H.oSet(k, k - 1, -H.oGet(k, k - 1))
+                            H[k, k - 1] = -H[k, k - 1]
                         }
                         p = p + s
                         x = p / s
@@ -5533,9 +5518,9 @@ class idMatX {
                         // modify row
                         j = k
                         while (j < numRows) {
-                            p = H.oGet(k, j) + q * H.oGet(k + 1, j)
+                            p = H[k, j] + q * H[k + 1, j]
                             if (notlast) {
-                                p = p + r * H.oGet(k + 2, j)
+                                p = p + r * H[k + 2, j]
                                 H.minusAssign(k + 2, j, p * z)
                             }
                             H.plusAssign(k, j, -p * x)
@@ -5546,9 +5531,9 @@ class idMatX {
                         // modify column
                         i = 0
                         while (i <= Lib.Min(n, k + 3)) {
-                            p = x * H.oGet(i, k) + y * H.oGet(i, k + 1)
+                            p = x * H[i, k] + y * H[i, k + 1]
                             if (notlast) {
-                                p = p + z * H.oGet(i, k + 2)
+                                p = p + z * H[i, k + 2]
                                 H.minusAssign(i, k + 2, p * r)
                             }
                             H.minusAssign(i, k, p)
@@ -5559,9 +5544,9 @@ class idMatX {
                         // accumulate transformations
                         i = low
                         while (i <= high) {
-                            p = x * this.oGet(i, k) + y * this.oGet(i, k + 1)
+                            p = x * this[i, k] + y * this[i, k + 1]
                             if (notlast) {
-                                p = p + z * this.oGet(i, k + 2)
+                                p = p + z * this[i, k + 2]
                                 this.minusAssign(i, k + 2, p * r)
                             }
                             this.minusAssign(i, k, p)
@@ -5584,14 +5569,14 @@ class idMatX {
             q = imaginaryEigenValues.p[n]
             if (q == 0.0f) {        // real vector
                 var l = n
-                H.oSet(n, n, 1.0f)
+                H[n, n] = 1.0f
                 i = n - 1
                 while (i >= 0) {
-                    w = H.oGet(i, i) - p
+                    w = H[i, i] - p
                     r = 0.0f
                     j = l
                     while (j <= n) {
-                        r = r + H.oGet(i, j) * H.oGet(j, n)
+                        r = r + H[i, j] * H[j, n]
                         j++
                     }
                     if (imaginaryEigenValues.p[i] < 0.0f) {
@@ -5601,30 +5586,30 @@ class idMatX {
                         l = i
                         if (imaginaryEigenValues.p[i] == 0.0f) {
                             if (w != 0.0f) {
-                                H.oSet(i, n, -r / w)
+                                H[i, n] = -r / w
                             } else {
-                                H.oSet(i, n, -r / (eps * norm))
+                                H[i, n] = -r / (eps * norm)
                             }
                         } else {        // solve real equations
-                            x = H.oGet(i, i + 1)
-                            y = H.oGet(i + 1, i)
+                            x = H[i, i + 1]
+                            y = H[i + 1, i]
                             q =
                                 (realEigenValues.p[i] - p) * (realEigenValues.p[i] - p) + imaginaryEigenValues.p[i] * imaginaryEigenValues.p[i]
                             t = (x * s - z * r) / q
-                            H.oSet(i, n, t)
+                            H[i, n] = t
                             if (abs(x) > abs(z)) {
-                                H.oSet(i + 1, n, (-r - w * t) / x)
+                                H[i + 1, n] = (-r - w * t) / x
                             } else {
-                                H.oSet(i + 1, n, (-s - y * t) / z)
+                                H[i + 1, n] = (-s - y * t) / z
                             }
                         }
 
                         // overflow control
-                        t = abs(H.oGet(i, n))
+                        t = abs(H[i, n])
                         if (eps * t * t > 1) {
                             j = i
                             while (j <= n) {
-                                H.oSet(j, n, H.oGet(j, n) / t)
+                                H[j, n] = H[j, n] / t
                                 j++
                             }
                         }
@@ -5637,16 +5622,16 @@ class idMatX {
                 val ci = CFloat()
 
                 // last vector component imaginary so matrix is triangular
-                if (abs(H.oGet(n, n - 1)) > abs(H.oGet(n - 1, n))) {
-                    H.oSet(n - 1, n - 1, q / H.oGet(n, n - 1))
-                    H.oSet(n - 1, n, -(H.oGet(n, n) - p) / H.oGet(n, n - 1))
+                if (abs(H[n, n - 1]) > abs(H[n - 1, n])) {
+                    H[n - 1, n - 1] = q / H[n, n - 1]
+                    H[n - 1, n] = -(H[n, n] - p) / H[n, n - 1]
                 } else {
-                    ComplexDivision(0.0f, -H.oGet(n - 1, n), H.oGet(n - 1, n - 1) - p, q, cr, ci)
-                    H.oSet(n - 1, n - 1, cr._val)
-                    H.oSet(n - 1, n, ci._val)
+                    ComplexDivision(0.0f, -H[n - 1, n], H[n - 1, n - 1] - p, q, cr, ci)
+                    H[n - 1, n - 1] = cr._val
+                    H[n - 1, n] = ci._val
                 }
-                H.oSet(n, n - 1, 0.0f)
-                H.oSet(n, n, 1.0f)
+                H[n, n - 1] = 0.0f
+                H[n, n] = 1.0f
                 i = n - 2
                 while (i >= 0) {
                     var ra: Float
@@ -5657,11 +5642,11 @@ class idMatX {
                     sa = 0.0f
                     j = l
                     while (j <= n) {
-                        ra = ra + H.oGet(i, j) * H.oGet(j, n - 1)
-                        sa = sa + H.oGet(i, j) * H.oGet(j, n)
+                        ra = ra + H[i, j] * H[j, n - 1]
+                        sa = sa + H[i, j] * H[j, n]
                         j++
                     }
-                    w = H.oGet(i, i) - p
+                    w = H[i, i] - p
                     if (imaginaryEigenValues.p[i] < 0.0f) {
                         z = w
                         r = ra
@@ -5670,12 +5655,12 @@ class idMatX {
                         l = i
                         if (imaginaryEigenValues.p[i] == 0.0f) {
                             ComplexDivision(-ra, -sa, w, q, cr, ci)
-                            H.oSet(i, n - 1, cr._val)
-                            H.oSet(i, n, ci._val)
+                            H[i, n - 1] = cr._val
+                            H[i, n] = ci._val
                         } else {
                             // solve complex equations
-                            x = H.oGet(i, i + 1)
-                            y = H.oGet(i + 1, i)
+                            x = H[i, i + 1]
+                            y = H[i + 1, i]
                             vr =
                                 (realEigenValues.p[i] - p) * (realEigenValues.p[i] - p) + imaginaryEigenValues.p[i] * imaginaryEigenValues.p[i] - q * q
                             vi = (realEigenValues.p[i] - p) * 2.0f * q
@@ -5683,25 +5668,25 @@ class idMatX {
                                 vr = eps * norm * (abs(w) + abs(q) + abs(x) + abs(y) + abs(z))
                             }
                             ComplexDivision(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi, cr, ci)
-                            H.oSet(i, n - 1, cr._val)
-                            H.oSet(i, n, ci._val)
+                            H[i, n - 1] = cr._val
+                            H[i, n] = ci._val
                             if (abs(x) > abs(z) + abs(q)) {
-                                H.oSet(i + 1, n - 1, (-ra - w * H.oGet(i, n - 1) + q * H.oGet(i, n)) / x)
-                                H.oSet(i + 1, n, (-sa - w * H.oGet(i, n) - q * H.oGet(i, n - 1)) / x)
+                                H[i + 1, n - 1] = (-ra - w * H[i, n - 1] + q * H[i, n]) / x
+                                H[i + 1, n] = (-sa - w * H[i, n] - q * H[i, n - 1]) / x
                             } else {
-                                ComplexDivision(-r - y * H.oGet(i, n - 1), -s - y * H.oGet(i, n), z, q, cr, ci)
-                                H.oSet(i + 1, n - 1, cr._val)
-                                H.oSet(i + 1, n, ci._val)
+                                ComplexDivision(-r - y * H[i, n - 1], -s - y * H[i, n], z, q, cr, ci)
+                                H[i + 1, n - 1] = cr._val
+                                H[i + 1, n] = ci._val
                             }
                         }
 
                         // overflow control
-                        t = Lib.Max(abs(H.oGet(i, n - 1)), abs(H.oGet(i, n)))
+                        t = Lib.Max(abs(H[i, n - 1]), abs(H[i, n]))
                         if (eps * t * t > 1) {
                             j = i
                             while (j <= n) {
-                                H.oSet(j, n - 1, H.oGet(j, n - 1) / t)
-                                H.oSet(j, n, H.oGet(j, n) / t)
+                                H[j, n - 1] = H[j, n - 1] / t
+                                H[j, n] = H[j, n] / t
                                 j++
                             }
                         }
@@ -5718,7 +5703,7 @@ class idMatX {
             if (i < low || i > high) {
                 j = i
                 while (j < numRows) {
-                    this.oSet(i, j, H.oGet(i, j))
+                    this[i, j] = H[i, j]
                     j++
                 }
             }
@@ -5733,10 +5718,10 @@ class idMatX {
                 z = 0.0f
                 k = low
                 while (k <= Lib.Min(j, high)) {
-                    z = z + this.oGet(i, k) * H.oGet(k, j)
+                    z = z + this[i, k] * H[k, j]
                     k++
                 }
-                this.oSet(i, j, z)
+                this[i, j] = z
                 i++
             }
             j--
@@ -5744,11 +5729,11 @@ class idMatX {
         return true
     }
 
-    fun oGet(row: Int, column: Int): Float {
+    operator fun get(row: Int, column: Int): Float {
         return mat[column + row * numColumns]
     }
 
-    fun oSet(row: Int, column: Int, value: Float): Float {
+    operator fun set(row: Int, column: Int, value: Float): Float {
         return value.also { mat[column + row * numColumns] = it }
     }
 
@@ -5852,14 +5837,12 @@ class idMatX {
 
         //public	friend idMatX	operator*( const float a, const idMatX &m );
         fun times(a: Float, m: idMatX): idMatX {
-            return m.oMultiply(a)
+            return m * a
         }
 
         //public					~idMatX( void );
         fun times(vec: idVecX, m: idMatX): idVecX {
-            var vec = vec
-            vec = m.oMultiply(vec)
-            return vec
+            return vec.set(m * vec)
         }
 
         fun Test() {
@@ -5878,15 +5861,15 @@ class idMatX {
             val d = idVecX()
             val size: Int = 6
             original.Random(size, size, 0)
-            original = original.oMultiply(original.Transpose())
+            original = original * original.Transpose()
             val index1: IntArray = IntArray(size + 1)
             val index2: IntArray = IntArray(size + 1)
 
             /*
          idMatX::LowerTriangularInverse
-         */m1.oSet(original)
+         */m1.set(original)
             m1.ClearUpperTriangle()
-            m2.oSet(m1)
+            m2.set(m1)
             m2.InverseSelf()
             m1.LowerTriangularInverse()
             if (!m1.Compare(m2, 1e-4f)) {
@@ -5895,9 +5878,9 @@ class idMatX {
 
             /*
          idMatX::UpperTriangularInverse
-         */m1.oSet(original)
+         */m1.set(original)
             m1.ClearLowerTriangle()
-            m2.oSet(m1)
+            m2.set(m1)
             m2.InverseSelf()
             m1.UpperTriangularInverse()
             if (!m1.Compare(m2, 1e-4f)) {
@@ -5906,17 +5889,17 @@ class idMatX {
 
             /*
          idMatX::Inverse_GaussJordan
-         */m1.oSet(original)
+         */m1.set(original)
             m1.Inverse_GaussJordan()
-            m1.oSet(m1.timesAssign(original))
+            m1.set(m1.timesAssign(original))
             if (!m1.IsIdentity(1e-4f)) {
                 idLib.common.Warning("idMatX::Inverse_GaussJordan failed")
             }
 
             /*
          idMatX::Inverse_UpdateRankOne
-         */m1.oSet(original)
-            m2.oSet(original)
+         */m1.set(original)
+            m2.set(original)
             w.Random(size, 1)
             v.Random(size, 2)
 
@@ -5940,8 +5923,8 @@ class idMatX {
          */
             var offset: Int = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.Random(size, 1)
                 w.Random(size, 2)
                 w.p[offset] = 0.0f
@@ -5965,8 +5948,8 @@ class idMatX {
 
             /*
          idMatX::Inverse_UpdateIncrement
-         */m1.oSet(original)
-            m2.oSet(original)
+         */m1.set(original)
+            m2.set(original)
             v.Random(size + 1, 1)
             w.Random(size + 1, 2)
             w.p[size] = 0.0f
@@ -5990,13 +5973,13 @@ class idMatX {
          idMatX::Inverse_UpdateDecrement
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.SetSize(6)
                 w.SetSize(6)
                 for (i in 0 until size) {
-                    v.p[i] = original.oGet(i, offset)
-                    w.p[i] = original.oGet(offset, i)
+                    v.p[i] = original[i, offset]
+                    w.p[i] = original[offset, i]
                 }
 
                 // invert m1
@@ -6016,20 +5999,20 @@ class idMatX {
                 offset++
             }
 
-            /*
-         idMatX::LU_Factor
-         */m1.oSet(original)
+            /*idMatX::LU_Factor*/
+            m1.set(original)
             m1.LU_Factor(null) // no pivoting
             m1.LU_UnpackFactors(m2, m3)
-            m1.oSet(m2.oMultiply(m3))
+            m1.set(m2 * m3)
             if (!original.Compare(m1, 1e-4f)) {
                 idLib.common.Warning("idMatX::LU_Factor failed")
             }
 
             /*
          idMatX::LU_UpdateRankOne
-         */m1.oSet(original)
-            m2.oSet(original)
+         */
+            m1.set(original)
+            m2.set(original)
             w.Random(size, 1)
             v.Random(size, 2)
 
@@ -6042,12 +6025,12 @@ class idMatX {
                 assert(false)
             }
             m2.LU_MultiplyFactors(m3, index2)
-            m2.oSet(m3)
+            m2.set(m3)
 
             // update factored m1
             m1.LU_UpdateRankOne(v, w, 1.0f, index1)
             m1.LU_MultiplyFactors(m3, index1)
-            m1.oSet(m3)
+            m1.set(m3)
             if (!m1.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::LU_UpdateRankOne failed")
             }
@@ -6056,8 +6039,8 @@ class idMatX {
          idMatX::LU_UpdateRowColumn
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.Random(size, 1)
                 w.Random(size, 2)
                 w.p[offset] = 0.0f
@@ -6071,12 +6054,12 @@ class idMatX {
                     assert(false)
                 }
                 m2.LU_MultiplyFactors(m3, index2)
-                m2.oSet(m3)
+                m2.set(m3)
 
                 // update m1
                 m1.LU_UpdateRowColumn(v, w, offset, index1)
                 m1.LU_MultiplyFactors(m3, index1)
-                m1.oSet(m3)
+                m1.set(m3)
                 if (!m1.Compare(m2, 1e-3f)) {
                     idLib.common.Warning("idMatX::LU_UpdateRowColumn failed")
                 }
@@ -6085,8 +6068,8 @@ class idMatX {
 
             /*
          idMatX::LU_UpdateIncrement
-         */m1.oSet(original)
-            m2.oSet(original)
+         */m1.set(original)
+            m2.set(original)
             v.Random(size + 1, 1)
             w.Random(size + 1, 2)
             w.p[size] = 0.0f
@@ -6100,12 +6083,12 @@ class idMatX {
                 assert(false)
             }
             m2.LU_MultiplyFactors(m3, index2)
-            m2.oSet(m3)
+            m2.set(m3)
 
             // update factored m1
             m1.LU_UpdateIncrement(v, w, index1)
             m1.LU_MultiplyFactors(m3, index1)
-            m1.oSet(m3)
+            m1.set(m3)
             if (!m1.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::LU_UpdateIncrement failed")
             }
@@ -6119,8 +6102,8 @@ class idMatX {
                 v.SetSize(6)
                 w.SetSize(6)
                 for (i in 0 until size) {
-                    v.p[i] = original.oGet(i, offset)
-                    w.p[i] = original.oGet(offset, i)
+                    v.p[i] = original[i, offset]
+                    w.p[i] = original[offset, i]
                 }
 
                 // factor m1
@@ -6132,16 +6115,16 @@ class idMatX {
                     assert(false)
                 }
                 m2.LU_MultiplyFactors(m3, index2)
-                m2.oSet(m3)
+                m2.set(m3)
                 u.SetSize(6)
                 for (i in 0 until size) {
-                    u.p[i] = original.oGet(index1[offset], i)
+                    u.p[i] = original[index1[offset], i]
                 }
 
                 // update factors of m1
                 m1.LU_UpdateDecrement(v, w, u, offset, index1)
                 m1.LU_MultiplyFactors(m3, index1)
-                m1.oSet(m3)
+                m1.set(m3)
                 if (!m1.Compare(m2, 1e-3f)) {
                     idLib.common.Warning("idMatX::LU_UpdateDecrement failed")
                 }
@@ -6150,7 +6133,7 @@ class idMatX {
 
             /*
          idMatX::LU_Inverse
-         */m2.oSet(original)
+         */m2.set(original)
             m2.LU_Factor(null)
             m2.LU_Inverse(m1, null)
             m1.timesAssign(original)
@@ -6163,22 +6146,23 @@ class idMatX {
          idMatX::QR_Factor
          */c.SetSize(size)
             d.SetSize(size)
-            m1.oSet(original)
+            m1.set(original)
             m1.QR_Factor(c, d)
             m1.QR_UnpackFactors(q1, r1, c, d)
-            m1.oSet(q1.oMultiply(r1))
+            m1.set(q1 * r1)
             if (!original.Compare(m1, 1e-4f)) {
                 idLib.common.Warning("idMatX::QR_Factor failed")
             }
 
             /*
          idMatX::QR_UpdateRankOne
-         */c.SetSize(size)
+         */
+            c.SetSize(size)
             d.SetSize(size)
-            m1.oSet(original)
-            m2.oSet(original)
+            m1.set(original)
+            m2.set(original)
             w.Random(size, 0)
-            v.oSet(w)
+            v.set(w)
 
             // factor m1
             m1.QR_Factor(c, d)
@@ -6190,23 +6174,24 @@ class idMatX {
                 assert(false)
             }
             m2.QR_UnpackFactors(q2, r2, c, d)
-            m2 = q2.oMultiply(r2)
+            m2 = q2 * r2
 
             // update factored m1
             q1.QR_UpdateRankOne(r1, v, w, 1.0f)
-            m1 = q1.oMultiply(r1)
+            m1 = q1 * r1
             if (!m1.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::QR_UpdateRankOne failed")
             }
 
             /*
          idMatX::QR_UpdateRowColumn
-         */offset = 0
+         */
+            offset = 0
             while (offset < size) {
                 c.SetSize(size)
                 d.SetSize(size)
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.Random(size, 1)
                 w.Random(size, 2)
                 w.p[offset] = 0.0f
@@ -6221,11 +6206,11 @@ class idMatX {
                     assert(false)
                 }
                 m2.QR_UnpackFactors(q2, r2, c, d)
-                m2 = q2.oMultiply(r2)
+                m2 = q2 * r2
 
                 // update m1
                 q1.QR_UpdateRowColumn(r1, v, w, offset)
-                m1 = q1.oMultiply(r1)
+                m1 = q1 * r1
                 if (!m1.Compare(m2, 1e-3f)) {
                     idLib.common.Warning("idMatX::QR_UpdateRowColumn failed")
                 }
@@ -6236,8 +6221,8 @@ class idMatX {
          idMatX::QR_UpdateIncrement
          */c.SetSize(size + 1)
             d.SetSize(size + 1)
-            m1.oSet(original)
-            m2.oSet(original)
+            m1.set(original)
+            m2.set(original)
             v.Random(size + 1, 1)
             w.Random(size + 1, 2)
             w.p[size] = 0.0f
@@ -6252,11 +6237,11 @@ class idMatX {
                 assert(false)
             }
             m2.QR_UnpackFactors(q2, r2, c, d)
-            m2 = q2.oMultiply(r2)
+            m2 = q2 * r2
 
             // update factored m1
             q1.QR_UpdateIncrement(r1, v, w)
-            m1 = q1.oMultiply(r1)
+            m1 = q1 * r1
             if (!m1.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::QR_UpdateIncrement failed")
             }
@@ -6267,13 +6252,13 @@ class idMatX {
             while (offset < size) {
                 c.SetSize(size + 1)
                 d.SetSize(size + 1)
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.SetSize(6)
                 w.SetSize(6)
                 for (i in 0 until size) {
-                    v.p[i] = original.oGet(i, offset)
-                    w.p[i] = original.oGet(offset, i)
+                    v.p[i] = original[i, offset]
+                    w.p[i] = original[offset, i]
                 }
 
                 // factor m1
@@ -6286,11 +6271,11 @@ class idMatX {
                     assert(false)
                 }
                 m2.QR_UnpackFactors(q2, r2, c, d)
-                m2 = q2.oMultiply(r2)
+                m2 = q2 * r2
 
                 // update factors of m1
                 q1.QR_UpdateDecrement(r1, v, w, offset)
-                m1.oSet(q1.oMultiply(r1))
+                m1.set(q1 * r1)
                 if (!m1.Compare(m2, 1e-3f)) {
                     idLib.common.Warning("idMatX::QR_UpdateDecrement failed")
                 }
@@ -6299,7 +6284,7 @@ class idMatX {
 
             /*
          idMatX::QR_Inverse
-         */m2.oSet(original)
+         */m2.set(original)
             m2.QR_Factor(c, d)
             m2.QR_Inverse(m1, c, d)
             m1.timesAssign(original)
@@ -6309,20 +6294,21 @@ class idMatX {
 
             /*
          idMatX::SVD_Factor
-         */m1.oSet(original)
+         */
+            m1.set(original)
             m3.Zero(size, size)
             w.Zero(size)
             m1.SVD_Factor(w, m3)
             m2.Diag(w)
             m3.TransposeSelf()
-            m1.oSet(m1.oMultiply(m2).oMultiply(m3))
+            m1.set(m1 * m2 * m3)
             if (!original.Compare(m1, 1e-4f)) {
                 idLib.common.Warning("idMatX::SVD_Factor failed")
             }
 
             /*
          idMatX::SVD_Inverse
-         */m2.oSet(original)
+         */m2.set(original)
             m2.SVD_Factor(w, m3)
             m2.SVD_Inverse(m1, w, m3)
             m1.timesAssign(original)
@@ -6332,7 +6318,7 @@ class idMatX {
 
             /*
          idMatX::Cholesky_Factor
-         */m1.oSet(original)
+         */m1.set(original)
             m1.Cholesky_Factor()
             m1.Cholesky_MultiplyFactors(m2)
             if (!original.Compare(m2, 1e-4f)) {
@@ -6341,8 +6327,8 @@ class idMatX {
 
             /*
          idMatX::Cholesky_UpdateRankOne
-         */m1.oSet(original)
-            m2.oSet(original)
+         */m1.set(original)
+            m2.set(original)
             w.Random(size, 0)
 
             // factor m1
@@ -6366,8 +6352,8 @@ class idMatX {
          idMatX::Cholesky_UpdateRowColumn
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
 
                 // factor m1
                 m1.Cholesky_Factor()
@@ -6394,12 +6380,12 @@ class idMatX {
             /*
          idMatX::Cholesky_UpdateIncrement
          */m1.Random(size + 1, size + 1, 0)
-            m3.oSet(m1.oMultiply(m1.Transpose()))
+            m3.set(m1 * m1.Transpose())
             m1.SquareSubMatrix(m3, size)
-            m2.oSet(m1)
+            m2.set(m1)
             w.SetSize(size + 1)
             for (i in 0 until size + 1) {
-                w.p[i] = m3.oGet(size, i)
+                w.p[i] = m3[size, i]
             }
 
             // factor m1
@@ -6423,11 +6409,11 @@ class idMatX {
          idMatX::Cholesky_UpdateDecrement
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.SetSize(6)
                 for (i in 0 until size) {
-                    v.p[i] = original.oGet(i, offset)
+                    v.p[i] = original[i, offset]
                 }
 
                 // factor m1
@@ -6449,7 +6435,7 @@ class idMatX {
 
             /*
          idMatX::Cholesky_Inverse
-         */m2.oSet(original)
+         */m2.set(original)
             m2.Cholesky_Factor()
             m2.Cholesky_Inverse(m1)
             m1.timesAssign(original)
@@ -6459,22 +6445,22 @@ class idMatX {
 
             /*
          idMatX::LDLT_Factor
-         */m1.oSet(original)
+         */m1.set(original)
             m1.LDLT_Factor()
             m1.LDLT_MultiplyFactors(m2)
             if (!original.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::LDLT_Factor failed")
             }
             m1.LDLT_UnpackFactors(m2, m3)
-            m2 = m2.oMultiply(m3).oMultiply(m2.Transpose())
+            m2.set(m2 * m3 * m2.Transpose())
             if (!original.Compare(m2, 1e-4f)) {
                 idLib.common.Warning("idMatX::LDLT_Factor failed")
             }
 
             /*
          idMatX::LDLT_UpdateRankOne
-         */m1.oSet(original)
-            m2.oSet(original)
+         */m1.set(original)
+            m2.set(original)
             w.Random(size, 0)
 
             // factor m1
@@ -6498,8 +6484,8 @@ class idMatX {
          idMatX::LDLT_UpdateRowColumn
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 w.Random(size, 0)
 
                 // factor m1
@@ -6524,12 +6510,12 @@ class idMatX {
             /*
          idMatX::LDLT_UpdateIncrement
          */m1.Random(size + 1, size + 1, 0)
-            m3 = m1.oMultiply(m1.Transpose())
+            m3 = m1 * m1.Transpose()
             m1.SquareSubMatrix(m3, size)
-            m2.oSet(m1)
+            m2.set(m1)
             w.SetSize(size + 1)
             for (i in 0 until size + 1) {
-                w.p[i] = m3.oGet(size, i)
+                w.p[i] = m3[size, i]
             }
 
             // factor m1
@@ -6553,11 +6539,11 @@ class idMatX {
          idMatX::LDLT_UpdateDecrement
          */offset = 0
             while (offset < size) {
-                m1.oSet(original)
-                m2.oSet(original)
+                m1.set(original)
+                m2.set(original)
                 v.SetSize(6)
                 for (i in 0 until size) {
-                    v.p[i] = original.oGet(i, offset)
+                    v.p[i] = original[i, offset]
                 }
 
                 // factor m1
@@ -6579,7 +6565,7 @@ class idMatX {
 
             /*
          idMatX::LDLT_Inverse
-         */m2.oSet(original)
+         */m2.set(original)
             m2.LDLT_Factor()
             m2.LDLT_Inverse(m1)
             m1.timesAssign(original)
@@ -6589,9 +6575,9 @@ class idMatX {
 
             /*
          idMatX::Eigen_SolveSymmetricTriDiagonal
-         */m3.oSet(original)
+         */m3.set(original)
             m3.TriDiagonal_ClearTriangles()
-            m1.oSet(m3)
+            m1.set(m3)
             v.SetSize(size)
             m1.Eigen_SolveSymmetricTriDiagonal(v)
             m3.TransposeMultiply(m2, m1)
@@ -6606,8 +6592,8 @@ class idMatX {
 
             /*
          idMatX::Eigen_SolveSymmetric
-         */m3.oSet(original)
-            m1.oSet(m3)
+         */m3.set(original)
+            m1.set(m3)
             v.SetSize(size)
             m1.Eigen_SolveSymmetric(v)
             m3.TransposeMultiply(m2, m1)
@@ -6622,8 +6608,8 @@ class idMatX {
 
             /*
          idMatX::Eigen_Solve
-         */m3.oSet(original)
-            m1.oSet(m3)
+         */m3.set(original)
+            m1.set(m3)
             v.SetSize(size)
             w.SetSize(size)
             m1.Eigen_Solve(v, w)

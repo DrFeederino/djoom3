@@ -162,9 +162,9 @@ object Model_liquid {
                 while (x < verts_x) {
                     page1.get(i) = 0.0f
                     page2.get(i) = 0.0f
-                    verts.oGet(i).Clear()
-                    verts.oGet(i).xyz.Set(x * scale_x, y * scale_y, 0.0f)
-                    verts.oGet(i).st.Set(x.toFloat() / (verts_x - 1).toFloat(), -y.toFloat() / (verts_y - 1).toFloat())
+                    verts.get(i).Clear()
+                    verts.get(i).xyz.set(x * scale_x, y * scale_y, 0.0f)
+                    verts.get(i).st.set(x.toFloat() / (verts_x - 1).toFloat(), -y.toFloat() / (verts_y - 1).toFloat())
                     x++
                     i++
                 }
@@ -176,12 +176,12 @@ object Model_liquid {
             while (y < verts_y - 1) {
                 x = 1
                 while (x < verts_x) {
-                    tris.oSet(i + 0, y * verts_x + x)
-                    tris.oSet(i + 1, y * verts_x + x - 1)
-                    tris.oSet(i + 2, (y + 1) * verts_x + x - 1)
-                    tris.oSet(i + 3, (y + 1) * verts_x + x - 1)
-                    tris.oSet(i + 4, (y + 1) * verts_x + x)
-                    tris.oSet(i + 0, y * verts_x + x)
+                    tris.set(i + 0, y * verts_x + x)
+                    tris.set(i + 1, y * verts_x + x - 1)
+                    tris.set(i + 2, (y + 1) * verts_x + x - 1)
+                    tris.set(i + 3, (y + 1) * verts_x + x - 1)
+                    tris.set(i + 4, (y + 1) * verts_x + x)
+                    tris.set(i + 0, y * verts_x + x)
                     x++
                     i += 6
                 }
@@ -272,7 +272,7 @@ object Model_liquid {
                 while (x < verts_x) {
                     page1.get(i) = 0.0f
                     page2.get(i) = 0.0f
-                    verts.oGet(i).xyz.z = 0.0f
+                    verts.get(i).xyz.z = 0.0f
                     x++
                     i++
                 }
@@ -290,12 +290,12 @@ object Model_liquid {
             val up: Float
             val down: Float
             var pos: Float
-            left = (bounds.oGet(0).x / scale_x).toInt()
-            right = (bounds.oGet(1).x / scale_x).toInt()
-            top = (bounds.oGet(0).y / scale_y).toInt()
-            bottom = (bounds.oGet(1).y / scale_y).toInt()
-            down = bounds.oGet(0).z
-            up = bounds.oGet(1).z
+            left = (bounds.get(0).x / scale_x).toInt()
+            right = (bounds.get(1).x / scale_x).toInt()
+            top = (bounds.get(0).y / scale_y).toInt()
+            bottom = (bounds.get(1).y / scale_y).toInt()
+            down = bounds.get(0).z
+            up = bounds.get(1).z
             if (right < 1 || left >= verts_x || bottom < 1 || top >= verts_x) {
                 return
             }
@@ -335,11 +335,11 @@ object Model_liquid {
             val surf = modelSurface_s()
             val inv_lerp: Float
             inv_lerp = 1.0f - lerp
-            vert = verts.oGet(0)
+            vert = verts.get(0)
             i = 0
             while (i < verts.Num()) {
                 vert.xyz.z = page1.get(i) * lerp + page2.get(i) * inv_lerp
-                vert = verts.oGet(++i)
+                vert = verts.get(++i)
             }
             tr_local.tr.pc.c_deformedSurfaces++
             tr_local.tr.pc.c_deformedVerts += deformInfo.numOutputVerts

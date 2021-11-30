@@ -102,7 +102,7 @@ object tritjunction {
         // snap the vert to integral values
         i = 0
         while (i < 3) {
-            iv[i] = Math.floor((v.oGet(i) + 0.5 / tritjunction.SNAP_FRACTIONS) * tritjunction.SNAP_FRACTIONS).toInt()
+            iv[i] = Math.floor((v.get(i) + 0.5 / tritjunction.SNAP_FRACTIONS) * tritjunction.SNAP_FRACTIONS).toInt()
             block[i] = (iv[i] - tritjunction.hashIntMins[i]) / tritjunction.hashIntScale[i]
             if (block[i] < 0) {
                 block[i] = 0
@@ -146,9 +146,9 @@ object tritjunction {
         hv.iv.get(0) = iv[0]
         hv.iv.get(1) = iv[1]
         hv.iv.get(2) = iv[2]
-        hv.v.oSet(0, iv[0] as Float / tritjunction.SNAP_FRACTIONS)
-        hv.v.oSet(1, iv[1] as Float / tritjunction.SNAP_FRACTIONS)
-        hv.v.oSet(2, iv[2] as Float / tritjunction.SNAP_FRACTIONS)
+        hv.v.set(0, iv[0] as Float / tritjunction.SNAP_FRACTIONS)
+        hv.v.set(1, iv[1] as Float / tritjunction.SNAP_FRACTIONS)
+        hv.v.set(2, iv[2] as Float / tritjunction.SNAP_FRACTIONS)
         Vector.VectorCopy(hv.v, v)
         tritjunction.numHashVerts++
         return hv
@@ -173,19 +173,19 @@ object tritjunction {
         // add a 1.0 slop margin on each side
         i = 0
         while (i < 3) {
-            blocks.get(0).get(i) = ((bounds.oGet(0, i) - 1.0 - tritjunction.hashBounds.oGet(
+            blocks.get(0).get(i) = ((bounds.get(0, i) - 1.0 - tritjunction.hashBounds.get(
                 0,
                 i
-            )) / tritjunction.hashScale.oGet(i)).toInt()
+            )) / tritjunction.hashScale.get(i)).toInt()
             if (blocks.get(0).get(i) < 0) {
                 blocks.get(0).get(i) = 0
             } else if (blocks.get(0).get(i) >= tritjunction.HASH_BINS) {
                 blocks.get(0).get(i) = tritjunction.HASH_BINS - 1
             }
-            blocks.get(1).get(i) = ((bounds.oGet(1, i) + 1.0 - tritjunction.hashBounds.oGet(
+            blocks.get(1).get(i) = ((bounds.get(1, i) + 1.0 - tritjunction.hashBounds.get(
                 0,
                 i
-            )) / tritjunction.hashScale.oGet(i)).toInt()
+            )) / tritjunction.hashScale.get(i)).toInt()
             if (blocks.get(1).get(i) < 0) {
                 blocks.get(1).get(i) = 0
             } else if (blocks.get(1).get(i) >= tritjunction.HASH_BINS) {
@@ -231,18 +231,18 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            tritjunction.hashBounds.oSet(
+            tritjunction.hashBounds.set(
                 0,
                 i,
-                Math.floor((tritjunction.hashBounds.oGet(0, i) - 1).toDouble()).toFloat()
+                Math.floor((tritjunction.hashBounds.get(0, i) - 1).toDouble()).toFloat()
             )
-            tritjunction.hashBounds.oSet(1, i, Math.ceil((tritjunction.hashBounds.oGet(1, i) + 1).toDouble()).toFloat())
-            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.oGet(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
-            tritjunction.hashScale.oSet(
+            tritjunction.hashBounds.set(1, i, Math.ceil((tritjunction.hashBounds.get(1, i) + 1).toDouble()).toFloat())
+            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.get(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
+            tritjunction.hashScale.set(
                 i,
-                (tritjunction.hashBounds.oGet(1, i) - tritjunction.hashBounds.oGet(0, i)) / tritjunction.HASH_BINS
+                (tritjunction.hashBounds.get(1, i) - tritjunction.hashBounds.get(0, i)) / tritjunction.HASH_BINS
             )
-            tritjunction.hashIntScale[i] = (tritjunction.hashScale.oGet(i) * tritjunction.SNAP_FRACTIONS).toInt()
+            tritjunction.hashIntScale[i] = (tritjunction.hashScale.get(i) * tritjunction.SNAP_FRACTIONS).toInt()
             if (tritjunction.hashIntScale[i] < 1) {
                 tritjunction.hashIntScale[i] = 1
             }
@@ -333,7 +333,7 @@ object tritjunction {
         val v = idVec3()
         val plane1 = idPlane()
         val plane2 = idPlane()
-        v.oSet(hv.v)
+        v.set(hv.v)
 
         // if the triangle already has this hashVert as a vert,
         // it can't be split by it
@@ -373,11 +373,11 @@ object tritjunction {
             // but interpolate everything else from the original tri
             Vector.VectorCopy(v, split.xyz)
             frac = d / len
-            split.st.oSet(0, v1.st.oGet(0) + frac * (v2.st.oGet(0) - v1.st.oGet(0)))
-            split.st.oSet(1, v1.st.oGet(1) + frac * (v2.st.oGet(1) - v1.st.oGet(1)))
-            split.normal.oSet(0, v1.normal.oGet(0) + frac * (v2.normal.oGet(0) - v1.normal.oGet(0)))
-            split.normal.oSet(1, v1.normal.oGet(1) + frac * (v2.normal.oGet(1) - v1.normal.oGet(1)))
-            split.normal.oSet(2, v1.normal.oGet(2) + frac * (v2.normal.oGet(2) - v1.normal.oGet(2)))
+            split.st.set(0, v1.st.get(0) + frac * (v2.st.get(0) - v1.st.get(0)))
+            split.st.set(1, v1.st.get(1) + frac * (v2.st.get(1) - v1.st.get(1)))
+            split.normal.set(0, v1.normal.get(0) + frac * (v2.normal.get(0) - v1.normal.get(0)))
+            split.normal.set(1, v1.normal.get(1) + frac * (v2.normal.get(1) - v1.normal.get(1)))
+            split.normal.set(2, v1.normal.get(2) + frac * (v2.normal.get(2) - v1.normal.get(2)))
             split.normal.Normalize()
 
             // split the tri
@@ -589,18 +589,18 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            tritjunction.hashBounds.oSet(
+            tritjunction.hashBounds.set(
                 0,
                 i,
-                Math.floor((tritjunction.hashBounds.oGet(0, i) - 1).toDouble()).toFloat()
+                Math.floor((tritjunction.hashBounds.get(0, i) - 1).toDouble()).toFloat()
             )
-            tritjunction.hashBounds.oSet(1, i, Math.ceil((tritjunction.hashBounds.oGet(1, i) + 1).toDouble()).toFloat())
-            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.oGet(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
-            tritjunction.hashScale.oSet(
+            tritjunction.hashBounds.set(1, i, Math.ceil((tritjunction.hashBounds.get(1, i) + 1).toDouble()).toFloat())
+            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.get(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
+            tritjunction.hashScale.set(
                 i,
-                (tritjunction.hashBounds.oGet(1, i) - tritjunction.hashBounds.oGet(0, i)) / tritjunction.HASH_BINS
+                (tritjunction.hashBounds.get(1, i) - tritjunction.hashBounds.get(0, i)) / tritjunction.HASH_BINS
             )
-            tritjunction.hashIntScale[i] = (tritjunction.hashScale.oGet(i) * tritjunction.SNAP_FRACTIONS).toInt()
+            tritjunction.hashIntScale[i] = (tritjunction.hashScale.get(i) * tritjunction.SNAP_FRACTIONS).toInt()
             if (tritjunction.hashIntScale[i] < 1) {
                 tritjunction.hashIntScale[i] = 1
             }

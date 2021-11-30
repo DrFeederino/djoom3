@@ -72,10 +72,10 @@ object Surface {
         //
         constructor()
         constructor(surf: idSurface?) {
-            verts.oSet(surf.verts)
-            indexes.oSet(surf.indexes)
-            edges.oSet(surf.edges)
-            edgeIndexes.oSet(surf.edgeIndexes)
+            verts.set(surf.verts)
+            indexes.set(surf.indexes)
+            edges.set(surf.edges)
+            edgeIndexes.set(surf.edgeIndexes)
         }
 
         constructor(verts: Array<idDrawVert?>?, numVerts: Int, indexes: IntArray?, numIndexes: Int) {
@@ -84,7 +84,7 @@ object Surface {
             //	memcpy( this.verts.Ptr(), verts, numVerts * sizeof( verts[0] ) );
             //System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
             for (i in 0 until numVerts) {
-                this.verts.oSet(i, verts.get(i))
+                this.verts.set(i, verts.get(i))
             }
             this.indexes.SetNum(numIndexes)
             //	memcpy( this.indexes.Ptr(), indexes, numIndexes * sizeof( indexes[0] ) );
@@ -96,7 +96,7 @@ object Surface {
         //
         //public	const idDrawVert &		operator[]( const int index ) const;
         fun oGet(index: Int): idDrawVert {
-            return verts.oGet(index)
+            return verts.get(index)
         }
 
         fun oPluSet(surf: idSurface?): idSurface {
@@ -145,16 +145,16 @@ object Surface {
 
         fun TranslateSelf(translation: idVec3) {
             for (i in 0 until verts.Num()) {
-                verts.oGet(i).xyz.plusAssign(translation)
+                verts.get(i).xyz.plusAssign(translation)
             }
         }
 
         fun RotateSelf(rotation: idMat3?) {
             for (i in 0 until verts.Num()) {
-                verts.oGet(i).xyz.timesAssign(rotation)
-                verts.oGet(i).normal.timesAssign(rotation)
-                verts.oGet(i).tangents[0].timesAssign(rotation)
-                verts.oGet(i).tangents[1].timesAssign(rotation)
+                verts.get(i).xyz.timesAssign(rotation)
+                verts.get(i).normal.timesAssign(rotation)
+                verts.get(i).tangents[0].timesAssign(rotation)
+                verts.get(i).tangents[1].timesAssign(rotation)
             }
         }
 
@@ -198,7 +198,7 @@ object Surface {
             // determine side for each vertex
             i = 0
             while (i < verts.Num()) {
-                f = plane.Distance(verts.oGet(i).xyz)
+                f = plane.Distance(verts.get(i).xyz)
                 dists[i] = f
                 if (f > epsilon) {
                     sides[i] = Plane.SIDE_FRONT
@@ -215,8 +215,8 @@ object Surface {
 
             // if coplanar, put on the front side if the normals match
             if (0 == counts[Plane.SIDE_FRONT] && 0 == counts[Plane.SIDE_BACK]) {
-                f = verts.oGet(indexes.oGet(1)).xyz.oMinus(verts.oGet(indexes.oGet(0)).xyz).Cross(
-                    verts.oGet(indexes.oGet(0)).xyz.oMinus(verts.oGet(indexes.oGet(2)).xyz)
+                f = verts.get(indexes.get(1)).xyz.minus(verts.get(indexes.get(0)).xyz).Cross(
+                    verts.get(indexes.get(0)).xyz.minus(verts.get(indexes.get(2)).xyz)
                 ).oMultiply(plane.Normal())
                 return if (Math_h.FLOATSIGNBITSET(f) != 0) {
                     back.get(0).get(0) = idSurface(this) //TODO:check deref
@@ -252,8 +252,8 @@ object Surface {
             // split edges
             i = 0
             while (i < edges.Num()) {
-                val v0 = edges.oGet(i).verts.get(0)
-                val v1 = edges.oGet(i).verts.get(1)
+                val v0 = edges.get(i).verts.get(0)
+                val v1 = edges.get(i).verts.get(1)
                 val sidesOr: Int = sides[v0] or sides[v1]
 
                 // if both vertexes are on the same side or one is on the clipping plane
@@ -263,7 +263,7 @@ object Surface {
                     counts[Plane.SIDE_ON] += sidesOr and Plane.SIDE_ON shr 1
                 } else {
                     f = dists[v0] / (dists[v0] - dists[v1])
-                    v.LerpAll(verts.oGet(v0), verts.oGet(v1), f)
+                    v.LerpAll(verts.get(v0), verts.get(v1), f)
                     edgeSplitVertex[i] = numEdgeSplitVertexes++
                     surface[0].verts.Append(v)
                     surface[1].verts.Append(v)
@@ -310,12 +310,12 @@ object Surface {
                 var v2: Int
                 var s: Int
                 var n: Int
-                e0 = Math.abs(edgeIndexes.oGet(i + 0))
-                e1 = Math.abs(edgeIndexes.oGet(i + 1))
-                e2 = Math.abs(edgeIndexes.oGet(i + 2))
-                v0 = indexes.oGet(i + 0)
-                v1 = indexes.oGet(i + 1)
-                v2 = indexes.oGet(i + 2)
+                e0 = Math.abs(edgeIndexes.get(i + 0))
+                e1 = Math.abs(edgeIndexes.get(i + 1))
+                e2 = Math.abs(edgeIndexes.get(i + 2))
+                v0 = indexes.get(i + 0)
+                v1 = indexes.get(i + 1)
+                v2 = indexes.get(i + 2)
                 when (Math_h.INTSIGNBITSET(edgeSplitVertex[e0]) or (Math_h.INTSIGNBITSET(edgeSplitVertex[e1]) shl 1) or (Math_h.INTSIGNBITSET(
                     edgeSplitVertex[e2]
                 ) shl 2) xor 7) {
@@ -323,8 +323,8 @@ object Surface {
                         // no edges split
                         if (sides[v0] and sides[v1] and sides[v2] and Plane.SIDE_ON != 0) {
                             // coplanar
-                            f = verts.oGet(v1).xyz.oMinus(verts.oGet(v0).xyz)
-                                .Cross(verts.oGet(v0).xyz.oMinus(verts.oGet(v2).xyz)).oMultiply(plane.Normal())
+                            f = verts.get(v1).xyz.minus(verts.get(v0).xyz)
+                                .Cross(verts.get(v0).xyz.minus(verts.get(v2).xyz)).oMultiply(plane.Normal())
                             s = Math_h.FLOATSIGNBITSET(f)
                         } else {
                             s = sides[v0] or sides[v1] or sides[v2] and Plane.SIDE_BACK
@@ -503,14 +503,14 @@ object Surface {
             //            index = vertexCopyIndex[0];
             i = numEdgeSplitVertexes
             while (i < surface[0].verts.Num()) {
-                surface[0].verts.oSet(i, verts.oGet(vertexCopyIndex[0].get(i)))
+                surface[0].verts.set(i, verts.get(vertexCopyIndex[0].get(i)))
                 i++
             }
             surface[1].verts.SetNum(vertexIndexNum[1].get(1), false)
             //            index = vertexCopyIndex[1];
             i = numEdgeSplitVertexes
             while (i < surface[1].verts.Num()) {
-                surface[1].verts.oSet(i, verts.oGet(vertexCopyIndex[1].get(i)))
+                surface[1].verts.set(i, verts.get(vertexCopyIndex[1].get(i)))
                 i++
             }
 
@@ -558,7 +558,7 @@ object Surface {
             // determine side for each vertex
             i = 0
             while (i < verts.Num()) {
-                f = plane.Distance(verts.oGet(i).xyz)
+                f = plane.Distance(verts.get(i).xyz)
                 dists[i] = f
                 if (f > epsilon) {
                     sides[i] = Plane.SIDE_FRONT
@@ -573,8 +573,8 @@ object Surface {
 
             // if coplanar, put on the front side if the normals match
             if (0 == counts[Plane.SIDE_FRONT] && 0 == counts[Plane.SIDE_BACK]) {
-                f = verts.oGet(indexes.oGet(1)).xyz.oMinus(verts.oGet(indexes.oGet(0)).xyz)
-                    .Cross(verts.oGet(indexes.oGet(0)).xyz.oMinus(verts.oGet(indexes.oGet(2)).xyz))
+                f = verts.get(indexes.get(1)).xyz.minus(verts.get(indexes.get(0)).xyz)
+                    .Cross(verts.get(indexes.get(0)).xyz.minus(verts.get(indexes.get(2)).xyz))
                     .oMultiply(plane.Normal())
                 return if (Math_h.FLOATSIGNBITSET(f) != 0) {
                     Clear()
@@ -600,8 +600,8 @@ object Surface {
             // split edges
             i = 0
             while (i < edges.Num()) {
-                val v0 = edges.oGet(i).verts.get(0)
-                val v1 = edges.oGet(i).verts.get(1)
+                val v0 = edges.get(i).verts.get(0)
+                val v1 = edges.get(i).verts.get(1)
 
                 // if both vertexes are on the same side or one is on the clipping plane
                 if (sides[v0] xor sides[v1] == 0 || sides[v0] or sides[v1] and Plane.SIDE_ON != 0) {
@@ -609,7 +609,7 @@ object Surface {
                     counts[sides[v0] or sides[v1] and Plane.SIDE_BACK]++
                 } else {
                     f = dists[v0] / (dists[v0] - dists[v1])
-                    v.LerpAll(verts.oGet(v0), verts.oGet(v1), f)
+                    v.LerpAll(verts.get(v0), verts.get(v1), f)
                     edgeSplitVertex[i] = numEdgeSplitVertexes++
                     newVerts.Append(v)
                 }
@@ -638,12 +638,12 @@ object Surface {
                 var v0: Int
                 var v1: Int
                 var v2: Int
-                e0 = Math.abs(edgeIndexes.oGet(i + 0))
-                e1 = Math.abs(edgeIndexes.oGet(i + 1))
-                e2 = Math.abs(edgeIndexes.oGet(i + 2))
-                v0 = indexes.oGet(i + 0)
-                v1 = indexes.oGet(i + 1)
-                v2 = indexes.oGet(i + 2)
+                e0 = Math.abs(edgeIndexes.get(i + 0))
+                e1 = Math.abs(edgeIndexes.get(i + 1))
+                e2 = Math.abs(edgeIndexes.get(i + 2))
+                v0 = indexes.get(i + 0)
+                v1 = indexes.get(i + 1)
+                v2 = indexes.get(i + 2)
                 when (Math_h.INTSIGNBITSET(edgeSplitVertex[e0]) or (Math_h.INTSIGNBITSET(edgeSplitVertex[e1]) shl 1) or (Math_h.INTSIGNBITSET(
                     edgeSplitVertex[e2]
                 ) shl 2) xor 7) {
@@ -657,8 +657,8 @@ object Surface {
                             if (!keepOn) {
                                 break
                             }
-                            f = verts.oGet(v1).xyz.oMinus(verts.oGet(v0).xyz)
-                                .Cross(verts.oGet(v0).xyz.oMinus(verts.oGet(v2).xyz)).oMultiply(plane.Normal())
+                            f = verts.get(v1).xyz.minus(verts.get(v0).xyz)
+                                .Cross(verts.get(v0).xyz.minus(verts.get(v2).xyz)).oMultiply(plane.Normal())
                             if (Math_h.FLOATSIGNBITSET(f) != 0) {
                                 break
                             }
@@ -784,13 +784,13 @@ object Surface {
             newVerts.SetNum(vertexIndexNum[1], false)
             i = numEdgeSplitVertexes
             while (i < newVerts.Num()) {
-                newVerts.oSet(i, verts.oGet(vertexCopyIndex[i]))
+                newVerts.set(i, verts.get(vertexCopyIndex[i]))
                 i++
             }
 
             // copy back to this surface
-            indexes.oSet(newIndexes)
-            verts.oSet(newVerts)
+            indexes.set(newIndexes)
+            verts.set(newVerts)
             GenerateEdgeIndexes()
             return true
         }
@@ -830,8 +830,8 @@ object Surface {
                     index = curTri * 3
                     j = 0
                     while (j < 3) {
-                        edgeNum = edgeIndexes.oGet(index + j)
-                        nextTri = edges.oGet(Math.abs(edgeNum)).tris.get(Math_h.INTSIGNBITNOTSET(edgeNum))
+                        edgeNum = edgeIndexes.get(index + j)
+                        nextTri = edges.get(Math.abs(edgeNum)).tris.get(Math_h.INTSIGNBITNOTSET(edgeNum))
                         if (nextTri == -1) {
                             j++
                             continue
@@ -856,7 +856,7 @@ object Surface {
         // returns true if the surface is closed
         fun IsClosed(): Boolean {
             for (i in 0 until edges.Num()) {
-                if (edges.oGet(i).tris.get(0) < 0 || edges.oGet(i).tris.get(1) < 0) {
+                if (edges.get(i).tris.get(0) < 0 || edges.get(i).tris.get(1) < 0) {
                     return false
                 }
             }
@@ -875,15 +875,15 @@ object Surface {
             i = 0
             while (i < indexes.Num()) {
                 plane.FromPoints(
-                    verts.oGet(
-                        indexes.oGet(i + 0)
+                    verts.get(
+                        indexes.get(i + 0)
                     ).xyz,
-                    verts.oGet(indexes.oGet(i + 1)).xyz,
-                    verts.oGet(indexes.oGet(i + 2)).xyz
+                    verts.get(indexes.get(i + 1)).xyz,
+                    verts.get(indexes.get(i + 2)).xyz
                 )
                 j = 0
                 while (j < verts.Num()) {
-                    if (plane.Side(verts.oGet(j).xyz, epsilon) == Plane.SIDE_FRONT) {
+                    if (plane.Side(verts.get(j).xyz, epsilon) == Plane.SIDE_FRONT) {
                         return false
                     }
                     j++
@@ -903,7 +903,7 @@ object Surface {
             max = -min
             i = 0
             while (i < verts.Num()) {
-                d = plane.Distance(verts.oGet(i).xyz)
+                d = plane.Distance(verts.get(i).xyz)
                 if (d < min) {
                     min = d
                     if (Math_h.FLOATSIGNBITSET(min) and Math_h.FLOATSIGNBITNOTSET(max) != 0) {
@@ -936,7 +936,7 @@ object Surface {
             back = false
             i = 0
             while (i < verts.Num()) {
-                d = plane.Distance(verts.oGet(i).xyz)
+                d = plane.Distance(verts.get(i).xyz)
                 if (d < -epsilon) {
                     if (front) {
                         return Plane.SIDE_CROSS
@@ -967,7 +967,7 @@ object Surface {
         @JvmOverloads
         fun LineIntersection(start: idVec3, end: idVec3, backFaceCull: Boolean = false): Boolean {
             val scale = CFloat()
-            RayIntersection(start, end.oMinus(start), scale, false)
+            RayIntersection(start, end.minus(start), scale, false)
             return scale.getVal() >= 0.0f && scale.getVal() <= 1.0f
         }
 
@@ -994,7 +994,7 @@ object Surface {
             // ray sidedness for edges
             i = 0
             while (i < edges.Num()) {
-                pl.FromLine(verts.oGet(edges.oGet(i).verts.get(1)).xyz, verts.oGet(edges.oGet(i).verts.get(0)).xyz)
+                pl.FromLine(verts.get(edges.get(i).verts.get(1)).xyz, verts.get(edges.get(i).verts.get(0)).xyz)
                 d = pl.PermutedInnerProduct(rayPl)
                 sidedness[i] = Math_h.FLOATSIGNBITSET(d).toByte()
                 i++
@@ -1003,17 +1003,17 @@ object Surface {
             // test triangles
             i = 0
             while (i < edgeIndexes.Num()) {
-                i0 = edgeIndexes.oGet(i + 0)
-                i1 = edgeIndexes.oGet(i + 1)
-                i2 = edgeIndexes.oGet(i + 2)
+                i0 = edgeIndexes.get(i + 0)
+                i1 = edgeIndexes.get(i + 1)
+                i2 = edgeIndexes.get(i + 2)
                 s0 = sidedness[Math.abs(i0)] xor Math_h.INTSIGNBITSET(i0)
                 s1 = sidedness[Math.abs(i1)] xor Math_h.INTSIGNBITSET(i1)
                 s2 = sidedness[Math.abs(i2)] xor Math_h.INTSIGNBITSET(i2)
                 if (s0 and s1 and s2 != 0) {
                     plane.FromPoints(
-                        verts.oGet(indexes.oGet(i + 0)).xyz,
-                        verts.oGet(indexes.oGet(i + 1)).xyz,
-                        verts.oGet(indexes.oGet(i + 2)).xyz
+                        verts.get(indexes.get(i + 0)).xyz,
+                        verts.get(indexes.get(i + 1)).xyz,
+                        verts.get(indexes.get(i + 2)).xyz
                     )
                     plane.RayIntersection(start, dir, s)
                     if (Math.abs(s.getVal()) < Math.abs(scale.getVal())) {
@@ -1021,9 +1021,9 @@ object Surface {
                     }
                 } else if (!backFaceCull && s0 or s1 or s2 == 0) {
                     plane.FromPoints(
-                        verts.oGet(indexes.oGet(i + 0)).xyz,
-                        verts.oGet(indexes.oGet(i + 1)).xyz,
-                        verts.oGet(indexes.oGet(i + 2)).xyz
+                        verts.get(indexes.get(i + 0)).xyz,
+                        verts.get(indexes.get(i + 1)).xyz,
+                        verts.get(indexes.get(i + 2)).xyz
                     )
                     plane.RayIntersection(start, dir, s)
                     if (Math.abs(s.getVal()) < Math.abs(scale.getVal())) {
@@ -1092,7 +1092,7 @@ object Surface {
                     v1 = e.get(j).verts.get(1)
                     edgeNum = vertexEdges[v0]
                     while (edgeNum >= 0) {
-                        if (edges.oGet(edgeNum).verts.get(1) == v1) {
+                        if (edges.get(edgeNum).verts.get(1) == v1) {
                             break
                         }
                         edgeNum = edgeChain[edgeNum]
@@ -1108,16 +1108,16 @@ object Surface {
                     // update edge index and edge tri references
                     if (index[i + j] == v0) {
                         assert(
-                            edges.oGet(edgeNum).tris.get(0) == -1 // edge may not be shared by more than two triangles
+                            edges.get(edgeNum).tris.get(0) == -1 // edge may not be shared by more than two triangles
                         )
-                        edges.oGet(edgeNum).tris.get(0) = i
-                        edgeIndexes.oSet(i + j, edgeNum)
+                        edges.get(edgeNum).tris.get(0) = i
+                        edgeIndexes.set(i + j, edgeNum)
                     } else {
                         assert(
-                            edges.oGet(edgeNum).tris.get(1) == -1 // edge may not be shared by more than two triangles
+                            edges.get(edgeNum).tris.get(1) == -1 // edge may not be shared by more than two triangles
                         )
-                        edges.oGet(edgeNum).tris.get(1) = i
-                        edgeIndexes.oSet(i + j, -edgeNum)
+                        edges.get(edgeNum).tris.get(1) = i
+                        edgeIndexes.set(i + j, -edgeNum)
                     }
                     j++
                 }
@@ -1138,8 +1138,8 @@ object Surface {
             }
             i = 1
             while (i < edges.Num()) {
-                if (edges.oGet(i).verts.get(0) == firstVert) {
-                    if (edges.oGet(i).verts.get(1) == secondVert) {
+                if (edges.get(i).verts.get(0) == firstVert) {
+                    if (edges.get(i).verts.get(1) == secondVert) {
                         break
                     }
                 }

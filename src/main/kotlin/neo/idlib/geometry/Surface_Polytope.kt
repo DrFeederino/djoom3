@@ -43,7 +43,7 @@ object Surface_Polytope {
                         j++
                         continue
                     }
-                    if (!w.ClipInPlace(planes.get(j).oNegative(), Plane.ON_EPSILON, true)) {
+                    if (!w.ClipInPlace(planes.get(j).unaryMinus(), Plane.ON_EPSILON, true)) {
                         break
                     }
                     j++
@@ -56,13 +56,13 @@ object Surface_Polytope {
                 while (j < w.GetNumPoints()) {
                     k = 0
                     while (k < verts.Num()) {
-                        if (verts.oGet(k).xyz.Compare(w.oGet(j).ToVec3(), Surface_Polytope.POLYTOPE_VERTEX_EPSILON)) {
+                        if (verts.get(k).xyz.Compare(w.oGet(j).ToVec3(), Surface_Polytope.POLYTOPE_VERTEX_EPSILON)) {
                             break
                         }
                         j++
                     }
                     if (k >= verts.Num()) {
-                        newVert.xyz.oSet(w.oGet(j).ToVec3())
+                        newVert.xyz.set(w.oGet(j).ToVec3())
                         k = verts.Append(newVert)
                     }
                     windingVerts[j] = k
@@ -89,120 +89,120 @@ object Surface_Polytope {
             c1 = 0.4714045207f
             c2 = 0.8164965809f
             c3 = -0.3333333333f
-            center.oSet(bounds.GetCenter())
-            scale.oSet(bounds.oGet(1).oMinus(center))
+            center.set(bounds.GetCenter())
+            scale.set(bounds.get(1).minus(center))
             verts.SetNum(4)
-            verts.oGet(0).xyz.oSet(center.oPlus(idVec3(0.0f, 0.0f, scale.z)))
-            verts.oGet(1).xyz.oSet(center.oPlus(idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z)))
-            verts.oGet(2).xyz.oSet(center.oPlus(idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z)))
-            verts.oGet(3).xyz.oSet(center.oPlus(idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z)))
+            verts.get(0).xyz.set(center.oPlus(idVec3(0.0f, 0.0f, scale.z)))
+            verts.get(1).xyz.set(center.oPlus(idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z)))
+            verts.get(2).xyz.set(center.oPlus(idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z)))
+            verts.get(3).xyz.set(center.oPlus(idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z)))
             indexes.SetNum(4 * 3)
-            indexes.oSet(0 * 3 + 0, 0)
-            indexes.oSet(0 * 3 + 1, 1)
-            indexes.oSet(0 * 3 + 2, 2)
-            indexes.oSet(1 * 3 + 0, 0)
-            indexes.oSet(1 * 3 + 1, 2)
-            indexes.oSet(1 * 3 + 2, 3)
-            indexes.oSet(2 * 3 + 0, 0)
-            indexes.oSet(2 * 3 + 1, 3)
-            indexes.oSet(2 * 3 + 2, 1)
-            indexes.oSet(3 * 3 + 0, 1)
-            indexes.oSet(3 * 3 + 1, 3)
-            indexes.oSet(3 * 3 + 2, 2)
+            indexes.set(0 * 3 + 0, 0)
+            indexes.set(0 * 3 + 1, 1)
+            indexes.set(0 * 3 + 2, 2)
+            indexes.set(1 * 3 + 0, 0)
+            indexes.set(1 * 3 + 1, 2)
+            indexes.set(1 * 3 + 2, 3)
+            indexes.set(2 * 3 + 0, 0)
+            indexes.set(2 * 3 + 1, 3)
+            indexes.set(2 * 3 + 2, 1)
+            indexes.set(3 * 3 + 0, 1)
+            indexes.set(3 * 3 + 1, 3)
+            indexes.set(3 * 3 + 2, 2)
             GenerateEdgeIndexes()
         }
 
         fun SetupHexahedron(bounds: idBounds?) {
             val center = idVec3()
             val scale = idVec3()
-            center.oSet(bounds.GetCenter())
-            scale.oSet(bounds.oGet(1).oMinus(center))
+            center.set(bounds.GetCenter())
+            scale.set(bounds.get(1).minus(center))
             verts.SetNum(8)
-            verts.oGet(0).xyz.oSet(center.oPlus(idVec3(-scale.x, -scale.y, -scale.z)))
-            verts.oGet(1).xyz.oSet(center.oPlus(idVec3(scale.x, -scale.y, -scale.z)))
-            verts.oGet(2).xyz.oSet(center.oPlus(idVec3(scale.x, scale.y, -scale.z)))
-            verts.oGet(3).xyz.oSet(center.oPlus(idVec3(-scale.x, scale.y, -scale.z)))
-            verts.oGet(4).xyz.oSet(center.oPlus(idVec3(-scale.x, -scale.y, scale.z)))
-            verts.oGet(5).xyz.oSet(center.oPlus(idVec3(scale.x, -scale.y, scale.z)))
-            verts.oGet(6).xyz.oSet(center.oPlus(idVec3(scale.x, scale.y, scale.z)))
-            verts.oGet(7).xyz.oSet(center.oPlus(idVec3(-scale.x, scale.y, scale.z)))
+            verts.get(0).xyz.set(center.oPlus(idVec3(-scale.x, -scale.y, -scale.z)))
+            verts.get(1).xyz.set(center.oPlus(idVec3(scale.x, -scale.y, -scale.z)))
+            verts.get(2).xyz.set(center.oPlus(idVec3(scale.x, scale.y, -scale.z)))
+            verts.get(3).xyz.set(center.oPlus(idVec3(-scale.x, scale.y, -scale.z)))
+            verts.get(4).xyz.set(center.oPlus(idVec3(-scale.x, -scale.y, scale.z)))
+            verts.get(5).xyz.set(center.oPlus(idVec3(scale.x, -scale.y, scale.z)))
+            verts.get(6).xyz.set(center.oPlus(idVec3(scale.x, scale.y, scale.z)))
+            verts.get(7).xyz.set(center.oPlus(idVec3(-scale.x, scale.y, scale.z)))
             indexes.SetNum(12 * 3)
-            indexes.oSet(0 * 3 + 0, 0)
-            indexes.oSet(0 * 3 + 1, 3)
-            indexes.oSet(0 * 3 + 2, 2)
-            indexes.oSet(1 * 3 + 0, 0)
-            indexes.oSet(1 * 3 + 1, 2)
-            indexes.oSet(1 * 3 + 2, 1)
-            indexes.oSet(2 * 3 + 0, 0)
-            indexes.oSet(2 * 3 + 1, 1)
-            indexes.oSet(2 * 3 + 2, 5)
-            indexes.oSet(3 * 3 + 0, 0)
-            indexes.oSet(3 * 3 + 1, 5)
-            indexes.oSet(3 * 3 + 2, 4)
-            indexes.oSet(4 * 3 + 0, 0)
-            indexes.oSet(4 * 3 + 1, 4)
-            indexes.oSet(4 * 3 + 2, 7)
-            indexes.oSet(5 * 3 + 0, 0)
-            indexes.oSet(5 * 3 + 1, 7)
-            indexes.oSet(5 * 3 + 2, 3)
-            indexes.oSet(6 * 3 + 0, 6)
-            indexes.oSet(6 * 3 + 1, 5)
-            indexes.oSet(6 * 3 + 2, 1)
-            indexes.oSet(7 * 3 + 0, 6)
-            indexes.oSet(7 * 3 + 1, 1)
-            indexes.oSet(7 * 3 + 2, 2)
-            indexes.oSet(8 * 3 + 0, 6)
-            indexes.oSet(8 * 3 + 1, 2)
-            indexes.oSet(8 * 3 + 2, 3)
-            indexes.oSet(9 * 3 + 0, 6)
-            indexes.oSet(9 * 3 + 1, 3)
-            indexes.oSet(9 * 3 + 2, 7)
-            indexes.oSet(10 * 3 + 0, 6)
-            indexes.oSet(10 * 3 + 1, 7)
-            indexes.oSet(10 * 3 + 2, 4)
-            indexes.oSet(11 * 3 + 0, 6)
-            indexes.oSet(11 * 3 + 1, 4)
-            indexes.oSet(11 * 3 + 2, 5)
+            indexes.set(0 * 3 + 0, 0)
+            indexes.set(0 * 3 + 1, 3)
+            indexes.set(0 * 3 + 2, 2)
+            indexes.set(1 * 3 + 0, 0)
+            indexes.set(1 * 3 + 1, 2)
+            indexes.set(1 * 3 + 2, 1)
+            indexes.set(2 * 3 + 0, 0)
+            indexes.set(2 * 3 + 1, 1)
+            indexes.set(2 * 3 + 2, 5)
+            indexes.set(3 * 3 + 0, 0)
+            indexes.set(3 * 3 + 1, 5)
+            indexes.set(3 * 3 + 2, 4)
+            indexes.set(4 * 3 + 0, 0)
+            indexes.set(4 * 3 + 1, 4)
+            indexes.set(4 * 3 + 2, 7)
+            indexes.set(5 * 3 + 0, 0)
+            indexes.set(5 * 3 + 1, 7)
+            indexes.set(5 * 3 + 2, 3)
+            indexes.set(6 * 3 + 0, 6)
+            indexes.set(6 * 3 + 1, 5)
+            indexes.set(6 * 3 + 2, 1)
+            indexes.set(7 * 3 + 0, 6)
+            indexes.set(7 * 3 + 1, 1)
+            indexes.set(7 * 3 + 2, 2)
+            indexes.set(8 * 3 + 0, 6)
+            indexes.set(8 * 3 + 1, 2)
+            indexes.set(8 * 3 + 2, 3)
+            indexes.set(9 * 3 + 0, 6)
+            indexes.set(9 * 3 + 1, 3)
+            indexes.set(9 * 3 + 2, 7)
+            indexes.set(10 * 3 + 0, 6)
+            indexes.set(10 * 3 + 1, 7)
+            indexes.set(10 * 3 + 2, 4)
+            indexes.set(11 * 3 + 0, 6)
+            indexes.set(11 * 3 + 1, 4)
+            indexes.set(11 * 3 + 2, 5)
             GenerateEdgeIndexes()
         }
 
         fun SetupOctahedron(bounds: idBounds?) {
             val center = idVec3()
             val scale = idVec3()
-            center.oSet(bounds.GetCenter())
-            scale.oSet(bounds.oGet(1).oMinus(center))
+            center.set(bounds.GetCenter())
+            scale.set(bounds.get(1).minus(center))
             verts.SetNum(6)
-            verts.oGet(0).xyz.oSet(center.oPlus(idVec3(scale.x, 0.0f, 0.0f)))
-            verts.oGet(1).xyz.oSet(center.oPlus(idVec3(-scale.x, 0.0f, 0.0f)))
-            verts.oGet(2).xyz.oSet(center.oPlus(idVec3(0.0f, scale.y, 0.0f)))
-            verts.oGet(3).xyz.oSet(center.oPlus(idVec3(0.0f, -scale.y, 0.0f)))
-            verts.oGet(4).xyz.oSet(center.oPlus(idVec3(0.0f, 0.0f, scale.z)))
-            verts.oGet(5).xyz.oSet(center.oPlus(idVec3(0.0f, 0.0f, -scale.z)))
+            verts.get(0).xyz.set(center.oPlus(idVec3(scale.x, 0.0f, 0.0f)))
+            verts.get(1).xyz.set(center.oPlus(idVec3(-scale.x, 0.0f, 0.0f)))
+            verts.get(2).xyz.set(center.oPlus(idVec3(0.0f, scale.y, 0.0f)))
+            verts.get(3).xyz.set(center.oPlus(idVec3(0.0f, -scale.y, 0.0f)))
+            verts.get(4).xyz.set(center.oPlus(idVec3(0.0f, 0.0f, scale.z)))
+            verts.get(5).xyz.set(center.oPlus(idVec3(0.0f, 0.0f, -scale.z)))
             indexes.SetNum(8 * 3)
-            indexes.oSet(0 * 3 + 0, 4)
-            indexes.oSet(0 * 3 + 1, 0)
-            indexes.oSet(0 * 3 + 2, 2)
-            indexes.oSet(1 * 3 + 0, 4)
-            indexes.oSet(1 * 3 + 1, 2)
-            indexes.oSet(1 * 3 + 2, 1)
-            indexes.oSet(2 * 3 + 0, 4)
-            indexes.oSet(2 * 3 + 1, 1)
-            indexes.oSet(2 * 3 + 2, 3)
-            indexes.oSet(3 * 3 + 0, 4)
-            indexes.oSet(3 * 3 + 1, 3)
-            indexes.oSet(3 * 3 + 2, 0)
-            indexes.oSet(4 * 3 + 0, 5)
-            indexes.oSet(4 * 3 + 1, 2)
-            indexes.oSet(4 * 3 + 2, 0)
-            indexes.oSet(5 * 3 + 0, 5)
-            indexes.oSet(5 * 3 + 1, 1)
-            indexes.oSet(5 * 3 + 2, 0)
-            indexes.oSet(6 * 3 + 0, 5)
-            indexes.oSet(6 * 3 + 1, 3)
-            indexes.oSet(6 * 3 + 2, 1)
-            indexes.oSet(7 * 3 + 0, 5)
-            indexes.oSet(7 * 3 + 1, 0)
-            indexes.oSet(7 * 3 + 2, 3)
+            indexes.set(0 * 3 + 0, 4)
+            indexes.set(0 * 3 + 1, 0)
+            indexes.set(0 * 3 + 2, 2)
+            indexes.set(1 * 3 + 0, 4)
+            indexes.set(1 * 3 + 1, 2)
+            indexes.set(1 * 3 + 2, 1)
+            indexes.set(2 * 3 + 0, 4)
+            indexes.set(2 * 3 + 1, 1)
+            indexes.set(2 * 3 + 2, 3)
+            indexes.set(3 * 3 + 0, 4)
+            indexes.set(3 * 3 + 1, 3)
+            indexes.set(3 * 3 + 2, 0)
+            indexes.set(4 * 3 + 0, 5)
+            indexes.set(4 * 3 + 1, 2)
+            indexes.set(4 * 3 + 2, 0)
+            indexes.set(5 * 3 + 0, 5)
+            indexes.set(5 * 3 + 1, 1)
+            indexes.set(5 * 3 + 2, 0)
+            indexes.set(6 * 3 + 0, 5)
+            indexes.set(6 * 3 + 1, 3)
+            indexes.set(6 * 3 + 2, 1)
+            indexes.set(7 * 3 + 0, 5)
+            indexes.set(7 * 3 + 1, 0)
+            indexes.set(7 * 3 + 2, 3)
             GenerateEdgeIndexes()
         }
 
@@ -256,16 +256,16 @@ object Surface_Polytope {
             s = 0
             while (s < 2) {
                 surf = polytopeSurfaces[s]
-                edgeNum = surf.edgeIndexes.oGet(onPlaneEdges[s].get(0))
-                v0 = surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]
-                v1 = surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
+                edgeNum = surf.edgeIndexes.get(onPlaneEdges[s].get(0))
+                v0 = surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]
+                v1 = surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
                 i = 1
                 while (onPlaneEdges[s].get(i) >= 0) {
                     j = i + 1
                     while (onPlaneEdges[s].get(j) >= 0) {
-                        edgeNum = surf.edgeIndexes.oGet(onPlaneEdges[s].get(j))
-                        if (v1 == surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]) {
-                            v1 = surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
+                        edgeNum = surf.edgeIndexes.get(onPlaneEdges[s].get(j))
+                        if (v1 == surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]) {
+                            v1 = surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
                             List.idSwap(onPlaneEdges, s, i, onPlaneEdges, s, j)
                             break
                         }
@@ -275,9 +275,9 @@ object Surface_Polytope {
                 }
                 i = 2
                 while (onPlaneEdges[s].get(i) >= 0) {
-                    edgeNum = surf.edgeIndexes.oGet(onPlaneEdges[s].get(i))
-                    v1 = surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
-                    v2 = surf.edges.oGet(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]
+                    edgeNum = surf.edgeIndexes.get(onPlaneEdges[s].get(i))
+                    v1 = surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
+                    v2 = surf.edges.get(Math.abs(edgeNum)).verts[Math_h.INTSIGNBITSET(edgeNum)]
                     surf.indexes.Append(v0)
                     surf.indexes.Append(v1)
                     surf.indexes.Append(v2)

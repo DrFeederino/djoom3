@@ -241,16 +241,16 @@ object PlayerView {
                 kickFinishTime = (Game_local.gameLocal.time + SysCvar.g_kickTime.GetFloat() * kickTime).toInt()
 
                 // forward / back kick will pitch view
-                kickAngles.oSet(0, localKickDir.oGet(0))
+                kickAngles.set(0, localKickDir.get(0))
 
                 // side kick will yaw view
-                kickAngles.oSet(1, localKickDir.oGet(1) * 0.5f)
+                kickAngles.set(1, localKickDir.get(1) * 0.5f)
 
                 // up / down kick will pitch view
-                kickAngles.plusAssign(0, localKickDir.oGet(2))
+                kickAngles.plusAssign(0, localKickDir.get(2))
 
                 // roll will come from  side
-                kickAngles.oSet(2, localKickDir.oGet(1))
+                kickAngles.set(2, localKickDir.get(1))
                 val kickAmplitude = damageDef.GetFloat("kick_amplitude")
                 if (kickAmplitude != 0f) {
                     kickAngles.timesAssign(kickAmplitude)
@@ -300,7 +300,7 @@ object PlayerView {
             if (recoilTime != 0 && kickFinishTime < Game_local.gameLocal.time) {
                 val angles = idAngles()
                 weaponDef.GetAngles("recoilAngles", "5 0 0", angles)
-                kickAngles.oSet(angles)
+                kickAngles.set(angles)
                 val finish = (Game_local.gameLocal.time + SysCvar.g_kickTime.GetFloat() * recoilTime).toInt()
                 kickFinishTime = finish
             }
@@ -320,10 +320,10 @@ object PlayerView {
                 val offset = (kickFinishTime - Game_local.gameLocal.time).toFloat()
                 ang = kickAngles.times(offset * offset * SysCvar.g_kickAmplitude.GetFloat())
                 for (i in 0..2) {
-                    if (ang.oGet(i) > 70.0f) {
-                        ang.oSet(i, 70.0f)
-                    } else if (ang.oGet(i) < -70.0f) {
-                        ang.oSet(i, -70.0f)
+                    if (ang.get(i) > 70.0f) {
+                        ang.set(i, 70.0f)
+                    } else if (ang.get(i) < -70.0f) {
+                        ang.set(i, -70.0f)
                     }
                 }
             }
@@ -346,9 +346,9 @@ object PlayerView {
             // since CurrentShakeAmplitudeForPosition() returns all the shake sounds
             // the player can hear, it can go over 1.0 too.
             //
-            shakeAng.oSet(0, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
-            shakeAng.oSet(1, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
-            shakeAng.oSet(2, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
+            shakeAng.set(0, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
+            shakeAng.set(1, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
+            shakeAng.set(2, Game_local.gameLocal.random.CRandomFloat() * shakeVolume)
         }
 
         // this may involve rendering to a texture and displaying
@@ -396,15 +396,15 @@ object PlayerView {
         fun Fade(color: idVec4?, time: Int) {
             var time = time
             if (0 == fadeTime) {
-                fadeFromColor.Set(0.0f, 0.0f, 0.0f, 1.0f - color.oGet(3))
+                fadeFromColor.set(0.0f, 0.0f, 0.0f, 1.0f - color.get(3))
             } else {
-                fadeFromColor.oSet(fadeColor)
+                fadeFromColor.set(fadeColor)
             }
-            fadeToColor.oSet(color)
+            fadeToColor.set(color)
             if (time <= 0) {
                 fadeRate = 0f
                 time = 0
-                fadeColor.oSet(fadeToColor)
+                fadeColor.set(fadeToColor)
             } else {
                 fadeRate = 1.0f / time.toFloat()
             }
@@ -424,7 +424,7 @@ object PlayerView {
          */
         fun Flash(color: idVec4?, time: Int) {
             Fade(idVec4(0, 0, 0, 0), time)
-            fadeFromColor.oSet(Lib.Companion.colorWhite)
+            fadeFromColor.set(Lib.Companion.colorWhite)
         }
 
         /*
@@ -703,7 +703,7 @@ object PlayerView {
             val distance: Float
             var pct = 1.0f
             if (player.GetInfluenceEntity() != null) {
-                distance = player.GetInfluenceEntity().GetPhysics().GetOrigin().oMinus(player.GetPhysics().GetOrigin())
+                distance = player.GetInfluenceEntity().GetPhysics().GetOrigin().minus(player.GetPhysics().GetOrigin())
                     .Length()
                 if (player.GetInfluenceRadius() != 0.0f && distance < player.GetInfluenceRadius()) {
 //			pct = distance / player.GetInfluenceRadius();//TODO:wtf?
@@ -742,20 +742,20 @@ object PlayerView {
             }
             msec = fadeTime - Game_local.gameLocal.realClientTime
             if (msec <= 0) {
-                fadeColor.oSet(fadeToColor)
-                if (fadeColor.oGet(3) == 0.0f) {
+                fadeColor.set(fadeToColor)
+                if (fadeColor.get(3) == 0.0f) {
                     fadeTime = 0
                 }
             } else {
                 t = msec.toFloat() * fadeRate
-                fadeColor.oSet(fadeFromColor.times(t).oPlus(fadeToColor.times(1.0f - t)))
+                fadeColor.set(fadeFromColor.times(t).oPlus(fadeToColor.times(1.0f - t)))
             }
-            if (fadeColor.oGet(3) != 0.0f) {
+            if (fadeColor.get(3) != 0.0f) {
                 RenderSystem.renderSystem.SetColor4(
-                    fadeColor.oGet(0),
-                    fadeColor.oGet(1),
-                    fadeColor.oGet(2),
-                    fadeColor.oGet(3)
+                    fadeColor.get(0),
+                    fadeColor.get(1),
+                    fadeColor.get(2),
+                    fadeColor.get(3)
                 )
                 RenderSystem.renderSystem.DrawStretchPic(
                     0f,

@@ -203,14 +203,14 @@ object tr_light {
 //        } else {
         for (i in 0 until tri.numVerts) {
             val v = tri.verts[i].xyz.ToFloatPtr()
-            temp[i * 2 + 0].xyz.oSet(0, v[0])
-            temp[i * 2 + 1].xyz.oSet(0, v[0])
-            temp[i * 2 + 0].xyz.oSet(1, v[1])
-            temp[i * 2 + 1].xyz.oSet(1, v[1])
-            temp[i * 2 + 0].xyz.oSet(2, v[2])
-            temp[i * 2 + 1].xyz.oSet(2, v[2])
-            temp[i * 2 + 0].xyz.oSet(3, 1.0f) // on the model surface
-            temp[i * 2 + 1].xyz.oSet(3, 0.0f) // will be projected to infinity
+            temp[i * 2 + 0].xyz.set(0, v[0])
+            temp[i * 2 + 1].xyz.set(0, v[0])
+            temp[i * 2 + 0].xyz.set(1, v[1])
+            temp[i * 2 + 1].xyz.set(1, v[1])
+            temp[i * 2 + 0].xyz.set(2, v[2])
+            temp[i * 2 + 1].xyz.set(2, v[2])
+            temp[i * 2 + 0].xyz.set(3, 1.0f) // on the model surface
+            temp[i * 2 + 1].xyz.set(3, 0.0f) // will be projected to infinity
         }
         tri.shadowCache = VertexCache.vertexCache.Alloc(temp, tri.numVerts * 2 * shadowCache_s.Companion.BYTES)
     }
@@ -229,7 +229,7 @@ object tr_light {
         val verts = surf.geo.verts
         i = 0
         while (i < numVerts) {
-            texCoords[i].oSet(verts[i].xyz.oMinus(localViewOrigin))
+            texCoords[i].set(verts[i].xyz.minus(localViewOrigin))
             i++
         }
         surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTemp(texCoords, numVerts)
@@ -259,14 +259,14 @@ object tr_light {
         var c = (Math.cos(a.toDouble()) * Math.sin(wobbleDegrees.toDouble())).toFloat()
         val z = Math.cos(wobbleDegrees.toDouble()).toFloat()
         val axis: Array<idVec3?> = idVec3.Companion.generateArray(3)
-        axis[2].oSet(0, c)
-        axis[2].oSet(1, s)
-        axis[2].oSet(2, z)
-        axis[1].oSet(0, (-Math.sin((a * 2).toDouble()) * Math.sin(wobbleDegrees.toDouble())).toFloat())
-        axis[1].oSet(2, (-s * Math.sin(wobbleDegrees.toDouble())).toFloat())
-        axis[1].oSet(
+        axis[2].set(0, c)
+        axis[2].set(1, s)
+        axis[2].set(2, z)
+        axis[1].set(0, (-Math.sin((a * 2).toDouble()) * Math.sin(wobbleDegrees.toDouble())).toFloat())
+        axis[1].set(2, (-s * Math.sin(wobbleDegrees.toDouble())).toFloat())
+        axis[1].set(
             1,
-            Math.sqrt((1.0f - (axis[1].oGet(0) * axis[1].oGet(0) + axis[1].oGet(2) * axis[1].oGet(2))).toDouble())
+            Math.sqrt((1.0f - (axis[1].get(0) * axis[1].get(0) + axis[1].get(2) * axis[1].get(2))).toDouble())
                 .toFloat()
         )
 
@@ -280,15 +280,15 @@ object tr_light {
         // add the rotate
         s = Math.sin((rotateSpeed * tr_local.tr.viewDef.floatTime).toDouble()).toFloat()
         c = Math.cos((rotateSpeed * tr_local.tr.viewDef.floatTime).toDouble()).toFloat()
-        transform[0] = axis[0].oGet(0) * c + axis[1].oGet(0) * s
-        transform[4] = axis[0].oGet(1) * c + axis[1].oGet(1) * s
-        transform[8] = axis[0].oGet(2) * c + axis[1].oGet(2) * s
-        transform[1] = axis[1].oGet(0) * c - axis[0].oGet(0) * s
-        transform[5] = axis[1].oGet(1) * c - axis[0].oGet(1) * s
-        transform[9] = axis[1].oGet(2) * c - axis[0].oGet(2) * s
-        transform[2] = axis[2].oGet(0)
-        transform[6] = axis[2].oGet(1)
-        transform[10] = axis[2].oGet(2)
+        transform[0] = axis[0].get(0) * c + axis[1].get(0) * s
+        transform[4] = axis[0].get(1) * c + axis[1].get(1) * s
+        transform[8] = axis[0].get(2) * c + axis[1].get(2) * s
+        transform[1] = axis[1].get(0) * c - axis[0].get(0) * s
+        transform[5] = axis[1].get(1) * c - axis[0].get(1) * s
+        transform[9] = axis[1].get(2) * c - axis[0].get(2) * s
+        transform[2] = axis[2].get(0)
+        transform[6] = axis[2].get(1)
+        transform[10] = axis[2].get(2)
         transform[11] = 0.0f
         transform[7] = transform[11]
         transform[3] = transform[7]
@@ -302,10 +302,10 @@ object tr_light {
         i = 0
         while (i < numVerts) {
             val v = idVec3()
-            v.oSet(0, verts[i].xyz.oGet(0) - localViewOrigin.oGet(0))
-            v.oSet(1, verts[i].xyz.oGet(1) - localViewOrigin.oGet(1))
-            v.oSet(2, verts[i].xyz.oGet(2) - localViewOrigin.oGet(2))
-            texCoords[i].oSet(tr_main.R_LocalPointToGlobal(transform, v))
+            v.set(0, verts[i].xyz.get(0) - localViewOrigin.get(0))
+            v.set(1, verts[i].xyz.get(1) - localViewOrigin.get(1))
+            v.set(2, verts[i].xyz.get(2) - localViewOrigin.get(2))
+            texCoords[i].set(tr_main.R_LocalPointToGlobal(transform, v))
             i++
         }
         surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTemp(texCoords, numVerts)
@@ -487,7 +487,7 @@ object tr_light {
             tr_light.R_PointInFrustum(light.globalLightOrigin, tr_local.tr.viewDef.frustum, 4)
 
         // copy data used by backend
-        vLight.globalLightOrigin.oSet(light.globalLightOrigin)
+        vLight.globalLightOrigin.set(light.globalLightOrigin)
         vLight.lightProject[0] = idPlane(light.lightProject[0])
         vLight.lightProject[1] = idPlane(light.lightProject[1])
         vLight.lightProject[2] = idPlane(light.lightProject[2])
@@ -599,7 +599,7 @@ object tr_light {
             // now check the winding against each of the frustum planes
             j = 0
             while (j < 5) {
-                if (!w.ClipInPlace(tr_local.tr.viewDef.frustum[j].oNegative())) {
+                if (!w.ClipInPlace(tr_local.tr.viewDef.frustum[j].unaryMinus())) {
                     break
                 }
                 j++
@@ -618,14 +618,14 @@ object tr_light {
                     eye,
                     clip
                 )
-                if (clip.oGet(3) <= 0.01f) {
-                    clip.oSet(3, 0.01f)
+                if (clip.get(3) <= 0.01f) {
+                    clip.set(3, 0.01f)
                 }
                 tr_main.R_TransformClipToDevice(clip, tr_local.tr.viewDef, ndc)
                 var windowX =
-                    0.5f * (1.0f + ndc.oGet(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
+                    0.5f * (1.0f + ndc.get(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
                 var windowY =
-                    0.5f * (1.0f + ndc.oGet(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
+                    0.5f * (1.0f + ndc.get(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
                 if (windowX > tr_local.tr.viewDef.scissor.x2) {
                     windowX = tr_local.tr.viewDef.scissor.x2.toFloat()
                 } else if (windowX < tr_local.tr.viewDef.scissor.x1) {
@@ -678,7 +678,7 @@ object tr_light {
             )
 
             // if it is near clipped, clip the winding polygons to the view frustum
-            if (clip.oGet(3) <= 1) {
+            if (clip.get(3) <= 1) {
                 tr_light.c_clippedLight++
                 return if (RenderSystem_init.r_useClippedLightScissors.GetInteger() != 0) {
                     tr_light.R_ClippedLightScissorRectangle(vLight)
@@ -692,9 +692,9 @@ object tr_light {
             }
             tr_main.R_TransformClipToDevice(clip, tr_local.tr.viewDef, ndc)
             var windowX =
-                0.5f * (1.0f + ndc.oGet(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
+                0.5f * (1.0f + ndc.get(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
             var windowY =
-                0.5f * (1.0f + ndc.oGet(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
+                0.5f * (1.0f + ndc.get(1)) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1)
             if (windowX > tr_local.tr.viewDef.scissor.x2) {
                 windowX = tr_local.tr.viewDef.scissor.x2.toFloat()
             } else if (windowX < tr_local.tr.viewDef.scissor.x1) {
@@ -976,22 +976,22 @@ object tr_light {
             Common.common.Error("R_IssueEntityDefCallback: dynamic entity callback didn't set model")
         }
         if (RenderSystem_init.r_checkBounds.GetBool()) {
-            if (oldBounds.oGet(0, 0) > def.referenceBounds.oGet(0, 0) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.oGet(
+            if (oldBounds.get(0, 0) > def.referenceBounds.get(0, 0) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.get(
                     0,
                     1
-                ) > def.referenceBounds.oGet(0, 1) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.oGet(
+                ) > def.referenceBounds.get(0, 1) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.get(
                     0,
                     2
-                ) > def.referenceBounds.oGet(0, 2) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.oGet(
+                ) > def.referenceBounds.get(0, 2) + tr_light.CHECK_BOUNDS_EPSILON || oldBounds.get(
                     1,
                     0
-                ) < def.referenceBounds.oGet(1, 0) - tr_light.CHECK_BOUNDS_EPSILON || oldBounds.oGet(
+                ) < def.referenceBounds.get(1, 0) - tr_light.CHECK_BOUNDS_EPSILON || oldBounds.get(
                     1,
                     1
-                ) < def.referenceBounds.oGet(1, 1) - tr_light.CHECK_BOUNDS_EPSILON || oldBounds.oGet(
+                ) < def.referenceBounds.get(1, 1) - tr_light.CHECK_BOUNDS_EPSILON || oldBounds.get(
                     1,
                     2
-                ) < def.referenceBounds.oGet(1, 2) - tr_light.CHECK_BOUNDS_EPSILON
+                ) < def.referenceBounds.get(1, 2) - tr_light.CHECK_BOUNDS_EPSILON
             ) {
                 Common.common.Printf("entity %d callback extended reference bounds\n", def.index)
             }
@@ -1049,22 +1049,22 @@ object tr_light {
                 }
                 if (RenderSystem_init.r_checkBounds.GetBool()) {
                     val b = def.cachedDynamicModel.Bounds()
-                    if (b.oGet(0, 0) < def.referenceBounds.oGet(0, 0) - tr_light.CHECK_BOUNDS_EPSILON || b.oGet(
+                    if (b.get(0, 0) < def.referenceBounds.get(0, 0) - tr_light.CHECK_BOUNDS_EPSILON || b.get(
                             0,
                             1
-                        ) < def.referenceBounds.oGet(0, 1) - tr_light.CHECK_BOUNDS_EPSILON || b.oGet(
+                        ) < def.referenceBounds.get(0, 1) - tr_light.CHECK_BOUNDS_EPSILON || b.get(
                             0,
                             2
-                        ) < def.referenceBounds.oGet(0, 2) - tr_light.CHECK_BOUNDS_EPSILON || b.oGet(
+                        ) < def.referenceBounds.get(0, 2) - tr_light.CHECK_BOUNDS_EPSILON || b.get(
                             1,
                             0
-                        ) > def.referenceBounds.oGet(1, 0) + tr_light.CHECK_BOUNDS_EPSILON || b.oGet(
+                        ) > def.referenceBounds.get(1, 0) + tr_light.CHECK_BOUNDS_EPSILON || b.get(
                             1,
                             1
-                        ) > def.referenceBounds.oGet(1, 1) + tr_light.CHECK_BOUNDS_EPSILON || b.oGet(
+                        ) > def.referenceBounds.get(1, 1) + tr_light.CHECK_BOUNDS_EPSILON || b.get(
                             1,
                             2
-                        ) > def.referenceBounds.oGet(1, 2) + tr_light.CHECK_BOUNDS_EPSILON
+                        ) > def.referenceBounds.get(1, 2) + tr_light.CHECK_BOUNDS_EPSILON
                     ) {
                         Common.common.Printf("entity %d dynamic model exceeded reference bounds\n", def.index)
                     }
@@ -1290,8 +1290,8 @@ object tr_light {
                 while (j < tri.numVerts) {
                     k = 0
                     while (k < 3) {
-                        if (tri.verts[j].xyz.oGet(k) > tri.bounds.oGet(1, k) + tr_light.CHECK_BOUNDS_EPSILON
-                            || tri.verts[j].xyz.oGet(k) < tri.bounds.oGet(0, k) - tr_light.CHECK_BOUNDS_EPSILON
+                        if (tri.verts[j].xyz.get(k) > tri.bounds.get(1, k) + tr_light.CHECK_BOUNDS_EPSILON
+                            || tri.verts[j].xyz.get(k) < tri.bounds.get(0, k) - tr_light.CHECK_BOUNDS_EPSILON
                         ) {
                             Common.common.Printf(
                                 "bad tri.bounds on %s:%s\n",
@@ -1300,8 +1300,8 @@ object tr_light {
                             )
                             break
                         }
-                        if (tri.verts[j].xyz.oGet(k) > def.referenceBounds.oGet(1, k) + tr_light.CHECK_BOUNDS_EPSILON
-                            || tri.verts[j].xyz.oGet(k) < def.referenceBounds.oGet(0, k) - tr_light.CHECK_BOUNDS_EPSILON
+                        if (tri.verts[j].xyz.get(k) > def.referenceBounds.get(1, k) + tr_light.CHECK_BOUNDS_EPSILON
+                            || tri.verts[j].xyz.get(k) < def.referenceBounds.get(0, k) - tr_light.CHECK_BOUNDS_EPSILON
                         ) {
                             Common.common.Printf(
                                 "bad referenceBounds on %s:%s\n",
@@ -1384,7 +1384,7 @@ object tr_light {
         var totalIntr = 0
         i = 0
         while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
-            ldef = tr_local.tr.primaryWorld.lightDefs.oGet(i)
+            ldef = tr_local.tr.primaryWorld.lightDefs.get(i)
             if (null == ldef) {
                 Common.common.Printf("%4d: FREED\n", i)
                 i++
@@ -1431,7 +1431,7 @@ object tr_light {
         var totalIntr = 0
         i = 0
         while (i < tr_local.tr.primaryWorld.entityDefs.Num()) {
-            mdef = tr_local.tr.primaryWorld.entityDefs.oGet(i)
+            mdef = tr_local.tr.primaryWorld.entityDefs.get(i)
             if (null == mdef) {
                 Common.common.Printf("%4d: FREED\n", i)
                 i++

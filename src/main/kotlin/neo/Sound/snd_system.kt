@@ -970,7 +970,7 @@ object snd_system {
             }
             i = firstEmitter
             while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.oGet(i)
+                val sound = sw.emitters.get(i)
                 if (null == sound) {
                     i++
                     continue
@@ -1170,7 +1170,7 @@ object snd_system {
 
                 // fx loop
                 for (k in 0 until fxList.Num()) {
-                    val fx = fxList.oGet(k)
+                    val fx = fxList.get(k)
 
                     // skip if we're not the right channel
                     if (fx.GetChannel() != i) {
@@ -1427,7 +1427,7 @@ object snd_system {
             numActiveDecoders = numWaitingDecoders
             i = 0
             while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.oGet(i)
+                val sound = sw.emitters.get(i)
                 if (TempDump.NOT(sound)) {
                     i++
                     continue
@@ -1456,7 +1456,7 @@ object snd_system {
             }
             i = 0
             while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.oGet(i)
+                val sound = sw.emitters.get(i)
                 if (TempDump.NOT(sound)) {
                     i++
                     continue

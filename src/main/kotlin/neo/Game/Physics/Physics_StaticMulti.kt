@@ -59,7 +59,7 @@ object Physics_StaticMulti {
             }
             idForce.Companion.DeletePhysics(this)
             for (i in 0 until clipModels.Num()) {
-                idClipModel.Companion.delete(clipModels.oGet(i))
+                idClipModel.Companion.delete(clipModels.get(i))
             }
             super._deconstructor()
         }
@@ -70,16 +70,16 @@ object Physics_StaticMulti {
             savefile.WriteInt(current.Num())
             i = 0
             while (i < current.Num()) {
-                savefile.WriteVec3(current.oGet(i).origin)
-                savefile.WriteMat3(current.oGet(i).axis)
-                savefile.WriteVec3(current.oGet(i).localOrigin)
-                savefile.WriteMat3(current.oGet(i).localAxis)
+                savefile.WriteVec3(current.get(i).origin)
+                savefile.WriteMat3(current.get(i).axis)
+                savefile.WriteVec3(current.get(i).localOrigin)
+                savefile.WriteMat3(current.get(i).localAxis)
                 i++
             }
             savefile.WriteInt(clipModels.Num())
             i = 0
             while (i < clipModels.Num()) {
-                savefile.WriteClipModel(clipModels.oGet(i))
+                savefile.WriteClipModel(clipModels.get(i))
                 i++
             }
             savefile.WriteBool(hasMaster)
@@ -94,17 +94,17 @@ object Physics_StaticMulti {
             current.AssureSize(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                savefile.ReadVec3(current.oGet(i).origin)
-                savefile.ReadMat3(current.oGet(i).axis)
-                savefile.ReadVec3(current.oGet(i).localOrigin)
-                savefile.ReadMat3(current.oGet(i).localAxis)
+                savefile.ReadVec3(current.get(i).origin)
+                savefile.ReadMat3(current.get(i).axis)
+                savefile.ReadVec3(current.get(i).localOrigin)
+                savefile.ReadMat3(current.get(i).localAxis)
                 i++
             }
             savefile.ReadInt(num)
             clipModels.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                savefile.ReadClipModel(clipModels.oGet(i))
+                savefile.ReadClipModel(clipModels.get(i))
                 i++
             }
             hasMaster = savefile.ReadBool()
@@ -116,9 +116,9 @@ object Physics_StaticMulti {
             if (id < 0 || id >= clipModels.Num()) {
                 return
             }
-            if (clipModels.oGet(id) != null && freeClipModel) {
-                idClipModel.Companion.delete(clipModels.oGet(id))
-                clipModels.oSet(id, null)
+            if (clipModels.get(id) != null && freeClipModel) {
+                idClipModel.Companion.delete(clipModels.get(id))
+                clipModels.set(id, null)
             }
             clipModels.RemoveIndex(id)
             current.RemoveIndex(id)
@@ -137,17 +137,17 @@ object Physics_StaticMulti {
                 current.AssureSize(id + 1, Physics_StaticMulti.defaultState)
                 clipModels.AssureSize(id + 1, null)
             }
-            if (clipModels.oGet(id) != null && clipModels.oGet(id) !== model && freeOld) {
-                idClipModel.Companion.delete(clipModels.oGet(id))
+            if (clipModels.get(id) != null && clipModels.get(id) !== model && freeOld) {
+                idClipModel.Companion.delete(clipModels.get(id))
             }
-            clipModels.oSet(id, model)
-            if (clipModels.oGet(id) != null) {
-                clipModels.oGet(id)
-                    .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+            clipModels.set(id, model)
+            if (clipModels.get(id) != null) {
+                clipModels.get(id)
+                    .Link(Game_local.gameLocal.clip, self, id, current.get(id).origin, current.get(id).axis)
             }
             i = clipModels.Num() - 1
             while (i >= 1) {
-                if (clipModels.oGet(i) != null) {
+                if (clipModels.get(i) != null) {
                     break
                 }
                 i--
@@ -157,8 +157,8 @@ object Physics_StaticMulti {
         }
 
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
-            return if (id >= 0 && id < clipModels.Num() && clipModels.oGet(id) != null) {
-                clipModels.oGet(id)
+            return if (id >= 0 && id < clipModels.Num() && clipModels.get(id) != null) {
+                clipModels.get(id)
             } else Game_local.gameLocal.clip.DefaultClipModel()
         }
 
@@ -174,14 +174,14 @@ object Physics_StaticMulti {
         override fun SetContents(contents: Int, id: Int /*= -1*/) {
             var i: Int
             if (id >= 0 && id < clipModels.Num()) {
-                if (clipModels.oGet(id) != null) {
-                    clipModels.oGet(id).SetContents(contents)
+                if (clipModels.get(id) != null) {
+                    clipModels.get(id).SetContents(contents)
                 }
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    if (clipModels.oGet(i) != null) {
-                        clipModels.oGet(i).SetContents(contents)
+                    if (clipModels.get(i) != null) {
+                        clipModels.get(i).SetContents(contents)
                     }
                     i++
                 }
@@ -192,14 +192,14 @@ object Physics_StaticMulti {
             var i: Int
             var contents = 0
             if (id >= 0 && id < clipModels.Num()) {
-                if (clipModels.oGet(id) != null) {
-                    contents = clipModels.oGet(id).GetContents()
+                if (clipModels.get(id) != null) {
+                    contents = clipModels.get(id).GetContents()
                 }
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    if (clipModels.oGet(i) != null) {
-                        contents = contents or clipModels.oGet(i).GetContents()
+                    if (clipModels.get(i) != null) {
+                        contents = contents or clipModels.get(i).GetContents()
                     }
                     i++
                 }
@@ -215,24 +215,24 @@ object Physics_StaticMulti {
         override fun GetBounds(id: Int /*= -1*/): idBounds? {
             var i: Int
             if (id >= 0 && id < clipModels.Num()) {
-                if (clipModels.oGet(id) != null) {
-                    return clipModels.oGet(id).GetBounds()
+                if (clipModels.get(id) != null) {
+                    return clipModels.get(id).GetBounds()
                 }
             }
             if (id == -1) {
                 bounds.Clear()
                 i = 0
                 while (i < clipModels.Num()) {
-                    if (clipModels.oGet(i) != null) {
-                        bounds.AddBounds(clipModels.oGet(i).GetAbsBounds())
+                    if (clipModels.get(i) != null) {
+                        bounds.AddBounds(clipModels.get(i).GetAbsBounds())
                     }
                     i++
                 }
                 i = 0
                 while (i < clipModels.Num()) {
-                    if (clipModels.oGet(i) != null) {
-                        bounds.oMinSet(0, clipModels.oGet(i).GetOrigin())
-                        bounds.oMinSet(1, clipModels.oGet(i).GetOrigin())
+                    if (clipModels.get(i) != null) {
+                        bounds.minusAssign(0, clipModels.get(i).GetOrigin())
+                        bounds.minusAssign(1, clipModels.get(i).GetOrigin())
                         break
                     }
                     i++
@@ -245,16 +245,16 @@ object Physics_StaticMulti {
         override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
             var i: Int
             if (id >= 0 && id < clipModels.Num()) {
-                if (clipModels.oGet(id) != null) {
-                    return clipModels.oGet(id).GetAbsBounds()
+                if (clipModels.get(id) != null) {
+                    return clipModels.get(id).GetAbsBounds()
                 }
             }
             if (id == -1) {
                 absBounds.Clear()
                 i = 0
                 while (i < clipModels.Num()) {
-                    if (clipModels.oGet(i) != null) {
-                        absBounds.AddBounds(clipModels.oGet(i).GetAbsBounds())
+                    if (clipModels.get(i) != null) {
+                        absBounds.AddBounds(clipModels.get(i).GetAbsBounds())
                     }
                     i++
                 }
@@ -271,15 +271,15 @@ object Physics_StaticMulti {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).origin.oSet(masterOrigin.oPlus(current.oGet(i).localOrigin.times(masterAxis)))
+                    current.get(i).origin.set(masterOrigin.oPlus(current.get(i).localOrigin.times(masterAxis)))
                     if (isOrientated) {
-                        current.oGet(i).axis.oSet(current.oGet(i).localAxis.times(masterAxis))
+                        current.get(i).axis.set(current.get(i).localAxis.times(masterAxis))
                     } else {
-                        current.oGet(i).axis.oSet(current.oGet(i).localAxis)
+                        current.get(i).axis.set(current.get(i).localAxis)
                     }
-                    if (clipModels.oGet(i) != null) {
-                        clipModels.oGet(i)
-                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    if (clipModels.get(i) != null) {
+                        clipModels.get(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.get(i).origin, current.get(i).axis)
                     }
                     i++
                 }
@@ -321,23 +321,23 @@ object Physics_StaticMulti {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).localOrigin.oSet(newOrigin)
+                current.get(id).localOrigin.set(newOrigin)
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).origin.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
+                    current.get(id).origin.set(masterOrigin.oPlus(newOrigin.times(masterAxis)))
                 } else {
-                    current.oGet(id).origin.oSet(newOrigin)
+                    current.get(id).origin.set(newOrigin)
                 }
-                if (clipModels.oGet(id) != null) {
-                    clipModels.oGet(id)
-                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                if (clipModels.get(id) != null) {
+                    clipModels.get(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.get(id).origin, current.get(id).axis)
                 }
             } else if (id == -1) {
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    Translate(masterOrigin.oPlus(masterAxis.times(newOrigin).oMinus(current.oGet(0).origin)))
+                    Translate(masterOrigin.oPlus(masterAxis.times(newOrigin).minus(current.get(0).origin)))
                 } else {
-                    Translate(newOrigin.oMinus(current.oGet(0).origin))
+                    Translate(newOrigin.minus(current.get(0).origin))
                 }
             }
         }
@@ -346,28 +346,28 @@ object Physics_StaticMulti {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).localAxis.oSet(newAxis)
+                current.get(id).localAxis.set(newAxis)
                 if (hasMaster && isOrientated) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).axis.oSet(newAxis.times(masterAxis))
+                    current.get(id).axis.set(newAxis.times(masterAxis))
                 } else {
-                    current.oGet(id).axis.oSet(newAxis)
+                    current.get(id).axis.set(newAxis)
                 }
-                if (clipModels.oGet(id) != null) {
-                    clipModels.oGet(id)
-                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                if (clipModels.get(id) != null) {
+                    clipModels.get(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.get(id).origin, current.get(id).axis)
                 }
             } else if (id == -1) {
                 val axis: idMat3?
                 val rotation: idRotation?
                 axis = if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(0).axis.Transpose().times(newAxis.times(masterAxis))
+                    current.get(0).axis.Transpose().times(newAxis.times(masterAxis))
                 } else {
-                    current.oGet(0).axis.Transpose().times(newAxis)
+                    current.get(0).axis.Transpose().times(newAxis)
                 }
                 rotation = axis.ToRotation()
-                rotation.SetOrigin(current.oGet(0).origin)
+                rotation.SetOrigin(current.get(0).origin)
                 Rotate(rotation)
             }
         }
@@ -375,20 +375,20 @@ object Physics_StaticMulti {
         override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
             var i: Int
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).localOrigin.plusAssign(translation)
-                current.oGet(id).origin.plusAssign(translation)
-                if (clipModels.oGet(id) != null) {
-                    clipModels.oGet(id)
-                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                current.get(id).localOrigin.plusAssign(translation)
+                current.get(id).origin.plusAssign(translation)
+                if (clipModels.get(id) != null) {
+                    clipModels.get(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.get(id).origin, current.get(id).axis)
                 }
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).localOrigin.plusAssign(translation)
-                    current.oGet(i).origin.plusAssign(translation)
-                    if (clipModels.oGet(i) != null) {
-                        clipModels.oGet(i)
-                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    current.get(i).localOrigin.plusAssign(translation)
+                    current.get(i).origin.plusAssign(translation)
+                    if (clipModels.get(i) != null) {
+                        clipModels.get(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.get(i).origin, current.get(i).axis)
                     }
                     i++
                 }
@@ -400,40 +400,40 @@ object Physics_StaticMulti {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             if (id >= 0 && id < clipModels.Num()) {
-                current.oGet(id).origin.timesAssign(rotation)
-                current.oGet(id).axis.timesAssign(rotation.ToMat3())
+                current.get(id).origin.timesAssign(rotation)
+                current.get(id).axis.timesAssign(rotation.ToMat3())
                 if (hasMaster) {
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.oGet(id).localAxis.timesAssign(rotation.ToMat3())
-                    current.oGet(id).localOrigin.oSet(
-                        current.oGet(id).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                    current.get(id).localAxis.timesAssign(rotation.ToMat3())
+                    current.get(id).localOrigin.set(
+                        current.get(id).origin.minus(masterOrigin).oMultiply(masterAxis.Transpose())
                     )
                 } else {
-                    current.oGet(id).localAxis.oSet(current.oGet(id).axis)
-                    current.oGet(id).localOrigin.oSet(current.oGet(id).origin)
+                    current.get(id).localAxis.set(current.get(id).axis)
+                    current.get(id).localOrigin.set(current.get(id).origin)
                 }
-                if (clipModels.oGet(id) != null) {
-                    clipModels.oGet(id)
-                        .Link(Game_local.gameLocal.clip, self, id, current.oGet(id).origin, current.oGet(id).axis)
+                if (clipModels.get(id) != null) {
+                    clipModels.get(id)
+                        .Link(Game_local.gameLocal.clip, self, id, current.get(id).origin, current.get(id).axis)
                 }
             } else if (id == -1) {
                 i = 0
                 while (i < clipModels.Num()) {
-                    current.oGet(i).origin.timesAssign(rotation)
-                    current.oGet(i).axis.timesAssign(rotation.ToMat3())
+                    current.get(i).origin.timesAssign(rotation)
+                    current.get(i).axis.timesAssign(rotation.ToMat3())
                     if (hasMaster) {
                         self.GetMasterPosition(masterOrigin, masterAxis)
-                        current.oGet(i).localAxis.timesAssign(rotation.ToMat3())
-                        current.oGet(i).localOrigin.oSet(
-                            current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                        current.get(i).localAxis.timesAssign(rotation.ToMat3())
+                        current.get(i).localOrigin.set(
+                            current.get(i).origin.minus(masterOrigin).oMultiply(masterAxis.Transpose())
                         )
                     } else {
-                        current.oGet(i).localAxis.oSet(current.oGet(i).axis)
-                        current.oGet(i).localOrigin.oSet(current.oGet(i).origin)
+                        current.get(i).localAxis.set(current.get(i).axis)
+                        current.get(i).localOrigin.set(current.get(i).origin)
                     }
-                    if (clipModels.oGet(i) != null) {
-                        clipModels.oGet(i)
-                            .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                    if (clipModels.get(i) != null) {
+                        clipModels.get(i)
+                            .Link(Game_local.gameLocal.clip, self, i, current.get(i).origin, current.get(i).axis)
                     }
                     i++
                 }
@@ -442,10 +442,10 @@ object Physics_StaticMulti {
 
         override fun GetOrigin(id: Int /*= 0*/): idVec3? {
             if (id >= 0 && id < clipModels.Num()) {
-                return current.oGet(id).origin
+                return current.get(id).origin
             }
             return if (clipModels.Num() != 0) {
-                current.oGet(0).origin
+                current.get(0).origin
             } else {
                 Vector.getVec3_origin()
             }
@@ -453,10 +453,10 @@ object Physics_StaticMulti {
 
         override fun GetAxis(id: Int /*= 0*/): idMat3? {
             if (id >= 0 && id < clipModels.Num()) {
-                return current.oGet(id).axis
+                return current.get(id).axis
             }
             return if (clipModels.Num() != 0) {
-                current.oGet(0).axis
+                current.get(0).axis
             } else {
                 idMat3.Companion.getMat3_identity()
             }
@@ -497,17 +497,17 @@ object Physics_StaticMulti {
             contents = 0
             i = 0
             while (i < clipModels.Num()) {
-                if (clipModels.oGet(i) != null) {
+                if (clipModels.get(i) != null) {
                     contents = if (model != null) {
                         contents or Game_local.gameLocal.clip.ContentsModel(
-                            clipModels.oGet(i).GetOrigin(), clipModels.oGet(i), clipModels.oGet(i).GetAxis(), -1,
+                            clipModels.get(i).GetOrigin(), clipModels.get(i), clipModels.get(i).GetAxis(), -1,
                             model.Handle(), model.GetOrigin(), model.GetAxis()
                         )
                     } else {
                         contents or Game_local.gameLocal.clip.Contents(
-                            clipModels.oGet(i).GetOrigin(),
-                            clipModels.oGet(i),
-                            clipModels.oGet(i).GetAxis(),
+                            clipModels.get(i).GetOrigin(),
+                            clipModels.get(i),
+                            clipModels.get(i).GetAxis(),
                             -1,
                             null
                         )
@@ -522,8 +522,8 @@ object Physics_StaticMulti {
             var i: Int
             i = 0
             while (i < clipModels.Num()) {
-                if (clipModels.oGet(i) != null) {
-                    clipModels.oGet(i).Disable()
+                if (clipModels.get(i) != null) {
+                    clipModels.get(i).Disable()
                 }
                 i++
             }
@@ -533,8 +533,8 @@ object Physics_StaticMulti {
             var i: Int
             i = 0
             while (i < clipModels.Num()) {
-                if (clipModels.oGet(i) != null) {
-                    clipModels.oGet(i).Enable()
+                if (clipModels.get(i) != null) {
+                    clipModels.get(i).Enable()
                 }
                 i++
             }
@@ -544,8 +544,8 @@ object Physics_StaticMulti {
             var i: Int
             i = 0
             while (i < clipModels.Num()) {
-                if (clipModels.oGet(i) != null) {
-                    clipModels.oGet(i).Unlink()
+                if (clipModels.get(i) != null) {
+                    clipModels.get(i).Unlink()
                 }
                 i++
             }
@@ -555,9 +555,9 @@ object Physics_StaticMulti {
             var i: Int
             i = 0
             while (i < clipModels.Num()) {
-                if (clipModels.oGet(i) != null) {
-                    clipModels.oGet(i)
-                        .Link(Game_local.gameLocal.clip, self, i, current.oGet(i).origin, current.oGet(i).axis)
+                if (clipModels.get(i) != null) {
+                    clipModels.get(i)
+                        .Link(Game_local.gameLocal.clip, self, i, current.get(i).origin, current.get(i).axis)
                 }
                 i++
             }
@@ -611,13 +611,13 @@ object Physics_StaticMulti {
                     self.GetMasterPosition(masterOrigin, masterAxis)
                     i = 0
                     while (i < clipModels.Num()) {
-                        current.oGet(i).localOrigin.oSet(
-                            current.oGet(i).origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose())
+                        current.get(i).localOrigin.set(
+                            current.get(i).origin.minus(masterOrigin).oMultiply(masterAxis.Transpose())
                         )
                         if (orientated) {
-                            current.oGet(i).localAxis.oSet(current.oGet(i).axis.times(masterAxis.Transpose()))
+                            current.get(i).localAxis.set(current.get(i).axis.times(masterAxis.Transpose()))
                         } else {
-                            current.oGet(i).localAxis.oSet(current.oGet(i).axis)
+                            current.get(i).localAxis.set(current.get(i).axis)
                         }
                         i++
                     }
@@ -654,17 +654,17 @@ object Physics_StaticMulti {
             msg.WriteByte(current.Num())
             i = 0
             while (i < current.Num()) {
-                quat = current.oGet(i).axis.ToCQuat()
-                localQuat = current.oGet(i).localAxis.ToCQuat()
-                msg.WriteFloat(current.oGet(i).origin.oGet(0))
-                msg.WriteFloat(current.oGet(i).origin.oGet(1))
-                msg.WriteFloat(current.oGet(i).origin.oGet(2))
+                quat = current.get(i).axis.ToCQuat()
+                localQuat = current.get(i).localAxis.ToCQuat()
+                msg.WriteFloat(current.get(i).origin.get(0))
+                msg.WriteFloat(current.get(i).origin.get(1))
+                msg.WriteFloat(current.get(i).origin.get(2))
                 msg.WriteFloat(quat.x)
                 msg.WriteFloat(quat.y)
                 msg.WriteFloat(quat.z)
-                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(0), current.oGet(i).localOrigin.oGet(0))
-                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(1), current.oGet(i).localOrigin.oGet(1))
-                msg.WriteDeltaFloat(current.oGet(i).origin.oGet(2), current.oGet(i).localOrigin.oGet(2))
+                msg.WriteDeltaFloat(current.get(i).origin.get(0), current.get(i).localOrigin.get(0))
+                msg.WriteDeltaFloat(current.get(i).origin.get(1), current.get(i).localOrigin.get(1))
+                msg.WriteDeltaFloat(current.get(i).origin.get(2), current.get(i).localOrigin.get(2))
                 msg.WriteDeltaFloat(quat.x, localQuat.x)
                 msg.WriteDeltaFloat(quat.y, localQuat.y)
                 msg.WriteDeltaFloat(quat.z, localQuat.z)
@@ -681,20 +681,20 @@ object Physics_StaticMulti {
             assert(num == current.Num())
             i = 0
             while (i < current.Num()) {
-                current.oGet(i).origin.oSet(0, msg.ReadFloat())
-                current.oGet(i).origin.oSet(1, msg.ReadFloat())
-                current.oGet(i).origin.oSet(2, msg.ReadFloat())
+                current.get(i).origin.set(0, msg.ReadFloat())
+                current.get(i).origin.set(1, msg.ReadFloat())
+                current.get(i).origin.set(2, msg.ReadFloat())
                 quat.x = msg.ReadFloat()
                 quat.y = msg.ReadFloat()
                 quat.z = msg.ReadFloat()
-                current.oGet(i).localOrigin.oSet(0, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(0)))
-                current.oGet(i).localOrigin.oSet(1, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(1)))
-                current.oGet(i).localOrigin.oSet(2, msg.ReadDeltaFloat(current.oGet(i).origin.oGet(2)))
+                current.get(i).localOrigin.set(0, msg.ReadDeltaFloat(current.get(i).origin.get(0)))
+                current.get(i).localOrigin.set(1, msg.ReadDeltaFloat(current.get(i).origin.get(1)))
+                current.get(i).localOrigin.set(2, msg.ReadDeltaFloat(current.get(i).origin.get(2)))
                 localQuat.x = msg.ReadDeltaFloat(quat.x)
                 localQuat.y = msg.ReadDeltaFloat(quat.y)
                 localQuat.z = msg.ReadDeltaFloat(quat.z)
-                current.oGet(i).axis.oSet(quat.ToMat3())
-                current.oGet(i).localAxis.oSet(localQuat.ToMat3())
+                current.get(i).axis.set(quat.ToMat3())
+                current.get(i).localAxis.set(localQuat.ToMat3())
                 i++
             }
         }
@@ -728,9 +728,9 @@ object Physics_StaticMulti {
             Physics_StaticMulti.defaultState.localOrigin.Zero()
             Physics_StaticMulti.defaultState.localAxis.Identity()
             current.SetNum(1)
-            current.oSet(0, Physics_StaticMulti.defaultState)
+            current.set(0, Physics_StaticMulti.defaultState)
             clipModels.SetNum(1)
-            clipModels.oSet(0, null)
+            clipModels.set(0, null)
         }
     }
 }

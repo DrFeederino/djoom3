@@ -684,7 +684,7 @@ object snd_emitter {
                 soundWorld.writeDemo.WriteInt(parms.soundShaderFlags)
                 soundWorld.writeDemo.WriteInt(parms.soundClass)
             }
-            this.origin.oSet(origin)
+            this.origin.set(origin)
             this.listenerId = listenerId
             this.parms = parms
 
@@ -1271,7 +1271,7 @@ object snd_emitter {
             // work out where the sound comes from
             //
             val realOrigin = idVec3(origin.times(snd_shader.DOOM_TO_METERS))
-            val len = idVec3(listenerPos.oMinus(realOrigin))
+            val len = idVec3(listenerPos.minus(realOrigin))
             realDistance = len.LengthFast()
             if (realDistance >= maxDistance) {
                 // no way to possibly hear it
@@ -1292,7 +1292,7 @@ object snd_emitter {
                 if (soundInArea == -1) {
                     if (lastValidPortalArea == -1) {        // sound is outside the world
                         distance = realDistance
-                        spatializedOrigin.oSet(origin) // sound is in our area
+                        spatializedOrigin.set(origin) // sound is in our area
                         return
                     }
                     soundInArea = lastValidPortalArea
@@ -1300,7 +1300,7 @@ object snd_emitter {
                 lastValidPortalArea = soundInArea
                 if (soundInArea == listenerArea) {
                     distance = realDistance
-                    spatializedOrigin.oSet(origin) // sound is in our area
+                    spatializedOrigin.set(origin) // sound is in our area
                     return
                 }
                 soundWorld.ResolveOrigin(0, null, soundInArea, 0.0f, origin, this)
@@ -1308,7 +1308,7 @@ object snd_emitter {
             } else {
                 // no portals available
                 distance = realDistance
-                spatializedOrigin.oSet(origin) // sound is in our area
+                spatializedOrigin.set(origin) // sound is in our area
             }
         }
 

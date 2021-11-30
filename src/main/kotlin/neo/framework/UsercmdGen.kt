@@ -677,10 +677,10 @@ object UsercmdGen {
                 JoystickMove()
 
                 // check to make sure the angles haven't wrapped
-                if (viewangles.oGet(Angles.PITCH) - oldAngles.oGet(Angles.PITCH) > 90) {
-                    viewangles.oSet(Angles.PITCH, oldAngles.oGet(Angles.PITCH) + 90)
-                } else if (oldAngles.oGet(Angles.PITCH) - viewangles.oGet(Angles.PITCH) > 90) {
-                    viewangles.oSet(Angles.PITCH, oldAngles.oGet(Angles.PITCH) - 90)
+                if (viewangles.get(Angles.PITCH) - oldAngles.get(Angles.PITCH) > 90) {
+                    viewangles.set(Angles.PITCH, oldAngles.get(Angles.PITCH) + 90)
+                } else if (oldAngles.get(Angles.PITCH) - viewangles.get(Angles.PITCH) > 90) {
+                    viewangles.set(Angles.PITCH, oldAngles.get(Angles.PITCH) - 90)
                 }
             } else {
                 mouseDx = 0.0
@@ -688,7 +688,7 @@ object UsercmdGen {
             }
             i = 0
             while (i < 3) {
-                cmd.angles.get(i) = Math_h.ANGLE2SHORT(viewangles.oGet(i)).toShort()
+                cmd.angles.get(i) = Math_h.ANGLE2SHORT(viewangles.get(i)).toShort()
                 i++
             }
             cmd.mx = continuousMouseX.toInt().toShort()

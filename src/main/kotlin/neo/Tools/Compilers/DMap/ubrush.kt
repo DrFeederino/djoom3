@@ -226,10 +226,10 @@ object ubrush {
         }
         i = 0
         while (i < 3) {
-            if (brush.bounds.oGet(0, i) < Lib.Companion.MIN_WORLD_COORD || brush.bounds.oGet(
+            if (brush.bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || brush.bounds.get(
                     1,
                     i
-                ) > Lib.Companion.MAX_WORLD_COORD || brush.bounds.oGet(0, i) >= brush.bounds.oGet(1, i)
+                ) > Lib.Companion.MAX_WORLD_COORD || brush.bounds.get(0, i) >= brush.bounds.get(1, i)
             ) {
                 return false
             }
@@ -255,7 +255,7 @@ object ubrush {
         i = 0
         while (i < brush.numsides) {
             side = brush.sides[i]
-            plane = dmap.dmapGlobals.mapPlanes.oGet(side.planenum)
+            plane = dmap.dmapGlobals.mapPlanes.get(side.planenum)
             w = idWinding(plane)
             j = 0
             while (j < brush.numsides && w != null) {
@@ -267,7 +267,7 @@ object ubrush {
                     j++
                     continue  // back side clipaway
                 }
-                plane = dmap.dmapGlobals.mapPlanes.oGet(brush.sides[j].planenum xor 1)
+                plane = dmap.dmapGlobals.mapPlanes.get(brush.sides[j].planenum xor 1)
                 w = w.Clip(plane, 0f) //CLIP_EPSILON);
                 j++
             }
@@ -297,12 +297,12 @@ object ubrush {
         b.numsides = 6
         i = 0
         while (i < 3) {
-            plane.oSet(0, plane.oSet(1, plane.oSet(2, 0f)))
-            plane.oSet(i, 1f)
-            plane.oSet(3, -bounds.oGet(1, i))
+            plane.set(0, plane.set(1, plane.set(2, 0f)))
+            plane.set(i, 1f)
+            plane.set(3, -bounds.get(1, i))
             b.sides[i].planenum = FindFloatPlane(plane)
-            plane.oSet(i, -1f)
-            plane.oSet(3, bounds.oGet(0, i))
+            plane.set(i, -1f)
+            plane.set(3, bounds.get(0, i))
             b.sides[3 + i].planenum = FindFloatPlane(plane)
             i++
         }
@@ -350,7 +350,7 @@ object ubrush {
                 i++
                 continue
             }
-            val plane = dmap.dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum)
+            val plane = dmap.dmapGlobals.mapPlanes.get(brush.sides[i].planenum)
             d = -plane.Distance(corner)
             area = w.GetArea()
             volume += d * area
@@ -383,24 +383,24 @@ object ubrush {
             f.Printf("{\n")
             s = list.sides[0.also { i = it }]
             while (i < list.numsides) {
-                w = idWinding(dmap.dmapGlobals.mapPlanes.oGet(s.planenum))
+                w = idWinding(dmap.dmapGlobals.mapPlanes.get(s.planenum))
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(0).oGet(0).toInt(),
-                    w.oGet(0).oGet(1).toInt(),
-                    w.oGet(0).oGet(2).toInt()
+                    w.oGet(0).get(0).toInt(),
+                    w.oGet(0).get(1).toInt(),
+                    w.oGet(0).get(2).toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(1).oGet(0).toInt(),
-                    w.oGet(1).oGet(1).toInt(),
-                    w.oGet(1).oGet(2).toInt()
+                    w.oGet(1).get(0).toInt(),
+                    w.oGet(1).get(1).toInt(),
+                    w.oGet(1).get(2).toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(2).oGet(0).toInt(),
-                    w.oGet(2).oGet(1).toInt(),
-                    w.oGet(2).oGet(2).toInt()
+                    w.oGet(2).get(0).toInt(),
+                    w.oGet(2).get(1).toInt(),
+                    w.oGet(2).get(2).toInt()
                 )
                 f.Printf("notexture 0 0 0 1 1\n")
                 s = list.sides[++i]
@@ -570,7 +570,7 @@ object ubrush {
         var d: Float
         var d_front: Float
         var d_back: Float
-        val plane = dmap.dmapGlobals.mapPlanes.oGet(planenum)
+        val plane = dmap.dmapGlobals.mapPlanes.get(planenum)
 
         // check all points
         d_back = 0f
@@ -610,7 +610,7 @@ object ubrush {
         w = idWinding(plane)
         i = 0
         while (i < brush.numsides && w != null) {
-            val plane2 = dmap.dmapGlobals.mapPlanes.oGet(brush.sides[i].planenum xor 1)
+            val plane2 = dmap.dmapGlobals.mapPlanes.get(brush.sides[i].planenum xor 1)
             w = w.Clip(plane2, 0f) // PLANESIDE_EPSILON);
             i++
         }

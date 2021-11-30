@@ -76,7 +76,7 @@ object Winding {
             }
             i = 0
             while (i < n) {
-                p.get(i).oSet(verts.get(i))
+                p.get(i).set(verts.get(i))
                 p.get(i).t = 0.0f
                 p.get(i).s = p.get(i).t
                 i++
@@ -138,7 +138,7 @@ object Winding {
         }
 
         fun oGet(index: Int, index2: Int): Float {
-            return p.get(index).oGet(index2)
+            return p.get(index).get(index2)
         }
 
         fun oSet(index: Int, value: idVec5): idVec5 {
@@ -149,7 +149,7 @@ object Winding {
             if (null == p.get(index)) {
                 p.get(index) = idVec5() //lazy init.
             }
-            return p.get(index).oSet(value)
+            return p.get(index).set(value)
         }
 
         // add a point to the end of the winding point array
@@ -167,7 +167,7 @@ object Winding {
             if (!EnsureAlloced(numPoints + 1, true)) {
                 return
             }
-            p.get(numPoints).oSet(v)
+            p.get(numPoints).set(v)
             numPoints++
         }
 
@@ -202,13 +202,13 @@ object Winding {
             val org = idVec3()
             val vRight = idVec3()
             val vUp = idVec3()
-            org.oSet(normal.times(dist))
+            org.set(normal.times(dist))
             normal.NormalVectors(vUp, vRight)
             vUp.timesAssign(Lib.Companion.MAX_WORLD_SIZE.toFloat())
             vRight.timesAssign(Lib.Companion.MAX_WORLD_SIZE.toFloat())
             EnsureAlloced(4)
             numPoints = 4
-            p.get(0) = idVec5(org.oMinus(vRight).oPlus(vUp))
+            p.get(0) = idVec5(org.minus(vRight).oPlus(vUp))
             p.get(0).t = 0.0f
             p.get(0).s = p.get(0).t
             p.get(1) = idVec5(org.oPlus(vRight).oPlus(vUp))
@@ -217,7 +217,7 @@ object Winding {
             p.get(2) = idVec5(org.oPlus(vRight).oMinus(vUp))
             p.get(2).t = 0.0f
             p.get(2).s = p.get(2).t
-            p.get(3) = idVec5(org.oMinus(vRight).oMinus(vUp))
+            p.get(3) = idVec5(org.minus(vRight).minus(vUp))
             p.get(3).t = 0.0f
             p.get(3).s = p.get(3).t
         }
@@ -296,9 +296,9 @@ object Winding {
             while (i < numPoints) {
                 val p1 = p.get(i)
                 if (sides[i] == Plane.SIDE_ON) {
-                    f.p.get(f.numPoints).oSet(p1)
+                    f.p.get(f.numPoints).set(p1)
                     f.numPoints++
-                    b.p.get(b.numPoints).oSet(p1)
+                    b.p.get(b.numPoints).set(p1)
                     b.numPoints++
                     i++
                     continue
@@ -327,12 +327,12 @@ object Winding {
                     while (j < 3) {
 
                         // avoid round off error when possible
-                        if (plane.Normal().oGet(j) == 1.0f) {
-                            mid.oSet(j, plane.Dist())
-                        } else if (plane.Normal().oGet(j) == -1.0f) {
-                            mid.oSet(j, -plane.Dist())
+                        if (plane.Normal().get(j) == 1.0f) {
+                            mid.set(j, plane.Dist())
+                        } else if (plane.Normal().get(j) == -1.0f) {
+                            mid.set(j, -plane.Dist())
                         } else {
-                            mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                            mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                         }
                         j++
                     }
@@ -344,12 +344,12 @@ object Winding {
                     while (j < 3) {
 
                         // avoid round off error when possible
-                        if (plane.Normal().oGet(j) == 1.0f) {
-                            mid.oSet(j, plane.Dist())
-                        } else if (plane.Normal().oGet(j) == -1.0f) {
-                            mid.oSet(j, -plane.Dist())
+                        if (plane.Normal().get(j) == 1.0f) {
+                            mid.set(j, plane.Dist())
+                        } else if (plane.Normal().get(j) == -1.0f) {
+                            mid.set(j, -plane.Dist())
                         } else {
-                            mid.oSet(j, p2.oGet(j) + dot * (p1.oGet(j) - p2.oGet(j)))
+                            mid.set(j, p2.get(j) + dot * (p1.get(j) - p2.get(j)))
                         }
                         j++
                     }
@@ -433,13 +433,13 @@ object Winding {
                     return this // can't split -- fall back to original
                 }
                 if (sides[i] == Plane.SIDE_ON) {
-                    newPoints[newNumPoints].oSet(p1)
+                    newPoints[newNumPoints].set(p1)
                     newNumPoints++
                     i++
                     continue
                 }
                 if (sides[i] == Plane.SIDE_FRONT) {
-                    newPoints[newNumPoints].oSet(p1)
+                    newPoints[newNumPoints].set(p1)
                     newNumPoints++
                 }
                 if (sides[i + 1] == Plane.SIDE_ON || sides[i + 1] == sides[i]) {
@@ -457,12 +457,12 @@ object Winding {
                 while (j < 3) {
 
                     // avoid round off error when possible
-                    if (plane.Normal().oGet(j) == 1.0f) {
-                        mid.oSet(j, plane.Dist())
-                    } else if (plane.Normal().oGet(j) == -1.0f) {
-                        mid.oSet(j, -plane.Dist())
+                    if (plane.Normal().get(j) == 1.0f) {
+                        mid.set(j, plane.Dist())
+                    } else if (plane.Normal().get(j) == -1.0f) {
+                        mid.set(j, -plane.Dist())
                     } else {
-                        mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                        mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                     }
                     j++
                 }
@@ -549,13 +549,13 @@ object Winding {
                     return true // can't split -- fall back to original
                 }
                 if (sides[i] == Plane.SIDE_ON) {
-                    newPoints[newNumPoints].oSet(p1)
+                    newPoints[newNumPoints].set(p1)
                     newNumPoints++
                     i++
                     continue
                 }
                 if (sides[i] == Plane.SIDE_FRONT) {
-                    newPoints[newNumPoints].oSet(p1)
+                    newPoints[newNumPoints].set(p1)
                     newNumPoints++
                 }
                 if (sides[i + 1] == Plane.SIDE_ON || sides[i + 1] == sides[i]) {
@@ -573,18 +573,18 @@ object Winding {
                 while (j < 3) {
 
                     // avoid round off error when possible
-                    if (plane.Normal().oGet(j) == 1.0f) {
-                        mid.oSet(j, plane.Dist())
-                    } else if (plane.Normal().oGet(j) == -1.0f) {
-                        mid.oSet(j, -plane.Dist())
+                    if (plane.Normal().get(j) == 1.0f) {
+                        mid.set(j, plane.Dist())
+                    } else if (plane.Normal().get(j) == -1.0f) {
+                        mid.set(j, -plane.Dist())
                     } else {
-                        mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                        mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                     }
                     j++
                 }
                 mid.s = p1.s + dot * (p2.s - p1.s)
                 mid.t = p1.t + dot * (p2.t - p1.t)
-                newPoints[newNumPoints].oSet(mid)
+                newPoints[newNumPoints].set(mid)
                 newNumPoints++
                 i++
             }
@@ -639,8 +639,8 @@ object Winding {
             var j: Int
             i = 0
             while (i < numPoints) {
-                println(p.get(i).ToVec3().oMinus(p.get((i + numPoints - 1) % numPoints).ToVec3()).LengthSqr())
-                if (p.get(i).ToVec3().oMinus(p.get((i + numPoints - 1) % numPoints).ToVec3()).LengthSqr() >= Math.pow(
+                println(p.get(i).ToVec3().minus(p.get((i + numPoints - 1) % numPoints).ToVec3()).LengthSqr())
+                if (p.get(i).ToVec3().minus(p.get((i + numPoints - 1) % numPoints).ToVec3()).LengthSqr() >= Math.pow(
                         epsilon.toDouble(),
                         2.0
                     )
@@ -673,7 +673,7 @@ object Winding {
 
 
                 // create plane through edge orthogonal to winding plane
-                edgeNormal.oSet(p.get(i).ToVec3().oMinus(p.get((i + numPoints - 1) % numPoints).ToVec3()).Cross(normal))
+                edgeNormal.set(p.get(i).ToVec3().minus(p.get((i + numPoints - 1) % numPoints).ToVec3()).Cross(normal))
                 edgeNormal.Normalize()
                 dist = edgeNormal.times(p.get(i).ToVec3())
                 if (Math.abs(edgeNormal.times(p.get((i + 1) % numPoints).ToVec3()) - dist) > epsilon) {
@@ -716,7 +716,7 @@ object Winding {
                 p.get(i) = p.get(i - 1)
                 i--
             }
-            p.get(spot).oSet(point)
+            p.get(spot).set(point)
             numPoints++
         }
 
@@ -736,14 +736,14 @@ object Winding {
 
 
                 // create plane through edge orthogonal to winding plane
-                normal.oSet(p.get((i + 1) % numPoints).ToVec3().oMinus(p.get(i).ToVec3()).Cross(plane.Normal()))
+                normal.set(p.get((i + 1) % numPoints).ToVec3().minus(p.get(i).ToVec3()).Cross(plane.Normal()))
                 normal.Normalize()
                 dist = normal.times(p.get(i).ToVec3())
                 if (Math.abs(normal.times(point) - dist) > epsilon) {
                     i++
                     continue
                 }
-                normal.oSet(plane.Normal().Cross(normal))
+                normal.set(plane.Normal().Cross(normal))
                 dot = normal.times(point)
                 dist = dot - normal.times(p.get(i).ToVec3())
                 if (dist < epsilon) {
@@ -812,9 +812,9 @@ object Winding {
                 // calculate hull edge vectors
                 j = 0
                 while (j < numPoints) {
-                    dir.oSet(p.get((j + 1) % numPoints).ToVec3().oMinus(p.get(j).ToVec3()))
+                    dir.set(p.get((j + 1) % numPoints).ToVec3().minus(p.get(j).ToVec3()))
                     dir.Normalize()
-                    hullDirs[j].oSet(normal.Cross(dir))
+                    hullDirs[j].set(normal.Cross(dir))
                     j++
                 }
 
@@ -822,7 +822,7 @@ object Winding {
                 outside = false
                 j = 0
                 while (j < numPoints) {
-                    dir.oSet(p1.ToVec3().oMinus(p.get(j).ToVec3()))
+                    dir.set(p1.ToVec3().minus(p.get(j).ToVec3()))
                     d = dir.times(hullDirs[j])
                     if (d >= epsilon) {
                         outside = true
@@ -922,9 +922,9 @@ object Winding {
                         return
                     }
                     // if only two points make sure we have the right ordering according to the normal
-                    dir.oSet(point.oMinus(p.get(0).ToVec3()))
-                    dir.oSet(dir.Cross(p.get(1).ToVec3().oMinus(p.get(0).ToVec3())))
-                    if (dir.oGet(0) == 0.0f && dir.oGet(1) == 0.0f && dir.oGet(2) == 0.0f) {
+                    dir.set(point.minus(p.get(0).ToVec3()))
+                    dir.set(dir.Cross(p.get(1).ToVec3().minus(p.get(0).ToVec3())))
+                    if (dir.get(0) == 0.0f && dir.get(1) == 0.0f && dir.get(2) == 0.0f) {
                         // points don't make a plane
                         return
                     }
@@ -944,8 +944,8 @@ object Winding {
             // calculate hull edge vectors
             j = 0
             while (j < numPoints) {
-                dir.oSet(p.get((j + 1) % numPoints).ToVec3().oMinus(p.get(j).ToVec3()))
-                hullDirs[j].oSet(normal.Cross(dir))
+                dir.set(p.get((j + 1) % numPoints).ToVec3().minus(p.get(j).ToVec3()))
+                hullDirs[j].set(normal.Cross(dir))
                 j++
             }
 
@@ -953,7 +953,7 @@ object Winding {
             outside = false
             j = 0
             while (j < numPoints) {
-                dir.oSet(point.oMinus(p.get(j).ToVec3()))
+                dir.set(point.minus(p.get(j).ToVec3()))
                 d = dir.times(hullDirs[j])
                 if (d >= epsilon) {
                     outside = true
@@ -992,7 +992,7 @@ object Winding {
                     k++
                     continue
                 }
-                hullPoints[numHullPoints].oSet(p.get((j + k + 1) % numPoints))
+                hullPoints[numHullPoints].set(p.get((j + k + 1) % numPoints))
                 numHullPoints++
                 k++
             }
@@ -1035,18 +1035,18 @@ object Winding {
             j = 0
             i = 0
             while (i < f1.numPoints) {
-                p1.oSet(f1.p.get(i).ToVec3())
-                p2.oSet(f1.p.get((i + 1) % f1.numPoints).ToVec3())
+                p1.set(f1.p.get(i).ToVec3())
+                p2.set(f1.p.get((i + 1) % f1.numPoints).ToVec3())
                 j = 0
                 while (j < f2.numPoints) {
-                    p3.oSet(f2.p.get(j).ToVec3())
-                    p4.oSet(f2.p.get((j + 1) % f2.numPoints).ToVec3())
+                    p3.set(f2.p.get(j).ToVec3())
+                    p4.set(f2.p.get((j + 1) % f2.numPoints).ToVec3())
                     k = 0
                     while (k < 3) {
-                        if (Math.abs(p1.oGet(k) - p4.oGet(k)) > 0.1f) {
+                        if (Math.abs(p1.get(k) - p4.get(k)) > 0.1f) {
                             break
                         }
-                        if (Math.abs(p2.oGet(k) - p3.oGet(k)) > 0.1f) {
+                        if (Math.abs(p2.get(k) - p3.get(k)) > 0.1f) {
                             break
                         }
                         k++
@@ -1069,23 +1069,23 @@ object Winding {
             // check slope of connected lines
             // if the slopes are colinear, the point can be removed
             //
-            back.oSet(f1.p.get((i + f1.numPoints - 1) % f1.numPoints).ToVec3())
-            delta.oSet(p1.oMinus(back))
-            normal.oSet(planenormal.Cross(delta))
+            back.set(f1.p.get((i + f1.numPoints - 1) % f1.numPoints).ToVec3())
+            delta.set(p1.minus(back))
+            normal.set(planenormal.Cross(delta))
             normal.Normalize()
-            back.oSet(f2.p.get((j + 2) % f2.numPoints).ToVec3())
-            delta.oSet(back.oMinus(p1))
+            back.set(f2.p.get((j + 2) % f2.numPoints).ToVec3())
+            delta.set(back.minus(p1))
             dot = delta.times(normal)
             if (dot > CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
             }
             keep1 = dot < -CONTINUOUS_EPSILON
-            back.oSet(f1.p.get((i + 2) % f1.numPoints).ToVec3())
-            delta.oSet(back.oMinus(p2))
-            normal.oSet(planenormal.Cross(delta))
+            back.set(f1.p.get((i + 2) % f1.numPoints).ToVec3())
+            delta.set(back.minus(p2))
+            normal.set(planenormal.Cross(delta))
             normal.Normalize()
-            back.oSet(f2.p.get((j + f2.numPoints - 1) % f2.numPoints).ToVec3())
-            delta.oSet(back.oMinus(p2))
+            back.set(f2.p.get((j + f2.numPoints - 1) % f2.numPoints).ToVec3())
+            delta.set(back.minus(p2))
             dot = delta.times(normal)
             if (dot > CONTINUOUS_EPSILON) {
                 return null // not a convex polygon
@@ -1155,13 +1155,13 @@ object Winding {
                 // check if the winding is huge
                 j = 0
                 while (j < 3) {
-                    if (p1.oGet(j) >= Lib.Companion.MAX_WORLD_COORD || p1.oGet(j) <= Lib.Companion.MIN_WORLD_COORD) {
+                    if (p1.get(j) >= Lib.Companion.MAX_WORLD_COORD || p1.get(j) <= Lib.Companion.MIN_WORLD_COORD) {
                         if (print) {
                             idLib.common.Printf(
                                 "idWinding::Check: point %d outside world %c-axis: %f",
                                 i,
                                 'X'.code + j,
-                                p1.oGet(j)
+                                p1.get(j)
                             )
                         }
                         return false
@@ -1171,7 +1171,7 @@ object Winding {
                 j = if (i + 1 == numPoints) 0 else i + 1
 
                 // check if the point is on the face plane
-                d = p1.times(plane.Normal()) + plane.oGet(3)
+                d = p1.times(plane.Normal()) + plane.get(3)
                 if (d < -Plane.ON_EPSILON || d > Plane.ON_EPSILON) {
                     if (print) {
                         idLib.common.Printf("idWinding::Check: point %d off plane.", i)
@@ -1181,7 +1181,7 @@ object Winding {
 
                 // check if the edge isn't degenerate
                 val p2 = p.get(j).ToVec3()
-                dir.oSet(p2.oMinus(p1))
+                dir.set(p2.minus(p1))
                 if (dir.Length() < Plane.ON_EPSILON) {
                     if (print) {
                         idLib.common.Printf("idWinding::Check: edge %d is degenerate.", i)
@@ -1190,7 +1190,7 @@ object Winding {
                 }
 
                 // check if the winding is convex
-                edgenormal.oSet(plane.Normal().Cross(dir))
+                edgenormal.set(plane.Normal().Cross(dir))
                 edgenormal.Normalize()
                 edgedist = p1.times(edgenormal)
                 edgedist += Plane.ON_EPSILON
@@ -1225,9 +1225,9 @@ object Winding {
             total = 0.0f
             i = 2
             while (i < numPoints) {
-                d1.oSet(p.get(i - 1).ToVec3().oMinus(p.get(0).ToVec3()))
-                d2.oSet(p.get(i).ToVec3().oMinus(p.get(0).ToVec3()))
-                cross.oSet(d1.Cross(d2))
+                d1.set(p.get(i - 1).ToVec3().minus(p.get(0).ToVec3()))
+                d2.set(p.get(i).ToVec3().minus(p.get(0).ToVec3()))
+                cross.set(d1.Cross(d2))
                 total += cross.Length()
                 i++
             }
@@ -1255,7 +1255,7 @@ object Winding {
             radius = 0.0f
             i = 0
             while (i < numPoints) {
-                dir.oSet(p.get(i).ToVec3().oMinus(center))
+                dir.set(p.get(i).ToVec3().minus(center))
                 r = dir.times(dir)
                 if (r > radius) {
                     radius = r
@@ -1274,10 +1274,10 @@ object Winding {
                 dist.setVal(0.0f)
                 return
             }
-            center.oSet(GetCenter())
-            v1.oSet(p.get(0).ToVec3().oMinus(center))
-            v2.oSet(p.get(1).ToVec3().oMinus(center))
-            normal.oSet(v2.Cross(v1))
+            center.set(GetCenter())
+            v1.set(p.get(0).ToVec3().minus(center))
+            v2.set(p.get(1).ToVec3().minus(center))
+            normal.set(v2.Cross(v1))
             normal.Normalize()
             dist.setVal(p.get(0).ToVec3().times(normal))
         }
@@ -1290,9 +1290,9 @@ object Winding {
                 plane.Zero()
                 return
             }
-            center.oSet(GetCenter())
-            v1.oSet(p.get(0).ToVec3().oMinus(center))
-            v2.oSet(p.get(1).ToVec3().oMinus(center))
+            center.set(GetCenter())
+            v1.set(p.get(0).ToVec3().minus(center))
+            v2.set(p.get(1).ToVec3().minus(center))
             plane.SetNormal(v2.Cross(v1))
             plane.Normalize()
             plane.FitThroughPoint(p.get(0).ToVec3())
@@ -1304,23 +1304,23 @@ object Winding {
                 bounds.Clear()
                 return
             }
-            bounds.oSet(0, bounds.oSet(1, p.get(0).ToVec3()))
+            bounds.set(0, bounds.set(1, p.get(0).ToVec3()))
             i = 1
             while (i < numPoints) {
-                if (p.get(i).x < bounds.oGet(0).x) {
-                    bounds.oGet(0).x = p.get(i).x
-                } else if (p.get(i).x > bounds.oGet(1).x) {
-                    bounds.oGet(1).x = p.get(i).x
+                if (p.get(i).x < bounds.get(0).x) {
+                    bounds.get(0).x = p.get(i).x
+                } else if (p.get(i).x > bounds.get(1).x) {
+                    bounds.get(1).x = p.get(i).x
                 }
-                if (p.get(i).y < bounds.oGet(0).y) {
-                    bounds.oGet(0).y = p.get(i).y
-                } else if (p.get(i).y > bounds.oGet(1).y) {
-                    bounds.oGet(1).y = p.get(i).y
+                if (p.get(i).y < bounds.get(0).y) {
+                    bounds.get(0).y = p.get(i).y
+                } else if (p.get(i).y > bounds.get(1).y) {
+                    bounds.get(1).y = p.get(i).y
                 }
-                if (p.get(i).z < bounds.oGet(0).z) {
-                    bounds.oGet(0).z = p.get(i).z
-                } else if (p.get(i).z > bounds.oGet(1).z) {
-                    bounds.oGet(1).z = p.get(i).z
+                if (p.get(i).z < bounds.get(0).z) {
+                    bounds.get(0).z = p.get(i).z
+                } else if (p.get(i).z > bounds.get(1).z) {
+                    bounds.get(1).z = p.get(i).z
                 }
                 i++
             }
@@ -1334,7 +1334,7 @@ object Winding {
             edges = 0
             i = 0
             while (i < numPoints) {
-                delta.oSet(p.get((i + 1) % numPoints).ToVec3().oMinus(p.get(i).ToVec3()))
+                delta.set(p.get((i + 1) % numPoints).ToVec3().minus(p.get(i).ToVec3()))
                 len = delta.Length()
                 if (len > EDGE_LENGTH) {
                     if (++edges == 3) {
@@ -1353,8 +1353,8 @@ object Winding {
             while (i < numPoints) {
                 j = 0
                 while (j < 3) {
-                    if (p.get(i).oGet(j) <= Lib.Companion.MIN_WORLD_COORD || p.get(i)
-                            .oGet(j) >= Lib.Companion.MAX_WORLD_COORD
+                    if (p.get(i).get(j) <= Lib.Companion.MIN_WORLD_COORD || p.get(i)
+                            .get(j) >= Lib.Companion.MAX_WORLD_COORD
                     ) {
                         return true
                     }
@@ -1369,7 +1369,7 @@ object Winding {
             var i: Int
             i = 0
             while (i < numPoints) {
-                idLib.common.Printf("(%5.1f, %5.1f, %5.1f)\n", p.get(i).oGet(0), p.get(i).oGet(1), p.get(i).oGet(2))
+                idLib.common.Printf("(%5.1f, %5.1f, %5.1f)\n", p.get(i).get(0), p.get(i).get(1), p.get(i).get(2))
                 i++
             }
         }
@@ -1471,9 +1471,9 @@ object Winding {
             val pointvec = idVec3()
             i = 0
             while (i < numPoints) {
-                dir.oSet(p.get((i + 1) % numPoints).ToVec3().oMinus(p.get(i).ToVec3()))
-                pointvec.oSet(point.oMinus(p.get(i).ToVec3()))
-                n.oSet(dir.Cross(normal))
+                dir.set(p.get((i + 1) % numPoints).ToVec3().minus(p.get(i).ToVec3()))
+                pointvec.set(point.minus(p.get(i).ToVec3()))
+                n.set(dir.Cross(normal))
                 if (pointvec.times(n) < -epsilon) {
                     return false
                 }
@@ -1512,12 +1512,12 @@ object Winding {
 
             // get point of intersection with winding plane
             if (Math.abs(front - back) < 0.0001f) {
-                mid.oSet(end)
+                mid.set(end)
             } else {
                 frac = front / (front - back)
-                mid.oSet(0, start.oGet(0) + (end.oGet(0) - start.oGet(0)) * frac)
-                mid.oSet(1, start.oGet(1) + (end.oGet(1) - start.oGet(1)) * frac)
-                mid.oSet(2, start.oGet(2) + (end.oGet(2) - start.oGet(2)) * frac)
+                mid.set(0, start.get(0) + (end.get(0) - start.get(0)) * frac)
+                mid.set(1, start.get(1) + (end.get(1) - start.get(1)) * frac)
+                mid.set(2, start.get(2) + (end.get(2) - start.get(2)) * frac)
             }
             return PointInside(windingPlane.Normal(), mid, 0.0f)
         }
@@ -1596,9 +1596,9 @@ object Winding {
                 val v1 = idVec3()
                 val v2 = idVec3()
                 val cross = idVec3()
-                v1.oSet(b.oMinus(a))
-                v2.oSet(c.oMinus(a))
-                cross.oSet(v1.Cross(v2))
+                v1.set(b.minus(a))
+                v2.set(c.minus(a))
+                cross.set(v1.Cross(v2))
                 return 0.5f * cross.Length()
             }
         }
@@ -1631,7 +1631,7 @@ object Winding {
             }
             i = 0
             while (i < n) {
-                p.get(i).oSet(verts.get(i))
+                p.get(i).set(verts.get(i))
                 p.get(i).t = 0f
                 p.get(i).s = p.get(i).t
                 i++
@@ -1762,19 +1762,19 @@ object Winding {
                     return Plane.SIDE_FRONT // can't split -- fall back to original
                 }
                 if (sides[i] == Plane.SIDE_ON) {
-                    out.p.get(out.numPoints).oSet(p1)
+                    out.p.get(out.numPoints).set(p1)
                     out.numPoints++
-                    back.p.get(back.numPoints).oSet(p1)
+                    back.p.get(back.numPoints).set(p1)
                     back.numPoints++
                     i++
                     continue
                 }
                 if (sides[i] == Plane.SIDE_FRONT) {
-                    out.p.get(out.numPoints).oSet(p1)
+                    out.p.get(out.numPoints).set(p1)
                     out.numPoints++
                 }
                 if (sides[i] == Plane.SIDE_BACK) {
-                    back.p.get(back.numPoints).oSet(p1)
+                    back.p.get(back.numPoints).set(p1)
                     back.numPoints++
                 }
                 if (sides[i + 1] == Plane.SIDE_ON || sides[i + 1] == sides[i]) {
@@ -1800,12 +1800,12 @@ object Winding {
                 while (j < 3) {
 
                     // avoid round off error when possible
-                    if (plane.Normal().oGet(j) == 1.0f) {
-                        mid.oSet(j, plane.Dist())
-                    } else if (plane.Normal().oGet(j) == -1.0f) {
-                        mid.oSet(j, -plane.Dist())
+                    if (plane.Normal().get(j) == 1.0f) {
+                        mid.set(j, plane.Dist())
+                    } else if (plane.Normal().get(j) == -1.0f) {
+                        mid.set(j, -plane.Dist())
                     } else {
-                        mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                        mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                     }
                     j++
                 }

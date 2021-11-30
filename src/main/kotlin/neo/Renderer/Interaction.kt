@@ -112,7 +112,11 @@ object Interaction {
         // cull the triangle surface bounding box
         i = 0
         while (i < 6) {
-            tr_main.R_GlobalPlaneToLocal(ent.modelMatrix, light.frustum[i].oNegative(), cullInfo.localClipPlanes.get(i))
+            tr_main.R_GlobalPlaneToLocal(
+                ent.modelMatrix,
+                light.frustum[i].unaryMinus(),
+                cullInfo.localClipPlanes.get(i)
+            )
 
             // get front bits for the whole surface
             if (tri.bounds.PlaneDistance(cullInfo.localClipPlanes.get(i)) >= Interaction.LIGHT_CLIP_EPSILON) {
@@ -200,7 +204,7 @@ object Interaction {
         front = false
         i = 0
         while (i < `in`.numVerts) {
-            dot = `in`.verts[i].times(plane.Normal()) + plane.oGet(3)
+            dot = `in`.verts[i].times(plane.Normal()) + plane.get(3)
             dists[i] = dot
             if (dot < Interaction.LIGHT_CLIP_EPSILON) {    // slop onto the back
                 sides[i] = Plane.SIDE_BACK
@@ -226,13 +230,13 @@ object Interaction {
         // avoid wrapping checks by duplicating first value to end
         sides[i] = sides[0]
         dists[i] = dists[0]
-        `in`.verts[`in`.numVerts].oSet(`in`.verts[0])
+        `in`.verts[`in`.numVerts].set(`in`.verts[0])
         out.numVerts = 0
         i = 0
         while (i < `in`.numVerts) {
             val p1 = `in`.verts[i]
             if (sides[i] == Plane.SIDE_FRONT) {
-                out.verts[out.numVerts].oSet(p1)
+                out.verts[out.numVerts].set(p1)
                 out.numVerts++
             }
             if (sides[i + 1] == sides[i]) {
@@ -245,7 +249,7 @@ object Interaction {
             dot = dists[i] / (dists[i] - dists[i + 1])
             j = 0
             while (j < 3) {
-                mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                 j++
             }
             out.verts[out.numVerts] = mid
@@ -273,9 +277,9 @@ object Interaction {
         val pingPong = arrayOfNulls<Interaction.clipTri_t?>(2)
         var p: Int
         pingPong[0].numVerts = 3
-        pingPong[0].verts[0].oSet(a)
-        pingPong[0].verts[1].oSet(b)
-        pingPong[0].verts[2].oSet(c)
+        pingPong[0].verts[0].set(a)
+        pingPong[0].verts[1].set(b)
+        pingPong[0].verts[2].set(c)
         p = 0
         i = 0
         while (i < 6) {
@@ -376,7 +380,7 @@ object Interaction {
                 }
 
                 // get bounds for the surface
-                Simd.SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes)
+                Simd.SIMDProcessor.MinMax(bounds.get(0), bounds.get(1), tri.verts, indexes, numIndexes)
 
                 // decrease the size of the memory block to the size of the number of used indexes
                 tr_trisurf.R_ResizeStaticTriSurfIndexes(newTri, numIndexes)
@@ -450,7 +454,7 @@ object Interaction {
             }
 
             // get bounds for the surface
-            Simd.SIMDProcessor.MinMax(bounds.oGet(0), bounds.oGet(1), tri.verts, indexes, numIndexes)
+            Simd.SIMDProcessor.MinMax(bounds.get(0), bounds.get(1), tri.verts, indexes, numIndexes)
 
             // decrease the size of the memory block to the size of the number of used indexes
             tr_trisurf.R_ResizeStaticTriSurfIndexes(newTri, numIndexes)
@@ -460,7 +464,7 @@ object Interaction {
             return null
         }
         newTri.numIndexes = numIndexes
-        newTri.bounds.oSet(bounds)
+        newTri.bounds.set(bounds)
         return newTri
     }
 
@@ -483,12 +487,12 @@ object Interaction {
             znear *= 0.25f
         }
         val stretch = znear * 2 // in theory, should vary with FOV
-        exp.oSet(0, 0, occluder.bounds.oGet(0, 0) - stretch)
-        exp.oSet(0, 1, occluder.bounds.oGet(0, 1) - stretch)
-        exp.oSet(0, 2, occluder.bounds.oGet(0, 2) - stretch)
-        exp.oSet(1, 0, occluder.bounds.oGet(1, 0) + stretch)
-        exp.oSet(1, 1, occluder.bounds.oGet(1, 1) + stretch)
-        exp.oSet(1, 2, occluder.bounds.oGet(1, 2) + stretch)
+        exp.set(0, 0, occluder.bounds.get(0, 0) - stretch)
+        exp.set(0, 1, occluder.bounds.get(0, 1) - stretch)
+        exp.set(0, 2, occluder.bounds.get(0, 2) - stretch)
+        exp.set(1, 0, occluder.bounds.get(1, 0) + stretch)
+        exp.set(1, 1, occluder.bounds.get(1, 1) + stretch)
+        exp.set(1, 2, occluder.bounds.get(1, 2) + stretch)
         if (exp.ContainsPoint(localView)) {
             return true
         }
@@ -498,32 +502,32 @@ object Interaction {
 
         // if the ray from localLight to localView intersects a face of the
         // expanded bounds, we will be inside the projection
-        val ray = idVec3(localView.oMinus(localLight))
+        val ray = idVec3(localView.minus(localLight))
 
         // intersect the ray from the view to the light with the near side of the bounds
         for (axis in 0..2) {
             var d: Float
             var frac: Float
             val hit = idVec3()
-            val eza = exp.oGet(0, axis)
-            val ezo = exp.oGet(1, axis) //eoa
-            val l_axis = localLight.oGet(axis)
+            val eza = exp.get(0, axis)
+            val ezo = exp.get(1, axis) //eoa
+            val l_axis = localLight.get(axis)
             if (l_axis < eza) {
-                if (localView.oGet(axis) < eza) {
+                if (localView.get(axis) < eza) {
                     continue
                 }
                 d = eza - l_axis
                 frac = d / ray.oGet(axis)
-                hit.oSet(localLight.oPlus(ray.oMultiply(frac)))
-                hit.oSet(axis, eza)
+                hit.set(localLight.oPlus(ray.oMultiply(frac)))
+                hit.set(axis, eza)
             } else if (l_axis > ezo) {
-                if (localView.oGet(axis) > ezo) {
+                if (localView.get(axis) > ezo) {
                     continue
                 }
                 d = ezo - l_axis
                 frac = d / ray.oGet(axis)
-                hit.oSet(localLight.oPlus(ray.oMultiply(frac)))
-                hit.oSet(axis, ezo)
+                hit.set(localLight.oPlus(ray.oMultiply(frac)))
+                hit.set(axis, ezo)
             } else {
                 continue
             }
@@ -1104,7 +1108,7 @@ object Interaction {
             // really large models, like outside terrain meshes, should use
             // the more exactly culled static shadow path instead of the turbo shadow path.
             // FIXME: this is a HACK, we should probably have a material flag.
-            if (bounds.oGet(1).oGet(0) - bounds.oGet(0).oGet(0) > 3000) {
+            if (bounds.get(1).oGet(0) - bounds.get(0).oGet(0) > 3000) {
                 shadowGen = shadowGen_t.SG_STATIC
             }
 
@@ -1458,7 +1462,7 @@ object Interaction {
             var shadowTriVerts = 0
             var shadowTriIndexes = 0
             for (i in 0 until tr_local.tr.primaryWorld.entityDefs.Num()) {
-                val def = tr_local.tr.primaryWorld.entityDefs.oGet(i)
+                val def = tr_local.tr.primaryWorld.entityDefs.get(i)
                 if (TempDump.NOT(def)) {
                     continue
                 }

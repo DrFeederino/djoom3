@@ -165,14 +165,14 @@ class Physics_Static {
             val masterAxis = idMat3()
             val oldAxis = idMat3()
             if (hasMaster) {
-                oldOrigin.oSet(current.origin)
-                oldAxis.oSet(current.axis)
+                oldOrigin.set(current.origin)
+                oldAxis.set(current.axis)
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
+                current.origin.set(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
                 if (isOrientated) {
-                    current.axis.oSet(current.localAxis.times(masterAxis))
+                    current.axis.set(current.localAxis.times(masterAxis))
                 } else {
-                    current.axis.oSet(current.localAxis)
+                    current.axis.set(current.localAxis)
                 }
                 if (clipModel != null) {
                     clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -212,12 +212,12 @@ class Physics_Static {
         override fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.localOrigin.oSet(newOrigin)
+            current.localOrigin.set(newOrigin)
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(newOrigin.times(masterAxis)))
+                current.origin.set(masterOrigin.oPlus(newOrigin.times(masterAxis)))
             } else {
-                current.origin.oSet(newOrigin)
+                current.origin.set(newOrigin)
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -227,12 +227,12 @@ class Physics_Static {
         override fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.localAxis.oSet(newAxis)
+            current.localAxis.set(newAxis)
             if (hasMaster && isOrientated) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.axis.oSet(newAxis.times(masterAxis))
+                current.axis.set(newAxis.times(masterAxis))
             } else {
-                current.axis.oSet(newAxis)
+                current.axis.set(newAxis)
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -255,10 +255,10 @@ class Physics_Static {
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 current.localAxis.timesAssign(rotation.ToMat3())
-                current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
             } else {
-                current.localAxis.oSet(current.axis)
-                current.localOrigin.oSet(current.origin)
+                current.localAxis.set(current.axis)
+                current.localOrigin.set(current.origin)
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -406,11 +406,11 @@ class Physics_Static {
                 if (!hasMaster) {
                     // transform from world space to master space
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                    current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
                     if (orientated) {
-                        current.localAxis.oSet(current.axis.times(masterAxis.Transpose()))
+                        current.localAxis.set(current.axis.times(masterAxis.Transpose()))
                     } else {
-                        current.localAxis.oSet(current.axis)
+                        current.localAxis.set(current.axis)
                     }
                     hasMaster = true
                     isOrientated = orientated
@@ -443,15 +443,15 @@ class Physics_Static {
             val localQuat: idCQuat?
             quat = current.axis.ToCQuat()
             localQuat = current.localAxis.ToCQuat()
-            msg.WriteFloat(current.origin.oGet(0))
-            msg.WriteFloat(current.origin.oGet(1))
-            msg.WriteFloat(current.origin.oGet(2))
+            msg.WriteFloat(current.origin.get(0))
+            msg.WriteFloat(current.origin.get(1))
+            msg.WriteFloat(current.origin.get(2))
             msg.WriteFloat(quat.x)
             msg.WriteFloat(quat.y)
             msg.WriteFloat(quat.z)
-            msg.WriteDeltaFloat(current.origin.oGet(0), current.localOrigin.oGet(0))
-            msg.WriteDeltaFloat(current.origin.oGet(1), current.localOrigin.oGet(1))
-            msg.WriteDeltaFloat(current.origin.oGet(2), current.localOrigin.oGet(2))
+            msg.WriteDeltaFloat(current.origin.get(0), current.localOrigin.get(0))
+            msg.WriteDeltaFloat(current.origin.get(1), current.localOrigin.get(1))
+            msg.WriteDeltaFloat(current.origin.get(2), current.localOrigin.get(2))
             msg.WriteDeltaFloat(quat.x, localQuat.x)
             msg.WriteDeltaFloat(quat.y, localQuat.y)
             msg.WriteDeltaFloat(quat.z, localQuat.z)
@@ -460,20 +460,20 @@ class Physics_Static {
         override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
             val quat = idCQuat()
             val localQuat = idCQuat()
-            current.origin.oSet(0, msg.ReadFloat())
-            current.origin.oSet(1, msg.ReadFloat())
-            current.origin.oSet(2, msg.ReadFloat())
+            current.origin.set(0, msg.ReadFloat())
+            current.origin.set(1, msg.ReadFloat())
+            current.origin.set(2, msg.ReadFloat())
             quat.x = msg.ReadFloat()
             quat.y = msg.ReadFloat()
             quat.z = msg.ReadFloat()
-            current.localOrigin.oSet(0, msg.ReadDeltaFloat(current.origin.oGet(0)))
-            current.localOrigin.oSet(1, msg.ReadDeltaFloat(current.origin.oGet(1)))
-            current.localOrigin.oSet(2, msg.ReadDeltaFloat(current.origin.oGet(2)))
+            current.localOrigin.set(0, msg.ReadDeltaFloat(current.origin.get(0)))
+            current.localOrigin.set(1, msg.ReadDeltaFloat(current.origin.get(1)))
+            current.localOrigin.set(2, msg.ReadDeltaFloat(current.origin.get(2)))
             localQuat.x = msg.ReadDeltaFloat(quat.x)
             localQuat.y = msg.ReadDeltaFloat(quat.y)
             localQuat.z = msg.ReadDeltaFloat(quat.z)
-            current.axis.oSet(quat.ToMat3())
-            current.localAxis.oSet(localQuat.ToMat3())
+            current.axis.set(quat.ToMat3())
+            current.localAxis.set(localQuat.ToMat3())
         }
 
         override fun CreateInstance(): idClass? {

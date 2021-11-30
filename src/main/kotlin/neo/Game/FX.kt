@@ -2,7 +2,6 @@ package neo.Game
 
 import neo.Game.*
 import neo.Game.Entity.idEntity
-import neo.Game.FX.idEntityFx
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Class.eventCallback_t1
@@ -154,24 +153,24 @@ object FX {
             savefile.WriteInt(actions.Num())
             i = 0
             while (i < actions.Num()) {
-                if (actions.oGet(i).lightDefHandle >= 0) {
+                if (actions.get(i).lightDefHandle >= 0) {
                     savefile.WriteBool(true)
-                    savefile.WriteRenderLight(actions.oGet(i).renderLight)
+                    savefile.WriteRenderLight(actions.get(i).renderLight)
                 } else {
                     savefile.WriteBool(false)
                 }
-                if (actions.oGet(i).modelDefHandle >= 0) {
+                if (actions.get(i).modelDefHandle >= 0) {
                     savefile.WriteBool(true)
-                    savefile.WriteRenderEntity(actions.oGet(i).renderEntity)
+                    savefile.WriteRenderEntity(actions.get(i).renderEntity)
                 } else {
                     savefile.WriteBool(false)
                 }
-                savefile.WriteFloat(actions.oGet(i).delay)
-                savefile.WriteInt(actions.oGet(i).start)
-                savefile.WriteBool(actions.oGet(i).soundStarted)
-                savefile.WriteBool(actions.oGet(i).shakeStarted)
-                savefile.WriteBool(actions.oGet(i).decalDropped)
-                savefile.WriteBool(actions.oGet(i).launched)
+                savefile.WriteFloat(actions.get(i).delay)
+                savefile.WriteInt(actions.get(i).start)
+                savefile.WriteBool(actions.get(i).soundStarted)
+                savefile.WriteBool(actions.get(i).shakeStarted)
+                savefile.WriteBool(actions.get(i).decalDropped)
+                savefile.WriteBool(actions.get(i).launched)
                 i++
             }
         }
@@ -190,32 +189,32 @@ object FX {
             while (i < num.getVal()) {
                 savefile.ReadBool(hasObject)
                 if (hasObject.isVal) {
-                    savefile.ReadRenderLight(actions.oGet(i).renderLight)
-                    actions.oGet(i).lightDefHandle = Game_local.gameRenderWorld.AddLightDef(actions.oGet(i).renderLight)
+                    savefile.ReadRenderLight(actions.get(i).renderLight)
+                    actions.get(i).lightDefHandle = Game_local.gameRenderWorld.AddLightDef(actions.get(i).renderLight)
                 } else {
 //			memset( actions.oGet(i).renderLight, 0, sizeof( renderLight_t ) );
-                    actions.oGet(i).renderLight = renderLight_s()
-                    actions.oGet(i).lightDefHandle = -1
+                    actions.get(i).renderLight = renderLight_s()
+                    actions.get(i).lightDefHandle = -1
                 }
                 savefile.ReadBool(hasObject)
                 if (hasObject.isVal) {
-                    savefile.ReadRenderEntity(actions.oGet(i).renderEntity)
-                    actions.oGet(i).modelDefHandle =
-                        Game_local.gameRenderWorld.AddEntityDef(actions.oGet(i).renderEntity)
+                    savefile.ReadRenderEntity(actions.get(i).renderEntity)
+                    actions.get(i).modelDefHandle =
+                        Game_local.gameRenderWorld.AddEntityDef(actions.get(i).renderEntity)
                 } else {
 //			memset( &actions[i].renderEntity, 0, sizeof( renderEntity_t ) );
-                    actions.oGet(i).renderEntity = renderEntity_s()
-                    actions.oGet(i).modelDefHandle = -1
+                    actions.get(i).renderEntity = renderEntity_s()
+                    actions.get(i).modelDefHandle = -1
                 }
-                actions.oGet(i).delay = savefile.ReadFloat()
+                actions.get(i).delay = savefile.ReadFloat()
 
                 // let the FX regenerate the particleSystem
-                actions.oGet(i).particleSystem = -1
-                actions.oGet(i).start = savefile.ReadInt()
-                actions.oGet(i).soundStarted = savefile.ReadBool()
-                actions.oGet(i).shakeStarted = savefile.ReadBool()
-                actions.oGet(i).decalDropped = savefile.ReadBool()
-                actions.oGet(i).launched = savefile.ReadBool()
+                actions.get(i).particleSystem = -1
+                actions.get(i).start = savefile.ReadInt()
+                actions.get(i).soundStarted = savefile.ReadBool()
+                actions.get(i).shakeStarted = savefile.ReadBool()
+                actions.get(i).decalDropped = savefile.ReadBool()
+                actions.get(i).launched = savefile.ReadBool()
                 i++
             }
         }
@@ -256,8 +255,8 @@ object FX {
 //		memset( &localAction, 0, sizeof( idFXLocalAction ) );
                 actions.AssureSize(fxEffect.events.Num(), localAction)
                 for (i in 0 until fxEffect.events.Num()) {
-                    val fxaction = fxEffect.events.oGet(i)
-                    val laction = actions.oGet(i)
+                    val fxaction = fxEffect.events.get(i)
+                    val laction = actions.get(i)
                     if (fxaction.random1 != 0f || fxaction.random2 != 0f) {
                         laction.delay =
                             fxaction.random1 + Game_local.gameLocal.random.RandomFloat() * (fxaction.random2 - fxaction.random1)
@@ -286,8 +285,8 @@ object FX {
             }
             ieff = 0
             while (ieff < fxEffect.events.Num()) {
-                val fxaction = fxEffect.events.oGet(ieff)
-                val laction = actions.oGet(ieff)
+                val fxaction = fxEffect.events.get(ieff)
+                val laction = actions.get(ieff)
 
                 //
                 // if we're currently done with this one
@@ -331,8 +330,8 @@ object FX {
                 if (fxaction.fire.Length() != 0) {
                     j = 0
                     while (j < fxEffect.events.Num()) {
-                        if (fxEffect.events.oGet(j).name.Icmp(fxaction.fire) == 0) {
-                            actions.oGet(j).delay = 0f
+                        if (fxEffect.events.get(j).name.Icmp(fxaction.fire) == 0) {
+                            actions.get(j).delay = 0f
                         }
                         j++
                     }
@@ -341,7 +340,7 @@ object FX {
                 useAction = if (fxaction.sibling == -1) {
                     laction
                 } else {
-                    actions.oGet(fxaction.sibling)
+                    actions.get(fxaction.sibling)
                 }
                 assert(useAction != null)
                 when (fxaction.type) {
@@ -350,11 +349,11 @@ object FX {
                             if (fxaction.type == fx_enum.FX_LIGHT) {
                                 useAction.renderLight =
                                     renderLight_s() //memset( &useAction.renderLight, 0, sizeof( renderLight_t ) );
-                                useAction.renderLight.origin.oSet(GetPhysics().GetOrigin().oPlus(fxaction.offset))
-                                useAction.renderLight.axis.oSet(GetPhysics().GetAxis())
-                                useAction.renderLight.lightRadius.oSet(0, fxaction.lightRadius)
-                                useAction.renderLight.lightRadius.oSet(1, fxaction.lightRadius)
-                                useAction.renderLight.lightRadius.oSet(2, fxaction.lightRadius)
+                                useAction.renderLight.origin.set(GetPhysics().GetOrigin().oPlus(fxaction.offset))
+                                useAction.renderLight.axis.set(GetPhysics().GetAxis())
+                                useAction.renderLight.lightRadius.set(0, fxaction.lightRadius)
+                                useAction.renderLight.lightRadius.set(1, fxaction.lightRadius)
+                                useAction.renderLight.lightRadius.set(2, fxaction.lightRadius)
                                 useAction.renderLight.shader =
                                     DeclManager.declManager.FindMaterial(fxaction.data, false)
                                 useAction.renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = fxaction.lightColor.x
@@ -373,7 +372,7 @@ object FX {
                             if (fxaction.noshadows) {
                                 j = 0
                                 while (j < fxEffect.events.Num()) {
-                                    val laction2 = actions.oGet(j)
+                                    val laction2 = actions.get(j)
                                     if (laction2.modelDefHandle != -1) {
                                         laction2.renderEntity.noShadow = true
                                     }
@@ -390,7 +389,7 @@ object FX {
                             StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
                             j = 0
                             while (j < fxEffect.events.Num()) {
-                                val laction2 = actions.oGet(j)
+                                val laction2 = actions.get(j)
                                 if (laction2.lightDefHandle != -1) {
                                     laction2.renderLight.referenceSound = refSound.referenceSound
                                     Game_local.gameRenderWorld.UpdateLightDef(
@@ -424,7 +423,7 @@ object FX {
                             j = 0
                             while (j < Game_local.gameLocal.numClients) {
                                 val player = Game_local.gameLocal.GetClientByNum(j)
-                                if (player != null && player.GetPhysics().GetOrigin().oMinus(GetPhysics().GetOrigin())
+                                if (player != null && player.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
                                         .LengthSqr() < Math_h.Square(fxaction.shakeDistance)
                                 ) {
                                     if (!Game_local.gameLocal.isMultiplayer || !fxaction.shakeIgnoreMaster || GetBindMaster() !== player) {
@@ -459,8 +458,8 @@ object FX {
                         if (useAction.modelDefHandle == -1) {
 //					memset( &useAction.renderEntity, 0, sizeof( renderEntity_t ) );
                             useAction.renderEntity = renderEntity_s()
-                            useAction.renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(fxaction.offset))
-                            useAction.renderEntity.axis.oSet(if (fxaction.explicitAxis) fxaction.axis else GetPhysics().GetAxis())
+                            useAction.renderEntity.origin.set(GetPhysics().GetOrigin().oPlus(fxaction.offset))
+                            useAction.renderEntity.axis.set(if (fxaction.explicitAxis) fxaction.axis else GetPhysics().GetAxis())
                             useAction.renderEntity.hModel =
                                 ModelManager.renderModelManager.FindModel(fxaction.data.toString())
                             useAction.renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
@@ -471,12 +470,12 @@ object FX {
                             useAction.renderEntity.shaderParms[3] = 1.0f
                             useAction.renderEntity.shaderParms[5] = 0.0f
                             if (useAction.renderEntity.hModel != null) {
-                                useAction.renderEntity.bounds.oSet(useAction.renderEntity.hModel.Bounds(useAction.renderEntity))
+                                useAction.renderEntity.bounds.set(useAction.renderEntity.hModel.Bounds(useAction.renderEntity))
                             }
                             useAction.modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(useAction.renderEntity)
                         } else if (fxaction.trackOrigin) {
-                            useAction.renderEntity.origin.oSet(GetPhysics().GetOrigin().oPlus(fxaction.offset))
-                            useAction.renderEntity.axis.oSet(if (fxaction.explicitAxis) fxaction.axis else GetPhysics().GetAxis())
+                            useAction.renderEntity.origin.set(GetPhysics().GetOrigin().oPlus(fxaction.offset))
+                            useAction.renderEntity.axis.set(if (fxaction.explicitAxis) fxaction.axis else GetPhysics().GetAxis())
                         }
                         ApplyFade(fxaction, useAction, time, actualStart)
                     }
@@ -497,10 +496,10 @@ object FX {
                                 Game_local.gameLocal.SpawnEntityDef(projectileDef, ent, false)
                                 if (ent[0] != null && ent[0] is idProjectile) {
                                     projectile = ent[0] as idProjectile?
-                                    projectile.Create(this, GetPhysics().GetOrigin(), GetPhysics().GetAxis().oGet(0))
+                                    projectile.Create(this, GetPhysics().GetOrigin(), GetPhysics().GetAxis().get(0))
                                     projectile.Launch(
                                         GetPhysics().GetOrigin(),
-                                        GetPhysics().GetAxis().oGet(0),
+                                        GetPhysics().GetAxis().get(0),
                                         Vector.getVec3_origin()
                                     )
                                 }
@@ -518,7 +517,7 @@ object FX {
             }
             started = time
             for (i in 0 until fxEffect.events.Num()) {
-                val laction = actions.oGet(i)
+                val laction = actions.get(i)
                 laction.start = time
                 laction.soundStarted = false
                 laction.shakeStarted = false
@@ -539,7 +538,7 @@ object FX {
                 return max
             }
             for (i in 0 until fxEffect.events.Num()) {
-                val fxaction = fxEffect.events.oGet(i)
+                val fxaction = fxEffect.events.get(i)
                 val d = ((fxaction.delay + fxaction.duration) * 1000.0f).toInt()
                 if (d > max) {
                     max = d
@@ -665,8 +664,8 @@ object FX {
                 return
             }
             for (i in 0 until fxEffect.events.Num()) {
-                val fxaction = fxEffect.events.oGet(i)
-                val laction = actions.oGet(i)
+                val fxaction = fxEffect.events.get(i)
+                val laction = actions.get(i)
                 CleanUpSingleAction(fxaction, laction)
             }
         }

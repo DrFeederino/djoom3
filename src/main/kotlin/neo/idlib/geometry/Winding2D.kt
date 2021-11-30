@@ -82,7 +82,7 @@ object Winding2D {
         }
 
         fun oPluSet(index: Int, value: idVec2?): idVec2? {
-            return p[index].oPluSet(value)
+            return p[index].plusAssign(value)
         }
 
         fun Clear() {
@@ -112,7 +112,7 @@ object Winding2D {
             }
             i = 0
             while (i < numPoints) {
-                p[i].oPluSet(edgeNormals[i].oPlus(edgeNormals[(i + numPoints - 1) % numPoints]))
+                p[i].plusAssign(edgeNormals[i].oPlus(edgeNormals[(i + numPoints - 1) % numPoints]))
                 i++
             }
         }
@@ -134,19 +134,19 @@ object Winding2D {
                     i++
                     continue
                 }
-                plane.oSet(Plane2DFromPoints(p[i], p[j], true))
+                plane.set(Plane2DFromPoints(p[i], p[j], true))
                 if (numPlanes > 0) {
                     if (Winding2D.GetAxialBevel(planes[numPlanes - 1], plane, p[i], bevel)) {
-                        planes[numPlanes++].oSet(bevel)
+                        planes[numPlanes++].set(bevel)
                     }
                 }
                 assert(numPlanes < Winding2D.MAX_POINTS_ON_WINDING_2D)
-                planes[numPlanes++].oSet(plane)
+                planes[numPlanes++].set(plane)
                 i++
             }
             assert(numPlanes != 0)
             if (Winding2D.GetAxialBevel(planes[numPlanes - 1], planes[0], p[0], bevel)) {
-                planes[numPlanes++].oSet(bevel)
+                planes[numPlanes++].set(bevel)
             }
 
             // expand the planes
@@ -262,12 +262,12 @@ object Winding2D {
                     while (j < 2) {
 
                         // avoid round off error when possible
-                        if (plane.oGet(j) == 1.0f) {
-                            mid.oSet(j, plane.z)
-                        } else if (plane.oGet(j) == -1.0f) {
-                            mid.oSet(j, -plane.z)
+                        if (plane.get(j) == 1.0f) {
+                            mid.set(j, plane.z)
+                        } else if (plane.get(j) == -1.0f) {
+                            mid.set(j, -plane.z)
                         } else {
-                            mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                            mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                         }
                         j++
                     }
@@ -277,12 +277,12 @@ object Winding2D {
                     while (j < 2) {
 
                         // avoid round off error when possible
-                        if (plane.oGet(j) == 1.0f) {
-                            mid.oSet(j, plane.z)
-                        } else if (plane.oGet(j) == -1.0f) {
-                            mid.oSet(j, -plane.z)
+                        if (plane.get(j) == 1.0f) {
+                            mid.set(j, plane.z)
+                        } else if (plane.get(j) == -1.0f) {
+                            mid.set(j, -plane.z)
                         } else {
-                            mid.oSet(j, p2.oGet(j) + dot * (p1.oGet(j) - p2.oGet(j)))
+                            mid.set(j, p2.get(j) + dot * (p1.get(j) - p2.get(j)))
                         }
                         j++
                     }
@@ -375,12 +375,12 @@ object Winding2D {
                 while (j < 2) {
 
                     // avoid round off error when possible
-                    if (plane.oGet(j) == 1.0f) {
-                        mid.oSet(j, plane.z)
-                    } else if (plane.oGet(j) == -1.0f) {
-                        mid.oSet(j, -plane.z)
+                    if (plane.get(j) == 1.0f) {
+                        mid.set(j, plane.z)
+                    } else if (plane.get(j) == -1.0f) {
+                        mid.set(j, -plane.z)
                     } else {
-                        mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                        mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                     }
                     j++
                 }
@@ -447,7 +447,7 @@ object Winding2D {
             center.Zero()
             i = 0
             while (i < numPoints) {
-                center.oPluSet(p[i])
+                center.plusAssign(p[i])
                 i++
             }
             center.oMulSet(1.0f / numPoints)
@@ -526,7 +526,7 @@ object Winding2D {
             while (i < numPoints) {
                 j = 0
                 while (j < 2) {
-                    if (p[i].oGet(j) <= Lib.Companion.MIN_WORLD_COORD || p[i].oGet(j) >= Lib.Companion.MAX_WORLD_COORD) {
+                    if (p[i].get(j) <= Lib.Companion.MIN_WORLD_COORD || p[i].get(j) >= Lib.Companion.MAX_WORLD_COORD) {
                         return true
                     }
                     j++
@@ -616,7 +616,7 @@ object Winding2D {
             val plane = idVec3()
             i = 0
             while (i < numPoints) {
-                plane.oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
+                plane.set(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
                 d = plane.x * point.x + plane.y * point.y + plane.z
                 if (d > epsilon) {
                     return false
@@ -639,7 +639,7 @@ object Winding2D {
             counts[Plane.SIDE_ON] = 0
             counts[Plane.SIDE_BACK] = counts[Plane.SIDE_ON]
             counts[Plane.SIDE_FRONT] = counts[Plane.SIDE_BACK]
-            plane.oSet(Plane2DFromPoints(start, end))
+            plane.set(Plane2DFromPoints(start, end))
             i = 0
             while (i < numPoints) {
                 d1 = plane.x * p[i].x + plane.y * p[i].y + plane.z
@@ -664,7 +664,7 @@ object Winding2D {
             i = 0
             while (i < numPoints) {
                 if (sides[i] != sides[i + 1] && sides[i + 1] != Plane.SIDE_ON) {
-                    edges[numEdges++].oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
+                    edges[numEdges++].set(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
                     if (numEdges >= 2) {
                         break
                     }
@@ -707,7 +707,7 @@ object Winding2D {
             counts[Plane.SIDE_ON] = 0
             counts[Plane.SIDE_BACK] = counts[Plane.SIDE_ON]
             counts[Plane.SIDE_FRONT] = counts[Plane.SIDE_BACK]
-            plane.oSet(Plane2DFromVecs(start, dir))
+            plane.set(Plane2DFromVecs(start, dir))
             i = 0
             while (i < numPoints) {
                 d1 = plane.x * p[i].x + plane.y * p[i].y + plane.z
@@ -733,7 +733,7 @@ object Winding2D {
             while (i < numPoints) {
                 if (sides[i] != sides[i + 1] && sides[i + 1] != Plane.SIDE_ON) {
                     localEdgeNums[numEdges] = i
-                    edges[numEdges++].oSet(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
+                    edges[numEdges++].set(Plane2DFromPoints(p[i], p[(i + 1) % numPoints]))
                     if (numEdges >= 2) {
                         break
                     }

@@ -94,7 +94,7 @@ object GameEdit {
             val axis = GetPhysics().GetAxis()
             Game_local.gameRenderWorld.DebugArrow(
                 Lib.Companion.colorYellow,
-                origin.oPlus(axis.oGet(1).times(-5.0f).oPlus(axis.oGet(2).times(5.0f))),
+                origin.oPlus(axis.get(1).times(-5.0f).oPlus(axis.get(2).times(5.0f))),
                 origin,
                 2
             )
@@ -161,7 +161,7 @@ object GameEdit {
                     Game_local.gameLocal.clip.TracePoint(
                         trace,
                         viewPoint,
-                        viewPoint.oPlus(viewAxis.oGet(0).times(GameEdit.MAX_DRAG_TRACE_DISTANCE)),
+                        viewPoint.oPlus(viewAxis.get(0).times(GameEdit.MAX_DRAG_TRACE_DISTANCE)),
                         Material.CONTENTS_SOLID or Material.CONTENTS_RENDERMODEL or Material.CONTENTS_BODY,
                         player
                     )
@@ -207,10 +207,10 @@ object GameEdit {
                                 cursor = Game_local.gameLocal.SpawnEntityType(idCursor3D::class.java)
                             }
                             val phys = dragEnt.GetEntity().GetPhysics()
-                            localPlayerPoint.oSet(trace.c.point.oMinus(viewPoint).oMultiply(viewAxis.Transpose()))
-                            origin.oSet(phys.GetOrigin(id))
+                            localPlayerPoint.set(trace.c.point.minus(viewPoint).oMultiply(viewAxis.Transpose()))
+                            origin.set(phys.GetOrigin(id))
                             axis = phys.GetAxis(id)
-                            localEntityPoint.oSet(trace.c.point.oMinus(origin).oMultiply(axis.Transpose()))
+                            localEntityPoint.set(trace.c.point.minus(origin).oMultiply(axis.Transpose()))
                             cursor.drag.Init(SysCvar.g_dragDamping.GetFloat())
                             cursor.drag.SetPhysics(phys, id, localEntityPoint)
                             cursor.Show()
@@ -239,7 +239,7 @@ object GameEdit {
                 val dragAnimator = drag.GetAnimator()
                 if (joint != Model.INVALID_JOINT && renderEntity != null && dragAnimator != null) {
                     dragAnimator.GetJointTransform(joint, Game_local.gameLocal.time, cursor.draggedPosition, axis)
-                    cursor.draggedPosition.oSet(renderEntity.origin.oPlus(cursor.draggedPosition.times(renderEntity.axis)))
+                    cursor.draggedPosition.set(renderEntity.origin.oPlus(cursor.draggedPosition.times(renderEntity.axis)))
                     Game_local.gameRenderWorld.DrawText(
                         Str.va(
                             "%s\n%s\n%s, %s",
@@ -250,7 +250,7 @@ object GameEdit {
                         ), cursor.GetPhysics().GetOrigin(), 0.1f, Lib.Companion.colorWhite, viewAxis, 1
                     )
                 } else {
-                    cursor.draggedPosition.oSet(cursor.GetPhysics().GetOrigin())
+                    cursor.draggedPosition.set(cursor.GetPhysics().GetOrigin())
                     Game_local.gameRenderWorld.DrawText(
                         Str.va(
                             "%s\n%s\n%s",
@@ -407,10 +407,10 @@ object GameEdit {
                 return true
             }
             nextSelectTime = Game_local.gameLocal.time + 300
-            end.oSet(origin.oPlus(dir.times(4096.0f)))
+            end.set(origin.oPlus(dir.times(4096.0f)))
             ent = null
             for (i in 0 until selectableEntityClasses.Num()) {
-                ent = Game_local.gameLocal.FindTraceEntity(origin, end, selectableEntityClasses.oGet(i).typeInfo, skip)
+                ent = Game_local.gameLocal.FindTraceEntity(origin, end, selectableEntityClasses.get(i).typeInfo, skip)
                 if (ent != null) {
                     break
                 }
@@ -444,7 +444,7 @@ object GameEdit {
             count = selectedEntities.Num()
             i = 0
             while (i < count) {
-                selectedEntities.oGet(i).fl.selected = false
+                selectedEntities.get(i).fl.selected = false
                 i++
             }
             selectedEntities.Clear()
@@ -524,7 +524,7 @@ object GameEdit {
                     }
                     val ss = DeclManager.declManager.FindSound(ent.spawnArgs.GetString(textKey.toString()))
                     if (ss.HasDefaultSound() || ss.base.GetState() == declState_t.DS_DEFAULTED) {
-                        color.Set(1.0f, 0.0f, 1.0f, 1.0f)
+                        color.set(1.0f, 0.0f, 1.0f, 1.0f)
                     }
                 } else if (ent.GetType() == idFuncEmitter::class.java) {
                     if (ent.fl.selected) {
@@ -617,16 +617,16 @@ object GameEdit {
             text: idStr? = null /*= NULL*/
         ): Boolean {
             for (i in 0 until selectableEntityClasses.Num()) {
-                if (ent.GetType() == selectableEntityClasses.oGet(i).typeInfo) {
-                    text?.oSet(selectableEntityClasses.oGet(i).textKey)
+                if (ent.GetType() == selectableEntityClasses.get(i).typeInfo) {
+                    text?.oSet(selectableEntityClasses.get(i).textKey)
                     if (color != null) {
                         if (ent.fl.selected) {
-                            color.oSet(Lib.Companion.colorRed)
+                            color.set(Lib.Companion.colorRed)
                         } else {
                             when (i) {
-                                1 -> color.oSet(Lib.Companion.colorYellow)
-                                2 -> color.oSet(Lib.Companion.colorBlue)
-                                else -> color.oSet(Lib.Companion.colorGreen)
+                                1 -> color.set(Lib.Companion.colorYellow)
+                                2 -> color.set(Lib.Companion.colorBlue)
+                                else -> color.set(Lib.Companion.colorGreen)
                             }
                         }
                     }

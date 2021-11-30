@@ -187,7 +187,7 @@ object ServerScan {
                 }
                 val id = info.GetValue().toString().toInt()
                 net_info.Delete(serv.toString())
-                val iserv = net_servers.oGet(id)
+                val iserv = net_servers.get(id)
                 server.ping = win_shared.Sys_Milliseconds() - iserv.time
                 server.id = iserv.id
             } else {
@@ -196,7 +196,7 @@ object ServerScan {
 
                 // check for duplicate servers
                 for (i in 0 until Num()) {
-                    if (oGet(i).adr != server.adr) {
+                    if (get(i).adr != server.adr) {
                         Common.common.DPrintf(
                             "idServerScan::InfoResponse LAN_SCAN: duplicate server %s\n",
                             serv.toString()
@@ -287,9 +287,9 @@ object ServerScan {
             GUIUpdateSelected()
             Common.common.DPrintf("NetScan with challenge %d\n", challenge)
             while (cur_info < Lib.Companion.Min(net_servers.Num(), MAX_PINGREQUESTS)) {
-                val serv = net_servers.oGet(cur_info).adr
+                val serv = net_servers.get(cur_info).adr
                 EmitGetInfo(serv)
-                net_servers.oGet(cur_info).time = win_shared.Sys_Milliseconds()
+                net_servers.get(cur_info).time = win_shared.Sys_Milliseconds()
                 net_info.SetInt(win_net.Sys_NetAdrToString(serv), cur_info)
                 cur_info++
             }
@@ -326,7 +326,7 @@ object ServerScan {
             // check for timeouts
             var i = 0
             while (i < net_info.GetNumKeyVals()) {
-                if (timeout_limit > net_servers.oGet(net_info.GetKeyVal(i).GetValue().toString().toInt()).time) {
+                if (timeout_limit > net_servers.get(net_info.GetKeyVal(i).GetValue().toString().toInt()).time) {
                     Common.common.DPrintf("timeout %s\n", net_info.GetKeyVal(i).GetKey().toString())
                     net_info.Delete(net_info.GetKeyVal(i).GetKey().toString())
                 } else {
@@ -336,9 +336,9 @@ object ServerScan {
 
             // possibly send more queries
             while (cur_info < net_servers.Num() && net_info.GetNumKeyVals() < MAX_PINGREQUESTS) {
-                val serv = net_servers.oGet(cur_info).adr
+                val serv = net_servers.get(cur_info).adr
                 EmitGetInfo(serv)
-                net_servers.oGet(cur_info).time = win_shared.Sys_Milliseconds()
+                net_servers.get(cur_info).time = win_shared.Sys_Milliseconds()
                 net_info.SetInt(win_net.Sys_NetAdrToString(serv), cur_info)
                 cur_info++
             }
@@ -369,11 +369,11 @@ object ServerScan {
             if (0 == ic) {
                 return false
             }
-            serv = oGet(0)
+            serv = get(0)
             i = 0
             while (i < ic) {
-                if (oGet(i).ping < serv.ping) {
-                    serv = oGet(i)
+                if (get(i).ping < serv.ping) {
+                    serv = get(i)
                 }
                 i++
             }
@@ -424,24 +424,24 @@ object ServerScan {
                 m_pGUI.SetStateString("server_IP", "")
                 m_pGUI.SetStateString("server_passworded", "")
             } else {
-                m_pGUI.SetStateString("server_name", oGet(i).serverInfo.GetString("si_name"))
+                m_pGUI.SetStateString("server_name", get(i).serverInfo.GetString("si_name"))
                 for (j in 0..7) {
-                    if (oGet(i).clients > j) {
-                        m_pGUI.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(oGet(i).nickname.get(j)))
+                    if (get(i).clients > j) {
+                        m_pGUI.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(get(i).nickname.get(j)))
                     } else {
                         m_pGUI.SetStateString(Str.va("player%d", j + 1), "")
                     }
                 }
-                m_pGUI.SetStateString("server_map", oGet(i).serverInfo.GetString("si_mapName"))
+                m_pGUI.SetStateString("server_map", get(i).serverInfo.GetString("si_mapName"))
                 FileSystem_h.fileSystem.FindMapScreenshot(
-                    oGet(i).serverInfo.GetString("si_map"),
+                    get(i).serverInfo.GetString("si_map"),
                     screenshot,
                     Lib.Companion.MAX_STRING_CHARS
                 )
                 m_pGUI.SetStateString("browser_levelshot", screenshot.toString())
-                m_pGUI.SetStateString("server_gameType", oGet(i).serverInfo.GetString("si_gameType"))
-                m_pGUI.SetStateString("server_IP", win_net.Sys_NetAdrToString(oGet(i).adr))
-                if (oGet(i).serverInfo.GetBool("si_usePass")) {
+                m_pGUI.SetStateString("server_gameType", get(i).serverInfo.GetString("si_gameType"))
+                m_pGUI.SetStateString("server_IP", win_net.Sys_NetAdrToString(get(i).adr))
+                if (get(i).serverInfo.GetBool("si_usePass")) {
                     m_pGUI.SetStateString("server_passworded", "PASSWORD REQUIRED")
                 } else {
                     m_pGUI.SetStateString("server_passworded", "")
@@ -467,9 +467,9 @@ object ServerScan {
             listGUI.Clear()
             i = if (m_sortAscending) 0 else m_sortedServers.Num() - 1
             while (if (m_sortAscending) i < m_sortedServers.Num() else i >= 0) {
-                serv = oGet(m_sortedServers.oGet(i))
+                serv = get(m_sortedServers.oGet(i))
                 if (!IsFiltered(serv)) {
-                    GUIAdd(m_sortedServers.oGet(i), serv)
+                    GUIAdd(m_sortedServers.get(i), serv)
                 }
                 i += if (m_sortAscending) 1 else -1
             }
@@ -631,8 +631,8 @@ object ServerScan {
                 val s1 = idStr()
                 val s2 = idStr()
                 val ret: Int
-                serv1 = ServerScan.l_serverScan.oGet(a)
-                serv2 = ServerScan.l_serverScan.oGet(b)
+                serv1 = ServerScan.l_serverScan.get(a)
+                serv2 = ServerScan.l_serverScan.get(b)
                 when (ServerScan.l_serverScan.m_sort) {
                     serverSort_t.SORT_PING -> {
                         ret = if (serv1.ping < serv2.ping) -1 else if (serv1.ping > serv2.ping) 1 else 0

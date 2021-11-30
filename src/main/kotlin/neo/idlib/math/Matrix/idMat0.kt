@@ -14,7 +14,7 @@ object idMat0 {
         println("START $label")
         for (b in 0 until rows) {
             for (a in 0 until columns) {
-                print(x.oGet(b, a).toString() + "\t")
+                print(x.get(b, a).toString() + "\t")
             }
             println()
         }

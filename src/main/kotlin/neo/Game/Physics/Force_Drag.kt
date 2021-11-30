@@ -51,12 +51,12 @@ class Force_Drag {
         fun SetPhysics(phys: idPhysics?, id: Int, p: idVec3?) {
             physics = phys
             this.id = id
-            this.p.oSet(p)
+            this.p.set(p)
         }
 
         // set position to drag towards
         fun SetDragPosition(pos: idVec3?) {
-            dragPosition.oSet(pos)
+            dragPosition.set(pos)
         }
 
         // get the position dragged towards
@@ -91,17 +91,17 @@ class Force_Drag {
             } else {
                 centerOfMass.Zero()
             }
-            centerOfMass.oSet(physics.GetOrigin(id).oPlus(centerOfMass.times(physics.GetAxis(id))))
-            dragOrigin.oSet(physics.GetOrigin(id).oPlus(p.times(physics.GetAxis(id))))
-            dir1.oSet(dragPosition.oMinus(centerOfMass))
-            dir2.oSet(dragOrigin.oMinus(centerOfMass))
+            centerOfMass.set(physics.GetOrigin(id).oPlus(centerOfMass.times(physics.GetAxis(id))))
+            dragOrigin.set(physics.GetOrigin(id).oPlus(p.times(physics.GetAxis(id))))
+            dir1.set(dragPosition.minus(centerOfMass))
+            dir2.set(dragOrigin.minus(centerOfMass))
             l1 = dir1.Normalize()
             l2 = dir2.Normalize()
             rotation.Set(centerOfMass, dir2.Cross(dir1), Vector.RAD2DEG(idMath.ACos(dir1.times(dir2))))
             physics.SetAngularVelocity(
                 rotation.ToAngularVelocity().div(Math_h.MS2SEC(UsercmdGen.USERCMD_MSEC.toFloat())), id
             )
-            velocity.oSet(
+            velocity.set(
                 physics.GetLinearVelocity(id).times(damping)
                     .oPlus(dir1.times((l1 - l2) * (1.0f - damping) / Math_h.MS2SEC(UsercmdGen.USERCMD_MSEC.toFloat())))
             )

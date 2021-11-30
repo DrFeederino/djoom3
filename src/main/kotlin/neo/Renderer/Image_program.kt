@@ -338,22 +338,22 @@ object Image_program {
                 a4 = d4
                 d2 -= d1
                 d3 -= d1
-                dir.oSet(0, -d2 * scale)
-                dir.oSet(1, -d3 * scale)
-                dir.oSet(2, 1f)
+                dir.set(0, -d2 * scale)
+                dir.set(1, -d3 * scale)
+                dir.set(2, 1f)
                 dir.NormalizeFast()
                 a1 -= a3
                 a4 -= a3
-                dir2.oSet(0, -a4 * scale)
-                dir2.oSet(1, a1 * scale)
-                dir2.oSet(2, 1f)
+                dir2.set(0, -a4 * scale)
+                dir2.set(1, a1 * scale)
+                dir2.set(2, 1f)
                 dir2.NormalizeFast()
                 dir.plusAssign(dir2)
                 dir.NormalizeFast()
                 a1 = (i * width + j) * 4
-                data.put(a1 + 0, (dir.oGet(0) * 127 + 128).toByte())
-                data.put(a1 + 1, (dir.oGet(1) * 127 + 128).toByte())
-                data.put(a1 + 2, (dir.oGet(2) * 127 + 128).toByte())
+                data.put(a1 + 0, (dir.get(0) * 127 + 128).toByte())
+                data.put(a1 + 1, (dir.get(1) * 127 + 128).toByte())
+                data.put(a1 + 2, (dir.get(2) * 127 + 128).toByte())
                 data.put(a1 + 3, 255.toByte())
                 j++
             }
@@ -383,7 +383,7 @@ object Image_program {
         while (i < width) {
             j = 0
             while (j < height) {
-                normal.oSet(Vector.getVec3_origin())
+                normal.set(Vector.getVec3_origin())
                 k = -1
                 while (k < 2) {
                     l = -1
@@ -409,9 +409,9 @@ object Image_program {
                 }
                 normal.Normalize()
                 out =  /*data +*/(j * width + i) * 4
-                data.put(out + 0, (128 + 127 * normal.oGet(0)).toByte())
-                data.put(out + 1, (128 + 127 * normal.oGet(1)).toByte())
-                data.put(out + 2, (128 + 127 * normal.oGet(2)).toByte())
+                data.put(out + 0, (128 + 127 * normal.get(0)).toByte())
+                data.put(out + 1, (128 + 127 * normal.get(1)).toByte())
+                data.put(out + 2, (128 + 127 * normal.get(2)).toByte())
                 j++
             }
             i++
@@ -543,22 +543,22 @@ object Image_program {
                 var len: Float
                 d1 =  /* data1 + */(i * width1 + j) * 4
                 d2 =  /*data2 + */(i * width1 + j) * 4
-                n.oSet(0, (data1.get(d1 + 0) - 128) / 127.0f)
-                n.oSet(1, (data1.get(d1 + 1) - 128) / 127.0f)
-                n.oSet(2, (data1.get(d1 + 2) - 128) / 127.0f)
+                n.set(0, (data1.get(d1 + 0) - 128) / 127.0f)
+                n.set(1, (data1.get(d1 + 1) - 128) / 127.0f)
+                n.set(2, (data1.get(d1 + 2) - 128) / 127.0f)
 
                 // There are some normal maps that blend to 0,0,0 at the edges
                 // this screws up compression, so we try to correct that here by instead fading it to 0,0,1
                 len = n.LengthFast()
                 if (len < 1.0f) {
-                    n.oSet(2, idMath.Sqrt(1.0f - n.oGet(0) * n.oGet(0) - n.oGet(1) * n.oGet(1)))
+                    n.set(2, idMath.Sqrt(1.0f - n.get(0) * n.get(0) - n.get(1) * n.get(1)))
                 }
                 n.plusAssign(0, (data2.get(d2 + 0) - 128) / 127.0f)
                 n.plusAssign(1, (data2.get(d2 + 1) - 128) / 127.0f)
                 n.Normalize()
-                data1.put(d1 + 0, (n.oGet(0) * 127 + 128).toByte())
-                data1.put(d1 + 1, (n.oGet(1) * 127 + 128).toByte())
-                data1.put(d1 + 2, (n.oGet(2) * 127 + 128).toByte())
+                data1.put(d1 + 0, (n.get(0) * 127 + 128).toByte())
+                data1.put(d1 + 1, (n.get(1) * 127 + 128).toByte())
+                data1.put(d1 + 2, (n.get(2) * 127 + 128).toByte())
                 data1.put(d1 + 3, 255.toByte())
                 j++
             }

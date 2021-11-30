@@ -277,9 +277,9 @@ object Model_md3 {
                 frame.radius = Lib.Companion.LittleFloat(frame.radius)
                 j = 0
                 while (j < 3) {
-                    frame.bounds.get(0).oSet(j, Lib.Companion.LittleFloat(frame.bounds.get(0).oGet(j)))
-                    frame.bounds.get(1).oSet(j, Lib.Companion.LittleFloat(frame.bounds.get(1).oGet(j)))
-                    frame.localOrigin.oSet(j, Lib.Companion.LittleFloat(frame.localOrigin.oGet(j)))
+                    frame.bounds.get(0).set(j, Lib.Companion.LittleFloat(frame.bounds.get(0).get(j)))
+                    frame.bounds.get(1).set(j, Lib.Companion.LittleFloat(frame.bounds.get(1).get(j)))
+                    frame.localOrigin.set(j, Lib.Companion.LittleFloat(frame.localOrigin.get(j)))
                     j++
                 }
                 md3.frames.get(i) = frame
@@ -294,10 +294,10 @@ object Model_md3 {
                 tag = md3Tag_s()
                 j = 0
                 while (j < 3) {
-                    tag.origin.oSet(j, Lib.Companion.LittleFloat(tag.origin.oGet(j)))
-                    tag.axis.get(0).oSet(j, Lib.Companion.LittleFloat(tag.axis.get(0).oGet(j)))
-                    tag.axis.get(1).oSet(j, Lib.Companion.LittleFloat(tag.axis.get(1).oGet(j)))
-                    tag.axis.get(2).oSet(j, Lib.Companion.LittleFloat(tag.axis.get(2).oGet(j)))
+                    tag.origin.set(j, Lib.Companion.LittleFloat(tag.origin.get(j)))
+                    tag.axis.get(0).set(j, Lib.Companion.LittleFloat(tag.axis.get(0).get(j)))
+                    tag.axis.get(1).set(j, Lib.Companion.LittleFloat(tag.axis.get(1).get(j)))
+                    tag.axis.get(2).set(j, Lib.Companion.LittleFloat(tag.axis.get(2).get(j)))
                     j++
                 }
                 md3.tags.get(i) = tag
@@ -477,15 +477,15 @@ object Model_md3 {
 //                texCoords = (float[]) ((byte[]) surface + surface.ofsSt);
                     while ( /*j = 0*/j < numVerts) {
                         val stri = tri.verts[j]
-                        stri.st.oSet(0, texCoords.st.get(j * 2 + 0))
-                        stri.st.oSet(1, texCoords.st.get(j * 2 + 1))
+                        stri.st.set(0, texCoords.st.get(j * 2 + 0))
+                        stri.st.set(1, texCoords.st.get(j * 2 + 1))
                         j++
                     }
                 }
                 tr_trisurf.R_BoundTriSurf(tri)
                 staticModel.AddSurface(surf)
-                staticModel.bounds.AddPoint(surf.geometry.bounds.oGet(0))
-                staticModel.bounds.AddPoint(surf.geometry.bounds.oGet(1))
+                staticModel.bounds.AddPoint(surf.geometry.bounds.get(0))
+                staticModel.bounds.AddPoint(surf.geometry.bounds.get(1))
 
                 // find the next surface
                 surface = md3.surfaces.get(++i)

@@ -95,26 +95,26 @@ object tr_rendertools {
             return
         }
         qgl.qglBegin(GL11.GL_LINE_LOOP)
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(1, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(0, 1), bounds.oGet(0, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(0, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(1, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(1, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(0, 1), bounds.get(0, 2))
         qgl.qglEnd()
         qgl.qglBegin(GL11.GL_LINE_LOOP)
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(1, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(0, 1), bounds.oGet(1, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(0, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(1, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(1, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(0, 1), bounds.get(1, 2))
         qgl.qglEnd()
         qgl.qglBegin(GL11.GL_LINES)
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(1, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(0, 0), bounds.oGet(1, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(0, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(0, 1), bounds.oGet(1, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(0, 2))
-        qgl.qglVertex3f(bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(1, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(0, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(0, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(1, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(0, 0), bounds.get(1, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(0, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(0, 1), bounds.get(1, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(1, 1), bounds.get(0, 2))
+        qgl.qglVertex3f(bounds.get(1, 0), bounds.get(1, 1), bounds.get(1, 2))
         qgl.qglEnd()
     }
 
@@ -818,12 +818,12 @@ object tr_rendertools {
         }
 
         // start far enough away that we don't hit the player model
-        start.oSet(
+        start.set(
             tr_local.tr.primaryView.renderView.vieworg.oPlus(
-                tr_local.tr.primaryView.renderView.viewaxis.oGet(0).times(16f)
+                tr_local.tr.primaryView.renderView.viewaxis.get(0).times(16f)
             )
         )
-        end.oSet(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.oGet(0).times(1000f)))
+        end.set(start.oPlus(tr_local.tr.primaryView.renderView.viewaxis.get(0).times(1000f)))
         //	end = start + tr.primaryView.renderView.viewaxis[0] * 1000.0f;
         if (!tr_local.tr.primaryWorld.Trace(mt, start, end, 0.0f, false)) {
             return
@@ -842,7 +842,7 @@ object tr_rendertools {
         // transform the object verts into global space
         tr_main.R_AxisToModelMatrix(mt.entity.axis, mt.entity.origin, matrix)
         tr_local.tr.primaryWorld.DrawText(
-            mt.entity.hModel.Name(), mt.point.oPlus(tr_local.tr.primaryView.renderView.viewaxis.oGet(2).times(12f)),
+            mt.entity.hModel.Name(), mt.point.oPlus(tr_local.tr.primaryView.renderView.viewaxis.get(2).times(12f)),
             0.35f, idDeviceContext.Companion.colorRed, tr_local.tr.primaryView.renderView.viewaxis
         )
         tr_local.tr.primaryWorld.DrawText(
@@ -961,11 +961,11 @@ object tr_rendertools {
                 c = tri.verts[tri.indexes[j + 2]]
 
                 // VectorSubtract( b.xyz, a.xyz, d0 );
-                d0[3] = b.st.oGet(0) - a.st.oGet(0)
-                d0[4] = b.st.oGet(1) - a.st.oGet(1)
+                d0[3] = b.st.get(0) - a.st.get(0)
+                d0[4] = b.st.get(1) - a.st.get(1)
                 // VectorSubtract( c.xyz, a.xyz, d1 );
-                d1[3] = c.st.oGet(0) - a.st.oGet(0)
-                d1[4] = c.st.oGet(1) - a.st.oGet(1)
+                d1[3] = c.st.get(0) - a.st.get(0)
+                d1[4] = c.st.get(1) - a.st.get(1)
                 area = d0[3] * d1[4] - d0[4] * d1[3]
                 if (Math.abs(area) < 0.0001) {
                     qgl.qglColor4f(0f, 0f, 1f, 0.5f)
@@ -1072,23 +1072,23 @@ object tr_rendertools {
                 v = tri.verts[tri.indexes[j]]
                 if (RenderSystem_init.r_showTangentSpace.GetInteger() == 1) {
                     qgl.qglColor4f(
-                        0.5f + 0.5f * v.tangents[0].oGet(0),
-                        0.5f + 0.5f * v.tangents[0].oGet(1),
-                        0.5f + 0.5f * v.tangents[0].oGet(2),
+                        0.5f + 0.5f * v.tangents[0].get(0),
+                        0.5f + 0.5f * v.tangents[0].get(1),
+                        0.5f + 0.5f * v.tangents[0].get(2),
                         0.5f
                     )
                 } else if (RenderSystem_init.r_showTangentSpace.GetInteger() == 2) {
                     qgl.qglColor4f(
-                        0.5f + 0.5f * v.tangents[1].oGet(0),
-                        0.5f + 0.5f * v.tangents[1].oGet(1),
-                        0.5f + 0.5f * v.tangents[1].oGet(2),
+                        0.5f + 0.5f * v.tangents[1].get(0),
+                        0.5f + 0.5f * v.tangents[1].get(1),
+                        0.5f + 0.5f * v.tangents[1].get(2),
                         0.5f
                     )
                 } else {
                     qgl.qglColor4f(
-                        0.5f + 0.5f * v.normal.oGet(0),
-                        0.5f + 0.5f * v.normal.oGet(1),
-                        0.5f + 0.5f * v.normal.oGet(2),
+                        0.5f + 0.5f * v.normal.get(0),
+                        0.5f + 0.5f * v.normal.get(1),
+                        0.5f + 0.5f * v.normal.get(2),
                         0.5f
                     )
                 }
@@ -1220,7 +1220,7 @@ object tr_rendertools {
                 }
                 j = 0
                 while (j < tri.numVerts) {
-                    pos.oSet(
+                    pos.set(
                         tr_main.R_LocalPointToGlobal(
                             drawSurf.space.modelMatrix,
                             tri.verts[j].xyz.oPlus(tri.verts[j].tangents[0].oPlus(tri.verts[j].normal.times(0.2f)))
@@ -1238,7 +1238,7 @@ object tr_rendertools {
                 }
                 j = 0
                 while (j < tri.numIndexes) {
-                    pos.oSet(
+                    pos.set(
                         tr_main.R_LocalPointToGlobal(
                             drawSurf.space.modelMatrix,
                             tri.verts[tri.indexes[j + 0]].xyz.oPlus(tri.verts[tri.indexes[j + 1]].xyz.oPlus(tri.verts[tri.indexes[j + 2]].xyz))
@@ -1298,12 +1298,12 @@ object tr_rendertools {
                 v[2] = tri.verts[tri.indexes[j + 2]]
 
                 // make the midpoint slightly above the triangle
-                mid.oSet(v[0].xyz.oPlus(v[1].xyz).oPlus(v[2].xyz).oMultiply(1.0f / 3.0f))
+                mid.set(v[0].xyz.oPlus(v[1].xyz).oPlus(v[2].xyz).oMultiply(1.0f / 3.0f))
                 mid.plusAssign(tri.facePlanes[j / 3].Normal().times(0.1f))
                 k = 0
                 while (k < 3) {
                     val pos = idVec3()
-                    pos.oSet(mid.oPlus(v[k].xyz.times(3f)).oMultiply(0.25f))
+                    pos.set(mid.oPlus(v[k].xyz.times(3f)).oMultiply(0.25f))
                     qgl.qglColor3f(0f, 0f, 1f)
                     qgl.qglVertex3fv(pos.ToFloatPtr())
                     Vector.VectorMA(pos, RenderSystem_init.r_showNormals.GetFloat(), v[k].normal, end)
@@ -1383,36 +1383,36 @@ object tr_rendertools {
                 c = tri.verts[tri.indexes[j + 2]]
 
                 // make the midpoint slightly above the triangle
-                mid.oSet(a.xyz.oPlus(b.xyz).oPlus(c.xyz).oMultiply(1.0f / 3.0f))
+                mid.set(a.xyz.oPlus(b.xyz).oPlus(c.xyz).oMultiply(1.0f / 3.0f))
                 mid.plusAssign(tri.facePlanes[j / 3].Normal().times(0.1f))
 
                 // calculate the texture vectors
                 Vector.VectorSubtract(b.xyz, a.xyz, d0)
-                d0[3] = b.st.oGet(0) - a.st.oGet(0)
-                d0[4] = b.st.oGet(1) - a.st.oGet(1)
+                d0[3] = b.st.get(0) - a.st.get(0)
+                d0[4] = b.st.get(1) - a.st.get(1)
                 Vector.VectorSubtract(c.xyz, a.xyz, d1)
-                d1[3] = c.st.oGet(0) - a.st.oGet(0)
-                d1[4] = c.st.oGet(1) - a.st.oGet(1)
+                d1[3] = c.st.get(0) - a.st.get(0)
+                d1[4] = c.st.get(1) - a.st.get(1)
                 area = d0[3] * d1[4] - d0[4] * d1[3]
                 if (area == 0f) {
                     j += 3
                     continue
                 }
                 inva = 1.0f / area
-                temp.oSet(0, (d0[0] * d1[4] - d0[4] * d1[0]) * inva)
-                temp.oSet(1, (d0[1] * d1[4] - d0[4] * d1[1]) * inva)
-                temp.oSet(2, (d0[2] * d1[4] - d0[4] * d1[2]) * inva)
+                temp.set(0, (d0[0] * d1[4] - d0[4] * d1[0]) * inva)
+                temp.set(1, (d0[1] * d1[4] - d0[4] * d1[1]) * inva)
+                temp.set(2, (d0[2] * d1[4] - d0[4] * d1[2]) * inva)
                 temp.Normalize()
-                tangents[0].oSet(temp)
-                temp.oSet(0, (d0[3] * d1[0] - d0[0] * d1[3]) * inva)
-                temp.oSet(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva)
-                temp.oSet(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva)
+                tangents[0].set(temp)
+                temp.set(0, (d0[3] * d1[0] - d0[0] * d1[3]) * inva)
+                temp.set(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva)
+                temp.set(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva)
                 temp.Normalize()
-                tangents[1].oSet(temp)
+                tangents[1].set(temp)
 
                 // draw the tangents
-                tangents[0].oSet(mid.oPlus(tangents[0].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
-                tangents[1].oSet(mid.oPlus(tangents[1].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
+                tangents[0].set(mid.oPlus(tangents[0].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
+                tangents[1].set(mid.oPlus(tangents[1].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
                 qgl.qglColor3f(1f, 0f, 0f)
                 qgl.qglVertex3fv(mid.ToFloatPtr())
                 qgl.qglVertex3fv(tangents[0].ToFloatPtr())
@@ -1472,7 +1472,7 @@ object tr_rendertools {
                 a = tri.verts[j]
                 b = tri.verts[tri.dominantTris[j].v2]
                 c = tri.verts[tri.dominantTris[j].v3]
-                mid.oSet(a.xyz.oPlus(b.xyz.oPlus(c.xyz)).oMultiply(1.0f / 3.0f))
+                mid.set(a.xyz.oPlus(b.xyz.oPlus(c.xyz)).oMultiply(1.0f / 3.0f))
                 qgl.qglVertex3fv(mid.ToFloatPtr())
                 qgl.qglVertex3fv(a.xyz.ToFloatPtr())
                 j++
@@ -1728,7 +1728,7 @@ object tr_rendertools {
         if (tr_rendertools.rb_numDebugText < tr_rendertools.MAX_DEBUG_TEXT) {
             debugText = tr_rendertools.rb_debugText[tr_rendertools.rb_numDebugText++]
             debugText.text.oSet(text) //			= text;
-            debugText.origin.oSet(origin)
+            debugText.origin.set(origin)
             debugText.scale = scale
             debugText.color = color
             debugText.viewAxis = viewAxis
@@ -1818,7 +1818,7 @@ object tr_rendertools {
             i = 0
             while (i < len) {
                 if (i == 0 || text[i] == '\n') {
-                    org.oSet(origin.oMinus(viewAxis.oGet(2)).oMultiply(line * 36.0f * scale))
+                    org.set(origin.minus(viewAxis.get(2)).oMultiply(line * 36.0f * scale))
                     if (align != 0) {
                         j = 1
                         while (i + j <= len) {
@@ -1830,10 +1830,10 @@ object tr_rendertools {
                         }
                         if (align == 2) {
                             // right
-                            org.plusAssign(viewAxis.oGet(1).times(textLen))
+                            org.plusAssign(viewAxis.get(1).times(textLen))
                         } else {
                             // center
-                            org.plusAssign(viewAxis.oGet(1).times(textLen * 0.5f))
+                            org.plusAssign(viewAxis.get(1).times(textLen * 0.5f))
                         }
                     }
                     line++
@@ -1851,9 +1851,9 @@ object tr_rendertools {
                         index++
                         continue
                     }
-                    p1.oSet(
-                        org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex.simplex[charIndex][index]))
-                            .oPlus(viewAxis.oGet(2).times(scale * simplex.simplex[charIndex][index + 1]))
+                    p1.set(
+                        org.oPlus(viewAxis.get(1).oNegative().oMultiply(scale * simplex.simplex[charIndex][index]))
+                            .oPlus(viewAxis.get(2).times(scale * simplex.simplex[charIndex][index + 1]))
                     )
                     index += 2
                     if (simplex.simplex[charIndex][index] < 0) {
@@ -1861,14 +1861,14 @@ object tr_rendertools {
                         continue
                     }
                     //				p2 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index+1] * viewAxis[2];
-                    p2.oSet(
-                        org.oPlus(viewAxis.oGet(1).oNegative().oMultiply(scale * simplex.simplex[charIndex][index]))
-                            .oPlus(viewAxis.oGet(2).times(scale * simplex.simplex[charIndex][index + 1]))
+                    p2.set(
+                        org.oPlus(viewAxis.get(1).oNegative().oMultiply(scale * simplex.simplex[charIndex][index]))
+                            .oPlus(viewAxis.get(2).times(scale * simplex.simplex[charIndex][index + 1]))
                     )
                     qgl.qglVertex3fv(p1.ToFloatPtr())
                     qgl.qglVertex3fv(p2.ToFloatPtr())
                 }
-                org.minusAssign(viewAxis.oGet(1).times(spacing * scale))
+                org.minusAssign(viewAxis.get(1).times(spacing * scale))
                 i++
             }
             qgl.qglEnd()
@@ -1988,8 +1988,8 @@ object tr_rendertools {
             tr_rendertools.rb_debugLines[tr_rendertools.rb_numDebugLines++] = debugLine_s()
             line = tr_rendertools.rb_debugLines[tr_rendertools.rb_numDebugLines++]
             line.rgb = idVec4(color)
-            line.start.oSet(start)
-            line.end.oSet(end)
+            line.start.set(start)
+            line.end.set(end)
             line.depthTest = depthTest
             line.lifeTime = tr_rendertools.rb_debugLineTime + lifeTime
         }

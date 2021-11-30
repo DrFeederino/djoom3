@@ -361,7 +361,7 @@ object Script_Thread {
 
             private fun Event_VecToAngles(t: idThread?, vec: idEventArg<idVec3?>?) {
                 val ang = vec.value.ToAngles()
-                ReturnVector(idVec3(ang.oGet(0), ang.oGet(1), ang.oGet(2)))
+                ReturnVector(idVec3(ang.get(0), ang.get(1), ang.get(2)))
             }
 
             private fun Event_OnSignal(
@@ -466,7 +466,7 @@ object Script_Thread {
                 val color = idVec3(colorA.value)
                 player = Game_local.gameLocal.GetLocalPlayer()
                 if (player != null) {
-                    fadeColor.Set(color.oGet(0), color.oGet(1), color.oGet(2), 0.0f)
+                    fadeColor.set(color.get(0), color.get(1), color.get(2), 0.0f)
                     player.playerView.Fade(fadeColor, Math_h.SEC2MS(time.value).toInt())
                 }
             }
@@ -477,7 +477,7 @@ object Script_Thread {
                 val color = idVec3(colorA.value)
                 player = Game_local.gameLocal.GetLocalPlayer()
                 if (player != null) {
-                    fadeColor.Set(color.oGet(0), color.oGet(1), color.oGet(2), 1.0f)
+                    fadeColor.set(color.get(0), color.get(1), color.get(2), 1.0f)
                     player.playerView.Fade(fadeColor, Math_h.SEC2MS(time.value).toInt())
                 }
             }
@@ -493,7 +493,7 @@ object Script_Thread {
                 val color = idVec3(colorA.value)
                 player = Game_local.gameLocal.GetLocalPlayer()
                 if (player != null) {
-                    fadeColor.Set(color.oGet(0), color.oGet(1), color.oGet(2), alpha.value)
+                    fadeColor.set(color.get(0), color.get(1), color.get(2), alpha.value)
                     player.playerView.Fade(fadeColor, Math_h.SEC2MS(time.value).toInt())
                 }
             }
@@ -729,7 +729,7 @@ object Script_Thread {
                 n = threadList.Num()
                 i = 0
                 while (i < n) {
-                    thread = threadList.oGet(i)
+                    thread = threadList.get(i)
                     if (thread.GetThreadNum() == num) {
                         return thread
                     }
@@ -792,7 +792,7 @@ object Script_Thread {
                 num = threadList.Num()
                 i = 0
                 while (i < num) {
-                    thread = threadList.oGet(i)
+                    thread = threadList.get(i)
                     if (0 == idStr.Companion.Cmpn(thread.GetThreadName(), name, len)) {
                         thread.End()
                     }
@@ -1562,7 +1562,7 @@ object Script_Thread {
             n = threadList.Num()
             i = 0
             while (i < n) {
-                thread = threadList.oGet(i)
+                thread = threadList.get(i)
                 if (thread.WaitingOnThread() === this) {
                     thread.ThreadCallback(this)
                 }
@@ -1889,10 +1889,10 @@ object Script_Thread {
                     //threadList[ i ].DisplayInfo();
                     Game_local.gameLocal.Printf(
                         "%3d: %-20s : %s(%d)\n",
-                        threadList.oGet(i).threadNum,
-                        threadList.oGet(i).threadName,
-                        threadList.oGet(i).interpreter.CurrentFile(),
-                        threadList.oGet(i).interpreter.CurrentLine()
+                        threadList.get(i).threadNum,
+                        threadList.get(i).threadName,
+                        threadList.get(i).interpreter.CurrentFile(),
+                        threadList.get(i).interpreter.CurrentLine()
                     )
                     i++
                 }

@@ -288,7 +288,7 @@ object Image_init {
             val sortedArray = arrayOfNulls<sortedImage_t?>(Image.globalImages.images.Num())
             i = 0
             while (i < Image.globalImages.images.Num()) {
-                image = Image.globalImages.images.oGet(i)
+                image = Image.globalImages.images.get(i)
                 if (uncompressedOnly) {
                     if (image.internalFormat >= EXTTextureCompressionS3TC.GL_COMPRESSED_RGB_S3TC_DXT1_EXT && image.internalFormat <= EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
                         || image.internalFormat == 0x80E5
@@ -323,7 +323,7 @@ object Image_init {
 //			int j;
                     j = i + 1
                     while (j < Image.globalImages.images.Num()) {
-                        if (idStr.Companion.Icmp(image.imgName, Image.globalImages.images.oGet(j).imgName) == 0) {
+                        if (idStr.Companion.Icmp(image.imgName, Image.globalImages.images.get(j).imgName) == 0) {
                             break
                         }
                         j++
@@ -392,13 +392,13 @@ object Image_init {
                     val overSizedList = idList<Int?>()
                     j = 0
                     while (j < classifications[i].Num()) {
-                        partialSize += sortedArray.get(classifications[i].oGet(j)).image.StorageSize()
+                        partialSize += sortedArray.get(classifications[i].get(j)).image.StorageSize()
                         if (overSized) {
-                            if (sortedArray.get(classifications[i].oGet(j)).image.uploadWidth.getVal() > Image_init.IC_Info[i].maxWidth && sortedArray.get(
-                                    classifications[i].oGet(j)
+                            if (sortedArray.get(classifications[i].get(j)).image.uploadWidth.getVal() > Image_init.IC_Info[i].maxWidth && sortedArray.get(
+                                    classifications[i].get(j)
                                 ).image.uploadHeight.getVal() > Image_init.IC_Info[i].maxHeight
                             ) {
-                                overSizedList.Append(classifications[i].oGet(j))
+                                overSizedList.Append(classifications[i].get(j))
                             }
                         }
                         j++
@@ -414,7 +414,7 @@ object Image_init {
                         j = 0
                         while (j < overSizedList.Num()) {
                             idLib.common.Printf("    ")
-                            sortedArray.get(overSizedList.oGet(j)).image.Print()
+                            sortedArray.get(overSizedList.get(j)).image.Print()
                             idLib.common.Printf("\n")
                             j++
                         }
@@ -553,7 +553,7 @@ object Image_init {
             }
             i = 0
             while (i < Image.globalImages.images.Num()) {
-                image = Image.globalImages.images.oGet(i)
+                image = Image.globalImages.images.get(i)
                 image.Reload(checkPrecompressed, all)
                 i++
             }
@@ -1010,9 +1010,9 @@ object Image_init {
             // flat normal map for default bunp mapping
             i = 0
             while (i < idImage.Companion.DEFAULT_SIZE) {
-                data[i + red] = (255 * tr_local.tr.ambientLightVector.oGet(0)).toByte()
-                data[i + 1] = (255 * tr_local.tr.ambientLightVector.oGet(1)).toByte()
-                data[i + 2] = (255 * tr_local.tr.ambientLightVector.oGet(2)).toByte()
+                data[i + red] = (255 * tr_local.tr.ambientLightVector.get(0)).toByte()
+                data[i + 1] = (255 * tr_local.tr.ambientLightVector.get(1)).toByte()
+                data[i + 2] = (255 * tr_local.tr.ambientLightVector.get(2)).toByte()
                 data[i + alpha] = 255.toByte()
                 i += 4
             }

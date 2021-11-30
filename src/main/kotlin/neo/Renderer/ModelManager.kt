@@ -233,7 +233,7 @@ object ModelManager {
 
             // skip the default model at index 0
             for (i in 1 until models.Num()) {
-                val model = models.oGet(i)
+                val model = models.get(i)
 
                 // we may want to allow world model reloading in the future, but we don't now
                 if (!model.IsReloadable()) {
@@ -258,14 +258,14 @@ object ModelManager {
 
         override fun FreeModelVertexCaches() {
             for (i in 0 until models.Num()) {
-                val model = models.oGet(i)
+                val model = models.get(i)
                 model.FreeVertexCache()
             }
         }
 
         override fun WritePrecacheCommands(f: idFile?) {
             for (i in 0 until models.Num()) {
-                val model = models.oGet(i) ?: continue
+                val model = models.get(i) ?: continue
                 if (!model.IsReloadable()) {
                     continue
                 }
@@ -280,7 +280,7 @@ object ModelManager {
         override fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until models.Num()) {
-                val model = models.oGet(i)
+                val model = models.get(i)
                 if (Common.com_purgeAll.GetBool() && model.IsReloadable()) {
                     tr_lightrun.R_CheckForEntityDefsUsingModel(model)
                     model.PurgeModel()
@@ -302,7 +302,7 @@ object ModelManager {
 
             // purge any models not touched
             for (i in 0 until models.Num()) {
-                val model = models.oGet(i)
+                val model = models.get(i)
                 if (!model.IsLevelLoadReferenced() && model.IsLoaded() && model.IsReloadable()) {
 
 //			common.Printf( "purging %s\n", model.Name() );
@@ -321,7 +321,7 @@ object ModelManager {
 
             // load any new ones
             for (i in 0 until models.Num()) {
-                val model = models.oGet(i)
+                val model = models.get(i)
                 if (model.IsLevelLoadReferenced() && !model.IsLoaded() && model.IsReloadable()) {
                     loadCount++
                     model.LoadModel()
@@ -363,8 +363,8 @@ object ModelManager {
             while (i < localModelManager.models.Num() - 1) {
                 j = i + 1
                 while (j < localModelManager.models.Num()) {
-                    if (localModelManager.models.oGet(sortIndex[i])
-                            .Memory() < localModelManager.models.oGet(sortIndex[j]).Memory()
+                    if (localModelManager.models.get(sortIndex[i])
+                            .Memory() < localModelManager.models.get(sortIndex[j]).Memory()
                     ) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
@@ -378,7 +378,7 @@ object ModelManager {
             // print next
             i = 0
             while (i < localModelManager.models.Num()) {
-                val model = localModelManager.models.oGet(sortIndex[i])
+                val model = localModelManager.models.get(sortIndex[i])
                 var mem: Int
                 if (!model.IsLoaded()) {
                     i++
@@ -409,7 +409,7 @@ object ModelManager {
             val key = hash.GenerateKey(modelName, false)
             var i = hash.First(key)
             while (i != -1) {
-                val model = models.oGet(i)
+                val model = models.get(i)
                 if (canonical.Icmp(model.Name()) == 0) {
                     if (!model.IsLoaded()) {
                         // reload it if it was purged
@@ -519,7 +519,7 @@ object ModelManager {
                 Common.common.Printf(" mem   srf verts tris\n")
                 Common.common.Printf(" ---   --- ----- ----\n")
                 for (i in 0 until localModelManager.models.Num()) {
-                    val model = localModelManager.models.oGet(i)
+                    val model = localModelManager.models.get(i)
                     if (!model.IsLoaded()) {
                         continue
                     }

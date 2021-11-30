@@ -136,13 +136,13 @@ class Anim_Testmodel {
             physicsObj.SetSelf(this)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
-            if (spawnArgs.GetVector("mins", null, bounds.oGet(0))) {
-                spawnArgs.GetVector("maxs", null, bounds.oGet(1))
+            if (spawnArgs.GetVector("mins", null, bounds.get(0))) {
+                spawnArgs.GetVector("maxs", null, bounds.get(1))
                 physicsObj.SetClipBox(bounds, 1.0f)
                 physicsObj.SetContents(0)
             } else if (spawnArgs.GetVector("size", null, size)) {
-                bounds.oGet(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
-                bounds.oGet(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
+                bounds.get(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
+                bounds.get(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
                 physicsObj.SetClipBox(bounds, 1.0f)
                 physicsObj.SetContents(0)
             }
@@ -165,7 +165,7 @@ class Anim_Testmodel {
                     }
                     head.oSet(Game_local.gameLocal.SpawnEntityType(idAnimatedEntity::class.java, args))
                     animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                    origin.oSet(
+                    origin.set(
                         GetPhysics().GetOrigin().oPlus(origin.oPlus(modelOffset).oMultiply(GetPhysics().GetAxis()))
                     )
                     head.GetEntity().SetModel(headModel)
@@ -712,8 +712,8 @@ class Anim_Testmodel {
                     val   /*jointHandle_t*/joint: Int
                     joint = animator.GetJointHandle("origin")
                     animator.GetJointTransform(joint, Game_local.gameLocal.time, neworigin, axis)
-                    neworigin.oSet(
-                        neworigin.oMinus(animator.ModelDef().GetVisualOffset()).oMultiply(physicsObj.GetAxis())
+                    neworigin.set(
+                        neworigin.minus(animator.ModelDef().GetVisualOffset()).oMultiply(physicsObj.GetAxis())
                             .oPlus(GetPhysics().GetOrigin())
                     )
                     clip.Link(Game_local.gameLocal.clip, this, 0, neworigin, clip.GetAxis())
@@ -931,7 +931,7 @@ class Anim_Testmodel {
                         dict.Set("model", name)
                     }
                 }
-                offset.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
+                offset.set(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
                 dict.Set("origin", offset.ToString())
                 dict.Set("angle", Str.va("%f", player.viewAngles.yaw + 180.0f))
                 Game_local.gameLocal.testmodel = Game_local.gameLocal.SpawnEntityType(idTestModel::class.java, dict)

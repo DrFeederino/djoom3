@@ -979,7 +979,7 @@ object CVarSystem {
         @Throws(idException::class)
         override fun CommandCompletion(callback: void_callback<String?>?) {
             for (i in 0 until cvars.Num()) {
-                callback.run(cvars.oGet(i).GetName())
+                callback.run(cvars.get(i).GetName())
             }
         }
 
@@ -988,11 +988,11 @@ object CVarSystem {
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(cmdString, false)
             for (i in 0 until cvars.Num()) {
-                if (null == cvars.oGet(i).valueCompletion) {
+                if (null == cvars.get(i).valueCompletion) {
                     continue
                 }
-                if (idStr.Companion.Icmp(args.Argv(0), cvars.oGet(i).nameString.toString()) == 0) {
-                    cvars.oGet(i).valueCompletion.run(args, callback)
+                if (idStr.Companion.Icmp(args.Argv(0), cvars.get(i).nameString.toString()) == 0) {
+                    cvars.get(i).valueCompletion.run(args, callback)
                     break
                 }
             }
@@ -1013,7 +1013,7 @@ object CVarSystem {
         @Throws(idException::class)
         override fun ResetFlaggedVariables(flags: Int) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.oGet(i)
+                val cvar = cvars.get(i)
                 if (cvar.GetFlags() and flags != 0) {
                     cvar.Set(null, true, true)
                 }
@@ -1022,7 +1022,7 @@ object CVarSystem {
 
         override fun RemoveFlaggedAutoCompletion(flags: Int) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.oGet(i)
+                val cvar = cvars.get(i)
                 if (cvar.GetFlags() and flags != 0) {
                     cvar.valueCompletion = null
                 }
@@ -1039,7 +1039,7 @@ object CVarSystem {
          */
         override fun WriteFlaggedVariables(flags: Int, setCmd: String?, f: idFile?) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.oGet(i)
+                val cvar = cvars.get(i)
                 if (cvar.GetFlags() and flags != 0) {
                     f.Printf("%s %s \"%s\"\n", setCmd, cvar.GetName(), cvar.GetString())
                 }
@@ -1050,7 +1050,7 @@ object CVarSystem {
         override fun MoveCVarsToDict(flags: Int): idDict? {
             moveCVarsToDict.Clear()
             for (i in 0 until cvars.Num()) {
-                val cvar: idCVar? = cvars.oGet(i)
+                val cvar: idCVar? = cvars.get(i)
                 if (cvar.GetFlags() and flags != 0) {
                     moveCVarsToDict.Set(cvar.GetName(), cvar.GetString())
                 }
@@ -1074,8 +1074,8 @@ object CVarSystem {
             val hash = cvarHash.GenerateKey(name, false)
             var i = cvarHash.First(hash)
             while (i != -1) {
-                if (cvars.oGet(i).nameString.Icmp(name) == 0) {
-                    return cvars.oGet(i)
+                if (cvars.get(i).nameString.Icmp(name) == 0) {
+                    return cvars.get(i)
                 }
                 i = cvarHash.Next(i)
             }
@@ -1317,7 +1317,7 @@ object CVarSystem {
                 var cvar: idInternalCVar?
                 i = 0
                 while (i < localCVarSystem.cvars.Num()) {
-                    cvar = localCVarSystem.cvars.oGet(i)
+                    cvar = localCVarSystem.cvars.get(i)
 
                     // don't mess with rom values
                     if (cvar.flags and (CVarSystem.CVAR_ROM or CVarSystem.CVAR_INIT) != 0) {
@@ -1400,7 +1400,7 @@ object CVarSystem {
                 }
                 i = 0
                 while (i < localCVarSystem.cvars.Num()) {
-                    cvar = localCVarSystem.cvars.oGet(i)
+                    cvar = localCVarSystem.cvars.get(i)
                     if (0L == cvar.GetFlags() and flags) {
                         i++
                         continue
@@ -1417,7 +1417,7 @@ object CVarSystem {
                     show.SHOW_VALUE -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.oGet(i)
+                            cvar = cvarList.get(i)
                             idLib.common.Printf(
                                 """
     ${CVarSystem.FORMAT_STRING}${Str.S_COLOR_WHITE}"%s"
@@ -1432,7 +1432,7 @@ object CVarSystem {
                         indent.Insert("\n", 0)
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.oGet(i)
+                            cvar = cvarList.get(i)
                             idLib.common.Printf(
                                 """
     ${CVarSystem.FORMAT_STRING}${Str.S_COLOR_WHITE}%s
@@ -1452,7 +1452,7 @@ object CVarSystem {
                     show.SHOW_TYPE -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.oGet(i)
+                            cvar = cvarList.get(i)
                             if (cvar.GetFlags() and CVarSystem.CVAR_BOOL != 0) {
                                 idLib.common.Printf(
                                     """
@@ -1526,7 +1526,7 @@ object CVarSystem {
                     show.SHOW_FLAGS -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.oGet(i)
+                            cvar = cvarList.get(i)
                             idLib.common.Printf(CVarSystem.FORMAT_STRING, cvar.GetName())
                             string = ""
                             string += if (cvar.GetFlags() and CVarSystem.CVAR_BOOL != 0) {

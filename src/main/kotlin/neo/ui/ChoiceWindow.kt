@@ -252,9 +252,9 @@ class ChoiceWindow {
             if (choiceType == 0) {
                 // ChoiceType 0 stores current as an integer in either cvar or gui
                 // If both cvar and gui are defined then cvar wins, but they are both updated
-                if (updateStr.oGet(0).NeedsUpdate()) {
+                if (updateStr.get(0).NeedsUpdate()) {
                     currentChoice = try {
-                        updateStr.oGet(0).c_str().toInt()
+                        updateStr.get(0).c_str().toInt()
                     } catch (e: NumberFormatException) {
                         0
                     }

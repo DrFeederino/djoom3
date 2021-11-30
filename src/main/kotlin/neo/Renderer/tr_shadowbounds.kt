@@ -44,13 +44,13 @@ object tr_shadowbounds {
         var c = c
         val v = idVec4()
         var t: idVec4?
-        if (a.oGet(3) == 0f) {
+        if (a.get(3) == 0f) {
             t = a
             a = b
             b = c
             c = t
         }
-        if (a.oGet(3) == 0f) {
+        if (a.get(3) == 0f) {
             t = a
             a = b
             b = c
@@ -58,7 +58,7 @@ object tr_shadowbounds {
         }
 
         // can't handle 3 infinite points
-        if (a.oGet(3) == 0f) {
+        if (a.get(3) == 0f) {
             return v
         }
         val vb = idVec3(tr_shadowbounds.homogeneous_difference(a, b))
@@ -106,8 +106,8 @@ object tr_shadowbounds {
             tr_shadowbounds.p.v.empty() // no need to copy this data since it'll be replaced
         }
         val p2 = polyhedron(tr_shadowbounds.p)
-        val min = idVec3(b.oGet(0))
-        val max = idVec3(b.oGet(1))
+        val min = idVec3(b.get(0))
+        val max = idVec3(b.get(1))
         p2.v.empty()
         p2.v.push_back(idVec4(min.x, min.y, max.z, 1))
         p2.v.push_back(idVec4(max.x, min.y, max.z, 1))
@@ -277,21 +277,21 @@ object tr_shadowbounds {
         val view = idVec4()
         i = 0
         while (i < 4) {
-            view.oSet(
+            view.set(
                 i,
-                global.oGet(0) * viewDef.worldSpace.modelViewMatrix[i + 0 * 4] + global.oGet(1) * viewDef.worldSpace.modelViewMatrix[i + 1 * 4] + global.oGet(
+                global.get(0) * viewDef.worldSpace.modelViewMatrix[i + 0 * 4] + global.get(1) * viewDef.worldSpace.modelViewMatrix[i + 1 * 4] + global.get(
                     2
-                ) * viewDef.worldSpace.modelViewMatrix[i + 2 * 4] + global.oGet(3) * viewDef.worldSpace.modelViewMatrix[i + 3 * 4]
+                ) * viewDef.worldSpace.modelViewMatrix[i + 2 * 4] + global.get(3) * viewDef.worldSpace.modelViewMatrix[i + 3 * 4]
             )
             i++
         }
         i = 0
         while (i < 4) {
-            clip.oSet(
+            clip.set(
                 i,
-                view.oGet(0) * viewDef.projectionMatrix[i + 0 * 4] + view.oGet(1) * viewDef.projectionMatrix[i + 1 * 4] + view.oGet(
+                view.get(0) * viewDef.projectionMatrix[i + 0 * 4] + view.get(1) * viewDef.projectionMatrix[i + 1 * 4] + view.get(
                     2
-                ) * viewDef.projectionMatrix[i + 2 * 4] + view.oGet(3) * viewDef.projectionMatrix[i + 3 * 4]
+                ) * viewDef.projectionMatrix[i + 2 * 4] + view.get(3) * viewDef.projectionMatrix[i + 3 * 4]
             )
             i++
         }
@@ -369,27 +369,27 @@ object tr_shadowbounds {
         }
 
         // limit the bounds to avoid an inside out scissor rectangle due to floating point to short conversion
-        if (outbounds.oGet(0).x < -1.0f) {
-            outbounds.oGet(0).x = -1.0f
+        if (outbounds.get(0).x < -1.0f) {
+            outbounds.get(0).x = -1.0f
         }
-        if (outbounds.oGet(1).x > 1.0f) {
-            outbounds.oGet(1).x = 1.0f
+        if (outbounds.get(1).x > 1.0f) {
+            outbounds.get(1).x = 1.0f
         }
-        if (outbounds.oGet(0).y < -1.0f) {
-            outbounds.oGet(0).y = -1.0f
+        if (outbounds.get(0).y < -1.0f) {
+            outbounds.get(0).y = -1.0f
         }
-        if (outbounds.oGet(1).y > 1.0f) {
-            outbounds.oGet(1).y = 1.0f
+        if (outbounds.get(1).y > 1.0f) {
+            outbounds.get(1).y = 1.0f
         }
         val w2 = (viewDef.viewport.x2 - viewDef.viewport.x1 + 1) / 2.0f
         val x = viewDef.viewport.x1.toFloat()
         val h2 = (viewDef.viewport.y2 - viewDef.viewport.y1 + 1) / 2.0f
         val y = viewDef.viewport.y1.toFloat()
         val rect = idScreenRect()
-        rect.x1 = (outbounds.oGet(0).x * w2 + w2 + x).toInt()
-        rect.x2 = (outbounds.oGet(1).x * w2 + w2 + x).toInt()
-        rect.y1 = (outbounds.oGet(0).y * h2 + h2 + y).toInt()
-        rect.y2 = (outbounds.oGet(1).y * h2 + h2 + y).toInt()
+        rect.x1 = (outbounds.get(0).x * w2 + w2 + x).toInt()
+        rect.x2 = (outbounds.get(1).x * w2 + w2 + x).toInt()
+        rect.y1 = (outbounds.get(0).y * h2 + h2 + y).toInt()
+        rect.y2 = (outbounds.get(1).y * h2 + h2 + y).toInt()
         rect.Expand()
         rect.Intersect(lightDef.viewLight.scissorRect)
 

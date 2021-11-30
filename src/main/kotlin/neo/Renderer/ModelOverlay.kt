@@ -160,8 +160,8 @@ object ModelOverlay {
                         if (vertexRemap[ind] == -1) {
                             vertexRemap[ind] = numVerts
                             overlayVerts[numVerts].vertexNum = ind
-                            overlayVerts[numVerts].st.get(0) = texCoords[ind].oGet(0)
-                            overlayVerts[numVerts].st.get(1) = texCoords[ind].oGet(1)
+                            overlayVerts[numVerts].st.get(0) = texCoords[ind].get(0)
+                            overlayVerts[numVerts].st.get(1) = texCoords[ind].get(1)
                             numVerts++
                         }
                         overlayIndexes[numIndexes++] = vertexRemap[ind]
@@ -190,13 +190,13 @@ object ModelOverlay {
                 s.numIndexes = numIndexes
                 i = 0
                 while (i < materials.Num()) {
-                    if (materials.oGet(i).material === mtr) {
+                    if (materials.get(i).material === mtr) {
                         break
                     }
                     i++
                 }
                 if (i < materials.Num()) {
-                    materials.oGet(i).surfaces.Append(s)
+                    materials.get(i).surfaces.Append(s)
                 } else {
                     val mat = overlayMaterial_s()
                     mat.material = mtr
@@ -209,9 +209,9 @@ object ModelOverlay {
             // remove the oldest overlay surfaces if there are too many per material
             i = 0
             while (i < materials.Num()) {
-                while (materials.oGet(i).surfaces.Num() > ModelOverlay.MAX_OVERLAY_SURFACES) {
-                    FreeSurface(materials.oGet(i).surfaces.oGet(0))
-                    materials.oGet(i).surfaces.RemoveIndex(0)
+                while (materials.get(i).surfaces.Num() > ModelOverlay.MAX_OVERLAY_SURFACES) {
+                    FreeSurface(materials.get(i).surfaces.get(0))
+                    materials.get(i).surfaces.RemoveIndex(0)
                 }
                 i++
             }
@@ -254,17 +254,17 @@ object ModelOverlay {
                 numIndexes = 0
                 numVerts = numIndexes
                 i = 0
-                while (i < materials.oGet(k).surfaces.Num()) {
-                    numVerts += materials.oGet(k).surfaces.oGet(i).numVerts
-                    numIndexes += materials.oGet(k).surfaces.oGet(i).numIndexes
+                while (i < materials.get(k).surfaces.Num()) {
+                    numVerts += materials.get(k).surfaces.get(i).numVerts
+                    numIndexes += materials.get(k).surfaces.get(i).numIndexes
                     i++
                 }
                 if (staticModel.FindSurfaceWithId(-1 - k, surfaceNum)) {
-                    newSurf = staticModel.surfaces.oGet(surfaceNum.getVal())
+                    newSurf = staticModel.surfaces.get(surfaceNum.getVal())
                 } else {
                     newSurf = staticModel.surfaces.Alloc()
                     newSurf.geometry = null
-                    newSurf.shader = materials.oGet(k).material
+                    newSurf.shader = materials.get(k).material
                     newSurf.id = -1 - k
                 }
                 if (newSurf.geometry == null || newSurf.geometry.numVerts < numVerts || newSurf.geometry.numIndexes < numIndexes) {
@@ -280,8 +280,8 @@ object ModelOverlay {
                 numIndexes = 0
                 numVerts = numIndexes
                 i = 0
-                while (i < materials.oGet(k).surfaces.Num()) {
-                    surf = materials.oGet(k).surfaces.oGet(i)
+                while (i < materials.get(k).surfaces.Num()) {
+                    surf = materials.get(k).surfaces.get(i)
 
                     // get the model surface for this overlay surface
                     baseSurf = if (surf.surfaceNum.getVal() < staticModel.NumSurfaces()) {
@@ -298,7 +298,7 @@ object ModelOverlay {
                         } else {
                             // the surface with this id no longer exists
                             FreeSurface(surf)
-                            materials.oGet(k).surfaces.RemoveIndex(i)
+                            materials.get(k).surfaces.RemoveIndex(i)
                             i--
                             i++
                             continue
@@ -317,17 +317,17 @@ object ModelOverlay {
                     j = 0
                     while (j < surf.numVerts) {
                         val overlayVert = surf.verts.get(j)
-                        newTri.verts[numVerts].st.oSet(0, overlayVert.st.get(0))
-                        newTri.verts[numVerts].st.oSet(1, overlayVert.st.get(1))
+                        newTri.verts[numVerts].st.set(0, overlayVert.st.get(0))
+                        newTri.verts[numVerts].st.set(1, overlayVert.st.get(1))
                         if (overlayVert.vertexNum >= baseSurf.geometry.numVerts) {
                             // This can happen when playing a demofile and a model has been changed since it was recorded, so just issue a warning and go on.
                             Common.common.Warning("idRenderModelOverlay::AddOverlaySurfacesToModel: overlay vertex out of range.  Model has probably changed since generating the overlay.")
                             FreeSurface(surf)
-                            materials.oGet(k).surfaces.RemoveIndex(i)
+                            materials.get(k).surfaces.RemoveIndex(i)
                             staticModel.DeleteSurfaceWithId(newSurf.id)
                             return
                         }
-                        newTri.verts[numVerts].xyz.oSet(baseSurf.geometry.verts[overlayVert.vertexNum].xyz)
+                        newTri.verts[numVerts].xyz.set(baseSurf.geometry.verts[overlayVert.vertexNum].xyz)
                         numVerts++
                         j++
                     }

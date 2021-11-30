@@ -179,7 +179,7 @@ object renderbump {
                     j++
                     continue
                 }
-                normal.oSet(Vector.getVec3_origin())
+                normal.set(Vector.getVec3_origin())
                 k = -1
                 while (k < 2) {
                     l = -1
@@ -203,9 +203,9 @@ object renderbump {
                     j++
                     continue  // no valid samples
                 }
-                data.put(out + 0, (128 + 127 * normal.oGet(0)).toByte())
-                data.put(out + 1, (128 + 127 * normal.oGet(1)).toByte())
-                data.put(out + 2, (128 + 127 * normal.oGet(2)).toByte())
+                data.put(out + 0, (128 + 127 * normal.get(0)).toByte())
+                data.put(out + 1, (128 + 127 * normal.get(1)).toByte())
+                data.put(out + 2, (128 + 127 * normal.get(2)).toByte())
                 j++
             }
             i++
@@ -244,7 +244,7 @@ object renderbump {
                     j++
                     continue
                 }
-                normal.oSet(Vector.getVec3_origin())
+                normal.set(Vector.getVec3_origin())
                 var count = 0
                 k = -1
                 while (k < 2) {
@@ -269,9 +269,9 @@ object renderbump {
                     continue
                 }
                 normal.timesAssign(1.0f / count)
-                data.put(out + 0, normal.oGet(0).toByte())
-                data.put(out + 1, normal.oGet(1).toByte())
-                data.put(out + 2, normal.oGet(2).toByte())
+                data.put(out + 0, normal.get(0).toByte())
+                data.put(out + 1, normal.get(1).toByte())
+                data.put(out + 2, normal.get(2).toByte())
                 j++
             }
             i++
@@ -322,12 +322,12 @@ object renderbump {
         // divide each axis as needed
         i = 0
         while (i < 3) {
-            hash.binSize.get(i) = (bounds.oGet(1, i) - bounds.oGet(0, i)) / renderbump.HASH_AXIS_BINS
+            hash.binSize.get(i) = (bounds.get(1, i) - bounds.get(0, i)) / renderbump.HASH_AXIS_BINS
             if (hash.binSize.get(i) <= 0) {
                 Common.common.FatalError(
                     "CreateTriHash: bad bounds: (%f %f %f) to (%f %f %f)",
-                    bounds.oGet(0, 0), bounds.oGet(0, 1), bounds.oGet(0, 2),
-                    bounds.oGet(1, 0), bounds.oGet(1, 1), bounds.oGet(1, 2)
+                    bounds.get(0, 0), bounds.get(0, 1), bounds.get(0, 2),
+                    bounds.get(1, 0), bounds.get(1, 1), bounds.get(1, 2)
                 )
             }
             i++
@@ -362,14 +362,14 @@ object renderbump {
             }
             j = 0
             while (j < 3) {
-                iBounds[0].get(j) = ((triBounds.oGet(0, j) - hash.bounds.oGet(0, j)) / hash.binSize.get(j)).toInt()
+                iBounds[0].get(j) = ((triBounds.get(0, j) - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
                 iBounds[0].get(j) -= 0.001 // epsilon
                 if (iBounds[0].get(j) < 0) {
                     iBounds[0].get(j) = 0
                 } else if (iBounds[0].get(j) >= renderbump.HASH_AXIS_BINS) {
                     iBounds[0].get(j) = renderbump.HASH_AXIS_BINS - 1
                 }
-                iBounds[1].get(j) = ((triBounds.oGet(1, j) - hash.bounds.oGet(0, j)) / hash.binSize.get(j)).toInt()
+                iBounds[1].get(j) = ((triBounds.get(1, j) - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
                 iBounds[0].get(j) += 0.001 // epsilon
                 if (iBounds[1].get(j) < 0) {
                     iBounds[1].get(j) = 0
@@ -424,10 +424,10 @@ object renderbump {
         val baseArea: Float
         val bary = FloatArray(3)
         val testVert = idVec3()
-        v[0].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz)
-        v[1].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz)
-        v[2].oSet(highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz)
-        plane.oSet(highMesh.facePlanes[faceNum])
+        v[0].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz)
+        v[1].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz)
+        v[2].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz)
+        plane.set(highMesh.facePlanes[faceNum])
 
         // only test against planes facing the same direction as our normal
         d = plane.Normal().times(normal)
@@ -438,7 +438,7 @@ object renderbump {
         // find the point of impact on the plane
         dist = plane.Distance(point)
         dist /= -d
-        testVert.oSet(point.oPlus(normal.times(dist)))
+        testVert.set(point.oPlus(normal.times(dist)))
 
         // if this would be beyond our requested trace distance,
         // don't even check it
@@ -452,18 +452,18 @@ object renderbump {
         // if normal is inside all edge planes, this face is hit
         Vector.VectorSubtract(v[0], point, dir[0])
         Vector.VectorSubtract(v[1], point, dir[1])
-        edge.oSet(dir[0].Cross(dir[1]))
+        edge.set(dir[0].Cross(dir[1]))
         d = Vector.DotProduct(normal, edge)
         if (d > 0.0f) {
             return renderbump.DIST_NO_INTERSECTION
         }
         Vector.VectorSubtract(v[2], point, dir[2])
-        edge.oSet(dir[1].Cross(dir[2]))
+        edge.set(dir[1].Cross(dir[2]))
         d = Vector.DotProduct(normal, edge)
         if (d > 0.0f) {
             return renderbump.DIST_NO_INTERSECTION
         }
-        edge.oSet(dir[2].Cross(dir[0]))
+        edge.set(dir[2].Cross(dir[0]))
         d = Vector.DotProduct(normal, edge)
         if (d > 0.0f) {
             return renderbump.DIST_NO_INTERSECTION
@@ -484,7 +484,7 @@ object renderbump {
         }
 
         // triangularly interpolate the normals to the sample point
-        sampledNormal.oSet(Vector.getVec3_origin())
+        sampledNormal.set(Vector.getVec3_origin())
         j = 0
         while (j < 3) {
             sampledNormal.plusAssign(highMesh.verts[highMesh.indexes[faceNum * 3 + j]].normal.times(bary[j]))
@@ -537,7 +537,7 @@ object renderbump {
         val normal = idVec3()
 
         // we allow non-normalized directions on input
-        normal.oSet(direction)
+        normal.set(direction)
         normal.Normalize()
 
         // increment our uniqueness counter (FIXME: make thread safe?)
@@ -546,22 +546,22 @@ object renderbump {
         // the max distance will be the traceFrac times the longest axis of the high poly model
         bestDist = -rb.traceDist
         maxDist = rb.traceDist
-        sampledNormal.oSet(Vector.getVec3_origin())
+        sampledNormal.set(Vector.getVec3_origin())
         c_hits = 0
 
         // this is a pretty damn lazy way to walk through a 3D grid, and has a (very slight)
         // chance of missing a triangle in a corner crossing case
         i = 0
         while (i < renderbump.RAY_STEPS) {
-            p.oSet(
-                point.oMinus(
-                    rb.hash.bounds.oGet(0)
+            p.set(
+                point.minus(
+                    rb.hash.bounds.get(0)
                         .oPlus(normal.times(-1.0f + 2.0f * i / renderbump.RAY_STEPS).oMultiply(rb.traceDist))
                 )
             ) //TODO:check if downcasting from doubles to floats has any effect
-            block[0] = Math.floor((p.oGet(0) / rb.hash.binSize.get(0)).toDouble()).toInt()
-            block[1] = Math.floor((p.oGet(1) / rb.hash.binSize.get(1)).toDouble()).toInt()
-            block[2] = Math.floor((p.oGet(2) / rb.hash.binSize.get(2)).toDouble()).toInt()
+            block[0] = Math.floor((p.get(0) / rb.hash.binSize.get(0)).toDouble()).toInt()
+            block[1] = Math.floor((p.get(1) / rb.hash.binSize.get(1)).toDouble()).toInt()
+            block[2] = Math.floor((p.get(2) / rb.hash.binSize.get(2)).toDouble()).toInt()
             if (block[0] < 0 || block[0] >= renderbump.HASH_AXIS_BINS) {
                 i++
                 continue
@@ -618,15 +618,15 @@ object renderbump {
         val d2 = idVec3()
         val cross = idVec3()
         val area: Float
-        d1.oSet(0, b.get(0) - a.get(0))
-        d1.oSet(1, b.get(1) - a.get(1))
-        d1.oSet(2, 0f)
-        d2.oSet(0, c.get(0) - a.get(0))
-        d2.oSet(1, c.get(1) - a.get(1))
-        d2.oSet(2, 0f)
-        cross.oSet(d1.Cross(d2))
+        d1.set(0, b.get(0) - a.get(0))
+        d1.set(1, b.get(1) - a.get(1))
+        d1.set(2, 0f)
+        d2.set(0, c.get(0) - a.get(0))
+        d2.set(1, c.get(1) - a.get(1))
+        d2.set(2, 0f)
+        cross.set(d1.Cross(d2))
         area = 0.5f * cross.Length()
-        return if (cross.oGet(2) < 0) {
+        return if (cross.get(2) < 0) {
             -area
         } else {
             area
@@ -676,12 +676,12 @@ object renderbump {
         // this is a brain-dead rasterizer, but compared to the ray trace,
         // nothing we do here is going to matter performance-wise
         // adjust for resolution and texel centers
-        verts[0].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(0) * rbs.get(0).width - 0.5f
-        verts[1].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(0) * rbs.get(0).width - 0.5f
-        verts[2].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(0) * rbs.get(0).width - 0.5f
-        verts[0].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.oGet(1) * rbs.get(0).width - 0.5f
-        verts[1].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.oGet(1) * rbs.get(0).width - 0.5f
-        verts[2].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.oGet(1) * rbs.get(0).width - 0.5f
+        verts[0].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.get(0) * rbs.get(0).width - 0.5f
+        verts[1].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.get(0) * rbs.get(0).width - 0.5f
+        verts[2].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.get(0) * rbs.get(0).width - 0.5f
+        verts[0].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.get(1) * rbs.get(0).width - 0.5f
+        verts[1].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.get(1) * rbs.get(0).width - 0.5f
+        verts[2].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.get(1) * rbs.get(0).width - 0.5f
 
         // find the texcoord bounding box
         bounds[0].get(0) = 99999
@@ -802,11 +802,11 @@ object renderbump {
                 }
 
                 // calculate the interpolated xyz, normal, and tangents of this sample
-                point.oSet(Vector.getVec3_origin())
-                traceNormal.oSet(Vector.getVec3_origin())
-                normal.oSet(Vector.getVec3_origin())
-                tangents[0].oSet(Vector.getVec3_origin())
-                tangents[1].oSet(Vector.getVec3_origin())
+                point.set(Vector.getVec3_origin())
+                traceNormal.set(Vector.getVec3_origin())
+                normal.set(Vector.getVec3_origin())
+                tangents[0].set(Vector.getVec3_origin())
+                tangents[1].set(Vector.getVec3_origin())
                 k = 0
                 while (k < 3) {
                     var index: Int
@@ -853,9 +853,9 @@ object renderbump {
                 rb.edgeDistances.get(0 + k / 4) = if (edgeTexel) 1.0f else 0
 
                 // fill the object space normal map spot
-                r = (128 + 127 * sampledNormal.oGet(0)).toInt()
-                g = (128 + 127 * sampledNormal.oGet(1)).toInt()
-                b = (128 + 127 * sampledNormal.oGet(2)).toInt()
+                r = (128 + 127 * sampledNormal.get(0)).toInt()
+                g = (128 + 127 * sampledNormal.get(1)).toInt()
+                b = (128 + 127 * sampledNormal.get(2)).toInt()
                 globalDest.put(0, r.toByte())
                 globalDest.put(1, g.toByte())
                 globalDest.put(2, b.toByte())
@@ -864,11 +864,11 @@ object renderbump {
                 // transform to local tangent space
                 val mat = idMat3(tangents[0], tangents[1], normal)
                 mat.InverseSelf()
-                localNormal.oSet(mat.times(sampledNormal))
+                localNormal.set(mat.times(sampledNormal))
                 localNormal.Normalize()
-                r = (128 + 127 * localNormal.oGet(0)).toInt()
-                g = (128 + 127 * localNormal.oGet(1)).toInt()
-                b = (128 + 127 * localNormal.oGet(2)).toInt()
+                r = (128 + 127 * localNormal.get(0)).toInt()
+                g = (128 + 127 * localNormal.get(1)).toInt()
+                b = (128 + 127 * localNormal.get(2)).toInt()
                 localDest.put(0, r.toByte())
                 localDest.put(1, g.toByte())
                 localDest.put(2, b.toByte())
@@ -1143,7 +1143,7 @@ object renderbump {
         i = 0
         while (i < 3) {
             var d: Float
-            d = rb.traceFrac * (bounds.oGet(1, i) - bounds.oGet(0, i))
+            d = rb.traceFrac * (bounds.get(1, i) - bounds.get(0, i))
             if (d > rb.traceDist) {
                 rb.traceDist = d
             }
@@ -1512,8 +1512,8 @@ object renderbump {
             qgl.qglMatrixMode(GL11.GL_PROJECTION)
             qgl.qglLoadIdentity()
             qgl.qglOrtho(
-                bounds.oGet(0, 0).toDouble(), bounds.oGet(1, 0).toDouble(), bounds.oGet(0, 2).toDouble(),
-                bounds.oGet(1, 2).toDouble(), -(bounds.oGet(0, 1) - 1).toDouble(), -(bounds.oGet(1, 1) + 1).toDouble()
+                bounds.get(0, 0).toDouble(), bounds.get(1, 0).toDouble(), bounds.get(0, 2).toDouble(),
+                bounds.get(1, 2).toDouble(), -(bounds.get(0, 1) - 1).toDouble(), -(bounds.get(1, 1) + 1).toDouble()
             )
             qgl.qglMatrixMode(GL11.GL_MODELVIEW)
             qgl.qglLoadIdentity()
@@ -1539,11 +1539,11 @@ object renderbump {
             while (sample < 16) {
                 var xOff: Float
                 var yOff: Float
-                xOff = (sample and 3) / 4.0f * (bounds.oGet(1, 0) - bounds.oGet(
+                xOff = (sample and 3) / 4.0f * (bounds.get(1, 0) - bounds.get(
                     0,
                     0
                 )) / width //TODO:loss of precision, float instead of double.
-                yOff = sample / 4 / 4.0f * (bounds.oGet(1, 2) - bounds.oGet(0, 2)) / height
+                yOff = sample / 4 / 4.0f * (bounds.get(1, 2) - bounds.get(0, 2)) / height
                 for (colorPass in 0..1) {
                     qgl.qglClearColor(0.5f, 0.5f, 0.5f, 0f)
                     qgl.qglClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
@@ -1585,9 +1585,9 @@ object renderbump {
                                     v1 = mesh.indexes[j + 0]
                                     v2 = mesh.indexes[j + 1]
                                     v3 = mesh.indexes[j + 2]
-                                    a2.oSet(mesh.verts[v1].xyz)
-                                    b2.oSet(mesh.verts[v2].xyz)
-                                    c2.oSet(mesh.verts[v3].xyz)
+                                    a2.set(mesh.verts[v1].xyz)
+                                    b2.set(mesh.verts[v2].xyz)
+                                    c2.set(mesh.verts[v3].xyz)
                                     plane.FromPoints(a2, b2, c2)
 
                                     // NULLNORMAL is used by the artists to force an area to reflect no
@@ -1596,18 +1596,18 @@ object renderbump {
                                         qgl.qglColor3f(0.5f, 0.5f, 0.5f)
                                     } else {
                                         qgl.qglColor3f(
-                                            0.5f + 0.5f * plane.oGet(0),
-                                            0.5f - 0.5f * plane.oGet(2),
-                                            0.5f - 0.5f * plane.oGet(1)
+                                            0.5f + 0.5f * plane.get(0),
+                                            0.5f - 0.5f * plane.get(2),
+                                            0.5f - 0.5f * plane.get(1)
                                         )
                                     }
 
 //							qglVertex3f( (*a2)[0] + xOff, (*a2)[2] + yOff, (*a2)[1] );//TODO:check this pointer cast thing
 //							qglVertex3f( (*b2)[0] + xOff, (*b2)[2] + yOff, (*b2)[1] );
 //							qglVertex3f( (*c2)[0] + xOff, (*c2)[2] + yOff, (*c2)[1] );
-                                    qgl.qglVertex3f(a2.oGet(0) + xOff, a2.oGet(2) + yOff, a2.oGet(1))
-                                    qgl.qglVertex3f(b2.oGet(0) + xOff, b2.oGet(2) + yOff, b2.oGet(1))
-                                    qgl.qglVertex3f(c2.oGet(0) + xOff, c2.oGet(2) + yOff, c2.oGet(1))
+                                    qgl.qglVertex3f(a2.get(0) + xOff, a2.get(2) + yOff, a2.get(1))
+                                    qgl.qglVertex3f(b2.get(0) + xOff, b2.get(2) + yOff, b2.get(1))
+                                    qgl.qglVertex3f(c2.get(0) + xOff, c2.get(2) + yOff, c2.get(1))
                                 } else {
                                     k = 0
                                     while (k < 3) {
@@ -1655,13 +1655,13 @@ object renderbump {
                         i = 0
                         while (i < c) {
                             val v = idVec3()
-                            v.oSet(0, (buffer[i * 4 + 0] - 128) / 127.0f)
-                            v.oSet(1, (buffer[i * 4 + 1] - 128) / 127.0f)
-                            v.oSet(2, (buffer[i * 4 + 2] - 128) / 127.0f)
+                            v.set(0, (buffer[i * 4 + 0] - 128) / 127.0f)
+                            v.set(1, (buffer[i * 4 + 1] - 128) / 127.0f)
+                            v.set(2, (buffer[i * 4 + 2] - 128) / 127.0f)
                             v.Normalize()
-                            buffer.put(i * 4 + 0, (128 + 127 * v.oGet(0)).toByte())
-                            buffer.put(i * 4 + 1, (128 + 127 * v.oGet(1)).toByte())
-                            buffer.put(i * 4 + 2, (128 + 127 * v.oGet(2)).toByte())
+                            buffer.put(i * 4 + 0, (128 + 127 * v.get(0)).toByte())
+                            buffer.put(i * 4 + 1, (128 + 127 * v.get(1)).toByte())
+                            buffer.put(i * 4 + 2, (128 + 127 * v.get(2)).toByte())
                             i++
                         }
 

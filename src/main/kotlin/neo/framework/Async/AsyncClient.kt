@@ -282,7 +282,7 @@ object AsyncClient {
                     )
                     return
                 }
-                adr = serverList.oGet(serverNum).adr
+                adr = serverList.get(serverNum).adr
             } else {
                 if (!win_net.Sys_StringToNetAdr(address, adr, true)) {
                     Session.Companion.session.MessageBox(
@@ -420,9 +420,9 @@ object AsyncClient {
                 Common.common.Printf(
                     "%3d: %s %dms (%s)\n",
                     i,
-                    serverList.oGet(i).serverInfo.GetString("si_name"),
-                    serverList.oGet(i).ping,
-                    win_net.Sys_NetAdrToString(serverList.oGet(i).adr)
+                    serverList.get(i).serverInfo.GetString("si_name"),
+                    serverList.get(i).ping,
+                    win_net.Sys_NetAdrToString(serverList.get(i).adr)
                 )
                 i++
             }
@@ -2140,12 +2140,12 @@ object AsyncClient {
                     var progress_end: Int
                     currentDlSize = 0
                     do {
-                        if (dlList.oGet(0).url.oGet(0) == '\u0000') {
+                        if (dlList.get(0).url.oGet(0) == '\u0000') {
                             // ignore empty files
                             dlList.RemoveIndex(0)
                             continue
                         }
-                        Common.common.Printf("start download for %s\n", dlList.oGet(0).url)
+                        Common.common.Printf("start download for %s\n", dlList.get(0).url)
                         val f = FileSystem_h.fileSystem.MakeTemporaryFile() as idFile_Permanent
                         if (null == f) {
                             Common.common.Warning("could not create temporary file")
@@ -2157,14 +2157,14 @@ object AsyncClient {
                         backgroundDownload.f = f
                         backgroundDownload.url.status = dlStatus_t.DL_WAIT
                         backgroundDownload.url.dlnow = 0
-                        backgroundDownload.url.dltotal = dlList.oGet(0).size
-                        backgroundDownload.url.url = dlList.oGet(0).url
+                        backgroundDownload.url.dltotal = dlList.get(0).size
+                        backgroundDownload.url.url = dlList.get(0).url
                         FileSystem_h.fileSystem.BackgroundDownload(backgroundDownload)
                         var dltitle: String?
                         // "Downloading %s"
                         dltitle = String.format(
                             Common.common.GetLanguageDict().GetString("#str_07213"),
-                            dlList.oGet(0).filename.toString()
+                            dlList.get(0).filename.toString()
                         )
                         if (numPaks > 1) {
                             dltitle += Str.va(" (%d/%d)", pakCount, numPaks)
@@ -2172,7 +2172,7 @@ object AsyncClient {
                         if (totalDlSize != 0) {
                             progress_start = (currentDlSize.toFloat() * 100.0f / totalDlSize.toFloat()).toInt()
                             progress_end =
-                                ((currentDlSize + dlList.oGet(0).size).toFloat() * 100.0f / totalDlSize.toFloat()).toInt()
+                                ((currentDlSize + dlList.get(0).size).toFloat() * 100.0f / totalDlSize.toFloat()).toInt()
                         } else {
                             progress_start = 0
                             progress_end = 100
@@ -2193,7 +2193,7 @@ object AsyncClient {
                             var checksum: Int
                             Common.common.Printf("file downloaded\n")
                             val finalPath = idStr(CVarSystem.cvarSystem.GetCVarString("fs_savepath"))
-                            finalPath.AppendPath(dlList.oGet(0).filename.toString())
+                            finalPath.AppendPath(dlList.get(0).filename.toString())
                             FileSystem_h.fileSystem.CreateOSPath(finalPath.toString())
                             // do the final copy ourselves so we do by small chunks in case the file is big
                             saveas = FileSystem_h.fileSystem.OpenExplicitFileWrite(finalPath.toString())
@@ -2227,28 +2227,28 @@ object AsyncClient {
                             buf = null //Mem_Free(buf);
 
                             // add that file to our paks list
-                            checksum = FileSystem_h.fileSystem.AddZipFile(dlList.oGet(0).filename.toString())
+                            checksum = FileSystem_h.fileSystem.AddZipFile(dlList.get(0).filename.toString())
 
                             // verify the checksum to be what the server says
-                            if (0 == checksum || checksum != dlList.oGet(0).checksum) {
+                            if (0 == checksum || checksum != dlList.get(0).checksum) {
                                 // "pak is corrupted ( checksum 0x%x, expected 0x%x )"
                                 Session.Companion.session.MessageBox(
                                     msgBoxType_t.MSG_OK,
                                     Str.va(
                                         Common.common.GetLanguageDict().GetString("#str_07214"),
                                         checksum,
-                                        dlList.oGet(0).checksum
+                                        dlList.get(0).checksum
                                     ),
                                     "Download failed",
                                     true
                                 )
-                                FileSystem_h.fileSystem.RemoveFile(dlList.oGet(0).filename.toString())
+                                FileSystem_h.fileSystem.RemoveFile(dlList.get(0).filename.toString())
                                 dlList.Clear()
                                 return
                             }
-                            currentDlSize += dlList.oGet(0).size
+                            currentDlSize += dlList.get(0).size
                         } else {
-                            Common.common.Warning("download failed: %s", dlList.oGet(0).url)
+                            Common.common.Warning("download failed: %s", dlList.get(0).url)
                             if (!backgroundDownload.url.dlerror.isEmpty()) {
                                 Common.common.Warning("curl error: %s", backgroundDownload.url.dlerror)
                             }

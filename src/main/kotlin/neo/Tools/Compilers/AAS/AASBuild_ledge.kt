@@ -32,31 +32,31 @@ object AASBuild_ledge {
         //
         constructor()
         constructor(v1: idVec3?, v2: idVec3?, gravityDir: idVec3?, n: idBrushBSPNode?) {
-            start.oSet(v1)
-            end.oSet(v2)
+            start.set(v1)
+            end.set(v2)
             node = n
             numPlanes = 4
-            planes.get(0).SetNormal(v1.oMinus(v2).Cross(gravityDir))
+            planes.get(0).SetNormal(v1.minus(v2).Cross(gravityDir))
             planes.get(0).Normalize()
             planes.get(0).FitThroughPoint(v1)
-            planes.get(1).SetNormal(v1.oMinus(v2).Cross(planes.get(0).Normal()))
+            planes.get(1).SetNormal(v1.minus(v2).Cross(planes.get(0).Normal()))
             planes.get(1).Normalize()
             planes.get(1).FitThroughPoint(v1)
-            planes.get(2).SetNormal(v1.oMinus(v2))
+            planes.get(2).SetNormal(v1.minus(v2))
             planes.get(2).Normalize()
             planes.get(2).FitThroughPoint(v1)
-            planes.get(3).SetNormal(v2.oMinus(v1))
+            planes.get(3).SetNormal(v2.minus(v1))
             planes.get(3).Normalize()
             planes.get(3).FitThroughPoint(v2)
         }
 
         fun AddPoint(v: idVec3?) {
             if (planes.get(2).Distance(v) > 0.0f) {
-                start.oSet(v)
+                start.set(v)
                 planes.get(2).FitThroughPoint(start)
             }
             if (planes.get(3).Distance(v) > 0.0f) {
-                end.oSet(v)
+                end.set(v)
                 planes.get(3).FitThroughPoint(end)
             }
         }
@@ -77,27 +77,27 @@ object AASBuild_ledge {
             bounds.Clear()
             bounds.AddPoint(start)
             bounds.AddPoint(end)
-            size.oSet(bounds.oGet(1).oMinus(bounds.oGet(0)))
+            size.set(bounds.get(1).minus(bounds.get(0)))
 
             // plane through ledge
-            planes.get(0).SetNormal(start.oMinus(end).Cross(gravityDir))
+            planes.get(0).SetNormal(start.minus(end).Cross(gravityDir))
             planes.get(0).Normalize()
             planes.get(0).FitThroughPoint(start)
             // axial bevels at start and end point
-            i = if (size.oGet(1) > size.oGet(0)) 1 else 0
-            normal.oSet(Vector.getVec3_origin())
-            normal.oSet(i, 1.0f)
-            j = if (end.oGet(i) > start.oGet(i)) 1 else 0
+            i = if (size.get(1) > size.get(0)) 1 else 0
+            normal.set(Vector.getVec3_origin())
+            normal.set(i, 1.0f)
+            j = if (end.get(i) > start.get(i)) 1 else 0
             planes.get(1 + j).SetNormal(normal)
             planes.get(1 +  /*!j*/(1 xor j)).SetNormal(normal.oNegative())
             planes.get(1).FitThroughPoint(start)
             planes.get(2).FitThroughPoint(end)
             numExpandedPlanes = 3
             // if additional bevels are required
-            if (Math.abs(size.oGet( /*!i*/1 xor i)) > 0.01f) {
-                normal.oSet(Vector.getVec3_origin())
-                normal.oSet( /*!i]*/1 xor i, 1.0f)
-                j = if (end.oGet( /*!i]*/1 xor i) > start.oGet( /*!i]*/1 xor i)) 1 else 0
+            if (Math.abs(size.get( /*!i*/1 xor i)) > 0.01f) {
+                normal.set(Vector.getVec3_origin())
+                normal.set( /*!i]*/1 xor i, 1.0f)
+                j = if (end.get( /*!i]*/1 xor i) > start.get( /*!i]*/1 xor i)) 1 else 0
                 planes.get(3 + j).SetNormal(normal)
                 planes.get(3 +  /*!j]*/1 xor j).SetNormal(normal.oNegative())
                 planes.get(3).FitThroughPoint(start)
@@ -105,15 +105,15 @@ object AASBuild_ledge {
                 numExpandedPlanes = 5
             }
             // opposite of first
-            planes.get(numExpandedPlanes + 0) = planes.get(0).oNegative()
+            planes.get(numExpandedPlanes + 0) = planes.get(0).unaryMinus()
             // number of planes used for splitting
             numSplitPlanes = numExpandedPlanes + 1
             // top plane
-            planes.get(numSplitPlanes + 0).SetNormal(start.oMinus(end).Cross(planes.get(0).Normal()))
+            planes.get(numSplitPlanes + 0).SetNormal(start.minus(end).Cross(planes.get(0).Normal()))
             planes.get(numSplitPlanes + 0).Normalize()
             planes.get(numSplitPlanes + 0).FitThroughPoint(start)
             // bottom plane
-            planes.get(numSplitPlanes + 1) = planes.get(numSplitPlanes + 0).oNegative()
+            planes.get(numSplitPlanes + 1) = planes.get(numSplitPlanes + 0).unaryMinus()
             // total number of planes
             numPlanes = numSplitPlanes + 2
         }
@@ -126,10 +126,10 @@ object AASBuild_ledge {
             while (i < numExpandedPlanes) {
                 j = 0
                 while (j < 3) {
-                    if (planes.get(i).Normal().oGet(j) > 0.0f) {
-                        v.oSet(j, bounds.oGet(0, j))
+                    if (planes.get(i).Normal().get(j) > 0.0f) {
+                        v.set(j, bounds.get(0, j))
                     } else {
-                        v.oSet(j, bounds.oGet(1, j))
+                        v.set(j, bounds.get(1, j))
                     }
                     j++
                 }
@@ -146,7 +146,7 @@ object AASBuild_ledge {
             w = winding.Copy()
             i = 0
             while (i < numPlanes && w != null) {
-                w = w.Clip(planes.get(i).oNegative(), Plane.ON_EPSILON, true)
+                w = w.Clip(planes.get(i).unaryMinus(), Plane.ON_EPSILON, true)
                 i++
             }
             return w

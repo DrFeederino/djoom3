@@ -3273,7 +3273,7 @@ object Image {
             total = 0
             i = 0
             while (i < images.Num()) {
-                image = images.oGet(i)
+                image = images.get(i)
                 if (image.frameUsed == tr_local.backEnd.frameCount) {
                     total += image.StorageSize()
                 }
@@ -3299,7 +3299,7 @@ object Image {
             var image: idImage?
             i = 0
             while (i < images.Num()) {
-                image = images.oGet(i)
+                image = images.get(i)
                 image.PurgeImage()
                 i++
             }
@@ -3348,7 +3348,7 @@ object Image {
         fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until images.Num()) {
-                val image = images.oGet(i)
+                val image = images.get(i)
 
                 // generator function images are always kept around
                 if (image.generatorFunction != null) {
@@ -3392,7 +3392,7 @@ object Image {
 
             // purge the ones we don't need
             for (i in 0 until images.Num()) {
-                val image = images.oGet(i)
+                val image = images.get(i)
                 if (image.generatorFunction != null) {
                     continue
                 }
@@ -3408,7 +3408,7 @@ object Image {
 
             // load the ones we do need, if we are preloading
             for (i in 0 until images.Num()) {
-                val image = images.oGet(i)
+                val image = images.get(i)
                 if (image.generatorFunction != null) {
                     continue
                 }
@@ -3522,7 +3522,7 @@ object Image {
             while (i < images.Num() - 1) {
                 j = i + 1
                 while (j < images.Num()) {
-                    if (images.oGet(sortIndex[i]).StorageSize() < images.oGet(sortIndex[j]).StorageSize()) {
+                    if (images.get(sortIndex[i]).StorageSize() < images.get(sortIndex[j]).StorageSize()) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
                         sortIndex[j] = temp
@@ -3535,7 +3535,7 @@ object Image {
             // print next
             i = 0
             while (i < images.Num()) {
-                val im = images.oGet(sortIndex[i])
+                val im = images.get(sortIndex[i])
                 var size: Int
                 size = im.StorageSize()
                 total += size
@@ -3647,18 +3647,18 @@ object Image {
                 while (i < 16) {
                     j = 0
                     while (j < 16) {
-                        v.oSet(0, (compressedToOriginal[i] - 127.5f) / 128f)
-                        v.oSet(1, (compressedToOriginal[j] - 127.5f) / 128f)
-                        t = 1.0f - (v.oGet(0) * v.oGet(0) + v.oGet(1) * v.oGet(1))
+                        v.set(0, (compressedToOriginal[i] - 127.5f) / 128f)
+                        v.set(1, (compressedToOriginal[j] - 127.5f) / 128f)
+                        t = 1.0f - (v.get(0) * v.get(0) + v.get(1) * v.get(1))
                         if (t < 0) {
                             t = 0f
                         }
-                        v.oSet(2, idMath.Sqrt(t))
-                        temptable.get((i * 16 + j) * 3 + 0) = (128 + Math.floor(127 * v.oGet(0) + 0.5)).toInt().toByte()
+                        v.set(2, idMath.Sqrt(t))
+                        temptable.get((i * 16 + j) * 3 + 0) = (128 + Math.floor(127 * v.get(0) + 0.5)).toInt().toByte()
                         temptable.get((i * 16 + j) * 3 + 1) =
-                            (128 + Math.floor((127 * v.oGet(1)).toDouble())).toInt().toByte()
+                            (128 + Math.floor((127 * v.get(1)).toDouble())).toInt().toByte()
                         temptable.get((i * 16 + j) * 3 + 2) =
-                            (128 + Math.floor((127 * v.oGet(2)).toDouble())).toInt().toByte()
+                            (128 + Math.floor((127 * v.get(2)).toDouble())).toInt().toByte()
                         j++
                     }
                     i++
@@ -3729,7 +3729,7 @@ object Image {
             i = 0
             while (i < images.Num()) {
                 var texEnum = GL11.GL_TEXTURE_2D
-                glt = images.oGet(i)
+                glt = images.get(i)
                 when (glt.type) {
                     textureType_t.TT_2D -> texEnum = GL11.GL_TEXTURE_2D
                     textureType_t.TT_3D -> texEnum = GL12.GL_TEXTURE_3D

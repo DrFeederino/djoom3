@@ -282,12 +282,12 @@ object Physics_AF {
 
         open fun ApplyFriction(invTimeStep: Float) {}
         protected fun InitSize(size: Int) {
-            J1.oSet(idMatX(size, 6))
-            J2.oSet(idMatX(size, 6))
-            c1.oSet(idVecX(size))
-            c2.oSet(idVecX(size))
-            s.oSet(idVecX(size))
-            lm.oSet(idVecX(size))
+            J1.set(idMatX(size, 6))
+            J2.set(idMatX(size, 6))
+            c1.set(idVecX(size))
+            c2.set(idVecX(size))
+            s.set(idVecX(size))
+            lm.set(idVecX(size))
         }
 
         protected class constraintFlags_s {
@@ -344,11 +344,11 @@ object Physics_AF {
         protected val offset: idVec3? = idVec3() // offset of body1 relative to body2 in body2 space
         protected var relAxis: idMat3? = idMat3() // rotation of body1 relative to body2
         fun SetRelativeOrigin(origin: idVec3?) {
-            offset.oSet(origin)
+            offset.set(origin)
         }
 
         fun SetRelativeAxis(axis: idMat3?) {
-            relAxis.oSet(axis)
+            relAxis.set(axis)
         }
 
         override fun SetBody1(body: idAFBody?) {
@@ -403,7 +403,7 @@ object Physics_AF {
         }
 
         override fun GetCenter(center: idVec3?) {
-            center.oSet(body1.GetWorldOrigin())
+            center.set(body1.GetWorldOrigin())
         }
 
         override fun Save(saveFile: idSaveGame?) {
@@ -428,22 +428,22 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
             ax = if (master != null) {
-                a2.oSet(offset.times(master.GetWorldAxis()))
-                ofs.oSet(a2.oPlus(master.GetWorldOrigin()))
+                a2.set(offset.times(master.GetWorldAxis()))
+                ofs.set(a2.oPlus(master.GetWorldOrigin()))
                 relAxis.times(master.GetWorldAxis())
             } else {
                 a2.Zero()
-                ofs.oSet(offset)
+                ofs.set(offset)
                 relAxis
             }
-            J1.Set(
+            J1.set(
                 idMat3.Companion.getMat3_identity(),
                 idMat3.Companion.getMat3_zero(),
                 idMat3.Companion.getMat3_zero(),
                 idMat3.Companion.getMat3_identity()
             )
             if (body2 != null) {
-                J2.Set(
+                J2.set(
                     idMat3.Companion.getMat3_identity().unaryMinus(),
                     idMat3.Companion.SkewSymmetric(a2),
                     idMat3.Companion.getMat3_zero(),
@@ -454,7 +454,7 @@ object Physics_AF {
             }
             c1.SubVec3_oSet(
                 0,
-                ofs.oMinus(body1.GetWorldOrigin()).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
+                ofs.minus(body1.GetWorldOrigin()).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
             )
             r = body1.GetWorldAxis().Transpose().times(ax).ToRotation()
             c1.SubVec3_oSet(
@@ -471,13 +471,13 @@ object Physics_AF {
 
         protected fun InitOffset() {
             if (body2 != null) {
-                offset.oSet(
-                    body1.GetWorldOrigin().oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose())
+                offset.set(
+                    body1.GetWorldOrigin().minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose())
                 )
                 relAxis = body1.GetWorldAxis().times(body2.GetWorldAxis().Transpose())
             } else {
-                offset.oSet(body1.GetWorldOrigin())
-                relAxis.oSet(body1.GetWorldAxis())
+                offset.set(body1.GetWorldOrigin())
+                relAxis.set(body1.GetWorldAxis())
             }
         }
 
@@ -517,12 +517,12 @@ object Physics_AF {
         fun SetAnchor(worldPosition: idVec3?) {
 
             // get anchor relative to center of mass of body1
-            anchor1.oSet(worldPosition.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            anchor1.set(worldPosition.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get anchor relative to center of mass of body2
-                anchor2.oSet(worldPosition.oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
+                anchor2.set(worldPosition.minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
             } else {
-                anchor2.oSet(worldPosition)
+                anchor2.set(worldPosition)
             }
             if (coneLimit != null) {
                 coneLimit.SetAnchor(anchor2)
@@ -685,7 +685,7 @@ object Physics_AF {
         }
 
         override fun GetCenter(center: idVec3?) {
-            center.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            center.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
         }
 
         override fun Save(saveFile: idSaveGame?) {
@@ -721,9 +721,9 @@ object Physics_AF {
             val a2 = idVec3()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(anchor1.times(body1.GetWorldAxis()))
+            a1.set(anchor1.times(body1.GetWorldAxis()))
             if (master != null) {
-                a2.oSet(anchor2.times(master.GetWorldAxis()))
+                a2.set(anchor2.times(master.GetWorldAxis()))
                 c1.SubVec3_oSet(
                     0,
                     a2.oPlus(master.GetWorldOrigin()).oMinus(a1.oPlus(body1.GetWorldOrigin()))
@@ -732,14 +732,14 @@ object Physics_AF {
             } else {
                 c1.SubVec3_oSet(
                     0,
-                    anchor2.oMinus(a1.oPlus(body1.GetWorldOrigin()))
+                    anchor2.minus(a1.oPlus(body1.GetWorldOrigin()))
                         .oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
                 )
             }
             c1.Clamp(-Physics_AF.ERROR_REDUCTION_MAX, Physics_AF.ERROR_REDUCTION_MAX)
-            J1.Set(idMat3.Companion.getMat3_identity(), idMat3.Companion.SkewSymmetric(a1).unaryMinus())
+            J1.set(idMat3.Companion.getMat3_identity(), idMat3.Companion.SkewSymmetric(a1).unaryMinus())
             if (body2 != null) {
-                J2.Set(idMat3.Companion.getMat3_identity().unaryMinus(), idMat3.Companion.SkewSymmetric(a2))
+                J2.set(idMat3.Companion.getMat3_identity().unaryMinus(), idMat3.Companion.SkewSymmetric(a2))
             } else {
                 J2.Zero(3, 6)
             }
@@ -759,14 +759,14 @@ object Physics_AF {
                 return
             }
             if (SysCvar.af_useImpulseFriction.GetBool() || SysCvar.af_useJointImpulseFriction.GetBool()) {
-                angular.oSet(body1.GetAngularVelocity())
+                angular.set(body1.GetAngularVelocity())
                 invMass = body1.GetInverseMass()
                 if (body2 != null) {
-                    angular.oMinus(body2.GetAngularVelocity())
+                    angular.minus(body2.GetAngularVelocity())
                     invMass += body2.GetInverseMass()
                 }
                 angular.timesAssign(currentFriction / invMass)
-                body1.SetAngularVelocity(body1.GetAngularVelocity().oMinus(angular.times(body1.GetInverseMass())))
+                body1.SetAngularVelocity(body1.GetAngularVelocity().minus(angular.times(body1.GetInverseMass())))
                 if (body2 != null) {
                     body2.SetAngularVelocity(
                         body2.GetAngularVelocity().oPlus(angular.times(body2.GetInverseMass()))
@@ -827,10 +827,10 @@ object Physics_AF {
             hi.p[1] = hi.p[2]
             hi.p[0] = hi.p[1]
             J1.Zero(3, 6)
-            J1.oSet(0, 3, J1.oSet(1, 4, J1.oSet(2, 5, 1.0f)))
+            J1.set(0, 3, J1.set(1, 4, J1.set(2, 5, 1.0f)))
             if (body2 != null) {
                 J2.Zero(3, 6)
-                J2.oSet(0, 3, J2.oSet(1, 4, J2.oSet(2, 5, 1.0f)))
+                J2.set(0, 3, J2.set(1, 4, J2.set(2, 5, 1.0f)))
             }
             physics.AddFrameConstraint(this)
             return true
@@ -892,12 +892,12 @@ object Physics_AF {
         fun SetAnchor(worldPosition: idVec3?) {
 
             // get anchor relative to center of mass of body1
-            anchor1.oSet(worldPosition.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            anchor1.set(worldPosition.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get anchor relative to center of mass of body2
-                anchor2.oSet(worldPosition.oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
+                anchor2.set(worldPosition.minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
             } else {
-                anchor2.oSet(worldPosition)
+                anchor2.set(worldPosition)
             }
             if (coneLimit != null) {
                 coneLimit.SetAnchor(anchor2)
@@ -916,27 +916,27 @@ object Physics_AF {
         fun SetShafts(cardanShaft1: idVec3?, cardanShaft2: idVec3?) {
             val cardanAxis = idVec3()
             var l: Float
-            shaft1.oSet(cardanShaft1)
+            shaft1.set(cardanShaft1)
             l = shaft1.Normalize()
             assert(l != 0.0f)
-            shaft2.oSet(cardanShaft2)
+            shaft2.set(cardanShaft2)
             l = shaft2.Normalize()
             assert(l != 0.0f)
 
             // the cardan axis is a vector orthogonal to both cardan shafts
-            cardanAxis.oSet(shaft1.Cross(shaft2))
+            cardanAxis.set(shaft1.Cross(shaft2))
             if (cardanAxis.Normalize() == 0.0f) {
                 val vecY = idVec3()
                 shaft1.OrthogonalBasis(cardanAxis, vecY)
                 cardanAxis.Normalize()
             }
             shaft1.timesAssign(body1.GetWorldAxis().Transpose())
-            axis1.oSet(cardanAxis.times(body1.GetWorldAxis().Transpose()))
+            axis1.set(cardanAxis.times(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 shaft2.timesAssign(body2.GetWorldAxis().Transpose())
-                axis2.oSet(cardanAxis.times(body2.GetWorldAxis().Transpose()))
+                axis2.set(cardanAxis.times(body2.GetWorldAxis().Transpose()))
             } else {
-                axis2.oSet(cardanAxis)
+                axis2.set(cardanAxis)
             }
             if (coneLimit != null) {
                 coneLimit.SetBody1Axis(shaft1)
@@ -947,8 +947,8 @@ object Physics_AF {
         }
 
         fun GetShafts(cardanShaft1: idVec3?, cardanShaft2: idVec3?) {
-            cardanShaft1.oSet(shaft1)
-            cardanShaft2.oSet(shaft2)
+            cardanShaft1.set(shaft1)
+            cardanShaft2.set(shaft2)
         }
 
         fun SetNoLimit() {
@@ -1035,19 +1035,19 @@ object Physics_AF {
             val v = idVec3()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
-            s1.oSet(shaft1.times(body1.GetWorldAxis()))
-            d1.oSet(axis1.times(body1.GetWorldAxis()))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            s1.set(shaft1.times(body1.GetWorldAxis()))
+            d1.set(axis1.times(body1.GetWorldAxis()))
             if (master != null) {
-                a2.oSet(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
-                s2.oSet(shaft2.times(master.GetWorldAxis()))
-                d2.oSet(axis2.times(master.GetWorldAxis()))
+                a2.set(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
+                s2.set(shaft2.times(master.GetWorldAxis()))
+                d2.set(axis2.times(master.GetWorldAxis()))
             } else {
-                a2.oSet(anchor2)
-                s2.oSet(shaft2)
-                d2.oSet(axis2)
+                a2.set(anchor2)
+                s2.set(shaft2)
+                d2.set(axis2)
             }
-            v.oSet(s1.Cross(s2))
+            v.set(s1.Cross(s2))
             if (v.Normalize() != 0.0f) {
                 val m1: idMat3
                 val m2: idMat3
@@ -1099,7 +1099,7 @@ object Physics_AF {
         }
 
         override fun GetCenter(center: idVec3?) {
-            center.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            center.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
         }
 
         override fun Save(saveFile: idSaveGame?) {
@@ -1155,45 +1155,45 @@ object Physics_AF {
             val v = idVec3()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(anchor1.times(body1.GetWorldAxis()))
-            s1.oSet(shaft1.times(body1.GetWorldAxis()))
-            d1.oSet(s1.Cross(axis1.times(body1.GetWorldAxis())))
+            a1.set(anchor1.times(body1.GetWorldAxis()))
+            s1.set(shaft1.times(body1.GetWorldAxis()))
+            d1.set(s1.Cross(axis1.times(body1.GetWorldAxis())))
             if (master != null) {
-                a2.oSet(anchor2.times(master.GetWorldAxis()))
-                s2.oSet(shaft2.times(master.GetWorldAxis()))
-                d2.oSet(axis2.times(master.GetWorldAxis()))
+                a2.set(anchor2.times(master.GetWorldAxis()))
+                s2.set(shaft2.times(master.GetWorldAxis()))
+                d2.set(axis2.times(master.GetWorldAxis()))
                 c1.SubVec3_oSet(
                     0,
                     a2.oPlus(master.GetWorldOrigin()).oMinus(a1.oPlus(body1.GetWorldOrigin()))
                         .oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
                 )
             } else {
-                a2.oSet(anchor2)
-                s2.oSet(shaft2)
-                d2.oSet(axis2)
+                a2.set(anchor2)
+                s2.set(shaft2)
+                d2.set(axis2)
                 c1.SubVec3_oSet(
                     0,
-                    a2.oMinus(a1.oPlus(body1.GetWorldOrigin())).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
+                    a2.minus(a1.oPlus(body1.GetWorldOrigin())).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
                 )
             }
-            J1.Set(
+            J1.set(
                 idMat3.Companion.getMat3_identity(),
                 idMat3.Companion.SkewSymmetric(a1).unaryMinus(),
                 idMat3.Companion.getMat3_zero(),
                 idMat3(
-                    s1.oGet(0), s1.oGet(1), s1.oGet(2),
+                    s1.get(0), s1.get(1), s1.get(2),
                     0.0f, 0.0f, 0.0f,
                     0.0f, 0.0f, 0.0f
                 )
             )
             J1.SetSize(4, 6)
             if (body2 != null) {
-                J2.Set(
+                J2.set(
                     idMat3.Companion.getMat3_identity().unaryMinus(),
                     idMat3.Companion.SkewSymmetric(a2),
                     idMat3.Companion.getMat3_zero(),
                     idMat3(
-                        s2.oGet(0), s2.oGet(1), s2.oGet(2),
+                        s2.get(0), s2.get(1), s2.get(2),
                         0.0f, 0.0f, 0.0f,
                         0.0f, 0.0f, 0.0f
                     )
@@ -1202,7 +1202,7 @@ object Physics_AF {
             } else {
                 J2.Zero(4, 6)
             }
-            v.oSet(s1.Cross(s2))
+            v.set(s1.Cross(s2))
             if (v.Normalize() != 0.0f) {
                 val m1: idMat3
                 val m2: idMat3
@@ -1228,14 +1228,14 @@ object Physics_AF {
                 return
             }
             if (SysCvar.af_useImpulseFriction.GetBool() || SysCvar.af_useJointImpulseFriction.GetBool()) {
-                angular.oSet(body1.GetAngularVelocity())
+                angular.set(body1.GetAngularVelocity())
                 invMass = body1.GetInverseMass()
                 if (body2 != null) {
                     angular.minusAssign(body2.GetAngularVelocity())
                     invMass += body2.GetInverseMass()
                 }
                 angular.timesAssign(currentFriction / invMass)
-                body1.SetAngularVelocity(body1.GetAngularVelocity().oMinus(angular.times(body1.GetInverseMass())))
+                body1.SetAngularVelocity(body1.GetAngularVelocity().minus(angular.times(body1.GetInverseMass())))
                 if (body2 != null) {
                     body2.SetAngularVelocity(
                         body2.GetAngularVelocity().oPlus(angular.times(body2.GetInverseMass()))
@@ -1420,12 +1420,12 @@ object Physics_AF {
         // ~idAFConstraint_Hinge();
         fun SetAnchor(worldPosition: idVec3?) {
             // get anchor relative to center of mass of body1
-            anchor1.oSet(worldPosition.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            anchor1.set(worldPosition.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get anchor relative to center of mass of body2
-                anchor2.oSet(worldPosition.oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
+                anchor2.set(worldPosition.minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
             } else {
-                anchor2.oSet(worldPosition)
+                anchor2.set(worldPosition)
             }
             if (coneLimit != null) {
                 coneLimit.SetAnchor(anchor2)
@@ -1440,22 +1440,22 @@ object Physics_AF {
 
         fun SetAxis(axis: idVec3?) {
             val normAxis = idVec3()
-            normAxis.oSet(axis)
+            normAxis.set(axis)
             normAxis.Normalize()
 
             // get axis relative to body1
-            axis1.oSet(normAxis.times(body1.GetWorldAxis().Transpose()))
+            axis1.set(normAxis.times(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get axis relative to body2
-                axis2.oSet(normAxis.times(body2.GetWorldAxis().Transpose()))
+                axis2.set(normAxis.times(body2.GetWorldAxis().Transpose()))
             } else {
-                axis2.oSet(normAxis)
+                axis2.set(normAxis)
             }
         }
 
         fun GetAxis(a1: idVec3?, a2: idVec3?) {
-            a1.oSet(axis1)
-            a2.oSet(axis2)
+            a1.set(axis1)
+            a2.set(axis2)
         }
 
         fun GetAxis(): idVec3? {
@@ -1597,7 +1597,7 @@ object Physics_AF {
         }
 
         override fun GetCenter(center: idVec3?) {
-            center.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            center.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
         }
 
         override fun Save(saveFile: idSaveGame?) {
@@ -1675,44 +1675,44 @@ object Physics_AF {
             val vecY = idVec3()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            x1.oSet(axis1.times(body1.GetWorldAxis())) // axis in body1 space
+            x1.set(axis1.times(body1.GetWorldAxis())) // axis in body1 space
             x1.OrthogonalBasis(vecX, vecY) // basis for axis in body1 space
-            a1.oSet(anchor1.times(body1.GetWorldAxis())) // anchor in body1 space
+            a1.set(anchor1.times(body1.GetWorldAxis())) // anchor in body1 space
             if (master != null) {
-                a2.oSet(anchor2.times(master.GetWorldAxis())) // anchor in master space
-                x2.oSet(axis2.times(master.GetWorldAxis()))
+                a2.set(anchor2.times(master.GetWorldAxis())) // anchor in master space
+                x2.set(axis2.times(master.GetWorldAxis()))
                 c1.SubVec3_oSet(
                     0,
                     a2.oPlus(master.GetWorldOrigin()).oMinus(a1.oPlus(body1.GetWorldOrigin()))
                         .oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
                 )
             } else {
-                a2.oSet(anchor2)
-                x2.oSet(axis2)
+                a2.set(anchor2)
+                x2.set(axis2)
                 c1.SubVec3_oSet(
                     0,
-                    a2.oMinus(a1.oPlus(body1.GetWorldOrigin())).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
+                    a2.minus(a1.oPlus(body1.GetWorldOrigin())).oMultiply(-(invTimeStep * Physics_AF.ERROR_REDUCTION))
                 )
             }
-            J1.Set(
+            J1.set(
                 idMat3.Companion.getMat3_identity(),
                 idMat3.Companion.SkewSymmetric(a1).unaryMinus(),
                 idMat3.Companion.getMat3_zero(),
                 idMat3(
-                    vecX.oGet(0), vecX.oGet(1), vecX.oGet(2),
-                    vecY.oGet(0), vecY.oGet(1), vecY.oGet(2),
+                    vecX.get(0), vecX.get(1), vecX.get(2),
+                    vecY.get(0), vecY.get(1), vecY.get(2),
                     0.0f, 0.0f, 0.0f
                 )
             )
             J1.SetSize(5, 6)
             if (body2 != null) {
-                J2.Set(
+                J2.set(
                     idMat3.Companion.getMat3_identity().unaryMinus(),
                     idMat3.Companion.SkewSymmetric(a2),
                     idMat3.Companion.getMat3_zero(),
                     idMat3(
-                        -vecX.oGet(0), -vecX.oGet(1), -vecX.oGet(2),
-                        -vecY.oGet(0), -vecY.oGet(1), -vecY.oGet(2),
+                        -vecX.get(0), -vecX.get(1), -vecX.get(2),
+                        -vecY.get(0), -vecY.get(1), -vecY.get(2),
                         0.0f, 0.0f, 0.0f
                     )
                 )
@@ -1720,7 +1720,7 @@ object Physics_AF {
             } else {
                 J2.Zero(5, 6)
             }
-            cross.oSet(x1.Cross(x2))
+            cross.set(x1.Cross(x2))
             c1.p[3] = -(invTimeStep * Physics_AF.ERROR_REDUCTION) * cross.times(vecX)
             c1.p[4] = -(invTimeStep * Physics_AF.ERROR_REDUCTION) * cross.times(vecY)
             c1.Clamp(-Physics_AF.ERROR_REDUCTION_MAX, Physics_AF.ERROR_REDUCTION_MAX)
@@ -1740,14 +1740,14 @@ object Physics_AF {
                 return
             }
             if (SysCvar.af_useImpulseFriction.GetBool() || SysCvar.af_useJointImpulseFriction.GetBool()) {
-                angular.oSet(body1.GetAngularVelocity())
+                angular.set(body1.GetAngularVelocity())
                 invMass = body1.GetInverseMass()
                 if (body2 != null) {
                     angular.minusAssign(body2.GetAngularVelocity())
                     invMass += body2.GetInverseMass()
                 }
                 angular.timesAssign(currentFriction / invMass)
-                body1.SetAngularVelocity(body1.GetAngularVelocity().oMinus(angular.times(body1.GetInverseMass())))
+                body1.SetAngularVelocity(body1.GetAngularVelocity().minus(angular.times(body1.GetInverseMass())))
                 if (body2 != null) {
                     body2.SetAngularVelocity(
                         body2.GetAngularVelocity().oPlus(angular.times(body2.GetInverseMass()))
@@ -1981,12 +1981,12 @@ object Physics_AF {
             val normAxis = idVec3()
 
             // get normalized axis relative to body1
-            normAxis.oSet(ax)
+            normAxis.set(ax)
             normAxis.Normalize()
             if (body2 != null) {
-                axis.oSet(normAxis.times(body2.GetWorldAxis().Transpose()))
+                axis.set(normAxis.times(body2.GetWorldAxis().Transpose()))
             } else {
-                axis.oSet(normAxis)
+                axis.set(normAxis)
             }
         }
 
@@ -1995,12 +1995,12 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                ofs.oSet(
+                ofs.set(
                     master.GetWorldOrigin()
-                        .oPlus(master.GetWorldAxis().times(offset).oMinus(body1.GetWorldOrigin()))
+                        .oPlus(master.GetWorldAxis().times(offset).minus(body1.GetWorldOrigin()))
                 )
             } else {
-                ofs.oSet(offset.oMinus(body1.GetWorldOrigin()))
+                ofs.set(offset.minus(body1.GetWorldOrigin()))
             }
             Game_local.gameRenderWorld.DebugLine(
                 Lib.Companion.colorGreen,
@@ -2025,12 +2025,12 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                center.oSet(
+                center.set(
                     master.GetWorldOrigin()
-                        .oPlus(master.GetWorldAxis().times(offset).oMinus(body1.GetWorldOrigin()))
+                        .oPlus(master.GetWorldAxis().times(offset).minus(body1.GetWorldOrigin()))
                 )
             } else {
-                center.oSet(offset.oMinus(body1.GetWorldOrigin()))
+                center.set(offset.minus(body1.GetWorldOrigin()))
             }
         }
 
@@ -2057,23 +2057,23 @@ object Physics_AF {
             master = if (body2 != null) body2 else physics.GetMasterBody()
             r = if (master != null) {
                 axis.times(master.GetWorldAxis()).OrthogonalBasis(vecX, vecY)
-                ofs.oSet(
+                ofs.set(
                     master.GetWorldOrigin()
-                        .oPlus(master.GetWorldAxis().times(offset).oMinus(body1.GetWorldOrigin()))
+                        .oPlus(master.GetWorldAxis().times(offset).minus(body1.GetWorldOrigin()))
                 )
                 body1.GetWorldAxis().Transpose().times(relAxis.times(master.GetWorldAxis())).ToRotation()
             } else {
                 axis.OrthogonalBasis(vecX, vecY)
-                ofs.oSet(offset.oMinus(body1.GetWorldOrigin()))
+                ofs.set(offset.minus(body1.GetWorldOrigin()))
                 body1.GetWorldAxis().Transpose().times(relAxis).ToRotation()
             }
-            J1.Set(
+            J1.set(
                 idMat3.Companion.getMat3_zero(), idMat3.Companion.getMat3_identity(),
                 idMat3(vecX, vecY, Vector.getVec3_origin()), idMat3.Companion.getMat3_zero()
             )
             J1.SetSize(5, 6)
             if (body2 != null) {
-                J2.Set(
+                J2.set(
                     idMat3.Companion.getMat3_zero(), idMat3.Companion.getMat3_identity().unaryMinus(),
                     idMat3(vecX.oNegative(), vecY.oNegative(), Vector.getVec3_origin()), idMat3.Companion.getMat3_zero()
                 )
@@ -2109,12 +2109,12 @@ object Physics_AF {
             fl.allowPrimary = true
             fl.noCollision = true
             relAxis = if (body2 != null) {
-                offset.oSet(
-                    body1.GetWorldOrigin().oMinus(body2.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose())
+                offset.set(
+                    body1.GetWorldOrigin().minus(body2.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose())
                 )
                 body1.GetWorldAxis().times(body2.GetWorldAxis().Transpose())
             } else {
-                offset.oSet(body1.GetWorldOrigin())
+                offset.set(body1.GetWorldOrigin())
                 body1.GetWorldAxis()
             }
         }
@@ -2182,14 +2182,14 @@ object Physics_AF {
 
         fun SetPlane(normal: idVec3?, anchor: idVec3?) {
             // get anchor relative to center of mass of body1
-            anchor1.oSet(anchor.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            anchor1.set(anchor.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get anchor relative to center of mass of body2
-                anchor2.oSet(anchor.oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
-                planeNormal.oSet(normal.times(body2.GetWorldAxis().Transpose()))
+                anchor2.set(anchor.minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
+                planeNormal.set(normal.times(body2.GetWorldAxis().Transpose()))
             } else {
-                anchor2.oSet(anchor)
-                planeNormal.oSet(normal)
+                anchor2.set(anchor)
+                planeNormal.set(normal)
             }
         }
 
@@ -2200,18 +2200,18 @@ object Physics_AF {
             val up = idVec3()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
             if (master != null) {
-                normal.oSet(planeNormal.times(master.GetWorldAxis()))
+                normal.set(planeNormal.times(master.GetWorldAxis()))
             } else {
-                normal.oSet(planeNormal)
+                normal.set(planeNormal)
             }
             normal.NormalVectors(right, up)
             normal.timesAssign(4.0f)
             right.timesAssign(4.0f)
             up.timesAssign(4.0f)
-            Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorCyan, a1.oMinus(right), a1.oPlus(right))
-            Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorCyan, a1.oMinus(up), a1.oPlus(up))
+            Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorCyan, a1.minus(right), a1.oPlus(right))
+            Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorCyan, a1.minus(up), a1.oPlus(up))
             Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorCyan, a1, a1.oPlus(normal), 1)
         }
 
@@ -2250,23 +2250,23 @@ object Physics_AF {
             val v = idVec6()
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
             if (master != null) {
-                a2.oSet(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
-                normal.oSet(planeNormal.times(master.GetWorldAxis()))
+                a2.set(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
+                normal.set(planeNormal.times(master.GetWorldAxis()))
             } else {
-                a2.oSet(anchor2)
-                normal.oSet(planeNormal)
+                a2.set(anchor2)
+                normal.set(planeNormal)
             }
-            p.oSet(a1.oMinus(body1.GetWorldOrigin()))
+            p.set(a1.minus(body1.GetWorldOrigin()))
             v.SubVec3_oSet(0, normal)
             v.SubVec3_oSet(1, p.Cross(normal))
-            J1.Set(1, 6, v.ToFloatPtr())
+            J1.set(1, 6, v.ToFloatPtr())
             if (body2 != null) {
-                p.oSet(a1.oMinus(body2.GetWorldOrigin()))
+                p.set(a1.minus(body2.GetWorldOrigin()))
                 v.SubVec3_oSet(0, normal.oNegative())
                 v.SubVec3_oSet(1, p.Cross(normal.oNegative()))
-                J2.Set(1, 6, v.ToFloatPtr())
+                J2.set(1, 6, v.ToFloatPtr())
             }
             c1.p[0] = -(invTimeStep * Physics_AF.ERROR_REDUCTION) * (a1.times(normal) - a2.times(normal))
             c1.Clamp(-Physics_AF.ERROR_REDUCTION_MAX, Physics_AF.ERROR_REDUCTION_MAX)
@@ -2320,12 +2320,12 @@ object Physics_AF {
 
         fun SetAnchor(worldAnchor1: idVec3?, worldAnchor2: idVec3?) {
             // get anchor relative to center of mass of body1
-            anchor1.oSet(worldAnchor1.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            anchor1.set(worldAnchor1.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (body2 != null) {
                 // get anchor relative to center of mass of body2
-                anchor2.oSet(worldAnchor2.oMinus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
+                anchor2.set(worldAnchor2.minus(body2.GetWorldOrigin()).oMultiply(body2.GetWorldAxis().Transpose()))
             } else {
-                anchor2.oSet(worldAnchor2)
+                anchor2.set(worldAnchor2)
             }
         }
 
@@ -2352,26 +2352,26 @@ object Physics_AF {
             val mid = idVec3()
             val p = idVec3()
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
             if (master != null) {
-                a2.oSet(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
+                a2.set(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
             } else {
-                a2.oSet(anchor2)
+                a2.set(anchor2)
             }
-            dir.oSet(a2.oMinus(a1))
-            mid.oSet(a1.oPlus(dir.times(0.5f)))
+            dir.set(a2.minus(a1))
+            mid.set(a1.oPlus(dir.times(0.5f)))
             length = dir.Normalize()
 
             // draw spring
             Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorGreen, a1, a2)
 
             // draw rest length
-            p.oSet(dir.times(restLength * 0.5f))
+            p.set(dir.times(restLength * 0.5f))
             Game_local.gameRenderWorld.DebugCircle(Lib.Companion.colorWhite, mid.oPlus(p), dir, 1.0f, 10)
-            Game_local.gameRenderWorld.DebugCircle(Lib.Companion.colorWhite, mid.oMinus(p), dir, 1.0f, 10)
+            Game_local.gameRenderWorld.DebugCircle(Lib.Companion.colorWhite, mid.minus(p), dir, 1.0f, 10)
             if (restLength > length) {
                 Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorWhite, a2, mid.oPlus(p))
-                Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorWhite, a1, mid.oMinus(p))
+                Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorWhite, a1, mid.minus(p))
             }
             if (minLength > 0.0f) {
                 // draw min length
@@ -2384,7 +2384,7 @@ object Physics_AF {
                 )
                 Game_local.gameRenderWorld.DebugCircle(
                     Lib.Companion.colorBlue,
-                    mid.oMinus(dir.times(minLength * 0.5f)),
+                    mid.minus(dir.times(minLength * 0.5f)),
                     dir,
                     2.0f,
                     10
@@ -2401,7 +2401,7 @@ object Physics_AF {
                 )
                 Game_local.gameRenderWorld.DebugCircle(
                     Lib.Companion.colorRed,
-                    mid.oMinus(dir.times(maxLength * 0.5f)),
+                    mid.minus(dir.times(maxLength * 0.5f)),
                     dir,
                     2.0f,
                     10
@@ -2426,13 +2426,13 @@ object Physics_AF {
             val a1 = idVec3()
             val a2 = idVec3()
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
             if (master != null) {
-                a2.oSet(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
+                a2.set(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
             } else {
-                a2.oSet(anchor2)
+                a2.set(anchor2)
             }
-            center.oSet(a1.oPlus(a2).oMultiply(0.5f))
+            center.set(a1.oPlus(a2).oMultiply(0.5f))
         }
 
         override fun Save(saveFile: idSaveGame?) {
@@ -2486,19 +2486,19 @@ object Physics_AF {
             val limit: Boolean
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
-            a1.oSet(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
-            velocity1.oSet(body1.GetPointVelocity(a1))
+            a1.set(body1.GetWorldOrigin().oPlus(anchor1.times(body1.GetWorldAxis())))
+            velocity1.set(body1.GetPointVelocity(a1))
             if (master != null) {
-                a2.oSet(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
-                velocity2.oSet(master.GetPointVelocity(a2))
+                a2.set(master.GetWorldOrigin().oPlus(anchor2.times(master.GetWorldAxis())))
+                velocity2.set(master.GetPointVelocity(a2))
             } else {
-                a2.oSet(anchor2)
+                a2.set(anchor2)
                 velocity2.Zero()
             }
-            force.oSet(a2.oMinus(a1))
+            force.set(a2.minus(a1))
             d = force.times(force)
             dampingForce = if (d != 0.0f) {
-                damping * Math.abs(velocity2.oMinus(velocity1).oMultiply(force)) / d
+                damping * Math.abs(velocity2.minus(velocity1).oMultiply(force)) / d
             } else {
                 0.0f
             }
@@ -2521,7 +2521,7 @@ object Physics_AF {
 
             // check for spring limits
             if (length < minLength) {
-                force.oSet(force.oNegative())
+                force.set(force.oNegative())
                 error = minLength - length
                 limit = true
             } else if (maxLength > 0.0f && length > maxLength) {
@@ -2535,12 +2535,12 @@ object Physics_AF {
                 a1.minusAssign(body1.GetWorldOrigin())
                 v1.SubVec3_oSet(0, force)
                 v1.SubVec3_oSet(1, a1.Cross(force))
-                J1.Set(1, 6, v1.ToFloatPtr())
+                J1.set(1, 6, v1.ToFloatPtr())
                 if (body2 != null) {
                     a2.minusAssign(body2.GetWorldOrigin())
                     v2.SubVec3_oSet(0, force.oNegative())
                     v2.SubVec3_oSet(1, a2.Cross(force.oNegative()))
-                    J2.Set(1, 6, v2.ToFloatPtr())
+                    J2.set(1, 6, v2.ToFloatPtr())
                 }
                 c1.p[0] = -(invTimeStep * Physics_AF.ERROR_REDUCTION) * error
                 lo.p[0] = 0.0f
@@ -2601,16 +2601,16 @@ object Physics_AF {
             body1 = b1
             body2 = b2
             contact = contactInfo_t(c)
-            p.oSet(c.point.oMinus(body1.GetWorldOrigin()))
+            p.set(c.point.minus(body1.GetWorldOrigin()))
             v.SubVec3_oSet(0, c.normal)
             v.SubVec3_oSet(1, p.Cross(c.normal))
-            J1.Set(1, 6, v.ToFloatPtr())
+            J1.set(1, 6, v.ToFloatPtr())
             vel = v.SubVec3(0).times(body1.GetLinearVelocity()) + v.SubVec3(1).times(body1.GetAngularVelocity())
             if (body2 != null) {
-                p.oSet(c.point.oMinus(body2.GetWorldOrigin()))
+                p.set(c.point.minus(body2.GetWorldOrigin()))
                 v.SubVec3_oSet(0, c.normal.oNegative())
                 v.SubVec3_oSet(1, p.Cross(c.normal.oNegative()))
-                J2.Set(1, 6, v.ToFloatPtr())
+                J2.set(1, 6, v.ToFloatPtr())
                 vel += v.SubVec3(0).times(body2.GetLinearVelocity()) + v.SubVec3(1)
                     .times(body2.GetAngularVelocity())
                 c2.p[0] = 0.0f
@@ -2642,12 +2642,12 @@ object Physics_AF {
             )
             Game_local.gameRenderWorld.DebugLine(
                 Lib.Companion.colorWhite,
-                contact.point.oMinus(x.times(2.0f)),
+                contact.point.minus(x.times(2.0f)),
                 contact.point.oPlus(x.times(2.0f))
             )
             Game_local.gameRenderWorld.DebugLine(
                 Lib.Companion.colorWhite,
-                contact.point.oMinus(y.times(2.0f)),
+                contact.point.minus(y.times(2.0f)),
                 contact.point.oPlus(y.times(2.0f))
             )
         }
@@ -2665,7 +2665,7 @@ object Physics_AF {
         }
 
         override fun GetCenter(center: idVec3?) {
-            center.oSet(contact.point)
+            center.set(contact.point)
         }
 
         //
@@ -2699,12 +2699,12 @@ object Physics_AF {
                 dv.SetData(6, idVecX.Companion.VECX_ALLOCA(6))
 
                 // calculate velocity in the contact plane
-                r.oSet(contact.point.oMinus(body1.GetWorldOrigin()))
-                velocity.oSet(body1.GetLinearVelocity().oPlus(body1.GetAngularVelocity().Cross(r)))
+                r.set(contact.point.minus(body1.GetWorldOrigin()))
+                velocity.set(body1.GetLinearVelocity().oPlus(body1.GetAngularVelocity().Cross(r)))
                 velocity.minusAssign(contact.normal.times(velocity.times(contact.normal)))
 
                 // get normalized direction of friction and magnitude of velocity
-                normal.oSet(velocity.oNegative())
+                normal.set(velocity.oNegative())
                 magnitude = normal.Normalize()
                 forceNumerator = friction * magnitude
                 forceDenominator =
@@ -2769,14 +2769,14 @@ object Physics_AF {
                 // project the friction direction into the contact plane
                 dir1.minusAssign(dir1.times(cc.GetContact().normal.times(dir1)))
                 dir1.Normalize()
-                r.oSet(cc.GetContact().point.oMinus(body1.GetWorldOrigin()))
+                r.set(cc.GetContact().point.minus(body1.GetWorldOrigin()))
                 J1.SetSize(1, 6)
                 J1.SubVec63_oSet(0, 0, dir1)
                 J1.SubVec63_oSet(0, 1, r.Cross(dir1))
                 c1.SetSize(1)
                 c1.p[0] = 0.0f
                 if (body2 != null) {
-                    r.oSet(cc.GetContact().point.oMinus(body2.GetWorldOrigin()))
+                    r.set(cc.GetContact().point.minus(body2.GetWorldOrigin()))
                     J2.SetSize(1, 6)
                     J2.SubVec63_oSet(0, 0, dir1.oNegative())
                     J2.SubVec63_oSet(0, 1, r.Cross(dir1.oNegative()))
@@ -2790,7 +2790,7 @@ object Physics_AF {
             } else {
                 // get two friction directions orthogonal to contact normal
                 cc.GetContact().normal.NormalVectors(dir1, dir2)
-                r.oSet(cc.GetContact().point.oMinus(body1.GetWorldOrigin()))
+                r.set(cc.GetContact().point.minus(body1.GetWorldOrigin()))
                 J1.SetSize(2, 6)
                 J1.SubVec63_oSet(0, 0, dir1)
                 J1.SubVec63_oSet(0, 1, r.Cross(dir1))
@@ -2800,7 +2800,7 @@ object Physics_AF {
                 c1.p[1] = 0.0f
                 c1.p[0] = c1.p[1]
                 if (body2 != null) {
-                    r.oSet(cc.GetContact().point.oMinus(body2.GetWorldOrigin()))
+                    r.set(cc.GetContact().point.minus(body2.GetWorldOrigin()))
                     J2.SetSize(2, 6)
                     J2.SubVec63_oSet(0, 0, dir1.oNegative())
                     J2.SubVec63_oSet(0, 1, r.Cross(dir1.oNegative()))
@@ -2825,7 +2825,7 @@ object Physics_AF {
                 // project the motor force direction into the contact plane
                 dir1.minusAssign(dir1.times(cc.GetContact().normal.times(dir1)))
                 dir1.Normalize()
-                r.oSet(cc.GetContact().point.oMinus(body1.GetWorldOrigin()))
+                r.set(cc.GetContact().point.minus(body1.GetWorldOrigin()))
                 newRow = J1.GetNumRows()
                 J1.ChangeSize(newRow + 1, J1.GetNumColumns())
                 J1.SubVec63_oSet(newRow, 0, dir1.oNegative())
@@ -2833,7 +2833,7 @@ object Physics_AF {
                 c1.ChangeSize(newRow + 1)
                 c1.p[newRow] = body1.GetContactMotorVelocity()
                 if (body2 != null) {
-                    r.oSet(cc.GetContact().point.oMinus(body2.GetWorldOrigin()))
+                    r.set(cc.GetContact().point.minus(body2.GetWorldOrigin()))
                     J2.ChangeSize(newRow + 1, J2.GetNumColumns())
                     J2.SubVec63_oSet(newRow, 0, dir1.oNegative())
                     J2.SubVec63_oSet(newRow, 1, r.Cross(dir1.oNegative()))
@@ -2910,10 +2910,10 @@ object Physics_AF {
         ) {
             body1 = b1
             body2 = b2
-            this.coneAxis.oSet(coneAxis)
+            this.coneAxis.set(coneAxis)
             this.coneAxis.Normalize()
-            this.coneAnchor.oSet(coneAnchor)
-            this.body1Axis.oSet(body1Axis)
+            this.coneAnchor.set(coneAnchor)
+            this.body1Axis.set(body1Axis)
             this.body1Axis.Normalize()
             cosAngle = Math.cos(Math_h.DEG2RAD(coneAngle * 0.5f).toDouble()).toFloat()
             sinHalfAngle = Math.sin(Math_h.DEG2RAD(coneAngle * 0.25f).toDouble()).toFloat()
@@ -2921,11 +2921,11 @@ object Physics_AF {
         }
 
         fun SetAnchor(coneAnchor: idVec3?) {
-            this.coneAnchor.oSet(coneAnchor)
+            this.coneAnchor.set(coneAnchor)
         }
 
         fun SetBody1Axis(body1Axis: idVec3?) {
-            this.body1Axis.oSet(body1Axis)
+            this.body1Axis.set(body1Axis)
         }
 
         fun SetEpsilon(e: Float) {
@@ -2952,13 +2952,13 @@ object Physics_AF {
             physics = phys
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                ax.oSet(coneAxis.times(master.GetWorldAxis()))
-                anchor.oSet(master.GetWorldOrigin().oPlus(coneAnchor.times(master.GetWorldAxis())))
+                ax.set(coneAxis.times(master.GetWorldAxis()))
+                anchor.set(master.GetWorldOrigin().oPlus(coneAnchor.times(master.GetWorldAxis())))
             } else {
-                ax.oSet(coneAxis)
-                anchor.oSet(coneAnchor)
+                ax.set(coneAxis)
+                anchor.set(coneAnchor)
             }
-            body1ax.oSet(body1Axis.times(body1.GetWorldAxis()))
+            body1ax.set(body1Axis.times(body1.GetWorldAxis()))
             a = ax.times(body1ax)
 
             // if the body1 axis is inside the cone
@@ -2968,25 +2968,25 @@ object Physics_AF {
             }
 
             // calculate the inward cone normal for the position the body1 axis went outside the cone
-            normal.oSet(body1ax.Cross(ax))
+            normal.set(body1ax.Cross(ax))
             normal.Normalize()
             q.x = normal.x * sinHalfAngle
             q.y = normal.y * sinHalfAngle
             q.z = normal.z * sinHalfAngle
             q.w = cosHalfAngle
-            coneVector.oSet(ax.times(q.ToMat3()))
-            normal.oSet(coneVector.Cross(ax).Cross(coneVector))
+            coneVector.set(ax.times(q.ToMat3()))
+            normal.set(coneVector.Cross(ax).Cross(coneVector))
             normal.Normalize()
-            p1.oSet(anchor.oPlus(coneVector.times(32.0f)).oMinus(body1.GetWorldOrigin()))
+            p1.set(anchor.oPlus(coneVector.times(32.0f)).oMinus(body1.GetWorldOrigin()))
             J1row.SubVec3_oSet(0, normal)
             J1row.SubVec3_oSet(1, p1.Cross(normal))
-            J1.Set(1, 6, J1row.ToFloatPtr())
+            J1.set(1, 6, J1row.ToFloatPtr())
             c1.p[0] = invTimeStep * Physics_AF.LIMIT_ERROR_REDUCTION * normal.times(body1ax.times(32.0f))
             if (body2 != null) {
-                p2.oSet(anchor.oPlus(coneVector.times(32.0f)).oMinus(master.GetWorldOrigin()))
+                p2.set(anchor.oPlus(coneVector.times(32.0f)).oMinus(master.GetWorldOrigin()))
                 J2row.SubVec3_oSet(0, normal.oNegative())
                 J2row.SubVec3_oSet(1, p2.Cross(normal.oNegative()))
-                J2.Set(1, 6, J2row.ToFloatPtr())
+                J2.set(1, 6, J2row.ToFloatPtr())
                 c2.p[0] = 0.0f
             }
             lo.p[0] = 0.0f
@@ -3009,11 +3009,11 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                ax.oSet(coneAxis.times(master.GetWorldAxis()))
-                anchor.oSet(master.GetWorldOrigin().oPlus(coneAnchor.times(master.GetWorldAxis())))
+                ax.set(coneAxis.times(master.GetWorldAxis()))
+                anchor.set(master.GetWorldOrigin().oPlus(coneAnchor.times(master.GetWorldAxis())))
             } else {
-                ax.oSet(coneAxis)
-                anchor.oSet(coneAnchor)
+                ax.set(coneAxis)
+                anchor.set(coneAnchor)
             }
 
             // draw body1 axis
@@ -3028,17 +3028,17 @@ object Physics_AF {
             sinAngle = idMath.Sqrt(1.0f - cosAngle * cosAngle)
             x.timesAssign(size * sinAngle)
             y.timesAssign(size * sinAngle)
-            z.oSet(anchor.oPlus(ax.times(size * cosAngle)))
-            start.oSet(x.oPlus(z))
+            z.set(anchor.oPlus(ax.times(size * cosAngle)))
+            start.set(x.oPlus(z))
             a = 0.0f
             while (a < 360.0f) {
-                end.oSet(
+                end.set(
                     x.times(Math.cos(Math_h.DEG2RAD(a + 45.0f).toDouble()).toFloat())
                         .oPlus(y.times(Math.sin(Math_h.DEG2RAD(a + 45.0f).toDouble()).toFloat()).oPlus(z))
                 )
                 Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorMagenta, anchor, start)
                 Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorMagenta, start, end)
-                start.oSet(end)
+                start.set(end)
                 a += 45.0f
             }
         }
@@ -3131,14 +3131,14 @@ object Physics_AF {
             body1 = b1
             body2 = b2
             // setup the base and make sure the basis is orthonormal
-            pyramidBasis.oSet(2, pyramidAxis)
-            pyramidBasis.oGet(2).Normalize()
-            pyramidBasis.oSet(0, baseAxis)
-            pyramidBasis.oGet(0).minusAssign(pyramidBasis.oGet(2).times(baseAxis.times(pyramidBasis.oGet(2))))
-            pyramidBasis.oGet(0).Normalize()
-            pyramidBasis.oSet(1, pyramidBasis.oGet(0).Cross(pyramidBasis.oGet(2)))
+            pyramidBasis.set(2, pyramidAxis)
+            pyramidBasis.get(2).Normalize()
+            pyramidBasis.set(0, baseAxis)
+            pyramidBasis.get(0).minusAssign(pyramidBasis.get(2).times(baseAxis.times(pyramidBasis.get(2))))
+            pyramidBasis.get(0).Normalize()
+            pyramidBasis.set(1, pyramidBasis.get(0).Cross(pyramidBasis.get(2)))
             // pyramid top
-            pyramidAnchor.oSet(pyramidAnchor)
+            pyramidAnchor.set(pyramidAnchor)
             // angles
             cosAngle.get(0) = Math.cos(Math_h.DEG2RAD(pyramidAngle1 * 0.5f).toDouble()).toFloat()
             cosAngle.get(1) = Math.cos(Math_h.DEG2RAD(pyramidAngle2 * 0.5f).toDouble()).toFloat()
@@ -3146,15 +3146,15 @@ object Physics_AF {
             sinHalfAngle.get(1) = Math.sin(Math_h.DEG2RAD(pyramidAngle2 * 0.25f).toDouble()).toFloat()
             cosHalfAngle.get(0) = Math.cos(Math_h.DEG2RAD(pyramidAngle1 * 0.25f).toDouble()).toFloat()
             cosHalfAngle.get(1) = Math.cos(Math_h.DEG2RAD(pyramidAngle2 * 0.25f).toDouble()).toFloat()
-            body1Axis.oSet(body1Axis)
+            body1Axis.set(body1Axis)
         }
 
         fun SetAnchor(pyramidAxis: idVec3?) {
-            pyramidAnchor.oSet(pyramidAnchor)
+            pyramidAnchor.set(pyramidAnchor)
         }
 
         fun SetBody1Axis(body1Axis: idVec3?) {
-            this.body1Axis.oSet(body1Axis)
+            this.body1Axis.set(body1Axis)
         }
 
         fun SetEpsilon(e: Float) {
@@ -3184,21 +3184,21 @@ object Physics_AF {
             physics = phys
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                worldBase.oSet(0, pyramidBasis.oGet(0).times(master.GetWorldAxis()))
-                worldBase.oSet(1, pyramidBasis.oGet(1).times(master.GetWorldAxis()))
-                worldBase.oSet(2, pyramidBasis.oGet(2).times(master.GetWorldAxis()))
-                anchor.oSet(master.GetWorldOrigin().oPlus(pyramidAnchor.times(master.GetWorldAxis())))
+                worldBase.set(0, pyramidBasis.get(0).times(master.GetWorldAxis()))
+                worldBase.set(1, pyramidBasis.get(1).times(master.GetWorldAxis()))
+                worldBase.set(2, pyramidBasis.get(2).times(master.GetWorldAxis()))
+                anchor.set(master.GetWorldOrigin().oPlus(pyramidAnchor.times(master.GetWorldAxis())))
             } else {
                 worldBase = pyramidBasis
-                anchor.oSet(pyramidAnchor)
+                anchor.set(pyramidAnchor)
             }
-            body1ax.oSet(body1Axis.times(body1.GetWorldAxis()))
+            body1ax.set(body1Axis.times(body1.GetWorldAxis()))
             i = 0
             while (i < 2) {
                 val he = if (i == 0) 1 else 0
-                ax[i].oSet(body1ax.oMinus(worldBase.oGet(he).times(body1ax.times(worldBase.oGet(he)))))
+                ax[i].set(body1ax.minus(worldBase.get(he).times(body1ax.times(worldBase.get(he)))))
                 ax[i].Normalize()
-                a[i] = worldBase.oGet(2).times(ax[i])
+                a[i] = worldBase.get(2).times(ax[i])
                 i++
             }
 
@@ -3209,11 +3209,11 @@ object Physics_AF {
             }
 
             // calculate the inward pyramid normal for the position the body1 axis went outside the pyramid
-            pyramidVector.oSet(worldBase.oGet(2))
+            pyramidVector.set(worldBase.get(2))
             i = 0
             while (i < 2) {
                 if (a[i] <= cosAngle.get(i)) {
-                    v.oSet(ax[i].Cross(worldBase.oGet(2)))
+                    v.set(ax[i].Cross(worldBase.get(2)))
                     v.Normalize()
                     q.x = v.x * sinHalfAngle.get(i)
                     q.y = v.y * sinHalfAngle.get(i)
@@ -3223,18 +3223,18 @@ object Physics_AF {
                 }
                 i++
             }
-            normal.oSet(pyramidVector.Cross(worldBase.oGet(2)).Cross(pyramidVector))
+            normal.set(pyramidVector.Cross(worldBase.get(2)).Cross(pyramidVector))
             normal.Normalize()
-            p1.oSet(anchor.oPlus(pyramidVector.times(32.0f).oMinus(body1.GetWorldOrigin())))
+            p1.set(anchor.oPlus(pyramidVector.times(32.0f).minus(body1.GetWorldOrigin())))
             J1row.SubVec3_oSet(0, normal)
             J1row.SubVec3_oSet(1, p1.Cross(normal))
-            J1.Set(1, 6, J1row.ToFloatPtr())
+            J1.set(1, 6, J1row.ToFloatPtr())
             c1.p[0] = invTimeStep * Physics_AF.LIMIT_ERROR_REDUCTION * normal.times(body1ax.times(32.0f))
             if (body2 != null) {
-                p2.oSet(anchor.oPlus(pyramidVector.times(32.0f).oMinus(master.GetWorldOrigin())))
+                p2.set(anchor.oPlus(pyramidVector.times(32.0f).minus(master.GetWorldOrigin())))
                 J2row.SubVec3_oSet(0, normal.oNegative())
                 J2row.SubVec3_oSet(1, p2.Cross(normal.oNegative()))
-                J2.Set(1, 6, J2row.ToFloatPtr())
+                J2.set(1, 6, J2row.ToFloatPtr())
                 c2.p[0] = 0.0f
             }
             lo.p[0] = 0.0f
@@ -3255,13 +3255,13 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics.GetMasterBody()
             if (master != null) {
-                worldBase.oSet(0, pyramidBasis.oGet(0).times(master.GetWorldAxis()))
-                worldBase.oSet(1, pyramidBasis.oGet(1).times(master.GetWorldAxis()))
-                worldBase.oSet(2, pyramidBasis.oGet(2).times(master.GetWorldAxis()))
-                anchor.oSet(master.GetWorldOrigin().oPlus(pyramidAnchor.times(master.GetWorldAxis())))
+                worldBase.set(0, pyramidBasis.get(0).times(master.GetWorldAxis()))
+                worldBase.set(1, pyramidBasis.get(1).times(master.GetWorldAxis()))
+                worldBase.set(2, pyramidBasis.get(2).times(master.GetWorldAxis()))
+                anchor.set(master.GetWorldOrigin().oPlus(pyramidAnchor.times(master.GetWorldAxis())))
             } else {
                 worldBase = pyramidBasis
-                anchor.oSet(pyramidAnchor)
+                anchor.set(pyramidAnchor)
             }
 
             // draw body1 axis
@@ -3275,18 +3275,18 @@ object Physics_AF {
             i = 0
             while (i < 2) {
                 val him = if (i == 0) 1 else 0
-                q.x = worldBase.oGet(him).x * sinHalfAngle.get(i)
-                q.y = worldBase.oGet(him).y * sinHalfAngle.get(i)
-                q.z = worldBase.oGet(him).z * sinHalfAngle.get(i)
+                q.x = worldBase.get(him).x * sinHalfAngle.get(i)
+                q.y = worldBase.get(him).y * sinHalfAngle.get(i)
+                q.z = worldBase.get(him).z * sinHalfAngle.get(i)
                 q.w = cosHalfAngle.get(i)
                 m[i] = q.ToMat3()
                 i++
             }
-            dir.oSet(worldBase.oGet(2).times(size))
-            p[0].oSet(anchor.oPlus(m[0].times(m[1].times(dir))))
-            p[1].oSet(anchor.oPlus(m[0].times(m[1].Transpose().times(dir))))
-            p[2].oSet(anchor.oPlus(m[0].Transpose().times(m[1].Transpose().times(dir))))
-            p[3].oSet(anchor.oPlus(m[0].Transpose().times(m[1].times(dir))))
+            dir.set(worldBase.get(2).times(size))
+            p[0].set(anchor.oPlus(m[0].times(m[1].times(dir))))
+            p[1].set(anchor.oPlus(m[0].times(m[1].Transpose().times(dir))))
+            p[2].set(anchor.oPlus(m[0].Transpose().times(m[1].Transpose().times(dir))))
+            p[3].set(anchor.oPlus(m[0].Transpose().times(m[1].times(dir))))
             i = 0
             while (i < 4) {
                 Game_local.gameRenderWorld.DebugLine(Lib.Companion.colorMagenta, anchor, p[i])
@@ -3304,9 +3304,9 @@ object Physics_AF {
         override fun Rotate(rotation: idRotation?) {
             if (null == body2) {
                 pyramidAnchor.timesAssign(rotation)
-                pyramidBasis.oGet(0).timesAssign(rotation.ToMat3())
-                pyramidBasis.oGet(1).timesAssign(rotation.ToMat3())
-                pyramidBasis.oGet(2).timesAssign(rotation.ToMat3())
+                pyramidBasis.get(0).timesAssign(rotation.ToMat3())
+                pyramidBasis.get(1).timesAssign(rotation.ToMat3())
+                pyramidBasis.get(2).timesAssign(rotation.ToMat3())
             }
         }
 
@@ -3411,7 +3411,7 @@ object Physics_AF {
             this.name.oSet(name)
             body1 = body
             body2 = null
-            localOrigin.oSet(origin.oMinus(body.GetWorldOrigin()).oMultiply(body.GetWorldAxis().Transpose()))
+            localOrigin.set(origin.minus(body.GetWorldOrigin()).oMultiply(body.GetWorldAxis().Transpose()))
             localAxis = axis.times(body.GetWorldAxis().Transpose())
             wheelModel = clipModel
         }
@@ -3453,25 +3453,25 @@ object Physics_AF {
             val axis: idMat3?
             val rotation = idRotation()
             axis = localAxis.times(body1.GetWorldAxis())
-            rotation.SetVec(axis.oGet(2))
+            rotation.SetVec(axis.get(2))
             rotation.SetAngle(steerAngle)
             axis.timesAssign(rotation.ToMat3())
             if (trace.fraction < 1.0f) {
-                origin.oSet(trace.c.point)
+                origin.set(trace.c.point)
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
                     origin,
-                    origin.oPlus(axis.oGet(2).times(6.0f))
+                    origin.oPlus(axis.get(2).times(6.0f))
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    origin.oMinus(axis.oGet(0).times(4.0f)),
-                    origin.oPlus(axis.oGet(0).times(4.0f))
+                    origin.minus(axis.get(0).times(4.0f)),
+                    origin.oPlus(axis.get(0).times(4.0f))
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    origin.oMinus(axis.oGet(1).times(2.0f)),
-                    origin.oPlus(axis.oGet(1).times(2.0f))
+                    origin.minus(axis.get(1).times(2.0f)),
+                    origin.oPlus(axis.get(1).times(2.0f))
                 )
             }
         }
@@ -3497,10 +3497,10 @@ object Physics_AF {
             val axis: idMat3?
             val rotation = idRotation()
             axis = localAxis.times(body1.GetWorldAxis())
-            origin.oSet(body1.GetWorldOrigin().oPlus(localOrigin.times(body1.GetWorldAxis())))
-            start.oSet(origin.oPlus(axis.oGet(2).times(suspensionUp)))
-            end.oSet(origin.oMinus(axis.oGet(2).times(suspensionDown)))
-            rotation.SetVec(axis.oGet(2))
+            origin.set(body1.GetWorldOrigin().oPlus(localOrigin.times(body1.GetWorldAxis())))
+            start.set(origin.oPlus(axis.get(2).times(suspensionUp)))
+            end.set(origin.minus(axis.get(2).times(suspensionDown)))
+            rotation.SetVec(axis.get(2))
             rotation.SetAngle(steerAngle)
             axis.timesAssign(rotation.ToMat3())
             run {
@@ -3508,7 +3508,7 @@ object Physics_AF {
                 Game_local.gameLocal.clip.Translation(tracy, start, end, wheelModel, axis, Game_local.MASK_SOLID, null)
                 this.trace = tracy
             }
-            wheelOffset.oSet(trace.endpos.oMinus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
+            wheelOffset.set(trace.endpos.minus(body1.GetWorldOrigin()).oMultiply(body1.GetWorldAxis().Transpose()))
             if (trace.fraction >= 1.0f) {
                 J1.SetSize(0, 6)
                 if (body2 != null) {
@@ -3518,21 +3518,21 @@ object Physics_AF {
             }
 
             // calculate and add spring force
-            vel1.oSet(body1.GetPointVelocity(start))
+            vel1.set(body1.GetPointVelocity(start))
             if (body2 != null) {
-                vel2.oSet(body2.GetPointVelocity(trace.c.point))
+                vel2.set(body2.GetPointVelocity(trace.c.point))
             } else {
                 vel2.Zero()
             }
             suspensionLength = suspensionUp + suspensionDown
-            springDir.oSet(trace.endpos.oMinus(start))
+            springDir.set(trace.endpos.minus(start))
             springLength = trace.fraction * suspensionLength
             dampingForce = suspensionDamping * Math.abs(
-                vel2.oMinus(vel1).oMultiply(springDir)
+                vel2.minus(vel1).oMultiply(springDir)
             ) / (1.0f + springLength * springLength)
             compression = suspensionLength - springLength
             springForce = compression * compression * suspensionKCompress - dampingForce
-            r.oSet(trace.c.point.oMinus(body1.GetWorldOrigin()))
+            r.set(trace.c.point.minus(body1.GetWorldOrigin()))
             J1.SetSize(2, 6)
             J1.SubVec63_oSet(0, 0, trace.c.normal)
             J1.SubVec63_oSet(0, 1, r.Cross(trace.c.normal))
@@ -3541,7 +3541,7 @@ object Physics_AF {
             velocity = J1.SubVec6(0).SubVec3(0).times(body1.GetLinearVelocity()) + J1.SubVec6(0).SubVec3(1)
                 .times(body1.GetAngularVelocity())
             if (body2 != null) {
-                r.oSet(trace.c.point.oMinus(body2.GetWorldOrigin()))
+                r.set(trace.c.point.minus(body2.GetWorldOrigin()))
                 J2.SetSize(2, 6)
                 J2.SubVec63_oSet(0, 0, trace.c.normal.oNegative())
                 J2.SubVec63_oSet(0, 1, r.Cross(trace.c.normal.oNegative()))
@@ -3558,14 +3558,14 @@ object Physics_AF {
             boxIndex.get(0) = -1
 
             // project the friction direction into the contact plane
-            frictionDir.oSet(axis.oGet(1).oMinus(axis.oGet(1).times(trace.c.normal.times(axis.oGet(1)))))
+            frictionDir.set(axis.get(1).minus(axis.get(1).times(trace.c.normal.times(axis.get(1)))))
             frictionDir.Normalize()
-            r.oSet(trace.c.point.oMinus(body1.GetWorldOrigin()))
+            r.set(trace.c.point.minus(body1.GetWorldOrigin()))
             J1.SubVec63_oSet(1, 0, frictionDir)
             J1.SubVec63_oSet(1, 1, r.Cross(frictionDir))
             c1.p[1] = 0.0f
             if (body2 != null) {
-                r.oSet(trace.c.point.oMinus(body2.GetWorldOrigin()))
+                r.set(trace.c.point.minus(body2.GetWorldOrigin()))
                 J2.SubVec63_oSet(1, 0, frictionDir.oNegative())
                 J2.SubVec63_oSet(1, 1, r.Cross(frictionDir.oNegative()))
                 c2.p[1] = 0.0f
@@ -3576,16 +3576,16 @@ object Physics_AF {
             boxIndex.get(1) = 0
             if (motorEnabled) {
                 // project the motor force direction into the contact plane
-                motorDir.oSet(axis.oGet(0).oMinus(axis.oGet(0).times(trace.c.normal.times(axis.oGet(0)))))
+                motorDir.set(axis.get(0).minus(axis.get(0).times(trace.c.normal.times(axis.get(0)))))
                 motorDir.Normalize()
-                r.oSet(trace.c.point.oMinus(body1.GetWorldOrigin()))
+                r.set(trace.c.point.minus(body1.GetWorldOrigin()))
                 J1.ChangeSize(3, J1.GetNumColumns())
                 J1.SubVec63_oSet(2, 0, motorDir.oNegative())
                 J1.SubVec63_oSet(2, 1, r.Cross(motorDir.oNegative()))
                 c1.ChangeSize(3)
                 c1.p[2] = motorVelocity
                 if (body2 != null) {
-                    r.oSet(trace.c.point.oMinus(body2.GetWorldOrigin()))
+                    r.set(trace.c.point.minus(body2.GetWorldOrigin()))
                     J2.ChangeSize(3, J2.GetNumColumns())
                     J2.SubVec63_oSet(2, 0, motorDir.oNegative())
                     J2.SubVec63_oSet(2, 1, r.Cross(motorDir.oNegative()))
@@ -3650,10 +3650,10 @@ object Physics_AF {
         }
 
         fun oSet(body: AFBodyPState_s?) {
-            worldOrigin.oSet(body.worldOrigin)
-            worldAxis.oSet(body.worldAxis)
-            spatialVelocity.oSet(body.spatialVelocity)
-            externalForce.oSet(body.externalForce)
+            worldOrigin.set(body.worldOrigin)
+            worldAxis.set(body.worldAxis)
+            spatialVelocity.set(body.spatialVelocity)
+            externalForce.set(body.externalForce)
         }
 
         companion object {
@@ -3773,8 +3773,8 @@ object Physics_AF {
             this.clipModel = null
             SetClipModel(clipModel)
             SetDensity(density)
-            current.worldOrigin.oSet(clipModel.GetOrigin())
-            current.worldAxis.oSet(clipModel.GetAxis())
+            current.worldOrigin.set(clipModel.GetOrigin())
+            current.worldAxis.set(clipModel.GetAxis())
             next.oSet(current)
         }
 
@@ -3796,26 +3796,26 @@ object Physics_AF {
             contactFriction = -1.0f
             bouncyness = -1.0f
             clipMask = 0
-            frictionDir.oSet(Vector.getVec3_zero())
-            contactMotorDir.oSet(Vector.getVec3_zero())
+            frictionDir.set(Vector.getVec3_zero())
+            contactMotorDir.set(Vector.getVec3_zero())
             contactMotorVelocity = 0.0f
             contactMotorForce = 0.0f
             mass = 1.0f
             invMass = 1.0f
-            centerOfMass.oSet(Vector.getVec3_zero())
+            centerOfMass.set(Vector.getVec3_zero())
             inertiaTensor = idMat3.Companion.getMat3_identity()
             inverseInertiaTensor = idMat3.Companion.getMat3_identity()
             state.get(0) = AFBodyPState_s()
             current = state.get(0)
             state.get(1) = AFBodyPState_s()
             next = state.get(1)
-            current.worldOrigin.oSet(Vector.getVec3_zero())
+            current.worldOrigin.set(Vector.getVec3_zero())
             current.worldAxis = idMat3.Companion.getMat3_identity()
             current.spatialVelocity = Vector.getVec6_zero()
             current.externalForce = Vector.getVec6_zero()
             next.oSet(current)
             saved = AFBodyPState_s(current)
-            atRestOrigin.oSet(Vector.getVec3_zero())
+            atRestOrigin.set(Vector.getVec3_zero())
             atRestAxis = idMat3.Companion.getMat3_identity()
             inverseWorldSpatialInertia = idMatX()
             I = idMatX()
@@ -3856,7 +3856,7 @@ object Physics_AF {
         }
 
         fun GetPointVelocity(point: idVec3?): idVec3? {
-            val r = idVec3(point.oMinus(current.worldOrigin))
+            val r = idVec3(point.minus(current.worldOrigin))
             return current.spatialVelocity.SubVec3(0).oPlus(current.spatialVelocity.SubVec3(1).Cross(r))
         }
 
@@ -3890,11 +3890,11 @@ object Physics_AF {
         }
 
         fun SetWorldOrigin(origin: idVec3?) {
-            current.worldOrigin.oSet(origin)
+            current.worldOrigin.set(origin)
         }
 
         fun SetWorldAxis(axis: idMat3?) {
-            current.worldAxis.oSet(axis)
+            current.worldAxis.set(axis)
         }
 
         fun SetLinearVelocity(linear: idVec3?) {
@@ -3971,16 +3971,16 @@ object Physics_AF {
                 val a = 0
             }
             if (inertiaTensor.IsDiagonal(1e-3f)) {
-                inertiaTensor.oSet(0, 1, inertiaTensor.oSet(0, 2, 0.0f))
-                inertiaTensor.oSet(1, 0, inertiaTensor.oSet(1, 2, 0.0f))
-                inertiaTensor.oSet(2, 0, inertiaTensor.oSet(2, 1, 0.0f))
+                inertiaTensor.set(0, 1, inertiaTensor.set(0, 2, 0.0f))
+                inertiaTensor.set(1, 0, inertiaTensor.set(1, 2, 0.0f))
+                inertiaTensor.set(2, 0, inertiaTensor.set(2, 1, 0.0f))
                 inverseInertiaTensor.Identity()
-                inverseInertiaTensor.oSet(0, 0, 1.0f / inertiaTensor.oGet(0, 0))
-                inverseInertiaTensor.oSet(1, 1, 1.0f / inertiaTensor.oGet(1, 1))
-                inverseInertiaTensor.oSet(2, 2, 1.0f / inertiaTensor.oGet(2, 2))
+                inverseInertiaTensor.set(0, 0, 1.0f / inertiaTensor.get(0, 0))
+                inverseInertiaTensor.set(1, 1, 1.0f / inertiaTensor.get(1, 1))
+                inverseInertiaTensor.set(2, 2, 1.0f / inertiaTensor.get(2, 2))
                 val a = 0
             } else {
-                inverseInertiaTensor.oSet(inertiaTensor.Inverse())
+                inverseInertiaTensor.set(inertiaTensor.Inverse())
                 val a = 0
             }
         }
@@ -3994,26 +3994,26 @@ object Physics_AF {
         }
 
         fun SetFrictionDirection(dir: idVec3?) {
-            frictionDir.oSet(dir.times(current.worldAxis.Transpose()))
+            frictionDir.set(dir.times(current.worldAxis.Transpose()))
             fl.useFrictionDir = true
         }
 
         fun GetFrictionDirection(dir: idVec3?): Boolean {
             if (fl.useFrictionDir) {
-                dir.oSet(frictionDir.times(current.worldAxis))
+                dir.set(frictionDir.times(current.worldAxis))
                 return true
             }
             return false
         }
 
         fun SetContactMotorDirection(dir: idVec3?) {
-            contactMotorDir.oSet(dir.times(current.worldAxis.Transpose()))
+            contactMotorDir.set(dir.times(current.worldAxis.Transpose()))
             fl.useContactMotorDir = true
         }
 
         fun GetContactMotorDirection(dir: idVec3?): Boolean {
             if (fl.useContactMotorDir) {
-                dir.oSet(contactMotorDir.times(current.worldAxis))
+                dir.set(contactMotorDir.times(current.worldAxis))
                 return true
             }
             return false
@@ -4037,7 +4037,7 @@ object Physics_AF {
 
         fun AddForce(point: idVec3?, force: idVec3?) {
             current.externalForce.SubVec3_oPluSet(0, force)
-            current.externalForce.SubVec3_oPluSet(1, point.oMinus(current.worldOrigin).Cross(force))
+            current.externalForce.SubVec3_oPluSet(1, point.minus(current.worldOrigin).Cross(force))
         }
 
         /*
@@ -4169,30 +4169,30 @@ object Physics_AF {
             // from the leaves up towards the root
             i = sortedBodies.Num() - 1
             while (i >= 0) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 if (body.children.Num() != 0) {
                     j = 0
                     while (j < body.children.Num()) {
-                        child = body.children.oGet(j).primaryConstraint
+                        child = body.children.get(j).primaryConstraint
 
                         // child.I = - child.body1.J.Transpose() * child.body1.I * child.body1.J;
                         childI.SetSize(child.J1.GetNumRows(), child.J1.GetNumRows())
-                        child.body1.J.TransposeMultiply(child.body1.I).Multiply(childI, child.body1.J)
+                        child.body1.J.TransposeMultiply(child.body1.I).times(childI, child.body1.J)
                         childI.Negate()
-                        child.invI.oSet(idMatX(childI))
+                        child.invI.set(idMatX(childI))
                         if (!child.invI.InverseFastSelf()) {
                             Game_local.gameLocal.Warning(
                                 "idAFTree::Factor: couldn't invert %dx%d matrix for constraint '%s'",
                                 child.invI.GetNumRows(), child.invI.GetNumColumns(), child.GetName()
                             )
                         }
-                        child.J.oSet(child.invI.oMultiply(child.J))
+                        child.J.set(child.invI.times(child.J))
                         val bodyI = body.I.ToFloatPtr().clone()
-                        body.I.minusAssign(child.J.TransposeMultiply(childI).oMultiply(child.J))
+                        body.I.minusAssign(child.J.TransposeMultiply(childI).times(child.J))
                         val a = 0
                         j++
                     }
-                    body.invI.oSet(body.I)
+                    body.invI.set(body.I)
                     if (!body.invI.InverseFastSelf()) {
                         Game_local.gameLocal.Warning(
                             "idAFTree::Factor: couldn't invert %dx%d matrix for body %s",
@@ -4201,12 +4201,12 @@ object Physics_AF {
                     }
                     if (body.primaryConstraint != null) {
                         val J = body.J.ToFloatPtr().clone()
-                        body.J.oSet(body.invI.oMultiply(body.J))
+                        body.J.set(body.invI.times(body.J))
                         val a = 0
                     }
                 } else if (body.primaryConstraint != null) {
                     val J = body.J.ToFloatPtr().clone()
-                    body.J.oSet(body.inverseWorldSpatialInertia.oMultiply(body.J))
+                    body.J.set(body.inverseWorldSpatialInertia.times(body.J))
                     val a = 0
                 }
                 i--
@@ -4231,10 +4231,10 @@ object Physics_AF {
             // from the leaves up towards the root
             i = sortedBodies.Num() - 1
             while (i >= 0) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 j = 0
                 while (j < body.children.Num()) {
-                    child = body.children.oGet(j)
+                    child = body.children.get(j)
                     primaryConstraint = child.primaryConstraint
                     val s = primaryConstraint.s.ToFloatPtr().clone()
                     if (!child.fl.isZero) {
@@ -4254,7 +4254,7 @@ object Physics_AF {
             // from the root down towards the leaves
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 primaryConstraint = body.primaryConstraint
                 if (primaryConstraint != null) {
                     if (useSymmetry && body.parent.maxSubTreeAuxiliaryIndex < auxiliaryIndex) {
@@ -4263,24 +4263,24 @@ object Physics_AF {
                     }
                     val s = primaryConstraint.s.ToFloatPtr().clone()
                     if (!primaryConstraint.fl.isZero) {
-                        primaryConstraint.s.oSet(primaryConstraint.invI.oMultiply(primaryConstraint.s))
+                        primaryConstraint.s.set(primaryConstraint.invI.times(primaryConstraint.s))
                     }
                     primaryConstraint.J.MultiplySub(primaryConstraint.s, primaryConstraint.body2.s)
-                    primaryConstraint.lm.oSet(primaryConstraint.s)
+                    primaryConstraint.lm.set(primaryConstraint.s)
                     if (useSymmetry && body.maxSubTreeAuxiliaryIndex < auxiliaryIndex) {
                         i++
                         continue
                     }
                     if (body.children.Num() != 0) {
                         if (!body.fl.isZero) {
-                            body.s.oSet(body.invI.oMultiply(body.s))
+                            body.s.set(body.invI.times(body.s))
                         }
                         body.J.MultiplySub(body.s, primaryConstraint.s)
                         val a = 0
                     }
                 } else if (body.children.Num() != 0) {
                     val s = body.s.p.clone()
-                    body.s.oSet(body.invI.oMultiply(body.s))
+                    body.s.set(body.invI.times(body.s))
                     val a = 0
                 }
                 i++
@@ -4320,7 +4320,7 @@ object Physics_AF {
             // initialize right hand side to zero
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 primaryConstraint = body.primaryConstraint
                 if (primaryConstraint != null) {
                     primaryConstraint.s.Zero()
@@ -4335,16 +4335,16 @@ object Physics_AF {
             // set right hand side for first constrained body
             body = constraint.body1
             if (body.tree === this) {
-                body.InverseWorldSpatialInertiaMultiply(v, constraint.J1.oGet(row))
+                body.InverseWorldSpatialInertiaMultiply(v, constraint.J1.get(row))
                 primaryConstraint = body.primaryConstraint
                 if (primaryConstraint != null) {
-                    primaryConstraint.J1.Multiply(primaryConstraint.s, v)
+                    primaryConstraint.J1.times(primaryConstraint.s, v)
                     primaryConstraint.fl.isZero = false
                 }
                 i = 0
                 while (i < body.children.Num()) {
-                    child = body.children.oGet(i).primaryConstraint
-                    child.J2.Multiply(child.s, v)
+                    child = body.children.get(i).primaryConstraint
+                    child.J2.times(child.s, v)
                     child.fl.isZero = false
                     i++
                 }
@@ -4354,7 +4354,7 @@ object Physics_AF {
             // set right hand side for second constrained body
             body = constraint.body2
             if (body != null && body.tree == this) {
-                body.InverseWorldSpatialInertiaMultiply(v, constraint.J2.oGet(row))
+                body.InverseWorldSpatialInertiaMultiply(v, constraint.J2.get(row))
                 primaryConstraint = body.primaryConstraint
                 if (primaryConstraint != null) {
                     primaryConstraint.J1.MultiplyAdd(primaryConstraint.s, v)
@@ -4362,7 +4362,7 @@ object Physics_AF {
                 }
                 i = 0
                 while (i < body.children.Num()) {
-                    child = body.children.oGet(i).primaryConstraint
+                    child = body.children.get(i).primaryConstraint
                     child.J2.MultiplyAdd(child.s, v)
                     child.fl.isZero = false
                     i++
@@ -4378,7 +4378,7 @@ object Physics_AF {
             val force = idVecX()
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 if (useSymmetry && body.maxAuxiliaryIndex < auxiliaryIndex) {
                     i++
                     continue
@@ -4393,7 +4393,7 @@ object Physics_AF {
                 j = 0
                 while (j < body.children.Num()) {
                     DBG_force++
-                    child = body.children.oGet(j).primaryConstraint
+                    child = body.children.get(j).primaryConstraint
                     child.J2.TransposeMultiplyAdd(force, child.lm)
                     j++
                 }
@@ -4422,7 +4422,7 @@ object Physics_AF {
             // forces on bodies
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 body.totalForce.SubVec6_oSet(0, body.current.externalForce.oPlus(body.auxForce.SubVec6(0)))
                 val a = 0
                 i++
@@ -4437,15 +4437,15 @@ object Physics_AF {
             // initialize right hand side
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 body.InverseWorldSpatialInertiaMultiply(body.acceleration, body.totalForce.ToFloatPtr())
                 body.acceleration.SubVec6_oPluSet(0, body.current.spatialVelocity.times(invStep))
                 primaryConstraint = body.primaryConstraint
                 if (primaryConstraint != null) {
                     // b = ( J * acc + c )
                     c = primaryConstraint
-                    c.s.oSet(
-                        c.J1.oMultiply(c.body1.acceleration).oPlus(c.J2.oMultiply(c.body2.acceleration))
+                    c.s.set(
+                        c.J1.times(c.body1.acceleration).oPlus(c.J2.times(c.body2.acceleration))
                             .oPlus(c.c1.oPlus(c.c2).oMultiply(invStep))
                     )
                     c.fl.isZero = false
@@ -4461,7 +4461,7 @@ object Physics_AF {
             // calculate forces on bodies after applying primary constraints
             i = 0
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
 
                 // add forces of all primary constraints acting on this body
                 primaryConstraint = body.primaryConstraint
@@ -4471,7 +4471,7 @@ object Physics_AF {
                 }
                 j = 0
                 while (j < body.children.Num()) {
-                    child = body.children.oGet(j).primaryConstraint
+                    child = body.children.get(j).primaryConstraint
                     child.J2.TransposeMultiplyAdd(body.totalForce, child.lm)
                     val a = 0
                     j++
@@ -4489,11 +4489,11 @@ object Physics_AF {
             // from the leaves up towards the root
             i = sortedBodies.Num() - 1
             while (i >= 0) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 body.maxSubTreeAuxiliaryIndex = body.maxAuxiliaryIndex
                 j = 0
                 while (j < body.children.Num()) {
-                    child = body.children.oGet(j)
+                    child = body.children.get(j)
                     if (child.maxSubTreeAuxiliaryIndex > body.maxSubTreeAuxiliaryIndex) {
                         body.maxSubTreeAuxiliaryIndex = child.maxSubTreeAuxiliaryIndex
                     }
@@ -4517,7 +4517,7 @@ object Physics_AF {
             // find the root
             i = 0
             while (i < sortedBodies.Num()) {
-                if (null == sortedBodies.oGet(i).parent) {
+                if (null == sortedBodies.get(i).parent) {
                     break
                 }
                 i++
@@ -4525,7 +4525,7 @@ object Physics_AF {
             if (i >= sortedBodies.Num()) {
                 idGameLocal.Companion.Error("Articulated figure tree has no root.")
             }
-            body = sortedBodies.oGet(i)
+            body = sortedBodies.get(i)
             sortedBodies.Clear()
             sortedBodies.Append(body)
             SortBodies_r(sortedBodies, body)
@@ -4535,12 +4535,12 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < body.children.Num()) {
-                sortedList.Append(body.children.oGet(i))
+                sortedList.Append(body.children.get(i))
                 i++
             }
             i = 0
             while (i < body.children.Num()) {
-                SortBodies_r(sortedList, body.children.oGet(i))
+                SortBodies_r(sortedList, body.children.get(i))
                 i++
             }
         }
@@ -4550,7 +4550,7 @@ object Physics_AF {
             var body: idAFBody?
             i = 1
             while (i < sortedBodies.Num()) {
-                body = sortedBodies.oGet(i)
+                body = sortedBodies.get(i)
                 Game_local.gameRenderWorld.DebugArrow(
                     color,
                     body.parent.current.worldOrigin,
@@ -4729,7 +4729,7 @@ object Physics_AF {
             saveFile.WriteInt(bodies.Num())
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).Save(saveFile)
+                bodies.get(i).Save(saveFile)
                 i++
             }
             if (masterBody != null) {
@@ -4741,7 +4741,7 @@ object Physics_AF {
             saveFile.WriteInt(constraints.Num())
             i = 0
             while (i < constraints.Num()) {
-                constraints.oGet(i).Save(saveFile)
+                constraints.get(i).Save(saveFile)
                 i++
             }
             saveFile.WriteBool(changedAF)
@@ -4793,7 +4793,7 @@ object Physics_AF {
             assert(num.getVal() == bodies.Num())
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).Restore(saveFile)
+                bodies.get(i).Restore(saveFile)
                 i++
             }
             saveFile.ReadBool(hasMaster)
@@ -4805,7 +4805,7 @@ object Physics_AF {
             assert(num.getVal() == constraints.Num())
             i = 0
             while (i < constraints.Num()) {
-                constraints.oGet(i).Restore(saveFile)
+                constraints.get(i).Restore(saveFile)
                 i++
             }
             changedAF = saveFile.ReadBool()
@@ -4946,9 +4946,9 @@ object Physics_AF {
                 )
             }
             if (id != newId) {
-                val b = bodies.oGet(newId)
-                bodies.oSet(newId, bodies.oGet(id))
-                bodies.oSet(id, b)
+                val b = bodies.get(newId)
+                bodies.set(newId, bodies.get(id))
+                bodies.set(id, b)
                 changedAF = true
             }
         }
@@ -4967,7 +4967,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (0 == bodies.oGet(i).name.Icmp(bodyName)) {
+                if (0 == bodies.get(i).name.Icmp(bodyName)) {
                     return i
                 }
                 i++
@@ -4995,7 +4995,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).name.Icmp(constraintName) == 0) {
+                if (constraints.get(i).name.Icmp(constraintName) == 0) {
                     return i
                 }
                 i++
@@ -5021,8 +5021,8 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (0 == bodies.oGet(i).name.Icmp(bodyName)) {
-                    return bodies.oGet(i)
+                if (0 == bodies.get(i).name.Icmp(bodyName)) {
+                    return bodies.get(i)
                 }
                 i++
             }
@@ -5038,7 +5038,7 @@ object Physics_AF {
                 idGameLocal.Companion.Error("GetBody: no body with id %d exists\n", id)
                 return null
             }
-            return bodies.oGet(id)
+            return bodies.get(id)
         }
 
         fun GetMasterBody(): idAFBody? {
@@ -5049,8 +5049,8 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.oGet(i).name.Icmp(constraintName) == 0) {
-                    return constraints.oGet(i)
+                if (constraints.get(i).name.Icmp(constraintName) == 0) {
+                    return constraints.get(i)
                 }
                 i++
             }
@@ -5063,7 +5063,7 @@ object Physics_AF {
                 idGameLocal.Companion.Error("GetConstraint: no constraint with id %d exists\n", id)
                 return null
             }
-            return constraints.oGet(id)
+            return constraints.get(id)
         }
 
         // delete body or constraint
@@ -5073,7 +5073,7 @@ object Physics_AF {
             // find the body with the given name
             i = 0
             while (i < bodies.Num()) {
-                if (0 == bodies.oGet(i).name.Icmp(bodyName)) {
+                if (0 == bodies.get(i).name.Icmp(bodyName)) {
                     break
                 }
                 i++
@@ -5098,7 +5098,7 @@ object Physics_AF {
             // remove any constraints attached to this body
             j = 0
             while (j < constraints.Num()) {
-                if (constraints.oGet(j).body1 == bodies.oGet(id) || constraints.oGet(j).body2 == bodies.oGet(id)) {
+                if (constraints.get(j).body1 == bodies.get(id) || constraints.get(j).body2 == bodies.get(id)) {
 //			delete constraints[j];
                     constraints.RemoveIndex(j)
                     j--
@@ -5113,7 +5113,7 @@ object Physics_AF {
             // set new body ids
             j = 0
             while (j < bodies.Num()) {
-                bodies.oGet(j).clipModel.SetId(j)
+                bodies.get(j).clipModel.SetId(j)
                 j++
             }
             changedAF = true
@@ -5125,7 +5125,7 @@ object Physics_AF {
             // find the constraint with the given name
             i = 0
             while (i < constraints.Num()) {
-                if (TempDump.NOT(constraints.oGet(i).name.Icmp(constraintName).toDouble())) {
+                if (TempDump.NOT(constraints.get(i).name.Icmp(constraintName).toDouble())) {
                     break
                 }
                 i++
@@ -5162,10 +5162,10 @@ object Physics_AF {
                 return 0
             }
             numContacts = 0
-            body = bodies.oGet(id)
+            body = bodies.get(id)
             i = 0
             while (i < contactConstraints.Num()) {
-                contact = contactConstraints.oGet(i)
+                contact = contactConstraints.get(i)
                 if (contact.body1 === body || contact.body2 === body) {
                     contacts.get(numContacts++) = contact
                     if (numContacts >= maxContacts) {
@@ -5309,7 +5309,7 @@ object Physics_AF {
             var body: idAFBody?
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 body.clipModel.Link(
                     Game_local.gameLocal.clip,
                     self,
@@ -5325,7 +5325,7 @@ object Physics_AF {
         override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {}
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
             return if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).GetClipModel()
+                bodies.get(id).GetClipModel()
             } else null
         }
 
@@ -5343,18 +5343,18 @@ object Physics_AF {
 
         override fun GetMass(id: Int /*= -1*/): Float {
             return if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).mass
+                bodies.get(id).mass
             } else totalMass
         }
 
         override fun SetContents(contents: Int, id: Int /*= -1*/) {
             var i: Int
             if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).GetClipModel().SetContents(contents)
+                bodies.get(id).GetClipModel().SetContents(contents)
             } else {
                 i = 0
                 while (i < bodies.Num()) {
-                    bodies.oGet(i).GetClipModel().SetContents(contents)
+                    bodies.get(i).GetClipModel().SetContents(contents)
                     i++
                 }
             }
@@ -5364,12 +5364,12 @@ object Physics_AF {
             var i: Int
             var contents: Int
             return if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).GetClipModel().GetContents()
+                bodies.get(id).GetClipModel().GetContents()
             } else {
                 contents = 0
                 i = 0
                 while (i < bodies.Num()) {
-                    contents = contents or bodies.oGet(i).GetClipModel().GetContents()
+                    contents = contents or bodies.get(i).GetClipModel().GetContents()
                     i++
                 }
                 contents
@@ -5379,22 +5379,22 @@ object Physics_AF {
         override fun GetBounds(id: Int /*= -1*/): idBounds? {
             var i: Int
             return if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).GetClipModel().GetBounds()
+                bodies.get(id).GetClipModel().GetBounds()
             } else if (0 == bodies.Num()) {
                 relBounds.Zero()
                 relBounds
             } else {
-                relBounds = bodies.oGet(0).GetClipModel().GetBounds()
+                relBounds = bodies.get(0).GetClipModel().GetBounds()
                 i = 1
                 while (i < bodies.Num()) {
                     val bounds = idBounds()
                     val origin = idVec3(
-                        bodies.oGet(i).GetWorldOrigin().oMinus(bodies.oGet(0).GetWorldOrigin())
-                            .oMultiply(bodies.oGet(0).GetWorldAxis().Transpose())
+                        bodies.get(i).GetWorldOrigin().minus(bodies.get(0).GetWorldOrigin())
+                            .oMultiply(bodies.get(0).GetWorldAxis().Transpose())
                     )
                     val axis =
-                        idMat3(bodies.oGet(i).GetWorldAxis().times(bodies.oGet(0).GetWorldAxis().Transpose()))
-                    bounds.FromTransformedBounds(bodies.oGet(i).GetClipModel().GetBounds(), origin, axis)
+                        idMat3(bodies.get(i).GetWorldAxis().times(bodies.get(0).GetWorldAxis().Transpose()))
+                    bounds.FromTransformedBounds(bodies.get(i).GetClipModel().GetBounds(), origin, axis)
                     relBounds.timesAssign(bounds)
                     i++
                 }
@@ -5405,15 +5405,15 @@ object Physics_AF {
         override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
             var i: Int
             return if (id >= 0 && id < bodies.Num()) {
-                bodies.oGet(id).GetClipModel().GetAbsBounds()
+                bodies.get(id).GetClipModel().GetAbsBounds()
             } else if (0 == bodies.Num()) {
                 absBounds.Zero()
                 absBounds
             } else {
-                absBounds = bodies.oGet(0).GetClipModel().GetAbsBounds()
+                absBounds = bodies.get(0).GetClipModel().GetAbsBounds()
                 i = 1
                 while (i < bodies.Num()) {
-                    absBounds.timesAssign(bodies.oGet(i).GetClipModel().GetAbsBounds())
+                    absBounds.timesAssign(bodies.get(i).GetClipModel().GetAbsBounds())
                     i++
                 }
                 absBounds
@@ -5450,8 +5450,8 @@ object Physics_AF {
                 if (current.atRest >= 0 && (masterBody.current.worldOrigin !== masterOrigin || masterBody.current.worldAxis !== masterAxis)) {
                     Activate()
                 }
-                masterBody.current.worldOrigin.oSet(masterOrigin)
-                masterBody.current.worldAxis.oSet(masterAxis)
+                masterBody.current.worldOrigin.set(masterOrigin)
+                masterBody.current.worldAxis.set(masterAxis)
             }
 
             // if the simulation is suspended because the figure is at rest
@@ -5492,12 +5492,12 @@ object Physics_AF {
             if (Physics_AF.AF_TIMINGS) {
                 i = 0
                 while (i < primaryConstraints.Num()) {
-                    numPrimary += primaryConstraints.oGet(i).J1.GetNumRows()
+                    numPrimary += primaryConstraints.get(i).J1.GetNumRows()
                     i++
                 }
                 i = 0
                 while (i < auxiliaryConstraints.Num()) {
-                    numAuxiliary += auxiliaryConstraints.oGet(i).J1.GetNumRows()
+                    numAuxiliary += auxiliaryConstraints.get(i).J1.GetNumRows()
                     i++
                 }
                 Physics_AF.timer_pc.Start()
@@ -5573,7 +5573,7 @@ object Physics_AF {
             if (IsOutsideWorld()) {
                 Game_local.gameLocal.Warning(
                     "articulated figure moved outside world bounds for entity '%s' type '%s' at (%s)",
-                    self.name, self.GetType().name, bodies.oGet(0).current.worldOrigin.ToString(0)
+                    self.name, self.GetType().name, bodies.get(0).current.worldOrigin.ToString(0)
                 )
                 Rest()
             }
@@ -5624,13 +5624,13 @@ object Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return info
             }
-            info.invMass = 1.0f / bodies.oGet(id).mass
-            info.invInertiaTensor = bodies.oGet(id).current.worldAxis.Transpose()
-                .times(bodies.oGet(id).inverseInertiaTensor.times(bodies.oGet(id).current.worldAxis))
-            info.position.oSet(point.oMinus(bodies.oGet(id).current.worldOrigin))
-            info.velocity.oSet(
-                bodies.oGet(id).current.spatialVelocity.SubVec3(0)
-                    .oPlus(bodies.oGet(id).current.spatialVelocity.SubVec3(1).Cross(info.position))
+            info.invMass = 1.0f / bodies.get(id).mass
+            info.invInertiaTensor = bodies.get(id).current.worldAxis.Transpose()
+                .times(bodies.get(id).inverseInertiaTensor.times(bodies.get(id).current.worldAxis))
+            info.position.set(point.minus(bodies.get(id).current.worldOrigin))
+            info.velocity.set(
+                bodies.get(id).current.spatialVelocity.SubVec3(0)
+                    .oPlus(bodies.get(id).current.spatialVelocity.SubVec3(1).Cross(info.position))
             )
             return info
         }
@@ -5642,12 +5642,12 @@ object Physics_AF {
             if (noImpact || impulse.LengthSqr() < Math_h.Square(impulseThreshold)) {
                 return
             }
-            val invWorldInertiaTensor = bodies.oGet(id).current.worldAxis.Transpose()
-                .times(bodies.oGet(id).inverseInertiaTensor.times(bodies.oGet(id).current.worldAxis))
-            bodies.oGet(id).current.spatialVelocity.SubVec3_oPluSet(0, impulse.times(bodies.oGet(id).invMass))
-            bodies.oGet(id).current.spatialVelocity.SubVec3_oPluSet(
+            val invWorldInertiaTensor = bodies.get(id).current.worldAxis.Transpose()
+                .times(bodies.get(id).inverseInertiaTensor.times(bodies.get(id).current.worldAxis))
+            bodies.get(id).current.spatialVelocity.SubVec3_oPluSet(0, impulse.times(bodies.get(id).invMass))
+            bodies.get(id).current.spatialVelocity.SubVec3_oPluSet(
                 1,
-                invWorldInertiaTensor.times(point.oMinus(bodies.oGet(id).current.worldOrigin).Cross(impulse))
+                invWorldInertiaTensor.times(point.minus(bodies.get(id).current.worldOrigin).Cross(impulse))
             )
             Activate()
         }
@@ -5659,10 +5659,10 @@ object Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return
             }
-            bodies.oGet(id).current.externalForce.SubVec3_oPluSet(0, force)
-            bodies.oGet(id).current.externalForce.SubVec3_oPluSet(
+            bodies.get(id).current.externalForce.SubVec3_oPluSet(0, force)
+            bodies.get(id).current.externalForce.SubVec3_oPluSet(
                 1,
-                point.oMinus(bodies.oGet(id).current.worldOrigin).Cross(force)
+                point.minus(bodies.get(id).current.worldOrigin).Cross(force)
             )
             Activate()
         }
@@ -5711,7 +5711,7 @@ object Physics_AF {
             while (i < bodies.Num()) {
 
 //                memcpy(bodies.oGet(i).saved, bodies.oGet(i).current, sizeof(AFBodyPState_t));
-                bodies.oGet(i).saved.oSet(bodies.oGet(i).current)
+                bodies.get(i).saved.oSet(bodies.get(i).current)
                 i++
             }
         }
@@ -5721,7 +5721,7 @@ object Physics_AF {
             current = saved
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).current.oSet(bodies.oGet(i).saved)
+                bodies.get(i).current.oSet(bodies.get(i).saved)
                 i++
             }
             EvaluateContacts()
@@ -5731,11 +5731,11 @@ object Physics_AF {
             if (masterBody != null) {
                 Translate(
                     masterBody.current.worldOrigin.oPlus(
-                        masterBody.current.worldAxis.times(newOrigin).oMinus(bodies.oGet(0).current.worldOrigin)
+                        masterBody.current.worldAxis.times(newOrigin).minus(bodies.get(0).current.worldOrigin)
                     )
                 )
             } else {
-                Translate(newOrigin.oMinus(bodies.oGet(0).current.worldOrigin))
+                Translate(newOrigin.minus(bodies.get(0).current.worldOrigin))
             }
         }
 
@@ -5743,12 +5743,12 @@ object Physics_AF {
             val axis: idMat3?
             val rotation: idRotation?
             axis = if (masterBody != null) {
-                bodies.oGet(0).current.worldAxis.Transpose().times(newAxis.times(masterBody.current.worldAxis))
+                bodies.get(0).current.worldAxis.Transpose().times(newAxis.times(masterBody.current.worldAxis))
             } else {
-                bodies.oGet(0).current.worldAxis.Transpose().times(newAxis)
+                bodies.get(0).current.worldAxis.Transpose().times(newAxis)
             }
             rotation = axis.ToRotation()
-            rotation.SetOrigin(bodies.oGet(0).current.worldOrigin)
+            rotation.SetOrigin(bodies.get(0).current.worldOrigin)
             Rotate(rotation)
         }
 
@@ -5760,7 +5760,7 @@ object Physics_AF {
                 // translate constraints attached to the world
                 i = 0
                 while (i < constraints.Num()) {
-                    constraints.oGet(i).Translate(translation)
+                    constraints.get(i).Translate(translation)
                     i++
                 }
             }
@@ -5768,7 +5768,7 @@ object Physics_AF {
             // translate all the bodies
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 body.current.worldOrigin.plusAssign(translation)
                 val a = 0
                 i++
@@ -5784,7 +5784,7 @@ object Physics_AF {
                 // rotate constraints attached to the world
                 i = 0
                 while (i < constraints.Num()) {
-                    constraints.oGet(i).Rotate(rotation)
+                    constraints.get(i).Rotate(rotation)
                     i++
                 }
             }
@@ -5792,7 +5792,7 @@ object Physics_AF {
             // rotate all the bodies
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 val old = idMat3(body.GetWorldAxis())
                 body.current.worldOrigin.timesAssign(rotation)
                 body.current.worldAxis.timesAssign(rotation.ToMat3())
@@ -5807,7 +5807,7 @@ object Physics_AF {
             return if (id < 0 || id >= bodies.Num()) {
                 Vector.getVec3_origin()
             } else {
-                bodies.oGet(id).current.worldOrigin
+                bodies.get(id).current.worldOrigin
             }
         }
 
@@ -5815,7 +5815,7 @@ object Physics_AF {
             return if (id < 0 || id >= bodies.Num()) {
                 idMat3.Companion.getMat3_identity()
             } else {
-                bodies.oGet(id).current.worldAxis
+                bodies.get(id).current.worldAxis
             }
         }
 
@@ -5823,7 +5823,7 @@ object Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return
             }
-            bodies.oGet(id).current.spatialVelocity.SubVec3_oSet(0, newLinearVelocity)
+            bodies.get(id).current.spatialVelocity.SubVec3_oSet(0, newLinearVelocity)
             Activate()
         }
 
@@ -5831,7 +5831,7 @@ object Physics_AF {
             if (id < 0 || id >= bodies.Num()) {
                 return
             }
-            bodies.oGet(id).current.spatialVelocity.SubVec3_oSet(1, newAngularVelocity)
+            bodies.get(id).current.spatialVelocity.SubVec3_oSet(1, newAngularVelocity)
             Activate()
         }
 
@@ -5839,7 +5839,7 @@ object Physics_AF {
             return if (id < 0 || id >= bodies.Num()) {
                 Vector.getVec3_origin()
             } else {
-                bodies.oGet(id).current.spatialVelocity.SubVec3(0)
+                bodies.get(id).current.spatialVelocity.SubVec3(0)
             }
         }
 
@@ -5847,7 +5847,7 @@ object Physics_AF {
             return if (id < 0 || id >= bodies.Num()) {
                 Vector.getVec3_origin()
             } else {
-                bodies.oGet(id).current.spatialVelocity.SubVec3(1)
+                bodies.get(id).current.spatialVelocity.SubVec3(1)
             }
         }
 
@@ -5858,7 +5858,7 @@ object Physics_AF {
             results.fraction = 1.0f
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 if (body.clipModel.IsTraceModel()) {
                     if (model != null) {
                         Game_local.gameLocal.clip.TranslationModel(
@@ -5878,8 +5878,8 @@ object Physics_AF {
                 }
                 i++
             }
-            results.endpos.oSet(bodies.oGet(0).current.worldOrigin.oPlus(translation.times(results.fraction)))
-            results.endAxis.oSet(bodies.oGet(0).current.worldAxis)
+            results.endpos.set(bodies.get(0).current.worldOrigin.oPlus(translation.times(results.fraction)))
+            results.endAxis.set(bodies.get(0).current.worldAxis)
         }
 
         override fun ClipRotation(results: trace_s?, rotation: idRotation?, model: idClipModel?) {
@@ -5891,7 +5891,7 @@ object Physics_AF {
             results.fraction = 1.0f
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 if (body.clipModel.IsTraceModel()) {
                     if (model != null) {
                         Game_local.gameLocal.clip.RotationModel(
@@ -5912,8 +5912,8 @@ object Physics_AF {
                 i++
             }
             partialRotation = rotation.times(results.fraction)
-            results.endpos.oSet(bodies.oGet(0).current.worldOrigin.times(partialRotation))
-            results.endAxis.oSet(bodies.oGet(0).current.worldAxis.times(partialRotation.ToMat3()))
+            results.endpos.set(bodies.get(0).current.worldOrigin.times(partialRotation))
+            results.endAxis.set(bodies.get(0).current.worldAxis.times(partialRotation.ToMat3()))
         }
 
         override fun ClipContents(model: idClipModel?): Int {
@@ -5923,7 +5923,7 @@ object Physics_AF {
             contents = 0
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 if (body.clipModel.IsTraceModel()) {
                     contents = if (model != null) {
                         contents or Game_local.gameLocal.clip.ContentsModel(
@@ -5947,7 +5947,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).clipModel.Disable()
+                bodies.get(i).clipModel.Disable()
                 i++
             }
         }
@@ -5956,7 +5956,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).clipModel.Enable()
+                bodies.get(i).clipModel.Enable()
                 i++
             }
         }
@@ -5965,7 +5965,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).clipModel.Unlink()
+                bodies.get(i).clipModel.Unlink()
                 i++
             }
         }
@@ -5996,7 +5996,7 @@ object Physics_AF {
             // find all the contacts
             i = 0
             while (i < bodies.Num()) {
-                val body = bodies.oGet(i)
+                val body = bodies.get(i)
                 val contactInfo = arrayOfNulls<contactInfo_t?>(10)
                 if (body.clipMask == 0) {
                     i++
@@ -6019,17 +6019,17 @@ object Physics_AF {
                         numBodyContacts = 0
                         k = 0
                         while (k < contacts.Num()) {
-                            if (contacts.oGet(k).entityNum == contactInfo[j].entityNum) {
-                                if (contacts.oGet(k).id == i && contactInfo[j].id == contactBodies.oGet(k)
-                                    || contactBodies.oGet(k) == i && contacts.oGet(k).id == contactInfo[j].id
+                            if (contacts.get(k).entityNum == contactInfo[j].entityNum) {
+                                if (contacts.get(k).id == i && contactInfo[j].id == contactBodies.get(k)
+                                    || contactBodies.get(k) == i && contacts.get(k).id == contactInfo[j].id
                                 ) {
-                                    if (contacts.oGet(k).point.oMinus(contactInfo[j].point).LengthSqr() < Math_h.Square(
+                                    if (contacts.get(k).point.minus(contactInfo[j].point).LengthSqr() < Math_h.Square(
                                             2.0f
                                         )
                                     ) {
                                         break
                                     }
-                                    if (Math.abs(contacts.oGet(k).normal.times(contactInfo[j].normal)) > 0.9f) {
+                                    if (Math.abs(contacts.get(k).normal.times(contactInfo[j].normal)) > 0.9f) {
                                         numBodyContacts++
                                     }
                                 }
@@ -6060,13 +6060,13 @@ object Physics_AF {
             val body: idAFBody?
             val rotation: idRotation?
             if (bodies.Num() != 0) {
-                body = bodies.oGet(0)
+                body = bodies.get(0)
                 rotation = body.saved.worldAxis.Transpose().times(body.current.worldAxis).ToRotation()
 
                 // velocity with which the af is pushed
                 current.pushVelocity.SubVec3_oPluSet(
                     0,
-                    body.current.worldOrigin.oMinus(body.saved.worldOrigin).oDivide(deltaTime * idMath.M_MS2SEC)
+                    body.current.worldOrigin.minus(body.saved.worldOrigin).oDivide(deltaTime * idMath.M_MS2SEC)
                 )
                 current.pushVelocity.SubVec3_oPluSet(
                     1,
@@ -6104,25 +6104,25 @@ object Physics_AF {
                     rotation = masterAxis.Transpose().ToRotation()
                     i = 0
                     while (i < constraints.Num()) {
-                        if (constraints.oGet(i).GetBody2() == null) {
-                            constraints.oGet(i).Translate(masterOrigin.oNegative())
-                            constraints.oGet(i).Rotate(rotation)
+                        if (constraints.get(i).GetBody2() == null) {
+                            constraints.get(i).Translate(masterOrigin.oNegative())
+                            constraints.get(i).Rotate(rotation)
                         }
                         i++
                     }
                     Activate()
                 }
-                masterBody.current.worldOrigin.oSet(masterOrigin)
-                masterBody.current.worldAxis.oSet(masterAxis)
+                masterBody.current.worldOrigin.set(masterOrigin)
+                masterBody.current.worldAxis.set(masterAxis)
                 val a = 0
             } else if (masterBody != null) {
                 // translate and rotate all the constraints with body2 == NULL from master space to world space
                 rotation = masterBody.current.worldAxis.ToRotation()
                 i = 0
                 while (i < constraints.Num()) {
-                    if (constraints.oGet(i).GetBody2() == null) {
-                        constraints.oGet(i).Rotate(rotation)
-                        constraints.oGet(i).Translate(masterBody.current.worldOrigin)
+                    if (constraints.get(i).GetBody2() == null) {
+                        constraints.get(i).Rotate(rotation)
+                        constraints.get(i).Translate(masterBody.current.worldOrigin)
                     }
                     i++
                 }
@@ -6140,84 +6140,84 @@ object Physics_AF {
             msg.WriteFloat(current.activateTime)
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(0),
+                current.pushVelocity.get(0),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(1),
+                current.pushVelocity.get(1),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(2),
+                current.pushVelocity.get(2),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(3),
+                current.pushVelocity.get(3),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(4),
+                current.pushVelocity.get(4),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.oGet(5),
+                current.pushVelocity.get(5),
                 AF_VELOCITY_EXPONENT_BITS,
                 AF_VELOCITY_MANTISSA_BITS
             )
             msg.WriteByte(bodies.Num())
             i = 0
             while (i < bodies.Num()) {
-                val state = bodies.oGet(i).current
+                val state = bodies.get(i).current
                 quat = state.worldAxis.ToCQuat()
-                msg.WriteFloat(state.worldOrigin.oGet(0))
-                msg.WriteFloat(state.worldOrigin.oGet(1))
-                msg.WriteFloat(state.worldOrigin.oGet(2))
+                msg.WriteFloat(state.worldOrigin.get(0))
+                msg.WriteFloat(state.worldOrigin.get(1))
+                msg.WriteFloat(state.worldOrigin.get(2))
                 msg.WriteFloat(quat.x)
                 msg.WriteFloat(quat.y)
                 msg.WriteFloat(quat.z)
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(0),
+                    state.spatialVelocity.get(0),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(1),
+                    state.spatialVelocity.get(1),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(2),
+                    state.spatialVelocity.get(2),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(3),
+                    state.spatialVelocity.get(3),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(4),
+                    state.spatialVelocity.get(4),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
                 msg.WriteDeltaFloat(
                     0.0f,
-                    state.spatialVelocity.oGet(5),
+                    state.spatialVelocity.get(5),
                     AF_VELOCITY_EXPONENT_BITS,
                     AF_VELOCITY_MANTISSA_BITS
                 )
@@ -6232,44 +6232,44 @@ object Physics_AF {
             current.atRest = msg.ReadLong()
             current.noMoveTime = msg.ReadFloat()
             current.activateTime = msg.ReadFloat()
-            current.pushVelocity.oSet(0, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
-            current.pushVelocity.oSet(1, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
-            current.pushVelocity.oSet(2, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
-            current.pushVelocity.oSet(3, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
-            current.pushVelocity.oSet(4, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
-            current.pushVelocity.oSet(5, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(0, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(1, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(2, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(3, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(4, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
+            current.pushVelocity.set(5, msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS))
             num = msg.ReadByte()
             assert(num == bodies.Num())
             i = 0
             while (i < bodies.Num()) {
-                val state = bodies.oGet(i).current
-                state.worldOrigin.oSet(0, msg.ReadFloat())
-                state.worldOrigin.oSet(1, msg.ReadFloat())
-                state.worldOrigin.oSet(2, msg.ReadFloat())
+                val state = bodies.get(i).current
+                state.worldOrigin.set(0, msg.ReadFloat())
+                state.worldOrigin.set(1, msg.ReadFloat())
+                state.worldOrigin.set(2, msg.ReadFloat())
                 quat.x = msg.ReadFloat()
                 quat.y = msg.ReadFloat()
                 quat.z = msg.ReadFloat()
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     0,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     1,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     2,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     3,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     4,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
-                state.spatialVelocity.oSet(
+                state.spatialVelocity.set(
                     5,
                     msg.ReadDeltaFloat(0.0f, AF_VELOCITY_EXPONENT_BITS, AF_VELOCITY_MANTISSA_BITS)
                 )
@@ -6279,7 +6279,7 @@ object Physics_AF {
                  state.externalForce[3] = msg.ReadDeltaFloat( 0.0f, AF_FORCE_EXPONENT_BITS, AF_FORCE_MANTISSA_BITS );
                  state.externalForce[4] = msg.ReadDeltaFloat( 0.0f, AF_FORCE_EXPONENT_BITS, AF_FORCE_MANTISSA_BITS );
                  state.externalForce[5] = msg.ReadDeltaFloat( 0.0f, AF_FORCE_EXPONENT_BITS, AF_FORCE_MANTISSA_BITS );
-                 */state.worldAxis.oSet(quat.ToMat3())
+                 */state.worldAxis.set(quat.ToMat3())
                 val a = 0
                 i++
             }
@@ -6298,7 +6298,7 @@ object Physics_AF {
             totalMass = 0.0f
             i = 0
             while (i < bodies.Num()) {
-                b = bodies.oGet(i)
+                b = bodies.get(i)
                 b.parent = null
                 b.primaryConstraint = null
                 b.constraints.SetNum(0, false)
@@ -6311,11 +6311,11 @@ object Physics_AF {
                 scale = forceTotalMass / totalMass
                 i = 0
                 while (i < bodies.Num()) {
-                    b = bodies.oGet(i)
+                    b = bodies.get(i)
                     b.mass *= scale
                     b.invMass = 1.0f / b.mass
                     b.inertiaTensor.timesAssign(scale)
-                    b.inverseInertiaTensor.oSet(b.inertiaTensor.Inverse())
+                    b.inverseInertiaTensor.set(b.inertiaTensor.Inverse())
                     val a = 0
                     i++
                 }
@@ -6324,7 +6324,7 @@ object Physics_AF {
             if (SysCvar.af_useLinearTime.GetBool()) {
                 i = 0
                 while (i < constraints.Num()) {
-                    c = constraints.oGet(i)
+                    c = constraints.get(i)
                     c.body1.constraints.Append(c)
                     if (c.body2 != null) {
                         c.body2.constraints.Append(c)
@@ -6353,11 +6353,11 @@ object Physics_AF {
                 // create trees for all parent bodies
                 i = 0
                 while (i < bodies.Num()) {
-                    if (null == bodies.oGet(i).parent) {
+                    if (null == bodies.get(i).parent) {
                         tree = idAFTree()
                         tree.sortedBodies.Clear()
-                        tree.sortedBodies.Append(bodies.oGet(i))
-                        bodies.oGet(i).tree = tree
+                        tree.sortedBodies.Append(bodies.get(i))
+                        bodies.get(i).tree = tree
                         trees.Append(tree)
                     }
                     i++
@@ -6366,13 +6366,13 @@ object Physics_AF {
                 // add each child body to the appropriate tree
                 i = 0
                 while (i < bodies.Num()) {
-                    if (bodies.oGet(i).parent != null) {
-                        b = bodies.oGet(i).parent
+                    if (bodies.get(i).parent != null) {
+                        b = bodies.get(i).parent
                         while (null == b.tree) {
                             b = b.parent
                         }
-                        b.tree.sortedBodies.Append(bodies.oGet(i))
-                        bodies.oGet(i).tree = b.tree
+                        b.tree.sortedBodies.Append(bodies.get(i))
+                        bodies.get(i).tree = b.tree
                     }
                     i++
                 }
@@ -6386,7 +6386,7 @@ object Physics_AF {
                 // sort bodies in each tree to make sure parents come first
                 i = 0
                 while (i < trees.Num()) {
-                    trees.oGet(i).SortBodies()
+                    trees.get(i).SortBodies()
                     i++
                 }
             } else {
@@ -6396,14 +6396,14 @@ object Physics_AF {
                 while (i < bodies.Num()) {
                     tree = idAFTree()
                     tree.sortedBodies.Clear()
-                    tree.sortedBodies.Append(bodies.oGet(i))
-                    bodies.oGet(i).tree = tree
+                    tree.sortedBodies.Append(bodies.get(i))
+                    bodies.get(i).tree = tree
                     trees.Append(tree)
                     i++
                 }
                 i = 0
                 while (i < constraints.Num()) {
-                    c = constraints.oGet(i)
+                    c = constraints.get(i)
                     c.body1.constraints.Append(c)
                     if (c.body2 != null) {
                         c.body2.constraints.Append(c)
@@ -6433,7 +6433,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < trees.Num()) {
-                trees.oGet(i).Factor()
+                trees.get(i).Factor()
                 i++
             }
         }
@@ -6444,7 +6444,7 @@ object Physics_AF {
             var axis: idMat3?
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
 
                 // we transpose the axis before using it because idMat3 is column-major
                 axis = body.current.worldAxis.Transpose()
@@ -6453,7 +6453,7 @@ object Physics_AF {
                 if (body.centerOfMass.Compare(Vector.getVec3_origin(), Physics_AF.CENTER_OF_MASS_EPSILON)) {
 
                     // spatial inertia in world space
-                    body.I.Set(
+                    body.I.set(
                         idMat3.Companion.getMat3_identity().times(body.mass),
                         idMat3.Companion.getMat3_zero(),
                         idMat3.Companion.getMat3_zero(),
@@ -6461,7 +6461,7 @@ object Physics_AF {
                     )
 
                     // inverse spatial inertia in world space
-                    body.inverseWorldSpatialInertia.Set(
+                    body.inverseWorldSpatialInertia.set(
                         idMat3.Companion.getMat3_identity().times(body.invMass),
                         idMat3.Companion.getMat3_zero(),
                         idMat3.Companion.getMat3_zero(),
@@ -6472,13 +6472,13 @@ object Physics_AF {
                     val massMoment: idMat3 = idMat3.Companion.SkewSymmetric(body.centerOfMass).times(body.mass)
 
                     // spatial inertia in world space
-                    body.I.Set(
+                    body.I.set(
                         idMat3.Companion.getMat3_identity().times(body.mass), massMoment,
                         massMoment.Transpose(), axis.times(body.inertiaTensor).times(axis.Transpose())
                     )
 
                     // inverse spatial inertia in world space
-                    body.inverseWorldSpatialInertia.oSet(body.I.InverseFast())
+                    body.inverseWorldSpatialInertia.set(body.I.InverseFast())
                     body.fl.spatialInertiaSparse = false
                 }
 
@@ -6498,30 +6498,30 @@ object Physics_AF {
             // setup the constraint equations for the current position and orientation of the bodies
             i = 0
             while (i < primaryConstraints.Num()) {
-                c = primaryConstraints.oGet(i)
+                c = primaryConstraints.get(i)
                 c.Evaluate(invTimeStep)
-                c.J.oSet(idMatX(c.J2))
+                c.J.set(idMatX(c.J2))
                 i++
             }
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                auxiliaryConstraints.oGet(i).Evaluate(invTimeStep)
+                auxiliaryConstraints.get(i).Evaluate(invTimeStep)
                 i++
             }
 
             // add contact constraints to the list with frame constraints
             i = 0
             while (i < contactConstraints.Num()) {
-                AddFrameConstraint(contactConstraints.oGet(i))
+                AddFrameConstraint(contactConstraints.get(i))
                 i++
             }
 
             // setup body primary constraint matrix
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 if (body.primaryConstraint != null) {
-                    body.J.oSet(body.primaryConstraint.J1.Transpose())
+                    body.J.set(body.primaryConstraint.J1.Transpose())
                     val a = 0
                 }
                 i++
@@ -6534,7 +6534,7 @@ object Physics_AF {
             // add frame constraints to auxiliary constraints
             i = 0
             while (i < frameConstraints.Num()) {
-                auxiliaryConstraints.Append(frameConstraints.oGet(i))
+                auxiliaryConstraints.Append(frameConstraints.get(i))
                 i++
             }
         }
@@ -6582,17 +6582,17 @@ object Physics_AF {
             invTimeStep = 1.0f / timeStep
             i = 0
             while (i < primaryConstraints.Num()) {
-                primaryConstraints.oGet(i).ApplyFriction(invTimeStep)
+                primaryConstraints.get(i).ApplyFriction(invTimeStep)
                 i++
             }
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                auxiliaryConstraints.oGet(i).ApplyFriction(invTimeStep)
+                auxiliaryConstraints.get(i).ApplyFriction(invTimeStep)
                 i++
             }
             i = 0
             while (i < frameConstraints.Num()) {
-                frameConstraints.oGet(i).ApplyFriction(invTimeStep)
+                frameConstraints.get(i).ApplyFriction(invTimeStep)
                 i++
             }
         }
@@ -6601,7 +6601,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < trees.Num()) {
-                trees.oGet(i).CalculateForces(timeStep)
+                trees.get(i).CalculateForces(timeStep)
                 i++
             }
         }
@@ -6640,7 +6640,7 @@ object Physics_AF {
             numAuxConstraints = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                numAuxConstraints += auxiliaryConstraints.oGet(i).J1.GetNumRows()
+                numAuxConstraints += auxiliaryConstraints.get(i).J1.GetNumRows()
                 i++
             }
             if (numAuxConstraints == 0) {
@@ -6652,7 +6652,7 @@ object Physics_AF {
 //            index = new int[bodies.Num() * numAuxConstraints];
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 body.response = FloatArray(bodies.Num() * numAuxConstraints * 8)
                 body.responseIndex = IntArray(bodies.Num() * numAuxConstraints)
                 body.numResponses = 0
@@ -6665,7 +6665,7 @@ object Physics_AF {
                 k = 0
                 i = 0
                 while (i < auxiliaryConstraints.Num()) {
-                    constraint = auxiliaryConstraints.oGet(i)
+                    constraint = auxiliaryConstraints.get(i)
                     j = 0
                     while (j < constraint.J1.GetNumRows()) {
                         if (k > constraint.body1.maxAuxiliaryIndex) {
@@ -6681,7 +6681,7 @@ object Physics_AF {
                 }
                 i = 0
                 while (i < trees.Num()) {
-                    trees.oGet(i).SetMaxSubTreeAuxiliaryIndex()
+                    trees.get(i).SetMaxSubTreeAuxiliaryIndex()
                     i++
                 }
             }
@@ -6690,7 +6690,7 @@ object Physics_AF {
             k = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                constraint = auxiliaryConstraints.oGet(i)
+                constraint = auxiliaryConstraints.get(i)
                 j = 0
                 while (j < constraint.J1.GetNumRows()) {
 
@@ -6720,10 +6720,10 @@ object Physics_AF {
             k = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                constraint = auxiliaryConstraints.oGet(i)
+                constraint = auxiliaryConstraints.get(i)
                 j = 0
                 while (j < constraint.J1.GetNumRows()) {
-                    constraint.body1.InverseWorldSpatialInertiaMultiply(tmp, constraint.J1.oGet(j))
+                    constraint.body1.InverseWorldSpatialInertiaMultiply(tmp, constraint.J1.get(j))
                     j1 = tmp.ToFloatPtr()
                     ptr = constraint.body1.response
                     index = constraint.body1.responseIndex
@@ -6746,7 +6746,7 @@ object Physics_AF {
                         dstPtr[c + l++] = 0.0f
                     }
                     if (constraint.body2 != null) {
-                        constraint.body2.InverseWorldSpatialInertiaMultiply(tmp, constraint.J2.oGet(j))
+                        constraint.body2.InverseWorldSpatialInertiaMultiply(tmp, constraint.J2.get(j))
                         j2 = tmp.ToFloatPtr()
                         ptr = constraint.body2.response
                         index = constraint.body2.responseIndex
@@ -6786,7 +6786,7 @@ object Physics_AF {
             // calculate body acceleration
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 body.InverseWorldSpatialInertiaMultiply(body.acceleration, body.totalForce.ToFloatPtr())
                 body.acceleration.SubVec6_oPluSet(0, body.current.spatialVelocity.times(invStep))
                 val a = 0
@@ -6802,8 +6802,8 @@ object Physics_AF {
             k = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                auxiliaryConstraints.oGet(i).firstIndex = k
-                k += auxiliaryConstraints.oGet(i).J1.GetNumRows()
+                auxiliaryConstraints.get(i).firstIndex = k
+                k += auxiliaryConstraints.get(i).J1.GetNumRows()
                 i++
             }
 
@@ -6811,22 +6811,22 @@ object Physics_AF {
             k = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                constraint = auxiliaryConstraints.oGet(i)
+                constraint = auxiliaryConstraints.get(i)
                 n = k
                 j = 0
                 while (j < constraint.J1.GetNumRows()) {
-                    j1 = constraint.J1.oGet(j)
+                    j1 = constraint.J1.get(j)
                     ptr = constraint.body1.acceleration.ToFloatPtr()
                     rhs.p[k] =
                         j1[0] * ptr[0] + j1[1] * ptr[1] + j1[2] * ptr[2] + j1[3] * ptr[3] + j1[4] * ptr[4] + j1[5] * ptr[5]
                     rhs.p[k] += constraint.c1.p[j] * invStep
                     if (constraint.body2 != null) {
-                        j2 = constraint.J2.oGet(j)
+                        j2 = constraint.J2.get(j)
                         ptr = constraint.body2.acceleration.ToFloatPtr()
                         rhs.p[k] += j2[0] * ptr[0] + j2[1] * ptr[1] + j2[2] * ptr[2] + j2[3] * ptr[3] + j2[4] * ptr[4] + j2[5] * ptr[5]
                         rhs.p[k] += constraint.c2.p[j] * invStep
                     }
-                    rhs.oSet(k, -rhs.oGet(k))
+                    rhs.set(k, -rhs.get(k))
                     lo.p[k] = constraint.lo.p[j]
                     hi.p[k] = constraint.hi.p[j]
                     if (constraint.boxIndex.get(j) >= 0) {
@@ -6837,7 +6837,7 @@ object Physics_AF {
                     } else {
                         boxIndex[k] = -1
                     }
-                    val v = jmk.oGet(k)[k]
+                    val v = jmk.get(k)[k]
                     jmk.plusAssign(k, k, constraint.e.p[j] * invStep)
                     val a = 0
                     j++
@@ -6861,12 +6861,12 @@ object Physics_AF {
             k = 0
             i = 0
             while (i < auxiliaryConstraints.Num()) {
-                constraint = auxiliaryConstraints.oGet(i)
+                constraint = auxiliaryConstraints.get(i)
                 j = 0
                 while (j < constraint.J1.GetNumRows()) {
-                    u = lm.oGet(k)
+                    u = lm.get(k)
                     constraint.lm.p[j] = u
-                    j1 = constraint.J1.oGet(j)
+                    j1 = constraint.J1.get(j)
                     ptr = constraint.body1.auxForce.ToFloatPtr()
                     ptr[0] += j1[0] * u
                     ptr[1] += j1[1] * u
@@ -6875,7 +6875,7 @@ object Physics_AF {
                     ptr[4] += j1[4] * u
                     ptr[5] += j1[5] * u
                     if (constraint.body2 != null) {
-                        j2 = constraint.J2.oGet(j)
+                        j2 = constraint.J2.get(j)
                         ptr = constraint.body2.auxForce.ToFloatPtr()
                         ptr[0] += j2[0] * u
                         ptr[1] += j2[1] * u
@@ -6896,7 +6896,7 @@ object Physics_AF {
             // clear pointers pointing to stack space so tools don't get confused
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 body.response = null
                 body.responseIndex = null
                 i++
@@ -6937,18 +6937,18 @@ object Physics_AF {
             val normal = idVec3()
             i = 0
             while (i < contactConstraints.Num()) {
-                body = contactConstraints.oGet(i).body1
-                normal.oSet(contactConstraints.oGet(i).GetContact().normal)
+                body = contactConstraints.get(i).body1
+                normal.set(contactConstraints.get(i).GetContact().normal)
                 val v = normal.times(body.next.spatialVelocity.SubVec3(0))
                 if (v <= 0.0f) {
                     body.next.spatialVelocity.SubVec3_oMinSet(0, normal.times(1.0001f * v))
                 }
-                body = contactConstraints.oGet(i).body2
+                body = contactConstraints.get(i).body2
                 if (null == body) {
                     i++
                     continue
                 }
-                normal.oSet(normal.oNegative())
+                normal.set(normal.oNegative())
                 if (v <= 0.0f) {
                     body.next.spatialVelocity.SubVec3_oMinSet(0, normal.times(1.0001f * v))
                 }
@@ -6970,12 +6970,12 @@ object Physics_AF {
             while (i < contacts.Num()) {
 
                 // add contact constraint
-                contactConstraints.oGet(i).physics = this
-                if (contacts.oGet(i).entityNum == self.entityNumber) {
-                    contactConstraints.oGet(i)
-                        .Setup(bodies.oGet(contactBodies.oGet(i)), bodies.oGet(contacts.oGet(i).id), contacts.oGet(i))
+                contactConstraints.get(i).physics = this
+                if (contacts.get(i).entityNum == self.entityNumber) {
+                    contactConstraints.get(i)
+                        .Setup(bodies.get(contactBodies.get(i)), bodies.get(contacts.get(i).id), contacts.get(i))
                 } else {
-                    contactConstraints.oGet(i).Setup(bodies.oGet(contactBodies.oGet(i)), null, contacts.oGet(i))
+                    contactConstraints.get(i).Setup(bodies.get(contactBodies.get(i)), null, contacts.get(i))
                 }
                 i++
             }
@@ -6998,11 +6998,11 @@ object Physics_AF {
             maxAngularVelocity = SysCvar.af_maxAngularVelocity.GetFloat() / timeStep
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
 
                 // calculate the spatial velocity for the next physics state
                 body.InverseWorldSpatialInertiaMultiply(body.acceleration, body.totalForce.ToFloatPtr())
-                body.next.spatialVelocity.oSet(
+                body.next.spatialVelocity.set(
                     body.current.spatialVelocity.oPlus(
                         body.acceleration.SubVec6(0).times(timeStep)
                     )
@@ -7032,23 +7032,23 @@ object Physics_AF {
             // calculate the position of the bodies for the next physics state
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
 
                 // translate world origin
-                body.next.worldOrigin.oSet(
+                body.next.worldOrigin.set(
                     body.current.worldOrigin.oPlus(
                         body.next.spatialVelocity.SubVec3(0).times(timeStep)
                     )
                 )
 
                 // convert angular velocity to a rotation matrix
-                vec.oSet(body.next.spatialVelocity.SubVec3(1))
+                vec.set(body.next.spatialVelocity.SubVec3(1))
                 angle = -timeStep * Vector.RAD2DEG(vec.Normalize())
                 rotation = idRotation(Vector.getVec3_origin(), vec, angle)
                 rotation.Normalize180()
 
                 // rotate world axis
-                body.next.worldAxis.oSet(body.current.worldAxis.times(rotation.ToMat3()))
+                body.next.worldAxis.set(body.current.worldAxis.times(rotation.ToMat3()))
                 body.next.worldAxis.OrthoNormalizeSelf()
 
                 // linear and angular friction
@@ -7074,19 +7074,19 @@ object Physics_AF {
                 // disable all bodies
                 i = 0
                 while (i < bodies.Num()) {
-                    bodies.oGet(i).clipModel.Disable()
+                    bodies.get(i).clipModel.Disable()
                     i++
                 }
 
                 // don't collide with world collision model if attached to the world
                 i = 0
                 while (i < body.constraints.Num()) {
-                    if (!body.constraints.oGet(i).fl.noCollision) {
+                    if (!body.constraints.get(i).fl.noCollision) {
                         i++
                         continue
                     }
                     // if this constraint attaches the body to the world
-                    if (body.constraints.oGet(i).body2 == null) {
+                    if (body.constraints.get(i).body2 == null) {
                         // don't collide with the world collision model
                         passEntity = Game_local.gameLocal.world
                     }
@@ -7097,10 +7097,10 @@ object Physics_AF {
                 // enable all bodies that have self collision
                 i = 0
                 while (i < bodies.Num()) {
-                    if (bodies.oGet(i).fl.selfCollision) {
-                        bodies.oGet(i).clipModel.Enable()
+                    if (bodies.get(i).fl.selfCollision) {
+                        bodies.get(i).clipModel.Enable()
                     } else {
-                        bodies.oGet(i).clipModel.Disable()
+                        bodies.get(i).clipModel.Disable()
                     }
                     i++
                 }
@@ -7111,19 +7111,19 @@ object Physics_AF {
                 // disable any bodies attached with constraints
                 i = 0
                 while (i < body.constraints.Num()) {
-                    if (!body.constraints.oGet(i).fl.noCollision) {
+                    if (!body.constraints.get(i).fl.noCollision) {
                         i++
                         continue
                     }
                     // if this constraint attaches the body to the world
-                    if (body.constraints.oGet(i).body2 == null) {
+                    if (body.constraints.get(i).body2 == null) {
                         // don't collide with the world collision model
                         passEntity = Game_local.gameLocal.world
                     } else {
-                        b = if (body.constraints.oGet(i).body1 == body) {
-                            body.constraints.oGet(i).body2
-                        } else if (body.constraints.oGet(i).body2 == body) {
-                            body.constraints.oGet(i).body1
+                        b = if (body.constraints.get(i).body1 == body) {
+                            body.constraints.get(i).body2
+                        } else if (body.constraints.get(i).body2 == body) {
+                            body.constraints.get(i).body1
                         } else {
                             i++
                             continue
@@ -7163,16 +7163,16 @@ object Physics_AF {
             // get info from other entity involved
             info = ent.GetImpactInfo(self, collision.c.id, collision.c.point)
             // collision point relative to the body center of mass
-            r.oSet(collision.c.point.oMinus(body.current.worldOrigin.oPlus(body.centerOfMass.times(body.current.worldAxis))))
+            r.set(collision.c.point.minus(body.current.worldOrigin.oPlus(body.centerOfMass.times(body.current.worldAxis))))
             // the velocity at the collision point
-            velocity.oSet(
+            velocity.set(
                 body.current.spatialVelocity.SubVec3(0).oPlus(body.current.spatialVelocity.SubVec3(1).Cross(r))
             )
             // subtract velocity of other entity
             velocity.minusAssign(info.velocity)
             // never stick
             if (velocity.times(collision.c.normal) > 0.0f) {
-                velocity.oSet(collision.c.normal)
+                velocity.set(collision.c.normal)
             }
             inverseWorldInertiaTensor = body.current.worldAxis.Transpose().times(body.inverseInertiaTensor)
                 .times(body.current.worldAxis)
@@ -7184,7 +7184,7 @@ object Physics_AF {
                 impulseDenominator += info.invMass + info.invInertiaTensor.times(info.position.Cross(collision.c.normal))
                     .Cross(info.position).times(collision.c.normal)
             }
-            impulse.oSet(collision.c.normal.times(impulseNumerator / impulseDenominator))
+            impulse.set(collision.c.normal.times(impulseNumerator / impulseDenominator))
 
             // apply impact to other entity
             ent.ApplyImpulse(self, collision.c.id, collision.c.point, impulse.oNegative())
@@ -7197,7 +7197,7 @@ object Physics_AF {
             var i: Int
             i = 0
             while (i < collisions.Num()) {
-                if (CollisionImpulse(timeStep, collisions.oGet(i).body, collisions.oGet(i).trace)) {
+                if (CollisionImpulse(timeStep, collisions.get(i).body, collisions.get(i).trace)) {
                     return true
                 }
                 i++
@@ -7224,7 +7224,7 @@ object Physics_AF {
             }
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 if (body.clipMask != 0) {
                     passEntity = SetupCollisionForBody(body)
                     if (Physics_AF.TEST_COLLISION_DETECTION) {
@@ -7248,15 +7248,15 @@ object Physics_AF {
                     ) {
 
                         // set the next state to the state at the moment of impact
-                        body.next.worldOrigin.oSet(collision.endpos)
+                        body.next.worldOrigin.set(collision.endpos)
                         body.next.worldAxis = collision.endAxis
 
                         // add collision to the list
                         index = collisions.Num()
                         collisions.SetNum(index + 1, false)
-                        collisions.oSet(index, AFCollision_s())
-                        collisions.oGet(index).trace = collision
-                        collisions.oGet(index).body = body
+                        collisions.set(index, AFCollision_s())
+                        collisions.get(index).trace = collision
+                        collisions.get(index).body = body
                     }
                     if (Physics_AF.TEST_COLLISION_DETECTION) {
                         if (Game_local.gameLocal.clip.Contents(
@@ -7286,7 +7286,7 @@ object Physics_AF {
             var body: idAFBody?
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
 
                 // clear external force
                 body.current.externalForce.Zero()
@@ -7300,7 +7300,7 @@ object Physics_AF {
             var body: idAFBody?
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
                 // add gravitational force
                 body.current.externalForce.SubVec3_oPluSet(0, gravityVector.times(body.mass))
                 i++
@@ -7313,7 +7313,7 @@ object Physics_AF {
             var swap: AFBodyPState_s?
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
+                body = bodies.get(i)
 
                 // swap the current and next state for next simulation step
                 swap = body.current
@@ -7349,9 +7349,9 @@ object Physics_AF {
             if (current.noMoveTime == 0.0f) {
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
-                    body.atRestOrigin.oSet(body.current.worldOrigin)
-                    body.atRestAxis.oSet(body.current.worldAxis)
+                    body = bodies.get(i)
+                    body.atRestOrigin.set(body.current.worldOrigin)
+                    body.atRestAxis.set(body.current.worldAxis)
                     i++
                 }
                 current.noMoveTime += timeStep
@@ -7361,8 +7361,8 @@ object Physics_AF {
                 maxRotation = 0.0f
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
-                    translationSqr = body.current.worldOrigin.oMinus(body.atRestOrigin).LengthSqr()
+                    body = bodies.get(i)
+                    translationSqr = body.current.worldOrigin.minus(body.atRestOrigin).LengthSqr()
                     if (translationSqr > maxTranslationSqr) {
                         maxTranslationSqr = translationSqr
                     }
@@ -7383,17 +7383,17 @@ object Physics_AF {
             // test if the velocity or acceleration of any body is still too large to come to rest
             i = 0
             while (i < bodies.Num()) {
-                body = bodies.oGet(i)
-                if (body.current.spatialVelocity.SubVec3(0).LengthSqr() > Math_h.Square(suspendVelocity.oGet(0))) {
+                body = bodies.get(i)
+                if (body.current.spatialVelocity.SubVec3(0).LengthSqr() > Math_h.Square(suspendVelocity.get(0))) {
                     return false
                 }
-                if (body.current.spatialVelocity.SubVec3(1).LengthSqr() > Math_h.Square(suspendVelocity.oGet(1))) {
+                if (body.current.spatialVelocity.SubVec3(1).LengthSqr() > Math_h.Square(suspendVelocity.get(1))) {
                     return false
                 }
-                if (body.acceleration.SubVec3(0).LengthSqr() > Math_h.Square(suspendAcceleration.oGet(0))) {
+                if (body.acceleration.SubVec3(0).LengthSqr() > Math_h.Square(suspendAcceleration.get(0))) {
                     return false
                 }
-                if (body.acceleration.SubVec3(1).LengthSqr() > Math_h.Square(suspendAcceleration.oGet(1))) {
+                if (body.acceleration.SubVec3(1).LengthSqr() > Math_h.Square(suspendAcceleration.get(1))) {
                     return false
                 }
                 i++
@@ -7408,8 +7408,8 @@ object Physics_AF {
             current.atRest = Game_local.gameLocal.time
             i = 0
             while (i < bodies.Num()) {
-                bodies.oGet(i).current.spatialVelocity.Zero()
-                bodies.oGet(i).current.externalForce.Zero()
+                bodies.get(i).current.spatialVelocity.Zero()
+                bodies.get(i).current.externalForce.Zero()
                 i++
             }
             self.BecomeInactive(Entity.TH_PHYSICS)
@@ -7420,7 +7420,7 @@ object Physics_AF {
             if (pushVelocity != Vector.getVec6_origin()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    bodies.oGet(i).current.spatialVelocity.plusAssign(pushVelocity)
+                    bodies.get(i).current.spatialVelocity.plusAssign(pushVelocity)
                     val a = 0
                     i++
                 }
@@ -7444,7 +7444,7 @@ object Physics_AF {
                     Game_local.gameRenderWorld.DebugCone(
                         Lib.Companion.colorYellow,
                         center,
-                        axis.oGet(2).oMinus(axis.oGet(1)).oMultiply(4.0f),
+                        axis.get(2).minus(axis.get(1)).oMultiply(4.0f),
                         0.0f,
                         1.0f,
                         0
@@ -7484,7 +7484,7 @@ object Physics_AF {
             if (SysCvar.af_showBodies.GetBool()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
+                    body = bodies.get(i)
                     if (body === constrainedBody1 || body === constrainedBody2) {
                         i++
                         continue
@@ -7504,7 +7504,7 @@ object Physics_AF {
             if (SysCvar.af_showBodyNames.GetBool()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
+                    body = bodies.get(i)
                     Game_local.gameRenderWorld.DrawText(
                         body.GetName().toString(),
                         body.GetWorldOrigin(),
@@ -7519,7 +7519,7 @@ object Physics_AF {
             if (SysCvar.af_showMass.GetBool()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
+                    body = bodies.get(i)
                     Game_local.gameRenderWorld.DrawText(
                         Str.va("\n%1.2f", 1.0f / body.GetInverseMass()),
                         body.GetWorldOrigin(),
@@ -7535,7 +7535,7 @@ object Physics_AF {
                 axis = Game_local.gameLocal.GetLocalPlayer().viewAngles.ToMat3()
                 Game_local.gameRenderWorld.DrawText(
                     Str.va("\n%1.2f", totalMass),
-                    bodies.oGet(0).GetWorldOrigin().oPlus(axis.oGet(2).times(8.0f)),
+                    bodies.get(0).GetWorldOrigin().oPlus(axis.get(2).times(8.0f)),
                     0.15f,
                     Lib.Companion.colorCyan,
                     axis,
@@ -7545,14 +7545,14 @@ object Physics_AF {
             if (SysCvar.af_showInertia.GetBool()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    body = bodies.oGet(i)
+                    body = bodies.get(i)
                     val I = body.inertiaTensor
                     Game_local.gameRenderWorld.DrawText(
                         Str.va(
                             "\n\n\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )",
-                            I.oGet(0).x, I.oGet(0).y, I.oGet(0).z,
-                            I.oGet(1).x, I.oGet(1).y, I.oGet(1).z,
-                            I.oGet(2).x, I.oGet(2).y, I.oGet(2).z
+                            I.get(0).x, I.get(0).y, I.get(0).z,
+                            I.get(1).x, I.get(1).y, I.get(1).z,
+                            I.get(2).x, I.get(2).y, I.get(2).z
                         ),
                         body.GetWorldOrigin(),
                         0.05f,
@@ -7566,21 +7566,21 @@ object Physics_AF {
             if (SysCvar.af_showVelocity.GetBool()) {
                 i = 0
                 while (i < bodies.Num()) {
-                    DrawVelocity(bodies.oGet(i).clipModel.GetId(), 0.1f, 4.0f)
+                    DrawVelocity(bodies.get(i).clipModel.GetId(), 0.1f, 4.0f)
                     i++
                 }
             }
             if (SysCvar.af_showConstraints.GetBool()) {
                 i = 0
                 while (i < primaryConstraints.Num()) {
-                    constraint = primaryConstraints.oGet(i)
+                    constraint = primaryConstraints.get(i)
                     constraint.DebugDraw()
                     i++
                 }
                 if (!SysCvar.af_showPrimaryOnly.GetBool()) {
                     i = 0
                     while (i < auxiliaryConstraints.Num()) {
-                        constraint = auxiliaryConstraints.oGet(i)
+                        constraint = auxiliaryConstraints.get(i)
                         constraint.DebugDraw()
                         i++
                     }
@@ -7589,7 +7589,7 @@ object Physics_AF {
             if (SysCvar.af_showConstraintNames.GetBool()) {
                 i = 0
                 while (i < primaryConstraints.Num()) {
-                    constraint = primaryConstraints.oGet(i)
+                    constraint = primaryConstraints.get(i)
                     constraint.GetCenter(center)
                     Game_local.gameRenderWorld.DrawText(
                         constraint.GetName().toString(),
@@ -7604,7 +7604,7 @@ object Physics_AF {
                 if (!SysCvar.af_showPrimaryOnly.GetBool()) {
                     i = 0
                     while (i < auxiliaryConstraints.Num()) {
-                        constraint = auxiliaryConstraints.oGet(i)
+                        constraint = auxiliaryConstraints.get(i)
                         constraint.GetCenter(center)
                         Game_local.gameRenderWorld.DrawText(
                             constraint.GetName().toString(),
@@ -7621,7 +7621,7 @@ object Physics_AF {
             if (SysCvar.af_showTrees.GetBool() || SysCvar.af_showActive.GetBool() && current.atRest < 0) {
                 i = 0
                 while (i < trees.Num()) {
-                    trees.oGet(i).DebugDraw(idStr.Companion.ColorForIndex(i + 3))
+                    trees.get(i).DebugDraw(idStr.Companion.ColorForIndex(i + 3))
                     i++
                 }
             }
@@ -7637,11 +7637,11 @@ object Physics_AF {
             val origin = clipModel.GetOrigin()
             val axis = clipModel.GetAxis()
             numSilEdges =
-                trm.GetProjectionSilhouetteEdges(projectionOrigin.oMinus(origin).oMultiply(axis.Transpose()), silEdges)
+                trm.GetProjectionSilhouetteEdges(projectionOrigin.minus(origin).oMultiply(axis.Transpose()), silEdges)
             i = 0
             while (i < numSilEdges) {
-                v1.oSet(trm.verts[trm.edges[Math.abs(silEdges[i])].v[Math_h.INTSIGNBITSET(silEdges[i])]])
-                v2.oSet(trm.verts[trm.edges[Math.abs(silEdges[i])].v[Math_h.INTSIGNBITNOTSET(silEdges[i])]])
+                v1.set(trm.verts[trm.edges[Math.abs(silEdges[i])].v[Math_h.INTSIGNBITSET(silEdges[i])]])
+                v2.set(trm.verts[trm.edges[Math.abs(silEdges[i])].v[Math_h.INTSIGNBITNOTSET(silEdges[i])]])
                 Game_local.gameRenderWorld.DebugArrow(
                     Lib.Companion.colorRed,
                     origin.oPlus(v1.times(axis)),

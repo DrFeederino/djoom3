@@ -213,7 +213,7 @@ object ListWindow {
             }
             if (currentSel.Num() > 0) {
                 for (i in 0 until currentSel.Num()) {
-                    gui.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel.oGet(i))
+                    gui.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel.get(i))
                 }
             } else {
                 gui.SetStateInt(Str.va("%s_sel_0", listName), 0)
@@ -330,26 +330,26 @@ object ListWindow {
             val doAligns = tabAligns.Num() == tabStops.Num()
             for (i in 0 until c) {
                 val r = idTabRect()
-                r.x = tabStops.oGet(i)
-                r.w = if (i < c - 1) tabStops.oGet(i + 1) - r.x - tabBorder else -1
-                r.align = if (doAligns) tabAligns.oGet(i) else 0
+                r.x = tabStops.get(i)
+                r.w = if (i < c - 1) tabStops.get(i + 1) - r.x - tabBorder else -1
+                r.align = if (doAligns) tabAligns.get(i) else 0
                 if (tabVAligns.Num() > 0) {
-                    r.valign = tabVAligns.oGet(i)
+                    r.valign = tabVAligns.get(i)
                 } else {
                     r.valign = 0
                 }
                 if (tabTypes.Num() > 0) {
-                    r.type = tabTypes.oGet(i)
+                    r.type = tabTypes.get(i)
                 } else {
                     r.type = TAB_TYPE_TEXT
                 }
                 if (tabSizes.Num() > 0) {
-                    r.iconSize = tabSizes.oGet(i)
+                    r.iconSize = tabSizes.get(i)
                 } else {
                     r.iconSize.Zero()
                 }
                 if (tabIconVOffsets.Num() > 0) {
-                    r.iconVOffset = tabIconVOffsets.oGet(i)
+                    r.iconVOffset = tabIconVOffsets.get(i)
                 } else {
                     r.iconVOffset = 0f
                 }
@@ -411,12 +411,12 @@ object ListWindow {
                             break
                         }
                         listItems.get(i).Mid(start, stop - start, work)
-                        rect.x = textRect.x + tabInfo.oGet(tab).x
-                        rect.w = if (tabInfo.oGet(tab).w == -1) width - tabInfo.oGet(tab).x else tabInfo.oGet(tab).w
+                        rect.x = textRect.x + tabInfo.get(tab).x
+                        rect.w = if (tabInfo.get(tab).w == -1) width - tabInfo.get(tab).x else tabInfo.get(tab).w
                         dc.PushClipRect(rect)
-                        if (tabInfo.oGet(tab).type == TAB_TYPE_TEXT) {
-                            dc.DrawText(work, scale, tabInfo.oGet(tab).align, color, rect, false, -1)
-                        } else if (tabInfo.oGet(tab).type == TAB_TYPE_ICON) {
+                        if (tabInfo.get(tab).type == TAB_TYPE_TEXT) {
+                            dc.DrawText(work, scale, tabInfo.get(tab).align, color, rect, false, -1)
+                        } else if (tabInfo.get(tab).type == TAB_TYPE_ICON) {
                             var hashMat: idMaterial?
                             var iconMat: idMaterial?
 
@@ -425,22 +425,22 @@ object ListWindow {
                                 hashMat = iconMaterials.get(work.toString())
                                 iconMat = hashMat ?: DeclManager.declManager.FindMaterial("_default")
                                 val iconRect = idRectangle()
-                                iconRect.w = tabInfo.oGet(tab).iconSize.x
-                                iconRect.h = tabInfo.oGet(tab).iconSize.y
-                                if (tabInfo.oGet(tab).align == TempDump.etoi(ALIGN.ALIGN_LEFT)) {
+                                iconRect.w = tabInfo.get(tab).iconSize.x
+                                iconRect.h = tabInfo.get(tab).iconSize.y
+                                if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_LEFT)) {
                                     iconRect.x = rect.x
-                                } else if (tabInfo.oGet(tab).align == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
+                                } else if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
                                     iconRect.x = rect.x + rect.w / 2.0f - iconRect.w / 2.0f
-                                } else if (tabInfo.oGet(tab).align == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
+                                } else if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
                                     iconRect.x = rect.x + rect.w - iconRect.w
                                 }
-                                if (tabInfo.oGet(tab).valign == 0) { //Top
-                                    iconRect.y = rect.y + tabInfo.oGet(tab).iconVOffset
-                                } else if (tabInfo.oGet(tab).valign == 1) { //Center
+                                if (tabInfo.get(tab).valign == 0) { //Top
+                                    iconRect.y = rect.y + tabInfo.get(tab).iconVOffset
+                                } else if (tabInfo.get(tab).valign == 1) { //Center
                                     iconRect.y =
-                                        rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo.oGet(tab).iconVOffset
-                                } else if (tabInfo.oGet(tab).valign == 2) { //Bottom
-                                    iconRect.y = rect.y + rect.h - iconRect.h + tabInfo.oGet(tab).iconVOffset
+                                        rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo.get(tab).iconVOffset
+                                } else if (tabInfo.get(tab).valign == 2) { //Bottom
+                                    iconRect.y = rect.y + rect.h - iconRect.h + tabInfo.get(tab).iconVOffset
                                 }
                                 dc.DrawMaterial(
                                     iconRect.x,
@@ -644,7 +644,7 @@ object ListWindow {
         }
 
         private fun GetCurrentSel(): Int {
-            return if (currentSel.Num() != 0) currentSel.oGet(0) else 0
+            return if (currentSel.Num() != 0) currentSel.get(0) else 0
         }
 
         private fun IsSelected(index: Int): Boolean {

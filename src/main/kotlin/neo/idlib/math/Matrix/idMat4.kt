@@ -14,10 +14,10 @@ class idMat4 {
 
     constructor()
     constructor(x: idVec4, y: idVec4, z: idVec4, w: idVec4) {
-        mat[0].oSet(x)
-        mat[1].oSet(y)
-        mat[2].oSet(z)
-        mat[3].oSet(w)
+        mat[0].set(x)
+        mat[1].set(y)
+        mat[2].set(z)
+        mat[3].set(w)
     }
 
     constructor(
@@ -91,27 +91,27 @@ class idMat4 {
     }
 
     constructor(m: idMat4) {
-        this.oSet(m)
+        this.set(m)
     }
 
     //public	idVec3			operator*( const idVec3 &vec ) const;
     //public	const idVec4 &	operator[]( int index ) const;
-    fun oGet(index: Int): idVec4 {
+    operator fun get(index: Int): idVec4 {
         return mat[index]
     }
 
     //public	idMat4			operator*( const idMat4 &a ) const;
-    fun oSet(index: Int, value: idVec4): idVec4 {
+    operator fun set(index: Int, value: idVec4): idVec4 {
         return value.also { mat[index] = it }
     }
 
     //public	idMat4			operator+( const idMat4 &a ) const;
-    fun oSet(index1: Int, index2: Int, value: Float): Float {
-        return mat[index1].oSet(index2, value)
+    operator fun set(index1: Int, index2: Int, value: Float): Float {
+        return mat[index1].set(index2, value)
     }
 
     //public	idMat4			operator-( const idMat4 &a ) const;
-    fun times(a: Float): idMat4 {
+    operator fun times(a: Float): idMat4 {
         return idMat4(
             mat[0].x * a, mat[0].y * a, mat[0].z * a, mat[0].w * a,
             mat[1].x * a, mat[1].y * a, mat[1].z * a, mat[1].w * a,
@@ -121,7 +121,7 @@ class idMat4 {
     }
 
     //public	idMat4 &		operator*=( const float a );
-    fun times(vec: idVec4): idVec4 {
+    operator fun times(vec: idVec4): idVec4 {
         return idVec4(
             mat[0].x * vec.x + mat[0].y * vec.y + mat[0].z * vec.z + mat[0].w * vec.w,
             mat[1].x * vec.x + mat[1].y * vec.y + mat[1].z * vec.z + mat[1].w * vec.w,
@@ -153,7 +153,7 @@ class idMat4 {
     }
 
     //public	idMat4 &		operator+=( const idMat4 &a );
-    fun times(a: idMat4): idMat4 {
+    operator fun times(a: idMat4): idMat4 {
         var i: Int
         var j: Int
         val dst = idMat4()
@@ -161,10 +161,10 @@ class idMat4 {
         while (i < 4) {
             j = 0
             while (j < 4) {
-                val value = (mat[0].times(a.mat[0 * 4 + j])
-                        + mat[1].times(a.mat[1 * 4 + j])
-                        + mat[2].times(a.mat[2 * 4 + j])
-                        + mat[2].times(a.mat[3 * 4 + j]))
+                val value = mat[0] * a.mat[0 * 4 + j] +
+                        mat[1] * a.mat[1 * 4 + j] +
+                        mat[2] * a.mat[2 * 4 + j] +
+                        mat[3] * a.mat[3 * 4 + j]
                 dst.setCell(i, j, value)
                 j++
             }
@@ -173,7 +173,7 @@ class idMat4 {
         return dst
     }
 
-    fun oPlus(a: idMat4): idMat4 {
+    operator fun plus(a: idMat4): idMat4 {
         return idMat4(
             mat[0].x + a.mat[0].x, mat[0].y + a.mat[0].y, mat[0].z + a.mat[0].z, mat[0].w + a.mat[0].w,
             mat[1].x + a.mat[1].x, mat[1].y + a.mat[1].y, mat[1].z + a.mat[1].z, mat[1].w + a.mat[1].w,
@@ -182,7 +182,7 @@ class idMat4 {
         )
     }
 
-    fun oMinus(a: idMat4): idMat4 {
+    operator fun minus(a: idMat4): idMat4 {
         return idMat4(
             mat[0].x - a.mat[0].x, mat[0].y - a.mat[0].y, mat[0].z - a.mat[0].z, mat[0].w - a.mat[0].w,
             mat[1].x - a.mat[1].x, mat[1].y - a.mat[1].y, mat[1].z - a.mat[1].z, mat[1].w - a.mat[1].w,
@@ -191,7 +191,7 @@ class idMat4 {
         )
     }
 
-    fun oMulSet(a: Float): idMat4 {
+    fun timesAssign(a: Float): idMat4 {
         mat[0].x *= a
         mat[0].y *= a
         mat[0].z *= a
@@ -215,28 +215,13 @@ class idMat4 {
     }
 
     //public	friend idVec3	operator*( const idVec3 &vec, const idMat4 &mat );
-    fun oMultSet(a: idMat4): idMat4 {
-        var i: Int
-        var j: Int
-        val dst = idMat4()
-        i = 0
-        while (i < 4) {
-            j = 0
-            while (j < 4) {
-                val value = (mat[0].times(a.mat[0 * 4 + j])
-                        + mat[1].times(a.mat[1 * 4 + j])
-                        + mat[2].times(a.mat[2 * 4 + j])
-                        + mat[2].times(a.mat[3 * 4 + j]))
-                dst.setCell(i, j, value)
-                j++
-            }
-            i++
-        }
+    fun timesAssign(a: idMat4): idMat4 {
+        this.set(this * a)
         return this
     }
 
     //public	friend idVec4 &	operator*=( idVec4 &vec, const idMat4 &mat );
-    fun oPluSet(a: idMat4): idMat4 {
+    fun plusAssign(a: idMat4): idMat4 {
         mat[0].x += a.mat[0].x
         mat[0].y += a.mat[0].y
         mat[0].z += a.mat[0].z
@@ -261,7 +246,7 @@ class idMat4 {
 
     //public	friend idVec3 &	operator*=( idVec3 &vec, const idMat4 &mat );
     //public	idMat4 &		operator-=( const idMat4 &a );
-    fun oMinSet(a: idMat4): idMat4 {
+    fun minusAssign(a: idMat4): idMat4 {
         mat[0].x -= a.mat[0].x
         mat[0].y -= a.mat[0].y
         mat[0].z -= a.mat[0].z
@@ -293,7 +278,7 @@ class idMat4 {
         while (i < 4) {
             j = 0
             while (j < 4) {
-                if (ptr1[i].oGet(j) != ptr2[i].oGet(j)) {
+                if (ptr1[i][j] != ptr2[i][j]) {
                     return false
                 }
                 j++
@@ -313,7 +298,7 @@ class idMat4 {
         while (i < 4) {
             j = 0
             while (j < 4) {
-                if (abs(ptr1[i].oGet(j) - ptr2[i].oGet(j)) > epsilon) {
+                if (abs(ptr1[i][j] - ptr2[i][j]) > epsilon) {
                     return false
                 }
                 j++
@@ -343,11 +328,11 @@ class idMat4 {
     }
 
     fun Zero() {
-        this.oSet(getMat4_zero())
+        this.set(getMat4_zero())
     }
 
     fun Identity() {
-        this.oSet(getMat4_identity())
+        this.set(getMat4_identity())
     }
 
     @JvmOverloads
@@ -359,7 +344,7 @@ class idMat4 {
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 1..3) {
             for (j in 0 until i) {
-                if (abs(mat[i].oGet(j) - mat[j].oGet(i)) > epsilon) {
+                if (abs(mat[i][j] - mat[j][i]) > epsilon) {
                     return false
                 }
             }
@@ -371,7 +356,7 @@ class idMat4 {
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 0..3) {
             for (j in 0..3) {
-                if (i != j && abs(mat[i].oGet(j)) > epsilon) {
+                if (i != j && abs(mat[i][j]) > epsilon) {
                     return false
                 }
             }
@@ -380,21 +365,21 @@ class idMat4 {
     }
 
     fun IsRotated(): Boolean {
-        return 0f != (mat[0].oGet(1) + mat[0].oGet(2)
-                + mat[1].oGet(0) + mat[1].oGet(2)
-                + mat[2].oGet(0) + mat[2].oGet(1))
+        return 0f != (mat[0][1] + mat[0][2]
+                + mat[1][0] + mat[1][2]
+                + mat[2][0] + mat[2][1])
     }
 
     fun ProjectVector(src: idVec4, dst: idVec4) {
-        dst.x = src.times(mat[0])
-        dst.y = src.times(mat[1])
-        dst.z = src.times(mat[2])
-        dst.w = src.times(mat[3])
+        dst.x = src * mat[0]
+        dst.y = src * mat[1]
+        dst.z = src * mat[2]
+        dst.w = src * mat[3]
     }
 
     fun UnprojectVector(src: idVec4, dst: idVec4) {
 //	dst = mat[ 0 ] * src.x + mat[ 1 ] * src.y + mat[ 2 ] * src.z + mat[ 3 ] * src.w;
-        dst.oSet(
+        dst.set(
             mat[0] * src.x +
                     mat[1] * src.y +
                     mat[2] * src.z +
@@ -403,30 +388,29 @@ class idMat4 {
     }
 
     fun Trace(): Float {
-        return mat[0].oGet(0) + mat[1].oGet(1) + mat[2].oGet(2) + mat[3].oGet(3)
+        return mat[0][0] + mat[1][1] + mat[2][2] + mat[3][3]
     }
 
     fun Determinant(): Float {
 
         // 2x2 sub-determinants
-        val det2_01_01 = mat[0].oGet(0) * mat[1].oGet(1) - mat[0].oGet(1) * mat[1].oGet(0)
-        val det2_01_02 = mat[0].oGet(0) * mat[1].oGet(2) - mat[0].oGet(2) * mat[1].oGet(0)
-        val det2_01_03 = mat[0].oGet(0) * mat[1].oGet(3) - mat[0].oGet(3) * mat[1].oGet(0)
-        val det2_01_12 = mat[0].oGet(1) * mat[1].oGet(2) - mat[0].oGet(2) * mat[1].oGet(1)
-        val det2_01_13 = mat[0].oGet(1) * mat[1].oGet(3) - mat[0].oGet(3) * mat[1].oGet(1)
-        val det2_01_23 = mat[0].oGet(2) * mat[1].oGet(3) - mat[0].oGet(3) * mat[1].oGet(2)
+        val det2_01_01 = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0]
+        val det2_01_02 = mat[0][0] * mat[1][2] - mat[0][2] * mat[1][0]
+        val det2_01_03 = mat[0][0] * mat[1][3] - mat[0][3] * mat[1][0]
+        val det2_01_12 = mat[0][1] * mat[1][2] - mat[0][2] * mat[1][1]
+        val det2_01_13 = mat[0][1] * mat[1][3] - mat[0][3] * mat[1][1]
+        val det2_01_23 = mat[0][2] * mat[1][3] - mat[0][3] * mat[1][2]
 
         // 3x3 sub-determinants
         val det3_201_012 =
-            mat[2].oGet(0) * det2_01_12 - mat[2].oGet(1) * det2_01_02 + mat[2].oGet(2) * det2_01_01
+            mat[2][0] * det2_01_12 - mat[2][1] * det2_01_02 + mat[2][2] * det2_01_01
         val det3_201_013 =
-            mat[2].oGet(0) * det2_01_13 - mat[2].oGet(1) * det2_01_03 + mat[2].oGet(3) * det2_01_01
+            mat[2][0] * det2_01_13 - mat[2][1] * det2_01_03 + mat[2][3] * det2_01_01
         val det3_201_023 =
-            mat[2].oGet(0) * det2_01_23 - mat[2].oGet(2) * det2_01_03 + mat[2].oGet(3) * det2_01_02
+            mat[2][0] * det2_01_23 - mat[2][2] * det2_01_03 + mat[2][3] * det2_01_02
         val det3_201_123 =
-            mat[2].oGet(1) * det2_01_23 - mat[2].oGet(2) * det2_01_13 + mat[2].oGet(3) * det2_01_12
-        return -det3_201_123 * mat[3].oGet(0) + det3_201_023 * mat[3].oGet(1) - det3_201_013 * mat[3]
-            .oGet(2) + det3_201_012 * mat[3].oGet(3)
+            mat[2][1] * det2_01_23 - mat[2][2] * det2_01_13 + mat[2][3] * det2_01_12
+        return -det3_201_123 * mat[3][0] + det3_201_023 * mat[3][1] - det3_201_013 * mat[3][2] + det3_201_012 * mat[3][3]
     }
 
     fun Transpose(): idMat4 { // returns transpose
@@ -437,7 +421,7 @@ class idMat4 {
         while (i < 4) {
             j = 0
             while (j < 4) {
-                transpose.mat[i].oSet(j, mat[j].oGet(i))
+                transpose.mat[i][j] = mat[j][i]
                 j++
             }
             i++
@@ -453,9 +437,9 @@ class idMat4 {
         while (i < 4) {
             j = i + 1
             while (j < 4) {
-                temp = mat[i].oGet(j)
-                mat[i].oSet(j, mat[j].oGet(i))
-                mat[j].oSet(i, temp)
+                temp = mat[i][j]
+                mat[i][j] = mat[j][i]
+                mat[j][i] = temp
                 j++
             }
             i++
@@ -655,11 +639,11 @@ class idMat4 {
         }
     }
 
-    private fun oSet(mat4: idMat4) {
-        mat[0].oSet(mat4.mat[0])
-        mat[1].oSet(mat4.mat[1])
-        mat[2].oSet(mat4.mat[2])
-        mat[3].oSet(mat4.mat[3])
+    private fun set(mat4: idMat4) {
+        mat[0].set(mat4.mat[0])
+        mat[1].set(mat4.mat[1])
+        mat[2].set(mat4.mat[2])
+        mat[3].set(mat4.mat[3])
     }
 
     fun reinterpret_cast(): FloatArray {
@@ -667,7 +651,7 @@ class idMat4 {
         val temp = FloatArray(size * size)
         for (x in 0 until size) {
             for (y in 0 until size) {
-                temp[x * size + y] = mat[x].oGet(y)
+                temp[x * size + y] = mat[x][y]
             }
         }
         return temp
@@ -689,28 +673,28 @@ class idMat4 {
 
         //public	friend idMat4	operator*( const float a, const idMat4 &mat );
         fun times(a: Float, mat: idMat4): idMat4 {
-            return mat.times(a)
+            return mat * a
         }
 
         //public	friend idVec4	operator*( const idVec4 &vec, const idMat4 &mat );
         fun times(vec: idVec4, mat: idMat4): idVec4 {
-            return mat.times(vec)
+            return mat * vec
         }
 
         fun times(vec: idVec3, mat: idMat4): idVec3 {
-            return mat.times(vec)
+            return mat * vec
         }
 
         //public	idVec4 &		operator[]( int index );
         //public	idMat4			operator*( const float a ) const;
-        fun oMulSet(vec: idVec4, mat: idMat4): idVec4 {
-            vec.oSet(mat.times(vec))
+        fun timesAssign(vec: idVec4, mat: idMat4): idVec4 {
+            vec.set(mat * vec)
             return vec
         }
 
         //public	idVec4			operator*( const idVec4 &vec ) const;
-        fun oMulSet(vec: idVec3, mat: idMat4): idVec3 {
-            vec.oSet(mat.times(vec))
+        fun timesAssign(vec: idVec3, mat: idMat4): idVec3 {
+            vec.set(mat * vec)
             return vec
         }
     }

@@ -92,7 +92,7 @@ object SmokeParticles {
             activeStages.Clear()
             renderEntity = renderEntity_s() //memset( &renderEntity, 0, sizeof( renderEntity ) );
             renderEntity.bounds.Clear()
-            renderEntity.axis.oSet(idMat3.Companion.getMat3_identity())
+            renderEntity.axis.set(idMat3.Companion.getMat3_identity())
             renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = 1
             renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1
             renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1
@@ -161,7 +161,7 @@ object SmokeParticles {
 
             // for each stage in the smoke that is still emitting particles, emit a new singleSmoke_t
             for (stageNum in 0 until smoke.stages.Num()) {
-                val stage = smoke.stages.oGet(stageNum)
+                val stage = smoke.stages.get(stageNum)
                 if (0 == stage.cycleMsec) {
                     continue
                 }
@@ -213,7 +213,7 @@ object SmokeParticles {
                 var i: Int
                 i = 0
                 while (i < activeStages.Num()) {
-                    active = activeStages.oGet(i)
+                    active = activeStages.get(i)
                     if (active.stage === stage) {
                         break
                     }
@@ -225,7 +225,7 @@ object SmokeParticles {
                     newActive.smokes = null
                     newActive.stage = stage
                     i = activeStages.Append(newActive)
-                    active = activeStages.oGet(i)
+                    active = activeStages.get(i)
                 }
 
                 // add all the required particles
@@ -243,7 +243,7 @@ object SmokeParticles {
                     numActiveSmokes++
                     newSmoke.index = prevCount
                     newSmoke.axis = axis
-                    newSmoke.origin.oSet(origin)
+                    newSmoke.origin.set(origin)
                     newSmoke.random = steppingRandom
                     newSmoke.privateStartTime = systemStartTime + prevCount * finalParticleTime / stage.totalParticles
                     newSmoke.next = active.smokes
@@ -262,7 +262,7 @@ object SmokeParticles {
                 var smoke: singleSmoke_t?
                 var next: singleSmoke_t?
                 var last: singleSmoke_t?
-                val active = activeStages.oGet(activeStageNum)
+                val active = activeStages.get(activeStageNum)
                 val stage = active.stage
                 last = null
                 smoke = active.smokes
@@ -320,7 +320,7 @@ object SmokeParticles {
                 var smoke: singleSmoke_t?
                 var next: singleSmoke_t?
                 var last: singleSmoke_t?
-                val active = activeStages.oGet(activeStageNum)
+                val active = activeStages.get(activeStageNum)
                 val stage = active.stage
                 if (null == stage.material) {
                     activeStageNum++
@@ -340,18 +340,18 @@ object SmokeParticles {
                 tri.numVerts = quads * 4
 
                 // just always draw the particles
-                tri.bounds.oSet(
+                tri.bounds.set(
                     0, 0,
-                    tri.bounds.oSet(
+                    tri.bounds.set(
                         0, 1,
-                        tri.bounds.oSet(0, 2, -99999f)
+                        tri.bounds.set(0, 2, -99999f)
                     )
                 )
-                tri.bounds.oSet(
+                tri.bounds.set(
                     1, 0,
-                    tri.bounds.oSet(
+                    tri.bounds.set(
                         1, 1,
-                        tri.bounds.oSet(1, 2, 99999f)
+                        tri.bounds.set(1, 2, 99999f)
                     )
                 )
                 tri.numVerts = 0
@@ -377,8 +377,8 @@ object SmokeParticles {
                     }
                     g.index = smoke.index
                     g.random = idRandom(smoke.random)
-                    g.origin.oSet(smoke.origin)
-                    g.axis.oSet(smoke.axis)
+                    g.origin.set(smoke.origin)
+                    g.axis.set(smoke.axis)
                     g.originalRandom = idRandom(g.random)
                     g.age = g.frac * stage.particleLife
                     tri.numVerts += stage.CreateParticle(g, Arrays.copyOfRange(tri.verts, tri.numVerts, tri.verts.size))

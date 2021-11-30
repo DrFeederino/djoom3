@@ -35,7 +35,7 @@ class PlaneSet {
             while (border <= 1) {
                 i = hash.First(hashKey + border)
                 while (i >= 0) {
-                    if (oGet(i).Compare(plane, normalEps, distEps)) {
+                    if (get(i).Compare(plane, normalEps, distEps)) {
                         return i
                     }
                     i = hash.Next(i)
@@ -43,7 +43,7 @@ class PlaneSet {
                 border++
             }
             return if (plane.Type() >= Plane.PLANETYPE_NEGX && plane.Type() < Plane.PLANETYPE_TRUEAXIAL) {
-                Append(plane.oNegative())
+                Append(plane.unaryMinus())
                 hash.Add(hashKey, Num() - 1)
                 Append(plane)
                 hash.Add(hashKey, Num() - 1)
@@ -51,7 +51,7 @@ class PlaneSet {
             } else {
                 Append(plane)
                 hash.Add(hashKey, Num() - 1)
-                Append(plane.oNegative())
+                Append(plane.unaryMinus())
                 hash.Add(hashKey, Num() - 1)
                 Num() - 2
             }

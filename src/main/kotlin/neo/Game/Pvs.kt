@@ -472,7 +472,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().times(4.0f))
+                    offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -533,7 +533,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().times(4.0f))
+                    offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -588,7 +588,7 @@ object Pvs {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
                     numPoints = portal.w.GetNumPoints()
                     portal.w.GetPlane(plane)
-                    offset.oSet(plane.Normal().times(4.0f))
+                    offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
@@ -683,7 +683,7 @@ object Pvs {
                     p.w.GetBounds(p.bounds)
                     p.w.GetPlane(p.plane)
                     // plane normal points to outside the area
-                    p.plane.oSet(p.plane.oNegative())
+                    p.plane.set(p.plane.unaryMinus())
                     // no PVS calculated for this portal yet
                     p.done = false
                     portalPtrs[area.numPortals++] = p
@@ -1021,15 +1021,15 @@ object Pvs {
             i = 0
             while (i < source.GetNumPoints()) {
                 l = (i + 1) % source.GetNumPoints()
-                v1.oSet(source.oGet(l).ToVec3().oMinus(source.oGet(i).ToVec3()))
+                v1.set(source.oGet(l).ToVec3().minus(source.oGet(i).ToVec3()))
 
                 // find a vertex of pass that makes a plane that puts all of the
                 // vertices of pass on the front side and all of the vertices of
                 // source on the back side
                 j = 0
                 while (j < pass.GetNumPoints()) {
-                    v2.oSet(pass.oGet(j).ToVec3().oMinus(source.oGet(i).ToVec3()))
-                    normal.oSet(v1.Cross(v2))
+                    v2.set(pass.oGet(j).ToVec3().minus(source.oGet(i).ToVec3()))
+                    normal.set(v1.Cross(v2))
                     if (normal.Normalize() < 0.01f) {
                         j++
                         continue
@@ -1068,7 +1068,7 @@ object Pvs {
 
                     // flip the normal if the source portal is backwards
                     if (flipTest) {
-                        normal.oSet(normal.oNegative())
+                        normal.set(normal.oNegative())
                         dist = -dist
                     }
 
@@ -1122,7 +1122,7 @@ object Pvs {
                         Game_local.gameLocal.Warning("max passage boundaries.")
                         break
                     }
-                    bounds.get(numBounds.getVal()).oSet(plane)
+                    bounds.get(numBounds.getVal()).set(plane)
                     numBounds.increment()
                     break
                     j++

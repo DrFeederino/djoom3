@@ -264,8 +264,8 @@ object tr_stencilshadow {
         // to 8, -8, 8
         // in the very rare case that these might be equal, all that would
         // happen is an oportunity for a tiny rasterization shadow crack
-        i = a.oGet(0) + a.oGet(1) * 127 + a.oGet(2) * 1023
-        j = b.oGet(0) + b.oGet(1) * 127 + b.oGet(2) * 1023
+        i = a.get(0) + a.get(1) * 127 + a.get(2) * 1023
+        j = b.get(0) + b.get(1) * 127 + b.get(2) * 1023
         return i < j
     }
 
@@ -287,22 +287,22 @@ object tr_stencilshadow {
         lg = rearPlane.ToVec4().times(lv)
 
         // outer product
-        mat.get(0).oSet(0, lg - rearPlane.oGet(0) * lv.oGet(0))
-        mat.get(0).oSet(1, -rearPlane.oGet(1) * lv.oGet(0))
-        mat.get(0).oSet(2, -rearPlane.oGet(2) * lv.oGet(0))
-        mat.get(0).oSet(3, -rearPlane.oGet(3) * lv.oGet(0))
-        mat.get(1).oSet(0, -rearPlane.oGet(0) * lv.oGet(1))
-        mat.get(1).oSet(1, lg - rearPlane.oGet(1) * lv.oGet(1))
-        mat.get(1).oSet(2, -rearPlane.oGet(2) * lv.oGet(1))
-        mat.get(1).oSet(3, -rearPlane.oGet(3) * lv.oGet(1))
-        mat.get(2).oSet(0, -rearPlane.oGet(0) * lv.oGet(2))
-        mat.get(2).oSet(1, -rearPlane.oGet(1) * lv.oGet(2))
-        mat.get(2).oSet(2, lg - rearPlane.oGet(2) * lv.oGet(2))
-        mat.get(2).oSet(3, -rearPlane.oGet(3) * lv.oGet(2))
-        mat.get(3).oSet(0, -rearPlane.oGet(0) * lv.oGet(3))
-        mat.get(3).oSet(1, -rearPlane.oGet(1) * lv.oGet(3))
-        mat.get(3).oSet(2, -rearPlane.oGet(2) * lv.oGet(3))
-        mat.get(3).oSet(3, lg - rearPlane.oGet(3) * lv.oGet(3))
+        mat.get(0).set(0, lg - rearPlane.get(0) * lv.get(0))
+        mat.get(0).set(1, -rearPlane.get(1) * lv.get(0))
+        mat.get(0).set(2, -rearPlane.get(2) * lv.get(0))
+        mat.get(0).set(3, -rearPlane.get(3) * lv.get(0))
+        mat.get(1).set(0, -rearPlane.get(0) * lv.get(1))
+        mat.get(1).set(1, lg - rearPlane.get(1) * lv.get(1))
+        mat.get(1).set(2, -rearPlane.get(2) * lv.get(1))
+        mat.get(1).set(3, -rearPlane.get(3) * lv.get(1))
+        mat.get(2).set(0, -rearPlane.get(0) * lv.get(2))
+        mat.get(2).set(1, -rearPlane.get(1) * lv.get(2))
+        mat.get(2).set(2, lg - rearPlane.get(2) * lv.get(2))
+        mat.get(2).set(3, -rearPlane.get(3) * lv.get(2))
+        mat.get(3).set(0, -rearPlane.get(0) * lv.get(3))
+        mat.get(3).set(1, -rearPlane.get(1) * lv.get(3))
+        mat.get(3).set(2, -rearPlane.get(2) * lv.get(3))
+        mat.get(3).set(3, lg - rearPlane.get(3) * lv.get(3))
     }
 
     /*
@@ -332,7 +332,7 @@ object tr_stencilshadow {
                 var w: Float
                 var oow: Float
                 tr_stencilshadow.shadowVerts[`in` + 0].w = 1f
-                w = tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[3].ToVec3()) + mat[3].oGet(3)
+                w = tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[3].ToVec3()) + mat[3].get(3)
                 if (w == 0f) {
                     tr_stencilshadow.shadowVerts[`in` + 1] = tr_stencilshadow.shadowVerts[`in` + 0]
                     i += 2
@@ -341,11 +341,11 @@ object tr_stencilshadow {
                 }
                 oow = 1.0f / w
                 tr_stencilshadow.shadowVerts[`in` + 1].x =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[0].ToVec3()) + mat[0].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[0].ToVec3()) + mat[0].get(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].y =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[1].ToVec3()) + mat[1].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[1].ToVec3()) + mat[1].get(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].z =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[2].ToVec3()) + mat[2].oGet(3)) * oow
+                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[2].ToVec3()) + mat[2].get(3)) * oow
                 tr_stencilshadow.shadowVerts[`in` + 1].w = 1f
                 i += 2
                 `in` += 2
@@ -424,14 +424,14 @@ object tr_stencilshadow {
         // avoid wrapping checks by duplicating first value to end
         sides[i] = sides[0]
         dists[i] = dists[0]
-        `in`.verts[`in`.numVerts].oSet(`in`.verts[0])
+        `in`.verts[`in`.numVerts].set(`in`.verts[0])
         `in`.edgeFlags[`in`.numVerts] = `in`.edgeFlags[0]
         out.numVerts = 0
         i = 0
         while (i < `in`.numVerts) {
-            p1.oSet(`in`.verts[i])
+            p1.set(`in`.verts[i])
             if (sides[i] != Plane.SIDE_BACK) {
-                out.verts[out.numVerts].oSet(p1)
+                out.verts[out.numVerts].set(p1)
                 if (sides[i] == Plane.SIDE_ON && sides[i + 1] == Plane.SIDE_BACK) {
                     out.edgeFlags[out.numVerts] = 1
                 } else {
@@ -443,14 +443,14 @@ object tr_stencilshadow {
                 || sides[i] == Plane.SIDE_BACK && sides[i + 1] == Plane.SIDE_FRONT
             ) {
                 // generate a split point
-                p2.oSet(`in`.verts[i + 1])
+                p2.set(`in`.verts[i + 1])
                 dot = dists[i] / (dists[i] - dists[i + 1])
                 j = 0
                 while (j < 3) {
-                    mid.oSet(j, p1.oGet(j) + dot * (p2.oGet(j) - p1.oGet(j)))
+                    mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
                     j++
                 }
-                out.verts[out.numVerts].oSet(mid)
+                out.verts[out.numVerts].set(mid)
 
                 // set the edge flag
                 if (sides[i + 1] != Plane.SIDE_FRONT) {
@@ -512,7 +512,7 @@ object tr_stencilshadow {
         base = tr_stencilshadow.numShadowVerts
         i = 0
         while (i < ct.numVerts) {
-            tr_stencilshadow.shadowVerts[base + i * 2].oSet(ct.verts[i])
+            tr_stencilshadow.shadowVerts[base + i * 2].set(ct.verts[i])
             i++
         }
         tr_stencilshadow.numShadowVerts += ct.numVerts * 2
@@ -574,8 +574,8 @@ object tr_stencilshadow {
         var d1: Float
         var d2: Float
         var f: Float
-        p1.oSet(a)
-        p2.oSet(b)
+        p1.set(a)
+        p2.set(b)
 
         // clip it
         j = 0
@@ -610,9 +610,9 @@ object tr_stencilshadow {
 //		}
 //}
             f = d1 / (d1 - d2)
-            clip[0] = p1.oGet(0) + f * (p2.oGet(0) - p1.oGet(0))
-            clip[1] = p1.oGet(1) + f * (p2.oGet(1) - p1.oGet(1))
-            clip[2] = p1.oGet(2) + f * (p2.oGet(2) - p1.oGet(2))
+            clip[0] = p1.get(0) + f * (p2.get(0) - p1.get(0))
+            clip[1] = p1.get(1) + f * (p2.get(1) - p1.get(1))
+            clip[2] = p1.get(2) + f * (p2.get(2) - p1.get(2))
             j++
         }
         return true // retain a fragment
@@ -933,17 +933,17 @@ object tr_stencilshadow {
             }
             if (!tr_stencilshadow.POINT_CULLED(i1, pointCull) && tr_stencilshadow.remap[i1] == -1) {
                 tr_stencilshadow.remap[i1] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].oSet(tri.verts[i1].xyz)
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i1].xyz)
                 tr_stencilshadow.numShadowVerts += 2
             }
             if (!tr_stencilshadow.POINT_CULLED(i2, pointCull) && tr_stencilshadow.remap[i2] == -1) {
                 tr_stencilshadow.remap[i2] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].oSet(tri.verts[i2].xyz)
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i2].xyz)
                 tr_stencilshadow.numShadowVerts += 2
             }
             if (!tr_stencilshadow.POINT_CULLED(i3, pointCull) && tr_stencilshadow.remap[i3] == -1) {
                 tr_stencilshadow.remap[i3] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].oSet(tri.verts[i3].xyz)
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i3].xyz)
                 tr_stencilshadow.numShadowVerts += 2
             }
 
@@ -1019,10 +1019,10 @@ object tr_stencilshadow {
             }
             i = 0
             while (i < opt.numVerts) {
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].oSet(0, opt.verts[i].oGet(0))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].oSet(1, opt.verts[i].oGet(1))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].oSet(2, opt.verts[i].oGet(2))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].oSet(3, 1f)
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(0, opt.verts[i].get(0))
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(1, opt.verts[i].get(1))
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(2, opt.verts[i].get(2))
+                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(3, 1f)
                 i++
             }
             i = 0
@@ -1113,9 +1113,9 @@ object tr_stencilshadow {
 
             // exact projection,taking into account asymetric frustums when
             // globalLightOrigin isn't centered
-            val centerOutside = Math.abs(light.parms.lightCenter.oGet(0)) > light.parms.lightRadius.oGet(0) || Math.abs(
-                light.parms.lightCenter.oGet(1)
-            ) > light.parms.lightRadius.oGet(1) || Math.abs(light.parms.lightCenter.oGet(2)) > light.parms.lightRadius.oGet(
+            val centerOutside = Math.abs(light.parms.lightCenter.get(0)) > light.parms.lightRadius.get(0) || Math.abs(
+                light.parms.lightCenter.get(1)
+            ) > light.parms.lightRadius.get(1) || Math.abs(light.parms.lightCenter.get(2)) > light.parms.lightRadius.get(
                 2
             )
 
@@ -1130,15 +1130,15 @@ object tr_stencilshadow {
                 j = 0
                 while (j < 3) {
                     if (i and (1 shl j) != 0) {
-                        temp.oSet(j, light.parms.lightRadius.oGet(j))
+                        temp.set(j, light.parms.lightRadius.get(j))
                     } else {
-                        temp.oSet(j, -light.parms.lightRadius.oGet(j))
+                        temp.set(j, -light.parms.lightRadius.get(j))
                     }
                     j++
                 }
 
                 // transform to global space
-                corners[i].oSet(light.parms.origin.oPlus(light.parms.axis.times(temp)))
+                corners[i].set(light.parms.origin.oPlus(light.parms.axis.times(temp)))
                 i++
             }
             light.numShadowFrustums = 0

@@ -1243,7 +1243,7 @@ object Game_local {
             val threads: idList<idThread?> = idThread.Companion.GetThreads()
             i = 0
             while (i < threads.Num()) {
-                savegame.AddObject(threads.oGet(i))
+                savegame.AddObject(threads.get(i))
                 i++
             }
 
@@ -2327,7 +2327,7 @@ object Game_local {
                         if (index >= clientDeclRemap.get(clientNum).get(type).Num()) {
                             clientDeclRemap.get(clientNum).get(type).AssureSize(index + 1, -1)
                         }
-                        clientDeclRemap.get(clientNum).get(type).oSet(index, decl.Index())
+                        clientDeclRemap.get(clientNum).get(type).set(index, decl.Index())
                     }
                 }
                 GAME_RELIABLE_MESSAGE_SPAWN_PLAYER -> {
@@ -2674,7 +2674,7 @@ object Game_local {
             if (null == editEntities) {
                 editEntities = idEditEntities()
             }
-            gravity.Set(0f, 0f, -SysCvar.g_gravity.GetFloat())
+            gravity.set(0f, 0f, -SysCvar.g_gravity.GetFloat())
             spawnArgs.Clear()
             skipCinematic = false
             inCinematic = false
@@ -2689,7 +2689,7 @@ object Game_local {
             // load navigation system for all the different monster sizes
             i = 0
             while (i < aasNames.size()) {
-                aasList.oGet(i)
+                aasList.get(i)
                     .Init(idStr(mapFileName).SetFileExtension(aasNames.get(i)), mapFile.GetGeometryCRC().toLong())
                 i++
             }
@@ -2942,8 +2942,8 @@ object Game_local {
 
         fun GetAAS(num: Int): idAAS? {
             if (num >= 0 && num < aasList.Num()) {
-                if (aasList.oGet(num) != null && aasList.oGet(num).GetSettings() != null) {
-                    return aasList.oGet(num)
+                if (aasList.get(num) != null && aasList.get(num).GetSettings() != null) {
+                    return aasList.get(num)
                 }
             }
             return null
@@ -2954,10 +2954,10 @@ object Game_local {
             i = 0
             while (i < aasNames.size()) {
                 if (aasNames.get(i) == name) {
-                    return if (TempDump.NOT(aasList.oGet(i).GetSettings())) {
+                    return if (TempDump.NOT(aasList.get(i).GetSettings())) {
                         null
                     } else {
-                        aasList.oGet(i)
+                        aasList.get(i)
                     }
                 }
                 i++
@@ -2969,7 +2969,7 @@ object Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.oGet(i).SetAreaState(bounds, areaContents, closed)
+                aasList.get(i).SetAreaState(bounds, areaContents, closed)
                 i++
             }
         }
@@ -2981,10 +2981,10 @@ object Game_local {
             if (0 == aasList.Num()) {
                 return -1
             }
-            obstacle = aasList.oGet(0).AddObstacle(bounds)
+            obstacle = aasList.get(0).AddObstacle(bounds)
             i = 1
             while (i < aasList.Num()) {
-                check = aasList.oGet(i).AddObstacle(bounds)
+                check = aasList.get(i).AddObstacle(bounds)
                 assert(check == obstacle)
                 i++
             }
@@ -2995,7 +2995,7 @@ object Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.oGet(i).RemoveObstacle(handle)
+                aasList.get(i).RemoveObstacle(handle)
                 i++
             }
         }
@@ -3004,7 +3004,7 @@ object Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.oGet(i).RemoveAllObstacles()
+                aasList.get(i).RemoveAllObstacles()
                 i++
             }
         }
@@ -3550,7 +3550,7 @@ object Game_local {
             while (ent != null) {
                 if (c.isInstance(ent) && ent !== skip) {
                     b = ent.GetPhysics().GetAbsBounds().Expand(16f)
-                    if (b.RayIntersection(start, end.oMinus(start), scale)) {
+                    if (b.RayIntersection(start, end.minus(start), scale)) {
                         if (scale.getVal() >= 0.0f && scale.getVal() < bestScale) {
                             bestEnt = ent
                             bestScale = scale.getVal()
@@ -3772,12 +3772,12 @@ object Game_local {
                 // find the distance from the edge of the bounding box
                 i = 0
                 while (i < 3) {
-                    if (origin.oGet(i) < ent.GetPhysics().GetAbsBounds().oGet(0, i)) {
-                        v.oSet(i, ent.GetPhysics().GetAbsBounds().oGet(0, i) - origin.oGet(i))
-                    } else if (origin.oGet(i) > ent.GetPhysics().GetAbsBounds().oGet(1, i)) {
-                        v.oSet(i, origin.oGet(i) - ent.GetPhysics().GetAbsBounds().oGet(1, i))
+                    if (origin.get(i) < ent.GetPhysics().GetAbsBounds().get(0, i)) {
+                        v.set(i, ent.GetPhysics().GetAbsBounds().get(0, i) - origin.get(i))
+                    } else if (origin.get(i) > ent.GetPhysics().GetAbsBounds().get(1, i)) {
+                        v.set(i, origin.get(i) - ent.GetPhysics().GetAbsBounds().get(1, i))
                     } else {
-                        v.oSet(i, 0f)
+                        v.set(i, 0f)
                     }
                     i++
                 }
@@ -3789,7 +3789,7 @@ object Game_local {
                 if (ent.CanDamage(origin, damagePoint)) {
                     // push the center of mass higher than the origin so players
                     // get knocked into the air more
-                    dir.oSet(ent.GetPhysics().GetOrigin().oMinus(origin))
+                    dir.set(ent.GetPhysics().GetOrigin().minus(origin))
                     dir.plusAssign(2, 24f)
 
                     // get the damage scale
@@ -3834,7 +3834,7 @@ object Game_local {
             val result = modelTrace_s()
             var ent: idEntity?
             var scale: Float
-            dir.Set(0.0f, 0.0f, 1.0f)
+            dir.set(0.0f, 0.0f, 1.0f)
             bounds = idBounds(origin).Expand(radius)
 
             // get all clip models touching the bounds
@@ -3912,21 +3912,21 @@ object Game_local {
             val impulse = idVec3()
             trm = clipModel.GetTraceModel()
             if (null == trm) { //|| 1 ) {//TODO:wtf?
-                impulse.oSet(clipModel.GetAbsBounds().GetCenter().oMinus(origin))
+                impulse.set(clipModel.GetAbsBounds().GetCenter().minus(origin))
                 impulse.Normalize()
                 impulse.z += 1.0f
                 clipModel.GetEntity()
                     .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), impulse.times(push))
                 return
             }
-            localOrigin.oSet(origin.oMinus(clipModel.GetOrigin()).oMultiply(clipModel.GetAxis().Transpose()))
+            localOrigin.set(origin.minus(clipModel.GetOrigin()).oMultiply(clipModel.GetAxis().Transpose()))
             i = 0
             while (i < trm.numPolys) {
                 poly = trm.polys[i]
                 center.Zero()
                 j = 0
                 while (j < poly.numEdges) {
-                    v.oSet(trm.verts[trm.edges[Math.abs(poly.edges[j])].v[Math_h.INTSIGNBITSET(poly.edges[j])]])
+                    v.set(trm.verts[trm.edges[Math.abs(poly.edges[j])].v[Math_h.INTSIGNBITSET(poly.edges[j])]])
                     center.plusAssign(v)
                     v.minusAssign(localOrigin)
                     v.NormalizeFast() // project point on a unit sphere
@@ -3934,7 +3934,7 @@ object Game_local {
                     j++
                 }
                 center.divAssign(poly.numEdges.toFloat())
-                v.oSet(center.oMinus(localOrigin))
+                v.set(center.minus(localOrigin))
                 dist = v.NormalizeFast()
                 dot = v.times(poly.normal)
                 if (dot > 0.0f) {
@@ -3943,7 +3943,7 @@ object Game_local {
                 }
                 area = w.GetArea()
                 // impulse in polygon normal direction
-                impulse.oSet(poly.normal.times(clipModel.GetAxis()))
+                impulse.set(poly.normal.times(clipModel.GetAxis()))
                 // always push up for nicer effect
                 impulse.z -= 1.0f
                 // scale impulse based on visible surface area and polygon angle
@@ -3951,7 +3951,7 @@ object Game_local {
                 // scale away distance for nicer effect
                 impulse.timesAssign(dist * 2.0f)
                 // impulse is applied to the center of the polygon
-                center.oSet(clipModel.GetOrigin().oPlus(center.times(clipModel.GetAxis())))
+                center.set(clipModel.GetOrigin().oPlus(center.times(clipModel.GetAxis())))
                 clipModel.GetEntity().ApplyImpulse(world, clipModel.GetId(), center, impulse)
                 i++
             }
@@ -3983,16 +3983,16 @@ object Game_local {
             idMath.SinCos16(if (angle != 0f) angle else random.RandomFloat() * idMath.TWO_PI, s, c)
 
             // winding orientation
-            axis.oSet(2, dir)
-            axis.oGet(2).Normalize()
-            axis.oGet(2).NormalVectors(axistemp.oGet(0), axistemp.oGet(1))
-            axis.oSet(0, axistemp.oGet(0).times(c.getVal()).oPlus(axistemp.oGet(1).times(-s.getVal())))
-            axis.oSet(1, axistemp.oGet(0).times(-s.getVal()).oPlus(axistemp.oGet(1).times(-c.getVal())))
-            windingOrigin.oSet(origin.oPlus(axis.oGet(2).times(depth)))
+            axis.set(2, dir)
+            axis.get(2).Normalize()
+            axis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
+            axis.set(0, axistemp.get(0).times(c.getVal()).oPlus(axistemp.get(1).times(-s.getVal())))
+            axis.set(1, axistemp.get(0).times(-s.getVal()).oPlus(axistemp.get(1).times(-c.getVal())))
+            windingOrigin.set(origin.oPlus(axis.get(2).times(depth)))
             if (parallel) {
-                projectionOrigin.oSet(origin.oMinus(axis.oGet(2).times(depth)))
+                projectionOrigin.set(origin.minus(axis.get(2).times(depth)))
             } else {
-                projectionOrigin.oSet(origin)
+                projectionOrigin.set(origin)
             }
             size *= 0.5f
             winding.Clear()
@@ -4301,7 +4301,7 @@ object Game_local {
                 // find the distance to the closest active player for each spawn spot
                 i = 0
                 while (i < spawnSpots.Num()) {
-                    pos.oSet(spawnSpots.oGet(i).ent.GetPhysics().GetOrigin())
+                    pos.set(spawnSpots.oGet(i).ent.GetPhysics().GetOrigin())
                     spawnSpots.oGet(i).dist = 0x7fffffff
                     j = 0
                     while (j < MAX_CLIENTS) {
@@ -4311,7 +4311,7 @@ object Game_local {
                             j++
                             continue
                         }
-                        dist = pos.oMinus(entities.get(j).GetPhysics().GetOrigin()).LengthSqr()
+                        dist = pos.minus(entities.get(j).GetPhysics().GetOrigin()).LengthSqr()
                         if (dist < spawnSpots.oGet(i).dist) {
                             spawnSpots.oGet(i).dist = dist.toInt()
                         }
@@ -4419,7 +4419,7 @@ object Game_local {
                 )
                 return -1
             }
-            if (clientDeclRemap.get(localClientNum).get(type.ordinal).oGet(index) == -1) {
+            if (clientDeclRemap.get(localClientNum).get(type.ordinal).get(index) == -1) {
                 Error(
                     "client received unmapped %s decl index %d from server",
                     DeclManager.declManager.GetDeclNameFromType(type),
@@ -4427,7 +4427,7 @@ object Game_local {
                 )
                 return -1
             }
-            return clientDeclRemap.get(localClientNum).get(type.ordinal).oGet(index)
+            return clientDeclRemap.get(localClientNum).get(type.ordinal).get(index)
         }
 
         fun SetGlobalMaterial(mat: idMaterial?) {
@@ -4527,7 +4527,7 @@ object Game_local {
             lastAIAlertEntity.oSet(null)
             lastAIAlertTime = 0
             spawnArgs.Clear()
-            gravity.Set(0f, 0f, -1f)
+            gravity.set(0f, 0f, -1f)
             playerPVS.h =  /*(unsigned int)*/-1
             playerConnectedAreas.h =  /*(unsigned int)*/-1
             gamestate = gameState_t.GAMESTATE_UNINITIALIZED
@@ -4787,7 +4787,7 @@ object Game_local {
                 if (SysCvar.g_gravity.GetFloat() == 0.0f) {
                     SysCvar.g_gravity.SetFloat(1.0f)
                 }
-                gravity.Set(0f, 0f, -SysCvar.g_gravity.GetFloat())
+                gravity.set(0f, 0f, -SysCvar.g_gravity.GetFloat())
 
                 // update all physics objects
                 ent = spawnedEntities.Next()
@@ -4881,7 +4881,7 @@ object Game_local {
 
         private fun ShowTargets() {
             val axis = GetLocalPlayer().viewAngles.ToMat3()
-            val up = idVec3(axis.oGet(2).times(5.0f))
+            val up = idVec3(axis.get(2).times(5.0f))
             val viewPos = GetLocalPlayer().GetPhysics().GetOrigin()
             val viewTextBounds = idBounds(viewPos)
             val viewBounds = idBounds(viewPos)
@@ -4897,7 +4897,7 @@ object Game_local {
                 totalBounds = ent.GetPhysics().GetAbsBounds()
                 i = 0
                 while (i < ent.targets.Num()) {
-                    target = ent.targets.oGet(i).GetEntity()
+                    target = ent.targets.get(i).GetEntity()
                     if (target != null) {
                         totalBounds.AddBounds(target.GetPhysics().GetAbsBounds())
                     }
@@ -4908,7 +4908,7 @@ object Game_local {
                     continue
                 }
                 val dist = CFloat()
-                val dir = idVec3(totalBounds.GetCenter().oMinus(viewPos))
+                val dir = idVec3(totalBounds.GetCenter().minus(viewPos))
                 dir.NormalizeFast()
                 totalBounds.RayIntersection(viewPos, dir, dist)
                 val frac = (512.0f - dist.getVal()) / 512.0f
@@ -4925,7 +4925,7 @@ object Game_local {
                     val center = idVec3(ent.GetPhysics().GetAbsBounds().GetCenter())
                     gameRenderWorld.DrawText(
                         ent.name.toString(),
-                        center.oMinus(up),
+                        center.minus(up),
                         0.1f,
                         Lib.Companion.colorWhite.times(frac),
                         axis,
@@ -4950,7 +4950,7 @@ object Game_local {
                 }
                 i = 0
                 while (i < ent.targets.Num()) {
-                    target = ent.targets.oGet(i).GetEntity()
+                    target = ent.targets.get(i).GetEntity()
                     if (target != null) {
                         gameRenderWorld.DebugArrow(
                             Lib.Companion.colorYellow.times(frac),
@@ -4981,7 +4981,7 @@ object Game_local {
             val origin = player.GetPhysics().GetOrigin()
             if (SysCvar.g_showEntityInfo.GetBool()) {
                 val axis = player.viewAngles.ToMat3()
-                val up = idVec3(axis.oGet(2).times(5.0f))
+                val up = idVec3(axis.get(2).times(5.0f))
                 val viewTextBounds = idBounds(origin)
                 val viewBounds = idBounds(origin)
                 viewTextBounds.ExpandSelf(128.0f)
@@ -5043,8 +5043,8 @@ object Game_local {
                 while (ent != null) {
                     val b = ent.GetPhysics().GetBounds()
                     if (b.GetVolume() <= 0) {
-                        b.oSet(0, 0, b.oSet(0, 1, b.oSet(0, 2, -8f)))
-                        b.oSet(1, 0, b.oSet(1, 1, b.oSet(1, 2, 8f)))
+                        b.set(0, 0, b.set(0, 1, b.set(0, 2, -8f)))
+                        b.set(1, 0, b.set(1, 1, b.set(1, 2, 8f)))
                     }
                     if (ent.fl.isDormant) {
                         gameRenderWorld.DebugBounds(
@@ -5130,7 +5130,7 @@ object Game_local {
                 if (aas != null) {
                     val seekPos = idVec3()
                     val path = obstaclePath_s()
-                    seekPos.oSet(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.oGet(0).times(200.0f)))
+                    seekPos.set(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.get(0).times(200.0f)))
                     idAI.Companion.FindPathAroundObstacles(
                         player.GetPhysics(),
                         aas,
@@ -5809,7 +5809,7 @@ object Game_local {
                         // once the first implicit decl is found all remaining decls are considered implicit as well
                         break
                     }
-                    clientDeclRemap.get(clientNum).get(type).oSet(i, i)
+                    clientDeclRemap.get(clientNum).get(type).set(i, i)
                     i++
                 }
                 type++
@@ -5829,7 +5829,7 @@ object Game_local {
                 clientDeclRemap.get(clientNum).get(type.ordinal).AssureSize(index + 1, -1)
             }
             // if already remapped
-            if (clientDeclRemap.get(clientNum).get(type.ordinal).oGet(index) != -1) {
+            if (clientDeclRemap.get(clientNum).get(type.ordinal).get(index) != -1) {
                 return
             }
             val decl = DeclManager.declManager.DeclByIndex(type, index, false)
@@ -5843,7 +5843,7 @@ object Game_local {
             }
 
             // set the index at the server
-            clientDeclRemap.get(clientNum).get(type.ordinal).oSet(index, index)
+            clientDeclRemap.get(clientNum).get(type.ordinal).set(index, index)
 
             // write update to client
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)

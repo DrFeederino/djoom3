@@ -317,7 +317,7 @@ object Physics_Parametric {
         ) {
             current.time = Game_local.gameLocal.time
             current.linearExtrapolation.Init(time.toFloat(), duration.toFloat(), base, baseSpeed, speed, type)
-            current.localOrigin.oSet(base)
+            current.localOrigin.set(base)
             Activate()
         }
 
@@ -330,7 +330,7 @@ object Physics_Parametric {
         ) {
             current.time = Game_local.gameLocal.time
             current.angularExtrapolation.Init(time.toFloat(), duration.toFloat(), base, baseSpeed, speed, type)
-            current.localAngles.oSet(base)
+            current.localAngles.set(base)
             Activate()
         }
 
@@ -359,7 +359,7 @@ object Physics_Parametric {
                 startPos,
                 endPos
             )
-            current.localOrigin.oSet(startPos)
+            current.localOrigin.set(startPos)
             Activate()
         }
 
@@ -380,7 +380,7 @@ object Physics_Parametric {
                 startAng,
                 endAng
             )
-            current.localAngles.oSet(startAng)
+            current.localAngles.set(startAng)
             Activate()
         }
 
@@ -424,15 +424,15 @@ object Physics_Parametric {
         }
 
         fun GetLocalOrigin(curOrigin: idVec3?) {
-            curOrigin.oSet(current.localOrigin)
+            curOrigin.set(current.localOrigin)
         }
 
         fun GetLocalAngles(curAngles: idAngles?) {
-            curAngles.oSet(current.localAngles)
+            curAngles.set(current.localAngles)
         }
 
         fun GetAngles(curAngles: idAngles?) {
-            curAngles.oSet(current.angles)
+            curAngles.set(current.angles)
         }
 
         // common physics interface
@@ -492,8 +492,8 @@ object Physics_Parametric {
             val oldAxis: idMat3
             val masterAxis = idMat3()
             isBlocked = false
-            oldLocalOrigin.oSet(current.localOrigin)
-            oldOrigin.oSet(current.origin)
+            oldLocalOrigin.set(current.localOrigin)
+            oldOrigin.set(current.origin)
             oldLocalAngles = idAngles(current.localAngles)
             oldAngles = idAngles(current.angles)
             oldAxis = idMat3(current.axis)
@@ -502,7 +502,7 @@ object Physics_Parametric {
             if (current.spline != null) {
                 val length: Float = current.splineInterpolate.GetCurrentValue(endTimeMSec.toFloat())
                 val t = current.spline.GetTimeForLength(length, 0.01f)
-                current.localOrigin.oSet(current.spline.GetCurrentValue(t))
+                current.localOrigin.set(current.spline.GetCurrentValue(t))
                 if (current.useSplineAngles) {
                     current.localAngles = current.spline.GetCurrentFirstDerivative(t).ToAngles()
                 }
@@ -517,13 +517,13 @@ object Physics_Parametric {
                 current.localAngles.plusAssign(current.angularExtrapolation.GetCurrentValue(endTimeMSec.toFloat()))
             }
             current.localAngles.Normalize360()
-            current.origin.oSet(current.localOrigin)
-            current.angles.oSet(current.localAngles)
-            current.axis.oSet(current.localAngles.ToMat3())
+            current.origin.set(current.localOrigin)
+            current.angles.set(current.localAngles)
+            current.axis.set(current.localAngles.ToMat3())
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
                 if (masterAxis.IsRotated()) {
-                    current.origin.oSet(current.origin.times(masterAxis).oPlus(masterOrigin))
+                    current.origin.set(current.origin.times(masterAxis).oPlus(masterOrigin))
                     if (isOrientated) {
                         current.axis.timesAssign(masterAxis)
                         current.angles = current.axis.ToAngles()
@@ -548,8 +548,8 @@ object Physics_Parametric {
                 }
                 if (pushResults.fraction < 1.0f) {
                     clipModel.Link(Game_local.gameLocal.clip, self, 0, oldOrigin, oldAxis)
-                    current.localOrigin.oSet(oldLocalOrigin)
-                    current.origin.oSet(oldOrigin)
+                    current.localOrigin.set(oldLocalOrigin)
+                    current.origin.set(oldOrigin)
                     current.localAngles = oldLocalAngles
                     current.angles = oldAngles
                     current.axis = oldAxis
@@ -619,12 +619,12 @@ object Physics_Parametric {
             val masterAxis = idMat3()
             current.linearExtrapolation.SetStartValue(newOrigin)
             current.linearInterpolation.SetStartValue(newOrigin)
-            current.localOrigin.oSet(current.linearExtrapolation.GetCurrentValue(current.time.toFloat()))
+            current.localOrigin.set(current.linearExtrapolation.GetCurrentValue(current.time.toFloat()))
             if (hasMaster) {
                 self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.oSet(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
+                current.origin.set(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
             } else {
-                current.origin.oSet(current.localOrigin)
+                current.origin.set(current.localOrigin)
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -645,7 +645,7 @@ object Physics_Parametric {
                 current.angles = current.axis.ToAngles()
             } else {
                 current.axis = current.localAngles.ToMat3()
-                current.angles.oSet(current.localAngles)
+                current.angles.set(current.localAngles)
             }
             if (clipModel != null) {
                 clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
@@ -695,14 +695,14 @@ object Physics_Parametric {
         }
 
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
-            curLinearVelocity.oSet(current.linearExtrapolation.GetCurrentSpeed(Game_local.gameLocal.time.toFloat()))
+            curLinearVelocity.set(current.linearExtrapolation.GetCurrentSpeed(Game_local.gameLocal.time.toFloat()))
             return curLinearVelocity
         }
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3? {
             val angles: idAngles?
             angles = current.angularExtrapolation.GetCurrentSpeed(Game_local.gameLocal.time.toFloat())
-            curAngularVelocity.oSet(angles.ToAngularVelocity())
+            curAngularVelocity.set(angles.ToAngularVelocity())
             return curAngularVelocity
         }
 
@@ -738,7 +738,7 @@ object Physics_Parametric {
 
                     // transform from world space to master space
                     self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.localOrigin.oSet(current.origin.oMinus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                    current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
                     if (orientated) {
                         current.localAngles = current.axis.times(masterAxis.Transpose()).ToAngles()
                     } else {
@@ -752,8 +752,8 @@ object Physics_Parametric {
             } else {
                 if (hasMaster) {
                     // transform from master space to world space
-                    current.localOrigin.oSet(current.origin)
-                    current.localAngles.oSet(current.angles)
+                    current.localOrigin.set(current.origin)
+                    current.localAngles.set(current.angles)
                     SetLinearExtrapolation(
                         Extrapolate.EXTRAPOLATION_NONE,
                         0,
@@ -810,62 +810,62 @@ object Physics_Parametric {
         override fun WriteToSnapshot(msg: idBitMsgDelta?) {
             msg.WriteLong(current.time)
             msg.WriteLong(current.atRest)
-            msg.WriteFloat(current.origin.oGet(0))
-            msg.WriteFloat(current.origin.oGet(1))
-            msg.WriteFloat(current.origin.oGet(2))
-            msg.WriteFloat(current.angles.oGet(0))
-            msg.WriteFloat(current.angles.oGet(1))
-            msg.WriteFloat(current.angles.oGet(2))
-            msg.WriteDeltaFloat(current.origin.oGet(0), current.localOrigin.oGet(0))
-            msg.WriteDeltaFloat(current.origin.oGet(1), current.localOrigin.oGet(1))
-            msg.WriteDeltaFloat(current.origin.oGet(2), current.localOrigin.oGet(2))
-            msg.WriteDeltaFloat(current.angles.oGet(0), current.localAngles.oGet(0))
-            msg.WriteDeltaFloat(current.angles.oGet(1), current.localAngles.oGet(1))
-            msg.WriteDeltaFloat(current.angles.oGet(2), current.localAngles.oGet(2))
+            msg.WriteFloat(current.origin.get(0))
+            msg.WriteFloat(current.origin.get(1))
+            msg.WriteFloat(current.origin.get(2))
+            msg.WriteFloat(current.angles.get(0))
+            msg.WriteFloat(current.angles.get(1))
+            msg.WriteFloat(current.angles.get(2))
+            msg.WriteDeltaFloat(current.origin.get(0), current.localOrigin.get(0))
+            msg.WriteDeltaFloat(current.origin.get(1), current.localOrigin.get(1))
+            msg.WriteDeltaFloat(current.origin.get(2), current.localOrigin.get(2))
+            msg.WriteDeltaFloat(current.angles.get(0), current.localAngles.get(0))
+            msg.WriteDeltaFloat(current.angles.get(1), current.localAngles.get(1))
+            msg.WriteDeltaFloat(current.angles.get(2), current.localAngles.get(2))
             msg.WriteBits(current.linearExtrapolation.GetExtrapolationType(), 8)
             msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartTime())
             msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetDuration())
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().oGet(2))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetStartValue().get(2))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().get(0))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().get(1))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetSpeed().get(2))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().get(0))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().get(1))
+            msg.WriteDeltaFloat(0.0f, current.linearExtrapolation.GetBaseSpeed().get(2))
             msg.WriteBits(current.angularExtrapolation.GetExtrapolationType(), 8)
             msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartTime())
             msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetDuration())
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().oGet(2))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetStartValue().get(2))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().get(0))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().get(1))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetSpeed().get(2))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().get(0))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().get(1))
+            msg.WriteDeltaFloat(0.0f, current.angularExtrapolation.GetBaseSpeed().get(2))
             msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartTime())
             msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetAcceleration())
             msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetDeceleration())
             msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetDuration())
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().oGet(2))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetStartValue().get(2))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.linearInterpolation.GetEndValue().get(2))
             msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartTime())
             msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetAcceleration())
             msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetDeceleration())
             msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetDuration())
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().oGet(2))
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().oGet(0))
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().oGet(1))
-            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().oGet(2))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetStartValue().get(2))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().get(0))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().get(1))
+            msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().get(2))
         }
 
         override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
@@ -887,30 +887,30 @@ object Physics_Parametric {
             val endAng = idAngles()
             current.time = msg.ReadLong()
             current.atRest = msg.ReadLong()
-            current.origin.oSet(0, msg.ReadFloat())
-            current.origin.oSet(1, msg.ReadFloat())
-            current.origin.oSet(2, msg.ReadFloat())
-            current.angles.oSet(0, msg.ReadFloat())
-            current.angles.oSet(1, msg.ReadFloat())
-            current.angles.oSet(2, msg.ReadFloat())
-            current.localOrigin.oSet(0, msg.ReadDeltaFloat(current.origin.oGet(0)))
-            current.localOrigin.oSet(1, msg.ReadDeltaFloat(current.origin.oGet(1)))
-            current.localOrigin.oSet(2, msg.ReadDeltaFloat(current.origin.oGet(2)))
-            current.localAngles.oSet(0, msg.ReadDeltaFloat(current.angles.oGet(0)))
-            current.localAngles.oSet(1, msg.ReadDeltaFloat(current.angles.oGet(1)))
-            current.localAngles.oSet(2, msg.ReadDeltaFloat(current.angles.oGet(2)))
+            current.origin.set(0, msg.ReadFloat())
+            current.origin.set(1, msg.ReadFloat())
+            current.origin.set(2, msg.ReadFloat())
+            current.angles.set(0, msg.ReadFloat())
+            current.angles.set(1, msg.ReadFloat())
+            current.angles.set(2, msg.ReadFloat())
+            current.localOrigin.set(0, msg.ReadDeltaFloat(current.origin.get(0)))
+            current.localOrigin.set(1, msg.ReadDeltaFloat(current.origin.get(1)))
+            current.localOrigin.set(2, msg.ReadDeltaFloat(current.origin.get(2)))
+            current.localAngles.set(0, msg.ReadDeltaFloat(current.angles.get(0)))
+            current.localAngles.set(1, msg.ReadDeltaFloat(current.angles.get(1)))
+            current.localAngles.set(2, msg.ReadDeltaFloat(current.angles.get(2)))
             linearType =  /*(extrapolation_t)*/msg.ReadBits(8)
             startTime = msg.ReadDeltaFloat(0.0f)
             duration = msg.ReadDeltaFloat(0.0f)
-            linearStartValue.oSet(0, msg.ReadDeltaFloat(0.0f))
-            linearStartValue.oSet(1, msg.ReadDeltaFloat(0.0f))
-            linearStartValue.oSet(2, msg.ReadDeltaFloat(0.0f))
-            linearSpeed.oSet(0, msg.ReadDeltaFloat(0.0f))
-            linearSpeed.oSet(1, msg.ReadDeltaFloat(0.0f))
-            linearSpeed.oSet(2, msg.ReadDeltaFloat(0.0f))
-            linearBaseSpeed.oSet(0, msg.ReadDeltaFloat(0.0f))
-            linearBaseSpeed.oSet(1, msg.ReadDeltaFloat(0.0f))
-            linearBaseSpeed.oSet(2, msg.ReadDeltaFloat(0.0f))
+            linearStartValue.set(0, msg.ReadDeltaFloat(0.0f))
+            linearStartValue.set(1, msg.ReadDeltaFloat(0.0f))
+            linearStartValue.set(2, msg.ReadDeltaFloat(0.0f))
+            linearSpeed.set(0, msg.ReadDeltaFloat(0.0f))
+            linearSpeed.set(1, msg.ReadDeltaFloat(0.0f))
+            linearSpeed.set(2, msg.ReadDeltaFloat(0.0f))
+            linearBaseSpeed.set(0, msg.ReadDeltaFloat(0.0f))
+            linearBaseSpeed.set(1, msg.ReadDeltaFloat(0.0f))
+            linearBaseSpeed.set(2, msg.ReadDeltaFloat(0.0f))
             current.linearExtrapolation.Init(
                 startTime,
                 duration,
@@ -922,15 +922,15 @@ object Physics_Parametric {
             angularType = msg.ReadBits(8)
             startTime = msg.ReadDeltaFloat(0.0f)
             duration = msg.ReadDeltaFloat(0.0f)
-            angularStartValue.oSet(0, msg.ReadDeltaFloat(0.0f))
-            angularStartValue.oSet(1, msg.ReadDeltaFloat(0.0f))
-            angularStartValue.oSet(2, msg.ReadDeltaFloat(0.0f))
-            angularSpeed.oSet(0, msg.ReadDeltaFloat(0.0f))
-            angularSpeed.oSet(1, msg.ReadDeltaFloat(0.0f))
-            angularSpeed.oSet(2, msg.ReadDeltaFloat(0.0f))
-            angularBaseSpeed.oSet(0, msg.ReadDeltaFloat(0.0f))
-            angularBaseSpeed.oSet(1, msg.ReadDeltaFloat(0.0f))
-            angularBaseSpeed.oSet(2, msg.ReadDeltaFloat(0.0f))
+            angularStartValue.set(0, msg.ReadDeltaFloat(0.0f))
+            angularStartValue.set(1, msg.ReadDeltaFloat(0.0f))
+            angularStartValue.set(2, msg.ReadDeltaFloat(0.0f))
+            angularSpeed.set(0, msg.ReadDeltaFloat(0.0f))
+            angularSpeed.set(1, msg.ReadDeltaFloat(0.0f))
+            angularSpeed.set(2, msg.ReadDeltaFloat(0.0f))
+            angularBaseSpeed.set(0, msg.ReadDeltaFloat(0.0f))
+            angularBaseSpeed.set(1, msg.ReadDeltaFloat(0.0f))
+            angularBaseSpeed.set(2, msg.ReadDeltaFloat(0.0f))
             current.angularExtrapolation.Init(
                 startTime,
                 duration,
@@ -943,23 +943,23 @@ object Physics_Parametric {
             accelTime = msg.ReadDeltaFloat(0.0f)
             decelTime = msg.ReadDeltaFloat(0.0f)
             duration = msg.ReadDeltaFloat(0.0f)
-            startPos.oSet(0, msg.ReadDeltaFloat(0.0f))
-            startPos.oSet(1, msg.ReadDeltaFloat(0.0f))
-            startPos.oSet(2, msg.ReadDeltaFloat(0.0f))
-            endPos.oSet(0, msg.ReadDeltaFloat(0.0f))
-            endPos.oSet(1, msg.ReadDeltaFloat(0.0f))
-            endPos.oSet(2, msg.ReadDeltaFloat(0.0f))
+            startPos.set(0, msg.ReadDeltaFloat(0.0f))
+            startPos.set(1, msg.ReadDeltaFloat(0.0f))
+            startPos.set(2, msg.ReadDeltaFloat(0.0f))
+            endPos.set(0, msg.ReadDeltaFloat(0.0f))
+            endPos.set(1, msg.ReadDeltaFloat(0.0f))
+            endPos.set(2, msg.ReadDeltaFloat(0.0f))
             current.linearInterpolation.Init(startTime, accelTime, decelTime, duration, startPos, endPos)
             startTime = msg.ReadDeltaFloat(0.0f)
             accelTime = msg.ReadDeltaFloat(0.0f)
             decelTime = msg.ReadDeltaFloat(0.0f)
             duration = msg.ReadDeltaFloat(0.0f)
-            startAng.oSet(0, msg.ReadDeltaFloat(0.0f))
-            startAng.oSet(1, msg.ReadDeltaFloat(0.0f))
-            startAng.oSet(2, msg.ReadDeltaFloat(0.0f))
-            endAng.oSet(0, msg.ReadDeltaFloat(0.0f))
-            endAng.oSet(1, msg.ReadDeltaFloat(0.0f))
-            endAng.oSet(2, msg.ReadDeltaFloat(0.0f))
+            startAng.set(0, msg.ReadDeltaFloat(0.0f))
+            startAng.set(1, msg.ReadDeltaFloat(0.0f))
+            startAng.set(2, msg.ReadDeltaFloat(0.0f))
+            endAng.set(0, msg.ReadDeltaFloat(0.0f))
+            endAng.set(1, msg.ReadDeltaFloat(0.0f))
+            endAng.set(2, msg.ReadDeltaFloat(0.0f))
             current.angularInterpolation.Init(startTime, accelTime, decelTime, duration, startAng, endAng)
             current.axis = current.angles.ToMat3()
             if (clipModel != null) {

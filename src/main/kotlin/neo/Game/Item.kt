@@ -174,7 +174,7 @@ object Item {
 
             //temp hack for tim
             pulse = false
-            orgOrigin.oSet(GetPhysics().GetOrigin())
+            orgOrigin.set(GetPhysics().GetOrigin())
             canPickUp = !(spawnArgs.GetBool("triggerFirst") || spawnArgs.GetBool("no_touch"))
             inViewTime = -1000
             lastCycle = -1
@@ -262,7 +262,7 @@ object Item {
                     ang.yaw = (Game_local.gameLocal.time and 4095) * 360.0f / -4096.0f
                     SetAngles(ang)
                     val scale = 0.005f + entityNumber * 0.00001f
-                    org.oSet(orgOrigin)
+                    org.set(orgOrigin)
                     org.z += (4.0f + Math.cos(((Game_local.gameLocal.time + 2000) * scale).toDouble()) * 4.0f).toFloat()
                     SetOrigin(org)
                 }
@@ -351,9 +351,9 @@ object Item {
             lastRenderViewTime = renderView.time
 
             // check for glow highlighting if near the center of the view
-            val dir = idVec3(renderEntity.origin.oMinus(renderView.vieworg))
+            val dir = idVec3(renderEntity.origin.minus(renderView.vieworg))
             dir.Normalize()
-            val d = dir.oMultiply(renderView.viewaxis.oGet(0))
+            val d = dir.oMultiply(renderView.viewaxis.get(0))
 
             // two second pulse cycle
             var cycle = (renderView.time - inViewTime) / 2000.0f
@@ -409,7 +409,7 @@ object Item {
             Game_local.gameLocal.clip.TraceBounds(
                 trace,
                 renderEntity.origin,
-                renderEntity.origin.oMinus(idVec3(0, 0, 64)),
+                renderEntity.origin.minus(idVec3(0, 0, 64)),
                 renderEntity.bounds,
                 Game_local.MASK_SOLID or Material.CONTENTS_CORPSE,
                 this
@@ -644,7 +644,7 @@ object Item {
         private fun Event_HideObjective(e: idEventArg<idEntity?>?) {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
-                val v = idVec3(player.GetPhysics().GetOrigin().oMinus(playerPos))
+                val v = idVec3(player.GetPhysics().GetOrigin().minus(playerPos))
                 if (v.Length() > 64.0f) {
                     player.HideObjective()
                     PostEventMS(Class.EV_Remove, 0)
@@ -657,7 +657,7 @@ object Item {
         private fun Event_GetPlayerPos() {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
-                playerPos.oSet(player.GetPhysics().GetOrigin())
+                playerPos.set(player.GetPhysics().GetOrigin())
                 PostEventMS(Item.EV_HideObjective, 100f, player)
             }
         }
@@ -798,7 +798,7 @@ object Item {
                                 jointName,
                                 ent.name
                             )
-                            origin.oSet(ent.GetPhysics().GetOrigin())
+                            origin.set(ent.GetPhysics().GetOrigin())
                             axis = ent.GetPhysics().GetAxis()
                         }
                         if (TempDump.isNotNullOrEmpty(SysCvar.g_dropItemRotation.GetString())) {
@@ -1194,7 +1194,7 @@ object Item {
         private fun Event_HideObjective(e: idEventArg<idEntity?>?) {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
-                playerPos.oSet(player.GetPhysics().GetOrigin())
+                playerPos.set(player.GetPhysics().GetOrigin())
                 PostEventMS(Item.EV_HideObjective, 100f, player)
             }
         }

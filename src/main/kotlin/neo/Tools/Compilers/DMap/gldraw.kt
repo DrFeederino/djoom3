@@ -47,10 +47,10 @@ object gldraw {
         GL11.glMatrixMode(GL11.GL_PROJECTION)
         GL11.glLoadIdentity()
         GL11.glOrtho(
-            dmap.dmapGlobals.drawBounds.oGet(0, 0).toDouble(),
-            dmap.dmapGlobals.drawBounds.oGet(1, 0).toDouble(),
-            dmap.dmapGlobals.drawBounds.oGet(0, 1).toDouble(),
-            dmap.dmapGlobals.drawBounds.oGet(1, 1).toDouble(),
+            dmap.dmapGlobals.drawBounds.get(0, 0).toDouble(),
+            dmap.dmapGlobals.drawBounds.get(1, 0).toDouble(),
+            dmap.dmapGlobals.drawBounds.get(0, 1).toDouble(),
+            dmap.dmapGlobals.drawBounds.get(1, 1).toDouble(),
             -1.0,
             1.0
         )
@@ -109,7 +109,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).oGet(0), w.oGet(i).oGet(1), w.oGet(i).oGet(2))
+            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -117,7 +117,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).oGet(0), w.oGet(i).oGet(1), w.oGet(i).oGet(2))
+            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -133,7 +133,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).oGet(0), w.oGet(i).oGet(1), w.oGet(i).oGet(2))
+            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -141,7 +141,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).oGet(0), w.oGet(i).oGet(1), w.oGet(i).oGet(2))
+            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
             i++
         }
         GL11.glEnd()

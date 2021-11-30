@@ -17,16 +17,16 @@ object Rectangle {
      ================
      */
     fun RotateVector(v: idVec3?, origin: idVec3?, a: Float, c: Float, s: Float) {
-        var x = v.oGet(0)
-        var y = v.oGet(1)
+        var x = v.get(0)
+        var y = v.get(1)
         if (a != 0f) {
-            val x2 = (x - origin.oGet(0)) * c - (y - origin.oGet(1)) * s + origin.oGet(0)
-            val y2 = (x - origin.oGet(0)) * s + (y - origin.oGet(1)) * c + origin.oGet(1)
+            val x2 = (x - origin.get(0)) * c - (y - origin.get(1)) * s + origin.get(0)
+            val y2 = (x - origin.get(0)) * s + (y - origin.get(1)) * c + origin.get(1)
             x = x2
             y = y2
         }
-        v.oSet(0, x)
-        v.oSet(1, y)
+        v.set(0, x)
+        v.set(1, y)
     }
 
     //
@@ -114,9 +114,9 @@ object Rectangle {
             val c: Float
             val s: Float
             val center = idVec3((x + w) / 2.0f, (y + h) / 2.0f, 0)
-            p1.Set(x, y, 0f)
-            p2.Set(Right(), y, 0f)
-            p4.Set(x, Bottom(), 0f)
+            p1.set(x, y, 0f)
+            p2.set(Right(), y, 0f)
+            p4.set(x, Bottom(), 0f)
             if (a != 0f) {
                 s = Math.sin(Math_h.DEG2RAD(a).toDouble()).toFloat()
                 c = Math.cos(Math_h.DEG2RAD(a).toDouble()).toFloat()
@@ -129,8 +129,8 @@ object Rectangle {
             RotateVector(p4, center, a, c, s)
             out.x = p1.x
             out.y = p1.y
-            out.w = p2.oMinus(p1).Length()
-            out.h = p4.oMinus(p1).Length()
+            out.w = p2.minus(p1).Length()
+            out.h = p4.minus(p1).Length()
         }
 
         fun oPluSet(a: idRectangle?): idRectangle? {
@@ -273,7 +273,7 @@ object Rectangle {
         fun Contains(xt: Float, yt: Float): Boolean {
             val c = rects.Num()
             for (i in 0 until c) {
-                if (rects.oGet(i).Contains(xt, yt)) {
+                if (rects.get(i).Contains(xt, yt)) {
                     return true
                 }
             }
@@ -290,7 +290,7 @@ object Rectangle {
 
         fun GetRect(index: Int): idRectangle? {
             return if (index >= 0 && index < rects.Num()) {
-                rects.oGet(index)
+                rects.get(index)
             } else null
         }
     }

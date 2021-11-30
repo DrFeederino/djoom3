@@ -80,12 +80,12 @@ object AI_pathing {
         var d3: Float
         val plane1 = idVec3()
         val plane2 = idVec3()
-        plane1.oSet(Plane2DFromPoints(start, end))
+        plane1.set(Plane2DFromPoints(start, end))
         d0 = plane1.x * node.pos.x + plane1.y * node.pos.y + plane1.z
         while (node.parent != null) {
             d1 = plane1.x * node.parent.pos.x + plane1.y * node.parent.pos.y + plane1.z
             if (Math_h.FLOATSIGNBITSET(d0) xor Math_h.FLOATSIGNBITSET(d1) != 0) {
-                plane2.oSet(Plane2DFromPoints(node.pos, node.parent.pos))
+                plane2.set(Plane2DFromPoints(node.pos, node.parent.pos))
                 d2 = plane2.x * start.x + plane2.y * start.y + plane2.z
                 d3 = plane2.x * end.x + plane2.y * end.y + plane2.z
                 if (Math_h.FLOATSIGNBITSET(d2) xor Math_h.FLOATSIGNBITSET(d3) != 0) {
@@ -172,11 +172,11 @@ object AI_pathing {
         bestEdgeNum = 0
         i = 0
         while (i < w.GetNumPoints()) {
-            plane.oSet(idWinding2D.Companion.Plane2DFromPoints(w.oGet((i + 1) % w.GetNumPoints()), w.oGet(i), true))
+            plane.set(idWinding2D.Companion.Plane2DFromPoints(w.oGet((i + 1) % w.GetNumPoints()), w.oGet(i), true))
             d = plane.x * point.x + plane.y * point.y + plane.z
             if (d < bestd) {
                 bestd = d
-                bestPlane.oSet(plane)
+                bestPlane.set(plane)
                 bestEdgeNum = i
             }
             // if this is a wall always try to pop out at the first edge
@@ -187,7 +187,7 @@ object AI_pathing {
         }
         newPoint = point.oMinus(bestPlane.ToVec2().oMultiply(bestd + AI_pathing.PUSH_OUTSIDE_OBSTACLES))
         if (AI_pathing.PointInsideObstacle(obstacles, numObstacles, newPoint) == -1) {
-            point.oSet(newPoint)
+            point.set(newPoint)
             obstacle?.setVal(bestObstacle)
             edgeNum?.setVal(bestEdgeNum)
             return
@@ -253,7 +253,7 @@ object AI_pathing {
                 j++
             }
             if (bestd < idMath.INFINITY) {
-                point.oSet(bestPoint)
+                point.set(bestPoint)
                 obstacle?.setVal(bestObstacle)
                 edgeNum?.setVal(bestEdgeNum)
                 return
@@ -374,16 +374,16 @@ object AI_pathing {
         val clipModelList = Stream.generate { idClipModel() }.limit(Game_local.MAX_GENTITIES.toLong())
             .toArray<idClipModel?> { _Dummy_.__Array__() }
         numObstacles = 0
-        seekDelta.oSet(seekPos.oMinus(startPos))
-        expBounds[0] = physics.GetBounds().oGet(0).ToVec2()
+        seekDelta.set(seekPos.minus(startPos))
+        expBounds[0] = physics.GetBounds().get(0).ToVec2()
             .oMinus(idVec2(CollisionModel.CM_BOX_EPSILON, CollisionModel.CM_BOX_EPSILON))
-        expBounds[1] = physics.GetBounds().oGet(1).ToVec2()
+        expBounds[1] = physics.GetBounds().get(1).ToVec2()
             .oPlus(idVec2(CollisionModel.CM_BOX_EPSILON, CollisionModel.CM_BOX_EPSILON))
         physics.GetAbsBounds().AxisProjection(physics.GetGravityNormal().oNegative(), stepHeight, headHeight)
         stepHeight.setVal(stepHeight.getVal() + aas.GetSettings().maxStepHeight.getVal())
 
         // clip bounds for the obstacle search space
-        clipBounds.oSet(0, clipBounds.oSet(1, startPos))
+        clipBounds.set(0, clipBounds.set(1, startPos))
         clipBounds.AddPoint(seekPos)
         clipBounds.ExpandSelf(AI_pathing.MAX_OBSTACLE_RADIUS)
         clipMask = physics.GetClipMask()
@@ -558,7 +558,7 @@ object AI_pathing {
                 val obstacle = obstacles.get(i)
                 j = 0
                 while (j < obstacle.winding.GetNumPoints()) {
-                    silVerts[j].oSet(obstacle.winding.oGet(j))
+                    silVerts[j].set(obstacle.winding.oGet(j))
                     silVerts[j].z = startPos.z
                     j++
                 }
@@ -609,9 +609,9 @@ object AI_pathing {
             i = 0
             while (i < 2) {
                 if (node.children.get(i) != null) {
-                    start.oSet(node.pos)
+                    start.set(node.pos)
                     start.z = height
-                    end.oSet(node.children.get(i).pos)
+                    end.set(node.children.get(i).pos)
                     end.z = height
                     Game_local.gameRenderWorld.DebugArrow(
                         if (node.edgeNum == -1) idDeviceContext.Companion.colorYellow else if (i != 0) idDeviceContext.Companion.colorBlue else idDeviceContext.Companion.colorRed,
@@ -659,7 +659,7 @@ object AI_pathing {
         if (!blocked) {
 
             // test if the current edge faces the goal
-            seekDelta.oSet(seekPos.oMinus(node.pos))
+            seekDelta.set(seekPos.oMinus(node.pos))
             facing = (2 * node.dir - 1) * (node.delta.x * seekDelta.y - node.delta.y * seekDelta.x) >= 0.0f
 
             // if the current edge faces goal and the line from the current
@@ -739,9 +739,9 @@ object AI_pathing {
 
             // don't move outside of the clip bounds
             val endPos = node.pos.oPlus(node.delta)
-            if (endPos.x - AI_pathing.CLIP_BOUNDS_EPSILON < clipBounds.oGet(0).x || endPos.x + AI_pathing.CLIP_BOUNDS_EPSILON > clipBounds.oGet(
+            if (endPos.x - AI_pathing.CLIP_BOUNDS_EPSILON < clipBounds.get(0).x || endPos.x + AI_pathing.CLIP_BOUNDS_EPSILON > clipBounds.get(
                     1
-                ).x || endPos.y - AI_pathing.CLIP_BOUNDS_EPSILON < clipBounds.oGet(0).y || endPos.y + AI_pathing.CLIP_BOUNDS_EPSILON > clipBounds.oGet(
+                ).x || endPos.y - AI_pathing.CLIP_BOUNDS_EPSILON < clipBounds.get(0).y || endPos.y + AI_pathing.CLIP_BOUNDS_EPSILON > clipBounds.get(
                     1
                 ).y
             ) {
@@ -1036,7 +1036,7 @@ object AI_pathing {
                         bestNumPathPoints =
                             AI_pathing.OptimizePath(root, bestNode, obstacles, numObstacles, optimizedPath)
                         bestPathLength = AI_pathing.PathLength(optimizedPath, bestNumPathPoints, curDir.ToVec2())
-                        seekPos.oSet(optimizedPath[1])
+                        seekPos.set(optimizedPath[1])
                     }
                     numPathPoints = AI_pathing.OptimizePath(root, node, obstacles, numObstacles, optimizedPath)
                     pathLength = AI_pathing.PathLength(optimizedPath, numPathPoints, curDir.ToVec2())
@@ -1044,7 +1044,7 @@ object AI_pathing {
                         bestNode = node
                         bestNumPathPoints = numPathPoints
                         bestPathLength = pathLength
-                        seekPos.oSet(optimizedPath[1])
+                        seekPos.set(optimizedPath[1])
                     }
                     optimizedPathCalculated = true
                 } else {
@@ -1070,10 +1070,10 @@ object AI_pathing {
             }
         }
         if (!pathToGoalExists) {
-            seekPos.oSet(root.children.get(0).pos)
+            seekPos.set(root.children.get(0).pos)
         } else if (!optimizedPathCalculated) {
             AI_pathing.OptimizePath(root, bestNode, obstacles, numObstacles, optimizedPath)
-            seekPos.oSet(optimizedPath[1])
+            seekPos.set(optimizedPath[1])
         }
         if (SysCvar.ai_showObstacleAvoidance.GetBool()) {
             val start = idVec3()
@@ -1083,8 +1083,8 @@ object AI_pathing {
             numPathPoints = AI_pathing.OptimizePath(root, bestNode, obstacles, numObstacles, optimizedPath)
             i = 0
             while (i < numPathPoints - 1) {
-                start.oSet(optimizedPath[i])
-                end.oSet(optimizedPath[i + 1])
+                start.set(optimizedPath[i])
+                end.set(optimizedPath[i + 1])
                 Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorCyan, start, end, 1)
                 i++
             }
@@ -1130,8 +1130,8 @@ object AI_pathing {
 
             // NOTE: could do (expensive) ledge detection here for when there is no AAS file
             trace.fraction = clipTrace.fraction
-            trace.endPos.oSet(clipTrace.endpos)
-            trace.normal.oSet(clipTrace.c.normal)
+            trace.endPos.set(clipTrace.endpos)
+            trace.normal.set(clipTrace.c.normal)
             trace.blockingEntity = Game_local.gameLocal.entities[clipTrace.c.entityNum]
         } else {
             aasTrace.getOutOfSolid = 1 //true;
@@ -1148,14 +1148,14 @@ object AI_pathing {
             )
             if (clipTrace.fraction >= 1.0f) {
                 trace.fraction = aasTrace.fraction
-                trace.endPos.oSet(aasTrace.endpos)
-                trace.normal.oSet(aas.GetPlane(aasTrace.planeNum).Normal())
+                trace.endPos.set(aasTrace.endpos)
+                trace.normal.set(aas.GetPlane(aasTrace.planeNum).Normal())
                 trace.blockingEntity = Game_local.gameLocal.world
                 if (aasTrace.fraction < 1.0f) {
                     if (stopEvent and AI.SE_ENTER_LEDGE_AREA != 0) {
                         if (aas.AreaFlags(aasTrace.blockingAreaNum) and AASFile.AREA_LEDGE != 0) {
-                            path.endPos.oSet(trace.endPos)
-                            path.endNormal.oSet(trace.normal)
+                            path.endPos.set(trace.endPos)
+                            path.endNormal.set(trace.normal)
                             path.endEvent = AI.SE_ENTER_LEDGE_AREA
                             path.blockingEntity = trace.blockingEntity
                             if (SysCvar.ai_debugMove.GetBool()) {
@@ -1170,8 +1170,8 @@ object AI_pathing {
                     }
                     if (stopEvent and AI.SE_ENTER_OBSTACLE != 0) {
                         if (aas.AreaTravelFlags(aasTrace.blockingAreaNum) and AASFile.TFL_INVALID != 0) {
-                            path.endPos.oSet(trace.endPos)
-                            path.endNormal.oSet(trace.normal)
+                            path.endPos.set(trace.endPos)
+                            path.endNormal.set(trace.normal)
                             path.endEvent = AI.SE_ENTER_OBSTACLE
                             path.blockingEntity = trace.blockingEntity
                             if (SysCvar.ai_debugMove.GetBool()) {
@@ -1187,8 +1187,8 @@ object AI_pathing {
                 }
             } else {
                 trace.fraction = clipTrace.fraction
-                trace.endPos.oSet(clipTrace.endpos)
-                trace.normal.oSet(clipTrace.c.normal)
+                trace.endPos.set(clipTrace.endpos)
+                trace.normal.set(clipTrace.c.normal)
                 trace.blockingEntity = Game_local.gameLocal.entities[clipTrace.c.entityNum]
             }
         }
@@ -1217,7 +1217,7 @@ object AI_pathing {
         val inva: Float
         val p = FloatArray(2)
         x = end.ToVec2().oMinus(start.ToVec2()).Length()
-        y = end.oGet(2) - start.oGet(2)
+        y = end.get(2) - start.get(2)
         a = 4.0f * y * y + 4.0f * x * x
         b = -4.0f * speed * speed - 4.0f * y * gravity
         c = gravity * gravity

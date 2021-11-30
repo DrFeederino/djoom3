@@ -14,7 +14,7 @@ class Complex {
 
      ===============================================================================
      */
-    internal class idComplex {
+    class idComplex {
         var i // imaginary part
                 = 0f
         var r // real part
@@ -26,24 +26,24 @@ class Complex {
             this.i = i
         }
 
-        //public		float &				operator[]( int index );
+        //public		float &				operator[]( int index )
         //
-        //public		idComplex			operator-() final;
-        fun Set(r: Float, i: Float) {
+        //public		idComplex			operator-() final
+        fun set(r: Float, i: Float) {
             this.r = r
             this.i = i
         }
 
-        //public		idComplex &			operator=( final idComplex &a );
+        //public		idComplex &			operator=( final idComplex &a )
         fun Zero() {
             i = 0.0f
             r = i
         }
 
         //
-        //public		idComplex			operator*( final idComplex &a ) final;
-        //public	float				operator[]( int index ) final;
-        fun oGet(index: Int): Float {
+        //public		idComplex			operator*( final idComplex &a ) final
+        //public	float				operator[]( int index ) final
+        operator fun get(index: Int): Float {
             assert(index in 0..1)
             return if (0 == index) {
                 r
@@ -52,8 +52,8 @@ class Complex {
             }
         }
 
-        //public		idComplex			operator/( final idComplex &a ) final;
-        fun oSet(index: Int, value: Float) {
+        //public		idComplex			operator/( final idComplex &a ) final
+        operator fun set(index: Int, value: Float) {
             assert(index in 0..1)
             if (0 == index) {
                 r = value
@@ -62,25 +62,29 @@ class Complex {
             }
         }
 
-        //public		idComplex			operator+( final idComplex &a ) final;
+        //public		idComplex			operator+( final idComplex &a ) final
         operator fun unaryMinus(): idComplex {
             return idComplex(-r, -i)
         }
 
-        //public		idComplex			operator-( final idComplex &a ) final;
-        fun oSet(a: idComplex): idComplex {
+        //public		idComplex			operator-( final idComplex &a ) final
+        fun set(a: idComplex): idComplex {
             r = a.r
             i = a.i
             return this
         }
 
         //
-        //public		idComplex &			operator*=( final idComplex &a );
+        //public		idComplex &			operator*=( final idComplex &a )
         operator fun times(a: idComplex): idComplex {
             return idComplex(r * a.r - i * a.i, i * a.r + r * a.i)
         }
 
-        //public		idComplex &			operator/=( final idComplex &a );
+        operator fun times(a: Int): idComplex {
+            return idComplex(r * a, i * a)
+        }
+
+        //public		idComplex &			operator/=( final idComplex &a )
         operator fun div(a: idComplex): idComplex {
             val s: Float
             val t: Float
@@ -95,47 +99,66 @@ class Complex {
             }
         }
 
-        //public		idComplex &			operator+=( final idComplex &a );
+        fun div(a: Float, b: idComplex): idComplex {
+            val s: Float
+            val t: Float
+            if (abs(b.r) >= abs(b.i)) {
+                s = b.i / b.r
+                t = a / (b.r + s * b.i)
+                return idComplex(t, -s * t)
+            } else {
+                s = b.r / b.i
+                t = a / (s * b.r + b.i)
+                return idComplex(s * t, -t)
+            }
+        }
+
+        operator fun div(a: Float): idComplex {
+            var s = 1.0f / a
+            return idComplex(r * s, i * s)
+        }
+
+        //public		idComplex &			operator+=( final idComplex &a )
         operator fun plus(a: idComplex): idComplex {
             return idComplex(r + a.r, i + a.i)
         }
 
-        //public		idComplex &			operator-=( final idComplex &a );
+        //public		idComplex &			operator-=( final idComplex &a )
         operator fun minus(a: idComplex): idComplex {
             return idComplex(r - a.r, i - a.i)
         }
 
         //
-        //public		idComplex			operator*( final float a ) final;
+        //public		idComplex			operator*( final float a ) final
         fun timesAssign(a: idComplex): idComplex {
-            Set(r * a.r - i * a.i, i * a.r + r * a.i)
+            set(r * a.r - i * a.i, i * a.r + r * a.i)
             return this
         }
 
-        //public		idComplex			operator/( final float a ) final;
+        //public		idComplex			operator/( final float a ) final
         fun divAssign(a: idComplex): idComplex {
             val s: Float
             val t: Float
             if (abs(a.r) >= abs(a.i)) {
                 s = a.i / a.r
                 t = 1.0f / (a.r + s * a.i)
-                Set((r + s * i) * t, (i - s * r) * t)
+                set((r + s * i) * t, (i - s * r) * t)
             } else {
                 s = a.r / a.i
                 t = 1.0f / (s * a.r + a.i)
-                Set((r * s + i) * t, (i * s - r) * t)
+                set((r * s + i) * t, (i * s - r) * t)
             }
             return this
         }
 
-        //public		idComplex			operator+( final float a ) final;
+        //public		idComplex			operator+( final float a ) final
         fun plusAssign(a: idComplex): idComplex {
             r += a.r
             i += a.i
             return this
         }
 
-        //public		idComplex			operator-( final float a ) final;
+        //public		idComplex			operator-( final float a ) final
         fun minusAssign(a: idComplex): idComplex {
             r -= a.r
             i -= a.i
@@ -143,36 +166,28 @@ class Complex {
         }
 
         //
-        //public		idComplex &			operator*=( final float a );
-        fun times(a: Float): idComplex {
+        //public		idComplex &			operator*=( final float a )
+        operator fun times(a: Float): idComplex {
             return idComplex(r * a, i * a)
         }
 
-        //public		idComplex &			operator/=( final float a );
-        fun div(a: Float): idComplex {
-            val s = 1.0f / a
-            return idComplex(r * s, i * s)
-        }
-
-        //public		idComplex &			operator+=( final float a );
+        //public		idComplex &			operator+=( final float a )
         fun plus(a: Float): idComplex {
             return idComplex(r + a, i)
         }
 
-        //public		idComplex &			operator-=( final float a );
+        //public		idComplex &			operator-=( final float a )
         fun minus(a: Float): idComplex {
             return idComplex(r - a, i)
         }
 
         //
-        //public		friend idComplex	operator*( final float a, final idComplex &b );
+        //public		friend idComplex	operator*( final float a, final idComplex &b )
         fun timesAssign(a: Float): idComplex {
-            r *= a
-            i *= a
-            return this
+            return idComplex(r * a, i * a)
         }
 
-        //public		friend idComplex	operator/( final float a, final idComplex &b );
+        //public		friend idComplex	operator/( final float a, final idComplex &b )
         fun divAssign(a: Float): idComplex {
             val s = 1.0f / a
             r *= s
@@ -180,13 +195,13 @@ class Complex {
             return this
         }
 
-        //public		friend idComplex	operator+( final float a, final idComplex &b );
+        //public		friend idComplex	operator+( final float a, final idComplex &b )
         fun plusAssign(a: Float): idComplex {
             r += a
             return this
         }
 
-        //public		friend idComplex	operator-( final float a, final idComplex &b );
+        //public		friend idComplex	operator-( final float a, final idComplex &b )
         fun minusAssign(a: Float): idComplex {
             r -= a
             return this
@@ -203,8 +218,8 @@ class Complex {
             } else abs(i - a.i) <= epsilon
         }
 
-        //public		boolean				operator==(	final idComplex &a ) final;						// exact compare, no epsilon
-        //public		boolean				operator!=(	final idComplex &a ) final;						// exact compare, no epsilon
+        //public		boolean				operator==(	final idComplex &a ) final						// exact compare, no epsilon
+        //public		boolean				operator!=(	final idComplex &a ) final						// exact compare, no epsilon
         override fun hashCode(): Int {
             var hash = 7
             hash = 29 * hash + java.lang.Float.floatToIntBits(r)
@@ -284,9 +299,9 @@ class Complex {
             return 2
         } //
 
-        //public		final float *		ToFloatPtr( void ) final;
-        //public		float *				ToFloatPtr( void );
-        //public		final char *		ToString( int precision = 2 ) final;
+        //public		final float *		ToFloatPtr( void ) final
+        //public		float *				ToFloatPtr( void )
+        //public		final char *		ToString( int precision = 2 ) final
         companion object {
             fun times(a: Float, b: idComplex): idComplex {
                 return idComplex(a * b.r, a * b.i)

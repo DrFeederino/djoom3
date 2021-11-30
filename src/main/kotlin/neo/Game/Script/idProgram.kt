@@ -107,7 +107,7 @@ class idProgram {
         memused += stringspace
         i = 0
         while (i < types.Num()) {
-            memused += types.oGet(i).Allocated()
+            memused += types.get(i).Allocated()
             i++
         }
         funcMem = functions.MemoryUsed()
@@ -324,7 +324,7 @@ class idProgram {
             // check to make sure all functions prototyped have code
             i = 0
             while (i < varDefs.Num()) {
-                def = varDefs.oGet(i)
+                def = varDefs.get(i)
                 if (def.Type() == Script_Program.ev_function && (def.scope.Type() == Script_Program.ev_namespace || def.scope.TypeDef()
                         .Inherits(Script_Program.type_object))
                 ) {
@@ -587,8 +587,8 @@ class idProgram {
         //FIXME: linear search == slow
         i = types.Num() - 1
         while (i >= 0) {
-            if (types.oGet(i).MatchesType(type) && types.oGet(i).Name() == type.Name()) {
-                return types.oGet(i)
+            if (types.get(i).MatchesType(type) && types.get(i).Name() == type.Name()) {
+                return types.get(i)
             }
             i--
         }
@@ -611,7 +611,7 @@ class idProgram {
         var i: Int
         i = types.Num() - 1
         while (i >= 0) {
-            check = types.oGet(i)
+            check = types.get(i)
             if (check.Name() == name) {
                 return check
             }
@@ -777,7 +777,7 @@ class idProgram {
         varDefs.RemoveIndex(def.num)
         i = def.num
         while (i < varDefs.Num()) {
-            varDefs.oGet(i).num = i
+            varDefs.get(i).num = i
             i++
         }
         def.close()
@@ -815,8 +815,8 @@ class idProgram {
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames.oGet(i).Name(), name) == 0) {
-                return varDefNames.oGet(i).GetDefs()
+            if (idStr.Companion.Cmp(varDefNames.get(i).Name(), name) == 0) {
+                return varDefNames.get(i).GetDefs()
             }
             i = varDefNameHash.Next(i)
         }
@@ -829,7 +829,7 @@ class idProgram {
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames.oGet(i).Name(), name) == 0) {
+            if (idStr.Companion.Cmp(varDefNames.get(i).Name(), name) == 0) {
                 break
             }
             i = varDefNameHash.Next(i)
@@ -838,7 +838,7 @@ class idProgram {
             i = varDefNames.Append(idVarDefName(name))
             varDefNameHash.Add(hash, i)
         }
-        varDefNames.oGet(i).AddDef(def)
+        varDefNames.get(i).AddDef(def)
     }
 
     /*

@@ -1,6 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h.idMath
@@ -64,7 +63,7 @@ class VectorSet {
             this.boxHashSize = boxHashSize
             i = 0
             while (i < dimension) {
-                boxSize = (maxs.oGet(i) - mins.oGet(i)) / boxHashSize.toFloat()
+                boxSize = (maxs.get(i) - mins.get(i)) / boxHashSize.toFloat()
                 boxInvSize.get(i) = 1.0f / boxSize
                 boxHalfSize.get(i) = boxSize * 0.5f
                 i++
@@ -91,7 +90,7 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 assert(epsilon <= boxHalfSize.get(i))
-                partialHashKey[i] = ((v.oGet(i) - mins.oGet(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
+                partialHashKey[i] = ((v.get(i) - mins.get(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
                 i++
             }
             i = 0
@@ -105,10 +104,10 @@ class VectorSet {
                 }
                 j = hash.First(hashKey)
                 while (j >= 0) {
-                    val lv = oGet(j) as idVec<*>?
+                    val lv = get(j) as idVec<*>?
                     k = 0
                     while (k < dimension) {
-                        if (Math.abs(lv.oGet(k) - v.oGet(k)) > epsilon) {
+                        if (Math.abs(lv.get(k) - v.get(k)) > epsilon) {
                             break
                         }
                         k++
@@ -124,7 +123,7 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 hashKey *= boxHashSize
-                hashKey += ((v.oGet(i) - mins.oGet(i)) * boxInvSize.get(i)).toInt()
+                hashKey += ((v.get(i) - mins.get(i)) * boxInvSize.get(i)).toInt()
                 i++
             }
             hash.Add(hashKey, super.Num())
@@ -188,7 +187,7 @@ class VectorSet {
             this.boxHashSize = boxHashSize
             i = 0
             while (i < dimension) {
-                boxSize = (maxs.oGet(i) - mins.oGet(i)) / boxHashSize.toFloat()
+                boxSize = (maxs.get(i) - mins.get(i)) / boxHashSize.toFloat()
                 boxInvSize.get(i) = 1.0f / boxSize
                 boxHalfSize.get(i) = boxSize * 0.5f
                 i++
@@ -212,7 +211,7 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 assert(epsilon <= boxHalfSize.get(i))
-                partialHashKey[i] = ((v.oGet(i) - mins.oGet(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
+                partialHashKey[i] = ((v.get(i) - mins.get(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
                 i++
             }
             i = 0
@@ -229,7 +228,7 @@ class VectorSet {
                     val lv = vectorList.get(j)
                     k = 0
                     while (k < dimension) {
-                        if (Math.abs(lv.oGet(k) - v.oGet(k)) > epsilon) {
+                        if (Math.abs(lv.get(k) - v.get(k)) > epsilon) {
                             break
                         }
                         k++
@@ -245,7 +244,7 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 hashKey *= boxHashSize
-                hashKey += ((v.oGet(i) - mins.oGet(i)) * boxInvSize.get(i)).toInt()
+                hashKey += ((v.get(i) - mins.get(i)) * boxInvSize.get(i)).toInt()
                 i++
             }
             hash.Add(hashKey, vectorNum)

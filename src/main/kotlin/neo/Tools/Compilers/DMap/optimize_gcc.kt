@@ -41,7 +41,7 @@ object optimize_gcc {
         // should we match based on the t-junction fixing hash verts?
         i = 0
         while (i < optimize_gcc.numOptVerts) {
-            if (optimize_gcc.optVerts[i].pv.oGet(0) == x && optimize_gcc.optVerts[i].pv.oGet(1) == y) {
+            if (optimize_gcc.optVerts[i].pv.get(0) == x && optimize_gcc.optVerts[i].pv.get(1) == y) {
                 return optimize_gcc.optVerts[i]
             }
             i++
@@ -55,9 +55,9 @@ object optimize_gcc {
         vert = optimize_gcc.optVerts[i]
         //	memset( vert, 0, sizeof( *vert ) );
         vert.v = v
-        vert.pv.oSet(0, x)
-        vert.pv.oSet(1, y)
-        vert.pv.oSet(2, 0f)
+        vert.pv.set(0, x)
+        vert.pv.set(1, y)
+        vert.pv.set(2, 0f)
         optimize_gcc.optBounds.AddPoint(vert.pv)
         return vert
     }

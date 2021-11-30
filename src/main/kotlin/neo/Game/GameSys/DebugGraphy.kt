@@ -23,7 +23,7 @@ class DebugGraphy {
         }
 
         fun AddValue(value: Float) {
-            samples.oSet(index++, value)
+            samples.set(index++, value)
             if (index >= samples.Num()) {
                 index = 0
             }
@@ -38,24 +38,24 @@ class DebugGraphy {
             val axis = Game_local.gameLocal.GetLocalPlayer().viewAxis
             val pos = idVec3(
                 Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin()
-                    .oPlus(axis.oGet(1).times(samples.Num() * 0.5f))
+                    .oPlus(axis.get(1).times(samples.Num() * 0.5f))
             )
-            value1 = samples.oGet(index) * scale
+            value1 = samples.get(index) * scale
             i = 1
             while (i < samples.Num()) {
-                value2 = samples.oGet((i + index) % samples.Num()) * scale
-                vec1.oSet(
+                value2 = samples.get((i + index) % samples.Num()) * scale
+                vec1.set(
                     pos.oPlus(
-                        axis.oGet(2).times(value1).oMinus(
-                            axis.oGet(1).times((i - 1).toFloat())
-                                .oPlus(axis.oGet(0).times(samples.Num().toFloat()))
+                        axis.get(2).times(value1).minus(
+                            axis.get(1).times((i - 1).toFloat())
+                                .oPlus(axis.get(0).times(samples.Num().toFloat()))
                         )
                     )
                 )
-                vec2.oSet(
+                vec2.set(
                     pos.oPlus(
-                        axis.oGet(2).times(value2).oMinus(
-                            axis.oGet(1).times(i.toFloat()).oPlus(axis.oGet(0).times(samples.Num().toFloat()))
+                        axis.get(2).times(value2).minus(
+                            axis.get(1).times(i.toFloat()).oPlus(axis.get(0).times(samples.Num().toFloat()))
                         )
                     )
                 )

@@ -73,8 +73,8 @@ object CollisionModel {
 
         constructor(c: contactInfo_t) : this() {
             type = c.type
-            point.oSet(c.point)
-            normal.oSet(c.normal)
+            point.set(c.point)
+            normal.set(c.normal)
             dist = c.dist
             contents = c.contents
             material = c.material
@@ -97,7 +97,7 @@ object CollisionModel {
         }
 
         constructor(other: trace_s) {
-            endpos.oSet(other.endpos)
+            endpos.set(other.endpos)
             endAxis = idMat3(other.endAxis)
             c = contactInfo_t(other.c)
             fraction = other.fraction
@@ -117,8 +117,8 @@ object CollisionModel {
 
         fun oSet(s: trace_s) {
             fraction = s.fraction
-            endpos.oSet(s.endpos)
-            endAxis.oSet(s.endAxis)
+            endpos.set(s.endpos)
+            endAxis.set(s.endAxis)
             c = s.c
         }
     }

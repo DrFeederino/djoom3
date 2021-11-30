@@ -1,7 +1,7 @@
 package neo.idlib.math
 
-import neo.TempDump.CPP_class.Char
 import neo.idlib.containers.CFloat
+import kotlin.math.*
 
 /**
  * ===============================================================================
@@ -84,16 +84,17 @@ object Math_h {
     }
 
     fun FLOAT_IS_NAN(x: Float): Boolean /*(((*(const unsigned long *)&x) & 0x7f800000) == 0x7f800000)*/ {
-        return java.lang.Float.isNaN(x)
+        return x.isNaN()
     }
 
     fun FLOAT_IS_INF(x: Float): Boolean {
         return java.lang.Float.floatToIntBits(x) and 0x7fffffff == 0x7f800000
     }
 
-    fun FLOAT_IS_IND(x: Float): Boolean {
-        return x == -0x400000f
-    }
+    // Not used
+//    fun FLOAT_IS_IND(x: Float): Boolean {
+//        return x == -0x400000f
+//    }
 
     fun FLOAT_IS_DENORMAL(x: Float): Boolean {
         return java.lang.Float.floatToIntBits(x) and 0x7f800000 == 0x00000000 && java.lang.Float.floatToIntBits(x) and 0x007fffff != 0x00000000
@@ -154,7 +155,7 @@ object Math_h {
         const val SQRT_1OVER2 = 0.70710678118654752440f // sqrt( 1 / 2 )
         const val SQRT_TABLE_SIZE = 2 shl LOOKUP_BITS
         const val LOOKUP_MASK = SQRT_TABLE_SIZE - 1
-        private val iSqrt: LongArray = LongArray(SQRT_TABLE_SIZE)
+        private val iSqrt: IntArray = IntArray(SQRT_TABLE_SIZE)
         const val TWO_PI = 2.0f * PI // pi * 2
         const val E = 2.71828182845904523536f // e
         const val HALF_PI = 0.5f * PI // pi / 2
@@ -169,10 +170,10 @@ object Math_h {
             var fo: _flint
             for (i in 0 until SQRT_TABLE_SIZE) {
                 fi = _flint(EXP_BIAS - 1 shl EXP_POS or (i shl LOOKUP_POS))
-                fo = _flint((1.0 / Math.sqrt(fi.f.toDouble())).toFloat())
-                iSqrt[i] = (fo.i + (1 shl SEED_POS - 2) shr SEED_POS and 0xFF).toLong() shl SEED_POS
+                fo = _flint((1.0 / sqrt(fi.f.toDouble())).toFloat())
+                iSqrt[i] = (fo.i + (1 shl SEED_POS - 2) shr SEED_POS and 0xFF) shl SEED_POS
             }
-            iSqrt[SQRT_TABLE_SIZE / 2] = 0xFF.toLong() shl SEED_POS
+            iSqrt[SQRT_TABLE_SIZE / 2] = 0xFF shl SEED_POS
             initialized = true
         }
 
@@ -194,10 +195,10 @@ object Math_h {
 
 //	long  a = ((union _flint*)(&x))->i;
             val seed = _flint(x)
-            val a = seed.getI()
+            val a = seed.getInt()
             assert(initialized)
             val y = (x * 0.5f).toDouble()
-            seed.setI(
+            seed.setInt(
                 3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS
                         or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK]
             )
@@ -209,10 +210,10 @@ object Math_h {
 
         fun InvSqrt16(x: Float): Float { // inverse square root with 16 bits precision, returns huge number when x == 0.0
             val seed = _flint(x)
-            val a = seed.getI()
+            val a = seed.getInt()
             assert(initialized)
             val y = (x * 0.5f).toDouble()
-            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
+            seed.setInt(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
             var r = seed.f.toDouble()
             r = r * (1.5f - r * r * y)
             return r.toFloat()
@@ -220,10 +221,10 @@ object Math_h {
 
         fun InvSqrt64(x: Float): Double { // inverse square root with 64 bits precision, returns huge number when x == 0.0
             val seed = _flint(x)
-            val a = seed.getI()
+            val a = seed.getInt()
             assert(initialized)
             val y = (x * 0.5f).toDouble()
-            seed.setI(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
+            seed.setInt(3 * EXP_BIAS - 1 - (a shr EXP_POS and 0xFF) shr 1 shl EXP_POS or iSqrt[a shr EXP_POS - LOOKUP_BITS and LOOKUP_MASK])
             var r = seed.f.toDouble()
             r = r * (1.5f - r * r * y)
             r = r * (1.5f - r * r * y)
@@ -244,7 +245,7 @@ object Math_h {
         }
 
         fun Sin(a: Float): Float {
-            return Math.sin(a.toDouble()).toFloat()
+            return sin(a.toDouble()).toFloat()
         } // sine with 32 bits precision
 
         fun Sin16(a: Float): Float { // sine with 16 bits precision, maximum absolute error is 2.3082e-09
@@ -252,7 +253,7 @@ object Math_h {
             val s: Float
             if (a < 0.0f || a >= TWO_PI) {
 //		a -= floorf( a / TWO_PI ) * TWO_PI;
-                a -= (Math.floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
+                a -= (floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
             }
             //#if 1
             if (a < PI) {
@@ -277,11 +278,11 @@ object Math_h {
         }
 
         fun Sin64(a: Float): Double {
-            return Math.sin(a.toDouble())
+            return sin(a.toDouble())
         } // sine with 64 bits precision
 
         fun Cos(a: Float): Float {
-            return Math.cos(a.toDouble()).toFloat()
+            return cos(a.toDouble()).toFloat()
         } // cosine with 32 bits precision
 
         fun Cos16(a: Float): Float { // cosine with 16 bits precision, maximum absolute error is 2.3082e-09
@@ -290,7 +291,7 @@ object Math_h {
             val d: Float
             if (a < 0.0f || a >= TWO_PI) {
 //		a -= floorf( a / TWO_PI ) * TWO_PI;
-                a -= (Math.floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
+                a -= (floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
             }
             //#if 1
             if (a < PI) {
@@ -323,7 +324,7 @@ object Math_h {
         }
 
         fun Cos64(a: Float): Double {
-            return Math.cos(a.toDouble())
+            return cos(a.toDouble())
         } // cosine with 64 bits precision
 
         fun SinCos(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 32 bits precision
@@ -337,8 +338,8 @@ object Math_h {
 //		fstp	dword ptr [edx]
 //	}
 //#else
-            s.setVal(Math.sin(a.toDouble()).toFloat())
-            c.setVal(Math.cos(a.toDouble()).toFloat())
+            s._val = (sin(a.toDouble()).toFloat())
+            c._val = (cos(a.toDouble()).toFloat())
             //#endif
         }
 
@@ -348,7 +349,7 @@ object Math_h {
             val d: Float
             if (a < 0.0f || a >= TWO_PI) {
 //		a -= floorf( a / idMath::TWO_PI ) * idMath::TWO_PI;
-                a -= (Math.floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
+                a -= (floor((a / TWO_PI).toDouble()) * TWO_PI).toFloat()
             }
             //#if 1
             if (a < PI) {
@@ -377,8 +378,10 @@ object Math_h {
 //	}
 //#endif
             t = a * a
-            s.setVal(a * (((((-2.39e-08f * t + 2.7526e-06f) * t - 1.98409e-04f) * t + 8.3333315e-03f) * t - 1.666666664e-01f) * t + 1.0f))
-            c.setVal(d * (((((-2.605e-07f * t + 2.47609e-05f) * t - 1.3888397e-03f) * t + 4.16666418e-02f) * t - 4.999999963e-01f) * t + 1.0f))
+            s._val =
+                (a * (((((-2.39e-08f * t + 2.7526e-06f) * t - 1.98409e-04f) * t + 8.3333315e-03f) * t - 1.666666664e-01f) * t + 1.0f))
+            c._val =
+                (d * (((((-2.605e-07f * t + 2.47609e-05f) * t - 1.3888397e-03f) * t + 4.16666418e-02f) * t - 4.999999963e-01f) * t + 1.0f))
         }
 
         fun SinCos64(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 64 bits precision
@@ -392,13 +395,13 @@ object Math_h {
 //		fstp	qword ptr [edx]
 //	}
 //#else
-            s.setVal(Math.sin(a.toDouble()).toFloat())
-            c.setVal(Math.cos(a.toDouble()).toFloat())
+            s._val = (sin(a.toDouble()).toFloat())
+            c._val = (cos(a.toDouble()).toFloat())
             //#endif
         }
 
         fun Tan(a: Float): Float { // tangent with 32 bits precision
-            return Math.tan(a.toDouble()).toFloat()
+            return tan(a.toDouble()).toFloat()
         }
 
         fun Tan16(a: Float): Float { // tangent with 16 bits precision, maximum absolute error is 1.8897e-08
@@ -407,7 +410,7 @@ object Math_h {
             val reciprocal: Boolean
             if (a < 0.0f || a >= PI) {
 //		a -= floorf( a / PI ) * PI;
-                a -= (Math.floor((a / PI).toDouble()) * PI).toFloat()
+                a -= (floor((a / PI).toDouble()) * PI).toFloat()
             }
             //#if 1
             if (a < HALF_PI) {
@@ -446,7 +449,7 @@ object Math_h {
         }
 
         fun Tan64(a: Float): Double { // tangent with 64 bits precision
-            return Math.tan(a.toDouble())
+            return tan(a.toDouble())
         }
 
         fun ASin(a: Float): Float { // arc sine with 32 bits precision, input is clamped to [-1, 1] to avoid a silent NaN
@@ -455,7 +458,7 @@ object Math_h {
             }
             return if (a >= 1.0f) {
                 HALF_PI
-            } else Math.asin(a.toDouble()).toFloat()
+            } else asin(a.toDouble()).toFloat()
         }
 
         fun ASin16(a: Float): Float { // arc sine with 16 bits precision, maximum absolute error is 6.7626e-05
@@ -464,12 +467,12 @@ object Math_h {
                 if (a <= -1.0f) {
                     return -HALF_PI
                 }
-                a = Math.abs(a)
-                ((((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * Math.sqrt((1.0f - a).toDouble()) - HALF_PI).toFloat()
+                a = abs(a)
+                ((((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * sqrt((1.0f - a).toDouble()) - HALF_PI).toFloat()
             } else {
                 if (a >= 1.0f) {
                     HALF_PI
-                } else (HALF_PI - (((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * Math.sqrt((1.0f - a).toDouble())).toFloat()
+                } else (HALF_PI - (((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * sqrt((1.0f - a).toDouble())).toFloat()
             }
         }
 
@@ -479,7 +482,7 @@ object Math_h {
             }
             return if (a >= 1.0f) {
                 HALF_PI
-            } else Math.sin(a.toDouble()).toFloat()
+            } else sin(a.toDouble()).toFloat()
         }
 
         fun ACos(a: Float): Float { // arc cosine with 32 bits precision, input is clamped to [-1, 1] to avoid a silent NaN
@@ -488,7 +491,7 @@ object Math_h {
             }
             return if (a >= 1.0f) {
                 0.0f
-            } else Math.acos(a.toDouble()).toFloat()
+            } else acos(a.toDouble()).toFloat()
         }
 
         fun ACos16(a: Float): Float { // arc cosine with 16 bits precision, maximum absolute error is 6.7626e-05
@@ -497,32 +500,32 @@ object Math_h {
                 if (a <= -1.0f) {
                     return PI
                 }
-                a = Math.abs(a)
-                (PI - (((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * Math.sqrt((1.0f - a).toDouble())).toFloat()
+                a = abs(a)
+                (PI - (((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * sqrt((1.0f - a).toDouble())).toFloat()
             } else {
                 if (a >= 1.0f) {
                     0.0f
-                } else ((((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * Math.sqrt((1.0f - a).toDouble())).toFloat()
+                } else ((((-0.0187293f * a + 0.0742610f) * a - 0.2121144f) * a + 1.5707288f) * sqrt((1.0f - a).toDouble())).toFloat()
             }
         }
 
-        fun ACos64(a: Float): Double { // arc cosine with 64 bits precision
+        fun ACos64(a: Float): Float { // arc cosine with 64 bits precision
             if (a <= -1.0f) {
                 return PI
             }
             return if (a >= 1.0f) {
                 0.0f
-            } else Math.acos(a.toDouble())
+            } else acos(a.toDouble()).toFloat()
         }
 
         fun ATan(a: Float): Float { // arc tangent with 32 bits precision
-            return Math.atan(a.toDouble()).toFloat()
+            return atan(a.toDouble()).toFloat()
         }
 
         fun ATan16(a: Float): Float { // arc tangent with 16 bits precision, maximum absolute error is 1.3593e-08
             var a = a
             var s: Float
-            return if (Math.abs(a) > 1.0f) {
+            return if (abs(a) > 1.0f) {
                 a = 1.0f / a
                 s = a * a
                 s = -((((((((0.0028662257f * s - 0.0161657367f) * s + 0.0429096138f) * s - 0.0752896400f)
@@ -540,11 +543,11 @@ object Math_h {
         }
 
         fun ATan64(a: Float): Double { // arc tangent with 64 bits precision
-            return Math.atan(a.toDouble())
+            return atan(a.toDouble())
         }
 
         fun ATan(y: Float, x: Float): Float { // arc tangent with 32 bits precision
-            return Math.atan2(y.toDouble(), x.toDouble()).toFloat()
+            return atan2(y.toDouble(), x.toDouble()).toFloat()
         }
 
         fun ATan16(
@@ -553,7 +556,7 @@ object Math_h {
         ): Float { // arc tangent with 16 bits precision, maximum absolute error is 1.3593e-08
             val a: Float
             var s: Float
-            return if (Math.abs(y) > Math.abs(x)) {
+            return if (abs(y) > abs(x)) {
                 a = x / y
                 s = a * a
                 s = -((((((((0.0028662257f * s - 0.0161657367f) * s + 0.0429096138f) * s - 0.0752896400f)
@@ -572,11 +575,11 @@ object Math_h {
         }
 
         fun ATan64(y: Float, x: Float): Double { // arc tangent with 64 bits precision
-            return Math.atan2(y.toDouble(), x.toDouble())
+            return atan2(y.toDouble(), x.toDouble())
         }
 
         fun Pow(x: Float, y: Float): Float { // x raised to the power y with 32 bits precision
-            return Math.pow(x.toDouble(), y.toDouble()).toFloat()
+            return x.toDouble().pow(y.toDouble()).toFloat()
         }
 
         fun Pow16(x: Float, y: Float): Float { // x raised to the power y with 16 bits precision
@@ -584,11 +587,11 @@ object Math_h {
         }
 
         fun Pow64(x: Float, y: Float): Double { // x raised to the power y with 64 bits precision
-            return Math.pow(x.toDouble(), y.toDouble())
+            return x.toDouble().pow(y.toDouble())
         }
 
         fun Exp(f: Float): Float { // e raised to the power f with 32 bits precision
-            return Math.exp(f.toDouble()).toFloat()
+            return exp(f.toDouble()).toFloat()
         }
 
         fun Exp16(f: Float): Float { // e raised to the power f with 16 bits precision
@@ -633,11 +636,11 @@ object Math_h {
         }
 
         fun Exp64(f: Float): Double { // e raised to the power f with 64 bits precision
-            return Math.exp(f.toDouble())
+            return exp(f.toDouble())
         }
 
         fun Log(f: Float): Float { // natural logarithm with 32 bits precision
-            return Math.log(f.toDouble()).toFloat()
+            return ln(f.toDouble()).toFloat()
         }
 
         fun Log16(f: Float): Float { // natural logarithm with 16 bits precision
@@ -663,7 +666,7 @@ object Math_h {
         }
 
         fun Log64(f: Float): Double { // natural logarithm with 64 bits precision
-            return Math.log(f.toDouble())
+            return ln(f.toDouble())
         }
 
         fun IPow(x: Int, y: Int): Int { // integral x raised to the power y
@@ -747,15 +750,15 @@ object Math_h {
         }
 
         fun Floor(f: Float): Float { // returns the largest integer that is less than or equal to the given value
-            return Math.floor(f.toDouble()).toFloat()
+            return floor(f.toDouble()).toFloat()
         }
 
         fun Ceil(f: Float): Float { // returns the smallest integer that is greater than or equal to the given value
-            return Math.ceil(f.toDouble()).toFloat()
+            return ceil(f.toDouble()).toFloat()
         }
 
         fun Rint(f: Float): Float { // returns the nearest integer
-            return Math.floor((f + 0.5f).toDouble()).toFloat()
+            return floor((f + 0.5f).toDouble()).toFloat()
         }
 
         fun Ftoi(f: Float): Int { // float to int conversion
@@ -777,7 +780,7 @@ object Math_h {
 //            m = (i & ((1 << IEEE_FLT_MANTISSA_BITS) - 1)) | (1 << IEEE_FLT_MANTISSA_BITS);
 //            shift = e - IEEE_FLT_MANTISSA_BITS;
 //            return ((((m >> -shift) | (m << shift)) & ~(e >> 31)) ^ s) - s;
-            return Math.round(f) //TODO:fix the C++ function.
+            return f.roundToInt() //TODO:fix the C++ function.
             //#elif defined( __i386__ )
 //#elif 0
 //	int i = 0;
@@ -796,7 +799,7 @@ object Math_h {
             return f.toLong()
         }
 
-        fun FtolFast(f: Float): Long { // fast float to long conversion but uses current FPU round mode (default round nearest)
+        fun FtolFast(f: Float): Int { // fast float to long conversion but uses current FPU round mode (default round nearest)
 //#ifdef _WIN32
 //	// FIXME: this overflows on 31bits still .. same as FtoiFast
 //	unsigned long i;
@@ -834,10 +837,10 @@ object Math_h {
 
         fun ClampChar(i: Int): Char {
             if (i < -128) { //goddamn unsigned char!!
-                return -128.toChar()
+                return Char(-128)
             }
             return if (i > 127) {
-                127
+                127.toChar()
             } else i.toChar()
         }
 
@@ -871,7 +874,7 @@ object Math_h {
         fun AngleNormalize360(angle: Float): Float {
             var angle = angle
             if (angle >= 360.0f || angle < 0.0f) {
-                angle -= (Math.floor((angle / 360.0f).toDouble()) * 360.0f).toFloat()
+                angle -= (floor((angle / 360.0f).toDouble()) * 360.0f).toFloat()
             }
             return angle
         }
@@ -924,7 +927,7 @@ object Math_h {
             mantissa = i and (1 shl Math_h.IEEE_FLT_MANTISSA_BITS) - 1
             value = sign shl 1 + exponentBits + mantissaBits
             value =
-                value or (Math_h.INTSIGNBITSET(exponent) shl exponentBits or (Math.abs(exponent) and (1 shl exponentBits) - 1) shl mantissaBits)
+                value or (Math_h.INTSIGNBITSET(exponent) shl exponentBits or (abs(exponent) and (1 shl exponentBits) - 1) shl mantissaBits)
             value = value or (mantissa shr Math_h.IEEE_FLT_MANTISSA_BITS - mantissaBits)
             return value
         }
@@ -971,27 +974,27 @@ object Math_h {
             var i = 0
 
             constructor(i: Int) {
-                setI(i)
+                setInt(i)
             }
 
             constructor(f: Float) {
-                setF(f)
+                setFloat(f)
             }
 
-            fun getI(): Int {
+            fun getInt(): Int {
                 return i
             }
 
-            fun setI(i: Int) {
+            fun setInt(i: Int) {
                 this.i = i
                 f = java.lang.Float.intBitsToFloat(i)
             }
 
-            fun getF(): Float {
+            fun getFloat(): Float {
                 return f
             }
 
-            fun setF(f: Float) {
+            fun setFloat(f: Float) {
                 this.f = f
                 i = java.lang.Float.floatToIntBits(f)
             }

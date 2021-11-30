@@ -556,9 +556,9 @@ object MegaTexture {
             }
 
             // force first bind to load everything
-            currentViewOrigin.oSet(0, -99999999.0f)
-            currentViewOrigin.oSet(1, -99999999.0f)
-            currentViewOrigin.oSet(2, -99999999.0f)
+            currentViewOrigin.set(0, -99999999.0f)
+            currentViewOrigin.set(1, -99999999.0f)
+            currentViewOrigin.set(2, -99999999.0f)
             return true
         }
 
@@ -580,31 +580,31 @@ object MegaTexture {
             }
             var origin: idDrawVert? = idDrawVert()
             val axis = arrayOfNulls<idDrawVert?>(2)
-            origin.st.oSet(0, 1.0f)
-            origin.st.oSet(1, 1.0f)
-            axis[0].st.oSet(0, 0f)
-            axis[0].st.oSet(1, 1f)
-            axis[1].st.oSet(0, 1f)
-            axis[1].st.oSet(1, 0f)
+            origin.st.set(0, 1.0f)
+            origin.st.set(1, 1.0f)
+            axis[0].st.set(0, 0f)
+            axis[0].st.set(1, 1f)
+            axis[1].st.set(0, 1f)
+            axis[1].st.set(1, 0f)
             for (i in 0 until tri.numVerts) {
                 val v = tri.verts[i]
-                if (v.st.oGet(0) <= origin.st.oGet(0) && v.st.oGet(1) <= origin.st.oGet(1)) {
+                if (v.st.get(0) <= origin.st.get(0) && v.st.get(1) <= origin.st.get(1)) {
                     origin = v
                 }
-                if (v.st.oGet(0) >= axis[0].st.oGet(0) && v.st.oGet(1) <= axis[0].st.oGet(1)) {
+                if (v.st.get(0) >= axis[0].st.get(0) && v.st.get(1) <= axis[0].st.get(1)) {
                     axis[0] = v
                 }
-                if (v.st.oGet(0) <= axis[1].st.oGet(0) && v.st.oGet(1) >= axis[1].st.oGet(1)) {
+                if (v.st.get(0) <= axis[1].st.get(0) && v.st.get(1) >= axis[1].st.get(1)) {
                     axis[1] = v
                 }
             }
             for (i in 0..1) {
-                val dir = idVec3(axis[i].xyz.oMinus(origin.xyz))
-                val texLen = axis[i].st.oGet(i) - origin.st.oGet(i)
-                val spaceLen = axis[i].xyz.oMinus(origin.xyz).Length()
+                val dir = idVec3(axis[i].xyz.minus(origin.xyz))
+                val texLen = axis[i].st.get(i) - origin.st.get(i)
+                val spaceLen = axis[i].xyz.minus(origin.xyz).Length()
                 val scale = texLen / (spaceLen * spaceLen)
                 dir.oMulSet(scale)
-                val c = origin.xyz.times(dir) - origin.st.oGet(i)
+                val c = origin.xyz.times(dir) - origin.st.get(i)
                 localViewToTextureCenter.get(i).get(0) = dir.oGet(0)
                 localViewToTextureCenter.get(i).get(1) = dir.oGet(1)
                 localViewToTextureCenter.get(i).get(2) = dir.oGet(2)
@@ -672,7 +672,7 @@ object MegaTexture {
         private fun SetViewOrigin(viewOrigin: idVec3?) {
             if (r_showMegaTextureLabels.IsModified()) {
                 r_showMegaTextureLabels.ClearModified()
-                currentViewOrigin.oSet(0, viewOrigin.oGet(0) + 0.1f) // force a change
+                currentViewOrigin.set(0, viewOrigin.get(0) + 0.1f) // force a change
                 for (i in 0 until numLevels) {
                     levels.get(i).Invalidate()
                 }
@@ -683,15 +683,15 @@ object MegaTexture {
             if (r_skipMegaTexture.GetBool()) {
                 return
             }
-            currentViewOrigin.oSet(viewOrigin)
+            currentViewOrigin.set(viewOrigin)
             val texCenter = FloatArray(2)
 
             // convert the viewOrigin to a texture center, which will
             // be a different conversion for each megaTexture
             for (i in 0..1) {
-                texCenter[i] = viewOrigin.oGet(0) * localViewToTextureCenter.get(i)
-                    .get(0) + viewOrigin.oGet(1) * localViewToTextureCenter.get(i)
-                    .get(1) + viewOrigin.oGet(2) * localViewToTextureCenter.get(i)
+                texCenter[i] = viewOrigin.get(0) * localViewToTextureCenter.get(i)
+                    .get(0) + viewOrigin.get(1) * localViewToTextureCenter.get(i)
+                    .get(1) + viewOrigin.get(2) * localViewToTextureCenter.get(i)
                     .get(2) + localViewToTextureCenter.get(i).get(3)
             }
             for (i in 0 until numLevels) {
