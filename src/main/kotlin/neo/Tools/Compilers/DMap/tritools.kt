@@ -183,9 +183,9 @@ object tritools {
     fun DrawTri(tri: mapTri_s?) {
         val w = idWinding()
         w.SetNumPoints(3)
-        Vector.VectorCopy(tri.v[0].xyz, w.oGet(0))
-        Vector.VectorCopy(tri.v[1].xyz, w.oGet(1))
-        Vector.VectorCopy(tri.v[2].xyz, w.oGet(2))
+        Vector.VectorCopy(tri.v[0].xyz, w.get(0))
+        Vector.VectorCopy(tri.v[1].xyz, w.get(1))
+        Vector.VectorCopy(tri.v[2].xyz, w.get(2))
         gldraw.DrawWinding(w)
     }
 
@@ -225,9 +225,9 @@ object tritools {
         val w: idWinding
         w = idWinding(3)
         w.SetNumPoints(3)
-        Vector.VectorCopy(tri.v[0].xyz, w.oGet(0))
-        Vector.VectorCopy(tri.v[1].xyz, w.oGet(1))
-        Vector.VectorCopy(tri.v[2].xyz, w.oGet(2))
+        Vector.VectorCopy(tri.v[0].xyz, w.get(0))
+        Vector.VectorCopy(tri.v[1].xyz, w.get(1))
+        Vector.VectorCopy(tri.v[2].xyz, w.get(2))
         return w
     }
 
@@ -315,11 +315,11 @@ object tritools {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.set(w.oGet(0).ToVec3())
+                    vec.set(w.get(0).ToVec3())
                 } else if (j == 1) {
-                    vec.set(w.oGet(i - 1).ToVec3())
+                    vec.set(w.get(i - 1).ToVec3())
                 } else {
-                    vec.set(w.oGet(i).ToVec3())
+                    vec.set(w.get(i).ToVec3())
                 }
                 Vector.VectorCopy(vec, tri.v[j].xyz)
                 j++

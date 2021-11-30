@@ -2145,7 +2145,7 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_POLYGON)
             j = 0
             while (j < poly.winding.GetNumPoints()) {
-                qgl.qglVertex3fv(poly.winding.oGet(j).ToFloatPtr())
+                qgl.qglVertex3fv(poly.winding.get(j).ToFloatPtr())
                 j++
             }
             qgl.qglEnd()

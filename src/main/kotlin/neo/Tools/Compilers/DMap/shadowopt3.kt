@@ -236,9 +236,9 @@ object shadowopt3 {
                 if (!back.isNULL) {
                     // recursively clip these triangles to all subsequent triangles
                     for (k in 2 until back.GetNumPoints()) {
-                        tri.v.get(0).set(back.oGet(0).ToVec3())
-                        tri.v.get(1).set(back.oGet(k - 1).ToVec3())
-                        tri.v.get(2).set(back.oGet(k).ToVec3())
+                        tri.v.get(0).set(back.get(0).ToVec3())
+                        tri.v.get(1).set(back.get(k - 1).ToVec3())
+                        tri.v.get(2).set(back.get(k).ToVec3())
                         shadowopt3.CreateEdgesForTri(tri)
                         shadowopt3.ClipTriangle_r(tri, i + 1, skipTri, numTris, tris)
                     }

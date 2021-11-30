@@ -66,7 +66,7 @@ object HashIndex {
             return Allocated()
         }
 
-        fun oSet(other: idHashIndex): idHashIndex {
+        fun set(other: idHashIndex): idHashIndex {
             granularity = other.granularity
             hashMask = other.hashMask
             lookupMask = other.lookupMask
@@ -132,14 +132,14 @@ object HashIndex {
 
         // get the first index from the hash, returns -1 if empty hash entry
         fun First(key: Int): Int {
-            return if (null == hash) {
+            return if (hash.isEmpty()) {
                 -1
             } else hash[key and hashMask and lookupMask]
         }
 
         // get the next index from the hash, returns -1 if at the end of the hash chain
         fun Next(index: Int): Int {
-            assert(index >= 0 && index < indexSize)
+            assert(index in 0 until indexSize)
             return indexChain[index and lookupMask]
         }
 

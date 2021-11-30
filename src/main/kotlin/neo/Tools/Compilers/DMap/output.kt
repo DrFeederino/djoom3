@@ -580,7 +580,7 @@ object output {
             output.procFile.WriteFloatString("/* iap %d */ %d %d %d ", i, w.GetNumPoints(), iap.area0, iap.area1)
             j = 0
             while (j < w.GetNumPoints()) {
-                output.Write1DMatrix(output.procFile, 3, w.oGet(j).ToFloatPtr())
+                output.Write1DMatrix(output.procFile, 3, w.get(j).ToFloatPtr())
                 j++
             }
             output.procFile.WriteFloatString("\n")

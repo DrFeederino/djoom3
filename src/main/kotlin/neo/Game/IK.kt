@@ -663,7 +663,7 @@ object IK /*ea*/ {
                 if (SysCvar.ik_debug.GetBool() && footModel != null) {
                     val w = idFixedWinding()
                     for (j in 0 until footModel.GetTraceModel().numVerts) {
-                        w.oPluSet(footModel.GetTraceModel().verts[j])
+                        w.plusAssign(footModel.GetTraceModel().verts[j])
                     }
                     Game_local.gameRenderWorld.DebugWinding(Lib.Companion.colorRed, w, results.endpos, results.endAxis)
                 }

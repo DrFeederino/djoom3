@@ -1363,10 +1363,10 @@ object RenderWorld_local {
             if (w.GetNumPoints() < 2) {
                 return
             }
-            lastPoint.set(origin.oPlus(w.oGet(w.GetNumPoints() - 1).ToVec3().times(axis)))
+            lastPoint.set(origin.oPlus(w.get(w.GetNumPoints() - 1).ToVec3().times(axis)))
             i = 0
             while (i < w.GetNumPoints()) {
-                point.set(origin.oPlus(w.oGet(i).ToVec3().times(axis)))
+                point.set(origin.oPlus(w.get(i).ToVec3().times(axis)))
                 DebugLine(color, lastPoint, point, lifetime, depthTest)
                 lastPoint.set(point)
                 i++
@@ -1816,10 +1816,10 @@ object RenderWorld_local {
                 w.SetNumPoints(numPoints)
                 j = 0
                 while (j < numPoints) {
-                    src.Parse1DMatrix(3, w.oGet(j))
+                    src.Parse1DMatrix(3, w.get(j))
                     // no texture coordinates
-                    w.oGet(j).set(3, 0f)
-                    w.oGet(j).set(4, 0f)
+                    w.get(j).set(3, 0f)
+                    w.get(j).set(4, 0f)
                     j++
                 }
 
@@ -2229,7 +2229,7 @@ object RenderWorld_local {
             r.Clear()
             i = 0
             while (i < w.GetNumPoints()) {
-                v.set(tr_main.R_LocalPointToGlobal(space.modelMatrix, w.oGet(i).ToVec3()))
+                v.set(tr_main.R_LocalPointToGlobal(space.modelMatrix, w.get(i).ToVec3()))
                 tr_main.R_GlobalToNormalizedDeviceCoordinates(v, ndc)
                 windowX =
                     0.5f * (1.0f + ndc.get(0)) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1)
@@ -2276,7 +2276,7 @@ object RenderWorld_local {
             i = 0
             while (i < w.GetNumPoints()) {
                 var d: Float
-                d = forward.Distance(w.oGet(i).ToVec3())
+                d = forward.Distance(w.get(i).ToVec3())
                 if (d < 0.5f) {
                     return false // a point not clipped off
                 }
@@ -2395,8 +2395,8 @@ object RenderWorld_local {
                     if (j == w.GetNumPoints()) {
                         j = 0
                     }
-                    v1.set(origin.minus(w.oGet(i).ToVec3()))
-                    v2.set(origin.minus(w.oGet(j).ToVec3()))
+                    v1.set(origin.minus(w.get(i).ToVec3()))
+                    v2.set(origin.minus(w.get(j).ToVec3()))
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1)
 
                     // if it is degenerate, skip the plane
@@ -2564,8 +2564,8 @@ object RenderWorld_local {
                     if (j == w.GetNumPoints()) {
                         j = 0
                     }
-                    v1.set(light.globalLightOrigin.minus(w.oGet(i).ToVec3()))
-                    v2.set(light.globalLightOrigin.minus(w.oGet(j).ToVec3()))
+                    v1.set(light.globalLightOrigin.minus(w.get(i).ToVec3()))
+                    v2.set(light.globalLightOrigin.minus(w.get(j).ToVec3()))
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1)
 
                     // if it is degenerate, skip the plane
@@ -2819,7 +2819,7 @@ object RenderWorld_local {
                         i++
                         continue
                     }
-                    w.oSet(ow)
+                    w.set(ow)
 
                     // now check the winding against each of the portalStack planes
                     j = 0
@@ -3043,7 +3043,7 @@ object RenderWorld_local {
                 wb.Clear()
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    wb.AddPoint(w.oGet(j).ToVec3())
+                    wb.AddPoint(w.get(j).ToVec3())
                     j++
                 }
                 if (wb.IntersectsBounds(b)) {
@@ -3183,7 +3183,7 @@ object RenderWorld_local {
                     qgl.qglBegin(GL11.GL_LINE_LOOP)
                     j = 0
                     while (j < w.GetNumPoints()) {
-                        qgl.qglVertex3fv(w.oGet(j).ToFloatPtr())
+                        qgl.qglVertex3fv(w.get(j).ToFloatPtr())
                         j++
                     }
                     qgl.qglEnd()

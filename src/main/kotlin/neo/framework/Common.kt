@@ -83,7 +83,7 @@ object Common {
     //
     //
     val STRTABLE_ID: String = "#str_"
-    const val STRTABLE_ID_LENGTH = Common.STRTABLE_ID.length //5
+    val STRTABLE_ID_LENGTH = STRTABLE_ID.length //5
     val com_allowConsole: idCVar = idCVar(
         "com_allowConsole",
         "0",
@@ -112,9 +112,9 @@ object Common {
         "com_asyncSound",
         "1",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM,
-        Common.ASYNCSOUND_INFO,
-        0,
-        1
+        ASYNCSOUND_INFO,
+        0f,
+        1f
     )
     val com_developer: idCVar = idCVar(
         "developer",
@@ -135,8 +135,8 @@ object Common {
         "0",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
         "1 = buffer log, 2 = flush after each print",
-        0,
-        2,
+        0f,
+        2f,
         ArgCompletion_Integer(0, 2)
     )
     val com_logFileName: idCVar = idCVar(

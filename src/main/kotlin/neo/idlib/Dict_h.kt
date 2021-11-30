@@ -155,7 +155,7 @@ class Dict_h {
             }
             Clear()
             args.set(other.args)
-            argHash.oSet(other.argHash)
+            argHash.set(other.argHash)
             i = 0
             while (i < args.Num()) {
                 args.get(i).key = globalKeys.CopyString(args.get(i).key)
@@ -242,7 +242,7 @@ class Dict_h {
             } catch (ex: CloneNotSupportedException) {
                 throw idException(ex)
             }
-            argHash.oSet(other.argHash)
+            argHash.set(other.argHash)
             other.args.Clear()
             other.argHash.Free()
         }

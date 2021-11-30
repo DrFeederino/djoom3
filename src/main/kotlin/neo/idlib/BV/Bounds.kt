@@ -146,7 +146,7 @@ object Bounds {
             return this
         }
 
-        fun plus(a: idBounds): idBounds {
+        operator fun plus(a: idBounds): idBounds {
             val newBounds: idBounds
             newBounds = idBounds(this)
             newBounds.AddBounds(a)
@@ -500,10 +500,10 @@ object Bounds {
         fun LineIntersection(start: idVec3, end: idVec3): Boolean {
             val ld = FloatArray(3)
             val center = (b[0] + b[1]) * 0.5f
-            val extents = b[1] - center;
-            val lineDir = (end - start) * 0.5f;
-            val lineCenter = start + lineDir;
-            val dir = lineCenter - center;
+            val extents = b[1] - center
+            val lineDir = (end - start) * 0.5f
+            val lineCenter = start + lineDir
+            val dir = lineCenter - center
             ld[0] = abs(lineDir[0])
             if (abs(dir[0]) > extents[0] + ld[0]) {
                 return false
@@ -740,9 +740,11 @@ object Bounds {
             val d2: Float
             val center = idVec3()
             val extents = idVec3()
+
             center.set((b[0] + b[1]) * 0.5f)
             extents.set(b[1] - center)
-            d1 = dir.times(center)
+
+            d1 = dir * center;
             d2 = (abs(extents[0] * dir[0])
                     + abs(extents[1] * dir[1])
                     + abs(extents[2] * dir[2]))
@@ -755,13 +757,16 @@ object Bounds {
             val d2: Float
             val center = idVec3()
             val extents = idVec3()
+
             center.set((b[0] + b[1]) * 0.5f)
             extents.set(b[1] - center)
             center.set(origin + center * axis)
-            d1 = dir.times(center)
-            d2 = (abs(extents[0] * dir.times(axis[0]))
-                    + abs(extents[1] * dir.times(axis[1]))
-                    + abs(extents[2] * dir.times(axis[2])))
+
+            d1 = dir * center;
+            d2 = abs(extents[0] * (dir * axis[0])) +
+                    abs(extents[1] * (dir * axis[1])) +
+                    abs(extents[2] * (dir * axis[2]))
+
             min._val = d1 - d2
             max._val = d1 + d2
         }

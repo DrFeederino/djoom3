@@ -199,7 +199,7 @@ object SaveGame {
             file.WriteInt(num)
             i = 0
             while (i < num) {
-                val v = idVec5(w.oGet(i))
+                val v = idVec5(w.get(i))
                 Lib.Companion.LittleRevBytes(v /*, sizeof(float), sizeof(v) / sizeof(float)*/)
                 file.Write(v /*, sizeof(v)*/)
                 i++
@@ -766,8 +766,8 @@ object SaveGame {
             w.SetNumPoints(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                file.Read(w.oGet(i) /*, sizeof(idVec5)*/)
-                Lib.Companion.LittleRevBytes(w.oGet(i) /*, sizeof(float), sizeof(idVec5) / sizeof(float)*/)
+                file.Read(w.get(i) /*, sizeof(idVec5)*/)
+                Lib.Companion.LittleRevBytes(w.get(i) /*, sizeof(float), sizeof(idVec5) / sizeof(float)*/)
                 i++
             }
         }

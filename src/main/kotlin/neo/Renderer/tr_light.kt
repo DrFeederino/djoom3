@@ -594,7 +594,7 @@ object tr_light {
                 i++
                 continue
             }
-            w.oSet(ow)
+            w.set(ow)
 
             // now check the winding against each of the frustum planes
             j = 0
@@ -612,7 +612,7 @@ object tr_light {
                 val clip = idPlane()
                 val ndc = idVec3()
                 tr_main.R_TransformModelToClip(
-                    w.oGet(j).ToVec3(),
+                    w.get(j).ToVec3(),
                     tr_local.tr.viewDef.worldSpace.modelViewMatrix,
                     tr_local.tr.viewDef.projectionMatrix,
                     eye,

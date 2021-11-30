@@ -11,7 +11,6 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Pluecker.idPluecker
 import neo.idlib.math.Vector.idVec3
 import java.util.*
-import java.util.stream.Stream
 
 /**
  *
@@ -50,13 +49,13 @@ object Surface {
 
      ===============================================================================
      */
-    internal class surfaceEdge_t {
-        var tris: IntArray? = IntArray(2) // edge triangles
-        var verts: IntArray? = IntArray(2) // edge vertices always with ( verts[0] < verts[1] )
+    class surfaceEdge_t {
+        var tris: IntArray = IntArray(2) // edge triangles
+        var verts: IntArray = IntArray(2) // edge vertices always with ( verts[0] < verts[1] )
 
         companion object {
-            private fun generateArray(length: Int): Array<surfaceEdge_t?>? {
-                return Stream.generate { surfaceEdge_t() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            private fun generateArray(length: Int): Array<surfaceEdge_t> {
+                return Array(length) { surfaceEdge_t() }
             }
         }
     }
@@ -64,14 +63,14 @@ object Surface {
     open class idSurface {
         protected val edgeIndexes: idList<Int?>? =
             idList() // 3 references to edges for each triangle, may be negative for reversed edge
-        protected val edges: idList<surfaceEdge_t?>? = idList() // edges
-        protected val indexes: idList<Int?>? = idList() // 3 references to vertices for each triangle
-        protected val verts: idList<idDrawVert?>? = idList() // vertices
+        protected val edges: idList<surfaceEdge_t> = idList() // edges
+        protected val indexes: idList<Int> = idList() // 3 references to vertices for each triangle
+        protected val verts: idList<idDrawVert> = idList() // vertices
 
         //
         //
         constructor()
-        constructor(surf: idSurface?) {
+        constructor(surf: idSurface) {
             verts.set(surf.verts)
             indexes.set(surf.indexes)
             edges.set(surf.edges)
@@ -95,7 +94,7 @@ object Surface {
         //public							~idSurface( void );
         //
         //public	const idDrawVert &		operator[]( const int index ) const;
-        fun oGet(index: Int): idDrawVert {
+        operator fun get(index: Int): idDrawVert {
             return verts.get(index)
         }
 

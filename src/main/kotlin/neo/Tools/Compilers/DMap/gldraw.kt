@@ -109,7 +109,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
+            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -117,7 +117,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
+            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -133,7 +133,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
+            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
             i++
         }
         GL11.glEnd()
@@ -141,7 +141,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.oGet(i).get(0), w.oGet(i).get(1), w.oGet(i).get(2))
+            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
             i++
         }
         GL11.glEnd()

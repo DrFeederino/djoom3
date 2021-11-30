@@ -44,7 +44,7 @@ object BinSearch {
         var offset = 0
         while (mid > 0) {
             mid = len shr 1
-            if (LTE(array.get(offset + mid),  /*<=*/value)) {
+            if (LTE(array[offset + mid],  /*<=*/value)) {
                 offset += mid
             }
             len -= mid
@@ -91,7 +91,7 @@ object BinSearch {
         var res = 0
         while (mid > 0) {
             mid = len shr 1
-            if (GTE(array.get(offset + mid),  /*>=*/value)) {
+            if (GTE(array[offset + mid],  /*>=*/value)) {
                 res = 0
             } else {
                 offset += mid

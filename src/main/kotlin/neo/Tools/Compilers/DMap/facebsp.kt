@@ -390,7 +390,7 @@ object facebsp {
             count++
             i = 0
             while (i < face.w.GetNumPoints()) {
-                tree.bounds.AddPoint(face.w.oGet(i).ToVec3())
+                tree.bounds.AddPoint(face.w.get(i).ToVec3())
                 i++
             }
             face = face.next

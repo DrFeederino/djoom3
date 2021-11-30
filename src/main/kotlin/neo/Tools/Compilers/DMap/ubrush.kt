@@ -219,7 +219,7 @@ object ubrush {
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                brush.bounds.AddPoint(w.oGet(j).ToVec3())
+                brush.bounds.AddPoint(w.get(j).ToVec3())
                 j++
             }
             i++
@@ -340,7 +340,7 @@ object ubrush {
         if (TempDump.NOT(w)) {
             return 0
         }
-        Vector.VectorCopy(w.oGet(0), corner)
+        Vector.VectorCopy(w.get(0), corner)
 
         // make tetrahedrons to all other faces
         volume = 0f
@@ -386,21 +386,21 @@ object ubrush {
                 w = idWinding(dmap.dmapGlobals.mapPlanes.get(s.planenum))
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(0).get(0).toInt(),
-                    w.oGet(0).get(1).toInt(),
-                    w.oGet(0).get(2).toInt()
+                    w.get(0).get(0).toInt(),
+                    w.get(0).get(1).toInt(),
+                    w.get(0).get(2).toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(1).get(0).toInt(),
-                    w.oGet(1).get(1).toInt(),
-                    w.oGet(1).get(2).toInt()
+                    w.get(1).get(0).toInt(),
+                    w.get(1).get(1).toInt(),
+                    w.get(1).get(2).toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.oGet(2).get(0).toInt(),
-                    w.oGet(2).get(1).toInt(),
-                    w.oGet(2).get(2).toInt()
+                    w.get(2).get(0).toInt(),
+                    w.get(2).get(1).toInt(),
+                    w.get(2).get(2).toInt()
                 )
                 f.Printf("notexture 0 0 0 1 1\n")
                 s = list.sides[++i]
@@ -534,7 +534,7 @@ object ubrush {
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                d = plane.Distance(w.oGet(j).ToVec3())
+                d = plane.Distance(w.get(j).ToVec3())
                 if (d > max) {
                     max = d
                     side = ubrush.PSIDE_FRONT
@@ -584,7 +584,7 @@ object ubrush {
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                d = plane.Distance(w.oGet(j).ToVec3())
+                d = plane.Distance(w.get(j).ToVec3())
                 if (d > 0 && d > d_front) {
                     d_front = d
                 }

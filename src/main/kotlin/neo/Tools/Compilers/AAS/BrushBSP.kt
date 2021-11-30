@@ -264,7 +264,7 @@ object BrushBSP {
                 s = if (p.nodes.get(1) == this) 1 else 0
                 i = 0
                 while (i < p.winding.GetNumPoints()) {
-                    bounds.AddPoint(p.winding.oGet(i).ToVec3())
+                    bounds.AddPoint(p.winding.get(i).ToVec3())
                     i++
                 }
                 p = p.next.get(s)
@@ -747,7 +747,7 @@ object BrushBSP {
                         w = p2.winding
                         k = 0
                         while (k < w.GetNumPoints()) {
-                            if (plane.Distance(w.oGet(k).ToVec3()) < -0.1f) {
+                            if (plane.Distance(w.get(k).ToVec3()) < -0.1f) {
                                 return false
                             }
                             k++
@@ -962,7 +962,7 @@ object BrushBSP {
                 d_front = d_back
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    d = plane.Distance(w.oGet(j).ToVec3())
+                    d = plane.Distance(w.get(j).ToVec3())
                     if (d > d_front) {
                         d_front = d
                     } else if (d < d_back) {
@@ -1977,8 +1977,8 @@ object BrushBSP {
                 w = p1.GetWinding()
                 i = 0
                 while (i < w.GetNumPoints()) {
-                    if (bounds.ContainsPoint(w.oGet(i).ToVec3())) {
-                        vertexList.FindVector(w.oGet(i).ToVec3(), BrushBSP.VERTEX_MELT_EPSILON)
+                    if (bounds.ContainsPoint(w.get(i).ToVec3())) {
+                        vertexList.FindVector(w.get(i).ToVec3(), BrushBSP.VERTEX_MELT_EPSILON)
                     }
                     i++
                 }

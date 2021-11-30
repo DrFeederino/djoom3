@@ -632,19 +632,19 @@ object AASBuild {
                     v2 = v1 + 1
                     v3 = v1 + mesh.GetWidth() + 1
                     v4 = v1 + mesh.GetWidth()
-                    d1.set(mesh.oGet(v2).xyz.minus(mesh.oGet(v1).xyz))
-                    d2.set(mesh.oGet(v3).xyz.minus(mesh.oGet(v1).xyz))
+                    d1.set(mesh.get(v2).xyz.minus(mesh.get(v1).xyz))
+                    d2.set(mesh.get(v3).xyz.minus(mesh.get(v1).xyz))
                     plane.SetNormal(d1.Cross(d2))
                     if (plane.Normalize() != 0.0f) {
-                        plane.FitThroughPoint(mesh.oGet(v1).xyz)
-                        dot = plane.Distance(mesh.oGet(v4).xyz)
+                        plane.FitThroughPoint(mesh.get(v1).xyz)
+                        dot = plane.Distance(mesh.get(v4).xyz)
                         // if we can turn it into a quad
                         if (Math.abs(dot) < 0.1f) {
                             w.Clear()
-                            w.oPluSet(mesh.oGet(v1).xyz)
-                            w.oPluSet(mesh.oGet(v2).xyz)
-                            w.oPluSet(mesh.oGet(v3).xyz)
-                            w.oPluSet(mesh.oGet(v4).xyz)
+                            w.plusAssign(mesh.get(v1).xyz)
+                            w.plusAssign(mesh.get(v2).xyz)
+                            w.plusAssign(mesh.get(v3).xyz)
+                            w.plusAssign(mesh.get(v4).xyz)
                             brush = idBrush()
                             brush.SetContents(contents)
                             if (brush.FromWinding(w, plane)) {
@@ -663,9 +663,9 @@ object AASBuild {
                         } else {
                             // create one of the triangles
                             w.Clear()
-                            w.oPluSet(mesh.oGet(v1).xyz)
-                            w.oPluSet(mesh.oGet(v2).xyz)
-                            w.oPluSet(mesh.oGet(v3).xyz)
+                            w.plusAssign(mesh.get(v1).xyz)
+                            w.plusAssign(mesh.get(v2).xyz)
+                            w.plusAssign(mesh.get(v3).xyz)
                             brush = idBrush()
                             brush.SetContents(contents)
                             if (brush.FromWinding(w, plane)) {
@@ -682,15 +682,15 @@ object AASBuild {
                         }
                     }
                     // create the other triangle
-                    d1.set(mesh.oGet(v3).xyz.minus(mesh.oGet(v1).xyz))
-                    d2.set(mesh.oGet(v4).xyz.minus(mesh.oGet(v1).xyz))
+                    d1.set(mesh.get(v3).xyz.minus(mesh.get(v1).xyz))
+                    d2.set(mesh.get(v4).xyz.minus(mesh.get(v1).xyz))
                     plane.SetNormal(d1.Cross(d2))
                     if (plane.Normalize() != 0.0f) {
-                        plane.FitThroughPoint(mesh.oGet(v1).xyz)
+                        plane.FitThroughPoint(mesh.get(v1).xyz)
                         w.Clear()
-                        w.oPluSet(mesh.oGet(v1).xyz)
-                        w.oPluSet(mesh.oGet(v3).xyz)
-                        w.oPluSet(mesh.oGet(v4).xyz)
+                        w.plusAssign(mesh.get(v1).xyz)
+                        w.plusAssign(mesh.get(v3).xyz)
+                        w.plusAssign(mesh.get(v4).xyz)
                         brush = idBrush()
                         brush.SetContents(contents)
                         if (brush.FromWinding(w, plane)) {
@@ -928,14 +928,14 @@ object AASBuild {
 
 
                     // create a plane through the edge of the gap parallel to the direction of gravity
-                    normal.set(w1.oGet((i + 1) % w1.GetNumPoints()).ToVec3().minus(w1.oGet(i).ToVec3()))
+                    normal.set(w1.get((i + 1) % w1.GetNumPoints()).ToVec3().minus(w1.get(i).ToVec3()))
                     normal.set(normal.Cross(aasSettings.invGravityDir))
                     if (normal.Normalize() < 0.2f) {
                         i++
                         continue
                     }
                     plane.SetNormal(normal)
-                    plane.FitThroughPoint(w1.oGet(i).ToVec3())
+                    plane.FitThroughPoint(w1.get(i).ToVec3())
 
                     // get the side of the plane the gap is on
                     side1 = w1.PlaneSide(plane, GRAVSUBDIV_EPSILON)
@@ -961,7 +961,7 @@ object AASBuild {
                         if (side1 == Plane.SIDE_FRONT) {
                             j = 0
                             while (j < w2.GetNumPoints()) {
-                                d = plane.Distance(w2.oGet(j).ToVec3())
+                                d = plane.Distance(w2.get(j).ToVec3())
                                 if (d >= GRAVSUBDIV_EPSILON) {
                                     break // point at the same side of the plane as the gap
                                 }
@@ -977,7 +977,7 @@ object AASBuild {
                         } else {
                             j = 0
                             while (j < w2.GetNumPoints()) {
-                                d = plane.Distance(w2.oGet(j).ToVec3())
+                                d = plane.Distance(w2.get(j).ToVec3())
                                 if (d <= -GRAVSUBDIV_EPSILON) {
                                     break // point at the same side of the plane as the gap
                                 }
@@ -1309,7 +1309,7 @@ object AASBuild {
             }
             i = 0
             while (i < w.GetNumPoints()) {
-                if (plane.Distance(w.oGet(i).ToVec3()) > 0.0f) {
+                if (plane.Distance(w.get(i).ToVec3()) > 0.0f) {
                     return true
                 }
                 i++
@@ -1394,22 +1394,22 @@ object AASBuild {
                 }
                 i = 0
                 while (i < w.GetNumPoints()) {
-                    v1.set(w.oGet(i).ToVec3())
-                    v2.set(w.oGet((i + 1) % w.GetNumPoints()).ToVec3())
+                    v1.set(w.get(i).ToVec3())
+                    v2.set(w.get((i + 1) % w.GetNumPoints()).ToVec3())
                     normal.set(v2.minus(v1).Cross(aasSettings.gravityDir))
                     if (normal.Normalize() < 0.5f) {
                         i++
                         continue
                     }
                     winding.Clear()
-                    winding.oPluSet(v1.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
-                    winding.oPluSet(v2.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
-                    winding.oPluSet(
-                        winding.oGet(1).ToVec3()
+                    winding.plusAssign(v1.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
+                    winding.plusAssign(v2.oPlus(normal.times(AASBuild_ledge.LEDGE_EPSILON * 0.5f)))
+                    winding.plusAssign(
+                        winding.get(1).ToVec3()
                             .oPlus(aasSettings.gravityDir.times(aasSettings.maxStepHeight.getVal() + 1.0f))
                     )
-                    winding.oPluSet(
-                        winding.oGet(0).ToVec3()
+                    winding.plusAssign(
+                        winding.get(0).ToVec3()
                             .oPlus(aasSettings.gravityDir.times(aasSettings.maxStepHeight.getVal() + 1.0f))
                     )
                     winding.GetBounds(bounds)
@@ -1736,7 +1736,7 @@ object AASBuild {
             v1num[0] = -1 // first vertex unknown
             i = 0
             while (i < w.GetNumPoints()) {
-                GetEdge(w.oGet(i).ToVec3(), w.oGet((i + 1) % w.GetNumPoints()).ToVec3(), faceEdges, numFaceEdges, v1num)
+                GetEdge(w.get(i).ToVec3(), w.get((i + 1) % w.GetNumPoints()).ToVec3(), faceEdges, numFaceEdges, v1num)
                 if (faceEdges[numFaceEdges] != 0) {
                     // last vertex of this edge is the first vertex of the next edge
                     v1num[0] =

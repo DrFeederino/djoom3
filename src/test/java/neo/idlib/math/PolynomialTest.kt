@@ -6,23 +6,23 @@ import neo.idlib.math.Polynomial.idPolynomial
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import java.util.stream.Stream
+import kotlin.math.abs
 
 class PolynomialTest {
     private var i = 0
     private var num = 0
-    private var roots: FloatArray? = null
+    private var roots: FloatArray = FloatArray(0)
     private var value = 0f
-    private var complexRoots: Array<idComplex?>? = null
-    private var complexValue: idComplex? = null
-    private var p: idPolynomial? = null
+    private var complexRoots: Array<idComplex> = Array(0) { idComplex() }
+    private var complexValue: idComplex = idComplex()
+    private var p: idPolynomial = idPolynomial()
 
     @Before
     @Throws(Exception::class)
     fun setUp() {
         idMath.Init()
         roots = FloatArray(4)
-        complexRoots = Stream.generate { idComplex() }.limit(4).toArray { _Dummy_.__Array__() }
+        complexRoots = Array(4) { idComplex() }
     }
 
     @Test
@@ -31,8 +31,8 @@ class PolynomialTest {
         num = p.GetRoots(roots)
         i = 0
         while (i < num) {
-            value = p.GetValue(roots.get(i))
-            Assert.assertTrue(Math.abs(value) < 1e-4f)
+            value = p.GetValue(roots[i])
+            Assert.assertTrue(abs(value) < 1e-4f)
             i++
         }
     }
@@ -43,8 +43,8 @@ class PolynomialTest {
         num = p.GetRoots(roots)
         i = 0
         while (i < num) {
-            value = p.GetValue(roots.get(i))
-            Assert.assertTrue(Math.abs(value) < 1e-4f)
+            value = p.GetValue(roots[i])
+            Assert.assertTrue(abs(value) < 1e-4f)
             i++
         }
     }
@@ -55,8 +55,8 @@ class PolynomialTest {
         num = p.GetRoots(roots)
         i = 0
         while (i < num) {
-            value = p.GetValue(roots.get(i))
-            Assert.assertTrue(Math.abs(value) < 1e-4f)
+            value = p.GetValue(roots[i])
+            Assert.assertTrue(abs(value) < 1e-4f)
             i++
         }
     }
@@ -67,8 +67,8 @@ class PolynomialTest {
         num = p.GetRoots(roots)
         i = 0
         while (i < num) {
-            value = p.GetValue(roots.get(i))
-            Assert.assertTrue(Math.abs(value) < 1e-4f)
+            value = p.GetValue(roots[i])
+            Assert.assertTrue(abs(value) < 1e-4f)
             i++
         }
     }
@@ -79,8 +79,8 @@ class PolynomialTest {
         num = p.GetRoots(roots)
         i = 0
         while (i < num) {
-            value = p.GetValue(roots.get(i))
-            Assert.assertTrue(Math.abs(value) < 1e-4f)
+            value = p.GetValue(roots[i])
+            Assert.assertTrue(abs(value) < 1e-4f)
             i++
         }
     }
@@ -91,8 +91,8 @@ class PolynomialTest {
         num = p.GetRoots(complexRoots)
         i = 0
         while (i < num) {
-            complexValue = p.GetValue(complexRoots.get(i))
-            Assert.assertTrue(Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f)
+            complexValue = p.GetValue(complexRoots[i])
+            Assert.assertTrue(abs(complexValue.r) < 1e-4f && abs(complexValue.i) < 1e-4f)
             i++
         }
     }
@@ -103,8 +103,8 @@ class PolynomialTest {
         num = p.GetRoots(complexRoots)
         i = 0
         while (i < num) {
-            complexValue = p.GetValue(complexRoots.get(i))
-            Assert.assertTrue(Math.abs(complexValue.r) < 1e-4f && Math.abs(complexValue.i) < 1e-4f)
+            complexValue = p.GetValue(complexRoots[i])
+            Assert.assertTrue(abs(complexValue.r) < 1e-4f && abs(complexValue.i) < 1e-4f)
             i++
         }
     }

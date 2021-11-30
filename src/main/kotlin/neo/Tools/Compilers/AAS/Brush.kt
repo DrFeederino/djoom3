@@ -253,7 +253,7 @@ object Brush {
             if (TempDump.NOT(w)) {
                 return 0.0f
             }
-            corner.set(w.oGet(0).ToVec3())
+            corner.set(w.get(0).ToVec3())
 
             // create tetrahedrons to all other sides
             volume = 0.0f
@@ -328,13 +328,13 @@ object Brush {
             i = 0
             while (i < w.GetNumPoints()) {
                 j = (i + 1) % w.GetNumPoints()
-                normal.set(w.oGet(j).ToVec3().minus(w.oGet(i).ToVec3()).Cross(axialNormal))
+                normal.set(w.get(j).ToVec3().minus(w.get(i).ToVec3()).Cross(axialNormal))
                 if (normal.Normalize() < 0.5f) {
                     i++
                     continue
                 }
                 plane.SetNormal(normal)
-                plane.FitThroughPoint(w.oGet(j).ToVec3())
+                plane.FitThroughPoint(w.get(j).ToVec3())
                 sides.Append(idBrushSide(plane, -1))
                 i++
             }
@@ -491,7 +491,7 @@ object Brush {
                         }
                         m = 0
                         while (m < w.GetNumPoints()) {
-                            if (plane.Distance(w.oGet(m).ToVec3()) > 0.1f) {
+                            if (plane.Distance(w.get(m).ToVec3()) > 0.1f) {
                                 return false
                             }
                             m++
@@ -632,7 +632,7 @@ object Brush {
                 maxFrontWinding[i] = -10.0f
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    dist = plane.Distance(w.oGet(j).ToVec3())
+                    dist = plane.Distance(w.get(j).ToVec3())
                     if (dist > maxFrontWinding[i]) {
                         maxFrontWinding[i] = dist
                     }
@@ -845,7 +845,7 @@ object Brush {
                 if (side.winding != null) {
                     j = 0
                     while (j < side.winding.GetNumPoints()) {
-                        bounds.AddPoint(side.winding.oGet(j).ToVec3())
+                        bounds.AddPoint(side.winding.get(j).ToVec3())
                         j++
                     }
                 }
@@ -886,7 +886,7 @@ object Brush {
                 }
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    bounds.AddPoint(w.oGet(j).ToVec3())
+                    bounds.AddPoint(w.get(j).ToVec3())
                     j++
                 }
                 i++
@@ -998,7 +998,7 @@ object Brush {
                 j = 0
                 while (j < w.GetNumPoints()) {
                     k = (j + 1) % w.GetNumPoints()
-                    vec.set(w.oGet(j).ToVec3().minus(w.oGet(k).ToVec3()))
+                    vec.set(w.get(j).ToVec3().minus(w.get(k).ToVec3()))
                     if (vec.Normalize() < 0.5f) {
                         j++
                         continue
@@ -1031,7 +1031,7 @@ object Brush {
                                 continue
                             }
                             plane.SetNormal(normal)
-                            plane.FitThroughPoint(w.oGet(j).ToVec3())
+                            plane.FitThroughPoint(w.get(j).ToVec3())
 
                             // if all the points on all the sides are
                             // behind this plane, it is a proper edge bevel
@@ -1051,7 +1051,7 @@ object Brush {
                                 minBack = 0.0f
                                 l = 0
                                 while (l < w2.GetNumPoints()) {
-                                    d = plane.Distance(w2.oGet(l).ToVec3())
+                                    d = plane.Distance(w2.get(l).ToVec3())
                                     if (d > Brush.BRUSH_BEVEL_EPSILON) {
                                         break // point at the front
                                     }

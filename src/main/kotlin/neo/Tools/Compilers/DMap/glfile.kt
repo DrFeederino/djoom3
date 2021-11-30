@@ -46,9 +46,9 @@ object glfile {
         while (i < w.GetNumPoints()) {
             glview.WriteFloatString(
                 "%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
-                w.oGet(i, 0),
-                w.oGet(i, 1),
-                w.oGet(i, 2),
+                w.get(i, 0),
+                w.get(i, 1),
+                w.get(i, 2),
                 light,
                 light,
                 light

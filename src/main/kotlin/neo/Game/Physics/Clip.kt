@@ -1490,7 +1490,7 @@ object Clip {
                 0
             } else {
                 if (clipModel.renderModelHandle != -1) {
-                    winding.oPluSet(contact.point)
+                    winding.plusAssign(contact.point)
                     return true
                 } else if (clipModel.traceModelIndex != -1) {
                     CollisionModel_local.collisionModelManager.SetupTrmModel(
@@ -1514,14 +1514,14 @@ object Clip {
                             start,
                             end
                         )
-                        winding.oPluSet(start)
-                        winding.oPluSet(end)
+                        winding.plusAssign(start)
+                        winding.plusAssign(end)
                     }
                     contactType_t.CONTACT_MODELVERTEX -> {
 
                         // the model contact feature is a collision model vertex
                         CollisionModel_local.collisionModelManager.GetModelVertex(handle, contact.modelFeature, start)
-                        winding.oPluSet(start)
+                        winding.plusAssign(start)
                     }
                     contactType_t.CONTACT_TRMVERTEX -> {
 
@@ -1539,8 +1539,8 @@ object Clip {
             if (clipModel != null) {
                 i = 0
                 while (i < winding.GetNumPoints()) {
-                    winding.oGet(i).ToVec3_oMulSet(clipModel.axis)
-                    winding.oGet(i).ToVec3_oPluSet(clipModel.origin)
+                    winding.get(i).ToVec3_oMulSet(clipModel.axis)
+                    winding.get(i).ToVec3_oPluSet(clipModel.origin)
                     i++
                 }
             }
@@ -1675,20 +1675,20 @@ object Clip {
             if (winding.GetNumPoints() == 1) {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorCyan,
-                    winding.oGet(0).ToVec3(),
-                    winding.oGet(0).ToVec3().oPlus(axis.get(0).times(2.0f)),
+                    winding.get(0).ToVec3(),
+                    winding.get(0).ToVec3().oPlus(axis.get(0).times(2.0f)),
                     lifetime
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    winding.oGet(0).ToVec3().minus( /*- 1.0f * */axis.get(1)),
-                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.get(1)),
+                    winding.get(0).ToVec3().minus( /*- 1.0f * */axis.get(1)),
+                    winding.get(0).ToVec3().oPlus( /*+ 1.0f */axis.get(1)),
                     lifetime
                 )
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.Companion.colorWhite,
-                    winding.oGet(0).ToVec3().minus( /*- 1.0f * */axis.get(2)),
-                    winding.oGet(0).ToVec3().oPlus( /*+ 1.0f */axis.get(2)),
+                    winding.get(0).ToVec3().minus( /*- 1.0f * */axis.get(2)),
+                    winding.get(0).ToVec3().oPlus( /*+ 1.0f */axis.get(2)),
                     lifetime
                 )
             } else {
@@ -1696,8 +1696,8 @@ object Clip {
                 while (i < winding.GetNumPoints()) {
                     Game_local.gameRenderWorld.DebugLine(
                         Lib.Companion.colorCyan,
-                        winding.oGet(i).ToVec3(),
-                        winding.oGet((i + 1) % winding.GetNumPoints()).ToVec3(),
+                        winding.get(i).ToVec3(),
+                        winding.get((i + 1) % winding.GetNumPoints()).ToVec3(),
                         lifetime
                     )
                     i++

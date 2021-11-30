@@ -1852,10 +1852,10 @@ class snd_world {
                     // if this point isn't inside the portal edges, slide it in
                     for (i in 0 until re.w.GetNumPoints()) {
                         val j = (i + 1) % re.w.GetNumPoints()
-                        val edgeDir = idVec3(re.w.oGet(j).ToVec3().minus(re.w.oGet(i).ToVec3()))
+                        val edgeDir = idVec3(re.w.get(j).ToVec3().minus(re.w.get(i).ToVec3()))
                         val edgeNormal = idVec3()
                         edgeNormal.Cross(pl.Normal(), edgeDir)
-                        val fromVert = idVec3(source.minus(re.w.oGet(j).ToVec3()))
+                        val fromVert = idVec3(source.minus(re.w.get(j).ToVec3()))
                         var d = edgeNormal.times(fromVert)
                         if (d > 0) {
                             // move it in

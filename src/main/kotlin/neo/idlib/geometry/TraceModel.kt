@@ -670,7 +670,7 @@ object TraceModel {
             ) //TODO: this is a temp hack, for some reason the math is fucked
             i = 0
             while (i < w.GetNumPoints()) {
-                verts[i].set(w.oGet(i).ToVec3())
+                verts[i].set(w.get(i).ToVec3())
                 i++
             }
             SetupPolygon(verts, w.GetNumPoints())

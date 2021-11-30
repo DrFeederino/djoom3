@@ -1,6 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger

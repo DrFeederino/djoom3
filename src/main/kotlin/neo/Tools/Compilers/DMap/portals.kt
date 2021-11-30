@@ -165,7 +165,7 @@ object portals {
         w = p.winding
         i = 0
         while (i < w.GetNumPoints()) {
-            Common.common.Printf("(%5.0f,%5.0f,%5.0f)\n", w.oGet(i, 0), w.oGet(i, 1), w.oGet(i, 2))
+            Common.common.Printf("(%5.0f,%5.0f,%5.0f)\n", w.get(i, 0), w.get(i, 1), w.get(i, 2))
             i++
         }
     }
@@ -435,7 +435,7 @@ object portals {
             s = if (p.nodes[1] == node) 1 else 0
             i = 0
             while (i < p.winding.GetNumPoints()) {
-                node.bounds.AddPoint(p.winding.oGet(i).ToVec3())
+                node.bounds.AddPoint(p.winding.get(i).ToVec3())
                 i++
             }
             p = p.next[s]

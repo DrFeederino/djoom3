@@ -6,9 +6,10 @@ import neo.idlib.math.Vector.idVecX
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import kotlin.math.abs
 
 class idMatXTest {
-    private var original: idMatX? = idMatX()
+    private var original: idMatX = idMatX()
     private var m1: idMatX = idMatX()
     private var m2: idMatX = idMatX()
     private var m3: idMatX = idMatX()
@@ -23,16 +24,16 @@ class idMatXTest {
     private val d: idVecX = idVecX()
     private var offset = 0
     private var size = 0
-    private var index1: IntArray? = null
-    private var index2: IntArray? = null
+    private var index1: IntArray = IntArray(0)
+    private var index2: IntArray = IntArray(0)
 
     @Before
     fun setUpTest() {
         idSIMD.Init()
         idMath.Init()
         size = 6
-        original?.Random(size, size, 0)
-        original = original?.times(original!!.Transpose())
+        original.Random(size, size, 0)
+        original = (original * original.Transpose())
         index1 = IntArray(size + 1)
         index2 = IntArray(size + 1)
     }
@@ -143,8 +144,8 @@ class idMatXTest {
             v.SetSize(6)
             w.SetSize(6)
             for (i in 0 until size) {
-                v.p[i] = original.get(i, offset)
-                w.p[i] = original.get(offset, i)
+                v.p[i] = original[i, offset]
+                w.p[i] = original[offset, i]
             }
 
             // invert m1
@@ -265,8 +266,8 @@ class idMatXTest {
             v.SetSize(6)
             w.SetSize(6)
             for (i in 0 until size) {
-                v.p[i] = original.get(i, offset)
-                w.p[i] = original.get(offset, i)
+                v.p[i] = original[i, offset]
+                w.p[i] = original[offset, i]
             }
 
             // factor m1
@@ -281,7 +282,7 @@ class idMatXTest {
             m2.set(m3)
             u.SetSize(6)
             for (i in 0 until size) {
-                u.p[i] = original.get(index1.get(offset), i)
+                u.p[i] = original[index1[offset], i]
             }
 
             // update factors of m1
@@ -415,8 +416,8 @@ class idMatXTest {
             v.SetSize(6)
             w.SetSize(6)
             for (i in 0 until size) {
-                v.p[i] = original.get(i, offset)
-                w.p[i] = original.get(offset, i)
+                v.p[i] = original[i, offset]
+                w.p[i] = original[offset, i]
             }
 
             // factor m1
@@ -541,7 +542,7 @@ class idMatXTest {
         m2.set(m1)
         w.SetSize(size + 1)
         for (i in 0 until size + 1) {
-            w.p[i] = m3.get(size, i)
+            w.p[i] = m3[size, i]
         }
 
         // factor m1
@@ -568,7 +569,7 @@ class idMatXTest {
             m2.set(original)
             v.SetSize(6)
             for (i in 0 until size) {
-                v.p[i] = original.get(i, offset)
+                v.p[i] = original[i, offset]
             }
 
             // factor m1
@@ -663,7 +664,7 @@ class idMatXTest {
         m2.set(m1)
         w.SetSize(size + 1)
         for (i in 0 until size + 1) {
-            w.p[i] = m3.get(size, i)
+            w.p[i] = m3[size, i]
         }
 
         // factor m1
@@ -690,7 +691,7 @@ class idMatXTest {
             m2.set(original)
             v.SetSize(6)
             for (i in 0 until size) {
-                v.p[i] = original.get(i, offset)
+                v.p[i] = original[i, offset]
             }
 
             // factor m1
@@ -774,6 +775,6 @@ class idMatXTest {
 
     @Test
     fun checkEqualityAbsAndIdFabs() {
-        Assert.assertTrue(Math.abs(-1.0f) == Math.abs(-1.0f))
+        Assert.assertTrue(abs(-1.0f) == abs(-1.0f))
     }
 }

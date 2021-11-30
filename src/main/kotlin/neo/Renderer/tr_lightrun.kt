@@ -479,7 +479,7 @@ object tr_lightrun {
             j = 0
             while (j < 6) {
                 var d: Float
-                d = w.oGet(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].get(3)
+                d = w.get(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].get(3)
                 if (d > 0) {
                     return false
                 }

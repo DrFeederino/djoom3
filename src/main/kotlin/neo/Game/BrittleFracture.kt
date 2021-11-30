@@ -518,7 +518,7 @@ object BrittleFracture {
                 clipBits = -1
                 j = 0
                 while (j < winding.GetNumPoints()) {
-                    val p = idVec3(origin.oPlus(winding.oGet(j).ToVec3().times(axis)))
+                    val p = idVec3(origin.oPlus(winding.get(j).ToVec3().times(axis)))
                     d0 = textureAxis[0].Distance(p)
                     st[j].x = d0
                     d1 = textureAxis[1].Distance(p)
@@ -541,9 +541,9 @@ object BrittleFracture {
                 decal.SetNumPoints(winding.GetNumPoints())
                 j = 0
                 while (j < winding.GetNumPoints()) {
-                    decal.oGet(j).set(winding.oGet(j).ToVec3()) //TODO:double check this.
-                    decal.oGet(j).s = st[j].x
-                    decal.oGet(j).t = st[j].y
+                    decal.get(j).set(winding.get(j).ToVec3()) //TODO:double check this.
+                    decal.get(j).s = st[j].x
+                    decal.get(j).t = st[j].y
                     j++
                 }
                 i++
@@ -681,27 +681,27 @@ object BrittleFracture {
                 while (j < winding.GetNumPoints()) {
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.set(origin.oPlus(winding.oGet(0).ToVec3().times(axis)))
-                    v.st.set(0, winding.oGet(0).s)
-                    v.st.set(1, winding.oGet(0).t)
+                    v.xyz.set(origin.oPlus(winding.get(0).ToVec3().times(axis)))
+                    v.st.set(0, winding.get(0).s)
+                    v.st.set(1, winding.get(0).t)
                     v.normal.set(tangents.get(0))
                     v.tangents[0] = tangents.get(1)
                     v.tangents[1] = tangents.get(2)
                     v.SetColor(packedColor.toLong())
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.set(origin.oPlus(winding.oGet(j - 1).ToVec3().times(axis)))
-                    v.st.set(0, winding.oGet(j - 1).s)
-                    v.st.set(1, winding.oGet(j - 1).t)
+                    v.xyz.set(origin.oPlus(winding.get(j - 1).ToVec3().times(axis)))
+                    v.st.set(0, winding.get(j - 1).s)
+                    v.st.set(1, winding.get(j - 1).t)
                     v.normal.set(tangents.get(0))
                     v.tangents[0] = tangents.get(1)
                     v.tangents[1] = tangents.get(2)
                     v.SetColor(packedColor.toLong())
                     v = tris.verts[tris.numVerts++]
                     v.Clear()
-                    v.xyz.set(origin.oPlus(winding.oGet(j).ToVec3().times(axis)))
-                    v.st.set(0, winding.oGet(j).s)
-                    v.st.set(1, winding.oGet(j).t)
+                    v.xyz.set(origin.oPlus(winding.get(j).ToVec3().times(axis)))
+                    v.st.set(0, winding.get(j).s)
+                    v.st.set(1, winding.get(j).t)
                     v.normal.set(tangents.get(0))
                     v.tangents[0] = tangents.get(1)
                     v.tangents[1] = tangents.get(2)
@@ -723,27 +723,27 @@ object BrittleFracture {
                     while (j < decalWinding.GetNumPoints()) {
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.set(origin.oPlus(decalWinding.oGet(0).ToVec3().times(axis)))
-                        v.st.set(0, decalWinding.oGet(0).s)
-                        v.st.set(1, decalWinding.oGet(0).t)
+                        v.xyz.set(origin.oPlus(decalWinding.get(0).ToVec3().times(axis)))
+                        v.st.set(0, decalWinding.get(0).s)
+                        v.st.set(1, decalWinding.get(0).t)
                         v.normal.set(tangents.get(0))
                         v.tangents[0] = tangents.get(1)
                         v.tangents[1] = tangents.get(2)
                         v.SetColor(packedColor.toLong())
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.set(origin.oPlus(decalWinding.oGet(j - 1).ToVec3().times(axis)))
-                        v.st.set(0, decalWinding.oGet(j - 1).s)
-                        v.st.set(1, decalWinding.oGet(j - 1).t)
+                        v.xyz.set(origin.oPlus(decalWinding.get(j - 1).ToVec3().times(axis)))
+                        v.st.set(0, decalWinding.get(j - 1).s)
+                        v.st.set(1, decalWinding.get(j - 1).t)
                         v.normal.set(tangents.get(0))
                         v.tangents[0] = tangents.get(1)
                         v.tangents[1] = tangents.get(2)
                         v.SetColor(packedColor.toLong())
                         v = decalTris.verts[decalTris.numVerts++]
                         v.Clear()
-                        v.xyz.set(origin.oPlus(decalWinding.oGet(j).ToVec3().times(axis)))
-                        v.st.set(0, decalWinding.oGet(j).s)
-                        v.st.set(1, decalWinding.oGet(j).t)
+                        v.xyz.set(origin.oPlus(decalWinding.get(j).ToVec3().times(axis)))
+                        v.st.set(0, decalWinding.get(j).s)
+                        v.st.set(1, decalWinding.get(j).t)
                         v.normal.set(tangents.get(0))
                         v.tangents[0] = tangents.get(1)
                         v.tangents[1] = tangents.get(2)
@@ -1041,7 +1041,7 @@ object BrittleFracture {
                     splitPlanes[i].FitThroughPoint(origin)
                     j = 0
                     while (j < w.GetNumPoints()) {
-                        dist = splitPlanes[i].Distance(w.oGet(j).ToVec3())
+                        dist = splitPlanes[i].Distance(w.get(j).ToVec3())
                         if (dist > bestDist) {
                             bestDist = dist
                             bestPlane = i
@@ -1064,7 +1064,7 @@ object BrittleFracture {
             origin.set(w.GetCenter())
             j = 0
             while (j < w.GetNumPoints()) {
-                w.oGet(j).ToVec3().minusAssign(origin)
+                w.get(j).ToVec3().minusAssign(origin)
                 j++
             }
             w.RemoveEqualPoints()
@@ -1101,8 +1101,8 @@ object BrittleFracture {
                     while (k < 3) {
                         v = surf.geometry.verts[surf.geometry.indexes[j + 2 - k]]
                         w.AddPoint(v.xyz)
-                        w.oGet(k).s = v.st.get(0)
-                        w.oGet(k).t = v.st.get(1)
+                        w.get(k).s = v.st.get(0)
+                        w.get(k).t = v.st.get(1)
                         k++
                     }
                     Fracture_r(w)
@@ -1132,8 +1132,8 @@ object BrittleFracture {
                 val axis1 = shard1.clipModel.GetAxis()
                 k = 0
                 while (k < w1.GetNumPoints()) {
-                    p1.set(origin1.oPlus(w1.oGet(k).ToVec3().times(axis1)))
-                    p2.set(origin1.oPlus(w1.oGet((k + 1) % w1.GetNumPoints()).ToVec3().times(axis1)))
+                    p1.set(origin1.oPlus(w1.get(k).ToVec3().times(axis1)))
+                    p2.set(origin1.oPlus(w1.get((k + 1) % w1.GetNumPoints()).ToVec3().times(axis1)))
                     dir.set(p2.minus(p1))
                     dir.Normalize()
                     axis = dir.ToMat3()
@@ -1168,10 +1168,10 @@ object BrittleFracture {
                         val axis2 = shard2.clipModel.GetAxis()
                         l = w2.GetNumPoints() - 1
                         while (l >= 0) {
-                            p1.set(origin2.oPlus(w2.oGet(l).ToVec3().times(axis2)))
+                            p1.set(origin2.oPlus(w2.get(l).ToVec3().times(axis2)))
                             p2.set(
                                 origin2.oPlus(
-                                    w2.oGet((l - 1 + w2.GetNumPoints()) % w2.GetNumPoints()).ToVec3().times(axis2)
+                                    w2.get((l - 1 + w2.GetNumPoints()) % w2.GetNumPoints()).ToVec3().times(axis2)
                                 )
                             )
                             if (plane[0].Side(p2, 0.1f) == Plane.SIDE_FRONT && plane[1].Side(

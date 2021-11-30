@@ -3996,25 +3996,25 @@ object Game_local {
             }
             size *= 0.5f
             winding.Clear()
-            winding.oPluSet(
+            winding.plusAssign(
                 idVec5(
                     windingOrigin.oPlus(axis.times(decalWinding.get(0)).times(size)),
                     idVec2(1, 1)
                 )
             )
-            winding.oPluSet(
+            winding.plusAssign(
                 idVec5(
                     windingOrigin.oPlus(axis.times(decalWinding.get(1)).times(size)),
                     idVec2(0, 1)
                 )
             )
-            winding.oPluSet(
+            winding.plusAssign(
                 idVec5(
                     windingOrigin.oPlus(axis.times(decalWinding.get(2)).times(size)),
                     idVec2(0, 0)
                 )
             )
-            winding.oPluSet(
+            winding.plusAssign(
                 idVec5(
                     windingOrigin.oPlus(axis.times(decalWinding.get(3)).times(size)),
                     idVec2(1, 0)

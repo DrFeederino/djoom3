@@ -477,8 +477,8 @@ object Pvs {
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w.oGet(k).ToVec3().oPlus(offset),
-                            portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset)
+                            portal.w.get(k).ToVec3().oPlus(offset),
+                            portal.w.get((k + 1) % numPoints).ToVec3().oPlus(offset)
                         )
                         k++
                     }
@@ -538,8 +538,8 @@ object Pvs {
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w.oGet(k).ToVec3().oPlus(offset),
-                            portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset)
+                            portal.w.get(k).ToVec3().oPlus(offset),
+                            portal.w.get((k + 1) % numPoints).ToVec3().oPlus(offset)
                         )
                         k++
                     }
@@ -593,8 +593,8 @@ object Pvs {
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w.oGet(k).ToVec3().oPlus(offset),
-                            portal.w.oGet((k + 1) % numPoints).ToVec3().oPlus(offset)
+                            portal.w.get(k).ToVec3().oPlus(offset),
+                            portal.w.get((k + 1) % numPoints).ToVec3().oPlus(offset)
                         )
                         k++
                     }
@@ -812,7 +812,7 @@ object Pvs {
                             while (k < p2.w.GetNumPoints()) {
 
                                 // if more than an epsilon at the front side
-                                if (p1.plane.Side(p2.w.oGet(k).ToVec3(), Plane.ON_EPSILON) == Plane.PLANESIDE_FRONT) {
+                                if (p1.plane.Side(p2.w.get(k).ToVec3(), Plane.ON_EPSILON) == Plane.PLANESIDE_FRONT) {
                                     break
                                 }
                                 k++
@@ -830,7 +830,7 @@ object Pvs {
                             while (k < p1.w.GetNumPoints()) {
 
                                 // if more than an epsilon at the back side
-                                if (p2.plane.Side(p1.w.oGet(k).ToVec3(), Plane.ON_EPSILON) == Plane.PLANESIDE_BACK) {
+                                if (p2.plane.Side(p1.w.get(k).ToVec3(), Plane.ON_EPSILON) == Plane.PLANESIDE_BACK) {
                                     break
                                 }
                                 k++
@@ -1021,20 +1021,20 @@ object Pvs {
             i = 0
             while (i < source.GetNumPoints()) {
                 l = (i + 1) % source.GetNumPoints()
-                v1.set(source.oGet(l).ToVec3().minus(source.oGet(i).ToVec3()))
+                v1.set(source.get(l).ToVec3().minus(source.get(i).ToVec3()))
 
                 // find a vertex of pass that makes a plane that puts all of the
                 // vertices of pass on the front side and all of the vertices of
                 // source on the back side
                 j = 0
                 while (j < pass.GetNumPoints()) {
-                    v2.set(pass.oGet(j).ToVec3().minus(source.oGet(i).ToVec3()))
+                    v2.set(pass.get(j).ToVec3().minus(source.get(i).ToVec3()))
                     normal.set(v1.Cross(v2))
                     if (normal.Normalize() < 0.01f) {
                         j++
                         continue
                     }
-                    dist = normal.times(pass.oGet(j).ToVec3())
+                    dist = normal.times(pass.get(j).ToVec3())
 
                     //
                     // find out which side of the generated seperating plane has the
@@ -1047,7 +1047,7 @@ object Pvs {
                             k++
                             continue
                         }
-                        d = source.oGet(k).ToVec3().times(normal) - dist
+                        d = source.get(k).ToVec3().times(normal) - dist
                         if (d < -Plane.ON_EPSILON) {
                             // source is on the negative side, so we want all
                             // pass and target on the positive side
@@ -1081,7 +1081,7 @@ object Pvs {
                             k++
                             continue
                         }
-                        d = pass.oGet(k).ToVec3().times(normal) - dist
+                        d = pass.get(k).ToVec3().times(normal) - dist
                         if (d < -Plane.ON_EPSILON) {
                             break
                         } else if (d > Plane.ON_EPSILON) {

@@ -65,11 +65,11 @@ class Surface_Patch {
             expanded = false
         }
 
-        constructor(patch: idSurface_Patch?) {
+        constructor(patch: idSurface_Patch) {
             this.oSet(patch)
         }
 
-        constructor(patch: idMapPrimitive?) {
+        constructor(patch: idMapPrimitive) {
             this.oSet(patch)
         }
 
@@ -877,7 +877,7 @@ class Surface_Patch {
             expanded = patch.expanded
         }
 
-        private fun oSet(patch: idMapPrimitive?) {
+        private fun oSet(patch: idMapPrimitive) {
             type = patch.GetType()
             epairs = patch.epairs
         }

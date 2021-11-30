@@ -179,11 +179,11 @@ object usurface {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.set(w.oGet(0).ToVec3())
+                    vec.set(w.get(0).ToVec3())
                 } else if (j == 1) {
-                    vec.set(w.oGet(i - 1).ToVec3())
+                    vec.set(w.get(i - 1).ToVec3())
                 } else {
-                    vec.set(w.oGet(i).ToVec3())
+                    vec.set(w.get(i).ToVec3())
                 }
                 dv = tri.v[j]
                 //#if 0

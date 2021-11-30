@@ -345,7 +345,7 @@ class GuiModel {
                     )
                     j = 0
                     while (j < 3) {
-                        if (w.oGet(j).x < min_x || w.oGet(j).x > max_x || w.oGet(j).y < min_y || w.oGet(j).y > max_y) {
+                        if (w.get(j).x < min_x || w.get(j).x > max_x || w.get(j).y < min_y || w.get(j).y > max_y) {
                             break
                         }
                         j++
@@ -374,11 +374,11 @@ class GuiModel {
                     j = 0
                     while (j < w.GetNumPoints()) {
                         val dv = verts.get(numVerts + j)
-                        dv.xyz.x = w.oGet(j).x
-                        dv.xyz.y = w.oGet(j).y
-                        dv.xyz.z = w.oGet(j).z
-                        dv.st.x = w.oGet(j).s
-                        dv.st.y = w.oGet(j).t
+                        dv.xyz.x = w.get(j).x
+                        dv.xyz.y = w.get(j).y
+                        dv.xyz.z = w.get(j).z
+                        dv.st.x = w.get(j).s
+                        dv.st.y = w.get(j).t
                         dv.normal.set(0f, 0f, 1f)
                         dv.tangents[0].set(1f, 0f, 0f)
                         dv.tangents[1].set(0f, 1f, 0f)

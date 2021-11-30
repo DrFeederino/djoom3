@@ -92,7 +92,7 @@ object Vector {
     }
 
     fun DotProduct(a: idVec3, b: idVec3): Float {
-        return a.get(0) * b.get(0) + a.get(1) * b.get(1) + a.get(2) * b.get(2)
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
     fun DotProduct(a: idVec3, b: idVec4): Float {
@@ -104,7 +104,7 @@ object Vector {
     }
 
     fun DotProduct(a: idPlane, b: idPlane): Float {
-        return a.get(0) * b.get(0) + a.get(1) * b.get(1) + a.get(2) * b.get(2)
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
     fun VectorSubtract(a: DoubleArray, b: DoubleArray, c: DoubleArray): DoubleArray {
@@ -122,16 +122,16 @@ object Vector {
     }
 
     fun VectorSubtract(a: idVec3, b: idVec3, c: FloatArray): FloatArray {
-        c[0] = a.get(0) - b.get(0)
-        c[1] = a.get(1) - b.get(1)
-        c[2] = a.get(2) - b.get(2)
+        c[0] = a[0] - b[0]
+        c[1] = a[1] - b[1]
+        c[2] = a[2] - b[2]
         return c
     }
 
     fun VectorSubtract(a: idVec3, b: idVec3, c: idVec3): idVec3 {
-        c.set(0, a.get(0) - b.get(0))
-        c.set(1, a.get(1) - b.get(1))
-        c.set(2, a.get(2) - b.get(2))
+        c[0] = a[0] - b[0]
+        c[1] = a[1] - b[1]
+        c[2] = a[2] - b[2]
         return c
     }
 
@@ -154,9 +154,9 @@ object Vector {
     }
 
     fun VectorMA(v: idVec3, s: Float, b: idVec3, o: idVec3) {
-        o.set(0, v.get(0) + b.get(0) * s)
-        o.set(1, v.get(1) + b.get(1) * s)
-        o.set(2, v.get(2) + b.get(2) * s)
+        o[0] = v[0] + b[0] * s
+        o[1] = v[1] + b[1] * s
+        o[2] = v[2] + b[2] * s
     }
 
     fun VectorCopy(a: DoubleArray, b: Array<Double>) {
@@ -539,9 +539,9 @@ object Vector {
 
         operator fun times(a: idMat3): idVec3 {
             return idVec3(
-                a.getRow(0).get(0) * x + a.getRow(1).get(0) * y + a.getRow(2).get(0) * z,
-                a.getRow(0).get(1) * x + a.getRow(1).get(1) * y + a.getRow(2).get(1) * z,
-                a.getRow(0).get(2) * x + a.getRow(1).get(2) * y + a.getRow(2).get(2) * z
+                a.getRow(0)[0] * x + a.getRow(1)[0] * y + a.getRow(2)[0] * z,
+                a.getRow(0)[1] * x + a.getRow(1)[1] * y + a.getRow(2)[1] * z,
+                a.getRow(0)[2] * x + a.getRow(1)[2] * y + a.getRow(2)[2] * z
             )
         }
 
@@ -2215,7 +2215,7 @@ object Vector {
         }
 
         fun SetData(length: Int, data: FloatArray) {
-            if ((p[0] < tempPtr.get(0) || p[0] >= tempPtr.get(0) + VECX_MAX_TEMP) && alloced != -1) {
+            if ((p[0] < tempPtr[0] || p[0] >= tempPtr[0] + VECX_MAX_TEMP) && alloced != -1) {
 //		Mem_Free16( p );
             }
             //	assert( ( ( (int) data ) & 15 ) == 0 ); // data must be 16 byte aligned
@@ -2420,27 +2420,27 @@ object Vector {
         }
 
         fun SubVec3_oSet(i: Int, v: idVec3) {
-            p[i * 3 + 0] = v.get(0)
-            p[i * 3 + 1] = v.get(1)
-            p[i * 3 + 2] = v.get(2)
+            p[i * 3 + 0] = v[0]
+            p[i * 3 + 1] = v[1]
+            p[i * 3 + 2] = v[2]
         }
 
         fun SubVec6_oSet(i: Int, v: idVec6) {
-            p[i * 6 + 0] = v.get(0)
-            p[i * 6 + 1] = v.get(1)
-            p[i * 6 + 2] = v.get(2)
-            p[i * 6 + 3] = v.get(3)
-            p[i * 6 + 4] = v.get(4)
-            p[i * 6 + 5] = v.get(5)
+            p[i * 6 + 0] = v[0]
+            p[i * 6 + 1] = v[1]
+            p[i * 6 + 2] = v[2]
+            p[i * 6 + 3] = v[3]
+            p[i * 6 + 4] = v[4]
+            p[i * 6 + 5] = v[5]
         }
 
         fun SubVec6_oPluSet(i: Int, v: idVec6) {
-            p[i * 6 + 0] += v.get(0)
-            p[i * 6 + 1] += v.get(1)
-            p[i * 6 + 2] += v.get(2)
-            p[i * 6 + 3] += v.get(3)
-            p[i * 6 + 4] += v.get(4)
-            p[i * 6 + 5] += v.get(5)
+            p[i * 6 + 0] += v[0]
+            p[i * 6 + 1] += v[1]
+            p[i * 6 + 2] += v[2]
+            p[i * 6 + 3] += v[3]
+            p[i * 6 + 4] += v[4]
+            p[i * 6 + 5] += v[5]
         }
 
         companion object {

@@ -56,13 +56,13 @@ object Surface_Polytope {
                 while (j < w.GetNumPoints()) {
                     k = 0
                     while (k < verts.Num()) {
-                        if (verts.get(k).xyz.Compare(w.oGet(j).ToVec3(), Surface_Polytope.POLYTOPE_VERTEX_EPSILON)) {
+                        if (verts.get(k).xyz.Compare(w.get(j).ToVec3(), Surface_Polytope.POLYTOPE_VERTEX_EPSILON)) {
                             break
                         }
                         j++
                     }
                     if (k >= verts.Num()) {
-                        newVert.xyz.set(w.oGet(j).ToVec3())
+                        newVert.xyz.set(w.get(j).ToVec3())
                         k = verts.Append(newVert)
                     }
                     windingVerts[j] = k

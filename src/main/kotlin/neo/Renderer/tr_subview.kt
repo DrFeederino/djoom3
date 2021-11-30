@@ -167,15 +167,15 @@ object tr_subview {
 
             // now find the exact screen bounds of the clipped triangle
             w.SetNumPoints(3)
-            w.oSet(0, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v1))
-            w.oSet(1, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v2))
-            w.oSet(2, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v3))
-            w.oGet(2).t = 0.0f
-            w.oGet(2).s = w.oGet(2).t
-            w.oGet(1).t = w.oGet(2).s
-            w.oGet(1).s = w.oGet(1).t
-            w.oGet(0).t = w.oGet(1).s
-            w.oGet(0).s = w.oGet(0).t
+            w.set(0, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v1))
+            w.set(1, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v2))
+            w.set(2, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v3))
+            w.get(2).t = 0.0f
+            w.get(2).s = w.get(2).t
+            w.get(1).t = w.get(2).s
+            w.get(1).s = w.get(1).t
+            w.get(0).t = w.get(1).s
+            w.get(0).s = w.get(0).t
             j = 0
             while (j < 4) {
                 if (!w.ClipInPlace(tr_local.tr.viewDef.frustum[j].unaryMinus(), 0.1f)) {
@@ -186,7 +186,7 @@ object tr_subview {
             j = 0
             while (j < w.GetNumPoints()) {
                 val screen = idVec3()
-                tr_main.R_GlobalToNormalizedDeviceCoordinates(w.oGet(j).ToVec3(), screen)
+                tr_main.R_GlobalToNormalizedDeviceCoordinates(w.get(j).ToVec3(), screen)
                 ndcBounds.AddPoint(screen)
                 j++
             }

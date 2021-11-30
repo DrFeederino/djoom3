@@ -8,6 +8,7 @@ import neo.framework.CmdSystem
 import neo.framework.CmdSystem.commandDef_s
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.StrPool.idPoolStr
+import neo.idlib.math.Vector
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -43,6 +44,12 @@ object List {
         val c = a1[p11][p12]
         a1[p11][12] = a2[p21][p22]
         a2[p21][p22] = c
+    }
+
+    fun idSwap(a: Vector.idVec3, b: Vector.idVec3) {
+        val c: Vector.idVec3 = Vector.idVec3(a)
+        a.set(b)
+        b.set(c)
     }
 
     fun idSwap(a1: FloatArray, a2: FloatArray, p1: Int, p2: Int) {
@@ -81,9 +88,9 @@ object List {
         private val DBG_count = DBG_counter++
         protected var granularity = 16
         protected var num = 0
-        private var list: Array<T?>?
+        private var list: Array<T>? = null
         private var size = 0
-        private var type: Class<T?>? = null
+        private lateinit var type: Class<T>
 
         //
         //public	typedef int		cmp_t( const T *, const T * );
@@ -93,7 +100,7 @@ object List {
             //            this(16);//disabled to prevent inherited constructors from calling the overridden clear function.
         }
 
-        constructor(type: Class<T?>?) : this() {
+        constructor(type: Class<T>) : this() {
             this.type = type
         }
 
@@ -104,11 +111,11 @@ object List {
             Clear()
         }
 
-        constructor(newgranularity: Int, type: Class<T?>?) : this(newgranularity) {
+        constructor(newgranularity: Int, type: Class<T>) : this(newgranularity) {
             this.type = type
         }
 
-        constructor(other: idList<T?>?) {
+        constructor(other: idList<T>) {
             list = null
             this.set(other)
         }
@@ -213,7 +220,7 @@ object List {
          Copies the contents and size attributes of another list.
          ================
          */
-        fun set(other: idList<T?>?): idList<T?>? {
+        fun set(other: idList<T>): idList<T> {
             var i: Int
             Clear()
             num = other.num
@@ -221,10 +228,10 @@ object List {
             granularity = other.granularity
             type = other.type
             if (size != 0) {
-                list = arrayOfNulls<Any?>(size) as Array<T?>
+                list = Array<T>(size)
                 i = 0
                 while (i < num) {
-                    list.get(i) = other.list.get(i)
+                    list!![i] = other.list!![i]
                     i++
                 }
             }

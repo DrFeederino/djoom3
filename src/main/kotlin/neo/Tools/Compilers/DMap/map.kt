@@ -357,9 +357,9 @@ object map {
         i = 0
         while (i < surface.GetNumIndexes()) {
             tri = tritools.AllocTri()
-            tri.v[2] = surface.oGet(surface.GetIndexes()[i + 0])
-            tri.v[1] = surface.oGet(surface.GetIndexes()[i + 2])
-            tri.v[0] = surface.oGet(surface.GetIndexes()[i + 1])
+            tri.v[2] = surface.get(surface.GetIndexes()[i + 0])
+            tri.v[1] = surface.get(surface.GetIndexes()[i + 2])
+            tri.v[0] = surface.get(surface.GetIndexes()[i + 1])
             tri.material = material
             tri.next = prim.tris
             prim.tris = tri
