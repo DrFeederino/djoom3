@@ -818,7 +818,7 @@ class Dict_h {
                 val keyStrings = idList<idPoolStr?>()
                 i = 0
                 while (i < globalKeys.Num()) {
-                    keyStrings.Append(globalKeys.oGet(i))
+                    keyStrings.Append(globalKeys.get(i))
                     i++
                 }
                 keyStrings.Sort()
@@ -845,7 +845,7 @@ class Dict_h {
                 val valueStrings = idList<idPoolStr?>()
                 i = 0
                 while (i < globalValues.Num()) {
-                    valueStrings.Append(globalValues.oGet(i))
+                    valueStrings.Append(globalValues.get(i))
                     i++
                 }
                 valueStrings.Sort()

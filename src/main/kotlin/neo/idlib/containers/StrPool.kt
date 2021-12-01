@@ -20,8 +20,8 @@ class StrPool {
         : idStr() {
         //	friend class idStrPool;
         //
-        private val numUsers = 0
-        private val pool: idStrPool? = null
+        var numUsers = 0
+        var pool: idStrPool = idStrPool()
 
         // returns total size of allocated memory including size of string pool type
         override fun Size(): Int {
@@ -29,15 +29,15 @@ class StrPool {
         }
 
         // returns a pointer to the pool this string was allocated from
-        fun GetPool(): idStrPool? {
+        fun GetPool(): idStrPool {
             return pool
         }
     }
 
     class idStrPool {
         private var caseSensitive = true
-        private val pool: idList<idPoolStr?>?
-        private val poolHash: idHashIndex?
+        private val pool: idList<idPoolStr>
+        private val poolHash: idHashIndex
         fun SetCaseSensitive(caseSensitive: Boolean) {
             this.caseSensitive = caseSensitive
         }
@@ -52,7 +52,7 @@ class StrPool {
             size = pool.Allocated() + poolHash.Allocated()
             i = 0
             while (i < pool.Num()) {
-                size += pool.get(i).Allocated()
+                size += pool[i].Allocated()
                 i++
             }
             return size
@@ -64,17 +64,17 @@ class StrPool {
             size = pool.Size() + poolHash.Size()
             i = 0
             while (i < pool.Num()) {
-                size += pool.get(i).Size()
+                size += pool[i].Size()
                 i++
             }
             return size
         }
 
-        fun oGet(index: Int): idPoolStr? {
-            return pool.get(index)
+        operator fun get(index: Int): idPoolStr {
+            return pool[index]
         }
 
-        fun AllocString(string: String?): idPoolStr? {
+        fun AllocString(string: String): idPoolStr {
             var i: Int
             val hash: Int
             val poolStr: idPoolStr
@@ -82,19 +82,19 @@ class StrPool {
             if (caseSensitive) {
                 i = poolHash.First(hash)
                 while (i != -1) {
-                    if (pool.get(i).Cmp(string) == 0) {
-                        pool.get(i).numUsers++
-                        return pool.get(i)
+                    if (pool[i].Cmp(string) == 0) {
+                        pool[i].numUsers++
+                        return pool[i]
                     }
                     i = poolHash.Next(i)
                 }
             } else {
                 i = poolHash.First(hash)
                 while (i != -1) {
-                    if (pool.get(i).Icmp(string) == 0) {
-                        pool.get(i).numUsers++
+                    if (pool[i].Icmp(string) == 0) {
+                        pool[i].numUsers++
                         //                        System.out.printf("AllocString, i = %d\n", i);
-                        return pool.get(i)
+                        return pool[i]
                     }
                     i = poolHash.Next(i)
                 }
@@ -107,7 +107,7 @@ class StrPool {
             return poolStr
         }
 
-        fun FreeString(poolStr: idPoolStr?) {
+        fun FreeString(poolStr: idPoolStr) {
             var i: Int
             val hash: Int
             assert(poolStr.numUsers >= 1)
@@ -118,7 +118,7 @@ class StrPool {
                 if (caseSensitive) {
                     i = poolHash.First(hash)
                     while (i != -1) {
-                        if (pool.get(i).Cmp(poolStr.toString()) == 0) {
+                        if (pool[i].Cmp(poolStr.toString()) == 0) {
                             break
                         }
                         i = poolHash.Next(i)
@@ -126,21 +126,21 @@ class StrPool {
                 } else {
                     i = poolHash.First(hash)
                     while (i != -1) {
-                        if (pool.get(i).Icmp(poolStr.toString()) == 0) {
+                        if (pool[i].Icmp(poolStr.toString()) == 0) {
                             break
                         }
                         i = poolHash.Next(i)
                     }
                 }
                 assert(i != -1)
-                assert(pool.get(i) === poolStr)
+                assert(pool[i] === poolStr)
                 //		delete pool[i];
                 pool.RemoveIndex(i)
                 poolHash.RemoveIndex(hash, i)
             }
         }
 
-        fun CopyString(poolStr: idPoolStr?): idPoolStr? {
+        fun CopyString(poolStr: idPoolStr): idPoolStr {
             assert(poolStr.numUsers >= 1)
             return if (poolStr.pool === this) {
                 // the string is from this pool so just increase the user count
@@ -156,7 +156,7 @@ class StrPool {
             var i: Int
             i = 0
             while (i < pool.Num()) {
-                pool.get(i).numUsers = 0
+                pool[i].numUsers = 0
                 i++
             }
             pool.DeleteContents(true)

@@ -2211,7 +2211,7 @@ object Str {
             }
 
             // hash keys
-            fun Hash(string: CharArray?): Int {
+            fun Hash(string: CharArray): Int {
                 var i: Int
                 var hash = 0
                 i = 0

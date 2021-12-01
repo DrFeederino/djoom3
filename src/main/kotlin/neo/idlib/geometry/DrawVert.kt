@@ -4,7 +4,9 @@ import neo.TempDump.SERiAL
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import org.lwjgl.BufferUtils
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import kotlin.math.abs
 
 /**
  *
@@ -32,7 +34,7 @@ object DrawVert {
      */
     class idDrawVert : SERiAL {
         private val DBG_count = DBG_counter++
-        val color: ByteArray = ByteArray(4)
+        var color: ByteArray = ByteArray(4)
         val normal: idVec3
         val st: idVec2
         val tangents: Array<idVec3>
@@ -58,13 +60,13 @@ object DrawVert {
                 xyz = idVec3()
                 st = idVec2()
                 normal = idVec3()
-                tangents = idVec3.Companion.generateArray(2)
+                tangents = idVec3.generateArray(2)
                 return
             }
             xyz = idVec3(dv.xyz)
             st = idVec2(dv.st)
             normal = idVec3(dv.normal)
-            tangents = arrayOf(idVec3(dv.tangents.get(0)), idVec3(dv.tangents.get(1)))
+            tangents = arrayOf(idVec3(dv.tangents[0]), idVec3(dv.tangents[1]))
         }
 
         /**
@@ -72,86 +74,86 @@ object DrawVert {
          *
          * @param buffer
          */
-        constructor(buffer: ByteBuffer?) : this() {
+        constructor(buffer: ByteBuffer) : this() {
             Read(buffer)
         }
 
-        fun oSet(dv: idDrawVert?) {
+        fun set(dv: idDrawVert) {
             xyz.set(dv.xyz)
             st.set(dv.st)
             normal.set(dv.normal)
-            tangents.get(0).set(dv.tangents.get(0))
-            tangents.get(1).set(dv.tangents.get(1))
+            tangents[0].set(dv.tangents[0])
+            tangents[1].set(dv.tangents[1])
         }
 
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             when (index) {
-                0, 1, 2 -> return xyz.get(index)
-                3, 4 -> return st.get(index - 3)
-                5, 6, 7 -> return normal.get(index - 5)
-                8, 9, 10 -> return tangents.get(0).get(index - 8)
-                11, 12, 13 -> return tangents.get(1).get(index - 11)
-                14, 15, 16, 17 -> return color.get(index - 14)
+                0, 1, 2 -> return xyz[index]
+                3, 4 -> return st[index - 3]
+                5, 6, 7 -> return normal[index - 5]
+                8, 9, 10 -> return tangents[0][index - 8]
+                11, 12, 13 -> return tangents[1][index - 11]
+                14, 15, 16, 17 -> return color[index - 14].toFloat()
             }
-            return -1
+            return -1f
         }
 
         fun Clear() {
             xyz.Zero()
             st.Zero()
             normal.Zero()
-            tangents.get(0).Zero()
-            tangents.get(1).Zero()
-            color.get(3) = 0
-            color.get(2) = color.get(3)
-            color.get(1) = color.get(2)
-            color.get(0) = color.get(1)
+            tangents[0].Zero()
+            tangents[1].Zero()
+            color[3] = 0
+            color[2] = color[3]
+            color[1] = color[2]
+            color[0] = color[1]
         }
 
-        fun Lerp(a: idDrawVert?, b: idDrawVert?, f: Float) {
-            xyz.set(a.xyz.oPlus(b.xyz.minus(a.xyz).oMultiply(f)))
-            st.set(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
+        fun Lerp(a: idDrawVert, b: idDrawVert, f: Float) {
+            xyz.set(a.xyz + (b.xyz - a.xyz) * f)
+            st.set(a.st + (b.st - a.st) * f)
         }
 
-        fun LerpAll(a: idDrawVert?, b: idDrawVert?, f: Float) {
-            xyz.set(a.xyz.oPlus(b.xyz.minus(a.xyz).oMultiply(f)))
-            st.set(a.st.oPlus(b.st.oMinus(a.st).oMultiply(f)))
-            normal.set(a.normal.oPlus(b.normal.minus(a.normal).oMultiply(f)))
-            tangents.get(0).set(a.tangents.get(0).oPlus(b.tangents.get(0).minus(a.tangents.get(0)).oMultiply(f)))
-            tangents.get(1).set(a.tangents.get(1).oPlus(b.tangents.get(1).minus(a.tangents.get(1)).oMultiply(f)))
-            color.get(0) = (a.color.get(0) + f * (b.color.get(0) - a.color.get(0))).toInt().toByte()
-            color.get(1) = (a.color.get(1) + f * (b.color.get(1) - a.color.get(1))).toInt().toByte()
-            color.get(2) = (a.color.get(2) + f * (b.color.get(2) - a.color.get(2))).toInt().toByte()
-            color.get(3) = (a.color.get(3) + f * (b.color.get(3) - a.color.get(3))).toInt().toByte()
+        fun LerpAll(a: idDrawVert, b: idDrawVert, f: Float) {
+            xyz.set(a.xyz + (b.xyz - a.xyz) * f)
+            st.set(a.st + (b.st - a.st) * f)
+            normal.set(a.normal + (b.normal - a.normal) * f)
+            tangents[0].set(a.tangents[0] + (b.tangents[0] - a.tangents[0]) * f)
+            tangents[1].set(a.tangents[1] + (b.tangents[1] - a.tangents[1]) * f)
+            color[0] = (a.color[0] + f * (b.color[0] - a.color[0])).toInt().toByte()
+            color[1] = (a.color[1] + f * (b.color[1] - a.color[1])).toInt().toByte()
+            color[2] = (a.color[2] + f * (b.color[2] - a.color[2])).toInt().toByte()
+            color[3] = (a.color[3] + f * (b.color[3] - a.color[3])).toInt().toByte()
         }
 
         fun Normalize() {
             normal.Normalize()
-            tangents.get(1).Cross(normal, tangents.get(0))
-            tangents.get(1).Normalize()
-            tangents.get(0).Cross(tangents.get(1), normal)
-            tangents.get(0).Normalize()
+            tangents[1].Cross(normal, tangents[0])
+            tangents[1].Normalize()
+            tangents[0].Cross(tangents[1], normal)
+            tangents[0].Normalize()
         }
 
-        fun SetColor(color: Long) {
+        fun SetColor(color: Int) {
 //	*reinterpret_cast<dword *>(this->color) = color;
 //            this.color = this.set_reinterpret_cast(color);
-            val buffer = ByteBuffer.allocate(java.lang.Long.BYTES)
-            buffer.putLong(color)
+            val buffer = ByteBuffer.allocate(Integer.BYTES)
+            buffer.putInt(color)
             this.color = buffer.array()
         }
 
-        fun GetColor(): Long {
+        fun GetColor(): Int {
             return get_reinterpret_cast()
         }
 
-        private fun get_reinterpret_cast(): Long {
-            return color.get(0) and 0x000000FF or (color.get(1) and 0x0000FF00
-                    ) or (color.get(2) and 0x00FF0000
-                    ) or (color.get(3) and -0x1000000)
+        private fun get_reinterpret_cast(): Int {
+            return color[0].toInt() and 0x000000FF or (color[1].toInt() and 0x0000FF00
+                    ) or (color[2].toInt() and 0x00FF0000
+                    ) or (color[3].toInt() and -0x1000000)
         }
 
-        private fun set_reinterpret_cast(color: Long): ShortArray? {
+        private fun set_reinterpret_cast(color: Long): ShortArray {
             return shortArrayOf(
                 (color and 0x000000FF).toShort(),
                 (color and 0x0000FF00).toShort(),
@@ -160,54 +162,54 @@ object DrawVert {
             )
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
-            if (null == buffer) {
+        override fun Read(buffer: ByteBuffer) {
+            if (buffer.capacity() == 0) {
                 return
             }
             if (buffer.capacity() == Integer.SIZE / java.lang.Byte.SIZE) {
                 VBO_OFFSET = buffer.getInt(0)
                 return
             }
-            xyz.set(0, buffer.float)
-            xyz.set(1, buffer.float)
-            xyz.set(2, buffer.float)
-            st.set(0, buffer.float)
-            st.set(1, buffer.float)
-            normal.set(0, buffer.float)
-            normal.set(1, buffer.float)
-            normal.set(2, buffer.float)
+            xyz[0] = buffer.float
+            xyz[1] = buffer.float
+            xyz[2] = buffer.float
+            st[0] = buffer.float
+            st[1] = buffer.float
+            normal[0] = buffer.float
+            normal[1] = buffer.float
+            normal[2] = buffer.float
             for (tan in tangents) {
-                tan.set(0, buffer.float)
-                tan.set(1, buffer.float)
-                tan.set(2, buffer.float)
+                tan[0] = buffer.float
+                tan[1] = buffer.float
+                tan[2] = buffer.float
             }
             for (c in color.indices) {
-                color.get(c) = buffer.get()
+                color[c] = buffer.get()
             }
         }
 
         override fun Write(): ByteBuffer {
             val data = ByteBuffer.allocate(BYTES)
             data.order(ByteOrder.LITTLE_ENDIAN) //very importante.
-            data.putFloat(xyz.get(0))
-            data.putFloat(xyz.get(1))
-            data.putFloat(xyz.get(2))
-            data.putFloat(st.get(0))
-            data.putFloat(st.get(1))
-            data.putFloat(normal.get(0))
-            data.putFloat(normal.get(1))
-            data.putFloat(normal.get(2))
+            data.putFloat(xyz[0])
+            data.putFloat(xyz[1])
+            data.putFloat(xyz[2])
+            data.putFloat(st[0])
+            data.putFloat(st[1])
+            data.putFloat(normal[0])
+            data.putFloat(normal[1])
+            data.putFloat(normal[2])
             for (tan in tangents) {
-                data.putFloat(tan.get(0))
-                data.putFloat(tan.get(1))
-                data.putFloat(tan.get(2))
+                data.putFloat(tan[0])
+                data.putFloat(tan[1])
+                data.putFloat(tan[2])
             }
             for (colour in color) {
-                data.put(Math.abs(colour.toByte().toInt()).toByte())
+                data.put(abs(colour.toInt()).toByte())
             }
             return data
         }
@@ -217,31 +219,31 @@ object DrawVert {
         }
 
         fun stOffset(): Int {
-            return xyzOffset() + idVec3.Companion.BYTES //+xyz
+            return xyzOffset() + idVec3.BYTES //+xyz
         }
 
         fun normalOffset(): Int {
-            return stOffset() + idVec2.Companion.BYTES //+xyz+st
+            return stOffset() + idVec2.BYTES //+xyz+st
         }
 
         fun tangentsOffset_0(): Int {
-            return normalOffset() + idVec3.Companion.BYTES //+xyz+st+normal
+            return normalOffset() + idVec3.BYTES //+xyz+st+normal
         }
 
         fun tangentsOffset_1(): Int {
-            return tangentsOffset_0() + idVec3.Companion.BYTES //+xyz+st+normal
+            return tangentsOffset_0() + idVec3.BYTES //+xyz+st+normal
         }
 
         fun colorOffset(): Int {
-            return tangentsOffset_1() + idVec3.Companion.BYTES //+xyz+st+normal+tangents
+            return tangentsOffset_1() + idVec3.BYTES //+xyz+st+normal+tangents
         }
 
         companion object {
             @Transient
-            val SIZE: Int = (idVec3.Companion.SIZE
-                    + idVec2.Companion.SIZE
-                    + idVec3.Companion.SIZE
-                    + 2 * idVec3.Companion.SIZE
+            val SIZE: Int = (idVec3.SIZE
+                    + idVec2.SIZE
+                    + idVec3.SIZE
+                    + 2 * idVec3.SIZE
                     + 4 * java.lang.Byte.SIZE) //color
 
             @Transient

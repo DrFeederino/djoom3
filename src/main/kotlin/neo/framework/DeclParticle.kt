@@ -395,7 +395,7 @@ object DeclParticle {
             val frac = g.animationFrameFrac
             val iFrac = 1.0f - frac
             for (i in 0 until numVerts) {
-                verts.get(numVerts + i).oSet(verts.get(i))
+                verts.get(numVerts + i).set(verts.get(i))
                 verts.get(numVerts + i).st.x += width
                 verts.get(numVerts + i).color[0] *= frac
                 verts.get(numVerts + i).color[1] *= frac
@@ -645,10 +645,10 @@ object DeclParticle {
                     up.Normalize()
                     left.set(up.Cross(forwardDir))
                     left.timesAssign(psize)
-                    verts.get(verts_p + 0).oSet(verts.get(0))
-                    verts.get(verts_p + 1).oSet(verts.get(1))
-                    verts.get(verts_p + 2).oSet(verts.get(2))
-                    verts.get(verts_p + 3).oSet(verts.get(3))
+                    verts.get(verts_p + 0).set(verts.get(0))
+                    verts.get(verts_p + 1).set(verts.get(1))
+                    verts.get(verts_p + 2).set(verts.get(2))
+                    verts.get(verts_p + 3).set(verts.get(3))
                     if (i == 0) {
                         verts.get(verts_p + 0).xyz.set(stepOrigin.minus(left))
                         verts.get(verts_p + 1).xyz.set(stepOrigin.oPlus(left))

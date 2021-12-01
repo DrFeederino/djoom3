@@ -266,7 +266,7 @@ object HashIndex {
 
         // force resizing the index, current hash table stays intact
         fun ResizeIndex(newIndexSize: Int) {
-            val oldIndexChain: IntArray?
+            val oldIndexChain: IntArray
             val mod: Int
             val newSize: Int
             if (newIndexSize <= indexSize) {
@@ -338,7 +338,7 @@ object HashIndex {
 
         // returns a key for a string
         @JvmOverloads
-        fun GenerateKey(string: CharArray?, caseSensitive: Boolean = true): Int {
+        fun GenerateKey(string: CharArray, caseSensitive: Boolean = true): Int {
             return if (caseSensitive) {
                 idStr.Hash(string) and hashMask
             } else {

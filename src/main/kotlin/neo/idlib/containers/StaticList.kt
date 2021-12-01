@@ -16,27 +16,27 @@ class StaticList {
 
      ===============================================================================
      */
-    class idStaticList<type>(private val size: Int) {
-        private var list: Array<type?>?
+    class idStaticList<T>(private val size: Int) {
+        private var list: Array<T> = arrayOfNulls<Any>(size) as Array<T>
         private var num = 0
-        private var type: Class<type?>? = null
+        private lateinit var type: Class<T>
 
-        constructor(size: Int, type: Class<type?>?) : this(size) {
+        constructor(size: Int, type: Class<T>) : this(size) {
             this.type = type
         }
 
-        constructor(size: Int, `object`: Any?) : this(size) {
-            list = (`object` as idStaticList<type?>?).list
+        constructor(size: Int, newList: idStaticList<T>) : this(size) {
+            list = newList.list
         }
 
-        //	public					idStaticList( const idStaticList<type,size> &other );
-        //	public					~idStaticList<type,size>( void );
+        //	public					idStaticList( const idStaticList<T,size> &other );
+        //	public					~idStaticList<T,size>( void );
         //
         /*
          ================
-         idStaticList<type,size>::Clear
+         idStaticList<T,size>::Clear
 
-         Sets the number of elements in the list to 0.  Assumes that type automatically handles freeing up memory.
+         Sets the number of elements in the list to 0.  Assumes that T automatically handles freeing up memory.
          ================
          */
         fun Clear() {                                        // marks the list as empty.  does not deallocate or intialize data.
@@ -45,7 +45,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Num
+         idStaticList<T,size>::Num
 
          Returns the number of elements currently contained in the list.
          ================
@@ -56,7 +56,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Max
+         idStaticList<T,size>::Max
 
          Returns the maximum number of elements in the list.
          ================
@@ -67,7 +67,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::SetNum
+         idStaticList<T,size>::SetNum
 
          Set number of elements in list.
          ================
@@ -80,7 +80,7 @@ class StaticList {
 
         //
         //public		size_t				Allocated( void ) const;							// returns total size of allocated memory
-        //public		size_t				Size( void ) const;									// returns total size of allocated memory including size of list type
+        //public		size_t				Size( void ) const;									// returns total size of allocated memory including size of list T
         // returns size of the used elements in the list
         fun  /*size_t*/MemoryUsed(): Int {
             return num * Integer.BYTES //TODO: * sizeof(list[0]);
@@ -89,29 +89,29 @@ class StaticList {
         //
         /*
          ================
-         idStaticList<type,size>::operator[] const
+         idStaticList<T,size>::operator[] const
 
          Access operator.  Index must be within range or an assert will be issued in debug builds.
          Release builds do no range checking.
          ================
          */
-        fun oGet(index: Int): type? {
+        operator fun get(index: Int): T {
             assert(index >= 0)
             assert(index < num)
-            return list.get(index)
+            return list[index]
         }
 
-        fun oSet(index: Int, value: type?): type? {
+        operator fun set(index: Int, value: T): T {
             assert(index >= 0)
             assert(index < num)
-            return value.also { list.get(index) = it }
+            return value.also { list[index] = it }
         }
 
-        //public		type &				operator[]( int index );
+        //public		T &				operator[]( int index );
         //
         /*
          ================
-         idStaticList<type,size>::Ptr
+         idStaticList<T,size>::Ptr
 
          Returns a pointer to the begining of the array.  Useful for iterating through the list in loops.
 
@@ -120,25 +120,25 @@ class StaticList {
          FIXME: Create an iterator template for this kind of thing.
          ================
          */
-        fun Ptr(): Array<type?>? {                                        // returns a pointer to the list
+        fun Ptr(): Array<T> {                                        // returns a pointer to the list
             return list
         }
 
-        //public		const type *		Ptr( void ) const;									// returns a pointer to the list
+        //public		const T *		Ptr( void ) const;									// returns a pointer to the list
         /*
          ================
-         idStaticList<type,size>::Alloc
+         idStaticList<T,size>::Alloc
 
          Returns a pointer to a new data element at the end of the list.
          ================
          */
-        fun Alloc(): type? {                                        // returns reference to a new data element at the end of the list.  returns NULL when full.
+        fun Alloc(): T? {                                        // returns reference to a new data element at the end of the list.  returns NULL when full.
             if (num >= size) {
                 return null
             }
             try {
                 return type.newInstance().also {
-                    list.get(num++) = it //TODO:init value before sending back. EDIT:ugly, but working.
+                    list[num++] = it //TODO:init value before sending back. EDIT:ugly, but working.
                 }
             } catch (ex: InstantiationException) {
                 Logger.getLogger(StaticList::class.java.name).log(Level.SEVERE, null, ex)
@@ -150,17 +150,17 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Append
+         idStaticList<T,size>::Append
 
          Increases the size of the list by one element and copies the supplied data into it.
 
          Returns the index of the new element, or -1 when list is full.
          ================
          */
-        fun Append(obj: type?): Int { // append element
+        fun Append(obj: T): Int { // append element
             assert(num < size)
             if (num < size) {
-                list.get(num) = obj
+                list[num] = obj
                 num++
                 return num - 1
             }
@@ -169,14 +169,14 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Append
+         idStaticList<T,size>::Append
 
          adds the other list to this one
 
          Returns the size of the new combined list
          ================
          */
-        fun Append(other: idStaticList<type?>?): Int {        // append list
+        fun Append(other: idStaticList<T>): Int {        // append list
             var i: Int
             var n = other.Num()
             if (num + n > other.size) { //TODO:which size??
@@ -184,7 +184,7 @@ class StaticList {
             }
             i = 0
             while (i < n) {
-                list.get(i + num) = other.list.get(i)
+                list[i + num] = other.list[i]
                 i++
             }
             num += n
@@ -193,12 +193,12 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::AddUnique
+         idStaticList<T,size>::AddUnique
 
          Adds the data to the list if it doesn't already exist.  Returns the index of the data in the list.
          ================
          */
-        fun AddUnique(obj: type?): Int {                        // add unique element
+        fun AddUnique(obj: T): Int {                        // add unique element
             var index: Int
             index = FindIndex(obj)
             if (index < 0) {
@@ -209,7 +209,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Insert
+         idStaticList<T,size>::Insert
 
          Increases the size of the list by at leat one element if necessary 
          and inserts the supplied data into it.
@@ -217,7 +217,7 @@ class StaticList {
          Returns the index of the new element, or -1 when list is full.
          ================
          */
-        fun Insert(obj: type?, index: Int): Int {                // insert the element at the given index
+        fun Insert(obj: T, index: Int): Int {                // insert the element at the given index
             var index = index
             var i: Int
             assert(num < size)
@@ -232,26 +232,26 @@ class StaticList {
             }
             i = num
             while (i > index) {
-                list.get(i) = list.get(i - 1)
+                list[i] = list[i - 1]
                 --i
             }
             num++
-            list.get(index) = obj
+            list[index] = obj
             return index
         }
 
         /*
          ================
-         idStaticList<type,size>::FindIndex
+         idStaticList<T,size>::FindIndex
 
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        fun FindIndex(obj: type?): Int {                // find the index for the given element
+        fun FindIndex(obj: T): Int {                // find the index for the given element
             var i: Int
             i = 0
             while (i < num) {
-                if (list.get(i) === obj) {
+                if (list[i] === obj) {
                     return i
                 }
                 i++
@@ -261,10 +261,10 @@ class StaticList {
             return -1
         }
 
-        //public		type *				Find( type const & obj ) const;						// find pointer to the given element
+        //public		T *				Find( T const & obj ) const;						// find pointer to the given element
         /*
          ================
-         idStaticList<type,size>::FindNull
+         idStaticList<T,size>::FindNull
 
          Searches for a NULL pointer in the list.  Returns -1 if NULL is not found.
 
@@ -276,7 +276,7 @@ class StaticList {
             var i: Int
             i = 0
             while (i < num) {
-                if (list.get(i) == null) {
+                if (list[i] == null) {
                     return i
                 }
                 i++
@@ -288,7 +288,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::IndexOf
+         idStaticList<T,size>::IndexOf
 
          Takes a pointer to an element in the list and returns the index of the element.
          This is NOT a guarantee that the object is really in the list. 
@@ -296,7 +296,7 @@ class StaticList {
          but remains silent in release builds.
          ================
          */
-        fun IndexOf(obj: type?): Int {                    // returns the index for the pointer to an element in the list
+        fun IndexOf(obj: T): Int {                    // returns the index for the pointer to an element in the list
 //    int index;
 //
 //	index = objptr - list;
@@ -310,7 +310,7 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::RemoveIndex
+         idStaticList<T,size>::RemoveIndex
 
          Removes the element at the specified index and moves all data following the element down to fill in the gap.
          The number of elements in the list is reduced by one.  Returns false if the index is outside the bounds of the list.
@@ -327,7 +327,7 @@ class StaticList {
             num--
             i = index
             while (i < num) {
-                list.get(i) = list.get(i + 1)
+                list[i] = list[i + 1]
                 i++
             }
             return true
@@ -335,14 +335,14 @@ class StaticList {
 
         /*
          ================
-         idStaticList<type,size>::Remove
+         idStaticList<T,size>::Remove
 
          Removes the element if it is found within the list and moves all data following the element down to fill in the gap.
          The number of elements in the list is reduced by one.  Returns false if the data is not found in the list.  Note that
          the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        fun Remove(obj: type?): Boolean {                            // remove the element
+        fun Remove(obj: T): Boolean {                            // remove the element
             val index: Int
             index = FindIndex(obj)
             return if (index >= 0) {
@@ -350,10 +350,10 @@ class StaticList {
             } else false
         }
 
-        //public		void				Swap( idStaticList<type,size> &other );				// swap the contents of the lists
+        //public		void				Swap( idStaticList<T,size> &other );				// swap the contents of the lists
         /*
          ================
-         idStaticList<type,size>::DeleteContents
+         idStaticList<T,size>::DeleteContents
 
          Calls the destructor of all elements in the list.  Conditionally frees up memory used by the list.
          Note that this only works on lists containing pointers to objects and will cause a compiler error
@@ -365,25 +365,12 @@ class StaticList {
          */
         fun DeleteContents(clear: Boolean) {                        // delete the contents of the list
             var i: Int
-            i = 0
-            while (i < size) {
-
-//		delete list[ i ];
-                list.get(i) = null
-                i++
-            }
             if (clear) {
                 Clear()
             } else {
 //		memset( list, 0, sizeof( list ) );
                 Arrays.fill(list, 0)
             }
-        }
-
-        //
-        //
-        init {
-            list = arrayOfNulls<Any?>(size) as Array<type?>
         }
     }
 }

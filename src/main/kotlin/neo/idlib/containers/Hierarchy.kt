@@ -105,13 +105,13 @@ class Hierarchy {
          */
         fun RemoveFromHierarchy() {
             val parentNode: idHierarchy<T>?
-            var node: idHierarchy<T>?
+            var node: idHierarchy<T>
             parentNode = parent
             RemoveFromParent()
             if (parentNode != null) {
                 while (child != null) {
-                    node = child
-                    node!!.RemoveFromParent()
+                    node = child!!
+                    node.RemoveFromParent()
                     node.ParentTo(parentNode)
                 }
             } else {

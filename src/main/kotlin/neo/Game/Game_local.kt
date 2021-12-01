@@ -4279,9 +4279,9 @@ object Game_local {
             }
             if (player.spectating) {
                 // plain random spot, don't bother
-                return spawnSpots.oGet(random.RandomInt(spawnSpots.Num().toDouble())).ent
+                return spawnSpots.get(random.RandomInt(spawnSpots.Num().toDouble())).ent
             } else if (player.useInitialSpawns && currentInitialSpot < initialSpots.Num()) {
-                return initialSpots.oGet(currentInitialSpot++)
+                return initialSpots.get(currentInitialSpot++)
             } else {
                 // check if we are alone in map
                 alone = true
@@ -4295,14 +4295,14 @@ object Game_local {
                 }
                 if (alone) {
                     // don't do distance-based
-                    return spawnSpots.oGet(random.RandomInt(spawnSpots.Num().toDouble())).ent
+                    return spawnSpots.get(random.RandomInt(spawnSpots.Num().toDouble())).ent
                 }
 
                 // find the distance to the closest active player for each spawn spot
                 i = 0
                 while (i < spawnSpots.Num()) {
-                    pos.set(spawnSpots.oGet(i).ent.GetPhysics().GetOrigin())
-                    spawnSpots.oGet(i).dist = 0x7fffffff
+                    pos.set(spawnSpots.get(i).ent.GetPhysics().GetOrigin())
+                    spawnSpots.get(i).dist = 0x7fffffff
                     j = 0
                     while (j < MAX_CLIENTS) {
                         if (null == entities.get(j) || entities.get(j) !is idPlayer
@@ -4312,8 +4312,8 @@ object Game_local {
                             continue
                         }
                         dist = pos.minus(entities.get(j).GetPhysics().GetOrigin()).LengthSqr()
-                        if (dist < spawnSpots.oGet(i).dist) {
-                            spawnSpots.oGet(i).dist = dist.toInt()
+                        if (dist < spawnSpots.get(i).dist) {
+                            spawnSpots.get(i).dist = dist.toInt()
                         }
                         j++
                     }
@@ -4326,7 +4326,7 @@ object Game_local {
 
                 // choose a random one in the top half
                 which = random.RandomInt((spawnSpots.Num() / 2).toDouble())
-                spot = spawnSpots.oGet(which)
+                spot = spawnSpots.get(which)
             }
             return spot.ent
         }
@@ -6125,16 +6125,16 @@ object Game_local {
                 Common.common.Warning("no info_player_deathmatch entities marked initial in map")
                 i = 0
                 while (i < spawnSpots.Num()) {
-                    initialSpots.Append(spawnSpots.oGet(i).ent)
+                    initialSpots.Append(spawnSpots.get(i).ent)
                     i++
                 }
             }
             i = 0
             while (i < initialSpots.Num()) {
                 j = random.RandomInt(initialSpots.Num().toDouble())
-                ent = initialSpots.oGet(i)
-                initialSpots.oSet(i, initialSpots.oGet(j))
-                initialSpots.oSet(j, ent)
+                ent = initialSpots.get(i)
+                initialSpots.set(i, initialSpots.get(j))
+                initialSpots.set(j, ent)
                 i++
             }
             // reset the counter

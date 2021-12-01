@@ -627,13 +627,13 @@ object TempDump {
         /**
          *
          */
-        private val GET_DIMENSION: String? = "GetDimension"
-        private val O_GET: String? = "oGet"
-        private val O_MINUS: String? = "oMinus"
-        private val O_MULTIPLY: String? = "oMultiply"
-        private val O_PLUS: String? = "oPlus"
-        private val O_SET: String? = "oSet"
-        private val ZERO: String? = "Zero"
+        private val GET_DIMENSION: String = "GetDimension"
+        private val O_GET: String = "get"
+        private val O_MINUS: String = "minus"
+        private val O_MULTIPLY: String = "times"
+        private val O_PLUS: String = "plus"
+        private val O_SET: String = "set"
+        private val ZERO: String = "Zero"
         fun GetDimension(`object`: Any): Int {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0
@@ -777,7 +777,7 @@ object TempDump {
             return returnValue
         }
 
-        fun _Minus(object1: Any, object2: Any): Any? {
+        fun _Minus(object1: Any, object2: Any): Any {
             return ooOOoooOOoo(object1, object2, O_MINUS)
         }
 
@@ -791,12 +791,12 @@ object TempDump {
          * @param O_METHOD
          * @return
          */
-        private fun ooOOoooOOoo(object1: Any, object2: Any, O_METHOD: String?): Any? {
+        private fun ooOOoooOOoo(object1: Any, object2: Any, O_METHOD: String): Any {
             val class1: Class<*> = object1.javaClass
             val class2: Class<*> = object2.javaClass
-            val method1: Method?
-            val method2: Method?
-            var returnObject: Any? = null
+            val method1: Method
+            val method2: Method
+            var returnObject: Any
             try {
                 method1 = class1.getDeclaredMethod(O_METHOD, class2)
                 returnObject = method1.invoke(object1, object2)
@@ -833,36 +833,36 @@ object TempDump {
     class Atomics {
         class renderViewShadow {
             //
-            var cramZNear: CBool? = CBool(false)
-            var forceUpdate: CBool? = CBool(false)
+            var cramZNear: CBool = CBool(false)
+            var forceUpdate: CBool = CBool(false)
 
             //
-            var fov_x: CFloat? = CFloat()
-            var fov_y: CFloat? = CFloat()
-            var globalMaterial: idMaterial? = idMaterial()
+            var fov_x: CFloat = CFloat()
+            var fov_y: CFloat = CFloat()
+            var globalMaterial: idMaterial = idMaterial()
             var shaderParms = Array(RenderWorld.MAX_GLOBAL_SHADER_PARMS) { CFloat() }
 
             //
-            var time: CInt? = CInt()
-            var viewID: CInt? = CInt()
-            var viewaxis: idMat3? = idMat3()
-            val vieworg: idVec3? = idVec3()
+            var time: CInt = CInt()
+            var viewID: CInt = CInt()
+            var viewaxis: idMat3 = idMat3()
+            val vieworg: idVec3 = idVec3()
 
             //
-            var x: CInt? = CInt()
-            var y: CInt? = CInt()
-            var width: CInt? = CInt()
-            var height: CInt? = CInt()
+            var x: CInt = CInt()
+            var y: CInt = CInt()
+            var width: CInt = CInt()
+            var height: CInt = CInt()
         }
 
         class renderEntityShadow {
             //
-            var allowSurfaceInViewID: CInt? = CInt()
-            var axis: idMat3? = null
-            var bodyId: CInt? = CInt()
+            var allowSurfaceInViewID: CInt = CInt()
+            var axis: idMat3 = idMat3()
+            var bodyId: CInt = CInt()
 
             //      
-            var bounds: idBounds? = null
+            var bounds: idBounds = idBounds()
             var callback: deferredEntityCallback_t? = null
 
             //

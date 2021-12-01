@@ -450,7 +450,7 @@ class DeclPDA {
         @Throws(idException::class)
         fun AddVideo(_name: String?, unique: Boolean /*= true*/) {
             val name = idStr(_name)
-            if (unique && videos.findIndex(name) != null) {
+            if (unique && videos.Find(name) != null) {
                 return
             }
             if (DeclManager.declManager.FindType(declType_t.DECL_VIDEO, _name, false) == null) {
@@ -463,7 +463,7 @@ class DeclPDA {
         @Throws(idException::class)
         fun AddAudio(_name: String?, unique: Boolean /*= true*/) {
             val name = idStr(_name)
-            if (unique && audios.findIndex(name) != null) {
+            if (unique && audios.Find(name) != null) {
                 return
             }
             if (DeclManager.declManager.FindType(declType_t.DECL_AUDIO, _name, false) == null) {
@@ -477,7 +477,7 @@ class DeclPDA {
         @Throws(idException::class)
         fun AddEmail(_name: String?, unique: Boolean = true /*= true*/) {
             val name = idStr(_name)
-            if (unique && emails.findIndex(name) != null) {
+            if (unique && emails.Find(name) != null) {
                 return
             }
             if (DeclManager.declManager.FindType(declType_t.DECL_EMAIL, _name, false) == null) {

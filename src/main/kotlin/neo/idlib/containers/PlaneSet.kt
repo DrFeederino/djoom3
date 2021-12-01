@@ -17,7 +17,7 @@ class PlaneSet {
 
      ===============================================================================
      */
-    class idPlaneSet : idList<idPlane?>() {
+    class idPlaneSet : idList<idPlane>() {
         private val hash: idHashIndex = idHashIndex()
         override fun Clear() {
             super.Clear()

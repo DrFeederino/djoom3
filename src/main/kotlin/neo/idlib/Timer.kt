@@ -24,52 +24,52 @@ class Timer {
     class idTimer {
         private var clockTicks: Double
         private var start = 0.0
-        private var state: Timer.State?
+        private var state: State?
 
         //
         //
         constructor() {
-            state = Timer.State.TS_STOPPED
+            state = State.TS_STOPPED
             clockTicks = 0.0
         }
 
         constructor(_clockTicks: Double) {
-            state = Timer.State.TS_STOPPED
+            state = State.TS_STOPPED
             clockTicks = _clockTicks
         }
 
         //public					~idTimer( void );
         //
-        fun oPlus(t: idTimer?): idTimer? {
-            assert(state == Timer.State.TS_STOPPED && t.state == Timer.State.TS_STOPPED)
+        operator fun plus(t: idTimer): idTimer {
+            assert(state == State.TS_STOPPED && t.state == State.TS_STOPPED)
             return idTimer(clockTicks + t.clockTicks)
         }
 
-        fun oMinus(t: idTimer?): idTimer? {
-            assert(state == Timer.State.TS_STOPPED && t.state == Timer.State.TS_STOPPED)
+        operator fun minus(t: idTimer): idTimer {
+            assert(state == State.TS_STOPPED && t.state == State.TS_STOPPED)
             return idTimer(clockTicks - t.clockTicks)
         }
 
-        fun oPluSet(t: idTimer?): idTimer? {
-            assert(state == Timer.State.TS_STOPPED && t.state == Timer.State.TS_STOPPED)
+        fun plusAssign(t: idTimer): idTimer {
+            assert(state == State.TS_STOPPED && t.state == State.TS_STOPPED)
             clockTicks += t.clockTicks
             return this
         }
 
-        fun oMinSet(t: idTimer?): idTimer? {
-            assert(state == Timer.State.TS_STOPPED && t.state == Timer.State.TS_STOPPED)
+        fun minusAssign(t: idTimer): idTimer {
+            assert(state == State.TS_STOPPED && t.state == State.TS_STOPPED)
             clockTicks -= t.clockTicks
             return this
         }
 
         fun Start() {
-            assert(state == Timer.State.TS_STOPPED)
-            state = Timer.State.TS_STARTED
+            assert(state == State.TS_STOPPED)
+            state = State.TS_STARTED
             start = idLib.sys.GetClockTicks()
         }
 
         fun Stop() {
-            assert(state == Timer.State.TS_STARTED)
+            assert(state == State.TS_STARTED)
             clockTicks += idLib.sys.GetClockTicks() - start
             if (base < 0.0) {
                 InitBaseClockTicks()
@@ -77,7 +77,7 @@ class Timer {
             if (clockTicks > base) {
                 clockTicks -= base
             }
-            state = Timer.State.TS_STOPPED
+            state = State.TS_STOPPED
         }
 
         fun Clear() {
@@ -85,12 +85,12 @@ class Timer {
         }
 
         fun ClockTicks(): Double {
-            assert(state == Timer.State.TS_STOPPED)
+            assert(state == State.TS_STOPPED)
             return clockTicks
         }
 
         fun Milliseconds(): Double {
-            assert(state == Timer.State.TS_STOPPED)
+            assert(state == State.TS_STOPPED)
             return clockTicks / (idLib.sys.ClockTicksPerSecond() * 0.001)
         }
 
@@ -130,9 +130,9 @@ class Timer {
     internal inner class idTimerReport  //
     //
     {
-        private val names: idStrList? = null
-        private var reportName: idStr? = null
-        private val timers: idList<idTimer?>? = idList()
+        private val names: idStrList = idStrList()
+        private var reportName: idStr = idStr()
+        private val timers: idList<idTimer> = idList()
 
         //public					~idTimerReport( void );
         //
@@ -157,7 +157,7 @@ class Timer {
         fun Reset() {
             assert(timers.Num() == names.size())
             for (i in 0 until timers.Num()) {
-                timers.get(i).Clear()
+                timers[i].Clear()
             }
         }
 
@@ -168,8 +168,8 @@ class Timer {
             idLib.common.Printf("-------------------------------\n")
             var total = 0.0f
             for (i in 0 until names.size()) {
-                idLib.common.Printf("%s consumed %5.2f seconds\n", names.get(i), timers.get(i).Milliseconds() * 0.001f)
-                total += timers.get(i).Milliseconds().toFloat()
+                idLib.common.Printf("%s consumed %5.2f seconds\n", names[i], timers[i].Milliseconds() * 0.001f)
+                total += timers[i].Milliseconds().toFloat()
             }
             idLib.common.Printf(
                 "Total time for report %s was %5.2f\n\n",
@@ -178,13 +178,13 @@ class Timer {
             ) //TODO:char[] OR string
         }
 
-        fun AddTime(name: String?, time: idTimer?) {
+        fun AddTime(name: String, time: idTimer) {
             assert(timers.Num() == names.size())
             var i: Int
             i = 0
             while (i < names.size()) {
-                if (names.get(i).Icmp(name) == 0) {
-                    timers.oPluSet(i, time)
+                if (names[i].Icmp(name) == 0) {
+                    timers[i].plusAssign(time)
                     break
                 }
                 i++
@@ -192,8 +192,8 @@ class Timer {
             if (i == names.size()) {
                 val index = AddReport(name)
                 if (index >= 0) {
-                    timers.get(index).Clear()
-                    timers.oPluSet(index, time)
+                    timers[index].Clear()
+                    timers[index].plusAssign(time)
                 }
             }
         }

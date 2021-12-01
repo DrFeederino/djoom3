@@ -362,7 +362,7 @@ object Common {
         //Contains /
         return if (testVal.Find("/") != -1) {
             false
-        } else excludeList.findIndex(testVal) == 0
+        } else excludeList.Find(testVal) == 0
     }
 
     //

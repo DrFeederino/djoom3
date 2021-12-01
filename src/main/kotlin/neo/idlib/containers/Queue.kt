@@ -1,6 +1,5 @@
 package neo.idlib.containers
 
-import neo.framework.DeclAF.idAFVector.type
 import java.util.*
 
 /**
@@ -15,18 +14,18 @@ class Queue {
 
      ===============================================================================
      */
-    //#define idQueue( type, next )		idQueueTemplate<type, (int)&(((type*)NULL)->next)>
-    class idQueueTemplate<type>  //TODO:fix the nextOffset part.
+    //#define idQueue( T, next )		idQueueTemplate<T, (int)&(((T*)NULL)->next)>
+    class idQueueTemplate<T>  //TODO:fix the nextOffset part.
     //        private final static int QUEUE_BLOCK_SIZE = 10;
     //        //
     //        private int first;
     //        private int last;
-    //        private type[] queue      = (type[]) new Object[10];
+    //        private T[] queue      = (T[]) new Object[10];
     //        private int    nextOffset = 0;
     //        //
     //        //
-        : LinkedList<type?>() {
-        fun Add(element: type?): Boolean {
+        : LinkedList<T>() {
+        fun Add(element: T): Boolean {
 //            if (nextOffset >= queue.length) {
 ////		QUEUE_NEXT_PTR(last) = element;
 //                expandQueue();
@@ -37,7 +36,7 @@ class Queue {
             return super.add(element)
         }
 
-        fun Get(): type? {
+        fun Get(): T? {
             return if (super.isEmpty()) {
                 null
             } else super.pop()
@@ -48,15 +47,15 @@ class Queue {
 //
 //            return queue[--nextOffset];
         } //        private void expandQueue() {
-        //            final type[] tempQueue = queue;
-        //            queue = (type[]) new Object[queue.length + QUEUE_BLOCK_SIZE];
+        //            final T[] tempQueue = queue;
+        //            queue = (T[]) new Object[queue.length + QUEUE_BLOCK_SIZE];
         //
         //            System.arraycopy(tempQueue, 0, queue, 0, tempQueue.length);
         //        }
         //
         //        private void shrinkQueue() {
-        //            final type[] tempQueue = queue;
-        //            queue = (type[]) new Object[queue.length - QUEUE_BLOCK_SIZE];
+        //            final T[] tempQueue = queue;
+        //            queue = (T[]) new Object[queue.length - QUEUE_BLOCK_SIZE];
         //
         //            System.arraycopy(tempQueue, 0, queue, 0, queue.length);
         //        }

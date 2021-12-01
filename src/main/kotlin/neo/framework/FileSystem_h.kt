@@ -1098,7 +1098,7 @@ object FileSystem_h {
                     val gamepath = idStr(BuildOSPath(search[isearch], dirs[i].toString(), ""))
                     ListOSFiles(gamepath.toString(), ".pk4", pk4s)
                     if (pk4s.size() != 0) {
-                        if (0 == list.mods.findIndex(dirs[i])) {
+                        if (0 == list.mods.Find(dirs[i])) {
                             // D3 1.3 #31, only list d3xp if the pak is present
                             if (dirs[i].Icmp("d3xp") != 0 || HasD3XP()) {
                                 list.mods.add(dirs[i])

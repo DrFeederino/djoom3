@@ -5,7 +5,7 @@ import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Quat.idQuat
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
-import java.util.*
+import kotlin.math.abs
 
 /**
  *
@@ -52,7 +52,6 @@ class JointTransform {
         private val mat: FloatArray = FloatArray(3 * 4)
 
         constructor() {
-            val a = 0
         }
 
         constructor(mat: FloatArray) {
@@ -63,44 +62,38 @@ class JointTransform {
 
         fun SetRotation(m: idMat3) {
             // NOTE: idMat3 is transposed because it is column-major
-            mat[0 * 4 + 0] = m.get(0).get(0)
-            mat[0 * 4 + 1] = m.get(1).get(0)
-            mat[0 * 4 + 2] = m.get(2).get(0)
-            mat[1 * 4 + 0] = m.get(0).get(1)
-            mat[1 * 4 + 1] = m.get(1).get(1)
-            mat[1 * 4 + 2] = m.get(2).get(1)
-            mat[2 * 4 + 0] = m.get(0).get(2)
-            mat[2 * 4 + 1] = m.get(1).get(2)
-            mat[2 * 4 + 2] = m.get(2).get(2)
+            mat[0 * 4 + 0] = m[0][0]
+            mat[0 * 4 + 1] = m[1][0]
+            mat[0 * 4 + 2] = m[2][0]
+            mat[1 * 4 + 0] = m[0][1]
+            mat[1 * 4 + 1] = m[1][1]
+            mat[1 * 4 + 2] = m[2][1]
+            mat[2 * 4 + 0] = m[0][2]
+            mat[2 * 4 + 1] = m[1][2]
+            mat[2 * 4 + 2] = m[2][2]
         }
 
-        fun SetTranslation(t: idVec3?) {
-            mat[0 * 4 + 3] = t.get(0)
-            mat[1 * 4 + 3] = t.get(1)
-            mat[2 * 4 + 3] = t.get(2)
+        fun SetTranslation(t: idVec3) {
+            mat[0 * 4 + 3] = t[0]
+            mat[1 * 4 + 3] = t[1]
+            mat[2 * 4 + 3] = t[2]
         }
 
         // only rotate
         operator fun times(v: idVec3): idVec3 {
             return idVec3(
-                mat[0 * 4 + 0] * v.get(0) + mat[0 * 4 + 1] * v.get(1) + mat[0 * 4 + 2] * v.get(2),
-                mat[1 * 4 + 0] * v.get(0) + mat[1 * 4 + 1] * v.get(1) + mat[1 * 4 + 2] * v.get(2),
-                mat[2 * 4 + 0] * v.get(0) + mat[2 * 4 + 1] * v.get(1) + mat[2 * 4 + 2] * v.get(2)
+                mat[0 * 4 + 0] * v[0] + mat[0 * 4 + 1] * v[1] + mat[0 * 4 + 2] * v[2],
+                mat[1 * 4 + 0] * v[0] + mat[1 * 4 + 1] * v[1] + mat[1 * 4 + 2] * v[2],
+                mat[2 * 4 + 0] * v[0] + mat[2 * 4 + 1] * v[1] + mat[2 * 4 + 2] * v[2]
             )
         }
 
         // rotate and translate
         operator fun times(v: idVec4): idVec3 {
             return idVec3(
-                mat[0 * 4 + 0] * v.get(0) + mat[0 * 4 + 1] * v.get(1) + mat[0 * 4 + 2] * v.get(2) + mat[0 * 4 + 3] * v.get(
-                    3
-                ),
-                mat[1 * 4 + 0] * v.get(0) + mat[1 * 4 + 1] * v.get(1) + mat[1 * 4 + 2] * v.get(2) + mat[1 * 4 + 3] * v.get(
-                    3
-                ),
-                mat[2 * 4 + 0] * v.get(0) + mat[2 * 4 + 1] * v.get(1) + mat[2 * 4 + 2] * v.get(2) + mat[2 * 4 + 3] * v.get(
-                    3
-                )
+                mat[0 * 4 + 0] * v[0] + mat[0 * 4 + 1] * v[1] + mat[0 * 4 + 2] * v[2] + mat[0 * 4 + 3] * v[3],
+                mat[1 * 4 + 0] * v[0] + mat[1 * 4 + 1] * v[1] + mat[1 * 4 + 2] * v[2] + mat[1 * 4 + 3] * v[3],
+                mat[2 * 4 + 0] * v[0] + mat[2 * 4 + 1] * v[1] + mat[2 * 4 + 2] * v[2] + mat[2 * 4 + 3] * v[3]
             )
         }
 
@@ -150,7 +143,7 @@ class JointTransform {
         }
 
         // untransform
-        fun oDivSet(a: idJointMat?): idJointMat? {
+        fun oDivSet(a: idJointMat): idJointMat {
             val dst = FloatArray(3)
             mat[0 * 4 + 3] -= a.mat[0 * 4 + 3]
             mat[1 * 4 + 3] -= a.mat[1 * 4 + 3]
@@ -195,7 +188,7 @@ class JointTransform {
         }
 
         // exact compare, no epsilon
-        fun Compare(a: idJointMat?): Boolean {
+        fun Compare(a: idJointMat): Boolean {
             var i: Int
             i = 0
             while (i < 12) {
@@ -208,11 +201,11 @@ class JointTransform {
         }
 
         // compare with epsilon
-        fun Compare(a: idJointMat?, epsilon: Float): Boolean {
+        fun Compare(a: idJointMat, epsilon: Float): Boolean {
             var i: Int
             i = 0
             while (i < 12) {
-                if (Math.abs(mat[i] - a.mat[i]) > epsilon) {
+                if (abs(mat[i] - a.mat[i]) > epsilon) {
                     return false
                 }
                 i++
@@ -224,7 +217,7 @@ class JointTransform {
         //public	bool			operator!=(	const idJointMat &a ) const;					// exact compare, no epsilon
         override fun hashCode(): Int {
             var hash = 3
-            hash = 71 * hash + Arrays.hashCode(mat)
+            hash = 71 * hash + mat.contentHashCode()
             return hash
         }
 
@@ -235,11 +228,11 @@ class JointTransform {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idJointMat?
-            return Arrays.equals(mat, other.mat)
+            val other = obj as idJointMat
+            return mat.contentEquals(other.mat)
         }
 
-        fun ToMat3(): idMat3? {
+        fun ToMat3(): idMat3 {
             return idMat3(
                 mat[0 * 4 + 0], mat[1 * 4 + 0], mat[2 * 4 + 0],
                 mat[0 * 4 + 1], mat[1 * 4 + 1], mat[2 * 4 + 1],
@@ -247,7 +240,7 @@ class JointTransform {
             )
         }
 
-        fun ToVec3(): idVec3? {
+        fun ToVec3(): idVec3 {
             return idVec3(
                 mat[0 * 4 + 3],
                 mat[1 * 4 + 3],
@@ -268,10 +261,10 @@ class JointTransform {
             if (trace > 0.0f) {
                 t = trace + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
-                jq.q.set(3, s * t)
-                jq.q.set(0, (mat[1 * 4 + 2] - mat[2 * 4 + 1]) * s)
-                jq.q.set(1, (mat[2 * 4 + 0] - mat[0 * 4 + 2]) * s)
-                jq.q.set(2, (mat[0 * 4 + 1] - mat[1 * 4 + 0]) * s)
+                jq.q[3] = s * t
+                jq.q[0] = (mat[1 * 4 + 2] - mat[2 * 4 + 1]) * s
+                jq.q[1] = (mat[2 * 4 + 0] - mat[0 * 4 + 2]) * s
+                jq.q[2] = (mat[0 * 4 + 1] - mat[1 * 4 + 0]) * s
             } else {
                 i = 0
                 if (mat[1 * 4 + 1] > mat[0 * 4 + 0]) {
@@ -284,19 +277,19 @@ class JointTransform {
                 k = next[j]
                 t = mat[i * 4 + i] - (mat[j * 4 + j] + mat[k * 4 + k]) + 1.0f
                 s = idMath.InvSqrt(t) * 0.5f
-                jq.q.set(i, s * t)
-                jq.q.set(3, (mat[j * 4 + k] - mat[k * 4 + j]) * s)
-                jq.q.set(j, (mat[i * 4 + j] + mat[j * 4 + i]) * s)
-                jq.q.set(k, (mat[i * 4 + k] + mat[k * 4 + i]) * s)
+                jq.q[i] = s * t
+                jq.q[3] = (mat[j * 4 + k] - mat[k * 4 + j]) * s
+                jq.q[j] = (mat[i * 4 + j] + mat[j * 4 + i]) * s
+                jq.q[k] = (mat[i * 4 + k] + mat[k * 4 + i]) * s
             }
-            jq.t.set(0, mat[0 * 4 + 3])
-            jq.t.set(1, mat[1 * 4 + 3])
-            jq.t.set(2, mat[2 * 4 + 3])
+            jq.t[0] = mat[0 * 4 + 3]
+            jq.t[1] = mat[1 * 4 + 3]
+            jq.t[2] = mat[2 * 4 + 3]
             return jq
         }
 
         //public	const float *	ToFloatPtr( void ) const;
-        fun ToFloatPtr(): FloatArray? {
+        fun ToFloatPtr(): FloatArray {
             return mat
         }
 

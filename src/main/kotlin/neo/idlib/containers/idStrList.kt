@@ -2,6 +2,7 @@ package neo.idlib.containers
 
 import neo.idlib.Text.Str.idStr
 import java.util.stream.Collectors
+import kotlin.math.min
 
 /*
 ===============================================================================
@@ -104,7 +105,7 @@ open class idStrList : Comparator<idStr> {
             // not changing the size, so just exit
             return
         }
-        val targetSize = Math.min(stringsList.size, newSize)
+        val targetSize = min(stringsList.size, newSize)
         stringsList = stringsList.stream().limit(targetSize.toLong()).collect(Collectors.toList())
     }
 
@@ -133,7 +134,7 @@ open class idStrList : Comparator<idStr> {
         return a.Icmp(b)
     }
 
-    fun findIndex(testVal: idStr?): Int? {
+    fun Find(testVal: idStr): Int? {
         val result = stringsList.indexOf(testVal)
         return if (result == -1) null else result
     }
@@ -143,7 +144,7 @@ open class idStrList : Comparator<idStr> {
         if (i >= stringsList.size) {
             i = if (stringsList.isEmpty()) 0 else stringsList.size - 1
         }
-        return stringsList.get(i)
+        return stringsList[i]
     }
 
     fun set(associatedModels: idStrList) {
@@ -223,7 +224,7 @@ open class idStrList : Comparator<idStr> {
      ================
      */
         fun idStrListSortPaths(strings: idStrList) {
-            if (strings.stringsList == null || strings.stringsList.isEmpty()) {
+            if (strings.stringsList.isEmpty()) {
                 return
             }
             strings.getStringsList().sortWith { a: idStr, b: idStr -> a.IcmpPath(b.toString()) }

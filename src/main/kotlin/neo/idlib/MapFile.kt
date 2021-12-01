@@ -90,7 +90,7 @@ object MapFile {
     open class idMapPrimitive {
         //
         //
-        var epairs: idDict? = null
+        val epairs: idDict = idDict()
         var type: Int
 
         //public	virtual					~idMapPrimitive( void ) { }

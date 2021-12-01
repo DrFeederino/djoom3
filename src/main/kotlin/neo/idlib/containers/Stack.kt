@@ -1,7 +1,5 @@
 package neo.idlib.containers
 
-import neo.idlib.containers.Stack.idStackTemplate.Companion.STACK_BLOCK_SIZE
-
 
 /**
  *
@@ -21,11 +19,11 @@ class Stack {
         private var top = 0
 
         //
-        fun Add(element: T?) { //push
+        fun Add(element: T) { //push
             if (top >= stack.size) { //reached top of stack
                 expand()
             }
-            stack.get(top++) = element
+            stack[top++] = element
         }
 
         fun Get(): T? { //pop
@@ -35,7 +33,7 @@ class Stack {
             if (stack.size - STACK_BLOCK_SIZE > 0 && top < stack.size - STACK_BLOCK_SIZE) { //reached block threshold
                 shrink()
             }
-            return stack.get(top--)
+            return stack[top--]
         }
 
         private fun expand() {
@@ -50,10 +48,6 @@ class Stack {
             System.arraycopy(temp, 0, stack, 0, stack.size)
         }
 
-        companion object {
-            //        private T bottom;
-            //
-            private const val STACK_BLOCK_SIZE = 10
-        }
+        private val STACK_BLOCK_SIZE = 10
     }
 }

@@ -9,6 +9,7 @@ import neo.idlib.geometry.Surface.idSurface
 import neo.idlib.math.Math_h
 import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
+import kotlin.math.abs
 
 /**
  *
@@ -30,7 +31,7 @@ class Surface_Patch {
         //
         //
         //
-        var epairs: idDict? = null
+        val epairs: idDict = idDict()
         protected var expanded // true if vertices are spaced out
                 = false
         protected var height // height of patch
@@ -66,11 +67,11 @@ class Surface_Patch {
         }
 
         constructor(patch: idSurface_Patch) {
-            this.oSet(patch)
+            this.set(patch)
         }
 
         constructor(patch: idMapPrimitive) {
-            this.oSet(patch)
+            this.set(patch)
         }
 
         @Throws(Exception::class)
@@ -136,20 +137,10 @@ class Surface_Patch {
                 while (i < height) {
                     l = 0
                     while (l < 3) {
-                        prevxyz.set(
-                            1,
-                            verts.get(i * maxWidth + j + 1).xyz.get(l) - verts.get(i * maxWidth + j).xyz.get(l)
-                        )
-                        nextxyz.set(
-                            1,
-                            verts.get(i * maxWidth + j + 2).xyz.get(l) - verts.get(i * maxWidth + j + 1).xyz.get(l)
-                        )
-                        midxyz.set(
-                            1,
-                            (verts.get(i * maxWidth + j).xyz.get(l) + verts.get(i * maxWidth + j + 1).xyz.get(l) * 2.0f + verts.get(
-                                i * maxWidth + j + 2
-                            ).xyz.get(l)) * 0.25f
-                        )
+                        prevxyz[1] = verts[i * maxWidth + j + 1].xyz[l] - verts[i * maxWidth + j].xyz[l]
+                        nextxyz[1] = verts[i * maxWidth + j + 2].xyz[l] - verts[i * maxWidth + j + 1].xyz[l]
+                        midxyz[1] =
+                            (verts[i * maxWidth + j].xyz[l] + verts[i * maxWidth + j + 1].xyz[l] * 2.0f + verts[i * maxWidth + j + 2].xyz[l]) * 0.25f
                         l++
                     }
                     if (maxLength > 0.0f) {
@@ -159,7 +150,7 @@ class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta.plusAssign(verts.get(i * maxWidth + j + 1).xyz.minus(midxyz))
+                    delta.plusAssign(verts[i * maxWidth + j + 1].xyz.minus(midxyz))
                     if (delta.LengthSqr() > maxHorizontalErrorSqr) {
                         break
                     }
@@ -177,17 +168,17 @@ class Surface_Patch {
                 width += 2
                 i = 0
                 while (i < height) {
-                    LerpVert(verts.get(i * maxWidth + j), verts.get(i * maxWidth + j + 1), prev)
-                    LerpVert(verts.get(i * maxWidth + j + 1), verts.get(i * maxWidth + j + 2), next)
+                    LerpVert(verts[i * maxWidth + j], verts[i * maxWidth + j + 1], prev)
+                    LerpVert(verts[i * maxWidth + j + 1], verts[i * maxWidth + j + 2], next)
                     LerpVert(prev, next, mid)
                     k = width - 1
                     while (k > j + 3) {
-                        verts.set(i * maxWidth + k, verts.get(i * maxWidth + k - 2))
+                        verts[i * maxWidth + k] = verts[i * maxWidth + k - 2]
                         k--
                     }
-                    verts.set(i * maxWidth + j + 1, prev)
-                    verts.set(i * maxWidth + j + 2, mid)
-                    verts.set(i * maxWidth + j + 3, next)
+                    verts[i * maxWidth + j + 1] = prev
+                    verts[i * maxWidth + j + 2] = mid
+                    verts[i * maxWidth + j + 3] = next
                     i++
                 }
 
@@ -205,22 +196,10 @@ class Surface_Patch {
                 while (i < width) {
                     l = 0
                     while (l < 3) {
-                        prevxyz.set(
-                            1,
-                            verts.get((j + 1) * maxWidth + i).xyz.get(l) - verts.get(j * maxWidth + i).xyz.get(l)
-                        )
-                        nextxyz.set(
-                            1,
-                            verts.get((j + 2) * maxWidth + i).xyz.get(l) - verts.get((j + 1) * maxWidth + i).xyz.get(
-                                l
-                            )
-                        )
-                        midxyz.set(
-                            1,
-                            (verts.get(j * maxWidth + i).xyz.get(l) + verts.get((j + 1) * maxWidth + i).xyz.get(l) * 2.0f + verts.get(
-                                (j + 2) * maxWidth + i
-                            ).xyz.get(l)) * 0.25f
-                        )
+                        prevxyz[1] = verts[(j + 1) * maxWidth + i].xyz[l] - verts[j * maxWidth + i].xyz[l]
+                        nextxyz[1] = verts[(j + 2) * maxWidth + i].xyz[l] - verts[(j + 1) * maxWidth + i].xyz[l]
+                        midxyz[1] =
+                            (verts[j * maxWidth + i].xyz[l] + verts[(j + 1) * maxWidth + i].xyz[l] * 2.0f + verts[(j + 2) * maxWidth + i].xyz[l]) * 0.25f
                         l++
                     }
                     if (maxLength > 0.0f) {
@@ -230,7 +209,7 @@ class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta.set(verts.get((j + 1) * maxWidth + i).xyz.minus(midxyz))
+                    delta.set(verts[(j + 1) * maxWidth + i].xyz.minus(midxyz))
                     if (delta.LengthSqr() > maxVerticalErrorSqr) {
                         break
                     }
@@ -248,17 +227,17 @@ class Surface_Patch {
                 height += 2
                 i = 0
                 while (i < width) {
-                    LerpVert(verts.get(j * maxWidth + i), verts.get((j + 1) * maxWidth + i), prev)
-                    LerpVert(verts.get((j + 1) * maxWidth + i), verts.get((j + 2) * maxWidth + i), next)
+                    LerpVert(verts[j * maxWidth + i], verts[(j + 1) * maxWidth + i], prev)
+                    LerpVert(verts[(j + 1) * maxWidth + i], verts[(j + 2) * maxWidth + i], next)
                     LerpVert(prev, next, mid)
                     k = height - 1
                     while (k > j + 3) {
-                        verts.set(k * maxWidth + i, verts.get((k - 2) * maxWidth + i))
+                        verts[k * maxWidth + i] = verts[(k - 2) * maxWidth + i]
                         k--
                     }
-                    verts.set((j + 1) * maxWidth + i, prev)
-                    verts.set((j + 2) * maxWidth + i, mid)
-                    verts.set((j + 3) * maxWidth + i, next)
+                    verts[(j + 1) * maxWidth + i] = prev
+                    verts[(j + 2) * maxWidth + i] = mid
+                    verts[(j + 3) * maxWidth + i] = next
                     i++
                 }
 
@@ -274,7 +253,7 @@ class Surface_Patch {
             if (genNormals) {
                 i = 0
                 while (i < width * height) {
-                    verts.get(i).normal.Normalize()
+                    verts[i].normal.Normalize()
                     i++
                 }
             }
@@ -296,10 +275,10 @@ class Surface_Patch {
             var j: Int
             var k: Int
             var l: Int
-            val sample = Array<Array<idDrawVert?>?>(3) { arrayOfNulls<idDrawVert?>(3) }
+            val sample = Array(3) { Array(3) { idDrawVert() } }
             val outWidth = (width - 1) / 2 * horzSubdivisions + 1
             val outHeight = (height - 1) / 2 * vertSubdivisions + 1
-            val dv = arrayOfNulls<idDrawVert?>(outWidth * outHeight)
+            val dv = Array(outWidth * outHeight) { idDrawVert() }
 
             // generate normals for the control mesh
             if (genNormals) {
@@ -315,7 +294,7 @@ class Surface_Patch {
                     while (k < 3) {
                         l = 0
                         while (l < 3) {
-                            sample[k].get(l) = verts.get((j + l) * width + i + k)
+                            sample[k][l] = verts[(j + l) * width + i + k]
                             l++
                         }
                         k++
@@ -330,7 +309,7 @@ class Surface_Patch {
             verts.SetNum(outWidth * outHeight)
             i = 0
             while (i < outWidth * outHeight) {
-                verts.set(i, dv[i])
+                verts[i] = dv[i]
                 i++
             }
 
@@ -350,7 +329,7 @@ class Surface_Patch {
             if (genNormals) {
                 i = 0
                 while (i < width * height) {
-                    verts.get(i).normal.Normalize()
+                    verts[i].normal.Normalize()
                     i++
                 }
             }
@@ -375,9 +354,9 @@ class Surface_Patch {
             while (i < width) {
                 j = 1
                 while (j < height) {
-                    LerpVert(verts.get(j * maxWidth + i), verts.get((j + 1) * maxWidth + i), prev)
-                    LerpVert(verts.get(j * maxWidth + i), verts.get((j - 1) * maxWidth + i), next)
-                    LerpVert(prev, next, verts.get(j * maxWidth + i))
+                    LerpVert(verts[j * maxWidth + i], verts[(j + 1) * maxWidth + i], prev)
+                    LerpVert(verts[j * maxWidth + i], verts[(j - 1) * maxWidth + i], next)
+                    LerpVert(prev, next, verts[j * maxWidth + i])
                     j += 2
                 }
                 i++
@@ -386,9 +365,9 @@ class Surface_Patch {
             while (j < height) {
                 i = 1
                 while (i < width) {
-                    LerpVert(verts.get(j * maxWidth + i), verts.get(j * maxWidth + i + 1), prev)
-                    LerpVert(verts.get(j * maxWidth + i), verts.get(j * maxWidth + i - 1), next)
-                    LerpVert(prev, next, verts.get(j * maxWidth + i))
+                    LerpVert(verts[j * maxWidth + i], verts[j * maxWidth + i + 1], prev)
+                    LerpVert(verts[j * maxWidth + i], verts[j * maxWidth + i - 1], next)
+                    LerpVert(prev, next, verts[j * maxWidth + i])
                     i += 2
                 }
                 j++
@@ -417,10 +396,10 @@ class Surface_Patch {
                 i = 0
                 while (i < height) {
                     ProjectPointOntoVector(
-                        verts.get(i * maxWidth + j).xyz,
-                        verts.get(i * maxWidth + j - 1).xyz, verts.get(i * maxWidth + j + 1).xyz, proj
+                        verts[i * maxWidth + j].xyz,
+                        verts[i * maxWidth + j - 1].xyz, verts[i * maxWidth + j + 1].xyz, proj
                     )
-                    dir.set(verts.get(i * maxWidth + j).xyz.minus(proj))
+                    dir.set(verts[i * maxWidth + j].xyz.minus(proj))
                     len = dir.LengthSqr()
                     if (len > maxLength) {
                         maxLength = len
@@ -433,7 +412,7 @@ class Surface_Patch {
                     while (i < height) {
                         k = j
                         while (k < width) {
-                            verts.set(i * maxWidth + k, verts.get(i * maxWidth + k + 1))
+                            verts[i * maxWidth + k] = verts[i * maxWidth + k + 1]
                             k++
                         }
                         i++
@@ -448,10 +427,10 @@ class Surface_Patch {
                 i = 0
                 while (i < width) {
                     ProjectPointOntoVector(
-                        verts.get(j * maxWidth + i).xyz,
-                        verts.get((j - 1) * maxWidth + i).xyz, verts.get((j + 1) * maxWidth + i).xyz, proj
+                        verts[j * maxWidth + i].xyz,
+                        verts[(j - 1) * maxWidth + i].xyz, verts[(j + 1) * maxWidth + i].xyz, proj
                     )
-                    dir.set(verts.get(j * maxWidth + i).xyz.minus(proj))
+                    dir.set(verts[j * maxWidth + i].xyz.minus(proj))
                     len = dir.LengthSqr()
                     if (len > maxLength) {
                         maxLength = len
@@ -464,7 +443,7 @@ class Surface_Patch {
                     while (i < width) {
                         k = j
                         while (k < height) {
-                            verts.set(k * maxWidth + i, verts.get((k + 1) * maxWidth + i))
+                            verts[k * maxWidth + i] = verts[(k + 1) * maxWidth + i]
                             k++
                         }
                         i++
@@ -491,7 +470,7 @@ class Surface_Patch {
             while (j >= 0) {
                 i = maxWidth - 1
                 while (i >= 0) {
-                    verts.set(j * newWidth + i, verts.get(j * maxWidth + i))
+                    verts[j * newWidth + i] = verts[j * maxWidth + i]
                     i--
                 }
                 j--
@@ -515,7 +494,7 @@ class Surface_Patch {
                 while (j >= 0) {
                     i = width - 1
                     while (i >= 0) {
-                        verts.set(j * maxWidth + i, verts.get(j * width + i))
+                        verts[j * maxWidth + i] = verts[j * width + i]
                         i--
                     }
                     j--
@@ -537,7 +516,7 @@ class Surface_Patch {
                 while (j < height) {
                     i = 0
                     while (i < width) {
-                        verts.set(j * width + i, verts.get(j * maxWidth + i))
+                        verts[j * width + i] = verts[j * maxWidth + i]
                         i++
                     }
                     j++
@@ -547,14 +526,14 @@ class Surface_Patch {
         }
 
         // project a point onto a vector to calculate maximum curve error
-        private fun ProjectPointOntoVector(point: idVec3?, vStart: idVec3?, vEnd: idVec3?, vProj: idVec3?) {
+        private fun ProjectPointOntoVector(point: idVec3, vStart: idVec3, vEnd: idVec3, vProj: idVec3) {
             val pVec = idVec3()
             val vec = idVec3()
             pVec.set(point.minus(vStart))
             vec.set(vEnd.minus(vStart))
             vec.Normalize()
             // project onto the directional vector for this segment
-            vProj.set(vStart.oPlus(vec.times(pVec.times(vec))))
+            vProj.set(vStart.plus(vec.times(pVec.times(vec))))
         }
 
         /*
@@ -577,12 +556,12 @@ class Surface_Patch {
             val delta = idVec3()
             var x: Int
             var y: Int
-            val around: Array<idVec3?> = idVec3.Companion.generateArray(8)
+            val around: Array<idVec3> = idVec3.generateArray(8)
             val temp = idVec3()
             val good = BooleanArray(8)
             var wrapWidth: Boolean
             var wrapHeight: Boolean
-            val neighbors = arrayOf<IntArray?>(
+            val neighbors = arrayOf(
                 intArrayOf(0, 1),
                 intArrayOf(1, 1),
                 intArrayOf(1, 0),
@@ -597,11 +576,11 @@ class Surface_Patch {
             //
             // if all points are coplanar, set all normals to that plane
             //
-            val extent: Array<idVec3?> = idVec3.Companion.generateArray(3)
+            val extent: Array<idVec3> = idVec3.generateArray(3)
             val offset: Float
-            extent[0].set(verts.get(width - 1).xyz.minus(verts.get(0).xyz))
-            extent[1].set(verts.get((height - 1) * width + width - 1).xyz.minus(verts.get(0).xyz))
-            extent[2].set(verts.get((height - 1) * width).xyz.minus(verts.get(0).xyz))
+            extent[0].set(verts[width - 1].xyz.minus(verts[0].xyz))
+            extent[1].set(verts[(height - 1) * width + width - 1].xyz.minus(verts[0].xyz))
+            extent[2].set(verts[(height - 1) * width].xyz.minus(verts[0].xyz))
             norm.set(extent[0].Cross(extent[1]))
             if (norm.LengthSqr() == 0.0f) {
                 norm.set(extent[0].Cross(extent[2]))
@@ -612,11 +591,11 @@ class Surface_Patch {
 
             // wrapped patched may not get a valid normal here
             if (norm.Normalize() != 0.0f) {
-                offset = verts.get(0).xyz.times(norm)
+                offset = verts[0].xyz.times(norm)
                 i = 1
                 while (i < width * height) {
-                    val d = verts.get(i).xyz.times(norm)
-                    if (Math.abs(d - offset) > COPLANAR_EPSILON) {
+                    val d = verts[i].xyz.times(norm)
+                    if (abs(d - offset) > COPLANAR_EPSILON) {
                         break
                     }
                     i++
@@ -625,7 +604,7 @@ class Surface_Patch {
                     // all are coplanar
                     i = 0
                     while (i < width * height) {
-                        verts.get(i).normal.set(norm)
+                        verts[i].normal.set(norm)
                         i++
                     }
                     return
@@ -636,7 +615,7 @@ class Surface_Patch {
             wrapWidth = false
             i = 0
             while (i < height) {
-                delta.set(verts.get(i * width).xyz.minus(verts.get(i * width + width - 1).xyz))
+                delta.set(verts[i * width].xyz.minus(verts[i * width + width - 1].xyz))
                 if (delta.LengthSqr() > Math_h.Square(1.0f)) {
                     break
                 }
@@ -648,7 +627,7 @@ class Surface_Patch {
             wrapHeight = false
             i = 0
             while (i < width) {
-                delta.set(verts.get(i).xyz.minus(verts.get((height - 1) * width + i).xyz))
+                delta.set(verts[i].xyz.minus(verts[(height - 1) * width + i].xyz))
                 if (delta.LengthSqr() > Math_h.Square(1.0f)) {
                     break
                 }
@@ -662,15 +641,15 @@ class Surface_Patch {
                 j = 0
                 while (j < height) {
                     count = 0
-                    base.set(verts.get(j * width + i).xyz)
+                    base.set(verts[j * width + i].xyz)
                     k = 0
                     while (k < 8) {
                         around[k].set(Vector.getVec3_origin())
                         good[k] = false
                         dist = 1
                         while (dist <= 3) {
-                            x = i + neighbors[k].get(0) * dist
-                            y = j + neighbors[k].get(1) * dist
+                            x = i + neighbors[k][0] * dist
+                            y = j + neighbors[k][1] * dist
                             if (wrapWidth) {
                                 if (x < 0) {
                                     x = width - 1 + x
@@ -688,7 +667,7 @@ class Surface_Patch {
                             if (x < 0 || x >= width || y < 0 || y >= height) {
                                 break // edge of patch
                             }
-                            temp.set(verts.get(y * width + x).xyz.minus(base))
+                            temp.set(verts[y * width + x].xyz.minus(base))
                             if (temp.Normalize() == 0.0f) {
                                 dist++
                                 continue  // degenerate edge, get more dist
@@ -721,8 +700,8 @@ class Surface_Patch {
                         //idLib::common->Printf("bad normal\n");
                         count = 1
                     }
-                    verts.get(j * width + i).normal.set(sum)
-                    verts.get(j * width + i).normal.Normalize()
+                    verts[j * width + i].normal.set(sum)
+                    verts[j * width + i].normal.Normalize()
                     j++
                 }
                 i++
@@ -748,12 +727,12 @@ class Surface_Patch {
                     v2 = v1 + 1
                     v3 = v1 + width + 1
                     v4 = v1 + width
-                    indexes.set(index++, v1)
-                    indexes.set(index++, v3)
-                    indexes.set(index++, v2)
-                    indexes.set(index++, v1)
-                    indexes.set(index++, v4)
-                    indexes.set(index++, v3)
+                    indexes[index++] = v1
+                    indexes[index++] = v3
+                    indexes[index++] = v2
+                    indexes[index++] = v1
+                    indexes[index++] = v4
+                    indexes[index++] = v3
                     j++
                 }
                 i++
@@ -762,20 +741,20 @@ class Surface_Patch {
         }
 
         // lerp point from two patch point
-        private fun LerpVert(a: idDrawVert?, b: idDrawVert?, out: idDrawVert?) {
-            out.xyz.set(0, 0.5f * (a.xyz.get(0) + b.xyz.get(0)))
-            out.xyz.set(1, 0.5f * (a.xyz.get(1) + b.xyz.get(1)))
-            out.xyz.set(2, 0.5f * (a.xyz.get(2) + b.xyz.get(2)))
-            out.normal.set(0, 0.5f * (a.normal.get(0) + b.normal.get(0)))
-            out.normal.set(1, 0.5f * (a.normal.get(1) + b.normal.get(1)))
-            out.normal.set(2, 0.5f * (a.normal.get(2) + b.normal.get(2)))
-            out.st.set(0, 0.5f * (a.st.get(0) + b.st.get(0)))
-            out.st.set(1, 0.5f * (a.st.get(1) + b.st.get(1)))
+        private fun LerpVert(a: idDrawVert, b: idDrawVert, out: idDrawVert) {
+            out.xyz[0] = 0.5f * (a.xyz[0] + b.xyz[0])
+            out.xyz[1] = 0.5f * (a.xyz[1] + b.xyz[1])
+            out.xyz[2] = 0.5f * (a.xyz[2] + b.xyz[2])
+            out.normal[0] = 0.5f * (a.normal[0] + b.normal[0])
+            out.normal[1] = 0.5f * (a.normal[1] + b.normal[1])
+            out.normal[2] = 0.5f * (a.normal[2] + b.normal[2])
+            out.st[0] = 0.5f * (a.st[0] + b.st[0])
+            out.st[1] = 0.5f * (a.st[1] + b.st[1])
         }
 
         // sample a single 3x3 patch
-        private fun SampleSinglePatchPoint(ctrl: Array<Array<idDrawVert?>?>?, u: Float, v: Float, out: idDrawVert?) {
-            val vCtrl = Array<FloatArray?>(3) { FloatArray(8) }
+        private fun SampleSinglePatchPoint(ctrl: Array<Array<idDrawVert>>, u: Float, v: Float, out: idDrawVert) {
+            val vCtrl = Array<FloatArray>(3) { FloatArray(8) }
             var vPoint: Int
             var axis: Int
 
@@ -791,22 +770,22 @@ class Surface_Patch {
                     var qB: Float
                     var qC: Float
                     if (axis < 3) {
-                        a = ctrl.get(0).get(vPoint).xyz.get(axis)
-                        b = ctrl.get(1).get(vPoint).xyz.get(axis)
-                        c = ctrl.get(2).get(vPoint).xyz.get(axis)
+                        a = ctrl[0][vPoint].xyz[axis]
+                        b = ctrl[1][vPoint].xyz[axis]
+                        c = ctrl[2][vPoint].xyz[axis]
                     } else if (axis < 6) {
-                        a = ctrl.get(0).get(vPoint).normal.get(axis - 3)
-                        b = ctrl.get(1).get(vPoint).normal.get(axis - 3)
-                        c = ctrl.get(2).get(vPoint).normal.get(axis - 3)
+                        a = ctrl[0][vPoint].normal[axis - 3]
+                        b = ctrl[1][vPoint].normal[axis - 3]
+                        c = ctrl[2][vPoint].normal[axis - 3]
                     } else {
-                        a = ctrl.get(0).get(vPoint).st.get(axis - 6)
-                        b = ctrl.get(1).get(vPoint).st.get(axis - 6)
-                        c = ctrl.get(2).get(vPoint).st.get(axis - 6)
+                        a = ctrl[0][vPoint].st[axis - 6]
+                        b = ctrl[1][vPoint].st[axis - 6]
+                        c = ctrl[2][vPoint].st[axis - 6]
                     }
                     qA = a - 2.0f * b + c
                     qB = 2.0f * b - 2.0f * a
                     qC = a
-                    vCtrl[vPoint].get(axis) = qA * u * u + qB * u + qC
+                    vCtrl[vPoint][axis] = qA * u * u + qB * u + qC
                     axis++
                 }
                 vPoint++
@@ -821,31 +800,31 @@ class Surface_Patch {
                 var qA: Float
                 var qB: Float
                 var qC: Float
-                a = vCtrl[0].get(axis)
-                b = vCtrl[1].get(axis)
-                c = vCtrl[2].get(axis)
+                a = vCtrl[0][axis]
+                b = vCtrl[1][axis]
+                c = vCtrl[2][axis]
                 qA = a - 2.0f * b + c
                 qB = 2.0f * b - 2.0f * a
                 qC = a
                 if (axis < 3) {
-                    out.xyz.set(axis, qA * v * v + qB * v + qC)
+                    out.xyz[axis] = qA * v * v + qB * v + qC
                 } else if (axis < 6) {
-                    out.normal.set(axis - 3, qA * v * v + qB * v + qC)
+                    out.normal[axis - 3] = qA * v * v + qB * v + qC
                 } else {
-                    out.st.set(axis - 6, qA * v * v + qB * v + qC)
+                    out.st[axis - 6] = qA * v * v + qB * v + qC
                 }
                 axis++
             }
         }
 
         private fun SampleSinglePatch(
-            ctrl: Array<Array<idDrawVert?>?>?,
+            ctrl: Array<Array<idDrawVert>>,
             baseCol: Int,
             baseRow: Int,
             width: Int,
             horzSub: Int,
             vertSub: Int,
-            outVerts: Array<idDrawVert?>?
+            outVerts: Array<idDrawVert>
         ) {
             var horzSub = horzSub
             var vertSub = vertSub
@@ -861,14 +840,14 @@ class Surface_Patch {
                 while (j < vertSub) {
                     u = i.toFloat() / (horzSub - 1)
                     v = j.toFloat() / (vertSub - 1)
-                    SampleSinglePatchPoint(ctrl, u, v, outVerts.get((baseRow + j) * width + i + baseCol))
+                    SampleSinglePatchPoint(ctrl, u, v, outVerts[(baseRow + j) * width + i + baseCol])
                     j++
                 }
                 i++
             }
         }
 
-        private fun oSet(patch: idSurface_Patch?) {
+        private fun set(patch: idSurface_Patch) {
             width = patch.width
             height = patch.height
             maxWidth = patch.maxWidth
@@ -877,9 +856,9 @@ class Surface_Patch {
             expanded = patch.expanded
         }
 
-        private fun oSet(patch: idMapPrimitive) {
+        private fun set(patch: idMapPrimitive) {
             type = patch.GetType()
-            epairs = patch.epairs
+            epairs.oSet(patch.epairs)
         }
 
         companion object {

@@ -228,7 +228,7 @@ object List {
             granularity = other.granularity
             type = other.type
             if (size != 0) {
-                list = Array<T>(size)
+                list = arrayOfNulls<Any>(size) as Array<T>
                 i = 0
                 while (i < num) {
                     list!![i] = other.list!![i]
@@ -266,23 +266,6 @@ object List {
             return list!!.set(index, value) as T
         }
 
-        fun oPluSet(index: Int, value: T?): T? {
-            assert(index >= 0)
-            assert(index < num)
-
-//            if (list[index] instanceof Double) {
-//                return list[index] = (T) (Object) ((Double) list[index] + (Double) value);//TODO:test thsi shit
-//            }
-//            if (list[index] instanceof Float) {
-//                return list[index] = (T) (Object) ((Float) list[index] + (Float) value);//TODO:test thsi shit
-//            }
-//            if (list[index] instanceof Integer) {
-            return ((list.get(index) as Number?).toDouble() + (value as Number?).toDouble()) as T?. also {
-                list.get(index) = it //TODO:test thsi shit
-            }
-            //            }
-        }
-
         //
         /*
          ================
@@ -310,7 +293,7 @@ object List {
          ================
          */
         fun Resize(newsize: Int) {                                // resizes list to the given number of elements
-            val temp: Array<T?>?
+            val temp: Array<T>
             var i: Int
             assert(newsize >= 0)
 
@@ -323,17 +306,17 @@ object List {
                 // not changing the size, so just exit
                 return
             }
-            temp = list
+            temp = list!!
             size = newsize
             if (size < num) {
                 num = size
             }
 
             // copy the old list into our new one
-            list = arrayOfNulls<Any?>(size) as Array<T?>
+            list = arrayOfNulls<Any>(size) as Array<T>
             i = 0
             while (i < num) {
-                list.get(i) = temp.get(i)
+                list!![i] = temp[i]
                 i++
             }
 
@@ -352,7 +335,7 @@ object List {
          ================
          */
         fun Resize(newsize: Int, newgranularity: Int) {            // resizes list and sets new granularity
-            val temp: Array<T?>?
+            val temp: Array<T>
             var i: Int
             assert(newsize >= 0)
             assert(newgranularity > 0)
@@ -363,17 +346,17 @@ object List {
                 Clear()
                 return
             }
-            temp = list
+            temp = list!!
             size = newsize
             if (size < num) {
                 num = size
             }
 
             // copy the old list into our new one
-            list = arrayOfNulls<Any?>(size) as Array<T?>
+            list = arrayOfNulls<Any>(size) as Array<T>
             i = 0
             while (i < num) {
-                list.get(i) = temp.get(i)
+                list!![i] = temp[i]
                 i++
             }
 
@@ -432,7 +415,7 @@ object List {
          */
         fun AssureSize(
             newSize: Int,
-            initValue: T?
+            initValue: T
         ) {    // assure list has given number of elements and initialize any new elements
             var newSize = newSize
             val newNum = newSize
@@ -445,7 +428,7 @@ object List {
                 num = size
                 Resize(newSize)
                 for (i in num until newSize) {
-                    list.get(i) = initValue
+                    list!![i] = initValue
                 }
             }
             num = newNum
@@ -463,7 +446,7 @@ object List {
          */
         fun AssureSizeAlloc(
             newSize: Int,  /*new_t*/
-            allocator: Class<*>?
+            allocator: Class<T>
         ) {    // assure the pointer list has the given number of elements and allocate any new elements
             var newSize = newSize
             val newNum = newSize
@@ -477,7 +460,7 @@ object List {
                 Resize(newSize)
                 for (i in num until newSize) {
                     try {
-                        list.get(i) =  /*( * allocator) ()*/
+                        list!![i] =  /*( * allocator) ()*/
                             allocator.newInstance() as T //TODO: check if any of this is necessary?
                     } catch (ex: InstantiationException) {
                         Logger.getLogger(List::class.java.name).log(Level.SEVERE, null, ex)
@@ -502,11 +485,11 @@ object List {
          ================
          */
         @Deprecated("")
-        fun getList(): Array<T?>? {                                        // returns a pointer to the list
+        fun getList(): Array<T>? {                                        // returns a pointer to the list
             return list
         }
 
-        fun <T> getList(type: Class<out Array<T?>?>?): Array<T?>? {
+        fun <T> getList(type: Class<out Array<T>>): Array<T>? {
             return if (num == 0) null else Arrays.copyOf(list, num, type)
 
             // returns a pointer to the list
@@ -521,14 +504,14 @@ object List {
          ================
          */
         fun Alloc(): T? {                                    // returns reference to a new data element at the end of the list
-            if (TempDump.NOT(*list)) {
+            if (TempDump.NOT(list)) {
                 Resize(granularity)
             }
             if (num == size) {
                 Resize(size + granularity)
             }
             try {
-                return type.newInstance().also { list.get(num++) = it }
+                return type.newInstance().also { list!![num++] = it }
             } catch (ex: InstantiationException) {
 //                Logger.getLogger(List.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ex: IllegalAccessException) {
@@ -545,8 +528,8 @@ object List {
          Returns the index of the new element.
          ================
          */
-        fun Append(obj: T?): Int { // append element
-            if (TempDump.NOT(*list)) {
+        fun Append(obj: T): Int { // append element
+            if (TempDump.NOT(list)) {
                 Resize(granularity)
             }
             if (num == size) {
@@ -557,7 +540,7 @@ object List {
                 newsize = size + granularity
                 Resize(newsize - newsize % granularity)
             }
-            list.get(num) = obj
+            list!![num] = obj
             num++
             return num - 1
         }
@@ -571,8 +554,8 @@ object List {
          Returns the size of the new combined list
          ================
          */
-        fun Append(other: idList<T?>?): Int {                // append list
-            if (TempDump.NOT(*list)) {
+        fun Append(other: idList<T>): Int {                // append list
+            if (TempDump.NOT(list)) {
                 if (granularity == 0) {    // this is a hack to fix our memset classes
                     granularity = 16
                 }
@@ -580,7 +563,7 @@ object List {
             }
             val n = other.Num()
             for (i in 0 until n) {
-                Append(other.get(i))
+                Append(other[i])
             }
             return Num()
         }
@@ -592,7 +575,7 @@ object List {
          Adds the data to the list if it doesn't already exist.  Returns the index of the data in the list.
          ================
          */
-        fun AddUnique(obj: T?): Int {            // add unique element
+        fun AddUnique(obj: T): Int {            // add unique element
             var index: Int
             index = FindIndex(obj)
             if (index < 0) {
@@ -612,9 +595,9 @@ object List {
          ================
          */
         @JvmOverloads
-        fun Insert(obj: T?, index: Int = 0): Int {            // insert the element at the given index
+        fun Insert(obj: T, index: Int = 0): Int {            // insert the element at the given index
             var index = index
-            if (TempDump.NOT(*list)) {
+            if (TempDump.NOT(list)) {
                 Resize(granularity)
             }
             if (num == size) {
@@ -631,10 +614,10 @@ object List {
                 index = num
             }
             for (i in num downTo index + 1) {
-                list.get(i) = list.get(i - 1)
+                list!![i] = list!![i - 1]
             }
             num++
-            list.get(index) = obj
+            list!![index] = obj
             return index
         }
 
@@ -645,11 +628,11 @@ object List {
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        fun FindIndex(obj: T?): Int {                // find the index for the given element
+        fun FindIndex(obj: T): Int {                // find the index for the given element
             var i: Int
             i = 0
             while (i < num) {
-                if (list.get(i) == obj) {
+                if (list!![i] == obj) {
                     return i
                 }
                 i++
@@ -666,7 +649,7 @@ object List {
          Searches for the specified data in the list and returns it's address. Returns NULL if the data is not found.
          ================
          */
-        fun Find(obj: T?): Int? {                        // find pointer to the given element
+        fun Find(obj: T): Int? {                        // find pointer to the given element
             val i: Int
             i = FindIndex(obj)
             return if (i >= 0) {
@@ -688,7 +671,7 @@ object List {
             var i: Int
             i = 0
             while (i < num) {
-                if (TempDump.NOT(list.get(i))) {
+                if (TempDump.NOT(list?.get(i))) {
                     return i
                 }
                 i++
@@ -708,7 +691,7 @@ object List {
          but remains silent in release builds.
          ================
          */
-        fun IndexOf(objptr: T?): Int {                    // returns the index for the pointer to an element in the list
+        fun IndexOf(objptr: T): Int {                    // returns the index for the pointer to an element in the list
             val index: Int
 
 //            index = objptr - list;
@@ -738,7 +721,7 @@ object List {
             num--
             i = index
             while (i < num) {
-                list.get(i) = list.get(i + 1)
+                list!![i] = list!![i + 1]
                 i++
             }
             return true
@@ -753,7 +736,7 @@ object List {
          the element is not destroyed, so any memory used by it may not be freed until the destruction of the list.
          ================
          */
-        fun Remove(obj: T?): Boolean {                            // remove the element
+        fun Remove(obj: T): Boolean {                            // remove the element
             val index: Int
             index = FindIndex(obj)
             return if (index >= 0) {
@@ -770,32 +753,32 @@ object List {
          ================
          */
         fun Sort() {
-            if (TempDump.NOT(*list)) {
+            if (TempDump.NOT(list)) {
                 return
             }
-            if (list.get(0) is idPoolStr) {
-                this.Sort(object : cmp_t<idStr?> {
-                    override fun compare(a: idStr?, b: idStr?): Int {
+            if (list!![0] is idPoolStr) {
+                this.Sort(object : cmp_t<idStr> {
+                    override fun compare(a: idStr, b: idStr): Int {
                         return a.Icmp(b)
                     }
-                })
-            } else if (list.get(0) is idInternalCVar) {
-                this.Sort(CVarSystem.idListSortCompare())
-            } else if (list.get(0) is commandDef_s) {
-                this.Sort(CmdSystem.idListSortCompare())
+                } as cmp_t<T>)
+            } else if (list!![0] is idInternalCVar) {
+                this.Sort(CVarSystem.idListSortCompare() as cmp_t<T>) // lol i hope it works
+            } else if (list!![0] is commandDef_s) {
+                this.Sort(CmdSystem.idListSortCompare() as cmp_t<T>)
             } else {
-                this.Sort(neo.idlib.containers.List.idListSortCompare<T?>())
+                this.Sort(idListSortCompare())
             }
         }
 
-        fun Sort(compare: cmp_t<*>? /*= ( cmp_t * )&idListSortCompare<T> */) {
+        fun Sort(sortCompareFun: cmp_t<T> /*= ( cmp_t * )&idListSortCompare<T> */) {
 
 //	typedef int cmp_c(const void *, const void *);
 //
 //	cmp_c *vCompare = (cmp_c *)compare;
 //	qsort( ( void * )list, ( size_t )num, sizeof( T ), vCompare );
             if (list != null) {
-                Arrays.sort(list, compare)
+                Arrays.sort(list, sortCompareFun)
             }
         }
 
@@ -810,11 +793,11 @@ object List {
         fun SortSubSection(
             startIndex: Int,
             endIndex: Int,
-            compare: cmp_t<*>? = neo.idlib.containers.List.idListSortCompare<T?>() /*= ( cmp_t * )&idListSortCompare<T>*/
+            compare: cmp_t<T> = idListSortCompare<T>() /*= ( cmp_t * )&idListSortCompare<T>*/
         ) {
             var startIndex = startIndex
             var endIndex = endIndex
-            if (TempDump.NOT(*list)) {
+            if (TempDump.NOT(list)) {
                 return
             }
             if (startIndex < 0) {
@@ -840,15 +823,15 @@ object List {
          Swaps the contents of two lists
          ================
          */
-        fun Swap(other: idList<T?>?) {                        // swap the contents of the lists
+        fun Swap(other: idList<T>) {                        // swap the contents of the lists
             val swap_num: Int
             val swap_size: Int
             val swap_granularity: Int
-            val swap_list: Array<T?>?
+            val swap_list: Array<T>
             swap_num = num
             swap_size = size
             swap_granularity = granularity
-            swap_list = list
+            swap_list = list!!
             num = other.num
             size = other.size
             granularity = other.granularity
@@ -877,20 +860,20 @@ object List {
             while (i < num) {
 
 //		delete list[i ];
-                list.get(i) = null
+                //list[i] = null
                 i++
             }
             if (clear) {
                 Clear()
             } else {
 //		memset( list, 0, size * sizeof( T ) );
-                list = arrayOfNulls<Any?>(list.size) as Array<T?>
+                list = arrayOfNulls<Any>(list!!.size) as Array<T>
             }
         }
 
         companion object {
             //TODO: implement java.util.List
-            const val SIZE = (Integer.SIZE
+            val SIZE = (Integer.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
                     + TempDump.CPP_class.Pointer.SIZE) //T
@@ -900,9 +883,9 @@ object List {
         }
     }
 
-    private class idListSortCompare<type> : cmp_t<type?> {
-        override fun compare(a: type?, b: type?): Int {
-            return reflects._Minus(a, b)
+    private class idListSortCompare<T> : cmp_t<T> {
+        override fun compare(a: T, b: T): Int {
+            return reflects._Minus(a as Any, b as Any) as Int
         }
     }
 }

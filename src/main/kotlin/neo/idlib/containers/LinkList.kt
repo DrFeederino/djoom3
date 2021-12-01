@@ -15,10 +15,10 @@ class LinkList {
      */
     class idLinkList<T>() {
         private val DBG_count = DBG_counter++
-        private var head: idLinkList<*>?
-        private var next: idLinkList<*>?
+        private var head: idLinkList<T>
+        private var next: idLinkList<T>?
         private var owner: T? = null
-        private var prev: idLinkList<*>?
+        private var prev: idLinkList<T>?
 
         constructor(owner: T?) : this() {
             this.owner = owner
@@ -56,13 +56,13 @@ class LinkList {
          ================
          */
         fun Num(): Int {
-            var node: idLinkList<T?>?
+            var node: idLinkList<T>
             var num: Int
             num = 0
-            node = head.next
+            node = head.next!!
             while (node !== head) {
                 num++
-                node = node.next
+                node = node.next!!
             }
             return num
         }
@@ -77,7 +77,7 @@ class LinkList {
         fun Clear() {
             if (head === this) {
                 while (next !== this) {
-                    next.Remove()
+                    next!!.Remove()
                 }
             } else {
                 Remove()
@@ -92,12 +92,12 @@ class LinkList {
          then the new node is placed at the end of the list.
          ================
          */
-        fun InsertBefore(node: idLinkList<*>?) {
+        fun InsertBefore(node: idLinkList<T>) {
             Remove()
             next = node
             prev = node.prev
             node.prev = this
-            prev.next = this
+            prev!!.next = this
             head = node.head
         }
 
@@ -109,12 +109,12 @@ class LinkList {
          then the new node is placed at the beginning of the list.
          ================
          */
-        fun InsertAfter(node: idLinkList<*>?) {
+        fun InsertAfter(node: idLinkList<T>) {
             Remove()
             prev = node
             next = node.next
             node.next = this
-            next.prev = this
+            next!!.prev = this
             head = node.head
         }
 
@@ -125,7 +125,7 @@ class LinkList {
          Adds node at the end of the list
          ================
          */
-        fun AddToEnd(node: idLinkList<*>?) {
+        fun AddToEnd(node: idLinkList<T>) {
             InsertBefore(node.head)
         }
 
@@ -136,7 +136,7 @@ class LinkList {
          Adds node at the beginning of the list
          ================
          */
-        fun AddToFront(node: idLinkList<*>?) {
+        fun AddToFront(node: idLinkList<T>) {
             InsertAfter(node.head)
         }
 
@@ -148,8 +148,8 @@ class LinkList {
          ================
          */
         fun Remove() {
-            prev.next = next
-            next.prev = prev
+            prev!!.next = next
+            next!!.prev = prev
             next = this
             prev = this
             head = this
@@ -165,7 +165,7 @@ class LinkList {
         fun Next(): T? {
             return if (null == next || next === head) {
                 null
-            } else next!!.owner as T?
+            } else next!!.owner
         }
 
         /*
@@ -178,7 +178,7 @@ class LinkList {
         fun Prev(): T? {
             return if (null == prev || prev === head) {
                 null
-            } else prev!!.owner as T?
+            } else prev!!.owner
         }
 
         //
@@ -200,8 +200,8 @@ class LinkList {
          Sets the object that this node is associated with.
          ================
          */
-        fun SetOwner(`object`: T?) {
-            owner = `object`
+        fun SetOwner(newOwner: T?) {
+            owner = newOwner
         }
 
         //
@@ -213,7 +213,7 @@ class LinkList {
          a pointer to itself.
          ================
          */
-        fun ListHead(): idLinkList<*>? {
+        fun ListHead(): idLinkList<T> {
             return head
         }
 
@@ -224,7 +224,7 @@ class LinkList {
          Returns the next node in the list, or NULL if at the end.
          ================
          */
-        fun NextNode(): idLinkList<*>? {
+        fun NextNode(): idLinkList<T>? {
             return if (next === head) {
                 null
             } else next
@@ -237,7 +237,7 @@ class LinkList {
          Returns the previous node in the list, or NULL if at the beginning.
          ================
          */
-        fun PrevNode(): idLinkList<*>? {
+        fun PrevNode(): idLinkList<T>? {
             return if (prev === head) {
                 null
             } else prev

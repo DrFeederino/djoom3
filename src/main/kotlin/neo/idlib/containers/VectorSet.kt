@@ -4,6 +4,7 @@ import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Vector.idVec
+import kotlin.math.abs
 
 /**
  *
@@ -18,14 +19,14 @@ class VectorSet {
 
      ===============================================================================
      */
-    class idVectorSet<type> : idList<type?> {
+    class idVectorSet<T> : idList<T> {
         //
         //
-        private val dimension: Int
-        private var boxHalfSize /*= new float[dimension]*/: FloatArray?
+        private var dimension: Int = 0
+        private var boxHalfSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
         private var boxHashSize = 0
-        private var boxInvSize /*= new float[dimension]*/: FloatArray?
-        private val hash: idHashIndex? = null
+        private var boxInvSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
+        private val hash: idHashIndex = idHashIndex()
         private var maxs: idVec<*>? = null
         private var mins: idVec<*>? = null
 
@@ -41,18 +42,18 @@ class VectorSet {
 //	memset( boxHalfSize, 0, dimension * sizeof( boxHalfSize[0] ) );
         }
 
-        constructor(mins: idVec<*>?, maxs: idVec<*>?, boxHashSize: Int, initialSize: Int, dimension: Int) {
+        constructor(mins: idVec<*>, maxs: idVec<*>, boxHashSize: Int, initialSize: Int, dimension: Int) {
             this.dimension = dimension
             Init(mins, maxs, boxHashSize, initialSize)
         }
 
         //
         //							// returns total size of allocated memory
-        //public	size_t					Allocated( void ) const { return idList<type>::Allocated() + hash.Allocated(); }
-        //							// returns total size of allocated memory including size of type
+        //public	size_t					Allocated( void ) const { return idList<T>::Allocated() + hash.Allocated(); }
+        //							// returns total size of allocated memory including size of T
         //public	size_t					Size( void ) const { return sizeof( *this ) + Allocated(); }
         //
-        fun Init(mins: idVec<*>?, maxs: idVec<*>?, boxHashSize: Int, initialSize: Int) {
+        fun Init(mins: idVec<*>, maxs: idVec<*>, boxHashSize: Int, initialSize: Int) {
             var i: Int
             var boxSize: Float
             super.AssureSize(initialSize)
@@ -63,9 +64,9 @@ class VectorSet {
             this.boxHashSize = boxHashSize
             i = 0
             while (i < dimension) {
-                boxSize = (maxs.get(i) - mins.get(i)) / boxHashSize.toFloat()
-                boxInvSize.get(i) = 1.0f / boxSize
-                boxHalfSize.get(i) = boxSize * 0.5f
+                boxSize = (maxs[i] - mins[i]) / boxHashSize.toFloat()
+                boxInvSize[i] = 1.0f / boxSize
+                boxHalfSize[i] = boxSize * 0.5f
                 i++
             }
         }
@@ -81,7 +82,7 @@ class VectorSet {
         }
 
         //
-        fun FindVector(v: idVec<*>?, epsilon: Float): Int {
+        fun FindVector(v: idVec<*>, epsilon: Float): Int {
             var i: Int
             var j: Int
             var k: Int
@@ -89,8 +90,8 @@ class VectorSet {
             val partialHashKey = IntArray(dimension)
             i = 0
             while (i < dimension) {
-                assert(epsilon <= boxHalfSize.get(i))
-                partialHashKey[i] = ((v.get(i) - mins.get(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
+                assert(epsilon <= boxHalfSize[i])
+                partialHashKey[i] = ((v[i] - mins!![i] - boxHalfSize[i]) * boxInvSize[i]).toInt()
                 i++
             }
             i = 0
@@ -104,10 +105,10 @@ class VectorSet {
                 }
                 j = hash.First(hashKey)
                 while (j >= 0) {
-                    val lv = get(j) as idVec<*>?
+                    val lv = get(j) as idVec<*>
                     k = 0
                     while (k < dimension) {
-                        if (Math.abs(lv.get(k) - v.get(k)) > epsilon) {
+                        if (abs(lv[k] - v[k]) > epsilon) {
                             break
                         }
                         k++
@@ -123,11 +124,11 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 hashKey *= boxHashSize
-                hashKey += ((v.get(i) - mins.get(i)) * boxInvSize.get(i)).toInt()
+                hashKey += ((v[i] - mins!![i]) * boxInvSize[i]).toInt()
                 i++
             }
             hash.Add(hashKey, super.Num())
-            this.Append(v as type?)
+            this.Append(v as T)
             return super.Num() - 1
         }
     }
@@ -143,18 +144,17 @@ class VectorSet {
      */
     class idVectorSubset<type> {
         //
-        private val dimension: Int
-        private var boxHalfSize /*= new float[dimension]*/: FloatArray?
+        private var dimension: Int = -1
+        private var boxHalfSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
         private var boxHashSize = 0
-        private var boxInvSize /*= new float[dimension]*/: FloatArray?
-        private val hash: idHashIndex? = idHashIndex()
+        private var boxInvSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
+        private val hash: idHashIndex = idHashIndex()
         private var maxs: idVec<*>? = null
         private var mins: idVec<*>? = null
 
         //
         //
         private constructor() {
-            dimension = -1
         }
 
         constructor(dimension: Int) {
@@ -167,7 +167,7 @@ class VectorSet {
 //	memset( boxHalfSize, 0, dimension * sizeof( boxHalfSize[0] ) );
         }
 
-        constructor(mins: idVec<*>?, maxs: idVec<*>?, boxHashSize: Int, initialSize: Int, dimension: Int) {
+        constructor(mins: idVec<*>, maxs: idVec<*>, boxHashSize: Int, initialSize: Int, dimension: Int) {
             this.dimension = dimension
             Init(mins, maxs, boxHashSize, initialSize)
         }
@@ -178,7 +178,7 @@ class VectorSet {
         //							// returns total size of allocated memory including size of type
         //	size_t					Size( void ) const { return sizeof( *this ) + Allocated(); }
         //
-        fun Init(mins: idVec<*>?, maxs: idVec<*>?, boxHashSize: Int, initialSize: Int) {
+        fun Init(mins: idVec<*>, maxs: idVec<*>, boxHashSize: Int, initialSize: Int) {
             var i: Int
             var boxSize: Float
             hash.Clear(idMath.IPow(boxHashSize, dimension), initialSize)
@@ -187,9 +187,9 @@ class VectorSet {
             this.boxHashSize = boxHashSize
             i = 0
             while (i < dimension) {
-                boxSize = (maxs.get(i) - mins.get(i)) / boxHashSize.toFloat()
-                boxInvSize.get(i) = 1.0f / boxSize
-                boxHalfSize.get(i) = boxSize * 0.5f
+                boxSize = (maxs[i] - mins[i]) / boxHashSize.toFloat()
+                boxInvSize[i] = 1.0f / boxSize
+                boxHalfSize[i] = boxSize * 0.5f
                 i++
             }
         }
@@ -201,17 +201,17 @@ class VectorSet {
 
         //
         // returns either vectorNum or an index to a previously found vector
-        fun FindVector(vectorList: Array<idVec<*>?>?, vectorNum: Int, epsilon: Float): Int {
+        fun FindVector(vectorList: Array<idVec<*>>, vectorNum: Int, epsilon: Float): Int {
             var i: Int
             var j: Int
             var k: Int
             var hashKey: Int
             val partialHashKey = IntArray(dimension)
-            val v = vectorList.get(vectorNum)
+            val v = vectorList[vectorNum]
             i = 0
             while (i < dimension) {
-                assert(epsilon <= boxHalfSize.get(i))
-                partialHashKey[i] = ((v.get(i) - mins.get(i) - boxHalfSize.get(i)) * boxInvSize.get(i)).toInt()
+                assert(epsilon <= boxHalfSize[i])
+                partialHashKey[i] = ((v[i] - mins!![i] - boxHalfSize[i]) * boxInvSize[i]).toInt()
                 i++
             }
             i = 0
@@ -225,10 +225,10 @@ class VectorSet {
                 }
                 j = hash.First(hashKey)
                 while (j >= 0) {
-                    val lv = vectorList.get(j)
+                    val lv = vectorList[j]
                     k = 0
                     while (k < dimension) {
-                        if (Math.abs(lv.get(k) - v.get(k)) > epsilon) {
+                        if (abs(lv[k] - v[k]) > epsilon) {
                             break
                         }
                         k++
@@ -244,7 +244,7 @@ class VectorSet {
             i = 0
             while (i < dimension) {
                 hashKey *= boxHashSize
-                hashKey += ((v.get(i) - mins.get(i)) * boxInvSize.get(i)).toInt()
+                hashKey += ((v[i] - mins!![i]) * boxInvSize[i]).toInt()
                 i++
             }
             hash.Add(hashKey, vectorNum)

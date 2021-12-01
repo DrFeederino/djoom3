@@ -113,7 +113,7 @@ class idProgram {
         funcMem = functions.MemoryUsed()
         i = 0
         while (i < functions.Num()) {
-            funcMem += functions.oGet(i).Allocated()
+            funcMem += functions.get(i).Allocated()
             i++
         }
         memallocated = funcMem + memused + idProgram.Companion.BYTES
@@ -143,7 +143,7 @@ class idProgram {
         }
         i = 0
         while (i < variableDefaults.Num()) {
-            if (variables.get(i) != variableDefaults.oGet(i)) {
+            if (variables.get(i) != variableDefaults.get(i)) {
                 savefile.WriteInt(i)
                 savefile.WriteByte(variables.get(i))
             }
@@ -220,24 +220,24 @@ class idProgram {
         i = 0
         while (i < statements.Num()) {
             statementList[i] = statementBlock_t()
-            statementList[i].op = statements.oGet(i).op
-            if (statements.oGet(i).a != null) {
-                statementList[i].a = statements.oGet(i).a.num
+            statementList[i].op = statements.get(i).op
+            if (statements.get(i).a != null) {
+                statementList[i].a = statements.get(i).a.num
             } else {
                 statementList[i].a = -1
             }
-            if (statements.oGet(i).b != null) {
-                statementList[i].b = statements.oGet(i).b.num
+            if (statements.get(i).b != null) {
+                statementList[i].b = statements.get(i).b.num
             } else {
                 statementList[i].b = -1
             }
-            if (statements.oGet(i).c != null) {
-                statementList[i].c = statements.oGet(i).c.num
+            if (statements.get(i).c != null) {
+                statementList[i].c = statements.get(i).c.num
             } else {
                 statementList[i].c = -1
             }
-            statementList[i].lineNumber = statements.oGet(i).linenumber
-            statementList[i].file = statements.oGet(i).file
+            statementList[i].lineNumber = statements.get(i).linenumber
+            statementList[i].file = statements.get(i).file
             System.arraycopy(statementList[i].toArray(), 0, statementIntArray, i * 6, 6)
             i++
         }
@@ -292,7 +292,7 @@ class idProgram {
         varDefs.SetNum(top_defs, false)
         i = top_functions
         while (i < functions.Num()) {
-            functions.oGet(i).Clear()
+            functions.get(i).Clear()
             i++
         }
         functions.SetNum(top_functions)
@@ -304,7 +304,7 @@ class idProgram {
         numVariables = variableDefaults.Num()
         i = 0
         while (i < numVariables) {
-            variables.get(i) = variableDefaults.oGet(i)
+            variables.get(i) = variableDefaults.get(i)
             i++
         }
     }
@@ -429,7 +429,7 @@ class idProgram {
         variableDefaults.SetNum(numVariables)
         i = 0
         while (i < numVariables) {
-            variableDefaults.oSet(i, variables.get(i))
+            variableDefaults.set(i, variables.get(i))
             i++
         }
     }
@@ -437,7 +437,7 @@ class idProgram {
     fun DisassembleStatement(file: idFile?, instructionPointer: Int) {
         val op: opcode_s
         val statement: statement_s?
-        statement = statements.oGet(instructionPointer)
+        statement = statements.get(instructionPointer)
         op = idCompiler.Companion.opcodes.get(statement.op)
         file.Printf(
             "%20s(%d):\t%6d: %15s\t",
@@ -469,7 +469,7 @@ class idProgram {
         file = idLib.fileSystem.OpenFileByMode("script/disasm.txt", fsMode_t.FS_WRITE)
         i = 0
         while (i < functions.Num()) {
-            func = functions.oGet(i)
+            func = functions.get(i)
             if (func.eventdef != null) {
                 // skip eventdefs
                 i++
@@ -514,7 +514,7 @@ class idProgram {
         // clear all the strings in the functions so that it doesn't look like we're leaking memory.
         i = 0
         while (i < functions.Num()) {
-            functions.oGet(i).Clear()
+            functions.get(i).Clear()
             i++
         }
         filename.Clear()
@@ -552,11 +552,11 @@ class idProgram {
     }
 
     fun GetLineNumberForStatement(index: Int): Int {
-        return statements.oGet(index).linenumber
+        return statements.get(index).linenumber
     }
 
     fun GetFilenameForStatement(index: Int): String? {
-        return GetFilename(statements.oGet(index).file)
+        return GetFilename(statements.get(index).file)
     }
 
     fun AllocType(type: idTypeDef?): idTypeDef? {
@@ -943,7 +943,7 @@ class idProgram {
     }
 
     fun GetFunction(index: Int): function_t? {
-        return functions.oGet(index)
+        return functions.get(index)
     }
 
     fun GetFunctionIndex(func: function_t?): Int {
@@ -979,7 +979,7 @@ class idProgram {
         if (index == 61961) {
             val a = 0
         }
-        return statements.oGet(index)
+        return statements.get(index)
     }
 
     fun NumStatements(): Int {

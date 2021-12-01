@@ -1595,8 +1595,8 @@ object CVarSystem {
      ============
      */
     // NOTE: the const wonkyness is required to make msvc happy
-    class idListSortCompare : cmp_t<idInternalCVar?> {
-        override fun compare(a: idInternalCVar?, b: idInternalCVar?): Int {
+    class idListSortCompare : cmp_t<idInternalCVar> {
+        override fun compare(a: idInternalCVar, b: idInternalCVar): Int {
             return idStr.Companion.Icmp(a.GetName(), b.GetName())
         }
     }
