@@ -183,7 +183,7 @@ object Actor {
                     self.scriptObject.GetTypeName()
                 )
             }
-            state.oSet(statename)
+            state.set(statename)
             disabled = false
             animBlendFrames = blendFrames
             lastAnimBlendFrames = blendFrames
@@ -523,7 +523,7 @@ object Actor {
             val rank = CInt()
             val team = CInt()
             val use_combat_bbox = CBool(false)
-            animPrefix.oSet("")
+            animPrefix.set("")
             state = null
             idealState = null
             spawnArgs.GetInt("rank", "0", rank)
@@ -588,7 +588,7 @@ object Actor {
                         continue
                     }
                     val copyJoint = copyJoints_t()
-                    jointName.oSet(kv.GetKey())
+                    jointName.set(kv.GetKey())
                     if (jointName.StripLeadingOnce("copy_joint_world ")) {
                         copyJoint.mod = jointModTransform_t.JOINTMOD_WORLD_OVERRIDE
                     } else {
@@ -601,7 +601,7 @@ object Actor {
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
                     }
-                    jointName.oSet(kv.GetValue())
+                    jointName.set(kv.GetValue())
                     copyJoint.to.setVal(headAnimator.GetJointHandle(jointName))
                     if (copyJoint.to.getVal() == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Unknown copy_joint '%s' on head of entity %s", jointName, name)
@@ -971,7 +971,7 @@ object Actor {
                 }
                 headAnim.Init(this, animator, Anim.ANIMCHANNEL_HEAD)
             }
-            waitState.oSet("")
+            waitState.set("")
             torsoAnim.Init(this, animator, Anim.ANIMCHANNEL_TORSO)
             legsAnim.Init(this, animator, Anim.ANIMCHANNEL_LEGS)
         }
@@ -1267,7 +1267,7 @@ object Actor {
             damageGroups.setSize(animator.NumJoints())
             arg = spawnArgs.MatchPrefix("damage_zone ", null)
             while (arg != null) {
-                groupname.oSet(arg.GetKey())
+                groupname.set(arg.GetKey())
                 groupname.Strip("damage_zone ")
                 animator.GetJointList(arg.GetValue(), jointList)
                 i = 0
@@ -1292,7 +1292,7 @@ object Actor {
             arg = spawnArgs.MatchPrefix("damage_scale ", null)
             while (arg != null) {
                 scale = TempDump.atof(arg.GetValue())
-                groupname.oSet(arg.GetKey())
+                groupname.set(arg.GetKey())
                 groupname.Strip("damage_scale ")
                 i = 0
                 while (i < damageScale.Num()) {
@@ -1435,34 +1435,34 @@ object Actor {
 
             // set the pain anim
             val damageGroup = GetDamageGroup(location)
-            painAnim.oSet("")
+            painAnim.set("")
             if (animPrefix.Length() != 0) {
                 if (TempDump.isNotNullOrEmpty(damageGroup) && damageGroup != "legs") {
-                    painAnim.oSet(String.format("%s_pain_%s", animPrefix.toString(), damageGroup))
+                    painAnim.set(String.format("%s_pain_%s", animPrefix.toString(), damageGroup))
                     if (!animator.HasAnim(painAnim)) {
-                        painAnim.oSet(String.format("pain_%s", damageGroup))
+                        painAnim.set(String.format("pain_%s", damageGroup))
                         if (!animator.HasAnim(painAnim)) {
-                            painAnim.oSet("")
+                            painAnim.set("")
                         }
                     }
                 }
                 if (0 == painAnim.Length()) {
-                    painAnim.oSet(String.format("%s_pain", animPrefix.toString()))
+                    painAnim.set(String.format("%s_pain", animPrefix.toString()))
                     if (!animator.HasAnim(painAnim)) {
-                        painAnim.oSet("")
+                        painAnim.set("")
                     }
                 }
             } else if (TempDump.isNotNullOrEmpty(damageGroup) && damageGroup != "legs") {
-                painAnim.oSet(String.format("pain_%s", damageGroup))
+                painAnim.set(String.format("pain_%s", damageGroup))
                 if (!animator.HasAnim(painAnim)) {
-                    painAnim.oSet(String.format("pain_%s", damageGroup))
+                    painAnim.set(String.format("pain_%s", damageGroup))
                     if (!animator.HasAnim(painAnim)) {
-                        painAnim.oSet("")
+                        painAnim.set("")
                     }
                 }
             }
             if (0 == painAnim.Length()) {
-                painAnim.oSet("pain")
+                painAnim.set("pain")
             }
             if (SysCvar.g_debugDamage.GetBool()) {
                 /*jointHandle_t*/
@@ -1849,7 +1849,7 @@ object Actor {
         }
 
         fun SetWaitState(_waitstate: String?) {
-            waitState.oSet(_waitstate)
+            waitState.set(_waitstate)
         }
 
         fun AnimDone(channel: Int, blendFrames: Int): Boolean {
@@ -2154,7 +2154,7 @@ object Actor {
         }
 
         private fun Event_SetAnimPrefix(prefix: idEventArg<String?>?) {
-            animPrefix.oSet(prefix.value)
+            animPrefix.set(prefix.value)
         }
 
         //        private void Event_LookAtEntity(idEntity ent, float duration);

@@ -195,7 +195,7 @@ object TypeInfo {
                 i = 0
                 while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
                     if (idStr.Companion.Cmp(typeName.toString(), NoGameTypeInfo.classTypeInfo[i].typeName) == 0) {
-                        typeName.oSet(NoGameTypeInfo.classTypeInfo[i].superType)
+                        typeName.set(NoGameTypeInfo.classTypeInfo[i].superType)
                         break
                     }
                     i++
@@ -399,7 +399,7 @@ object TypeInfo {
         private fun ParseTemplateArguments(src: idLexer?, arguments: idStr?): Boolean {
             var indent: Int
             val token = idToken()
-            arguments.oSet("")
+            arguments.set("")
             if (!src.ExpectTokenString("<")) {
                 return false
             }

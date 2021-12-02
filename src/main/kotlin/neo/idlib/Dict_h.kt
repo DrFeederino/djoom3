@@ -487,10 +487,10 @@ class Dict_h {
         fun GetString(key: String?, defaultString: String?, out: idStr?): Boolean {
             val kv = FindKey(key)
             if (kv != null) {
-                out.oSet(kv.GetValue())
+                out.set(kv.GetValue())
                 return true
             }
-            out.oSet(defaultString)
+            out.set(defaultString)
             return false
         }
 

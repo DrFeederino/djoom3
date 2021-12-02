@@ -100,7 +100,7 @@ class StrPool {
                 }
             }
             poolStr = idPoolStr()
-            poolStr.oSet(string) //TODO:*static_cast<idStr *>(poolStr) = string;
+            poolStr.set(string) //TODO:*static_cast<idStr *>(poolStr) = string;
             poolStr.pool = this
             poolStr.numUsers = 1
             poolHash.Add(hash, pool.Append(poolStr))

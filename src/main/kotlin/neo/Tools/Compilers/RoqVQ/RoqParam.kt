@@ -241,7 +241,7 @@ object RoqParam {
                 justDeltaFlag = false
             }
             if (addPath == true) {
-                currentFile.oSet(currentPath.toString() + "/" + tempBuffer)
+                currentFile.set(currentPath.toString() + "/" + tempBuffer)
             } else {
                 currentFile = tempBuffer
             }
@@ -249,7 +249,7 @@ object RoqParam {
             i = 0
             while (i < len) {
                 if (currentFile.oGet(i) == '^') {
-                    currentFile.oSet(i, ' ')
+                    currentFile.set(i, ' ')
                 }
                 i++
             }
@@ -385,7 +385,7 @@ object RoqParam {
                 // starting palette
                 if (token.Icmp("start_palette") == 0) {
                     src.ReadToken(token)
-                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token))
+                    startPal.set(String.format("/LocalLibrary/vdxPalettes/%s", token))
                     //			common.Error("  + starting palette is %s\n", startPal );
                     startPalette = true
                     readarg++
@@ -394,7 +394,7 @@ object RoqParam {
                 // ending palette
                 if (token.Icmp("end_palette") == 0) {
                     src.ReadToken(token)
-                    endPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token))
+                    endPal.set(String.format("/LocalLibrary/vdxPalettes/%s", token))
                     //			common.Printf("  + ending palette is %s\n", endPal );
                     endPalette = true
                     readarg++
@@ -403,7 +403,7 @@ object RoqParam {
                 // fixed palette
                 if (token.Icmp("fixed_palette") == 0) {
                     src.ReadToken(token)
-                    startPal.oSet(String.format("/LocalLibrary/vdxPalettes/%s", token))
+                    startPal.set(String.format("/LocalLibrary/vdxPalettes/%s", token))
                     //			common.Printf("  + fixed palette is %s\n", startPal );
                     fixedPalette = true
                     readarg++
@@ -640,7 +640,7 @@ object RoqParam {
                         mins = index / (30 * 60) % 60
                         secs = index / 30 % 60
                         frs = index % 30
-                        fileName.oSet(
+                        fileName.set(
                             String.format(
                                 "%s%.02d%.02d/%.02d%.02d%.02d%.02d%s",
                                 left,
@@ -655,7 +655,7 @@ object RoqParam {
                         )
                     } else {
                         tempfile = String.format("%032d", index)
-                        fileName.oSet(
+                        fileName.set(
                             String.format(
                                 "%s%s%s",
                                 left,
@@ -670,7 +670,7 @@ object RoqParam {
                         mins = index / (30 * 60) % 60
                         secs = index / 30 % 60
                         frs = index % 30
-                        fileName.oSet(
+                        fileName.set(
                             String.format(
                                 "%s%.02d%.02d/%.02d%.02d%.02d%.02d%s",
                                 left,
@@ -684,7 +684,7 @@ object RoqParam {
                             )
                         )
                     } else {
-                        fileName.oSet(String.format("%s%d%s", left, index, right))
+                        fileName.set(String.format("%s%d%s", left, index, right))
                     }
                 }
             } else if (range.get(myfield) == 2) {
@@ -699,7 +699,7 @@ object RoqParam {
                 }
                 if (padding.get(myfield) == true) {
                     tempfile = String.format("%032d", index)
-                    fileName.oSet(
+                    fileName.set(
                         String.format(
                             "%s%s%s",
                             left,
@@ -708,7 +708,7 @@ object RoqParam {
                         )
                     )
                 } else {
-                    fileName.oSet(String.format("%s%d%s", left, index, right))
+                    fileName.set(String.format("%s%d%s", left, index, right))
                 }
                 left = file2.get(myfield).toString()
                 strp = left.indexOf("*")
@@ -721,12 +721,12 @@ object RoqParam {
                 }
                 if (padding2.get(myfield) == true) {
                     tempfile = String.format("%032d", index)
-                    fileName.oPluSet(Str.va("\n%s%s%s", left, tempfile.substring(32 - numpadding2.get(myfield)), right))
+                    fileName.plusAssign(Str.va("\n%s%s%s", left, tempfile.substring(32 - numpadding2.get(myfield)), right))
                 } else {
-                    fileName.oPluSet(Str.va("\n%s%d%s", left, index, right))
+                    fileName.plusAssign(Str.va("\n%s%d%s", left, index, right))
                 }
             } else {
-                fileName.oSet(file.get(myfield).toString())
+                fileName.set(file.get(myfield).toString())
             }
         }
 

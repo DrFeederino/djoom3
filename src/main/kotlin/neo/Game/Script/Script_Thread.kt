@@ -1856,7 +1856,7 @@ object Script_Thread {
         }
 
         fun SetThreadName(name: String?) {
-            threadName.oSet(name)
+            threadName.set(name)
         }
 
         fun GetThreadName(): String? {

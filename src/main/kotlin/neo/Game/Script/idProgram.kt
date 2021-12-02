@@ -526,7 +526,7 @@ class idProgram {
         top_types = 0
         top_defs = 0
         top_files = 0
-        filename.oSet("")
+        filename.set("")
     }
 
     fun GetFilename(num: Int): String? {
@@ -547,7 +547,7 @@ class idProgram {
         }
 
         // save the unstripped name so that we don't have to strip the incoming name every time we call GetFilenum
-        filename.oSet(name)
+        filename.set(name)
         return filenum
     }
 

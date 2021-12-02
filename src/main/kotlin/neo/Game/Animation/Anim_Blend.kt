@@ -106,8 +106,8 @@ object Anim_Blend {
             var i: Int
             this.modelDef = modelDef
             numAnims = anim.numAnims
-            name.oSet(anim.name)
-            realname.oSet(anim.realname)
+            name.set(anim.name)
+            realname.set(anim.realname)
             flags = animFlags_t(anim.flags)
             anims = arrayOfNulls<idMD5Anim?>(anims.size)
             i = 0
@@ -162,8 +162,8 @@ object Anim_Blend {
             }
             assert(num > 0 && num <= Anim.ANIM_MaxSyncedAnims)
             numAnims = num
-            realname.oSet(sourceName)
-            name.oSet(animName)
+            realname.set(sourceName)
+            name.set(animName)
             i = 0
             while (i < num) {
                 anims.get(i) = md5anims.get(i)
@@ -1200,7 +1200,7 @@ object Anim_Blend {
                         MakeDefault()
                         return false
                     }
-                    filename.oSet(token2)
+                    filename.set(token2)
                     filename.ExtractFileExtension(extension)
                     if (extension != Model.MD5_MESH_EXT) {
                         src.Warning("Invalid model for MD5 mesh")
@@ -1771,7 +1771,7 @@ object Anim_Blend {
                 MakeDefault()
                 return false
             }
-            alias.oSet(realname)
+            alias.set(realname)
             i = 0
             while (i < anims.size) {
                 if (anims.get(i).FullName().equals(realname.toString(), ignoreCase = true)) {

@@ -311,7 +311,7 @@ object GameEdit {
             // parse all the bind constraints
             kv = af.spawnArgs.MatchPrefix("bindConstraint ", null)
             while (kv != null) {
-                key.oSet(kv.GetKey())
+                key.set(kv.GetKey())
                 key.Strip("bindConstraint ")
                 if (GameEdit.sscanf(key, "bind%d").also { num = it } != -1) {
                     if (num >= largestNum) {
@@ -331,7 +331,7 @@ object GameEdit {
                 }
                 kv = af.spawnArgs.MatchPrefix("bindConstraint ", kv)
             }
-            key.oSet(String.format("bindConstraint bind%d", largestNum))
+            key.set(String.format("bindConstraint bind%d", largestNum))
             value = String.format("ballAndSocket %s %s", bindBodyName.toString(), af.GetAnimator().GetJointName(joint))
             af.spawnArgs.Set(key, value)
             af.spawnArgs.Set("bind", "worldspawn")
@@ -460,40 +460,40 @@ object GameEdit {
             when (SysCvar.g_editEntityMode.GetInteger()) {
                 1 -> {
                     sit.typeInfo = idLight::class.java
-                    sit.textKey.oSet("texture")
+                    sit.textKey.set("texture")
                     selectableEntityClasses.Append(sit)
                 }
                 2 -> {
                     sit.typeInfo = idSound::class.java
-                    sit.textKey.oSet("s_shader")
+                    sit.textKey.set("s_shader")
                     selectableEntityClasses.Append(sit)
                     sit.typeInfo = idLight::class.java
-                    sit.textKey.oSet("texture")
+                    sit.textKey.set("texture")
                     selectableEntityClasses.Append(sit)
                 }
                 3 -> {
                     sit.typeInfo = idAFEntity_Base::class.java
-                    sit.textKey.oSet("articulatedFigure")
+                    sit.textKey.set("articulatedFigure")
                     selectableEntityClasses.Append(sit)
                 }
                 4 -> {
                     sit.typeInfo = idFuncEmitter::class.java
-                    sit.textKey.oSet("model")
+                    sit.textKey.set("model")
                     selectableEntityClasses.Append(sit)
                 }
                 5 -> {
                     sit.typeInfo = idAI::class.java
-                    sit.textKey.oSet("name")
+                    sit.textKey.set("name")
                     selectableEntityClasses.Append(sit)
                 }
                 6 -> {
                     sit.typeInfo = idEntity::class.java
-                    sit.textKey.oSet("name")
+                    sit.textKey.set("name")
                     selectableEntityClasses.Append(sit)
                 }
                 7 -> {
                     sit.typeInfo = idEntity::class.java
-                    sit.textKey.oSet("model")
+                    sit.textKey.set("model")
                     selectableEntityClasses.Append(sit)
                 }
                 else -> return
@@ -618,7 +618,7 @@ object GameEdit {
         ): Boolean {
             for (i in 0 until selectableEntityClasses.Num()) {
                 if (ent.GetType() == selectableEntityClasses.get(i).typeInfo) {
-                    text?.oSet(selectableEntityClasses.get(i).textKey)
+                    text?.set(selectableEntityClasses.get(i).textKey)
                     if (color != null) {
                         if (ent.fl.selected) {
                             color.set(Lib.Companion.colorRed)

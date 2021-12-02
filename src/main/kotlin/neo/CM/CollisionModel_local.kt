@@ -152,7 +152,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             BuildModels(mapFile)
 
             // save name and time stamp
-            mapName.oSet(mapFile.GetNameStr())
+            mapName.set(mapFile.GetNameStr())
             mapFileTime = mapFile.GetFileTime()
             loaded = true
 
@@ -1285,7 +1285,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             SetupHash()
             model = CollisionModelForMapEntity(mapEnt)
             name = idStr(filename)
-            model!!.name.oSet(name)
+            model!!.name.set(name)
             name.SetFileExtension(CollisionModel_files.CM_FILE_EXT)
             Common.common.Printf("writing %s\n", name)
             fp = FileSystem_h.fileSystem.OpenFileWrite(filename, "fs_devpath")
@@ -6913,7 +6913,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             model.edges = cm_edge_s.generateArray(model.maxEdges)
             cm_vertexHash!!.ResizeIndex(model.maxVertices)
             cm_edgeHash!!.ResizeIndex(model.maxEdges)
-            model.name.oSet(name[0])
+            model.name.set(name[0])
             model.isConvex = false
 
             // convert brushes
@@ -6992,7 +6992,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
             renderModel = ModelManager.renderModelManager.FindModel(fileName.toString())!!
             model = AllocModel()
-            model.name.oSet(fileName)
+            model.name.set(fileName)
             node = AllocNode(model, NODE_BLOCK_SIZE_SMALL)
             node.planeType = -1
             model.node = node
@@ -7637,7 +7637,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             numModels++
             // parse the file
             src.ExpectTokenType(Token.TT_STRING, 0, token)
-            model.name.oSet(token)
+            model.name.set(token)
             src.ExpectTokenString("{")
             while (!src.CheckTokenString("}")) {
                 src.ReadToken(token)

@@ -219,7 +219,7 @@ class MarkerWindow {
                 currentMarker = -1
                 currentTime = -1
                 stopTime = -1
-                statData.oSet(gui.State().GetString("statData"))
+                statData.set(gui.State().GetString("statData"))
                 numStats = 0
                 if (statData.Length() != 0) {
                     val file = idLib.fileSystem.OpenFileRead(statData.toString())

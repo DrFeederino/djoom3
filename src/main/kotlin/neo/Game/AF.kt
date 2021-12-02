@@ -187,7 +187,7 @@ object AF {
                 )
                 return false
             }
-            name.oSet(fileName)
+            name.set(fileName)
             name.StripFileExtension()
             file = DeclManager.declManager.FindType(declType_t.DECL_AF, name) as idDeclAF
             if (null == file) {
@@ -797,7 +797,7 @@ object AF {
             val angles = idAngles()
             kv = args.MatchPrefix("body ", null)
             while (kv != null) {
-                name.oSet(kv.GetKey())
+                name.set(kv.GetKey())
                 name.Strip("body ")
                 body = physicsObj.GetBody(name.toString())
                 if (body != null) {
@@ -847,7 +847,7 @@ object AF {
             // parse all the bind constraints
             kv = args.MatchPrefix("bindConstraint ", null)
             while (kv != null) {
-                name.oSet(kv.GetKey())
+                name.set(kv.GetKey())
                 name.Strip("bindConstraint ")
                 lexer.LoadMemory(kv.GetValue(), kv.GetValue().Length(), kv.GetKey())
                 lexer.ReadToken(type)
@@ -912,7 +912,7 @@ object AF {
             val name = idStr()
             kv = args.MatchPrefix("bindConstraint ", null)
             while (kv != null) {
-                name.oSet(kv.GetKey())
+                name.set(kv.GetKey())
                 name.Strip("bindConstraint ")
                 if (physicsObj.GetConstraint(name.toString()) != null) {
                     physicsObj.DeleteConstraint(name.toString())

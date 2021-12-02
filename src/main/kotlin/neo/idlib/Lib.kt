@@ -34,18 +34,18 @@ class Lib {
      ===============================================================================
      */
     fun BigShort(l: Short): Short {
-        return if (Lib.Companion.SWAP_TEST) {
-            Lib.Companion.ShortSwap(l)
+        return if (Lib.SWAP_TEST) {
+            Lib.ShortSwap(l)
         } else {
-            Lib.Companion.ShortNoSwap(l)
+            Lib.ShortNoSwap(l)
         }
     }
 
     fun BigLong(l: Int): Int {
-        return if (Lib.Companion.SWAP_TEST) {
-            Lib.Companion.LongSwap(l)
+        return if (Lib.SWAP_TEST) {
+            Lib.LongSwap(l)
         } else {
-            Lib.Companion.LongNoSwap(l)
+            Lib.LongNoSwap(l)
         }
     }
 
@@ -93,13 +93,13 @@ class Lib {
 
 //	assert( sizeof( bool ) == 1 );
             // initialize little/big endian conversion
-            Lib.Companion.Swap_Init()
+            Lib.Swap_Init()
             //
 //            // initialize memory manager
 //            Heap.Mem_Init();
 //
             // init string memory allocator
-            idStr.Companion.InitMemory()
+            idStr.InitMemory()
 
             // initialize generic SIMD implementation
             idSIMD.Init()
@@ -108,22 +108,22 @@ class Lib {
             idMath.Init()
 
             // test idMatX
-            idMatX.Companion.Test()
+            idMatX.Test()
 
             // test idPolynomial
-            idPolynomial.Companion.Test()
+            idPolynomial.Test()
 
             // initialize the dictionary string pools
-            idDict.Companion.Init()
+            idDict.Init()
         }
 
         fun ShutDown() {
 
             // shut down the dictionary string pools
-            idDict.Companion.Shutdown()
+            idDict.Shutdown()
 
             // shut down the string memory allocator
-            idStr.Companion.ShutdownMemory()
+            idStr.ShutdownMemory()
 
             // shut down the SIMD engine
             idSIMD.Shutdown()
@@ -192,7 +192,7 @@ class Lib {
         // maximum world size
         const val MAX_WORLD_COORD = 128 * 1024
         const val MIN_WORLD_COORD = -128 * 1024
-        val MAX_WORLD_SIZE: Int = Lib.Companion.MAX_WORLD_COORD - Lib.Companion.MIN_WORLD_COORD
+        val MAX_WORLD_SIZE: Int = Lib.MAX_WORLD_COORD - Lib.MIN_WORLD_COORD
 
         //
         // basic colors
@@ -224,7 +224,7 @@ class Lib {
      Swap_Init
      ================
      */
-        private val SWAP_TEST: Boolean = Lib.Companion.Swap_IsBigEndian()
+        private val SWAP_TEST: Boolean = Lib.Swap_IsBigEndian()
 
         //
         var colorMask: IntArray? = intArrayOf(255, 0)
@@ -238,7 +238,7 @@ class Lib {
      ================
      */
         fun ColorFloatToByte(c: Float): Byte {
-            return ((c * 255.0f).toLong() and Lib.Companion.colorMask.get(Math_h.FLOATSIGNBITSET(c))).toByte()
+            return ((c * 255.0f).toLong() and Lib.colorMask.get(Math_h.FLOATSIGNBITSET(c))).toByte()
         }
 
         // packs color floats in the range [0,1] into an integer
@@ -252,10 +252,10 @@ class Lib {
             val dx: Long
             val dy: Long
             val dz: Long
-            dx = Lib.Companion.ColorFloatToByte(color.x).toLong()
-            dy = Lib.Companion.ColorFloatToByte(color.y).toLong()
-            dz = Lib.Companion.ColorFloatToByte(color.z).toLong()
-            dw = Lib.Companion.ColorFloatToByte(color.w).toLong()
+            dx = Lib.ColorFloatToByte(color.x).toLong()
+            dy = Lib.ColorFloatToByte(color.y).toLong()
+            dz = Lib.ColorFloatToByte(color.z).toLong()
+            dw = Lib.ColorFloatToByte(color.w).toLong()
             return dx shl 0 or (dy shl 8) or (dz shl 16) or (dw shl 24)
         }
 
@@ -282,9 +282,9 @@ class Lib {
             val dx: Long
             val dy: Long
             val dz: Long
-            dx = Lib.Companion.ColorFloatToByte(color.x).toLong()
-            dy = Lib.Companion.ColorFloatToByte(color.y).toLong()
-            dz = Lib.Companion.ColorFloatToByte(color.z).toLong()
+            dx = Lib.ColorFloatToByte(color.x).toLong()
+            dy = Lib.ColorFloatToByte(color.y).toLong()
+            dz = Lib.ColorFloatToByte(color.z).toLong()
             return dx shl 0 or (dy shl 8) or (dz shl 16)
         }
 
@@ -302,59 +302,59 @@ class Lib {
         }
 
         fun LittleShort(l: Short): Short {
-            return if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.ShortSwap(l)
+            return if (Lib.SWAP_TEST) {
+                Lib.ShortSwap(l)
             } else {
-                Lib.Companion.ShortNoSwap(l)
+                Lib.ShortNoSwap(l)
             }
         }
 
         fun LittleLong(l: Int): Int {
-            return if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.LongSwap(l)
+            return if (Lib.SWAP_TEST) {
+                Lib.LongSwap(l)
             } else {
-                Lib.Companion.LongNoSwap(l)
+                Lib.LongNoSwap(l)
             }
         }
 
         fun LittleLong(l: Long): Int {
-            return Lib.Companion.LittleLong(l.toInt()) //TODO:little or long?
+            return Lib.LittleLong(l.toInt()) //TODO:little or long?
         }
 
         fun LittleLong(b: ByteArray?): Int {
             val l = BigInteger(b).toInt()
-            return Lib.Companion.LittleLong(l)
+            return Lib.LittleLong(l)
         }
 
         fun BigFloat(l: Float): Float {
-            return if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.FloatSwap(l)
+            return if (Lib.SWAP_TEST) {
+                Lib.FloatSwap(l)
             } else {
-                Lib.Companion.FloatNoSwap(l)
+                Lib.FloatNoSwap(l)
             }
         }
 
         fun LittleFloat(l: Float): Float {
-            return if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.FloatSwap(l)
+            return if (Lib.SWAP_TEST) {
+                Lib.FloatSwap(l)
             } else {
-                Lib.Companion.FloatNoSwap(l)
+                Lib.FloatNoSwap(l)
             }
         }
 
         fun BigRevBytes(buffer: ByteBuffer?, elcount: Int) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 buffer.order(ByteOrder.LITTLE_ENDIAN)
             }
         }
 
         fun LittleRevBytes(bp: FloatArray?, elcount: Int) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 val pb = IntArray(bp.size)
                 for (a in bp.indices) {
                     pb[a] = java.lang.Float.floatToIntBits(bp.get(a))
                 }
-                Lib.Companion.RevBytesSwap(pb,  /*elsize,*/elcount)
+                Lib.RevBytesSwap(pb,  /*elsize,*/elcount)
                 for (b in pb.indices) {
                     bp.get(b) = java.lang.Float.intBitsToFloat(pb[b])
                 }
@@ -362,19 +362,19 @@ class Lib {
         }
 
         fun LittleRevBytes(bp: ByteArray?, offset: Int, elcount: Int) {
-            if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.RevBytesSwap(bp, 0,  /*elsize,*/elcount)
+            if (Lib.SWAP_TEST) {
+                Lib.RevBytesSwap(bp, 0,  /*elsize,*/elcount)
             } else {
-                Lib.Companion.RevBytesNoSwap(bp,  /*elsize,*/elcount)
+                Lib.RevBytesNoSwap(bp,  /*elsize,*/elcount)
             }
         }
 
         fun LittleRevBytes(bp: ByteArray? /*, int elsize*/, elcount: Int) {
-            Lib.Companion.LittleRevBytes(bp, 0, elcount)
+            Lib.LittleRevBytes(bp, 0, elcount)
         }
 
         fun LittleRevBytes(v: idVec5?) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 val x = v.x
                 val y = v.y
                 v.x = v.t
@@ -385,7 +385,7 @@ class Lib {
         }
 
         fun LittleRevBytes(bounds: idBounds?) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 val a = idVec3(bounds.get(0))
                 val b = idVec3(bounds.get(1))
                 bounds.set(0, b)
@@ -394,7 +394,7 @@ class Lib {
         }
 
         fun LittleRevBytes(angles: idAngles?) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 val pitch = angles.pitch
                 angles.pitch = angles.roll
                 angles.roll = pitch
@@ -402,15 +402,15 @@ class Lib {
         }
 
         fun LittleBitField(bp: ByteArray?, elsize: Int) {
-            if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.RevBitFieldSwap(bp, elsize)
+            if (Lib.SWAP_TEST) {
+                Lib.RevBitFieldSwap(bp, elsize)
             } else {
-                Lib.Companion.RevBitFieldNoSwap(bp, elsize)
+                Lib.RevBitFieldNoSwap(bp, elsize)
             }
         }
 
         fun LittleBitField(flags: entityFlags_s?) {
-            if (Lib.Companion.SWAP_TEST) { //TODO:expand this in the morning.
+            if (Lib.SWAP_TEST) { //TODO:expand this in the morning.
                 flags.notarget = flags.networkSync or (false and flags.notarget.also { flags.networkSync = it })
                 flags.noknockback = flags.hasAwakened or (false and flags.noknockback.also { flags.hasAwakened = it })
                 flags.takedamage = flags.isDormant or (false and flags.takedamage.also { flags.isDormant = it })
@@ -422,27 +422,27 @@ class Lib {
         }
 
         fun LittleBitField(flags: projectileFlags_s?) {
-            if (Lib.Companion.SWAP_TEST) {
+            if (Lib.SWAP_TEST) {
                 flags.detonate_on_world =
                     flags.detonate_on_actor or (false and flags.detonate_on_world.also { flags.detonate_on_actor = it })
                 flags.isTracer = flags.noSplashDamage or (false and flags.isTracer.also { flags.noSplashDamage = it })
             }
         }
 
-        fun SixtetsForInt(out: ByteArray?, src: Int) //TODO:primitive byte cannot be passed by reference????
+        fun SixtetsForInt(out: ByteArray, src: Int) //TODO:primitive byte cannot be passed by reference????
         {
-            if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.SixtetsForIntLittle(out, src)
+            if (Lib.SWAP_TEST) {
+                Lib.SixtetsForIntLittle(out, src)
             } else {
-                Lib.Companion.SixtetsForIntBig(out, src)
+                Lib.SixtetsForIntBig(out, src)
             }
         }
 
-        fun IntForSixtets(`in`: ByteArray?): Int {
-            return if (Lib.Companion.SWAP_TEST) {
-                Lib.Companion.IntForSixtetsLittle(`in`)
+        fun IntForSixtets(`in`: ByteArray): Int {
+            return if (Lib.SWAP_TEST) {
+                Lib.IntForSixtetsLittle(`in`)
             } else {
-                Lib.Companion.IntForSixtetsBig(`in`)
+                Lib.IntForSixtetsBig(`in`)
             }
         }
 
@@ -621,7 +621,7 @@ class Lib {
             val p: Int
             var t: Int
             var v: Int
-            Lib.Companion.LittleRevBytes(bp,  /*elsize,*/1)
+            Lib.LittleRevBytes(bp,  /*elsize,*/1)
             p = 0
             while (elsize-- != 0) {
                 v = bp.get(p)

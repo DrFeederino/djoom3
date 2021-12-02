@@ -151,7 +151,7 @@ class Anim_Testmodel {
             // add the head model if it has one
             headModel = spawnArgs.GetString("def_head", "")
             if (TempDump.isNotNullOrEmpty(headModel)) {
-                jointName.oSet(spawnArgs.GetString("head_joint"))
+                jointName.set(spawnArgs.GetString("head_joint"))
                 joint = animator.GetJointHandle(jointName.toString())
                 if (joint == Model.INVALID_JOINT) {
                     Game_local.gameLocal.Warning("Joint '%s' not found for 'head_joint'", jointName)
@@ -237,7 +237,7 @@ class Anim_Testmodel {
             }
             startTime = Game_local.gameLocal.time
             animTime = animator.AnimLength(anim)
-            animName.oSet(animator.AnimFullName(anim))
+            animName.set(animator.AnimFullName(anim))
             headAnim = 0
             if (headAnimator != null) {
                 headAnimator.ClearAllAnims(Game_local.gameLocal.time, 0)
@@ -282,7 +282,7 @@ class Anim_Testmodel {
             }
             startTime = Game_local.gameLocal.time
             animTime = animator.AnimLength(anim)
-            animName.oSet(animator.AnimFullName(anim))
+            animName.set(animator.AnimFullName(anim))
             headAnim = 0
             if (headAnimator != null) {
                 headAnimator.ClearAllAnims(Game_local.gameLocal.time, 0)
@@ -402,7 +402,7 @@ class Anim_Testmodel {
                     animTime = headAnimator.AnimLength(headAnim)
                 }
             }
-            animName.oSet(name)
+            animName.set(name)
             Game_local.gameLocal.Printf(
                 "anim '%s', %d.%03d seconds, %d frames\n",
                 animName.toString(),
@@ -437,7 +437,7 @@ class Anim_Testmodel {
                 Game_local.gameLocal.Printf("Animation '%s' not found.\n", args.Argv(2))
                 return
             }
-            animName.oSet(args.Argv(2))
+            animName.set(args.Argv(2))
             animator.CycleAnim(Anim.ANIMCHANNEL_ALL, anim1, Game_local.gameLocal.time, 0)
             animator.CycleAnim(
                 Anim.ANIMCHANNEL_ALL,
@@ -817,7 +817,7 @@ class Anim_Testmodel {
                     Game_local.gameLocal.testmodel.SetSkin(null)
                     return
                 }
-                name.oSet(args.Argv(1))
+                name.set(args.Argv(1))
                 Game_local.gameLocal.testmodel.SetSkin(DeclManager.declManager.FindSkin(name))
             }
 
@@ -906,7 +906,7 @@ class Anim_Testmodel {
                 if (args.Argc() < 2) {
                     return
                 }
-                name.oSet(args.Argv(1))
+                name.set(args.Argv(1))
                 entityDef = Game_local.gameLocal.FindEntityDefDict(name.toString(), false)
                 if (entityDef != null) {
                     dict = entityDef

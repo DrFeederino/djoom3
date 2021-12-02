@@ -117,7 +117,7 @@ object Script_Program {
         }
 
         fun SetName(name: String?) {
-            this.name.oSet(name)
+            this.name.set(name)
         }
 
         fun Name(): String? {
@@ -409,7 +409,7 @@ object Script_Program {
             }
             parmTypes.Append(parmtype)
             val parmName = parmNames.addEmptyStr()
-            parmName.oSet(name)
+            parmName.set(name)
         }
 
         /*
@@ -425,7 +425,7 @@ object Script_Program {
             }
             parmTypes.Append(fieldtype)
             val parmName = parmNames.addEmptyStr()
-            parmName.oSet(name)
+            parmName.set(name)
             size += if (fieldtype.FieldType().Inherits(Script_Program.type_object)) {
                 Script_Program.type_object.Size()
             } else {
@@ -434,7 +434,7 @@ object Script_Program {
         }
 
         fun SetName(newname: String?) {
-            name.oSet(newname)
+            name.set(newname)
         }
 
         fun Name(): String? {
@@ -1267,7 +1267,7 @@ object Script_Program {
         }
 
         constructor(n: String?) {
-            name.oSet(n)
+            name.set(n)
             defs = null
         }
 

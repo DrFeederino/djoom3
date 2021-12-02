@@ -2629,7 +2629,7 @@ object Game_local {
                     Error("Couldn't load %s", mapName)
                 }
             }
-            mapFileName.oSet(mapFile.GetName())
+            mapFileName.set(mapFile.GetName())
 
             // load the collision map
             CollisionModel_local.collisionModelManager.LoadMap(mapFile)
@@ -2668,7 +2668,7 @@ object Game_local {
             previousTime = 0
             time = 0
             framenum = 0
-            sessionCommand.oSet("")
+            sessionCommand.set("")
             nextGibTime = 0
             vacuumAreaNum = -1 // if an info_vacuum is spawned, it will set this
             if (null == editEntities) {
@@ -6266,7 +6266,7 @@ object Game_local {
             if (!soundShaderName.isEmpty() && dict.GetFloat("s_shakes") != 0.0f) {
                 soundShader = DeclManager.declManager.FindSound(soundShaderName)
                 for (i in 0 until soundShader.GetNumSounds()) {
-                    soundName.oSet(soundShader.GetSound(i))
+                    soundName.set(soundShader.GetSound(i))
                     soundName.BackSlashesToSlashes()
                     shakeSounds.addUnique(soundName)
                 }

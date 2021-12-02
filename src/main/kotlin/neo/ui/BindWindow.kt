@@ -96,7 +96,7 @@ class BindWindow {
         }
 
         private fun CommonInit() {
-            bindName.data.oSet("")
+            bindName.data.set("")
             waitingOnKey = false
         }
 

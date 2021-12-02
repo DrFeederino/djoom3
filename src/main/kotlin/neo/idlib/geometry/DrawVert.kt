@@ -51,25 +51,6 @@ object DrawVert {
         }
 
         /**
-         * copy constructor
-         *
-         * @param dv
-         */
-        constructor(dv: idDrawVert?) {
-            if (null == dv) {
-                xyz = idVec3()
-                st = idVec2()
-                normal = idVec3()
-                tangents = idVec3.generateArray(2)
-                return
-            }
-            xyz = idVec3(dv.xyz)
-            st = idVec2(dv.st)
-            normal = idVec3(dv.normal)
-            tangents = arrayOf(idVec3(dv.tangents[0]), idVec3(dv.tangents[1]))
-        }
-
-        /**
          * cast constructor
          *
          * @param buffer

@@ -290,7 +290,7 @@ object MultiplayerGame {
                 }
                 pingUpdateTime = Game_local.gameLocal.time + 1000
             }
-            warmupText.oSet("")
+            warmupText.set("")
             when (gameState) {
                 MultiplayerGame.idMultiplayerGame.gameState_t.GAMEREVIEW -> {
                     if (nextState == MultiplayerGame.idMultiplayerGame.gameState_t.INACTIVE) {
@@ -330,7 +330,7 @@ object MultiplayerGame {
                         nextStateSwitch =
                             Game_local.gameLocal.time + 1000 * CVarSystem.cvarSystem.GetCVarInteger("g_countDown")
                     }
-                    warmupText.oSet("Warming up.. waiting for players to get ready")
+                    warmupText.set("Warming up.. waiting for players to get ready")
                     three = false
                     two = three
                     one = two
@@ -347,7 +347,7 @@ object MultiplayerGame {
                         PlayGlobalSound(-1, snd_evt_t.SND_ONE)
                         one = true
                     }
-                    warmupText.oSet(Str.va("Match starts in %d", timeLeft))
+                    warmupText.set(Str.va("Match starts in %d", timeLeft))
                 }
                 MultiplayerGame.idMultiplayerGame.gameState_t.GAMEON -> {
                     player = FragLimitHit()
@@ -643,7 +643,7 @@ object MultiplayerGame {
                 CVarSystem.cvarSystem.SetCVarBool("ui_chat", true)
             }
             nextMenu = 0
-            Game_local.gameLocal.sessionCommand.oSet("") // in case we used "game_startMenu" to trigger the menu
+            Game_local.gameLocal.sessionCommand.set("") // in case we used "game_startMenu" to trigger the menu
             if (currentMenu == 1) {
                 UpdateMainGui()
 
@@ -1390,7 +1390,7 @@ object MultiplayerGame {
                 outMsg.WriteString(_voteString)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
             }
-            voteString.oSet(_voteString)
+            voteString.set(_voteString)
             AddChatLine(
                 Str.va(
                     Common.common.GetLanguageDict().GetString("#str_04279"),
@@ -1415,7 +1415,7 @@ object MultiplayerGame {
             yesVotes = 1f
             noVotes = 0f
             vote = voteIndex
-            this.voteValue.oSet(voteValue)
+            this.voteValue.set(voteValue)
             voteTimeOut = Game_local.gameLocal.time + 20000
             // mark players allowed to vote - only current ingame players, players joining during vote will be ignored
             i = 0
@@ -1832,7 +1832,7 @@ object MultiplayerGame {
                     str = str.Right(str.Length() - n - 1)
                 } else {
                     skin = str
-                    str.oSet("")
+                    str.set("")
                 }
                 DeclManager.declManager.FindSkin(skin, false)
             }
@@ -3342,11 +3342,11 @@ object MultiplayerGame {
             msgmodeGui.SetStateString("chattext", "")
             nextMenu = 2
             // let the session know that we want our ingame main menu opened
-            Game_local.gameLocal.sessionCommand.oSet("game_startmenu")
+            Game_local.gameLocal.sessionCommand.set("game_startmenu")
         }
 
         private fun DisableMenu() {
-            Game_local.gameLocal.sessionCommand.oSet("") // in case we used "game_startMenu" to trigger the menu
+            Game_local.gameLocal.sessionCommand.set("") // in case we used "game_startMenu" to trigger the menu
             if (currentMenu == 1) {
                 mainGui.Activate(false, Game_local.gameLocal.time)
             } else if (currentMenu == 2) {

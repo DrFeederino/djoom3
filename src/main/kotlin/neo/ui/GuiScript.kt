@@ -511,7 +511,7 @@ object GuiScript {
                 var str: String? = window.cmd.toString()
                 str += " ; runScript "
                 str += parm.c_str()
-                window.cmd.oSet(str)
+                window.cmd.set(str)
             }
         }
 

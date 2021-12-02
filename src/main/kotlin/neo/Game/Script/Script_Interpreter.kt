@@ -1632,16 +1632,16 @@ object Script_Interpreter {
             return when (d.Type()) {
                 Script_Program.ev_float -> {
                     if (reg.getFloatPtr() != 0.0f) {
-                        out.oSet(Str.va("%g", reg.getFloatPtr()))
+                        out.set(Str.va("%g", reg.getFloatPtr()))
                     } else {
-                        out.oSet("0")
+                        out.set("0")
                     }
                     true
                 }
                 Script_Program.ev_vector -> {
                     //                    if (reg.vectorPtr != null) {
                     val vectorPtr = idVec3(reg.getVectorPtr())
-                    out.oSet(Str.va("%g,%g,%g", vectorPtr.x, vectorPtr.y, vectorPtr.z))
+                    out.set(Str.va("%g,%g,%g", vectorPtr.x, vectorPtr.y, vectorPtr.z))
                     //                    } else {
 //                        out.oSet("0,0,0");
 //                    }
@@ -1649,9 +1649,9 @@ object Script_Interpreter {
                 }
                 Script_Program.ev_boolean -> {
                     if (reg.getIntPtr() != 0) {
-                        out.oSet(Str.va("%d", reg.getIntPtr()))
+                        out.set(Str.va("%d", reg.getIntPtr()))
                     } else {
-                        out.oSet("0")
+                        out.set("0")
                     }
                     true
                 }
@@ -1675,11 +1675,11 @@ object Script_Interpreter {
                     }
                     when (field.Type()) {
                         Script_Program.ev_boolean -> {
-                            out.oSet(Str.va("%d", obj.data.getInt(reg.getPtrOffset())))
+                            out.set(Str.va("%d", obj.data.getInt(reg.getPtrOffset())))
                             true
                         }
                         Script_Program.ev_float -> {
-                            out.oSet(Str.va("%g", obj.data.getFloat(reg.getPtrOffset())))
+                            out.set(Str.va("%g", obj.data.getFloat(reg.getPtrOffset())))
                             true
                         }
                         else -> false
@@ -1687,11 +1687,11 @@ object Script_Interpreter {
                 }
                 Script_Program.ev_string -> {
                     if (reg.stringPtr != null) {
-                        out.oSet("\"")
-                        out.oPluSet(reg.stringPtr)
-                        out.oPluSet("\"")
+                        out.set("\"")
+                        out.plusAssign(reg.stringPtr)
+                        out.plusAssign("\"")
                     } else {
-                        out.oSet("\"\"")
+                        out.set("\"\"")
                     }
                     true
                 }

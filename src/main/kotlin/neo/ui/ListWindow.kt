@@ -167,7 +167,7 @@ object ListWindow {
                     return ret
                 }
                 if (gui.GetTime() > typedTime + 1000) {
-                    typed.oSet("")
+                    typed.set("")
                 }
                 typedTime = gui.GetTime()
                 typed.Append(key.toChar())
@@ -521,7 +521,7 @@ object ListWindow {
             top = value.toInt()
             typedTime = 0
             clickTime = 0
-            typed.oSet("")
+            typed.set("")
         }
 
         override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
@@ -578,7 +578,7 @@ object ListWindow {
         }
 
         private fun CommonInit() {
-            typed.oSet("")
+            typed.set("")
             typedTime = 0
             clickTime = 0
             currentSel.Clear()

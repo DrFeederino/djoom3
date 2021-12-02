@@ -990,7 +990,7 @@ object snd_system {
                         continue
                     }
                     decoderInfo.name = sample.name
-                    decoderInfo.format.oSet(if (sample.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV")
+                    decoderInfo.format.set(if (sample.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV")
                     decoderInfo.numChannels = sample.objectInfo.nChannels
                     decoderInfo.numSamplesPerSecond = sample.objectInfo.nSamplesPerSec.toLong()
                     decoderInfo.num44kHzSamples = sample.LengthIn44kHzSamples()
@@ -1053,7 +1053,7 @@ object snd_system {
             val mapname = idStr(mapString)
             mapname.SetFileExtension(".efx")
             mapname.StripPath()
-            efxname.oPluSet(mapname)
+            efxname.plusAssign(mapname)
             efxloaded = EFXDatabase.LoadFile(efxname.toString())
             if (efxloaded) {
                 Common.common.Printf("sound: found %s\n", efxname)

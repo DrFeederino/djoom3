@@ -51,7 +51,7 @@ class CRC32 {
                 c = if (c and 1 == 1L) poly xor (c shr 1) else c shr 1
                 j++
             }
-            CRC32.Companion.crctable.get(i) = c
+            crctable[i] = c
             i++
         }
     }
@@ -63,7 +63,7 @@ class CRC32 {
         /*
      Table of CRC-32's of all single-byte values (made by make_crc_table)
      */
-        val crctable: LongArray? = longArrayOf(
+        val crctable: LongArray = longArrayOf(
             0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL,
             0x076dc419L, 0x706af48fL, 0xe963a535L, 0x9e6495a3L,
             0x0edb8832L, 0x79dcb8a4L, 0xe0d5e91eL, 0x97d2d988L,
@@ -130,35 +130,35 @@ class CRC32 {
             0xb40bbe37L, 0xc30c8ea1L, 0x5a05df1bL, 0x2d02ef8dL
         )
 
-        fun CRC32_InitChecksum(crcvalue: LongArray?) {
-            crcvalue.get(0) = CRC32.Companion.CRC32_INIT_VALUE
+        fun CRC32_InitChecksum(crcvalue: LongArray) {
+            crcvalue[0] = CRC32_INIT_VALUE
         }
 
-        fun CRC32_Update(crcvalue: LongArray?, data: Byte) {
-            crcvalue.get(0) =
-                CRC32.Companion.crctable.get((crcvalue.get(0) xor data).toInt() and 0xff) xor (crcvalue.get(0) shr 8)
+        fun CRC32_Update(crcvalue: LongArray, data: Byte) {
+            crcvalue[0] =
+                crctable[(crcvalue[0] xor data.toLong()).toInt() and 0xff] xor (crcvalue[0] shr 8)
         }
 
-        fun CRC32_UpdateChecksum(crcvalue: LongArray?, data: CharArray?, length: Int) {
+        fun CRC32_UpdateChecksum(crcvalue: LongArray, data: CharArray, length: Int) {
             var length = length
             var crc: Long
             var buf = 0
-            crc = crcvalue.get(0)
+            crc = crcvalue[0]
             while (length-- != 0) {
-                crc = CRC32.Companion.crctable.get((crc xor data.get(buf++)).toInt() and 0xff) xor (crc shr 8)
+                crc = crctable[(crc xor data[buf++].code.toLong()).toInt() and 0xff] xor (crc shr 8)
             }
-            crcvalue.get(0) = crc
+            crcvalue[0] = crc
         }
 
-        fun CRC32_FinishChecksum(crcvalue: LongArray?) {
-            crcvalue.get(0) = crcvalue.get(0) xor CRC32.Companion.CRC32_XOR_VALUE
+        fun CRC32_FinishChecksum(crcvalue: LongArray) {
+            crcvalue[0] = crcvalue[0] xor CRC32_XOR_VALUE
         }
 
-        fun CRC32_BlockChecksum(data: CharArray?, length: Int): Long {
+        fun CRC32_BlockChecksum(data: CharArray, length: Int): Long {
             val crc = LongArray(1)
-            CRC32.Companion.CRC32_InitChecksum(crc)
-            CRC32.Companion.CRC32_UpdateChecksum(crc, data, length)
-            CRC32.Companion.CRC32_FinishChecksum(crc)
+            CRC32_InitChecksum(crc)
+            CRC32_UpdateChecksum(crc, data, length)
+            CRC32_FinishChecksum(crc)
             return crc[0]
         }
     }

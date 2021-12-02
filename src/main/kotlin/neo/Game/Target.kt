@@ -225,7 +225,7 @@ object Target {
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity?>?) {
-            Game_local.gameLocal.sessionCommand.oSet(spawnArgs.GetString("command"))
+            Game_local.gameLocal.sessionCommand.set(spawnArgs.GetString("command"))
         }
 
         override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
@@ -263,13 +263,13 @@ object Target {
             if (BuildDefines.ID_DEMO_BUILD) {
                 if (spawnArgs.GetBool("endOfGame")) {
                     CVarSystem.cvarSystem.SetCVarBool("g_nightmare", true)
-                    Game_local.gameLocal.sessionCommand.oSet("endofDemo")
+                    Game_local.gameLocal.sessionCommand.set("endofDemo")
                     return
                 }
             } else {
                 if (spawnArgs.GetBool("endOfGame")) {
                     CVarSystem.cvarSystem.SetCVarBool("g_nightmare", true)
-                    Game_local.gameLocal.sessionCommand.oSet("disconnect")
+                    Game_local.gameLocal.sessionCommand.set("disconnect")
                     return
                 }
             }
@@ -278,11 +278,11 @@ object Target {
                 return
             }
             if (spawnArgs.GetInt("devmap", "0") != 0) {
-                Game_local.gameLocal.sessionCommand.oSet("devmap ") // only for special demos
+                Game_local.gameLocal.sessionCommand.set("devmap ") // only for special demos
             } else {
-                Game_local.gameLocal.sessionCommand.oSet("map ")
+                Game_local.gameLocal.sessionCommand.set("map ")
             }
-            Game_local.gameLocal.sessionCommand.oPluSet(nextMap[0])
+            Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0])
         }
 
         override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {

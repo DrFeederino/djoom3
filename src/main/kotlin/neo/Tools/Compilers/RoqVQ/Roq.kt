@@ -180,7 +180,7 @@ object Roq {
         fun LoadAndDisplayImage(filename: String?) {
 //	if (image) delete image;
             Common.common.Printf("loadAndDisplayImage: %s\n", filename)
-            currentFile.oSet(filename)
+            currentFile.set(filename)
             image = NSBitmapImageRep(filename)
             numQuadCels =
                 (image.pixelsWide() and 0xfff0) * (image.pixelsHigh() and 0xfff0) / (QuadDefs.MINSIZE * QuadDefs.MINSIZE)
@@ -224,7 +224,7 @@ object Roq {
                 i = 30 // framerate
                 Write16Word(i, RoQFile)
             }
-            roqOutfile.oSet(RoQFilename)
+            roqOutfile.set(RoQFilename)
         }
 
         fun InitRoQPatterns() {

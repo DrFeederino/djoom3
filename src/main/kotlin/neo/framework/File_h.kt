@@ -484,7 +484,7 @@ object File_h {
                 stringBytes = ByteBuffer.allocate(capacity) //2 bytes per char
                 //                string.Fill(' ', len[0]);
                 result = Read(stringBytes)
-                string.oSet(String(stringBytes.array()))
+                string.set(String(stringBytes.array()))
             }
             return result
         }
@@ -1176,7 +1176,7 @@ object File_h {
         }
 
         override fun GetFullPath(): String? {
-            return fullPath.oPlus('/').oPlus(name).toString()
+            return fullPath.plus('/').plus(name).toString()
         }
 
         override fun Read(buffer: ByteBuffer?): Int {

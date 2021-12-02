@@ -1350,7 +1350,7 @@ object Window {
         }
 
         open fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
-            cmd.oSet("")
+            cmd.set("")
             if (flags and WIN_DESKTOP != 0) {
                 actionDownRun = false
                 actionUpRun = false
@@ -1580,13 +1580,13 @@ object Window {
                     }
                 }
             }
-            gui.GetReturnCmd().oSet(cmd)
+            gui.GetReturnCmd().set(cmd)
             if (gui.GetPendingCmd().Length() != 0) {
-                gui.GetReturnCmd().oPluSet(" ; ")
-                gui.GetReturnCmd().oPluSet(gui.GetPendingCmd())
+                gui.GetReturnCmd().plusAssign(" ; ")
+                gui.GetReturnCmd().plusAssign(gui.GetPendingCmd())
                 gui.GetPendingCmd().Clear()
             }
-            cmd.oSet("")
+            cmd.set("")
             return gui.GetReturnCmd().toString()
         }
 
@@ -1901,7 +1901,7 @@ object Window {
                             str = overChild.cmd.toString()
                             if (TempDump.isNotNullOrEmpty(str)) {
                                 gui.GetDesktop().AddCommand(str)
-                                overChild.cmd.oSet("")
+                                overChild.cmd.set("")
                             }
                         }
                         overChild = child
@@ -1909,7 +1909,7 @@ object Window {
                         str = overChild.cmd.toString()
                         if (TempDump.isNotNullOrEmpty(str)) {
                             gui.GetDesktop().AddCommand(str)
-                            overChild.cmd.oSet("")
+                            overChild.cmd.set("")
                         }
                     } else {
                         if (0 == child.flags and WIN_HOLDCAPTURE) {
@@ -1924,7 +1924,7 @@ object Window {
                 str = overChild.cmd.toString()
                 if (TempDump.isNotNullOrEmpty(str)) {
                     gui.GetDesktop().AddCommand(str)
-                    overChild.cmd.oSet("")
+                    overChild.cmd.set("")
                 }
                 overChild = null
             }
@@ -2622,7 +2622,7 @@ object Window {
             } else {
                 str = _cmd
             }
-            cmd.oSet(str)
+            cmd.set(str)
         }
 
         fun AddUpdateVar(`var`: idWinVar?) {
@@ -2690,7 +2690,7 @@ object Window {
         }
 
         fun SetComment(p: String?) {
-            comment.oSet(p)
+            comment.set(p)
         }
 
         open fun RunNamedEvent(eventName: String?) {
@@ -2946,9 +2946,9 @@ object Window {
             hoverColor.oSet(idVec4(1, 1, 1, 1))
             matColor.oSet(idVec4(1, 1, 1, 1))
             borderColor.Zero()
-            text.data.oSet("")
+            text.data.set("")
             background = null
-            backGroundName.data.oSet("")
+            backGroundName.data.set("")
         }
 
         ////
@@ -3043,7 +3043,7 @@ object Window {
             if (timeLine == -1) {
                 timeLine = gui.GetTime()
             }
-            cmd.oSet("")
+            cmd.set("")
             val c = timeLineEvents.Num()
             if (c > 0) {
                 for (i in 0 until c) {
@@ -3054,7 +3054,7 @@ object Window {
                 }
             }
             if (gui.Active()) {
-                gui.GetPendingCmd().oPluSet(cmd)
+                gui.GetPendingCmd().plusAssign(cmd)
             }
         }
 
@@ -3690,7 +3690,7 @@ object Window {
         protected fun ParseString(src: idParser?, out: idStr?) {
             val tok = idToken()
             if (src.ReadToken(tok)) {
-                out.oSet(tok)
+                out.set(tok)
             }
         }
 

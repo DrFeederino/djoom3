@@ -301,10 +301,10 @@ object dmap {
         if (i >= args.Argc()) {
             idLib.common.Error("usage: dmap [options] mapfile")
         }
-        passedName.oSet(args.Argv(i)) // may have an extension
+        passedName.set(args.Argv(i)) // may have an extension
         passedName.BackSlashesToSlashes()
         if (passedName.Icmpn("maps/", 4) != 0) {
-            passedName.oSet("maps/$passedName")
+            passedName.set("maps/$passedName")
         }
         val stripped = passedName
         stripped.StripFileExtension()

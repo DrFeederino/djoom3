@@ -791,7 +791,7 @@ object Frustum {
             invFar = 0.0f
             this.dFar = invFar
             dNear = this.dFar
-            dir.set(box.GetCenter().minus(projectionOrigin))
+            dir.set(box.GetCenter() - projectionOrigin)
             if (dir.Normalize() == 0.0f) {
                 return false
             }
@@ -912,10 +912,13 @@ object Frustum {
             val s: Float
             val x: Float
             val y: Float
+
             assert(dFar > 0.0f)
-            dir.set(sphere.GetOrigin().minus(projectionOrigin))
+
+            dir.set(sphere.GetOrigin() - projectionOrigin)
             d = dir.Normalize()
             r = sphere.GetRadius()
+
             if (d <= r + 1.0f) {
                 invFar = 0.0f
                 this.dFar = invFar
@@ -1238,13 +1241,7 @@ object Frustum {
 
                 // test the outer edges of this frustum for intersection with the bounds
                 if (outside and 2 == 2 && outside and 8 == 8) {
-                    BoundsRayIntersection(
-                        bounds,
-                        localOrigin,
-                        localScaled[0].minus(localScaled[1].minus(localScaled[2])),
-                        scale1,
-                        scale2
-                    )
+                    BoundsRayIntersection( bounds, localOrigin, localScaled[0] - localScaled[1] - localScaled[2], scale1, scale2 )
                     if (scale1._val <= scale2._val && scale1._val >= 0.0f) {
                         projectionBounds.AddPoint(idVec3(scale1._val * dFar, -1.0f, -1.0f))
                         projectionBounds.AddPoint(idVec3(scale2._val * dFar, -1.0f, -1.0f))
@@ -1437,12 +1434,7 @@ object Frustum {
 
                 // test the outer edges of this frustum for intersection with the other frustum
                 if (outside and 2 == 2 && outside and 8 == 8) {
-                    frustum.LocalRayIntersection(
-                        localOrigin,
-                        localScaled[0].minus(localScaled[1]).minus(localScaled[2]),
-                        scale1,
-                        scale2
-                    )
+                    frustum.LocalRayIntersection( localOrigin, localScaled[0] - localScaled[1] - localScaled[2], scale1, scale2 )
                     if (scale1._val <= scale2._val && scale1._val >= 0.0f) {
                         projectionBounds.AddPoint(idVec3(scale1._val * dFar, -1.0f, -1.0f))
                         projectionBounds.AddPoint(idVec3(scale2._val * dFar, -1.0f, -1.0f))
@@ -1564,12 +1556,7 @@ object Frustum {
 
                 // test the outer edges of this frustum for intersection with the winding
                 if (outside and 2 == 2 && outside and 8 == 8) {
-                    if (winding.RayIntersection(
-                            plane,
-                            origin,
-                            scaled[0].minus(scaled[1]).minus(scaled[2]),
-                            scale
-                        )
+                    if (winding.RayIntersection( plane, origin, scaled[0] - scaled[1] + scaled[2], scale )
                     ) {
                         projectionBounds.AddPoint(idVec3(scale._val * dFar, -1.0f, -1.0f))
                     }
@@ -1890,20 +1877,9 @@ object Frustum {
 
                 // test the outer edges of this frustum for intersection with both the other frustum and the clip bounds
                 if (outside and 2 != 0 && outside and 8 != 0) {
-                    frustum.LocalRayIntersection(
-                        localOrigin1,
-                        localAxis1[0].minus(localAxis1[1].minus(localAxis1[2])),
-                        s1,
-                        s2
-                    )
+                    frustum.LocalRayIntersection( localOrigin1, localAxis1[0] - localAxis1[1] - localAxis1[2], s1, s2 )
                     if (s1._val <= s2._val && s1._val >= 0.0f) {
-                        BoundsRayIntersection(
-                            clipBounds,
-                            localOrigin2,
-                            localAxis2[0].minus(localAxis2[1].minus(localAxis2[2])),
-                            t1,
-                            t2
-                        )
+                        BoundsRayIntersection( clipBounds, localOrigin2, localAxis2[0] - localAxis2[1] - localAxis2[2], t1, t2 )
                         if (t1._val <= t2._val && t2._val > s1._val && t1._val < s2._val) {
                             projectionBounds.AddPoint(idVec3(s1._val * dFar, -1.0f, -1.0f))
                             projectionBounds.AddPoint(idVec3(s2._val * dFar, -1.0f, -1.0f))
@@ -2226,7 +2202,7 @@ object Frustum {
             var startInside = 1
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.set(end.minus(start))
+            dir.set(end - start)
 
             // test near plane
             if (dNear > 0.0f) {
@@ -2711,7 +2687,7 @@ object Frustum {
 //#endif
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.set(end.minus(start))
+            dir.set(end - start)
             fstart = dFar * start.y
             fend = dFar * end.y
             lstart = dLeft * start.x
@@ -2856,7 +2832,7 @@ object Frustum {
 //#endif
             leftScale = dLeft * invFar
             upScale = dUp * invFar
-            dir.set(end.minus(start))
+            dir.set(end - start)
             if (clip and (1 or 2) != 0) {
                 fstart = dFar * start.y
                 fend = dFar * end.y
@@ -3191,7 +3167,7 @@ object Frustum {
             upScale = dUp * invFar
             localStart.set(localPoints[startIndex])
             localEnd.set(localPoints[endIndex])
-            localDir.set(localEnd.minus(localStart))
+            localDir.set(localEnd - localStart)
             startClip._val = (endClip._val - 1)
             scale1 = idMath.INFINITY
             scale2 = -idMath.INFINITY

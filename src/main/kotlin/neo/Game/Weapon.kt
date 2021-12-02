@@ -155,7 +155,7 @@ object Weapon {
                     if (brassDef != null) {
                         brassDef.dict.GetString("clipmodel", "", clipModelName)
                         if (!TempDump.isNotNullOrEmpty(clipModelName)) {
-                            clipModelName.oSet(brassDef.dict.GetString("model")) // use the visual model
+                            clipModelName.set(brassDef.dict.GetString("model")) // use the visual model
                         }
                         // load the trace model
                         CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)
@@ -884,7 +884,7 @@ object Weapon {
             strikePos.Zero()
             strikeAxis = idMat3.Companion.getMat3_identity()
             nextStrikeFx = 0
-            icon.oSet("")
+            icon.set("")
             playerViewAxis.Identity()
             playerViewOrigin.Zero()
             viewWeaponAxis.Identity()
@@ -893,13 +893,13 @@ object Weapon {
             muzzleOrigin.Zero()
             pushVelocity.Zero()
             status = weaponStatus_t.WP_HOLSTERED
-            state.oSet("")
-            idealState.oSet("")
+            state.set("")
+            idealState.set("")
             animBlendFrames = 0
             animDoneTime = 0
             projectileDict.Clear()
             meleeDef = null
-            meleeDefName.oSet("")
+            meleeDefName.set("")
             meleeDistance = 0.0f
             brassDict.Clear()
             flashTime = 250
@@ -966,7 +966,7 @@ object Weapon {
             ammoRequired = weaponDef.dict.GetInt("ammoRequired")
             clipSize = weaponDef.dict.GetInt("clipSize")
             lowAmmo = weaponDef.dict.GetInt("lowAmmo")
-            icon.oSet(weaponDef.dict.GetString("icon"))
+            icon.set(weaponDef.dict.GetString("icon"))
             silent_fire = weaponDef.dict.GetBool("silent_fire")
             powerAmmo = weaponDef.dict.GetBool("powerAmmo")
             muzzle_kick_time = Math_h.SEC2MS(weaponDef.dict.GetFloat("muzzle_kick_time")).toInt()
@@ -1104,7 +1104,7 @@ object Weapon {
 
             // get the melee damage def
             meleeDistance = weaponDef.dict.GetFloat("melee_distance")
-            meleeDefName.oSet(weaponDef.dict.GetString("def_melee"))
+            meleeDefName.set(weaponDef.dict.GetString("def_melee"))
             if (meleeDefName.Length() != 0) {
                 meleeDef = Game_local.gameLocal.FindEntityDef(meleeDefName.toString(), false)
                 if (null == meleeDef) {
@@ -1590,12 +1590,12 @@ object Weapon {
                 )
             }
             thread.CallFunction(this, func, true)
-            state.oSet(statename)
+            state.set(statename)
             animBlendFrames = blendFrames
             if (SysCvar.g_debugWeapon.GetBool()) {
                 Game_local.gameLocal.Printf("%d: weapon state : %s\n", Game_local.gameLocal.time, statename)
             }
-            idealState.oSet("")
+            idealState.set("")
         }
 
         fun UpdateScript() {
@@ -1915,12 +1915,12 @@ object Weapon {
 
                 // immediately go to the firing state so we don't skip fire animations
                 if (!WEAPON_NETFIRING.underscore() && isFiring) {
-                    idealState.oSet("Fire")
+                    idealState.set("Fire")
                 }
 
                 // immediately switch back to idle
                 if (WEAPON_NETFIRING.underscore() && !isFiring) {
-                    idealState.oSet("Idle")
+                    idealState.set("Idle")
                 }
                 WEAPON_NETFIRING.underscore(isFiring)
             }
@@ -2210,7 +2210,7 @@ object Weapon {
                     scriptObject.GetTypeName()
                 )
             }
-            idealState.oSet(statename)
+            idealState.set(statename)
             isFiring = 0 == idealState.Icmp("Fire")
             animBlendFrames = blendFrames.value
             thread.DoneProcessing()

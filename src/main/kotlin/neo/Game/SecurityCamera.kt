@@ -135,7 +135,7 @@ object SecurityCamera {
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", str)
             if (!TempDump.isNotNullOrEmpty(str)) {
-                str.oSet(spawnArgs.GetString("model")) // use the visual model
+                str.set(spawnArgs.GetString("model")) // use the visual model
             }
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(str, trm)) {
                 idGameLocal.Companion.Error("idSecurityCamera '%s': cannot load collision model %s", name, str)

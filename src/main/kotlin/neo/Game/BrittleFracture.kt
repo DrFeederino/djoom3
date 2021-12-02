@@ -300,7 +300,7 @@ object BrittleFracture {
             minShatterRadius = spawnArgs.GetFloat("minShatterRadius", "10")
             linearVelocityScale = spawnArgs.GetFloat("linearVelocityScale", "0.1")
             angularVelocityScale = spawnArgs.GetFloat("angularVelocityScale", "40")
-            fxFracture.oSet(spawnArgs.GetString("fx"))
+            fxFracture.set(spawnArgs.GetString("fx"))
 
             // get rigid body properties
             shardMass = spawnArgs.GetFloat("shardMass", "20")

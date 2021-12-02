@@ -640,7 +640,7 @@ object CmdSystem {
                 parm = idStr(args.Argv(1))
                 parm.ExtractFilePath(path)
                 if (stripFolder || path.Length() == 0) {
-                    path.oSet(folder).Append(path)
+                    path.set(folder).Append(path)
                 }
                 path.StripTrailing('/')
 
@@ -673,7 +673,7 @@ object CmdSystem {
                         } else {
                             name.Strip("/")
                         }
-                        name.oSet(args.Argv(0) + " $name")
+                        name.set(args.Argv(0) + " $name")
                         completionParms.add(name)
                         i++
                     }

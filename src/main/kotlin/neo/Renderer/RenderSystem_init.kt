@@ -537,7 +537,7 @@ object RenderSystem_init {
             d = frac / 10
             frac -= d * 10
             e = frac
-            fileName.oSet(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e))
+            fileName.set(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e))
             if (lastNumber.getVal() == 99999) {
                 break
             }
@@ -1155,7 +1155,7 @@ object RenderSystem_init {
                 width = tr_local.glConfig.vidWidth
                 height = tr_local.glConfig.vidHeight
                 blends = 1
-                checkName.oSet(args.Argv(1))
+                checkName.set(args.Argv(1))
             }
             3 -> {
                 width = args.Argv(1).toInt()
@@ -1418,7 +1418,7 @@ object RenderSystem_init {
                     width = tr_local.glConfig.vidWidth
                     height = tr_local.glConfig.vidHeight
                     blends = 1
-                    checkname.oSet(args.Argv(1))
+                    checkname.set(args.Argv(1))
                 }
                 3 -> {
                     width = args.Argv(1).toInt()
@@ -1957,7 +1957,7 @@ object RenderSystem_init {
             // try to play the matching wav file
             val wavString = idStr(args.Argv(if (args.Argc() == 2) 1 else 2))
             wavString.StripFileExtension()
-            wavString.oPluSet(".wav")
+            wavString.plusAssign(".wav")
             Session.Companion.session.sw.PlayShaderDirectly(wavString.toString())
         }
 

@@ -1914,7 +1914,7 @@ object Projectile {
             if (numListedEntities != 0) {
                 StartSound("snd_beam", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
             }
-            damageFreq.oSet(spawnArgs.GetString("def_damageFreq"))
+            damageFreq.set(spawnArgs.GetString("def_damageFreq"))
             nextDamageTime = Game_local.gameLocal.time + Projectile.BFG_DAMAGE_FREQUENCY
             UpdateVisuals()
         }
@@ -2143,7 +2143,7 @@ object Projectile {
             val trm = idTraceModel()
             spawnArgs.GetString("clipmodel", "", clipModelName)
             if (clipModelName.IsEmpty()) {
-                clipModelName.oSet(spawnArgs.GetString("model")) // use the visual model
+                clipModelName.set(spawnArgs.GetString("model")) // use the visual model
             }
 
             // load the trace model

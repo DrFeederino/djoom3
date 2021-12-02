@@ -2008,7 +2008,7 @@ options:
                     mapName = idStr(args.Argv(i))
                     mapName.BackSlashesToSlashes()
                     if (mapName.Icmpn("maps/", 4) != 0) {
-                        mapName.oSet("maps/$mapName")
+                        mapName.set("maps/$mapName")
                     }
                     aas.Build(mapName, settings)
                 }

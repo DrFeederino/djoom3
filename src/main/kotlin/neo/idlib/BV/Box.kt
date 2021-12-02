@@ -4,6 +4,7 @@ import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.BV.Sphere.idSphere
 import neo.idlib.containers.CFloat
 import neo.idlib.math.Math_h
+import neo.idlib.math.Math_h.Min3Index
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMatX
@@ -251,7 +252,7 @@ object Box {
         }
 
         operator fun times(r: idMat3): idBox {                // returns rotated box
-            return idBox(center.times(r), extents, axis.times(r))
+            return idBox(center * r, extents, axis * r)
         }
 
         fun timesAssign(r: idMat3): idBox {                    // rotate the box
@@ -349,7 +350,7 @@ object Box {
         }
 
         fun GetVolume(): Float {                        // returns the volume of the box
-            return extents.times(2.0f).LengthSqr()
+            return (extents * 2.0f).LengthSqr()
         }
 
         fun IsCleared(): Boolean {                        // returns true if box are inside out
@@ -368,35 +369,25 @@ object Box {
                 return true
             }
 
-            bounds1[0, 0] = bounds1.set(1, 0, center.times(axis[0]))
-            bounds1[0, 1] = bounds1.set(1, 1, center.times(axis[1]))
-            bounds1[0, 2] = bounds1.set(1, 2, center.times(axis[2]))
+            bounds1[0, 0] = bounds1.set(1, 0, center * axis[0])
+            bounds1[0, 1] = bounds1.set(1, 1, center * axis[1])
+            bounds1[0, 2] = bounds1.set(1, 2, center * axis[2])
             bounds1[0].minusAssign(extents)
             bounds1[1].plusAssign(extents)
 
-            if (!bounds1.AddPoint(
-                    idVec3(
-                        v.times(axis[0]),
-                        v.times(axis[1]),
-                        v.times(axis[2])
-                    )
-                )
+            if (!bounds1.AddPoint( idVec3( v * axis[0], v * axis[1], v * axis[2] ) )
             ) {
                 // point is contained in the box
                 return false
             }
             axis2[0] = v - center
             axis2[0].Normalize()
-            axis2[1] = axis[Math_h.Min3Index(
-                axis2[0].times(axis[0]),
-                axis2[0].times(axis[1]),
-                axis2[0].times(axis[2])
-            )]
+            axis2[1] = axis[ Min3Index( axis2[0] * axis[0], axis2[0] * axis[1], axis2[0] * axis[2] ) ]
             axis2[1] = axis2[1] - axis2[0] * (axis2[1] * axis2[0])
             axis2[1].Normalize()
             axis2[2].Cross(axis2[0], axis2[1])
             AxisProjection(axis2, bounds2)
-            bounds2.AddPoint(idVec3(v.times(axis2[0]), v.times(axis2[1]), v.times(axis2[2])))
+            bounds2.AddPoint(idVec3( v * axis2[0], v * axis2[1], v * axis2[2] ) )
 
             // create new box based on the smallest bounds
             if (bounds1.GetVolume() < bounds2.GetVolume()) {
@@ -434,9 +425,9 @@ object Box {
 
             // test axis of this box
             ax[0].set(axis)
-            bounds[0][0, 0] = bounds[0].set(1, 0, center.times(ax[0][0]))
-            bounds[0][0, 1] = bounds[0].set(1, 1, center.times(ax[0][1]))
-            bounds[0][0, 2] = bounds[0].set(1, 2, center.times(ax[0][2]))
+            bounds[0][0, 0] = bounds[0].set(1, 0, center * ax[0][0])
+            bounds[0][0, 1] = bounds[0].set(1, 1, center * ax[0][1])
+            bounds[0][0, 2] = bounds[0].set(1, 2, center * ax[0][2])
             bounds[0][0].minusAssign(extents)
             bounds[0][1].plusAssign(extents)
             a.AxisProjection(ax[0], b)
@@ -447,9 +438,9 @@ object Box {
 
             // test axis of other box
             ax[1].set(a.axis)
-            bounds[0][0, 0] = bounds[0].set(1, 0, a.center.times(ax[0][0]))
-            bounds[0][0, 1] = bounds[0].set(1, 1, a.center.times(ax[0][1]))
-            bounds[0][0, 2] = bounds[0].set(1, 2, a.center.times(ax[0][2]))
+            bounds[0][0, 0] = bounds[0].set(1, 0, center * ax[0][0])
+            bounds[0][0, 1] = bounds[0].set(1, 1, center * ax[0][1])
+            bounds[0][0, 2] = bounds[0].set(1, 2, center * ax[0][2])
             bounds[0][0].minusAssign(a.extents)
             bounds[0][1].plusAssign(a.extents)
             AxisProjection(ax[1], b)
@@ -462,17 +453,13 @@ object Box {
             }
 
             // test axes aligned with the vector between the box centers and one of the box axis
-            dir.set(a.center.minus(center))
+            dir.set(a.center - center)
             dir.Normalize()
             i = 2
             while (i < 4) {
                 ax[i][0] = dir
-                ax[i][1] = ax[i - 2][Math_h.Min3Index(
-                    dir.times(ax[i - 2][0]),
-                    dir.times(ax[i - 2][1]),
-                    dir.times(ax[i - 2][2])
-                )]
-                ax[i][1] = ax[i][1].minus(dir.times(ax[i][1].times(dir)))
+                ax[i][1] = ax[i - 2][Min3Index(dir * ax[i - 2][0], dir * ax[i - 2][1], dir * ax[i - 2][2])]
+                ax[i][1] = ax[i][1] - dir * (ax[i][1] * dir)
                 ax[i][1].Normalize()
                 ax[i][2].Cross(dir, ax[i][1])
                 AxisProjection(ax[i], bounds[i])
@@ -523,7 +510,7 @@ object Box {
         }
 
         fun Rotate(rotation: idMat3): idBox {            // return rotated box
-            return idBox(center.times(rotation), extents, axis.times(rotation))
+            return idBox( center * rotation, extents, axis * rotation )
         }
 
         fun RotateSelf(rotation: idMat3): idBox {            // rotate this box
@@ -566,7 +553,7 @@ object Box {
 
         //
         fun ContainsPoint(p: idVec3): Boolean {            // includes touching
-            val lp = idVec3(p.minus(center))
+            val lp = p - center
             if (abs(lp * axis[0]) > extents[0]
                 || abs(lp * axis[1]) > extents[1]
                 || abs(lp * axis[2]) > extents[2]
@@ -587,10 +574,10 @@ object Box {
             dir.set(a.center - center)
 
             // axis C0 + t * A0
-            c[0][0] = axis[0].times(a.axis[0])
-            c[0][1] = axis[0].times(a.axis[1])
-            c[0][2] = axis[0].times(a.axis[2])
-            axisdir[0] = axis[0].times(dir)
+            c[0][0] = axis[0] * a.axis[0]
+            c[0][1] = axis[0] * a.axis[1]
+            c[0][2] = axis[0] * a.axis[2]
+            axisdir[0] = axis[0] * dir
             ac[0][0] = abs(c[0][0])
             ac[0][1] = abs(c[0][1])
             ac[0][2] = abs(c[0][2])
@@ -602,10 +589,10 @@ object Box {
             }
 
             // axis C0 + t * A1
-            c[1][0] = axis[1].times(a.axis[0])
-            c[1][1] = axis[1].times(a.axis[1])
-            c[1][2] = axis[1].times(a.axis[2])
-            axisdir[1] = axis[1].times(dir)
+            c[1][0] = axis[1] * a.axis[0]
+            c[1][1] = axis[1] * a.axis[1]
+            c[1][2] = axis[1] * a.axis[2]
+            axisdir[1] = axis[1] * dir
             ac[1][0] = abs(c[1][0])
             ac[1][1] = abs(c[1][1])
             ac[1][2] = abs(c[1][2])
@@ -617,10 +604,10 @@ object Box {
             }
 
             // axis C0 + t * A2
-            c[2][0] = axis[2].times(a.axis[0])
-            c[2][1] = axis[2].times(a.axis[1])
-            c[2][2] = axis[2].times(a.axis[2])
-            axisdir[2] = axis[2].times(dir)
+            c[2][0] = axis[2] * a.axis[0]
+            c[2][1] = axis[2] * a.axis[1]
+            c[2][2] = axis[2] * a.axis[2]
+            axisdir[2] = axis[2] * dir
             ac[2][0] = abs(c[2][0])
             ac[2][1] = abs(c[2][1])
             ac[2][2] = abs(c[2][2])
@@ -632,7 +619,7 @@ object Box {
             }
 
             // axis C0 + t * B0
-            d = abs(a.axis[0].times(dir))
+            d = abs(a.axis[0] * dir)
             e0 = extents[0] * ac[0][0] + extents[1] * ac[1][0] + extents[2] * ac[2][0]
             e1 = a.extents[0]
             if (d > e0 + e1) {
@@ -640,7 +627,7 @@ object Box {
             }
 
             // axis C0 + t * B1
-            d = abs(a.axis[1].times(dir))
+            d = abs(a.axis[1] * dir )
             e0 = extents[0] * ac[0][1] + extents[1] * ac[1][1] + extents[2] * ac[2][1]
             e1 = a.extents[1]
             if (d > e0 + e1) {
@@ -648,7 +635,7 @@ object Box {
             }
 
             // axis C0 + t * B2
-            d = abs(a.axis[2].times(dir))
+            d = abs(a.axis[2] * dir)
             e0 = extents[0] * ac[0][2] + extents[1] * ac[1][2] + extents[2] * ac[2][2]
             e1 = a.extents[2]
             if (d > e0 + e1) {
@@ -838,7 +825,7 @@ object Box {
             sumZZ = 0.0f
             i = 0
             while (i < numPoints) {
-                dir.set(points[i].minus(center))
+                dir.set(points[i] - center)
                 sumXX += dir.x * dir.x
                 sumXY += dir.x * dir.y
                 sumXZ += dir.x * dir.z
@@ -886,11 +873,7 @@ object Box {
             i = 0
             while (i < numPoints) {
                 bounds.AddPoint(
-                    idVec3(
-                        points[i].times(axis[0]),
-                        points[i].times(axis[1]),
-                        points[i].times(axis[2])
-                    )
+                    idVec3(points[i] * axis[0], points[i] * axis[1], points[i] * axis[2])
                 )
                 i++
             }
@@ -909,9 +892,9 @@ object Box {
         fun ToPoints(points: Array<idVec3>) {
             val ax = idMat3()
             val temp: Array<idVec3> = idVec3.generateArray(4)
-            ax[0] = axis[0].times(extents[0])
-            ax[1] = axis[1].times(extents[1])
-            ax[2] = axis[2].times(extents[2])
+            ax[0] = axis[0] * extents[0]
+            ax[1] = axis[1] * extents[1]
+            ax[2] = axis[2] * extents[2]
             temp[0].set(center - ax[0])
             temp[1].set(center + ax[0])
             temp[2].set(ax[1] - ax[2])
@@ -933,20 +916,20 @@ object Box {
         //
         //					// calculates the projection of this box onto the given axis
         fun AxisProjection(dir: idVec3, min: CFloat, max: CFloat) {
-            val d1 = dir.times(center)
-            val d2 = (abs(extents[0] * dir.times(axis[0]))
-                    + abs(extents[1] * dir.times(axis[1]))
-                    + abs(extents[2] * dir.times(axis[2])))
+            val d1 = dir * center
+            val d2 = abs(extents[0] * (dir * axis[0])) +
+                    abs(extents[1] * (dir * axis[1])) +
+                    abs(extents[2] * (dir * axis[2]))
             min._val = (d1 - d2)
             max._val = (d1 + d2)
         }
 
         fun AxisProjection(ax: idMat3, bounds: idBounds) {
             for (i in 0..2) {
-                val d1 = ax[i].times(center)
-                val d2 = (abs(extents[0] * ax[i].times(axis[0]))
-                        + abs(extents[1] * ax[i].times(axis[1]))
-                        + abs(extents[2] * ax[i].times(axis[2])))
+                val d1 =  ax[i] * center
+                val d2 = abs(extents[0] * (ax[i] * axis[0])) +
+                        abs(extents[1] * (ax[i] * axis[1])) +
+                        abs(extents[2] * (ax[i] * axis[2]))
                 bounds[0, i] = d1 - d2
                 bounds[1, i] = d1 + d2
             }
@@ -963,19 +946,21 @@ object Box {
             val dir1 = idVec3()
             val dir2 = idVec3()
             ToPoints(points)
-            dir1.set(points[0].minus(projectionOrigin))
-            dir2.set(points[6].minus(projectionOrigin))
-            f = dir1.times(axis[0])
+
+            dir1.set(points[0] - projectionOrigin)
+            dir2.set(points[6] - projectionOrigin)
+
+            f = dir1 * axis[0]
             planeBits = Math_h.FLOATSIGNBITNOTSET(f)
-            f = dir2.times(axis[0])
+            f = dir2 * axis[0]
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 1)
-            f = dir1.times(axis[1])
+            f = dir1 * axis[1]
             planeBits = planeBits or (Math_h.FLOATSIGNBITNOTSET(f) shl 2)
-            f = dir2.times(axis[1])
+            f = dir2 * axis[1]
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 3)
-            f = dir1.times(axis[2])
+            f = dir1 * axis[2]
             planeBits = planeBits or (Math_h.FLOATSIGNBITNOTSET(f) shl 4)
-            f = dir2.times(axis[2])
+            f = dir2 * axis[2]
             planeBits = planeBits or (Math_h.FLOATSIGNBITSET(f) shl 5)
             index = boxPlaneBitsSilVerts[planeBits]
             i = 0
@@ -992,17 +977,19 @@ object Box {
             var planeBits: Int
             val index: IntArray?
             val points: Array<idVec3> = idVec3.generateArray(8)
+
             ToPoints(points)
+
             planeBits = 0
-            f = projectionDir.times(axis[0])
+            f = projectionDir * axis[0]
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = 1 shl Math_h.FLOATSIGNBITSET(f)
             }
-            f = projectionDir.times(axis[1])
+            f = projectionDir * axis[1]
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = planeBits or (4 shl Math_h.FLOATSIGNBITSET(f))
             }
-            f = projectionDir.times(axis[2])
+            f = projectionDir * axis[2]
             if (Math_h.FLOATNOTZERO(f)) {
                 planeBits = planeBits or (16 shl Math_h.FLOATSIGNBITSET(f))
             }

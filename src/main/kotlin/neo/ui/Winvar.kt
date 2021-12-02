@@ -326,21 +326,21 @@ object Winvar {
         //	public operator const idStr &() {
         fun LengthWithoutColors(): Int {
             if (guiDict != null && name != null && !name.isEmpty()) {
-                data.oSet(guiDict.GetString(GetName()))
+                data.set(guiDict.GetString(GetName()))
             }
             return data.LengthWithoutColors()
         }
 
         open fun Length(): Int {
             if (guiDict != null && name != null && !name.isEmpty()) {
-                data.oSet(guiDict.GetString(GetName()))
+                data.set(guiDict.GetString(GetName()))
             }
             return data.Length()
         }
 
         fun RemoveColors() {
             if (guiDict != null && name != null && !name.isEmpty()) {
-                data.oSet(guiDict.GetString(GetName()))
+                data.set(guiDict.GetString(GetName()))
             }
             data.RemoveColors()
         }
@@ -350,7 +350,7 @@ object Winvar {
         }
 
         override fun Set(`val`: String?) {
-            data.oSet(`val`)
+            data.set(`val`)
             if (guiDict != null) {
                 guiDict.Set(GetName(), data)
             }
@@ -359,7 +359,7 @@ object Winvar {
         override fun Update() {
             val s = GetName()
             if (guiDict != null && !s.isEmpty()) {
-                data.oSet(guiDict.GetString(s))
+                data.set(guiDict.GetString(s))
             }
         }
 
@@ -1141,7 +1141,7 @@ object Winvar {
         override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
-                data.oSet(guiDict.GetString(GetName()))
+                data.set(guiDict.GetString(GetName()))
             }
         }
 
@@ -1179,7 +1179,7 @@ object Winvar {
 
         override fun Length(): Int {
             if (guiDict != null) {
-                data.oSet(guiDict.GetString(GetName()))
+                data.set(guiDict.GetString(GetName()))
             }
             return data.Length()
         }
@@ -1189,7 +1189,7 @@ object Winvar {
         }
 
         override fun Set(`val`: String?) {
-            data.oSet(`val`)
+            data.set(`val`)
             if (guiDict != null) {
                 guiDict.Set(GetName(), data)
             }
@@ -1205,7 +1205,7 @@ object Winvar {
         override fun Update() {
             val s = GetName()
             if (guiDict != null && s.get(0) != '\u0000') {
-                data.oSet(guiDict.GetString(s))
+                data.set(guiDict.GetString(s))
                 if (mat != null) {
                     if (data.IsEmpty()) {
                         mat[0] = null

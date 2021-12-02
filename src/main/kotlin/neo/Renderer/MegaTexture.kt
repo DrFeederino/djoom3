@@ -430,7 +430,7 @@ object MegaTexture {
                 }
                 val outName = idStr(fileName)
                 outName.StripFileExtension()
-                outName.oPluSet("_preview.tga")
+                outName.plusAssign("_preview.tga")
                 Common.common.Printf("Creating %s.\n", outName.toString())
                 val header: megaTextureHeader_t?
                 val headerBuffer = megaTextureHeader_t.ReadDdsFileHeader_t()

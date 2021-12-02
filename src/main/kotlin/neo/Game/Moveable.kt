@@ -158,7 +158,7 @@ object Moveable {
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName)
             if (!TempDump.isNotNullOrEmpty(clipModelName)) {
-                clipModelName.oSet(spawnArgs.GetString("model")) // use the visual model
+                clipModelName.set(spawnArgs.GetString("model")) // use the visual model
             }
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {
                 idGameLocal.Companion.Error("idMoveable '%s': cannot load collision model %s", name, clipModelName)

@@ -346,9 +346,9 @@ class ChoiceWindow {
                         if (token == ";") {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
-                                str2.oSet(Common.common.GetLanguageDict().GetString(str2))
+                                str2.set(Common.common.GetLanguageDict().GetString(str2))
                                 choices.add(str2)
-                                str2.oSet("")
+                                str2.set("")
                             }
                             continue
                         }
@@ -360,14 +360,14 @@ class ChoiceWindow {
                         choices.add(str2)
                     }
                 }
-                latchedChoices.oSet(choicesStr.c_str())
+                latchedChoices.set(choicesStr.c_str())
             }
             if (choiceVals.Length() != 0 && latchedVals.Icmp(choiceVals.data) != 0) {
                 values.clear()
                 src.FreeSource()
                 src.SetFlags(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
                 src.LoadMemory(choiceVals.data, choiceVals.Length(), "<ChoiceVals>")
-                str2.oSet("")
+                str2.set("")
                 var negNum = false
                 if (src.IsLoaded()) {
                     while (src.ReadToken(token)) {
@@ -379,16 +379,16 @@ class ChoiceWindow {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
                                 values.add(str2)
-                                str2.oSet("") //TODO:what Da fuk? EDIT:yes yes, vision gets blury at 4 in teh morning!
+                                str2.set("") //TODO:what Da fuk? EDIT:yes yes, vision gets blury at 4 in teh morning!
                             }
                             continue
                         }
                         if (negNum) {
-                            str2.oPluSet("-")
+                            str2.plusAssign("-")
                             negNum = false
                         }
-                        str2.oPluSet(token)
-                        str2.oPluSet(" ")
+                        str2.plusAssign(token)
+                        str2.plusAssign(" ")
                     }
                     if (str2.Length() != 0) {
                         str2.StripTrailingWhitespace()
@@ -402,7 +402,7 @@ class ChoiceWindow {
                         name
                     )
                 }
-                latchedVals.oSet(choiceVals.c_str())
+                latchedVals.set(choiceVals.c_str())
             }
         }
     }

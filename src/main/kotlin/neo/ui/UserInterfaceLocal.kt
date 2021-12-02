@@ -100,7 +100,7 @@ class UserInterfaceLocal {
                 desktop = idWindow(this)
             }
             //            System.out.println("FAAAAAAAAAAAAAAAAAAR " + desktop);
-            source.oSet(qpath)
+            source.set(qpath)
             state.Set("text", "Test Text!")
             val src =
                 idParser(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
@@ -251,7 +251,7 @@ class UserInterfaceLocal {
             time = _time
             active = activate
             if (desktop != null) {
-                activateStr.oSet("")
+                activateStr.set("")
                 desktop.Activate(activate, activateStr)
                 return activateStr.toString()
             }
@@ -268,7 +268,7 @@ class UserInterfaceLocal {
         override fun ReadFromDemoFile(f: idDemoFile?) {
 //	idStr work;
             f.ReadDict(state)
-            source.oSet(state.GetString("name"))
+            source.set(state.GetString("name"))
             if (desktop == null) {
                 f.Log("creating new gui\n")
                 desktop = idWindow(this)

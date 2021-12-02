@@ -270,7 +270,7 @@ object Token {
             whiteSpaceStart_p = token.whiteSpaceStart_p
             whiteSpaceEnd_p = token.whiteSpaceEnd_p
             next = token.next
-            super.oSet(token)
+            super.set(token)
             return this
         }
 

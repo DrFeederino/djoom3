@@ -605,7 +605,7 @@ object Trigger {
                 )
             }
             triggerFirst = spawnArgs.GetBool("triggerFirst", "0")
-            entityName.oSet(spawnArgs.GetString("entityname"))
+            entityName.set(spawnArgs.GetString("entityname"))
             if (TempDump.NOT(entityName.Length().toDouble())) {
                 idGameLocal.Companion.Error(
                     "idTrigger_EntityName '%s' at (%s) doesn't have 'entityname' key specified",
@@ -771,8 +771,8 @@ object Trigger {
             wait = spawnArgs.GetFloat("wait", "1")
             on = spawnArgs.GetBool("start_on", "0")
             delay = spawnArgs.GetFloat("delay", "0")
-            onName.oSet(spawnArgs.GetString("onName"))
-            offName.oSet(spawnArgs.GetString("offName"))
+            onName.set(spawnArgs.GetString("onName"))
+            offName.set(spawnArgs.GetString("offName"))
             if (random >= wait && wait >= 0) {
                 random = wait - 0.001f
                 Game_local.gameLocal.Warning(

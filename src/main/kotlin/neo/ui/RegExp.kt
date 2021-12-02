@@ -172,7 +172,7 @@ class RegExp {
             for (i in 0..3) {
                 regs.get(i) = f.ReadUnsignedShort().toShort()
             }
-            name.oSet(f.ReadHashString())
+            name.set(f.ReadHashString())
         }
 
         fun WriteToDemoFile(f: idDemoFile?) {
@@ -233,7 +233,7 @@ class RegExp {
                         if ("#str_07184" == tok.toString()) {
                             reg.DBG_D3_KEY = true
                         }
-                        tok.oSet(Common.common.GetLanguageDict().GetString(tok.toString()))
+                        tok.set(Common.common.GetLanguageDict().GetString(tok.toString()))
                         `var`.Init(tok.toString(), win)
                     }
                 } else {

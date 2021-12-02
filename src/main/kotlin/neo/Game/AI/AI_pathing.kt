@@ -172,7 +172,7 @@ object AI_pathing {
         bestEdgeNum = 0
         i = 0
         while (i < w.GetNumPoints()) {
-            plane.set(idWinding2D.Companion.Plane2DFromPoints(w.oGet((i + 1) % w.GetNumPoints()), w.oGet(i), true))
+            plane.set(idWinding2D.Companion.Plane2DFromPoints(w.get((i + 1) % w.GetNumPoints()), w.get(i), true))
             d = plane.x * point.x + plane.y * point.y + plane.z
             if (d < bestd) {
                 bestd = d
@@ -229,14 +229,14 @@ object AI_pathing {
                 w2.Expand(0.2f)
                 k = 0
                 while (k < w1.GetNumPoints()) {
-                    dir = w1.oGet((k + 1) % w1.GetNumPoints()).oMinus(w1.oGet(k))
-                    if (!w2.RayIntersection(w1.oGet(k), dir, scale[0], scale[1], edgeNums)) {
+                    dir = w1.get((k + 1) % w1.GetNumPoints()).oMinus(w1.get(k))
+                    if (!w2.RayIntersection(w1.get(k), dir, scale[0], scale[1], edgeNums)) {
                         k++
                         continue
                     }
                     n = 0
                     while (n < 2) {
-                        newPoint = w1.oGet(k).oPlus(dir.oMultiply(scale[n].getVal()))
+                        newPoint = w1.get(k).oPlus(dir.oMultiply(scale[n].getVal()))
                         if (AI_pathing.PointInsideObstacle(obstacles, numObstacles, newPoint) == -1) {
                             d = newPoint.oMinus(point).LengthSqr()
                             if (d < bestd) {
@@ -531,14 +531,14 @@ object AI_pathing {
                 obstacle.winding.AddPoint(start.ToVec2().oMinus(edgeDir.oMinus(edgeNormal.oMultiply(halfBoundsSize))))
                 obstacle.winding.AddPoint(end.ToVec2().oPlus(edgeDir.oMinus(edgeNormal.oMultiply(halfBoundsSize))))
                 if (lastVerts[1] == verts[0]) {
-                    obstacle.winding.oMinSet(2, lastEdgeNormal.oMultiply(halfBoundsSize))
+                    obstacle.winding.minusAssign(2, lastEdgeNormal.oMultiply(halfBoundsSize))
                 } else {
-                    obstacle.winding.oMinSet(1, edgeDir)
+                    obstacle.winding.minusAssign(1, edgeDir)
                 }
                 if (verts[1] == nextVerts[0]) {
-                    obstacle.winding.oMinSet(3, nextEdgeNormal.oMultiply(halfBoundsSize))
+                    obstacle.winding.minusAssign(3, nextEdgeNormal.oMultiply(halfBoundsSize))
                 } else {
-                    obstacle.winding.oPluSet(0, edgeDir)
+                    obstacle.winding.plusAssign(0, edgeDir)
                 }
                 obstacle.winding.GetBounds(obstacle.bounds)
                 obstacle.entity = null
@@ -558,7 +558,7 @@ object AI_pathing {
                 val obstacle = obstacles.get(i)
                 j = 0
                 while (j < obstacle.winding.GetNumPoints()) {
-                    silVerts[j].set(obstacle.winding.oGet(j))
+                    silVerts[j].set(obstacle.winding.get(j))
                     silVerts[j].z = startPos.z
                     j++
                 }
@@ -648,7 +648,7 @@ object AI_pathing {
         // get delta along the current edge
         while (true) {
             edgeNum = (node.edgeNum + node.dir) % numPoints
-            node.delta = obstacles.get(node.obstacle).winding.oGet(edgeNum).oMinus(node.pos)
+            node.delta = obstacles.get(node.obstacle).winding.get(edgeNum).oMinus(node.pos)
             if (node.delta.LengthSqr() > 0.01f) {
                 break
             }

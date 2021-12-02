@@ -1637,7 +1637,7 @@ object win_input {
     fun Sys_InitScanTable() {
         val lang = idStr(idLib.cvarSystem.GetCVarString("sys_lang"))
         if (lang.Length() == 0) {
-            lang.oSet("english")
+            lang.set("english")
         }
         if (lang.Icmp("english") == 0) {
             keyScanTable = s_scantokey

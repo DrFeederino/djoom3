@@ -368,37 +368,37 @@ class DeclPDA {
                 }
                 if (0 == token.Icmp("name")) {
                     src.ReadToken(token)
-                    pdaName.oSet(token)
+                    pdaName.set(token)
                     continue
                 }
                 if (0 == token.Icmp("fullname")) {
                     src.ReadToken(token)
-                    fullName.oSet(token)
+                    fullName.set(token)
                     continue
                 }
                 if (0 == token.Icmp("icon")) {
                     src.ReadToken(token)
-                    icon.oSet(token)
+                    icon.set(token)
                     continue
                 }
                 if (0 == token.Icmp("id")) {
                     src.ReadToken(token)
-                    id.oSet(token)
+                    id.set(token)
                     continue
                 }
                 if (0 == token.Icmp("post")) {
                     src.ReadToken(token)
-                    post.oSet(token)
+                    post.set(token)
                     continue
                 }
                 if (0 == token.Icmp("title")) {
                     src.ReadToken(token)
-                    title.oSet(token)
+                    title.set(token)
                     continue
                 }
                 if (0 == token.Icmp("security")) {
                     src.ReadToken(token)
-                    security.oSet(token)
+                    security.set(token)
                     continue
                 }
                 if (0 == token.Icmp("pda_email")) {
@@ -536,7 +536,7 @@ class DeclPDA {
         }
 
         fun SetSecurity(sec: String?) {
-            security.oSet(sec)
+            security.set(sec)
         }
 
         fun GetPdaName(): String? {

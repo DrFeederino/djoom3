@@ -1,12 +1,10 @@
 package neo.idlib.Text
 
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.SERiAL
 import neo.TempDump.TODO_Exception
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.idlib.Lib.idLib
-import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.math.Math_h
 import neo.idlib.math.Vector.idVec4
@@ -32,18 +30,18 @@ object Str {
     const val C_COLOR_WHITE = '7'.code
     const val C_COLOR_YELLOW = '3'.code
     const val FILE_HASH_SIZE = 1024
-    val S_COLOR_BLACK: String? = "^9"
-    val S_COLOR_BLUE: String? = "^4"
-    val S_COLOR_CYAN: String? = "^5"
+    val S_COLOR_BLACK: String = "^9"
+    val S_COLOR_BLUE: String = "^4"
+    val S_COLOR_CYAN: String = "^5"
 
     // color escape string
-    val S_COLOR_DEFAULT: String? = "^0"
-    val S_COLOR_GRAY: String? = "^8"
-    val S_COLOR_GREEN: String? = "^2"
-    val S_COLOR_MAGENTA: String? = "^6"
-    val S_COLOR_RED: String? = "^1"
-    val S_COLOR_WHITE: String? = "^7"
-    val S_COLOR_YELLOW: String? = "^3"
+    val S_COLOR_DEFAULT: String = "^0"
+    val S_COLOR_GRAY: String = "^8"
+    val S_COLOR_GREEN: String = "^2"
+    val S_COLOR_MAGENTA: String = "^6"
+    val S_COLOR_RED: String = "^1"
+    val S_COLOR_WHITE: String = "^7"
+    val S_COLOR_YELLOW: String = "^3"
 
     // make idStr a multiple of 16 bytes long
     // don't make too large to keep memory requirements to a minimum
@@ -71,7 +69,7 @@ object Str {
         idVec4(0.0f, 0.0f, 0.0f, 1.0f),
         idVec4(0.0f, 0.0f, 0.0f, 1.0f)
     )
-    val units: Array<Array<String?>?>? = arrayOf(arrayOf("B", "KB", "MB", "GB"), arrayOf("B/s", "KB/s", "MB/s", "GB/s"))
+    val units: Array<Array<String>> = arrayOf(arrayOf("B", "KB", "MB", "GB"), arrayOf("B/s", "KB/s", "MB/s", "GB/s"))
 
     /*
      ============
@@ -82,7 +80,7 @@ object Str {
      ============
      */
     //    @Deprecated
-    fun va(fmt: String, vararg args: Any?): String {
+    fun va(fmt: String, vararg args: Any): String {
 //////	va_list argptr;
 ////        char[] argptr;
 ////        int index = 0;
@@ -107,7 +105,7 @@ object Str {
     open class idStr : SERiAL {
         //
         //
-        protected val baseBuffer: CharArray? = CharArray(Str.STR_ALLOC_BASE)
+        protected val baseBuffer: CharArray = CharArray(Str.STR_ALLOC_BASE)
         var alloced = 0
         var data: String =
             "" //i·ro·ny: when your program breaks because of two measly double quotes. stu·pid·i·ty: when it takes you 2 days to find said "bug".
@@ -130,7 +128,7 @@ object Str {
 
         fun StripTrailing(c: Char) { // strip char from end as many times as the char occurs
             var i = Length()
-            while (i > 0 && data.get(i - 1) == c) {
+            while (i > 0 && data[i - 1] == c) {
                 len--
                 data = data.substring(0, len - 1)
                 i--
@@ -290,10 +288,10 @@ object Str {
 
         fun oGet(index: Int): kotlin.Char {
             assert(index >= 0 && index <= len)
-            return data.get(index)
+            return data[index]
         }
 
-        fun oSet(index: Int, value: Char): Char {
+        fun set(index: Int, value: Char): Char {
             //assert ((index >= 0) && (index <= len));
             if (index == len
                 || 0 == len
@@ -305,7 +303,7 @@ object Str {
             return value
         }
 
-        open fun oSet(text: idStr?) {
+        open fun set(text: idStr) {
             val l: Int
             l = text.Length()
             EnsureAlloced(l + 1, false)
@@ -316,7 +314,7 @@ object Str {
         }
 
         //public	void				operator=( const char *text );
-        open fun oSet(text: String?): idStr? {
+        open fun set(text: String): idStr {
             val l: Int
             if (text == null) {
                 // safe behaviour if NULL
@@ -331,19 +329,19 @@ object Str {
             return this
         }
 
-        fun oSet(text: CharArray?): idStr? {
-            return this.oSet(TempDump.ctos(text))
+        fun set(text: CharArray): idStr {
+            return this.set(TempDump.ctos(text)!!)
         }
 
         //public	friend idStr		operator+( const idStr &a, const idStr &b );
-        fun oPlus(b: idStr?): idStr? {
+        fun plus(b: idStr): idStr {
             val result = idStr(data)
             result.Append(b.data)
             return result
         }
 
         //public	friend idStr		operator+( const idStr &a, const char *b );
-        fun oPlus(b: String?): idStr? {
+        fun plus(b: String): idStr {
             val result = idStr(data)
             result.Append(b)
             return result
@@ -357,7 +355,7 @@ object Str {
          ============
          */
         //public	friend idStr		operator+( const idStr &a, const float b );
-        fun oPlus(b: Float): idStr? {
+        fun plus(b: Float): idStr {
             val text: String
             val result = idStr(data)
             text = String.format("%f", b)
@@ -367,7 +365,7 @@ object Str {
 
         //public	friend idStr		operator+( const idStr &a, const int b );
         //public	friend idStr		operator+( const idStr &a, const unsigned b );
-        fun oPlus(b: Long): idStr? {
+        fun plus(b: Long): idStr {
             val text: String
             val result = idStr(data)
             text = String.format("%d", b)
@@ -375,14 +373,14 @@ object Str {
             return result
         }
 
-        fun oPlus(b: Boolean): idStr? {
+        fun plus(b: Boolean): idStr {
             val result = idStr(data)
             result.Append(if (b) "true" else "false")
             return result
         }
 
         //public	friend idStr		operator+( const idStr &a, const char b );
-        fun oPlus(b: Char): idStr? {
+        fun plus(b: Char): idStr {
             val result = idStr(data)
             result.Append(b)
             return result
@@ -390,35 +388,35 @@ object Str {
 
         //public	 idStr		plus( final idStr a, final int b ){return plus(a, b);}
         //public	idStr &				operator+=( const idStr &a );
-        fun oPluSet(a: idStr?): idStr? {
+        fun plusAssign(a: idStr): idStr {
             Append(a)
             return this
         }
 
         //public	idStr &				operator+=( const char *a );
-        fun oPluSet(a: String?): idStr? {
+        fun plusAssign(a: String): idStr {
             Append(a)
             return this
         }
 
         //public	idStr &				operator+=( const float a );
-        fun oPluSet(a: Float): idStr? {
+        fun plusAssign(a: Float): idStr {
             Append("" + a)
             return this
         }
 
         //public	idStr &				operator+=( const char a );
-        fun oPluSet(a: Char): idStr? {
+        fun plusAssign(a: Char): idStr {
             Append(a)
             return this
         }
 
-        fun oPluSet(a: Long): idStr? {
+        fun plusAssign(a: Long): idStr {
             Append("" + a)
             return this
         }
 
-        fun oPluSet(a: Boolean): idStr? {
+        fun plusAssign(a: Boolean): idStr {
             Append(java.lang.Boolean.toString(a))
             return this
         }
@@ -442,82 +440,82 @@ object Str {
                 return false
             }
             if (obj.javaClass == String::class.java) { //when comparing pointers it's usually only about what they point to.
-                if (!(obj as String?).isEmpty()) {
-                    return data.startsWith(obj as String?) //TODO:should we check first character against first character only?
+                if (!(obj as String).isEmpty()) {
+                    return data.startsWith(obj as String) //TODO:should we check first character against first character only
                 }
             }
             if (obj.javaClass == idStr::class.java) {
-                if (!(obj as idStr?).IsEmpty()) {
-                    return data.startsWith((obj as idStr?).data)
+                if (!(obj as idStr).IsEmpty()) {
+                    return data.startsWith(obj.data)
                 }
             }
             return if (obj.javaClass == Char::class.java) {
-                data.startsWith((obj as Char?).toString())
+                data.startsWith((obj as Char).toString())
             } else false
         }
 
         // case sensitive compare
-        fun Cmp(text: String?): Int {
+        fun Cmp(text: String): Int {
             assert(text != null)
             return Cmp(data, text)
         }
 
-        fun Cmp(text: idStr?): Int {
+        fun Cmp(text: idStr): Int {
             return Cmp(text.toString())
         }
 
-        fun Cmpn(text: String?, n: Int): Int {
+        fun Cmpn(text: String, n: Int): Int {
             assert(text != null)
             return Cmpn(data, text, n)
         }
 
-        fun CmpPrefix(text: String?): Int {
+        fun CmpPrefix(text: String): Int {
             assert(null != text)
             return Cmpn(data, text,  /*strlen( text )*/text.length)
         }
 
         // case insensitive compare
-        fun Icmp(text: String?): Int {
+        fun Icmp(text: String): Int {
             assert(text != null)
             return Icmp(data, text)
         }
 
-        fun Icmp(text: idStr?): Int {
+        fun Icmp(text: idStr): Int {
             return this.Icmp(text.toString())
         }
 
-        fun Icmpn(text: String?, n: Int): Int {
+        fun Icmpn(text: String, n: Int): Int {
             assert(text != null)
             return Icmpn(data, text, n)
         }
 
-        fun IcmpPrefix(text: String?): Int {
+        fun IcmpPrefix(text: String): Int {
             assert(text != null)
             return Icmpn(data, text, text.length)
         }
 
         // case insensitive compare ignoring color
-        fun IcmpNoColor(text: String?): Int {
+        fun IcmpNoColor(text: String): Int {
             assert(text != null)
             return IcmpNoColor(data, text)
         }
 
-        fun IcmpNoColor(text: idStr?): Int {
+        fun IcmpNoColor(text: idStr): Int {
             return this.IcmpNoColor(text.toString())
         }
 
         // compares paths and makes sure folders come first
-        fun IcmpPath(text: String?): Int {
+        fun IcmpPath(text: String): Int {
             assert(text != null)
             return IcmpPath(data, text)
         }
 
-        fun IcmpnPath(text: String?, n: Int): Int {
+        fun IcmpnPath(text: String, n: Int): Int {
             assert(text != null)
             return IcmpnPath(data, text, n)
         }
 
-        fun IcmpPrefixPath(text: String?): Int {
+        fun IcmpPrefixPath(text: String): Int {
             assert(text != null)
             return IcmpnPath(data, text, text.length)
         }
@@ -551,7 +549,7 @@ object Str {
             Init()
         }
 
-        fun Append(a: idStr?) {
+        fun Append(a: idStr) {
             Append(a.data)
         }
 
@@ -562,7 +560,7 @@ object Str {
             //	data+= '\0';
         }
 
-        fun Append(text: String?) {
+        fun Append(text: String) {
             val newLen: Int
             var i: Int
             newLen = len + text.length
@@ -575,11 +573,11 @@ object Str {
             //	data[ len ] = '\0';
         }
 
-        fun Append(text: CharArray?) {
-            Append(TempDump.ctos(text))
+        fun Append(text: CharArray) {
+            Append(TempDump.ctos(text)!!)
         }
 
-        fun Append(text: String?, l: Int) {
+        fun Append(text: String, l: Int) {
             val newLen: Int
             var i: Int
             if (text != null && l > 0) {
@@ -613,7 +611,7 @@ object Str {
             len++
         }
 
-        fun Insert(text: String?, index: Int) {
+        fun Insert(text: String, index: Int) {
             var index = index
             var i: Int
             val l: Int
@@ -654,7 +652,7 @@ object Str {
             data = data.uppercase(Locale.getDefault())
         }
 
-        fun RemoveColors(): idStr? {
+        fun RemoveColors(): idStr {
             data = RemoveColors(data)
             //            len = Length( data );
             len = data.length
@@ -693,7 +691,7 @@ object Str {
 
         //public	static int			snPrintf( char *dest, int size, const char *fmt, ... ) id_attribute((format(printf,3,4)));
         @JvmOverloads
-        fun Find(text: String?, casesensitive: Boolean = true, start: Int = 0, end: Int = -1): Int {
+        fun Find(text: String, casesensitive: Boolean = true, start: Int = 0, end: Int = -1): Int {
             var end = end
             if (end == -1) {
                 end = len
@@ -701,7 +699,7 @@ object Str {
             return FindText(data, text, casesensitive, start, end)
         }
 
-        fun Filter(filter: String?, casesensitive: Boolean): Boolean {
+        fun Filter(filter: String, casesensitive: Boolean): Boolean {
             return this.Filter(filter, data, casesensitive)
         }
 
@@ -718,20 +716,20 @@ object Str {
             return data.lastIndexOf(c)
         }
 
-        fun Left(len: Int, result: idStr?): idStr? { // store the leftmost 'len' characters in the result
+        fun Left(len: Int, result: idStr): idStr { // store the leftmost 'len' characters in the result
             return Mid(0, len, result)
         }
 
-        fun Right(len: Int, result: idStr?): idStr? { // store the rightmost 'len' characters in the result
+        fun Right(len: Int, result: idStr): idStr { // store the rightmost 'len' characters in the result
             if (len >= Length()) {
-                result.oSet(this)
+                result.set(this)
                 return result
             }
             return Mid(Length() - len, len, result)
         }
 
         // store 'len' characters starting at 'start' in result
-        fun Mid(start: Int, len: Int, result: idStr?): idStr? {
+        fun Mid(start: Int, len: Int, result: idStr): idStr? {
             var len = len
             val i: Int
             result.Empty()
@@ -746,17 +744,17 @@ object Str {
             return result
         }
 
-        fun Left(len: Int): idStr? { // return the leftmost 'len' characters
+        fun Left(len: Int): idStr { // return the leftmost 'len' characters
             return Mid(0, len)
         }
 
-        fun Right(len: Int): idStr? { // return the rightmost 'len' characters
+        fun Right(len: Int): idStr { // return the rightmost 'len' characters
             return if (len >= Length()) {
                 this
             } else Mid(Length() - len, len)
         }
 
-        fun Mid(start: Int, len: Int): idStr? { // return 'len' characters starting at 'start'
+        fun Mid(start: Int, len: Int): idStr { // return 'len' characters starting at 'start'
             var len = len
             val i: Int
             val result = idStr()
@@ -779,7 +777,7 @@ object Str {
 //		memmove( &data[ 0 ], &data[ 1 ], len );
 //		len--;
 //	}
-            while (c == data.get(0)) {
+            while (c == data[0]) {
                 len--
                 if (data.length == 1) {
                     data = ""
@@ -789,7 +787,7 @@ object Str {
             }
         }
 
-        fun StripLeading(string: String?) { // strip string from front as many times as the string occurs
+        fun StripLeading(string: String) { // strip string from front as many times as the string occurs
             val l: Int
 
 //	l = strlen( string );
@@ -807,7 +805,7 @@ object Str {
             }
         }
 
-        fun StripLeadingOnce(string: String?): Boolean { // strip string from front just once if it occurs
+        fun StripLeadingOnce(string: String): Boolean { // strip string from front just once if it occurs
             val l: Int
 
 //	l = strlen( string );
@@ -823,7 +821,7 @@ object Str {
         }
 
 
-        fun StripTrailing(string: String?) { // strip string from end as many times as the string occurs
+        fun StripTrailing(string: String) { // strip string from end as many times as the string occurs
             val l: Int
 
 //	l = strlen( string );
@@ -837,7 +835,7 @@ object Str {
             }
         }
 
-        fun StripTrailingOnce(string: String?): Boolean { // strip string from end just once if it occurs
+        fun StripTrailingOnce(string: String): Boolean { // strip string from end just once if it occurs
             val l: Int
 
 //	l = strlen( string );
@@ -856,7 +854,7 @@ object Str {
             StripTrailing(c)
         }
 
-        fun Strip(string: String?) { // strip string from front and end as many times as the string occurs
+        fun Strip(string: String) { // strip string from front and end as many times as the string occurs
             StripLeading(string)
             StripTrailing(string)
         }
@@ -873,13 +871,13 @@ object Str {
             len = data.length
         }
 
-        fun StripQuotes(): idStr? { // strip quotes around string
-            if (data.get(0) != '\"') {
+        fun StripQuotes(): idStr { // strip quotes around string
+            if (data[0] != '\"') {
                 return this
             }
 
             // Remove the trailing quote first
-            if (data.get(len - 1) == '\"') {
+            if (data[len - 1] == '\"') {
 //		data[len-1] = '\0';
                 data = data.substring(0, len - 2)
                 len--
@@ -893,7 +891,7 @@ object Str {
             return this
         }
 
-        fun Replace(old: String?, nw: String?) {
+        fun Replace(old: String, nw: String) {
             data = data.replace(old.toRegex(), nw)
             len = data.length
             //	int		oldLen, newLen, i, j, count;
@@ -948,7 +946,7 @@ object Str {
             i = 0
             //	while( data[i] != '\0' ) {
             while (i < data.length) {
-                letter = ToLower(data.get(i))
+                letter = ToLower(data[i])
                 if (letter == '.') {
                     break // don't include extension
                 }
@@ -962,7 +960,7 @@ object Str {
             return hash.toInt()
         }
 
-        fun BackSlashesToSlashes(): idStr? { // convert slashes
+        fun BackSlashesToSlashes(): idStr { // convert slashes
 //	int i;
 //
 //	for ( i = 0; i < len; i++ ) {
@@ -974,21 +972,21 @@ object Str {
             return this
         }
 
-        fun SetFileExtension(extension: String?): idStr? { // set the given file extension
+        fun SetFileExtension(extension: String): idStr { // set the given file extension
             StripFileExtension()
             //	if ( *extension != '.' ) {
-            if (extension.get(0) != '.') {
+            if (extension[0] != '.') {
                 Append('.')
             }
             Append(extension)
             return this
         }
 
-        fun SetFileExtension(extension: idStr?): idStr? {
+        fun SetFileExtension(extension: idStr): idStr {
             return SetFileExtension(extension.toString())
         }
 
-        fun StripFileExtension(): idStr? { // remove any file extension
+        fun StripFileExtension(): idStr { // remove any file extension
             val i: Int
 
 //            for (i = len - 1; i >= 0; i--) {
@@ -1007,11 +1005,11 @@ object Str {
             return this
         }
 
-        fun StripAbsoluteFileExtension(): idStr? { // remove any file extension looking from front (useful if there are multiple .'s)
+        fun StripAbsoluteFileExtension(): idStr { // remove any file extension looking from front (useful if there are multiple .'s)
             var i: Int
             i = 0
             while (i < len) {
-                if (data.get(i) == '.') {
+                if (data[i] == '.') {
 //			data[i] = '\0';
                     len = i
                     data = data.substring(0, len - 1)
@@ -1022,7 +1020,7 @@ object Str {
             return this
         }
 
-        fun DefaultFileExtension(extension: String?): idStr? { // if there's no file extension use the default
+        fun DefaultFileExtension(extension: String): idStr { // if there's no file extension use the default
             var i: Int
 
             // do nothing if the string already has an extension
@@ -1038,19 +1036,19 @@ object Str {
             return this
         }
 
-        fun DefaultPath(basepath: CharArray?): idStr? { // if there's no path use the default
+        fun DefaultPath(basepath: CharArray): idStr { // if there's no path use the default
 //	if ( ( ( *this )[ 0 ] == '/' ) || ( ( *this )[ 0 ] == '\\' ) ) {
-            if (data.get(0) == '/' || data.get(0) == '\\') {
+            if (data[0] == '/' || data[0] == '\\') {
                 // absolute path location
                 return this
             }
 
 //	*this = basepath + *this;
-            data = basepath.toString() + data //TODO:bad..where to put the extension?
+            data = basepath.toString() + data //TODO:bad..where to put the extension
             return this
         }
 
-        fun AppendPath(text: String?) { // append a partial path
+        fun AppendPath(text: String) { // append a partial path
             val pos: Int
             var i = 0
             val dataArray = data.toCharArray()
@@ -1079,14 +1077,14 @@ object Str {
             }
         }
 
-        fun AppendPath(text: idStr?) {
+        fun AppendPath(text: idStr) {
             Append(text.toString())
         }
 
-        fun StripFilename(): idStr? { // remove the filename from a path
+        fun StripFilename(): idStr { // remove the filename from a path
             var pos: Int
             pos = Length() - 1
-            while (pos > 0 && data.get(pos) != '/' && data.get(pos) != '\\') {
+            while (pos > 0 && data[pos] != '/' && data[pos] != '\\') {
                 pos--
             }
             if (pos < 0) {
@@ -1097,10 +1095,10 @@ object Str {
         }
 
         // remove the path from the filename
-        fun StripPath(): idStr? {
+        fun StripPath(): idStr {
             var pos: Int
             pos = Length()
-            while (pos > 0 && data.get(pos - 1) != '/' && data.get(pos - 1) != '\\') {
+            while (pos > 0 && data[pos - 1] != '/' && data[pos - 1] != '\\') {
                 pos--
             }
             val temp = Right(Length() - pos)
@@ -1109,33 +1107,33 @@ object Str {
             return this
         }
 
-        fun ExtractFilePath(dest: idStr?) { // copy the file path to another string
+        fun ExtractFilePath(dest: idStr) { // copy the file path to another string
             var pos: Int
 
             //
             // back up until a \ or the start
             //
             pos = Length()
-            while (pos > 0 && data.get(pos - 1) != '/' && data.get(pos - 1) != '\\') {
+            while (pos > 0 && data[pos - 1] != '/' && data[pos - 1] != '\\') {
                 pos--
             }
             Left(pos, dest)
         }
 
-        fun ExtractFileName(dest: idStr?) { // copy the filename to another string
+        fun ExtractFileName(dest: idStr) { // copy the filename to another string
             var pos: Int
 
             //
             // back up until a \ or the start
             //
             pos = Length() - 1
-            while (pos > 0 && data.get(pos - 1) != '/' && data.get(pos - 1) != '\\') {
+            while (pos > 0 && data[pos - 1] != '/' && data[pos - 1] != '\\') {
                 pos--
             }
             Right(Length() - pos, dest)
         }
 
-        fun ExtractFileBase(dest: idStr?) { // copy the filename minus the extension to another string
+        fun ExtractFileBase(dest: idStr) { // copy the filename minus the extension to another string
             var pos: Int
             val start: Int
 
@@ -1143,25 +1141,25 @@ object Str {
             // back up until a \ or the start
             //
             pos = Length() - 1
-            while (pos > 0 && data.get(pos - 1) != '/' && data.get(pos - 1) != '\\') {
+            while (pos > 0 && data[pos - 1] != '/' && data[pos - 1] != '\\') {
                 pos--
             }
             start = pos
-            while (pos < Length() && data.get(pos) != '.') {
+            while (pos < Length() && data[pos] != '.') {
                 pos++
             }
             Mid(start, pos - start, dest)
         }
 
         // copy the file extension to another string
-        fun ExtractFileExtension(dest: idStr?) {
+        fun ExtractFileExtension(dest: idStr) {
             var pos: Int
 
             //
             // back up until a . or the start
             //
             pos = Length() - 1
-            while (pos > 0 && data.get(pos - 1) != '.') {
+            while (pos > 0 && data[pos - 1] != '.') {
                 pos--
             }
             if (pos == 0) {
@@ -1173,7 +1171,7 @@ object Str {
         }
 
         // format value in the requested unit and measurement
-        fun CheckExtension(ext: String?): Boolean {
+        fun CheckExtension(ext: String): Boolean {
             return CheckExtension(data, ext)
         }
 
@@ -1185,13 +1183,13 @@ object Str {
          Several metacharacter may be used in the filter.
 
          *          match any string of zero or more characters
-         ?          match any single character
+                   match any single character
          [abc...]   match any of the enclosed characters; a hyphen can
          be used to specify a range (e.g. a-z, A-Z, 0-9)
 
          ============
          */
-        /*static*/   fun Filter(filter: String?, name: String?, casesensitive: Boolean): Boolean {
+        /*static*/   fun Filter(filter: String, name: String, casesensitive: Boolean): Boolean {
             var name = name
             val buf = idStr()
             var i: Int
@@ -1199,22 +1197,22 @@ object Str {
             var found: Boolean
             var filterIndex = 0
             while (filterIndex < filter.length) {
-                var filterChar: Char = filter.get(filterIndex)
+                var filterChar: Char = filter[filterIndex]
                 if (filterChar == '*') {
                     filterIndex++
                     buf.Empty()
                     i = 0
                     while (filterIndex < filter.length) {
-                        if (filterChar == '*' || filterChar == '?' || filterChar == '[' && filter.get(filterIndex + 1) != '[') {
+                        if (filterChar == '*' || filterChar == '' || filterChar == '[' && filter[filterIndex + 1] != '[') {
                             break
                         }
-                        buf.oPluSet(filterChar)
+                        buf.plusAssign(filterChar)
                         if (filterChar == '[') {
                             filterIndex++
                         }
                         filterIndex++
                         i++
-                        filterChar = filter.get(filterIndex)
+                        filterChar = filter[filterIndex]
                     }
                     if (buf.Length() > 0) {
                         index =  /*new idStr(name).*/Find(buf.toString(), casesensitive) //TODO:remove stuff
@@ -1224,13 +1222,13 @@ object Str {
                         //				name += index + strlen(buf);
                         name = name.substring(index + buf.Length(), name.length - 1)
                     }
-                } else if (filterChar == '?') {
+                } else if (filterChar == '') {
                     filterIndex++
                     //			name++;
                     name = name.substring(1)
                 } else if (filterChar == '[') {
-                    if (filter.get(filterIndex + 1) == '[') {
-                        if (name.get(0) != '[') {
+                    if (filter[filterIndex + 1] == '[') {
+                        if (name[0] != '[') {
                             return false
                         }
                         filterIndex += 2
@@ -1239,34 +1237,32 @@ object Str {
                         filterIndex++
                         found = false
                         while (filterIndex < filter.length && !found) {
-                            if (filterChar == ']' && filter.get(filterIndex + 1) != ']') {
+                            if (filterChar == ']' && filter[filterIndex + 1] != ']') {
                                 break
                             }
-                            if (filter.get(filterIndex + 1) == '-' && filter.length > filterIndex + 2 && (filter.get(
-                                    filterIndex + 2
-                                ) != ']' || filter.get(filterIndex + 3) == ']')
+                            if (filter[filterIndex + 1] == '-' && filter.length > filterIndex + 2 && (filter[filterIndex + 2] != ']' || filter[filterIndex + 3] == ']')
                             ) {
                                 if (casesensitive) {
-                                    if (name.get(0) >= filterChar
-                                        && name.get(0) <= filter.get(filterIndex + 2)
+                                    if (name[0] >= filterChar
+                                        && name[0] <= filter[filterIndex + 2]
                                     ) {
                                         found = true
                                     }
                                 } else {
 //							if ( ::toupper(*name) >= ::toupper(*filterIndex) && ::toupper(*name) <= ::toupper(*(filterIndex+2)) ) {
-                                    if (name.get(0) >= filterChar && name.get(0) <= filter.get(filterIndex + 2)) {
+                                    if (name[0] >= filterChar && name[0] <= filter[filterIndex + 2]) {
                                         found = true
                                     }
                                 }
                                 filterIndex += 3
                             } else {
                                 if (casesensitive) {
-                                    if (filterChar == name.get(0)) {
+                                    if (filterChar == name[0]) {
                                         found = true
                                     }
                                 } else {
 //							if ( ::toupper(*filterIndex) == ::toupper(*name) ) {
-                                    if (filterChar == name.get(0)) {
+                                    if (filterChar == name[0]) {
                                         found = true
                                     }
                                 }
@@ -1277,7 +1273,7 @@ object Str {
                             return false
                         }
                         while (filterIndex < filter.length) {
-                            if (filterChar == ']' && filter.get(filterIndex + 1) != ']') {
+                            if (filterChar == ']' && filter[filterIndex + 1] != ']') {
                                 break
                             }
                             filterIndex++
@@ -1287,12 +1283,12 @@ object Str {
                     }
                 } else {
                     if (casesensitive) {
-                        if (filterChar != name.get(0)) {
+                        if (filterChar != name[0]) {
                             return false
                         }
                     } else {
 //				if ( ::toupper(*filterIndex) != ::toupper(*name) ) {
-                        if (filterChar != name.get(0)) {
+                        if (filterChar != name[0]) {
                             return false
                         }
                     }
@@ -1335,14 +1331,14 @@ object Str {
          ============
          */
         //public	friend int			vsprintf( idStr &dest, const char *fmt, va_list ap );
-        fun vsprintf(string: idStr?, fmt: String?, vararg args: Any?): Int { //char[] argptr) {
+        fun vsprintf(string: idStr, fmt: String, vararg args: Any): Int { //char[] argptr) {
             val l: Int
-            val buffer = arrayOf<String?>(null) //new char[32000];
+            val buffer = arrayOf<String>(null) //new char[32000];
             l = vsnPrintf(buffer, 32000, fmt, *args)
             //	buffer[buffer.length-1] = '\0';
 
 //	string = buffer;
-            string.oSet(buffer[0])
+            string.set(buffer[0])
             return l
         }
 
@@ -1392,7 +1388,7 @@ object Str {
         }
 
         // format value in the given measurement with the best unit, returns the best unit
-        fun BestUnit(format: String?, value: Float, measure: Measure_t?): Int {
+        fun BestUnit(format: String, value: Float, measure: Measure_t): Int {
             var value = value
             var unit = 1
             while (unit <= 3 && 1 shl unit * 10 < value) {
@@ -1403,11 +1399,11 @@ object Str {
             //	sprintf( *this, format, value );
             data = String.format(format, value)
             data += " "
-            data += Str.units[measure.ordinal][unit] //TODO:ordinal??
+            data += Str.units[measure.ordinal][unit] //TODO:ordinal
             return unit
         }
 
-        fun SetUnit(format: String?, value: Float, unit: Int, measure: Measure_t?) {
+        fun SetUnit(format: String, value: Float, unit: Int, measure: Measure_t) {
             var value = value
             value /= (1 shl unit * 10).toFloat()
             //	sprintf( *this, format, value );
@@ -1432,7 +1428,7 @@ object Str {
         }
 
         fun DynamicMemoryUsed(): Int {
-//	return ( data == baseBuffer ) ? 0 : alloced;
+//	return ( data == baseBuffer )  0 : alloced;
             return alloced
         }
 
@@ -1457,7 +1453,7 @@ object Str {
             }
         }
 
-        fun substring(beginIndex: Int): String? {
+        fun substring(beginIndex: Int): String {
             return data.substring(beginIndex)
         }
 
@@ -1466,7 +1462,7 @@ object Str {
         }
 
         class ShowMemoryUsage_f : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
 //#ifdef USE_STRING_DATA_ALLOCATOR
                 idLib.common.Printf("%6d KB string memory (%d KB free in %d blocks, %d empty base blocks)\n")
                 //                        stringDataAllocator.GetBaseBlockMemory() >> 10,
@@ -1477,8 +1473,8 @@ object Str {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Str.idStr.ShowMemoryUsage_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Str.idStr.ShowMemoryUsage_f()
+                fun getInstance(): cmdFunction_t {
                     return Str.idStr.ShowMemoryUsage_f.Companion.instance
                 }
             }
@@ -1505,7 +1501,7 @@ object Str {
             val BYTES = SIZE / java.lang.Byte.SIZE
 
             // elements of list need to decend in size
-            var formatList: Array<formatList_t?>? = arrayOf(
+            var formatList: Array<formatList_t> = arrayOf(
                 formatList_t(1000000000, 0),
                 formatList_t(1000000, 0),
                 formatList_t(1000, 0)
@@ -1514,7 +1510,7 @@ object Str {
 
             //int numFormatList = sizeof(formatList) / sizeof( formatList[0] );
             var numFormatList = formatList.size
-            var str: Array<StringBuffer?>? = arrayOfNulls<StringBuffer?>(4) // in case called by nested functions
+            var str: Array<StringBuffer> = arrayOfNulls<StringBuffer>(4) // in case called by nested functions
             fun parseStr(str: String): idStr {
                 return idStr(str)
             }
@@ -1523,38 +1519,38 @@ object Str {
             //
             //public	void				operator=( const idStr &text );
             //public	friend idStr		operator+( const char *a, const idStr &b );
-            fun oPlus(a: String?, b: idStr?): idStr? {
+            fun plus(a: String, b: idStr): idStr {
                 val result = idStr(a)
                 result.Append(b.data)
                 return result
             }
 
             // char * methods to replace library functions
-            fun Length(s: CharArray?): Int {
+            fun Length(s: CharArray): Int {
                 var i: Int
                 i = 0
-                while (i < s.size && s.get(i) != 0) {
+                while (i < s.size && s[i] != 0) {
                     i++
                 }
                 return i
             }
 
-            fun ToLower(s: CharArray?): CharArray? {
+            fun ToLower(s: CharArray): CharArray {
                 var i = 0
-                while (i < s.size && s.get(i) != 0) {
-                    if (CharIsUpper(s.get(i))) {
-                        s.get(i) += 'a' - 'A'
+                while (i < s.size && s[i] != 0) {
+                    if (CharIsUpper(s[i])) {
+                        s[i] += 'a' - 'A'
                     }
                     i++
                 }
                 return s
             }
 
-            fun ToUpper(s: CharArray?): CharArray? {
+            fun ToUpper(s: CharArray): CharArray {
                 var i = 0
-                while (i < s.size && s.get(i) != 0) {
-                    if (CharIsLower(s.get(i))) {
-                        s.get(i) -= 'a' - 'A'
+                while (i < s.size && s[i] != 0) {
+                    if (CharIsLower(s[i])) {
+                        s[i] -= 'a' - 'A'
                     }
                     i++
                 }
@@ -1567,13 +1563,13 @@ object Str {
             }
 
             @JvmOverloads
-            fun IsColor(s: String? = data): Boolean {
+            fun IsColor(s: String = data): Boolean {
                 val sArray = s.toCharArray()
                 return sArray[0] == Str.C_COLOR_ESCAPE && sArray.size > 1 && sArray[1] != ' '
             }
 
             @JvmOverloads
-            fun HasLower(s: String? = data): Boolean {
+            fun HasLower(s: String = data): Boolean {
                 return if (s == null) {
                     false
                 } else s.uppercase(Locale.getDefault()) != s
@@ -1587,7 +1583,7 @@ object Str {
 
             //public	friend idStr		operator+( const idStr &a, const bool b );
             @JvmOverloads
-            fun HasUpper(s: String? = data): Boolean {
+            fun HasUpper(s: String = data): Boolean {
                 return if (s == null) {
                     false
                 } else s.lowercase(Locale.getDefault()) != s
@@ -1600,7 +1596,7 @@ object Str {
             }
 
             @JvmOverloads
-            fun LengthWithoutColors(s: String? = data): Int {
+            fun LengthWithoutColors(s: String = data): Int {
                 val len: Int
                 var p = 0
                 if (s == null) {
@@ -1620,14 +1616,14 @@ object Str {
                 return len - p
             }
 
-            fun RemoveColors(s: String?): String? {
+            fun RemoveColors(s: String): String {
                 var string = ""
                 var a = 0
                 while (a < s.length) {
                     if (IsColor(s.substring(a))) {
                         a++
                     } else {
-                        string += s.get(a)
+                        string += s[a]
                     }
                     a++
                 }
@@ -1635,21 +1631,21 @@ object Str {
                 return string
             }
 
-            fun Cmp(s1: CharArray?, s2: CharArray?): Int {
+            fun Cmp(s1: CharArray, s2: CharArray): Int {
                 return Cmp(TempDump.ctos(s1), TempDump.ctos(s2))
             }
 
-            fun Cmp(s1: idStr?, s2: idStr?): Int {
+            fun Cmp(s1: idStr, s2: idStr): Int {
                 return Cmp(s1.toString(), s2.toString())
             }
 
-            fun Cmp(s1: String?, s2: String?): Int {
+            fun Cmp(s1: String, s2: String): Int {
                 return ("" + s1).compareTo("" + s2)
             }
 
             //public	idStr &				operator+=( const int a );
             //public	idStr &				operator+=( const unsigned a );
-            fun Cmpn(s1: String?, s2: String?, n: Int): Int { //TODO:see if we can return booleans
+            fun Cmpn(s1: String, s2: String, n: Int): Int { //TODO:see if we can return booleans
                 if (TempDump.isNotNullOrEmpty(s1) && TempDump.isNotNullOrEmpty(s2)) {
                     if (s1.length >= n && s2.length >= n) {
                         return Cmp(s1.substring(0, n), s2.substring(0, n))
@@ -1659,7 +1655,7 @@ object Str {
             }
 
             //public	idStr &				operator+=( const bool a );
-            fun Icmp(t1: idToken?, s2: String?): Int {
+            fun Icmp(t1: idToken, s2: String): Int {
                 return Icmp(t1.data, s2)
             }
 
@@ -1672,23 +1668,23 @@ object Str {
             //public	friend bool			operator!=( const idStr &a, const idStr &b );
             //public	friend bool			operator!=( const idStr &a, const char *b );
             //public	friend bool			operator!=( const char *a, const idStr &b );
-            fun Icmp(t1: idStr?, s2: String?): Int {
+            fun Icmp(t1: idStr, s2: String): Int {
                 return Icmp(t1.data, s2)
             }
 
-            fun Icmp(t1: idStr?, s2: idStr?): Int {
+            fun Icmp(t1: idStr, s2: idStr): Int {
                 return Icmp(t1.data, s2.data)
             }
 
-            fun Icmp(t1: CharArray?, s2: CharArray?): Int {
+            fun Icmp(t1: CharArray, s2: CharArray): Int {
                 return Icmp(TempDump.ctos(t1), TempDump.ctos(s2))
             }
 
-            fun Icmp(s1: String?, s2: String?): Int {
+            fun Icmp(s1: String, s2: String): Int {
                 return ("" + s1).compareTo("" + s2, ignoreCase = true)
             }
 
-            fun Icmpn(s1: String?, s2: String?, n: Int): Int {
+            fun Icmpn(s1: String, s2: String, n: Int): Int {
                 if (TempDump.isNotNullOrEmpty(s1) && TempDump.isNotNullOrEmpty(s2)) {
                     if (s1.length >= n && s2.length >= n) {
                         return Icmp(s1.substring(0, n), s2.substring(0, n))
@@ -1697,15 +1693,15 @@ object Str {
                 return 1 //not equal
             }
 
-            fun Icmpn(s1: idStr?, s2: idStr?, n: Int): Int {
+            fun Icmpn(s1: idStr, s2: idStr, n: Int): Int {
                 return Icmpn(s1.toString(), s2.toString(), n)
             }
 
-            fun Icmpn(s1: idStr?, s2: String?, n: Int): Int {
+            fun Icmpn(s1: idStr, s2: String, n: Int): Int {
                 return Icmpn(s1.toString(), s2, n)
             }
 
-            fun IcmpNoColor(s1: String?, s2: String?): Int {
+            fun IcmpNoColor(s1: String, s2: String): Int {
                 val s1Array = s1.toCharArray()
                 val s2Array = s2.toCharArray()
                 var c1 = 0
@@ -1741,9 +1737,9 @@ object Str {
             }
 
             // compares paths and makes sure folders come first
-            fun IcmpPath(s1: String?, s2: String?): Int {
+            fun IcmpPath(s1: String, s2: String): Int {
                 return Paths.get(s1)
-                    .compareTo(Paths.get(s2)) //TODO: whats the "make sure fodlers come first" all about?
+                    .compareTo(Paths.get(s2)) //TODO: whats the "make sure fodlers come first" all about
 
 //            char[] s1Array = s1.toCharArray();
 //            char[] s2Array = s2.toCharArray();
@@ -1752,7 +1748,7 @@ object Str {
 //
 ////#if 0
 ////#if !defined( _WIN32 )
-////	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem?\n" );
+////	idLib.common.Printf( "WARNING: IcmpPath used on a case-sensitive filesystem\n" );
 ////#endif
 //            do {
 //                c1 = s1Array[i1++];
@@ -1810,7 +1806,7 @@ object Str {
 //            return 0;
             }
 
-            fun IcmpnPath(s1: String?, s2: String?, n: Int): Int { // compares paths and makes sure folders come first
+            fun IcmpnPath(s1: String, s2: String, n: Int): Int { // compares paths and makes sure folders come first
                 var n = n
                 val s1Array = s1.toCharArray()
                 val s2Array = s2.toCharArray()
@@ -1882,7 +1878,7 @@ object Str {
          never goes past bounds or leaves without a terminating 0
          ================
          */
-            fun Append(dest: CharArray?, size: Int, src: String?) {
+            fun Append(dest: CharArray, size: Int, src: String) {
                 val l1: Int
                 l1 = TempDump.strLen(dest)
                 if (l1 >= size) {
@@ -1891,7 +1887,7 @@ object Str {
                 Copynz(dest, src, size - l1)
             }
 
-            fun Append(dest: String?, size: Int, src: String?): String? {
+            fun Append(dest: String, size: Int, src: String): String {
                 val l1: Int
                 val l2: Int
                 l1 = dest.length
@@ -1905,7 +1901,7 @@ object Str {
                 } else dest + src
             }
 
-            fun Copynz(dest: CharArray?, src: String?, destsize: Int): CharArray? {
+            fun Copynz(dest: CharArray, src: String, destsize: Int): CharArray {
                 return Copynz(dest, 0, src, destsize)
             }
 
@@ -1916,7 +1912,7 @@ object Str {
          Safe strncpy that ensures a trailing zero
          =============
          */
-            fun Copynz(dest: CharArray?, offset: Int, src: String?, destsize: Int): CharArray? {
+            fun Copynz(dest: CharArray, offset: Int, src: String, destsize: Int): CharArray {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return null
@@ -1927,11 +1923,11 @@ object Str {
                 }
                 val len = Math.min(destsize - 1, src.length)
                 System.arraycopy(src.toCharArray(), 0, dest, offset, len)
-                dest.get(offset + len) = 0
+                dest[offset + len] = 0
                 return dest
             }
 
-            fun Copynz(dest: CharArray?, src: CharArray?, destsize: Int) {
+            fun Copynz(dest: CharArray, src: CharArray, destsize: Int) {
                 Copynz(dest, TempDump.ctos(src), destsize)
             }
 
@@ -1948,7 +1944,7 @@ object Str {
             //
             //            idStr.Copynz(dest.toCharArray(), src, destsize);
             //        }
-            fun Copynz(dest: Array<String?>?, src: String?, destsize: Int) {
+            fun Copynz(dest: Array<String>, src: String, destsize: Int) {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return
@@ -1957,10 +1953,10 @@ object Str {
                     idLib.common.Warning("idStr::Copynz: destsize < 1")
                     return
                 }
-                dest.get(0) = String(Copynz(null as CharArray?, src, destsize))
+                dest[0] = String(Copynz(null as CharArray, src, destsize))
             }
 
-            fun Copynz(dest: StringBuilder?, vararg src: String?) {
+            fun Copynz(dest: StringBuilder, vararg src: String) {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return
@@ -1974,7 +1970,7 @@ object Str {
                 }
             }
 
-            fun snPrintf(dest: StringBuffer?, size: Int, fmt: String?, vararg args: Any?): Int {
+            fun snPrintf(dest: StringBuffer, size: Int, fmt: String, vararg args: Any): Int {
                 var len: Int
                 val bufferSize = 32000
                 val buffer = StringBuffer(bufferSize)
@@ -1992,11 +1988,11 @@ object Str {
                 }
                 //            idStr.Copynz(dest, buffer, size);
                 dest.delete(0, dest.capacity()) //clear
-                dest.append(buffer) //TODO: use replace instead?
+                dest.append(buffer) //TODO: use replace instead
                 return len
             }
 
-            fun snPrintf(dest: Array<String?>?, size: Int, fmt: String?, vararg args: Any?): Int {
+            fun snPrintf(dest: Array<String>, size: Int, fmt: String, vararg args: Any): Int {
                 throw TODO_Exception()
                 //	int len;
 //	va_list argptr;
@@ -2016,11 +2012,11 @@ object Str {
 //	return len;
             }
 
-            fun snPrintf(dest: CharArray?, size: Int, fmt: String?, vararg args: Any?): Int {
+            fun snPrintf(dest: CharArray, size: Int, fmt: String, vararg args: Any): Int {
                 return snPrintf(0, dest, size, fmt, *args)
             }
 
-            fun snPrintf(offset: Int, dest: CharArray?, size: Int, fmt: String?, vararg args: Any?): Int {
+            fun snPrintf(offset: Int, dest: CharArray, size: Int, fmt: String, vararg args: Any): Int {
                 var length: Int
                 //            char[] argptr;
                 val buffer = StringBuilder(32000) // big, but small enough to fit in PPC stack
@@ -2058,7 +2054,7 @@ object Str {
          or returns -1 on failure or if the buffer would be overflowed.
          ============
          */
-            fun vsnPrintf(dest: Array<String?>?, size: Int, fmt: String?, vararg args: Any?): Int {
+            fun vsnPrintf(dest: Array<String>, size: Int, fmt: String, vararg args: Any): Int {
                 var ret = 0
 
 //#ifdef _WIN32
@@ -2071,9 +2067,9 @@ object Str {
 //#define vsnprintf	use_idStr_vsnPrintf
 //#endif
 //            dest[size - 1] = '\0';
-                ret = String.format(fmt, *args).also { dest.get(0) = it }.length
+                ret = String.format(fmt, *args).also { dest[0] = it }.length
                 if (ret < 0 || ret >= size) {
-                    dest.get(0) = null
+                    dest[0] = null
                     return -1
                 }
                 return ret
@@ -2088,7 +2084,7 @@ object Str {
          ============
          */
             @JvmOverloads
-            fun FindChar(str: String?, c: Char, start: Int = 0, end: Int = -1): Int {
+            fun FindChar(str: String, c: Char, start: Int = 0, end: Int = -1): Int {
                 var end = end
                 val strArray = str.toCharArray()
                 var i: Int
@@ -2115,8 +2111,8 @@ object Str {
          */
             @JvmOverloads
             fun FindText(
-                str: String?,
-                text: String?,
+                str: String,
+                text: String,
                 casesensitive: Boolean = true,
                 start: Int = 0,
                 end: Int = -1
@@ -2140,7 +2136,7 @@ object Str {
          makes the string lower case, replaces backslashes with forward slashes, and removes extension
          =============
          */
-            fun StripMediaName(name: String?, mediaName: idStr?) {
+            fun StripMediaName(name: String, mediaName: idStr) {
 //	char c;
                 mediaName.Empty()
                 for (c in name.toCharArray()) {
@@ -2157,13 +2153,13 @@ object Str {
                 }
             }
 
-            fun CheckExtension(name: String?, ext: String?): Boolean {
+            fun CheckExtension(name: String, ext: String): Boolean {
                 var c1 = name.length - 1
                 var c2 = ext.length - 1
                 var d: Int
                 //TODO:double check if its working
                 do {
-                    d = name.get(c1) - ext.get(c2)
+                    d = name[c1] - ext[c2]
                     while (d != 0) {
                         if (c1 <= 'Z'.code && c1 >= 'A'.code) {
                             d += 'a' - 'A'
@@ -2189,14 +2185,14 @@ object Str {
                 var i: Int
                 val n: Int
                 var format: String
-                val s: StringBuffer?
+                val s: StringBuffer
 
                 // use an array of string so that multiple calls won't collide
-                str.get(index) = StringBuffer(16384)
-                s = str.get(index)
+                str[index] = StringBuffer(16384)
+                s = str[index]
                 index = index + 1 and 3
                 format = String.format("%%.%df", precision)
-                n = snPrintf(s, s.capacity(), format, array.get(0))
+                n = snPrintf(s, s.capacity(), format, array[0])
                 //	if ( precision > 0 ) {
 //		while( n > 0 && s[n-1] == '0' ) s[--n] = '\0';
 //		while( n > 0 && s[n-1] == '.' ) s[--n] = '\0';
@@ -2204,7 +2200,7 @@ object Str {
                 format = String.format(" %%.%df", precision)
                 i = 1
                 while (i < length) {
-                    s.append(String.format(format, array.get(i)))
+                    s.append(String.format(format, array[i]))
                     i++
                 }
                 return s.toString()
@@ -2215,48 +2211,48 @@ object Str {
                 var i: Int
                 var hash = 0
                 i = 0
-                while (i < string.size && string.get(i) != '\u0000') {
-                    hash += string.get(i) * (i + 119)
+                while (i < string.size && string[i] != '\u0000') {
+                    hash += string[i] * (i + 119)
                     i++
                 }
                 return hash
             }
 
-            fun Hash(string: String?): Int {
+            fun Hash(string: String): Int {
                 return Hash(string.toCharArray())
             }
 
-            fun Hash(string: CharArray?, length: Int): Int {
+            fun Hash(string: CharArray, length: Int): Int {
                 var i: Int
                 var hash = 0
                 i = 0
                 while (i < length) {
-                    hash += string.get(i) * (i + 119)
+                    hash += string[i] * (i + 119)
                     i++
                 }
                 return hash
             }
 
             // case insensitive
-            fun IHash(string: CharArray?): Int {
+            fun IHash(string: CharArray): Int {
                 var i: Int
                 var hash = 0
                 i = 0
-                while (i < string.size && string.get(i) != '\u0000') {
+                while (i < string.size && string[i] != '\u0000') {
                     //TODO:eliminate '\0' from char strings.
-                    hash += ToLower(string.get(i)).code * (i + 119)
+                    hash += ToLower(string[i]).code * (i + 119)
                     i++
                 }
                 return hash
             }
 
             // case insensitive
-            fun IHash(string: CharArray?, length: Int): Int {
+            fun IHash(string: CharArray, length: Int): Int {
                 var i: Int
                 var hash = 0
                 i = 0
                 while (i < length) {
-                    hash += ToLower(string.get(i)).code * (i + 119)
+                    hash += ToLower(string[i]).code * (i + 119)
                     i++
                 }
                 return hash
@@ -2319,7 +2315,7 @@ object Str {
                 return c and 15
             }
 
-            fun ColorForIndex(i: Int): idVec4? {
+            fun ColorForIndex(i: Int): idVec4 {
                 return Str.g_color_table[i and 15]
             }
 
@@ -2341,14 +2337,14 @@ object Str {
 //#endif
             }
 
-            fun FormatNumber(number: Int): idStr? {
+            fun FormatNumber(number: Int): idStr {
                 var number = number
                 val string = idStr()
                 var hit: Boolean
 
                 // reset
                 for (i in 0 until numFormatList) {
-                    val li = formatList.get(i)
+                    val li = formatList[i]
                     li.count = 0
                 }
 
@@ -2356,7 +2352,7 @@ object Str {
                 do {
                     hit = false
                     for (i in 0 until numFormatList) {
-                        val li = formatList.get(i)
+                        val li = formatList[i]
                         if (number >= li.gran) {
                             li.count++
                             number -= li.gran
@@ -2369,26 +2365,26 @@ object Str {
                 // print out
                 var found = false
                 for (i in 0 until numFormatList) {
-                    val li = formatList.get(i)
+                    val li = formatList[i]
                     if (li.count != 0) {
                         if (!found) {
-                            string.oPluSet(Str.va("%d,", li.count))
+                            string.plusAssign(Str.va("%d,", li.count))
                         } else {
 //				string += va( "%3.3i,", li.count );
-                            string.oPluSet(Str.va("%3.3i,", li.count))
+                            string.plusAssign(Str.va("%3.3i,", li.count))
                         }
                         found = true
                     } else if (found) {
 //			string += va( "%3.3i,", li->count );
-                        string.oPluSet(Str.va("%3.3i,", li.count))
+                        string.plusAssign(Str.va("%3.3i,", li.count))
                     }
                 }
                 if (found) {
 //		string += va( "%3.3i", number );
-                    string.oPluSet(Str.va("%3.3i,", number))
+                    string.plusAssign(Str.va("%3.3i,", number))
                 } else {
 //		string += va( "%d", number );
-                    string.oPluSet(Str.va("%d,", number))
+                    string.plusAssign(Str.va("%d,", number))
                 }
 
                 // pad to proper size

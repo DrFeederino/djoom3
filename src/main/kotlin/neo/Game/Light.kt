@@ -226,9 +226,9 @@ object Light {
                     if (pos > 0) {
                         model.Left(pos, brokenModel)
                     }
-                    brokenModel.oPluSet("_broken")
+                    brokenModel.plusAssign("_broken")
                     if (pos > 0) {
-                        brokenModel.oPluSet(model.substring(pos))
+                        brokenModel.plusAssign(model.substring(pos))
                     }
                 }
 
@@ -242,7 +242,7 @@ object Light {
                             name
                         )
                     } else {
-                        brokenModel.oSet("")
+                        brokenModel.set("")
                     }
                 }
                 GetPhysics().SetContents(if (spawnArgs.GetBool("nonsolid")) 0 else Material.CONTENTS_SOLID)

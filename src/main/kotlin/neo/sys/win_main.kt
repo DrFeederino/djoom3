@@ -950,32 +950,32 @@ object win_main {
             win_local.Companion.win32.cpuid = win_cpu.Sys_GetCPUId()
             string = idStr() //Clear();
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_AMD != 0) {
-                string.oPluSet("AMD CPU")
+                string.plusAssign("AMD CPU")
             } else if (win_local.Companion.win32.cpuid and sys_public.CPUID_INTEL != 0) {
-                string.oPluSet("Intel CPU")
+                string.plusAssign("Intel CPU")
             } else if (win_local.Companion.win32.cpuid and sys_public.CPUID_UNSUPPORTED != 0) {
-                string.oPluSet("unsupported CPU")
+                string.plusAssign("unsupported CPU")
             } else {
-                string.oPluSet("generic CPU")
+                string.plusAssign("generic CPU")
             }
-            string.oPluSet(" with ")
+            string.plusAssign(" with ")
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_MMX != 0) {
-                string.oPluSet("MMX & ")
+                string.plusAssign("MMX & ")
             }
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_3DNOW != 0) {
-                string.oPluSet("3DNow! & ")
+                string.plusAssign("3DNow! & ")
             }
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE != 0) {
-                string.oPluSet("SSE & ")
+                string.plusAssign("SSE & ")
             }
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE2 != 0) {
-                string.oPluSet("SSE2 & ")
+                string.plusAssign("SSE2 & ")
             }
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE3 != 0) {
-                string.oPluSet("SSE3 & ")
+                string.plusAssign("SSE3 & ")
             }
             if (win_local.Companion.win32.cpuid and sys_public.CPUID_HTT != 0) {
-                string.oPluSet("HTT & ")
+                string.plusAssign("HTT & ")
             }
             string.StripTrailing(" & ")
             string.StripTrailing(" with ")

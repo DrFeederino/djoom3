@@ -537,7 +537,7 @@ object Parser {
             }
             //if the type matches
             if (tok.type == type && tok.subtype and subtype == subtype) {
-                token.oSet(tok)
+                token.set(tok)
                 return true
             }
             UnreadSourceToken(tok)
@@ -568,7 +568,7 @@ object Parser {
 
             // if the type matches
             if (tok.type == type && tok.subtype and subtype == subtype) {
-                token.oSet(tok)
+                token.set(tok)
                 return true
             }
             return false
@@ -650,7 +650,7 @@ object Parser {
             if (!ExpectTokenString("{")) {
                 return out.toString()
             }
-            out.oSet("{")
+            out.set("{")
             depth = 1
             do {
                 if (!ReadToken(token)) {
@@ -745,7 +745,7 @@ object Parser {
             }
             // if no lines were crossed before this token
             if (0 == tok.linesCrossed) {
-                token.oSet(tok)
+                token.set(tok)
                 return true
             }
             //
@@ -897,10 +897,10 @@ object Parser {
                 val temp = idParser(marker_p, p, "temp", flags) //TODO:check whether this substringing works
                 val token = idToken()
                 while (temp.ReadToken(token)) {
-                    out.oPluSet(token)
+                    out.plusAssign(token)
                 }
             } else {
-                out.oSet(marker_p)
+                out.set(marker_p)
             }
 
             // restore the character we set to NULL
@@ -1196,7 +1196,7 @@ object Parser {
                 //		delete script;
             }
             // copy the already available token
-            token.oSet(tokens)
+            token.set(tokens)
             // remove the token from the source
             t = tokens
             tokens = tokens.next
@@ -1384,7 +1384,7 @@ object Parser {
             when (define.builtin) {
                 Parser.BUILTIN_LINE -> {
                     buf = String.format("%d", defToken.line)
-                    token.oSet(buf)
+                    token.set(buf)
                     token.intValue = defToken.line.toLong()
                     token.floatValue = defToken.line.toDouble()
                     token.type = Token.TT_NUMBER
@@ -1396,7 +1396,7 @@ object Parser {
                     lastToken.get(0) = token
                 }
                 Parser.BUILTIN_FILE -> {
-                    token.oSet(scriptstack.GetFileName())
+                    token.set(scriptstack.GetFileName())
                     token.type = Token.TT_NAME
                     token.subtype = token.Length()
                     token.line = defToken.line
@@ -1410,11 +1410,11 @@ object Parser {
 //                    t = System.currentTimeMillis();
 //                    curtime = ctime( & t);
                     curtime = Date().toString()
-                    token.oSet("\"")
+                    token.set("\"")
                     token.Append(curtime + 4)
-                    token.oSet(7, '\u0000')
+                    token.set(7, '\u0000')
                     token.Append(curtime + 20)
-                    token.oSet(10, '\u0000')
+                    token.set(10, '\u0000')
                     token.Append("\"")
                     //			free(curtime);
                     token.type = Token.TT_STRING
@@ -1430,9 +1430,9 @@ object Parser {
 //                    t = System.currentTimeMillis();
 //                    curtime = ctime( & t);
                     curtime = Date().toString()
-                    token.oSet("\"")
+                    token.set("\"")
                     token.Append(curtime + 11)
-                    token.oSet(8, '\u0000')
+                    token.set(8, '\u0000')
                     token.Append("\"")
                     //			free(curtime);
                     token.type = Token.TT_STRING
@@ -1759,16 +1759,16 @@ object Parser {
             if (token.type == Token.TT_STRING) {
                 script = idLexer()
                 // try relative to the current file
-                path.oSet(scriptstack.GetFileName())
+                path.set(scriptstack.GetFileName())
                 path.StripFilename()
-                path.oPluSet("/")
-                path.oPluSet(token)
+                path.plusAssign("/")
+                path.plusAssign(token)
                 if (!script.LoadFile(path.toString(), OSPath)) {
                     // try absolute path
-                    path.oSet(token)
+                    path.set(token)
                     if (!script.LoadFile(path.toString(), OSPath)) {
                         // try from the include path
-                        path.oSet(includepath.oPlus(token))
+                        path.set(includepath.plus(token))
                         if (!script.LoadFile(path.toString(), OSPath)) {
 //					delete script;
                             script = null
@@ -1776,7 +1776,7 @@ object Parser {
                     }
                 }
             } else if (token.type == Token.TT_PUNCTUATION && token == "<") {
-                path.oSet(includepath)
+                path.set(includepath)
                 while (ReadSourceToken(token)) {
                     if (token.linesCrossed > 0) {
                         UnreadSourceToken(token)
@@ -1785,7 +1785,7 @@ object Parser {
                     if (token.type == Token.TT_PUNCTUATION && token == ">") {
                         break
                     }
-                    path.oPluSet(token)
+                    path.plusAssign(token)
                 }
                 if (token != ">") {
                     this.Warning("#include missing trailing >")
@@ -1798,7 +1798,7 @@ object Parser {
                     return true
                 }
                 script = idLexer()
-                if (!script.LoadFile(includepath.oPlus(path).toString(), OSPath)) {
+                if (!script.LoadFile(includepath.plus(path).toString(), OSPath)) {
 //			delete script;
                     script = null
                 }
@@ -2796,7 +2796,7 @@ object Parser {
             token.whiteSpaceEnd_p = 0
             token.linesCrossed = 0
             token.flags = 0
-            token.oSet("-")
+            token.set("-")
             token.type = Token.TT_PUNCTUATION
             token.subtype = Lexer.P_SUB
             UnreadSourceToken(token)
@@ -2816,7 +2816,7 @@ object Parser {
             token.linesCrossed = 0
             token.flags = 0
             buf = String.format("%d", Math.abs(value[0]))
-            token.oSet(buf)
+            token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_INTEGER or Token.TT_LONG or Token.TT_DECIMAL
             UnreadSourceToken(token)
@@ -2840,7 +2840,7 @@ object Parser {
             token.linesCrossed = 0
             token.flags = 0
             buf = String.format("%1.2f", Math.abs(value[0] as Float))
-            token.oSet(buf)
+            token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_FLOAT or Token.TT_LONG or Token.TT_DECIMAL
             UnreadSourceToken(token)
@@ -2916,7 +2916,7 @@ object Parser {
             token.linesCrossed = 0
             token.flags = 0
             buf = String.format("%d", Math.abs(value[0]))
-            token.oSet(buf)
+            token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_INTEGER or Token.TT_LONG or Token.TT_DECIMAL or Token.TT_VALUESVALID
             token.intValue = Math.abs(value[0])
@@ -2942,7 +2942,7 @@ object Parser {
             token.linesCrossed = 0
             token.flags = 0
             buf = String.format("%1.2f", Math.abs(value[0] as Float))
-            token.oSet(buf)
+            token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_FLOAT or Token.TT_LONG or Token.TT_DECIMAL or Token.TT_VALUESVALID
             token.intValue = Math.abs(value[0] as Float).toLong()

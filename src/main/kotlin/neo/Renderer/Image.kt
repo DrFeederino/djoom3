@@ -3092,7 +3092,7 @@ object Image {
                 // we don't bother hooking this into the hash table for lookup, but we do add it to the manager
                 // list for listImages
                 Image.globalImages.images.Append(image.partialImage)
-                image.partialImage.imgName.oSet(image.imgName)
+                image.partialImage.imgName.set(image.imgName)
                 image.partialImage.isPartialImage = true
 
                 // let the background file loader know that we can load
@@ -3570,7 +3570,7 @@ object Image {
             images.Append(image)
             image.hashNext = imageHashTable.get(hash)
             imageHashTable.get(hash) = image
-            image.imgName.oSet(name)
+            image.imgName.set(name)
             return image
         }
 

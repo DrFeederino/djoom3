@@ -1331,7 +1331,7 @@ object Entity {
                 Game_local.gameLocal.RemoveEntityFromHash(name.toString(), this)
                 Game_local.gameLocal.program.SetEntity(name.toString(), null)
             }
-            name.oSet(newname)
+            name.set(newname)
             if (name.Length() != 0) {
 //            if ( ( name == "NULL" ) || ( name == "null_entity" ) ) {
                 if ("NULL" == newname || "null_entity" == newname) {

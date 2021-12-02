@@ -69,16 +69,16 @@ class Base64 {
                 ++i
                 if (size == 0 || i == 3) {
                     val out = ByteArray(4)
-                    Lib.Companion.SixtetsForInt(out, w.toInt())
+                    Lib.Companion.SixtetsForInt(out, w)
                     j = 0
                     while (j * 6 < i * 8) {
-                        to[t_ptr++] = sixtet_to_base64.get(out[j]) as Byte
+                        to[t_ptr++] = sixtet_to_base64[out[j].toInt()].code.toByte()
                         ++j
                     }
                     if (size == 0) {
                         j = i
                         while (j < 3) {
-                            to[t_ptr++] = '='
+                            to[t_ptr++] = '='.code.toByte()
                             ++j
                         }
                     }
@@ -86,7 +86,7 @@ class Base64 {
                     i = 0
                 }
             }
-            to[t_ptr++] = '\u0000'
+            to[t_ptr++] = '\u0000'.code.toByte()
             len = t_ptr
         }
 
@@ -118,7 +118,7 @@ class Base64 {
             if (!tab_init) {
 //                memset(base64_to_sixtet, 0, 256);
                 i = 0
-                while (sixtet_to_base64[i].also { j = it } != '\u0000'.code) {
+                while (sixtet_to_base64[i].also { j = it.code } != '\u0000') {
                     base64_to_sixtet[j] = i.toChar()
                     ++i
                 }
@@ -128,15 +128,15 @@ class Base64 {
             i = 0
             n = 0
             val `in` = byteArrayOf(0, 0, 0, 0)
-            while (from[f_ptr] != '\u0000' && from[f_ptr] != '=') {
-                if (from[f_ptr] == ' ' || from[f_ptr] == '\n') {
+            while (from[f_ptr] != '\u0000'.code.toByte() && from[f_ptr] != '='.code.toByte()) {
+                if (from[f_ptr] == ' '.code.toByte() || from[f_ptr] == '\n'.code.toByte()) {
                     ++f_ptr
                     continue
                 }
-                `in`[i] = base64_to_sixtet.get(from[f_ptr]) as Byte
+                `in`[i] = base64_to_sixtet[from[f_ptr].toInt()].code.toByte()
                 ++i
                 ++f_ptr
-                if (from[f_ptr] == '\u0000' || from[f_ptr] == '=' || i == 4) {
+                if (from[f_ptr] == '\u0000'.code.toByte() || from[f_ptr] == '='.code.toByte() || i == 4) {
                     w = Lib.Companion.IntForSixtets(`in`).toLong()
                     j = 0
                     while (j * 8 < i * 6) {
@@ -184,7 +184,7 @@ class Base64 {
         private fun Init() {
             len = 0
             alloced = 0
-            data = null
+            data = ByteArray(0)
         }
 
         private fun Release() {

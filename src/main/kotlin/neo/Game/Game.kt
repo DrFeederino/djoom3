@@ -1047,7 +1047,7 @@ object Game {
             // get any new body transforms stored in the key/value pairs
             arg = args.MatchPrefix("body ", null)
             while (arg != null) {
-                name.oSet(arg.GetKey())
+                name.set(arg.GetKey())
                 name.Strip("body ")
                 i = 0
                 while (i < af.bodies.Num()) {
@@ -1408,7 +1408,7 @@ object Game {
                         val work = idStr(ent.epairs.GetString("classname"))
                         if (work.Icmp(classname) == 0) {
                             if (TempDump.isNotNullOrEmpty(match)) {
-                                work.oSet(ent.epairs.GetString("soundgroup"))
+                                work.set(ent.epairs.GetString("soundgroup"))
                                 if (count < max && work.Icmp(match) == 0) {
                                     list.get(count++) = ent.epairs.GetString("name")
                                 }

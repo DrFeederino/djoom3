@@ -1873,7 +1873,7 @@ object AI {
             lookJointAngles.SetGranularity(1)
             kv = spawnArgs.MatchPrefix("look_joint", null)
             while (kv != null) {
-                jointName.oSet(kv.GetKey())
+                jointName.set(kv.GetKey())
                 jointName.StripLeadingOnce("look_joint ")
                 joint = animator.GetJointHandle(jointName)
                 if (joint == Model.INVALID_JOINT) {
@@ -1904,7 +1904,7 @@ object AI {
             flashJointWorld = animator.GetJointHandle("flash")
             if (head.GetEntity() != null) {
                 val headAnimator = head.GetEntity().GetAnimator()
-                jointName.oSet(spawnArgs.GetString("bone_focus"))
+                jointName.set(spawnArgs.GetString("bone_focus"))
                 if (TempDump.isNotNullOrEmpty(jointName)) {
                     focusJoint = headAnimator.GetJointHandle(jointName)
                     if (focusJoint == Model.INVALID_JOINT) {
@@ -1912,7 +1912,7 @@ object AI {
                     }
                 }
             } else {
-                jointName.oSet(spawnArgs.GetString("bone_focus"))
+                jointName.set(spawnArgs.GetString("bone_focus"))
                 if (TempDump.isNotNullOrEmpty(jointName)) {
                     focusJoint = animator.GetJointHandle(jointName)
                     if (focusJoint == Model.INVALID_JOINT) {
@@ -1920,14 +1920,14 @@ object AI {
                     }
                 }
             }
-            jointName.oSet(spawnArgs.GetString("bone_orientation"))
+            jointName.set(spawnArgs.GetString("bone_orientation"))
             if (TempDump.isNotNullOrEmpty(jointName)) {
                 orientationJoint = animator.GetJointHandle(jointName)
                 if (orientationJoint == Model.INVALID_JOINT) {
                     Game_local.gameLocal.Warning("Joint '%s' not found on '%s'", jointName, name)
                 }
             }
-            jointName.oSet(spawnArgs.GetString("bone_flytilt"))
+            jointName.set(spawnArgs.GetString("bone_flytilt"))
             if (TempDump.isNotNullOrEmpty(jointName)) {
                 flyTiltJoint = animator.GetJointHandle(jointName)
                 if (flyTiltJoint == Model.INVALID_JOINT) {
@@ -5036,12 +5036,12 @@ object AI {
         }
 
         protected fun BeginAttack(name: String?) {
-            attack.oSet(name)
+            attack.set(name)
             lastAttackTime = Game_local.gameLocal.time
         }
 
         protected fun EndAttack() {
-            attack.oSet("")
+            attack.set("")
         }
 
         protected fun PushWithAF() {

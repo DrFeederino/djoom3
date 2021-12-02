@@ -1394,9 +1394,9 @@ object FileSystem_h {
             while (ofs < path.Length()) {
                 if (path.oGet(ofs) == sys_public.PATHSEPERATOR_CHAR) {
                     // create the directory
-                    path.oSet(ofs, '0')
+                    path.set(ofs, '0')
                     win_main.Sys_Mkdir(path)
-                    path.oSet(ofs, sys_public.PATHSEPERATOR_CHAR)
+                    path.set(ofs, sys_public.PATHSEPERATOR_CHAR)
                 }
                 ofs++
             }
@@ -2090,7 +2090,7 @@ object FileSystem_h {
                     }
                     val file = idFile_Permanent()
                     file.o = fp
-                    file.name.oSet(relativePath)
+                    file.name.set(relativePath)
                     file.fullPath = netpath
                     file.mode = 1 shl TempDump.etoi(fsMode_t.FS_READ)
                     file.fileSize = DirectFileLength(file.o).toInt()
@@ -2306,8 +2306,8 @@ object FileSystem_h {
 //		delete f;
                 return null
             }
-            f.name.oSet(relativePath)
-            f.fullPath.oSet(OSpath)
+            f.name.set(relativePath)
+            f.fullPath.set(OSpath)
             f.mode = 1 shl fsMode_t.FS_WRITE.ordinal
             f.handleSync = false
             f.fileSize = 0
@@ -2344,8 +2344,8 @@ object FileSystem_h {
 //		delete f;
                 return null
             }
-            f.name.oSet(filename)
-            f.fullPath.oSet(OSpath)
+            f.name.set(filename)
+            f.fullPath.set(OSpath)
             f.mode = (1 shl TempDump.etoi(fsMode_t.FS_WRITE)) + (1 shl TempDump.etoi(fsMode_t.FS_APPEND))
             f.handleSync = sync
             f.fileSize = DirectFileLength(f.o).toInt()
@@ -2381,7 +2381,7 @@ object FileSystem_h {
 //		delete f;
                 return null
             }
-            f.name.oSet(OSPath)
+            f.name.set(OSPath)
             f.fullPath = idStr(OSPath)
             f.mode = 1 shl TempDump.etoi(fsMode_t.FS_READ)
             f.handleSync = false
@@ -2405,8 +2405,8 @@ object FileSystem_h {
 //		delete f;
                 return null
             }
-            f.name.oSet(OSPath)
-            f.fullPath.oSet(OSPath)
+            f.name.set(OSPath)
+            f.fullPath.set(OSPath)
             f.mode = 1 shl TempDump.etoi(fsMode_t.FS_WRITE)
             f.handleSync = false
             f.fileSize = 0
@@ -2477,7 +2477,7 @@ object FileSystem_h {
 // #endif
                 // from executable directory first - this is handy for developement
                 dllName = __dllName[0]
-                dllPath.oSet(win_main.Sys_EXEPath())
+                dllPath.set(win_main.Sys_EXEPath())
                 dllPath.StripFilename()
                 dllPath.AppendPath(dllName)
                 dllFile = OpenExplicitFileRead(dllPath.toString())
@@ -2730,7 +2730,7 @@ object FileSystem_h {
                 if (testList[i].Length() != 0
                     && TempDump.NOT(testList[i].Icmpn(pak.pakFilename.toString(), testList[i].Length()).toDouble())
                 ) {
-                    relativePath.oSet(pak.pakFilename.toString().substring(testList[i].Length() + 1))
+                    relativePath.set(pak.pakFilename.toString().substring(testList[i].Length() + 1))
                     break
                 }
                 i++
@@ -2757,8 +2757,8 @@ object FileSystem_h {
             }
             val file = idFile_Permanent()
             file.o = f
-            file.name.oSet("<tempfile>")
-            file.fullPath.oSet("<tempfile>")
+            file.name.set("<tempfile>")
+            file.fullPath.set("<tempfile>")
             file.mode = (1 shl TempDump.etoi(fsMode_t.FS_READ)) + (1 shl TempDump.etoi(fsMode_t.FS_WRITE))
             file.fileSize = 0
             return file
@@ -3086,7 +3086,7 @@ object FileSystem_h {
                         fp = Paths.get(entry.toString()) //fp = fopen(entry, mode);
                         if (Files.exists(fp, LinkOption.NOFOLLOW_LINKS)) {
                             if (caseSensitiveName != null) {
-                                caseSensitiveName.oSet(entry)
+                                caseSensitiveName.set(entry)
                                 caseSensitiveName.StripPath()
                             }
                             if (fs_debug.GetInteger() != 0) {
@@ -3108,7 +3108,7 @@ object FileSystem_h {
                     i++
                 }
             } else if (caseSensitiveName != null) {
-                caseSensitiveName.oSet(fileName)
+                caseSensitiveName.set(fileName)
                 caseSensitiveName.StripPath()
             }
             try {
@@ -4011,8 +4011,8 @@ object FileSystem_h {
                 idLib.common.FatalError("Couldn't reopen %s", pak.pakFilename.toString())
             }
             file.z = pakFile.entry
-            file.name.oSet(relativePath)
-            file.fullPath.oSet(pak.pakFilename)
+            file.name.set(relativePath)
+            file.fullPath.set(pak.pakFilename)
             file.zipFilePos = pakFile.pos
             file.fileSize = pakFile.entry.getSize().toInt()
             return file

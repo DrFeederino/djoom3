@@ -1084,14 +1084,14 @@ object renderbump {
         Common.common.Printf("writing %s (%d,%d)\n", filename, width, height)
         Image_files.R_WriteTGA(filename, rb.localPic, width, height)
         if (rb.saveGlobalMap) {
-            filename.oSet(rb.outputName)
+            filename.set(rb.outputName)
             filename.StripFileExtension()
             filename.Append("_global.tga")
             Common.common.Printf("writing %s (%d,%d)\n", filename, width, height)
             Image_files.R_WriteTGA(filename, rb.globalPic, width, height)
         }
         if (rb.saveColorMap) {
-            filename.oSet(rb.outputName)
+            filename.set(rb.outputName)
             filename.StripFileExtension()
             filename.Append("_color.tga")
             Common.common.Printf("writing %s (%d,%d)\n", filename, width, height)
@@ -1713,7 +1713,7 @@ object renderbump {
                 buffer.put(i * 4 + 3, (sumBuffer[i * 4 + 3] / 16).toByte())
                 i++
             }
-            filename.oSet(source)
+            filename.set(source)
             filename.StripFileExtension()
             filename.Append("_local.tga")
             Common.common.Printf("writing %s (%d,%d)\n", filename, width, height)

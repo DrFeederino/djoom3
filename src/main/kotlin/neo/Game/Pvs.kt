@@ -1222,7 +1222,7 @@ object Pvs {
 
                             // if not at the front of all bounding planes and thus not completely inside the passage
                             if (front != numBounds.getVal()) {
-                                winding.oSet(p.w)
+                                winding.set(p.w)
                                 l = 0
                                 while (l < numBounds.getVal()) {
 

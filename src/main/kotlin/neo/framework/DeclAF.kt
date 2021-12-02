@@ -90,25 +90,25 @@ class DeclAF {
                 type = type.VEC_JOINT
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
-                joint1.oSet(token)
+                joint1.set(token)
                 src.ExpectTokenString(")")
             } else if (token == "bonecenter") {
                 type = type.VEC_BONECENTER
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
-                joint1.oSet(token)
+                joint1.set(token)
                 src.ExpectTokenString(",")
                 src.ReadToken(token)
-                joint2.oSet(token)
+                joint2.set(token)
                 src.ExpectTokenString(")")
             } else if (token == "bonedir") {
                 type = type.VEC_BONEDIR
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
-                joint1.oSet(token)
+                joint1.set(token)
                 src.ExpectTokenString(",")
                 src.ReadToken(token)
-                joint2.oSet(token)
+                joint2.set(token)
                 src.ExpectTokenString(")")
             } else {
                 src.Error("unknown token %s in vector", token.toString())
@@ -194,21 +194,21 @@ class DeclAF {
                 type.VEC_COORDS -> {
                     val format: String //[128];
                     format = String.format("( %%.%df, %%.%df, %%.%df )", precision, precision, precision)
-                    str.oSet(String.format(format, vec.x, vec.y, vec.z))
+                    str.set(String.format(format, vec.x, vec.y, vec.z))
                 }
                 type.VEC_JOINT -> {
-                    str.oSet(String.format("joint( \"%s\" )", joint1.toString()))
+                    str.set(String.format("joint( \"%s\" )", joint1.toString()))
                 }
                 type.VEC_BONECENTER -> {
-                    str.oSet(String.format("bonecenter( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
+                    str.set(String.format("bonecenter( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
                 }
                 type.VEC_BONEDIR -> {
-                    str.oSet(String.format("bonedir( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
+                    str.set(String.format("bonedir( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
                 }
                 else -> {}
             }
             if (negate) {
-                str.oSet("-$str") //TODO:don't set= idStr reference
+                str.set("-$str") //TODO:don't set= idStr reference
             }
             return str.toString()
         }
@@ -259,7 +259,7 @@ class DeclAF {
         var v2: idAFVector? = null
         var width = 0f
         fun SetDefault(file: idDeclAF?) {
-            name.oSet("noname")
+            name.set("noname")
             modelType = traceModel_t.TRM_BOX
             v1 = idAFVector()
             v1.ToVec3().z = -10.0f
@@ -284,9 +284,9 @@ class DeclAF {
             selfCollision = file.selfCollision
             frictionDirection = idAFVector()
             contactMotorDirection = idAFVector()
-            jointName.oSet("origin")
+            jointName.set("origin")
             jointMod = declAFJointMod_t.DECLAF_JOINTMOD_AXIS
-            containedJoints.oSet("*origin")
+            containedJoints.set("*origin")
         }
 
         //
@@ -322,14 +322,14 @@ class DeclAF {
         //
         //
         fun SetDefault(file: idDeclAF?) {
-            name.oSet("noname")
+            name.set("noname")
             type = declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT
             if (file.bodies.Num() != 0) {
-                body1.oSet(file.bodies.get(0).name)
+                body1.set(file.bodies.get(0).name)
             } else {
-                body1.oSet("world")
+                body1.set("world")
             }
-            body2.oSet("world")
+            body2.set("world")
             friction = file.defaultConstraintFriction
             anchor = idAFVector()
             anchor2 = idAFVector()
@@ -570,7 +570,7 @@ class DeclAF {
             val body: idDeclAF_Body
             body = idDeclAF_Body()
             body.SetDefault(this)
-            body.name.oSet(name)
+            body.name.set(name)
             bodies.Append(body)
         }
 
@@ -587,7 +587,7 @@ class DeclAF {
             i = 0
             while (i < bodies.Num()) {
                 if (bodies.get(i).name.Icmp(oldName) == 0) {
-                    bodies.get(i).name.oSet(newName)
+                    bodies.get(i).name.set(newName)
                     break
                 }
                 i++
@@ -595,9 +595,9 @@ class DeclAF {
             i = 0
             while (i < constraints.Num()) {
                 if (constraints.get(i).body1.Icmp(oldName) == 0) {
-                    constraints.get(i).body1.oSet(newName)
+                    constraints.get(i).body1.set(newName)
                 } else if (constraints.get(i).body2.Icmp(oldName) == 0) {
-                    constraints.get(i).body2.oSet(newName)
+                    constraints.get(i).body2.set(newName)
                 }
                 i++
             }
@@ -640,7 +640,7 @@ class DeclAF {
             val constraint: idDeclAF_Constraint
             constraint = idDeclAF_Constraint()
             constraint.SetDefault(this)
-            constraint.name.oSet(name)
+            constraint.name.set(name)
             constraints.Append(constraint)
         }
 
@@ -650,7 +650,7 @@ class DeclAF {
             i = 0
             while (i < constraints.Num()) {
                 if (constraints.get(i).name.Icmp(oldName) == 0) {
-                    constraints.get(i).name.oSet(newName)
+                    constraints.get(i).name.set(newName)
                     return
                 }
                 i++
@@ -698,7 +698,7 @@ class DeclAF {
             ) {
                 return false
             }
-            body.name.oSet(token)
+            body.name.set(token)
             if (0 == body.name.Icmp("origin") || 0 == body.name.Icmp("world")) {
                 src.Error("a body may not be named \"origin\" or \"world\"")
                 return false
@@ -800,7 +800,7 @@ class DeclAF {
                     if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)) {
                         return false
                     }
-                    body.jointName.oSet(token)
+                    body.jointName.set(token)
                     hasJoint = true
                 } else if (0 == token.Icmp("mod")) {
                     if (!src.ExpectAnyToken(token)) {
@@ -827,7 +827,7 @@ class DeclAF {
                     if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)) {
                         return false
                     }
-                    body.containedJoints.oSet(token)
+                    body.containedJoints.set(token)
                 } else if (0 == token.Icmp("frictionDirection")) {
                     if (!body.frictionDirection.Parse(src)) {
                         return false
@@ -867,14 +867,14 @@ class DeclAF {
                 return false
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_FIXED
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (token == "}") {
                     break
                 } else {
@@ -898,17 +898,17 @@ class DeclAF {
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_BALLANDSOCKETJOINT
             constraint.limit = idDeclAF_Constraint.LIMIT_NONE
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             constraint.friction = 0.5f
             constraint.anchor.ToVec3().Zero()
             constraint.shaft.get(0).ToVec3().Zero()
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (0 == token.Icmp("anchor")) {
                     if (!constraint.anchor.Parse(src)) {
                         return false
@@ -972,7 +972,7 @@ class DeclAF {
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT
             constraint.limit = idDeclAF_Constraint.LIMIT_NONE
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             constraint.friction = 0.5f
             constraint.anchor.ToVec3().Zero()
             constraint.shaft.get(0).ToVec3().Zero()
@@ -980,10 +980,10 @@ class DeclAF {
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (0 == token.Icmp("anchor")) {
                     if (!constraint.anchor.Parse(src)) {
                         return false
@@ -1044,17 +1044,17 @@ class DeclAF {
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_HINGE
             constraint.limit = idDeclAF_Constraint.LIMIT_NONE
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             constraint.friction = 0.5f
             constraint.anchor.ToVec3().Zero()
             constraint.axis.ToVec3().Zero()
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (0 == token.Icmp("anchor")) {
                     if (!constraint.anchor.Parse(src)) {
                         return false
@@ -1099,15 +1099,15 @@ class DeclAF {
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_SLIDER
             constraint.limit = idDeclAF_Constraint.LIMIT_NONE
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             constraint.friction = 0.5f
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (0 == token.Icmp("axis")) {
                     if (!constraint.axis.Parse(src)) {
                         return false
@@ -1137,15 +1137,15 @@ class DeclAF {
             }
             constraint.type = declAFConstraintType_t.DECLAF_CONSTRAINT_SPRING
             constraint.limit = idDeclAF_Constraint.LIMIT_NONE
-            constraint.name.oSet(token)
+            constraint.name.set(token)
             constraint.friction = 0.5f
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body1.oSet(token)
+                    constraint.body1.set(token)
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
-                    constraint.body2.oSet(token)
+                    constraint.body2.set(token)
                 } else if (0 == token.Icmp("anchor1")) {
                     if (!constraint.anchor.Parse(src)) {
                         return false
@@ -1576,7 +1576,7 @@ class DeclAF {
             }
 
             fun ContentsToString(contents: Int, str: idStr?): String? {
-                str.oSet("")
+                str.set("")
                 if (contents and Material.CONTENTS_SOLID != 0) {
                     if (str.Length() != 0) {
                         str.Append(", ")
@@ -1608,7 +1608,7 @@ class DeclAF {
                     str.Append("monsterclip")
                 }
                 if (str.IsEmpty()) {
-                    str.oSet("none")
+                    str.set("none")
                 }
                 return str.toString()
             }

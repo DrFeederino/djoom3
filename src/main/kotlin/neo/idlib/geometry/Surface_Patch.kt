@@ -150,7 +150,7 @@ class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta.plusAssign(verts[i * maxWidth + j + 1].xyz.minus(midxyz))
+                    delta.plusAssign(verts[i*maxWidth + j+1].xyz - midxyz)
                     if (delta.LengthSqr() > maxHorizontalErrorSqr) {
                         break
                     }
@@ -209,7 +209,7 @@ class Surface_Patch {
                         }
                     }
                     // see if this midpoint is off far enough to subdivide
-                    delta.set(verts[(j + 1) * maxWidth + i].xyz.minus(midxyz))
+                    delta.set(verts[(j+1)*maxWidth + i].xyz - midxyz)
                     if (delta.LengthSqr() > maxVerticalErrorSqr) {
                         break
                     }
@@ -399,7 +399,7 @@ class Surface_Patch {
                         verts[i * maxWidth + j].xyz,
                         verts[i * maxWidth + j - 1].xyz, verts[i * maxWidth + j + 1].xyz, proj
                     )
-                    dir.set(verts[i * maxWidth + j].xyz.minus(proj))
+                    dir.set(verts[i*maxWidth + j].xyz - proj)
                     len = dir.LengthSqr()
                     if (len > maxLength) {
                         maxLength = len
@@ -430,7 +430,7 @@ class Surface_Patch {
                         verts[j * maxWidth + i].xyz,
                         verts[(j - 1) * maxWidth + i].xyz, verts[(j + 1) * maxWidth + i].xyz, proj
                     )
-                    dir.set(verts[j * maxWidth + i].xyz.minus(proj))
+                    dir.set(verts[j*maxWidth + i].xyz - proj)
                     len = dir.LengthSqr()
                     if (len > maxLength) {
                         maxLength = len
@@ -529,11 +529,11 @@ class Surface_Patch {
         private fun ProjectPointOntoVector(point: idVec3, vStart: idVec3, vEnd: idVec3, vProj: idVec3) {
             val pVec = idVec3()
             val vec = idVec3()
-            pVec.set(point.minus(vStart))
-            vec.set(vEnd.minus(vStart))
+            pVec.set(point - vStart)
+            vec.set(vEnd - vStart)
             vec.Normalize()
             // project onto the directional vector for this segment
-            vProj.set(vStart.plus(vec.times(pVec.times(vec))))
+            vProj.set(vStart + vec * (pVec * vec))
         }
 
         /*
@@ -578,9 +578,9 @@ class Surface_Patch {
             //
             val extent: Array<idVec3> = idVec3.generateArray(3)
             val offset: Float
-            extent[0].set(verts[width - 1].xyz.minus(verts[0].xyz))
-            extent[1].set(verts[(height - 1) * width + width - 1].xyz.minus(verts[0].xyz))
-            extent[2].set(verts[(height - 1) * width].xyz.minus(verts[0].xyz))
+            extent[0].set(verts[width - 1].xyz - verts[0].xyz)
+            extent[1].set(verts[(height-1) * width + width - 1].xyz - verts[0].xyz)
+            extent[2].set(verts[(height-1) * width].xyz - verts[0].xyz)
             norm.set(extent[0].Cross(extent[1]))
             if (norm.LengthSqr() == 0.0f) {
                 norm.set(extent[0].Cross(extent[2]))
@@ -591,10 +591,10 @@ class Surface_Patch {
 
             // wrapped patched may not get a valid normal here
             if (norm.Normalize() != 0.0f) {
-                offset = verts[0].xyz.times(norm)
+                offset =verts[0].xyz * norm
                 i = 1
                 while (i < width * height) {
-                    val d = verts[i].xyz.times(norm)
+                    val d = verts[i].xyz * norm
                     if (abs(d - offset) > COPLANAR_EPSILON) {
                         break
                     }
@@ -615,7 +615,7 @@ class Surface_Patch {
             wrapWidth = false
             i = 0
             while (i < height) {
-                delta.set(verts[i * width].xyz.minus(verts[i * width + width - 1].xyz))
+                delta.set(verts[i * width].xyz - verts[i * width + width-1].xyz)
                 if (delta.LengthSqr() > Math_h.Square(1.0f)) {
                     break
                 }
@@ -627,7 +627,7 @@ class Surface_Patch {
             wrapHeight = false
             i = 0
             while (i < width) {
-                delta.set(verts[i].xyz.minus(verts[(height - 1) * width + i].xyz))
+                delta.set(verts[i].xyz - verts[(height-1) * width + i].xyz)
                 if (delta.LengthSqr() > Math_h.Square(1.0f)) {
                     break
                 }
@@ -667,7 +667,7 @@ class Surface_Patch {
                             if (x < 0 || x >= width || y < 0 || y >= height) {
                                 break // edge of patch
                             }
-                            temp.set(verts[y * width + x].xyz.minus(base))
+                            temp.set(verts[y * width + x].xyz - base)
                             if (temp.Normalize() == 0.0f) {
                                 dist++
                                 continue  // degenerate edge, get more dist

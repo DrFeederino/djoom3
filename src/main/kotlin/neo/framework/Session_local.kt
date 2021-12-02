@@ -664,7 +664,7 @@ object Session_local {
                             com_aviDemoSamples.GetInteger(),
                             null
                         )
-                        name.oSet(
+                        name.set(
                             Str.va(
                                 "demos/%s/%s_%05i.tga",
                                 aviDemoShortName.toString(),
@@ -1152,8 +1152,8 @@ object Session_local {
                 msgBoxType_t.MSG_WAIT -> {}
                 else -> Common.common.Printf("idSessionLocal::MessageBox: unknown msg box type\n")
             }
-            msgFireBack.get(0).oSet("" + fire_yes)
-            msgFireBack.get(1).oSet("" + fire_no)
+            msgFireBack.get(0).set("" + fire_yes)
+            msgFireBack.get(1).set("" + fire_no)
             guiMsgRestore = guiActive
             guiActive = guiMsg
             guiMsg.SetCursor(325f, 290f)
@@ -1182,7 +1182,7 @@ object Session_local {
                 } else if (type == msgBoxType_t.MSG_CDKEY) {
                     if (msgRetIndex == 0) {
                         // the visible_ values distinguish looking at a valid key, or editing it
-                        msgFireBack.get(0).oSet(
+                        msgFireBack.get(0).set(
                             String.format(
                                 "%1s;%16s;%2s;%1s;%16s;%2s",
                                 guiMsg.State().GetString("visible_cdchk"),
@@ -1901,7 +1901,7 @@ object Session_local {
                 // Game Name / Version / Map Name / Persistant Player Info
                 // game
                 savegameFile.ReadString(gamename)
-                gamename.oSet(gamename.toString().substring(0, 6))
+                gamename.set(gamename.toString().substring(0, 6))
                 assert(gamename.toString() == Licensee.GAME_NAME)
                 // if this isn't a savegame for the correct game, abort loadgame
                 if (gamename.toString() != Licensee.GAME_NAME) {
@@ -4136,7 +4136,7 @@ object Session_local {
                         while (i < count) {
                             val person = guiTakeNotes.State().GetInt(Str.va("person_sel_%d", i))
                             workName = idStr("$fileName/")
-                            workName.oPluSet(guiTakeNotes.State().GetString(Str.va("person_item_%d", person), "Nobody"))
+                            workName.plusAssign(guiTakeNotes.State().GetString(Str.va("person_item_%d", person), "Nobody"))
                             fileList.add(workName)
                             i++
                         }
@@ -4298,7 +4298,7 @@ object Session_local {
                 if (src.LoadFile(Str.va("savegames/%s.txt", loadGameList.get(i)))) {
                     val tok = idToken()
                     src.ReadToken(tok)
-                    name.oSet(tok.toString())
+                    name.set(tok.toString())
                 } else {
                     name = loadGameList.get(i)
                 }
@@ -4383,7 +4383,7 @@ object Session_local {
                     str = str.Right(str.Length() - n - 1)
                 } else {
                     skin = str
-                    str.oSet("")
+                    str.set("")
                 }
                 if (skin.Icmp(uiSkin.toString()) == 0) {
                     skinId = count

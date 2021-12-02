@@ -1060,7 +1060,7 @@ object AsyncServer {
         }
 
         fun GetAsyncStatsAvgMsg(msg: idStr?) {
-            msg.oSet(
+            msg.set(
                 String.format(
                     "avrg out: %d B/s - max %d B/s ( over %d ms )",
                     stats_average_sum / stats_numsamples,
@@ -2290,7 +2290,7 @@ object AsyncServer {
                 }
                 if (replyMsg == authReplyMsg_t.AUTH_REPLY_PRINT) {
                     msg.ReadString(string, Lib.Companion.MAX_STRING_CHARS)
-                    replyPrintMsg.oSet(TempDump.ctos(string))
+                    replyPrintMsg.set(TempDump.ctos(string))
                 }
             }
             lastAuthTime = serverTime
@@ -2534,7 +2534,7 @@ object AsyncServer {
                 return
             }
             if (!VerifyChecksumMessage(clientNum, null, msg, reply, clients.get(clientNum).OS)) {
-                reply.oSet(DropClient(clientNum, reply.toString()))
+                reply.set(DropClient(clientNum, reply.toString()))
                 return
             }
             Common.common.DPrintf("client %d: passed pure checks (reliable channel)\n", clientNum)
@@ -2563,7 +2563,7 @@ object AsyncServer {
                         "MAX_PURE_PAKS ( %d ) exceeded in idAsyncServer.ProcessPureMessage\n",
                         FileSystem_h.MAX_PURE_PAKS
                     )
-                    reply.oSet("#str_07144")
+                    reply.set("#str_07144")
                     return false
                 }
             } while (i != 0)
@@ -2581,7 +2581,7 @@ object AsyncServer {
                     if (from != null) win_net.Sys_NetAdrToString(from) else Str.va("%d", clientNum),
                     gamePakChecksum
                 )
-                reply.oSet("#str_07145")
+                reply.set("#str_07145")
                 return false
             }
             i = 0
@@ -2592,7 +2592,7 @@ object AsyncServer {
                         if (from != null) win_net.Sys_NetAdrToString(from) else Str.va("%d", clientNum),
                         serverChecksums[i]
                     )
-                    reply.oSet(String.format("pak missing ( 0x%x )\n", serverChecksums[i]))
+                    reply.set(String.format("pak missing ( 0x%x )\n", serverChecksums[i]))
                     return false
                 }
                 i++
@@ -2603,7 +2603,7 @@ object AsyncServer {
                     if (from != null) win_net.Sys_NetAdrToString(from) else Str.va("%d", clientNum),
                     checksums[i]
                 )
-                reply.oSet(String.format("extra pak file referenced ( 0x%x )\n", checksums[i]))
+                reply.set(String.format("extra pak file referenced ( 0x%x )\n", checksums[i]))
                 return false
             }
             return true
@@ -2709,9 +2709,9 @@ object AsyncServer {
             i = 0
             while (i < pakNames.size()) {
                 if (i > 0) {
-                    paklist.oPluSet(";")
+                    paklist.plusAssign(";")
                 }
-                paklist.oPluSet(pakNames[i].toString())
+                paklist.plusAssign(pakNames[i].toString())
                 i++
             }
 

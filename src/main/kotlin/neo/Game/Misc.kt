@@ -1891,7 +1891,7 @@ object Misc {
         override fun Spawn() {
             super.Spawn()
             // these are cached as the are used each frame
-            text.oSet(spawnArgs.GetString("text"))
+            text.set(spawnArgs.GetString("text"))
             playerOriented = spawnArgs.GetBool("playerOriented")
             val force = spawnArgs.GetBool("force")
             if (Common.com_developer.GetBool() || force) {

@@ -29,7 +29,7 @@ class ListGUILocal {
         // idListGUI interface
         override fun Config(pGUI: idUserInterface?, name: String?) {
             m_pGUI = pGUI
-            m_name.oSet("" + name)
+            m_name.set("" + name)
         }
 
         override fun Add(id: Int, s: idStr?) {

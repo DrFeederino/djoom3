@@ -609,8 +609,8 @@ object Item {
                     if ( /*player &&*/player.hud != null) {
                         val shotName = idStr(Game_local.gameLocal.GetMapName())
                         shotName.StripFileExtension()
-                        shotName.oPluSet("/")
-                        shotName.oPluSet(spawnArgs.GetString("screenshot"))
+                        shotName.plusAssign("/")
+                        shotName.plusAssign(spawnArgs.GetString("screenshot"))
                         shotName.SetFileExtension(".tga")
                         player.hud.SetStateString("screenshot", shotName.toString())
                         player.hud.SetStateString("objective", "1")
@@ -666,8 +666,8 @@ object Item {
             val camName = arrayOf<String?>(null)
             val shotName = idStr(Game_local.gameLocal.GetMapName())
             shotName.StripFileExtension()
-            shotName.oPluSet("/")
-            shotName.oPluSet(spawnArgs.GetString("screenshot"))
+            shotName.plusAssign("/")
+            shotName.plusAssign(spawnArgs.GetString("screenshot"))
             shotName.SetFileExtension(".tga")
             if (spawnArgs.GetString("camShot", "", camName)) {
                 val ent = Game_local.gameLocal.FindEntity(camName[0])
@@ -929,7 +929,7 @@ object Item {
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName)
             if (!TempDump.isNotNullOrEmpty(clipModelName)) {
-                clipModelName.oSet(spawnArgs.GetString("model")) // use the visual model
+                clipModelName.set(spawnArgs.GetString("model")) // use the visual model
             }
 
             // load the trace model

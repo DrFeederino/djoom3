@@ -1681,7 +1681,7 @@ object Brush {
             val qpath: idStr
             qpath = idStr(fileName)
             qpath.StripFileExtension()
-            qpath.oPluSet(ext)
+            qpath.plusAssign(ext)
             qpath.SetFileExtension("map")
             Common.common.Printf("writing %s...\n", qpath)
             fp = FileSystem_h.fileSystem.OpenFileWrite(qpath.toString(), "fs_devpath")
@@ -1689,7 +1689,7 @@ object Brush {
                 Common.common.Error("Couldn't open %s\n", qpath)
                 return
             }
-            texture.oSet("textures/washroom/btile01")
+            texture.set("textures/washroom/btile01")
             fp.WriteFloatString("Version %1.2f\n", MapFile.CURRENT_MAP_VERSION.toFloat())
             fp.WriteFloatString("{\n")
             fp.WriteFloatString("\"classname\" \"worldspawn\"\n")

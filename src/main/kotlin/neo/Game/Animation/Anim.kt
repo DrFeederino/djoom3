@@ -176,7 +176,7 @@ object Anim {
             numJoints = 0
             frameRate = 24
             animLength = 0
-            name.oSet("")
+            name.set("")
             totaldelta.Zero()
             jointInfo.clear()
             bounds.clear()
@@ -207,7 +207,7 @@ object Anim {
                 return false
             }
             Free()
-            name.oSet(filename)
+            name.set(filename)
             parser.ExpectTokenString(Model.MD5_VERSION_STRING)
             version = parser.ParseInt()
             if (version != Model.MD5_VERSION) {

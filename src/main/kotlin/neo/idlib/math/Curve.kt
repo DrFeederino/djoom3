@@ -815,12 +815,12 @@ class Curve {
             return boundaryT != BT_CLOSED && time >= times[times.Num() - 1]
         }
 
-        fun SetBoundaryT(boundary_t: Int) {
+        fun SetBoundaryType(boundary_t: Int) {
             boundaryT = boundary_t
             changed = true
         }
 
-        fun GetBoundaryT(): Int {
+        fun GetBoundaryType(): Int {
             return boundaryT
         }
 

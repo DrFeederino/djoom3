@@ -747,7 +747,7 @@ object Script_Compiler {
             if (token.type != Token.TT_NAME) {
                 Error("'%s' is not a name", token)
             }
-            name.oSet(token)
+            name.set(token)
             NextToken()
         }
 
@@ -2453,19 +2453,19 @@ object Script_Compiler {
             parserPtr = parser
 
             // unread tokens to include script defines
-            token.oSet(Game.SCRIPT_DEFAULTDEFS)
+            token.set(Game.SCRIPT_DEFAULTDEFS)
             token.type = Token.TT_STRING
             token.subtype = token.Length()
             token.linesCrossed = 0
             token.line = token.linesCrossed
             parser.UnreadToken(token)
-            token.oSet("include")
+            token.set("include")
             token.type = Token.TT_NAME
             token.subtype = token.Length()
             token.linesCrossed = 0
             token.line = token.linesCrossed
             parser.UnreadToken(token)
-            token.oSet("#")
+            token.set("#")
             token.type = Token.TT_PUNCTUATION
             token.subtype = Lexer.P_PRECOMP
             token.linesCrossed = 0

@@ -1792,7 +1792,7 @@ object Common {
                         }
                         if (out.Length() > 200000) {
                             outFile.WriteString(out /*, out.Length()*/)
-                            out.oSet("")
+                            out.set("")
                         }
                         work = token.Right(6)
                         if (token.Icmp("text") == 0 || work.Icmp("::text") == 0 || token.Icmp("choices") == 0) {
@@ -1801,7 +1801,7 @@ object Common {
                                 // otherwise add this to the list and save the id to this position in this file
                                 src.GetLastWhiteSpace(ws)
                                 out.Append(ws)
-                                token.oSet(langDict.AddString(token.toString()))
+                                token.set(langDict.AddString(token.toString()))
                                 out.Append("\"")
                                 k = 0
                                 while (k < token.Length()) {

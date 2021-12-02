@@ -241,7 +241,7 @@ class snd_world {
             listenerQU.set(origin) // Doom units
             listenerPos.set(origin.times(snd_shader.DOOM_TO_METERS)) // meters
             listenerAxis.set(axis)
-            listenerAreaName.oSet(areaName)
+            listenerAreaName.set(areaName)
             listenerAreaName.ToLower()
             listenerArea = if (rw != null) {
                 rw.PointInArea(listenerQU) // where are we?
@@ -498,8 +498,8 @@ class snd_world {
          */
         // avidump
         override fun AVIOpen(path: String?, name: String?) {
-            aviDemoPath.oSet(path)
-            aviDemoName.oSet(name)
+            aviDemoPath.set(path)
+            aviDemoName.set(name)
             lastAVI44kHz = game44kHz - game44kHz % Simd.MIXBUFFER_SAMPLES
             if (snd_system.soundSystemLocal.snd_audio_hw.GetNumberOfSpeakers() == 6) {
                 fpa.get(0) = FileSystem_h.fileSystem.OpenFileWrite(aviDemoPath.toString() + "channel_51_left.raw")
@@ -544,12 +544,12 @@ class snd_world {
                 if (null == wO) {
                     Common.common.Error("Couldn't write %s", *name.c_str())
                 }
-                name.oSet(aviDemoPath.toString() + "channel_right.raw")
+                name.set(aviDemoPath.toString() + "channel_right.raw")
                 rL = FileSystem_h.fileSystem.OpenFileRead(name.toString())
                 if (null == rL) {
                     Common.common.Error("Couldn't open %s", *name.c_str())
                 }
-                name.oSet(aviDemoPath.toString() + "channel_left.raw")
+                name.set(aviDemoPath.toString() + "channel_left.raw")
                 lL = FileSystem_h.fileSystem.OpenFileRead(name.toString())
                 if (null == lL) {
                     Common.common.Error("Couldn't open %s", *name.c_str())
@@ -913,7 +913,7 @@ class snd_world {
             listenerPrivateId = 0
             listenerQU.Zero()
             listenerArea = 0
-            listenerAreaName.oSet("Undefined")
+            listenerAreaName.set("Undefined")
             listenerEnvironmentID = -2
             gameMsec = 0
             game44kHz = 0
@@ -933,8 +933,8 @@ class snd_world {
             fpa.get(2) = fpa.get(3)
             fpa.get(1) = fpa.get(2)
             fpa.get(0) = fpa.get(1)
-            aviDemoPath.oSet("")
-            aviDemoName.oSet("")
+            aviDemoPath.set("")
+            aviDemoName.set("")
             localSound = null
             slowmoActive = false
             slowmoSpeed = 0f

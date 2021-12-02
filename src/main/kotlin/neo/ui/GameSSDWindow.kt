@@ -279,7 +279,7 @@ object GameSSDWindow {
         }
 
         fun SetMaterial(_name: String?) {
-            materialName.oSet(_name)
+            materialName.set(_name)
             material = DeclManager.declManager.FindMaterial(_name)
             material.SetSort(Material.SS_GUI.toFloat())
         }

@@ -134,7 +134,7 @@ object FX {
             nextTriggerTime = 0
             fxEffect = null
             if (spawnArgs.GetString("fx", "", fx)) {
-                systemName.oSet(fx[0])
+                systemName.set(fx[0])
             }
             if (!spawnArgs.GetBool("triggered")) {
                 Setup(fx[0])
@@ -246,7 +246,7 @@ object FX {
             if (Game_local.gameLocal.isClient && (null == fx || !fx.isEmpty())) { //[0] == '\0' ) ) {
                 return
             }
-            systemName.oSet(fx)
+            systemName.set(fx)
             started = 0
             fxEffect = DeclManager.declManager.FindType(declType_t.DECL_FX, systemName) as idDeclFX
             if (fxEffect != null) {

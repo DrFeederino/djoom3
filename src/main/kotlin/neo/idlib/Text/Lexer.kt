@@ -472,7 +472,7 @@ object Lexer {
             // if there is a token available (from unreadToken)
             if (tokenAvailable) {
                 tokenAvailable = false
-                token.oSet(this.token)
+                token.set(this.token)
                 return true
             }
             // save script pointer
@@ -564,12 +564,12 @@ object Lexer {
             }
             if (token.type != type) {
                 when (type) {
-                    Token.TT_STRING -> str.oSet("string")
-                    Token.TT_LITERAL -> str.oSet("literal")
-                    Token.TT_NUMBER -> str.oSet("number")
-                    Token.TT_NAME -> str.oSet("name")
-                    Token.TT_PUNCTUATION -> str.oSet("punctuation")
-                    else -> str.oSet("unknown type")
+                    Token.TT_STRING -> str.set("string")
+                    Token.TT_LITERAL -> str.set("literal")
+                    Token.TT_NUMBER -> str.set("number")
+                    Token.TT_NAME -> str.set("name")
+                    Token.TT_PUNCTUATION -> str.set("punctuation")
+                    else -> str.set("unknown type")
                 }
                 Error("expected a %s but found '%s'", str.toString(), token.toString())
                 return 0
@@ -578,16 +578,16 @@ object Lexer {
                 if (token.subtype and subtype != subtype) {
                     str.Clear()
                     if (subtype and Token.TT_DECIMAL != 0) {
-                        str.oSet("decimal ")
+                        str.set("decimal ")
                     }
                     if (subtype and Token.TT_HEX != 0) {
-                        str.oSet("hex ")
+                        str.set("hex ")
                     }
                     if (subtype and Token.TT_OCTAL != 0) {
-                        str.oSet("octal ")
+                        str.set("octal ")
                     }
                     if (subtype and Token.TT_BINARY != 0) {
-                        str.oSet("binary ")
+                        str.set("binary ")
                     }
                     if (subtype and Token.TT_UNSIGNED != 0) {
                         str.Append("unsigned ")
@@ -655,7 +655,7 @@ object Lexer {
             }
             // if the type matches
             if (tok.type == type && tok.subtype and subtype == subtype) {
-                token.oSet(tok)
+                token.set(tok)
                 return 1
             }
             // unread token
@@ -776,7 +776,7 @@ object Lexer {
             }
             // if no lines were crossed before this token
             if (0 == tok.linesCrossed) {
-                token.oSet(tok)
+                token.set(tok)
                 return true
             }
             // restore our position
@@ -1000,7 +1000,7 @@ object Lexer {
             if (!ExpectTokenString("{")) {
                 return out.toString()
             }
-            out.oSet("{")
+            out.set("{")
             depth = 1
             do {
                 if (!ReadToken(token)) {
@@ -1011,7 +1011,7 @@ object Lexer {
                 // if the token is on a new line
                 i = 0
                 while (i < token.linesCrossed) {
-                    out.oPluSet("\r\n")
+                    out.plusAssign("\r\n")
                     i++
                 }
                 if (token.type == Token.TT_PUNCTUATION) {
@@ -1022,11 +1022,11 @@ object Lexer {
                     }
                 }
                 if (token.type == Token.TT_STRING) {
-                    out.oPluSet("\"" + token + "\"")
+                    out.plusAssign("\"" + token + "\"")
                 } else {
-                    out.oPluSet(token)
+                    out.plusAssign(token)
                 }
-                out.oPluSet(" ")
+                out.plusAssign(" ")
             } while (depth != 0)
             return out.toString()
         }
@@ -1052,7 +1052,7 @@ object Lexer {
             if (!ExpectTokenString("{")) {
                 return out.toString()
             }
-            out.oSet("{")
+            out.set("{")
             depth = 1
             skipWhite = false
             doTabs = tabs >= 0
@@ -1067,7 +1067,7 @@ object Lexer {
                     '\n' -> {
                         if (doTabs) {
                             skipWhite = true
-                            out.oPluSet(c)
+                            out.plusAssign(c)
                             continue
                         }
                     }
@@ -1087,11 +1087,11 @@ object Lexer {
                     }
                     skipWhite = false
                     while (i > 0) {
-                        out.oPluSet('\t')
+                        out.plusAssign('\t')
                         i--
                     }
                 }
-                out.oPluSet(c)
+                out.plusAssign(c)
             }
             return out.toString()
         }
@@ -1119,7 +1119,7 @@ object Lexer {
             if (!ExpectTokenString("{")) {
                 return out.toString()
             }
-            out.oSet("{")
+            out.set("{")
             depth = 1
             skipWhite = false
             doTabs = tabs >= 0
@@ -1134,7 +1134,7 @@ object Lexer {
                     '\n' -> {
                         if (doTabs) {
                             skipWhite = true
-                            out.oPluSet(c)
+                            out.plusAssign(c)
                             continue
                         }
                     }
@@ -1154,11 +1154,11 @@ object Lexer {
                     }
                     skipWhite = false
                     while (i > 0) {
-                        out.oPluSet('\t')
+                        out.plusAssign('\t')
                         i--
                     }
                 }
-                out.oPluSet(c)
+                out.plusAssign(c)
             }
             return out.toString()
         }
@@ -1175,9 +1175,9 @@ object Lexer {
                     break
                 }
                 if (out.Length() != 0) {
-                    out.oPluSet(" ")
+                    out.plusAssign(" ")
                 }
-                out.oPluSet(token)
+                out.plusAssign(token)
             }
             return out.toString()
         }
@@ -1890,7 +1890,7 @@ object Lexer {
                     while (i < l) {
 
 //                        token.data[i] = p[i];
-                        token.oSet(i, p[i])
+                        token.set(i, p[i])
                         i++
                     }
                     token.len = l

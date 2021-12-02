@@ -1727,7 +1727,7 @@ object tr_rendertools {
         val debugText: debugText_s?
         if (tr_rendertools.rb_numDebugText < tr_rendertools.MAX_DEBUG_TEXT) {
             debugText = tr_rendertools.rb_debugText[tr_rendertools.rb_numDebugText++]
-            debugText.text.oSet(text) //			= text;
+            debugText.text.set(text) //			= text;
             debugText.origin.set(origin)
             debugText.scale = scale
             debugText.color = color

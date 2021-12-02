@@ -226,12 +226,12 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("name")) {
                     src.ReadToken(token)
-                    FXAction.name.oSet(token)
+                    FXAction.name.set(token)
                     continue
                 }
                 if (0 == token.Icmp("fire")) {
                     src.ReadToken(token)
-                    FXAction.fire.oSet(token)
+                    FXAction.fire.set(token)
                     continue
                 }
                 if (0 == token.Icmp("random")) {
@@ -306,7 +306,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("uselight")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     for (i in 0 until events.Num()) {
                         if (events.get(i).name.Icmp(FXAction.data.toString()) == 0) {
                             FXAction.sibling = i
@@ -322,7 +322,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("attachlight")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_ATTACHLIGHT
 
                     // precache it
@@ -331,7 +331,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("attachentity")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_ATTACHENTITY
 
                     // precache the model
@@ -340,7 +340,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("launch")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_LAUNCH
 
                     // precache the entity def
@@ -349,7 +349,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("useModel")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     for (i in 0 until events.Num()) {
                         if (events.get(i).name.Icmp(FXAction.data) == 0) {
                             FXAction.sibling = i
@@ -363,7 +363,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("light")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     src.ExpectTokenString(",")
                     FXAction.lightColor.set(0, src.ParseFloat())
                     src.ExpectTokenString(",")
@@ -380,7 +380,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("model")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_MODEL
 
                     // precache it
@@ -389,7 +389,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("particle")) {    // FIXME: now the same as model
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_PARTICLE
 
                     // precache it
@@ -398,7 +398,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("decal")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_DECAL
 
                     // precache it
@@ -411,7 +411,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("sound")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_SOUND
 
                     // precache it
@@ -424,7 +424,7 @@ class DeclFX {
                 }
                 if (0 == token.Icmp("shockwave")) {
                     src.ReadToken(token)
-                    FXAction.data.oSet(token)
+                    FXAction.data.set(token)
                     FXAction.type = fx_enum.FX_SHOCKWAVE
 
                     // precache the entity def

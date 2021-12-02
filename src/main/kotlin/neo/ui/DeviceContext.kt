@@ -822,12 +822,12 @@ object DeviceContext {
 
         fun SetupFonts() {
             fonts.SetGranularity(1)
-            fontLang.oSet(idLib.cvarSystem.GetCVarString("sys_lang"))
+            fontLang.set(idLib.cvarSystem.GetCVarString("sys_lang"))
             val font = fontLang.toString()
 
             // western european languages can use the english font
             if ("french" == font || "german" == font || "spanish" == font || "italian" == font) {
-                fontLang.oSet("english")
+                fontLang.set("english")
             }
 
             // Default font has to be added first

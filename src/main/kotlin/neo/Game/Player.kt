@@ -709,7 +709,7 @@ object Player {
                 itemname = String.format("item_%d ", i)
                 kv = dict.MatchPrefix(itemname)
                 while (kv != null) {
-                    key.oSet(kv.GetKey())
+                    key.set(kv.GetKey())
                     key.Strip(itemname)
                     item.Set(key, kv.GetValue())
                     kv = dict.MatchPrefix(itemname, kv)
@@ -776,9 +776,9 @@ object Player {
             while (i < num) {
                 itemname = String.format("levelTrigger_Level_%d", i)
                 val lti = idLevelTriggerInfo()
-                lti.levelName.oSet(dict.GetString(itemname))
+                lti.levelName.set(dict.GetString(itemname))
                 itemname = String.format("levelTrigger_Trigger_%d", i)
-                lti.triggerName.oSet(dict.GetString(itemname))
+                lti.triggerName.set(dict.GetString(itemname))
                 levelTriggers.Append(lti)
                 i++
             }
@@ -2716,8 +2716,8 @@ object Player {
         fun SetLevelTrigger(levelName: String?, triggerName: String?) {
             if (levelName != null && !levelName.isEmpty() && triggerName != null && !triggerName.isEmpty()) {
                 val lti = idLevelTriggerInfo()
-                lti.levelName.oSet(levelName)
-                lti.triggerName.oSet(triggerName)
+                lti.levelName.set(levelName)
+                lti.triggerName.set(triggerName)
                 inventory.levelTriggers.Append(lti)
             }
         }
@@ -3942,11 +3942,11 @@ object Player {
             val info = idItemInfo()
             val itemName = item.GetString("inv_name")
             if (idStr.Companion.Cmpn(itemName, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
-                info.name.oSet(Common.common.GetLanguageDict().GetString(itemName))
+                info.name.set(Common.common.GetLanguageDict().GetString(itemName))
             } else {
-                info.name.oSet(itemName)
+                info.name.set(itemName)
             }
-            info.icon.oSet(item.GetString("inv_icon"))
+            info.icon.set(item.GetString("inv_icon"))
             inventory.pickupItemNames.Append(info)
             if (hud != null) {
                 hud.SetStateString("itemicon", info.icon.toString())
@@ -3997,7 +3997,7 @@ object Player {
                 inventory.pdaSecurity.addUnique(item.GetString("inv_name"))
             }
             if (TempDump.isNotNullOrEmpty(pdaName)) {
-                pdaName.oSet("personal")
+                pdaName.set("personal")
             }
             val pda = DeclManager.declManager.FindType(declType_t.DECL_PDA, pdaName) as idDeclPDA
             inventory.pdas.addUnique(pdaName)
@@ -4014,7 +4014,7 @@ object Player {
             // We don't want to display the 'you got a new pda' message during a map load
             if (Game_local.gameLocal.GetFrameNum() > 10) {
                 if (pda != null && hud != null) {
-                    pdaName.oSet(pda.GetPdaName())
+                    pdaName.set(pda.GetPdaName())
                     pdaName.RemoveColors()
                     hud.SetStateString("pda", "1")
                     hud.SetStateString("pda_text", pdaName.toString())
@@ -4046,8 +4046,8 @@ object Player {
             inventory.videos.addUnique(videoName)
             if (item != null) {
                 val info = idItemInfo()
-                info.name.oSet(item.GetString("inv_name"))
-                info.icon.oSet(item.GetString("inv_icon"))
+                info.name.set(item.GetString("inv_name"))
+                info.icon.set(item.GetString("inv_icon"))
                 inventory.pickupItemNames.Append(info)
             }
             if (hud != null) {
@@ -5919,19 +5919,19 @@ object Player {
             }
             if (Game_local.gameLocal.gameType == gameType_t.GAME_TDM) {
                 if (team != 0) {
-                    baseSkinName.oSet("skins/characters/player/marine_mp_blue")
+                    baseSkinName.set("skins/characters/player/marine_mp_blue")
                 } else {
-                    baseSkinName.oSet("skins/characters/player/marine_mp_red")
+                    baseSkinName.set("skins/characters/player/marine_mp_red")
                 }
                 if (!Game_local.gameLocal.isClient && team != latchedTeam) {
                     Game_local.gameLocal.mpGame.SwitchToTeam(entityNumber, latchedTeam, team)
                 }
                 latchedTeam = team
             } else {
-                baseSkinName.oSet(GetUserInfo().GetString("ui_skin"))
+                baseSkinName.set(GetUserInfo().GetString("ui_skin"))
             }
             if (0 == baseSkinName.Length()) {
-                baseSkinName.oSet("skins/characters/player/marine_mp")
+                baseSkinName.set("skins/characters/player/marine_mp")
             }
             skin.oSet(DeclManager.declManager.FindSkin(baseSkinName, false))
             assert(skin != null)
@@ -6069,7 +6069,7 @@ object Player {
                     assert(Game_local.gameLocal.isClient)
                     currentWeapon = idealWeapon
                     weaponGone = false
-                    animPrefix.oSet(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
+                    animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
                     weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(currentWeapon))
                     animPrefix.Strip("weapon_")
                     weapon.GetEntity().NetCatchup()
@@ -6097,7 +6097,7 @@ object Player {
                         }
                         currentWeapon = idealWeapon
                         weaponGone = false
-                        animPrefix.oSet(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
+                        animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
                         weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(currentWeapon))
                         animPrefix.Strip("weapon_")
                         weapon.GetEntity().Raise()
@@ -6204,7 +6204,7 @@ object Player {
             // always make sure the weapon is correctly setup before accessing it
             if (!weapon.GetEntity().IsLinked()) {
                 if (idealWeapon != -1) {
-                    animPrefix.oSet(spawnArgs.GetString(Str.va("def_weapon%d", idealWeapon)))
+                    animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", idealWeapon)))
                     weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(idealWeapon))
                     assert(weapon.GetEntity().IsLinked())
                 } else {
@@ -6734,7 +6734,7 @@ object Player {
             // in MP, idMultiplayerGame decides spawns
             if (forceRespawn && !Game_local.gameLocal.isMultiplayer && !SysCvar.g_testDeath.GetBool()) {
                 // in single player, we let the session handle restarting the level or loading a game
-                Game_local.gameLocal.sessionCommand.oSet("died")
+                Game_local.gameLocal.sessionCommand.set("died")
             }
             if (usercmd.flags and UsercmdGen.UCF_IMPULSE_SEQUENCE != oldFlags and UsercmdGen.UCF_IMPULSE_SEQUENCE) {
                 PerformImpulse(usercmd.impulse.toInt())
@@ -7489,9 +7489,9 @@ object Player {
                 inventory.pdasViewed.get(currentPDA shr 5) =
                     inventory.pdasViewed.get(currentPDA shr 5) or (1 shl (currentPDA and 31))
             }
-            pdaAudio.oSet("")
-            pdaVideo.oSet("")
-            pdaVideoWave.oSet("")
+            pdaAudio.set("")
+            pdaVideo.set("")
+            pdaVideoWave.set("")
             var name: String
             var data: String
             var preview: String
@@ -7565,8 +7565,8 @@ object Player {
                             ) as idDeclVideo
                         }
                         if (vid != null) {
-                            pdaVideo.oSet(vid.GetRoq())
-                            pdaVideoWave.oSet(vid.GetWave())
+                            pdaVideo.set(vid.GetRoq())
+                            pdaVideoWave.set(vid.GetWave())
                             objectiveSystem.SetStateString("PDAVideoTitle", vid.GetVideoName())
                             objectiveSystem.SetStateString("PDAVideoVid", vid.GetRoq())
                             objectiveSystem.SetStateString("PDAVideoIcon", vid.GetPreview())
@@ -7596,7 +7596,7 @@ object Player {
                             aud = pda.GetAudioByIndex(sel)
                         }
                         if (aud != null) {
-                            pdaAudio.oSet(aud.GetWave())
+                            pdaAudio.set(aud.GetWave())
                             objectiveSystem.SetStateString("PDAAudioTitle", aud.GetAudioName())
                             objectiveSystem.SetStateString("PDAAudioIcon", aud.GetPreview())
                             objectiveSystem.SetStateString("PDAAudioInfo", aud.GetInfo())

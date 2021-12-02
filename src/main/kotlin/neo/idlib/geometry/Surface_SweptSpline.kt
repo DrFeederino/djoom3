@@ -21,12 +21,12 @@ class Surface_SweptSpline {
      */
     internal inner class idSurface_SweptSpline : idSurface() {
         //
-        protected var spline: idCurve_Spline<idVec4?>? = null
+        protected var spline: idCurve_Spline<idVec4>? = null
 
         //	public						~idSurface_SweptSpline( void );
         //
-        protected var sweptSpline: idCurve_Spline<idVec4?>? = null
-        fun SetSpline(spline: idCurve_Spline<idVec4?>?) {
+        protected var sweptSpline: idCurve_Spline<idVec4>? = null
+        fun SetSpline(spline: idCurve_Spline<idVec4>) {
 //            if (null != this.spline) {
 ////		delete this->spline;
 //                this.spline = null;
@@ -35,7 +35,7 @@ class Surface_SweptSpline {
         }
 
         //
-        fun SetSweptSpline(sweptSpline: idCurve_Spline<idVec4?>?) {
+        fun SetSweptSpline(sweptSpline: idCurve_Spline<idVec4>) {
 //            if (null != this.sweptSpline) {
 ////		delete this->sweptSpline;
 //                this.sweptSpline = null;
@@ -57,7 +57,7 @@ class Surface_SweptSpline {
             nurbs.AddValue(100.0f, idVec4(-radius, radius, 0.0f, 0.25f))
             nurbs.AddValue(200.0f, idVec4(-radius, -radius, 0.0f, 0.50f))
             nurbs.AddValue(300.0f, idVec4(radius, -radius, 0.0f, 0.75f))
-            nurbs.SetBoundaryType(idCurve_Spline.Companion.BT_CLOSED)
+            nurbs.SetBoundaryType(idCurve_Spline.BT_CLOSED)
             nurbs.SetCloseTime(100.0f)
             //            if (null != sweptSpline) {
 ////		delete sweptSpline;
@@ -97,40 +97,40 @@ class Surface_SweptSpline {
 
             // calculate the points and first derivatives for the swept spline
             totalTime =
-                sweptSpline.GetTime(sweptSpline.GetNumValues() - 1) - sweptSpline.GetTime(0) + sweptSpline.GetCloseTime()
+                sweptSpline!!.GetTime(sweptSpline!!.GetNumValues() - 1) - sweptSpline!!.GetTime(0) + sweptSpline!!.GetCloseTime()
             sweptSplineDiv =
-                if (sweptSpline.GetBoundaryType() == idCurve_Spline.Companion.BT_CLOSED) sweptSplineSubdivisions else sweptSplineSubdivisions - 1
+                if (sweptSpline!!.GetBoundaryType() == idCurve_Spline.BT_CLOSED) sweptSplineSubdivisions else sweptSplineSubdivisions - 1
             baseOffset = (splineSubdivisions - 1) * sweptSplineSubdivisions
             i = 0
             while (i < sweptSplineSubdivisions) {
                 t = totalTime * i / sweptSplineDiv
-                splinePos = sweptSpline.GetCurrentValue(t)
-                splineD1 = sweptSpline.GetCurrentFirstDerivative(t)
-                verts.get(baseOffset + i).xyz.set(splinePos.ToVec3())
-                verts.get(baseOffset + i).st.set(0, splinePos.w)
-                verts.get(baseOffset + i).tangents[0] = splineD1.ToVec3()
+                splinePos = sweptSpline!!.GetCurrentValue(t)
+                splineD1 = sweptSpline!!.GetCurrentFirstDerivative(t)
+                verts[baseOffset + i].xyz.set(splinePos.ToVec3())
+                verts[baseOffset + i].st[0] = splinePos.w
+                verts[baseOffset + i].tangents[0] = splineD1.ToVec3()
                 i++
             }
 
             // sweep the spline
-            totalTime = spline.GetTime(spline.GetNumValues() - 1) - spline.GetTime(0) + spline.GetCloseTime()
+            totalTime = spline!!.GetTime(spline!!.GetNumValues() - 1) - spline!!.GetTime(0) + spline!!.GetCloseTime()
             splineDiv =
-                if (spline.GetBoundaryType() == idCurve_Spline.Companion.BT_CLOSED) splineSubdivisions else splineSubdivisions - 1
+                if (spline!!.GetBoundaryType() == idCurve_Spline.BT_CLOSED) splineSubdivisions else splineSubdivisions - 1
             splineMat.Identity()
             i = 0
             while (i < splineSubdivisions) {
                 t = totalTime * i / splineDiv
-                splinePos = spline.GetCurrentValue(t)
-                splineD1 = spline.GetCurrentFirstDerivative(t)
+                splinePos = spline!!.GetCurrentValue(t)
+                splineD1 = spline!!.GetCurrentFirstDerivative(t)
                 GetFrame(splineMat, splineD1.ToVec3(), splineMat)
                 offset = i * sweptSplineSubdivisions
                 j = 0
                 while (j < sweptSplineSubdivisions) {
-                    val v = verts.get(offset + j)
-                    v.xyz.set(splinePos.ToVec3().oPlus(verts.get(baseOffset + j).xyz.times(splineMat)))
-                    v.st.set(0, verts.get(baseOffset + j).st.get(0))
-                    v.st.set(1, splinePos.w)
-                    v.tangents[0] = verts.get(baseOffset + j).tangents[0].times(splineMat)
+                    val v = verts[offset + j]
+                    v.xyz.set(splinePos.ToVec3() + verts[baseOffset+j].xyz * splineMat)
+                    v.st[0] = verts[baseOffset + j].st[0]
+                    v.st[1] = splinePos.w
+                    v.tangents[0] = verts[baseOffset+j].tangents[0] * splineMat
                     v.tangents[1] = splineD1.ToVec3()
                     v.normal.set(v.tangents[1].Cross(v.tangents[0]))
                     v.normal.Normalize()
@@ -153,12 +153,12 @@ class Surface_SweptSpline {
                 while (j < sweptSplineDiv) {
                     j0 = j + 0
                     j1 = (j + 1) % sweptSplineSubdivisions
-                    indexes.set(offset++, i0 + j0)
-                    indexes.set(offset++, i0 + j1)
-                    indexes.set(offset++, i1 + j1)
-                    indexes.set(offset++, i1 + j1)
-                    indexes.set(offset++, i1 + j0)
-                    indexes.set(offset++, i0 + j0)
+                    indexes[offset++] = i0 + j0
+                    indexes[offset++] = i0 + j1
+                    indexes[offset++] = i1 + j1
+                    indexes[offset++] = i1 + j1
+                    indexes[offset++] = i1 + j0
+                    indexes[offset++] = i0 + j0
                     j++
                 }
                 i++
@@ -178,7 +178,7 @@ class Surface_SweptSpline {
         }
 
         //
-        protected fun GetFrame(previousFrame: idMat3?, dir: idVec3?, newFrame: idMat3?) {
+        protected fun GetFrame(previousFrame: idMat3, dir: idVec3, newFrame: idMat3) {
             val wx: Float
             val wy: Float
             val wz: Float
@@ -202,14 +202,14 @@ class Surface_SweptSpline {
             val axis = idMat3()
             d.set(dir)
             d.Normalize()
-            v.set(d.Cross(previousFrame.get(2)))
+            v.set(d.Cross(previousFrame[2]))
             v.Normalize()
-            a = idMath.ACos(previousFrame.get(2).times(d)) * 0.5f
+            a = idMath.ACos(previousFrame[2] * d ) * 0.5f
             c = idMath.Cos(a)
             s = idMath.Sqrt(1.0f - c * c)
-            x = v.get(0) * s
-            y = v.get(1) * s
-            z = v.get(2) * s
+            x = v[0] * s
+            y = v[1] * s
+            z = v[2] * s
             x2 = x + x
             y2 = y + y
             z2 = z + z
@@ -222,6 +222,7 @@ class Surface_SweptSpline {
             wx = c * x2
             wy = c * y2
             wz = c * z2
+
             axis.set(0, 0, 1.0f - (yy + zz))
             axis.set(0, 1, xy - wz)
             axis.set(0, 2, xz + wy)
@@ -231,13 +232,15 @@ class Surface_SweptSpline {
             axis.set(2, 0, xz - wy)
             axis.set(2, 1, yz + wx)
             axis.set(2, 2, 1.0f - (xx + yy))
-            newFrame.set(previousFrame.times(axis))
+
+            newFrame.set(previousFrame * axis)
+
             newFrame.setRow(2, dir)
-            newFrame.get(2).Normalize() //TODO:check if this normalizes back ref
-            newFrame.setRow(1, newFrame.get(1).Cross(newFrame.get(2), newFrame.get(0)))
-            newFrame.get(1).Normalize()
-            newFrame.setRow(0, newFrame.get(0).Cross(newFrame.get(1), newFrame.get(2)))
-            newFrame.get(0).Normalize()
+            newFrame[2].Normalize() //TODO:check if this normalizes back ref
+            newFrame.setRow(1, newFrame[1].Cross(newFrame[2], newFrame[0]))
+            newFrame[1].Normalize()
+            newFrame.setRow(0, newFrame[0].Cross(newFrame[1], newFrame[2]))
+            newFrame[0].Normalize()
         }
     }
 }

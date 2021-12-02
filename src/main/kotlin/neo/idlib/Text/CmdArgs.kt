@@ -159,7 +159,7 @@ class CmdArgs {
                 // check for negative numbers
                 if (!keepAsStrings && token == "-") {
                     if (lex.CheckTokenType(Token.TT_NUMBER, 0, number) != 0) {
-                        token.oSet("-$number")
+                        token.set("-$number")
                     }
                 }
 
@@ -169,9 +169,9 @@ class CmdArgs {
                         return
                     }
                     if (idLib.cvarSystem != null) {
-                        token.oSet(idLib.cvarSystem.GetCVarString(token.toString()))
+                        token.set(idLib.cvarSystem.GetCVarString(token.toString()))
                     } else {
-                        token.oSet("<unknown>")
+                        token.set("<unknown>")
                     }
                 }
                 len = token.Length()

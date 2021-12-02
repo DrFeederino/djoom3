@@ -484,7 +484,7 @@ object Physics_AF {
         init {
             assert(body1 != null)
             type = constraintType_t.CONSTRAINT_FIXED
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(6)
@@ -786,7 +786,7 @@ object Physics_AF {
         init {
             assert(body1 != null)
             type = constraintType_t.CONSTRAINT_BALLANDSOCKETJOINT
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(3)
@@ -850,7 +850,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_FRICTION
-            name.oSet("ballAndSocketJointFriction")
+            name.set("ballAndSocketJointFriction")
             InitSize(3)
             joint = null
             fl.allowPrimary = false
@@ -1260,7 +1260,7 @@ object Physics_AF {
             axis1 = idVec3()
             axis2 = idVec3()
             type = constraintType_t.CONSTRAINT_UNIVERSALJOINT
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(4)
@@ -1337,7 +1337,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_FRICTION
-            name.oSet("universalJointFriction")
+            name.set("universalJointFriction")
             InitSize(2)
             joint = null
             fl.allowPrimary = false
@@ -1771,7 +1771,7 @@ object Physics_AF {
             axis2 = idVec3()
             assert(body1 != null)
             type = constraintType_t.CONSTRAINT_HINGE
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(5)
@@ -1844,7 +1844,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_FRICTION
-            name.oSet("hingeFriction")
+            name.set("hingeFriction")
             InitSize(1)
             hinge = null
             fl.allowPrimary = false
@@ -1952,7 +1952,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_HINGESTEERING
-            name.oSet("hingeFriction")
+            name.set("hingeFriction")
             InitSize(1)
             hinge = null
             fl.allowPrimary = false
@@ -2102,7 +2102,7 @@ object Physics_AF {
             offset = idVec3()
             assert(body1 != null)
             type = constraintType_t.CONSTRAINT_SLIDER
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(5)
@@ -2284,7 +2284,7 @@ object Physics_AF {
             anchor2 = idVec3()
             planeNormal = idVec3()
             type = constraintType_t.CONSTRAINT_PLANE
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(1)
@@ -2562,7 +2562,7 @@ object Physics_AF {
             anchor1 = idVec3()
             anchor2 = idVec3()
             type = constraintType_t.CONSTRAINT_SPRING
-            this.name.oSet(name)
+            this.name.set(name)
             this.body1 = body1
             this.body2 = body2
             InitSize(1)
@@ -2728,7 +2728,7 @@ object Physics_AF {
         }
 
         init {
-            name.oSet("contact")
+            name.set("contact")
             type = constraintType_t.CONSTRAINT_CONTACT
             InitSize(1)
             fc = null
@@ -2864,7 +2864,7 @@ object Physics_AF {
 
         init {
             type = constraintType_t.CONSTRAINT_FRICTION
-            name.oSet("contactFriction")
+            name.set("contactFriction")
             InitSize(2)
             cc = null
             fl.allowPrimary = false
@@ -3099,7 +3099,7 @@ object Physics_AF {
             coneAxis = idVec3()
             body1Axis = idVec3()
             type = constraintType_t.CONSTRAINT_CONELIMIT
-            name.oSet("coneLimit")
+            name.set("coneLimit")
             InitSize(1)
             fl.allowPrimary = false
             fl.frameConstraint = true
@@ -3359,7 +3359,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_PYRAMIDLIMIT
-            name.oSet("pyramidLimit")
+            name.set("pyramidLimit")
             InitSize(1)
             fl.allowPrimary = false
             fl.frameConstraint = true
@@ -3408,7 +3408,7 @@ object Physics_AF {
                 : idClipModel?
 
         fun Setup(name: String?, body: idAFBody?, origin: idVec3?, axis: idMat3?, clipModel: idClipModel?) {
-            this.name.oSet(name)
+            this.name.set(name)
             body1 = body
             body2 = null
             localOrigin.set(origin.minus(body.GetWorldOrigin()).oMultiply(body.GetWorldAxis().Transpose()))
@@ -3606,7 +3606,7 @@ object Physics_AF {
         //
         init {
             type = constraintType_t.CONSTRAINT_SUSPENSION
-            name.oSet("suspension")
+            name.set("suspension")
             InitSize(3)
             fl.allowPrimary = false
             fl.frameConstraint = true
@@ -3769,7 +3769,7 @@ object Physics_AF {
             assert(clipModel != null)
             assert(clipModel.IsTraceModel())
             Init()
-            this.name.oSet(name)
+            this.name.set(name)
             this.clipModel = null
             SetClipModel(clipModel)
             SetDensity(density)

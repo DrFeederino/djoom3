@@ -229,7 +229,7 @@ object Model_md3 {
             val buffer = arrayOf<ByteBuffer?>(null)
             val version: Int
             var size: Int
-            name.oSet(fileName)
+            name.set(fileName)
             size = FileSystem_h.fileSystem.ReadFile(fileName, buffer, null)
             if (0 == size || size < 0) {
                 return

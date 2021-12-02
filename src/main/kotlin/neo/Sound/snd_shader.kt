@@ -269,7 +269,7 @@ object snd_shader {
         }
 
         private fun Init() {
-            desc.oSet("<no description>")
+            desc.set("<no description>")
             errorDuringParse = false
             onDemand = false
             numEntries = 0
@@ -313,7 +313,7 @@ object snd_shader {
                 } // description
                 else if (0 == token.Icmp("description")) {
                     src.ReadTokenOnLine(token)
-                    desc.oSet(token)
+                    desc.set(token)
                 } // mindistance
                 else if (0 == token.Icmp("mindistance")) {
                     parms.minDistance = src.ParseFloat()
@@ -435,14 +435,14 @@ object snd_shader {
                             val work = idStr(token)
                             work.ToLower()
                             work.StripLeading("sound/vo/")
-                            work.oSet(Str.va("sound/vo/%s/%s", lang.toString(), work.toString()))
+                            work.set(Str.va("sound/vo/%s/%s", lang.toString(), work.toString()))
                             if (FileSystem_h.fileSystem.ReadFile(work.toString(), null, null) > 0) {
-                                token.oSet(work)
+                                token.set(work)
                             } else {
                                 // also try to find it with the .ogg extension
                                 work.SetFileExtension(".ogg")
                                 if (FileSystem_h.fileSystem.ReadFile(work, null, null) > 0) {
-                                    token.oSet(work)
+                                    token.set(work)
                                 }
                             }
                         }

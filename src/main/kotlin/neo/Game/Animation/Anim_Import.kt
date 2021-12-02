@@ -54,9 +54,9 @@ object Anim_Import {
         var src: idStr? = null
         private fun Reset() {
             force = false
-            commandLine.oSet("")
-            src.oSet("")
-            dest.oSet("")
+            commandLine.set("")
+            src.set("")
+            dest.set("")
         }
 
         @Throws(idException::class)
@@ -95,21 +95,21 @@ object Anim_Import {
                         }
                         dest = token
                     } else {
-                        commandLine.oPluSet(Str.va(" -%s", token.toString()))
+                        commandLine.plusAssign(Str.va(" -%s", token.toString()))
                     }
                 } else {
-                    commandLine.oPluSet(Str.va(" %s", token.toString()))
+                    commandLine.plusAssign(Str.va(" %s", token.toString()))
                 }
             }
             if (sourcedir.Length() != 0) {
                 src.StripPath()
                 sourcedir.BackSlashesToSlashes()
-                src.oSet(String.format("%s/%s", sourcedir, src.toString()))
+                src.set(String.format("%s/%s", sourcedir, src.toString()))
             }
             if (destdir.Length() != 0) {
                 dest.StripPath()
                 destdir.BackSlashesToSlashes()
-                dest.oSet(String.format("%s/%s", destdir, dest.toString()))
+                dest.set(String.format("%s/%s", destdir, dest.toString()))
             }
             return true
         }
@@ -154,8 +154,8 @@ object Anim_Import {
                     parser.ParseRestOfLine(defaultCommands)
                 } else if (command == "addoptions") {
                     parser.ParseRestOfLine(temp)
-                    defaultCommands.oPluSet(" ")
-                    defaultCommands.oPluSet(temp)
+                    defaultCommands.plusAssign(" ")
+                    defaultCommands.plusAssign(temp)
                 } else if (command == "mesh" || command == "anim" || command == "camera") {
                     if (!parser.ReadToken(token)) {
                         parser.Error("Expected filename")
@@ -163,10 +163,10 @@ object Anim_Import {
                     temp = token
                     parser.ParseRestOfLine(parms)
                     if (defaultCommands.Length() != 0) {
-                        temp.oSet(String.format("%s %s", temp, defaultCommands))
+                        temp.set(String.format("%s %s", temp, defaultCommands))
                     }
                     if (parms.Length() != 0) {
-                        temp.oSet(String.format("%s %s", temp, parms))
+                        temp.set(String.format("%s %s", temp, parms))
                     }
                     lex.LoadMemory(temp, temp.Length(), parser.GetFileName())
                     Reset()
@@ -185,7 +185,7 @@ object Anim_Import {
                             dest.SetFileExtension(command.toString())
                         }
                         //				idStr back = commandLine;
-                        commandLine.oSet(
+                        commandLine.set(
                             String.format(
                                 "%s %s -dest %s -game %s%s",
                                 command,
@@ -335,10 +335,10 @@ object Anim_Import {
                 game = Licensee.BASE_GAMEDIR
             }
             Reset()
-            src.oSet(model)
-            dest.oSet(model)
+            src.set(model)
+            dest.set(model)
             dest.SetFileExtension(Model.MD5_MESH_EXT)
-            commandLine.oSet(String.format("mesh %s -dest %s -game %s", src.toString(), dest.toString(), game))
+            commandLine.set(String.format("mesh %s -dest %s -game %s", src.toString(), dest.toString(), game))
             if (!ConvertMayaToMD5()) {
                 Game_local.gameLocal.Printf("Failed to export '%s' : %s", src, Anim_Import.Maya_Error)
                 return false
@@ -352,10 +352,10 @@ object Anim_Import {
                 game = Licensee.BASE_GAMEDIR
             }
             Reset()
-            src.oSet(anim)
-            dest.oSet(anim)
+            src.set(anim)
+            dest.set(anim)
             dest.SetFileExtension(Model.MD5_ANIM_EXT)
-            commandLine.oSet(String.format("anim %s -dest %s -game %s", src, dest, game))
+            commandLine.set(String.format("anim %s -dest %s -game %s", src, dest, game))
             if (!ConvertMayaToMD5()) {
                 Game_local.gameLocal.Printf("Failed to export '%s' : %s", src, Anim_Import.Maya_Error)
                 return false

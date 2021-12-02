@@ -515,16 +515,16 @@ object AsyncNetwork {
         @Throws(idException::class)
         fun BuildInvalidKeyMsg(msg: idStr, valid: BooleanArray /*[2 ]*/) {
             if (!valid[0]) {
-                msg.oPluSet(Common.common.GetLanguageDict().GetString("#str_07194"))
+                msg.plusAssign(Common.common.GetLanguageDict().GetString("#str_07194"))
             }
             if (FileSystem_h.fileSystem.HasD3XP() && !valid[1]) {
                 if (msg.Length() != 0) {
-                    msg.oPluSet("\n")
+                    msg.plusAssign("\n")
                 }
-                msg.oPluSet(Common.common.GetLanguageDict().GetString("#str_07195"))
+                msg.plusAssign(Common.common.GetLanguageDict().GetString("#str_07195"))
             }
-            msg.oPluSet("\n")
-            msg.oPluSet(Common.common.GetLanguageDict().GetString("#str_04304"))
+            msg.plusAssign("\n")
+            msg.plusAssign(Common.common.GetLanguageDict().GetString("#str_04304"))
         }
 
         /*

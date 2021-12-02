@@ -101,7 +101,7 @@ object GameBustOutWindow {
         }
 
         fun SetMaterial(name: String?) {
-            materialName.oSet(name)
+            materialName.set(name)
             material = DeclManager.declManager.FindMaterial(name)
             material.SetSort(Material.SS_GUI.toFloat())
         }

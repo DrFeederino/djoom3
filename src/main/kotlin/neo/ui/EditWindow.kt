@@ -179,7 +179,7 @@ object EditWindow {
                             System.arraycopy(buffer, cursorPos, buffer, cursorPos - 1, len + 1 - cursorPos)
                             cursorPos--
                         }
-                        text.data.oSet(buffer)
+                        text.data.set(buffer)
                         UpdateCvar(false)
                         RunScript(TempDump.etoi(ON.ON_ACTION))
                     }
@@ -210,7 +210,7 @@ object EditWindow {
                     System.arraycopy(buffer, cursorPos, buffer, cursorPos + 1, len + 1 - cursorPos)
                 }
                 buffer.get(cursorPos) = key.toChar()
-                text.data.oSet(buffer)
+                text.data.set(buffer)
                 UpdateCvar(false)
                 RunScript(TempDump.etoi(ON.ON_ACTION))
                 if (cursorPos < len + 1) {
@@ -228,7 +228,7 @@ object EditWindow {
                     if (cursorPos < len) {
 //				memmove( &buffer[cursorPos], &buffer[cursorPos + 1], len - cursorPos);
                         System.arraycopy(buffer, cursorPos + 1, buffer, cursorPos, len - cursorPos)
-                        text.data.oSet(buffer)
+                        text.data.set(buffer)
                         UpdateCvar(false)
                         RunScript(TempDump.etoi(ON.ON_ACTION))
                     }
@@ -345,7 +345,7 @@ object EditWindow {
             if (sourceFile.Length() != 0) {
                 val buffer = arrayOf<ByteBuffer?>(null)
                 FileSystem_h.fileSystem.ReadFile(sourceFile, buffer)
-                text.data.oSet(String(buffer[0].array()))
+                text.data.set(String(buffer[0].array()))
                 FileSystem_h.fileSystem.FreeFile(buffer)
             }
             InitCvar()
@@ -472,7 +472,7 @@ object EditWindow {
             if (force || liveUpdate.oCastBoolean()) {
                 if (cvar != null) {
                     if (read) {
-                        text.data.oSet(cvar.GetString())
+                        text.data.set(cvar.GetString())
                     } else {
                         cvar.SetString(text.data.toString())
                         if (cvarMax != 0 && cvar.GetInteger() > cvarMax) {
@@ -491,7 +491,7 @@ object EditWindow {
             cursorLine = 0
             cvarMax = 0
             wrap = false
-            sourceFile.oSet("")
+            sourceFile.set("")
             scroller = null
             sizeBias = 0f
             lastTextLength = 0

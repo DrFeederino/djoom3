@@ -1950,7 +1950,7 @@ object RenderWorld_local {
 //            areaReferenceAllocator.Shutdown();
 //            interactionAllocator.Shutdown();
 //            areaNumRefAllocator.Shutdown();
-            mapName.oSet("<FREED>")
+            mapName.set("<FREED>")
         }
 
         /*

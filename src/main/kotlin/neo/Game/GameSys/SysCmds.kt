@@ -138,7 +138,7 @@ object SysCmds {
             return
         }
         if (text.oGet(text.Length() - 1) == '\n') {
-            text.oSet(text.Length() - 1, '\u0000')
+            text.set(text.Length() - 1, '\u0000')
         }
         name = "player"
         val player: idPlayer?
@@ -1205,7 +1205,7 @@ object SysCmds {
             dict.SetVector("light_end", rv.viewaxis.get(0).times(1000f))
             if (args.Argc() >= 2) {
                 value = args.Argv(1)
-                filename.oSet(args.Argv(1))
+                filename.set(args.Argv(1))
                 filename.DefaultFileExtension(".tga")
                 dict.Set("texture", filename)
             }
@@ -1689,8 +1689,8 @@ object SysCmds {
             if (args.Argc() < 2) {
                 exporter.ExportModels("def", ".def")
             } else {
-                name.oSet(args.Argv(1))
-                name.oSet("def/$name")
+                name.set(args.Argv(1))
+                name.set("def/$name")
                 name.DefaultFileExtension(".def")
                 exporter.ExportDefFile(name.toString())
             }
@@ -1723,8 +1723,8 @@ object SysCmds {
             if (args.Argc() < 2) {
                 exporter.ExportModels("def", ".def")
             } else {
-                name.oSet(args.Argv(1))
-                name.oSet("def/$name")
+                name.set(args.Argv(1))
+                name.set("def/$name")
                 name.DefaultFileExtension(".def")
                 exporter.ExportDefFile(name.toString())
             }
@@ -2005,7 +2005,7 @@ object SysCmds {
             }
             if (args.Argc() > 1) {
                 mapName = idStr(args.Argv(1))
-                mapName.oSet("maps/$mapName")
+                mapName.set("maps/$mapName")
             } else {
                 mapName = idStr(mapFile.GetName())
             }
@@ -2024,7 +2024,7 @@ object SysCmds {
                     }
                     i++
                 }
-                s.name.oSet(name)
+                s.name.set(name)
                 mapEnt.epairs.Set("classname", s.GetEntityDefName())
                 mapEnt.epairs.Set("name", s.name)
             }
@@ -2117,10 +2117,10 @@ object SysCmds {
                 return
             }
             if (args.Argc() > 1) {
-                mapName.oSet(args.Argv(1))
-                mapName.oSet("maps/$mapName")
+                mapName.set(args.Argv(1))
+                mapName.set("maps/$mapName")
             } else {
-                mapName.oSet(mapFile.GetName())
+                mapName.set(mapFile.GetName())
             }
             e = 0
             while (e < Game_local.MAX_GENTITIES) {
@@ -2148,7 +2148,7 @@ object SysCmds {
                         }
                         i++
                     }
-                    m.name.oSet(name)
+                    m.name.set(name)
                     mapEnt.epairs.Set("classname", m.GetEntityDefName())
                     mapEnt.epairs.Set("name", m.name)
                 }
@@ -2189,10 +2189,10 @@ object SysCmds {
                 return
             }
             if (args.Argc() > 1) {
-                mapName.oSet(args.Argv(1))
-                mapName.oSet("maps/$mapName")
+                mapName.set(args.Argv(1))
+                mapName.set("maps/$mapName")
             } else {
-                mapName.oSet(mapFile.GetName())
+                mapName.set(mapFile.GetName())
             }
             e = 0
             while (e < Game_local.MAX_GENTITIES) {
@@ -2232,7 +2232,7 @@ object SysCmds {
                         }
                         i++
                     }
-                    af.name.oSet(name)
+                    af.name.set(name)
                     mapEnt.epairs.Set("classname", af.GetEntityDefName())
                     mapEnt.epairs.Set("name", af.name)
                 }
@@ -2340,10 +2340,10 @@ object SysCmds {
                 return
             }
             if (args.Argc() > 1) {
-                mapName.oSet(args.Argv(1))
-                mapName.oSet("maps/$mapName")
+                mapName.set(args.Argv(1))
+                mapName.set("maps/$mapName")
             } else {
-                mapName.oSet(mapFile.GetName())
+                mapName.set(mapFile.GetName())
             }
             e = 0
             while (e < Game_local.MAX_GENTITIES) {
@@ -2369,7 +2369,7 @@ object SysCmds {
                         }
                         i++
                     }
-                    light.name.oSet(name)
+                    light.name.set(name)
                     mapEnt.epairs.Set("classname", light.GetEntityDefName())
                     mapEnt.epairs.Set("name", light.name)
                 }
@@ -2408,10 +2408,10 @@ object SysCmds {
                 return
             }
             if (args.Argc() > 1) {
-                mapName.oSet(args.Argv(1))
-                mapName.oSet("maps/$mapName")
+                mapName.set(args.Argv(1))
+                mapName.set("maps/$mapName")
             } else {
-                mapName.oSet(mapFile.GetName())
+                mapName.set(mapFile.GetName())
             }
             e = 0
             while (e < Game_local.MAX_GENTITIES) {
@@ -2522,10 +2522,10 @@ object SysCmds {
             }
             val viewComments = idStr(args.Argv(1))
             viewComments.StripLeading("viewnotes/")
-            viewComments.oPluSet(" -- Loc: ")
-            viewComments.oPluSet(origin.ToString())
-            viewComments.oPluSet("\n")
-            viewComments.oPluSet(args.Argv(3))
+            viewComments.plusAssign(" -- Loc: ")
+            viewComments.plusAssign(origin.ToString())
+            viewComments.plusAssign("\n")
+            viewComments.plusAssign(args.Argv(3))
             player.hud.SetStateString("viewcomments", viewComments.toString())
             player.hud.HandleNamedEvent("showViewComments")
         }
@@ -2575,13 +2575,13 @@ object SysCmds {
             }
             if (!parser.IsLoaded()) {
                 val str = idStr("viewnotes/")
-                str.oPluSet(Game_local.gameLocal.GetMapName())
+                str.plusAssign(Game_local.gameLocal.GetMapName())
                 str.StripFileExtension()
-                str.oPluSet("/")
+                str.plusAssign("/")
                 if (args.Argc() > 1) {
-                    str.oPluSet(args.Argv(1))
+                    str.plusAssign(args.Argv(1))
                 } else {
-                    str.oPluSet("comments")
+                    str.plusAssign("comments")
                 }
                 str.SetFileExtension(".txt")
                 if (!parser.LoadFile(str.toString())) {
