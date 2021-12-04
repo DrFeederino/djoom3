@@ -15,6 +15,7 @@ import neo.sys.sys_public.netadrtype_t
 import java.nio.ByteBuffer
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.math.abs
 
 /**
  *
@@ -58,36 +59,36 @@ object BitMsg {
         private var readCount // number of bytes read so far
                 = 0
         private var readData // pointer to data for reading
-                : ByteBuffer? = null
+                : ByteBuffer = ByteBuffer.allocate(0)
         private var writeBit // number of bits written to the last written byte
                 = 0
         private var writeData // pointer to data for writing
                 : ByteBuffer? = null
 
-        fun Init(data: ByteArray?) {
+        fun Init(data: ByteArray) {
             this.Init(ByteBuffer.wrap(data), data.size)
         }
 
         @JvmOverloads
-        fun Init(data: ByteBuffer?, length: Int = data.capacity()) {
+        fun Init(data: ByteBuffer, length: Int = data.capacity()) {
             writeData = data
             readData = data
             maxSize = length
         }
 
-        fun InitReadOnly(data: ByteBuffer?, length: Int) {
+        fun InitReadOnly(data: ByteBuffer, length: Int) {
             writeData = null
             readData = data
             maxSize = length
         }
 
         // get data for writing
-        fun GetData(): ByteBuffer? {
-            return writeData
+        fun GetData(): ByteBuffer {
+            return writeData!!
         }
 
         // get data for reading
-        fun GetDataReadOnly(): ByteBuffer? {
+        fun GetDataReadOnly(): ByteBuffer {
             return readData.duplicate()
         }
 
@@ -150,9 +151,9 @@ object BitMsg {
         }
 
         // save the write state
-        fun SaveWriteState(s: CInt?, b: CInt?) {
-            s.setVal(curSize)
-            b.setVal(writeBit)
+        fun SaveWriteState(s: CInt, b: CInt) {
+            s._val = curSize
+            b._val = writeBit
         }
 
         // restore the write state
@@ -161,8 +162,8 @@ object BitMsg {
             writeBit = b and 7
             if (writeBit != 0) {
                 val pos = curSize - 1
-                val `val` = writeData.getInt(pos)
-                writeData.putInt(pos, `val` and (1 shl writeBit) - 1)
+                val `val` = writeData!!.getInt(pos)
+                writeData!!.putInt(pos, `val` and (1 shl writeBit) - 1)
             }
         }
 
@@ -197,9 +198,9 @@ object BitMsg {
         }
 
         // save the read state
-        fun SaveReadState(c: CInt?, b: CInt?) {
-            c.setVal(readCount)
-            b.setVal(readBit)
+        fun SaveReadState(c: CInt, b: CInt) {
+            c._val = readCount
+            b._val = readBit
         }
 
         // restore the read state
@@ -336,7 +337,7 @@ object BitMsg {
             WriteShort(Math_h.ANGLE2SHORT(f).toByte().toInt())
         }
 
-        fun WriteDir(dir: idVec3?, numBits: Int) {
+        fun WriteDir(dir: idVec3, numBits: Int) {
             WriteBits(DirToBits(dir, numBits), numBits)
         }
 
@@ -348,7 +349,7 @@ object BitMsg {
             } else {
                 var i: Int
                 var l: Int
-                val dataPtr: ByteArray?
+                val dataPtr: ByteArray
                 val bytePtr: ByteArray
                 l = s.length
                 if (maxLength >= 0 && l >= maxLength) {
@@ -360,38 +361,38 @@ object BitMsg {
                     i = 0
                     while (i < l) {
                         if (bytePtr[i] > 127) {
-                            dataPtr.get(i) = '.'
+                            dataPtr[i] = '.'.code.toByte()
                         } else {
-                            dataPtr.get(i) = bytePtr[i]
+                            dataPtr[i] = bytePtr[i]
                         }
                         i++
                     }
                 } else {
                     i = 0
                     while (i < l) {
-                        dataPtr.get(i) = bytePtr[i]
+                        dataPtr[i] = bytePtr[i]
                         i++
                     }
                 }
-                dataPtr.get(i) = '\u0000'
+                dataPtr[i] = '\u0000'.code.toByte()
             }
         }
 
         @Throws(idException::class)
-        fun WriteData(data: ByteBuffer?, length: Int) {
+        fun WriteData(data: ByteBuffer, length: Int) {
 //            memcpy(GetByteSpace(length), data, length);
             WriteData(data, 0, length)
         }
 
         @Throws(idException::class)
-        fun WriteData(data: ByteBuffer?, offset: Int, length: Int) {
+        fun WriteData(data: ByteBuffer, offset: Int, length: Int) {
 //            System.arraycopy(data, offset, GetByteSpace(length), 0, length);
             data.get(GetByteSpace(length), offset, length)
         }
 
         @Throws(idException::class)
-        fun WriteNetadr(adr: netadr_t?) {
-            val dataPtr: ByteArray?
+        fun WriteNetadr(adr: netadr_t) {
+            val dataPtr: ByteArray
             dataPtr = GetByteSpace(4)
             System.arraycopy(adr.ip, 0, dataPtr, 0, 4)
             WriteUShort(adr.port.toInt())
@@ -817,7 +818,7 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        private fun GetByteSpace(length: Int): ByteArray? {
+        private fun GetByteSpace(length: Int): ByteArray {
             val ptr: ByteArray
             if (null == writeData) {
                 idLib.common.FatalError("idBitMsg::GetByteSpace: cannot write to message")
@@ -828,8 +829,8 @@ object BitMsg {
 
             // check for overflow
             CheckOverflow(length shl 3)
-            ptr = ByteArray(writeData.capacity() - curSize)
-            writeData.mark().position(curSize)[ptr].rewind()
+            ptr = ByteArray(writeData!!.capacity() - curSize)
+            writeData!!.mark().position(curSize)[ptr].rewind()
             curSize += length
             return ptr
         }
@@ -852,7 +853,7 @@ object BitMsg {
 
         companion object {
             //public					~idBitMsg() {}
-            fun DirToBits(dir: idVec3?, numBits: Int): Int {
+            fun DirToBits(dir: idVec3, numBits: Int): Int {
                 var numBits = numBits
                 val max: Int
                 var bits: Int
@@ -863,15 +864,15 @@ object BitMsg {
                 max = (1 shl numBits - 1) - 1
                 bias = 0.5f / max
                 bits = Math_h.FLOATSIGNBITSET(dir.x) shl numBits * 3 - 1
-                bits = bits or (idMath.Ftoi((Math.abs(dir.x) + bias) * max) shl numBits * 2)
+                bits = bits or (idMath.Ftoi((abs(dir.x) + bias) * max) shl numBits * 2)
                 bits = bits or (Math_h.FLOATSIGNBITSET(dir.y) shl numBits * 2 - 1)
-                bits = bits or (idMath.Ftoi((Math.abs(dir.y) + bias) * max) shl numBits * 1)
+                bits = bits or (idMath.Ftoi((abs(dir.y) + bias) * max) shl numBits * 1)
                 bits = bits or (Math_h.FLOATSIGNBITSET(dir.z) shl numBits * 1 - 1)
-                bits = bits or (idMath.Ftoi((Math.abs(dir.z) + bias) * max) shl numBits * 0)
+                bits = bits or (idMath.Ftoi((abs(dir.z) + bias) * max) shl numBits * 0)
                 return bits
             }
 
-            fun BitsToDir(bits: Int, numBits: Int): idVec3? {
+            fun BitsToDir(bits: Int, numBits: Int): idVec3 {
                 var numBits = numBits
                 val sign = floatArrayOf(1.0f, -1.0f)
                 val max: Int

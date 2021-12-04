@@ -1,7 +1,6 @@
 package neo.framework
 
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.SERiAL
 import neo.framework.FileSystem_h.fsMode_t
 import neo.idlib.BitMsg.idBitMsg
@@ -195,7 +194,7 @@ object File_h {
         }
 
         // Get the full file path.
-        open fun GetFullPath(): String? {
+        open fun GetFullPath(): String {
             return ""
         }
 

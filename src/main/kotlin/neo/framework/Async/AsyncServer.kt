@@ -1217,7 +1217,7 @@ object AsyncServer {
             clients.get(clientNum).channel.Init(badAddress, serverId)
             clients.get(clientNum).clientState = serverClientState_t.SCS_INGAME
             Session.Companion.sessLocal.mapSpawnData.userInfo.get(clientNum)
-                .oSet(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
+                .set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
         }
 
         private fun BeginLocalClient() {
@@ -1396,7 +1396,7 @@ object AsyncServer {
                 }
                 i++
             }
-            Session.Companion.sessLocal.mapSpawnData.syncedCVars.oSet(cvars)
+            Session.Companion.sessLocal.mapSpawnData.syncedCVars.set(cvars)
         }
 
         private fun SendSyncedCvarsToClient(clientNum: Int, cvars: idDict?) {

@@ -1,6 +1,5 @@
 package neo.idlib.Text
 
-import neo.TempDump.CPP_class.Char
 import neo.idlib.Text.Str.idStr
 import neo.idlib.math.Math_h.idMath
 
@@ -76,16 +75,16 @@ object Token {
         //
         //
         constructor()
-        constructor(token: idToken?) {
-            this.oSet(token)
+        constructor(token: idToken) {
+            this.set(token)
         }
 
         // double value of TT_NUMBER
         fun GetDoubleValue(): Double {
-            if (type != Token.TT_NUMBER) {
+            if (type != TT_NUMBER) {
                 return 0.0
             }
-            if (0 == subtype and Token.TT_VALUESVALID) {
+            if (0 == subtype and TT_VALUESVALID) {
                 NumberValue()
             }
             return floatValue
@@ -97,10 +96,10 @@ object Token {
         }
 
         fun GetUnsignedLongValue(): Long {        // unsigned long value of TT_NUMBER
-            if (type != Token.TT_NUMBER) {
+            if (type != TT_NUMBER) {
                 return 0
             }
-            if (0 == subtype and Token.TT_VALUESVALID) {
+            if (0 == subtype and TT_VALUESVALID) {
                 NumberValue()
             }
             return intValue
@@ -126,23 +125,23 @@ object Token {
             var pow: Int
             var c: Int
             val div: Boolean
-            val p: CharArray?
+            val p: CharArray
             var pIndex = 0
             var m: Double
-            assert(type == Token.TT_NUMBER)
+            assert(type == TT_NUMBER)
             p = c_str()
             floatValue = 0.0
             intValue = 0
             // floating point number
-            if (subtype and Token.TT_FLOAT != 0) {
-                if (subtype and (Token.TT_INFINITE or Token.TT_INDEFINITE or Token.TT_NAN) != 0) {
-                    if (subtype and Token.TT_INFINITE != 0) {            // 1.#INF
+            if (subtype and TT_FLOAT != 0) {
+                if (subtype and (TT_INFINITE or TT_INDEFINITE or TT_NAN) != 0) {
+                    if (subtype and TT_INFINITE != 0) {            // 1.#INF
                         val inf = 0x7f800000
                         floatValue = inf.toFloat().toDouble() //TODO:WHY THE DOUBLE CAST?
-                    } else if (subtype and Token.TT_INDEFINITE != 0) {    // 1.#IND
+                    } else if (subtype and TT_INDEFINITE != 0) {    // 1.#IND
                         val ind = -0x400000
                         floatValue = ind.toFloat().toDouble()
-                    } else if (subtype and Token.TT_NAN != 0) {            // 1.#QNAN
+                    } else if (subtype and TT_NAN != 0) {            // 1.#QNAN
                         val nan = 0x7fc00000
                         floatValue = nan.toFloat().toDouble()
                     }
@@ -190,13 +189,13 @@ object Token {
                     }
                 }
                 intValue = idMath.Ftol(floatValue.toFloat())
-            } else if (subtype and Token.TT_DECIMAL != 0) {
+            } else if (subtype and TT_DECIMAL != 0) {
                 while (pIndex < p.size) {
                     intValue = intValue * 10 + (p[pIndex] - '0')
                     pIndex++
                 }
                 floatValue = intValue.toDouble()
-            } else if (subtype and Token.TT_IPADDRESS != 0) {
+            } else if (subtype and TT_IPADDRESS != 0) {
                 c = 0
                 while ( /*p[pIndex] &&*/p[pIndex] != ':') {
                     if (p[pIndex] == '.') {
@@ -216,7 +215,7 @@ object Token {
                     c++
                 }
                 floatValue = intValue.toDouble()
-            } else if (subtype and Token.TT_OCTAL != 0) {
+            } else if (subtype and TT_OCTAL != 0) {
                 // step over the first zero
                 pIndex += 1
                 while (pIndex < p.size) {
@@ -224,7 +223,7 @@ object Token {
                     pIndex++
                 }
                 floatValue = intValue.toDouble()
-            } else if (subtype and Token.TT_HEX != 0) {
+            } else if (subtype and TT_HEX != 0) {
                 // step over the leading 0x or 0X
                 pIndex += 2
                 while (pIndex < p.size) {
@@ -239,7 +238,7 @@ object Token {
                     p[pIndex]++
                 }
                 floatValue = intValue.toDouble()
-            } else if (subtype and Token.TT_BINARY != 0) {
+            } else if (subtype and TT_BINARY != 0) {
                 // step over the leading 0b or 0B
                 pIndex += 2
                 while (pIndex < p.size) {
@@ -248,7 +247,7 @@ object Token {
                 }
                 floatValue = intValue.toDouble()
             }
-            subtype = subtype or Token.TT_VALUESVALID
+            subtype = subtype or TT_VALUESVALID
         }
 
         // append character without adding trailing zero
@@ -259,7 +258,7 @@ object Token {
             len++
         }
 
-        fun oSet(token: idToken?): idToken? {
+        fun set(token: idToken): idToken {
             type = token.type
             subtype = token.subtype
             line = token.line
@@ -274,16 +273,16 @@ object Token {
             return this
         }
 
+
         override fun equals(obj: Any?): Boolean {
             if (obj == null) {
                 return false
             }
-
             //idStr
             if (javaClass != obj.javaClass) {
                 return super.equals(obj)
             }
-            val other = obj as idToken?
+            val other = obj as idToken
             return data.startsWith(other.data)
         }
     }

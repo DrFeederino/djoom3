@@ -858,7 +858,7 @@ class Surface_Patch {
 
         private fun set(patch: idMapPrimitive) {
             type = patch.GetType()
-            epairs.oSet(patch.epairs)
+            epairs.set(patch.epairs)
         }
 
         companion object {

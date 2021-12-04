@@ -16,6 +16,10 @@ import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  *
@@ -50,38 +54,38 @@ object MapFile {
      rotation by (0,RotY,RotZ) assigns X to normal
      =================
      */
-    fun ComputeAxisBase(normal: idVec3?, texS: idVec3?, texT: idVec3?) {
+    fun ComputeAxisBase(normal: idVec3, texS: idVec3, texT: idVec3) {
         val RotY: Double
         val RotZ: Double
         val n = idVec3()
 
         // do some cleaning
-        n.set(0, if (Math.abs(normal.get(0)) < 1e-6f) 0.0f else normal.get(0))
-        n.set(1, if (Math.abs(normal.get(1)) < 1e-6f) 0.0f else normal.get(1))
-        n.set(2, if (Math.abs(normal.get(2)) < 1e-6f) 0.0f else normal.get(2))
-        RotY = -Math.atan2(n.get(2).toDouble(), idMath.Sqrt(n.get(1) * n.get(1) + n.get(0) * n.get(0)).toDouble())
-        RotZ = Math.atan2(n.get(1).toDouble(), n.get(0).toDouble())
+        n[0] = if (abs(normal[0]) < 1e-6f) 0.0f else normal[0]
+        n[1] = if (abs(normal[1]) < 1e-6f) 0.0f else normal[1]
+        n[2] = if (abs(normal[2]) < 1e-6f) 0.0f else normal[2]
+        RotY = -atan2(n[2].toDouble(), idMath.Sqrt(n[1] * n[1] + n[0] * n[0]).toDouble())
+        RotZ = atan2(n[1].toDouble(), n[0].toDouble())
         // rotate (0,1,0) and (0,0,1) to compute texS and texT
-        texS.set(0, -Math.sin(RotZ).toFloat())
-        texS.set(1, Math.cos(RotZ).toFloat())
-        texS.set(2, 0f)
+        texS[0] = -sin(RotZ).toFloat()
+        texS[1] = cos(RotZ).toFloat()
+        texS[2] = 0f
         // the texT vector is along -Z ( T texture coorinates axis )
-        texT.set(0, (-Math.sin(RotY) * Math.cos(RotZ)).toFloat())
-        texT.set(1, (-Math.sin(RotY) * Math.sin(RotZ)).toFloat())
-        texT.set(2, -Math.cos(RotY).toFloat())
+        texT[0] = (-sin(RotY) * cos(RotZ)).toFloat()
+        texT[1] = (-sin(RotY) * sin(RotZ)).toFloat()
+        texT[2] = -cos(RotY).toFloat()
     }
 
     private fun FloatCRC(f: Float): Long {
         return Integer.toUnsignedLong(java.lang.Float.floatToIntBits(f))
     }
 
-    private fun StringCRC(str: String?): Int {
+    private fun StringCRC(str: String): Int {
         var i: Int
         var crc: Int
         crc = 0
         i = 0
         while (i < str.length) {
-            crc = crc xor (str.get(i).code shl (i and 3))
+            crc = crc xor (str[i].code shl (i and 3))
             i++
         }
         return crc
@@ -91,7 +95,7 @@ object MapFile {
         //
         //
         val epairs: idDict = idDict()
-        var type: Int
+        var type: Int = TYPE_INVALID
 
         //public	virtual					~idMapPrimitive( void ) { }
         fun GetType(): Int {
@@ -105,25 +109,22 @@ object MapFile {
             const val TYPE_PATCH = 1
         }
 
-        init {
-            type = TYPE_INVALID
-        }
     }
 
     class idMapBrushSide {
         //	friend class idMapBrush;
-        val origin: idVec3?
-        val plane: idPlane?
-        val texMat: Array<idVec3?>? = idVec3.Companion.generateArray(2)
-        var material: idStr? = null
+        val origin: idVec3 = idVec3()
+        val plane: idPlane = idPlane()
+        val texMat: Array<idVec3> = idVec3.generateArray(2)
+        val material: idStr = idStr()
 
         //public							~idMapBrushSide( void ) { }
-        fun GetMaterial(): idStr? {
+        fun GetMaterial(): idStr {
             return material
         }
 
-        fun SetMaterial(p: String?) {
-            material = idStr(p)
+        fun SetMaterial(p: String) {
+            material.set(p)
         }
 
         fun GetPlane(): idPlane {
@@ -134,51 +135,51 @@ object MapFile {
             plane.set(p)
         }
 
-        fun SetTextureMatrix(mat: Array<idVec3?>?) {
-            texMat.get(0).set(mat.get(0))
-            texMat.get(1).set(mat.get(1))
+        fun SetTextureMatrix(mat: Array<idVec3>) {
+            texMat[0].set(mat[0])
+            texMat[1].set(mat[1])
         }
 
-        fun GetTextureMatrix(mat1: Array<idVec3?>?, mat2: Array<idVec3?>?) {
-            mat1.get(0).set(texMat.get(0))
-            mat2.get(0).set(texMat.get(1))
+        fun GetTextureMatrix(mat1: Array<idVec3>, mat2: Array<idVec3>) {
+            mat1[0].set(texMat[0])
+            mat2[0].set(texMat[1])
         }
 
-        fun GetTextureVectors(v: Array<idVec4?>?) {
+        fun GetTextureVectors(v: Array<idVec4>) {
             var i: Int
             val texX = idVec3()
             val texY = idVec3()
-            MapFile.ComputeAxisBase(plane.Normal(), texX, texY)
+            ComputeAxisBase(plane.Normal(), texX, texY)
             i = 0
             while (i < 2) {
-                v.get(i).set(0, texX.get(0) * texMat.get(i).get(0) + texY.get(0) * texMat.get(i).get(1))
-                v.get(i).set(1, texX.get(1) * texMat.get(i).get(0) + texY.get(1) * texMat.get(i).get(1))
-                v.get(i).set(2, texX.get(2) * texMat.get(i).get(0) + texY.get(2) * texMat.get(i).get(1))
-                v.get(i).set(3, texMat.get(i).get(2) + origin.times(v.get(i).ToVec3()))
+                v[i][0] = texX[0] * texMat[i][0] + texY[0] * texMat[i][1]
+                v[i][1] = texX[1] * texMat[i][0] + texY[1] * texMat[i][1]
+                v[i][2] = texX[2] * texMat[i][0] + texY[2] * texMat[i][1]
+                v[i][3] = texMat[i][2] + origin.times(v[i].ToVec3())
                 i++
             }
         }
 
         //
         //
-        init {
-            plane = idPlane()
-            origin = idVec3()
-        }
     }
 
     class idMapBrush : idMapPrimitive() {
-        protected val sides: idList<idMapBrushSide?>?
+        protected val sides: idList<idMapBrushSide>
         protected var numSides = 0
-        fun Write(fp: idFile?, primitiveNum: Int, origin: idVec3?): Boolean {
+        fun Write(fp: idFile, primitiveNum: Int, origin: idVec3): Boolean {
             var i: Int
-            var side: idMapBrushSide?
+            var side: idMapBrushSide
             fp.WriteFloatString("// primitive %d\n{\n brushDef3\n {\n", primitiveNum)
 
             // write brush epairs
             i = 0
             while (i < epairs.GetNumKeyVals()) {
-                fp.WriteFloatString("  \"%s\" \"%s\"\n", epairs.GetKeyVal(i).GetKey(), epairs.GetKeyVal(i).GetValue())
+                fp.WriteFloatString(
+                    "  \"%s\" \"%s\"\n",
+                    epairs.GetKeyVal(i)!!.GetKey(),
+                    epairs.GetKeyVal(i)!!.GetValue()
+                )
                 i++
             }
 
@@ -188,15 +189,15 @@ object MapFile {
                 side = GetSide(i)
                 fp.WriteFloatString(
                     "  ( %f %f %f %f ) ",
-                    side.plane.get(0),
-                    side.plane.get(1),
-                    side.plane.get(2),
-                    side.plane.get(3)
+                    side.plane[0],
+                    side.plane[1],
+                    side.plane[2],
+                    side.plane[3]
                 )
                 fp.WriteFloatString(
                     "( ( %f %f %f ) ( %f %f %f ) ) \"%s\" 0 0 0\n",
-                    side.texMat.get(0).get(0), side.texMat.get(0).get(1), side.texMat.get(0).get(2),
-                    side.texMat.get(1).get(0), side.texMat.get(1).get(1), side.texMat.get(1).get(2),
+                    side.texMat[0][0], side.texMat[0][1], side.texMat[0][2],
+                    side.texMat[1][0], side.texMat[1][1], side.texMat[1][2],
                     side.material
                 )
                 i++
@@ -214,13 +215,13 @@ object MapFile {
         }
 
         fun GetSide(i: Int): idMapBrushSide {
-            return sides.get(i)
+            return sides[i]
         }
 
         fun GetGeometryCRC(): Int {
             var i: Int
             var j: Int
-            var mapSide: idMapBrushSide?
+            var mapSide: idMapBrushSide
             var crc: Long
             crc = 0
             i = 0
@@ -228,10 +229,10 @@ object MapFile {
                 mapSide = GetSide(i)
                 j = 0
                 while (j < 4) {
-                    crc = crc xor MapFile.FloatCRC(mapSide.GetPlane().get(j))
+                    crc = crc xor FloatCRC(mapSide.GetPlane()[j])
                     j++
                 }
-                crc = crc xor MapFile.StringCRC(mapSide.GetMaterial().toString())
+                crc = crc xor StringCRC(mapSide.GetMaterial().toString()).toLong()
                 i++
             }
             return crc.toInt()
@@ -241,11 +242,11 @@ object MapFile {
             //public							~idMapBrush( void ) { sides.DeleteContents( true ); }
             //public	static idMapBrush *		Parse( idLexer &src, const idVec3 &origin, bool newFormat = true, float version = CURRENT_MAP_VERSION );
             @Throws(idException::class)
-            fun Parse(src: idLexer?, origin: idVec3?, newFormat: Boolean, version: Float): idMapBrush? {
+            fun Parse(src: idLexer, origin: idVec3, newFormat: Boolean, version: Float): idMapBrush? {
                 var i: Int
-                val planepts: Array<idVec3?> = idVec3.Companion.generateArray(3)
+                val planepts: Array<idVec3> = idVec3.generateArray(3)
                 val token = idToken()
-                val sides = idList<idMapBrushSide?>()
+                val sides = idList<idMapBrushSide>()
                 var side: idMapBrushSide
                 val epairs = idDict()
                 if (!src.ExpectTokenString("{")) {
@@ -257,14 +258,14 @@ object MapFile {
                         sides.DeleteContents(true)
                         return null
                     }
-                    if (token == "}") {
+                    if (token.toString() == "}") {
                         break
                     }
 
                     // here we may have to jump over brush epairs ( only used in editor )
                     do {
                         // if token is a brace
-                        if (token == "(") {
+                        if (token.toString() == "(") {
                             break
                         }
                         // the token should be a key string for a key/value pair
@@ -331,9 +332,9 @@ object MapFile {
 
                     // we had an implicit 'textures/' in the old format...
                     if (version < 2.0f) {
-                        side.material = idStr("textures/$token")
+                        side.material.set("textures/$token")
                     } else {
-                        side.material = idStr(token)
+                        side.material.set(token)
                     }
 
                     // Q2 allowed override of default flags and values, but we don't any more
@@ -351,22 +352,22 @@ object MapFile {
                 val brush = idMapBrush()
                 i = 0
                 while (i < sides.Num()) {
-                    brush.AddSide(sides.get(i))
+                    brush.AddSide(sides[i])
                     i++
                 }
-                brush.epairs = epairs
+                brush.epairs.set(epairs)
                 return brush
             }
 
             @Throws(idException::class)
-            fun ParseQ3(src: idLexer?, origin: idVec3?): idMapBrush? {
+            fun ParseQ3(src: idLexer, origin: idVec3): idMapBrush? {
                 var i: Int
                 var rotate: Int
                 val shift = IntArray(2)
                 val scale = FloatArray(2)
-                val planepts = arrayOfNulls<idVec3?>(3)
+                val planepts = idVec3.generateArray(3)
                 val token = idToken()
-                val sides = idList<idMapBrushSide?>()
+                val sides = idList<idMapBrushSide>()
                 var side: idMapBrushSide
                 val epairs = idDict()
                 do {
@@ -398,7 +399,7 @@ object MapFile {
                     }
 
                     // we have an implicit 'textures/' in the old format
-                    side.material = idStr("textures/$token")
+                    side.material.set("textures/$token")
 
                     // read the texture shift, rotate and scale
                     shift[0] = src.ParseInt()
@@ -406,8 +407,8 @@ object MapFile {
                     rotate = src.ParseInt()
                     scale[0] = src.ParseFloat()
                     scale[1] = src.ParseFloat()
-                    side.texMat.get(0).set(idVec3(0.03125f, 0.0f, 0.0f))
-                    side.texMat.get(1).set(idVec3(0.0f, 0.03125f, 0.0f))
+                    side.texMat[0].set(idVec3(0.03125f, 0.0f, 0.0f))
+                    side.texMat[1].set(idVec3(0.0f, 0.03125f, 0.0f))
                     side.origin.set(origin)
 
                     // Q2 allowed override of default flags and values, but we don't any more
@@ -421,10 +422,10 @@ object MapFile {
                 val brush = idMapBrush()
                 i = 0
                 while (i < sides.Num()) {
-                    brush.AddSide(sides.get(i))
+                    brush.AddSide(sides[i])
                     i++
                 }
-                brush.epairs = epairs
+                brush.epairs.set(epairs)
                 return brush
             }
         }
@@ -439,7 +440,7 @@ object MapFile {
     }
 
     class idMapPatch : idMapPrimitive {
-        protected val verts: idList<idDrawVert?>? = idList() // vertices
+        protected val verts: idList<idDrawVert> = idList() // vertices
         protected var expanded // true if vertices are spaced out
                 = false
         protected var explicitSubdivisions = false
@@ -449,7 +450,7 @@ object MapFile {
 
         //
         //
-        protected var material: idStr? = idStr()
+        protected var material: idStr = idStr()
         protected var maxHeight // maximum height allocated for
                 = 0
         protected var maxWidth // maximum width allocated for
@@ -488,15 +489,15 @@ object MapFile {
         }
 
         @Deprecated("")
-        constructor(mapPrimitive: idMapPrimitive?) {
-            epairs = mapPrimitive.epairs
+        constructor(mapPrimitive: idMapPrimitive) {
+            epairs.set(mapPrimitive.epairs)
             type = mapPrimitive.type
         }
 
-        fun Write(fp: idFile?, primitiveNum: Int, origin: idVec3?): Boolean {
+        fun Write(fp: idFile, primitiveNum: Int, origin: idVec3): Boolean {
             var i: Int
             var j: Int
-            var v: idDrawVert?
+            var v: idDrawVert
             if (GetExplicitlySubdivided()) {
                 fp.WriteFloatString("// primitive %d\n{\n patchDef3\n {\n", primitiveNum)
                 fp.WriteFloatString(
@@ -517,14 +518,14 @@ object MapFile {
                 fp.WriteFloatString("   ( ")
                 j = 0
                 while (j < GetHeight()) {
-                    v = verts.get(j * GetWidth() + i)
+                    v = verts[j * GetWidth() + i]
                     fp.WriteFloatString(
                         " ( %f %f %f %f %f )",
-                        v.xyz.get(0) + origin.get(0),
-                        v.xyz.get(1) + origin.get(1),
-                        v.xyz.get(2) + origin.get(2),
-                        v.st.get(0),
-                        v.st.get(1)
+                        v.xyz[0] + origin[0],
+                        v.xyz[1] + origin[1],
+                        v.xyz[2] + origin[2],
+                        v.st[0],
+                        v.st[1]
                     )
                     j++
                 }
@@ -535,11 +536,11 @@ object MapFile {
             return true
         }
 
-        fun GetMaterial(): idStr? {
+        fun GetMaterial(): idStr {
             return material
         }
 
-        fun SetMaterial(p: String?) {
+        fun SetMaterial(p: String) {
             material = idStr(p)
         }
 
@@ -570,21 +571,21 @@ object MapFile {
         fun GetGeometryCRC(): Int {
             var i: Int
             var j: Int
-            var crc: Int
-            crc = GetHorzSubdivisions() xor GetVertSubdivisions()
+            var crc: Long
+            crc = (GetHorzSubdivisions() xor GetVertSubdivisions()).toLong()
             i = 0
             while (i < GetWidth()) {
                 j = 0
                 while (j < GetHeight()) {
-                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.x)
-                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.y)
-                    crc = crc xor MapFile.FloatCRC(verts.get(j * GetWidth() + i).xyz.z)
+                    crc = crc xor FloatCRC(verts[j * GetWidth() + i].xyz.x)
+                    crc = crc xor FloatCRC(verts[j * GetWidth() + i].xyz.y)
+                    crc = crc xor FloatCRC(verts[j * GetWidth() + i].xyz.z)
                     j++
                 }
                 i++
             }
-            crc = crc xor MapFile.StringCRC(GetMaterial().toString())
-            return crc
+            crc = crc xor StringCRC(GetMaterial().toString()).toLong()
+            return crc.toInt()
         }
 
         fun GetWidth(): Int {
@@ -612,7 +613,7 @@ object MapFile {
             //public							~idMapPatch( void ) { }
             //public	static idMapPatch *		Parse( idLexer &src, const idVec3 &origin, bool patchDef3 = true, float version = CURRENT_MAP_VERSION );
             @Throws(idException::class)
-            fun Parse(src: idLexer?, origin: idVec3?, patchDef3: Boolean, version: Float): idMapPatch? {
+            fun Parse(src: idLexer, origin: idVec3, patchDef3: Boolean, version: Float): idMapPatch? {
                 val info = FloatArray(7)
                 var vert: idDrawVert
                 val token = idToken()
@@ -678,11 +679,11 @@ object MapFile {
 
 //                    vert = patch.oGet(i * patch.GetWidth() + j);
                         vert = patch.verts.set(i * patch.GetWidth() + j, idDrawVert())
-                        vert.xyz.set(0, v[0] - origin.get(0))
-                        vert.xyz.set(1, v[1] - origin.get(1))
-                        vert.xyz.set(2, v[2] - origin.get(2))
-                        vert.st.set(0, v[3])
-                        vert.st.set(1, v[4])
+                        vert.xyz[0] = v[0] - origin[0]
+                        vert.xyz[1] = v[1] - origin[1]
+                        vert.xyz[2] = v[2] - origin[2]
+                        vert.st[0] = v[3]
+                        vert.st[1] = v[4]
                         i++
                     }
                     if (!src.ExpectTokenString(")")) {
@@ -698,7 +699,7 @@ object MapFile {
 
                 // read any key/value pairs
                 while (src.ReadToken(token)) {
-                    if (token == "}") {
+                    if (token.toString() == "}") {
                         src.ExpectTokenString("}")
                         break
                     }
@@ -718,20 +719,20 @@ object MapFile {
         //
         //
         //
-        val primitives: idList<idMapPrimitive?>?
-        var epairs: idDict?
+        val primitives: idList<idMapPrimitive>
+        var epairs: idDict
 
         @Throws(idException::class)
-        fun Write(fp: idFile?, entityNum: Int): Boolean {
+        fun Write(fp: idFile, entityNum: Int): Boolean {
             var i: Int
-            var mapPrim: idMapPrimitive?
+            var mapPrim: idMapPrimitive
             val origin = idVec3()
             fp.WriteFloatString("// entity %d\n{\n", entityNum)
 
             // write entity epairs
             i = 0
             while (i < epairs.GetNumKeyVals()) {
-                fp.WriteFloatString("\"%s\" \"%s\"\n", epairs.GetKeyVal(i).GetKey(), epairs.GetKeyVal(i).GetValue())
+                fp.WriteFloatString("\"%s\" \"%s\"\n", epairs.GetKeyVal(i)!!.GetKey(), epairs.GetKeyVal(i)!!.GetValue())
                 i++
             }
             epairs.GetVector("origin", "0 0 0", origin)
@@ -741,8 +742,8 @@ object MapFile {
             while (i < GetNumPrimitives()) {
                 mapPrim = GetPrimitive(i)
                 when (mapPrim.GetType()) {
-                    idMapPrimitive.TYPE_BRUSH -> (mapPrim as idMapBrush?).Write(fp, i, origin)
-                    idMapPrimitive.TYPE_PATCH -> (mapPrim as idMapPatch?).Write(fp, i, origin)
+                    idMapPrimitive.TYPE_BRUSH -> (mapPrim as idMapBrush).Write(fp, i, origin)
+                    idMapPrimitive.TYPE_PATCH -> (mapPrim as idMapPatch).Write(fp, i, origin)
                 }
                 i++
             }
@@ -755,24 +756,24 @@ object MapFile {
         }
 
         fun GetPrimitive(i: Int): idMapPrimitive {
-            return primitives.get(i)
+            return primitives[i]
         }
 
-        fun AddPrimitive(p: idMapPrimitive?) {
+        fun AddPrimitive(p: idMapPrimitive) {
             primitives.Append(p)
         }
 
         fun GetGeometryCRC(): Int {
             var i: Int
             var crc: Int
-            var mapPrim: idMapPrimitive?
+            var mapPrim: idMapPrimitive
             crc = 0
             i = 0
             while (i < GetNumPrimitives()) {
                 mapPrim = GetPrimitive(i)
                 when (mapPrim.GetType()) {
-                    idMapPrimitive.TYPE_BRUSH -> crc = crc xor (mapPrim as idMapBrush?).GetGeometryCRC()
-                    idMapPrimitive.TYPE_PATCH -> crc = crc xor (mapPrim as idMapPatch?).GetGeometryCRC()
+                    idMapPrimitive.TYPE_BRUSH -> crc = crc xor (mapPrim as idMapBrush).GetGeometryCRC()
+                    idMapPrimitive.TYPE_PATCH -> crc = crc xor (mapPrim as idMapPatch).GetGeometryCRC()
                 }
                 i++
             }
@@ -787,7 +788,7 @@ object MapFile {
             //public							~idMapEntity( void ) { primitives.DeleteContents( true ); }
             //public	static idMapEntity *	Parse( idLexer &src, bool worldSpawn = false, float version = CURRENT_MAP_VERSION );
             @Throws(idException::class)
-            fun Parse(src: idLexer?, worldSpawn: Boolean, version: Float): idMapEntity? {
+            fun Parse(src: idLexer, worldSpawn: Boolean, version: Float): idMapEntity? {
                 val token = idToken()
                 val mapEnt: idMapEntity
                 var mapPatch: idMapPatch?
@@ -800,7 +801,7 @@ object MapFile {
                 if (!src.ReadToken(token)) {
                     return null
                 }
-                if (token != "{") {
+                if (token.toString() != "{") {
                     src.Error("idMapEntity::Parse: { not found, found %s", token /*c_str()*/)
                     return null
                 }
@@ -815,10 +816,10 @@ object MapFile {
                         src.Error("idMapEntity::Parse: EOF without closing brace")
                         return null
                     }
-                    if (token == "}") {
+                    if (token.toString() == "}") {
                         break
                     }
-                    if (token == "{") {
+                    if (token.toString() == "{") {
                         // parse a brush or patch
                         if (!src.ReadToken(token)) {
                             src.Error("idMapEntity::Parse: unexpected EOF")
@@ -870,20 +871,20 @@ object MapFile {
                         value.StripTrailingWhitespace()
                         key.StripTrailingWhitespace()
                         mapEnt.epairs.Set(key, value)
-                        if (0 == idStr.Companion.Icmp(key, "origin")) {
+                        if (0 == idStr.Icmp(key, "origin")) {
                             // scanf into doubles, then assign, so it is idVec size independent
                             v3 = 0f
                             v2 = v3
                             v1 = v2
                             //                        sscanf(value, "%lf %lf %lf",  & v1,  & v2,  & v3);
-                            val values: Array<String?> = value.toString().split(" ").toTypedArray()
+                            val values: Array<String> = value.toString().split(" ").toTypedArray()
                             v1 = values[0].toFloat()
                             origin.x = v1
                             v2 = values[1].toFloat()
                             origin.y = v2
                             v3 = values[2].toFloat()
                             origin.z = v3
-                        } else if (0 == idStr.Companion.Icmp(key, "classname") && 0 == idStr.Companion.Icmp(
+                        } else if (0 == idStr.Icmp(key, "classname") && 0 == idStr.Icmp(
                                 value,
                                 "worldspawn"
                             )
@@ -906,11 +907,11 @@ object MapFile {
     }
 
     class idMapFile {
-        protected val entities: idList<idMapEntity?>?
+        protected val entities: idList<idMapEntity>
         protected var fileTime: Long
         protected var geometryCRC: Int
         protected var hasPrimitiveData: Boolean
-        protected var name: idStr? = null
+        protected val name: idStr = idStr()
         protected var version: Float
 
         //public							~idMapFile( void ) { entities.DeleteContents( true ); }
@@ -922,7 +923,7 @@ object MapFile {
         @JvmOverloads
         @Throws(idException::class)
         fun Parse(
-            filename: String?,
+            filename: String,
             ignoreRegion: Boolean = false /*= false*/,
             osPath: Boolean = false /*= false*/
         ): Boolean {
@@ -930,12 +931,12 @@ object MapFile {
             val src =
                 idLexer(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_ALLOWPATHNAMES)
             val token = idToken()
-            val fullName: idStr?
+            val fullName: idStr
             var mapEnt: idMapEntity?
             var i: Int
             var j: Int
             var k: Int
-            name = idStr(filename)
+            name.set(filename)
             name.StripFileExtension()
             fullName = name
             hasPrimitiveData = false
@@ -953,7 +954,7 @@ object MapFile {
                     return false
                 }
             }
-            version = MapFile.OLD_MAP_VERSION.toFloat()
+            version = OLD_MAP_VERSION.toFloat()
             fileTime = src.GetFileTime()
             entities.DeleteContents(true)
             if (src.CheckTokenString("Version")) {
@@ -973,24 +974,24 @@ object MapFile {
             if (entities.Num() != 0) {
 
                 // "removeEntities" "classname" can be set in the worldspawn to remove all entities with the given classname
-                var removeEntities = entities.get(0).epairs.MatchPrefix("removeEntities", null)
+                var removeEntities = entities[0].epairs.MatchPrefix("removeEntities", null)
                 while (removeEntities != null) {
                     RemoveEntities(removeEntities.GetValue().toString())
-                    removeEntities = entities.get(0).epairs.MatchPrefix("removeEntities", removeEntities)
+                    removeEntities = entities[0].epairs.MatchPrefix("removeEntities", removeEntities)
                 }
 
                 // "overrideMaterial" "material" can be set in the worldspawn to reset all materials
                 val material = idStr()
-                if (entities.get(0).epairs.GetString("overrideMaterial", "", material)) {
+                if (entities[0].epairs.GetString("overrideMaterial", "", material)) {
                     i = 0
                     while (i < entities.Num()) {
-                        mapEnt = entities.get(i)
+                        mapEnt = entities[i]
                         j = 0
                         while (j < mapEnt.GetNumPrimitives()) {
                             val mapPrimitive = mapEnt.GetPrimitive(j)
                             when (mapPrimitive.GetType()) {
                                 idMapPrimitive.TYPE_BRUSH -> {
-                                    val mapBrush = mapPrimitive as idMapBrush?
+                                    val mapBrush = mapPrimitive as idMapBrush
                                     k = 0
                                     while (k < mapBrush.GetNumSides()) {
                                         mapBrush.GetSide(k).SetMaterial(material.toString())
@@ -1006,14 +1007,14 @@ object MapFile {
                 }
 
                 // force all entities to have a name key/value pair
-                if (entities.get(0).epairs.GetBool("forceEntityNames")) {
+                if (entities[0].epairs.GetBool("forceEntityNames")) {
                     i = 1
                     while (i < entities.Num()) {
-                        mapEnt = entities.get(i)
+                        mapEnt = entities[i]
                         if (null == mapEnt.epairs.FindKey("name")) {
                             mapEnt.epairs.Set(
                                 "name",
-                                Str.va("%s%d", mapEnt.epairs.GetString("classname", "forcedName"), i)
+                                Str.va("%s%d", mapEnt.epairs.GetString("classname", "forcedName")!!, i)
                             )
                         }
                         i++
@@ -1021,12 +1022,12 @@ object MapFile {
                 }
 
                 // move the primitives of any func_group entities to the worldspawn
-                if (entities.get(0).epairs.GetBool("moveFuncGroups")) {
+                if (entities[0].epairs.GetBool("moveFuncGroups")) {
                     i = 1
                     while (i < entities.Num()) {
-                        mapEnt = entities.get(i)
-                        if (idStr.Companion.Icmp(mapEnt.epairs.GetString("classname"), "func_group") == 0) {
-                            entities.get(0).primitives.Append(mapEnt.primitives)
+                        mapEnt = entities[i]
+                        if (idStr.Icmp(mapEnt.epairs.GetString("classname")!!, "func_group") == 0) {
+                            entities[0].primitives.Append(mapEnt.primitives)
                             mapEnt.primitives.Clear()
                         }
                         i++
@@ -1038,13 +1039,13 @@ object MapFile {
         }
 
         @Throws(idException::class)
-        fun Parse(filename: idStr?): Boolean {
+        fun Parse(filename: idStr): Boolean {
             return Parse(filename.toString())
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun Write(fileName: String?, ext: String?, fromBasePath: Boolean = true): Boolean {
+        fun Write(fileName: String, ext: String, fromBasePath: Boolean = true): Boolean {
             var i: Int
             val qpath: idStr
             val fp: idFile?
@@ -1060,10 +1061,10 @@ object MapFile {
                 idLib.common.Warning("Couldn't open %s\n", qpath)
                 return false
             }
-            fp.WriteFloatString("Version %f\n", MapFile.CURRENT_MAP_VERSION)
+            fp.WriteFloatString("Version %f\n", CURRENT_MAP_VERSION)
             i = 0
             while (i < entities.Num()) {
-                entities.get(i).Write(fp, i)
+                entities[i].Write(fp, i)
                 i++
             }
             idLib.fileSystem.CloseFile(fp)
@@ -1077,7 +1078,7 @@ object MapFile {
 
         // get the specified entity
         fun GetEntity(i: Int): idMapEntity {
-            return entities.get(i)
+            return entities[i]
         }
 
         // get the name without file extension
@@ -1113,15 +1114,15 @@ object MapFile {
         }
 
         //
-        fun AddEntity(mapentity: idMapEntity?): Int {
+        fun AddEntity(mapentity: idMapEntity): Int {
             return entities.Append(mapentity)
         }
 
         @Throws(idException::class)
-        fun FindEntity(name: String?): idMapEntity? {
+        fun FindEntity(name: String): idMapEntity? {
             for (i in 0 until entities.Num()) {
-                val ent = entities.get(i)
-                if (idStr.Companion.Icmp(ent.epairs.GetString("name"), name) == 0) {
+                val ent = entities[i]
+                if (idStr.Icmp(ent.epairs.GetString("name")!!, name) == 0) {
                     return ent
                 }
             }
@@ -1129,21 +1130,21 @@ object MapFile {
         }
 
         @Throws(idException::class)
-        fun FindEntity(name: idStr?): idMapEntity? {
+        fun FindEntity(name: idStr): idMapEntity? {
             return this.FindEntity(name.toString())
         }
 
-        fun RemoveEntity(mapEnt: idMapEntity?) {
+        fun RemoveEntity(mapEnt: idMapEntity) {
             entities.Remove(mapEnt)
             //	delete mapEnt;
         }
 
         @Throws(idException::class)
-        fun RemoveEntities(classname: String?) {
+        fun RemoveEntities(classname: String) {
             var i = 0
             while (i < entities.Num()) {
-                val ent = entities.get(i)
-                if (idStr.Companion.Icmp(ent.epairs.GetString("classname"), classname) == 0) {
+                val ent = entities[i]
+                if (idStr.Icmp(ent.epairs.GetString("classname")!!, classname) == 0) {
 //			delete entities[i];
                     entities.RemoveIndex(i)
                     i--
@@ -1159,7 +1160,7 @@ object MapFile {
 
         fun RemovePrimitiveData() {
             for (i in 0 until entities.Num()) {
-                val ent = entities.get(i)
+                val ent = entities[i]
                 ent.RemovePrimitiveData()
             }
             hasPrimitiveData = false
@@ -1174,7 +1175,7 @@ object MapFile {
             geometryCRC = 0
             i = 0
             while (i < entities.Num()) {
-                geometryCRC = geometryCRC xor entities.get(i).GetGeometryCRC()
+                geometryCRC = geometryCRC xor entities[i].GetGeometryCRC()
                 i++
             }
         }
@@ -1182,7 +1183,7 @@ object MapFile {
         //
         //
         init {
-            version = MapFile.CURRENT_MAP_VERSION.toFloat()
+            version = CURRENT_MAP_VERSION.toFloat()
             fileTime = 0
             geometryCRC = 0
             entities = idList()

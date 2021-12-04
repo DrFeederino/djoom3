@@ -1,7 +1,6 @@
 package neo.idlib.Text
 
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.framework.File_h.idFile
 import neo.idlib.Lib
 import neo.idlib.Lib.idException
@@ -14,7 +13,8 @@ import neo.idlib.math.Quat.idCQuat
 import neo.idlib.math.Quat.idQuat
 import neo.idlib.math.Vector.idVec
 import neo.idlib.math.Vector.idVec3
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
 import java.util.*
 
 /**
@@ -22,15 +22,15 @@ import java.util.*
  */
 object Lexer {
     val LEXFL_ALLOWBACKSLASHSTRINGCONCAT: Int =
-        Lib.Companion.BIT(12) // allow multiple strings seperated by '\' to be concatenated
+        Lib.BIT(12) // allow multiple strings seperated by '\' to be concatenated
     val LEXFL_ALLOWFLOATEXCEPTIONS: Int =
-        Lib.Companion.BIT(10) // allow float exceptions like 1.#INF or 1.#IND to be parsed
-    val LEXFL_ALLOWIPADDRESSES: Int = Lib.Companion.BIT(9) // allow ip addresses to be parsed as numbers
-    val LEXFL_ALLOWMULTICHARLITERALS: Int = Lib.Companion.BIT(11) // allow multi character literals
-    val LEXFL_ALLOWNUMBERNAMES: Int = Lib.Companion.BIT(8) // allow names to start with a number
-    val LEXFL_ALLOWPATHNAMES: Int = Lib.Companion.BIT(7) // allow path seperators in names
-    val LEXFL_NOBASEINCLUDES: Int = Lib.Companion.BIT(6) // don't include files embraced with < >
-    val LEXFL_NODOLLARPRECOMPILE: Int = Lib.Companion.BIT(5) // don't use the $ sign for precompilation
+        Lib.BIT(10) // allow float exceptions like 1.#INF or 1.#IND to be parsed
+    val LEXFL_ALLOWIPADDRESSES: Int = Lib.BIT(9) // allow ip addresses to be parsed as numbers
+    val LEXFL_ALLOWMULTICHARLITERALS: Int = Lib.BIT(11) // allow multi character literals
+    val LEXFL_ALLOWNUMBERNAMES: Int = Lib.BIT(8) // allow names to start with a number
+    val LEXFL_ALLOWPATHNAMES: Int = Lib.BIT(7) // allow path seperators in names
+    val LEXFL_NOBASEINCLUDES: Int = Lib.BIT(6) // don't include files embraced with < >
+    val LEXFL_NODOLLARPRECOMPILE: Int = Lib.BIT(5) // don't use the $ sign for precompilation
 
     /**
      * ===============================================================================
@@ -52,37 +52,37 @@ object Lexer {
      * ===============================================================================
      */
     // lexer flags
-    val LEXFL_NOERRORS: Int = Lib.Companion.BIT(0) // don't print any errors
-    val LEXFL_NOFATALERRORS: Int = Lib.Companion.BIT(2) // errors aren't fatal
+    val LEXFL_NOERRORS: Int = Lib.BIT(0) // don't print any errors
+    val LEXFL_NOFATALERRORS: Int = Lib.BIT(2) // errors aren't fatal
     val LEXFL_NOSTRINGCONCAT: Int =
-        Lib.Companion.BIT(3) // multiple strings seperated by whitespaces are not concatenated
-    val LEXFL_NOSTRINGESCAPECHARS: Int = Lib.Companion.BIT(4) // no escape characters inside strings
-    val LEXFL_NOWARNINGS: Int = Lib.Companion.BIT(1) // don't print any warnings
+        Lib.BIT(3) // multiple strings seperated by whitespaces are not concatenated
+    val LEXFL_NOSTRINGESCAPECHARS: Int = Lib.BIT(4) // no escape characters inside strings
+    val LEXFL_NOWARNINGS: Int = Lib.BIT(1) // don't print any warnings
     val LEXFL_ONLYSTRINGS: Int =
-        Lib.Companion.BIT(13) // parse as whitespace deliminated strings (quoted strings keep quotes)
+        Lib.BIT(13) // parse as whitespace deliminated strings (quoted strings keep quotes)
     const val P_PRECOMP = 51
     const val PUNCTABLE = true
     const val P_ADD = 29
-    const val P_ADD_ASSIGN = 14
-    const val P_ASSIGN = 31
-    const val P_BACKSLASH = 50
+    private const val P_ADD_ASSIGN = 14
+    private const val P_ASSIGN = 31
+    private const val P_BACKSLASH = 50
     const val P_BIN_AND = 32
-    const val P_BIN_AND_ASSIGN = 18
+    private const val P_BIN_AND_ASSIGN = 18
     const val P_BIN_NOT = 35
     const val P_BIN_OR = 33
-    const val P_BIN_OR_ASSIGN = 19
+    private const val P_BIN_OR_ASSIGN = 19
     const val P_BIN_XOR = 34
-    const val P_BIN_XOR_ASSIGN = 20
-    const val P_BRACECLOSE = 47
-    const val P_BRACEOPEN = 46
+    private const val P_BIN_XOR_ASSIGN = 20
+    private const val P_BRACECLOSE = 47
+    private const val P_BRACEOPEN = 46
     const val P_COLON = 42
-    const val P_COMMA = 40
-    const val P_CPP1 = 24
-    const val P_CPP2 = 25
+    private const val P_COMMA = 40
+    private const val P_CPP1 = 24
+    private const val P_CPP2 = 25
     const val P_DEC = 17
     const val P_DIV = 27
-    const val P_DIV_ASSIGN = 12
-    const val P_DOLLAR = 52
+    private const val P_DIV_ASSIGN = 12
+    private const val P_DOLLAR = 52
     const val P_INC = 16
     const val P_LOGIC_AND = 5
     const val P_LOGIC_EQ = 9
@@ -94,101 +94,101 @@ object Lexer {
     const val P_LOGIC_OR = 6
     const val P_LOGIC_UNEQ = 10
     const val P_LSHIFT = 22
-    const val P_LSHIFT_ASSIGN = 2
+    private const val P_LSHIFT_ASSIGN = 2
     const val P_MOD = 28
-    const val P_MOD_ASSIGN = 13
+    private const val P_MOD_ASSIGN = 13
     const val P_MUL = 26
-    const val P_MUL_ASSIGN = 11
+    private const val P_MUL_ASSIGN = 11
     const val P_PARENTHESESCLOSE = 45
     const val P_PARENTHESESOPEN = 44
-    const val P_PARMS = 3
-    const val P_POINTERREF = 23
-    const val P_PRECOMPMERGE = 4
+    private const val P_PARMS = 3
+    private const val P_POINTERREF = 23
+    private const val P_PRECOMPMERGE = 4
     const val P_QUESTIONMARK = 43
-    const val P_REF = 39
+    private const val P_REF = 39
     const val P_RSHIFT = 21
 
     //
     //
     // punctuation ids
-    const val P_RSHIFT_ASSIGN = 1
-    const val P_SEMICOLON = 41
-    const val P_SQBRACKETCLOSE = 49
-    const val P_SQBRACKETOPEN = 48
+    private const val P_RSHIFT_ASSIGN = 1
+    private const val P_SEMICOLON = 41
+    private const val P_SQBRACKETCLOSE = 49
+    private const val P_SQBRACKETOPEN = 48
     const val P_SUB = 30
-    const val P_SUB_ASSIGN = 15
+    private const val P_SUB_ASSIGN = 15
 
     //
     //  
     //longer punctuations first
-    val default_punctuations: Array<punctuation_t?>? = arrayOf( //binary operators
-        punctuation_t(">>=", Lexer.P_RSHIFT_ASSIGN),
-        punctuation_t("<<=", Lexer.P_LSHIFT_ASSIGN),  //
-        punctuation_t("...", Lexer.P_PARMS),  //define merge operator
-        punctuation_t("##", Lexer.P_PRECOMPMERGE),  // pre-compiler
+    val default_punctuations: Array<punctuation_t> = arrayOf( //binary operators
+        punctuation_t(">>=", P_RSHIFT_ASSIGN),
+        punctuation_t("<<=", P_LSHIFT_ASSIGN),  //
+        punctuation_t("...", P_PARMS),  //define merge operator
+        punctuation_t("##", P_PRECOMPMERGE),  // pre-compiler
         //logic operators
-        punctuation_t("&&", Lexer.P_LOGIC_AND),  // pre-compiler
-        punctuation_t("||", Lexer.P_LOGIC_OR),  // pre-compiler
-        punctuation_t(">=", Lexer.P_LOGIC_GEQ),  // pre-compiler
-        punctuation_t("<=", Lexer.P_LOGIC_LEQ),  // pre-compiler
-        punctuation_t("==", Lexer.P_LOGIC_EQ),  // pre-compiler
-        punctuation_t("!=", Lexer.P_LOGIC_UNEQ),  // pre-compiler
+        punctuation_t("&&", P_LOGIC_AND),  // pre-compiler
+        punctuation_t("||", P_LOGIC_OR),  // pre-compiler
+        punctuation_t(">=", P_LOGIC_GEQ),  // pre-compiler
+        punctuation_t("<=", P_LOGIC_LEQ),  // pre-compiler
+        punctuation_t("==", P_LOGIC_EQ),  // pre-compiler
+        punctuation_t("!=", P_LOGIC_UNEQ),  // pre-compiler
         //arithmatic operators
-        punctuation_t("*=", Lexer.P_MUL_ASSIGN),
-        punctuation_t("/=", Lexer.P_DIV_ASSIGN),
-        punctuation_t("%=", Lexer.P_MOD_ASSIGN),
-        punctuation_t("+=", Lexer.P_ADD_ASSIGN),
-        punctuation_t("-=", Lexer.P_SUB_ASSIGN),
-        punctuation_t("++", Lexer.P_INC),
-        punctuation_t("--", Lexer.P_DEC),  //binary operators
-        punctuation_t("&=", Lexer.P_BIN_AND_ASSIGN),
-        punctuation_t("|=", Lexer.P_BIN_OR_ASSIGN),
-        punctuation_t("^=", Lexer.P_BIN_XOR_ASSIGN),
-        punctuation_t(">>", Lexer.P_RSHIFT),  // pre-compiler
-        punctuation_t("<<", Lexer.P_LSHIFT),  // pre-compiler
+        punctuation_t("*=", P_MUL_ASSIGN),
+        punctuation_t("/=", P_DIV_ASSIGN),
+        punctuation_t("%=", P_MOD_ASSIGN),
+        punctuation_t("+=", P_ADD_ASSIGN),
+        punctuation_t("-=", P_SUB_ASSIGN),
+        punctuation_t("++", P_INC),
+        punctuation_t("--", P_DEC),  //binary operators
+        punctuation_t("&=", P_BIN_AND_ASSIGN),
+        punctuation_t("|=", P_BIN_OR_ASSIGN),
+        punctuation_t("^=", P_BIN_XOR_ASSIGN),
+        punctuation_t(">>", P_RSHIFT),  // pre-compiler
+        punctuation_t("<<", P_LSHIFT),  // pre-compiler
         //reference operators
-        punctuation_t("->", Lexer.P_POINTERREF),  //C++
-        punctuation_t("::", Lexer.P_CPP1),
-        punctuation_t(".*", Lexer.P_CPP2),  //arithmatic operators
-        punctuation_t("*", Lexer.P_MUL),  // pre-compiler
-        punctuation_t("/", Lexer.P_DIV),  // pre-compiler
-        punctuation_t("%", Lexer.P_MOD),  // pre-compiler
-        punctuation_t("+", Lexer.P_ADD),  // pre-compiler
-        punctuation_t("-", Lexer.P_SUB),  // pre-compiler
-        punctuation_t("=", Lexer.P_ASSIGN),  //binary operators
-        punctuation_t("&", Lexer.P_BIN_AND),  // pre-compiler
-        punctuation_t("|", Lexer.P_BIN_OR),  // pre-compiler
-        punctuation_t("^", Lexer.P_BIN_XOR),  // pre-compiler
-        punctuation_t("~", Lexer.P_BIN_NOT),  // pre-compiler
+        punctuation_t("->", P_POINTERREF),  //C++
+        punctuation_t("::", P_CPP1),
+        punctuation_t(".*", P_CPP2),  //arithmatic operators
+        punctuation_t("*", P_MUL),  // pre-compiler
+        punctuation_t("/", P_DIV),  // pre-compiler
+        punctuation_t("%", P_MOD),  // pre-compiler
+        punctuation_t("+", P_ADD),  // pre-compiler
+        punctuation_t("-", P_SUB),  // pre-compiler
+        punctuation_t("=", P_ASSIGN),  //binary operators
+        punctuation_t("&", P_BIN_AND),  // pre-compiler
+        punctuation_t("|", P_BIN_OR),  // pre-compiler
+        punctuation_t("^", P_BIN_XOR),  // pre-compiler
+        punctuation_t("~", P_BIN_NOT),  // pre-compiler
         //logic operators
-        punctuation_t("!", Lexer.P_LOGIC_NOT),  // pre-compiler
-        punctuation_t(">", Lexer.P_LOGIC_GREATER),  // pre-compiler
-        punctuation_t("<", Lexer.P_LOGIC_LESS),  // pre-compiler
+        punctuation_t("!", P_LOGIC_NOT),  // pre-compiler
+        punctuation_t(">", P_LOGIC_GREATER),  // pre-compiler
+        punctuation_t("<", P_LOGIC_LESS),  // pre-compiler
         //reference operator
-        punctuation_t(".", Lexer.P_REF),  //seperators
-        punctuation_t(",", Lexer.P_COMMA),  // pre-compiler
-        punctuation_t(";", Lexer.P_SEMICOLON),  //label indication
-        punctuation_t(":", Lexer.P_COLON),  // pre-compiler
+        punctuation_t(".", P_REF),  //seperators
+        punctuation_t(",", P_COMMA),  // pre-compiler
+        punctuation_t(";", P_SEMICOLON),  //label indication
+        punctuation_t(":", P_COLON),  // pre-compiler
         //if statement
-        punctuation_t("?", Lexer.P_QUESTIONMARK),  // pre-compiler
+        punctuation_t("", P_QUESTIONMARK),  // pre-compiler
         //embracements
-        punctuation_t("(", Lexer.P_PARENTHESESOPEN),  // pre-compiler
-        punctuation_t(")", Lexer.P_PARENTHESESCLOSE),  // pre-compiler
-        punctuation_t("{", Lexer.P_BRACEOPEN),  // pre-compiler
-        punctuation_t("}", Lexer.P_BRACECLOSE),  // pre-compiler
-        punctuation_t("[", Lexer.P_SQBRACKETOPEN),
-        punctuation_t("]", Lexer.P_SQBRACKETCLOSE),  //
-        punctuation_t("\\", Lexer.P_BACKSLASH),  //precompiler operator
-        punctuation_t("#", Lexer.P_PRECOMP),  // pre-compiler
-        punctuation_t("$", Lexer.P_DOLLAR),
+        punctuation_t("(", P_PARENTHESESOPEN),  // pre-compiler
+        punctuation_t(")", P_PARENTHESESCLOSE),  // pre-compiler
+        punctuation_t("{", P_BRACEOPEN),  // pre-compiler
+        punctuation_t("}", P_BRACECLOSE),  // pre-compiler
+        punctuation_t("[", P_SQBRACKETOPEN),
+        punctuation_t("]", P_SQBRACKETCLOSE),  //
+        punctuation_t("\\", P_BACKSLASH),  //precompiler operator
+        punctuation_t("#", P_PRECOMP),  // pre-compiler
+        punctuation_t("$", P_DOLLAR),
         punctuation_t(null, 0)
     )
-    val default_nextpunctuation: IntArray? = IntArray(Lexer.default_punctuations.size)
-    val default_punctuationtable: IntArray? = IntArray(256)
+    val default_nextpunctuation: IntArray = IntArray(default_punctuations.size)
+    val default_punctuationtable: IntArray = IntArray(256)
     var default_setup = false
 
     // punctuation
-    internal class punctuation_t(// punctuation character(s)
+    class punctuation_t(// punctuation character(s)
         var p: String?, // punctuation id
         var n: Int
     )
@@ -197,7 +197,7 @@ object Lexer {
         var next // next script in a chain
                 : idLexer?
         var buffer // buffer containing the script
-                : CharBuffer? = null
+                : CharBuffer = CharBuffer.allocate(0)
         var script_p // current pointer in the script
                 = 0
         private var allocated // true if buffer memory was allocated
@@ -207,7 +207,7 @@ object Lexer {
         private /*ID_TIME_T*/  var fileTime // file time
                 : Long = 0
         private var filename // file name of the script
-                : idStr? = null
+                : idStr = idStr()
         private var flags // several script flags
                 : Int
         private var hadError // set by idLexer::Error, even if the error is suppressed
@@ -223,11 +223,11 @@ object Lexer {
         private var loaded // set when a script file is loaded from file or memory
                 : Boolean
         private var nextPunctuation // next punctuation in chain
-                : IntArray?
+                : IntArray = IntArray(0)
         private var punctuationTable // ASCII table with punctuations
-                : IntArray?
+                : IntArray = IntArray(0)
         private var punctuations // the punctuations used in the script
-                : Array<punctuation_t?>?
+                : Array<punctuation_t> = default_punctuations
         private var token // available token
                 : idToken?
         private var tokenAvailable // set by unreadToken
@@ -272,7 +272,7 @@ object Lexer {
             hadError = false
         }
 
-        constructor(filename: String?) {
+        constructor(filename: String) {
             loaded = false
             flags = 0
             SetPunctuations(null)
@@ -283,9 +283,9 @@ object Lexer {
             this.LoadFile(filename, false)
         }
 
-        constructor(filename: String?, flags: Int) {
+        constructor(filename: String, flags: Int) {
             loaded = false
-            this.flags = flags.toLong()
+            this.flags = flags
             SetPunctuations(null)
             allocated = false
             token = idToken()
@@ -294,9 +294,9 @@ object Lexer {
             this.LoadFile(filename, false)
         }
 
-        constructor(filename: String?, flags: Int, OSPath: Boolean) {
+        constructor(filename: String, flags: Int, OSPath: Boolean) {
             loaded = false
-            this.flags = flags.toLong()
+            this.flags = flags
             SetPunctuations(null)
             allocated = false
             token = idToken()
@@ -305,7 +305,7 @@ object Lexer {
             this.LoadFile(filename, OSPath)
         }
 
-        constructor(ptr: CharBuffer?, length: Int, name: String?) {
+        constructor(ptr: CharBuffer, length: Int, name: String) {
             loaded = false
             flags = 0
             SetPunctuations(null)
@@ -316,10 +316,10 @@ object Lexer {
             this.LoadMemory(ptr, length, name)
         }
 
-        constructor(ptr: String?, length: Int, name: String?) : this(TempDump.atocb(ptr), length, name)
-        constructor(ptr: String?, length: Int, name: String?, flags: Int) {
+        constructor(ptr: String, length: Int, name: String) : this(TempDump.atocb(ptr)!!, length, name)
+        constructor(ptr: String, length: Int, name: String, flags: Int) {
             loaded = false
-            this.flags = flags.toLong()
+            this.flags = flags
             SetPunctuations(null)
             allocated = false
             token = idToken()
@@ -329,25 +329,25 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun LoadFile(filename: idStr?): Boolean {
+        fun LoadFile(filename: idStr): Boolean {
             return this.LoadFile(filename.toString())
         }
 
         // load a script from the given file at the given offset with the given length
         @JvmOverloads
         @Throws(idException::class)
-        fun LoadFile(filename: String?, OSPath: Boolean = false /*= false*/): Boolean {
+        fun LoadFile(filename: String, OSPath: Boolean = false /*= false*/): Boolean {
 //        TODO:NIO
             val fp: idFile?
-            val pathname: String?
+            val pathname: String
             val length: Int
-            val buf: ByteBuffer?
+            val buf: ByteBuffer
             if (loaded) {
                 idLib.common.Error("this.LoadFile: another script already loaded")
                 return false
             }
             pathname =
-                if (!OSPath && baseFolder.length > 0 && baseFolder.get(0) != '\u0000') { //TODO: use length isntead?
+                if (!OSPath && baseFolder.length > 0 && baseFolder[0] != '\u0000') { //TODO: use length isntead
                     Str.va("%s/%s", baseFolder, filename)
                 } else {
                     filename
@@ -388,24 +388,24 @@ object Lexer {
         // so source strings extracted from a file can still refer to proper line numbers in the file
         // NOTE: the ptr is expected to point at a valid C string: ptr[length] == '\0'
         @Throws(idException::class)
-        fun LoadMemory(ptr: idStr?, length: Int, name: idStr? /*= 1*/): Boolean {
-            return LoadMemory(CharBuffer.wrap(ptr.c_str()), length, name.toString())
+        fun LoadMemory(ptr: idStr, length: Int, name: idStr /*= 1*/): Boolean {
+            return LoadMemory(CharBuffer.wrap(ptr.toString()), length, name.toString())
         }
 
         @Throws(idException::class)
-        fun LoadMemory(ptr: String?, length: Int, name: String? /*= 1*/): Boolean {
-            return LoadMemory(TempDump.atocb(ptr), length, name, 1)
+        fun LoadMemory(ptr: String, length: Int, name: String /*= 1*/): Boolean {
+            return LoadMemory(TempDump.atocb(ptr)!!, length, name, 1)
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun LoadMemory(ptr: CharBuffer?, length: Int, name: String?, startLine: Int = 1): Boolean {
+        fun LoadMemory(ptr: CharBuffer, length: Int, name: String, startLine: Int = 1): Boolean {
             if (loaded) {
                 idLib.common.Error("this.LoadMemory: another script already loaded")
                 return false
             }
             filename = idStr(name)
-            buffer = CharBuffer.wrap(ptr.toString() + '\u0000') ///TODO:should ptr and name be the same?
+            buffer = CharBuffer.wrap(ptr.toString() + '\u0000') ///TODO:should ptr and name be the same
             fileTime = 0
             this.length = length
             // pointer in script buffer
@@ -423,30 +423,30 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun LoadMemory(ptr: String?, length: Int, name: String?, startLine: Int): Boolean {
+        fun LoadMemory(ptr: String, length: Int, name: String, startLine: Int): Boolean {
             return LoadMemory(CharBuffer.wrap(ptr), length, name, startLine) //the \0 is needed for the parsing loops.
         }
 
         @Throws(idException::class)
-        fun LoadMemory(ptr: idStr?, length: Int, name: String?): Boolean {
+        fun LoadMemory(ptr: idStr, length: Int, name: String): Boolean {
             return LoadMemory(ptr.toString(), length, name)
         }
 
         // free the script
         fun FreeSource() {
 //#ifdef PUNCTABLE
-            if (punctuationTable != null && punctuationTable != Lexer.default_punctuationtable) {
+            if (punctuationTable.isNotEmpty() && !punctuationTable.contentEquals(default_punctuationtable)) {
 //                Mem_Free((void *) this.punctuationtable);
-                punctuationTable = null
+                punctuationTable = IntArray(0)
             }
-            if (nextPunctuation != null && nextPunctuation != Lexer.default_nextpunctuation) {
+            if (nextPunctuation.isNotEmpty() && !nextPunctuation.contentEquals(default_nextpunctuation)) {
 //                Mem_Free((void *) this.nextpunctuation);
-                nextPunctuation = null
+                nextPunctuation = IntArray(0)
             }
             //#endif //PUNCTABLE
             if (allocated) {
 //                Mem_Free((void *) this.buffer);
-                buffer = null
+                buffer = CharBuffer.allocate(0)
                 allocated = false
             }
             tokenAvailable = false //0;
@@ -461,7 +461,7 @@ object Lexer {
 
         // read a token
         @Throws(idException::class)
-        fun ReadToken(token: idToken?): Boolean {
+        fun ReadToken(token: idToken): Boolean {
             var c: Char
             val c2: Char
             if (!loaded) {
@@ -472,7 +472,7 @@ object Lexer {
             // if there is a token available (from unreadToken)
             if (tokenAvailable) {
                 tokenAvailable = false
-                token.set(this.token)
+                token.set(this.token!!)
                 return true
             }
             // save script pointer
@@ -502,7 +502,7 @@ object Lexer {
             c2 = buffer.get(script_p + 1)
 
             // if we're keeping everything as whitespace deliminated strings
-            if (flags and Lexer.LEXFL_ONLYSTRINGS != 0L) {
+            if (flags and LEXFL_ONLYSTRINGS != 0) {
                 // if there is a leading quote
                 return if (c == '\"' || c == '\'') {
                     ReadString(token, c.code)
@@ -515,7 +515,7 @@ object Lexer {
                     return false
                 }
                 // if names are allowed to start with a number
-                if (flags and Lexer.LEXFL_ALLOWNUMBERNAMES != 0L) {
+                if (flags and LEXFL_ALLOWNUMBERNAMES != 0) {
                     c = buffer.get(script_p)
                     if (Character.isLetter(c) || c == '_') {
                         return ReadName(token)
@@ -528,7 +528,7 @@ object Lexer {
             else if (Character.isLetter(c) || c == '_') {
                 return ReadName(token)
             } // names may also start with a slash when pathnames are allowed
-            else if (flags and Lexer.LEXFL_ALLOWPATHNAMES != 0L && (c == '/' || c == '\\' || c == '.')) {
+            else if (flags and LEXFL_ALLOWPATHNAMES != 0 && (c == '/' || c == '\\' || c == '.')) {
                 return ReadName(token)
             } // check for punctuations
             else if (!ReadPunctuation(token)) {
@@ -541,13 +541,13 @@ object Lexer {
 
         // expect a certain token, reads the token when available
         @Throws(idException::class)
-        fun ExpectTokenString(string: String?): Boolean {
+        fun ExpectTokenString(string: String): Boolean {
             val token = idToken()
             if (!ReadToken(token)) {
                 Error("couldn't find expected '%s'", string)
                 return false
             }
-            if (token != string) {
+            if (token.toString() != string) {
                 Error("expected '%s' but found '%s'", string, token)
                 return false
             }
@@ -556,7 +556,7 @@ object Lexer {
 
         // expect a certain token type
         @Throws(idException::class)
-        fun ExpectTokenType(type: Int, subtype: Int, token: idToken?): Int {
+        fun ExpectTokenType(type: Int, subtype: Int, token: idToken): Int {
             val str = idStr()
             if (!ReadToken(token)) {
                 Error("couldn't read expected token")
@@ -620,7 +620,7 @@ object Lexer {
 
         // expect a token
         @Throws(idException::class)
-        fun ExpectAnyToken(token: idToken?): Boolean {
+        fun ExpectAnyToken(token: idToken): Boolean {
             return if (!ReadToken(token)) {
                 Error("couldn't read expected token")
                 false
@@ -631,7 +631,7 @@ object Lexer {
 
         // returns true when the token is available
         @Throws(idException::class)
-        fun CheckTokenString(string: String?): Boolean {
+        fun CheckTokenString(string: String): Boolean {
             val tok = idToken()
             if (!ReadToken(tok)) {
                 return false
@@ -648,7 +648,7 @@ object Lexer {
 
         // returns true an reads the token when a token with the given type is available
         @Throws(idException::class)
-        fun CheckTokenType(type: Int, subtype: Int, token: idToken?): Int {
+        fun CheckTokenType(type: Int, subtype: Int, token: idToken): Int {
             val tok = idToken()
             if (!ReadToken(tok)) {
                 return 0
@@ -666,7 +666,7 @@ object Lexer {
 
         // returns true if the next token equals the given string but does not remove the token from the source
         @Throws(idException::class)
-        fun PeekTokenString(string: String?): Boolean {
+        fun PeekTokenString(string: String): Boolean {
             val tok = idToken()
             if (!ReadToken(tok)) {
                 return false
@@ -680,7 +680,7 @@ object Lexer {
 
         // returns true if the next token equals the given type but does not remove the token from the source
         @Throws(idException::class)
-        fun PeekTokenType(type: Int, subtype: Int, token: Array<idToken?>?): Boolean {
+        fun PeekTokenType(type: Int, subtype: Int, token: Array<idToken>): Boolean {
             val tok = idToken()
             if (!ReadToken(tok)) {
                 return false
@@ -692,7 +692,7 @@ object Lexer {
 
             // if the type matches
             if (tok.type == type && tok.subtype and subtype == subtype) {
-                token.get(0) = tok
+                token[0] = tok
                 return true
             }
             return false
@@ -700,7 +700,7 @@ object Lexer {
 
         // skip tokens until the given token string is read
         @Throws(idException::class)
-        fun SkipUntilString(string: String?): Boolean {
+        fun SkipUntilString(string: String): Boolean {
             val token = idToken()
             while (ReadToken(token)) {
                 if (token.toString() == string) {
@@ -744,9 +744,9 @@ object Lexer {
                     return false
                 }
                 if (token.type == Token.TT_PUNCTUATION) {
-                    if (token == "{") {
+                    if (token.toString() == "{") {
                         depth++
-                    } else if (token == "}") {
+                    } else if (token.toString() == "}") {
                         depth--
                     }
                 }
@@ -756,7 +756,7 @@ object Lexer {
 
         // unread the given token
         @Throws(idException::class)
-        fun UnreadToken(token: idToken?) {
+        fun UnreadToken(token: idToken) {
             if (tokenAvailable) {
                 idLib.common.FatalError("idLexer::unreadToken, unread token twice\n")
             }
@@ -767,7 +767,7 @@ object Lexer {
         //		
         // read a token only if on the same line
         @Throws(idException::class)
-        fun ReadTokenOnLine(token: idToken?): Boolean {
+        fun ReadTokenOnLine(token: idToken): Boolean {
             val tok = idToken()
             if (!ReadToken(tok)) {
                 script_p = lastScript_p
@@ -788,7 +788,7 @@ object Lexer {
 
         //
         //Returns the rest of the current line
-        fun ReadRestOfLine(out: idStr?): String? {
+        fun ReadRestOfLine(out: idStr): String {
             while (true) {
                 if (buffer.get(script_p) == '\n') {
                     line++
@@ -816,7 +816,7 @@ object Lexer {
                 Error("couldn't read expected integer")
                 return 0
             }
-            if (token.type == Token.TT_PUNCTUATION && token == "-") {
+            if (token.type == Token.TT_PUNCTUATION && token.toString() == "-") {
                 ExpectTokenType(Token.TT_NUMBER, Token.TT_INTEGER, token)
                 return -token.GetIntValue()
             } else if (token.type != Token.TT_NUMBER || token.subtype == Token.TT_FLOAT) {
@@ -852,9 +852,9 @@ object Lexer {
                 } else {
                     Error("couldn't read expected floating point number")
                 }
-                return 0
+                return 0f
             }
-            if (token.type == Token.TT_PUNCTUATION && token == "-") {
+            if (token.type == Token.TT_PUNCTUATION && token.toString() == "-") {
                 ExpectTokenType(Token.TT_NUMBER, 0, token)
                 return -token.GetFloatValue()
             } else if (token.type != Token.TT_NUMBER) {
@@ -869,27 +869,27 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, v: idVec<*>?): Boolean {
+        fun Parse1DMatrix(x: Int, v: idVec<*>): Boolean {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                v.set(i, m[i])
+                v[i] = m[i]
             }
             return result
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, p: idPlane?): Boolean {
+        fun Parse1DMatrix(x: Int, p: idPlane): Boolean {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                p.set(i, m[i])
+                p[i] = m[i]
             }
             return result
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, m: idMat3?): Boolean {
+        fun Parse1DMatrix(x: Int, m: idMat3): Boolean {
             val n = FloatArray(x)
             val result = Parse1DMatrix(x, n)
             for (i in 0..2) {
@@ -901,49 +901,49 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, q: idQuat?): Boolean {
+        fun Parse1DMatrix(x: Int, q: idQuat): Boolean {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                q.set(i, m[i])
+                q[i] = m[i]
             }
             return result
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, q: idCQuat?): Boolean {
+        fun Parse1DMatrix(x: Int, q: idCQuat): Boolean {
             val m = FloatArray(x)
             val result = Parse1DMatrix(x, m)
             for (i in 0 until x) {
-                q.set(i, m[i])
+                q[i] = m[i]
             }
             return result
         }
 
         @Throws(idException::class)
-        fun Parse1DMatrix(x: Int, m: FloatArray?): Boolean {
+        fun Parse1DMatrix(x: Int, m: FloatArray): Boolean {
             return this.Parse1DMatrix(x, m, 0)
         }
 
         // parse matrices with floats
         @Throws(idException::class)
-        private fun Parse1DMatrix(x: Int, m: FloatArray?, offset: Int): Boolean {
+        private fun Parse1DMatrix(x: Int, m: FloatArray, offset: Int): Boolean {
             if (!ExpectTokenString("(")) {
                 return false
             }
             for (i in 0 until x) {
-                m.get(offset + i) = ParseFloat()
+                m[offset + i] = ParseFloat()
             }
             return ExpectTokenString(")")
         }
 
         @Throws(idException::class)
-        fun Parse2DMatrix(y: Int, x: Int, m: Array<idVec3?>?): Boolean {
+        fun Parse2DMatrix(y: Int, x: Int, m: Array<idVec3>): Boolean {
             if (!ExpectTokenString("(")) {
                 return false
             }
             for (i in 0 until y) {
-                if (!Parse1DMatrix(x, m.get(i))) {
+                if (!Parse1DMatrix(x, m[i])) {
                     return false
                 }
             }
@@ -951,12 +951,12 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun Parse2DMatrix(y: Int, x: Int, m: FloatArray?): Boolean {
+        fun Parse2DMatrix(y: Int, x: Int, m: FloatArray): Boolean {
             return this.Parse2DMatrix(y, x, m, 0)
         }
 
         @Throws(idException::class)
-        private fun Parse2DMatrix(y: Int, x: Int, m: FloatArray?, offset: Int): Boolean {
+        private fun Parse2DMatrix(y: Int, x: Int, m: FloatArray, offset: Int): Boolean {
             if (!ExpectTokenString("(")) {
                 return false
             }
@@ -969,7 +969,7 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        fun Parse3DMatrix(z: Int, y: Int, x: Int, m: FloatArray?): Boolean {
+        fun Parse3DMatrix(z: Int, y: Int, x: Int, m: FloatArray): Boolean {
             if (!ExpectTokenString("(")) {
                 return false
             }
@@ -992,7 +992,7 @@ object Lexer {
          */
         // parse a braced section into a string
         @Throws(idException::class)
-        fun ParseBracedSection(out: idStr?): String? {
+        fun ParseBracedSection(out: idStr): String {
             val token = idToken()
             var i: Int
             var depth: Int
@@ -1015,9 +1015,9 @@ object Lexer {
                     i++
                 }
                 if (token.type == Token.TT_PUNCTUATION) {
-                    if (token == '{') {
+                    if (token.toString() == "{") {
                         depth++
-                    } else if (token == '}') {
+                    } else if (token.toString() == "}") {
                         depth--
                     }
                 }
@@ -1043,7 +1043,7 @@ object Lexer {
          =================
          */
         @Throws(idException::class)
-        fun ParseBracedSection(out: idStr?, tabs: Int /*= -1*/): String? {
+        fun ParseBracedSection(out: idStr, tabs: Int /*= -1*/): String {
             var tabs = tabs
             var depth: Int
             val doTabs: Boolean
@@ -1110,7 +1110,7 @@ object Lexer {
         // parse a braced section into a string, maintaining indents and newlines
         //public	String	ParseBracedSectionExact ( idStr &out, int tabs = -1 );
         @Throws(idException::class)
-        fun ParseBracedSectionExact(out: idStr?, tabs: Int): String? {
+        fun ParseBracedSectionExact(out: idStr, tabs: Int): String {
             var tabs = tabs
             var depth: Int
             val doTabs: Boolean
@@ -1165,7 +1165,7 @@ object Lexer {
 
         // parse the rest of the line
         @Throws(idException::class)
-        fun ParseRestOfLine(out: idStr?): String? {
+        fun ParseRestOfLine(out: idStr): String {
             val token = idToken()
             out.Empty()
             while (ReadToken(token)) {
@@ -1183,7 +1183,7 @@ object Lexer {
         }
 
         // retrieves the white space characters before the last read token
-        fun GetLastWhiteSpace(whiteSpace: idStr?): Int {
+        fun GetLastWhiteSpace(whiteSpace: idStr): Int {
             whiteSpace.Clear()
             for (p in whiteSpaceStart_p until whiteSpaceEnd_p) {
                 whiteSpace.Append(buffer.get(p))
@@ -1202,42 +1202,42 @@ object Lexer {
         }
 
         // set an array with punctuations, NULL restores default C/C++ set, see default_punctuations for an example
-        fun SetPunctuations(p: Array<punctuation_t?>?) {
-            if (Lexer.PUNCTABLE) {
+        fun SetPunctuations(p: Array<punctuation_t>?) {
+            if (PUNCTABLE) {
                 if (p != null) {
                     CreatePunctuationTable(p)
                 } else {
-                    CreatePunctuationTable(Lexer.default_punctuations)
+                    CreatePunctuationTable(default_punctuations)
                 }
             } //PUNCTABLE
             if (p != null) {
                 punctuations = p
             } else {
-                punctuations = Lexer.default_punctuations
+                punctuations = default_punctuations
             }
         }
 
         // returns a pointer to the punctuation with the given id
-        fun GetPunctuationFromId(id: Int): String? {
+        fun GetPunctuationFromId(id: Int): String {
             var i: Int
             i = 0
-            while (punctuations.get(i).p != null) {
-                if (punctuations.get(i).n == id) {
-                    return punctuations.get(i).p
+            while (punctuations[i].p != null) {
+                if (punctuations[i].n == id) {
+                    return punctuations[i].p!!
                 }
                 i++
             }
-            return "unkown punctuation"
+            return "unknown punctuation"
         }
 
         // set lexer flags
         // get the id for the given punctuation
-        fun GetPunctuationId(p: String?): Int {
+        fun GetPunctuationId(p: String): Int {
             var i: Int
             i = 0
-            while (punctuations.get(i).p != null) {
-                if (punctuations.get(i).p == p) {
-                    return punctuations.get(i).n
+            while (punctuations[i].p != null) {
+                if (punctuations[i].p == p) {
+                    return punctuations[i].n
                 }
                 i++
             }
@@ -1245,11 +1245,11 @@ object Lexer {
         }
 
         fun SetFlags(flags: Int) {
-            this.flags = flags.toLong()
+            this.flags = flags
         }
 
         // get lexer flags
-        fun GetFlags(): Long {
+        fun GetFlags(): Int {
             return flags
         }
 
@@ -1279,7 +1279,7 @@ object Lexer {
         }
 
         // returns the current filename
-        fun GetFileName(): idStr? {
+        fun GetFileName(): idStr {
             return filename
         }
 
@@ -1300,18 +1300,18 @@ object Lexer {
 
         // print an error message
         @Throws(idException::class)
-        fun Error(fmt: String?, vararg str: Any?) { //id_attribute((format(printf,2,3)));
+        fun Error(fmt: String, vararg str: Any) { //id_attribute((format(printf,2,3)));
             val text: String //[MAX_STRING_CHARS];
             //            va_list ap;
             hadError = true
-            if (flags and Lexer.LEXFL_NOERRORS != 0L) {
+            if (flags and LEXFL_NOERRORS != 0) {
                 return
             }
             text = String.format(fmt, *str)
             //            va_start(ap, str);
 //            vsprintf(text, str, ap);
 //            va_end(ap);
-            if (flags and Lexer.LEXFL_NOFATALERRORS != 0L) {
+            if (flags and LEXFL_NOFATALERRORS != 0) {
                 idLib.common.Warning("file %s, line %d: %s", filename.toString(), line, text)
             } else {
                 idLib.common.Error("file %s, line %d: %s", filename.toString(), line, text)
@@ -1320,10 +1320,10 @@ object Lexer {
 
         // print a warning message
         @Throws(idException::class)
-        fun Warning(fmt: String?, vararg str: Any?) { //id_attribute((format(printf,2,3)));
+        fun Warning(fmt: String, vararg str: Any) { //id_attribute((format(printf,2,3)));
             val text: String //[MAX_STRING_CHARS];
             //	va_list ap;
-            if (flags and Lexer.LEXFL_NOWARNINGS != 0L) {
+            if (flags and LEXFL_NOWARNINGS != 0) {
                 return
             }
             text = String.format(fmt, *str)
@@ -1338,36 +1338,33 @@ object Lexer {
             return hadError
         }
 
-        private fun CreatePunctuationTable(punctuations: Array<punctuation_t?>?) {
+        private fun CreatePunctuationTable(punctuations: Array<punctuation_t>) {
             var i: Int
             var n: Int
             var lastp: Int
-            var p: punctuation_t?
-            var newp: punctuation_t?
+            var p: punctuation_t
+            var newp: punctuation_t
 
             //get memory for the table
-            if (Arrays.equals(punctuations, Lexer.default_punctuations)) {
-                punctuationTable = Lexer.default_punctuationtable
-                nextPunctuation = Lexer.default_nextpunctuation
-                if (Lexer.default_setup) {
+            if (punctuations.contentEquals(default_punctuations)) {
+                punctuationTable = default_punctuationtable
+                nextPunctuation = default_nextpunctuation
+                if (default_setup) {
                     return
                 }
-                Lexer.default_setup = true
-                i = Lexer.default_punctuations.size
+                default_setup = true
+                i = default_punctuations.size
             } else {
-                if (TempDump.NOT(*punctuationTable) || Arrays.equals(
-                        punctuationTable,
-                        Lexer.default_punctuationtable
-                    )
+                if (TempDump.NOT(punctuationTable) || punctuationTable.contentEquals(default_punctuationtable)
                 ) {
                     punctuationTable = IntArray(256) // (int *) Mem_Alloc(256 * sizeof(int));
                 }
-                if (nextPunctuation != null && !Arrays.equals(nextPunctuation, Lexer.default_nextpunctuation)) {
+                if (nextPunctuation.isNotEmpty() && !nextPunctuation.contentEquals(default_nextpunctuation)) {
 //			Mem_Free( this.nextPunctuation );
-                    nextPunctuation = null
+                    nextPunctuation = IntArray(0)
                 }
                 i = 0
-                while (punctuations.get(i).p != null) {
+                while (punctuations[i].p != null) {
                     i++
                 }
                 nextPunctuation = IntArray(i) //(int *) Mem_Alloc(i * sizeof(int));
@@ -1376,31 +1373,31 @@ object Lexer {
             Arrays.fill(nextPunctuation, 0, i, -1) //memset(this.nextPunctuation, 0xFF, i * sizeof(int));
             //add the punctuations in the list to the punctuation table
             i = 0
-            while (punctuations.get(i).p != null) {
-                newp = punctuations.get(i)
+            while (punctuations[i].p != null) {
+                newp = punctuations[i]
                 lastp = -1
                 //sort the punctuations in this table entry on length (longer punctuations first)
-                n = punctuationTable.get(newp.p.get(0).code)
+                n = punctuationTable[newp.p!![0].code]
                 while (n >= 0) {
-                    p = punctuations.get(n)
-                    if (p.p.length < newp.p.length) {
-                        nextPunctuation.get(i) = n
+                    p = punctuations[n]
+                    if (p.p!!.length < newp.p!!.length) {
+                        nextPunctuation[i] = n
                         if (lastp >= 0) {
-                            nextPunctuation.get(lastp) = i
+                            nextPunctuation[lastp] = i
                         } else {
-                            punctuationTable.get(newp.p.get(0).code) = i
+                            punctuationTable[newp.p!![0].code] = i
                         }
                         break
                     }
                     lastp = n
-                    n = nextPunctuation.get(n)
+                    n = nextPunctuation[n]
                 }
                 if (n < 0) {
-                    nextPunctuation.get(i) = -1
+                    nextPunctuation[i] = -1
                     if (lastp >= 0) {
-                        nextPunctuation.get(lastp) = i
+                        nextPunctuation[lastp] = i
                     } else {
-                        punctuationTable.get(newp.p.get(0).code) = i
+                        punctuationTable[newp.p!![0].code] = i
                     }
                 }
                 i++
@@ -1485,7 +1482,7 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        private fun ReadEscapeCharacter(ch: CharArray?): Boolean {
+        private fun ReadEscapeCharacter(ch: CharArray): Boolean {
             var c: Int
             var `val`: Int
             var i: Int
@@ -1499,11 +1496,11 @@ object Lexer {
                 't' -> c = '\t'.code
                 'v' -> c = '\u000B'.code //'\v';
                 'b' -> c = '\b'.code
-                'f' -> c = '\f'.code
+                'f' -> c = '\u000C'.code //'\f'
                 'a' -> c = '\u0007'.code //'\a';
                 '\'' -> c = '\''.code
                 '\"' -> c = '\"'.code
-                '?' -> c = '?'.code
+                '?' -> c = '?'.code // I hope it works
                 'x' -> {
                     script_p++
                     i = 0
@@ -1558,7 +1555,7 @@ object Lexer {
             // step over the escape character or the last digit of the number
             script_p++
             // store the escape character
-            ch.get(0) = c.toChar()
+            ch[0] = c.toChar()
             // succesfully read escape character
             return true
         }
@@ -1572,7 +1569,7 @@ object Lexer {
          ================
          */
         @Throws(idException::class)
-        private fun ReadString(token: idToken?, quote: Int): Boolean {
+        private fun ReadString(token: idToken, quote: Int): Boolean {
             var tmpline: Int
             var tmpscript_p: Int
             val ch = CharArray(1)
@@ -1586,7 +1583,7 @@ object Lexer {
             script_p++
             while (true) {
                 // if there is an escape character and escape characters are allowed
-                if (buffer.get(script_p) == '\\' && 0L == flags and Lexer.LEXFL_NOSTRINGESCAPECHARS) {
+                if (buffer.get(script_p) == '\\' && 0 == flags and LEXFL_NOSTRINGESCAPECHARS) {
                     if (!ReadEscapeCharacter(ch)) {
                         return false
                     }
@@ -1596,8 +1593,8 @@ object Lexer {
                     // step over the quote
                     script_p++
                     // if consecutive strings should not be concatenated
-                    if (flags and Lexer.LEXFL_NOSTRINGCONCAT != 0L
-                        && (0L == flags and Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT || quote != '\"'.code)
+                    if (flags and LEXFL_NOSTRINGCONCAT != 0
+                        && (0 == flags and LEXFL_ALLOWBACKSLASHSTRINGCONCAT || quote != '\"'.code)
                     ) {
                         break
                     }
@@ -1609,7 +1606,7 @@ object Lexer {
                         line = tmpline
                         break
                     }
-                    if (flags and Lexer.LEXFL_NOSTRINGCONCAT != 0L) {
+                    if (flags and LEXFL_NOSTRINGCONCAT != 0) {
                         if (buffer.get(script_p) != '\\') {
                             script_p = tmpscript_p
                             line = tmpline
@@ -1645,7 +1642,7 @@ object Lexer {
             }
             //            token.oSet(token.len, '\0');
             if (token.type == Token.TT_LITERAL) {
-                if (0L == flags and Lexer.LEXFL_ALLOWMULTICHARLITERALS) {
+                if (0 == flags and LEXFL_ALLOWMULTICHARLITERALS) {
                     if (token.Length() != 1) {
                         Warning("literal is not one character long")
                     }
@@ -1658,7 +1655,7 @@ object Lexer {
             return true
         }
 
-        private fun ReadName(token: idToken?): Boolean {
+        private fun ReadName(token: idToken): Boolean {
             var c: Char
             token.type = Token.TT_NAME
             do {
@@ -1668,9 +1665,9 @@ object Lexer {
                         || Character.isUpperCase(c)
                         || Character.isDigit(c)
                         || c == '_' ||  // if treating all tokens as strings, don't parse '-' as a seperate token
-                        flags and Lexer.LEXFL_ONLYSTRINGS != 0L && c == '-'
+                        flags and LEXFL_ONLYSTRINGS != 0 && c == '-'
                         ||  // if special path name characters are allowed
-                        flags and Lexer.LEXFL_ALLOWPATHNAMES != 0L && (c == '/' || c == '\\' || c == ':' || c == '.'))
+                        flags and LEXFL_ALLOWPATHNAMES != 0 && (c == '/' || c == '\\' || c == ':' || c == '.'))
             )
             //            token.oSet(token.len, '\0');
             //the sub type is the length of the name
@@ -1679,7 +1676,7 @@ object Lexer {
         }
 
         @Throws(idException::class)
-        private fun ReadNumber(token: idToken?): Boolean {
+        private fun ReadNumber(token: idToken): Boolean {
             var i: Int
             var dot: Int
             var c: Char
@@ -1787,13 +1784,13 @@ object Lexer {
                             token.AppendDirty(c)
                             c = buffer.get(++script_p)
                         }
-                        if (0L == flags and Lexer.LEXFL_ALLOWFLOATEXCEPTIONS) {
+                        if (0 == flags and LEXFL_ALLOWFLOATEXCEPTIONS) {
 //                            token.AppendDirty('\0');	// zero terminate for c_str
                             Error("parsed %s", token.toString())
                         }
                     }
                 } else if (dot > 1) {
-                    if (0L == flags and Lexer.LEXFL_ALLOWIPADDRESSES) {
+                    if (0 == flags and LEXFL_ALLOWIPADDRESSES) {
                         Error("more than one dot in number")
                         return false
                     }
@@ -1857,24 +1854,24 @@ object Lexer {
             return true
         }
 
-        private fun ReadPunctuation(token: idToken?): Boolean {
+        private fun ReadPunctuation(token: idToken): Boolean {
             var l: Int
             var n: Int
             var i: Int
             var p: CharArray
-            var punc: punctuation_t?
+            var punc: punctuation_t
 
 // #ifdef PUNCTABLE
-            n = punctuationTable.get(buffer.get(script_p).code)
+            n = punctuationTable[buffer.get(script_p).code]
             while (n >= 0) {
-                punc = punctuations.get(n)
+                punc = punctuations[n]
                 // #else
 //	int i;
 //
 //	for (i = 0; idLexer::punctuations[i].p; i++) {
 //		punc = &idLexer::punctuations[i];
 //#endif
-                p = punc.p.toCharArray()
+                p = punc.p!!.toCharArray()
                 // check for this punctuation in the script
                 l = 0
                 while (l < p.size && buffer.get(script_p + l).code != 0) {
@@ -1901,17 +1898,17 @@ object Lexer {
                     token.subtype = punc.n
                     return true
                 }
-                n = nextPunctuation.get(n)
+                n = nextPunctuation[n]
             }
             return false
         }
 
         //        private boolean ReadPrimitive(idToken token);
-        private fun CheckString(str: String?): Boolean {
+        private fun CheckString(str: String): Boolean {
             var i: Int
             i = 0
-            while (str.get(i).code != 0) {
-                if (buffer.get(i + script_p) != str.get(i)) {
+            while (str[i].code != 0) {
+                if (buffer.get(i + script_p) != str[i]) {
                     return false
                 }
                 i++
@@ -1926,13 +1923,13 @@ object Lexer {
         companion object {
             //
             // base folder to load files from
-            private val baseFolder: StringBuilder? = StringBuilder(256)
+            private val baseFolder: StringBuilder = StringBuilder(256)
 
             //					// destructor
             //public					~idLexer();
             // set the base folder to load files from
-            fun SetBaseFolder(path: String?) {
-                idStr.Companion.Copynz(baseFolder, path) //TODO:length?
+            fun SetBaseFolder(path: String) {
+                idStr.Copynz(baseFolder, path) //TODO:length
             }
         }
     }

@@ -12,22 +12,22 @@ import neo.idlib.Text.Token.idToken
  */
 class CmdArgs {
     class idCmdArgs {
-        private val argv: Array<String?>? =
-            arrayOfNulls<String?>(CmdArgs.idCmdArgs.Companion.MAX_COMMAND_ARGS) // points into tokenized
+        private val argv: Array<String> =
+            Array(MAX_COMMAND_ARGS) { String() } // points into tokenized
         private var argc // number of arguments
                 = 0
-        private var tokenized: StringBuilder? =
-            StringBuilder(CmdArgs.idCmdArgs.Companion.MAX_COMMAND_STRING) // will have 0 bytes inserted
+        private var tokenized: StringBuilder =
+            StringBuilder(MAX_COMMAND_STRING) // will have 0 bytes inserted
 
         //
         //
         constructor()
-        constructor(text: String?, keepAsStrings: Boolean) {
+        constructor(text: String, keepAsStrings: Boolean) {
             TokenizeString(text, keepAsStrings)
         }
 
         //operator=( final idCmdArgs &args );
-        fun oSet(args: CmdArgs.idCmdArgs?) {
+        fun set(args: idCmdArgs) {
             var i: Int
             argc = args.argc
             //	memcpy( tokenized, args.tokenized, MAX_COMMAND_STRING );
@@ -36,12 +36,12 @@ class CmdArgs {
             while (i < argc) {
 
 //		argv[ i ] = tokenized + ( args.argv[ i ] - args.tokenized );//TODO:what the hell does this do??????
-                argv.get(i) = args.argv[i]
+                argv[i] = args.argv[i]
                 i++
             }
         }
 
-        fun oSet(text: String?) {
+        fun set(text: String?) {
             TokenizeString(text, false)
         }
 
@@ -52,7 +52,7 @@ class CmdArgs {
 
         // Argv() will return an empty string, not NULL if arg >= argc.
         fun Argv(arg: Int): String {
-            return if (arg >= 0 && arg < argc) argv.get(arg) else ""
+            return if (arg >= 0 && arg < argc) argv[arg] else ""
         }
 
         // Returns a single string containing argv(start) to argv(end)
@@ -61,7 +61,7 @@ class CmdArgs {
         fun Args(start: Int = 1, end: Int = -1, escapeArgs: Boolean = false): String {
 //	char []cmd_args=new char[MAX_COMMAND_STRING];
             var end = end
-            var cmd_args: String = ""
+            var cmd_args = ""
             var i: Int
             if (end < 0) {
                 end = argc - 1
@@ -85,16 +85,16 @@ class CmdArgs {
                     }
                 }
                 //		if ( escapeArgs && strchr( argv[i], '\\' ) ) {
-                if (escapeArgs && argv.get(i).contains("\\")) {
+                if (escapeArgs && argv[i].contains("\\")) {
 //			char *p = argv[i];
                     var p = i
-                    while (p < argv.get(i).length) {
-                        if (argv.get(i).get(p) == '\\') {
+                    while (p < argv[i].length) {
+                        if (argv[i][p] == '\\') {
 //					strcat( cmd_args, "\\\\" );
                             cmd_args += "\\\\"
                         } else {
                             val l = cmd_args.length
-                            cmd_args += argv.get(i).get(p)
+                            cmd_args += argv[i][p]
                             //					cmd_args[ l ] = *p;
 //					cmd_args[ l+1 ] = '\0';
                         }
@@ -102,7 +102,7 @@ class CmdArgs {
                     }
                 } else {
 //			strcat( cmd_args, argv[i] );
-                    cmd_args += argv.get(i)
+                    cmd_args += argv[i]
                 }
                 i++
             }
@@ -150,7 +150,7 @@ class CmdArgs {
             )
             totalLen = 0
             while (true) {
-                if (argc == CmdArgs.idCmdArgs.Companion.MAX_COMMAND_ARGS) {
+                if (argc == MAX_COMMAND_ARGS) {
                     return  // this is usually something malicious
                 }
                 if (!lex.ReadToken(token)) {
@@ -158,22 +158,18 @@ class CmdArgs {
                 }
 
                 // check for negative numbers
-                if (!keepAsStrings && token == "-") {
+                if (!keepAsStrings && token.toString() == "-") {
                     if (lex.CheckTokenType(Token.TT_NUMBER, 0, number) != 0) {
                         token.set("-$number")
                     }
                 }
 
                 // check for cvar expansion
-                if (token == "$") {
+                if (token.toString() == "$") {
                     if (!lex.ReadToken(token)) {
                         return
                     }
-                    if (idLib.cvarSystem != null) {
-                        token.set(idLib.cvarSystem.GetCVarString(token.toString()))
-                    } else {
-                        token.set("<unknown>")
-                    }
+                    token.set(idLib.cvarSystem.GetCVarString(token.toString()))
                 }
                 len = token.Length()
                 if (totalLen + len + 1 >  /*sizeof(*/tokenized.capacity()) {
@@ -182,7 +178,7 @@ class CmdArgs {
 
 //                tokenized.append(token);//damn pointers!
                 // regular token
-                argv.get(argc) = tokenized.replace(totalLen, tokenized.capacity(), token.toString()).substring(totalLen)
+                argv[argc] = tokenized.replace(totalLen, tokenized.capacity(), token.toString()).substring(totalLen)
                 argc++
 
 //                idStr::Copynz( tokenized + totalLen, token.c_str(), sizeof( tokenized ) - totalLen );
@@ -191,16 +187,16 @@ class CmdArgs {
             }
         }
 
-        fun AppendArg(text: String?) {
+        fun AppendArg(text: String) {
             if (0 == argc) {
                 argc = 1
-                argv.get(0) = text
+                argv[0] = text
                 //		idStr::Copynz( tokenized, text, sizeof( tokenized ) );
                 tokenized = StringBuilder(tokenized.capacity()).append(text)
             } else {
 //              argv[ argc ] = argv[ argc-1 ] + strlen( argv[ argc-1 ] ) + 1;
 //              idStr::Copynz( argv[ argc ], text, sizeof( tokenized ) - ( argv[ argc ] - tokenized ) );
-                argv.get(argc++) = text
+                argv[argc++] = text
             }
         }
 
@@ -208,14 +204,14 @@ class CmdArgs {
             argc = 0
         }
 
-        fun GetArgs(_argc: IntArray?): Array<String?>? {
-            _argc.get(0) = argc
+        fun GetArgs(_argc: IntArray): Array<String> {
+            _argc[0] = argc
             return argv
         }
 
         companion object {
             private const val MAX_COMMAND_ARGS = 64
-            private val MAX_COMMAND_STRING: Int = 2 * Lib.Companion.MAX_STRING_CHARS
+            private val MAX_COMMAND_STRING: Int = 2 * Lib.MAX_STRING_CHARS
         }
     }
 }

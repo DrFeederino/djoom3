@@ -608,7 +608,7 @@ object FileSystem_h {
 
         // Frees the memory allocated by ReadFile.
         @Deprecated("")
-        abstract fun FreeFile(buffer: Array<Any?>?)
+        abstract fun FreeFile(buffer: Array<ByteBuffer?>?)
 
         // Writes a complete file, will create any needed subdirectories.
         // Returns the length of the file, or -1 on failure.
@@ -1946,7 +1946,7 @@ object FileSystem_h {
             loadStack--
 
 //            Heap.Mem_Free(buffer);
-            buffer.get(0) = null
+            buffer[0] = null
         }
 
         /*
@@ -2366,7 +2366,7 @@ object FileSystem_h {
             return null
         }
 
-        override fun OpenExplicitFileRead(OSPath: String?): idFile? {
+        override fun OpenExplicitFileRead(OSPath: String): idFile? {
             val f: idFile_Permanent
             if (null == searchPaths) {
                 idLib.common.FatalError("Filesystem call made without initialization\n")
@@ -2381,7 +2381,7 @@ object FileSystem_h {
 //		delete f;
                 return null
             }
-            f.name.set(OSPath)
+            f.name!!.set(OSPath)
             f.fullPath = idStr(OSPath)
             f.mode = 1 shl TempDump.etoi(fsMode_t.FS_READ)
             f.handleSync = false

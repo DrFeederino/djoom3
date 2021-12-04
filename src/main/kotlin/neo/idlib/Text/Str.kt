@@ -8,7 +8,7 @@ import neo.idlib.Lib.idLib
 import neo.idlib.Text.Token.idToken
 import neo.idlib.math.Math_h
 import neo.idlib.math.Vector.idVec4
-import java.nio.*
+import java.nio.ByteBuffer
 import java.nio.file.Paths
 import java.util.*
 
@@ -105,7 +105,7 @@ object Str {
     open class idStr : SERiAL {
         //
         //
-        protected val baseBuffer: CharArray = CharArray(Str.STR_ALLOC_BASE)
+        protected val baseBuffer: CharArray = CharArray(STR_ALLOC_BASE)
         var alloced = 0
         var data: String =
             "" //i·ro·ny: when your program breaks because of two measly double quotes. stu·pid·i·ty: when it takes you 2 days to find said "bug".
@@ -286,7 +286,7 @@ object Str {
             return data.toCharArray()
         }
 
-        fun oGet(index: Int): kotlin.Char {
+        fun oGet(index: Int): Char {
             assert(index >= 0 && index <= len)
             return data[index]
         }
@@ -314,7 +314,7 @@ object Str {
         }
 
         //public	void				operator=( const char *text );
-        open fun set(text: String): idStr {
+        open fun set(text: String?): idStr {
             val l: Int
             if (text == null) {
                 // safe behaviour if NULL
@@ -716,11 +716,11 @@ object Str {
             return data.lastIndexOf(c)
         }
 
-        fun Left(len: Int, result: idStr): idStr { // store the leftmost 'len' characters in the result
+        fun Left(len: Int, result: idStr): idStr? { // store the leftmost 'len' characters in the result
             return Mid(0, len, result)
         }
 
-        fun Right(len: Int, result: idStr): idStr { // store the rightmost 'len' characters in the result
+        fun Right(len: Int, result: idStr): idStr? { // store the rightmost 'len' characters in the result
             if (len >= Length()) {
                 result.set(this)
                 return result
@@ -940,7 +940,7 @@ object Str {
         // hash key for the filename (skips extension)
         fun FileNameHash(): Int {
             var i: Int
-            var hash: Long
+            var hash: Int
             var letter: Char
             hash = 0
             i = 0
@@ -953,10 +953,10 @@ object Str {
                 if (letter == '\\') {
                     letter = '/'
                 }
-                hash += (letter.code * (i + 119)).toLong()
+                hash += (letter.code * (i + 119))
                 i++
             }
-            hash = hash and Str.FILE_HASH_SIZE - 1
+            hash = hash and FILE_HASH_SIZE - 1
             return hash.toInt()
         }
 
@@ -1049,7 +1049,7 @@ object Str {
         }
 
         fun AppendPath(text: String) { // append a partial path
-            val pos: Int
+            var pos: Int
             var i = 0
             val dataArray = data.toCharArray()
             if (text != null && text.length > 0) {
@@ -1073,7 +1073,7 @@ object Str {
                 }
                 len = pos
                 //		data[ pos ] = '\0';
-                data = TempDump.ctos(dataArray)
+                data = TempDump.ctos(dataArray)!!
             }
         }
 
@@ -1203,7 +1203,7 @@ object Str {
                     buf.Empty()
                     i = 0
                     while (filterIndex < filter.length) {
-                        if (filterChar == '*' || filterChar == '' || filterChar == '[' && filter[filterIndex + 1] != '[') {
+                        if (filterChar == '*' || filterChar.code == 0 || filterChar == '[' && filter[filterIndex + 1] != '[') {
                             break
                         }
                         buf.plusAssign(filterChar)
@@ -1222,7 +1222,7 @@ object Str {
                         //				name += index + strlen(buf);
                         name = name.substring(index + buf.Length(), name.length - 1)
                     }
-                } else if (filterChar == '') {
+                } else if (filterChar.code == 0) {
                     filterIndex++
                     //			name++;
                     name = name.substring(1)
@@ -1333,7 +1333,7 @@ object Str {
         //public	friend int			vsprintf( idStr &dest, const char *fmt, va_list ap );
         fun vsprintf(string: idStr, fmt: String, vararg args: Any): Int { //char[] argptr) {
             val l: Int
-            val buffer = arrayOf<String>(null) //new char[32000];
+            val buffer = emptyArray<String?>() //new char[32000];
             l = vsnPrintf(buffer, 32000, fmt, *args)
             //	buffer[buffer.length-1] = '\0';
 
@@ -1348,11 +1348,11 @@ object Str {
             val newsize: Int
             val mod: Int
             assert(amount > 0)
-            mod = amount % Str.STR_ALLOC_GRAN
+            mod = amount % STR_ALLOC_GRAN
             newsize = if (0 != mod) {
                 amount
             } else {
-                amount + Str.STR_ALLOC_GRAN - mod
+                amount + STR_ALLOC_GRAN - mod
             }
             alloced = newsize
 
@@ -1399,7 +1399,7 @@ object Str {
             //	sprintf( *this, format, value );
             data = String.format(format, value)
             data += " "
-            data += Str.units[measure.ordinal][unit] //TODO:ordinal
+            data += units[measure.ordinal][unit] //TODO:ordinal
             return unit
         }
 
@@ -1409,7 +1409,7 @@ object Str {
             //	sprintf( *this, format, value );
             data = String.format(format, value)
             data += " "
-            data += Str.units[measure.ordinal][unit]
+            data += units[measure.ordinal][unit]
         }
 
         override fun AllocBuffer(): ByteBuffer {
@@ -1434,7 +1434,7 @@ object Str {
 
         protected fun Init() {
             len = 0
-            alloced = Str.STR_ALLOC_BASE
+            alloced = STR_ALLOC_BASE
             //	data = baseBuffer;
 //	data[ 0 ] = '\0';
             data = ""
@@ -1462,7 +1462,7 @@ object Str {
         }
 
         class ShowMemoryUsage_f : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: neo.idlib.CmdArgs.idCmdArgs) {
 //#ifdef USE_STRING_DATA_ALLOCATOR
                 idLib.common.Printf("%6d KB string memory (%d KB free in %d blocks, %d empty base blocks)\n")
                 //                        stringDataAllocator.GetBaseBlockMemory() >> 10,
@@ -1473,9 +1473,9 @@ object Str {
             }
 
             companion object {
-                private val instance: cmdFunction_t = Str.idStr.ShowMemoryUsage_f()
+                private val instance: cmdFunction_t = ShowMemoryUsage_f()
                 fun getInstance(): cmdFunction_t {
-                    return Str.idStr.ShowMemoryUsage_f.Companion.instance
+                    return instance
                 }
             }
         }
@@ -1489,13 +1489,29 @@ object Str {
             }
         }
 
-        internal class formatList_t(var gran: Int, var count: Int)
+        fun LengthWithoutColors(): Int {
+            return LengthWithoutColors(data)
+        }
+
+        fun HasUpper(): Boolean {
+            return HasUpper(data)
+        }
+
+        fun HasLower(): Boolean {
+            return HasLower(data)
+        }
+
+        fun IsColor(): Boolean {
+            return IsColor(data)
+        }
+
+        class formatList_t(var gran: Int, var count: Int)
         companion object {
             @Transient
             val SIZE = (Integer.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //Character.SIZE //pointer.//TODO:ascertain a char pointer size. EDIT: done.
                     + Integer.SIZE
-                    + Char.SIZE * Str.STR_ALLOC_BASE) //TODO:char size
+                    + Char.SIZE_BITS * STR_ALLOC_BASE) //TODO:char size
 
             @Transient
             val BYTES = SIZE / java.lang.Byte.SIZE
@@ -1510,7 +1526,7 @@ object Str {
 
             //int numFormatList = sizeof(formatList) / sizeof( formatList[0] );
             var numFormatList = formatList.size
-            var str: Array<StringBuffer> = arrayOfNulls<StringBuffer>(4) // in case called by nested functions
+            var str: Array<StringBuffer> = Array(4) { StringBuffer() } // in case called by nested functions
             fun parseStr(str: String): idStr {
                 return idStr(str)
             }
@@ -1529,7 +1545,7 @@ object Str {
             fun Length(s: CharArray): Int {
                 var i: Int
                 i = 0
-                while (i < s.size && s[i] != 0) {
+                while (i < s.size && s[i].code != 0) {
                     i++
                 }
                 return i
@@ -1537,9 +1553,9 @@ object Str {
 
             fun ToLower(s: CharArray): CharArray {
                 var i = 0
-                while (i < s.size && s[i] != 0) {
-                    if (CharIsUpper(s[i])) {
-                        s[i] += 'a' - 'A'
+                while (i < s.size && s[i].code != 0) {
+                    if (CharIsUpper(s[i].code)) {
+                        s[i] = s[i].lowercaseChar()
                     }
                     i++
                 }
@@ -1548,9 +1564,9 @@ object Str {
 
             fun ToUpper(s: CharArray): CharArray {
                 var i = 0
-                while (i < s.size && s[i] != 0) {
-                    if (CharIsLower(s[i])) {
-                        s[i] -= 'a' - 'A'
+                while (i < s.size && s[i].code != 0) {
+                    if (CharIsLower(s[i].code)) {
+                        s[i] = s[i].uppercaseChar()
                     }
                     i++
                 }
@@ -1562,14 +1578,12 @@ object Str {
                 return '0' >= c && c <= '9'
             }
 
-            @JvmOverloads
-            fun IsColor(s: String = data): Boolean {
+            fun IsColor(s: String): Boolean {
                 val sArray = s.toCharArray()
-                return sArray[0] == Str.C_COLOR_ESCAPE && sArray.size > 1 && sArray[1] != ' '
+                return sArray[0].code == C_COLOR_ESCAPE && sArray.size > 1 && sArray[1] != ' '
             }
 
-            @JvmOverloads
-            fun HasLower(s: String = data): Boolean {
+            fun HasLower(s: String?): Boolean {
                 return if (s == null) {
                     false
                 } else s.uppercase(Locale.getDefault()) != s
@@ -1582,8 +1596,7 @@ object Str {
             }
 
             //public	friend idStr		operator+( const idStr &a, const bool b );
-            @JvmOverloads
-            fun HasUpper(s: String = data): Boolean {
+            fun HasUpper(s: String?): Boolean {
                 return if (s == null) {
                     false
                 } else s.lowercase(Locale.getDefault()) != s
@@ -1595,8 +1608,7 @@ object Str {
 //	}
             }
 
-            @JvmOverloads
-            fun LengthWithoutColors(s: String = data): Int {
+            fun LengthWithoutColors(s: String?): Int {
                 val len: Int
                 var p = 0
                 if (s == null) {
@@ -1632,7 +1644,7 @@ object Str {
             }
 
             fun Cmp(s1: CharArray, s2: CharArray): Int {
-                return Cmp(TempDump.ctos(s1), TempDump.ctos(s2))
+                return Cmp(TempDump.ctos(s1)!!, TempDump.ctos(s2)!!)
             }
 
             fun Cmp(s1: idStr, s2: idStr): Int {
@@ -1677,7 +1689,7 @@ object Str {
             }
 
             fun Icmp(t1: CharArray, s2: CharArray): Int {
-                return Icmp(TempDump.ctos(t1), TempDump.ctos(s2))
+                return Icmp(TempDump.ctos(t1)!!, TempDump.ctos(s2)!!)
             }
 
             fun Icmp(s1: String, s2: String): Int {
@@ -1887,7 +1899,7 @@ object Str {
                 Copynz(dest, src, size - l1)
             }
 
-            fun Append(dest: String, size: Int, src: String): String {
+            fun Append(dest: String, size: Int, src: String): String? {
                 val l1: Int
                 val l2: Int
                 l1 = dest.length
@@ -1901,7 +1913,7 @@ object Str {
                 } else dest + src
             }
 
-            fun Copynz(dest: CharArray, src: String, destsize: Int): CharArray {
+            fun Copynz(dest: CharArray, src: String, destsize: Int): CharArray? {
                 return Copynz(dest, 0, src, destsize)
             }
 
@@ -1912,7 +1924,7 @@ object Str {
          Safe strncpy that ensures a trailing zero
          =============
          */
-            fun Copynz(dest: CharArray, offset: Int, src: String, destsize: Int): CharArray {
+            fun Copynz(dest: CharArray, offset: Int, src: String?, destsize: Int): CharArray? {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return null
@@ -1923,12 +1935,12 @@ object Str {
                 }
                 val len = Math.min(destsize - 1, src.length)
                 System.arraycopy(src.toCharArray(), 0, dest, offset, len)
-                dest[offset + len] = 0
+                dest[offset + len] = Char(0)
                 return dest
             }
 
             fun Copynz(dest: CharArray, src: CharArray, destsize: Int) {
-                Copynz(dest, TempDump.ctos(src), destsize)
+                Copynz(dest, TempDump.ctos(src)!!, destsize)
             }
 
             //        @Deprecated
@@ -1944,7 +1956,7 @@ object Str {
             //
             //            idStr.Copynz(dest.toCharArray(), src, destsize);
             //        }
-            fun Copynz(dest: Array<String>, src: String, destsize: Int) {
+            fun Copynz(dest: Array<String>, src: String?, destsize: Int) {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return
@@ -1953,11 +1965,11 @@ object Str {
                     idLib.common.Warning("idStr::Copynz: destsize < 1")
                     return
                 }
-                dest[0] = String(Copynz(null as CharArray, src, destsize))
+                dest[0] = String(Copynz(null as CharArray, src, destsize) ?: CharArray(0))
             }
 
-            fun Copynz(dest: StringBuilder, vararg src: String) {
-                if (null == src) {
+            fun Copynz(dest: StringBuilder?, vararg src: String?) {
+                if (src.isEmpty()) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
                     return
                 }
@@ -2054,7 +2066,7 @@ object Str {
          or returns -1 on failure or if the buffer would be overflowed.
          ============
          */
-            fun vsnPrintf(dest: Array<String>, size: Int, fmt: String, vararg args: Any): Int {
+            fun vsnPrintf(dest: Array<String?>, size: Int, fmt: String, vararg args: Any): Int {
                 var ret = 0
 
 //#ifdef _WIN32
@@ -2212,7 +2224,7 @@ object Str {
                 var hash = 0
                 i = 0
                 while (i < string.size && string[i] != '\u0000') {
-                    hash += string[i] * (i + 119)
+                    hash += string[i].code * (i + 119)
                     i++
                 }
                 return hash
@@ -2227,7 +2239,7 @@ object Str {
                 var hash = 0
                 i = 0
                 while (i < length) {
-                    hash += string[i] * (i + 119)
+                    hash += string[i].code * (i + 119)
                     i++
                 }
                 return hash
@@ -2316,7 +2328,7 @@ object Str {
             }
 
             fun ColorForIndex(i: Int): idVec4 {
-                return Str.g_color_table[i and 15]
+                return g_color_table[i and 15]
             }
 
             fun InitMemory() {
@@ -2368,23 +2380,23 @@ object Str {
                     val li = formatList[i]
                     if (li.count != 0) {
                         if (!found) {
-                            string.plusAssign(Str.va("%d,", li.count))
+                            string.plusAssign(va("%d,", li.count))
                         } else {
 //				string += va( "%3.3i,", li.count );
-                            string.plusAssign(Str.va("%3.3i,", li.count))
+                            string.plusAssign(va("%3.3i,", li.count))
                         }
                         found = true
                     } else if (found) {
 //			string += va( "%3.3i,", li->count );
-                        string.plusAssign(Str.va("%3.3i,", li.count))
+                        string.plusAssign(va("%3.3i,", li.count))
                     }
                 }
                 if (found) {
 //		string += va( "%3.3i", number );
-                    string.plusAssign(Str.va("%3.3i,", number))
+                    string.plusAssign(va("%3.3i,", number))
                 } else {
 //		string += va( "%d", number );
-                    string.plusAssign(Str.va("%d,", number))
+                    string.plusAssign(va("%d,", number))
                 }
 
                 // pad to proper size

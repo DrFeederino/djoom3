@@ -809,7 +809,7 @@ object SaveGame {
             val value = idStr()
             ReadInt(num)
             if (num.getVal() < 0) {
-                dict.oSet(null)
+                dict.set(null)
             } else {
                 dict.Clear()
                 i = 0

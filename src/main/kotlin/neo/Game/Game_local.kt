@@ -362,7 +362,7 @@ object Game_local {
      */
     fun TestGameAPI() {
         val testImport = gameImport_t()
-        var testExport: gameExport_t? = gameExport_t()
+        var testExport: gameExport_t = gameExport_t()
         testImport.sys = sys_public.sys
         testImport.common = Common.common
         testImport.cmdSystem = CmdSystem.cmdSystem
@@ -3064,7 +3064,7 @@ object Game_local {
             }
             try {
                 if (args != null) {
-                    spawnArgs.oSet(args)
+                    spawnArgs.set(args)
                 } else {
                     spawnArgs.Clear()
                 }
@@ -3089,7 +3089,7 @@ object Game_local {
                 Error("Attempted to spawn non-entity class '%s'", classdef)
             }
             if (args != null) {
-                spawnArgs.oSet(args)
+                spawnArgs.set(args)
             } else {
                 spawnArgs.Clear()
             }
@@ -3122,7 +3122,7 @@ object Game_local {
 //            if (ent != null) {
 //                ent[0] = null;
 //            }
-            spawnArgs.oSet(args)
+            spawnArgs.set(args)
             if (spawnArgs.GetString("name", "", name)) {
                 error = String.format(" on '%s'", name[0])
             }
@@ -3144,7 +3144,7 @@ object Game_local {
                 }
 
                 // many objects rely on spawn args and default state may break spawns for many classes.
-                obj.spawnArgs.oSet(args)
+                obj.spawnArgs.set(args)
                 obj.Spawn()
                 if (ent != null && obj is idEntity) {
                     ent[0] = obj

@@ -380,20 +380,20 @@ object TempDump {
         return buffer.flip()
     }
 
-    fun atocb(ascii: String): CharBuffer? {
-        return if (NOT(ascii)) {
+    fun atocb(ascii: String?): CharBuffer? {
+        return if (ascii == null) {
             null
         } else CharBuffer.wrap(ascii.toCharArray())
     }
 
-    fun bbtocb(buffer: ByteBuffer): CharBuffer? {
+    fun bbtocb(buffer: ByteBuffer): CharBuffer {
 
 //        buffer.rewind();
 //        return Charset.forName("UTF-8").decode(buffer);
         return StandardCharsets.ISO_8859_1.decode(buffer)
     }
 
-    fun bbtoa(buffer: ByteBuffer): String? {
+    fun bbtoa(buffer: ByteBuffer): String {
         return bbtocb(buffer).toString()
     }
 
@@ -796,7 +796,7 @@ object TempDump {
             val class2: Class<*> = object2.javaClass
             val method1: Method
             val method2: Method
-            var returnObject: Any
+            var returnObject: Any? = null
             try {
                 method1 = class1.getDeclaredMethod(O_METHOD, class2)
                 returnObject = method1.invoke(object1, object2)
@@ -826,7 +826,7 @@ object TempDump {
             } catch (ex: InvocationTargetException) {
                 Logger.getLogger(TempDump::class.java.name).log(Level.SEVERE, null, ex)
             }
-            return returnObject
+            return returnObject!!
         }
     }
 

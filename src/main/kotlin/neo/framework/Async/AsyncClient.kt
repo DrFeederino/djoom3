@@ -920,7 +920,7 @@ object AsyncClient {
             for (i in 0 until AsyncNetwork.MAX_ASYNC_CLIENTS) {
                 Session.Companion.sessLocal.mapSpawnData.userInfo.get(i).Clear()
             }
-            Session.Companion.sessLocal.mapSpawnData.serverInfo.oSet(serverSI)
+            Session.Companion.sessLocal.mapSpawnData.serverInfo.set(serverSI)
         }
 
         @Throws(idException::class)

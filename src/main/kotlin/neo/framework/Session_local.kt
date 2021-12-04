@@ -3428,7 +3428,7 @@ object Session_local {
                     val ev = sysEvent_s()
                     ev.evType = sysEventType_t.SE_NONE
                     //			final String cmd;
-                    args.oSet(guiActive.HandleEvent(ev, Common.com_frameTime))
+                    args.set(guiActive.HandleEvent(ev, Common.com_frameTime))
                     guiActive.Activate(false, Common.com_frameTime)
                     guiActive = null
                 }

@@ -254,7 +254,7 @@ class Session {
     internal class Session_RescanSI_f : cmdFunction_t() {
         @Throws(idException::class)
         override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.mapSpawnData.serverInfo.oSet(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
+            Session.Companion.sessLocal.mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
             if (Game_local.game != null && idAsyncNetwork.server.IsActive()) {
                 Game_local.game.SetServerInfo(Session.Companion.sessLocal.mapSpawnData.serverInfo)
             }
@@ -682,7 +682,7 @@ class Session {
             val empty = !TempDump.isNotNullOrEmpty(Argv[0])
             Session.Companion.sessLocal.AVIGame(Argv) //TODO:back reference
             if (empty) {
-                args.oSet(Argv[0])
+                args.set(Argv[0])
             }
         }
 

@@ -20,7 +20,9 @@ import neo.idlib.math.Vector.idVec4
 import neo.idlib.math.Vector.idVec5
 import neo.sys.sys_public.idSys
 import java.math.BigInteger
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import kotlin.experimental.xor
 
 /**
  *
@@ -34,18 +36,18 @@ class Lib {
      ===============================================================================
      */
     fun BigShort(l: Short): Short {
-        return if (Lib.SWAP_TEST) {
-            Lib.ShortSwap(l)
+        return if (SWAP_TEST) {
+            ShortSwap(l)
         } else {
-            Lib.ShortNoSwap(l)
+            ShortNoSwap(l)
         }
     }
 
     fun BigLong(l: Int): Int {
-        return if (Lib.SWAP_TEST) {
-            Lib.LongSwap(l)
+        return if (SWAP_TEST) {
+            LongSwap(l)
         } else {
-            Lib.LongNoSwap(l)
+            LongNoSwap(l)
         }
     }
 
@@ -56,7 +58,7 @@ class Lib {
 
      ===============================================================================
      */
-    fun AssertFailed(file: String?, line: Int, expression: String?) {
+    fun AssertFailed(file: String, line: Int, expression: String) {
         idLib.sys.DebugPrintf("\n\nASSERTION FAILED!\n%s(%d): '%s'\n", file, line, expression)
         //#ifdef _WIN32
 //	__asm int 0x03
@@ -84,16 +86,16 @@ class Lib {
      ===============================================================================
      */
     object idLib {
-        var common: idCommon = null
-        var cvarSystem: idCVarSystem? = null
-        var fileSystem: idFileSystem? = null
+        lateinit var common: idCommon
+        lateinit var cvarSystem: idCVarSystem
+        lateinit var fileSystem: idFileSystem
         var frameNumber = 0
-        var sys: idSys? = null
+        lateinit var sys: idSys
         fun Init() {
 
 //	assert( sizeof( bool ) == 1 );
             // initialize little/big endian conversion
-            Lib.Swap_Init()
+            Swap_Init()
             //
 //            // initialize memory manager
 //            Heap.Mem_Init();
@@ -150,20 +152,20 @@ class Lib {
     open class idException : RuntimeException {
         //TODO:to exception or to runtimeException!!
         var error //[MAX_STRING_CHARS];
-                : String? = null
+                : String = String()
 
         constructor() : super()
-        constructor(text: String?) : super(text) {
+        constructor(text: String) : super(text) {
 //            strcpy(error, text);
             error = text
         }
 
-        constructor(text: CharArray?) : super(TempDump.ctos(text)) {
+        constructor(text: CharArray) : super(TempDump.ctos(text)) {
 //            strcpy(error, text);
-            error = TempDump.ctos(text)
+            error = TempDump.ctos(text)!!
         }
 
-        constructor(cause: Throwable?) : super(cause)
+        constructor(cause: Throwable) : super(cause)
     }
 
     companion object {
@@ -192,7 +194,7 @@ class Lib {
         // maximum world size
         const val MAX_WORLD_COORD = 128 * 1024
         const val MIN_WORLD_COORD = -128 * 1024
-        val MAX_WORLD_SIZE: Int = Lib.MAX_WORLD_COORD - Lib.MIN_WORLD_COORD
+        val MAX_WORLD_SIZE: Int = MAX_WORLD_COORD - MIN_WORLD_COORD
 
         //
         // basic colors
@@ -203,31 +205,31 @@ class Lib {
 
      ===============================================================================
      */
-        val colorBlack: idVec4? = idVec4(0.00f, 0.00f, 0.00f, 1.00f)
-        val colorBlue: idVec4? = idVec4(0.00f, 0.00f, 1.00f, 1.00f)
-        val colorBrown: idVec4? = idVec4(0.40f, 0.35f, 0.08f, 1.00f)
-        val colorCyan: idVec4? = idVec4(0.00f, 1.00f, 1.00f, 1.00f)
-        val colorDkGrey: idVec4? = idVec4(0.25f, 0.25f, 0.25f, 1.00f)
-        val colorGreen: idVec4? = idVec4(0.00f, 1.00f, 0.00f, 1.00f)
-        val colorLtGrey: idVec4? = idVec4(0.75f, 0.75f, 0.75f, 1.00f)
-        val colorMagenta: idVec4? = idVec4(1.00f, 0.00f, 1.00f, 1.00f)
-        val colorMdGrey: idVec4? = idVec4(0.50f, 0.50f, 0.50f, 1.00f)
-        val colorOrange: idVec4? = idVec4(1.00f, 0.50f, 0.00f, 1.00f)
-        val colorPink: idVec4? = idVec4(0.73f, 0.40f, 0.48f, 1.00f)
-        val colorPurple: idVec4? = idVec4(0.60f, 0.00f, 0.60f, 1.00f)
-        val colorRed: idVec4? = idVec4(1.00f, 0.00f, 0.00f, 1.00f)
-        val colorWhite: idVec4? = idVec4(1.00f, 1.00f, 1.00f, 1.00f)
-        val colorYellow: idVec4? = idVec4(1.00f, 1.00f, 0.00f, 1.00f)
+        val colorBlack: idVec4 = idVec4(0.00f, 0.00f, 0.00f, 1.00f)
+        val colorBlue: idVec4 = idVec4(0.00f, 0.00f, 1.00f, 1.00f)
+        val colorBrown: idVec4 = idVec4(0.40f, 0.35f, 0.08f, 1.00f)
+        val colorCyan: idVec4 = idVec4(0.00f, 1.00f, 1.00f, 1.00f)
+        val colorDkGrey: idVec4 = idVec4(0.25f, 0.25f, 0.25f, 1.00f)
+        val colorGreen: idVec4 = idVec4(0.00f, 1.00f, 0.00f, 1.00f)
+        val colorLtGrey: idVec4 = idVec4(0.75f, 0.75f, 0.75f, 1.00f)
+        val colorMagenta: idVec4 = idVec4(1.00f, 0.00f, 1.00f, 1.00f)
+        val colorMdGrey: idVec4 = idVec4(0.50f, 0.50f, 0.50f, 1.00f)
+        val colorOrange: idVec4 = idVec4(1.00f, 0.50f, 0.00f, 1.00f)
+        val colorPink: idVec4 = idVec4(0.73f, 0.40f, 0.48f, 1.00f)
+        val colorPurple: idVec4 = idVec4(0.60f, 0.00f, 0.60f, 1.00f)
+        val colorRed: idVec4 = idVec4(1.00f, 0.00f, 0.00f, 1.00f)
+        val colorWhite: idVec4 = idVec4(1.00f, 1.00f, 1.00f, 1.00f)
+        val colorYellow: idVec4 = idVec4(1.00f, 1.00f, 0.00f, 1.00f)
 
         /*
      ================
      Swap_Init
      ================
      */
-        private val SWAP_TEST: Boolean = Lib.Swap_IsBigEndian()
+        private val SWAP_TEST: Boolean = Swap_IsBigEndian()
 
         //
-        var colorMask: IntArray? = intArrayOf(255, 0)
+        var colorMask: IntArray = intArrayOf(255, 0)
         fun BIT(num: Int): Int { //TODO:is int voldoende?
             return 1 shl num
         }
@@ -238,7 +240,7 @@ class Lib {
      ================
      */
         fun ColorFloatToByte(c: Float): Byte {
-            return ((c * 255.0f).toLong() and Lib.colorMask.get(Math_h.FLOATSIGNBITSET(c))).toByte()
+            return ((c * 255.0f).toInt() and colorMask[Math_h.FLOATSIGNBITSET(c)]).toByte()
         }
 
         // packs color floats in the range [0,1] into an integer
@@ -247,15 +249,15 @@ class Lib {
      PackColor
      ================
      */
-        fun PackColor(color: idVec4?): Long {
+        fun PackColor(color: idVec4): Long {
             val dw: Long
             val dx: Long
             val dy: Long
             val dz: Long
-            dx = Lib.ColorFloatToByte(color.x).toLong()
-            dy = Lib.ColorFloatToByte(color.y).toLong()
-            dz = Lib.ColorFloatToByte(color.z).toLong()
-            dw = Lib.ColorFloatToByte(color.w).toLong()
+            dx = ColorFloatToByte(color.x).toLong()
+            dy = ColorFloatToByte(color.y).toLong()
+            dz = ColorFloatToByte(color.z).toLong()
+            dw = ColorFloatToByte(color.w).toLong()
             return dx shl 0 or (dy shl 8) or (dz shl 16) or (dw shl 24)
         }
 
@@ -264,7 +266,7 @@ class Lib {
      UnpackColor
      ================
      */
-        fun UnpackColor(color: Long, unpackedColor: idVec4?) {
+        fun UnpackColor(color: Long, unpackedColor: idVec4) {
             unpackedColor.set(
                 (color shr 0 and 255) * (1.0f / 255.0f),
                 (color shr 8 and 255) * (1.0f / 255.0f),
@@ -278,13 +280,13 @@ class Lib {
      PackColor
      ================
      */
-        fun PackColor(color: idVec3?): Long {
+        fun PackColor(color: idVec3): Long {
             val dx: Long
             val dy: Long
             val dz: Long
-            dx = Lib.ColorFloatToByte(color.x).toLong()
-            dy = Lib.ColorFloatToByte(color.y).toLong()
-            dz = Lib.ColorFloatToByte(color.z).toLong()
+            dx = ColorFloatToByte(color.x).toLong()
+            dy = ColorFloatToByte(color.y).toLong()
+            dz = ColorFloatToByte(color.z).toLong()
             return dx shl 0 or (dy shl 8) or (dz shl 16)
         }
 
@@ -293,7 +295,7 @@ class Lib {
      UnpackColor
      ================
      */
-        fun UnpackColor(color: Long, unpackedColor: idVec3?) {
+        fun UnpackColor(color: Long, unpackedColor: idVec3) {
             unpackedColor.set(
                 (color shr 0 and 255) * (1.0f / 255.0f),
                 (color shr 8 and 255) * (1.0f / 255.0f),
@@ -302,79 +304,79 @@ class Lib {
         }
 
         fun LittleShort(l: Short): Short {
-            return if (Lib.SWAP_TEST) {
-                Lib.ShortSwap(l)
+            return if (SWAP_TEST) {
+                ShortSwap(l)
             } else {
-                Lib.ShortNoSwap(l)
+                ShortNoSwap(l)
             }
         }
 
         fun LittleLong(l: Int): Int {
-            return if (Lib.SWAP_TEST) {
-                Lib.LongSwap(l)
+            return if (SWAP_TEST) {
+                LongSwap(l)
             } else {
-                Lib.LongNoSwap(l)
+                LongNoSwap(l)
             }
         }
 
         fun LittleLong(l: Long): Int {
-            return Lib.LittleLong(l.toInt()) //TODO:little or long?
+            return LittleLong(l.toInt()) //TODO:little or long?
         }
 
-        fun LittleLong(b: ByteArray?): Int {
+        fun LittleLong(b: ByteArray): Int {
             val l = BigInteger(b).toInt()
-            return Lib.LittleLong(l)
+            return LittleLong(l)
         }
 
         fun BigFloat(l: Float): Float {
-            return if (Lib.SWAP_TEST) {
-                Lib.FloatSwap(l)
+            return if (SWAP_TEST) {
+                FloatSwap(l)
             } else {
-                Lib.FloatNoSwap(l)
+                FloatNoSwap(l)
             }
         }
 
         fun LittleFloat(l: Float): Float {
-            return if (Lib.SWAP_TEST) {
-                Lib.FloatSwap(l)
+            return if (SWAP_TEST) {
+                FloatSwap(l)
             } else {
-                Lib.FloatNoSwap(l)
+                FloatNoSwap(l)
             }
         }
 
-        fun BigRevBytes(buffer: ByteBuffer?, elcount: Int) {
-            if (Lib.SWAP_TEST) {
+        fun BigRevBytes(buffer: ByteBuffer, elcount: Int) {
+            if (SWAP_TEST) {
                 buffer.order(ByteOrder.LITTLE_ENDIAN)
             }
         }
 
-        fun LittleRevBytes(bp: FloatArray?, elcount: Int) {
-            if (Lib.SWAP_TEST) {
+        fun LittleRevBytes(bp: FloatArray, elcount: Int) {
+            if (SWAP_TEST) {
                 val pb = IntArray(bp.size)
                 for (a in bp.indices) {
-                    pb[a] = java.lang.Float.floatToIntBits(bp.get(a))
+                    pb[a] = java.lang.Float.floatToIntBits(bp[a])
                 }
-                Lib.RevBytesSwap(pb,  /*elsize,*/elcount)
+                RevBytesSwap(pb,  /*elsize,*/elcount)
                 for (b in pb.indices) {
-                    bp.get(b) = java.lang.Float.intBitsToFloat(pb[b])
+                    bp[b] = java.lang.Float.intBitsToFloat(pb[b])
                 }
             }
         }
 
-        fun LittleRevBytes(bp: ByteArray?, offset: Int, elcount: Int) {
-            if (Lib.SWAP_TEST) {
-                Lib.RevBytesSwap(bp, 0,  /*elsize,*/elcount)
+        fun LittleRevBytes(bp: ByteArray, offset: Int, elcount: Int) {
+            if (SWAP_TEST) {
+                RevBytesSwap(bp, 0,  /*elsize,*/elcount)
             } else {
-                Lib.RevBytesNoSwap(bp,  /*elsize,*/elcount)
+                RevBytesNoSwap(bp,  /*elsize,*/elcount)
             }
         }
 
-        fun LittleRevBytes(bp: ByteArray? /*, int elsize*/, elcount: Int) {
-            Lib.LittleRevBytes(bp, 0, elcount)
+        fun LittleRevBytes(bp: ByteArray /*, int elsize*/, elcount: Int) {
+            LittleRevBytes(bp, 0, elcount)
         }
 
-        fun LittleRevBytes(v: idVec5?) {
-            if (Lib.SWAP_TEST) {
+        fun LittleRevBytes(v: idVec5) {
+            if (SWAP_TEST) {
                 val x = v.x
                 val y = v.y
                 v.x = v.t
@@ -384,33 +386,33 @@ class Lib {
             }
         }
 
-        fun LittleRevBytes(bounds: idBounds?) {
-            if (Lib.SWAP_TEST) {
-                val a = idVec3(bounds.get(0))
-                val b = idVec3(bounds.get(1))
-                bounds.set(0, b)
-                bounds.set(1, a)
+        fun LittleRevBytes(bounds: idBounds) {
+            if (SWAP_TEST) {
+                val a = idVec3(bounds[0])
+                val b = idVec3(bounds[1])
+                bounds[0] = b
+                bounds[1] = a
             }
         }
 
-        fun LittleRevBytes(angles: idAngles?) {
-            if (Lib.SWAP_TEST) {
+        fun LittleRevBytes(angles: idAngles) {
+            if (SWAP_TEST) {
                 val pitch = angles.pitch
                 angles.pitch = angles.roll
                 angles.roll = pitch
             }
         }
 
-        fun LittleBitField(bp: ByteArray?, elsize: Int) {
-            if (Lib.SWAP_TEST) {
-                Lib.RevBitFieldSwap(bp, elsize)
+        fun LittleBitField(bp: ByteArray, elsize: Int) {
+            if (SWAP_TEST) {
+                RevBitFieldSwap(bp, elsize)
             } else {
-                Lib.RevBitFieldNoSwap(bp, elsize)
+                RevBitFieldNoSwap(bp, elsize)
             }
         }
 
-        fun LittleBitField(flags: entityFlags_s?) {
-            if (Lib.SWAP_TEST) { //TODO:expand this in the morning.
+        fun LittleBitField(flags: entityFlags_s) {
+            if (SWAP_TEST) { //TODO:expand this in the morning.
                 flags.notarget = flags.networkSync or (false and flags.notarget.also { flags.networkSync = it })
                 flags.noknockback = flags.hasAwakened or (false and flags.noknockback.also { flags.hasAwakened = it })
                 flags.takedamage = flags.isDormant or (false and flags.takedamage.also { flags.isDormant = it })
@@ -421,8 +423,8 @@ class Lib {
             }
         }
 
-        fun LittleBitField(flags: projectileFlags_s?) {
-            if (Lib.SWAP_TEST) {
+        fun LittleBitField(flags: projectileFlags_s) {
+            if (SWAP_TEST) {
                 flags.detonate_on_world =
                     flags.detonate_on_actor or (false and flags.detonate_on_world.also { flags.detonate_on_actor = it })
                 flags.isTracer = flags.noSplashDamage or (false and flags.isTracer.also { flags.noSplashDamage = it })
@@ -431,18 +433,18 @@ class Lib {
 
         fun SixtetsForInt(out: ByteArray, src: Int) //TODO:primitive byte cannot be passed by reference????
         {
-            if (Lib.SWAP_TEST) {
-                Lib.SixtetsForIntLittle(out, src)
+            if (SWAP_TEST) {
+                SixtetsForIntLittle(out, src)
             } else {
-                Lib.SixtetsForIntBig(out, src)
+                SixtetsForIntBig(out, src)
             }
         }
 
         fun IntForSixtets(`in`: ByteArray): Int {
-            return if (Lib.SWAP_TEST) {
-                Lib.IntForSixtetsLittle(`in`)
+            return if (SWAP_TEST) {
+                IntForSixtetsLittle(`in`)
             } else {
-                Lib.IntForSixtetsBig(`in`)
+                IntForSixtetsBig(`in`)
             }
         }
 
@@ -452,10 +454,10 @@ class Lib {
      ================
      */
         fun ShortSwap(l: Short): Short {
-            val b1: Byte
-            val b2: Byte
-            b1 = (l and 255).toByte()
-            b2 = (l shr 8 and 255).toByte()
+            val b1: Int
+            val b2: Int
+            b1 = (l.toInt() and 255)
+            b2 = (l.toInt() shr 8 and 255)
             return ((b1 shl 8) + b2).toShort()
         }
 
@@ -540,7 +542,7 @@ class Lib {
      RESULTS
      Reverses the byte order in each of elcount elements.
      ===================================================================== */
-        fun RevBytesSwap(bp: ByteArray?, offset: Int /*, int elsize*/, elcount: Int) {
+        fun RevBytesSwap(bp: ByteArray, offset: Int /*, int elsize*/, elcount: Int) {
             var elcount = elcount
             var p: Int
             var q: Int
@@ -550,9 +552,9 @@ class Lib {
             if (elsize == 2) {
                 q = p + 1
                 while (elcount-- != 0) {
-                    bp.get(p) = bp.get(p) xor bp.get(q)
-                    bp.get(q) = bp.get(q) xor bp.get(p)
-                    bp.get(p) = bp.get(p) xor bp.get(q)
+                    bp[p] = bp[p] xor bp[q]
+                    bp[q] = bp[q] xor bp[p]
+                    bp[p] = bp[p] xor bp[q]
                     p += 2
                     q += 2
                 }
@@ -561,9 +563,9 @@ class Lib {
             while (elcount-- != 0) {
                 q = p + elsize - 1
                 while (p < q) {
-                    bp.get(p) = bp.get(p) xor bp.get(q)
-                    bp.get(q) = bp.get(q) xor bp.get(p)
-                    bp.get(p) = bp.get(p) xor bp.get(q)
+                    bp[p] = bp[p] xor bp[q]
+                    bp[q] = bp[q] xor bp[p]
+                    bp[p] = bp[p] xor bp[q]
                     ++p
                     --q
                 }
@@ -571,7 +573,7 @@ class Lib {
             }
         }
 
-        fun RevBytesSwap(bp: IntArray? /*, int elsize*/, elcount: Int) {
+        fun RevBytesSwap(bp: IntArray /*, int elsize*/, elcount: Int) {
             var elcount = elcount
             var p: Int
             var q: Int
@@ -581,9 +583,9 @@ class Lib {
             if (elsize == 2) {
                 q = p + 1
                 while (elcount-- != 0) {
-                    bp.get(p) = bp.get(p) xor bp.get(q)
-                    bp.get(q) = bp.get(q) xor bp.get(p)
-                    bp.get(p) = bp.get(p) xor bp.get(q)
+                    bp[p] = bp[p] xor bp[q]
+                    bp[q] = bp[q] xor bp[p]
+                    bp[p] = bp[p] xor bp[q]
                     p += 2
                     q += 2
                 }
@@ -592,9 +594,9 @@ class Lib {
             while (elcount-- != 0) {
                 q = p + elsize - 1
                 while (p < q) {
-                    bp.get(p) = bp.get(p) xor bp.get(q)
-                    bp.get(q) = bp.get(q) xor bp.get(p)
-                    bp.get(p) = bp.get(p) xor bp.get(q)
+                    bp[p] = bp[p] xor bp[q]
+                    bp[q] = bp[q] xor bp[p]
+                    bp[p] = bp[p] xor bp[q]
                     ++p
                     --q
                 }
@@ -615,16 +617,16 @@ class Lib {
      RESULTS
      Reverses the bitfield of size elsize.
      ===================================================================== */
-        fun RevBitFieldSwap(bp: ByteArray?, elsize: Int) {
+        fun RevBitFieldSwap(bp: ByteArray, elsize: Int) {
             var elsize = elsize
             var i: Int
-            val p: Int
+            var p: Int
             var t: Int
             var v: Int
-            Lib.LittleRevBytes(bp,  /*elsize,*/1)
+            LittleRevBytes(bp,  /*elsize,*/1)
             p = 0
             while (elsize-- != 0) {
-                v = bp.get(p)
+                v = bp[p].toInt()
                 t = 0
                 i = 7
                 while (i != 0) {
@@ -633,7 +635,7 @@ class Lib {
                     t = t or (v and 1)
                     i--
                 }
-                bp.get(p++) = t.toByte()
+                bp[p++] = t.toByte()
             }
         }
 
@@ -643,7 +645,7 @@ class Lib {
      ================
      */
         fun RevBytesNoSwap(
-            bp: ByteArray?,  /*int elsize,*/
+            bp: ByteArray,  /*int elsize,*/
             elcount: Int
         ) {
             return
@@ -654,7 +656,7 @@ class Lib {
      RevBytesNoSwap
      ================
      */
-        fun RevBitFieldNoSwap(bp: ByteArray?, elsize: Int) {
+        fun RevBitFieldNoSwap(bp: ByteArray, elsize: Int) {
             return
         }
 
@@ -663,17 +665,17 @@ class Lib {
      SixtetsForIntLittle
      ================
      */
-        fun SixtetsForIntLittle(out: ByteArray?, src: Int) {
+        fun SixtetsForIntLittle(out: ByteArray, src: Int) {
             val b = intArrayOf(
                 src shr 0 and 0xff,  //TODO:check order
                 src shr 8 and 0xff,
                 src shr 16 and 0xff,
                 src shr 24 and 0xff
             )
-            out.get(0) = (b[0] and 0xfc shr 2).toByte()
-            out.get(1) = ((b[0] and 0x3 shl 4) + (b[1] and 0xf0 shr 4)).toByte()
-            out.get(2) = ((b[1] and 0xf shl 2) + (b[2] and 0xc0 shr 6)).toByte()
-            out.get(3) = (b[2] and 0x3f).toByte()
+            out[0] = (b[0] and 0xfc shr 2).toByte()
+            out[1] = ((b[0] and 0x3 shl 4) + (b[1] and 0xf0 shr 4)).toByte()
+            out[2] = ((b[1] and 0xf shl 2) + (b[2] and 0xc0 shr 6)).toByte()
+            out[3] = (b[2] and 0x3f).toByte()
         }
 
         /*
@@ -682,10 +684,10 @@ class Lib {
      TTimo: untested - that's the version from initial base64 encode
      ================
      */
-        fun SixtetsForIntBig(out: ByteArray?, src: Int) {
+        fun SixtetsForIntBig(out: ByteArray, src: Int) {
             var src = src
             for (i in 0..3) {
-                out.get(0) += src and 0x3f
+                out.set(0, (out[0] + src and 0x3f).toByte())
                 src = src shr 6
             }
         }
@@ -695,14 +697,14 @@ class Lib {
      IntForSixtetsLittle
      ================
      */
-        fun IntForSixtetsLittle(`in`: ByteArray?): Int {
+        fun IntForSixtetsLittle(`in`: ByteArray): Int {
             val b = IntArray(4)
-            b[0] = b[0] or (`in`.get(0) shl 2)
-            b[0] = b[0] or (`in`.get(1) and 0x30 shr 4)
-            b[1] = b[1] or (`in`.get(1) and 0xf shl 4)
-            b[1] = b[1] or (`in`.get(2) and 0x3c shr 2)
-            b[2] = b[2] or (`in`.get(2) and 0x3 shl 6)
-            b[2] = b[2] or `in`.get(3)
+            b[0] = b[0] or (`in`[0].toInt() shl 2)
+            b[0] = b[0] or (`in`[1].toInt() and 0x30 shr 4)
+            b[1] = b[1] or (`in`[1].toInt() and 0xf shl 4)
+            b[1] = b[1] or (`in`[2].toInt() and 0x3c shr 2)
+            b[2] = b[2] or (`in`[2].toInt() and 0x3 shl 6)
+            b[2] = b[2] or `in`[3].toInt()
             return ((b[0] shl 24)
                     + (b[1] shl 16)
                     + (b[2] shl 8)
@@ -715,12 +717,12 @@ class Lib {
      TTimo: untested - that's the version from initial base64 decode
      ================
      */
-        fun IntForSixtetsBig(`in`: ByteArray?): Int {
+        fun IntForSixtetsBig(`in`: ByteArray): Int {
             var ret = 0
-            ret = ret or `in`.get(0)
-            ret = ret or (`in`.get(1) shl 6)
-            ret = ret or (`in`.get(2) shl 2 * 6)
-            ret = ret or (`in`.get(3) shl 3 * 6)
+            ret = ret or `in`[0].toInt()
+            ret = ret or (`in`[1].toInt() shl 6)
+            ret = ret or (`in`[2].toInt() shl 2 * 6)
+            ret = ret or (`in`[3].toInt() shl 3 * 6)
             return ret
         }
 

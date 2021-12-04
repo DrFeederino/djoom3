@@ -49,17 +49,17 @@ object Parser {
      PC_NameHash
      ================
      */
-    fun PC_NameHash(name: String?): Int {
+    fun PC_NameHash(name: String): Int {
         return Parser.PC_NameHash(name.toCharArray())
     }
 
-    fun PC_NameHash(name: CharArray?): Int {
+    fun PC_NameHash(name: CharArray): Int {
         var hash: Int
         var i: Int
         hash = 0
         i = 0
-        while (i < name.size && name.get(i) != '\u0000') {
-            hash += name.get(i) * (119 + i)
+        while (i < name.size && name[i] != '\u0000') {
+            hash += name[i].code * (119 + i)
             i++
         }
         hash = hash xor (hash shr 10) xor (hash shr 20) and Parser.DEFINEHASHSIZE - 1
@@ -106,19 +106,19 @@ object Parser {
                 : Array<define_s?>?
         private var defines // list with macro definitions
                 : Array<define_s?>?
-        private var filename // file name of the script
-                : idStr? = null
+        private val filename // file name of the script
+                : idStr = idStr()
         private var flags // flags used for script parsing
                 : Int
-        private var includepath // path to include files
-                : idStr? = null
+        private val includepath // path to include files
+                : idStr = idStr()
         private var indentstack // stack with indents
                 : indent_s?
         private var loaded // set when a source file is loaded from file or memory
                 : Boolean
         private var marker_p: String?
         private var punctuations // punctuations to use
-                : Array<punctuation_t?>?
+                : Array<punctuation_t>?
         private var scriptstack // stack with scripts of the source
                 : idLexer?
 
@@ -156,7 +156,7 @@ object Parser {
             marker_p = null
         }
 
-        constructor(filename: String?) {
+        constructor(filename: String) {
             loaded = false
             OSPath = true
             punctuations = null
@@ -170,7 +170,7 @@ object Parser {
             LoadFile(filename, false)
         }
 
-        constructor(filename: String?, flags: Int) {
+        constructor(filename: String, flags: Int) {
             loaded = false
             OSPath = true
             punctuations = null
@@ -184,7 +184,7 @@ object Parser {
             LoadFile(filename, false)
         }
 
-        constructor(filename: String?, flags: Int, OSPath: Boolean) {
+        constructor(filename: String, flags: Int, OSPath: Boolean) {
             loaded = false
             this.OSPath = true
             punctuations = null
@@ -200,7 +200,7 @@ object Parser {
 
         //					// destructor
         //public					~idParser();
-        constructor(ptr: String?, length: Int, name: String?) {
+        constructor(ptr: String, length: Int, name: String) {
             loaded = false
             OSPath = true
             punctuations = null
@@ -214,7 +214,7 @@ object Parser {
             LoadMemory(ptr, length, name)
         }
 
-        constructor(ptr: String?, length: Int, name: String?, flags: Int) {
+        constructor(ptr: String, length: Int, name: String, flags: Int) {
             loaded = false
             OSPath = true
             punctuations = null
@@ -229,15 +229,15 @@ object Parser {
         }
 
         @Throws(idException::class)
-        fun LoadFile(filename: idStr?): Boolean {
+        fun LoadFile(filename: idStr): Boolean {
             return LoadFile(filename.toString())
         }
 
         // load a source file
         @JvmOverloads
         @Throws(idException::class)
-        fun LoadFile(filename: String?, OSPath: Boolean = false): Boolean {
-            var script: idLexer?
+        fun LoadFile(filename: String, OSPath: Boolean = false): Boolean {
+            var script: idLexer
             if (loaded) {
                 idLib.common.FatalError("idParser::loadFile: another source already loaded")
                 return false
@@ -245,14 +245,14 @@ object Parser {
             script = idLexer(filename, 0, OSPath)
             if (!script.IsLoaded()) {
 //		delete script;
-                script = null
+                //script = null
                 return false
             }
             script.SetFlags(flags)
             script.SetPunctuations(punctuations)
             script.next = null
             this.OSPath = OSPath
-            this.filename = idStr(filename)
+            this.filename.set(filename)
             scriptstack = script
             tokens = null
             indentstack = null
@@ -269,7 +269,7 @@ object Parser {
         // load a source from the given memory with the given length
         // NOTE: the ptr is expected to point at a valid C string: ptr[length] == '\0'
         @Throws(idException::class)
-        fun LoadMemory(ptr: CharBuffer?, length: Int, name: String?): Boolean {
+        fun LoadMemory(ptr: CharBuffer, length: Int, name: String): Boolean {
             val script: idLexer
             if (loaded) {
                 idLib.common.FatalError("idParser.loadMemory: another source already loaded")
@@ -283,7 +283,7 @@ object Parser {
             script.SetFlags(flags)
             script.SetPunctuations(punctuations)
             script.next = null
-            filename = idStr(name)
+            filename.set(name)
             scriptstack = script
             tokens = null
             indentstack = null
@@ -298,8 +298,8 @@ object Parser {
         }
 
         @Throws(idException::class)
-        fun LoadMemory(ptr: String?, length: Int, name: String?): Boolean {
-            return LoadMemory(TempDump.atocb(ptr), length, name)
+        fun LoadMemory(ptr: String, length: Int, name: String): Boolean {
+            return LoadMemory(TempDump.atocb(ptr)!!, length, name)
         }
 
         // free the current source

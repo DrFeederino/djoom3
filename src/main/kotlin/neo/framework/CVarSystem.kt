@@ -477,7 +477,7 @@ object CVarSystem {
         abstract fun SetCVarFloat(name: String?, value: Float, flags: Int)
 
         // Gets the value of a CVar by name.
-        abstract fun GetCVarString(name: String?): String?
+        abstract fun GetCVarString(name: String): String
         abstract fun GetCVarBool(name: String?): Boolean
         abstract fun GetCVarInteger(name: String?): Int
         abstract fun GetCVarFloat(name: String?): Float
@@ -926,7 +926,7 @@ object CVarSystem {
             SetInternal(name, "" + value, flags)
         }
 
-        override fun GetCVarString(name: String?): String? {
+        override fun GetCVarString(name: String): String {
             val internal = FindInternal(name)
             return if (internal != null) {
                 internal.GetString()

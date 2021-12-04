@@ -1,10 +1,10 @@
 package neo.framework
 
 import neo.TempDump.void_callback
-import neo.framework.*
 import neo.framework.DeclManager.declType_t
 import neo.framework.FileSystem_h.idFileList
-import neo.idlib.*
+import neo.idlib.CmdArgs
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str
@@ -12,7 +12,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.idStrList
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -762,7 +762,7 @@ object CmdSystem {
                 return  // no tokens
             }
             if (args.Argv(0) == "bla1") {
-                args.oSet("map game/alphalabs1") //HACKME::11
+                args.set("map game/alphalabs1") //HACKME::11
             }
 
             // check registered command functions

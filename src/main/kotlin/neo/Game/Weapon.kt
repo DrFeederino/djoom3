@@ -720,13 +720,13 @@ object Weapon {
             meleeDef = Game_local.gameLocal.FindEntityDef(weaponDef.dict.GetString("def_melee"), false)
             val projectileDef = Game_local.gameLocal.FindEntityDef(weaponDef.dict.GetString("def_projectile"), false)
             if (projectileDef != null) {
-                projectileDict.oSet(projectileDef.dict)
+                projectileDict.set(projectileDef.dict)
             } else {
                 projectileDict.Clear()
             }
             val brassDef = Game_local.gameLocal.FindEntityDef(weaponDef.dict.GetString("def_ejectBrass"), false)
             if (brassDef != null) {
-                brassDict.oSet(brassDef.dict)
+                brassDict.set(brassDef.dict)
             } else {
                 brassDict.Clear()
             }
@@ -1044,7 +1044,7 @@ object Weapon {
                             objectName
                         )
                     } else {
-                        projectileDict.oSet(projectileDef.dict)
+                        projectileDict.set(projectileDef.dict)
                     }
                 }
             }
@@ -1121,7 +1121,7 @@ object Weapon {
                 if (null == brassDef) {
                     Game_local.gameLocal.Warning("Unknown brass '%s'", brassDefName)
                 } else {
-                    brassDict.oSet(brassDef.dict)
+                    brassDict.set(brassDef.dict)
                 }
             }
             if (ammoType < 0 || ammoType >= Weapon.AMMO_NUMTYPES) {
@@ -1163,7 +1163,7 @@ object Weapon {
             if (!BuildDefines.ID_DEMO_BUILD) WEAPON_NETFIRING.LinkTo(scriptObject, "WEAPON_NETFIRING")
             WEAPON_RAISEWEAPON.LinkTo(scriptObject, "WEAPON_RAISEWEAPON")
             WEAPON_LOWERWEAPON.LinkTo(scriptObject, "WEAPON_LOWERWEAPON")
-            spawnArgs.oSet(weaponDef.dict)
+            spawnArgs.set(weaponDef.dict)
             shader[0] = spawnArgs.GetString("snd_hum")
             if (TempDump.isNotNullOrEmpty(shader[0])) {
                 sndHum = DeclManager.declManager.FindSound(shader[0])

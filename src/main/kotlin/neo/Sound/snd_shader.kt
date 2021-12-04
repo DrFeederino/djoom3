@@ -1,7 +1,6 @@
 package neo.Sound
 
 import neo.Sound.snd_cache.idSoundSample
-import neo.Sound.snd_system
 import neo.Sound.snd_system.idSoundSystemLocal
 import neo.TempDump
 import neo.framework.CVarSystem

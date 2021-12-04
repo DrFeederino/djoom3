@@ -1387,7 +1387,7 @@ object Game {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null) {
                 val ent = idMapEntity()
-                ent.epairs.oSet(dict)
+                ent.epairs.set(dict)
                 mapFile.AddEntity(ent)
             }
         }

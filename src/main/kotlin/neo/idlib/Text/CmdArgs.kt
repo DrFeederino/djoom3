@@ -21,12 +21,13 @@ class CmdArgs {
      ===============================================================================
      */
     internal inner class idCmdArgs {
-        //
+        private val MAX_COMMAND_ARGS = 64
+        private val MAX_COMMAND_STRING: Int = 2 * Lib.MAX_STRING_CHARS
         private var argc // number of arguments
                 = 0
-        private val argv: CharArray? = CharArray(CmdArgs.idCmdArgs.Companion.MAX_COMMAND_ARGS) // points into tokenized
-        private val tokenized: CharArray? =
-            CharArray(CmdArgs.idCmdArgs.Companion.MAX_COMMAND_STRING) // will have 0 bytes inserted
+        private val argv: CharArray = CharArray(MAX_COMMAND_ARGS) // points into tokenized
+        private val tokenized: CharArray =
+            CharArray(MAX_COMMAND_STRING) // will have 0 bytes inserted
 
         //
         //
@@ -39,11 +40,11 @@ class CmdArgs {
         }
 
         //
-        fun oSet(args: CmdArgs.idCmdArgs?) {
+        fun oSet(args: CmdArgs.idCmdArgs) {
             var i: Int
             argc = args.argc
             //	memcpy( tokenized, args.tokenized, MAX_COMMAND_STRING );
-            System.arraycopy(args.tokenized, 0, tokenized, 0, CmdArgs.idCmdArgs.Companion.MAX_COMMAND_STRING)
+            System.arraycopy(args.tokenized, 0, tokenized, 0, MAX_COMMAND_STRING)
             //            for (i = 0; i < argc; i++) {
 //		argv[ i ] = tokenized + ( args.argv[ i ] - args.tokenized );
 //            }
@@ -57,14 +58,14 @@ class CmdArgs {
         }
 
         // Argv() will return an empty string, not NULL if arg >= argc.
-        fun Argv(arg: Int): String? {
-            return (if (arg >= 0 && arg < argc) argv.get(arg) else "") as String
+        fun Argv(arg: Int): String {
+            return (if (arg >= 0 && arg < argc) argv[arg] else "") as String
         }
 
         // Returns a single string containing argv(start) to argv(end)
         // escapeArgs is a fugly way to put the string back into a state ready to tokenize again
         //public	String			Args( int start = 1, int end = -1, bool escapeArgs = false ) const;
-        fun Args(start: Int, end: Int, escapeArgs: Boolean): String? {
+        fun Args(start: Int, end: Int, escapeArgs: Boolean): String {
 //	static char cmd_args[MAX_COMMAND_STRING];
             var end = end
             var cmd_args = ""
@@ -90,18 +91,18 @@ class CmdArgs {
                 }
                 if (escapeArgs && Arrays.binarySearch(argv, i, argv.size, '\\') != 0) {
                     var p = i
-                    while (argv.get(p) != '\u0000') {
-                        if (argv.get(p) == '\\') {
+                    while (argv[p] != '\u0000') {
+                        if (argv[p] == '\\') {
                             cmd_args += "\\\\"
                         } else {
                             val l = cmd_args.length
-                            cmd_args += argv.get(p)
+                            cmd_args += argv[p]
                             cmd_args += '\u0000'
                         }
                         p++
                     }
                 } else {
-                    cmd_args += argv.get(i)
+                    cmd_args += argv[i]
                 }
                 i++
             }
@@ -149,7 +150,7 @@ class CmdArgs {
             )
             totalLen = 0
             while (true) {
-                if (argc == CmdArgs.idCmdArgs.Companion.MAX_COMMAND_ARGS) {
+                if (argc == MAX_COMMAND_ARGS) {
                     return  // this is usually something malicious
                 }
                 if (!lex.ReadToken(token)) {
@@ -157,22 +158,18 @@ class CmdArgs {
                 }
 
                 // check for negative numbers
-                if (!keepAsStrings && token == "-") {
+                if (!keepAsStrings && token.toString() == "-") {
                     if (lex.CheckTokenType(Token.TT_NUMBER, 0, number) != 0) {
                         token.set("-$number")
                     }
                 }
 
                 // check for cvar expansion
-                if (token == "$") {
+                if (token.toString() == "$") {
                     if (!lex.ReadToken(token)) {
                         return
                     }
-                    if (idLib.cvarSystem != null) {
-                        token.set(idLib.cvarSystem.GetCVarString(token.toString()))
-                    } else {
-                        token.set("<unknown>")
-                    }
+                    token.set(idLib.cvarSystem.GetCVarString(token.toString()))
                 }
                 len = token.Length()
                 if (totalLen + len + 1 > tokenized.size) {
@@ -180,25 +177,25 @@ class CmdArgs {
                 }
 
                 // regular token
-                argv.get(argc) = tokenized.get(totalLen)
+                argv[argc] = tokenized[totalLen]
                 argc++
                 val tokenizedClam = Lcp.clam(tokenized, totalLen)
-                idStr.Companion.Copynz(tokenizedClam, token.toString(), tokenized.size - totalLen)
+                idStr.Copynz(tokenizedClam, token.toString(), tokenized.size - totalLen)
                 Lcp.unClam(tokenized, tokenizedClam)
                 totalLen += len + 1
             }
         }
 
         //
-        fun AppendArg(text: String?) {
+        fun AppendArg(text: String) {
             if (0 == argc) {
                 argc = 1
-                argv.get(0) = tokenized.get(0)
-                idStr.Companion.Copynz(tokenized, text, tokenized.size)
+                argv[0] = tokenized[0]
+                idStr.Copynz(tokenized, text, tokenized.size)
             } else {
-                argv.get(argc) = argv.get(argc - 1 + (argv.size - argc - 1) + 1)
+                argv[argc] = argv[argc - 1 + (argv.size - argc - 1) + 1]
                 val argvClam = Lcp.clam(argv, argc)
-                idStr.Companion.Copynz(argvClam, text, tokenized.size - (argv.size - argc - tokenized.get(0)))
+                idStr.Copynz(argvClam, text, tokenized.size - (argv.size - argc - tokenized[0].code))
                 Lcp.unClam(argv, argvClam)
                 argc++
             }
@@ -208,14 +205,11 @@ class CmdArgs {
             argc = 0
         }
 
-        fun GetArgs(_argc: IntArray?): CharArray? {
-            _argc.get(0) = argc
+        fun GetArgs(_argc: IntArray): CharArray {
+            _argc[0] = argc
             return argv
         }
 
-        companion object {
-            private const val MAX_COMMAND_ARGS = 64
-            private val MAX_COMMAND_STRING: Int = 2 * Lib.Companion.MAX_STRING_CHARS
-        }
+
     }
 }
