@@ -1,11 +1,9 @@
 package neo.idlib
 
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.framework.File_h.idFile
-import neo.idlib.*
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Parser.idParser
@@ -29,6 +27,7 @@ import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import java.util.*
+import kotlin.math.sqrt
 
 /**
  *
@@ -56,25 +55,25 @@ class Dict_h {
      */
     class idKeyValue : idDict(), Cloneable {
         //	friend class idDict;
-        private val key: idPoolStr? = null
-        private val value: idPoolStr? = null
+        val key: idPoolStr = idPoolStr()
+        val value: idPoolStr = idPoolStr()
 
         //
         //
-        fun GetKey(): idStr? {
+        fun GetKey(): idStr {
             return key
         }
 
-        fun GetValue(): idStr? {
+        fun GetValue(): idStr {
             return value
         }
 
         override fun Allocated(): Long {
-            return key.Allocated() + value.Allocated()
+            return (key.Allocated() + value.Allocated()).toLong()
         }
 
         override fun Size(): Long {
-            return  /*sizeof( *this ) +*/key.Size() + value.Size()
+            return  /*sizeof( *this ) +*/(key.Size() + value.Size()).toLong()
         }
 
         //	public boolean				operator==( final idKeyValue &kv ) final { return ( key == kv.key && value == kv.value ); }
@@ -121,7 +120,7 @@ class Dict_h {
 
         //public						~idDict( );
         // allow declaration with assignment
-        constructor(other: idDict?) {
+        constructor(other: idDict) {
             set(other)
         }
 
@@ -158,8 +157,8 @@ class Dict_h {
             argHash.set(other.argHash)
             i = 0
             while (i < args.Num()) {
-                args[i].key = globalKeys.CopyString(args[i].key)
-                args[i].value = globalValues.CopyString(args[i].value)
+                args[i].key.set(globalKeys.CopyString(args[i].key))
+                args[i].value.set(globalValues.CopyString(args[i].value))
                 i++
             }
             return this
@@ -200,11 +199,11 @@ class Dict_h {
                 if (found != null && found[i] != -1) {
                     // first set the new value and then free the old value to allow proper self copying
                     val oldValue = args[found[i]].value
-                    args[found[i]].value = globalValues.CopyString(other.args[i].value)
+                    args[found[i]].value.set(globalValues.CopyString(other.args[i].value))
                     globalValues.FreeString(oldValue)
                 } else {
-                    kv.key = globalKeys.CopyString(other.args[i].key)
-                    kv.value = globalValues.CopyString(other.args[i].value)
+                    kv.key.set(globalKeys.CopyString(other.args[i].key))
+                    kv.value.set(globalValues.CopyString(other.args[i].value))
                     argHash.Add(argHash.GenerateKey(kv.GetKey().toString() + "", false), args.Append(kv))
                 }
                 i++
@@ -236,7 +235,7 @@ class Dict_h {
             try {
                 i = 0
                 while (i < n) {
-                    args.set(i, other.args[i].clone())
+                    args[i] = other.args[i] // TODO:check if clone() was necessary
                     i++
                 }
             } catch (ex: CloneNotSupportedException) {
@@ -284,8 +283,8 @@ class Dict_h {
                 val kv = FindKey(def.GetKey().toString() + "") //TODO:override toString?
                 val newkv = idKeyValue()
                 if (null == kv) {
-                    newkv.key = globalKeys.CopyString(def.key)
-                    newkv.value = globalValues.CopyString(def.value)
+                    newkv.key.set(globalKeys.CopyString(def.key))
+                    newkv.value.set(globalValues.CopyString(def.value))
                     argHash.Add(argHash.GenerateKey(newkv.GetKey().toString() + "", false), args.Append(newkv))
                 }
             }
@@ -340,8 +339,7 @@ class Dict_h {
         @Throws(idException::class)
         fun Set(key: Any?, value: Any) {
             Set(
-                key.toString(),
-                value.toString()
+                    key.toString(), value.toString()
             ) //TODO:check if toString is sufficient instead of checking whether it's an idStr first?
         }
 
@@ -358,84 +356,84 @@ class Dict_h {
             if (i != -1) {
                 // first set the new value and then free the old value to allow proper self copying
                 val oldValue = args[i].value
-                args[i].value = globalValues.AllocString(value)
+                args[i].value.set(globalValues.AllocString(value))
                 globalValues.FreeString(oldValue)
             } else {
-                kv.key = globalKeys.AllocString(key)
-                kv.value = globalValues.AllocString(value)
+                kv.key.set(globalKeys.AllocString(key))
+                kv.value.set(globalValues.AllocString(value))
                 argHash.Add(argHash.GenerateKey("" + kv.GetKey(), false), args.Append(kv))
             }
         }
 
         @Throws(idException::class)
-        fun SetFloat(key: String?, `val`: Float) {
+        fun SetFloat(key: String, `val`: Float) {
             Set(key, Str.va("%f", `val`))
         }
 
         @Throws(idException::class)
-        fun SetInt(key: String?, `val`: Int) {
+        fun SetInt(key: String, `val`: Int) {
             Set(key, Str.va("%d", `val`))
         }
 
         @Throws(idException::class)
-        fun SetBool(key: String?, `val`: Boolean) {
+        fun SetBool(key: String, `val`: Boolean) {
             Set(key, Str.va("%d", TempDump.btoi(`val`)))
         }
 
         @Throws(idException::class)
-        fun SetVector(key: String?, `val`: idVec3) {
+        fun SetVector(key: String, `val`: idVec3) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetVec2(key: String?, `val`: idVec2) {
+        fun SetVec2(key: String, `val`: idVec2) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetVec4(key: String?, `val`: idVec4) {
+        fun SetVec4(key: String, `val`: idVec4) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetAngles(key: String?, `val`: idAngles) {
+        fun SetAngles(key: String, `val`: idAngles) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetMatrix(key: String?, `val`: idMat3) {
+        fun SetMatrix(key: String, `val`: idMat3) {
             Set(key, `val`.ToString())
         }
 
         // these return default values of 0.0, 0 and false
         @JvmOverloads
         @Throws(idException::class)
-        fun GetString(key: String?, defaultString: String? = ""): String? {
+        fun GetString(key: String?, defaultString: String = ""): String {
             val kv = FindKey(key)
             return kv?.GetValue()?.toString() ?: defaultString
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetFloat(key: String?, defaultString: String? = "0" /*= "0"*/): Float {
-            return TempDump.atof(GetString(key, defaultString)!!)
+        fun GetFloat(key: String?, defaultString: String = "0" /*= "0"*/): Float {
+            return TempDump.atof(GetString(key, defaultString))
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetInt(key: String?, defaultString: String? = "0"): Int {
+        fun GetInt(key: String, defaultString: String = "0"): Int {
             return TempDump.atoi(GetString(key, defaultString))
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetBool(key: String?, defaultString: String? = "0"): Boolean {
+        fun GetBool(key: String, defaultString: String = "0"): Boolean {
             return TempDump.atob(GetString(key, defaultString))
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetVector(key: String?, defaultString: String? = null): idVec3? {
+        fun GetVector(key: String, defaultString: String? = null): idVec3 {
             val out = idVec3()
             GetVector(key, defaultString, out)
             return out
@@ -443,7 +441,7 @@ class Dict_h {
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetVec2(key: String?, defaultString: String? = null): idVec2? {
+        fun GetVec2(key: String?, defaultString: String? = null): idVec2 {
             val out = idVec2()
             GetVec2(key, defaultString, out)
             return out
@@ -451,7 +449,7 @@ class Dict_h {
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetVec4(key: String?, defaultString: String? = null): idVec4? {
+        fun GetVec4(key: String?, defaultString: String? = null): idVec4 {
             val out = idVec4()
             GetVec4(key, defaultString, out)
             return out
@@ -459,14 +457,14 @@ class Dict_h {
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetAngles(key: String?, defaultString: String? = null): idAngles? {
+        fun GetAngles(key: String?, defaultString: String? = null): idAngles {
             val out = idAngles()
             GetAngles(key, defaultString, out)
             return out
         }
 
         @Throws(idException::class)
-        fun GetMatrix(key: String?, defaultString: String?): idMat3? {
+        fun GetMatrix(key: String?, defaultString: String?): idMat3 {
             val out = idMat3()
             GetMatrix(key, defaultString, out)
             return out
@@ -484,7 +482,7 @@ class Dict_h {
         }
 
         @Throws(idException::class)
-        fun GetString(key: String?, defaultString: String?, out: idStr?): Boolean {
+        fun GetString(key: String?, defaultString: String?, out: idStr): Boolean {
             val kv = FindKey(key)
             if (kv != null) {
                 out.set(kv.GetValue())
@@ -495,112 +493,112 @@ class Dict_h {
         }
 
         @Throws(idException::class)
-        fun GetFloat(key: String?, defaultString: String?, out: CFloat?): Boolean {
-            val s = arrayOfNulls<String?>(1)
+        fun GetFloat(key: String?, defaultString: String, out: CFloat): Boolean {
+            val s = Array(1) { "" }
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out.setVal(TempDump.atof(s[0]))
+            out._val = (TempDump.atof(s[0]))
             return found
         }
 
         @Throws(idException::class)
-        fun GetInt(key: String?, defaultString: String?, out: CInt?): Boolean {
-            val s = arrayOfNulls<String?>(1)
+        fun GetInt(key: String?, defaultString: String, out: CInt): Boolean {
+            val s = Array(1) { "" }
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out.setVal(TempDump.atoi(s[0]))
+            out._val = (TempDump.atoi(s[0]))
             return found
         }
 
         @Throws(idException::class)
-        fun GetBool(key: String?, defaultString: String?, out: CBool?): Boolean {
-            val s = arrayOfNulls<String?>(1)
+        fun GetBool(key: String?, defaultString: String, out: CBool): Boolean {
+            val s = Array(1) { "" }
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out.setVal(TempDump.atob(s[0]))
+            out._val = (TempDump.atob(s[0]))
             return found
         }
 
         @Throws(idException::class)
-        fun GetVector(key: String?, defaultString: String?, out: idVec3?): Boolean {
+        fun GetVector(key: String?, defaultString: String?, out: idVec3): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = arrayOf<String?>(null)
+            val s = Array(1) { "" }
             if (null == defaultString) {
                 defaultString = "0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.set(i, TempDump.atof(sscanf[i]))
+                out[i] = TempDump.atof(sscanf[i])
             }
             return found
         }
 
         @Throws(idException::class)
-        fun GetVec2(key: String?, defaultString: String?, out: idVec2?): Boolean {
+        fun GetVec2(key: String?, defaultString: String?, out: idVec2): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = arrayOfNulls<String?>(1)
+            val s = Array(1) { "" }
             if (null == defaultString) {
                 defaultString = "0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.set(i, TempDump.atof(sscanf[i]))
+                out[i] = TempDump.atof(sscanf[i])
             }
             return found
         }
 
         @Throws(idException::class)
-        fun GetVec4(key: String?, defaultString: String?, out: idVec4?): Boolean {
+        fun GetVec4(key: String?, defaultString: String?, out: idVec4): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = arrayOfNulls<String?>(1)
+            val s = Array(1) { "" }
             if (null == defaultString) {
                 defaultString = "0 0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.set(i, TempDump.atof(sscanf[i]))
+                out[i] = TempDump.atof(sscanf[i])
             }
             return found
         }
 
         @Throws(idException::class)
-        fun GetAngles(key: String?, defaultString: String?, out: idAngles?): Boolean {
+        fun GetAngles(key: String?, defaultString: String?, out: idAngles): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = arrayOfNulls<String?>(1)
+            val s = Array(1) { "" }
             if (null == defaultString) {
                 defaultString = "0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
             for (i in sscanf.indices) {
-                out.set(i, TempDump.atof(sscanf[i]))
+                out[i] = TempDump.atof(sscanf[i])
             }
             return found
         }
 
         @Throws(idException::class)
-        fun GetMatrix(key: String?, defaultString: String?, out: idMat3?): Boolean {
+        fun GetMatrix(key: String?, defaultString: String?, out: idMat3): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = arrayOfNulls<String?>(1)
+            val s = Array(1) { "" }
             if (null == defaultString) {
                 defaultString = "1 0 0 0 1 0 0 0 1"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String?> = s[0].split(" ").toTypedArray()
-            val halfSize = Math.sqrt(sscanf.size.toDouble()).toInt()
+            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val halfSize = sqrt(sscanf.size.toDouble()).toInt()
             var i = 0
             var index = 0
             while (i < halfSize) {
@@ -670,7 +668,7 @@ class Dict_h {
         // finds the next key/value pair with the given key prefix.
         // lastMatch can be used to do additional searches past the first match.
         // delete the key/value pair with the given key
-        fun Delete(key: String?) {
+        fun Delete(key: String) {
             val hash: Int
             var i: Int
             hash = argHash.GenerateKey(key, false)
@@ -694,14 +692,12 @@ class Dict_h {
 //#endif
         }
 
-        fun Delete(key: idStr?) {
-            if (key != null) {
-                Delete(key.toString())
-            }
+        fun Delete(key: idStr) {
+            Delete(key.toString())
         }
 
         @JvmOverloads
-        fun MatchPrefix(prefix: String?, lastMatch: idKeyValue? = null): idKeyValue? {
+        fun MatchPrefix(prefix: String, lastMatch: idKeyValue? = null): idKeyValue? {
             var i: Int
             val len: Int
             var start: Int
@@ -726,8 +722,8 @@ class Dict_h {
         }
 
         // randomly chooses one of the key/value pairs with the given key prefix and returns it's value
-        fun RandomPrefix(prefix: String?, random: idRandom?): String? {
-            val count: Int
+        fun RandomPrefix(prefix: String, random: idRandom): String? {
+            var count: Int
             val MAX_RANDOM_KEYS = 2048
             val list = arrayOfNulls<String?>(MAX_RANDOM_KEYS)
             var kv: idKeyValue?
@@ -736,15 +732,15 @@ class Dict_h {
             count = 0
             kv = MatchPrefix(prefix)
             while (kv != null && count < MAX_RANDOM_KEYS) {
-                list[count++] = String(kv.GetValue().c_str())
+                list[count++] = String(kv.GetValue().toString().toCharArray())
                 kv = MatchPrefix(prefix, kv)
             }
             return list[random.RandomInt(count.toDouble())]
         }
 
         @Throws(idException::class)
-        fun WriteToFileHandle(f: idFile?) {
-            val c: Int = Lib.Companion.LittleLong(args.Num())
+        fun WriteToFileHandle(f: idFile) {
+            val c: Int = Lib.LittleLong(args.Num())
             f.WriteInt(c) //, sizeof(c));
             for (i in 0 until args.Num()) {    // don't loop on the swapped count use the original
                 WriteString(args[i].GetKey().toString(), f)
@@ -753,16 +749,16 @@ class Dict_h {
         }
 
         @Throws(idException::class)
-        fun ReadFromFileHandle(f: idFile?) {
+        fun ReadFromFileHandle(f: idFile) {
             val c = CInt()
-            var key: idStr?
-            var `val`: idStr?
+            var key: idStr
+            var `val`: idStr
             Clear()
 
 //            f.Read(c, sizeof(c));
             f.ReadInt(c)
-            c.setVal(Lib.Companion.LittleLong(c.getVal()))
-            for (i in 0 until c.getVal()) {
+            c._val = (Lib.Companion.LittleLong(c._val))
+            for (i in 0 until c._val) {
                 key = ReadString(f)
                 `val` = ReadString(f)
                 Set(key, `val`)
@@ -774,51 +770,47 @@ class Dict_h {
             val ret = LongArray(1)
             var i: Int
             val n: Int
-            val sorted: idList<idKeyValue?> = idList<Any?>(args)
+            val sorted: idList<idKeyValue> = idList(args)
             sorted.Sort(KeyCompare())
             n = sorted.Num()
-            CRC32.Companion.CRC32_InitChecksum(ret)
+            CRC32.CRC32_InitChecksum(ret)
             i = 0
             while (i < n) {
-                CRC32.Companion.CRC32_UpdateChecksum(
-                    ret,
-                    sorted[i].GetKey().c_str(),
-                    sorted[i].GetKey().Length()
+                CRC32.CRC32_UpdateChecksum(
+                        ret, sorted[i].GetKey().toString().toCharArray(), sorted[i].GetKey().Length()
                 )
-                CRC32.Companion.CRC32_UpdateChecksum(
-                    ret,
-                    sorted[i].GetValue().c_str(),
-                    sorted[i].GetValue().Length()
+                CRC32.CRC32_UpdateChecksum(
+                        ret, sorted[i].GetValue().toString().toCharArray(), sorted[i].GetValue().Length()
                 )
                 i++
             }
-            CRC32.Companion.CRC32_FinishChecksum(ret)
+            CRC32.CRC32_FinishChecksum(ret)
             return ret[0]
         }
 
         class ShowMemoryUsage_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 idLib.common.Printf("%5d KB in %d keys\n", globalKeys.Size() shr 10, globalKeys.Num())
                 idLib.common.Printf("%5d KB in %d values\n", globalValues.Size() shr 10, globalValues.Num())
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Dict_h.idDict.ShowMemoryUsage_f()
-                fun getInstance(): cmdFunction_t? {
-                    return Dict_h.idDict.ShowMemoryUsage_f.Companion.instance
+                private val instance: cmdFunction_t = ShowMemoryUsage_f()
+                fun getInstance(): cmdFunction_t {
+                    return instance
                 }
             }
         }
 
         class ListKeys_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
-                val keyStrings = idList<idPoolStr?>()
+                val keyStrings = idList<idPoolStr>()
                 i = 0
                 while (i < globalKeys.Num()) {
-                    keyStrings.Append(globalKeys.get(i))
+                    keyStrings.Append(globalKeys[i])
                     i++
                 }
                 keyStrings.Sort()
@@ -831,8 +823,8 @@ class Dict_h {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ListKeys_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ListKeys_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -840,12 +832,12 @@ class Dict_h {
 
         class ListValues_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
-                val valueStrings = idList<idPoolStr?>()
+                val valueStrings = idList<idPoolStr>()
                 i = 0
                 while (i < globalValues.Num()) {
-                    valueStrings.Append(globalValues.get(i))
+                    valueStrings.Append(globalValues[i])
                     i++
                 }
                 valueStrings.Sort()
@@ -858,8 +850,8 @@ class Dict_h {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ListValues_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ListValues_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -867,8 +859,8 @@ class Dict_h {
 
         companion object {
             //
-            private val globalKeys: idStrPool? = idStrPool()
-            private val globalValues: idStrPool? = idStrPool()
+            private val globalKeys: idStrPool = idStrPool()
+            private val globalValues: idStrPool = idStrPool()
             private const val DBG_Set = 0
 
             //
@@ -876,29 +868,29 @@ class Dict_h {
             private var DBG_counter = 0
 
             @Throws(idException::class)
-            fun WriteString(s: String?, f: idFile?) {
+            fun WriteString(s: String, f: idFile) {
                 val len = s.length
-                if (len >= Lib.Companion.MAX_STRING_CHARS - 1) {
+                if (len >= Lib.MAX_STRING_CHARS - 1) {
                     idLib.common.Error("idDict::WriteToFileHandle: bad string")
                 }
                 f.WriteString(s) //, len + 1);
             }
 
             @Throws(idException::class)
-            fun ReadString(f: idFile?): idStr? {
-                val str = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            fun ReadString(f: idFile): idStr {
+                val str = CharArray(Lib.MAX_STRING_CHARS)
                 val c = shortArrayOf(0)
                 var len: Int
                 len = 0
-                while (len < Lib.Companion.MAX_STRING_CHARS) {
+                while (len < Lib.MAX_STRING_CHARS) {
                     f.ReadChar(c) //, 1);
                     str[len] = c[0] as Char
-                    if (str[len] == 0) {
+                    if (str[len].code == 0) {
                         break
                     }
                     len++
                 }
-                if (len == Lib.Companion.MAX_STRING_CHARS) {
+                if (len == Lib.MAX_STRING_CHARS) {
                     idLib.common.Error("idDict::ReadFromFileHandle: bad string")
                 }
                 return idStr(str)
@@ -916,9 +908,9 @@ class Dict_h {
         }
     }
 
-    internal class KeyCompare : cmp_t<idKeyValue?> {
-        override fun compare(a: idKeyValue?, b: idKeyValue?): Int {
-            return idStr.Companion.Cmp(a.GetKey(), b.GetKey())
+    internal class KeyCompare : cmp_t<idKeyValue> {
+        override fun compare(a: idKeyValue, b: idKeyValue): Int {
+            return idStr.Cmp(a.GetKey(), b.GetKey())
         }
     }
 }

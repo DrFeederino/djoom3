@@ -1684,7 +1684,7 @@ object Lexer {
             token.type = Token.TT_NUMBER
             token.subtype = 0
             token.intValue = 0
-            token.floatValue = 0.0
+            token.floatValue = 0.0f
             c = buffer.get(script_p)
             c2 = buffer.get(script_p + 1)
             if (c == '0' && c2 != '.') {

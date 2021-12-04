@@ -60,11 +60,11 @@ object Token {
         var type // token type
                 = 0
         var floatValue // floating point value
-                = 0.0
+                = 0.0f
 
         //
         var intValue // integer value
-                : Long = 0
+                : Int = 0
         var next // next token in chain, only used by idParser
                 : idToken? = null
         var whiteSpaceEnd_p // end of white space before token, only used by idLexer
@@ -80,9 +80,9 @@ object Token {
         }
 
         // double value of TT_NUMBER
-        fun GetDoubleValue(): Double {
+        fun GetDoubleValue(): Float {
             if (type != TT_NUMBER) {
-                return 0.0
+                return 0.0f
             }
             if (0 == subtype and TT_VALUESVALID) {
                 NumberValue()
@@ -92,10 +92,10 @@ object Token {
 
         // float value of TT_NUMBER
         fun GetFloatValue(): Float {
-            return GetDoubleValue().toFloat()
+            return GetDoubleValue()
         }
 
-        fun GetUnsignedLongValue(): Long {        // unsigned long value of TT_NUMBER
+        fun GetUnsignedLongValue(): Int {        // unsigned long value of TT_NUMBER
             if (type != TT_NUMBER) {
                 return 0
             }
@@ -106,7 +106,7 @@ object Token {
         }
 
         fun GetIntValue(): Int {                // int value of TT_NUMBER
-            return GetUnsignedLongValue().toInt()
+            return GetUnsignedLongValue()
         }
 
         fun WhiteSpaceBeforeToken(): Boolean { // returns length of whitespace before token
@@ -127,35 +127,35 @@ object Token {
             val div: Boolean
             val p: CharArray
             var pIndex = 0
-            var m: Double
+            var m: Float
             assert(type == TT_NUMBER)
             p = c_str()
-            floatValue = 0.0
+            floatValue = 0.0f
             intValue = 0
             // floating point number
             if (subtype and TT_FLOAT != 0) {
                 if (subtype and (TT_INFINITE or TT_INDEFINITE or TT_NAN) != 0) {
                     if (subtype and TT_INFINITE != 0) {            // 1.#INF
                         val inf = 0x7f800000
-                        floatValue = inf.toFloat().toDouble() //TODO:WHY THE DOUBLE CAST?
+                        floatValue = inf.toFloat() //TODO:WHY THE DOUBLE CAST?
                     } else if (subtype and TT_INDEFINITE != 0) {    // 1.#IND
                         val ind = -0x400000
-                        floatValue = ind.toFloat().toDouble()
+                        floatValue = ind.toFloat()
                     } else if (subtype and TT_NAN != 0) {            // 1.#QNAN
                         val nan = 0x7fc00000
-                        floatValue = nan.toFloat().toDouble()
+                        floatValue = nan.toFloat()
                     }
                 } else {
                     while ( /*p[pIndex]!=null &&*/p[pIndex] != '.' && p[pIndex] != 'e') {
-                        floatValue = floatValue * 10.0 + (p[pIndex] - '0').toDouble()
+                        floatValue = floatValue * 10.0f + (p[pIndex] - '0')
                         pIndex++
                     }
                     if (p[pIndex] == '.') {
                         pIndex++
-                        m = 0.1
+                        m = 0.1f
                         while (pIndex < p.size && p[pIndex] != 'e') {
-                            floatValue = floatValue + (p[pIndex] - '0').toDouble() * m
-                            m *= 0.1
+                            floatValue = (floatValue + (p[pIndex] - '0') * m)
+                            m *= 0.1f
                             pIndex++
                         }
                     }
@@ -175,10 +175,10 @@ object Token {
                             pow = pow * 10 + (p[pIndex] - '0')
                             pIndex++
                         }
-                        m = 1.0
+                        m = 1.0f
                         i = 0
                         while (i < pow) {
-                            m *= 10.0
+                            m *= 10.0f
                             i++
                         }
                         if (div) {
@@ -188,13 +188,13 @@ object Token {
                         }
                     }
                 }
-                intValue = idMath.Ftol(floatValue.toFloat())
+                intValue = idMath.Ftol(floatValue).toInt()
             } else if (subtype and TT_DECIMAL != 0) {
                 while (pIndex < p.size) {
                     intValue = intValue * 10 + (p[pIndex] - '0')
                     pIndex++
                 }
-                floatValue = intValue.toDouble()
+                floatValue = intValue.toFloat()
             } else if (subtype and TT_IPADDRESS != 0) {
                 c = 0
                 while ( /*p[pIndex] &&*/p[pIndex] != ':') {
@@ -214,7 +214,7 @@ object Token {
                     intValue = intValue * 10
                     c++
                 }
-                floatValue = intValue.toDouble()
+                floatValue = intValue.toFloat()
             } else if (subtype and TT_OCTAL != 0) {
                 // step over the first zero
                 pIndex += 1
@@ -222,22 +222,22 @@ object Token {
                     intValue = (intValue shl 3) + (p[pIndex] - '0')
                     pIndex++
                 }
-                floatValue = intValue.toDouble()
+                floatValue = intValue.toFloat()
             } else if (subtype and TT_HEX != 0) {
                 // step over the leading 0x or 0X
                 pIndex += 2
                 while (pIndex < p.size) {
                     intValue = intValue shl 4
-                    intValue += if (p[pIndex] >= 'a' && p[pIndex] <= 'f') {
-                        (p[pIndex] - 'a' + 10).toLong()
-                    } else if (p[pIndex] >= 'A' && p[pIndex] <= 'F') {
-                        (p[pIndex] - 'A' + 10).toLong()
+                    intValue += if (p[pIndex] in 'a'..'f') {
+                        (p[pIndex] - 'a' + 10)
+                    } else if (p[pIndex] in 'A'..'F') {
+                        (p[pIndex] - 'A' + 10)
                     } else {
-                        (p[pIndex] - '0').toLong()
+                        (p[pIndex] - '0')
                     }
                     p[pIndex]++
                 }
-                floatValue = intValue.toDouble()
+                floatValue = intValue.toFloat()
             } else if (subtype and TT_BINARY != 0) {
                 // step over the leading 0b or 0B
                 pIndex += 2
@@ -245,7 +245,7 @@ object Token {
                     intValue = (intValue shl 1) + (p[pIndex] - '0')
                     pIndex++
                 }
-                floatValue = intValue.toDouble()
+                floatValue = intValue.toFloat()
             }
             subtype = subtype or TT_VALUESVALID
         }

@@ -63,7 +63,7 @@ object BitMsg {
         private var writeBit // number of bits written to the last written byte
                 = 0
         private var writeData // pointer to data for writing
-                : ByteBuffer? = null
+                : ByteBuffer = ByteBuffer.allocate(0)
 
         fun Init(data: ByteArray) {
             this.Init(ByteBuffer.wrap(data), data.size)
@@ -77,14 +77,14 @@ object BitMsg {
         }
 
         fun InitReadOnly(data: ByteBuffer, length: Int) {
-            writeData = null
+            writeData = ByteBuffer.allocate(0)
             readData = data
             maxSize = length
         }
 
         // get data for writing
         fun GetData(): ByteBuffer {
-            return writeData!!
+            return writeData
         }
 
         // get data for reading
@@ -162,8 +162,8 @@ object BitMsg {
             writeBit = b and 7
             if (writeBit != 0) {
                 val pos = curSize - 1
-                val `val` = writeData!!.getInt(pos)
-                writeData!!.putInt(pos, `val` and (1 shl writeBit) - 1)
+                val `val` = writeData.getInt(pos)
+                writeData.putInt(pos, `val` and (1 shl writeBit) - 1)
             }
         }
 
@@ -240,7 +240,7 @@ object BitMsg {
             var put: Int
             var fraction: Int
             try {
-                if (null == writeData) {
+                if (writeData.array().isEmpty()) {
                     idLib.common.Error("idBitMsg.WriteBits: cannot write to message")
                 }
 
@@ -305,11 +305,11 @@ object BitMsg {
         }
 
         fun WriteByte(c: Byte) {
-            WriteBits(c, 8)
+            WriteBits(c.toInt(), 8)
         }
 
         fun WriteShort(c: Short) {
-            WriteBits(c, -16)
+            WriteBits(c.toInt(), -16)
         }
 
         fun WriteUShort(c: Int) {
@@ -330,11 +330,11 @@ object BitMsg {
         }
 
         fun WriteAngle8(f: Float) {
-            WriteByte(Math_h.ANGLE2BYTE(f).toByte().toInt())
+            WriteByte(Math_h.ANGLE2BYTE(f).toInt().toByte())
         }
 
         fun WriteAngle16(f: Float) {
-            WriteShort(Math_h.ANGLE2SHORT(f).toByte().toInt())
+            WriteShort(Math_h.ANGLE2SHORT(f).toInt().toShort())
         }
 
         fun WriteDir(dir: idVec3, numBits: Int) {
@@ -399,15 +399,15 @@ object BitMsg {
         }
 
         fun WriteDeltaChar(oldValue: Byte, newValue: Byte) {
-            WriteDelta(oldValue, newValue, -8)
+            WriteDelta(oldValue.toInt(), newValue.toInt(), -8)
         }
 
         fun WriteDeltaByte(oldValue: Byte, newValue: Byte) {
-            WriteDelta(oldValue, newValue, 8)
+            WriteDelta(oldValue.toInt(), newValue.toInt(), 8)
         }
 
         fun WriteDeltaShort(oldValue: Short, newValue: Short) {
-            WriteDelta(oldValue, newValue, -16)
+            WriteDelta(oldValue.toInt(), newValue.toInt(), -16)
         }
 
         fun WriteDeltaLong(oldValue: Int, newValue: Int) {
@@ -480,7 +480,7 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun WriteDeltaDict(dict: idDict?, base: idDict?): Boolean {
+        fun WriteDeltaDict(dict: idDict, base: idDict?): Boolean {
             var i: Int
             var kv: idKeyValue?
             var basekv: idKeyValue?
@@ -488,7 +488,7 @@ object BitMsg {
             if (base != null) {
                 i = 0
                 while (i < dict.GetNumKeyVals()) {
-                    kv = dict.GetKeyVal(i)
+                    kv = dict.GetKeyVal(i)!!
                     basekv = base.FindKey(kv.GetKey().toString())
                     if (basekv == null || basekv.GetValue().Icmp(kv.GetValue().toString()) != 0) {
                         WriteString(kv.GetKey().toString())
@@ -500,7 +500,7 @@ object BitMsg {
                 WriteString("")
                 i = 0
                 while (i < base.GetNumKeyVals()) {
-                    basekv = base.GetKeyVal(i)
+                    basekv = base.GetKeyVal(i)!!
                     kv = dict.FindKey(basekv.GetKey().toString())
                     if (kv == null) {
                         WriteString(basekv.GetKey().toString())
@@ -512,7 +512,7 @@ object BitMsg {
             } else {
                 i = 0
                 while (i < dict.GetNumKeyVals()) {
-                    kv = dict.GetKeyVal(i)
+                    kv = dict.GetKeyVal(i)!!
                     WriteString(kv.GetKey().toString())
                     WriteString(kv.GetValue().toString())
                     changed = true
@@ -553,7 +553,7 @@ object BitMsg {
             var get: Int
             var fraction: Int
             val sgn: Boolean
-            if (null == readData) {
+            if (readData.array().isEmpty()) {
                 idLib.common.FatalError("idBitMsg.ReadBits: cannot read from message")
             }
 
@@ -599,17 +599,17 @@ object BitMsg {
 
         @Throws(idException::class)
         fun ReadChar(): Byte {
-            return ReadBits(-8)
+            return ReadBits(-8).toByte()
         }
 
         @Throws(idException::class)
         fun ReadByte(): Byte {
-            return ReadBits(8)
+            return ReadBits(8).toByte()
         }
 
         @Throws(idException::class)
         fun ReadShort(): Short {
-            return ReadBits(-16)
+            return ReadBits(-16).toShort()
         }
 
         @Throws(idException::class)
@@ -651,13 +651,13 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadString(buffer: CharArray?, bufferSize: Int): Int {
+        fun ReadString(buffer: CharArray, bufferSize: Int): Int {
             var l: Int
             var c: Int
             ReadByteAlign()
             l = 0
             while (1 != 0) {
-                c = ReadByte()
+                c = ReadByte().toInt()
                 if (c <= 0 || c >= 255) {
                     break
                 }
@@ -670,31 +670,31 @@ object BitMsg {
                 // the following data can be read, but the string will
                 // be truncated
                 if (l < bufferSize - 1) {
-                    buffer.get(l) = c.toChar()
+                    buffer[l] = c.toChar()
                     l++
                 }
             }
-            buffer.get(l) = 0
+            buffer[l] = Char(0)
             return l
         }
 
         //
-        fun ReadData(data: ByteBuffer?, length: Int): Int {
+        fun ReadData(data: ByteBuffer, length: Int): Int {
             val cnt: Int
             ReadByteAlign()
             cnt = readCount
             if (readCount + length > curSize) {
-                data?.put(readData.array(), readCount, GetRemaingData())
+                data.put(readData.array(), readCount, GetRemaingData())
                 readCount = curSize
             } else {
-                data?.put(readData.array(), readCount, length)
+                data.put(readData.array(), readCount, length)
                 readCount += length
             }
             return readCount - cnt
         }
 
         @Throws(idException::class)
-        fun ReadNetadr(adr: netadr_t?) {
+        fun ReadNetadr(adr: netadr_t) {
             var i: Int
             adr.type = netadrtype_t.NA_IP
             i = 0
@@ -707,17 +707,17 @@ object BitMsg {
 
         @Throws(idException::class)
         fun ReadDeltaChar(oldValue: Byte): Byte {
-            return ReadDelta(oldValue, -8)
+            return ReadDelta(oldValue.toInt(), -8).toByte()
         }
 
         @Throws(idException::class)
         fun ReadDeltaByte(oldValue: Byte): Byte {
-            return ReadDelta(oldValue, 8)
+            return ReadDelta(oldValue.toInt(), 8).toByte()
         }
 
         @Throws(idException::class)
         fun ReadDeltaShort(oldValue: Short): Short {
-            return ReadDelta(oldValue, -16)
+            return ReadDelta(oldValue.toInt(), -16).toShort()
         }
 
         @Throws(idException::class)
@@ -777,23 +777,22 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadDeltaDict(dict: idDict?, base: idDict?): Boolean {
-            var dict = dict
-            val key = CharArray(Lib.Companion.MAX_STRING_CHARS)
-            val value = CharArray(Lib.Companion.MAX_STRING_CHARS)
+        fun ReadDeltaDict(dict: idDict, base: idDict?): Boolean {
+            val key = CharArray(Lib.MAX_STRING_CHARS)
+            val value = CharArray(Lib.MAX_STRING_CHARS)
             var changed = false
             if (base != null) {
-                dict = base
+                dict.set(base)
             } else {
                 dict.Clear()
             }
             while (ReadString(key, key.size) != 0) {
                 ReadString(value, value.size)
-                dict.Set(TempDump.ctos(key), TempDump.ctos(value))
+                dict.Set(TempDump.ctos(key), TempDump.ctos(value)!!)
                 changed = true
             }
             while (ReadString(key, key.size) != 0) {
-                dict.Delete(TempDump.ctos(key))
+                dict.Delete(TempDump.ctos(key)!!)
                 changed = true
             }
             return changed
@@ -820,7 +819,7 @@ object BitMsg {
         @Throws(idException::class)
         private fun GetByteSpace(length: Int): ByteArray {
             val ptr: ByteArray
-            if (null == writeData) {
+            if (writeData.array().isEmpty()) {
                 idLib.common.FatalError("idBitMsg::GetByteSpace: cannot write to message")
             }
 
@@ -829,8 +828,8 @@ object BitMsg {
 
             // check for overflow
             CheckOverflow(length shl 3)
-            ptr = ByteArray(writeData!!.capacity() - curSize)
-            writeData!!.mark().position(curSize)[ptr].rewind()
+            ptr = ByteArray(writeData.capacity() - curSize)
+            writeData.mark().position(curSize)[ptr].rewind()
             curSize += length
             return ptr
         }
@@ -907,7 +906,7 @@ object BitMsg {
 
         //public					~idBitMsgDelta() {}
         //
-        fun Init(base: idBitMsg?, newBase: idBitMsg?, delta: idBitMsg?) {
+        fun Init(base: idBitMsg, newBase: idBitMsg, delta: idBitMsg) {
             this.base = base
             this.newBase = newBase
             writeDelta = delta
@@ -915,7 +914,7 @@ object BitMsg {
             changed = false
         }
 
-        fun InitReadOnly(base: idBitMsg?, newBase: idBitMsg?, delta: idBitMsg?) {
+        fun InitReadOnly(base: idBitMsg, newBase: idBitMsg, delta: idBitMsg) {
             this.base = base
             this.newBase = newBase
             writeDelta = null
@@ -930,18 +929,18 @@ object BitMsg {
         @Throws(idException::class)
         fun WriteBits(value: Int, numBits: Int) {
             if (newBase != null) {
-                newBase.WriteBits(value, numBits)
+                newBase!!.WriteBits(value, numBits)
             }
             if (null == base) {
-                writeDelta.WriteBits(value, numBits)
+                writeDelta!!.WriteBits(value, numBits)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(numBits)
+                val baseValue = base!!.ReadBits(numBits)
                 if (baseValue == value) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteBits(value, numBits)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteBits(value, numBits)
                     changed = true
                 }
             }
@@ -985,16 +984,16 @@ object BitMsg {
 
         @Throws(idException::class)
         fun WriteAngle8(f: Float) {
-            WriteBits(Math_h.ANGLE2BYTE(f).toByte().toInt(), 8)
+            WriteBits(Math_h.ANGLE2BYTE(f).toInt(), 8)
         }
 
         @Throws(idException::class)
         fun WriteAngle16(f: Float) {
-            WriteBits(Math_h.ANGLE2SHORT(f).toShort().toInt(), 16)
+            WriteBits(Math_h.ANGLE2SHORT(f).toInt(), 16)
         }
 
         @Throws(idException::class)
-        fun WriteDir(dir: idVec3?, numBits: Int) {
+        fun WriteDir(dir: idVec3, numBits: Int) {
             WriteBits(idBitMsg.DirToBits(dir, numBits), numBits)
         }
 
@@ -1002,58 +1001,58 @@ object BitMsg {
         @Throws(idException::class)
         fun WriteString(s: String?, maxLength: Int) {
             if (newBase != null) {
-                newBase.WriteString(s, maxLength)
+                newBase!!.WriteString(s, maxLength)
             }
             if (null == base) {
-                writeDelta.WriteString(s, maxLength)
+                writeDelta!!.WriteString(s, maxLength)
                 changed = true
             } else {
-                val baseString = CharArray(BitMsg.MAX_DATA_BUFFER)
-                base.ReadString(baseString, BitMsg.MAX_DATA_BUFFER)
-                if (idStr.Companion.Cmp(s, TempDump.ctos(baseString)) == 0) {
-                    writeDelta.WriteBits(0, 1)
+                val baseString = CharArray(MAX_DATA_BUFFER)
+                base!!.ReadString(baseString, MAX_DATA_BUFFER)
+                if (idStr.Cmp(s!!, TempDump.ctos(baseString)!!) == 0) {
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteString(s, maxLength)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteString(s, maxLength)
                     changed = true
                 }
             }
         }
 
         @Throws(idException::class)
-        fun WriteData(data: ByteBuffer?, length: Int) {
+        fun WriteData(data: ByteBuffer, length: Int) {
             if (newBase != null) {
-                newBase.WriteData(data, length)
+                newBase!!.WriteData(data, length)
             }
             if (null == base) {
-                writeDelta.WriteData(data, length)
+                writeDelta!!.WriteData(data, length)
                 changed = true
             } else {
-                val baseData = ByteBuffer.allocate(BitMsg.MAX_DATA_BUFFER)
-                assert(length < BitMsg.MAX_DATA_BUFFER)
-                base.ReadData(baseData, length)
+                val baseData = ByteBuffer.allocate(MAX_DATA_BUFFER)
+                assert(length < MAX_DATA_BUFFER)
+                base!!.ReadData(baseData, length)
                 if (data == baseData) { //TODO:compareTo??
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteData(data, length)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteData(data, length)
                     changed = true
                 }
             }
         }
 
         @Throws(idException::class)
-        fun WriteDict(dict: idDict?) {
+        fun WriteDict(dict: idDict) {
             if (newBase != null) {
-                newBase.WriteDeltaDict(dict, null)
+                newBase!!.WriteDeltaDict(dict, null)
             }
             changed = if (null == base) {
-                writeDelta.WriteDeltaDict(dict, null)
+                writeDelta!!.WriteDeltaDict(dict, null)
                 true
             } else {
                 val baseDict = idDict()
-                base.ReadDeltaDict(baseDict, null)
-                writeDelta.WriteDeltaDict(dict, baseDict)
+                base!!.ReadDeltaDict(baseDict, null)
+                writeDelta!!.WriteDeltaDict(dict, baseDict)
             }
         }
 
@@ -1093,18 +1092,18 @@ object BitMsg {
         @Throws(idException::class)
         fun WriteDeltaByteCounter(oldValue: Int, newValue: Int) {
             if (newBase != null) {
-                newBase.WriteBits(newValue, 8)
+                newBase!!.WriteBits(newValue, 8)
             }
             if (null == base) {
-                writeDelta.WriteDeltaByteCounter(oldValue, newValue)
+                writeDelta!!.WriteDeltaByteCounter(oldValue, newValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(8)
+                val baseValue = base!!.ReadBits(8)
                 if (baseValue == newValue) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteDeltaByteCounter(oldValue, newValue)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteDeltaByteCounter(oldValue, newValue)
                     changed = true
                 }
             }
@@ -1113,18 +1112,18 @@ object BitMsg {
         @Throws(idException::class)
         fun WriteDeltaShortCounter(oldValue: Int, newValue: Int) {
             if (newBase != null) {
-                newBase.WriteBits(newValue, 16)
+                newBase!!.WriteBits(newValue, 16)
             }
             if (null == base) {
-                writeDelta.WriteDeltaShortCounter(oldValue, newValue)
+                writeDelta!!.WriteDeltaShortCounter(oldValue, newValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(16)
+                val baseValue = base!!.ReadBits(16)
                 if (baseValue == newValue) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteDeltaShortCounter(oldValue, newValue)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteDeltaShortCounter(oldValue, newValue)
                     changed = true
                 }
             }
@@ -1133,18 +1132,18 @@ object BitMsg {
         @Throws(idException::class)
         fun WriteDeltaLongCounter(oldValue: Int, newValue: Int) {
             if (newBase != null) {
-                newBase.WriteBits(newValue, 32)
+                newBase!!.WriteBits(newValue, 32)
             }
             if (null == base) {
-                writeDelta.WriteDeltaLongCounter(oldValue, newValue)
+                writeDelta!!.WriteDeltaLongCounter(oldValue, newValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(32)
+                val baseValue = base!!.ReadBits(32)
                 if (baseValue == newValue) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteDeltaLongCounter(oldValue, newValue)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteDeltaLongCounter(oldValue, newValue)
                     changed = true
                 }
             }
@@ -1155,19 +1154,19 @@ object BitMsg {
         fun ReadBits(numBits: Int): Int {
             val value: Int
             if (null == base) {
-                value = readDelta.ReadBits(numBits)
+                value = readDelta!!.ReadBits(numBits)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(numBits)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseValue = base!!.ReadBits(numBits)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
                     value = baseValue
                 } else {
-                    value = readDelta.ReadBits(numBits)
+                    value = readDelta!!.ReadBits(numBits)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteBits(value, numBits)
+                newBase!!.WriteBits(value, numBits)
             }
             return value
         }
@@ -1221,69 +1220,68 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadDir(numBits: Int): idVec3? {
+        fun ReadDir(numBits: Int): idVec3 {
             return idBitMsg.BitsToDir(ReadBits(numBits), numBits)
         }
 
         @Throws(idException::class)
-        fun ReadString(buffer: CharArray?, bufferSize: Int) {
+        fun ReadString(buffer: CharArray, bufferSize: Int) {
             if (null == base) {
-                readDelta.ReadString(buffer, bufferSize)
+                readDelta!!.ReadString(buffer, bufferSize)
                 changed = true
             } else {
-                val baseString = CharArray(BitMsg.MAX_DATA_BUFFER)
-                base.ReadString(baseString, BitMsg.MAX_DATA_BUFFER)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
-                    idStr.Companion.Copynz(buffer, TempDump.ctos(baseString), bufferSize)
+                val baseString = CharArray(MAX_DATA_BUFFER)
+                base!!.ReadString(baseString, MAX_DATA_BUFFER)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
+                    idStr.Copynz(buffer, TempDump.ctos(baseString)!!, bufferSize)
                 } else {
-                    readDelta.ReadString(buffer, bufferSize)
+                    readDelta!!.ReadString(buffer, bufferSize)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteString(TempDump.ctos(buffer))
+                newBase!!.WriteString(TempDump.ctos(buffer))
             }
         }
 
         @Throws(idException::class)
-        fun ReadData(data: ByteBuffer?, length: Int) {
+        fun ReadData(data: ByteBuffer, length: Int) {
             if (null == base) {
-                readDelta.ReadData(data, length)
+                readDelta!!.ReadData(data, length)
                 changed = true
             } else {
-                val baseData = ByteBuffer.allocate(BitMsg.MAX_DATA_BUFFER)
-                assert(length < BitMsg.MAX_DATA_BUFFER)
-                base.ReadData(baseData, length)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseData = ByteBuffer.allocate(MAX_DATA_BUFFER)
+                assert(length < MAX_DATA_BUFFER)
+                base!!.ReadData(baseData, length)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
 //			memcpy( data, baseData, length );
                     data.put(data) //.array(), 0, length);
                 } else {
-                    readDelta.ReadData(data, length)
+                    readDelta!!.ReadData(data, length)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteData(data, length)
+                newBase!!.WriteData(data, length)
             }
         }
 
         @Throws(idException::class)
-        fun ReadDict(dict: idDict?) {
-            var dict = dict
+        fun ReadDict(dict: idDict) {
             if (null == base) {
-                readDelta.ReadDeltaDict(dict, null)
+                readDelta!!.ReadDeltaDict(dict, null)
                 changed = true
             } else {
                 val baseDict = idDict()
-                base.ReadDeltaDict(baseDict, null)
+                base!!.ReadDeltaDict(baseDict, null)
                 if (null == readDelta) {
-                    dict = baseDict
+                    dict.set(baseDict)
                 } else {
-                    changed = readDelta.ReadDeltaDict(dict, baseDict)
+                    changed = readDelta!!.ReadDeltaDict(dict, baseDict)
                 }
             }
             if (newBase != null) {
-                newBase.WriteDeltaDict(dict, null)
+                newBase!!.WriteDeltaDict(dict, null)
             }
         }
 
@@ -1326,19 +1324,19 @@ object BitMsg {
         fun ReadDeltaByteCounter(oldValue: Int): Int {
             val value: Int
             if (null == base) {
-                value = readDelta.ReadDeltaByteCounter(oldValue)
+                value = readDelta!!.ReadDeltaByteCounter(oldValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(8)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseValue = base!!.ReadBits(8)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
                     value = baseValue
                 } else {
-                    value = readDelta.ReadDeltaByteCounter(oldValue)
+                    value = readDelta!!.ReadDeltaByteCounter(oldValue)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteBits(value, 8)
+                newBase!!.WriteBits(value, 8)
             }
             return value
         }
@@ -1347,19 +1345,19 @@ object BitMsg {
         fun ReadDeltaShortCounter(oldValue: Int): Int {
             val value: Int
             if (null == base) {
-                value = readDelta.ReadDeltaShortCounter(oldValue)
+                value = readDelta!!.ReadDeltaShortCounter(oldValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(16)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseValue = base!!.ReadBits(16)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
                     value = baseValue
                 } else {
-                    value = readDelta.ReadDeltaShortCounter(oldValue)
+                    value = readDelta!!.ReadDeltaShortCounter(oldValue)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteBits(value, 16)
+                newBase!!.WriteBits(value, 16)
             }
             return value
         }
@@ -1368,19 +1366,19 @@ object BitMsg {
         fun ReadDeltaLongCounter(oldValue: Int): Int {
             val value: Int
             if (null == base) {
-                value = readDelta.ReadDeltaLongCounter(oldValue)
+                value = readDelta!!.ReadDeltaLongCounter(oldValue)
                 changed = true
             } else {
-                val baseValue = base.ReadBits(32)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseValue = base!!.ReadBits(32)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
                     value = baseValue
                 } else {
-                    value = readDelta.ReadDeltaLongCounter(oldValue)
+                    value = readDelta!!.ReadDeltaLongCounter(oldValue)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteBits(value, 32)
+                newBase!!.WriteBits(value, 32)
             }
             return value
         }
@@ -1388,28 +1386,28 @@ object BitMsg {
         @Throws(idException::class)
         private fun WriteDelta(oldValue: Int, newValue: Int, numBits: Int) {
             if (newBase != null) {
-                newBase.WriteBits(newValue, numBits)
+                newBase!!.WriteBits(newValue, numBits)
             }
             if (null == base) {
                 if (oldValue == newValue) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
-                    writeDelta.WriteBits(newValue, numBits)
+                    writeDelta!!.WriteBits(1, 1)
+                    writeDelta!!.WriteBits(newValue, numBits)
                 }
                 changed = true
             } else {
-                val baseValue = base.ReadBits(numBits)
+                val baseValue = base!!.ReadBits(numBits)
                 if (baseValue == newValue) {
-                    writeDelta.WriteBits(0, 1)
+                    writeDelta!!.WriteBits(0, 1)
                 } else {
-                    writeDelta.WriteBits(1, 1)
+                    writeDelta!!.WriteBits(1, 1)
                     changed = if (oldValue == newValue) {
-                        writeDelta.WriteBits(0, 1)
+                        writeDelta!!.WriteBits(0, 1)
                         true
                     } else {
-                        writeDelta.WriteBits(1, 1)
-                        writeDelta.WriteBits(newValue, numBits)
+                        writeDelta!!.WriteBits(1, 1)
+                        writeDelta!!.WriteBits(newValue, numBits)
                         true
                     }
                 }
@@ -1420,26 +1418,26 @@ object BitMsg {
         private fun ReadDelta(oldValue: Int, numBits: Int): Int {
             val value: Int
             if (null == base) {
-                value = if (readDelta.ReadBits(1) == 0) {
+                value = if (readDelta!!.ReadBits(1) == 0) {
                     oldValue
                 } else {
-                    readDelta.ReadBits(numBits)
+                    readDelta!!.ReadBits(numBits)
                 }
                 changed = true
             } else {
-                val baseValue = base.ReadBits(numBits)
-                if (null == readDelta || readDelta.ReadBits(1) == 0) {
+                val baseValue = base!!.ReadBits(numBits)
+                if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
                     value = baseValue
-                } else if (readDelta.ReadBits(1) == 0) {
+                } else if (readDelta!!.ReadBits(1) == 0) {
                     value = oldValue
                     changed = true
                 } else {
-                    value = readDelta.ReadBits(numBits)
+                    value = readDelta!!.ReadBits(numBits)
                     changed = true
                 }
             }
             if (newBase != null) {
-                newBase.WriteBits(value, numBits)
+                newBase!!.WriteBits(value, numBits)
             }
             return value
         }

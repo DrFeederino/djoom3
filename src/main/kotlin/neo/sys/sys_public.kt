@@ -45,10 +45,10 @@ object sys_public {
     val PATHSEPERATOR_CHAR: Char = 0.toChar()
 
     //
-    val PATHSEPERATOR_STR: String? = null
+    val PATHSEPERATOR_STR: String = null
     const val PORT_ANY = -1
     const val TRIGGER_EVENT_ONE = 1
-    val g_thread_count: IntArray? = intArrayOf(0)
+    val g_thread_count: IntArray = intArrayOf(0)
     val CPUSTRING: String? = null
     const val CPU_EASYARGS = 0
     const val FPU_EXCEPTION_DENORMALIZED_OPERAND = 2
