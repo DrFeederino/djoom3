@@ -2,7 +2,6 @@ package neo.Sound
 
 import neo.Sound.snd_cache.idSoundSample
 import neo.Sound.snd_local.idSampleDecoder
-import neo.Sound.snd_system
 import neo.TempDump.TODO_Exception
 import neo.framework.File_h.idFile_Memory
 import neo.idlib.math.Simd
@@ -11,7 +10,8 @@ import neo.sys.win_main
 import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
 import org.lwjgl.stb.STBVorbis
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.FloatBuffer
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -70,10 +70,10 @@ object snd_decoder {
      ====================
      */
     fun  /*size_t*/FS_ReadOGG(
-        dest: ByteBuffer?,    /*size_t*/
+        dest: ByteBuffer,    /*size_t*/
         size1: Int,    /*size_t*/
         size2: Int,
-        fh: ByteBuffer?
+        fh: ByteBuffer
     ): Int {
         throw TODO_Exception()
         //        idFile f = reinterpret_cast < idFile > (fh);
@@ -85,7 +85,7 @@ object snd_decoder {
      FS_SeekOGG
      ====================
      */
-    fun FS_SeekOGG(fh: Any?,    /*ogg_int64_t*/to: Long, type: Int): Int {
+    fun FS_SeekOGG(fh: Any,    /*ogg_int64_t*/to: Long, type: Int): Int {
         throw TODO_Exception()
         //        fsOrigin_t retype = FS_SEEK_SET;
 //
@@ -107,7 +107,7 @@ object snd_decoder {
      FS_CloseOGG
      ====================
      */
-    fun FS_CloseOGG(fh: Any?): Int {
+    fun FS_CloseOGG(fh: Any): Int {
         return 0
     }
 
@@ -116,7 +116,7 @@ object snd_decoder {
      FS_TellOGG
      ====================
      */
-    fun FS_TellOGG(fh: Any?): Long {
+    fun FS_TellOGG(fh: Any): Long {
         throw TODO_Exception()
         //        idFile f = reinterpret_cast < idFile > (fh);
 //        return f.Tell();
@@ -127,11 +127,11 @@ object snd_decoder {
      ov_openFile
      ====================
      */
-    fun ov_openFile(f: idFile_Memory?, error: IntArray?): Long {
+    fun ov_openFile(f: idFile_Memory, error: IntArray): Long {
         return STBVorbis.stb_vorbis_open_memory(f.GetDataPtr(), error, null)
     }
 
-    private fun getErrorMessage(errorCode: Int): String? {
+    private fun getErrorMessage(errorCode: Int): String {
         when (errorCode) {
             STBVorbis.VORBIS__no_error -> return "VORBIS__no_error"
             STBVorbis.VORBIS_need_more_data -> return "VORBIS_need_more_data"
@@ -170,7 +170,7 @@ object snd_decoder {
         private var failed // set if decoding failed
                 = false
         private val file // encoded file in memory
-                : idFile_Memory?
+                : idFile_Memory
         private var lastDecodeTime // last time decoding sound
                 = 0
         private var lastFormat // last format being decoded
@@ -184,9 +184,9 @@ object snd_decoder {
         //
         //
         private var ogg // OggVorbis file
-                : Long? = null
+                : Long = 0L
 
-        override fun Decode(sample: idSoundSample?, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer?) {
+        override fun Decode(sample: idSoundSample, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer) {
             val readSamples44k: Int
             if (sample.objectInfo.wFormatTag != lastFormat || sample !== lastSample) {
                 ClearDecoder()
@@ -231,7 +231,7 @@ object snd_decoder {
 
 //                    ov_clear(ogg);
 //                    memset(ogg, 0, sizeof(ogg));
-                        ogg = null
+                        ogg = 0L
                     }
                 }
                 Clear()
@@ -256,7 +256,7 @@ object snd_decoder {
             lastDecodeTime = 0
         }
 
-        fun DecodePCM(sample: idSoundSample?, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatArray?): Int {
+        fun DecodePCM(sample: idSoundSample, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatArray): Int {
             throw TODO_Exception()
             //            ByteBuffer first;
 //            int[] pos = {0}, size = {0};
@@ -293,7 +293,7 @@ object snd_decoder {
 //            return (readSamples << shift);
         }
 
-        fun DecodeOGG(sample: idSoundSample?, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer?): Int {
+        fun DecodeOGG(sample: idSoundSample, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer): Int {
             var readSamples: Int
             var totalSamples: Int
             val shift = 22050 / sample.objectInfo.nSamplesPerSec
@@ -315,10 +315,10 @@ object snd_decoder {
                 }
                 file.SetData(sample.nonCacheData, sample.objectMemSize)
                 val error = intArrayOf(0)
-                ogg = snd_decoder.ov_openFile(file, error)
+                ogg = ov_openFile(file, error)
                 if (error[0] != 0) {
                     Logger.getLogger(snd_decoder::class.java.name)
-                        .log(Level.SEVERE, snd_decoder.getErrorMessage(error[0]))
+                        .log(Level.SEVERE, getErrorMessage(error[0]))
                     failed = true
                     return 0
                 }
@@ -354,7 +354,7 @@ object snd_decoder {
                     return 0
                 }
                 ret *= sample.objectInfo.nChannels
-                val samplesArray = Array<FloatArray?>(sample.objectInfo.nChannels) { FloatArray(num_samples) }
+                val samplesArray = Array(sample.objectInfo.nChannels) { FloatArray(num_samples) }
                 for (i in 0 until sample.objectInfo.nChannels) {
                     samples.getFloatBuffer(i, num_samples)[samplesArray[i]]
                 }

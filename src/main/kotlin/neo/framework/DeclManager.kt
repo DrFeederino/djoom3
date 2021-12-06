@@ -538,7 +538,7 @@ object DeclManager {
         }
 
         // Returns the name of the file in which the decl is defined.
-        fun GetFileName(): String? {
+        fun GetFileName(): String {
             return base.GetFileName()
         }
 
@@ -604,7 +604,7 @@ object DeclManager {
         // The subclass can call MakeDefault() internally at any point if
         // there are parse errors.
         @Throws(idException::class)
-        /*abstract*/ open fun Parse(text: String?, textLength: Int): Boolean {
+        /*abstract*/ open fun Parse(text: String, textLength: Int): Boolean {
             return base.Parse(text, textLength)
         }
 

@@ -45,19 +45,19 @@ object snd_cache {
 
     class idSoundSample {
         var amplitudeData // precomputed min,max amplitude pairs
-                : ByteBuffer?
+                : ByteBuffer
         var defaultSound: Boolean
         var hardwareBuffer: Boolean
         var levelLoadReferenced // so we can tell which samples aren't needed any more
                 : Boolean
-        var name // name of the sample file
-                : idStr? = null
+        val name // name of the sample file
+                : idStr = idStr()
         var nonCacheData // if it's not cached
-                : ByteBuffer?
+                : ByteBuffer
 
         //
         var objectInfo // what are we caching
-                : waveformatex_s?
+                : waveformatex_s = waveformatex_s()
         var objectMemSize // object size in memory
                 : Int
         var objectSize // size of waveform in samples, excludes the header
@@ -84,7 +84,7 @@ object snd_cache {
         fun  /*ID_TIME_T*/GetNewTimeStamp(): Long {
             val timestamp = longArrayOf(0)
             FileSystem_h.fileSystem.ReadFile(name.toString(), null, timestamp)
-            if (timestamp[0] == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
+            if (timestamp[0] == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP.toLong()) {
                 val oggName = idStr(name)
                 oggName.SetFileExtension(".ogg")
                 FileSystem_h.fileSystem.ReadFile(oggName.toString(), null, timestamp)
@@ -115,7 +115,7 @@ object snd_cache {
                 ncd.put(i * 2 + 1, sample)
                 i++
             }
-            if (idSoundSystemLocal.Companion.useOpenAL) {
+            if (idSoundSystemLocal.useOpenAL) {
                 AL10.alGetError()
                 //                alGenBuffers(1, openalBuffer);
                 openalBuffer = AL10.alGenBuffers()
@@ -160,7 +160,7 @@ object snd_cache {
 
             // load it
             val fh = idWaveFile()
-            val info = arrayOf<waveformatex_s?>(null)
+            val info = Array(1) { waveformatex_s() }
             if (fh.Open(name.toString(), info) == -1) {
                 Common.common.Warning("Couldn't load sound '%s' using default", name)
                 MakeDefault()
@@ -204,7 +204,7 @@ object snd_cache {
             CheckForDownSample()
 
             // create hardware audio buffers 
-            if (idSoundSystemLocal.Companion.useOpenAL) {
+            if (idSoundSystemLocal.useOpenAL) {
                 // PCM loads directly;
                 if (objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_PCM) {
                     AL10.alGetError()
@@ -242,7 +242,7 @@ object snd_cache {
                                 var max: Short = -32768
                                 var j: Int
                                 j = 0
-                                while (j < Lib.Companion.Min(objectSize - i, blockSize)) {
+                                while (j < Lib.Min(objectSize - i, blockSize)) {
                                     min = Math.min(ncd[i + j].toInt(), min.toInt()).toShort()
                                     max = Math.max(ncd[i + j].toInt(), max.toInt()).toShort()
                                     j++
@@ -258,8 +258,8 @@ object snd_cache {
 
                 // OGG decompressed at load time (when smaller than s_decompressionLimit seconds, 6 seconds by default)
                 if (objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) {
-                    if (BuildDefines.MACOS_X && objectSize < objectInfo.nSamplesPerSec * idSoundSystemLocal.Companion.s_decompressionLimit.GetInteger()
-                        || AL10.alIsExtensionPresent("EAX-RAM") && objectSize < objectInfo.nSamplesPerSec * idSoundSystemLocal.Companion.s_decompressionLimit.GetInteger()
+                    if (BuildDefines.MACOS_X && objectSize < objectInfo.nSamplesPerSec * idSoundSystemLocal.s_decompressionLimit.GetInteger()
+                        || AL10.alIsExtensionPresent("EAX-RAM") && objectSize < objectInfo.nSamplesPerSec * idSoundSystemLocal.s_decompressionLimit.GetInteger()
                     ) {
                         AL10.alGetError()
                         openalBuffer = AL10.alGenBuffers()
@@ -267,7 +267,7 @@ object snd_cache {
                             Common.common.Error("idSoundCache: error generating OpenAL hardware buffer")
                         }
                         if (AL10.alIsBuffer(openalBuffer)) {
-                            val decoder: idSampleDecoder = idSampleDecoder.Companion.Alloc()
+                            val decoder: idSampleDecoder = idSampleDecoder.Alloc()
                             var destData =
                                 BufferUtils.createByteBuffer((LengthIn44kHzSamples() + 1) * java.lang.Float.BYTES) //soundCacheAllocator.Alloc( ( LengthIn44kHzSamples() + 1 ) * sizeof( float ) );
 
@@ -332,7 +332,7 @@ object snd_cache {
                                     var max: Short = -32768
                                     var j: Int
                                     j = 0
-                                    while (j < Lib.Companion.Min(objectSize - i, blockSize)) {
+                                    while (j < Lib.Min(objectSize - i, blockSize)) {
                                         min = if (destData.getShort(i + j) < min) destData.getShort(i + j) else min
                                         max = if (destData.getShort(i + j) > max) destData.getShort(i + j) else max
                                         j++
@@ -345,8 +345,8 @@ object snd_cache {
                             }
 
 //					soundCacheAllocator.Free( (byte *)destData );
-                            destData = null
-                            idSampleDecoder.Companion.Free(decoder)
+                            destData.clear()
+                            idSampleDecoder.Free(decoder)
                         }
                     }
                 }
@@ -354,7 +354,7 @@ object snd_cache {
                 // Free memory if sample was loaded into hardware
                 if (hardwareBuffer) {
 //			soundCacheAllocator.Free( nonCacheData );
-                    nonCacheData = null
+                    nonCacheData.clear()
                 }
             }
             fh.Close()
@@ -385,7 +385,7 @@ object snd_cache {
 
         fun PurgeSoundSample() {            // frees all data
             purged = true
-            if (hardwareBuffer && idSoundSystemLocal.Companion.useOpenAL) {
+            if (hardwareBuffer && idSoundSystemLocal.useOpenAL) {
                 val error = AL10.alGetError()
                 //                alDeleteBuffers(1, openalBuffer);
                 AL10.alDeleteBuffers(openalBuffer)
@@ -398,16 +398,16 @@ object snd_cache {
             }
             if (amplitudeData != null) {
 //                soundCacheAllocator.Free(amplitudeData);
-                amplitudeData = null
+                amplitudeData.clear()
             }
             if (nonCacheData != null) {
 //                soundCacheAllocator.Free(nonCacheData);
-                nonCacheData = null
+                nonCacheData.clear()
             }
         }
 
         fun CheckForDownSample() {        // down sample if required
-            if (!idSoundSystemLocal.Companion.s_force22kHz.GetBool()) {
+            if (!idSoundSystemLocal.s_force22kHz.GetBool()) {
                 return
             }
             if (objectInfo.wFormatTag != snd_local.WAVE_FORMAT_TAG_PCM || objectInfo.nSamplesPerSec != 44100) {
@@ -468,8 +468,8 @@ object snd_cache {
             }
             if (size != null) {
                 size[0] = objectSize * 2 /*sizeof(short)*/ - offset
-                if (size[0] > snd_cache.SCACHE_SIZE) {
-                    size[0] = snd_cache.SCACHE_SIZE
+                if (size[0] > SCACHE_SIZE) {
+                    size[0] = SCACHE_SIZE
                 }
             }
             return true
@@ -482,8 +482,8 @@ object snd_cache {
             objectInfo = waveformatex_s()
             objectSize = 0
             objectMemSize = 0
-            nonCacheData = null
-            amplitudeData = null
+            nonCacheData = ByteBuffer.allocate(0)
+            amplitudeData = ByteBuffer.allocate(0)
             openalBuffer = 0
             hardwareBuffer = false
             defaultSound = false
@@ -502,7 +502,7 @@ object snd_cache {
      */
     class idSoundCache {
         private var insideLevelLoad: Boolean
-        private val listCache: idList<idSoundSample?>?
+        private val listCache: idList<idSoundSample>
 
         // ~idSoundCache();
         /*
@@ -512,7 +512,7 @@ object snd_cache {
          Adds a sound object to the cache and returns a handle for it.
          ===================
          */
-        fun FindSound(filename: idStr?, loadOnDemandOnly: Boolean): idSoundSample? {
+        fun FindSound(filename: idStr, loadOnDemandOnly: Boolean): idSoundSample {
             val fname: idStr
             fname = idStr(filename)
             fname.BackSlashesToSlashes()
@@ -521,7 +521,7 @@ object snd_cache {
 
             // check to see if object is already in cache
             for (i in 0 until listCache.Num()) {
-                val def = listCache.get(i)
+                val def = listCache[i]
                 if (def != null && def.name == fname) {
                     def.levelLoadReferenced = true
                     if (def.purged && !loadOnDemandOnly) {
@@ -535,11 +535,11 @@ object snd_cache {
             val def = idSoundSample()
             var shandle = listCache.FindNull()
             if (shandle != -1) {
-                listCache.set(shandle, def)
+                listCache[shandle] = def
             } else {
                 shandle = listCache.Append(def)
             }
-            def.name = fname
+            def.name.set(fname)
             def.levelLoadReferenced = true
             def.onDemand = loadOnDemandOnly
             def.purged = true
@@ -564,7 +564,7 @@ object snd_cache {
         fun GetObject(index: Int): idSoundSample? {
             return if (index < 0 || index > listCache.Num()) {
                 null
-            } else listCache.get(index)
+            } else listCache[index]
         }
 
         /*
@@ -578,7 +578,7 @@ object snd_cache {
             var i: Int
             i = 0
             while (i < listCache.Num()) {
-                val def = listCache.get(i)
+                val def = listCache[i]
                 def?.Reload(force)
                 i++
             }
@@ -597,7 +597,7 @@ object snd_cache {
         fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until listCache.Num()) {
-                val sample = listCache.get(i) ?: continue
+                val sample = listCache[i] ?: continue
                 if (Common.com_purgeAll.GetBool()) {
                     sample.PurgeSoundSample()
                 }
@@ -624,7 +624,7 @@ object snd_cache {
             useCount = 0
             purgeCount = 0
             for (i in 0 until listCache.Num()) {
-                val sample = listCache.get(i) ?: continue
+                val sample = listCache[i] ?: continue
                 if (sample.purged) {
                     continue
                 }
@@ -643,7 +643,7 @@ object snd_cache {
             Common.common.Printf("----------------------------------------\n")
         }
 
-        fun PrintMemInfo(mi: MemInfo_t?) {
+        fun PrintMemInfo(mi: MemInfo_t) {
             var i: Int
             var j: Int
             var num = 0
@@ -658,7 +658,7 @@ object snd_cache {
             // count
             i = 0
             while (i < listCache.Num()) {
-                if (null == listCache.get(i)) {
+                if (null == listCache[i]) {
                     break
                 }
                 i++
@@ -676,7 +676,7 @@ object snd_cache {
             while (i < num - 1) {
                 j = i + 1
                 while (j < num) {
-                    if (listCache.get(sortIndex[i]).objectMemSize < listCache.get(sortIndex[j]).objectMemSize) {
+                    if (listCache[sortIndex[i]].objectMemSize < listCache[sortIndex[j]].objectMemSize) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
                         sortIndex[j] = temp
@@ -689,7 +689,7 @@ object snd_cache {
             // print next
             i = 0
             while (i < num) {
-                val sample = listCache.get(sortIndex[i])
+                val sample = listCache[sortIndex[i]]
 
                 // this is strange
                 if (null == sample) {
@@ -699,13 +699,13 @@ object snd_cache {
                 total += sample.objectMemSize
                 f.Printf(
                     "%s %s\n",
-                    idStr.Companion.FormatNumber(sample.objectMemSize).toString(),
+                    idStr.FormatNumber(sample.objectMemSize).toString(),
                     sample.name.toString()
                 )
                 i++
             }
             mi.soundAssetsTotal = total
-            f.Printf("\nTotal sound bytes allocated: %s\n", idStr.Companion.FormatNumber(total).toString())
+            f.Printf("\nTotal sound bytes allocated: %s\n", idStr.FormatNumber(total).toString())
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
@@ -715,7 +715,7 @@ object snd_cache {
             listCache = idList()
             //            soundCacheAllocator.Init();
 //            soundCacheAllocator.SetLockMemory(true);
-            listCache.AssureSize(1024, null)
+            listCache.AssureSize(1024, idSoundSample())
             listCache.SetGranularity(256)
             insideLevelLoad = false
         }

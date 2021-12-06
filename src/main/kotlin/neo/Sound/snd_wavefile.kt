@@ -18,17 +18,17 @@ import neo.sys.win_main
 import org.lwjgl.BufferUtils
 import org.lwjgl.stb.STBVorbis
 import org.lwjgl.stb.STBVorbisInfo
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
  */
 object snd_wavefile {
-    val fourcc_riff = snd_wavefile.mmioFOURCC('R'.code, 'I'.code, 'F'.code, 'F'.code)
+    val fourcc_riff = mmioFOURCC('R'.code, 'I'.code, 'F'.code, 'F'.code)
     fun mmioFOURCC(ch0: Int, ch1: Int, ch2: Int, ch3: Int): Long {
-        return (ch0.toByte() or (ch1.toByte() shl 8)
-                or (ch2.toByte() shl 16)
-                or (ch3.toByte() shl 24))
+        return (ch0 or (ch1 shl 8)
+                or (ch2 shl 16)
+                or (ch3 shl 24)).toLong()
     }
 
     /*
@@ -40,7 +40,7 @@ object snd_wavefile {
      */
     class idWaveFile {
         var mpwfx // Pointer to waveformatex structure
-                : waveformatextensible_s?
+                : waveformatextensible_s = waveformatextensible_s()
         private var isOgg: Boolean
         private var   /*dword*/mMemSize // size of the wave data in memory
                 : Long = 0
@@ -48,9 +48,9 @@ object snd_wavefile {
         //
         private var mbIsReadingFromMemory: Boolean
         private val mck // Multimedia RIFF chunk
-                : mminfo_s?
+                : mminfo_s
         private val mckRiff // used when opening a WAVE file
-                : mminfo_s?
+                : mminfo_s
         private var   /*dword*/mdwSize // size in samples
                 : Long
         private var   /*ID_TIME_T*/mfileTime: Long = 0
@@ -72,7 +72,7 @@ object snd_wavefile {
         // Name: idWaveFile::Open()
         // Desc: Opens a wave file for reading
         //-----------------------------------------------------------------------------
-        fun Open(strFileName: String?, pwfx: Array<waveformatex_s?>? /*= NULL*/): Int {
+        fun Open(strFileName: String?, pwfx: Array<waveformatex_s> /*= NULL*/): Int {
             mbIsReadingFromMemory = false
             mpbData = null
             mpbDataCur = mpbData
@@ -94,7 +94,7 @@ object snd_wavefile {
                 mdwSize = 0
                 return -1
             }
-            if (mhmmio.Length() <= 0) {
+            if (mhmmio!!.Length() <= 0) {
                 mhmmio = null
                 return -1
             }
@@ -103,7 +103,7 @@ object snd_wavefile {
                 Close()
                 return -1
             }
-            mfileTime = mhmmio.Timestamp()
+            mfileTime = mhmmio!!.Timestamp()
             if (ResetFile() != 0) {
                 Close()
                 return -1
@@ -113,10 +113,8 @@ object snd_wavefile {
             mdwSize = (mck.cksize / java.lang.Short.BYTES).toLong()
             mMemSize = mck.cksize.toLong()
             if (mck.cksize != -0x1) {
-                if (pwfx != null) {
-                    pwfx[0] =
-                        waveformatex_s(mpwfx.Format) //memcpy(pwfx, (waveformatex_t *) & mpwfx, sizeof(waveformatex_t));
-                }
+                pwfx[0] =
+                    waveformatex_s(mpwfx.Format)
                 return 0
             }
             return -1
@@ -126,11 +124,11 @@ object snd_wavefile {
         // Name: idWaveFile::OpenFromMemory()
         // Desc: copy data to idWaveFile member variable from memory
         //-----------------------------------------------------------------------------
-        fun OpenFromMemory(pbData: ShortArray?, ulDataSize: Int, pwfx: waveformatextensible_s?): Int {
+        fun OpenFromMemory(pbData: ShortArray, ulDataSize: Int, pwfx: waveformatextensible_s): Int {
             mpwfx = pwfx
             mulDataSize = ulDataSize.toLong()
             mpbData = TempDump.stobb(pbData)
-            mpbDataCur = mpbData.duplicate()
+            mpbDataCur = mpbData!!.duplicate()
             mdwSize = (ulDataSize / 2).toLong() //sizeof(short);
             mMemSize = ulDataSize.toLong()
             mbIsReadingFromMemory = true
@@ -145,7 +143,7 @@ object snd_wavefile {
         //       subsequent calls will be continue where the last left off unless 
         //       Reset() is called.
         //-----------------------------------------------------------------------------
-        fun Read(pBuffer: ByteBuffer?, dwSizeToRead: Int, pdwSizeRead: IntArray?): Int {
+        fun Read(pBuffer: ByteBuffer, dwSizeToRead: Int, pdwSizeRead: IntArray?): Int {
             var dwSizeToRead = dwSizeToRead
             return if (ogg != null) {
                 ReadOGG(pBuffer.array(), dwSizeToRead, pdwSizeRead)
@@ -153,12 +151,12 @@ object snd_wavefile {
                 if (mpbDataCur == null) {
                     return -1
                 }
-                val pos = dwSizeToRead + mpbDataCur.position() //add current offset
-                if (mpbDataCur.get(dwSizeToRead) > mpbData.get(mulDataSize.toInt())) {
-                    dwSizeToRead = (mulDataSize - mpbDataCur.position()).toInt()
+                val pos = dwSizeToRead + mpbDataCur!!.position() //add current offset
+                if (mpbDataCur!!.get(dwSizeToRead) > mpbData!!.get(mulDataSize.toInt())) {
+                    dwSizeToRead = (mulDataSize - mpbDataCur!!.position()).toInt()
                 }
-                Simd.SIMDProcessor.Memcpy(pBuffer, mpbDataCur, dwSizeToRead)
-                mpbDataCur.position(pos)
+                Simd.SIMDProcessor.Memcpy(pBuffer, mpbDataCur!!, dwSizeToRead)
+                mpbDataCur!!.position(pos)
                 if (pdwSizeRead != null) {
                     pdwSizeRead[0] = dwSizeToRead
                 }
@@ -170,10 +168,10 @@ object snd_wavefile {
                 if (pBuffer == null) {
                     return -1
                 }
-                dwSizeToRead = mhmmio.Read(pBuffer, dwSizeToRead)
+                dwSizeToRead = mhmmio!!.Read(pBuffer, dwSizeToRead)
                 // this is hit by ogg code, which does it's own byte swapping internally
                 if (!isOgg) {
-                    Lib.Companion.LittleRevBytes(pBuffer.array(), 2, dwSizeToRead / 2)
+                    Lib.LittleRevBytes(pBuffer.array(), 2, dwSizeToRead / 2)
                 }
                 if (pdwSizeRead != null) {
                     pdwSizeRead[0] = dwSizeToRead
@@ -236,7 +234,7 @@ object snd_wavefile {
                 }
 
                 // Seek to the data
-                if (!mhmmio.Seek((mckRiff.dwDataOffset + Integer.BYTES).toLong(), fsOrigin_t.FS_SEEK_SET)) {
+                if (!mhmmio!!.Seek((mckRiff.dwDataOffset + Integer.BYTES).toLong(), fsOrigin_t.FS_SEEK_SET)) {
                     return -1
                 }
 
@@ -244,15 +242,15 @@ object snd_wavefile {
                 mck.ckid = 0
                 do {
                     val ioin = ByteBuffer.allocate(1)
-                    if (0 == mhmmio.Read(ioin, 1)) {
+                    if (0 == mhmmio!!.Read(ioin, 1)) {
                         return -1
                     }
-                    mck.ckid = Integer.toUnsignedLong((mck.ckid ushr 8).toInt() or (ioin.get() shl 24))
-                } while (mck.ckid != snd_wavefile.mmioFOURCC('d'.code, 'a'.code, 't'.code, 'a'.code))
-                mck.cksize = mhmmio.ReadInt()
+                    mck.ckid = Integer.toUnsignedLong((mck.ckid ushr 8).toInt() or (ioin.get().toInt() shl 24))
+                } while (mck.ckid != mmioFOURCC('d'.code, 'a'.code, 't'.code, 'a'.code))
+                mck.cksize = mhmmio!!.ReadInt()
                 assert(!isOgg)
-                mck.cksize = Lib.Companion.LittleLong(mck.cksize)
-                mseekBase = mhmmio.Tell().toLong()
+                mck.cksize = Lib.LittleLong(mck.cksize)
+                mseekBase = mhmmio!!.Tell().toLong()
             }
             return 0
         }
@@ -275,15 +273,15 @@ object snd_wavefile {
             val ckIn = mminfo_s() // chunk info. for general use.
             val pcmWaveFormat = pcmwaveformat_s() // Temp PCM structure to load in.       
             mpwfx = waveformatextensible_s() //memset( &mpwfx, 0, sizeof( waveformatextensible_t ) );
-            mhmmio.Read(mckRiff, 12)
+            mhmmio!!.Read(mckRiff, 12)
             assert(!isOgg)
-            mckRiff.ckid = Lib.Companion.LittleLong(mckRiff.ckid).toLong()
-            mckRiff.cksize = Lib.Companion.LittleLong(mckRiff.cksize)
-            mckRiff.fccType = Lib.Companion.LittleLong(mckRiff.fccType).toLong()
+            mckRiff.ckid = Lib.LittleLong(mckRiff.ckid).toLong()
+            mckRiff.cksize = Lib.LittleLong(mckRiff.cksize)
+            mckRiff.fccType = Lib.LittleLong(mckRiff.fccType).toLong()
             mckRiff.dwDataOffset = 12
 
             // Check to make sure this is a valid wave file
-            if (mckRiff.ckid != snd_wavefile.fourcc_riff || mckRiff.fccType != snd_wavefile.mmioFOURCC(
+            if (mckRiff.ckid != fourcc_riff || mckRiff.fccType != mmioFOURCC(
                     'W'.code,
                     'A'.code,
                     'V'.code,
@@ -296,32 +294,32 @@ object snd_wavefile {
             // Search the input file for for the 'fmt ' chunk.
             ckIn.dwDataOffset = 12
             do {
-                if (8 != mhmmio.Read(ckIn, 8)) {
+                if (8 != mhmmio!!.Read(ckIn, 8)) {
                     return -1
                 }
                 assert(!isOgg)
-                ckIn.ckid = Lib.Companion.LittleLong(ckIn.ckid).toLong()
-                ckIn.cksize = Lib.Companion.LittleLong(ckIn.cksize)
+                ckIn.ckid = Lib.LittleLong(ckIn.ckid).toLong()
+                ckIn.cksize = Lib.LittleLong(ckIn.cksize)
                 ckIn.dwDataOffset += ckIn.cksize - 8
-            } while (ckIn.ckid != snd_wavefile.mmioFOURCC('f'.code, 'm'.code, 't'.code, ' '.code))
+            } while (ckIn.ckid != mmioFOURCC('f'.code, 'm'.code, 't'.code, ' '.code))
 
             // Expect the 'fmt' chunk to be at least as large as <PCMWAVEFORMAT>;
             // if there are extra parameters at the end, we'll ignore them
-            if (ckIn.cksize < pcmwaveformat_s.Companion.BYTES) {
+            if (ckIn.cksize < pcmwaveformat_s.BYTES) {
                 return -1
             }
 
             // Read the 'fmt ' chunk into <pcmWaveFormat>.
-            if (mhmmio.Read(pcmWaveFormat) != pcmwaveformat_s.Companion.BYTES) {
+            if (mhmmio!!.Read(pcmWaveFormat) != pcmwaveformat_s.BYTES) {
                 return -1
             }
             assert(!isOgg)
-            pcmWaveFormat.wf.wFormatTag = Lib.Companion.LittleShort(pcmWaveFormat.wf.wFormatTag.toShort()).toInt()
-            pcmWaveFormat.wf.nChannels = Lib.Companion.LittleShort(pcmWaveFormat.wf.nChannels.toShort()).toInt()
-            pcmWaveFormat.wf.nSamplesPerSec = Lib.Companion.LittleLong(pcmWaveFormat.wf.nSamplesPerSec)
-            pcmWaveFormat.wf.nAvgBytesPerSec = Lib.Companion.LittleLong(pcmWaveFormat.wf.nAvgBytesPerSec)
-            pcmWaveFormat.wf.nBlockAlign = Lib.Companion.LittleShort(pcmWaveFormat.wf.nBlockAlign.toShort()).toInt()
-            pcmWaveFormat.wBitsPerSample = Lib.Companion.LittleShort(pcmWaveFormat.wBitsPerSample.toShort()).toInt()
+            pcmWaveFormat.wf.wFormatTag = Lib.LittleShort(pcmWaveFormat.wf.wFormatTag.toShort()).toInt()
+            pcmWaveFormat.wf.nChannels = Lib.LittleShort(pcmWaveFormat.wf.nChannels.toShort()).toInt()
+            pcmWaveFormat.wf.nSamplesPerSec = Lib.LittleLong(pcmWaveFormat.wf.nSamplesPerSec)
+            pcmWaveFormat.wf.nAvgBytesPerSec = Lib.LittleLong(pcmWaveFormat.wf.nAvgBytesPerSec)
+            pcmWaveFormat.wf.nBlockAlign = Lib.LittleShort(pcmWaveFormat.wf.nBlockAlign.toShort()).toInt()
+            pcmWaveFormat.wBitsPerSample = Lib.LittleShort(pcmWaveFormat.wBitsPerSample.toShort()).toInt()
 
             // Copy the bytes from the pcm structure to the waveformatex_t structure
             mpwfx = waveformatextensible_s(pcmWaveFormat)
@@ -349,7 +347,7 @@ object snd_wavefile {
             return 0
         }
 
-        private fun OpenOGG(strFileName: String?, pwfx: Array<waveformatex_s?>? /*= NULL*/): Int {
+        private fun OpenOGG(strFileName: String, pwfx: Array<waveformatex_s> /*= NULL*/): Int {
 //            memset(pwfx, 0, sizeof(waveformatex_t));
             val error = intArrayOf(0)
             var vi: STBVorbisInfo? = null
@@ -358,8 +356,8 @@ object snd_wavefile {
                 return -1
             }
             win_main.Sys_EnterCriticalSection(sys_public.CRITICAL_SECTION_ONE)
-            val buffer = ByteBuffer.allocate(mhmmio.Length())
-            mhmmio.Read(buffer)
+            val buffer = ByteBuffer.allocate(mhmmio!!.Length())
+            mhmmio!!.Read(buffer)
             try {
                 val d_buffer = BufferUtils.createByteBuffer(buffer.capacity()).put(buffer).rewind()
                 val ov = STBVorbis.stb_vorbis_open_memory(d_buffer, error, null)
@@ -369,27 +367,25 @@ object snd_wavefile {
                     return -1
                 }
                 vi = STBVorbis.stb_vorbis_get_info(ov, STBVorbisInfo.create())
-                mfileTime = mhmmio.Timestamp()
+                mfileTime = mhmmio!!.Timestamp()
                 mpwfx.Format.nSamplesPerSec = vi.sample_rate()
                 mpwfx.Format.nChannels = vi.channels()
                 mpwfx.Format.wBitsPerSample = java.lang.Short.SIZE
                 mdwSize =
                     (STBVorbis.stb_vorbis_stream_length_in_samples(ov) * vi.channels()).toLong() // pcm samples * num channels
                 mbIsReadingFromMemory = false
-                if (idSoundSystemLocal.Companion.s_realTimeDecoding.GetBool()) {
+                if (idSoundSystemLocal.s_realTimeDecoding.GetBool()) {
                     FileSystem_h.fileSystem.CloseFile(mhmmio)
                     mhmmio = null
                     mpwfx.Format.wFormatTag = snd_local.WAVE_FORMAT_TAG_OGG
                     mhmmio = FileSystem_h.fileSystem.OpenFileRead(strFileName)
-                    mMemSize = mhmmio.Length().toLong()
+                    mMemSize = mhmmio!!.Length().toLong()
                 } else {
                     ogg = "we only check if this is not null"
                     mpwfx.Format.wFormatTag = snd_local.WAVE_FORMAT_TAG_PCM
                     mMemSize = mdwSize * java.lang.Short.SIZE / java.lang.Byte.SIZE
                 }
-                if (pwfx != null) {
-                    pwfx[0] = waveformatex_s(mpwfx.Format)
-                }
+                pwfx[0] = waveformatex_s(mpwfx.Format)
             } finally {
                 win_main.Sys_LeaveCriticalSection(sys_public.CRITICAL_SECTION_ONE)
             }

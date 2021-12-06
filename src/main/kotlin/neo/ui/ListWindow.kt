@@ -586,7 +586,7 @@ object ListWindow {
             top = 0
             sizeBias = 0f
             horizontal = false
-            scroller = idSliderWindow(dc, gui)
+            scroller = idSliderWindow(dc!!, gui)
             multipleSel = false
         }
 

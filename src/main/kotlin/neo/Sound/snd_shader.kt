@@ -32,7 +32,7 @@ object snd_shader {
     // unfortunately, our minDistance / maxDistance is specified in meters, and
     // we have far too many of them to change at this time.
     const val DOOM_TO_METERS = 0.0254f // doom to meters
-    const val METERS_TO_DOOM = 1.0f / snd_shader.DOOM_TO_METERS // meters to doom
+    const val METERS_TO_DOOM = 1.0f / DOOM_TO_METERS // meters to doom
 
     // sound classes are used to fade most sounds down inside cinematics, leaving dialog
     // flagged with a non-zero class full volume
@@ -41,20 +41,20 @@ object snd_shader {
     //
     //
     const val SOUND_MAX_LIST_WAVS = 32
-    val SSF_ANTI_PRIVATE_SOUND: Int = Lib.Companion.BIT(1) // plays for everyone but the current listenerId
-    val SSF_GLOBAL: Int = Lib.Companion.BIT(3) // play full volume to all speakers and all listeners
-    val SSF_LOOPING: Int = Lib.Companion.BIT(5) // repeat the sound continuously
-    val SSF_NO_DUPS: Int = Lib.Companion.BIT(9) // try not to play the same sound twice in a row
-    val SSF_NO_FLICKER: Int = Lib.Companion.BIT(8) // always return 1.0 for volume queries
-    val SSF_NO_OCCLUSION: Int = Lib.Companion.BIT(2) // don't flow through portals, only use straight line
-    val SSF_OMNIDIRECTIONAL: Int = Lib.Companion.BIT(4) // fall off with distance, but play same volume in all speakers
-    val SSF_PLAY_ONCE: Int = Lib.Companion.BIT(6) // never restart if already playing on any channel of a given emitter
+    val SSF_ANTI_PRIVATE_SOUND: Int = Lib.BIT(1) // plays for everyone but the current listenerId
+    val SSF_GLOBAL: Int = Lib.BIT(3) // play full volume to all speakers and all listeners
+    val SSF_LOOPING: Int = Lib.BIT(5) // repeat the sound continuously
+    val SSF_NO_DUPS: Int = Lib.BIT(9) // try not to play the same sound twice in a row
+    val SSF_NO_FLICKER: Int = Lib.BIT(8) // always return 1.0 for volume queries
+    val SSF_NO_OCCLUSION: Int = Lib.BIT(2) // don't flow through portals, only use straight line
+    val SSF_OMNIDIRECTIONAL: Int = Lib.BIT(4) // fall off with distance, but play same volume in all speakers
+    val SSF_PLAY_ONCE: Int = Lib.BIT(6) // never restart if already playing on any channel of a given emitter
 
     //
     //
     // sound shader flags
-    val SSF_PRIVATE_SOUND: Int = Lib.Companion.BIT(0) // only plays for the current listenerId
-    val SSF_UNCLAMPED: Int = Lib.Companion.BIT(7) // don't clamp calculated volumes at 1.0
+    val SSF_PRIVATE_SOUND: Int = Lib.BIT(0) // only plays for the current listenerId
+    val SSF_UNCLAMPED: Int = Lib.BIT(7) // don't clamp calculated volumes at 1.0
 
     // these options can be overriden from sound shader defaults on a per-emitter and per-channel basis
     class soundShaderParms_t {
@@ -72,12 +72,12 @@ object snd_shader {
     // it is somewhat tempting to make this a virtual class to hide the private
     // details here, but that doesn't fit easily with the decl manager at the moment.
     class idSoundShader : idDecl() {
-        var entries: Array<idSoundSample?>? = arrayOfNulls<idSoundSample?>(snd_shader.SOUND_MAX_LIST_WAVS)
+        var entries: Array<idSoundSample?> = Array(SOUND_MAX_LIST_WAVS) { null }
         var leadinVolume // allows light breaking leadin sounds to be much louder than the broken loop
                 = 0f
 
         //
-        var leadins: Array<idSoundSample?>? = arrayOfNulls<idSoundSample?>(snd_shader.SOUND_MAX_LIST_WAVS)
+        var leadins: Array<idSoundSample?> = Array(SOUND_MAX_LIST_WAVS) { null }
         var numEntries = 0
 
         // friend class idSoundWorldLocal;
@@ -88,11 +88,11 @@ object snd_shader {
         //
         // options from sound shader text
         var parms // can be overriden on a per-channel basis
-                : snd_shader.soundShaderParms_t?
+                : soundShaderParms_t = soundShaderParms_t()
         var speakerMask = 0
         private var altSound: idSoundShader? = null
         private val desc // description
-                : idStr?
+                : idStr = idStr()
         private var errorDuringParse = false
         private var numLeadins = 0
 
@@ -108,7 +108,7 @@ object snd_shader {
             // if there exists a wav file with the same name
             return if (true) { //fileSystem->ReadFile( wavname, NULL ) != -1 ) {
                 val generated = StringBuffer(2048)
-                idStr.Companion.snPrintf(
+                idStr.snPrintf(
                     generated, generated.capacity(),
                     """
                         sound %s // IMPLICITLY GENERATED
@@ -125,10 +125,10 @@ object snd_shader {
             }
         }
 
-        override fun DefaultDefinition(): String? {
+        override fun DefaultDefinition(): String {
             return """{
-	_default.wav
-}"""
+	            _default.wav
+            }"""
         }
 
         /*
@@ -138,7 +138,7 @@ object snd_shader {
          this is called by the declManager
          ===============
          */
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum())
             src.SetFlags(DeclManager.DECL_LEXER_FLAGS)
@@ -161,11 +161,11 @@ object snd_shader {
         override fun List() {
             var shaders: idStrList
             Common.common.Printf("%4d: %s\n", Index(), GetName())
-            if (idStr.Companion.Icmp(GetDescription(), "<no description>") != 0) {
+            if (idStr.Icmp(GetDescription(), "<no description>") != 0) {
                 Common.common.Printf("      description: %s\n", GetDescription())
             }
             for (k in 0 until numLeadins) {
-                val objectp = leadins.get(k)
+                val objectp = leadins[k]
                 if (objectp != null) {
                     Common.common.Printf(
                         "      %5dms %4dKb %s (LEADIN)\n",
@@ -176,7 +176,7 @@ object snd_shader {
                 }
             }
             for (k in 0 until numEntries) {
-                val objectp = entries.get(k)
+                val objectp = entries[k]
                 if (objectp != null) {
                     Common.common.Printf(
                         "      %5dms %4dKb %s\n",
@@ -188,7 +188,7 @@ object snd_shader {
             }
         }
 
-        fun GetDescription(): String? {
+        fun GetDescription(): String {
             return desc.toString()
         }
 
@@ -204,20 +204,20 @@ object snd_shader {
 
         // returns NULL if an AltSound isn't defined in the shader.
         // we use this for pairing a specific broken light sound with a normal light sound
-        fun GetAltSound(): idSoundShader? {
-            return altSound
+        fun GetAltSound(): idSoundShader {
+            return altSound!!
         }
 
         fun HasDefaultSound(): Boolean {
             for (i in 0 until numEntries) {
-                if (entries.get(i) != null && entries.get(i).defaultSound) {
+                if (entries[i] != null && entries[i]!!.defaultSound) {
                     return true
                 }
             }
             return false
         }
 
-        fun GetParms(): snd_shader.soundShaderParms_t? {
+        fun GetParms(): soundShaderParms_t {
             return parms
         }
 
@@ -225,15 +225,15 @@ object snd_shader {
             return numLeadins + numEntries
         }
 
-        fun GetSound(index: Int): String? {
+        fun GetSound(index: Int): String {
             var index = index
             if (index >= 0) {
                 if (index < numLeadins) {
-                    return leadins.get(index).name.toString()
+                    return leadins[index]!!.name.toString()
                 }
                 index -= numLeadins
                 if (index < numEntries) {
-                    return entries.get(index).name.toString()
+                    return entries[index]!!.name.toString()
                 }
             }
             return ""
@@ -244,10 +244,10 @@ object snd_shader {
             var ret = false
             i = 0
             while (i < numLeadins) {
-                if (leadins.get(i).objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) {
+                if (leadins[i]!!.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) {
                     Common.common.Warning(
                         "sound shader '%s' has shakes and uses OGG file '%s'",
-                        GetName(), leadins.get(i).name
+                        GetName(), leadins[i]!!.name
                     )
                     ret = true
                 }
@@ -255,10 +255,10 @@ object snd_shader {
             }
             i = 0
             while (i < numEntries) {
-                if (entries.get(i).objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) {
+                if (entries[i]!!.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) {
                     Common.common.Warning(
                         "sound shader '%s' has shakes and uses OGG file '%s'",
-                        GetName(), entries.get(i).name
+                        GetName(), entries[i]!!.name
                     )
                     ret = true
                 }
@@ -277,7 +277,7 @@ object snd_shader {
             altSound = null
         }
 
-        private fun ParseShader(src: idLexer?): Boolean {
+        private fun ParseShader(src: idLexer): Boolean {
             var i: Int
             val token = idToken()
             parms.minDistance = 1f
@@ -289,26 +289,26 @@ object snd_shader {
             speakerMask = 0
             altSound = null
             i = 0
-            while (i < snd_shader.SOUND_MAX_LIST_WAVS) {
-                leadins.get(i) = null
-                entries.get(i) = null
+            while (i < SOUND_MAX_LIST_WAVS) {
+                leadins[i] = null
+                entries[i] = null
                 i++
             }
             numEntries = 0
             numLeadins = 0
-            var maxSamples: Int = idSoundSystemLocal.Companion.s_maxSoundsPerShader.GetInteger()
-            if (Common.com_makingBuild.GetBool() || maxSamples <= 0 || maxSamples > snd_shader.SOUND_MAX_LIST_WAVS) {
-                maxSamples = snd_shader.SOUND_MAX_LIST_WAVS
+            var maxSamples: Int = idSoundSystemLocal.s_maxSoundsPerShader.GetInteger()
+            if (Common.com_makingBuild.GetBool() || maxSamples <= 0 || maxSamples > SOUND_MAX_LIST_WAVS) {
+                maxSamples = SOUND_MAX_LIST_WAVS
             }
             while (true) {
                 if (!src.ExpectAnyToken(token)) {
                     return false
                 } // end of definition
-                else if (token == "}") {
+                else if (token.toString() == "}") {
                     break
                 } // minimum number of sounds
                 else if (0 == token.Icmp("minSamples")) {
-                    maxSamples = idMath.ClampInt(src.ParseInt(), snd_shader.SOUND_MAX_LIST_WAVS, maxSamples)
+                    maxSamples = idMath.ClampInt(src.ParseInt(), SOUND_MAX_LIST_WAVS, maxSamples)
                 } // description
                 else if (0 == token.Icmp("description")) {
                     src.ReadTokenOnLine(token)
@@ -364,7 +364,7 @@ object snd_shader {
                 } // soundClass
                 else if (0 == token.Icmp("soundClass")) {
                     parms.soundClass = src.ParseInt()
-                    if (parms.soundClass < 0 || parms.soundClass >= snd_shader.SOUND_MAX_CLASSES) {
+                    if (parms.soundClass < 0 || parms.soundClass >= SOUND_MAX_CLASSES) {
                         src.Warning("SoundClass out of range")
                         return false
                     }
@@ -379,37 +379,37 @@ object snd_shader {
                     // no longer supported
                 } // no_dups
                 else if (0 == token.Icmp("no_dups")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_NO_DUPS
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_NO_DUPS
                 } // no_flicker
                 else if (0 == token.Icmp("no_flicker")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_NO_FLICKER
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_NO_FLICKER
                 } // plain
                 else if (0 == token.Icmp("plain")) {
                     // no longer supported
                 } // looping
                 else if (0 == token.Icmp("looping")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_LOOPING
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_LOOPING
                 } // no occlusion
                 else if (0 == token.Icmp("no_occlusion")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_NO_OCCLUSION
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_NO_OCCLUSION
                 } // private
                 else if (0 == token.Icmp("private")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_PRIVATE_SOUND
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_PRIVATE_SOUND
                 } // antiPrivate
                 else if (0 == token.Icmp("antiPrivate")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_ANTI_PRIVATE_SOUND
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_ANTI_PRIVATE_SOUND
                 } // once
                 else if (0 == token.Icmp("playonce")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_PLAY_ONCE
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_PLAY_ONCE
                 } // global
                 else if (0 == token.Icmp("global")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_GLOBAL
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_GLOBAL
                 } // unclamped
                 else if (0 == token.Icmp("unclamped")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_UNCLAMPED
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_UNCLAMPED
                 } // omnidirectional
                 else if (0 == token.Icmp("omnidirectional")) {
-                    parms.soundShaderFlags = parms.soundShaderFlags or snd_shader.SSF_OMNIDIRECTIONAL
+                    parms.soundShaderFlags = parms.soundShaderFlags or SSF_OMNIDIRECTIONAL
                 } // onDemand can't be a parms, because we must track all references and overrides would confuse it
                 else if (0 == token.Icmp("onDemand")) {
                     // no longer loading sounds on demand
@@ -422,7 +422,7 @@ object snd_shader {
                         return false
                     }
                     if (snd_system.soundSystemLocal.soundCache != null && numLeadins < maxSamples) {
-                        leadins.get(numLeadins) = snd_system.soundSystemLocal.soundCache.FindSound(token, onDemand)
+                        leadins[numLeadins] = snd_system.soundSystemLocal.soundCache!!.FindSound(token, onDemand)
                         numLeadins++
                     }
                 } else if (token.Find(".wav", false) != -1 || token.Find(".ogg", false) != -1) {
@@ -445,7 +445,7 @@ object snd_shader {
                                 }
                             }
                         }
-                        entries.get(numEntries) = snd_system.soundSystemLocal.soundCache.FindSound(token, onDemand)
+                        entries[numEntries] = snd_system.soundSystemLocal.soundCache!!.FindSound(token, onDemand)
                         numEntries++
                     }
                 } else {
@@ -459,15 +459,13 @@ object snd_shader {
             return true
         }
 
-        fun oSet(FindSound: idSoundShader?) {
+        fun oSet(FindSound: idSoundShader) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
         //
         //
         init {
-            parms = snd_shader.soundShaderParms_t()
-            desc = idStr()
             Init()
         }
     }

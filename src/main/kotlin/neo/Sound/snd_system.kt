@@ -25,6 +25,7 @@ import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Integer
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_SoundName
 import neo.framework.Common
 import neo.framework.Common.MemInfo_t
+import neo.idlib.CmdArgs
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h.idMath
@@ -46,8 +47,9 @@ import java.util.*
 object snd_system {
     var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
     var soundSystem: idSoundSystem = soundSystemLocal
+
     fun setSoundSystems(soundSystem: idSoundSystem) {
-        soundSystemLocal = soundSystem
+        soundSystemLocal = soundSystem as idSoundSystemLocal
         snd_system.soundSystem = soundSystemLocal
     }
 
@@ -85,40 +87,40 @@ object snd_system {
     //        }
         : idSoundSystem() {
         companion object {
-            val s_clipVolumes: idCVar? = idCVar("s_clipVolumes", "1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_constantAmplitude: idCVar? =
+            val s_clipVolumes: idCVar = idCVar("s_clipVolumes", "1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
+            val s_constantAmplitude: idCVar =
                 idCVar("s_constantAmplitude", "-1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_decompressionLimit: idCVar? = idCVar(
+            val s_decompressionLimit: idCVar = idCVar(
                 "s_decompressionLimit",
                 "6",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
                 "specifies maximum uncompressed sample length in seconds"
             )
-            val s_doorDistanceAdd: idCVar? = idCVar(
+            val s_doorDistanceAdd: idCVar = idCVar(
                 "s_doorDistanceAdd",
                 "150",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
                 "reduce sound volume with this distance when going through a door"
             )
-            val s_dotbias2: idCVar? = idCVar("s_dotbias2", "1.1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_dotbias6: idCVar? = idCVar("s_dotbias6", "0.8", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_drawSounds: idCVar? = idCVar(
+            val s_dotbias2: idCVar = idCVar("s_dotbias2", "1.1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
+            val s_dotbias6: idCVar = idCVar("s_dotbias6", "0.8", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
+            val s_drawSounds: idCVar = idCVar(
                 "s_drawSounds",
                 "0",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_INTEGER,
                 "",
-                0,
-                2,
+                0f,
+                2f,
                 ArgCompletion_Integer(0, 2)
             )
-            val s_enviroSuitCutoffFreq: idCVar? =
+            val s_enviroSuitCutoffFreq: idCVar =
                 idCVar("s_enviroSuitCutoffFreq", "2000", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_enviroSuitCutoffQ: idCVar? =
+            val s_enviroSuitCutoffQ: idCVar =
                 idCVar("s_enviroSuitCutoffQ", "2", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_enviroSuitVolumeScale: idCVar? =
+            val s_enviroSuitVolumeScale: idCVar =
                 idCVar("s_enviroSuitVolumeScale", "0.9", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_force22kHz: idCVar? = idCVar("s_force22kHz", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_globalFraction: idCVar? = idCVar(
+            val s_force22kHz: idCVar = idCVar("s_force22kHz", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
+            val s_globalFraction: idCVar = idCVar(
                 "s_globalFraction",
                 "0.8",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
@@ -132,25 +134,25 @@ object snd_system {
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE,
                 "OpenAL DLL name/path"
             )
-            val s_maxSoundsPerShader: idCVar? = idCVar(
+            val s_maxSoundsPerShader: idCVar = idCVar(
                 "s_maxSoundsPerShader",
                 "0",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE,
                 "",
-                0,
-                10,
+                0f,
+                10f,
                 ArgCompletion_Integer(0, 10)
             )
-            val s_meterTopTime: idCVar? = idCVar(
+            val s_meterTopTime: idCVar = idCVar(
                 "s_meterTopTime",
                 "2000",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
                 ""
             )
-            val s_minVolume2: idCVar? =
+            val s_minVolume2: idCVar =
                 idCVar("s_minVolume2", "0.25", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_minVolume6: idCVar? = idCVar("s_minVolume6", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_muteEAXReverb: idCVar? =
+            val s_minVolume6: idCVar = idCVar("s_minVolume6", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
+            val s_muteEAXReverb: idCVar =
                 idCVar("s_muteEAXReverb", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "mute eax reverb")
 
             //
@@ -162,73 +164,73 @@ object snd_system {
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE,
                 "number of speakers"
             )
-            val s_playDefaultSound: idCVar? = idCVar(
+            val s_playDefaultSound: idCVar = idCVar(
                 "s_playDefaultSound",
                 "1",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 "play a beep for missing sounds"
             )
-            val s_quadraticFalloff: idCVar? =
+            val s_quadraticFalloff: idCVar =
                 idCVar("s_quadraticFalloff", "1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_realTimeDecoding: idCVar? = idCVar(
+            val s_realTimeDecoding: idCVar = idCVar(
                 "s_realTimeDecoding",
                 "1",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_INIT,
                 ""
             )
-            val s_reverbFeedback: idCVar? =
+            val s_reverbFeedback: idCVar =
                 idCVar("s_reverbFeedback", "0.333", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_reverbTime: idCVar? =
+            val s_reverbTime: idCVar =
                 idCVar("s_reverbTime", "1000", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_FLOAT, "")
-            val s_reverse: idCVar? =
+            val s_reverse: idCVar =
                 idCVar("s_reverse", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL, "")
-            val s_showLevelMeter: idCVar? =
+            val s_showLevelMeter: idCVar =
                 idCVar("s_showLevelMeter", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_showStartSound: idCVar? =
+            val s_showStartSound: idCVar =
                 idCVar("s_showStartSound", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_singleEmitter: idCVar? = idCVar(
+            val s_singleEmitter: idCVar = idCVar(
                 "s_singleEmitter",
                 "0",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_INTEGER,
                 "mute all sounds but this emitter"
             )
-            val s_skipHelltimeFX: idCVar? =
+            val s_skipHelltimeFX: idCVar =
                 idCVar("s_skipHelltimeFX", "0", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
 
             //
-            val s_slowAttenuate: idCVar? = idCVar(
+            val s_slowAttenuate: idCVar = idCVar(
                 "s_slowAttenuate",
                 "1",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL,
                 "slowmo sounds attenuate over shorted distance"
             )
-            val s_spatializationDecay: idCVar? = idCVar(
+            val s_spatializationDecay: idCVar = idCVar(
                 "s_spatializationDecay",
                 "2",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
                 ""
             )
-            val s_subFraction: idCVar? = idCVar(
+            val s_subFraction: idCVar = idCVar(
                 "s_subFraction",
                 "0.75",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
                 "volume to subwoofer in 5.1"
             )
-            val s_useEAXReverb: idCVar? = idCVar(
+            val s_useEAXReverb: idCVar = idCVar(
                 "s_useEAXReverb",
                 "1",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
                 "use EAX reverb"
             )
-            val s_useOcclusion: idCVar? =
+            val s_useOcclusion: idCVar =
                 idCVar("s_useOcclusion", "1", CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL, "")
-            val s_useOpenAL: idCVar? = idCVar(
+            val s_useOpenAL: idCVar = idCVar(
                 "s_useOpenAL",
                 "1",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
                 "use OpenAL"
             )
-            val s_volume: idCVar? = idCVar(
+            val s_volume: idCVar = idCVar(
                 "s_volume_dB",
                 "0",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
@@ -268,7 +270,7 @@ object snd_system {
         //        public boolean alEAXGet;
         //        public boolean alEAXSetBufferMode;
         //        public boolean alEAXGetBufferMode;
-        var EFXDatabase: idEFXFile? = idEFXFile()
+        var EFXDatabase: idEFXFile = idEFXFile()
         var buffers // statistics
                 = 0
 
@@ -277,20 +279,20 @@ object snd_system {
                 : idSoundWorldLocal? = null
         var efxloaded = false
         var finalMixBuffer // points inside realAccum at a 16 byte aligned boundary
-                : FloatArray?
+                : FloatArray
 
         //
-        val fxList: idList<SoundFX?>? = idList()
+        val fxList: idList<SoundFX> = idList()
 
         //
-        var graph: IntArray?
+        var graph: IntArray
 
         //
         var isInitialized = false
 
         //
-        var meterTops: IntArray? = IntArray(256)
-        var meterTopsTime: IntArray? = IntArray(256)
+        var meterTops: IntArray = IntArray(256)
+        var meterTopsTime: IntArray = IntArray(256)
         var muted = false
 
         //
@@ -304,19 +306,19 @@ object snd_system {
         //
         var openalDevice: Long = 0
         var   /*ALsizei*/openalSourceCount = 0
-        var openalSources: Array<openalSource_t?>? = arrayOfNulls<openalSource_t?>(256)
+        var openalSources: Array<openalSource_t?> = arrayOfNulls<openalSource_t?>(256)
 
         //
-        var realAccum: FloatArray? = FloatArray(6 * Simd.MIXBUFFER_SAMPLES + 16)
+        var realAccum: FloatArray = FloatArray(6 * Simd.MIXBUFFER_SAMPLES + 16)
         var shutdown = false
         var snd_audio_hw: idAudioHardware? = null
         var soundCache: idSoundCache? = null
 
         //
-        var soundStats: s_stats? = s_stats() // NOTE: updated throughout the code, not displayed anywhere
+        var soundStats: s_stats = s_stats() // NOTE: updated throughout the code, not displayed anywhere
 
         //
-        var volumesDB: FloatArray? = FloatArray(1200) // dB to float volume conversion
+        var volumesDB: FloatArray = FloatArray(1200) // dB to float volume conversion
 
         // all non-hardware initialization
         /*
@@ -769,7 +771,7 @@ object snd_system {
          ===================
          */
         // direct mixing called from the sound driver thread for OSes that support it
-        override fun AsyncMix(soundTime: Int, mixBuffer: FloatArray?): Int {
+        override fun AsyncMix(soundTime: Int, mixBuffer: FloatArray): Int {
             val inTime: Int
             val numSpeakers: Int
             if (!isInitialized || shutdown || TempDump.NOT(snd_audio_hw)) {
@@ -790,7 +792,7 @@ object snd_system {
             muted = muteOn
         }
 
-        override fun ImageForTime(milliseconds: Int, waveform: Boolean): cinData_t? {
+        override fun ImageForTime(milliseconds: Int, waveform: Boolean): cinData_t {
             val ret = cinData_t()
             var i: Int
             var j: Int
@@ -955,7 +957,7 @@ object snd_system {
             return ret
         }
 
-        override fun GetSoundDecoderInfo(index: Int, decoderInfo: soundDecoderInfo_t?): Int {
+        override fun GetSoundDecoderInfo(index: Int, decoderInfo: soundDecoderInfo_t): Int {
             var i: Int
             var j: Int
             val firstEmitter: Int
@@ -1009,7 +1011,7 @@ object snd_system {
         }
 
         // if rw == NULL, no portal occlusion or rendered debugging is available
-        override fun AllocSoundWorld(rw: idRenderWorld?): idSoundWorld? {
+        override fun AllocSoundWorld(rw: idRenderWorld): idSoundWorld {
             val local = idSoundWorldLocal()
             local.Init(rw)
             return local
@@ -1023,13 +1025,13 @@ object snd_system {
          ===================
          */
         // specifying NULL will cause silence to be played
-        override fun SetPlayingSoundWorld(soundWorld: idSoundWorld?) {
-            currentSoundWorld = soundWorld as idSoundWorldLocal?
+        override fun SetPlayingSoundWorld(soundWorld: idSoundWorld) {
+            currentSoundWorld = soundWorld as idSoundWorldLocal
         }
 
         // some tools, like the sound dialog, may be used in both the game and the editor
         // This can return NULL, so check!
-        override fun GetPlayingSoundWorld(): idSoundWorld? {
+        override fun GetPlayingSoundWorld(): idSoundWorld {
             return currentSoundWorld
         }
 
@@ -1044,7 +1046,7 @@ object snd_system {
             }
         }
 
-        override fun EndLevelLoad(mapString: String?) {
+        override fun EndLevelLoad(mapString: String) {
             if (!isInitialized) {
                 return
             }
@@ -1062,7 +1064,7 @@ object snd_system {
             }
         }
 
-        override fun PrintMemInfo(mi: MemInfo_t?) {
+        override fun PrintMemInfo(mi: MemInfo_t) {
             soundCache.PrintMemInfo(mi)
         }
 
@@ -1131,7 +1133,7 @@ object snd_system {
             return ms * (snd_local.PRIMARYFREQ / 1000)
         }
 
-        fun DoEnviroSuit(samples: FloatArray?, numSamples: Int, numSpeakers: Int) {
+        fun DoEnviroSuit(samples: FloatArray, numSamples: Int, numSpeakers: Int) {
             var out: FloatArray
             val out_p = 2
             var `in`: FloatArray
@@ -1218,7 +1220,7 @@ object snd_system {
             }
         }
 
-        fun  /*ALuint*/AllocOpenALSource(chan: idSoundChannel?, looping: Boolean, stereo: Boolean): Int {
+        fun  /*ALuint*/AllocOpenALSource(chan: idSoundChannel, looping: Boolean, stereo: Boolean): Int {
             var timeOldestZeroVolSingleShot = win_shared.Sys_Milliseconds()
             var timeOldestZeroVolLooping = win_shared.Sys_Milliseconds()
             var timeOldestSingle = win_shared.Sys_Milliseconds()
@@ -1331,7 +1333,7 @@ object snd_system {
      ===============
      */
     internal class SoundReloadSounds_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (TempDump.NOT(soundSystemLocal.soundCache)) {
                 return
             }
@@ -1343,7 +1345,7 @@ object snd_system {
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = SoundReloadSounds_f()
+            val INSTANCE: cmdFunction_t = SoundReloadSounds_f()
         }
     }
 
@@ -1355,7 +1357,7 @@ object snd_system {
      ===============
      */
     internal class ListSounds_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val snd = args.Argv(1)
             if (TempDump.NOT(soundSystemLocal.soundCache)) {
@@ -1407,7 +1409,7 @@ object snd_system {
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = ListSounds_f()
+            val INSTANCE: cmdFunction_t = ListSounds_f()
         }
     }
 
@@ -1417,7 +1419,7 @@ object snd_system {
      ===============
      */
     internal class ListSoundDecoders_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var j: Int
             var numActiveDecoders: Int
@@ -1505,7 +1507,7 @@ object snd_system {
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = ListSoundDecoders_f()
+            val INSTANCE: cmdFunction_t = ListSoundDecoders_f()
         }
     }
 
@@ -1517,7 +1519,7 @@ object snd_system {
      ===============
      */
     internal class TestSound_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
                 Common.common.Printf("Usage: testSound <file>\n")
                 return
@@ -1528,7 +1530,7 @@ object snd_system {
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = TestSound_f()
+            val INSTANCE: cmdFunction_t = TestSound_f()
         }
     }
 
@@ -1542,7 +1544,7 @@ object snd_system {
      ===============
      */
     internal class SoundSystemRestart_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             soundSystem.SetMute(true)
             soundSystemLocal.ShutdownHW()
             soundSystemLocal.InitHW()
@@ -1550,7 +1552,7 @@ object snd_system {
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = SoundSystemRestart_f()
+            val INSTANCE: cmdFunction_t = SoundSystemRestart_f()
         }
     }
 }

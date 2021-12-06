@@ -501,7 +501,7 @@ object EditWindow {
             cvar = null
             liveUpdate.data = true
             readonly = false
-            scroller = idSliderWindow(dc, gui)
+            scroller = idSliderWindow(dc!!, gui)
         }
 
         private fun EnsureCursorVisible() {

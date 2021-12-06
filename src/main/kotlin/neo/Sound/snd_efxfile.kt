@@ -11,7 +11,7 @@ import java.nio.ByteBuffer
  *
  */
 class snd_efxfile {
-    internal class idSoundEffect //	~idSoundEffect() { 
+    class idSoundEffect //	~idSoundEffect() {
     //		if ( data && datasize ) {
     //			Mem_Free( data );
     //			data = NULL;
@@ -20,20 +20,20 @@ class snd_efxfile {
     {
         var data: ByteBuffer? = null
         var datasize = 0
-        var name: idStr? = null
+        val name: idStr = idStr()
     }
 
-    internal class idEFXFile {
-        val effects: idList<idSoundEffect?>?
+    class idEFXFile {
+        val effects: idList<idSoundEffect>
 
         //	~idEFXFile();
-        fun FindEffect(name: idStr?, effect: Array<idSoundEffect?>?, index: IntArray?): Boolean {
+        fun FindEffect(name: idStr, effect: Array<idSoundEffect>, index: IntArray): Boolean {
             var i: Int
             i = 0
             while (i < effects.Num()) {
-                if (effects.get(i) != null && effects.get(i).name == name) {
-                    effect.get(0) = effects.get(i)
-                    index.get(0) = i
+                if (effects[i].name == name) {
+                    effect[0] = effects[i]
+                    index[0] = i
                     return true
                 }
                 i++
@@ -41,7 +41,7 @@ class snd_efxfile {
             return false
         }
 
-        fun ReadEffect(src: idLexer?, effect: idSoundEffect?): Boolean {
+        fun ReadEffect(src: idLexer, effect: idSoundEffect): Boolean {
             return false
             //            idToken name, token;
 //
@@ -177,7 +177,7 @@ class snd_efxfile {
         }
 
         @JvmOverloads
-        fun LoadFile(filename: String?, OSPath: Boolean = false /*= false*/): Boolean {
+        fun LoadFile(filename: String, OSPath: Boolean = false /*= false*/): Boolean {
             val src = idLexer(Lexer.LEXFL_NOSTRINGCONCAT)
             var token: idToken
             src.LoadFile(filename, OSPath)

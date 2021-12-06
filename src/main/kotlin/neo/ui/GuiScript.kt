@@ -447,7 +447,7 @@ object GuiScript {
             if (parm != null) {
                 val win = window.GetGui().GetDesktop().FindChildByName(parm.data.toString())
                 if (win != null && win.win != null) {
-                    window.SetFocus(win.win)
+                    window.SetFocus(win.win!!)
                 }
             }
         }

@@ -48,7 +48,7 @@ object snd_local {
 
      ===================================================================================
      */
-    internal class waveformatex_s {
+    class waveformatex_s {
         var cbSize // The count in bytes of the size of extra information (after cbSize)
                 = 0
         var nAvgBytesPerSec // for buffer estimation
@@ -90,7 +90,7 @@ object snd_local {
     }
 
     /* OLD general waveform format structure (information common to all formats) */
-    internal class waveformat_s {
+    class waveformat_s {
         var   /*dword*/nAvgBytesPerSec // for buffer estimation
                 = 0
         var   /*word*/nBlockAlign // block size of data
@@ -116,7 +116,7 @@ object snd_local {
 
     // };
     /* specific waveform format structure for PCM data */
-    internal class pcmwaveformat_s : SERiAL {
+    class pcmwaveformat_s : SERiAL {
         var   /*word*/wBitsPerSample = 0
         var wf: waveformat_s = waveformat_s()
         override fun AllocBuffer(): ByteBuffer {
@@ -126,12 +126,12 @@ object snd_local {
         override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN)
             wf = waveformat_s()
-            wf.wFormatTag = java.lang.Short.toUnsignedInt(buffer.getShort())
-            wf.nChannels = java.lang.Short.toUnsignedInt(buffer.getShort())
-            wf.nSamplesPerSec = buffer.getInt()
-            wf.nAvgBytesPerSec = buffer.getInt()
-            wf.nBlockAlign = java.lang.Short.toUnsignedInt(buffer.getShort())
-            wBitsPerSample = java.lang.Short.toUnsignedInt(buffer.getShort())
+            wf.wFormatTag = java.lang.Short.toUnsignedInt(buffer.short)
+            wf.nChannels = java.lang.Short.toUnsignedInt(buffer.short)
+            wf.nSamplesPerSec = buffer.int
+            wf.nAvgBytesPerSec = buffer.int
+            wf.nBlockAlign = java.lang.Short.toUnsignedInt(buffer.short)
+            wBitsPerSample = java.lang.Short.toUnsignedInt(buffer.short)
         }
 
         override fun Write(): ByteBuffer {
@@ -159,7 +159,7 @@ object snd_local {
     // ( (dword)(byte)(ch2) << 16 ) | ( (dword)(byte)(ch3) << 24 ) )
     // #endif
     // #define fourcc_riff     mmioFOURCC('R', 'I', 'F', 'F')
-    internal class waveformatextensible_s() {
+    class waveformatextensible_s() {
         var Format: waveformatex_s
 
         //        union {
@@ -214,13 +214,13 @@ object snd_local {
 
         override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN)
-            ckid = Integer.toUnsignedLong(buffer.getInt())
-            cksize = buffer.getInt()
+            ckid = Integer.toUnsignedLong(buffer.int)
+            cksize = buffer.int
             if (buffer.hasRemaining()) {
-                fccType = Integer.toUnsignedLong(buffer.getInt())
+                fccType = Integer.toUnsignedLong(buffer.int)
             }
             if (buffer.hasRemaining()) {
-                dwDataOffset = buffer.getInt()
+                dwDataOffset = buffer.int
             }
         }
 
@@ -254,7 +254,7 @@ object snd_local {
         // virtual					~idSampleDecoder() {}
         abstract fun Decode(sample: idSoundSample, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer)
         abstract fun ClearDecoder()
-        abstract fun GetSample(): idSoundSample
+        abstract fun GetSample(): idSoundSample?
         abstract fun GetLastDecodeTime(): Int
 
         companion object {

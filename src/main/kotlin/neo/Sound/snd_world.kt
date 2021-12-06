@@ -43,7 +43,7 @@ import java.nio.*
  *
  */
 class snd_world {
-    internal class s_stats {
+    class s_stats {
         var activeSounds = 0
         var missedUpdateWindow = 0
         var missedWindow = 0

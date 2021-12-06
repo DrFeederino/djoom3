@@ -55,24 +55,13 @@ object sys_public {
     const val CPU_EASYARGS = 1
     const val FPU_EXCEPTION_DENORMALIZED_OPERAND = 2
     const val FPU_EXCEPTION_DIVIDE_BY_ZERO = 4
-
-    //                
     const val FPU_EXCEPTION_INEXACT_RESULT = 32
-
-    //
-    //
     const val FPU_EXCEPTION_INVALID_OPERATION = 1
     const val FPU_EXCEPTION_NUMERIC_OVERFLOW = 8
     const val FPU_EXCEPTION_NUMERIC_UNDERFLOW = 16
-
-    //
     const val MAX_CRITICAL_SECTIONS = 4
     const val MAX_THREADS = 10
-
-    //
     val g_threads: Array<xthreadInfo?> = arrayOfNulls<xthreadInfo?>(MAX_THREADS)
-
-    // };
     const val MAX_TRIGGER_EVENTS = 4
     const val TRIGGER_EVENT_THREE = 3
     const val TRIGGER_EVENT_TWO = 2
