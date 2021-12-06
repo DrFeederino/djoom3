@@ -86,8 +86,8 @@ class Session {
         var renderdemoVersion = 0
 
         // The render world and sound world used for this session.
-        var rw: idRenderWorld? = null
-        var sw: idSoundWorld? = null
+        lateinit var rw: idRenderWorld
+        lateinit var sw: idSoundWorld
         var writeDemo: idDemoFile? = null
 
         //	public abstract			~idSession() {}

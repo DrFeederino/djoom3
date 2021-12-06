@@ -609,17 +609,17 @@ object Game {
         fun ANIM_GetAnimFromEntityDef(classname: String?, animname: String?): idMD5Anim? {
             val args: idDict?
             var md5anim: idMD5Anim?
-            val anim: idAnim
+            val anim: idAnim?
             val animNum: Int
             val modelname: String?
-            val modelDef: idDeclModelDef
+            val modelDef: idDeclModelDef?
             args = Game_local.gameLocal.FindEntityDefDict(classname, false)
             if (null == args) {
                 return null
             }
             md5anim = null
             modelname = args.GetString("model")
-            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef
+            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef?
             if (modelDef != null) {
                 animNum = modelDef.GetAnim(animname)
                 if (animNum != 0) {
@@ -632,7 +632,7 @@ object Game {
             return md5anim
         }
 
-        fun ANIM_GetNumAnimsFromEntityDef(args: idDict?): Int {
+        fun ANIM_GetNumAnimsFromEntityDef(args: idDict): Int {
             val modelname: String?
             val modelDef: idDeclModelDef
             modelname = args.GetString("model")

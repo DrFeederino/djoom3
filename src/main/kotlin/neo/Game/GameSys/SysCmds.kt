@@ -137,7 +137,7 @@ object SysCmds {
         if (text.Length() == 0) {
             return
         }
-        if (text.oGet(text.Length() - 1) == '\n') {
+        if (text.get(text.Length() - 1) == '\n') {
             text.set(text.Length() - 1, '\u0000')
         }
         name = "player"

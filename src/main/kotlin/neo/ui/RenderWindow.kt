@@ -23,44 +23,45 @@ import neo.ui.Winvar.idWinBool
 import neo.ui.Winvar.idWinStr
 import neo.ui.Winvar.idWinVar
 import neo.ui.Winvar.idWinVec4
+import kotlin.math.atan
 
 /**
  *
  */
 class RenderWindow {
     class idRenderWindow : idWindow {
-        private val animClass: idStr? = idStr()
-        private val animName: idWinStr? = idWinStr()
-        private val lightColor: idWinVec4? = idWinVec4()
-        private val lightOrigin: idWinVec4? = idWinVec4()
-        private val modelName: idWinStr? = idWinStr()
-        private val modelOrigin: idWinVec4? = idWinVec4()
-        private val modelRotate: idWinVec4? = idWinVec4()
-        private val needsRender: idWinBool? = idWinBool()
-        private val rLight: renderLight_s? = renderLight_s()
-        private val viewOffset: idWinVec4? = idWinVec4()
+        private val animClass: idStr = idStr()
+        private val animName: idWinStr = idWinStr()
+        private val lightColor: idWinVec4 = idWinVec4()
+        private val lightOrigin: idWinVec4 = idWinVec4()
+        private val modelName: idWinStr = idWinStr()
+        private val modelOrigin: idWinVec4 = idWinVec4()
+        private val modelRotate: idWinVec4 = idWinVec4()
+        private val needsRender: idWinBool = idWinBool()
+        private val rLight: renderLight_s = renderLight_s()
+        private val viewOffset: idWinVec4 = idWinVec4()
         private var animEndTime = 0
         private var animLength = 0
         private var   /*qhandle_t*/lightDef = 0
         private var modelAnim: idMD5Anim? = null
         private var   /*qhandle_t*/modelDef = 0
-        private var refdef: renderView_s? = null
+        private lateinit var refdef: renderView_s
         private var updateAnimation = false
-        private var world: idRenderWorld? = null
-        private var worldEntity: renderEntity_s? = null
+        private lateinit var world: idRenderWorld
+        private lateinit var worldEntity: renderEntity_s
 
         //
         private val   /*qhandle_t*/worldModelDef = 0
 
         //
         //
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             dc = null
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -75,22 +76,22 @@ class RenderWindow {
             refdef.vieworg.set(viewOffset.ToVec3())
             //refdef.vieworg.Set(-128, 0, 0);
             refdef.viewaxis.Identity()
-            refdef.shaderParms[0] = 1
-            refdef.shaderParms[1] = 1
-            refdef.shaderParms[2] = 1
-            refdef.shaderParms[3] = 1
+            refdef.shaderParms[0] = 1f
+            refdef.shaderParms[1] = 1f
+            refdef.shaderParms[2] = 1f
+            refdef.shaderParms[3] = 1f
             refdef.x = drawRect.x.toInt()
             refdef.y = drawRect.y.toInt()
             refdef.width = drawRect.w.toInt()
             refdef.height = drawRect.h.toInt()
             refdef.fov_x = 90f
-            refdef.fov_y = (2 * Math.atan((drawRect.h / drawRect.w).toDouble()) * idMath.M_RAD2DEG).toFloat()
+            refdef.fov_y = (2 * atan((drawRect.h / drawRect.w).toDouble()) * idMath.M_RAD2DEG).toFloat()
             refdef.time = time
             world.RenderScene(refdef)
         }
 
         override fun GetWinVarByName(
-            _name: String?,
+            _name: String,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
@@ -123,10 +124,10 @@ class RenderWindow {
         private fun CommonInit() {
             world = RenderSystem.renderSystem.AllocRenderWorld()
             needsRender.data = true
-            lightOrigin.oSet(idVec4(-128.0f, 0.0f, 0.0f, 1.0f))
-            lightColor.oSet(idVec4(1.0f, 1.0f, 1.0f, 1.0f))
+            lightOrigin.set(idVec4(-128.0f, 0.0f, 0.0f, 1.0f))
+            lightColor.set(idVec4(1.0f, 1.0f, 1.0f, 1.0f))
             modelOrigin.Zero()
-            viewOffset.oSet(idVec4(-128.0f, 0.0f, 0.0f, 1.0f))
+            viewOffset.set(idVec4(-128.0f, 0.0f, 0.0f, 1.0f))
             modelAnim = null
             animLength = 0
             animEndTime = -1
@@ -134,7 +135,7 @@ class RenderWindow {
             updateAnimation = true
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
             if (idStr.Companion.Icmp(_name, "animClass") == 0) {
                 ParseString(src, animClass)
                 return true
@@ -199,10 +200,10 @@ class RenderWindow {
                 if (worldEntity.hModel != null) {
                     val v = idVec3(modelRotate.ToVec3())
                     worldEntity.axis.set(v.ToMat3())
-                    worldEntity.shaderParms[0] = 1
-                    worldEntity.shaderParms[1] = 1
-                    worldEntity.shaderParms[2] = 1
-                    worldEntity.shaderParms[3] = 1
+                    worldEntity.shaderParms[0] = 1f
+                    worldEntity.shaderParms[1] = 1f
+                    worldEntity.shaderParms[2] = 1f
+                    worldEntity.shaderParms[3] = 1f
                     modelDef = world.AddEntityDef(worldEntity)
                 }
                 needsRender.data = false
@@ -214,7 +215,7 @@ class RenderWindow {
                 return
             }
             if (animName.Length() != 0 && animClass.Length() != 0) {
-                worldEntity.numJoints = worldEntity.hModel.NumJoints()
+                worldEntity.numJoints = worldEntity.hModel!!.NumJoints()
                 worldEntity.joints = arrayOfNulls(worldEntity.numJoints)
                 modelAnim = GameEdit.gameEdit.ANIM_GetAnimFromEntityDef(animClass.toString(), animName.toString())
                 if (modelAnim != null) {

@@ -29,7 +29,7 @@ import neo.ui.Winvar.idWinVec4
  *
  */
 class SimpleWindow {
-    internal class drawWin_t {
+    class drawWin_t {
         val DBG_index: Int
         var simp: idSimpleWindow? = null
         var win: idWindow? = null
@@ -43,48 +43,39 @@ class SimpleWindow {
         }
     }
 
-    class idSimpleWindow(win: idWindow?) {
-        private val DBG_count = DBG_countersOfCreation++
-
-        //
-        var name: idStr?
-        protected var backColor: idWinVec4? = idWinVec4()
-        protected var backGroundName: idWinBackground? = idWinBackground()
-
-        //
+    class idSimpleWindow(win: idWindow) {
+        val name: idStr = idStr()
+        protected var backColor: idWinVec4 = idWinVec4()
+        protected var backGroundName: idWinBackground = idWinBackground()
         protected var background: idMaterial?
-        protected var borderColor: idWinVec4? = idWinVec4()
+        protected var borderColor: idWinVec4 = idWinVec4()
         protected var borderSize: Float
-        protected val clientRect: idRectangle? = idRectangle() // client area
-        protected var dc: idDeviceContext?
-        protected val drawRect: idRectangle? = idRectangle() // overall rect
+        protected val clientRect: idRectangle = idRectangle() // client area
+        protected var dc: idDeviceContext
+        protected val drawRect: idRectangle = idRectangle() // overall rect
         protected var flags: Int
         protected var fontNum: Int
-        protected var foreColor: idWinVec4? = idWinVec4()
-        protected var gui: idUserInterfaceLocal?
-
-        //
-        protected var hideCursor: idWinBool? = idWinBool()
-
-        //
+        protected var foreColor: idWinVec4 = idWinVec4()
+        protected var gui: idUserInterfaceLocal
+        protected var hideCursor: idWinBool = idWinBool()
         protected var mParent: idWindow?
-        protected var matColor: idWinVec4? = idWinVec4()
+        protected var matColor: idWinVec4 = idWinVec4()
         protected var matScalex: Float
         protected var matScaley: Float
-        protected var origin: idVec2?
-        protected var rect: idWinRectangle? = idWinRectangle() // overall rect
-        protected var rotate: idWinFloat? = idWinFloat()
-        protected var shear: idWinVec2? = idWinVec2()
+        protected val origin: idVec2 = idVec2()
+        protected var rect: idWinRectangle = idWinRectangle() // overall rect
+        protected var rotate: idWinFloat = idWinFloat()
+        protected var shear: idWinVec2 = idWinVec2()
 
         //
-        protected var text: idWinStr? = idWinStr()
+        protected var text: idWinStr = idWinStr()
         protected var textAlign: Int
         protected var textAlignx: Float
         protected var textAligny: Float
-        protected val textRect: idRectangle? = idRectangle()
-        protected var textScale: idWinFloat? = idWinFloat()
+        protected val textRect: idRectangle = idRectangle()
+        protected var textScale: idWinFloat = idWinFloat()
         protected var textShadow: Int
-        protected var visible: idWinBool? = idWinBool()
+        protected var visible: idWinBool = idWinBool()
 
         //	virtual			~idSimpleWindow();
         fun Redraw(x: Float, y: Float) {
@@ -112,7 +103,7 @@ class SimpleWindow {
                     shadowText,
                     textScale.data,
                     textAlign,
-                    Lib.Companion.colorBlack,
+                    Lib.colorBlack,
                     shadowRect,
                     !TempDump.itob(flags and Window.WIN_NOWRAP),
                     -1
@@ -127,7 +118,7 @@ class SimpleWindow {
                 !TempDump.itob(flags and Window.WIN_NOWRAP),
                 -1
             )
-            dc.SetTransformInfo(Vector.getVec3_origin(), idMat3.Companion.getMat3_identity())
+            dc.SetTransformInfo(Vector.getVec3_origin(), idMat3.getMat3_identity())
             if (flags and Window.WIN_NOCLIP != 0) {
                 dc.EnableClipping(true)
             }
@@ -137,50 +128,51 @@ class SimpleWindow {
         }
 
         fun StateChanged(redraw: Boolean) {
-            if (redraw && background != null && background.CinematicLength() != 0) {
-                background.UpdateCinematic(gui.GetTime())
+            if (redraw && background != null && background!!.CinematicLength() != 0) {
+                background!!.UpdateCinematic(gui.GetTime())
             }
         }
 
-        fun GetWinVarByName(_name: String?): idWinVar? {
+        fun GetWinVarByName(_name: String): idWinVar? {
             var retVar: idWinVar? = null
-            if (idStr.Companion.Icmp(_name, "background") == 0) { //TODO:should this be a switch?
+            if (idStr.Icmp(_name, "background") == 0) { //TODO:should this be a switch?
                 retVar = backGroundName
             }
-            if (idStr.Companion.Icmp(_name, "visible") == 0) {
+            if (idStr.Icmp(_name, "visible") == 0) {
                 retVar = visible
             }
-            if (idStr.Companion.Icmp(_name, "rect") == 0) {
+            if (idStr.Icmp(_name, "rect") == 0) {
                 retVar = rect
             }
-            if (idStr.Companion.Icmp(_name, "backColor") == 0) {
+            if (idStr.Icmp(_name, "backColor") == 0) {
                 retVar = backColor
             }
-            if (idStr.Companion.Icmp(_name, "matColor") == 0) {
+            if (idStr.Icmp(_name, "matColor") == 0) {
                 retVar = matColor
             }
-            if (idStr.Companion.Icmp(_name, "foreColor") == 0) {
+            if (idStr.Icmp(_name, "foreColor") == 0) {
                 retVar = foreColor
             }
-            if (idStr.Companion.Icmp(_name, "borderColor") == 0) {
+            if (idStr.Icmp(_name, "borderColor") == 0) {
                 retVar = borderColor
             }
-            if (idStr.Companion.Icmp(_name, "textScale") == 0) {
+            if (idStr.Icmp(_name, "textScale") == 0) {
                 retVar = textScale
             }
-            if (idStr.Companion.Icmp(_name, "rotate") == 0) {
+            if (idStr.Icmp(_name, "rotate") == 0) {
                 retVar = rotate
             }
-            if (idStr.Companion.Icmp(_name, "shear") == 0) {
+            if (idStr.Icmp(_name, "shear") == 0) {
                 retVar = shear
             }
-            if (idStr.Companion.Icmp(_name, "text") == 0) {
+            if (idStr.Icmp(_name, "text") == 0) {
                 retVar = text
             }
             return retVar
         }
 
-        fun GetWinVarOffset(wv: idWinVar?, owner: drawWin_t?): Int {
+        // TODO: check why this isn't implemented
+        fun GetWinVarOffset(wv: idWinVar, owner: drawWin_t): Int {
 
 //	if ( wv == &rect ) {
 //		ret = (int)&( ( idSimpleWindow * ) 0 )->rect;
@@ -216,11 +208,11 @@ class SimpleWindow {
             return -1
         }
 
-        fun GetParent(): idWindow? {
-            return mParent
+        fun GetParent(): idWindow {
+            return mParent!!
         }
 
-        fun WriteToSaveGame(savefile: idFile?) {
+        fun WriteToSaveGame(savefile: idFile) {
             savefile.WriteInt(flags)
             savefile.Write(drawRect)
             savefile.Write(clientRect)
@@ -247,16 +239,16 @@ class SimpleWindow {
             backGroundName.WriteToSaveGame(savefile)
             val stringLen: Int
             if (background != null) {
-                stringLen = background.GetName().length
+                stringLen = background!!.GetName().length
                 savefile.WriteInt(stringLen)
-                savefile.WriteString(background.GetName())
+                savefile.WriteString(background!!.GetName())
             } else {
                 stringLen = 0
                 savefile.WriteInt(stringLen)
             }
         }
 
-        fun ReadFromSaveGame(savefile: idFile?) {
+        fun ReadFromSaveGame(savefile: idFile) {
             flags = savefile.ReadInt()
             savefile.Read(drawRect)
             savefile.Read(clientRect)
@@ -288,21 +280,21 @@ class SimpleWindow {
                 backName.Fill(' ', stringLen)
                 savefile.ReadString(backName)
                 background = DeclManager.declManager.FindMaterial(backName)
-                background.SetSort(Material.SS_GUI.toFloat())
+                background!!.SetSort(Material.SS_GUI.toFloat())
             } else {
                 background = null
             }
         }
 
         protected fun CalcClientRect(xofs: Float, yofs: Float) {
-            drawRect.oSet(rect.data)
+            drawRect.set(rect.data)
             if (flags and Window.WIN_INVERTRECT != 0) {
                 drawRect.x = rect.x() - rect.w()
                 drawRect.y = rect.y() - rect.h()
             }
             drawRect.x += xofs
             drawRect.y += yofs
-            clientRect.oSet(drawRect)
+            clientRect.set(drawRect)
             if (rect.h() > 0.0 && rect.w() > 0.0) {
                 if (flags and Window.WIN_BORDER != 0 && borderSize != 0f) {
                     clientRect.x += borderSize
@@ -310,7 +302,7 @@ class SimpleWindow {
                     clientRect.w -= borderSize
                     clientRect.h -= borderSize
                 }
-                textRect.oSet(clientRect)
+                textRect.set(clientRect)
                 textRect.x += 2.0.toFloat()
                 textRect.w -= 2.0.toFloat()
                 textRect.y += 2.0.toFloat()
@@ -326,7 +318,7 @@ class SimpleWindow {
             org.set(origin.x + x, origin.y + y, 0f)
             if (rotate != null && rotate.data != 0f) {
                 rot.Set(org, vec, rotate.data)
-                trans = rot.ToMat3()
+                trans.set(rot.ToMat3())
             }
             smat.Identity()
             if (shear.x() != 0f || shear.y() != 0f) {
@@ -339,7 +331,7 @@ class SimpleWindow {
             }
         }
 
-        protected fun DrawBackground(drawRect: idRectangle?) {
+        protected fun DrawBackground(drawRect: idRectangle) {
             if (backColor.w() > 0) {
                 dc.DrawFilledRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, backColor.data)
             }
@@ -348,8 +340,8 @@ class SimpleWindow {
                     val scaleX: Float
                     val scaleY: Float
                     if (flags and Window.WIN_NATURALMAT != 0) {
-                        scaleX = drawRect.w / background.GetImageWidth()
-                        scaleY = drawRect.h / background.GetImageHeight()
+                        scaleX = drawRect.w / background!!.GetImageWidth()
+                        scaleY = drawRect.h / background!!.GetImageHeight()
                     } else {
                         scaleX = matScalex
                         scaleY = matScaley
@@ -359,7 +351,7 @@ class SimpleWindow {
                         drawRect.y,
                         drawRect.w,
                         drawRect.h,
-                        background,
+                        background!!,
                         matColor.data,
                         scaleX,
                         scaleY
@@ -368,7 +360,7 @@ class SimpleWindow {
             }
         }
 
-        protected fun DrawBorderAndCaption(drawRect: idRectangle?) {
+        protected fun DrawBorderAndCaption(drawRect: idRectangle) {
             if (flags and Window.WIN_BORDER != 0) {
                 if (borderSize != 0f) {
                     dc.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, borderSize, borderColor.data)
@@ -378,65 +370,57 @@ class SimpleWindow {
 
         companion object {
             //	friend class idWindow;
-            private val org: idVec3? = idVec3()
-            private val rot: idRotation? = idRotation()
-            private val smat: idMat3? = idMat3()
-            private val vec: idVec3? = idVec3(0, 0, 1)
-            var DBG_idSimpleWindow = 0
-
-            //
-            //
-            private var DBG_countersOfCreation = 0
-
-            //
-            private var trans: idMat3? = idMat3()
+            private val org: idVec3 = idVec3()
+            private val rot: idRotation = idRotation()
+            private val smat: idMat3 = idMat3()
+            private val vec: idVec3 = idVec3(0f, 0f, 1f)
+            private val trans: idMat3 = idMat3()
         }
 
         init {
             gui = win.GetGui()
-            dc = win.dc
-            drawRect.oSet(win.drawRect)
-            clientRect.oSet(win.clientRect)
-            textRect.oSet(win.textRect)
-            origin = idVec2(win.origin)
+            dc = win.dc!!
+            drawRect.set(win.drawRect)
+            clientRect.set(win.clientRect)
+            textRect.set(win.textRect)
+            origin.set(win.origin)
             fontNum = win.fontNum.code
-            name = idStr(win.name)
+            name.set(win.name)
             matScalex = win.matScalex
             matScaley = win.matScaley
             borderSize = win.borderSize
             textAlign = win.textAlign.code
             textAlignx = win.textAlignx
             textAligny = win.textAligny
-            background = win.background
+            background = win.background!!
             flags = win.flags
             textShadow = win.textShadow.code
-            text.oSet(win.text)
-            visible.oSet(win.visible)
-            rect.oSet(win.rect)
-            backColor.oSet(win.backColor)
-            matColor.oSet(win.matColor)
-            foreColor.oSet(win.foreColor)
-            borderColor.oSet(win.borderColor)
-            textScale.oSet(win.textScale)
-            rotate.oSet(win.rotate)
-            shear.oSet(win.shear)
-            backGroundName.oSet(win.backGroundName)
+            text.set(win.text)
+            visible.set(win.visible)
+            rect.set(win.rect)
+            backColor.set(win.backColor)
+            matColor.set(win.matColor)
+            foreColor.set(win.foreColor)
+            borderColor.set(win.borderColor)
+            textScale.set(win.textScale)
+            rotate.set(win.rotate)
+            shear.set(win.shear)
+            backGroundName.set(win.backGroundName)
             if (backGroundName.Length() != 0) {
                 background = DeclManager.declManager.FindMaterial(backGroundName.data)
-                background.SetSort(Material.SS_GUI.toFloat())
-                background.SetImageClassifications(1) // just for resource tracking
+                background!!.SetSort(Material.SS_GUI.toFloat())
+                background!!.SetImageClassifications(1) // just for resource tracking
             }
-            backGroundName.SetMaterialPtr(background)
+            backGroundName.SetMaterialPtr(background!!)
 
             // 
             //  added parent
             mParent = win.GetParent()
             // 
-            hideCursor.oSet(win.hideCursor)
+            hideCursor.set(win.hideCursor)
             val parent = win.GetParent()
             if (parent != null) {
                 if (text.NeedsUpdate()) {
-                    DBG_idSimpleWindow++
                     //                    if(DBG_idSimpleWindow++==26)
 //                    if(DBG_idSimpleWindow++==27)
                     parent.AddUpdateVar(text)

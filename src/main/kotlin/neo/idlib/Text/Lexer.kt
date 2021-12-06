@@ -1647,7 +1647,7 @@ object Lexer {
                         Warning("literal is not one character long")
                     }
                 }
-                token.subtype = token.oGet(0).code
+                token.subtype = token.get(0).code
             } else {
                 // the sub type is the length of the string
                 token.subtype = token.Length()

@@ -431,8 +431,8 @@ object RenderSystem {
 
     class fontInfo_t {
         var glyphScale = 0f
-        var glyphs: Array<glyphInfo_t?>? = arrayOfNulls<glyphInfo_t?>(RenderSystem.GLYPHS_PER_FONT)
-        var name: StringBuilder? = StringBuilder(64)
+        var glyphs: Array<glyphInfo_t> = Array(GLYPHS_PER_FONT) { glyphInfo_t() }
+        var name: StringBuilder = StringBuilder(64)
 
         companion object {
             @Transient
@@ -444,17 +444,12 @@ object RenderSystem {
             val BYTES = SIZE / java.lang.Byte.SIZE
         }
 
-        init {
-            for (g in glyphs.indices) {
-                glyphs.get(g) = glyphInfo_t()
-            }
-        }
     }
 
     class fontInfoEx_t {
-        var fontInfoLarge: fontInfo_t? = fontInfo_t()
-        var fontInfoMedium: fontInfo_t? = fontInfo_t()
-        var fontInfoSmall: fontInfo_t? = fontInfo_t()
+        var fontInfoLarge: fontInfo_t = fontInfo_t()
+        var fontInfoMedium: fontInfo_t = fontInfo_t()
+        var fontInfoSmall: fontInfo_t = fontInfo_t()
         var maxHeight = 0
         var maxHeightLarge = 0
         var maxHeightMedium = 0
@@ -465,7 +460,7 @@ object RenderSystem {
         var maxWidthSmall = 0
 
         // char				name[64];
-        var name: String? = null
+        var name: String = ""
 
         /**
          * memset(font, 0, sizeof(font));
@@ -502,7 +497,7 @@ object RenderSystem {
         abstract fun GetScreenHeight(): Int
 
         // allocate a renderWorld to be used for drawing
-        abstract fun AllocRenderWorld(): idRenderWorld?
+        abstract fun AllocRenderWorld(): idRenderWorld
         abstract fun FreeRenderWorld(rw: idRenderWorld?)
 
         // All data that will be used in a level should be
@@ -533,7 +528,7 @@ object RenderSystem {
 
         @JvmOverloads
         fun DrawStretchPic(
-            verts: Array<idDrawVert?>?,
+            verts: Array<idDrawVert>,
             indexes: IntArray?,
             vertCount: Int,
             indexCount: Int,

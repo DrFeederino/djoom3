@@ -1805,7 +1805,7 @@ object Common {
                                 out.Append("\"")
                                 k = 0
                                 while (k < token.Length()) {
-                                    ch = token.oGet(k)
+                                    ch = token.get(k)
                                     if (ch == '\t') {
                                         out.Append(slash)
                                         out.Append(tab)
@@ -1829,7 +1829,7 @@ object Common {
                                 out.Append("\"")
                                 k = 0
                                 while (k < token.Length()) {
-                                    ch = token.oGet(k)
+                                    ch = token.get(k)
                                     if (ch == '\t') {
                                         out.Append(slash)
                                         out.Append(tab)

@@ -15,8 +15,10 @@ import java.util.*
  *
  */
 object sys_public {
-    const val BUILD_OS_ID = 0
-    val BUILD_STRING: String? = null
+    const val BUILD_OS_ID = 0 //BUILD_OS_ID = 1 for linux
+    const val WIN32 = true
+
+    val BUILD_STRING: String = "win-x86" // "linux-x86")
     const val CPUID_3DNOW = 0x00020 // 3DNow!
     const val CPUID_ALTIVEC = 0x00200 // AltiVec
     const val CPUID_AMD = 0x00008 // AMD
@@ -42,15 +44,15 @@ object sys_public {
     //
     // enum {
     const val CRITICAL_SECTION_ZERO = 0
-    val PATHSEPERATOR_CHAR: Char = 0.toChar()
+    val PATHSEPERATOR_CHAR: Char = '\\'
 
     //
-    val PATHSEPERATOR_STR: String = null
+    val PATHSEPERATOR_STR: String = "\\"
     const val PORT_ANY = -1
     const val TRIGGER_EVENT_ONE = 1
     val g_thread_count: IntArray = intArrayOf(0)
-    val CPUSTRING: String? = null
-    const val CPU_EASYARGS = 0
+    val CPUSTRING: String = "x86"
+    const val CPU_EASYARGS = 1
     const val FPU_EXCEPTION_DENORMALIZED_OPERAND = 2
     const val FPU_EXCEPTION_DIVIDE_BY_ZERO = 4
 
@@ -68,7 +70,7 @@ object sys_public {
     const val MAX_THREADS = 10
 
     //
-    val g_threads: Array<xthreadInfo?>? = arrayOfNulls<xthreadInfo?>(MAX_THREADS)
+    val g_threads: Array<xthreadInfo?> = arrayOfNulls<xthreadInfo?>(MAX_THREADS)
 
     // };
     const val MAX_TRIGGER_EVENTS = 4
@@ -77,22 +79,21 @@ object sys_public {
 
     // enum {
     const val TRIGGER_EVENT_ZERO = 0
-    const val WIN32 = true
-    val udpPorts: Array<idUDPLag?>? = arrayOfNulls<idUDPLag?>(65536)
-    var sys: idSys? = sys_local.sysLocal
-    fun <T> __id_attribute__(input: T?): T? {
+    val udpPorts: Array<idUDPLag?> = arrayOfNulls<idUDPLag?>(65536)
+    var sys: idSys = sys_local.sysLocal
+    fun <T> __id_attribute__(input: T): T {
 //        DebugPrintf( final String...fmt)id_attribute((format(printf,2,3)));
         return input
     }
 
     // use fs_debug to verbose Sys_ListFiles
     // returns -1 if directory was not found (the list is cleared)
-    fun Sys_ListFiles(directory: String?, extension: String?, list: idStrList?): Int {
+    fun Sys_ListFiles(directory: String, extension: String, list: idStrList): Int {
         return win_main.Sys_ListFiles(directory, extension, list)
     }
 
-    fun setSys(sys: idSys?) {
-        sys_local.sysLocal = sys.also { sys_public.sys = it } as idSysLocal?
+    fun setSysLocal(sys: idSys) {
+        sys_local.sysLocal = sys.also { sys_public.sys = it } as idSysLocal
     }
 
     internal enum class fpuPrecision_t {
@@ -141,21 +142,21 @@ object sys_public {
                 : ByteBuffer? = null
         var evPtrLength // bytes of data pointed to by evPtr, for journaling
                 = 0
-        var evType: sysEventType_t? = sysEventType_t.values()[0]
+        var evType: sysEventType_t = sysEventType_t.values()[0]
         var evValue = 0
         var evValue2 = 0
 
         //TODO:is a byteBuffer necessary? we seem to always be converting it to a string.
         constructor()
-        constructor(event: ByteBuffer?) {
+        constructor(event: ByteBuffer) {
             Read(event)
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             return ByteBuffer.allocate(BYTES)
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN).rewind()
             evType = sysEventType_t.values()[buffer.getInt()]
             evValue = buffer.getInt()
@@ -164,7 +165,7 @@ object sys_public {
             buffer.getInt() //death to the pointer
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val buffer = AllocBuffer()
             buffer.putInt(evType.ordinal)
             buffer.putInt(evValue)
@@ -187,7 +188,7 @@ object sys_public {
         }
     }
 
-    internal class sysMemoryStats_s {
+    class sysMemoryStats_s {
         var availExtendedVirtual = 0
         var availPageFile = 0
         var availPhysical = 0
@@ -200,7 +201,7 @@ object sys_public {
 
     class netadr_t {
         val ip: CharArray = CharArray(4)
-        var port: Short = 0
+        var port: Int = 0
         var type: netadrtype_t = netadrtype_t.NA_BAD
         fun oSet(address: netadr_t) {
             type = address.type
@@ -214,14 +215,14 @@ object sys_public {
         override fun equals(o: Any?): Boolean {
             if (this === o) return true
             if (o !is netadr_t) return false
-            val netadr_t = o as netadr_t?
+            val netadr_t = o
             if (port != netadr_t.port) return false
             return if (!Arrays.equals(ip, netadr_t.ip)) false else type == netadr_t.type
         }
 
         override fun hashCode(): Int {
             var result = Arrays.hashCode(ip)
-            result = 31 * result + port.toInt()
+            result = 31 * result + port
             result = 31 * result + if (type != null) type.hashCode() else 0
             return result
         }
@@ -231,14 +232,9 @@ object sys_public {
         var bytesRead = 0
         var bytesWritten = 0
         var packetsRead = 0
-
-        //
         var packetsWritten = 0
-
-        //
-        //
         private var bound_to // interface and port
-                : netadr_t?
+                : netadr_t = netadr_t()
         private var netSocket // OS specific socket
                 = 0
 
@@ -257,7 +253,7 @@ object sys_public {
                     win_net.NET_OpenSocks(portNumber)
                 }
             }
-            udpPorts.get(bound_to.port.toInt()) = idUDPLag()
+            udpPorts[bound_to.port] = idUDPLag()
             return true
         }
 
@@ -265,14 +261,14 @@ object sys_public {
             return bound_to.port
         }
 
-        fun GetAdr(): netadr_t? {
+        fun GetAdr(): netadr_t {
             return bound_to
         }
 
         fun Close() {
             if (netSocket != 0) {
-                if (udpPorts.get(bound_to.port.toInt()) != null) {
-                    udpPorts.get(bound_to.port.toInt()) = null // delete udpPorts[bound_to.port ];
+                if (udpPorts[bound_to.port] != null) {
+                    udpPorts[bound_to.port] = null // delete udpPorts[bound_to.port ];
                 }
                 //                closesocket(netSocket); //TODO:
                 netSocket = 0
@@ -280,7 +276,7 @@ object sys_public {
             }
         }
 
-        fun GetPacket(from: netadr_t?, data: Any?, size: CInt?, maxSize: Int): Boolean {
+        fun GetPacket(from: netadr_t, data: Any, size: CInt, maxSize: Int): Boolean {
             throw TODO_Exception()
             //            udpMsg_s msg;
 //            boolean ret;
@@ -342,12 +338,12 @@ object sys_public {
 //            }
         }
 
-        fun GetPacketBlocking(from: netadr_t?, data: Any?, size: CInt?, maxSize: Int, timeout: Int): Boolean {
+        fun GetPacketBlocking(from: netadr_t, data: Any, size: CInt, maxSize: Int, timeout: Int): Boolean {
             win_net.Net_WaitForUDPPacket(netSocket, timeout)
             return GetPacket(from, data, size, maxSize)
         }
 
-        fun SendPacket(to: netadr_t?, data: Any?, size: Int) {
+        fun SendPacket(to: netadr_t, data: Any, size: Int) {
             throw TODO_Exception()
             //            udpMsg_s msg;
 //
@@ -394,13 +390,6 @@ object sys_public {
 //                Net_SendUDPPacket(netSocket, size, data, to);
 //            }
         }
-
-        //
-        //
-        // this just zeros netSocket and port
-        init {
-            bound_to = netadr_t()
-        }
     }
 
     /*
@@ -411,7 +400,7 @@ object sys_public {
      ==============================================================
      */
     abstract class xthread_t : TimerTask() {
-        abstract fun run() //        public abstract int run(Object... parms);
+        override fun run() {} //        public abstract int run(Object... parms);
     }
 
     // };
@@ -429,54 +418,36 @@ object sys_public {
      ==============================================================
      */
     abstract class idSys {
-        abstract fun DebugPrintf(fmt: String?, vararg arg: Any?)
-        abstract fun DebugVPrintf(fmt: String?, vararg arg: Any?)
+        abstract fun DebugPrintf(fmt: String, vararg arg: Any)
+        abstract fun DebugVPrintf(fmt: String, vararg arg: Any)
         abstract fun GetClockTicks(): Double
         abstract fun ClockTicksPerSecond(): Double
         abstract /*cpuid_t*/  fun GetProcessorId(): Int
-        abstract fun GetProcessorString(): String?
-        abstract fun FPU_GetState(): String?
+        abstract fun GetProcessorString(): String
+        abstract fun FPU_GetState(): String
         abstract fun FPU_StackIsEmpty(): Boolean
         abstract fun FPU_SetFTZ(enable: Boolean)
         abstract fun FPU_SetDAZ(enable: Boolean)
         abstract fun FPU_EnableExceptions(exceptions: Int)
         abstract fun LockMemory( /*void **/
-            ptr: Any?, bytes: Int
+            ptr: Any, bytes: Int
         ): Boolean
 
         abstract fun UnlockMemory( /*void **/
-            ptr: Any?, bytes: Int
+            ptr: Any, bytes: Int
         ): Boolean
 
         abstract fun GetCallStack(callStack: Long, callStackSize: Int)
-        abstract fun GetCallStackStr(callStack: Long, callStackSize: Int): String?
-        abstract fun GetCallStackCurStr(depth: Int): String?
+        abstract fun GetCallStackStr(callStack: Long, callStackSize: Int): String
+        abstract fun GetCallStackCurStr(depth: Int): String
         abstract fun ShutdownSymbols()
-        abstract fun DLL_Load(dllName: String?): Int
-        abstract fun DLL_GetProcAddress(dllHandle: Int, procName: String?): Any?
+        abstract fun DLL_Load(dllName: String): Int
+        abstract fun DLL_GetProcAddress(dllHandle: Int, procName: String): Any
         abstract fun DLL_Unload(dllHandle: Int)
-        abstract fun DLL_GetFileName(baseName: String?, dllName: Array<String?>?, maxLength: Int)
-        abstract fun GenerateMouseButtonEvent(button: Int, down: Boolean): sysEvent_s?
-        abstract fun GenerateMouseMoveEvent(deltax: Int, deltay: Int): sysEvent_s?
-        abstract fun OpenURL(url: String?, quit: Boolean)
-        abstract fun StartProcess(exePath: String?, quit: Boolean)
-    }
-
-    init {
-        if (WIN32) {
-            BUILD_STRING = "win-x86"
-            BUILD_OS_ID = 0
-            CPUSTRING = "x86"
-            CPU_EASYARGS = 1
-            PATHSEPERATOR_STR = "\\"
-            PATHSEPERATOR_CHAR = '\\'
-        } else {
-            BUILD_STRING = "linux-x86"
-            BUILD_OS_ID = 1
-            CPUSTRING = "x86"
-            CPU_EASYARGS = 1
-            PATHSEPERATOR_STR = "/"
-            PATHSEPERATOR_CHAR = '/'
-        }
+        abstract fun DLL_GetFileName(baseName: String, dllName: Array<String>, maxLength: Int)
+        abstract fun GenerateMouseButtonEvent(button: Int, down: Boolean): sysEvent_s
+        abstract fun GenerateMouseMoveEvent(deltax: Int, deltay: Int): sysEvent_s
+        abstract fun OpenURL(url: String, quit: Boolean)
+        abstract fun StartProcess(exePath: String, quit: Boolean)
     }
 }

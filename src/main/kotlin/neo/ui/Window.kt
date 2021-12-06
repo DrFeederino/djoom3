@@ -20,6 +20,7 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.CBool
 import neo.idlib.containers.List.idList
 import neo.idlib.math.*
 import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear
@@ -66,19 +67,19 @@ import neo.ui.Winvar.idWinVec4
  */
 object Window {
     //
-    val CAPTION_HEIGHT: String? = "16.0"
+    val CAPTION_HEIGHT: String = "16.0"
 
     //
-    val DEFAULT_BACKCOLOR: String? = "1 1 1 1"
-    val DEFAULT_BORDERCOLOR: String? = "0 0 0 1"
-    val DEFAULT_FORECOLOR: String? = "0 0 0 1"
-    val DEFAULT_TEXTSCALE: String? = "0.4"
+    val DEFAULT_BACKCOLOR: String = "1 1 1 1"
+    val DEFAULT_BORDERCOLOR: String = "0 0 0 1"
+    val DEFAULT_FORECOLOR: String = "0 0 0 1"
+    val DEFAULT_TEXTSCALE: String = "0.4"
     const val MAX_LIST_ITEMS = 1024
 
     //
     const val MAX_WINDOW_NAME = 32
     const val SCROLLBAR_SIZE = 16
-    val SCROLLER_SIZE: String? = "16.0"
+    val SCROLLER_SIZE: String = "16.0"
 
     //
     const val TOP_PRIORITY = 4
@@ -114,15 +115,15 @@ object Window {
     //
     const val WRITE_GUIS = false
 
-    internal enum class wexpOpType_t {
+    enum class wexpOpType_t {
         WOP_TYPE_ADD, WOP_TYPE_SUBTRACT, WOP_TYPE_MULTIPLY, WOP_TYPE_DIVIDE, WOP_TYPE_MOD, WOP_TYPE_TABLE, WOP_TYPE_GT, WOP_TYPE_GE, WOP_TYPE_LT, WOP_TYPE_LE, WOP_TYPE_EQ, WOP_TYPE_NE, WOP_TYPE_AND, WOP_TYPE_OR, WOP_TYPE_VAR, WOP_TYPE_VARS, WOP_TYPE_VARF, WOP_TYPE_VARI, WOP_TYPE_VARB, WOP_TYPE_COND
     }
 
-    internal enum class wexpRegister_t {
+    enum class wexpRegister_t {
         WEXP_REG_TIME, WEXP_REG_NUM_PREDEFINED
     }
 
-    internal class wexpOp_t {
+    class wexpOp_t {
         var a: idWinVar? = null
         var d: idWinVar? = null
         var b = 0
@@ -134,28 +135,28 @@ object Window {
          */
         fun getA(): Int {
             if (a is idWinFloat) {
-                return (a as idWinFloat?).data.toInt()
+                return (a as idWinFloat).data.toInt()
             } else if (a is idWinInt) {
-                return (a as idWinInt?).data
+                return (a as idWinInt).data
             }
             return -1
         }
 
         fun getD(): Int {
             if (d is idWinFloat) {
-                return (d as idWinFloat?).data.toInt()
+                return (d as idWinFloat).data.toInt()
             } else if (d is idWinInt) {
-                return (d as idWinInt?).data
+                return (d as idWinInt).data
             }
             return -1
         }
     }
 
-    internal class idRegEntry(var name: String?, var type: REGTYPE?) {
+    class idRegEntry(var name: String?, var type: REGTYPE?) {
         var index = 0
     }
 
-    internal class idTimeLineEvent {
+    class idTimeLineEvent {
         var event: idGuiScriptList?
         var pending = false
         var time = 0
@@ -167,57 +168,52 @@ object Window {
         //	}
     }
 
-    internal class rvNamedEvent(name: String?) {
-        var mEvent: idGuiScriptList?
-
-        // ~rvNamedEvent(void)
-        // {
-        // delete mEvent;
-        // }
-        var mName: idStr?
+    class rvNamedEvent(name: String) {
+        var mEvent: idGuiScriptList = idGuiScriptList()
+        val mName: idStr = idStr()
 
         init {
             mEvent = idGuiScriptList()
-            mName = idStr(name)
+            mName.set(name)
         }
     }
 
-    internal class idTransitionData {
+    class idTransitionData {
         var data: idWinVar? = null
-        var interp: idInterpolateAccelDecelLinear<idVec4?>? = idInterpolateAccelDecelLinear()
+        var interp: idInterpolateAccelDecelLinear<idVec4> = idInterpolateAccelDecelLinear()
         var offset = 0
     }
 
     open class idWindow {
         private val DBG_COUNT = DBG_COUNTER++
-        var cmd: idStr? = idStr()
+        val cmd: idStr = idStr()
         protected var actualX // physical coords
                 = 0f
         protected var actualY // ''
                 = 0f
-        var backColor: idWinVec4? = idWinVec4()
-        var backGroundName: idWinBackground? = idWinBackground()
+        val backColor: idWinVec4 = idWinVec4()
+        var backGroundName: idWinBackground = idWinBackground()
         var background // background asset
                 : idMaterial? = null
-        var borderColor: idWinVec4? = idWinVec4()
+        var borderColor: idWinVec4 = idWinVec4()
         var borderSize = 0f
         protected var captureChild // if a child window has mouse capture
                 : idWindow? = null
         protected var childID // this childs id
                 = 0
-        protected val children: idList<idWindow?>? = idList() // child windows
-        val clientRect: idRectangle? = idRectangle() // client area
-        protected var comment: idStr? = idStr()
+        protected val children: idList<idWindow> = idList() // child windows
+        val clientRect: idRectangle = idRectangle() // client area
+        protected val comment: idStr = idStr()
         protected /*unsigned*/  var cursor: Char = 0.toChar()
 
         //
         var dc: idDeviceContext?
 
         //
-        protected val definedVars: idList<idWinVar?>? = idList()
-        val drawRect: idRectangle? = idRectangle() // overall rect
-        protected val drawWindows: idList<drawWin_t?>? = idList()
-        protected val expressionRegisters: idList<Float?>? = idList()
+        protected val definedVars: idList<idWinVar?> = idList()
+        val drawRect: idRectangle = idRectangle() // overall rect
+        protected val drawWindows: idList<drawWin_t?> = idList()
+        protected val expressionRegisters: idList<Float?> = idList()
         /*unsigned*/  var flags // visible, focus, mouseover, cursor, border, etc..
                 = 0
 
@@ -227,57 +223,57 @@ object Window {
         /*unsigned*/  var fontNum: Char = 0.toChar()
         protected var forceAspectHeight = 0f
         protected var forceAspectWidth = 0f
-        var foreColor: idWinVec4? = idWinVec4()
+        var foreColor: idWinVec4 = idWinVec4()
 
         //
-        protected var gui: idUserInterfaceLocal?
+        protected var gui: idUserInterfaceLocal
 
         //
-        var hideCursor: idWinBool? = idWinBool()
+        var hideCursor: idWinBool = idWinBool()
         protected var hover = false
-        protected var hoverColor: idWinVec4? = idWinVec4()
+        protected var hoverColor: idWinVec4 = idWinVec4()
         protected var lastTimeRun //
                 = 0
-        var matColor: idWinVec4? = idWinVec4()
+        var matColor: idWinVec4 = idWinVec4()
         var matScalex = 0f
         var matScaley = 0f
-        var name: idStr? = null
-        protected val namedEvents: idList<rvNamedEvent?>? = idList() //  added named events
-        protected var noEvents: idWinBool? = idWinBool()
+        val name: idStr = idStr()
+        protected val namedEvents: idList<rvNamedEvent?> = idList() //  added named events
+        protected var noEvents: idWinBool = idWinBool()
 
         //
         protected var noTime: idWinBool? = idWinBool()
 
         //
-        protected val ops: idList<wexpOp_t?>? = idList() // evaluate to make expressionRegisters
-        var origin: idVec2? = idVec2()
+        protected val ops: idList<wexpOp_t?> = idList() // evaluate to make expressionRegisters
+        var origin: idVec2 = idVec2()
         protected var overChild // if a child window has mouse capture
                 : idWindow? = null
 
         //
         protected var parent // parent window
                 : idWindow? = null
-        var rect: idWinRectangle? = idWinRectangle() // overall rect
+        var rect: idWinRectangle = idWinRectangle() // overall rect
 
         //
-        protected var regList: idRegisterList? = idRegisterList()
-        var rotate: idWinFloat? = idWinFloat()
+        protected var regList: idRegisterList = idRegisterList()
+        var rotate: idWinFloat = idWinFloat()
         protected var saveOps // evaluate to make expressionRegisters
-                : Array<idList<wexpOp_t?>?>?
-        protected var saveRegs: Array<idList<Float?>?>?
-        protected var saveTemps: BooleanArray?
+                : Array<idList<wexpOp_t?>?>? = null
+        protected var saveRegs: Array<idList<Float?>?>? = null
+        protected var saveTemps: BooleanArray? = null
 
         //
-        protected var scripts: Array<idGuiScriptList?>? = arrayOfNulls<idGuiScriptList?>(TempDump.etoi(ON.SCRIPT_COUNT))
-        var shear: idVec2? = idVec2()
-        var text: idWinStr? = idWinStr()
+        protected var scripts: Array<idGuiScriptList?> = arrayOfNulls<idGuiScriptList?>(TempDump.etoi(ON.SCRIPT_COUNT))
+        val shear: idVec2 = idVec2()
+        val text: idWinStr = idWinStr()
         /*signed*/  var textAlign: Char = 0.toChar()
         var textAlignx = 0f
         var textAligny = 0f
 
         //
-        val textRect: idRectangle? = idRectangle() // text extented rect
-        var textScale: idWinFloat? = idWinFloat()
+        val textRect: idRectangle = idRectangle() // text extented rect
+        var textScale: idWinFloat = idWinFloat()
 
         //
         /*signed*/  var textShadow: Char = 0.toChar()
@@ -287,20 +283,20 @@ object Window {
                 = 0
 
         //
-        protected val timeLineEvents: idList<idTimeLineEvent?>? = idList()
-        protected val transitions: idList<idTransitionData?>? = idList()
-        protected val updateVars: idList<idWinVar?>? = idList()
-        var visible: idWinBool? = idWinBool()
+        protected val timeLineEvents: idList<idTimeLineEvent> = idList()
+        protected val transitions: idList<idTransitionData> = idList()
+        protected val updateVars: idList<idWinVar> = idList()
+        var visible: idWinBool = idWinBool()
         protected var xOffset = 0f
         protected var yOffset = 0f
 
-        constructor(gui: idUserInterfaceLocal?) {
+        constructor(gui: idUserInterfaceLocal) {
             dc = null
             this.gui = gui
             CommonInit()
         }
 
-        constructor(d: idDeviceContext?, ui: idUserInterfaceLocal?) {
+        constructor(d: idDeviceContext, ui: idUserInterfaceLocal) {
             dc = d
             gui = ui
             CommonInit()
@@ -313,14 +309,14 @@ object Window {
             CleanUp()
         }
 
-        fun SetDC(d: idDeviceContext?) {
+        fun SetDC(d: idDeviceContext) {
             dc = d
             //if (flags & WIN_DESKTOP) {
-            dc.SetSize(forceAspectWidth, forceAspectHeight)
+            dc!!.SetSize(forceAspectWidth, forceAspectHeight)
             //}
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).SetDC(d)
+                children[i]!!.SetDC(d)
             }
         }
 
@@ -329,7 +325,7 @@ object Window {
         }
 
         @JvmOverloads
-        fun SetFocus(w: idWindow?, scripts: Boolean = false /*= true*/): idWindow? {
+        fun SetFocus(w: idWindow, scripts: Boolean = false /*= true*/): idWindow? {
             // only one child can have the focus
             var lastFocus: idWindow? = null
             if (w.flags and WIN_CANFOCUS != 0) {
@@ -356,13 +352,13 @@ object Window {
             return lastFocus
         }
 
-        fun SetCapture(w: idWindow?): idWindow? {
+        fun SetCapture(w: idWindow): idWindow? {
             // only one child can have the focus
             var last: idWindow? = null
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.get(i).flags and WIN_CAPTURE != 0) {
-                    last = children.get(i)
+                if (children[i].flags and WIN_CAPTURE != 0) {
+                    last = children[i]
                     //last.flags &= ~WIN_CAPTURE;
                     last.LoseCapture()
                     break
@@ -374,7 +370,7 @@ object Window {
             return last
         }
 
-        fun SetParent(w: idWindow?) {
+        fun SetParent(w: idWindow) {
             parent = w
         }
 
@@ -400,7 +396,7 @@ object Window {
             rct.y = y
             val reg = RegList().FindReg("rect")
             reg?.Enable(false)
-            rect.data.oSet(rct)
+            rect.data.set(rct)
         }
 
         fun BringToTop(w: idWindow?) {
@@ -409,12 +405,12 @@ object Window {
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.get(i) == w) {
+                if (children[i] == w) {
                     // this is it move from i - 1 to 0 to i to 1 then shove this one into 0
                     for (j in i + 1 until c) {
-                        children.set(j - 1, children.get(j))
+                        children[j - 1] = children[j]
                     }
-                    children.set(c - 1, w)
+                    children[c - 1] = w
                     break
                 }
             }
@@ -428,7 +424,7 @@ object Window {
             rct.y = y
             rct.w = w
             rct.h = h
-            rect.data.oSet(rct)
+            rect.data.set(rct)
             CalcClientRect(0f, 0f)
         }
 
@@ -443,7 +439,7 @@ object Window {
                 flags = flags or WIN_TRANSFORM
             }
             CalcClientRect(0f, 0f)
-            if (scripts.get(TempDump.etoi(ON.ON_ACTION)) != null) {
+            if (scripts[TempDump.etoi(ON.ON_ACTION)] != null) {
                 cursor = TempDump.etoi(CURSOR.CURSOR_HAND).toChar()
                 flags = flags or WIN_CANFOCUS
             }
@@ -461,32 +457,32 @@ object Window {
             backGroundName.SetMaterialPtr(background)
         }
 
-        fun FindChildByName(_name: String?): drawWin_t? {
-            if (idStr.Companion.Icmp(name.toString(), _name) == 0) {
+        fun FindChildByName(_name: String): drawWin_t? {
+            if (idStr.Icmp(name.toString(), _name) == 0) {
                 dw.simp = null
                 dw.win = this
                 return dw
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.get(i).win != null) {
-                    if (idStr.Companion.Icmp(drawWindows.get(i).win.name, _name) == 0) {
-                        return drawWindows.get(i)
+                if (drawWindows[i].win != null) {
+                    if (idStr.Icmp(drawWindows[i].win.name, _name) == 0) {
+                        return drawWindows[i]
                     }
-                    val win = drawWindows.get(i).win.FindChildByName(_name)
+                    val win = drawWindows[i].win.FindChildByName(_name)
                     if (win != null) {
                         return win
                     }
                 } else {
-                    if (idStr.Companion.Icmp(drawWindows.get(i).simp.name, _name) == 0) {
-                        return drawWindows.get(i)
+                    if (idStr.Icmp(drawWindows[i].simp.name, _name) == 0) {
+                        return drawWindows[i]
                     }
                 }
             }
             return null
         }
 
-        fun FindSimpleWinByName(_name: String?): idSimpleWindow? {
+        fun FindSimpleWinByName(_name: String): idSimpleWindow? {
             throw UnsupportedOperationException()
         }
 
@@ -494,7 +490,7 @@ object Window {
             return parent
         }
 
-        fun GetGui(): idUserInterfaceLocal? {
+        fun GetGui(): idUserInterfaceLocal {
             return gui
         }
 
@@ -509,7 +505,7 @@ object Window {
             val c = children.Num()
             var sz = 0
             for (i in 0 until c) {
-                sz += children.get(i).Size()
+                sz += children[i].Size()
             }
             sz += Allocated()
             return sz
@@ -524,13 +520,13 @@ object Window {
             c = definedVars.Num()
             i = 0
             while (i < c) {
-                sz += definedVars.get(i).Size()
+                sz += definedVars[i].Size()
                 i++
             }
             i = 0
             while (i < ON.SCRIPT_COUNT.ordinal) {
-                if (scripts.get(i) != null) {
-                    sz += scripts.get(i).Size()
+                if (scripts[i] != null) {
+                    sz += scripts[i]!!.Size()
                 }
                 i++
             }
@@ -549,7 +545,7 @@ object Window {
             c = drawWindows.Num()
             i = 0
             while (i < c) {
-                if (drawWindows.get(i).simp != null) {
+                if (drawWindows[i]!!.simp != null) {
                     sz += 4
                 }
                 i++
@@ -562,7 +558,7 @@ object Window {
         }
 
         open fun GetWinVarByName(
-            _name: String?,
+            _name: String,
             fixup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
@@ -570,66 +566,66 @@ object Window {
             if (owner != null) {
                 owner[0] = null
             }
-            if (idStr.Companion.Icmp(_name, "notime") == 0) {
+            if (idStr.Icmp(_name, "notime") == 0) {
                 retVar = noTime
             }
-            if (idStr.Companion.Icmp(_name, "background") == 0) {
+            if (idStr.Icmp(_name, "background") == 0) {
                 retVar = backGroundName
             }
-            if (idStr.Companion.Icmp(_name, "visible") == 0) {
+            if (idStr.Icmp(_name, "visible") == 0) {
                 retVar = visible
             }
-            if (idStr.Companion.Icmp(_name, "rect") == 0) {
+            if (idStr.Icmp(_name, "rect") == 0) {
                 retVar = rect
             }
-            if (idStr.Companion.Icmp(_name, "backColor") == 0) {
+            if (idStr.Icmp(_name, "backColor") == 0) {
                 retVar = backColor
             }
-            if (idStr.Companion.Icmp(_name, "matColor") == 0) {
+            if (idStr.Icmp(_name, "matColor") == 0) {
                 retVar = matColor
             }
-            if (idStr.Companion.Icmp(_name, "foreColor") == 0) {
+            if (idStr.Icmp(_name, "foreColor") == 0) {
                 retVar = foreColor
             }
-            if (idStr.Companion.Icmp(_name, "hoverColor") == 0) {
+            if (idStr.Icmp(_name, "hoverColor") == 0) {
                 retVar = hoverColor
             }
-            if (idStr.Companion.Icmp(_name, "borderColor") == 0) {
+            if (idStr.Icmp(_name, "borderColor") == 0) {
                 retVar = borderColor
             }
-            if (idStr.Companion.Icmp(_name, "textScale") == 0) {
+            if (idStr.Icmp(_name, "textScale") == 0) {
                 retVar = textScale
             }
-            if (idStr.Companion.Icmp(_name, "rotate") == 0) {
+            if (idStr.Icmp(_name, "rotate") == 0) {
                 retVar = rotate
             }
-            if (idStr.Companion.Icmp(_name, "noEvents") == 0) {
+            if (idStr.Icmp(_name, "noEvents") == 0) {
                 retVar = noEvents
             }
-            if (idStr.Companion.Icmp(_name, "text") == 0) {
+            if (idStr.Icmp(_name, "text") == 0) {
                 retVar = text
             }
-            if (idStr.Companion.Icmp(_name, "backGroundName") == 0) {
+            if (idStr.Icmp(_name, "backGroundName") == 0) {
                 retVar = backGroundName
             }
-            if (idStr.Companion.Icmp(_name, "hidecursor") == 0) {
+            if (idStr.Icmp(_name, "hidecursor") == 0) {
                 retVar = hideCursor
             }
             val key = idStr(_name)
             val guiVar = key.Find(Winvar.VAR_GUIPREFIX) >= 0
             val c = definedVars.Num()
             for (i in 0 until c) {
-                if (idStr.Companion.Icmp(
+                if (idStr.Icmp(
                         _name,
-                        if (guiVar) Str.va("%s", definedVars.get(i).GetName()) else definedVars.get(i).GetName()
+                        if (guiVar) Str.va("%s", definedVars[i].GetName()) else definedVars[i].GetName()
                     ) == 0
                 ) {
-                    retVar = definedVars.get(i)
+                    retVar = definedVars[i]
                     break
                 }
             }
             if (retVar != null) {
-                if (fixup && _name.get(0) != '$') {
+                if (fixup && _name[0] != '$') {
                     DisableRegister(_name)
                 }
                 if (owner != null && parent != null) {
@@ -709,10 +705,10 @@ object Window {
                 return ret
             }
             for (i in 0 until drawWindows.Num()) {
-                ret = if (drawWindows.get(i).win != null) {
-                    drawWindows.get(i).win.GetWinVarOffset(wv, owner)
+                ret = if (drawWindows[i].win != null) {
+                    drawWindows[i].win.GetWinVarOffset(wv, owner)
                 } else {
-                    drawWindows.get(i).simp.GetWinVarOffset(wv, owner)
+                    drawWindows[i].simp.GetWinVarOffset(wv, owner)
                 }
                 if (ret != -1) {
                     break
@@ -754,7 +750,7 @@ object Window {
             if (dc != null) {
                 dc.EnableClipping(false)
                 if (gui_debug.GetInteger() == 1) {
-                    dc.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, 1f, idDeviceContext.Companion.colorRed)
+                    dc.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, 1f, idDeviceContext.colorRed)
                 } else if (gui_debug.GetInteger() == 2) {
 //			char out[1024];
                     var out: String //[1024];
@@ -794,7 +790,7 @@ object Window {
         }
 
         fun CalcClientRect(xofs: Float, yofs: Float) {
-            drawRect.oSet(rect.data)
+            drawRect.set(rect.data)
             //            if(rect.DBG_count==289425){
 //                int a = 1;
 //            }
@@ -813,7 +809,7 @@ object Window {
             }
             drawRect.x += xofs
             drawRect.y += yofs
-            clientRect.oSet(drawRect)
+            clientRect.set(drawRect)
             //            System.out.println(drawRect);
             if (rect.h() > 0.0 && rect.w() > 0.0) {
                 if (flags and WIN_BORDER != 0 && borderSize.toDouble() != 0.0) {
@@ -822,7 +818,7 @@ object Window {
                     clientRect.w -= borderSize
                     clientRect.h -= borderSize
                 }
-                textRect.oSet(clientRect)
+                textRect.set(clientRect)
                 textRect.x += 2.0.toFloat()
                 textRect.w -= 2.0.toFloat()
                 textRect.y += 2.0.toFloat()
@@ -858,12 +854,12 @@ object Window {
             shear.Zero()
             textScale.data = 0.35f
             backColor.Zero()
-            foreColor.oSet(idVec4(1, 1, 1, 1))
-            hoverColor.oSet(idVec4(1, 1, 1, 1))
-            matColor.oSet(idVec4(1, 1, 1, 1))
+            foreColor.set(idVec4(1, 1, 1, 1))
+            hoverColor.set(idVec4(1, 1, 1, 1))
+            matColor.set(idVec4(1, 1, 1, 1))
             borderColor.Zero()
             background = null
-            backGroundName.oSet(idStr(""))
+            backGroundName.set(idStr(""))
             focusedChild = null
             captureChild = null
             overChild = null
@@ -874,7 +870,7 @@ object Window {
             textShadow = 0.toChar()
             hover = false
             for (i in 0 until ON.SCRIPT_COUNT.ordinal) {
-                scripts.get(i) = null
+                scripts[i] = null
             }
             hideCursor.data = false
         }
@@ -886,7 +882,7 @@ object Window {
             while (i < c) {
 
 //		delete drawWindows[i].simp;
-                drawWindows.set(i, null)
+                drawWindows[i] = null
                 i++
             }
 
@@ -903,15 +899,15 @@ object Window {
             while (i < ON.SCRIPT_COUNT.ordinal) {
 
 //		delete scripts[i];
-                scripts.get(i) = null
+                scripts[i] = null
                 i++
             }
             CommonInit()
         }
 
-        fun DrawBorderAndCaption(drawRect: idRectangle?) {
+        fun DrawBorderAndCaption(drawRect: idRectangle) {
             if (flags and WIN_BORDER != 0 && borderSize != 0f && borderColor.w() != 0f) {
-                dc.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, borderSize, borderColor.data)
+                dc!!.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, borderSize, borderColor.data)
             }
         }
 
@@ -982,7 +978,7 @@ object Window {
                 if (token == "windowDef" || token == "animationDef") {
                     if (token == "animationDef") {
                         visible.data = false
-                        rect.data.oSet(idRectangle(0, 0, 0, 0))
+                        rect.data.set(idRectangle(0, 0, 0, 0))
                     }
                     src.ExpectTokenType(Token.TT_NAME, 0, token)
                     token2 = token
@@ -1349,7 +1345,7 @@ object Window {
             return ret
         }
 
-        open fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
+        open fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
             cmd.set("")
             if (flags and WIN_DESKTOP != 0) {
                 actionDownRun = false
@@ -1375,11 +1371,11 @@ object Window {
                         }
                         var c = children.Num()
                         while (--c >= 0) {
-                            if (children.get(c).visible.data
-                                && children.get(c).Contains(children.get(c).drawRect, gui.CursorX(), gui.CursorY())
-                                && !children.get(c).noEvents.data
+                            if (children[c].visible.data
+                                && children[c].Contains(children[c].drawRect, gui.CursorX(), gui.CursorY())
+                                && !children[c].noEvents.data
                             ) {
-                                val child = children.get(c)
+                                val child = children[c]
                                 if (event.evValue2 != 0) {
                                     BringToTop(child)
                                     SetFocus(child)
@@ -1425,11 +1421,11 @@ object Window {
                         }
                         var c = children.Num()
                         while (--c >= 0) {
-                            if (children.get(c).visible.data
-                                && children.get(c).Contains(children.get(c).drawRect, gui.CursorX(), gui.CursorY())
-                                && !children.get(c).noEvents.data
+                            if (children[c].visible.data
+                                && children[c].Contains(children[c].drawRect, gui.CursorX(), gui.CursorY())
+                                && !children[c].noEvents.data
                             ) {
-                                val child = children.get(c)
+                                val child = children[c]
                                 if (event.evValue2 != 0) {
                                     BringToTop(child)
                                     SetFocus(child)
@@ -1457,10 +1453,10 @@ object Window {
                         if (gui_edit.GetBool()) {
                             val c = children.Num()
                             for (i in 0 until c) {
-                                if (children.get(i).drawRect.Contains(gui.CursorX(), gui.CursorY())) {
+                                if (children[i].drawRect.Contains(gui.CursorX(), gui.CursorY())) {
                                     if (event.evValue2 != 0) {
-                                        children.get(i).flags = children.get(i).flags xor WIN_SELECTED
-                                        if (children.get(i).flags and WIN_SELECTED != 0) {
+                                        children[i].flags = children[i].flags xor WIN_SELECTED
+                                        if (children[i].flags and WIN_SELECTED != 0) {
                                             flags = flags and WIN_SELECTED.inv()
                                             return "childsel"
                                         }
@@ -1598,8 +1594,8 @@ object Window {
             actualY = drawRect.y
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.get(i).win != null) {
-                    drawWindows.get(i).win.CalcRects(clientRect.x + xOffset, clientRect.y + yOffset)
+                if (drawWindows[i].win != null) {
+                    drawWindows[i].win.CalcRects(clientRect.x + xOffset, clientRect.y + yOffset)
                 }
             }
             drawRect.Offset(-x, -y)
@@ -1624,7 +1620,7 @@ object Window {
                         " %0.1f seconds\n%s",
                         (time - timeLine).toFloat() / 1000,
                         gui.State().GetString("name")
-                    ), 0.35f, 0, idDeviceContext.Companion.colorWhite, idRectangle(100, 0, 80, 80), false
+                    ), 0.35f, 0, idDeviceContext.colorWhite, idRectangle(100, 0, 80, 80), false
                 )
             }
             if (flags and WIN_SHOWCOORDS != 0) {
@@ -1642,7 +1638,7 @@ object Window {
                     str.toString(),
                     0.25f,
                     0,
-                    idDeviceContext.Companion.colorWhite,
+                    idDeviceContext.colorWhite,
                     idRectangle(0, 0, 100, 20),
                     false
                 )
@@ -1682,12 +1678,12 @@ object Window {
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.get(i).win != null) {
+                if (drawWindows[i].win != null) {
                     bla1++
-                    drawWindows.get(i).win.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
+                    drawWindows[i].win.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
                 } else {
                     bla2++
-                    drawWindows.get(i).simp.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
+                    drawWindows[i].simp.Redraw(clientRect.x + xOffset, clientRect.y + yOffset)
                 }
             }
 
@@ -1701,7 +1697,7 @@ object Window {
                 || (flags and WIN_DESKTOP != 0 && 0 == flags and WIN_NOCURSOR && !hideCursor.data
                         && (gui.Active() || flags and WIN_MENUGUI != 0))
             ) {
-                dc.SetTransformInfo(Vector.getVec3_origin(), idMat3.Companion.getMat3_identity())
+                dc.SetTransformInfo(Vector.getVec3_origin(), idMat3.getMat3_identity())
                 gui.DrawCursor()
             }
             if (gui_debug.GetInteger() != 0 && flags and WIN_DESKTOP != 0) {
@@ -1711,7 +1707,7 @@ object Window {
                     str.toString(),
                     0.25f,
                     0,
-                    idDeviceContext.Companion.colorWhite,
+                    idDeviceContext.colorWhite,
                     idRectangle(0, 0, 100, 20),
                     false
                 )
@@ -1719,7 +1715,7 @@ object Window {
                     gui.GetSourceFile(),
                     0.25f,
                     0,
-                    idDeviceContext.Companion.colorWhite,
+                    idDeviceContext.colorWhite,
                     idRectangle(0, 20, 300, 20),
                     false
                 )
@@ -1735,7 +1731,7 @@ object Window {
             //FIXME: rewrite without state
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).ArchiveToDictionary(dict)
+                children[i].ArchiveToDictionary(dict)
             }
         }
 
@@ -1744,12 +1740,12 @@ object Window {
             //FIXME: rewrite without state
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).InitFromDictionary(dict)
+                children[i].InitFromDictionary(dict)
             }
         }
 
         open fun PostParse() {}
-        open fun Activate(activate: Boolean, act: idStr?) {
+        open fun Activate(activate: Boolean, act: idStr) {
             DEBUG_Activate++
             val n = (if (activate) ON.ON_ACTIVATE else ON.ON_DEACTIVATE).ordinal
 
@@ -1758,7 +1754,7 @@ object Window {
             RunScript(n)
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).Activate(activate, act)
+                children[i].Activate(activate, act)
             }
             if (act.Length() != 0) {
                 act.Append(" ; ")
@@ -1769,7 +1765,7 @@ object Window {
             RunScript(ON.ON_TRIGGER)
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).Trigger()
+                children[i].Trigger()
             }
             StateChanged(true)
         }
@@ -1797,7 +1793,7 @@ object Window {
                     shadowText.toString(),
                     textScale.data,
                     textAlign.code,
-                    Lib.Companion.colorBlack,
+                    Lib.colorBlack,
                     shadowRect,
                     !TempDump.itob(flags and WIN_NOWRAP),
                     -1
@@ -1818,7 +1814,7 @@ object Window {
                     Str.va("x: %d  y: %d", rect.x().toInt(), rect.y().toInt()),
                     0.25f,
                     0,
-                    idDeviceContext.Companion.colorWhite,
+                    idDeviceContext.colorWhite,
                     idRectangle(rect.x(), rect.y() - 15, 100, 20),
                     false
                 )
@@ -1826,7 +1822,7 @@ object Window {
                     Str.va("w: %d  h: %d", rect.w().toInt(), rect.h().toInt()),
                     0.25f,
                     0,
-                    idDeviceContext.Companion.colorWhite,
+                    idDeviceContext.colorWhite,
                     idRectangle(rect.x() + rect.w(), rect.w() + rect.h() + 5, 100, 20),
                     false
                 )
@@ -1848,7 +1844,7 @@ object Window {
             RunScript(ON.ON_MOUSEENTER)
         }
 
-        open fun DrawBackground(drawRect: idRectangle?) {
+        open fun DrawBackground(drawRect: idRectangle) {
             if (backColor.w() != 0f) {
                 dc.DrawFilledRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, backColor.data)
             }
@@ -1875,7 +1871,7 @@ object Window {
             }
         }
 
-        open fun RouteMouseCoords(xd: Float, yd: Float): String? {
+        open fun RouteMouseCoords(xd: Float, yd: Float): String {
             var str: String
             if (GetCaptureChild() != null) {
                 //FIXME: unkludge this whole mechanism
@@ -1886,7 +1882,7 @@ object Window {
             }
             var c = children.Num()
             while (c > 0) {
-                val child = children.get(--c)
+                val child = children[--c]
                 if (child.visible.data && !child.noEvents.data && child.Contains(
                         child.drawRect,
                         gui.CursorX(),
@@ -1931,8 +1927,8 @@ object Window {
             return ""
         }
 
-        open fun SetBuddy(buddy: idWindow?) {}
-        open fun HandleBuddyUpdate(buddy: idWindow?) {}
+        open fun SetBuddy(buddy: idWindow) {}
+        open fun HandleBuddyUpdate(buddy: idWindow) {}
         open fun StateChanged(redraw: Boolean) {
             UpdateWinVars()
             if (expressionRegisters.Num() != 0 && ops.Num() != 0) {
@@ -1940,10 +1936,10 @@ object Window {
             }
             val c = drawWindows.Num()
             for (i in 0 until c) {
-                if (drawWindows.get(i).win != null) {
-                    drawWindows.get(i).win.StateChanged(redraw)
+                if (drawWindows[i].win != null) {
+                    drawWindows[i].win.StateChanged(redraw)
                 } else {
-                    drawWindows.get(i).simp.StateChanged(redraw)
+                    drawWindows[i].simp.StateChanged(redraw)
                 }
             }
             if (redraw) {
@@ -2000,7 +1996,7 @@ object Window {
             }
         }
 
-        open fun WriteToSaveGame(savefile: idFile?) {
+        open fun WriteToSaveGame(savefile: idFile) {
             var i: Int
             WriteSaveGameString(cmd, savefile)
             savefile.WriteFloat(actualX)
@@ -2048,7 +2044,7 @@ object Window {
             // Defined Vars
             i = 0
             while (i < definedVars.Num()) {
-                definedVars.get(i).WriteToSaveGame(savefile)
+                definedVars[i].WriteToSaveGame(savefile)
                 i++
             }
             savefile.Write(textRect)
@@ -2065,8 +2061,8 @@ object Window {
             // Scripts
             i = 0
             while (i < ON.SCRIPT_COUNT.ordinal) {
-                if (scripts.get(i) != null) {
-                    scripts.get(i).WriteToSaveGame(savefile)
+                if (scripts[i] != null) {
+                    scripts[i].WriteToSaveGame(savefile)
                 }
                 i++
             }
@@ -2074,11 +2070,11 @@ object Window {
             // TimeLine Events
             i = 0
             while (i < timeLineEvents.Num()) {
-                if (timeLineEvents.get(i) != null) {
-                    savefile.WriteBool(timeLineEvents.get(i).pending)
-                    savefile.WriteInt(timeLineEvents.get(i).time)
-                    if (timeLineEvents.get(i).event != null) {
-                        timeLineEvents.get(i).event.WriteToSaveGame(savefile)
+                if (timeLineEvents[i] != null) {
+                    savefile.WriteBool(timeLineEvents[i].pending)
+                    savefile.WriteInt(timeLineEvents[i].time)
+                    if (timeLineEvents[i].event != null) {
+                        timeLineEvents[i].event.WriteToSaveGame(savefile)
                     }
                 }
                 i++
@@ -2089,17 +2085,17 @@ object Window {
             savefile.WriteInt(num)
             i = 0
             while (i < transitions.Num()) {
-                WriteSaveGameTransition(transitions.get(i), savefile)
+                WriteSaveGameTransition(transitions[i], savefile)
                 i++
             }
 
             // Named Events
             i = 0
             while (i < namedEvents.Num()) {
-                if (namedEvents.get(i) != null) {
-                    WriteSaveGameString(namedEvents.get(i).mName.toString(), savefile)
-                    if (namedEvents.get(i).mEvent != null) {
-                        namedEvents.get(i).mEvent.WriteToSaveGame(savefile)
+                if (namedEvents[i] != null) {
+                    WriteSaveGameString(namedEvents[i].mName.toString(), savefile)
+                    if (namedEvents[i].mEvent != null) {
+                        namedEvents[i].mEvent.WriteToSaveGame(savefile)
                     }
                 }
                 i++
@@ -2111,7 +2107,7 @@ object Window {
             // Save children
             i = 0
             while (i < drawWindows.Num()) {
-                val window = drawWindows.get(i)
+                val window = drawWindows[i]
                 if (window.simp != null) {
                     window.simp.WriteToSaveGame(savefile)
                 } else if (window.win != null) {
@@ -2148,7 +2144,7 @@ object Window {
             }
         }
 
-        open fun ReadFromSaveGame(savefile: idFile?) {
+        open fun ReadFromSaveGame(savefile: idFile) {
             var i: Int
             transitions.Clear()
             ReadSaveGameString(cmd, savefile)
@@ -2192,7 +2188,7 @@ object Window {
             rotate.ReadFromSaveGame(savefile)
             text.ReadFromSaveGame(savefile)
             backGroundName.ReadFromSaveGame(savefile)
-            if (Session.Companion.session.GetSaveGameVersion() >= 17) {
+            if (Session.session.GetSaveGameVersion() >= 17) {
                 hideCursor.ReadFromSaveGame(savefile)
             } else {
                 hideCursor.data = false
@@ -2201,7 +2197,7 @@ object Window {
             // Defined Vars
             i = 0
             while (i < definedVars.Num()) {
-                definedVars.get(i).ReadFromSaveGame(savefile)
+                definedVars[i].ReadFromSaveGame(savefile)
                 i++
             }
             savefile.Read(textRect)
@@ -2211,24 +2207,24 @@ object Window {
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.get(i).childID == winID) {
-                    focusedChild = children.get(i)
+                if (children[i].childID == winID) {
+                    focusedChild = children[i]
                 }
                 i++
             }
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.get(i).childID == winID) {
-                    captureChild = children.get(i)
+                if (children[i].childID == winID) {
+                    captureChild = children[i]
                 }
                 i++
             }
             winID = savefile.ReadInt()
             i = 0
             while (i < children.Num()) {
-                if (children.get(i).childID == winID) {
-                    overChild = children.get(i)
+                if (children[i].childID == winID) {
+                    overChild = children[i]
                 }
                 i++
             }
@@ -2236,8 +2232,8 @@ object Window {
             // Scripts
             i = 0
             while (i < ON.SCRIPT_COUNT.ordinal) {
-                if (scripts.get(i) != null) {
-                    scripts.get(i).ReadFromSaveGame(savefile)
+                if (scripts[i] != null) {
+                    scripts[i].ReadFromSaveGame(savefile)
                 }
                 i++
             }
@@ -2245,11 +2241,11 @@ object Window {
             // TimeLine Events
             i = 0
             while (i < timeLineEvents.Num()) {
-                if (timeLineEvents.get(i) != null) {
-                    timeLineEvents.get(i).pending = savefile.ReadBool()
-                    timeLineEvents.get(i).time = savefile.ReadInt()
-                    if (timeLineEvents.get(i).event != null) {
-                        timeLineEvents.get(i).event.ReadFromSaveGame(savefile)
+                if (timeLineEvents[i] != null) {
+                    timeLineEvents[i].pending = savefile.ReadBool()
+                    timeLineEvents[i].time = savefile.ReadInt()
+                    if (timeLineEvents[i].event != null) {
+                        timeLineEvents[i].event.ReadFromSaveGame(savefile)
                     }
                 }
                 i++
@@ -2272,10 +2268,10 @@ object Window {
             // Named Events
             i = 0
             while (i < namedEvents.Num()) {
-                if (namedEvents.get(i) != null) {
-                    ReadSaveGameString(namedEvents.get(i).mName, savefile)
-                    if (namedEvents.get(i).mEvent != null) {
-                        namedEvents.get(i).mEvent.ReadFromSaveGame(savefile)
+                if (namedEvents[i] != null) {
+                    ReadSaveGameString(namedEvents[i].mName, savefile)
+                    if (namedEvents[i].mEvent != null) {
+                        namedEvents[i].mEvent.ReadFromSaveGame(savefile)
                     }
                 }
                 i++
@@ -2287,7 +2283,7 @@ object Window {
             // Read children
             i = 0
             while (i < drawWindows.Num()) {
-                val window = drawWindows.get(i)
+                val window = drawWindows[i]
                 if (window.simp != null) {
                     window.simp.ReadFromSaveGame(savefile)
                 } else if (window.win != null) {
@@ -2305,9 +2301,9 @@ object Window {
             var c = transitions.Num()
             i = 0
             while (i < c) {
-                val dw = gui.GetDesktop().FindChildByName(transitions.get(i).data.c_str())
+                val dw = gui.GetDesktop().FindChildByName(transitions[i].data.c_str())
                 //		delete transitions[i].data;
-                transitions.get(i).data = null
+                transitions[i].data = null
                 if (dw != null && (dw.win != null || dw.simp != null)) { //TODO:
 //			if ( dw.win ) {
 //				if ( transitions.oGet(i).offset == (int)( ( idWindow  ) 0 ).rect ) {
@@ -2343,7 +2339,7 @@ object Window {
 //				}
 //			}
                 }
-                if (transitions.get(i).data == null) {
+                if (transitions[i].data == null) {
                     transitions.RemoveIndex(i)
                     i--
                     c--
@@ -2352,7 +2348,7 @@ object Window {
             }
             c = 0
             while (c < children.Num()) {
-                children.get(c).FixupTransitions()
+                children[c].FixupTransitions()
                 c++
             }
         }
@@ -2364,39 +2360,39 @@ object Window {
             var c = children.Num()
             i = 0
             while (i < c) {
-                children.get(i).FixupParms()
+                children[i].FixupParms()
                 i++
             }
             i = 0
             while (i < ON.SCRIPT_COUNT.ordinal) {
-                if (scripts.get(i) != null) {
-                    scripts.get(i).FixupParms(this)
+                if (scripts[i] != null) {
+                    scripts[i].FixupParms(this)
                 }
                 i++
             }
             c = timeLineEvents.Num()
             i = 0
             while (i < c) {
-                timeLineEvents.get(i).event.FixupParms(this)
+                timeLineEvents[i].event.FixupParms(this)
                 i++
             }
             c = namedEvents.Num()
             i = 0
             while (i < c) {
-                namedEvents.get(i).mEvent.FixupParms(this)
+                namedEvents[i].mEvent.FixupParms(this)
                 i++
             }
             c = ops.Num()
             i = 0
             while (i < c) {
-                if (ops.get(i).b == -2) {
+                if (ops[i].b == -2) {
                     // need to fix this up
-                    val p = ops.get(i).a.c_str()
+                    val p = ops[i].a.c_str()
                     val `var` = GetWinVarByName(p, true)
                     //                    System.out.println("=="+p);
 //			delete []p;
-                    ops.get(i).a =  /*(int)*/`var`
-                    ops.get(i).b = -1
+                    ops[i].a =  /*(int)*/`var`
+                    ops[i].b = -1
                 }
                 i++
             }
@@ -2414,7 +2410,7 @@ object Window {
         @JvmOverloads
         fun EvalRegs(test: Int = -1 /*= -1*/, force: Boolean = false /*= false*/): Float {
             if (!force && test >= 0 && test < precompiled.MAX_EXPRESSION_REGISTERS && lastEval === this) {
-                return regs.get(test)
+                return regs[test]
             }
             lastEval = this
             if (expressionRegisters.Num() != 0) {
@@ -2423,7 +2419,7 @@ object Window {
                 regList.GetFromRegs(regs)
             }
             return if (test >= 0 && test < precompiled.MAX_EXPRESSION_REGISTERS) {
-                regs.get(test)
+                regs[test]
             } else 0.0f
         }
 
@@ -2444,8 +2440,8 @@ object Window {
             var c = timeLineEvents.Num()
             i = 0
             while (i < c) {
-                if (timeLineEvents.get(i).time >= t) {
-                    timeLineEvents.get(i).pending = true
+                if (timeLineEvents[i].time >= t) {
+                    timeLineEvents[i].pending = true
                 }
                 i++
             }
@@ -2453,7 +2449,7 @@ object Window {
             c = transitions.Num()
             i = 0
             while (i < c) {
-                val data = transitions.get(i)
+                val data = transitions[i]
                 if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
                     transitions.RemoveIndex(i)
                     i--
@@ -2472,15 +2468,15 @@ object Window {
         fun NumTransitions(): Int {
             var c = transitions.Num()
             for (i in 0 until children.Num()) {
-                c += children.get(i).NumTransitions()
+                c += children[i].NumTransitions()
             }
             return c
         }
 
         @JvmOverloads
         fun ParseScript(
-            src: idParser?,
-            list: idGuiScriptList?,
+            src: idParser,
+            list: idGuiScriptList,
             timeParm: IntArray? = null /*= NULL*/,
             elseBlock: Boolean = false /*= false*/
         ): Boolean {
@@ -2555,7 +2551,7 @@ object Window {
 
         fun RunScript(n: Int): Boolean {
             return if (n >= ON.ON_MOUSEENTER.ordinal && n < ON.SCRIPT_COUNT.ordinal) {
-                RunScriptList(scripts.get(n))
+                RunScriptList(scripts[n])
             } else false
         }
 
@@ -2589,7 +2585,7 @@ object Window {
             var i: Int
             i = TempDump.etoi(wexpRegister_t.WEXP_REG_NUM_PREDEFINED)
             while (i < expressionRegisters.Num()) {
-                if (!registerIsTemporary.get(i) && expressionRegisters.get(i) == f) {
+                if (!registerIsTemporary.get(i) && expressionRegisters[i] == f) {
                     return i
                 }
                 i++
@@ -2632,12 +2628,12 @@ object Window {
         }
 
         fun Interactive(): Boolean {
-            if (scripts.get(ON.ON_ACTION.ordinal) != null) {
+            if (scripts[ON.ON_ACTION.ordinal] != null) {
                 return true
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.get(i).Interactive()) {
+                if (children[i].Interactive()) {
                     return true
                 }
             }
@@ -2650,7 +2646,7 @@ object Window {
             }
             val c = children.Num()
             for (i in 0 until c) {
-                if (children.get(i).ContainsStateVars()) {
+                if (children[i].ContainsStateVars()) {
                     return true
                 }
             }
@@ -2667,7 +2663,7 @@ object Window {
                     wv = dw.win.GetWinVarByName(`var`)
                 }
                 if (wv != null) {
-                    wv.Set(`val`)
+                    wv.set(`val`)
                     wv.SetEval(false)
                 }
             }
@@ -2685,7 +2681,7 @@ object Window {
             } else null
         }
 
-        fun GetComment(): String? {
+        fun GetComment(): String {
             return comment.toString()
         }
 
@@ -2693,7 +2689,7 @@ object Window {
             comment.set(p)
         }
 
-        open fun RunNamedEvent(eventName: String?) {
+        open fun RunNamedEvent(eventName: String) {
             var i: Int
             var c: Int
 
@@ -2701,7 +2697,7 @@ object Window {
             c = namedEvents.Num()
             i = 0
             while (i < c) {
-                if (namedEvents.get(i).mName.Icmp(eventName) != 0) {
+                if (namedEvents[i].mName.Icmp(eventName) != 0) {
                     i++
                     continue
                 }
@@ -2711,7 +2707,7 @@ object Window {
                 if (expressionRegisters.Num() != 0 && ops.Num() != 0) {
                     EvalRegs(-1, true)
                 }
-                RunScriptList(namedEvents.get(i).mEvent)
+                RunScriptList(namedEvents[i].mEvent)
                 break
                 i++
             }
@@ -2720,7 +2716,7 @@ object Window {
             c = children.Num()
             i = 0
             while (i < c) {
-                children.get(i).RunNamedEvent(eventName)
+                children[i].RunNamedEvent(eventName)
                 i++
             }
         }
@@ -2737,7 +2733,7 @@ object Window {
             var find: Int
             find = 0
             while (find < drawWindows.Num()) {
-                if (drawWindows.get(find).win === window) {
+                if (drawWindows[find].win === window) {
                     return find
                 }
                 find++
@@ -2758,7 +2754,7 @@ object Window {
 
         fun GetChild(index: Int): idWindow? {
             DBG_GetChild++
-            val win_t = drawWindows.get(index)
+            val win_t = drawWindows[index]
             val win = win_t.win
             if (win_t != null && win_t.DBG_index == 10670) {
                 val a = 0
@@ -2781,7 +2777,7 @@ object Window {
             children.Remove(win)
             find = 0
             while (find < drawWindows.Num()) {
-                if (drawWindows.get(find).win === win) {
+                if (drawWindows[find].win === win) {
                     drawWindows.RemoveIndex(find)
                     break
                 }
@@ -2907,7 +2903,7 @@ object Window {
                 return null
             }
             for (i in c - 1 downTo 0) {
-                val found = children.get(i).FindChildByPoint(x, y, below)
+                val found = children[i].FindChildByPoint(x, y, below)
                 if (found != null) {
                     if (below.get(0) != null) {
                         continue
@@ -2942,9 +2938,9 @@ object Window {
             shear.Zero()
             textScale.data = 0.35f
             backColor.Zero()
-            foreColor.oSet(idVec4(1, 1, 1, 1))
-            hoverColor.oSet(idVec4(1, 1, 1, 1))
-            matColor.oSet(idVec4(1, 1, 1, 1))
+            foreColor.set(idVec4(1, 1, 1, 1))
+            hoverColor.set(idVec4(1, 1, 1, 1))
+            matColor.set(idVec4(1, 1, 1, 1))
             borderColor.Zero()
             text.data.set("")
             background = null
@@ -2970,7 +2966,7 @@ object Window {
                 return false
             }
             for (i in 0 until ON.SCRIPT_COUNT.ordinal) {
-                if (scripts.get(i) != null) {
+                if (scripts[i] != null) {
                     return false
                 }
             }
@@ -2983,7 +2979,7 @@ object Window {
             val c = updateVars.Num()
             for (i in 0 until c) {
 //                System.out.printf("%d %s\n", DEBUG_Activate, updateVars.oGet(i).c_str());
-                updateVars.get(i).Update()
+                updateVars[i].Update()
             }
         }
 
@@ -2998,7 +2994,7 @@ object Window {
             var clear = true
             i = 0
             while (i < c) {
-                val data = transitions.get(i)
+                val data = transitions[i]
                 var r: idWinRectangle? = null
                 var `val`: idWinFloat? = null
                 var v4: idWinVec4? = null
@@ -3011,15 +3007,15 @@ object Window {
                 }
                 if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
                     if (v4 != null) {
-                        v4.oSet(data.interp.GetEndValue())
-                    } else `val`?.oSet(data.interp.GetEndValue().get(0)) ?: r.oSet(data.interp.GetEndValue())
+                        v4.set(data.interp.GetEndValue())
+                    } else `val`?.set(data.interp.GetEndValue()[0]) ?: r.set(data.interp.GetEndValue())
                 } else {
                     clear = false
                     if (data.data != null) {
                         if (v4 != null) {
-                            v4.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
-                        } else `val`?.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()).get(0))
-                            ?: r.oSet(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
+                            v4.set(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
+                        } else `val`?.set(data.interp.GetCurrentValue(gui.GetTime().toFloat())[0])
+                            ?: r.set(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
                     } else {
                         Common.common.Warning(
                             "Invalid transitional data for window %s in gui %s",
@@ -3047,9 +3043,9 @@ object Window {
             val c = timeLineEvents.Num()
             if (c > 0) {
                 for (i in 0 until c) {
-                    if (timeLineEvents.get(i).pending && gui.GetTime() - timeLine >= timeLineEvents.get(i).time) {
-                        timeLineEvents.get(i).pending = false
-                        RunScriptList(timeLineEvents.get(i).event)
+                    if (timeLineEvents[i].pending && gui.GetTime() - timeLine >= timeLineEvents[i].time) {
+                        timeLineEvents[i].pending = false
+                        RunScriptList(timeLineEvents[i].event)
                     }
                 }
             }
@@ -3077,7 +3073,7 @@ object Window {
             RunScript(ON.ON_FRAME)
             val c = children.Num()
             for (i in 0 until c) {
-                children.get(i).RunTimeEvents(time)
+                children[i].RunTimeEvents(time)
             }
             return true
         }
@@ -3132,12 +3128,12 @@ object Window {
         protected fun ExpressionOp(): wexpOp_t? {
             if (ops.Num() == precompiled.MAX_EXPRESSION_OPS) {
                 Common.common.Warning("expressionOp: gui %s hit MAX_EXPRESSION_OPS", gui.GetSourceFile())
-                return ops.get(0)
+                return ops[0]
             }
             val wop = wexpOp_t()
             //	memset(&wop, 0, sizeof(wexpOp_t));
             val i = ops.Append(wop)
-            return ops.get(i)
+            return ops[i]
         }
 
         protected fun EmitOp(
@@ -3377,7 +3373,7 @@ object Window {
             // copy the constants
             i = TempDump.etoi(wexpRegister_t.WEXP_REG_NUM_PREDEFINED)
             while (i < erc) {
-                registers.get(i) = expressionRegisters.get(i)
+                registers.get(i) = expressionRegisters[i]
                 i++
             }
 
@@ -3385,7 +3381,7 @@ object Window {
             registers.get(TempDump.etoi(wexpRegister_t.WEXP_REG_TIME)) = gui.GetTime()
             i = 0
             while (i < oc) {
-                op = ops.get(i)
+                op = ops[i]
                 if (op.b == -2) {
                     i++
                     continue
@@ -3437,7 +3433,7 @@ object Window {
                         if (op.b >= 0 && registers.get(op.b) >= 0 && registers.get(op.b) < 4) {
                             // grabs vector components
                             val `var` = op.a as idWinVec4?
-                            registers.get(op.c) = `var`.data.get(registers.get(op.b) as Int)
+                            registers.get(op.c) = `var`.data[registers.get(op.b) as Int]
                         } else {
                             registers.get(op.c) = op.a.x()
                         }
@@ -3493,10 +3489,10 @@ object Window {
 
         protected fun ParseScriptEntry(name: String?, src: idParser?): Boolean {
             for (i in 0 until ON.SCRIPT_COUNT.ordinal) {
-                if (idStr.Companion.Icmp(name, ScriptNames.get(i)) == 0) {
+                if (idStr.Icmp(name, ScriptNames.get(i)) == 0) {
                     // delete scripts[i];
-                    scripts.get(i) = idGuiScriptList()
-                    return ParseScript(src, scripts.get(i))
+                    scripts[i] = idGuiScriptList()
+                    return ParseScript(src, scripts[i])
                 }
             }
             return false
@@ -3509,7 +3505,7 @@ object Window {
             val `var` = GetWinVarByName(work.toString(), false)
             if (`var` != null) {
                 for (i in 0 until NumRegisterVars) {
-                    if (idStr.Companion.Icmp(work, RegisterVars.get(i).name) == 0) {
+                    if (idStr.Icmp(work, RegisterVars.get(i).name) == 0) {
                         regList.AddReg(work.toString(), TempDump.etoi(RegisterVars.get(i).type), src, this, `var`)
                         DBG_ParseRegEntry++
                         return true
@@ -3556,62 +3552,62 @@ object Window {
             return true
         }
 
-        protected open fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
-            if (idStr.Companion.Icmp(_name, "showtime") == 0) {
+        protected open fun ParseInternalVar(_name: String, src: idParser): Boolean {
+            if (idStr.Icmp(_name, "showtime") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_SHOWTIME
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "showcoords") == 0) {
+            if (idStr.Icmp(_name, "showcoords") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_SHOWCOORDS
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "forceaspectwidth") == 0) {
+            if (idStr.Icmp(_name, "forceaspectwidth") == 0) {
                 forceAspectWidth = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "forceaspectheight") == 0) {
+            if (idStr.Icmp(_name, "forceaspectheight") == 0) {
                 forceAspectHeight = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "matscalex") == 0) {
+            if (idStr.Icmp(_name, "matscalex") == 0) {
                 matScalex = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "matscaley") == 0) {
+            if (idStr.Icmp(_name, "matscaley") == 0) {
                 matScaley = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "bordersize") == 0) {
+            if (idStr.Icmp(_name, "bordersize") == 0) {
                 borderSize = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "nowrap") == 0) {
+            if (idStr.Icmp(_name, "nowrap") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_NOWRAP
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "shadow") == 0) {
+            if (idStr.Icmp(_name, "shadow") == 0) {
                 textShadow = src.ParseInt().toChar()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "textalign") == 0) {
+            if (idStr.Icmp(_name, "textalign") == 0) {
                 textAlign = src.ParseInt().toChar()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "textalignx") == 0) {
+            if (idStr.Icmp(_name, "textalignx") == 0) {
                 textAlignx = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "textaligny") == 0) {
+            if (idStr.Icmp(_name, "textaligny") == 0) {
                 textAligny = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "shear") == 0) {
+            if (idStr.Icmp(_name, "shear") == 0) {
                 shear.x = src.ParseFloat()
                 val tok = idToken()
                 src.ReadToken(tok)
@@ -3622,63 +3618,63 @@ object Window {
                 shear.y = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "wantenter") == 0) {
+            if (idStr.Icmp(_name, "wantenter") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_WANTENTER
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "naturalmatscale") == 0) {
+            if (idStr.Icmp(_name, "naturalmatscale") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_NATURALMAT
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "noclip") == 0) {
+            if (idStr.Icmp(_name, "noclip") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_NOCLIP
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "nocursor") == 0) {
+            if (idStr.Icmp(_name, "nocursor") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_NOCURSOR
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "menugui") == 0) {
+            if (idStr.Icmp(_name, "menugui") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_MENUGUI
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "modal") == 0) {
+            if (idStr.Icmp(_name, "modal") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_MODAL
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "invertrect") == 0) {
+            if (idStr.Icmp(_name, "invertrect") == 0) {
                 if (src.ParseBool()) {
                     flags = flags or WIN_INVERTRECT
                 }
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "name") == 0) {
+            if (idStr.Icmp(_name, "name") == 0) {
                 ParseString(src, name)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "play") == 0) {
+            if (idStr.Icmp(_name, "play") == 0) {
                 Common.common.Warning("play encountered during gui parse.. see Robert\n")
                 val playStr = idStr()
                 ParseString(src, playStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "comment") == 0) {
+            if (idStr.Icmp(_name, "comment") == 0) {
                 ParseString(src, comment)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "font") == 0) {
+            if (idStr.Icmp(_name, "font") == 0) {
                 val fontStr = idStr()
                 ParseString(src, fontStr)
                 fontNum = dc.FindFont(fontStr.toString()).toChar()
@@ -3810,15 +3806,13 @@ object Window {
             private var DBG_SetupBackground = 0
             private var actionDownRun = false
             private var actionUpRun = false
-            private var buff: String? = "" //[16384];
+            private var buff: String = "" //[16384];
             private var lastEval: idWindow? = null
-            private val org: idVec3? = idVec3()
-            private val regs: FloatArray? = FloatArray(precompiled.MAX_EXPRESSION_REGISTERS)
-            private val rot: idRotation? = idRotation()
-            private val smat: idMat3? = idMat3()
-
-            //
-            private var trans: idMat3? = idMat3()
+            private val org: idVec3 = idVec3()
+            private val regs: FloatArray = FloatArray(precompiled.MAX_EXPRESSION_REGISTERS)
+            private val rot: idRotation = idRotation()
+            private val smat: idMat3 = idMat3()
+            private val trans: idMat3 = idMat3()
         }
     }
 }

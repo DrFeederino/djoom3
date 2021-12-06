@@ -562,12 +562,12 @@ object ServerScan {
             keyval = server.serverInfo.FindKey("si_usePass")
             if (keyval != null && ServerScan.gui_filter_password.GetInteger() == 1) {
                 // show passworded only
-                if (keyval.GetValue().oGet(0) == '0') {
+                if (keyval.GetValue().get(0) == '0') {
                     return true
                 }
             } else if (keyval != null && ServerScan.gui_filter_password.GetInteger() == 2) {
                 // show no password only
-                if (keyval.GetValue().oGet(0) != '0') {
+                if (keyval.GetValue().get(0) != '0') {
                     return true
                 }
             }

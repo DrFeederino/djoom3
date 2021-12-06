@@ -9,7 +9,7 @@ object win_wndproc {
     //==========================================================================
     // Keep this in sync with the one in win_input.cpp
     // This one is used in the menu, the other one is used in game
-    val s_scantokey /*[128]*/: IntArray? =
+    val s_scantokey /*[128]*/: IntArray =
         intArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0,
@@ -141,7 +141,7 @@ object win_wndproc {
             0,
             0 // 7
         )
-    var s_scantoshift /*[128]*/: IntArray? =
+    var s_scantoshift /*[128]*/: IntArray =
         intArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0,
@@ -301,7 +301,7 @@ object win_wndproc {
             }
         }
         val scanToKey = win_input.Sys_GetScanTable()
-        result = scanToKey[modified]
+        result = scanToKey[modified].code
 
         // common->Printf( "Key: 0x%08x Modified: 0x%02x Extended: %s Result: 0x%02x\n", key, modified, (is_extended?"Y":"N"), result);
         if (is_extended) {

@@ -126,7 +126,7 @@ object snd_system {
             )
 
             //
-            val s_libOpenAL: idCVar? = idCVar(
+            val s_libOpenAL: idCVar = idCVar(
                 "s_libOpenAL",
                 "openal32.dll",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE,
@@ -156,7 +156,7 @@ object snd_system {
             //
             //
             val s_noSound: idCVar? = null
-            val s_numberOfSpeakers: idCVar? = idCVar(
+            val s_numberOfSpeakers: idCVar = idCVar(
                 "s_numberOfSpeakers",
                 "2",
                 CVarSystem.CVAR_SOUND or CVarSystem.CVAR_ARCHIVE,

@@ -221,7 +221,7 @@ object RoqParam {
             len = outputFilename.Length()
             i = 0
             while (i < len) {
-                if (outputFilename.oGet(i) == '/') {
+                if (outputFilename.get(i) == '/') {
                     j = i
                 }
                 i++
@@ -248,7 +248,7 @@ object RoqParam {
             len = currentFile.Length()
             i = 0
             while (i < len) {
-                if (currentFile.oGet(i) == '^') {
+                if (currentFile.get(i) == '^') {
                     currentFile.set(i, ' ')
                 }
                 i++
@@ -507,13 +507,13 @@ object RoqParam {
 //						arg3 += token;
                                 arg3.Append(token)
                             }
-                            if (arg1.oGet(0) != '[') {
+                            if (arg1.get(0) != '[') {
 //						common.Printf("  + reading %s\n", file[field] );
                                 range.get(field) = 0
                                 numfiles.get(field) = 1
                                 realnum++
                             } else {
-                                if (arg1.oGet(0) == '[') {
+                                if (arg1.get(0) == '[') {
                                     range.get(field) = 1
                                     realnum += if (useTimecodeForRange) {
                                         RoqParam.parseTimecodeRange(
@@ -540,7 +540,7 @@ object RoqParam {
                                         )
                                         //								common.Printf("  + reading %s from %d to %d\n", file[field], startnum[field], endnum[field]);
                                     }
-                                } else if (arg1.oGet(0) != '[' && arg2.oGet(0) == '[' && arg3.oGet(0) == '[') {  //a double ranger...
+                                } else if (arg1.get(0) != '[' && arg2.get(0) == '[' && arg3.get(0) == '[') {  //a double ranger...
                                     var files1: Int
                                     var files2: Int
                                     file2.set(field, arg1)

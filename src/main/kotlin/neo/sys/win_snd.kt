@@ -178,8 +178,8 @@ object win_snd {
         }
 
         override fun Write(value: Boolean) {}
-        override fun GetMixBuffer(): ShortArray? {
-            return null
+        override fun GetMixBuffer(): ShortArray {
+            return shortArrayOf(128)
         }
 
         override fun Initialize(): Boolean {
@@ -209,7 +209,7 @@ object win_snd {
             return true
         }
 
-        override fun Lock(pDSLockedBuffer: Any?, dwDSLockedBufferSize: Long): Boolean {
+        override fun Lock(pDSLockedBuffer: Any, dwDSLockedBufferSize: Long): Boolean {
             throw TODO_Exception()
             //	if (speakers) {
 //		return speakers->Lock( pDSLockedBuffer, dwDSLockedBufferSize );
@@ -217,7 +217,7 @@ object win_snd {
 //	return false;
         }
 
-        override fun Unlock(pDSLockedBuffer: Any?, dwDSLockedBufferSize: Long): Boolean {
+        override fun Unlock(pDSLockedBuffer: Any, dwDSLockedBufferSize: Long): Boolean {
             throw TODO_Exception()
             //	if (speakers) {
 //		return speakers->Unlock( pDSLockedBuffer, dwDSLockedBufferSize );

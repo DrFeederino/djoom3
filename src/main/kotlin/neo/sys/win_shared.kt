@@ -56,7 +56,7 @@ object win_shared {
      returns in megabytes
      ================
      */
-    fun Sys_GetDriveFreeSpace(path: String?): Long {
+    fun Sys_GetDriveFreeSpace(path: String): Long {
         return File(path).freeSpace / (1024L * 1024L)
         //	DWORDLONG lpFreeBytesAvailable;
 //	DWORDLONG lpTotalNumberOfBytes;
@@ -136,7 +136,7 @@ object win_shared {
      all values are in kB except the memoryload
      ================
      */
-    fun Sys_GetCurrentMemoryStatus(stats: sysMemoryStats_s?) {
+    fun Sys_GetCurrentMemoryStatus(stats: sysMemoryStats_s) {
         throw TODO_Exception()
         //	MEMORYSTATUSEX statex;
 //	unsigned __int64 work;
@@ -176,7 +176,7 @@ object win_shared {
      Sys_LockMemory
      ================
      */
-    fun Sys_LockMemory(ptr: Any?, bytes: Int): Boolean {
+    fun Sys_LockMemory(ptr: Any, bytes: Int): Boolean {
         throw TODO_Exception()
         //	return ( VirtualLock( ptr, (SIZE_T)bytes ) != FALSE );
     }
@@ -186,7 +186,7 @@ object win_shared {
      Sys_UnlockMemory
      ================
      */
-    fun Sys_UnlockMemory(ptr: Any?, bytes: Int): Boolean {
+    fun Sys_UnlockMemory(ptr: Any, bytes: Int): Boolean {
         throw TODO_Exception()
         //	return ( VirtualUnlock( ptr, (SIZE_T)bytes ) != FALSE );
     }
@@ -201,8 +201,8 @@ object win_shared {
         //	::SetProcessWorkingSetSize( GetCurrentProcess(), minBytes, maxBytes );
     }
 
-    fun Sys_GetCurrentUser(): String? {
-        var s_userName: String?
+    fun Sys_GetCurrentUser(): String {
+        var s_userName: String = ""
         if (!TempDump.isNotNullOrEmpty(System.getProperty("user.name").also { s_userName = it })) {
             s_userName = "player"
         }
@@ -241,7 +241,7 @@ object win_shared {
      Sym_GetFuncInfo
      ==================
      */
-    fun Sym_GetFuncInfo(addr: Long, module: idStr?, funcName: idStr?) {
+    fun Sym_GetFuncInfo(addr: Long, module: idStr, funcName: idStr) {
         throw TODO_Exception()
         //	module = "";
 //	sprintf( funcName, "0x%08x", addr );
@@ -332,7 +332,7 @@ object win_shared {
      Sys_GetCallStackStr
      ==================
      */
-    fun Sys_GetCallStackStr(   /*address_t*/callStack: Long, callStackSize: Int): String? {
+    fun Sys_GetCallStackStr(   /*address_t*/callStack: Long, callStackSize: Int): String {
         throw TODO_Exception()
         //	static char string[MAX_STRING_CHARS*2];
 //	int index, i;
@@ -351,7 +351,7 @@ object win_shared {
      Sys_GetCallStackCurStr
      ==================
      */
-    fun Sys_GetCallStackCurStr(depth: Int): String? {
+    fun Sys_GetCallStackCurStr(depth: Int): String {
         throw TODO_Exception()
         //	long/*address_t*/ *callStack;
 //
@@ -365,7 +365,7 @@ object win_shared {
      Sys_GetCallStackCurAddressStr
      ==================
      */
-    fun Sys_GetCallStackCurAddressStr(depth: Int): String? {
+    fun Sys_GetCallStackCurAddressStr(depth: Int): String {
         throw TODO_Exception()
         //	static char string[MAX_STRING_CHARS*2];
 //	long/*address_t*/ *callStack;

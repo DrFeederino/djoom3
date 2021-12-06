@@ -417,8 +417,8 @@ object FileSystem_h {
         //	friend class idFileSystemLocal;
         //
         private val basePath: idStr?
-        private val list: idStrList?
-        fun GetBasePath(): String? {
+        private val list: idStrList
+        fun GetBasePath(): String {
             return basePath.toString()
         }
 
@@ -426,7 +426,7 @@ object FileSystem_h {
             return list.size()
         }
 
-        fun GetFile(index: Int): String? {
+        fun GetFile(index: Int): String {
             return list.get(index).toString()
         }
 
@@ -496,14 +496,14 @@ object FileSystem_h {
         // The returned files will not include any directories or '/' unless fullRelativePath is set.
         // The extension must include a leading dot and may not contain wildcards.
         // If extension is "/", only subdirectories will be returned.
-        abstract fun ListFiles(relativePath: String?, extension: String?): idFileList?
-        abstract fun ListFiles(relativePath: String?, extension: String?, sort: Boolean): idFileList?
+        abstract fun ListFiles(relativePath: String?, extension: String?): idFileList
+        abstract fun ListFiles(relativePath: String?, extension: String?, sort: Boolean): idFileList
         abstract fun ListFiles(
             relativePath: String?,
             extension: String?,
             sort: Boolean,
             fullRelativePath: Boolean
-        ): idFileList?
+        ): idFileList
 
         abstract fun ListFiles(
             relativePath: String?,
@@ -511,7 +511,7 @@ object FileSystem_h {
             sort: Boolean,
             fullRelativePath: Boolean,
             gamedir: String?
-        ): idFileList?
+        ): idFileList
 
         // Lists files in the given directory and all subdirectories with the given extension.
         // Directory should not have either a leading or trailing '/'
@@ -533,8 +533,8 @@ object FileSystem_h {
         abstract fun OSPathToRelativePath(OSPath: String?): String?
 
         // Converts a full OS path to a relative path.
-        abstract fun RelativePathToOSPath(relativePath: String?, basePath: String? /* = "fs_devpath"*/): String?
-        fun RelativePathToOSPath(relativePath: String?): String? { //TODO:return Path
+        abstract fun RelativePathToOSPath(relativePath: String, basePath: String /* = "fs_devpath"*/): String
+        fun RelativePathToOSPath(relativePath: String): String { //TODO:return Path
             return RelativePathToOSPath(relativePath, "fs_devpath")
         }
 
@@ -1164,7 +1164,7 @@ object FileSystem_h {
             extension: String?,
             sort: Boolean,
             fullRelativePath: Boolean
-        ): idFileList? {
+        ): idFileList {
             return ListFiles(relativePath, extension, sort, fullRelativePath, null)
         }
 
@@ -1174,7 +1174,7 @@ object FileSystem_h {
             sort: Boolean,
             fullRelativePath: Boolean,
             gamedir: String?
-        ): idFileList? {
+        ): idFileList {
             val hashIndex = idHashIndex(4096, 4096)
             val extensionList = idStrList()
             val fileList = idFileList()
@@ -1392,7 +1392,7 @@ object FileSystem_h {
             val path = idStr(OSPath)
             ofs = 1
             while (ofs < path.Length()) {
-                if (path.oGet(ofs) == sys_public.PATHSEPERATOR_CHAR) {
+                if (path.get(ofs) == sys_public.PATHSEPERATOR_CHAR) {
                     // create the directory
                     path.set(ofs, '0')
                     win_main.Sys_Mkdir(path)
@@ -3396,7 +3396,7 @@ object FileSystem_h {
             GetFileList(relativePath, slash, folders, folderHashIndex, true, gamedir)
             i = 0
             while (i < folders.size()) {
-                if (folders[i].oGet(0) == '.') {
+                if (folders[i].get(0) == '.') {
                     i++
                     continue
                 }
@@ -4243,7 +4243,7 @@ object FileSystem_h {
                 } else {
                     relativePath = idStr(args.Argv(1))
                     extension = idStr(args.Argv(2))
-                    if (extension.oGet(0) != '.') {
+                    if (extension.get(0) != '.') {
                         idLib.common.Warning("extension should have a leading dot")
                     }
                 }
@@ -4285,7 +4285,7 @@ object FileSystem_h {
                 } else {
                     relativePath = idStr(args.Argv(1))
                     extension = idStr(args.Argv(2))
-                    if (extension.oGet(0) != '.') {
+                    if (extension.get(0) != '.') {
                         idLib.common.Warning("extension should have a leading dot")
                     }
                 }

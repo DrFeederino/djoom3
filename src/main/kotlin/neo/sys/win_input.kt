@@ -39,9 +39,9 @@ object win_input {
     // { 0,              FIELD_OFFSET(MYDATA, bButtonD), 0x80000000 | DIDFT_BUTTON | DIDFT_ANYINSTANCE, 0,},
     // };
     //==========================================================================
-    val   /*DIDEVICEOBJECTDATA*/polled_didod: Array<InputEvent?>? =
+    val   /*DIDEVICEOBJECTDATA*/polled_didod: Array<InputEvent?> =
         arrayOfNulls<InputEvent?>(DINPUT_BUFFERSIZE) // Receives buffered data
-    val s_scantokey /*[256]*/: CharArray? =
+    val s_scantokey /*[256]*/: CharArray =
         charArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0.toChar(),
@@ -303,7 +303,7 @@ object win_input {
             0 // 7
                 .toChar()
         )
-    val s_scantokey_french /*[256]*/: CharArray? =
+    val s_scantokey_french /*[256]*/: CharArray =
         charArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0.toChar(),
@@ -565,7 +565,7 @@ object win_input {
             0 // 7
                 .toChar()
         )
-    val s_scantokey_german /*[256]*/: CharArray? =
+    val s_scantokey_german /*[256]*/: CharArray =
         charArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0.toChar(),
@@ -827,7 +827,7 @@ object win_input {
             0 // 7
                 .toChar()
         )
-    val s_scantokey_italian /*[256]*/: CharArray? =
+    val s_scantokey_italian /*[256]*/: CharArray =
         charArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0.toChar(),
@@ -1089,7 +1089,7 @@ object win_input {
             0 // 7
                 .toChar()
         )
-    val s_scantokey_spanish /*[256]*/: CharArray? =
+    val s_scantokey_spanish /*[256]*/: CharArray =
         charArrayOf( //  0            1       2          3          4       5            6         7
             //  8            9       A          B          C       D            E         F
             0.toChar(),
@@ -1362,7 +1362,7 @@ object win_input {
     // for it.  Eventually, the tables above should be fixed to handle all possible
     // scan codes instead of just the first 128.
     var rightAltKey = KeyInput.K_ALT
-    var toggleFetch: Array<ByteArray?>? = Array(2) { ByteArray(256) }
+    var toggleFetch: Array<ByteArray> = Array(2) { ByteArray(256) }
     private const val B1 = false
 
     /*
@@ -1440,7 +1440,7 @@ object win_input {
                 else -> 0
             }
         }
-        return if (scancode > 256) 0 else keyScanTable.get(getShiftedScancode(key, scancode, mods))
+        return if (scancode > 256) 0 else keyScanTable[getShiftedScancode(key, scancode, mods)].code
     }
 
     private fun getShiftedScancode(key: Int, scancode: Int, mods: Int): Int {
@@ -1453,9 +1453,9 @@ object win_input {
     }
 
     private fun isShiftableKey(key: Int): Boolean {
-        return (key == GLFW.GLFW_KEY_APOSTROPHE || key == GLFW.GLFW_KEY_COMMA || key == GLFW.GLFW_KEY_MINUS || key == GLFW.GLFW_KEY_PERIOD || key == GLFW.GLFW_KEY_SLASH || key == GLFW.GLFW_KEY_0 || key == GLFW.GLFW_KEY_1 || key == GLFW.GLFW_KEY_2 || key == GLFW.GLFW_KEY_3 || key == GLFW.GLFW_KEY_4 || key == GLFW.GLFW_KEY_5 || key == GLFW.GLFW_KEY_6 || key == GLFW.GLFW_KEY_7 || key == GLFW.GLFW_KEY_8 || key == GLFW.GLFW_KEY_9 || key == GLFW.GLFW_KEY_SEMICOLON || key == GLFW.GLFW_KEY_EQUAL ||
-                isShiftableLetter(key)
-                || key == GLFW.GLFW_KEY_LEFT_BRACKET || key == GLFW.GLFW_KEY_BACKSLASH || key == GLFW.GLFW_KEY_RIGHT_BRACKET || key == GLFW.GLFW_KEY_GRAVE_ACCENT || key == GLFW.GLFW_KEY_WORLD_1 || key == GLFW.GLFW_KEY_WORLD_2)
+        return (key == GLFW.GLFW_KEY_APOSTROPHE || key == GLFW.GLFW_KEY_COMMA || key == GLFW.GLFW_KEY_MINUS || key == GLFW.GLFW_KEY_PERIOD || key == GLFW.GLFW_KEY_SLASH || key == GLFW.GLFW_KEY_0 || key == GLFW.GLFW_KEY_1 || key == GLFW.GLFW_KEY_2 || key == GLFW.GLFW_KEY_3 || key == GLFW.GLFW_KEY_4 || key == GLFW.GLFW_KEY_5 || key == GLFW.GLFW_KEY_6 || key == GLFW.GLFW_KEY_7 || key == GLFW.GLFW_KEY_8 || key == GLFW.GLFW_KEY_9 || key == GLFW.GLFW_KEY_SEMICOLON || key == GLFW.GLFW_KEY_EQUAL || isShiftableLetter(
+            key
+        ) || key == GLFW.GLFW_KEY_LEFT_BRACKET || key == GLFW.GLFW_KEY_BACKSLASH || key == GLFW.GLFW_KEY_RIGHT_BRACKET || key == GLFW.GLFW_KEY_GRAVE_ACCENT || key == GLFW.GLFW_KEY_WORLD_1 || key == GLFW.GLFW_KEY_WORLD_2)
     }
 
     /*
@@ -1594,13 +1594,13 @@ object win_input {
     fun Sys_ShutdownInput() {
         IN_DeactivateMouse()
         IN_DeactivateKeyboard()
-        if (win_local.Companion.win32.g_pKeyboard != null) {
+        if (win_local.win32.g_pKeyboard != null) {
 //		win32.g_pKeyboard->Release();
-            win_local.Companion.win32.g_pKeyboard = null
+            win_local.win32.g_pKeyboard = null
         }
-        if (win_local.Companion.win32.g_pMouse != null) {
+        if (win_local.win32.g_pMouse != null) {
 //		win32.g_pMouse->Release();
-            win_local.Companion.win32.g_pMouse = null
+            win_local.win32.g_pMouse = null
         }
 
 //    if ( win32.g_pdi ) {//TODO:not entirely sure what this is, yet!
@@ -1617,7 +1617,7 @@ object win_input {
     fun Sys_InitInput() {
         Common.common.Printf("\n------- Input Initialization -------\n")
         //        IN_InitDirectInput();
-        if (Win32Vars_t.Companion.in_mouse.GetBool()) {
+        if (Win32Vars_t.in_mouse.GetBool()) {
             IN_InitDIMouse()
             // don't grab the mouse on initialization
             Sys_GrabMouseCursor(false)
@@ -1626,7 +1626,7 @@ object win_input {
         }
         IN_StartupKeyboard()
         Common.common.Printf("------------------------------------\n")
-        Win32Vars_t.Companion.in_mouse.ClearModified()
+        Win32Vars_t.in_mouse.ClearModified()
     }
 
     /*
@@ -1665,7 +1665,7 @@ object win_input {
      Sys_GetScanTable
      ==================
      */
-    fun Sys_GetScanTable(): CharArray? {
+    fun Sys_GetScanTable(): CharArray {
         return keyScanTable
     }
 
@@ -1675,7 +1675,7 @@ object win_input {
      ===============
      */
     fun Sys_GetConsoleKey(shifted: Boolean): Char {
-        return keyScanTable.get(41 + if (shifted) 128 else 0)
+        return keyScanTable[41 + if (shifted) 128 else 0]
     }
 
     //=====================================================================================
@@ -1749,7 +1749,7 @@ object win_input {
         return -1
     }
 
-    fun Sys_ReturnKeyboardInputEvent(n: Int, ch: CInt?, state: CBool?): Int {
+    fun Sys_ReturnKeyboardInputEvent(n: Int, ch: CInt, state: CBool): Int {
         return 0
     }
 
@@ -1758,49 +1758,30 @@ object win_input {
      Sys_PollKeyboardInputEvents
      ====================
      */
-    fun Sys_ReturnKeyboardInputEvent(ch: IntArray?, action: Int, key: Int, scancode: Int, mods: Int): Int {
-        ch.get(0) = IN_DIMapKey(key, scancode, mods)
-        when (ch.get(0)) {
+    fun Sys_ReturnKeyboardInputEvent(ch: IntArray, action: Int, key: Int, scancode: Int, mods: Int): Int {
+        ch[0] = IN_DIMapKey(key, scancode, mods)
+        when (ch[0]) {
             KeyInput.K_PRINT_SCR -> {
-                if (action == GLFW.GLFW_RELEASE) {
+                if (action != GLFW.GLFW_RELEASE) {
                     // don't queue printscreen keys.  Since windows doesn't send us key
                     // down events for this, we handle queueing them with DirectInput
-                    break
+                    win_main.Sys_QueEvent(
+                        GetTickCount(), sysEventType_t.SE_KEY, ch[0], action, 0, null
+                    ) //TODO:enable this
                 }
                 // for windows, add a keydown event for print screen here, since
                 // windows doesn't send keydown events to the WndProc for this key.
                 // ctrl and alt are handled here to get around windows sending ctrl and
                 // alt messages when the right-alt is pressed on non-US 102 keyboards.
-                win_main.Sys_QueEvent(
-                    GetTickCount(),
-                    sysEventType_t.SE_KEY,
-                    ch.get(0),
-                    action,
-                    0,
-                    null
-                ) //TODO:enable this
             }
             KeyInput.K_CTRL, KeyInput.K_ALT, KeyInput.K_RIGHT_ALT -> win_main.Sys_QueEvent(
-                GetTickCount(),
-                sysEventType_t.SE_KEY,
-                ch.get(0),
-                action,
-                0,
-                null
+                GetTickCount(), sysEventType_t.SE_KEY, ch[0], action, 0, null
             )
-            else -> if (action == GLFW.GLFW_RELEASE && ch.get(0) > 31 && ch.get(0) != '~' && ch.get(0) != '`' && ch.get(
-                    0
-                ) < 128
-            ) win_main.Sys_QueEvent(
-                System.currentTimeMillis(),
-                sysEventType_t.SE_CHAR,
-                ch.get(0),
-                action,
-                0,
-                null
-            ) else win_main.Sys_QueEvent(System.currentTimeMillis(), sysEventType_t.SE_KEY, ch.get(0), action, 0, null)
+            else -> if (action == GLFW.GLFW_RELEASE && ch[0] > 31 && ch[0] != '~'.code && ch[0] != '`'.code && ch[0] < 128) win_main.Sys_QueEvent(
+                System.currentTimeMillis(), sysEventType_t.SE_CHAR, ch[0], action, 0, null
+            ) else win_main.Sys_QueEvent(System.currentTimeMillis(), sysEventType_t.SE_KEY, ch[0], action, 0, null)
         }
-        return ch.get(0)
+        return ch[0]
     }
 
     private fun GetTickCount(): Long {
@@ -1871,10 +1852,10 @@ object win_input {
 //	return dwElements;
     }
 
-    fun Sys_ReturnMouseInputEvent(n: Int, action: CInt?, value: CInt?) {}
+    fun Sys_ReturnMouseInputEvent(n: Int, action: CInt, value: CInt) {}
 
     @Deprecated("")
-    fun Sys_ReturnMouseInputEvent(action: IntArray?, value: IntArray?) {
+    fun Sys_ReturnMouseInputEvent(action: IntArray, value: IntArray) {
 
 //        final long dwTimeStamp = Mouse.getEventNanoseconds();
 //

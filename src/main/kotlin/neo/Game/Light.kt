@@ -184,7 +184,7 @@ object Light {
             // but there may still be a chance to get it wrong if the game moves
             // a light before the first present, and doesn't clear the prelight
             renderLight.prelightModel = null
-            if (name.oGet(0).code != 0) {
+            if (name.get(0).code != 0) {
                 // this will return 0 if not found
                 renderLight.prelightModel = ModelManager.renderModelManager.CheckModel(Str.va("_prelight_%s", name))
             }

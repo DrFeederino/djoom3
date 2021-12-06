@@ -31,21 +31,21 @@ object DeviceContext {
     const val BLINK_DIVISOR = 200
     const val VIRTUAL_HEIGHT = 480
     const val VIRTUAL_WIDTH = 640
-    val gui_mediumFontLimit: idCVar? =
+    val gui_mediumFontLimit: idCVar =
         idCVar("gui_mediumFontLimit", "0.60", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
-    val gui_smallFontLimit: idCVar? =
+    val gui_smallFontLimit: idCVar =
         idCVar("gui_smallFontLimit", "0.30", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
 
     class idDeviceContext {
-        private val cursorImages: Array<idMaterial?>? = arrayOfNulls<idMaterial?>(CURSOR.CURSOR_COUNT.ordinal)
-        private val scrollBarImages: Array<idMaterial?>? = arrayOfNulls<idMaterial?>(SCROLLBAR.SCROLLBAR_COUNT.ordinal)
-        private var activeFont: fontInfoEx_t? = null
+        private val cursorImages: Array<idMaterial> = Array(CURSOR.CURSOR_COUNT.ordinal) { idMaterial() }
+        private val scrollBarImages: Array<idMaterial> = Array(SCROLLBAR.SCROLLBAR_COUNT.ordinal) { idMaterial() }
+        private lateinit var activeFont: fontInfoEx_t
 
         //
-        private val clipRects: idList<idRectangle?>? = idList()
+        private val clipRects: idList<idRectangle> = idList()
 
         //
-        private var cursor: CURSOR? = null
+        private lateinit var cursor: CURSOR
 
         //
         //
@@ -53,30 +53,31 @@ object DeviceContext {
         private var enableClipping = false
 
         // ~idDeviceContext() { }
-        private val fontLang: idStr?
-        private val fontName: idStr? = idStr()
+        private val fontLang: idStr = idStr()
+        private val fontName: idStr = idStr()
         private var initialized = false
 
         //
         //        public void EnableLocalization();
         //
         //
-        private var mat: idMat3?
+        private val mat: idMat3 = idMat3()
 
         //
         private var mbcs = false
-        private val origin: idVec3?
+        private val origin: idVec3 = idVec3()
 
         //
         private var overStrikeMode = false
-        private var useFont: fontInfo_t? = null
+        private lateinit var useFont: fontInfo_t
 
         //
         private var vidHeight = 0f
         private var vidWidth = 0f
-        private var whiteImage: idMaterial? = null
+        private var whiteImage: idMaterial = idMaterial()
         private var xScale = 0f
         private var yScale = 0f
+
         fun Init() {
             xScale = 0f
             SetSize(VIRTUAL_WIDTH.toFloat(), VIRTUAL_HEIGHT.toFloat())
@@ -84,43 +85,43 @@ object DeviceContext {
             whiteImage.SetSort(Material.SS_GUI.toFloat())
             mbcs = false
             SetupFonts()
-            activeFont = fonts.get(0)
-            colorPurple = idVec4(1, 0, 1, 1)
-            colorOrange = idVec4(1, 1, 0, 1)
-            colorYellow = idVec4(0, 1, 1, 1)
-            colorGreen = idVec4(0, 1, 0, 1)
-            colorBlue = idVec4(0, 0, 1, 1)
-            colorRed = idVec4(1, 0, 0, 1)
-            colorWhite = idVec4(1, 1, 1, 1)
-            colorBlack = idVec4(0, 0, 0, 1)
-            colorNone = idVec4(0, 0, 0, 0)
-            cursorImages.get(CURSOR.CURSOR_ARROW.ordinal) =
+            activeFont = fonts[0]
+            colorPurple.set(idVec4(1f, 0f, 1f, 1f))
+            colorOrange.set(idVec4(1f, 1f, 0f, 1f))
+            colorYellow.set(idVec4(0f, 1f, 1f, 1f))
+            colorGreen.set(idVec4(0f, 1f, 0f, 1f))
+            colorBlue.set(idVec4(0f, 0f, 1f, 1f))
+            colorRed.set(idVec4(1f, 0f, 0f, 1f))
+            colorWhite.set(idVec4(1f, 1f, 1f, 1f))
+            colorBlack.set(idVec4(0f, 0f, 0f, 1f))
+            colorNone.set(idVec4(0f, 0f, 0f, 0f))
+            cursorImages[CURSOR.CURSOR_ARROW.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/guicursor_arrow.tga")
-            cursorImages.get(CURSOR.CURSOR_HAND.ordinal) =
+            cursorImages[CURSOR.CURSOR_HAND.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/guicursor_hand.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_HBACK.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbarh.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_VBACK.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbarv.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_THUMB.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_thumb.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_RIGHT.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_right.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_LEFT.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_left.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_UP.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_DOWN.ordinal) =
+            scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")
-            cursorImages.get(CURSOR.CURSOR_ARROW.ordinal).SetSort(Material.SS_GUI.toFloat())
-            cursorImages.get(CURSOR.CURSOR_HAND.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_HBACK.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_VBACK.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_THUMB.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_RIGHT.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_LEFT.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_UP.ordinal).SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages.get(SCROLLBAR.SCROLLBAR_DOWN.ordinal).SetSort(Material.SS_GUI.toFloat())
+            cursorImages[CURSOR.CURSOR_ARROW.ordinal].SetSort(Material.SS_GUI.toFloat())
+            cursorImages[CURSOR.CURSOR_HAND.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal].SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal].SetSort(Material.SS_GUI.toFloat())
             cursor = CURSOR.CURSOR_ARROW
             enableClipping = true
             overStrikeMode = true
@@ -140,14 +141,14 @@ object DeviceContext {
             return initialized
         }
 
-        fun GetTransformInfo(origin: idVec3?, mat: idMat3?) {
+        fun GetTransformInfo(origin: idVec3, mat: idMat3) {
             mat.set(this.mat)
             origin.set(this.origin)
         }
 
-        fun SetTransformInfo(origin: idVec3?, mat: idMat3?) {
+        fun SetTransformInfo(origin: idVec3, mat: idMat3) {
             this.origin.set(origin)
-            this.mat = mat
+            this.mat.set(mat)
         }
 
         @JvmOverloads
@@ -156,8 +157,8 @@ object DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial?,
-            color: idVec4?,
+            mat: idMaterial,
+            color: idVec4,
             scalex: Float = 1.0f /*= 1.0f*/
         ) {
             DrawMaterial(x, y, w, h, mat, color, scalex, 1.0f)
@@ -168,8 +169,8 @@ object DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial?,
-            color: idVec4?,
+            mat: idMaterial,
+            color: idVec4,
             scaleX: Float /*= 1.0f*/,
             scaleY: Float /*= 1.0f*/
         ) {
@@ -187,28 +188,28 @@ object DeviceContext {
             //
 //  handle negative scales as well
             if (scaleX < 0) {
-                w1[0] *= -1
+                w1[0] = w1[0] * -1
                 scaleX *= -1f
             }
             if (scaleY < 0) {
-                h1[0] *= -1
+                h1[0] = h1[0] * -1
                 scaleY *= -1f
             }
             //
             if (w1[0] < 0) {    // flip about vertical
                 w1[0] = -w1[0]
                 s0[0] = 1 * scaleX
-                s1[0] = 0
+                s1[0] = 0f
             } else {
-                s0[0] = 0
+                s0[0] = 0f
                 s1[0] = 1 * scaleX
             }
             if (h1[0] < 0) {    // flip about horizontal
                 h1[0] = -h1[0]
                 t0[0] = 1 * scaleY
-                t1[0] = 0
+                t1[0] = 0f
             } else {
-                t0[0] = 0
+                t0[0] = 0f
                 t1[0] = 1 * scaleY
             }
             if (ClippedCoords(x1, y1, w1, h1, s0, t0, s1, t1)) {
@@ -219,7 +220,7 @@ object DeviceContext {
             bla99++
         }
 
-        fun DrawRect(x: Float, y: Float, width: Float, height: Float, size: Float, color: idVec4?) {
+        fun DrawRect(x: Float, y: Float, width: Float, height: Float, size: Float, color: idVec4) {
             val x1 = floatArrayOf(x)
             val y1 = floatArrayOf(y)
             val w1 = floatArrayOf(width)
@@ -238,7 +239,7 @@ object DeviceContext {
             DrawStretchPic(x1[0], y1[0] + h1[0] - size, w1[0], size, 0f, 0f, 0f, 0f, whiteImage)
         }
 
-        fun DrawFilledRect(x: Float, y: Float, width: Float, height: Float, color: idVec4?) {
+        fun DrawFilledRect(x: Float, y: Float, width: Float, height: Float, color: idVec4) {
             val x1 = floatArrayOf(x)
             val y1 = floatArrayOf(y)
             val w1 = floatArrayOf(width)
@@ -260,12 +261,12 @@ object DeviceContext {
             text: String?,
             textScale: Float,
             textAlign: Int,
-            color: idVec4?,
-            rectDraw: idRectangle?,
+            color: idVec4,
+            rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int = -1 /*= -1*/,
             calcOnly: Boolean = false /*= false*/,
-            breaks: idList<Int?>? = null /*= NULL*/,
+            breaks: idList<Int>? = null /*= NULL*/,
             limit: Int = 0 /*= 0*/
         ): Int {
             var text = text
@@ -286,11 +287,11 @@ object DeviceContext {
             var textWidth: Float
             val charSkip = (MaxCharWidth(textScale) + 1).toFloat()
             val lineSkip = MaxCharHeight(textScale).toFloat()
-            val cursorSkip: Float = if (cursor >= 0) charSkip else 0
+            val cursorSkip: Float = if (cursor >= 0) charSkip else 0f
             var lineBreak: Boolean
             var wordBreak: Boolean
             SetFontByScale(textScale)
-            if (!calcOnly && !(text != null && !text.isEmpty())) {
+            if (!calcOnly) {
                 if (cursor == 0) {
                     RenderSystem.renderSystem.SetColor(color)
                     DrawEditCursor(rectDraw.x, lineSkip + rectDraw.y, textScale)
@@ -320,7 +321,7 @@ object DeviceContext {
                     }
                 }
                 var nextCharWidth =
-                    (if (idStr.Companion.CharIsPrintable(p.code)) CharWidth(p, textScale) else cursorSkip).toInt()
+                    (if (idStr.CharIsPrintable(p.code)) CharWidth(p, textScale) else cursorSkip).toInt()
                 // FIXME: this is a temp hack until the guis can be fixed not not overflow the bounding rectangles
                 //	      the side-effect is that list boxes and edit boxes will draw over their scroll bars
                 //  The following line and the !linebreak in the if statement below should be removed
@@ -390,8 +391,8 @@ object DeviceContext {
                 buff[len] = '\u0000'
                 // update the width
                 bla++
-                if (buff[len - 1] != Str.C_COLOR_ESCAPE && (len <= 1 || buff[len - 2] != Str.C_COLOR_ESCAPE)) {
-                    textWidth += textScale * useFont.glyphScale * useFont.glyphs.get(buff[len - 1]).xSkip
+                if (buff[len - 1].code != Str.C_COLOR_ESCAPE && (len <= 1 || buff[len - 2].code != Str.C_COLOR_ESCAPE)) {
+                    textWidth += textScale * useFont.glyphScale * useFont.glyphs.get(buff[len - 1].code).xSkip
                     // Jim Dosé, I don't know who you are..but I hate you.
                 }
             }
@@ -399,32 +400,32 @@ object DeviceContext {
         }
 
         fun DrawText(
-            text: idStr?,
+            text: idStr,
             textScale: Float,
             textAlign: Int,
-            color: idVec4?,
-            rectDraw: idRectangle?,
+            color: idVec4,
+            rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int /*= -1*/,
             calcOnly: Boolean /*= false*/,
-            breaks: idList<Int?>? /*= NULL*/
+            breaks: idList<Int> /*= NULL*/
         ): Int {
             return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, calcOnly, breaks, 0)
         }
 
         fun DrawText(
-            text: idStr?,
+            text: idStr,
             textScale: Float,
             textAlign: Int,
-            color: idVec4?,
-            rectDraw: idRectangle?,
+            color: idVec4,
+            rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int
         ): Int {
-            return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor)
+            return DrawText(text, textScale, textAlign, color, rectDraw, wrap, cursor)
         }
 
-        fun DrawMaterialRect(x: Float, y: Float, w: Float, h: Float, size: Float, mat: idMaterial?, color: idVec4?) {
+        fun DrawMaterialRect(x: Float, y: Float, w: Float, h: Float, size: Float, mat: idMaterial, color: idVec4) {
             if (color.w == 0f) {
                 return
             }
@@ -444,9 +445,9 @@ object DeviceContext {
             t0: Float,
             s1: Float,
             t1: Float,
-            shader: idMaterial?
+            shader: idMaterial
         ) {
-            val verts = arrayOf<idDrawVert?>(idDrawVert(), idDrawVert(), idDrawVert(), idDrawVert())
+            val verts = arrayOf(idDrawVert(), idDrawVert(), idDrawVert(), idDrawVert())
             val indexes = IntArray(6)
             indexes[0] = 3
             indexes[1] = 0
@@ -454,62 +455,62 @@ object DeviceContext {
             indexes[3] = 2
             indexes[4] = 0
             indexes[5] = 1
-            verts[0].xyz.set(0, x)
-            verts[0].xyz.set(1, y)
-            verts[0].xyz.set(2, 0f)
-            verts[0].st.set(0, s0)
-            verts[0].st.set(1, t0)
-            verts[0].normal.set(0, 0f)
-            verts[0].normal.set(1, 0f)
-            verts[0].normal.set(2, 1f)
-            verts[0].tangents[0].set(0, 1f)
-            verts[0].tangents[0].set(1, 0f)
-            verts[0].tangents[0].set(2, 0f)
-            verts[0].tangents[1].set(0, 0f)
-            verts[0].tangents[1].set(1, 1f)
-            verts[0].tangents[1].set(2, 0f)
-            verts[1].xyz.set(0, x + w)
-            verts[1].xyz.set(1, y)
-            verts[1].xyz.set(2, 0f)
-            verts[1].st.set(0, s1)
-            verts[1].st.set(1, t0)
-            verts[1].normal.set(0, 0f)
-            verts[1].normal.set(1, 0f)
-            verts[1].normal.set(2, 1f)
-            verts[1].tangents[0].set(0, 1f)
-            verts[1].tangents[0].set(1, 0f)
-            verts[1].tangents[0].set(2, 0f)
-            verts[1].tangents[1].set(0, 0f)
-            verts[1].tangents[1].set(1, 1f)
-            verts[1].tangents[1].set(2, 0f)
-            verts[2].xyz.set(0, x + w)
-            verts[2].xyz.set(1, y + h)
-            verts[2].xyz.set(2, 0f)
-            verts[2].st.set(0, s1)
-            verts[2].st.set(1, t1)
-            verts[2].normal.set(0, 0f)
-            verts[2].normal.set(1, 0f)
-            verts[2].normal.set(2, 1f)
-            verts[2].tangents[0].set(0, 1f)
-            verts[2].tangents[0].set(1, 0f)
-            verts[2].tangents[0].set(2, 0f)
-            verts[2].tangents[1].set(0, 0f)
-            verts[2].tangents[1].set(1, 1f)
-            verts[2].tangents[1].set(2, 0f)
-            verts[3].xyz.set(0, x)
-            verts[3].xyz.set(1, y + h)
-            verts[3].xyz.set(2, 0f)
-            verts[3].st.set(0, s0)
-            verts[3].st.set(1, t1)
-            verts[3].normal.set(0, 0f)
-            verts[3].normal.set(1, 0f)
-            verts[3].normal.set(2, 1f)
-            verts[3].tangents[0].set(0, 1f)
-            verts[3].tangents[0].set(1, 0f)
-            verts[3].tangents[0].set(2, 0f)
-            verts[3].tangents[1].set(0, 0f)
-            verts[3].tangents[1].set(1, 1f)
-            verts[3].tangents[1].set(2, 0f)
+            verts[0].xyz[0] = x
+            verts[0].xyz[1] = y
+            verts[0].xyz[2] = 0f
+            verts[0].st[0] = s0
+            verts[0].st[1] = t0
+            verts[0].normal[0] = 0f
+            verts[0].normal[1] = 0f
+            verts[0].normal[2] = 1f
+            verts[0].tangents[0][0] = 1f
+            verts[0].tangents[0][1] = 0f
+            verts[0].tangents[0][2] = 0f
+            verts[0].tangents[1][0] = 0f
+            verts[0].tangents[1][1] = 1f
+            verts[0].tangents[1][2] = 0f
+            verts[1].xyz[0] = x + w
+            verts[1].xyz[1] = y
+            verts[1].xyz[2] = 0f
+            verts[1].st[0] = s1
+            verts[1].st[1] = t0
+            verts[1].normal[0] = 0f
+            verts[1].normal[1] = 0f
+            verts[1].normal[2] = 1f
+            verts[1].tangents[0][0] = 1f
+            verts[1].tangents[0][1] = 0f
+            verts[1].tangents[0][2] = 0f
+            verts[1].tangents[1][0] = 0f
+            verts[1].tangents[1][1] = 1f
+            verts[1].tangents[1][2] = 0f
+            verts[2].xyz[0] = x + w
+            verts[2].xyz[1] = y + h
+            verts[2].xyz[2] = 0f
+            verts[2].st[0] = s1
+            verts[2].st[1] = t1
+            verts[2].normal[0] = 0f
+            verts[2].normal[1] = 0f
+            verts[2].normal[2] = 1f
+            verts[2].tangents[0][0] = 1f
+            verts[2].tangents[0][1] = 0f
+            verts[2].tangents[0][2] = 0f
+            verts[2].tangents[1][0] = 0f
+            verts[2].tangents[1][1] = 1f
+            verts[2].tangents[1][2] = 0f
+            verts[3].xyz[0] = x
+            verts[3].xyz[1] = y + h
+            verts[3].xyz[2] = 0f
+            verts[3].st[0] = s0
+            verts[3].st[1] = t1
+            verts[3].normal[0] = 0f
+            verts[3].normal[1] = 0f
+            verts[3].normal[2] = 1f
+            verts[3].tangents[0][0] = 1f
+            verts[3].tangents[0][1] = 0f
+            verts[3].tangents[0][2] = 0f
+            verts[3].tangents[1][0] = 0f
+            verts[3].tangents[1][1] = 1f
+            verts[3].tangents[1][2] = 0f
             val identity = !mat.IsIdentity()
             if (identity) {
                 verts[0].xyz.minusAssign(origin)
@@ -533,8 +534,8 @@ object DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial?,
-            color: idVec4?,
+            mat: idMaterial,
+            color: idVec4,
             scalex: Float /*= 1.0*/,
             scaley: Float /*= 1.0*/,
             angle: Float /*= 0.0f*/
@@ -553,28 +554,28 @@ object DeviceContext {
             //
             //  handle negative scales as well
             if (scalex < 0) {
-                w1[0] *= -1
+                w1[0] = w1[0] * -1
                 scalex *= -1f
             }
             if (scaley < 0) {
-                h1[0] *= -1
+                h1[0] = h1[0] * -1
                 scaley *= -1f
             }
             //
             if (w1[0] < 0) {    // flip about vertical
                 w1[0] = -w1[0]
                 s0[0] = 1 * scalex
-                s1[0] = 0
+                s1[0] = 0f
             } else {
-                s0[0] = 0
+                s0[0] = 0f
                 s1[0] = 1 * scalex
             }
             if (h1[0] < 0) {    // flip about horizontal
                 h1[0] = -h1[0]
                 t0[0] = 1 * scaley
-                t1[0] = 0
+                t1[0] = 0f
             } else {
-                t0[0] = 0
+                t0[0] = 0f
                 t1[0] = 1 * scaley
             }
             if (angle == 0f && ClippedCoords(x1, y1, w1, h1, s0, t0, s1, t1)) {
@@ -593,10 +594,10 @@ object DeviceContext {
             t0: Float,
             s1: Float,
             t1: Float,
-            shader: idMaterial?,
+            shader: idMaterial,
             angle: Float /*= 0.0f*/
         ) {
-            val verts = arrayOfNulls<idDrawVert?>(4)
+            val verts = Array(4) { idDrawVert() }
             val indexes = IntArray(6)
             indexes[0] = 3
             indexes[1] = 0
@@ -604,62 +605,62 @@ object DeviceContext {
             indexes[3] = 2
             indexes[4] = 0
             indexes[5] = 1
-            verts[0].xyz.set(0, x)
-            verts[0].xyz.set(1, y)
-            verts[0].xyz.set(2, 0f)
-            verts[0].st.set(0, s0)
-            verts[0].st.set(1, t0)
-            verts[0].normal.set(0, 0f)
-            verts[0].normal.set(1, 0f)
-            verts[0].normal.set(2, 1f)
-            verts[0].tangents[0].set(0, 1f)
-            verts[0].tangents[0].set(1, 0f)
-            verts[0].tangents[0].set(2, 0f)
-            verts[0].tangents[1].set(0, 0f)
-            verts[0].tangents[1].set(1, 1f)
-            verts[0].tangents[1].set(2, 0f)
-            verts[1].xyz.set(0, x + w)
-            verts[1].xyz.set(1, y)
-            verts[1].xyz.set(2, 0f)
-            verts[1].st.set(0, s1)
-            verts[1].st.set(1, t0)
-            verts[1].normal.set(0, 0f)
-            verts[1].normal.set(1, 0f)
-            verts[1].normal.set(2, 1f)
-            verts[1].tangents[0].set(0, 1f)
-            verts[1].tangents[0].set(1, 0f)
-            verts[1].tangents[0].set(2, 0f)
-            verts[1].tangents[1].set(0, 0f)
-            verts[1].tangents[1].set(1, 1f)
-            verts[1].tangents[1].set(2, 0f)
-            verts[2].xyz.set(0, x + w)
-            verts[2].xyz.set(1, y + h)
-            verts[2].xyz.set(2, 0f)
-            verts[2].st.set(0, s1)
-            verts[2].st.set(1, t1)
-            verts[2].normal.set(0, 0f)
-            verts[2].normal.set(1, 0f)
-            verts[2].normal.set(2, 1f)
-            verts[2].tangents[0].set(0, 1f)
-            verts[2].tangents[0].set(1, 0f)
-            verts[2].tangents[0].set(2, 0f)
-            verts[2].tangents[1].set(0, 0f)
-            verts[2].tangents[1].set(1, 1f)
-            verts[2].tangents[1].set(2, 0f)
-            verts[3].xyz.set(0, x)
-            verts[3].xyz.set(1, y + h)
-            verts[3].xyz.set(2, 0f)
-            verts[3].st.set(0, s0)
-            verts[3].st.set(1, t1)
-            verts[3].normal.set(0, 0f)
-            verts[3].normal.set(1, 0f)
-            verts[3].normal.set(2, 1f)
-            verts[3].tangents[0].set(0, 1f)
-            verts[3].tangents[0].set(1, 0f)
-            verts[3].tangents[0].set(2, 0f)
-            verts[3].tangents[1].set(0, 0f)
-            verts[3].tangents[1].set(1, 1f)
-            verts[3].tangents[1].set(2, 0f)
+            verts[0].xyz[0] = x
+            verts[0].xyz[1] = y
+            verts[0].xyz[2] = 0f
+            verts[0].st[0] = s0
+            verts[0].st[1] = t0
+            verts[0].normal[0] = 0f
+            verts[0].normal[1] = 0f
+            verts[0].normal[2] = 1f
+            verts[0].tangents[0][0] = 1f
+            verts[0].tangents[0][1] = 0f
+            verts[0].tangents[0][2] = 0f
+            verts[0].tangents[1][0] = 0f
+            verts[0].tangents[1][1] = 1f
+            verts[0].tangents[1][2] = 0f
+            verts[1].xyz[0] = x + w
+            verts[1].xyz[1] = y
+            verts[1].xyz[2] = 0f
+            verts[1].st[0] = s1
+            verts[1].st[1] = t0
+            verts[1].normal[0] = 0f
+            verts[1].normal[1] = 0f
+            verts[1].normal[2] = 1f
+            verts[1].tangents[0][0] = 1f
+            verts[1].tangents[0][1] = 0f
+            verts[1].tangents[0][2] = 0f
+            verts[1].tangents[1][0] = 0f
+            verts[1].tangents[1][1] = 1f
+            verts[1].tangents[1][2] = 0f
+            verts[2].xyz[0] = x + w
+            verts[2].xyz[1] = y + h
+            verts[2].xyz[2] = 0f
+            verts[2].st[0] = s1
+            verts[2].st[1] = t1
+            verts[2].normal[0] = 0f
+            verts[2].normal[1] = 0f
+            verts[2].normal[2] = 1f
+            verts[2].tangents[0][0] = 1f
+            verts[2].tangents[0][1] = 0f
+            verts[2].tangents[0][2] = 0f
+            verts[2].tangents[1][0] = 0f
+            verts[2].tangents[1][1] = 1f
+            verts[2].tangents[1][2] = 0f
+            verts[3].xyz[0] = x
+            verts[3].xyz[1] = y + h
+            verts[3].xyz[2] = 0f
+            verts[3].st[0] = s0
+            verts[3].st[1] = t1
+            verts[3].normal[0] = 0f
+            verts[3].normal[1] = 0f
+            verts[3].normal[2] = 1f
+            verts[3].tangents[0][0] = 1f
+            verts[3].tangents[0][1] = 0f
+            verts[3].tangents[0][2] = 0f
+            verts[3].tangents[1][0] = 0f
+            verts[3].tangents[1][1] = 1f
+            verts[3].tangents[1][2] = 0f
             val ident = !mat.IsIdentity()
             if (ident) {
                 verts[0].xyz.minusAssign(origin)
@@ -687,10 +688,10 @@ object DeviceContext {
             rotz.Identity()
             val sinAng = idMath.Sin(angle)
             val cosAng = idMath.Cos(angle)
-            rotz.set(0, 0, cosAng)
-            rotz.set(0, 1, sinAng)
-            rotz.set(1, 0, -sinAng)
-            rotz.set(1, 1, cosAng)
+            rotz[0, 0] = cosAng
+            rotz[0, 1] = sinAng
+            rotz[1, 0] = -sinAng
+            rotz[1, 1] = cosAng
             for (i in 0..3) {
                 //Translate to origin
                 verts[i].xyz.minusAssign(origTrans)
@@ -726,7 +727,7 @@ object DeviceContext {
             if (limit > 0) {
                 i = 0
                 while (text[i] != '\u0000' && i < limit) {
-                    if (idStr.Companion.IsColor(text.substring(i))) {
+                    if (idStr.IsColor(text.substring(i))) {
                         i++
                     } else {
                         width += glyphs[text[i].code].xSkip
@@ -736,7 +737,7 @@ object DeviceContext {
             } else {
                 i = 0
                 while (text[i] != '\u0000') {
-                    if (idStr.Companion.IsColor(text.substring(i))) {
+                    if (idStr.IsColor(text.substring(i))) {
                         i++
                     } else {
                         width += glyphs[text[i].code].xSkip
@@ -748,7 +749,7 @@ object DeviceContext {
         }
 
         fun TextWidth(text: idStr?, scale: Float, limit: Int): Int {
-            return TextWidth(text.toString(), scale, limit)
+            return TextWidth(text?.toString(), scale, limit)
         }
 
         fun TextHeight(text: String?, scale: Float, limit: Int): Int {
@@ -769,7 +770,7 @@ object DeviceContext {
                 }
                 count = 0
                 while (count < len) {
-                    if (idStr.Companion.IsColor(text.substring(s))) {
+                    if (idStr.IsColor(text.substring(s))) {
                         s += 2
                         //                        continue;
                     } else {
@@ -797,10 +798,10 @@ object DeviceContext {
             return idMath.FtoiFast(activeFont.maxWidth * useScale)
         }
 
-        fun FindFont(name: String?): Int {
+        fun FindFont(name: String): Int {
             val c = fonts.Num()
             for (i in 0 until c) {
-                if (idStr.Companion.Icmp(name, fonts.get(i).name) == 0) {
+                if (idStr.Icmp(name, fonts[i].name) == 0) {
                     return i
                 }
             }
@@ -810,8 +811,8 @@ object DeviceContext {
             fileName.Replace("fonts", Str.va("fonts/%s", fontLang))
             val fontInfo = fontInfoEx_t()
             val index = fonts.Append(fontInfo)
-            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts.get(index))) {
-                fonts.get(index).name =
+            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index])) {
+                fonts[index].name =
                     name //idStr.Copynz(fonts.oGet(index).name, name, fonts.oGet(index).name.length());
                 index
             } else {
@@ -990,23 +991,23 @@ object DeviceContext {
              */
         }
 
-        fun DrawCursor(x: FloatArray?, y: FloatArray?, size: Float) {
+        fun DrawCursor(x: FloatArray, y: FloatArray, size: Float) {
             val s = floatArrayOf(size)
-            if (x.get(0) < 0) {
-                x.get(0) = 0
+            if (x[0] < 0) {
+                x[0] = 0f
             }
-            if (x.get(0) >= vidWidth) {
-                x.get(0) = vidWidth
+            if (x[0] >= vidWidth) {
+                x[0] = vidWidth
             }
-            if (y.get(0) < 0) {
-                y.get(0) = 0
+            if (y[0] < 0) {
+                y[0] = 0f
             }
-            if (y.get(0) >= vidHeight) {
-                y.get(0) = vidHeight
+            if (y[0] >= vidHeight) {
+                y[0] = vidHeight
             }
             RenderSystem.renderSystem.SetColor(colorWhite)
             AdjustCoords(x, y, s, s)
-            DrawStretchPic(x.get(0), y.get(0), s[0], s[0], 0f, 0f, 1f, 1f, cursorImages.get(cursor.ordinal))
+            DrawStretchPic(x[0], y[0], s[0], s[0], 0f, 0f, 1f, 1f, cursorImages[cursor.ordinal])
         }
 
         fun SetCursor(n: Int) {
@@ -1031,10 +1032,10 @@ object DeviceContext {
 
         @JvmOverloads
         fun ClippedCoords(
-            x: FloatArray?,
-            y: FloatArray?,
-            w: FloatArray?,
-            h: FloatArray?,
+            x: FloatArray,
+            y: FloatArray,
+            w: FloatArray,
+            h: FloatArray,
             s1: FloatArray? = null,
             t1: FloatArray? = null,
             s2: FloatArray? = null,
@@ -1045,41 +1046,41 @@ object DeviceContext {
             }
             var c = clipRects.Num()
             while (--c > 0) {
-                val clipRect = clipRects.get(c)
-                val ox = x.get(0)
-                val oy = y.get(0)
-                val ow = w.get(0)
-                val oh = h.get(0)
+                val clipRect = clipRects[c]
+                val ox = x[0]
+                val oy = y[0]
+                val ow = w[0]
+                val oh = h[0]
                 if (ow <= 0.0f || oh <= 0.0f) {
                     break
                 }
-                if (x.get(0) < clipRect.x) {
-                    w.get(0) -= clipRect.x - x.get(0)
-                    x.get(0) = clipRect.x
-                } else if (x.get(0) > clipRect.x + clipRect.w) {
-                    h.get(0) = 0
-                    y.get(0) = h.get(0)
-                    w.get(0) = y.get(0)
-                    x.get(0) = w.get(0)
+                if (x[0] < clipRect.x) {
+                    w[0] -= clipRect.x - x[0]
+                    x[0] = clipRect.x
+                } else if (x[0] > clipRect.x + clipRect.w) {
+                    h[0] = 0f
+                    y[0] = h[0]
+                    w[0] = y[0]
+                    x[0] = w[0]
                 }
-                if (y.get(0) < clipRect.y) {
-                    h.get(0) -= clipRect.y - y.get(0)
-                    y.get(0) = clipRect.y
-                } else if (y.get(0) > clipRect.y + clipRect.h) {
-                    h.get(0) = 0
-                    y.get(0) = h.get(0)
-                    w.get(0) = y.get(0)
-                    x.get(0) = w.get(0)
+                if (y[0] < clipRect.y) {
+                    h[0] -= clipRect.y - y[0]
+                    y[0] = clipRect.y
+                } else if (y[0] > clipRect.y + clipRect.h) {
+                    h[0] = 0f
+                    y[0] = h[0]
+                    w[0] = y[0]
+                    x[0] = w[0]
                 }
-                if (w.get(0) > clipRect.w) {
-                    w.get(0) = clipRect.w - x.get(0) + clipRect.x
-                } else if (x.get(0) + w.get(0) > clipRect.x + clipRect.w) {
-                    w.get(0) = clipRect.Right() - x.get(0)
+                if (w[0] > clipRect.w) {
+                    w[0] = clipRect.w - x[0] + clipRect.x
+                } else if (x[0] + w[0] > clipRect.x + clipRect.w) {
+                    w[0] = clipRect.Right() - x[0]
                 }
-                if (h.get(0) > clipRect.h) {
-                    h.get(0) = clipRect.h - y.get(0) + clipRect.y
-                } else if (y.get(0) + h.get(0) > clipRect.y + clipRect.h) {
-                    h.get(0) = clipRect.Bottom() - y.get(0)
+                if (h[0] > clipRect.h) {
+                    h[0] = clipRect.h - y[0] + clipRect.y
+                } else if (y[0] + h[0] > clipRect.y + clipRect.h) {
+                    h[0] = clipRect.Bottom() - y[0]
                 }
                 if (s1 != null && s2 != null && t1 != null && t2 != null && ow > 0) {
                     var ns1: Float
@@ -1087,19 +1088,19 @@ object DeviceContext {
                     var nt1: Float
                     var nt2: Float
                     // upper left
-                    var u = (x.get(0) - ox) / ow
+                    var u = (x[0] - ox) / ow
                     ns1 = s1[0] * (1.0f - u) + s2[0] * u
 
                     // upper right
-                    u = (x.get(0) + w.get(0) - ox) / ow
+                    u = (x[0] + w[0] - ox) / ow
                     ns2 = s1[0] * (1.0f - u) + s2[0] * u
 
                     // lower left
-                    u = (y.get(0) - oy) / oh
+                    u = (y[0] - oy) / oh
                     nt1 = t1[0] * (1.0f - u) + t2[0] * u
 
                     // lower right
-                    u = (y.get(0) + h.get(0) - oy) / oh
+                    u = (y[0] + h[0] - oy) / oh
                     nt2 = t1[0] * (1.0f - u) + t2[0] * u
 
                     // set values
@@ -1109,14 +1110,14 @@ object DeviceContext {
                     t2[0] = nt2
                 }
             }
-            return w.get(0) == 0 || h.get(0) == 0
+            return w[0] == 0f || h[0] == 0f
         }
 
         fun PushClipRect(x: Float, y: Float, w: Float, h: Float) {
             clipRects.Append(idRectangle(x, y, w, h))
         }
 
-        fun PushClipRect(r: idRectangle?) {
+        fun PushClipRect(r: idRectangle) {
             clipRects.Append(r)
         }
 
@@ -1132,9 +1133,9 @@ object DeviceContext {
 
         fun SetFont(num: Int) {
             activeFont = if (num >= 0 && num < fonts.Num()) {
-                fonts.get(num)
+                fonts[num]
             } else {
-                fonts.get(0)
+                fonts[0]
             }
         }
 
@@ -1152,7 +1153,7 @@ object DeviceContext {
             }
             SetFontByScale(scale)
             val useScale = scale * useFont.glyphScale
-            val glyph2 = useFont.glyphs.get(if (overStrikeMode) '_' else '|'.code)
+            val glyph2 = useFont.glyphs.get(if (overStrikeMode) '_'.code else '|'.code)
             val yadj = useScale * glyph2.top
             PaintChar(
                 x,
@@ -1172,7 +1173,7 @@ object DeviceContext {
             x: Float,
             y: Float,
             scale: Float,
-            color: idVec4?,
+            color: idVec4,
             text: String?,
             adjust: Float,
             limit: Int,
@@ -1182,14 +1183,14 @@ object DeviceContext {
             var x = x
             var len: Int
             var count: Int
-            var newColor: idVec4?
-            var glyph: glyphInfo_t?
+            var newColor: idVec4
+            var glyph: glyphInfo_t
             val useScale: Float
             SetFontByScale(scale)
             useScale = scale * useFont.glyphScale
             count = 0
-            if (TempDump.isNotNullOrEmpty(text) && color.w != 0.0f) {
-                var s: Char = text.get(0) //(const unsigned char*)text;
+            if (text != null && text.isNotEmpty() && color.w != 0.0f) {
+                var s: Char = text[0] //(const unsigned char*)text;
                 var s_i = 0
                 RenderSystem.renderSystem.SetColor(color)
                 //		memcpy(newColor[0], color[0], sizeof(idVec4));
@@ -1198,12 +1199,12 @@ object DeviceContext {
                 if (limit > 0 && len > limit) {
                     len = limit
                 }
-                while (s_i < len && text.get(s_i).also { s = it }.code != 0 && count < len) {
+                while (s_i < len && text[s_i].also { s = it }.code != 0 && count < len) {
                     if (s.code < RenderSystem.GLYPH_START || s.code > RenderSystem.GLYPH_END) {
                         s_i++
                         continue
                     }
-                    glyph = useFont.glyphs[text.get(s_i).also { s = it }.code]
+                    glyph = useFont.glyphs[text[s_i].also { s = it }.code]
 
                     //
                     // int yadj = Assets.textFont.glyphs[text[i]].bottom +
@@ -1211,13 +1212,13 @@ object DeviceContext {
                     // (Assets.textFont.glyphs[text[i]].imageHeight -
                     // Assets.textFont.glyphs[text[i]].height);
                     //
-                    if (idStr.Companion.IsColor(TempDump.ctos(s))) {
+                    if (idStr.IsColor(TempDump.ctos(s.toString().toCharArray())!!)) {
                         d1++
-                        if (text.get(s_i + 1).code == Str.C_COLOR_DEFAULT) {
+                        if (text[s_i + 1].code == Str.C_COLOR_DEFAULT) {
                             newColor = color
                         } else {
-                            newColor = idStr.Companion.ColorForIndex(text.get(s_i + 1).code)
-                            newColor.set(3, color.get(3))
+                            newColor = idStr.ColorForIndex(text[s_i + 1].code)
+                            newColor[3] = color[3]
                         }
                         if (cursor == count || cursor == count + 1) {
                             var partialSkip = (glyph.xSkip * useScale + adjust) / 5.0f
@@ -1272,7 +1273,7 @@ object DeviceContext {
             t: Float,
             s2: Float,
             t2: Float,
-            hShader: idMaterial?
+            hShader: idMaterial
         ) {
             val w = floatArrayOf(width * scale)
             val h = floatArrayOf(height * scale)
@@ -1308,8 +1309,8 @@ object DeviceContext {
 
         private fun Clear() {
             initialized = false
-            useFont = null
-            activeFont = null
+            useFont = activeFont.fontInfoMedium
+            activeFont = fonts[0]
             mbcs = false
         }
 
@@ -1326,15 +1327,15 @@ object DeviceContext {
         }
 
         companion object {
-            var colorBlack: idVec4? = null
-            var colorBlue: idVec4? = null
-            var colorGreen: idVec4? = null
-            var colorNone: idVec4? = null
-            var colorOrange: idVec4? = null
-            var colorPurple: idVec4? = null
-            var colorRed: idVec4? = null
-            var colorWhite: idVec4? = null
-            var colorYellow: idVec4? = null
+            val colorBlack: idVec4 = idVec4()
+            val colorBlue: idVec4 = idVec4()
+            val colorGreen: idVec4 = idVec4()
+            val colorNone: idVec4 = idVec4()
+            val colorOrange: idVec4 = idVec4()
+            val colorPurple: idVec4 = idVec4()
+            val colorRed: idVec4 = idVec4()
+            val colorWhite: idVec4 = idVec4()
+            val colorYellow: idVec4 = idVec4()
             var aaaa = 0
             var asdasdasd = 0
             var bla = 0
@@ -1343,13 +1344,10 @@ object DeviceContext {
             var d2 = 0
 
             //
-            private val fonts: idList<fontInfoEx_t?>? = idList()
+            private val fonts: idList<fontInfoEx_t> = idList()
         }
 
         init {
-            fontLang = idStr()
-            mat = idMat3()
-            origin = idVec3()
             Clear()
         }
     }

@@ -2140,7 +2140,7 @@ object AsyncClient {
                     var progress_end: Int
                     currentDlSize = 0
                     do {
-                        if (dlList.get(0).url.oGet(0) == '\u0000') {
+                        if (dlList.get(0).url.get(0) == '\u0000') {
                             // ignore empty files
                             dlList.RemoveIndex(0)
                             continue

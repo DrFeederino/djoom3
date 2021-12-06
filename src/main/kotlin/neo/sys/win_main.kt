@@ -101,7 +101,7 @@ object win_main {
 
      ========================================================================
      */
-    var eventQue: Array<sysEvent_s?> = arrayOfNulls<sysEvent_s?>(MAX_QUED_EVENTS)
+    var eventQue: Array<sysEvent_s> = Array(MAX_QUED_EVENTS) { sysEvent_s() }
     var eventTail = 0
 
     /*
@@ -146,26 +146,26 @@ object win_main {
      ==================
      */
     fun Sys_CreateThread(
-        function: xthread_t?,
-        parms: Any?,
+        function: xthread_t,
+        parms: Any,
         priority: xthreadPriority,
         info: xthreadInfo,
-        name: String?,
-        threads: Array<xthreadInfo?>? /*[MAX_THREADS]*/,
-        thread_count: IntArray?
+        name: String,
+        threads: Array<xthreadInfo> /*[MAX_THREADS]*/,
+        thread_count: IntArray
     ) {
         val temp = Thread(function)
         info.threadId = temp.id
         info.threadHandle = temp //TODO: do we need this?
         if (priority == xthreadPriority.THREAD_HIGHEST) {
-            info.threadHandle.priority = Thread.MAX_PRIORITY //  we better sleep enough to do this
+            info.threadHandle!!.priority = Thread.MAX_PRIORITY //  we better sleep enough to do this
         } else if (priority == xthreadPriority.THREAD_ABOVE_NORMAL) {
-            info.threadHandle.priority = Thread.NORM_PRIORITY + 2
+            info.threadHandle!!.priority = Thread.NORM_PRIORITY + 2
         }
         info.name = name
-        if (thread_count.get(0) < sys_public.MAX_THREADS) {
-            threads.get(thread_count.get(0)++) = info
-            info.threadHandle.start()
+        if (thread_count[0] < sys_public.MAX_THREADS) {
+            threads[thread_count[0]++] = info
+            info.threadHandle!!.start()
         } else {
             Common.common.DPrintf("WARNING: MAX_THREADS reached\n")
         }
@@ -223,7 +223,7 @@ object win_main {
     fun Sys_EnterCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
         //		Sys_DebugPrintf( "busy lock '%s' in thread '%s'\n", lock->name, Sys_GetThreadName() );
-        win_local.Companion.win32.criticalSections.get(index).lock()
+        win_local.Companion.win32.criticalSections[index].lock()
     }
 
     /*
@@ -234,8 +234,8 @@ object win_main {
     @JvmOverloads
     fun Sys_LeaveCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
-        if ((win_local.Companion.win32.criticalSections.get(index) as ReentrantLock).isLocked) {
-            win_local.Companion.win32.criticalSections.get(index).unlock()
+        if ((win_local.Companion.win32.criticalSections[index] as ReentrantLock).isLocked) {
+            win_local.Companion.win32.criticalSections[index].unlock()
         }
     }
 
@@ -311,7 +311,7 @@ object win_main {
      Show the early console as an error dialog
      =============
      */
-    fun Sys_Error(fmt: String?, vararg arg: Any?) {
+    fun Sys_Error(fmt: String, vararg arg: Any) {
         val text = StringBuilder(4096)
 
 //	va_start( argptr, error );
@@ -360,7 +360,7 @@ object win_main {
      Sys_Printf
      ==============
      */
-    fun Sys_Printf(fmt: String?, vararg arg: Any?) {
+    fun Sys_Printf(fmt: String, vararg arg: Any) {
         val msg = StringBuilder(MAXPRINTMSG)
         msg.append(String.format(fmt, *arg))
         if (Win32Vars_t.Companion.win_outputDebugString.GetBool()) {
@@ -376,7 +376,7 @@ object win_main {
      Sys_DebugPrintf
      ==============
      */
-    fun Sys_DebugPrintf(fmt: String?, vararg arg: Any?) {
+    fun Sys_DebugPrintf(fmt: String, vararg arg: Any) {
         System.out.printf(
             """
     $fmt
@@ -390,7 +390,7 @@ object win_main {
      Sys_DebugVPrintf
      ==============
      */
-    fun Sys_DebugVPrintf(fmt: String?, vararg arg: Any?) {
+    fun Sys_DebugVPrintf(fmt: String, vararg arg: Any) {
         throw TODO_Exception()
         //	char msg[MAXPRINTMSG];
 //
@@ -434,12 +434,12 @@ object win_main {
      Sys_Mkdir
      ==============
      */
-    fun Sys_Mkdir(path: String?) {
+    fun Sys_Mkdir(path: String) {
 //	_mkdir (path);
         Paths.get(path).toFile().mkdir()
     }
 
-    fun Sys_Mkdir(path: idStr?) {
+    fun Sys_Mkdir(path: idStr) {
         Sys_Mkdir(path.toString())
     }
 
@@ -448,7 +448,7 @@ object win_main {
      Sys_FileTimeStamp
      =================
      */
-    fun  /*ID_TIME_T*/Sys_FileTimeStamp(fp: String?): Long {
+    fun  /*ID_TIME_T*/Sys_FileTimeStamp(fp: String): Long {
         val st = Paths.get(fp).toFile()
         return if (st.exists()) {
 //        Files.getLastModifiedTime(Paths.get(fp), LinkOption.NOFOLLOW_LINKS).toMillis();
@@ -456,7 +456,7 @@ object win_main {
         } else 0
     }
 
-    fun Sys_Cwd(): String? {
+    fun Sys_Cwd(): String {
         return System.getProperty("user.dir")
     }
 
@@ -465,7 +465,7 @@ object win_main {
      Sys_DefaultCDPath
      ==============
      */
-    fun Sys_DefaultCDPath(): String? {
+    fun Sys_DefaultCDPath(): String {
         return ""
     }
 
@@ -481,7 +481,7 @@ object win_main {
      Sys_DefaultBasePath
      ==============
      */
-    fun Sys_DefaultBasePath(): String? {
+    fun Sys_DefaultBasePath(): String {
         return Sys_Cwd()
     }
 
@@ -490,7 +490,7 @@ object win_main {
      Sys_DefaultSavePath
      ==============
      */
-    fun Sys_DefaultSavePath(): String? {
+    fun Sys_DefaultSavePath(): String {
         return idLib.cvarSystem.GetCVarString("fs_basepath")
     }
 
@@ -499,7 +499,7 @@ object win_main {
      Sys_EXEPath
      ==============
      */
-    fun Sys_EXEPath(): String? {
+    fun Sys_EXEPath(): String {
         throw TODO_Exception()
         //	static char exe[ MAX_OSPATH ];
 //	GetModuleFileName( NULL, exe, sizeof( exe ) - 1 );
@@ -511,19 +511,19 @@ object win_main {
      Sys_ListFiles
      ==============
      */
-    fun Sys_ListFiles(directory: String?, extension: String?, list: idStrList?): Int {
+    fun Sys_ListFiles(directory: String, extension: String, list: idStrList): Int {
         val search: FilenameFilter
         val   /*_finddata_t*/findinfo: File
         //	int			findhandle;
 //        final boolean _A_SUBDIR;
-        search = label@ FilenameFilter { pathname: File?, name: String? ->
+        search = FilenameFilter { pathname: File, name: String ->
             // passing a slash as extension will find directories
-            if (extension == '/') {
+            if (extension == "/") {
 //                    _A_SUBDIR = false;
-                return@label pathname.isDirectory()
+                return@FilenameFilter pathname.isDirectory()
             } else {
 //                    _A_SUBDIR = true;
-                return@label name.endsWith(extension)
+                return@FilenameFilter name.endsWith(extension)
             }
         }
         findinfo = File(directory)
@@ -580,7 +580,7 @@ object win_main {
      Sys_SetClipboardData
      ================
      */
-    fun Sys_SetClipboardData(string: String?) {
+    fun Sys_SetClipboardData(string: String) {
         Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(string), null)
         //	HGLOBAL HMem;
 //	char *PMem;
@@ -613,8 +613,8 @@ object win_main {
 //	CloseClipboard();
     }
 
-    fun Sys_SetClipboardData(string: CharArray?) {
-        Sys_SetClipboardData(TempDump.ctos(string))
+    fun Sys_SetClipboardData(string: CharArray) {
+        Sys_SetClipboardData(TempDump.ctos(string)!!)
     }
 
     /*
@@ -629,7 +629,7 @@ object win_main {
      Sys_DLL_Load
      =====================
      */
-    fun Sys_DLL_Load(dllName: String?): Int {
+    fun Sys_DLL_Load(dllName: String): Int {
         throw TODO_Exception()
         //	HINSTANCE	libHandle;
 //	libHandle = LoadLibrary( dllName );
@@ -651,7 +651,7 @@ object win_main {
      Sys_DLL_GetProcAddress
      =====================
      */
-    fun Sys_DLL_GetProcAddress(dllHandle: Int, procName: String?): Any? {
+    fun Sys_DLL_GetProcAddress(dllHandle: Int, procName: String): Any {
         throw TODO_Exception()
         //	return GetProcAddress( (HINSTANCE)dllHandle, procName );
     }
@@ -690,16 +690,14 @@ object win_main {
      be freed by the game later.
      ================
      */
-    fun Sys_QueEvent(time: Long, type: sysEventType_t?, value: Int, value2: Int, ptrLength: Int, ptr: ByteBuffer?) {
-        val ev: sysEvent_s?
-        eventQue.get(eventHead and MASK_QUED_EVENTS) = sysEvent_s()
-        ev = eventQue.get(eventHead and MASK_QUED_EVENTS)
+    fun Sys_QueEvent(time: Long, type: sysEventType_t, value: Int, value2: Int, ptrLength: Int, ptr: ByteBuffer) {
+        val ev: sysEvent_s
+        eventQue[eventHead and MASK_QUED_EVENTS] = sysEvent_s()
+        ev = eventQue[eventHead and MASK_QUED_EVENTS]!!
         if (eventHead - eventTail >= MAX_QUED_EVENTS) {
             Common.common.Printf("Sys_QueEvent: overflow\n")
             // we are discarding an event, but don't leak memory
-            if (ev.evPtr != null) {
-                ev.evPtr.clear() //Mem_Free( ev->evPtr );
-            }
+            ev.evPtr?.clear() //Mem_Free( ev->evPtr );
             eventTail++
         }
         eventHead++
@@ -759,7 +757,7 @@ object win_main {
         if (s != null) {
             val len: Int
             len = s.length
-            Sys_QueEvent(0, sysEventType_t.SE_CONSOLE, 0, 0, len, TempDump.atobb(s))
+            Sys_QueEvent(0, sysEventType_t.SE_CONSOLE, 0, 0, len, TempDump.atobb(s)!!)
         }
         entered = false
     }
@@ -779,13 +777,13 @@ object win_main {
      Sys_GetEvent
      ================
      */
-    fun Sys_GetEvent(): sysEvent_s? {
+    fun Sys_GetEvent(): sysEvent_s {
         val ev: sysEvent_s
 
         // return if we have data
         if (eventHead > eventTail) {
             eventTail++
-            return eventQue.get(eventTail - 1 and MASK_QUED_EVENTS)
+            return eventQue[eventTail - 1 and MASK_QUED_EVENTS]
         }
 
         // return the empty event
@@ -798,7 +796,7 @@ object win_main {
 
         // create an auto-reset event that happens 60 times a second
 //        hTimer = Executors.newSingleThreadScheduledExecutor(r -> new Thread("bla" + (thread++)));
-        hTimer = Executors.newSingleThreadScheduledExecutor { r: Runnable? ->
+        hTimer = Executors.newSingleThreadScheduledExecutor { r: Runnable ->
             val thread = Thread(r, "bla-" + count++)
             thread.priority = Thread.MAX_PRIORITY
             thread
@@ -815,7 +813,7 @@ object win_main {
 //        }
 
 //        hTimer.scheduleAtFixedRate(threadInfo.threadHandle, 0, USERCMD_MSEC, TimeUnit.MILLISECONDS);
-        hTimer.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
+        hTimer!!.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
 //                if (!DEBUG) {//TODO:Session_local.java::742
             Common.common.Async()
         }, 0, 1000000000L / 60, TimeUnit.NANOSECONDS)
@@ -1048,7 +1046,7 @@ object win_main {
      Sys_GetProcessorString
      ================
      */
-    fun Sys_GetProcessorString(): String? {
+    fun Sys_GetProcessorString(): String {
         throw TODO_Exception()
         //	return win32.sys_cpustring.GetString();
     }
@@ -1064,7 +1062,7 @@ object win_main {
 
         // if "viewlog" has been modified, show or hide the log console
         if (Win32Vars_t.Companion.win_viewlog.IsModified()) {
-            if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated.GetInteger() != 1) {
+            if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated!!.GetInteger() != 1) {
                 win_syscon.Sys_ShowConsole(Win32Vars_t.Companion.win_viewlog.GetInteger(), false)
             }
             Win32Vars_t.Companion.win_viewlog.ClearModified()
@@ -1103,7 +1101,7 @@ object win_main {
      GetExceptionCodeInfo
      ====================
      */
-    fun GetExceptionCodeInfo(   /*UINT*/code: Int): String? {
+    fun GetExceptionCodeInfo(   /*UINT*/code: Int): String {
         throw TODO_Exception()
         //	switch( code ) {
 //		case EXCEPTION_ACCESS_VIOLATION: return "The thread tried to read from or write to a virtual address for which it does not have the appropriate access.";
@@ -1430,9 +1428,9 @@ object win_main {
      Sys_SetFatalError
      ==================
      */
-    fun Sys_SetFatalError(error: String?) {}
-    fun Sys_SetFatalError(error: CharArray?) {
-        Sys_SetFatalError(TempDump.ctos(error))
+    fun Sys_SetFatalError(error: String) {}
+    fun Sys_SetFatalError(error: CharArray) {
+        Sys_SetFatalError(TempDump.ctos(error)!!)
     }
 
     /*
@@ -1441,16 +1439,16 @@ object win_main {
      ==================
      */
     fun Sys_DoPreferences() {}
-    fun remove(path: String?): Boolean {
+    fun remove(path: String): Boolean {
         return Paths.get(path).toFile().delete()
     }
 
-    fun remove(path: idStr?): Boolean {
+    fun remove(path: idStr): Boolean {
         return remove(path.toString())
     }
 
     @Throws(IOException::class)
-    fun tmpfile(): FileChannel? {
+    fun tmpfile(): FileChannel {
         val tmp = File.createTempFile("bla", "bla")
         tmp.deleteOnExit()
         return FileChannel.open(tmp.toPath(), TempDump.fopenOptions("wb+"))
@@ -1487,7 +1485,7 @@ object win_main {
 //
         for (i in 0 until sys_public.MAX_CRITICAL_SECTIONS) {
 //            InitializeCriticalSection( &win32.criticalSections[i] );
-            win_local.Companion.win32.criticalSections.get(i) =
+            win_local.Companion.win32.criticalSections[i] =
                 ReentrantLock() //TODO: see if we can use synchronized blocks instead?
         }
         // get the initial time base
@@ -1516,7 +1514,7 @@ object win_main {
 
         // hide or show the early console as necessary
         if (Win32Vars_t.Companion.win_viewlog.GetInteger() != 0 || Common.com_skipRenderer.GetBool()
-            || idAsyncNetwork.serverDedicated.GetInteger() != 0
+            || idAsyncNetwork.serverDedicated!!.GetInteger() != 0
         ) {
             win_syscon.Sys_ShowConsole(1, true)
         } else {
@@ -1610,13 +1608,13 @@ object win_main {
      */
     class Sys_In_Restart_f private constructor() : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             win_input.Sys_ShutdownInput()
             win_input.Sys_InitInput()
         }
 
         companion object {
-            val INSTANCE: cmdFunction_t? = Sys_In_Restart_f()
+            val INSTANCE: cmdFunction_t = Sys_In_Restart_f()
         }
     }
 

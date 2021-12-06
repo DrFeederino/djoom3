@@ -30,7 +30,7 @@ object win_syscon {
     const val INPUT_ID = 101
     const val QUIT_ID = 2
     private const val CONSOLE_BUFFER_SIZE = 16384
-    var s_wcd: WinConData? = WinConData()
+    var s_wcd: WinConData = WinConData()
     private var s_totalChars: /*unsigned*/Long = 0
 
     //    static LONG WINAPI    ConWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -224,7 +224,7 @@ object win_syscon {
         val nHeight: Int
         val swidth: Int
         val sheight: Int
-        val screen: Dimension?
+        val screen: Dimension
         //	int DEDSTYLE = WS_POPUPWINDOW | WS_CAPTION | WS_MINIMIZEBOX;
         var i: Int
         try {
@@ -283,42 +283,42 @@ object win_syscon {
         // create the input line
         //
         s_wcd.hwndInputLine = JTextField("edit")
-        s_wcd.hwndInputLine.setEditable(false)
-        s_wcd.hwndInputLine.setLocation(6, 400)
-        s_wcd.hwndInputLine.setPreferredSize(Dimension(528, 20))
+        s_wcd.hwndInputLine!!.isEditable = false
+        s_wcd.hwndInputLine!!.setLocation(6, 400)
+        s_wcd.hwndInputLine!!.preferredSize = Dimension(528, 20)
 
         //
         // create the buttons
         //
         s_wcd.hwndButtonCopy = JButton("copy")
-        s_wcd.hwndButtonCopy.setBounds(5, 425, 72, 24)
+        s_wcd.hwndButtonCopy!!.setBounds(5, 425, 72, 24)
         //        s_wcd.hwndButtonCopy.setLocation(5, 425);
 //        s_wcd.hwndButtonCopy.setPreferredSize(new Dimension(72, 24));
 //        s_wcd.hwndButtonCopy.setAction();
-        s_wcd.hwndButtonCopy.addMouseListener(object : Click() {
-            override fun mouseClicked(e: MouseEvent?) {
+        s_wcd.hwndButtonCopy!!.addMouseListener(object : Click() {
+            override fun mouseClicked(e: MouseEvent) {
 //                System.out.println("---" + s_wcd.buffer.getText());
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(s_wcd.textArea.getText()), null)
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(s_wcd.textArea!!.text), null)
                 println("--DBUG-- " + s_wcd.buffer.toString())
             }
         })
         s_wcd.hwndButtonClear = JButton("clear")
-        s_wcd.hwndButtonClear.setBounds(82, 425, 72, 24)
+        s_wcd.hwndButtonClear!!.setBounds(82, 425, 72, 24)
         //        s_wcd.hwndButtonClear.setLocation(82, 425);
 //        s_wcd.hwndButtonClear.setPreferredSize(new Dimension(72, 24));
 //        s_wcd.hwndButtonClear.setAction();
-        s_wcd.hwndButtonClear.addMouseListener(object : Click() {
-            override fun mouseClicked(e: MouseEvent?) {
-                s_wcd.textArea.setText("")
+        s_wcd.hwndButtonClear!!.addMouseListener(object : Click() {
+            override fun mouseClicked(e: MouseEvent) {
+                s_wcd.textArea!!.text = ""
             }
         })
         s_wcd.hwndButtonQuit = JButton("quit")
-        s_wcd.hwndButtonQuit.setBounds(462, 425, 72, 24)
+        s_wcd.hwndButtonQuit!!.setBounds(462, 425, 72, 24)
         //        s_wcd.hwndButtonQuit.setLocation(462, 425);
 //        s_wcd.hwndButtonQuit.setPreferredSize(new Dimension(72, 24));
 //        s_wcd.hwndButtonQuit.setAction();
-        s_wcd.hwndButtonQuit.addMouseListener(object : Click() {
-            override fun mouseClicked(e: MouseEvent?) {
+        s_wcd.hwndButtonQuit!!.addMouseListener(object : Click() {
+            override fun mouseClicked(e: MouseEvent) {
                 Common.common.Quit()
             }
         })
@@ -327,12 +327,12 @@ object win_syscon {
         // create the scrollbuffer text area
         //
         s_wcd.textArea = JTextArea()
-        s_wcd.textArea.setEditable(false)
-        s_wcd.textArea.setLineWrap(true)
-        s_wcd.textArea.setWrapStyleWord(true)
-        s_wcd.textArea.setFont(s_wcd.hfBufferFont)
-        s_wcd.textArea.setBackground(Color.BLUE.darker().darker())
-        s_wcd.textArea.setForeground(Color.YELLOW.brighter())
+        s_wcd.textArea!!.isEditable = false
+        s_wcd.textArea!!.lineWrap = true
+        s_wcd.textArea!!.wrapStyleWord = true
+        s_wcd.textArea!!.font = s_wcd.hfBufferFont
+        s_wcd.textArea!!.background = Color.BLUE.darker().darker()
+        s_wcd.textArea!!.foreground = Color.YELLOW.brighter()
 
         //
         // create the scrollbuffer
@@ -342,8 +342,8 @@ object win_syscon {
             JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
             JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         )
-        s_wcd.hwndBuffer.setLocation(6, 40)
-        s_wcd.hwndBuffer.setPreferredSize(Dimension(526, 354))
+        s_wcd.hwndBuffer!!.setLocation(6, 40)
+        s_wcd.hwndBuffer!!.preferredSize = Dimension(526, 354)
         //
 //	s_wcd.SysInputLineWndProc = ( WNDPROC ) SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, ( long ) InputLineWndProc );
 //	SendMessage( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM ) s_wcd.hfBufferFont, 0 );
@@ -358,18 +358,18 @@ object win_syscon {
 //        wc.setVisible(true);
 
         // don't show it now that we have a splash screen up
-        if (Win32Vars_t.Companion.win_viewlog.GetBool()) {
+        if (Win32Vars_t.win_viewlog.GetBool()) {
             wc.isVisible = true
             //		UpdateWindow( s_wcd.hWnd );
 //		SetForegroundWindow( s_wcd.hWnd );
-            s_wcd.hwndInputLine.setFocusable(true)
+            s_wcd.hwndInputLine!!.isFocusable = true
         }
         s_wcd.consoleField.Clear()
         i = 0
         while (i < COMMAND_HISTORY) {
 
 //            s_wcd.historyEditLines[i].Clear();
-            s_wcd.historyEditLines.get(i) = idEditField()
+            s_wcd.historyEditLines[i] = idEditField()
             i++
         }
     }
@@ -520,8 +520,8 @@ object win_syscon {
     fun Sys_DestroyConsole() {
         if (s_wcd.hWnd != null) {
 //		ShowWindow( s_wcd.hWnd, SW_HIDE );
-            s_wcd.hWnd.setVisible(false)
-            s_wcd.hWnd.dispose()
+            s_wcd.hWnd!!.isVisible = false
+            s_wcd.hWnd!!.dispose()
             //		CloseWindow( s_wcd.hWnd );
 //		DestroyWindow( s_wcd.hWnd );
             s_wcd.hWnd = null
@@ -537,17 +537,17 @@ object win_syscon {
             return
         }
         when (visLevel) {
-            0 -> s_wcd.hWnd.setVisible(false) //ShowWindow( s_wcd.hWnd, SW_HIDE );
+            0 -> s_wcd.hWnd!!.isVisible = false //ShowWindow( s_wcd.hWnd, SW_HIDE );
             1 -> {
-                s_wcd.textArea.setText(s_wcd.buffer.toString())
-                s_wcd.hWnd.setVisible(true) //ShowWindow( s_wcd.hWnd, SW_SHOWNORMAL );
-                s_wcd.hwndBuffer.getVerticalScrollBar().value =
+                s_wcd.textArea!!.text = s_wcd.buffer.toString()
+                s_wcd.hWnd!!.isVisible = true //ShowWindow( s_wcd.hWnd, SW_SHOWNORMAL );
+                s_wcd.hwndBuffer!!.verticalScrollBar.value =
                     0xffff //SendMessage(s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff);
             }
             2 -> {
-                s_wcd.textArea.setText(s_wcd.buffer.toString())
-                s_wcd.hWnd.setVisible(true)
-                s_wcd.hWnd.setState(JFrame.ICONIFIED) //ShowWindow( s_wcd.hWnd, SW_MINIMIZE );
+                s_wcd.textArea!!.text = s_wcd.buffer.toString()
+                s_wcd.hWnd!!.isVisible = true
+                s_wcd.hWnd!!.state = JFrame.ICONIFIED //ShowWindow( s_wcd.hWnd, SW_MINIMIZE );
             }
             else -> win_main.Sys_Error("Invalid visLevel %d sent to Sys_ShowConsole\n", visLevel)
         }
@@ -572,10 +572,10 @@ object win_syscon {
     /*
      ** Conbuf_AppendText
      */
-    fun Conbuf_AppendText(pMsg: String?) {
+    fun Conbuf_AppendText(pMsg: String) {
         val buffer = StringBuilder(CONSOLE_BUFFER_SIZE * 2)
         var b = 0 //buffer;
-        val msg: String?
+        val msg: String
         val bufLen: Int
         var i = 0
 
@@ -583,7 +583,7 @@ object win_syscon {
         // if the message is REALLY long, use just the last portion of it
         //
         msg = if (TempDump.isNotNullOrEmpty(pMsg)
-            && pMsg.length > CONSOLE_BUFFER_SIZE - 1
+            && pMsg!!.length > CONSOLE_BUFFER_SIZE - 1
         ) {
             pMsg.substring(pMsg.length - CONSOLE_BUFFER_SIZE + 1)
         } else {
@@ -596,25 +596,25 @@ object win_syscon {
         while (i < msg.length //&& msg.charAt(i) != 0)//TODO: is the character ever '0' or '\0', or are we just wasting our fucking resources?
             && b < buffer.capacity() - 1
         ) {
-            if (msg.get(i) == '\n'
+            if (msg[i] == '\n'
                 && (i + 1 < msg.length
-                        && msg.get(i + 1) == '\r')
+                        && msg[i + 1] == '\r')
             ) {
                 buffer.insert(b + 0, '\r')
                 buffer.insert(b + 1, '\n')
                 b += 2
                 i++
-            } else if (msg.get(i) == '\r') {
+            } else if (msg[i] == '\r') {
                 buffer.insert(b + 0, '\r')
                 buffer.insert(b + 1, '\n')
-            } else if (msg.get(i) == '\n') {
+            } else if (msg[i] == '\n') {
                 buffer.insert(b + 0, '\r')
                 buffer.insert(b + 1, '\n')
                 b += 2
-            } else if (idStr.Companion.IsColor(msg.substring(i))) {
+            } else if (idStr.IsColor(msg.substring(i))) {
                 i++
             } else {
-                buffer.insert(b++, msg.get(i))
+                buffer.insert(b++, msg[i])
             }
             i++
         }
@@ -643,35 +643,35 @@ object win_syscon {
     /*
      ** Win_SetErrorText
      */
-    fun Win_SetErrorText(buf: String?) {
-        idStr.Companion.Copynz(s_wcd.errorString, buf)
+    fun Win_SetErrorText(buf: String) {
+        idStr.Copynz(s_wcd.errorString, buf)
         if (TempDump.NOT(s_wcd.hwndErrorBox)) {
             s_wcd.hwndErrorBox = JTextField("static")
-            s_wcd.hwndErrorBox.setEditable(false)
-            s_wcd.hwndErrorBox.setLocation(6, 5)
-            s_wcd.hwndErrorBox.setPreferredSize(Dimension(526, 30))
-            s_wcd.hwndErrorBox.setBackground(Color.GRAY)
-            s_wcd.hwndErrorBox.setForeground(Color.RED)
-            s_wcd.hwndErrorBox.setText(s_wcd.errorString.toString())
-            s_wcd.hWnd.getContentPane().add(s_wcd.hwndErrorBox)
-            s_wcd.hWnd.getContentPane().remove(s_wcd.hwndInputLine)
-            s_wcd.hWnd.pack()
+            s_wcd.hwndErrorBox!!.isEditable = false
+            s_wcd.hwndErrorBox!!.setLocation(6, 5)
+            s_wcd.hwndErrorBox!!.preferredSize = Dimension(526, 30)
+            s_wcd.hwndErrorBox!!.background = Color.GRAY
+            s_wcd.hwndErrorBox!!.foreground = Color.RED
+            s_wcd.hwndErrorBox!!.text = s_wcd.errorString.toString()
+            s_wcd.hWnd!!.contentPane.add(s_wcd.hwndErrorBox)
+            s_wcd.hWnd!!.contentPane.remove(s_wcd.hwndInputLine)
+            s_wcd.hWnd!!.pack()
             s_wcd.hwndInputLine = null
         }
     }
 
-    private class WinConData {
-        var buffer: StringBuilder? = StringBuilder(0x7000)
+    class WinConData {
+        var buffer: StringBuilder = StringBuilder(0x7000)
 
         //
         //	int			nextHistoryLine;// the last line in the history buffer, not masked
         //	int			historyLine;	// the line being displayed from history buffer
         //								// will be <= nextHistoryLine
         //
-        var consoleField: idEditField? = idEditField()
+        var consoleField: idEditField = idEditField()
 
         //
-        var errorString: StringBuilder? = StringBuilder(80)
+        var errorString: StringBuilder = StringBuilder(80)
         var   /*HWND*/hWnd: JFrame? = null
 
         //	HWND		hwndErrorText;
@@ -688,7 +688,7 @@ object win_syscon {
         //
         //	WNDPROC		SysInputLineWndProc;
         //
-        var historyEditLines: Array<idEditField?>? = arrayOfNulls<idEditField?>(COMMAND_HISTORY)
+        var historyEditLines: Array<idEditField?> = arrayOfNulls<idEditField?>(COMMAND_HISTORY)
         var   /*HWND*/hwndBuffer: JScrollPane? = null
 
         //
@@ -709,19 +709,19 @@ object win_syscon {
         var windowHeight = 0
         fun setQuitOnClose(quitOnClose: Boolean) {
             if (quitOnClose) {
-                hWnd.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-                hWnd.addWindowListener(QUIT_ON_CLOSE)
+                hWnd!!.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+                hWnd!!.addWindowListener(QUIT_ON_CLOSE)
             } else {
-                hWnd.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE)
-                hWnd.removeWindowListener(QUIT_ON_CLOSE)
+                hWnd!!.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+                hWnd!!.removeWindowListener(QUIT_ON_CLOSE)
             }
         }
 
         companion object {
             //TODO:refactor names to reflect the types; e.g:hWnd -> jFrame or something.
             //
-            private val QUIT_ON_CLOSE: WindowAdapter? = object : WindowAdapter() {
-                override fun windowClosing(e: WindowEvent?) {
+            private val QUIT_ON_CLOSE: WindowAdapter = object : WindowAdapter() {
+                override fun windowClosing(e: WindowEvent) {
                     Common.common.Quit()
                 }
             }
@@ -729,10 +729,10 @@ object win_syscon {
     }
 
     internal abstract class Click : MouseListener {
-        abstract fun mouseClicked(e: MouseEvent?)
-        override fun mousePressed(e: MouseEvent?) {}
-        override fun mouseReleased(e: MouseEvent?) {}
-        override fun mouseEntered(e: MouseEvent?) {}
-        override fun mouseExited(e: MouseEvent?) {}
+        override fun mouseClicked(e: MouseEvent) {}
+        override fun mousePressed(e: MouseEvent) {}
+        override fun mouseReleased(e: MouseEvent) {}
+        override fun mouseEntered(e: MouseEvent) {}
+        override fun mouseExited(e: MouseEvent) {}
     }
 }

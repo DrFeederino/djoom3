@@ -20,27 +20,27 @@ object win_net {
 
     //=============================================================================
     const val MAX_UDP_MSG_SIZE = 1400
-    val net_forceDrop: idCVar? =
+    val net_forceDrop: idCVar =
         idCVar("net_forceDrop", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER, "percentage packet loss")
-    val net_forceLatency: idCVar? =
+    val net_forceLatency: idCVar =
         idCVar("net_forceLatency", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER, "milliseconds latency")
-    val net_ip: idCVar? = idCVar("net_ip", "localhost", CVarSystem.CVAR_SYSTEM, "local IP address")
-    val net_port: idCVar? =
+    val net_ip: idCVar = idCVar("net_ip", "localhost", CVarSystem.CVAR_SYSTEM, "local IP address")
+    val net_port: idCVar =
         idCVar("net_port", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER, "local IP port number")
-    val net_socksEnabled: idCVar? =
+    val net_socksEnabled: idCVar =
         idCVar("net_socksEnabled", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL, "")
-    val net_socksPassword: idCVar? =
+    val net_socksPassword: idCVar =
         idCVar("net_socksPassword", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "")
-    val net_socksPort: idCVar? = idCVar(
+    val net_socksPort: idCVar = idCVar(
         "net_socksPort",
         "1080",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
         ""
     )
-    val net_socksServer: idCVar? = idCVar("net_socksServer", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "")
-    val net_socksUsername: idCVar? =
+    val net_socksServer: idCVar = idCVar("net_socksServer", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "")
+    val net_socksUsername: idCVar =
         idCVar("net_socksUsername", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE, "")
-    val netint: Array<net_interface?>? = arrayOfNulls<net_interface?>(MAX_INTERFACES)
+    val netint: Array<net_interface?> = arrayOfNulls<net_interface?>(MAX_INTERFACES)
     var num_interfaces = 0
     var usingSocks = false
 
@@ -53,7 +53,7 @@ object win_net {
      NET_ErrorString
      ====================
      */
-    fun NET_ErrorString(): String? {
+    fun NET_ErrorString(): String {
         throw TODO_Exception()
         //	int		code;
 //
@@ -112,7 +112,7 @@ object win_net {
      Net_NetadrToSockadr
      ====================
      */
-    fun Net_NetadrToSockadr(a: netadr_t?, s: SocketAddress?) {
+    fun Net_NetadrToSockadr(a: netadr_t, s: SocketAddress) {
         throw TODO_Exception()
         //	memset( s, 0, sizeof(*s) );
 //
@@ -133,7 +133,7 @@ object win_net {
      Net_SockadrToNetadr
      ====================
      */
-    fun Net_SockadrToNetadr(s: SocketAddress?, a: netadr_t?) {
+    fun Net_SockadrToNetadr(s: SocketAddress, a: netadr_t) {
         throw TODO_Exception()
         //	unsigned int ip;
 //	if (s->sa_family == AF_INET) {
@@ -155,7 +155,7 @@ object win_net {
      Net_ExtractPort
      =============
      */
-    fun Net_ExtractPort(src: String?, buf: String?, bufsize: Int, port: IntArray?): Boolean {
+    fun Net_ExtractPort(src: String, buf: String, bufsize: Int, port: IntArray): Boolean {
         throw TODO_Exception()
         //	char *p;
 //	strncpy( buf, src, bufsize );
@@ -177,7 +177,7 @@ object win_net {
      Net_StringToSockaddr
      =============
      */
-    fun Net_StringToSockaddr(s: String?, sadr: SocketAddress?, doDNSResolve: Boolean): Boolean {
+    fun Net_StringToSockaddr(s: String, sadr: SocketAddress, doDNSResolve: Boolean): Boolean {
         throw TODO_Exception()
         //	struct hostent	*h;
 //	char buf[256];
@@ -225,7 +225,7 @@ object win_net {
      NET_IPSocket
      ====================
      */
-    fun NET_IPSocket(net_interface: String?, port: Int, bound_to: netadr_t?): Int {
+    fun NET_IPSocket(net_interface: String, port: Int, bound_to: netadr_t): Int {
         throw TODO_Exception()
         //	SOCKET				newsocket;
 //	struct sockaddr_in	address;
@@ -514,7 +514,7 @@ object win_net {
      Net_GetUDPPacket
      ==================
      */
-    fun Net_GetUDPPacket(netSocket: Int, net_from: netadr_t?, data: CharArray?, size: CInt?, maxSize: Int): Boolean {
+    fun Net_GetUDPPacket(netSocket: Int, net_from: netadr_t, data: CharArray, size: CInt, maxSize: Int): Boolean {
         throw TODO_Exception()
         //	int 			ret;
 //	struct sockaddr	from;
@@ -575,7 +575,7 @@ object win_net {
      Net_SendUDPPacket
      ==================
      */
-    fun Net_SendUDPPacket(netSocket: Int, length: Int, data: Any?, to: netadr_t?) {
+    fun Net_SendUDPPacket(netSocket: Int, length: Int, data: Any, to: netadr_t) {
         throw TODO_Exception()
         //	int				ret;
 //	struct sockaddr	addr;
@@ -633,11 +633,11 @@ object win_net {
 //
         winsockInitialized = true
         Common.common.Printf("Winsock Initialized\n")
-        val   /*PIP_ADAPTER_INFO*/pAdapterInfo: Enumeration<NetworkInterface?>?
-        var   /*PIP_ADAPTER_INFO*/pAdapter: NetworkInterface? = null
+        val   /*PIP_ADAPTER_INFO*/pAdapterInfo: Enumeration<NetworkInterface>
+        var   /*PIP_ADAPTER_INFO*/pAdapter: NetworkInterface
         //        DWORD dwRetVal = 0;
-        var   /*PIP_ADDR_STRING*/pIPAddrStrings: Enumeration<InetAddress?>?
-        var pIPAddr: InetAddress?
+        var   /*PIP_ADDR_STRING*/pIPAddrStrings: Enumeration<InetAddress>
+        var pIPAddr: InetAddress
         //        ULONG ulOutBufLen;
 //        boolean foundLoopback;
         num_interfaces = 0
@@ -663,7 +663,7 @@ object win_net {
             pAdapterInfo =
                 NetworkInterface.getNetworkInterfaces() //if( ( dwRetVal = GetAdaptersInfo( pAdapterInfo, &ulOutBufLen) ) != NO_ERROR ) {
             while (pAdapterInfo.hasMoreElements()) {
-                pAdapter = pAdapterInfo.nextElement()
+                pAdapter = pAdapterInfo.nextElement()!!
                 Common.common.Printf("Found interface: %s %s - ", pAdapter.getName(), pAdapter.getDisplayName())
                 pIPAddrStrings = pAdapter.getInetAddresses()
                 while (pIPAddrStrings.hasMoreElements()) {
@@ -690,7 +690,7 @@ object win_net {
                         continue
                     }
                     Common.common.Printf("%s/%s", pIPAddr.getHostAddress(), ip_m)
-                    netint.get(num_interfaces) = net_interface(ip_a, ip_m)
+                    netint[num_interfaces] = net_interface(ip_a, ip_m)
                     num_interfaces++
                     if (num_interfaces >= MAX_INTERFACES) {
                         Common.common.Printf("\nSys_InitNetworking: MAX_INTERFACES(%d) hit.\n", MAX_INTERFACES)
@@ -837,20 +837,20 @@ object win_net {
 //	return false;
     }
 
-    internal class net_interface(/*unsigned*/
+    class net_interface(/*unsigned*/
         var ip: Long, /*unsigned*/
         var mask: Long
     )
 
-    internal class udpMsg_s {
+    class udpMsg_s {
         var address: netadr_t? = null
-        var data: ByteArray? = ByteArray(MAX_UDP_MSG_SIZE)
+        var data: ByteArray = ByteArray(MAX_UDP_MSG_SIZE)
         var next: udpMsg_s? = null
         var size = 0
         var time = 0
     }
 
-    internal class idUDPLag {
+    class idUDPLag {
         var recieveFirst: udpMsg_s?
 
         //						~idUDPLag( void );

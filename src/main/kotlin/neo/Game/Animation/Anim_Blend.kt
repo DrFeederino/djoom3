@@ -1101,11 +1101,11 @@ object Anim_Blend {
      ==============================================================================================
      */
     class idDeclModelDef : idDecl {
-        private val anims: ArrayList<idAnim?>? = ArrayList()
-        private val channelJoints: Array<ArrayList<Int?>?>? = arrayOfNulls<ArrayList<*>?>(Anim.ANIM_NumAnimChannels)
-        private val jointParents: ArrayList<Int?>? = ArrayList()
-        private val joints: ArrayList<jointInfo_t?>? = ArrayList()
-        private val offset: idVec3? = idVec3()
+        private val anims: ArrayList<idAnim> = ArrayList()
+        private val channelJoints: Array<ArrayList<Int?>?> = arrayOfNulls<ArrayList<*>?>(Anim.ANIM_NumAnimChannels)
+        private val jointParents: ArrayList<Int> = ArrayList()
+        private val joints: ArrayList<jointInfo_t> = ArrayList()
+        private val offset: idVec3 = idVec3()
         private var modelHandle: idRenderModel?
 
         //
@@ -1796,7 +1796,7 @@ object Anim_Blend {
             len = alias.Length()
             i = len - 1
             while (i > 0) {
-                if (!Character.isDigit(alias.oGet(i))) {
+                if (!Character.isDigit(alias.get(i))) {
                     break
                 }
                 i--

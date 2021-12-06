@@ -327,7 +327,7 @@ object Game_local {
     fun GetGameAPI(gameImport: gameImport_t): gameExport_t {
         if (gameImport.version == Game.GAME_API_VERSION) {
             // set interface pointers used by the game
-            sys_public.setSys(gameImport.sys)
+            sys_public.setSysLocal(gameImport.sys)
             Common.setCommon(gameImport.common)
             CmdSystem.setCmdSystems(gameImport.cmdSystem)
             CVarSystem.setCvarSystems(gameImport.cvarSystem)

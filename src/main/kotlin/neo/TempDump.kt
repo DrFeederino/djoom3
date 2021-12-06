@@ -184,7 +184,7 @@ object TempDump {
     }
 
     fun isNotNullOrEmpty(stringy: idStr?): Boolean {
-        return stringy != null && !stringy.IsEmpty() && '\u0000' != stringy.oGet(0)
+        return stringy != null && !stringy.IsEmpty() && '\u0000' != stringy.get(0)
     }
 
     /**

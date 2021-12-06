@@ -12,6 +12,7 @@ import neo.idlib.Lib
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
+import neo.idlib.containers.CBool
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h.idMath
 import neo.sys.sys_public.sysEventType_t
@@ -35,42 +36,42 @@ object EditWindow {
     const val MAX_EDITFIELD = 4096
 
     internal class idEditWindow : idWindow {
-        private val breaks: idList<Int?>? = idList()
+        private val breaks: idList<Int> = idList()
         private var cursorLine = 0
         private var cursorPos = 0
         private var cvar: idCVar? = null
-        private val cvarGroup: idWinStr? = idWinStr()
+        private val cvarGroup: idWinStr = idWinStr()
         private var cvarMax = 0
 
         //
-        private val cvarStr: idWinStr? = idWinStr()
+        private val cvarStr: idWinStr = idWinStr()
         private var forceScroll = false
         private var lastTextLength = 0
 
         //
-        private val liveUpdate: idWinBool? = idWinBool()
+        private val liveUpdate: idWinBool = idWinBool()
         private var maxChars = 0
         private var numeric = false
         private var paintOffset = 0
-        private val password: idWinBool? = idWinBool()
+        private val password: idWinBool = idWinBool()
         private var readonly = false
-        private var scroller: idSliderWindow? = null
+        private lateinit var scroller: idSliderWindow
         private var sizeBias = 0f
-        private val sourceFile: idStr? = idStr()
+        private val sourceFile: idStr = idStr()
         private val textIndex = 0
 
         //
         //
         private var wrap = false
 
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
         //	// virtual 			~idEditWindow();
         //
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -87,8 +88,8 @@ object EditWindow {
             }
             val scale = textScale.oCastFloat()
             var pass = ""
-            val buffer: String?
-            if (password != null) {
+            val buffer: String
+            if (!password.data) {
                 var temp = 0 //text;
                 while (temp < text.Length()) {
                     pass += "*"
@@ -118,7 +119,7 @@ object EditWindow {
             if (flags and Window.WIN_FOCUS != 0) {
                 color = hoverColor.oCastIdVec4()
             }
-            dc.DrawText(
+            dc!!.DrawText(
                 buffer,
                 scale,
                 0,
@@ -129,19 +130,19 @@ object EditWindow {
             )
         }
 
-        override fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
-            var ret: String? = ""
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
+            var ret: String = ""
             if (wrap) {
                 // need to call this to allow proper focus and capturing on embedded children
                 ret = super.HandleEvent(event, updateVisuals)
-                if (ret != null && !ret.isEmpty()) {
+                if (ret.isNotEmpty()) {
                     return ret
                 }
             }
             if (event.evType != sysEventType_t.SE_CHAR && event.evType != sysEventType_t.SE_KEY) {
                 return ret
             }
-            idStr.Companion.Copynz(buffer, text.c_str(), buffer.size)
+            idStr.Copynz(buffer, text.c_str(), buffer.size)
             val key = event.evValue
             var len = text.Length()
             if (event.evType == sysEventType_t.SE_CHAR) {
@@ -152,7 +153,7 @@ object EditWindow {
                     return ""
                 }
                 if (updateVisuals != null) {
-                    updateVisuals[0] = true
+                    updateVisuals._val = true
                 }
                 if (maxChars != 0 && len > maxChars) {
                     len = maxChars
@@ -172,7 +173,7 @@ object EditWindow {
                 if (key == 'h' - 'a' + 1 || key == KeyInput.K_BACKSPACE) {    // ctrl-h is backspace
                     if (cursorPos > 0) {
                         if (cursorPos >= len) {
-                            buffer.get(len - 1) = 0
+                            buffer[len - 1] = Char(0)
                             cursorPos = len - 1
                         } else {
 //					memmove( &buffer[ cursorPos - 1 ], &buffer[ cursorPos ], len + 1 - cursorPos);
@@ -190,7 +191,7 @@ object EditWindow {
                 // ignore any non printable chars (except enter when wrap is enabled)
                 //
                 if (wrap && (key == KeyInput.K_ENTER || key == KeyInput.K_KP_ENTER)) {
-                } else if (!idStr.Companion.CharIsPrintable(key)) {
+                } else if (!idStr.CharIsPrintable(key)) {
                     return ""
                 }
                 if (numeric) {
@@ -198,7 +199,7 @@ object EditWindow {
                         return ""
                     }
                 }
-                if (dc.GetOverStrike()) {
+                if (dc!!.GetOverStrike()) {
                     if (maxChars != 0 && cursorPos >= maxChars) {
                         return ""
                     }
@@ -209,7 +210,7 @@ object EditWindow {
                     //			memmove( &buffer[ cursorPos + 1 ], &buffer[ cursorPos ], len + 1 - cursorPos );
                     System.arraycopy(buffer, cursorPos, buffer, cursorPos + 1, len + 1 - cursorPos)
                 }
-                buffer.get(cursorPos) = key.toChar()
+                buffer[cursorPos] = key.toChar()
                 text.data.set(buffer)
                 UpdateCvar(false)
                 RunScript(TempDump.etoi(ON.ON_ACTION))
@@ -219,7 +220,7 @@ object EditWindow {
                 EnsureCursorVisible()
             } else if (event.evType == sysEventType_t.SE_KEY && event.evValue2 != 0) {
                 if (updateVisuals != null) {
-                    updateVisuals[0] = true
+                    updateVisuals._val = true
                 }
                 if (key == KeyInput.K_DEL) {
                     if (readonly) {
@@ -238,10 +239,10 @@ object EditWindow {
                     if (cursorPos < len) {
                         if (idKeyInput.IsDown(KeyInput.K_CTRL)) {
                             // skip to next word
-                            while (cursorPos < len && buffer.get(cursorPos) != ' ') {
+                            while (cursorPos < len && buffer[cursorPos] != ' ') {
                                 cursorPos++
                             }
-                            while (cursorPos < len && buffer.get(cursorPos) == ' ') {
+                            while (cursorPos < len && buffer[cursorPos] == ' ') {
                                 cursorPos++
                             }
                         } else {
@@ -256,10 +257,10 @@ object EditWindow {
                 if (key == KeyInput.K_LEFTARROW) {
                     if (idKeyInput.IsDown(KeyInput.K_CTRL)) {
                         // skip to previous word
-                        while (cursorPos > 0 && buffer.get(cursorPos - 1) == ' ') {
+                        while (cursorPos > 0 && buffer[cursorPos - 1] == ' ') {
                             cursorPos--
                         }
-                        while (cursorPos > 0 && buffer.get(cursorPos - 1) != ' ') {
+                        while (cursorPos > 0 && buffer[cursorPos - 1] != ' ') {
                             cursorPos--
                         }
                     } else {
@@ -274,7 +275,7 @@ object EditWindow {
                     if (idKeyInput.IsDown(KeyInput.K_CTRL) || cursorLine <= 0 || cursorLine >= breaks.Num()) {
                         cursorPos = 0
                     } else {
-                        cursorPos = breaks.get(cursorLine)
+                        cursorPos = breaks[cursorLine]
                     }
                     EnsureCursorVisible()
                     return ret
@@ -284,14 +285,14 @@ object EditWindow {
                         if (idKeyInput.IsDown(KeyInput.K_CTRL) || cursorLine < -1 || cursorLine >= breaks.Num() - 1) {
                             len
                         } else {
-                            breaks.get(cursorLine + 1) - 1
+                            breaks[cursorLine + 1] - 1
                         }
                     EnsureCursorVisible()
                     return ret
                 }
                 if (key == KeyInput.K_INS) {
                     if (!readonly) {
-                        dc.SetOverStrike(!dc.GetOverStrike())
+                        dc!!.SetOverStrike(dc!!.GetOverStrike())
                     }
                     return ret
                 }
@@ -300,8 +301,8 @@ object EditWindow {
                         scroller.SetValue(scroller.GetValue() + 1.0f)
                     } else {
                         if (cursorLine < breaks.Num() - 1) {
-                            val offset = cursorPos - breaks.get(cursorLine)
-                            cursorPos = breaks.get(cursorLine + 1) + offset
+                            val offset = cursorPos - breaks[cursorLine]
+                            cursorPos = breaks[cursorLine + 1] + offset
                             EnsureCursorVisible()
                         }
                     }
@@ -311,8 +312,8 @@ object EditWindow {
                         scroller.SetValue(scroller.GetValue() - 1.0f)
                     } else {
                         if (cursorLine > 0) {
-                            val offset = cursorPos - breaks.get(cursorLine)
-                            cursorPos = breaks.get(cursorLine - 1) + offset
+                            val offset = cursorPos - breaks[cursorLine]
+                            cursorPos = breaks[cursorLine - 1] + offset
                             EnsureCursorVisible()
                         }
                     }
@@ -343,7 +344,7 @@ object EditWindow {
                 maxChars = 10
             }
             if (sourceFile.Length() != 0) {
-                val buffer = arrayOf<ByteBuffer?>(null)
+                val buffer = Array(0) { ByteBuffer.allocate(0) }
                 FileSystem_h.fileSystem.ReadFile(sourceFile, buffer)
                 text.data.set(String(buffer[0].array()))
                 FileSystem_h.fileSystem.FreeFile(buffer)
@@ -360,26 +361,26 @@ object EditWindow {
         }
 
         override fun GetWinVarByName(
-            _name: String?,
+            _name: String,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
-            if (idStr.Companion.Icmp(_name, "cvar") == 0) {
+            if (idStr.Icmp(_name, "cvar") == 0) {
                 return cvarStr
             }
-            if (idStr.Companion.Icmp(_name, "password") == 0) {
+            if (idStr.Icmp(_name, "password") == 0) {
                 return password
             }
-            if (idStr.Companion.Icmp(_name, "liveUpdate") == 0) {
+            if (idStr.Icmp(_name, "liveUpdate") == 0) {
                 return liveUpdate
             }
-            return if (idStr.Companion.Icmp(_name, "cvarGroup") == 0) {
+            return if (idStr.Icmp(_name, "cvarGroup") == 0) {
                 cvarGroup
             } else super.GetWinVarByName(_name, winLookup, owner)
         }
 
-        override fun HandleBuddyUpdate(buddy: idWindow?) {}
-        override fun Activate(activate: Boolean, act: idStr?) {
+        override fun HandleBuddyUpdate(buddy: idWindow) {}
+        override fun Activate(activate: Boolean, act: idStr) {
             super.Activate(activate, act)
             if (activate) {
                 UpdateCvar(true, true)
@@ -387,16 +388,16 @@ object EditWindow {
             }
         }
 
-        override fun RunNamedEvent(eventName: String?) {
+        override fun RunNamedEvent(eventName: String) {
             val event: idStr
             val group: idStr?
-            if (0 == idStr.Companion.Cmpn(eventName, "cvar read ", 10)) {
+            if (0 == idStr.Cmpn(eventName, "cvar read ", 10)) {
                 event = idStr(eventName)
                 group = event.Mid(10, event.Length() - 10)
                 if (TempDump.NOT(group.Cmp(cvarGroup.data).toDouble())) {
                     UpdateCvar(true, true)
                 }
-            } else if (0 == idStr.Companion.Cmpn(eventName, "cvar write ", 11)) {
+            } else if (0 == idStr.Cmpn(eventName, "cvar write ", 11)) {
                 event = idStr(eventName)
                 group = event.Mid(11, event.Length() - 11)
                 if (TempDump.NOT(group.Cmp(cvarGroup.data).toDouble())) {
@@ -405,36 +406,36 @@ object EditWindow {
             }
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
-            if (idStr.Companion.Icmp(_name, "maxchars") == 0) {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
+            if (idStr.Icmp(_name, "maxchars") == 0) {
                 maxChars = src.ParseInt()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "numeric") == 0) {
+            if (idStr.Icmp(_name, "numeric") == 0) {
                 numeric = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "wrap") == 0) {
+            if (idStr.Icmp(_name, "wrap") == 0) {
                 wrap = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "readonly") == 0) {
+            if (idStr.Icmp(_name, "readonly") == 0) {
                 readonly = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "forceScroll") == 0) {
+            if (idStr.Icmp(_name, "forceScroll") == 0) {
                 forceScroll = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "source") == 0) {
+            if (idStr.Icmp(_name, "source") == 0) {
                 ParseString(src, sourceFile)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "password") == 0) {
+            if (idStr.Icmp(_name, "password") == 0) {
                 password.data = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "cvarMax") == 0) {
+            if (idStr.Icmp(_name, "cvarMax") == 0) {
                 cvarMax = src.ParseInt()
                 return true
             }
@@ -472,11 +473,11 @@ object EditWindow {
             if (force || liveUpdate.oCastBoolean()) {
                 if (cvar != null) {
                     if (read) {
-                        text.data.set(cvar.GetString())
+                        text.data.set(cvar!!.GetString())
                     } else {
-                        cvar.SetString(text.data.toString())
-                        if (cvarMax != 0 && cvar.GetInteger() > cvarMax) {
-                            cvar.SetInteger(cvarMax)
+                        cvar!!.SetString(text.data.toString())
+                        if (cvarMax != 0 && cvar!!.GetInteger() > cvarMax) {
+                            cvar!!.SetInteger(cvarMax)
                         }
                     }
                 }
@@ -492,7 +493,7 @@ object EditWindow {
             cvarMax = 0
             wrap = false
             sourceFile.set("")
-            scroller = null
+            //scroller = null
             sizeBias = 0f
             lastTextLength = 0
             forceScroll = false
@@ -516,14 +517,14 @@ object EditWindow {
             if (!wrap) {
                 var cursorX = 0
                 if (password.data) {
-                    cursorX = cursorPos * dc.CharWidth('*', textScale.data)
+                    cursorX = cursorPos * dc!!.CharWidth('*', textScale.data)
                 } else {
                     var i = 0
                     while (i < text.Length() && i < cursorPos) {
-                        if (idStr.Companion.IsColor(TempDump.ctos(text.data.oGet(i)))) {
+                        if (idStr.IsColor(TempDump.ctos(text.data[i].toString().toCharArray())!!)) {
                             i += 2
                         } else {
-                            cursorX += dc.CharWidth(text.data.oGet(i), textScale.data)
+                            cursorX += dc!!.CharWidth(text.data[i], textScale.data)
                             i++
                         }
                     }
@@ -547,11 +548,11 @@ object EditWindow {
                 breaks.Clear()
                 val rect = idRectangle(textRect)
                 rect.w -= sizeBias
-                dc.DrawText(
+                dc!!.DrawText(
                     text.data,
                     textScale.data,
                     textAlign.code,
-                    Lib.Companion.colorWhite,
+                    Lib.colorWhite,
                     rect,
                     true,
                     if (TempDump.itob(flags and Window.WIN_FOCUS)) cursorPos else -1,
@@ -571,7 +572,7 @@ object EditWindow {
                 } else {
                     cursorLine = 0
                     for (i in 1 until breaks.Num()) {
-                        cursorLine = if (cursorPos >= breaks.get(i)) {
+                        cursorLine = if (cursorPos >= breaks[i]) {
                             i
                         } else {
                             break
@@ -633,7 +634,7 @@ object EditWindow {
         }
 
         companion object {
-            private val buffer: CharArray? = CharArray(MAX_EDITFIELD)
+            private val buffer: CharArray = CharArray(MAX_EDITFIELD)
         }
     }
 }

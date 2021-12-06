@@ -5,28 +5,27 @@ import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import java.nio.ByteBuffer
+import kotlin.math.cos
+import kotlin.math.sin
 
-java.nio.*
-/**
- *
- */
 object Rectangle {
     /*
      ================
      RotateVector
      ================
      */
-    fun RotateVector(v: idVec3?, origin: idVec3?, a: Float, c: Float, s: Float) {
-        var x = v.get(0)
-        var y = v.get(1)
+    fun RotateVector(v: idVec3, origin: idVec3, a: Float, c: Float, s: Float) {
+        var x = v[0]
+        var y = v[1]
         if (a != 0f) {
-            val x2 = (x - origin.get(0)) * c - (y - origin.get(1)) * s + origin.get(0)
-            val y2 = (x - origin.get(0)) * s + (y - origin.get(1)) * c + origin.get(1)
-            x = x2
-            y = y2
+            val x2 = (((x - origin[0]) * c) - ((y - origin[1]) * s)) + origin[0];
+            val y2 = (((x - origin[0]) * s) + ((y - origin[1]) * c)) + origin[1];
+            x = x2;
+            y = y2;
         }
-        v.set(0, x)
-        v.set(1, y)
+        v[0] = x
+        v[1] = y
     }
 
     //
@@ -60,7 +59,7 @@ object Rectangle {
         }
 
         //copy constructor
-        constructor(rectangle: idRectangle?) : this(rectangle.x, rectangle.y, rectangle.w, rectangle.h)
+        constructor(rectangle: idRectangle) : this(rectangle.x, rectangle.y, rectangle.w, rectangle.h)
 
         fun Bottom(): Float {
             return y + h
@@ -88,7 +87,7 @@ object Rectangle {
             x = y
         }
 
-        fun ClipAgainst(r: idRectangle?, sizeOnly: Boolean) {
+        fun ClipAgainst(r: idRectangle, sizeOnly: Boolean) {
             if (!sizeOnly) {
                 if (x < r.x) {
                     x = r.x
@@ -105,7 +104,7 @@ object Rectangle {
             }
         }
 
-        fun Rotate(a: Float, out: idRectangle?) {
+        fun Rotate(a: Float, out: idRectangle) {
             val p1 = idVec3()
             val p2 = idVec3()
             val p3 = idVec3()
@@ -113,13 +112,13 @@ object Rectangle {
             val p5 = idVec3()
             val c: Float
             val s: Float
-            val center = idVec3((x + w) / 2.0f, (y + h) / 2.0f, 0)
+            val center = idVec3((x + w) / 2.0f, (y + h) / 2.0f, 0f)
             p1.set(x, y, 0f)
             p2.set(Right(), y, 0f)
             p4.set(x, Bottom(), 0f)
             if (a != 0f) {
-                s = Math.sin(Math_h.DEG2RAD(a).toDouble()).toFloat()
-                c = Math.cos(Math_h.DEG2RAD(a).toDouble()).toFloat()
+                s = sin(Math_h.DEG2RAD(a).toDouble()).toFloat()
+                c = cos(Math_h.DEG2RAD(a).toDouble()).toFloat()
             } else {
                 c = 0f
                 s = c
@@ -133,7 +132,7 @@ object Rectangle {
             out.h = p4.minus(p1).Length()
         }
 
-        fun oPluSet(a: idRectangle?): idRectangle? {
+        fun plusAssign(a: idRectangle): idRectangle {
             x += a.x
             y += a.y
             w += a.w
@@ -141,7 +140,7 @@ object Rectangle {
             return this
         }
 
-        fun oMinSet(a: idRectangle?): idRectangle? {
+        fun minusAssign(a: idRectangle): idRectangle {
             x -= a.x
             y -= a.y
             w -= a.w
@@ -149,7 +148,7 @@ object Rectangle {
             return this
         }
 
-        fun oDivSet(a: idRectangle?): idRectangle? {
+        fun divAssign(a: idRectangle): idRectangle {
             x /= a.x
             y /= a.y
             w /= a.w
@@ -157,7 +156,7 @@ object Rectangle {
             return this
         }
 
-        fun oDivSet(a: Float): idRectangle? {
+        fun divAssign(a: Float): idRectangle {
             val inva = 1.0f / a
             x *= inva
             y *= inva
@@ -166,7 +165,7 @@ object Rectangle {
             return this
         }
 
-        fun oMulSet(a: Float): idRectangle? {
+        fun timesAssign(a: Float): idRectangle {
             x *= a
             y *= a
             w *= a
@@ -174,7 +173,7 @@ object Rectangle {
             return this
         }
 
-        fun oSet(v: idVec4?): idRectangle? {
+        fun set(v: idVec4): idRectangle {
             x = v.x
             y = v.y
             w = v.z
@@ -182,7 +181,7 @@ object Rectangle {
             return this
         }
 
-        fun oSet(r: idRectangle?): idRectangle? {
+        fun set(r: idRectangle): idRectangle {
             x = r.x
             y = r.y
             w = r.w
@@ -207,7 +206,7 @@ object Rectangle {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idRectangle?
+            val other = obj as idRectangle
             if (java.lang.Float.floatToIntBits(x) != java.lang.Float.floatToIntBits(other.x)) {
                 return false
             }
@@ -219,7 +218,7 @@ object Rectangle {
             } else java.lang.Float.floatToIntBits(h) == java.lang.Float.floatToIntBits(other.h)
         }
 
-        fun oGet(index: Int): Float {
+        operator fun get(index: Int): Float {
             return when (index) {
                 1 -> y
                 2 -> w
@@ -240,32 +239,32 @@ object Rectangle {
             return s
         }
 
-        fun ToVec4(): idVec4? {
+        fun ToVec4(): idVec4 {
             return idVec4(x, y, w, h)
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
         companion object {
-            private val str: Array<CharArray?>? = Array(8) { CharArray(48) }
+            private val str: Array<CharArray> = Array(8) { CharArray(48) }
             private var index = 0
         }
     }
 
-    internal class idRegion  //
+    class idRegion  //
     //
     {
-        protected val rects: idList<idRectangle?>? = idList()
+        protected val rects: idList<idRectangle> = idList()
         fun Empty() {
             rects.Clear()
         }
@@ -273,7 +272,7 @@ object Rectangle {
         fun Contains(xt: Float, yt: Float): Boolean {
             val c = rects.Num()
             for (i in 0 until c) {
-                if (rects.get(i).Contains(xt, yt)) {
+                if (rects[i].Contains(xt, yt)) {
                     return true
                 }
             }
@@ -290,7 +289,7 @@ object Rectangle {
 
         fun GetRect(index: Int): idRectangle? {
             return if (index >= 0 && index < rects.Num()) {
-                rects.get(index)
+                rects[index]
             } else null
         }
     }

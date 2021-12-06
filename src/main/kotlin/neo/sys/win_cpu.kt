@@ -39,19 +39,19 @@ object win_cpu {
 
      ==============================================================
      */
-    val precisionControlField: Array<String?>? = arrayOf(
+    val precisionControlField: Array<String> = arrayOf(
         "Single Precision (24-bits)",
         "Reserved",
         "Double Precision (53-bits)",
         "Double Extended Precision (64-bits)"
     )
-    val roundingControlField: Array<String?>? = arrayOf(
+    val roundingControlField: Array<String> = arrayOf(
         "Round to nearest",
         "Round down",
         "Round up",
         "Round toward zero"
     )
-    val statusWordFlags: Array<bitFlag_s?>? = arrayOf(
+    val statusWordFlags: Array<bitFlag_s> = arrayOf(
         bitFlag_s("Invalid operation", 0),
         bitFlag_s("Denormalized operand", 1),
         bitFlag_s("Divide-by-zero", 2),
@@ -71,7 +71,7 @@ object win_cpu {
 
      ==============================================================
      */
-    var controlWordFlags: Array<bitFlag_s?>? = arrayOf(
+    var controlWordFlags: Array<bitFlag_s> = arrayOf(
         bitFlag_s("Invalid operation", 0),
         bitFlag_s("Denormalized operand", 1),
         bitFlag_s("Divide-by-zero", 2),
@@ -81,7 +81,7 @@ object win_cpu {
         bitFlag_s("Infinity control", 12),
         bitFlag_s("", 0)
     )
-    var fpuString: CharArray? = CharArray(2048)
+    var fpuString: CharArray = CharArray(2048)
 
     /*
      ================
@@ -156,7 +156,7 @@ object win_cpu {
     @Throws(IOException::class)
     fun HasCPUID(): Boolean {
         if (BuildDefines._WIN32) {
-            val cpuid: String?
+            val cpuid: String
             cpuid = wmic("cpu get ProcessorId")
             return !cpuid.isEmpty()
         }
@@ -197,7 +197,7 @@ object win_cpu {
      CPUID
      ================
      */
-    fun CPUID(func: Int, regs: IntArray? /*[4]*/) {
+    fun CPUID(func: Int, regs: IntArray /*[4]*/) {
         throw TODO_Exception()
         //	unsigned regEAX, regEBX, regECX, regEDX;
 //
@@ -428,7 +428,7 @@ object win_cpu {
      returns one of the HT_* flags
      ================
      */
-    fun CPUCount(logicalNum: CInt?, physicalNum: CInt?): Int {
+    fun CPUCount(logicalNum: CInt, physicalNum: CInt): Int {
         throw TODO_Exception()
         //	int statusFlag;
 //	SYSTEM_INFO info;
@@ -515,7 +515,7 @@ object win_cpu {
 //	return statusFlag;
     }
 
-    var fpuState: ByteArray? = ByteArray(128)
+    var fpuState: ByteArray = ByteArray(128)
     var statePtr = fpuState
 
     /*
@@ -651,7 +651,7 @@ object win_cpu {
      ===============
      */
     fun Sys_FPU_PrintStateFlags(
-        ptr: String?,
+        ptr: String,
         ctrl: Int,
         stat: Int,
         tags: Int,
@@ -741,7 +741,7 @@ object win_cpu {
      gets the FPU state without changing the state
      ===============
      */
-    fun Sys_FPU_GetState(): String? {
+    fun Sys_FPU_GetState(): String {
         throw TODO_Exception()
         //	double fpuStack[8] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 //	double *fpuStackPtr = fpuStack;
@@ -952,11 +952,8 @@ object win_cpu {
 //	}
     }
 
-    /**
-     *
-     */
     @Throws(IOException::class)
-    fun wmic(query: String?): String? {
+    fun wmic(query: String): String {
         val result: String
         return ""
         //        Process wmic = Runtime.getRuntime().exec("wmic " + query);
@@ -975,7 +972,7 @@ object win_cpu {
     }
 
     @Throws(IOException::class)
-    fun cmd(query: String?): String? {
+    fun cmd(query: String): String {
         val result: String
         val wmic = Runtime.getRuntime().exec(query)
         BufferedReader(InputStreamReader(wmic.inputStream)).use { reader -> result = reader.readLine() }
@@ -990,5 +987,5 @@ object win_cpu {
 
      ===============================================================================
      */
-    internal class bitFlag_s(var name: String?, var bit: Int)
+    class bitFlag_s(var name: String, var bit: Int)
 }

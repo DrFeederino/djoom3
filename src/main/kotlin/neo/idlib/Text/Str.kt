@@ -286,12 +286,12 @@ object Str {
             return data.toCharArray()
         }
 
-        fun oGet(index: Int): Char {
+        operator fun get(index: Int): Char {
             assert(index >= 0 && index <= len)
             return data[index]
         }
 
-        fun set(index: Int, value: Char): Char {
+        operator fun set(index: Int, value: Char): Char {
             //assert ((index >= 0) && (index <= len));
             if (index == len
                 || 0 == len
@@ -334,14 +334,14 @@ object Str {
         }
 
         //public	friend idStr		operator+( const idStr &a, const idStr &b );
-        fun plus(b: idStr): idStr {
+        operator fun plus(b: idStr): idStr {
             val result = idStr(data)
             result.Append(b.data)
             return result
         }
 
         //public	friend idStr		operator+( const idStr &a, const char *b );
-        fun plus(b: String): idStr {
+        operator fun plus(b: String): idStr {
             val result = idStr(data)
             result.Append(b)
             return result
@@ -355,7 +355,7 @@ object Str {
          ============
          */
         //public	friend idStr		operator+( const idStr &a, const float b );
-        fun plus(b: Float): idStr {
+        operator fun plus(b: Float): idStr {
             val text: String
             val result = idStr(data)
             text = String.format("%f", b)
@@ -365,7 +365,7 @@ object Str {
 
         //public	friend idStr		operator+( const idStr &a, const int b );
         //public	friend idStr		operator+( const idStr &a, const unsigned b );
-        fun plus(b: Long): idStr {
+        operator fun plus(b: Long): idStr {
             val text: String
             val result = idStr(data)
             text = String.format("%d", b)
@@ -373,14 +373,14 @@ object Str {
             return result
         }
 
-        fun plus(b: Boolean): idStr {
+        operator fun plus(b: Boolean): idStr {
             val result = idStr(data)
             result.Append(if (b) "true" else "false")
             return result
         }
 
         //public	friend idStr		operator+( const idStr &a, const char b );
-        fun plus(b: Char): idStr {
+        operator fun plus(b: Char): idStr {
             val result = idStr(data)
             result.Append(b)
             return result

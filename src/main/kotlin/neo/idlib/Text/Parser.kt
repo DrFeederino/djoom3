@@ -368,7 +368,7 @@ object Parser {
                 }
                 // check for precompiler directives
                 if (token.type == Token.TT_PUNCTUATION
-                        && token.oGet(0) == '#' && (token.Length() == 1 || token.oGet(1) == '\u0000')
+                    && token.get(0) == '#' && (token.Length() == 1 || token.get(1) == '\u0000')
                 ) {
                     // read the precompiler directive
                     if (!ReadDirective()) {
@@ -395,7 +395,7 @@ object Parser {
                 if (0 == scriptstack!!.GetFlags() and Lexer.LEXFL_NODOLLARPRECOMPILE) {
                     // check for special precompiler directives
                     if (token.type == Token.TT_PUNCTUATION
-                            && token.oGet(0) == '$' && (token.Length() == 1 || token.oGet(1) == '\u0000')
+                        && token.get(0) == '$' && (token.Length() == 1 || token.get(1) == '\u0000')
                     ) {
                         // read the precompiler directive
                         if (ReadDollarDirective()) {
@@ -958,8 +958,8 @@ object Parser {
         fun SetIncludePath(path: String) {
             includepath.set(path)
             // add trailing path seperator
-            if (includepath.oGet(includepath.Length() - 1) != '\\'
-                    && includepath.oGet(includepath.Length() - 1) != '/'
+            if (includepath.get(includepath.Length() - 1) != '\\'
+                && includepath.get(includepath.Length() - 1) != '/'
             ) {
                 includepath.Append(sys_public.PATHSEPERATOR_STR)
             }
@@ -2548,9 +2548,9 @@ object Parser {
                     }
                 } //if the token is a number or a punctuation
                 else if (token.type == Token.TT_NUMBER || token.type == Token.TT_PUNCTUATION) {
-                    if (token.oGet(0) == '(') {
+                    if (token.get(0) == '(') {
                         indent++
-                    } else if (token.oGet(0) == ')') {
+                    } else if (token.get(0) == ')') {
                         indent--
                     }
                     if (indent <= 0) {

@@ -164,7 +164,7 @@ class RenderWorld {
     }
 
     class renderEntity_s {
-        val shaderParms: FloatArray? =
+        val shaderParms: FloatArray =
             FloatArray(Material.MAX_ENTITY_SHADER_PARMS) // can be used in any way by shader or model generation
         private val DBG_count = DBG_counter++
 
@@ -172,7 +172,7 @@ class RenderWorld {
         // if non-zero, the surface and shadow (if it casts one)
         // will only show up in the specific view, ie: player weapons
         var allowSurfaceInViewID = 0
-        var axis: idMat3?
+        val axis: idMat3
         var bodyId = 0
 
         //
@@ -505,27 +505,27 @@ class RenderWorld {
     }
 
     class renderLight_s {
-        val end: idVec3? = idVec3()
-        val lightCenter: idVec3? = idVec3() // offset the lighting direction for shading and
-        val lightRadius: idVec3? = idVec3() // xyz radius for point lights
-        val origin: idVec3? = idVec3()
-        val right: idVec3? = idVec3()
-        val shaderParms: FloatArray? = FloatArray(Material.MAX_ENTITY_SHADER_PARMS) // can be used in any way by shader
-        val start: idVec3? = idVec3()
+        val end: idVec3 = idVec3()
+        val lightCenter: idVec3 = idVec3() // offset the lighting direction for shading and
+        val lightRadius: idVec3 = idVec3() // xyz radius for point lights
+        val origin: idVec3 = idVec3()
+        val right: idVec3 = idVec3()
+        val shaderParms: FloatArray = FloatArray(Material.MAX_ENTITY_SHADER_PARMS) // can be used in any way by shader
+        val start: idVec3 = idVec3()
 
         // shadows, relative to origin
         //
         // frustum definition for projected lights, all reletive to origin
         // FIXME: we should probably have real plane equations here, and offer
         // a helper function for conversion from this format
-        val target: idVec3? = idVec3()
-        val up: idVec3? = idVec3()
+        val target: idVec3 = idVec3()
+        val up: idVec3 = idVec3()
 
         //
         // if non-zero, the light will only show up in the specific view
         // which can allow player gun gui lights and such to not effect everyone
         var allowLightInViewID = 0
-        var axis: idMat3? = idMat3() // rotation vectors, must be unit length
+        val axis: idMat3 = idMat3() // rotation vectors, must be unit length
 
         //
         // muzzle flash lights will not cast shadows from player and weapon world models
@@ -568,7 +568,7 @@ class RenderWorld {
         constructor()
 
         //copy constructor
-        constructor(other: renderLight_s?) {
+        constructor(other: renderLight_s) {
             axis = idMat3(other.axis)
             origin.set(other.origin)
             suppressLightInViewID = other.suppressLightInViewID
@@ -614,7 +614,7 @@ class RenderWorld {
             referenceSound = temp.referenceSound
         }
 
-        fun atomicSet(shadow: renderLightShadow?) {
+        fun atomicSet(shadow: renderLightShadow) {
             axis = shadow.axis
             origin.set(shadow.origin)
             suppressLightInViewID = shadow.suppressLightInViewID.getVal()
@@ -638,7 +638,7 @@ class RenderWorld {
     }
 
     class renderView_s : SERiAL {
-        val vieworg: idVec3? = idVec3()
+        val vieworg: idVec3 = idVec3()
         private val DBG_count = DBG_counter++
 
         //
@@ -652,14 +652,14 @@ class RenderWorld {
         var fov_y = 0f
         var globalMaterial // used to override everything draw
                 : idMaterial? = null
-        var shaderParms: FloatArray? =
+        var shaderParms: FloatArray =
             FloatArray(RenderWorld.MAX_GLOBAL_SHADER_PARMS) // can be used in any way by shader
 
         //
         // time in milliseconds for shader effects and other time dependent rendering issues
         var time = 0
         var viewID = 0
-        var viewaxis: idMat3? = idMat3() // transformation matrix, view looks down the positive X axis
+        val viewaxis: idMat3 = idMat3() // transformation matrix, view looks down the positive X axis
 
         //
         // sized from 0 to SCREEN_WIDTH / SCREEN_HEIGHT (640/480), not actual resolution

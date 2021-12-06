@@ -14,7 +14,7 @@ import neo.ui.Window.idWindow
 class FieldWindow {
     internal class idFieldWindow : idWindow {
         private var cursorPos = 0
-        private val cursorVar: idStr? = null
+        private val cursorVar: idStr = idStr()
         private var lastCursorPos = 0
         private var lastTextLength = 0
         private var paintOffset = 0
@@ -22,12 +22,12 @@ class FieldWindow {
 
         //
         //
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -49,7 +49,7 @@ class FieldWindow {
                 cursorPos = len
             }
             //            dc->DrawText(&text[paintOffset], scale, 0, foreColor, rect, false, ((flags & WIN_FOCUS) || showCursor) ? cursorPos - paintOffset : -1);
-            dc.DrawText(
+            dc!!.DrawText(
                 text.data.toString().substring(paintOffset),
                 scale,
                 0,
@@ -60,12 +60,12 @@ class FieldWindow {
             )
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
-            if (idStr.Companion.Icmp(_name, "cursorvar") == 0) {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
+            if (idStr.Icmp(_name, "cursorvar") == 0) {
                 ParseString(src, cursorVar)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "showcursor") == 0) {
+            if (idStr.Icmp(_name, "showcursor") == 0) {
                 showCursor = src.ParseBool()
                 return true
             }
@@ -85,12 +85,12 @@ class FieldWindow {
             lastCursorPos = cursorPos
             lastTextLength = len
             paintOffset = 0
-            var tw = dc.TextWidth(text.data, textScale.data, -1)
+            var tw = dc!!.TextWidth(text.data, textScale.data, -1)
             if (tw < textRect.w) {
                 return
             }
             while (tw > textRect.w && len > 0) {
-                tw = dc.TextWidth(text.data, textScale.data, --len)
+                tw = dc!!.TextWidth(text.data, textScale.data, --len)
                 paintOffset++
             }
         }

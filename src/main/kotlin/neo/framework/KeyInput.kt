@@ -386,7 +386,7 @@ object KeyInput {
          returns the localized name of the key for the binding
          ============
          */
-        private val keyName: CharArray? = CharArray(Lib.Companion.MAX_STRING_CHARS)
+        private val keyName: CharArray = CharArray(Lib.Companion.MAX_STRING_CHARS)
 
         @Throws(idException::class)
         fun Init() {
@@ -691,7 +691,7 @@ object KeyInput {
         }
 
         @Throws(idException::class)
-        fun KeysFromBinding(bind: String?): String? {
+        fun KeysFromBinding(bind: String?): String {
             var i: Int
             keyName.get(0) = '\u0000'
             if (bind != null) {
@@ -714,7 +714,7 @@ object KeyInput {
                 idStr.Companion.Copynz(keyName, Common.common.GetLanguageDict().GetString("#str_07133"), keyName.size)
             }
             idStr.Companion.ToLower(keyName)
-            return TempDump.ctos(keyName)
+            return TempDump.ctos(keyName)!!
         }
 
         /*

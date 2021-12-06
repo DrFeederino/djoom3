@@ -209,7 +209,7 @@ object RenderSystem_init {
     val r_showPortals // draw portal outlines in color based on passed / not passed
             : idCVar? = null
     val r_showPrimitives // report vertex/index/draw counts
-            : idCVar? = null
+            : idCVar = null
     val r_showShadowCount // colors screen based on shadow volume depth complexity
             : idCVar? = null
     val r_showShadows // visualize the stencil shadow volumes
@@ -413,9 +413,9 @@ object RenderSystem_init {
     const val MAX_BLENDS = 256 // to keep the accumulation in shorts
 
     //============================================================================
-    val cubeAxis: Array<idMat3?>? = arrayOfNulls<idMat3?>(6)
-    val r_rendererArgs: Array<String?>? = arrayOf("best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null)
-    val r_vidModes: Array<vidmode_s?>? = arrayOf(
+    val cubeAxis: Array<idMat3?> = arrayOfNulls<idMat3?>(6)
+    val r_rendererArgs: Array<String?> = arrayOf("best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null)
+    val r_vidModes: Array<vidmode_s> = arrayOf(
         vidmode_s("Mode  0: 320x240", 320, 240),
         vidmode_s("Mode  1: 400x300", 400, 300),
         vidmode_s("Mode  2: 512x384", 512, 384),
@@ -424,7 +424,8 @@ object RenderSystem_init {
         vidmode_s("Mode  5: 1024x768", 1024, 768),
         vidmode_s("Mode  6: 1152x864", 1152, 864),
         vidmode_s("Mode  7: 1280x1024", 1280, 1024),
-        vidmode_s("Mode  8: 1600x1200", 1600, 1200)
+        vidmode_s("Mode  8: 1600x1200", 1600, 1200),
+        vidmode_s("Mode  9: 1920x1080", 1920, 1080)
     )
 
     /*
@@ -1322,7 +1323,7 @@ object RenderSystem_init {
      will be used instead.
      ====================
      */
-    internal class vidmode_s(var description: String?, var width: Int, var height: Int)
+    class vidmode_s(var description: String, var width: Int, var height: Int)
 
     /*
      =================

@@ -67,7 +67,7 @@ object snd_local {
                 = 0
 
         constructor()
-        constructor(mpwfx: waveformatex_s?) {
+        constructor(mpwfx: waveformatex_s) {
             wFormatTag = mpwfx.wFormatTag
             nChannels = mpwfx.nChannels
             nSamplesPerSec = mpwfx.nSamplesPerSec
@@ -78,7 +78,7 @@ object snd_local {
         }
 
         companion object {
-            private const val SIZE = (java.lang.Short.SIZE
+            const val SIZE = (java.lang.Short.SIZE
                     + java.lang.Short.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
@@ -105,7 +105,7 @@ object snd_local {
                 = 0
 
         companion object {
-            private const val SIZE = (java.lang.Short.SIZE
+            const val SIZE = (java.lang.Short.SIZE
                     + java.lang.Short.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
@@ -118,12 +118,12 @@ object snd_local {
     /* specific waveform format structure for PCM data */
     internal class pcmwaveformat_s : SERiAL {
         var   /*word*/wBitsPerSample = 0
-        var wf: waveformat_s? = null
-        override fun AllocBuffer(): ByteBuffer? {
+        var wf: waveformat_s = waveformat_s()
+        override fun AllocBuffer(): ByteBuffer {
             return ByteBuffer.allocate(BYTES)
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN)
             wf = waveformat_s()
             wf.wFormatTag = java.lang.Short.toUnsignedInt(buffer.getShort())
@@ -134,7 +134,7 @@ object snd_local {
             wBitsPerSample = java.lang.Short.toUnsignedInt(buffer.getShort())
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val data = ByteBuffer.allocate(BYTES)
             data.order(ByteOrder.LITTLE_ENDIAN) //very importante.
             data.putShort(wf.wFormatTag.toShort())
@@ -160,7 +160,7 @@ object snd_local {
     // #endif
     // #define fourcc_riff     mmioFOURCC('R', 'I', 'F', 'F')
     internal class waveformatextensible_s() {
-        var Format: waveformatex_s?
+        var Format: waveformatex_s
 
         //        union {
         //            word wValidBitsPerSample;       /* bits of precision  */
@@ -174,7 +174,7 @@ object snd_local {
         var   /*dword*/dwChannelMask // which channels are */
                 = 0
 
-        constructor(pcmWaveFormat: pcmwaveformat_s?) : this() {
+        constructor(pcmWaveFormat: pcmwaveformat_s) : this() {
             Format.wFormatTag = pcmWaveFormat.wf.wFormatTag
             Format.nChannels = pcmWaveFormat.wf.nChannels
             Format.nSamplesPerSec = pcmWaveFormat.wf.nSamplesPerSec
@@ -208,11 +208,11 @@ object snd_local {
         var   /*fourcc*/fccType // form type or list type
                 : Long = 0
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             return ByteBuffer.allocate(BYTES)
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN)
             ckid = Integer.toUnsignedLong(buffer.getInt())
             cksize = buffer.getInt()
@@ -224,7 +224,7 @@ object snd_local {
             }
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             val data = ByteBuffer.allocate(BYTES)
             data.order(ByteOrder.LITTLE_ENDIAN) //very importante.
             data.putInt(ckid.toInt())
@@ -252,9 +252,9 @@ object snd_local {
      */
     abstract class idSampleDecoder {
         // virtual					~idSampleDecoder() {}
-        abstract fun Decode(sample: idSoundSample?, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer?)
+        abstract fun Decode(sample: idSoundSample, sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer)
         abstract fun ClearDecoder()
-        abstract fun GetSample(): idSoundSample?
+        abstract fun GetSample(): idSoundSample
         abstract fun GetLastDecodeTime(): Int
 
         companion object {
@@ -269,14 +269,14 @@ object snd_local {
 //            sampleDecoderAllocator.Shutdown();
             }
 
-            fun Alloc(): idSampleDecoder? {
+            fun Alloc(): idSampleDecoder {
                 val decoder = idSampleDecoderLocal() //sampleDecoderAllocator.Alloc();
                 decoder.Clear()
                 return decoder
             }
 
-            fun Free(decoder: idSampleDecoder?) {
-                val localDecoder = decoder as idSampleDecoderLocal?
+            fun Free(decoder: idSampleDecoder) {
+                val localDecoder = decoder as idSampleDecoderLocal
                 localDecoder.ClearDecoder()
                 //            sampleDecoderAllocator.Free(localDecoder);
             }
@@ -305,8 +305,8 @@ object snd_local {
     abstract class idAudioHardware {
         //    virtual					~idAudioHardware();
         abstract fun Initialize(): Boolean
-        abstract fun Lock(pDSLockedBuffer: Any?, dwDSLockedBufferSize: Long): Boolean
-        abstract fun Unlock(pDSLockedBuffer: Any?,    /*dword*/dwDSLockedBufferSize: Long): Boolean
+        abstract fun Lock(pDSLockedBuffer: Any, dwDSLockedBufferSize: Long): Boolean
+        abstract fun Unlock(pDSLockedBuffer: Any,    /*dword*/dwDSLockedBufferSize: Long): Boolean
         abstract fun GetCurrentPosition(pdwCurrentWriteCursor: Long): Boolean
 
         // try to write as many sound samples to the device as possible without blocking and prepare for a possible new mixing call
@@ -315,10 +315,10 @@ object snd_local {
         abstract fun Write(flushing: Boolean)
         abstract fun GetNumberOfSpeakers(): Int
         abstract fun GetMixBufferSize(): Int
-        abstract fun GetMixBuffer(): ShortArray?
+        abstract fun GetMixBuffer(): ShortArray
 
         companion object {
-            fun Alloc(): idAudioHardware? {
+            fun Alloc(): idAudioHardware {
                 return idAudioHardwareWIN32()
             }
         }

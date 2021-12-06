@@ -916,7 +916,7 @@ class Anim_Testmodel {
                     } else {
                         // allow map models with underscore prefixes to be tested during development
                         // without appending an ase
-                        if (name.oGet(0) != '_') {
+                        if (name.get(0) != '_') {
                             name.DefaultFileExtension(".ase")
                         }
                         if (name.toString().contains(".ma") || name.toString().contains(".mb")) {

@@ -25,7 +25,7 @@ import java.util.logging.Logger
  *
  */
 object win_glimp {
-    private val ospath: StringBuilder? = StringBuilder(FileSystem_h.MAX_OSPATH)
+    private val ospath: StringBuilder = StringBuilder(FileSystem_h.MAX_OSPATH)
     var errorCallback: GLFWErrorCallback? = null
     var window: Long = 0
     private var initialFrames = 0
@@ -36,7 +36,7 @@ object win_glimp {
      GLW_SetFullScreen
      ===================
      */
-    fun GLW_SetFullScreen(parms: glimpParms_t?): Boolean {
+    fun GLW_SetFullScreen(parms: glimpParms_t): Boolean {
 ////#if 0
 ////	// for some reason, bounds checker claims that windows is
 ////	// writing past the bounds of dm in the get display frequency call
@@ -110,7 +110,7 @@ object win_glimp {
         //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         window = GLFW.glfwCreateWindow(parms.width, parms.height, "Doom 3", 0, 0)
-        val currentMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())
+        val currentMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
         GLFW.glfwSetWindowPos(
             window,
             currentMode.width() / 2 - parms.width / 2,
@@ -177,7 +177,7 @@ object win_glimp {
      parameters and try again.
      ===================
      */
-    fun GLimp_Init(parms: glimpParms_t?): Boolean {
+    fun GLimp_Init(parms: glimpParms_t): Boolean {
 ////	const char	*driverName;
 ////	HDC		hDC;
 ////
@@ -263,7 +263,7 @@ object win_glimp {
     // If the desired mode can't be set satisfactorily, false will be returned.
     // The renderer will then reset the glimpParms to "safe mode" of 640x480
     // fullscreen and try again.  If that also fails, the error will be fatal.
-    fun GLimp_SetScreenParms(parms: glimpParms_t?): Boolean {
+    fun GLimp_SetScreenParms(parms: glimpParms_t): Boolean {
 //        final DisplayMode dm;
 //        final boolean ret;
 //
@@ -351,7 +351,7 @@ object win_glimp {
     // Destroys the rendering context, closes the window, resets the resolution,
     // and resets the gamma ramps.
     fun GLimp_SwapBuffers() {
-        if (RenderSystem_init.r_swapInterval.IsModified()) {
+        if (RenderSystem_init.r_swapInterval!!.IsModified()) {
             RenderSystem_init.r_swapInterval.ClearModified()
 
 //        if (wglSwapIntervalEXT) {
@@ -427,7 +427,7 @@ object win_glimp {
     //        throw new TODO_Exception();
     //    }
     // Returns false if the system only has a single processor
-    fun GLimp_BackEndSleep(): Any? {
+    fun GLimp_BackEndSleep(): Any {
         throw TODO_Exception()
     }
 
@@ -435,7 +435,7 @@ object win_glimp {
         throw TODO_Exception()
     }
 
-    fun GLimp_WakeBackEnd(data: Any?) {
+    fun GLimp_WakeBackEnd(data: Any) {
         throw TODO_Exception()
     }
 
@@ -461,13 +461,13 @@ object win_glimp {
             // return if we're already active
             if (isEnabled && enable) {
                 // decrement log counter and stop if it has reached 0
-                RenderSystem_init.r_logFile.SetInteger(RenderSystem_init.r_logFile.GetInteger() - 1)
+                RenderSystem_init.r_logFile!!.SetInteger(RenderSystem_init.r_logFile.GetInteger() - 1)
                 if (RenderSystem_init.r_logFile.GetInteger() != 0) {
                     return
                 }
                 idLib.common.Printf("closing logfile '%s' after %d frames.\n", ospath, initialFrames)
                 enable = false
-                tr_local.tr.logFile.close()
+                tr_local.tr.logFile!!.close()
                 tr_local.tr.logFile = null
             }
 
@@ -482,8 +482,8 @@ object win_glimp {
 //			ID_TIME_T			aclock;
                     var qpath = ""
                     var i: Int
-                    val path: String?
-                    initialFrames = RenderSystem_init.r_logFile.GetInteger()
+                    val path: String
+                    initialFrames = RenderSystem_init.r_logFile!!.GetInteger()
 
                     // scan for an unused filename
                     i = 0
@@ -501,8 +501,8 @@ object win_glimp {
                     // write the time out to the top of the file
 //			time( &aclock );
 //			newtime = localtime( &aclock );
-                    tr_local.tr.logFile.write(TempDump.atobb(String.format("// %s", Date())))
-                    tr_local.tr.logFile.write(
+                    tr_local.tr.logFile!!.write(TempDump.atobb(String.format("// %s", Date())))
+                    tr_local.tr.logFile!!.write(
                         TempDump.atobb(
                             String.format(
                                 "// %s\n\n",

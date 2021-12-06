@@ -16,6 +16,7 @@ import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.CBool
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Vector.idVec4
 import neo.sys.sys_public.sysEventType_t
@@ -27,7 +28,6 @@ import neo.ui.Rectangle.idRectangle
 import neo.ui.UserInterface.idUserInterface
 import neo.ui.UserInterface.idUserInterface.idUserInterfaceManager
 import neo.ui.Window.idWindow
-import neo.ui.Winvar.idWinStr
 import java.nio.ByteBuffer
 
 /**
@@ -43,31 +43,31 @@ class UserInterfaceLocal {
      */
     class idUserInterfaceLocal : idUserInterface() {
         // friend class idUserInterfaceManagerLocal;
-        private val activateStr: idStr? = idStr()
+        private val activateStr: idStr = idStr()
         private var active = false
         private var bindHandler: idWindow? = null
 
         //
         private var cursorX = 0f
         private var cursorY = 0f
-        private var desktop: idWindow? = null
-        private var interactive = false
+        var desktop: idWindow = idWindow(this)
+        var interactive = false
         private var loading = false
-        private val pendingCmd: idStr? = idStr()
+        private val pendingCmd: idStr = idStr()
 
         //
-        private val source: idStr? = idStr()
-        private val returnCmd: idStr? = idStr()
+        private val source: idStr = idStr()
+        private val returnCmd: idStr = idStr()
 
         //
-        private val state: idDict? = idDict()
+        private val state: idDict = idDict()
 
         //
         private var refs = 1
 
         //
         private var time = 0
-        private val timeStamp: LongArray? = longArrayOf(0)
+        private val timeStamp: LongArray = longArrayOf(0)
         private var uniqued = false
 
         //
@@ -77,18 +77,16 @@ class UserInterfaceLocal {
             return source.toString()
         }
 
-        override fun Comment(): String? {
-            return if (desktop != null) {
-                desktop!!.GetComment()
-            } else ""
+        override fun Comment(): String {
+            return desktop?.GetComment() ?: ""
         }
 
         override fun IsInteractive(): Boolean {
             return interactive
         }
 
-        override fun InitFromFile(qpath: String?, rebuild: Boolean /*= true*/, cache: Boolean /*= true*/): Boolean {
-            if (!(qpath != null && !qpath.isEmpty())) {
+        override fun InitFromFile(qpath: String, rebuild: Boolean /*= true*/, cache: Boolean /*= true*/): Boolean {
+            if (!(qpath != null && qpath.isNotEmpty())) {
                 // FIXME: Memory leak!!
                 return false
             }
@@ -112,7 +110,7 @@ class UserInterfaceLocal {
                 val token = idToken()
                 while (src.ReadToken(token)) {
                     if (idStr.Companion.Icmp(token, "windowDef") == 0) {
-                        desktop.SetDC(UserInterface.uiManagerLocal.dc)
+                        desktop.SetDC(UserInterface.uiManagerLocal.dc!!)
                         if (desktop.Parse(src, rebuild)) {
                             desktop.SetFlag(Window.WIN_DESKTOP)
                             desktop.FixupParms()
@@ -124,12 +122,12 @@ class UserInterfaceLocal {
             } else {
                 desktop.SetDC(UserInterface.uiManagerLocal.dc)
                 desktop.SetFlag(Window.WIN_DESKTOP)
-                desktop.name = idStr("Desktop")
-                desktop.text = idWinStr(Str.va("Invalid GUI: %s", qpath)) //TODO:clean this mess up.
-                desktop.rect.oSet(idRectangle(0.0f, 0.0f, 640.0f, 480.0f))
-                desktop.drawRect.oSet(desktop.rect.data)
-                desktop.foreColor.oSet(idVec4(1.0f, 1.0f, 1.0f, 1.0f))
-                desktop.backColor.oSet(idVec4(0.0f, 0.0f, 0.0f, 1.0f))
+                desktop.name.set("Desktop")
+                desktop.text.set(Str.va("Invalid GUI: %s", qpath)) //TODO:clean this mess up.
+                desktop.rect.set(idRectangle(0.0f, 0.0f, 640.0f, 480.0f))
+                desktop.drawRect.set(desktop.rect.data)
+                desktop.foreColor.set(idVec4(1.0f, 1.0f, 1.0f, 1.0f))
+                desktop.backColor.set(idVec4(0.0f, 0.0f, 0.0f, 1.0f))
                 desktop.SetupFromState()
                 Common.common.Warning("Couldn't load gui: '%s'", qpath)
             }
@@ -141,11 +139,11 @@ class UserInterfaceLocal {
             return true
         }
 
-        override fun HandleEvent(event: sysEvent_s?, _time: Int, updateVisuals: BooleanArray?): String? {
+        override fun HandleEvent(event: sysEvent_s, _time: Int, updateVisuals: CBool): String {
             time = _time
             //            System.out.println(System.nanoTime()+"HandleEvent time="+_time+" "+Common.com_ticNumber);
             if (bindHandler != null && event.evType == sysEventType_t.SE_KEY && event.evValue2 == 1) {
-                val ret = bindHandler.HandleEvent(event, updateVisuals)
+                val ret = bindHandler!!.HandleEvent(event, updateVisuals)
                 bindHandler = null
                 return ret
             }
@@ -164,12 +162,12 @@ class UserInterfaceLocal {
             } else ""
         }
 
-        override fun HandleNamedEvent(namedEvent: String?) {
+        override fun HandleNamedEvent(namedEvent: String) {
             desktop.RunNamedEvent(namedEvent)
         }
 
         override fun Redraw(_time: Int) {
-            if (RenderSystem_init.r_skipGuiShaders.GetInteger() > 5) {
+            if (RenderSystem_init.r_skipGuiShaders!!.GetInteger() > 5) {
                 return
             }
             if (!loading && desktop != null) {
@@ -190,44 +188,44 @@ class UserInterfaceLocal {
             }
         }
 
-        override fun State(): idDict? {
+        override fun State(): idDict {
             return state
         }
 
-        override fun DeleteStateVar(varName: String?) {
+        override fun DeleteStateVar(varName: String) {
             state.Delete(varName)
         }
 
-        override fun SetStateString(varName: String?, value: String?) {
+        override fun SetStateString(varName: String, value: String) {
             state.Set(varName, value)
         }
 
-        override fun SetStateBool(varName: String?, value: Boolean) {
+        override fun SetStateBool(varName: String, value: Boolean) {
             state.SetBool(varName, value)
         }
 
-        override fun SetStateInt(varName: String?, value: Int) {
+        override fun SetStateInt(varName: String, value: Int) {
             state.SetInt(varName, value)
         }
 
-        override fun SetStateFloat(varName: String?, value: Float) {
+        override fun SetStateFloat(varName: String, value: Float) {
             state.SetFloat(varName, value)
         }
 
         // Gets a gui state variable
-        override fun GetStateString(varName: String?, defaultString: String? /*= ""*/): String? {
+        override fun GetStateString(varName: String, defaultString: String /*= ""*/): String {
             return state.GetString(varName, defaultString)
         }
 
-        fun GetStateBool(varName: String?, defaultString: String? /*= "0"*/): Boolean {
+        fun GetStateBool(varName: String, defaultString: String /*= "0"*/): Boolean {
             return state.GetBool(varName, defaultString)
         }
 
-        override fun GetStateInt(varName: String?, defaultString: String? /*= "0"*/): Int {
+        override fun GetStateInt(varName: String, defaultString: String /*= "0"*/): Int {
             return state.GetInt(varName, defaultString)
         }
 
-        override fun GetStateFloat(varName: String?, defaultString: String? /*= "0"*/): Float {
+        override fun GetStateFloat(varName: String, defaultString: String /*= "0"*/): Float {
             return state.GetFloat(varName, defaultString)
         }
 
@@ -247,7 +245,7 @@ class UserInterfaceLocal {
             }
         }
 
-        override fun Activate(activate: Boolean, _time: Int): String? {
+        override fun Activate(activate: Boolean, _time: Int): String {
             time = _time
             active = activate
             if (desktop != null) {
@@ -265,7 +263,7 @@ class UserInterfaceLocal {
             }
         }
 
-        override fun ReadFromDemoFile(f: idDemoFile?) {
+        override fun ReadFromDemoFile(f: idDemoFile) {
 //	idStr work;
             f.ReadDict(state)
             source.set(state.GetString("name"))
@@ -284,7 +282,7 @@ class UserInterfaceLocal {
             var add = true
             val c = UserInterface.uiManagerLocal.demoGuis.Num()
             for (i in 0 until c) {
-                if (UserInterface.uiManagerLocal.demoGuis.get(i) == this) {
+                if (UserInterface.uiManagerLocal.demoGuis[i] == this) {
                     add = false
                     break
                 }
@@ -294,7 +292,7 @@ class UserInterfaceLocal {
             }
         }
 
-        override fun WriteToDemoFile(f: idDemoFile?) {
+        override fun WriteToDemoFile(f: idDemoFile) {
 //	idStr work;
             f.WriteDict(state)
             if (desktop != null) {
@@ -304,14 +302,14 @@ class UserInterfaceLocal {
             f.WriteFloat(cursorY)
         }
 
-        override fun WriteToSaveGame(savefile: idFile?): Boolean {
+        override fun WriteToSaveGame(savefile: idFile): Boolean {
             var len: Int
             var kv: idKeyValue?
             var string: String
             val num = state.GetNumKeyVals()
             savefile.WriteInt(num)
             for (i in 0 until num) {
-                kv = state.GetKeyVal(i)
+                kv = state.GetKeyVal(i)!!
                 len = kv.GetKey().Length()
                 string = kv.GetKey().toString()
                 savefile.WriteInt(len)
@@ -340,7 +338,7 @@ class UserInterfaceLocal {
             return true
         }
 
-        override fun ReadFromSaveGame(savefile: idFile?): Boolean {
+        override fun ReadFromSaveGame(savefile: idFile): Boolean {
             val num: Int
             var i: Int
             var len: Int
@@ -407,23 +405,23 @@ class UserInterfaceLocal {
             return cursorY
         }
 
-        fun GetStateDict(): idDict? {
+        fun GetStateDict(): idDict {
             return state
         }
 
-        fun GetSourceFile(): String? {
+        fun GetSourceFile(): String {
             return source.toString()
         }
 
-        fun  /*ID_TIME_T*/GetTimeStamp(): LongArray? {
+        fun  /*ID_TIME_T*/GetTimeStamp(): LongArray {
             return timeStamp
         }
 
-        fun GetDesktop(): idWindow? {
+        fun GetDesktop(): idWindow {
             return desktop
         }
 
-        fun SetBindHandler(win: idWindow?) {
+        fun SetBindHandler(win: idWindow) {
             bindHandler = win
         }
 
@@ -451,7 +449,7 @@ class UserInterfaceLocal {
             return refs
         }
 
-        fun RecurseSetKeyBindingNames(window: idWindow?) {
+        fun RecurseSetKeyBindingNames(window: idWindow) {
             var i: Int
             val v = window.GetWinVarByName("bind")
             if (v != null) {
@@ -465,31 +463,31 @@ class UserInterfaceLocal {
             }
         }
 
-        fun GetPendingCmd(): idStr? {
+        fun GetPendingCmd(): idStr {
             return pendingCmd
         }
 
-        fun GetReturnCmd(): idStr? {
+        fun GetReturnCmd(): idStr {
             return returnCmd
         }
 
-        override fun GetStateboolean(varName: String?, defaultString: String?): Boolean {
+        override fun GetStateboolean(varName: String, defaultString: String): Boolean {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun oSet(FindGui: idUserInterface?) {
+        override fun oSet(FindGui: idUserInterface) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -503,15 +501,15 @@ class UserInterfaceLocal {
      */
     class idUserInterfaceManagerLocal : idUserInterfaceManager() {
         // friend class idUserInterfaceLocal;
-        private val dc: idDeviceContext? = idDeviceContext()
-        private val demoGuis: idList<idUserInterfaceLocal?>? = idList()
-        private val guis: idList<idUserInterfaceLocal?>? = idList()
-        private val screenRect: idRectangle? = idRectangle()
+        val dc: idDeviceContext = idDeviceContext()
+        val demoGuis: idList<idUserInterfaceLocal> = idList()
+        val guis: idList<idUserInterfaceLocal> = idList()
+        val screenRect: idRectangle = idRectangle()
 
         //
         //
         override fun Init() {
-            screenRect.oSet(idRectangle(0, 0, 640, 480))
+            screenRect.set(idRectangle(0f, 0f, 640f, 480f))
             dc.Init()
         }
 
@@ -521,16 +519,16 @@ class UserInterfaceLocal {
             dc.Shutdown()
         }
 
-        override fun Touch(name: String?) {
+        override fun Touch(name: String) {
             val gui = Alloc()
             gui.InitFromFile(name)
             //	delete gui;
         }
 
-        override fun WritePrecacheCommands(f: idFile?) {
+        override fun WritePrecacheCommands(f: idFile) {
             val c = guis.Num()
             for (i in 0 until c) {
-                val str = String.format("touchGui %s\n", guis.get(i).Name())
+                val str = String.format("touchGui %s\n", guis[i].Name())
                 Common.common.Printf("%s", str)
                 f.Printf("%s", str)
             }
@@ -543,8 +541,8 @@ class UserInterfaceLocal {
         override fun BeginLevelLoad() {
             val c = guis.Num()
             for (i in 0 until c) {
-                if (guis.get(i).GetDesktop().GetFlags() and Window.WIN_MENUGUI == 0) {
-                    guis.get(i).ClearRefs()
+                if (guis[i].GetDesktop().GetFlags() and Window.WIN_MENUGUI == 0) {
+                    guis[i].ClearRefs()
                     /*
                      delete guis[ i ];
                      guis.RemoveIndex( i );
@@ -558,7 +556,7 @@ class UserInterfaceLocal {
             var c = guis.Num()
             var i = 0
             while (i < c) {
-                if (guis.get(i).GetRefs() == 0) {
+                if (guis[i].GetRefs() == 0) {
                     //common.Printf( "purging %s.\n", guis[i].GetSourceFile() );
 
                     // use this to make sure no materials still reference this gui
@@ -566,7 +564,7 @@ class UserInterfaceLocal {
                     for (j in 0 until DeclManager.declManager.GetNumDecls(declType_t.DECL_MATERIAL)) {
                         val material =
                             DeclManager.declManager.DeclByIndex(declType_t.DECL_MATERIAL, j, false) as idMaterial
-                        if (material.GlobalGui() === guis.get(i)) {
+                        if (material.GlobalGui() === guis[i]) {
                             remove = false
                             break
                         }
@@ -587,13 +585,13 @@ class UserInterfaceLocal {
             val c = guis.Num()
             for (i in 0 until c) {
                 if (!all) {
-                    FileSystem_h.fileSystem.ReadFile(guis.get(i).GetSourceFile(), null, ts)
-                    if (ts[0] <= guis.get(i).GetTimeStamp().get(0)) {
+                    FileSystem_h.fileSystem.ReadFile(guis[i].GetSourceFile(), null, ts)
+                    if (ts[0] <= guis[i].GetTimeStamp()[0]) {
                         continue
                     }
                 }
-                guis.get(i).InitFromFile(guis.get(i).GetSourceFile())
-                Common.common.Printf("reloading %s.\n", guis.get(i).GetSourceFile())
+                guis[i].InitFromFile(guis[i].GetSourceFile())
+                Common.common.Printf("reloading %s.\n", guis[i].GetSourceFile())
             }
         }
 
@@ -604,8 +602,8 @@ class UserInterfaceLocal {
             var copies = 0
             var unique = 0
             for (i in 0 until c) {
-                val gui = guis.get(i)
-                val isUnique = guis.get(i).interactive
+                val gui = guis[i]
+                val isUnique = guis[i].interactive
                 if (isUnique) {
                     unique++
                 } else {
@@ -614,10 +612,10 @@ class UserInterfaceLocal {
                 Common.common.Printf(
                     "%6.1fk %4d (%s) %s ( %d transitions )\n",
                     0 / 1024.0f,
-                    guis.get(i).GetRefs(),
+                    guis[i].GetRefs(),
                     if (isUnique) "unique" else "copy",
-                    guis.get(i).GetSourceFile(),
-                    guis.get(i).desktop.NumTransitions()
+                    guis[i].GetSourceFile(),
+                    guis[i].desktop.NumTransitions()
                 )
                 total += 0
             }
@@ -630,7 +628,7 @@ class UserInterfaceLocal {
             )
         }
 
-        override fun CheckGui(qpath: String?): Boolean {
+        override fun CheckGui(qpath: String): Boolean {
             val file = FileSystem_h.fileSystem.OpenFileRead(qpath)
             if (file != null) {
                 FileSystem_h.fileSystem.CloseFile(file)
@@ -639,15 +637,15 @@ class UserInterfaceLocal {
             return false
         }
 
-        override fun Alloc(): idUserInterface? {
+        override fun Alloc(): idUserInterface {
             return idUserInterfaceLocal()
         }
 
-        override fun DeAlloc(gui: idUserInterface?) {
+        override fun DeAlloc(gui: idUserInterface) {
             if (gui != null) {
                 val c = guis.Num()
                 for (i in 0 until c) {
-                    if (guis.get(i) === gui) {
+                    if (guis[i] === gui) {
 //				delete guis[i];
                         guis.RemoveIndex(i)
                         return
@@ -657,7 +655,7 @@ class UserInterfaceLocal {
         }
 
         override fun FindGui(
-            qpath: String?,
+            qpath: String,
             autoLoad: Boolean /*= false*/,
             needInteractive: Boolean /*= false*/,
             forceUnique: Boolean /*= false*/
@@ -665,12 +663,12 @@ class UserInterfaceLocal {
             val c = guis.Num()
             for (i in 0 until c) {
 //		idUserInterfaceLocal gui = guis.oGet(i);
-                if (0 == idStr.Companion.Icmp(guis.get(i).GetSourceFile(), qpath)) {
-                    if (!forceUnique && (needInteractive || guis.get(i).IsInteractive())) {
+                if (0 == idStr.Companion.Icmp(guis[i].GetSourceFile(), qpath)) {
+                    if (!forceUnique && (needInteractive || guis[i].IsInteractive())) {
                         break
                     }
-                    guis.get(i).AddRef()
-                    return guis.get(i)
+                    guis[i].AddRef()
+                    return guis[i]
                 }
             }
             if (autoLoad) {
@@ -685,21 +683,21 @@ class UserInterfaceLocal {
             return null
         }
 
-        override fun FindDemoGui(qpath: String?): idUserInterface? {
+        override fun FindDemoGui(qpath: String): idUserInterface? {
             val c = demoGuis.Num()
             for (i in 0 until c) {
-                if (0 == idStr.Companion.Icmp(demoGuis.get(i).GetSourceFile(), qpath)) {
-                    return demoGuis.get(i)
+                if (0 == idStr.Companion.Icmp(demoGuis[i].GetSourceFile(), qpath)) {
+                    return demoGuis[i]
                 }
             }
             return null
         }
 
-        override fun AllocListGUI(): idListGUI? {
+        override fun AllocListGUI(): idListGUI {
             return idListGUILocal()
         }
 
-        override fun FreeListGUI(listgui: idListGUI?) {
+        override fun FreeListGUI(listgui: idListGUI) {
 //            delete listgui;
             listgui.Clear()
         }

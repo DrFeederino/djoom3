@@ -27,11 +27,11 @@ object edit_public {
 
     fun RadiantShutdown() {}
     fun RadiantRun() {}
-    fun RadiantPrint(text: String?) {}
-    fun RadiantSync(mapName: String?, viewOrg: idVec3?, viewAngles: idAngles?) {}
+    fun RadiantPrint(text: String) {}
+    fun RadiantSync(mapName: String, viewOrg: idVec3, viewAngles: idAngles) {}
 
     // in-game Light Editor
-    fun LightEditorInit(spawnArgs: idDict?) {
+    fun LightEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The Light Editor only runs on Win32\n")
     }
 
@@ -39,7 +39,7 @@ object edit_public {
     fun LightEditorRun() {}
 
     // in-game Sound Editor
-    fun SoundEditorInit(spawnArgs: idDict?) {
+    fun SoundEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The Sound Editor only runs on Win32\n")
     }
 
@@ -47,7 +47,7 @@ object edit_public {
     fun SoundEditorRun() {}
 
     // in-game Articulated Figure Editor
-    fun AFEditorInit(spawnArgs: idDict?) {
+    fun AFEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The Articulated Figure Editor only runs on Win32\n")
     }
 
@@ -55,7 +55,7 @@ object edit_public {
     fun AFEditorRun() {}
 
     // in-game Particle Editor
-    fun ParticleEditorInit(spawnArgs: idDict?) {
+    fun ParticleEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The Particle Editor only runs on Win32\n")
     }
 
@@ -63,7 +63,7 @@ object edit_public {
     fun ParticleEditorRun() {}
 
     // in-game PDA Editor
-    fun PDAEditorInit(spawnArgs: idDict?) {
+    fun PDAEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The PDA editor only runs on Win32\n")
     }
 
@@ -71,7 +71,7 @@ object edit_public {
     fun PDAEditorRun() {}
 
     // in-game Script Editor
-    fun ScriptEditorInit(spawnArgs: idDict?) {
+    fun ScriptEditorInit(spawnArgs: idDict) {
         Common.common.Printf("The Script Editor only runs on Win32\n")
     }
 
@@ -79,7 +79,7 @@ object edit_public {
     fun ScriptEditorRun() {}
 
     // in-game Declaration Browser
-    fun DeclBrowserInit(spawnArgs: idDict?) {
+    fun DeclBrowserInit(spawnArgs: idDict) {
         Common.common.Printf("The Declaration Browser only runs on Win32\n")
     }
 
@@ -94,13 +94,13 @@ object edit_public {
 
     fun GUIEditorShutdown() {}
     fun GUIEditorRun() {}
-    fun GUIEditorHandleMessage(msg: Any?): Boolean {
+    fun GUIEditorHandleMessage(msg: Any): Boolean {
         return false
     }
 
     // Script Debugger
     fun DebuggerClientLaunch() {}
-    fun DebuggerClientInit(cmdline: String?) {
+    fun DebuggerClientInit(cmdline: String) {
         Common.common.Printf("The Script Debugger Client only runs on Win32\n")
     }
 
@@ -109,8 +109,8 @@ object edit_public {
     }
 
     fun DebuggerServerShutdown() {}
-    fun DebuggerServerPrint(text: String?) {}
-    fun DebuggerServerCheckBreakpoint(interpreter: idInterpreter?, program: idProgram?, instructionPointer: Int) {}
+    fun DebuggerServerPrint(text: String) {}
+    fun DebuggerServerCheckBreakpoint(interpreter: idInterpreter, program: idProgram, instructionPointer: Int) {}
 
     //Material Editor
     fun MaterialEditorInit() {
@@ -119,5 +119,5 @@ object edit_public {
 
     fun MaterialEditorRun() {}
     fun MaterialEditorShutdown() {}
-    fun MaterialEditorPrintConsole(msg: String?) {}
+    fun MaterialEditorPrintConsole(msg: String) {}
 }

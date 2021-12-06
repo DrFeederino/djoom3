@@ -34,8 +34,8 @@ import java.nio.*
  *
  */
 object GameSSDWindow {
-    val ASTEROID_MATERIAL: String? = "game/SSD/asteroid"
-    val ASTRONAUT_MATERIAL: String? = "game/SSD/astronaut"
+    val ASTEROID_MATERIAL: String = "game/SSD/asteroid"
+    val ASTRONAUT_MATERIAL: String = "game/SSD/astronaut"
 
     //
     /*
@@ -43,8 +43,8 @@ object GameSSDWindow {
      * SSDCrossHair
      ****************************************************************************
      */
-    val CROSSHAIR_STANDARD_MATERIAL: String? = "game/SSD/crosshair_standard"
-    val CROSSHAIR_SUPER_MATERIAL: String? = "game/SSD/crosshair_super"
+    val CROSSHAIR_STANDARD_MATERIAL: String = "game/SSD/crosshair_standard"
+    val CROSSHAIR_SUPER_MATERIAL: String = "game/SSD/crosshair_super"
     const val ENTITY_START_DIST = 3000
     const val EXPLOSION_MATERIAL_COUNT = 2
 
@@ -89,14 +89,14 @@ object GameSSDWindow {
 
     //
     const val POWERUP_MATERIAL_COUNT = 6
-    val PROJECTILE_MATERIAL: String? = "game/SSD/fball"
+    val PROJECTILE_MATERIAL: String = "game/SSD/fball"
     const val V_HEIGHT = 480.0f
 
     //
     const val V_WIDTH = 640.0f
     const val Z_FAR = 4000.0f
     const val Z_NEAR = 100.0f
-    val explosionMaterials: Array<String?>? = arrayOf(
+    val explosionMaterials: Array<String> = arrayOf(
         "game/SSD/fball",
         "game/SSD/teleport"
     )
@@ -106,7 +106,7 @@ object GameSSDWindow {
      * SSDPowerup
      ****************************************************************************
      */
-    val powerupMaterials /*[][2]*/: Array<Array<String?>?>? = arrayOf(
+    val powerupMaterials /*[][2]*/: Array<Array<String>> = arrayOf(
         arrayOf("game/SSD/powerupHealthClosed", "game/SSD/powerupHealthOpen"),
         arrayOf("game/SSD/powerupSuperBlasterClosed", "game/SSD/powerupSuperBlasterOpen"),
         arrayOf("game/SSD/powerupNukeClosed", "game/SSD/powerupNukeOpen"),
@@ -123,19 +123,19 @@ object GameSSDWindow {
     class SSDCrossHair  //
     {
         //	};
-        var crosshairMaterial: Array<idMaterial?>? = arrayOfNulls<idMaterial?>(CROSSHAIR_COUNT)
+        var crosshairMaterial: Array<idMaterial?> = arrayOfNulls<idMaterial?>(CROSSHAIR_COUNT)
         var crosshairWidth = 0f
         var crosshairHeight = 0f
         var currentCrosshair = 0
 
         //				~SSDCrossHair();
-        fun WriteToSaveGame(savefile: idFile?) {
+        fun WriteToSaveGame(savefile: idFile) {
             savefile.WriteInt(currentCrosshair)
             savefile.WriteFloat(crosshairWidth)
             savefile.WriteFloat(crosshairHeight)
         }
 
-        fun ReadFromSaveGame(savefile: idFile?) {
+        fun ReadFromSaveGame(savefile: idFile) {
             InitCrosshairs()
             currentCrosshair = savefile.ReadInt()
             crosshairWidth = savefile.ReadFloat()
@@ -151,7 +151,7 @@ object GameSSDWindow {
             currentCrosshair = CROSSHAIR_STANDARD
         }
 
-        fun Draw(dc: idDeviceContext?, cursor: idVec2?) {
+        fun Draw(dc: idDeviceContext, cursor: idVec2) {
             dc.DrawMaterial(
                 cursor.x - crosshairWidth / 2, cursor.y - crosshairHeight / 2,
                 crosshairWidth, crosshairHeight,
@@ -174,13 +174,13 @@ object GameSSDWindow {
      ****************************************************************************
      */
     open class SSDEntity {
-        val position: idVec3? = idVec3()
+        val position: idVec3 = idVec3()
         var currentTime = 0
 
         //
         var destroyed = false
         var elapsed = 0
-        var foreColor: idVec4? = null
+        val foreColor: idVec4 = null
 
         //
         var game: idGameSSDWindow? = null
@@ -829,7 +829,7 @@ object GameSSDWindow {
             text = idStr(Str.va("%d", _points))
             var width = 0f
             for (i in 0 until text.Length()) {
-                width += game.GetDC().CharWidth(text.oGet(i), textScale).toFloat()
+                width += game.GetDC().CharWidth(text.get(i), textScale).toFloat()
             }
             size.set(0f, 0f)
 

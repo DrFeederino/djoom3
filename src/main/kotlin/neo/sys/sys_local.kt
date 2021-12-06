@@ -19,13 +19,13 @@ import java.util.*
  *
  */
 object sys_local {
-    val sysLanguageNames: Array<String?>? = arrayOf(
+    val sysLanguageNames: Array<String?> = arrayOf(
         "english", "spanish", "italian", "german", "french", "russian",
         "polish", "korean", "japanese", "chinese", null
     )
 
     //
-    val sys_lang: idCVar? = idCVar(
+    val sys_lang: idCVar = idCVar(
         "sys_lang",
         "english",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
@@ -33,7 +33,7 @@ object sys_local {
         sysLanguageNames,
         ArgCompletion_String(sysLanguageNames)
     )
-    var sysLocal: idSysLocal? = idSysLocal()
+    var sysLocal: idSysLocal = idSysLocal()
 
     /*
      =================
@@ -43,12 +43,12 @@ object sys_local {
     var timeString //= new char[MAX_STRING_CHARS];
             : String? = null
 
-    fun Sys_TimeStampToStr(   /*ID_TIME_T*/timeStamp: Long): String? {
+    fun Sys_TimeStampToStr(   /*ID_TIME_T*/timeStamp: Long): String {
 //        timeString[0] = '\0';
 
 //        tm time = localtime(timeStamp);
         val time = Date()
-        val out: String?
+        val out: String
         val lang = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
         out = if (lang.Icmp("english") == 0) {
             // english gets "month/day/year  hour:min" + "am" or "pm"
@@ -98,17 +98,17 @@ object sys_local {
 
      ==============================================================
      */
-    internal class idSysLocal : idSys() {
-        override fun DebugPrintf(fmt: String?, vararg arg: Any?) {
+    class idSysLocal : idSys() {
+        override fun DebugPrintf(fmt: String, vararg arg: Any) {
             win_main.Sys_DebugVPrintf(fmt, *arg)
         }
 
-        override fun DebugVPrintf(fmt: String?, vararg arg: Any?) {
+        override fun DebugVPrintf(fmt: String, vararg arg: Any) {
             win_main.Sys_DebugVPrintf(fmt, *arg)
         }
 
         override fun GetClockTicks(): Double {
-            return win_cpu.Sys_GetClockTicks()
+            return win_cpu.Sys_GetClockTicks().toDouble()
         }
 
         override fun ClockTicksPerSecond(): Double {
@@ -119,11 +119,11 @@ object sys_local {
             return win_main.Sys_GetProcessorId()
         }
 
-        override fun GetProcessorString(): String? {
+        override fun GetProcessorString(): String {
             return win_main.Sys_GetProcessorString()
         }
 
-        override fun FPU_GetState(): String? {
+        override fun FPU_GetState(): String {
             return win_cpu.Sys_FPU_GetState()
         }
 
@@ -143,11 +143,11 @@ object sys_local {
             win_cpu.Sys_FPU_EnableExceptions(exceptions)
         }
 
-        override fun LockMemory(ptr: Any?, bytes: Int): Boolean {
+        override fun LockMemory(ptr: Any, bytes: Int): Boolean {
             return win_shared.Sys_LockMemory(ptr, bytes)
         }
 
-        override fun UnlockMemory(ptr: Any?, bytes: Int): Boolean {
+        override fun UnlockMemory(ptr: Any, bytes: Int): Boolean {
             return win_shared.Sys_UnlockMemory(ptr, bytes)
         }
 
@@ -155,11 +155,11 @@ object sys_local {
             win_shared.Sys_GetCallStack(callStack, callStackSize)
         }
 
-        override fun GetCallStackStr(callStack: Long, callStackSize: Int): String? {
+        override fun GetCallStackStr(callStack: Long, callStackSize: Int): String {
             return win_shared.Sys_GetCallStackStr(callStack, callStackSize)
         }
 
-        override fun GetCallStackCurStr(depth: Int): String? {
+        override fun GetCallStackCurStr(depth: Int): String {
             return win_shared.Sys_GetCallStackCurStr(depth)
         }
 
@@ -167,11 +167,11 @@ object sys_local {
             win_shared.Sys_ShutdownSymbols()
         }
 
-        override fun DLL_Load(dllName: String?): Int {
+        override fun DLL_Load(dllName: String): Int {
             return win_main.Sys_DLL_Load(dllName)
         }
 
-        override fun DLL_GetProcAddress(dllHandle: Int, procName: String?): Any? {
+        override fun DLL_GetProcAddress(dllHandle: Int, procName: String): Any {
             return win_main.Sys_DLL_GetProcAddress(dllHandle, procName)
         }
 
@@ -179,7 +179,7 @@ object sys_local {
             win_main.Sys_DLL_Unload(dllHandle)
         }
 
-        override fun DLL_GetFileName(baseName: String?, dllName: Array<String?>?, maxLength: Int) {
+        override fun DLL_GetFileName(baseName: String, dllName: Array<String>, maxLength: Int) {
             if (BuildDefines._WIN32) {
                 idStr.Companion.snPrintf(dllName, maxLength, "%s" + sys_public.CPUSTRING + ".dll", baseName)
             } else if (BuildDefines.__linux__) {
@@ -193,7 +193,7 @@ object sys_local {
             }
         }
 
-        override fun GenerateMouseButtonEvent(button: Int, down: Boolean): sysEvent_s? {
+        override fun GenerateMouseButtonEvent(button: Int, down: Boolean): sysEvent_s {
             val ev = sysEvent_s()
             ev.evType = sysEventType_t.SE_KEY
             ev.evValue = KeyInput.K_MOUSE1 + button - 1
@@ -203,7 +203,7 @@ object sys_local {
             return ev
         }
 
-        override fun GenerateMouseMoveEvent(deltax: Int, deltay: Int): sysEvent_s? {
+        override fun GenerateMouseMoveEvent(deltax: Int, deltay: Int): sysEvent_s {
             val ev = sysEvent_s()
             ev.evType = sysEventType_t.SE_MOUSE
             ev.evValue = deltax
@@ -213,7 +213,7 @@ object sys_local {
             return ev
         }
 
-        override fun OpenURL(url: String?, doExit: Boolean) {
+        override fun OpenURL(url: String, doExit: Boolean) {
             throw TODO_Exception()
             //            HWND wnd;
 //
@@ -240,7 +240,7 @@ object sys_local {
 //            }
         }
 
-        override fun StartProcess(exePath: String?, doExit: Boolean) {
+        override fun StartProcess(exePath: String, doExit: Boolean) {
             throw TODO_Exception()
             //            char[] szPathOrig = new char[_MAX_PATH];
 //            STARTUPINFO si;

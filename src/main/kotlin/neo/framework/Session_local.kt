@@ -1832,16 +1832,16 @@ object Session_local {
             val len = inFileName.Length()
             i = 0
             while (i < len) {
-                if ("',.~!@#$%^&*()[]{}<>\\|/=?+;:-'\"".indexOf(inFileName.oGet(i)) > -1) {
+                if ("',.~!@#$%^&*()[]{}<>\\|/=?+;:-'\"".indexOf(inFileName.get(i)) > -1) {
                     // random junk
                     saveFileName.Append('_')
-                } else if (inFileName.oGet(i).code >= 128) {
+                } else if (inFileName.get(i).code >= 128) {
                     // high ascii chars
                     saveFileName.Append('_')
-                } else if (inFileName.oGet(i) == ' ') {
+                } else if (inFileName.get(i) == ' ') {
                     saveFileName.Append('_')
                 } else {
-                    saveFileName.Append(inFileName.oGet(i))
+                    saveFileName.Append(inFileName.get(i))
                 }
                 i++
             }

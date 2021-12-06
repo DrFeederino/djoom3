@@ -3001,7 +3001,7 @@ object Image {
             while (image != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     // the built in's, like _white and _flat always match the other options
-                    if (name.oGet(0) == '_') {
+                    if (name.get(0) == '_') {
                         return image
                     }
                     if (image.cubeFiles != cubeMap) {

@@ -10,6 +10,7 @@ import neo.framework.KeyInput
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
+import neo.idlib.containers.CBool
 import neo.idlib.math.Vector.idVec4
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
@@ -33,31 +34,31 @@ class SliderWindow {
         private val cvarGroup: idWinStr? = null
 
         //
-        private val cvarStr: idWinStr? = idWinStr()
+        private val cvarStr: idWinStr = idWinStr()
         private var cvar_init = false
         private var high = 0f
         private val lastValue = 0f
-        private val liveUpdate: idWinBool? = idWinBool()
+        private val liveUpdate: idWinBool = idWinBool()
         private var low = 0f
         private var scrollbar = false
         private var stepSize = 0f
         private var thumbHeight = 0f
         private var thumbMat: idMaterial? = null
-        private val thumbRect: idRectangle? = idRectangle()
-        private val thumbShader: idStr? = idStr()
+        private val thumbRect: idRectangle = idRectangle()
+        private val thumbShader: idStr = idStr()
         private var thumbWidth = 0f
-        private val value: idWinFloat? = idWinFloat()
+        private val value: idWinFloat = idWinFloat()
         private var vertical = false
         private var verticalFlip = false
 
         //
         //
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -65,25 +66,25 @@ class SliderWindow {
 
         //	// virtual				~idSliderWindow();
         fun InitWithDefaults(
-            _name: String?,
-            _rect: idRectangle?,
-            _foreColor: idVec4?,
-            _matColor: idVec4?,
-            _background: String?,
-            thumbShader: String?,
+            _name: String,
+            _rect: idRectangle,
+            _foreColor: idVec4,
+            _matColor: idVec4,
+            _background: String,
+            thumbShader: String,
             _vertical: Boolean,
             _scrollbar: Boolean
         ) {
             SetInitialState(_name)
-            rect.oSet(_rect)
-            foreColor.oSet(_foreColor)
-            matColor.oSet(_matColor)
+            rect.set(_rect)
+            foreColor.set(_foreColor)
+            matColor.set(_matColor)
             thumbMat = DeclManager.declManager.FindMaterial(thumbShader)
-            thumbMat.SetSort(Material.SS_GUI.toFloat())
-            thumbWidth = thumbMat.GetImageWidth().toFloat()
-            thumbHeight = thumbMat.GetImageHeight().toFloat()
+            thumbMat!!.SetSort(Material.SS_GUI.toFloat())
+            thumbWidth = thumbMat!!.GetImageWidth().toFloat()
+            thumbHeight = thumbMat!!.GetImageHeight().toFloat()
             background = DeclManager.declManager.FindMaterial(_background)
-            background.SetSort(Material.SS_GUI.toFloat())
+            background!!.SetSort(Material.SS_GUI.toFloat())
             vertical = _vertical
             scrollbar = _scrollbar
             flags = flags or Window.WIN_HOLDCAPTURE
@@ -112,7 +113,7 @@ class SliderWindow {
         }
 
         override fun GetWinVarByName(
-            _name: String?,
+            _name: String,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
@@ -130,7 +131,7 @@ class SliderWindow {
             } else super.GetWinVarByName(_name, winLookup, owner)
         }
 
-        override fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
             if (!(event.evType == sysEventType_t.SE_KEY && event.evValue2 != 0)) {
                 return ""
             }
@@ -147,7 +148,7 @@ class SliderWindow {
                 value.data = value.data - stepSize
             }
             if (buddyWin != null) {
-                buddyWin.HandleBuddyUpdate(this)
+                buddyWin!!.HandleBuddyUpdate(this)
             } else {
                 gui.SetStateFloat(cvarStr.data.toString(), value.data)
                 UpdateCvar(false)
@@ -159,9 +160,9 @@ class SliderWindow {
             super.PostParse()
             value.data = 0f
             thumbMat = DeclManager.declManager.FindMaterial(thumbShader)
-            thumbMat.SetSort(Material.SS_GUI.toFloat())
-            thumbWidth = thumbMat.GetImageWidth().toFloat()
-            thumbHeight = thumbMat.GetImageHeight().toFloat()
+            thumbMat!!.SetSort(Material.SS_GUI.toFloat())
+            thumbWidth = thumbMat!!.GetImageWidth().toFloat()
+            thumbHeight = thumbMat!!.GetImageHeight().toFloat()
             //vertical = state.GetBool("vertical");
             //scrollbar = state.GetBool("scrollbar");
             flags = flags or (Window.WIN_HOLDCAPTURE or Window.WIN_CANFOCUS)
@@ -174,8 +175,8 @@ class SliderWindow {
                 return
             }
             if (0f == thumbWidth || 0f == thumbHeight) {
-                thumbWidth = thumbMat.GetImageWidth().toFloat()
-                thumbHeight = thumbMat.GetImageHeight().toFloat()
+                thumbWidth = thumbMat!!.GetImageWidth().toFloat()
+                thumbHeight = thumbMat!!.GetImageHeight().toFloat()
             }
             UpdateCvar(true)
             if (value.data > high) {
@@ -187,7 +188,7 @@ class SliderWindow {
             if (range <= 0.0f) {
                 return
             }
-            var thumbPos: Float = if (range != 0f) (value.data - low) / range else 0
+            var thumbPos: Float = if (range != 0f) (value.data - low) / range else 0f
             if (vertical) {
                 if (verticalFlip) {
                     thumbPos = 1f - thumbPos
@@ -213,13 +214,20 @@ class SliderWindow {
                 color.set(hoverColor.data)
                 hover = true
             }
-            dc.DrawMaterial(thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat, color)
+            dc!!.DrawMaterial(thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat!!, color)
             if (flags and Window.WIN_FOCUS != 0) {
-                dc.DrawRect(thumbRect.x + 1.0f, thumbRect.y + 1.0f, thumbRect.w - 2.0f, thumbRect.h - 2.0f, 1.0f, color)
+                dc!!.DrawRect(
+                    thumbRect.x + 1.0f,
+                    thumbRect.y + 1.0f,
+                    thumbRect.w - 2.0f,
+                    thumbRect.h - 2.0f,
+                    1.0f,
+                    color
+                )
             }
         }
 
-        override fun DrawBackground(_drawRect: idRectangle?) {
+        override fun DrawBackground(_drawRect: idRectangle) {
             if (null == cvar && null == buddyWin) {
                 return
             }
@@ -239,7 +247,7 @@ class SliderWindow {
             super.DrawBackground(r)
         }
 
-        override fun RouteMouseCoords(xd: Float, yd: Float): String? {
+        override fun RouteMouseCoords(xd: Float, yd: Float): String {
             var pct: Float
             if (TempDump.NOT((flags and Window.WIN_CAPTURE).toDouble())) {
                 return ""
@@ -284,7 +292,7 @@ class SliderWindow {
                 }
             }
             if (buddyWin != null) {
-                buddyWin.HandleBuddyUpdate(this)
+                buddyWin!!.HandleBuddyUpdate(this)
             } else {
                 gui.SetStateFloat(cvarStr.data.toString(), value.data)
             }
@@ -292,36 +300,36 @@ class SliderWindow {
             return ""
         }
 
-        override fun Activate(activate: Boolean, act: idStr?) {
+        override fun Activate(activate: Boolean, act: idStr) {
             super.Activate(activate, act)
             if (activate) {
                 UpdateCvar(true, true)
             }
         }
 
-        override fun SetBuddy(buddy: idWindow?) {
+        override fun SetBuddy(buddy: idWindow) {
             buddyWin = buddy
         }
 
-        override fun RunNamedEvent(eventName: String?) {
+        override fun RunNamedEvent(eventName: String) {
             val event: idStr
             val group: idStr
             if (0 == idStr.Companion.Cmpn(eventName, "cvar read ", 10)) {
                 event = idStr(eventName)
                 group = idStr(event.Mid(10, event.Length() - 10))
-                if (TempDump.NOT(group.Cmp(cvarGroup.data).toDouble())) {
+                if (TempDump.NOT(group.Cmp(cvarGroup!!.data).toDouble())) {
                     UpdateCvar(true, true)
                 }
             } else if (0 == idStr.Companion.Cmpn(eventName, "cvar write ", 11)) {
                 event = idStr(eventName)
                 group = idStr(event.Mid(11, event.Length() - 11))
-                if (TempDump.NOT(group.Cmp(cvarGroup.data).toDouble())) {
+                if (TempDump.NOT(group.Cmp(cvarGroup!!.data).toDouble())) {
                     UpdateCvar(false, true)
                 }
             }
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
             if (idStr.Companion.Icmp(_name, "stepsize") == 0 || idStr.Companion.Icmp(_name, "step") == 0) {
                 stepSize = src.ParseFloat()
                 return true
@@ -403,13 +411,13 @@ class SliderWindow {
                 return
             }
             if (force || liveUpdate.oCastBoolean()) {
-                value.data = cvar.GetFloat()
+                value.data = cvar!!.GetFloat()
                 if (value.data != gui.State().GetFloat(cvarStr.data.toString())) {
                     if (read) {
                         gui.SetStateFloat(cvarStr.data.toString(), value.data)
                     } else {
                         value.data = gui.State().GetFloat(cvarStr.data.toString())
-                        cvar.SetFloat(value.data)
+                        cvar!!.SetFloat(value.data)
                     }
                 }
             }

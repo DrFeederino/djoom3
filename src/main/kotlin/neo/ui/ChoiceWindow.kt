@@ -12,6 +12,7 @@ import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.CBool
 import neo.idlib.containers.idStrList
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
@@ -31,32 +32,32 @@ import neo.ui.Winvar.idWinVar
 class ChoiceWindow {
     class idChoiceWindow : idWindow {
         private var choiceType = 0
-        private val choiceVals: idWinStr? = idWinStr()
-        private val choices: idStrList? = idStrList()
-        private val choicesStr: idWinStr? = idWinStr()
+        private val choiceVals: idWinStr = idWinStr()
+        private val choices: idStrList = idStrList()
+        private val choicesStr: idWinStr = idWinStr()
         private var currentChoice = 0
         private var cvar: idCVar? = null
-        private val cvarStr: idWinStr? = idWinStr()
+        private val cvarStr: idWinStr = idWinStr()
 
         //
-        private val guiStr: idWinStr? = idWinStr()
-        private val latchedChoices: idStr? = idStr()
-        private val latchedVals: idStr? = idStr()
+        private val guiStr: idWinStr = idWinStr()
+        private val latchedChoices: idStr = idStr()
+        private val latchedVals: idStr = idStr()
 
         //
-        private val liveUpdate: idWinBool? = idWinBool()
-        private val updateGroup: idWinStr? = idWinStr()
-        private val updateStr: idMultiWinVar? = idMultiWinVar()
-        private val values: idStrList? = idStrList()
+        private val liveUpdate: idWinBool = idWinBool()
+        private val updateGroup: idWinStr = idWinStr()
+        private val updateStr: idMultiWinVar = idMultiWinVar()
+        private val values: idStrList = idStrList()
 
         //
         //
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -64,7 +65,7 @@ class ChoiceWindow {
 
         //	virtual				~idChoiceWindow();
         //
-        override fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
             val key: Int
             var runAction = false
             var runAction2 = false
@@ -102,7 +103,7 @@ class ChoiceWindow {
                 key = event.evValue
                 var potentialChoice = -1
                 for (i in 0 until choices.size()) {
-                    if (key.uppercaseChar() == choices.get(i).oGet(0).uppercaseChar()) {
+                    if (Char(key).uppercaseChar() == choices[i][0].uppercaseChar()) {
                         if (i < currentChoice && potentialChoice < 0) {
                             potentialChoice = i
                         } else if (i > currentChoice) {
@@ -124,11 +125,11 @@ class ChoiceWindow {
                 RunScript(TempDump.etoi(ON.ON_ACTION))
             }
             if (choiceType == 0) {
-                cvarStr.Set(Str.va("%d", currentChoice))
+                cvarStr.set(Str.va("%d", currentChoice))
             } else if (values.size() != 0) {
-                cvarStr.Set(values.get(currentChoice))
+                cvarStr.set(values[currentChoice])
             } else {
-                cvarStr.Set(choices.get(currentChoice))
+                cvarStr.set(choices[currentChoice])
             }
             UpdateVars(false)
             if (runAction2) {
@@ -154,12 +155,12 @@ class ChoiceWindow {
             // FIXME: It'd be really cool if textAlign worked, but a lot of the guis have it set wrong because it used to not work
             textAlign = 0.toChar()
             if (textShadow.code != 0) {
-                val shadowText = choices.get(currentChoice)
+                val shadowText = choices[currentChoice]
                 val shadowRect = idRectangle(textRect)
                 shadowText.RemoveColors()
                 shadowRect.x += textShadow.code.toFloat()
                 shadowRect.y += textShadow.code.toFloat()
-                dc.DrawText(shadowText, textScale.data, textAlign.code, Lib.Companion.colorBlack, shadowRect, false, -1)
+                dc!!.DrawText(shadowText, textScale.data, textAlign.code, Lib.colorBlack, shadowRect, false, -1)
             }
             if (hover && TempDump.NOT(noEvents) && Contains(gui.CursorX(), gui.CursorY())) {
                 color = hoverColor.oCastIdVec4()
@@ -169,10 +170,10 @@ class ChoiceWindow {
             if (flags and Window.WIN_FOCUS != 0) {
                 color = hoverColor.oCastIdVec4()
             }
-            dc.DrawText(choices.get(currentChoice), textScale.data, textAlign.code, color, textRect, false, -1)
+            dc!!.DrawText(choices[currentChoice], textScale.data, textAlign.code, color, textRect, false, -1)
         }
 
-        override fun Activate(activate: Boolean, act: idStr?) {
+        override fun Activate(activate: Boolean, act: idStr) {
             super.Activate(activate, act)
             if (activate) {
                 // sets the gui state based on the current choice the window contains
@@ -181,40 +182,40 @@ class ChoiceWindow {
         }
 
         override fun GetWinVarByName(
-            _name: String?,
+            _name: String,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
-            if (idStr.Companion.Icmp(_name, "choices") == 0) {
+            if (idStr.Icmp(_name, "choices") == 0) {
                 return choicesStr
             }
-            if (idStr.Companion.Icmp(_name, "values") == 0) {
+            if (idStr.Icmp(_name, "values") == 0) {
                 return choiceVals
             }
-            if (idStr.Companion.Icmp(_name, "cvar") == 0) {
+            if (idStr.Icmp(_name, "cvar") == 0) {
                 return cvarStr
             }
-            if (idStr.Companion.Icmp(_name, "gui") == 0) {
+            if (idStr.Icmp(_name, "gui") == 0) {
                 return guiStr
             }
-            if (idStr.Companion.Icmp(_name, "liveUpdate") == 0) {
+            if (idStr.Icmp(_name, "liveUpdate") == 0) {
                 return liveUpdate
             }
-            return if (idStr.Companion.Icmp(_name, "updateGroup") == 0) {
+            return if (idStr.Icmp(_name, "updateGroup") == 0) {
                 updateGroup
             } else super.GetWinVarByName(_name, winLookup, owner)
         }
 
-        override fun RunNamedEvent(eventName: String?) {
+        override fun RunNamedEvent(eventName: String) {
             val event: idStr
             val group: idStr?
-            if (0 == idStr.Companion.Cmpn(eventName, "cvar read ", 10)) {
+            if (0 == idStr.Cmpn(eventName, "cvar read ", 10)) {
                 event = idStr(eventName)
                 group = event.Mid(10, event.Length() - 10)
                 if (0 == group.Cmp(updateGroup.data)) {
                     UpdateVars(true, true)
                 }
-            } else if (0 == idStr.Companion.Cmpn(eventName, "cvar write ", 11)) {
+            } else if (0 == idStr.Cmpn(eventName, "cvar write ", 11)) {
                 event = idStr(eventName)
                 group = event.Mid(11, event.Length() - 11)
                 if (0 == group.Cmp(updateGroup.data)) {
@@ -223,12 +224,12 @@ class ChoiceWindow {
             }
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
-            if (idStr.Companion.Icmp(_name, "choicetype") == 0) {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
+            if (idStr.Icmp(_name, "choicetype") == 0) {
                 choiceType = src.ParseInt()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "currentchoice") == 0) {
+            if (idStr.Icmp(_name, "currentchoice") == 0) {
                 currentChoice = src.ParseInt()
                 return true
             }
@@ -252,9 +253,9 @@ class ChoiceWindow {
             if (choiceType == 0) {
                 // ChoiceType 0 stores current as an integer in either cvar or gui
                 // If both cvar and gui are defined then cvar wins, but they are both updated
-                if (updateStr.get(0).NeedsUpdate()) {
+                if (updateStr[0].NeedsUpdate()) {
                     currentChoice = try {
-                        updateStr.get(0).c_str().toInt()
+                        updateStr[0].c_str().toInt()
                     } catch (e: NumberFormatException) {
                         0
                     }
@@ -266,9 +267,9 @@ class ChoiceWindow {
                 var i: Int
                 i = 0
                 while (i < c) {
-                    if (idStr.Companion.Icmp(
+                    if (idStr.Icmp(
                             cvarStr.c_str(),
-                            (if (values.size() != 0) values.get(i) else choices.get(i)).toString()
+                            (if (values.size() != 0) values[i] else choices[i]).toString()
                         ) == 0
                     ) {
                         break
@@ -320,13 +321,13 @@ class ChoiceWindow {
             if (force || liveUpdate.data) {
                 if (cvar != null && cvarStr.NeedsUpdate()) {
                     if (read) {
-                        cvarStr.Set(cvar.GetString())
+                        cvarStr.set(cvar!!.GetString())
                     } else {
-                        cvar.SetString(cvarStr.c_str())
+                        cvar!!.SetString(cvarStr.c_str())
                     }
                 }
                 if (!read && guiStr.NeedsUpdate()) {
-                    guiStr.Set(Str.va("%d", currentChoice))
+                    guiStr.set(Str.va("%d", currentChoice))
                 }
             }
         }
@@ -343,7 +344,7 @@ class ChoiceWindow {
                 src.LoadMemory(choicesStr.data, choicesStr.Length(), "<ChoiceList>")
                 if (src.IsLoaded()) {
                     while (src.ReadToken(token)) {
-                        if (token == ";") {
+                        if (token.toString() == ";") {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
                                 str2.set(Common.common.GetLanguageDict().GetString(str2))
@@ -371,11 +372,11 @@ class ChoiceWindow {
                 var negNum = false
                 if (src.IsLoaded()) {
                     while (src.ReadToken(token)) {
-                        if (token == "-") {
+                        if (token.toString() == "-") {
                             negNum = true
                             continue
                         }
-                        if (token == ";") {
+                        if (token.toString() == ";") {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
                                 values.add(str2)

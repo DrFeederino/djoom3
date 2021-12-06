@@ -104,7 +104,7 @@ abstract class win_local {
     //LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     //
     //void Conbuf_AppendText( const char *msg );
-    internal class Win32Vars_t {
+    class Win32Vars_t {
         var activeApp // changed with WM_ACTIVATE messages
                 = false
 
@@ -117,7 +117,7 @@ abstract class win_local {
         var   /*cpuid_t*/cpuid = 0
 
         //
-        var criticalSections: Array<Lock?>? = arrayOfNulls<ReentrantLock?>(sys_public.MAX_CRITICAL_SECTIONS)
+        var criticalSections: Array<Lock> = Array(sys_public.MAX_CRITICAL_SECTIONS) { ReentrantLock() }
 
         //
         //	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library
@@ -174,7 +174,7 @@ abstract class win_local {
             //	HWND			hWnd;
             //	HINSTANCE		hInstance;
             //
-            val in_mouse: idCVar? =
+            val in_mouse: idCVar =
                 idCVar("in_mouse", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "enable mouse input")
 
             //
@@ -183,47 +183,47 @@ abstract class win_local {
             //	unsigned short	oldHardwareGamma[3][256];
             // desktop gamma is saved here for restoration at exit
             //
-            val sys_arch: idCVar? = idCVar("sys_arch", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT, "")
-            val sys_cpustring: idCVar? =
+            val sys_arch: idCVar = idCVar("sys_arch", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT, "")
+            val sys_cpustring: idCVar =
                 idCVar("sys_cpustring", "detect", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT, "")
-            val win_allowAltTab: idCVar? = idCVar(
+            val win_allowAltTab: idCVar = idCVar(
                 "win_allowAltTab",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL,
                 "allow Alt-Tab when fullscreen"
             )
-            val win_allowMultipleInstances: idCVar? = idCVar(
+            val win_allowMultipleInstances: idCVar = idCVar(
                 "win_allowMultipleInstances",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL,
                 "allow multiple instances running concurrently"
             )
-            val win_notaskkeys: idCVar? = idCVar(
+            val win_notaskkeys: idCVar = idCVar(
                 "win_notaskkeys",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER,
                 "disable windows task keys"
             )
-            val win_outputDebugString: idCVar? =
+            val win_outputDebugString: idCVar =
                 idCVar("win_outputDebugString", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "")
-            val win_outputEditString: idCVar? =
+            val win_outputEditString: idCVar =
                 idCVar("win_outputEditString", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "")
-            val win_timerUpdate: idCVar? = idCVar(
+            val win_timerUpdate: idCVar = idCVar(
                 "win_timerUpdate",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL,
                 "allows the game to be updated while dragging the window"
             )
-            val win_username: idCVar? =
+            val win_username: idCVar =
                 idCVar("win_username", "", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT, "windows user name")
-            val win_viewlog: idCVar? = idCVar("win_viewlog", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER, "")
-            val win_xpos: idCVar? = idCVar(
+            val win_viewlog: idCVar = idCVar("win_viewlog", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER, "")
+            val win_xpos: idCVar = idCVar(
                 "win_xpos",
                 "3",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
                 "horizontal position of window"
             ) // archived X coordinate of window position
-            val win_ypos: idCVar? = idCVar(
+            val win_ypos: idCVar = idCVar(
                 "win_ypos",
                 "22",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
@@ -233,6 +233,6 @@ abstract class win_local {
     }
 
     companion object {
-        var win32: Win32Vars_t? = Win32Vars_t()
+        var win32: Win32Vars_t = Win32Vars_t()
     }
 }

@@ -13,6 +13,7 @@ import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.CBool
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.idStrList
 import neo.idlib.math.Vector.idVec2
@@ -50,7 +51,7 @@ object ListWindow {
     // };
     class idTabRect {
         var align = 0
-        var iconSize: idVec2? = idVec2()
+        var iconSize: idVec2 = idVec2()
         var iconVOffset = 0f
         var type = 0
         var valign = 0
@@ -61,43 +62,43 @@ object ListWindow {
     class idListWindow : idWindow {
         //
         private var clickTime = 0
-        private val currentSel: idList<Int?>? = idList()
+        private val currentSel: idList<Int> = idList()
         private var horizontal = false
-        private val iconMaterials: HashMap<String?, idMaterial?>? = HashMap()
+        private val iconMaterials: HashMap<String, idMaterial> = HashMap()
 
         //
-        private val listItems: idStrList? = idStrList()
-        private val listName: idStr? = idStr()
+        private val listItems: idStrList = idStrList()
+        private val listName: idStr = idStr()
         private var multipleSel = false
-        private var scroller: idSliderWindow? = null
+        private lateinit var scroller: idSliderWindow
         private var sizeBias = 0f
-        private val tabAlignStr: idStr? = idStr()
-        private val tabIconSizeStr: idStr? = idStr()
-        private val tabIconVOffsetStr: idStr? = idStr()
-        private val tabInfo: idList<idTabRect?>? = idList()
-        private val tabStopStr: idStr? = idStr()
-        private val tabTypeStr: idStr? = idStr()
-        private val tabVAlignStr: idStr? = idStr()
+        private val tabAlignStr: idStr = idStr()
+        private val tabIconSizeStr: idStr = idStr()
+        private val tabIconVOffsetStr: idStr = idStr()
+        private val tabInfo: idList<idTabRect> = idList()
+        private val tabStopStr: idStr = idStr()
+        private val tabTypeStr: idStr = idStr()
+        private val tabVAlignStr: idStr = idStr()
         private var top = 0
-        private val typed: idStr? = idStr()
+        private val typed: idStr = idStr()
 
         //
         private var typedTime = 0
 
         //
         //
-        constructor(gui: idUserInterfaceLocal?) : super(gui) {
+        constructor(gui: idUserInterfaceLocal) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
+        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
         }
 
-        override fun HandleEvent(event: sysEvent_s?, updateVisuals: BooleanArray?): String? {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
             // need to call this to allow proper focus and capturing on embedded children
             val ret = super.HandleEvent(event, updateVisuals)
             val vert = GetMaxCharHeight()
@@ -172,7 +173,7 @@ object ListWindow {
                 typedTime = gui.GetTime()
                 typed.Append(key.toChar())
                 for (i in 0 until listItems.size()) {
-                    if (idStr.Companion.Icmpn(typed, listItems.get(i), typed.Length()) == 0) {
+                    if (idStr.Companion.Icmpn(typed, listItems[i], typed.Length()) == 0) {
                         SetCurrentSel(i)
                         break
                     }
@@ -213,7 +214,7 @@ object ListWindow {
             }
             if (currentSel.Num() > 0) {
                 for (i in 0 until currentSel.Num()) {
-                    gui.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel.get(i))
+                    gui.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel[i])
                 }
             } else {
                 gui.SetStateInt(Str.va("%s_sel_0", listName), 0)
@@ -225,8 +226,8 @@ object ListWindow {
         override fun PostParse() {
             super.PostParse()
             InitScroller(horizontal)
-            val tabStops = idList<Int?>()
-            val tabAligns = idList<Int?>()
+            val tabStops = idList<Int>()
+            val tabAligns = idList<Int>()
             if (tabStopStr.Length() != 0) {
                 val src = idParser(
                     tabStopStr.toString(),
@@ -236,7 +237,7 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     tabStops.Append(tok.toString().toInt())
@@ -251,13 +252,13 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     tabAligns.Append(tok.toString().toInt())
                 }
             }
-            val tabVAligns = idList<Int?>()
+            val tabVAligns = idList<Int>()
             if (tabVAlignStr.Length() != 0) {
                 val src = idParser(
                     tabVAlignStr.toString(),
@@ -267,13 +268,13 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     tabVAligns.Append(tok.toString().toInt())
                 }
             }
-            val tabTypes = idList<Int?>()
+            val tabTypes = idList<Int>()
             if (tabTypeStr.Length() != 0) {
                 val src = idParser(
                     tabTypeStr.toString(),
@@ -283,13 +284,13 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     tabTypes.Append(tok.toString().toInt())
                 }
             }
-            val tabSizes = idList<idVec2?>()
+            val tabSizes = idList<idVec2>()
             if (tabIconSizeStr.Length() != 0) {
                 val src = idParser(
                     tabIconSizeStr.toString(),
@@ -299,7 +300,7 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     val size = idVec2()
@@ -310,7 +311,7 @@ object ListWindow {
                     tabSizes.Append(size)
                 }
             }
-            val tabIconVOffsets = idList<Float?>()
+            val tabIconVOffsets = idList<Float>()
             if (tabIconVOffsetStr.Length() != 0) {
                 val src = idParser(
                     tabIconVOffsetStr.toString(),
@@ -320,7 +321,7 @@ object ListWindow {
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok == ",") {
+                    if (tok.toString() == ",") {
                         continue
                     }
                     tabIconVOffsets.Append(tok.toString().toFloat())
@@ -330,26 +331,26 @@ object ListWindow {
             val doAligns = tabAligns.Num() == tabStops.Num()
             for (i in 0 until c) {
                 val r = idTabRect()
-                r.x = tabStops.get(i)
-                r.w = if (i < c - 1) tabStops.get(i + 1) - r.x - tabBorder else -1
-                r.align = if (doAligns) tabAligns.get(i) else 0
+                r.x = tabStops[i]
+                r.w = if (i < c - 1) tabStops[i + 1] - r.x - tabBorder else -1
+                r.align = if (doAligns) tabAligns[i] else 0
                 if (tabVAligns.Num() > 0) {
-                    r.valign = tabVAligns.get(i)
+                    r.valign = tabVAligns[i]
                 } else {
                     r.valign = 0
                 }
                 if (tabTypes.Num() > 0) {
-                    r.type = tabTypes.get(i)
+                    r.type = tabTypes[i]
                 } else {
                     r.type = TAB_TYPE_TEXT
                 }
                 if (tabSizes.Num() > 0) {
-                    r.iconSize = tabSizes.get(i)
+                    r.iconSize = tabSizes[i]
                 } else {
                     r.iconSize.Zero()
                 }
                 if (tabIconVOffsets.Num() > 0) {
-                    r.iconVOffset = tabIconVOffsets.get(i)
+                    r.iconVOffset = tabIconVOffsets[i]
                 } else {
                     r.iconVOffset = 0f
                 }
@@ -381,11 +382,11 @@ object ListWindow {
             for (i in top until count) {
                 if (IsSelected(i)) {
                     rect.h = lineHeight
-                    dc.DrawFilledRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, borderColor.data)
+                    dc!!.DrawFilledRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, borderColor.data)
                     if (flags and Window.WIN_FOCUS != 0) {
                         val color2 = borderColor.data
                         color2.w = 1.0f
-                        dc.DrawRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, 1.0f, color2)
+                        dc!!.DrawRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, 1.0f, color2)
                     }
                 }
                 rect.y++
@@ -400,8 +401,8 @@ object ListWindow {
                 if (tabInfo.Num() > 0) {
                     var start = 0
                     var tab = 0
-                    var stop = listItems.get(i).Find('\t', 0)
-                    while (start < listItems.get(i).Length()) {
+                    var stop = listItems[i].Find('\t', 0)
+                    while (start < listItems[i].Length()) {
                         if (tab >= tabInfo.Num()) {
                             Common.common.Warning(
                                 "idListWindow::Draw: gui '%s' window '%s' tabInfo.Num() exceeded",
@@ -410,39 +411,39 @@ object ListWindow {
                             )
                             break
                         }
-                        listItems.get(i).Mid(start, stop - start, work)
-                        rect.x = textRect.x + tabInfo.get(tab).x
-                        rect.w = if (tabInfo.get(tab).w == -1) width - tabInfo.get(tab).x else tabInfo.get(tab).w
-                        dc.PushClipRect(rect)
-                        if (tabInfo.get(tab).type == TAB_TYPE_TEXT) {
-                            dc.DrawText(work, scale, tabInfo.get(tab).align, color, rect, false, -1)
-                        } else if (tabInfo.get(tab).type == TAB_TYPE_ICON) {
+                        listItems[i].Mid(start, stop - start, work)
+                        rect.x = textRect.x + tabInfo[tab].x
+                        rect.w = if (tabInfo[tab].w == -1) width - tabInfo[tab].x else tabInfo[tab].w.toFloat()
+                        dc!!.PushClipRect(rect)
+                        if (tabInfo[tab].type == TAB_TYPE_TEXT) {
+                            dc!!.DrawText(work, scale, tabInfo[tab].align, color, rect, false, -1)
+                        } else if (tabInfo[tab].type == TAB_TYPE_ICON) {
                             var hashMat: idMaterial?
                             var iconMat: idMaterial?
 
                             // leaving the icon name empty doesn't draw anything
                             if (TempDump.isNotNullOrEmpty(work)) {
-                                hashMat = iconMaterials.get(work.toString())
+                                hashMat = iconMaterials[work.toString()]
                                 iconMat = hashMat ?: DeclManager.declManager.FindMaterial("_default")
                                 val iconRect = idRectangle()
-                                iconRect.w = tabInfo.get(tab).iconSize.x
-                                iconRect.h = tabInfo.get(tab).iconSize.y
-                                if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_LEFT)) {
+                                iconRect.w = tabInfo[tab].iconSize.x
+                                iconRect.h = tabInfo[tab].iconSize.y
+                                if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_LEFT)) {
                                     iconRect.x = rect.x
-                                } else if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
+                                } else if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
                                     iconRect.x = rect.x + rect.w / 2.0f - iconRect.w / 2.0f
-                                } else if (tabInfo.get(tab).align == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
+                                } else if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
                                     iconRect.x = rect.x + rect.w - iconRect.w
                                 }
-                                if (tabInfo.get(tab).valign == 0) { //Top
-                                    iconRect.y = rect.y + tabInfo.get(tab).iconVOffset
-                                } else if (tabInfo.get(tab).valign == 1) { //Center
+                                if (tabInfo[tab].valign == 0) { //Top
+                                    iconRect.y = rect.y + tabInfo[tab].iconVOffset
+                                } else if (tabInfo[tab].valign == 1) { //Center
                                     iconRect.y =
-                                        rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo.get(tab).iconVOffset
-                                } else if (tabInfo.get(tab).valign == 2) { //Bottom
-                                    iconRect.y = rect.y + rect.h - iconRect.h + tabInfo.get(tab).iconVOffset
+                                        rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo[tab].iconVOffset
+                                } else if (tabInfo[tab].valign == 2) { //Bottom
+                                    iconRect.y = rect.y + rect.h - iconRect.h + tabInfo[tab].iconVOffset
                                 }
-                                dc.DrawMaterial(
+                                dc!!.DrawMaterial(
                                     iconRect.x,
                                     iconRect.y,
                                     iconRect.w,
@@ -454,18 +455,18 @@ object ListWindow {
                                 )
                             }
                         }
-                        dc.PopClipRect()
+                        dc!!.PopClipRect()
                         start = stop + 1
-                        stop = listItems.get(i).Find('\t', start)
+                        stop = listItems[i].Find('\t', start)
                         if (stop < 0) {
-                            stop = listItems.get(i).Length()
+                            stop = listItems[i].Length()
                         }
                         tab++
                     }
                     rect.x = textRect.x
                     rect.w = width
                 } else {
-                    dc.DrawText(listItems.get(i), scale, 0, color, rect, false, -1)
+                    dc!!.DrawText(listItems[i], scale, 0, color, rect, false, -1)
                 }
                 rect.y += lineHeight
                 if (rect.y > bottom) {
@@ -474,14 +475,14 @@ object ListWindow {
             }
         }
 
-        override fun Activate(activate: Boolean, act: idStr?) {
+        override fun Activate(activate: Boolean, act: idStr) {
             super.Activate(activate, act)
             if (activate) {
                 UpdateList()
             }
         }
 
-        override fun HandleBuddyUpdate(buddy: idWindow?) {
+        override fun HandleBuddyUpdate(buddy: idWindow) {
             top = scroller.GetValue().toInt()
         }
 
@@ -524,7 +525,7 @@ object ListWindow {
             typed.set("")
         }
 
-        override fun ParseInternalVar(_name: String?, src: idParser?): Boolean {
+        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
             if (idStr.Companion.Icmp(_name, "horizontal") == 0) {
                 horizontal = src.ParseBool()
                 return true
@@ -644,7 +645,7 @@ object ListWindow {
         }
 
         private fun GetCurrentSel(): Int {
-            return if (currentSel.Num() != 0) currentSel.get(0) else 0
+            return if (currentSel.Num() != 0) currentSel[0] else 0
         }
 
         private fun IsSelected(index: Int): Boolean {
