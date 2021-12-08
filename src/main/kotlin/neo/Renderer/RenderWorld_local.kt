@@ -921,7 +921,7 @@ object RenderWorld_local {
             return count
         }
 
-        override fun GetPortal(areaNum: Int, portalNum: Int): exitPortal_t? {
+        override fun GetPortal(areaNum: Int, portalNum: Int): exitPortal_t {
             val area: portalArea_s?
             var count: Int
             var portal: portal_s?

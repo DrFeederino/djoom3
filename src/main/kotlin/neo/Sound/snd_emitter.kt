@@ -9,15 +9,20 @@ import neo.Sound.snd_system.idSoundSystemLocal
 import neo.Sound.snd_world.idSoundWorldLocal
 import neo.Sound.sound.idSoundEmitter
 import neo.TempDump
-import neo.framework.*
+import neo.framework.Common
 import neo.framework.DemoFile.demoSystem_t
+import neo.framework.Session
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
+import neo.sys.win_main.Sys_EnterCriticalSection
+import neo.sys.win_main.Sys_LeaveCriticalSection
 import neo.sys.win_shared
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL10
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
 
 /**
  *
@@ -43,12 +48,12 @@ object snd_emitter {
      ===============================================================================
      */
     // sound channels
-    const val SCHANNEL_ANY = 0 // used in queries and commands to effect every channel at once, in
+    public const val SCHANNEL_ANY = 0 // used in queries and commands to effect every channel at once, in
 
     // startSound to have it not override any other channel
     const val SCHANNEL_ONE = 1 // any following integer can be used as a channel number
 
-    internal class idSoundFade {
+    class idSoundFade {
         var fadeEnd44kHz = 0
         var fadeEndVolume // in dB
                 = 0f
@@ -80,15 +85,15 @@ object snd_emitter {
         }
     }
 
-    internal open class SoundFX//            memset(continuitySamples, 0, sizeof(float) * 4);     //
+    open class SoundFX//            memset(continuitySamples, 0, sizeof(float) * 4);     //
     //
     {
         //
-        protected var buffer: FloatArray? = null
+        protected var buffer: FloatArray = FloatArray(0)
 
         //
         protected var channel = 0
-        protected var continuitySamples: FloatArray? = FloatArray(4)
+        protected var continuitySamples: FloatArray = FloatArray(4)
         protected var initialized = false
         protected var maxlen = 0
 
@@ -97,7 +102,7 @@ object snd_emitter {
 
         //	virtual				~SoundFX()										{ if ( buffer ) delete buffer; };
         open fun Initialize() {}
-        open fun ProcessSample(`in`: FloatArray?, in_offset: Int, out: FloatArray?, out_offset: Int) {}
+        open fun ProcessSample(inArr: FloatArray, in_offset: Int, out: FloatArray, out_offset: Int) {}
         fun SetChannel(chan: Int) {
             channel = chan
         }
@@ -107,18 +112,18 @@ object snd_emitter {
         }
 
         fun SetContinuitySamples(in1: Float, in2: Float, out1: Float, out2: Float) {
-            continuitySamples.get(0) = in1
-            continuitySamples.get(1) = in2
-            continuitySamples.get(2) = out1
-            continuitySamples.get(3) = out2
+            continuitySamples[0] = in1
+            continuitySamples[1] = in2
+            continuitySamples[2] = out1
+            continuitySamples[3] = out2
         }
 
         // FIXME?
-        fun GetContinuitySamples(in1: FloatArray?, in2: FloatArray?, out1: FloatArray?, out2: FloatArray?) {
-            in1.get(0) = continuitySamples.get(0)
-            in2.get(0) = continuitySamples.get(1)
-            out1.get(0) = continuitySamples.get(2)
-            out2.get(0) = continuitySamples.get(3)
+        fun GetContinuitySamples(in1: FloatArray, in2: FloatArray, out1: FloatArray, out2: FloatArray) {
+            in1[0] = continuitySamples[0]
+            in2[0] = continuitySamples[1]
+            out1[0] = continuitySamples[2]
+            out2[0] = continuitySamples[3]
         }
 
         fun SetParameter(`val`: Float) {
@@ -127,15 +132,15 @@ object snd_emitter {
     }
 
     internal class SoundFX_Lowpass : SoundFX() {
-        override fun ProcessSample(`in`: FloatArray?, in_offset: Int, out: FloatArray?, out_offset: Int) {
+        override fun ProcessSample(inArr: FloatArray, in_offset: Int, out: FloatArray, out_offset: Int) {
             val c: Float
             val a1: Float
             val a2: Float
             val a3: Float
             val b1: Float
             val b2: Float
-            val resonance: Float = idSoundSystemLocal.Companion.s_enviroSuitCutoffQ.GetFloat()
-            val cutoffFrequency: Float = idSoundSystemLocal.Companion.s_enviroSuitCutoffFreq.GetFloat()
+            val resonance: Float = idSoundSystemLocal.s_enviroSuitCutoffQ.GetFloat()
+            val cutoffFrequency: Float = idSoundSystemLocal.s_enviroSuitCutoffFreq.GetFloat()
             Initialize()
             c = 1.0f / idMath.Tan16(idMath.PI * cutoffFrequency / 44100)
 
@@ -147,14 +152,12 @@ object snd_emitter {
             b2 = (1.0f - resonance * c + c * c) * a1
 
             // compute output value
-            out.get(out_offset + 0) =
-                a1 * `in`.get(in_offset + 0) + a2 * `in`.get(in_offset + -1) + a3 * `in`.get(in_offset + -2) - b1 * out.get(
-                    out_offset + -1
-                ) - b2 * out.get(out_offset + -2)
+            out[out_offset + 0] =
+                a1 * inArr[in_offset + 0] + a2 * inArr[in_offset + -1] + a3 * inArr[in_offset + -2] - b1 * out[out_offset + -1] - b2 * out[out_offset + -2]
         }
     }
 
-    internal class SoundFX_LowpassFast : SoundFX() {
+    class SoundFX_LowpassFast : SoundFX() {
         var a1 = 0f
         var a2 = 0f
         var a3 = 0f
@@ -165,12 +168,10 @@ object snd_emitter {
 
         //
         //
-        override fun ProcessSample(`in`: FloatArray?, inOffset: Int, out: FloatArray?, outOffset: Int) {
+        override fun ProcessSample(inArr: FloatArray, inOffset: Int, out: FloatArray, outOffset: Int) {
             // compute output value
-            out.get(outOffset + 0) =
-                a1 * `in`.get(inOffset + 0) + a2 * `in`.get(inOffset - 1) + a3 * `in`.get(inOffset - 2) - b1 * out.get(
-                    outOffset - 1
-                ) - b2 * out.get(outOffset - 2)
+            out[outOffset + 0] =
+                a1 * inArr[inOffset + 0] + a2 * inArr[inOffset - 1] + a3 * inArr[inOffset - 2] - b1 * out[outOffset - 1] - b2 * out[outOffset - 2]
         }
 
         @JvmOverloads
@@ -209,14 +210,14 @@ object snd_emitter {
             currentTime = 0
         }
 
-        override fun ProcessSample(`in`: FloatArray?, in_offset: Int, out: FloatArray?, out_offset: Int) {
-            val gain: Float = idSoundSystemLocal.Companion.s_reverbFeedback.GetFloat()
-            val len: Int = (idSoundSystemLocal.Companion.s_reverbTime.GetFloat() + param).toInt()
+        override fun ProcessSample(inArr: FloatArray, in_offset: Int, out: FloatArray, out_offset: Int) {
+            val gain: Float = idSoundSystemLocal.s_reverbFeedback.GetFloat()
+            val len: Int = (idSoundSystemLocal.s_reverbTime.GetFloat() + param).toInt()
             Initialize()
 
             // sum up and output
-            out.get(out_offset + 0) = buffer.get(currentTime)
-            buffer.get(currentTime) = buffer.get(currentTime) * gain + `in`.get(in_offset + 0)
+            out[out_offset + 0] = buffer[currentTime]
+            buffer[currentTime] = buffer[currentTime] * gain + inArr[in_offset + 0]
 
             // increment current time
             currentTime++
@@ -226,7 +227,7 @@ object snd_emitter {
         }
     }
 
-    internal class FracTime {
+    class FracTime {
         var frac = 0f
         var time = 0
 
@@ -246,29 +247,19 @@ object snd_emitter {
         }
     }
 
-    internal class idSlowChannel {
+    class idSlowChannel {
         var active = false
         var chan: idSoundChannel? = null
-
-        //
-        var curPosition: FracTime? = FracTime()
+        var curPosition: FracTime = FracTime()
         var curSampleOffset = 0
-
-        //
-        var lowpass: SoundFX_LowpassFast? = null
-
-        //
-        var newPosition: FracTime? = FracTime()
+        var lowpass: SoundFX_LowpassFast = SoundFX_LowpassFast()
+        var newPosition: FracTime = FracTime()
         var newSampleOffset = 0
-
-        //
         var playbackState = 0
         var triggerOffset = 0
 
-        //
-        //
         // functions
-        fun GenerateSlowChannel(playPos: FracTime?, sampleCount44k: Int, finalBuffer: FloatArray?) {
+        fun GenerateSlowChannel(playPos: FracTime, sampleCount44k: Int, finalBuffer: FloatArray) {
             val sw = snd_system.soundSystemLocal.GetPlayingSoundWorld() as idSoundWorldLocal
             val `in` = FloatArray(Simd.MIXBUFFER_SAMPLES + 3)
             val out = FloatArray(Simd.MIXBUFFER_SAMPLES + 3)
@@ -289,7 +280,7 @@ object snd_emitter {
             orgTime = playPos.time
 
             // get the channel's samples
-            chan.GatherChannelSamples(playPos.time * 2, neededSamples, FloatBuffer.wrap(src))
+            chan!!.GatherChannelSamples(playPos.time * 2, neededSamples, FloatBuffer.wrap(src))
             i = 0
             while (i < neededSamples shr 1) {
                 spline[i] = src[i * 2]
@@ -328,8 +319,8 @@ object snd_emitter {
             count = 0
             while (i < numSamples) {
                 lowpass.ProcessSample(`in`, 2 + i, out, 2 + i)
-                finalBuffer.get(count + 1) = out[i]
-                finalBuffer.get(count) = finalBuffer.get(count + 1)
+                finalBuffer[count + 1] = out[i]
+                finalBuffer[count] = finalBuffer[count + 1]
                 i++
                 count += 2
             }
@@ -343,11 +334,11 @@ object snd_emitter {
         }
 
         fun GetSlowmoSpeed(): Float {
-            val sw = snd_system.soundSystemLocal.GetPlayingSoundWorld() as idSoundWorldLocal
-            return sw?.slowmoSpeed ?: 0
+            val sw = snd_system.soundSystemLocal.GetPlayingSoundWorld() as idSoundWorldLocal?
+            return sw?.slowmoSpeed ?: 0f
         }
 
-        fun AttachSoundChannel(chan: idSoundChannel?) {
+        fun AttachSoundChannel(chan: idSoundChannel) {
             this.chan = chan
         }
 
@@ -362,7 +353,7 @@ object snd_emitter {
             triggerOffset = 0
         }
 
-        fun GatherChannelSamples(sampleOffset44k: Int, sampleCount44k: Int, dest: FloatArray?) {
+        fun GatherChannelSamples(sampleOffset44k: Int, sampleCount44k: Int, dest: FloatArray) {
             var state = 0
 
             // setup chan
@@ -371,11 +362,11 @@ object snd_emitter {
 
             // set state
             if (newSampleOffset < curSampleOffset) {
-                state = snd_emitter.PLAYBACK_RESET
+                state = PLAYBACK_RESET
             } else if (newSampleOffset > curSampleOffset) {
-                state = snd_emitter.PLAYBACK_ADVANCING
+                state = PLAYBACK_ADVANCING
             }
-            if (state == snd_emitter.PLAYBACK_RESET) {
+            if (state == PLAYBACK_RESET) {
                 curPosition.Set(newSampleOffset)
             }
 
@@ -387,7 +378,7 @@ object snd_emitter {
             GenerateSlowChannel(newPosition, sampleCount44k, dest)
 
             // finish off
-            if (state == snd_emitter.PLAYBACK_ADVANCING) {
+            if (state == PLAYBACK_ADVANCING) {
                 curPosition = newPosition
             }
         }
@@ -401,21 +392,21 @@ object snd_emitter {
         }
     }
 
-    internal class idSoundChannel {
-        var channelFade: idSoundFade?
+    class idSoundChannel {
+        var channelFade: idSoundFade = idSoundFade()
         var decoder: idSampleDecoder? = null
 
         //
         var disallowSlow = false
         var diversity = 0f
-        var lastV: FloatArray? = FloatArray(6) // last calculated volume for each speaker, so we can smoothly fade
+        var lastV: FloatArray = FloatArray(6) // last calculated volume for each speaker, so we can smoothly fade
         var lastVolume // last calculated volume based on distance
                 = 0f
-        var   /*ALuint*/lastopenalStreamingBuffer: IntBuffer?
+        var   /*ALuint*/lastopenalStreamingBuffer: IntBuffer = BufferUtils.createIntBuffer(3)
         var leadinSample // if not looped, this is the only sample
                 : idSoundSample? = null
         var   /*ALuint*/openalSource = 0
-        var   /*ALuint*/openalStreamingBuffer: IntBuffer?
+        var   /*ALuint*/openalStreamingBuffer: IntBuffer = BufferUtils.createIntBuffer(3)
         var   /*ALuint*/openalStreamingOffset = 0
         var parms // combines the shader parms and the per-channel overrides
                 : snd_shader.soundShaderParms_t? = null
@@ -434,14 +425,14 @@ object snd_emitter {
             Stop()
             soundShader = null
             lastVolume = 0.0f
-            triggerChannel = snd_emitter.SCHANNEL_ANY
+            triggerChannel = SCHANNEL_ANY
             channelFade.Clear()
             diversity = 0.0f
             leadinSample = null
             trigger44kHzTime = 0
             j = 0
             while (j < 6) {
-                lastV.get(j) = 0.0f
+                lastV[j] = 0.0f
                 j++
             }
             //	memset( &parms, 0, sizeof(parms) );
@@ -458,14 +449,14 @@ object snd_emitter {
         fun Start() {
             triggerState = true
             if (decoder == null) {
-                decoder = idSampleDecoder.Companion.Alloc()
+                decoder = idSampleDecoder.Alloc()
             }
         }
 
         fun Stop() {
             triggerState = false
             if (decoder != null) {
-                idSampleDecoder.Companion.Free(decoder)
+                idSampleDecoder.Free(decoder!!)
                 decoder = null
             }
         }
@@ -479,7 +470,7 @@ object snd_emitter {
          samples and leadins
          ===================
          */
-        fun GatherChannelSamples(sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer?) {
+        fun GatherChannelSamples(sampleOffset44k: Int, sampleCount44k: Int, dest: FloatBuffer) {
             var sampleOffset44k = sampleOffset44k
             var sampleCount44k = sampleCount44k
             var dest_p = 0
@@ -500,7 +491,7 @@ object snd_emitter {
             }
 
             // grab part of the leadin sample
-            val leadin = leadinSample
+            val leadin = leadinSample!!
             if (TempDump.NOT(leadin) || sampleOffset44k < 0 || sampleCount44k <= 0) {
 //		memset( dest_p, 0, sampleCount44k * sizeof( dest_p[0] ) );
 //                dest.clear();
@@ -513,21 +504,21 @@ object snd_emitter {
                 }
 
                 // decode the sample
-                decoder.Decode(leadin, sampleOffset44k, len, dest)
+                decoder!!.Decode(leadin, sampleOffset44k, len, dest)
                 dest.position(len.let { dest_p += it; dest_p })
                 sampleCount44k -= len
                 sampleOffset44k += len
             }
 
             // if not looping, zero fill any remaining spots
-            if (null == soundShader || 0 == parms.soundShaderFlags and snd_shader.SSF_LOOPING) {
+            if (null == soundShader || 0 == parms!!.soundShaderFlags and snd_shader.SSF_LOOPING) {
 //		memset( dest_p, 0, sampleCount44k * sizeof( dest_p[0] ) );
 //                dest.clear();
                 return
             }
 
             // fill the remainder with looped samples
-            val loop = soundShader.entries[0]
+            val loop = soundShader!!.entries[0]
                 ?: //		memset( dest_p, 0, sampleCount44k * sizeof( dest_p[0] ) );
 //                dest.clear();
                 return
@@ -541,7 +532,7 @@ object snd_emitter {
                 }
 
                 // decode the sample
-                decoder.Decode(loop, sampleOffset44k, len, dest) //TODO:
+                decoder!!.Decode(loop, sampleOffset44k, len, dest) //TODO:
                 dest.position(len.let { dest_p += it; dest_p })
                 sampleCount44k -= len
                 sampleOffset44k += len
@@ -549,7 +540,7 @@ object snd_emitter {
         }
 
         fun ALStop() {            // free OpenAL resources if any
-            if (idSoundSystemLocal.Companion.useOpenAL) {
+            if (idSoundSystemLocal.useOpenAL) {
                 if (AL10.alIsSource(openalSource)) {
                     AL10.alSourceStop(openalSource)
                     AL10.alSourcei(openalSource, AL10.AL_BUFFER, 0)
@@ -583,15 +574,12 @@ object snd_emitter {
         //
         //
         init {
-            channelFade = idSoundFade()
-            openalStreamingBuffer = BufferUtils.createIntBuffer(3)
-            lastopenalStreamingBuffer = BufferUtils.createIntBuffer(3)
             Clear()
         }
     }
 
     // typedef int s_channelType;	  // the game uses its own series of enums, and we don't want to require casts
-    internal class idSoundEmitterLocal : idSoundEmitter() {
+    class idSoundEmitterLocal : idSoundEmitter() {
         //
         // this is just used for feedback to the game or rendering system:
         // flashing lights and screen shakes.  Because the material expression
@@ -599,7 +587,7 @@ object snd_emitter {
         // last generated value
         var ampTime = 0
         var amplitude = 0f
-        var channels: Array<idSoundChannel?>?
+        var channels: Array<idSoundChannel>
         var distance // in meters, this may be the straight-line distance, or
                 = 0f
         var hasShakes = false
@@ -618,9 +606,9 @@ object snd_emitter {
                 = 0f
 
         //
-        val origin: idVec3?
+        val origin: idVec3
         var parms // default overrides for all channels
-                : snd_shader.soundShaderParms_t? = null
+                : snd_shader.soundShaderParms_t = snd_shader.soundShaderParms_t()
         var playing // if false, no channel is active
                 = false
 
@@ -628,11 +616,11 @@ object snd_emitter {
         var realDistance // in meters
                 = 0f
         var   /*removeStatus_t*/removeStatus = 0
-        var slowChannels: Array<idSlowChannel?>?
+        var slowChannels: Array<idSlowChannel>
         var soundWorld // the world that holds this emitter
                 : idSoundWorldLocal? = null
         val spatializedOrigin // the virtual sound origin, either the real sound origin,
-                : idVec3?
+                : idVec3
 
         //----------------------------------------------
         // the "time" parameters should be game time in msec, which is used to make queries
@@ -646,20 +634,20 @@ object snd_emitter {
          =====================
          */
         override fun Free(immediate: Boolean) {
-            if (removeStatus != snd_emitter.REMOVE_STATUS_ALIVE) {
+            if (removeStatus != REMOVE_STATUS_ALIVE) {
                 return
             }
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                 Common.common.Printf("FreeSound (%d,%d)\n", index, immediate)
             }
-            if (soundWorld != null && soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_FREE)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteInt(TempDump.btoi(immediate))
+            if (soundWorld != null && soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_FREE)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteInt(TempDump.btoi(immediate))
             }
             if (!immediate) {
-                removeStatus = snd_emitter.REMOVE_STATUS_WAITSAMPLEFINISHED
+                removeStatus = REMOVE_STATUS_WAITSAMPLEFINISHED
             } else {
                 Clear()
             }
@@ -667,22 +655,22 @@ object snd_emitter {
 
         // the parms specified will be the default overrides for all sounds started on this emitter.
         // NULL is acceptable for parms
-        override fun UpdateEmitter(origin: idVec3?, listenerId: Int, parms: snd_shader.soundShaderParms_t?) {
+        override fun UpdateEmitter(origin: idVec3, listenerId: Int, parms: snd_shader.soundShaderParms_t) {
             if (null == parms) {
                 Common.common.Error("idSoundEmitterLocal::UpdateEmitter: NULL parms")
             }
-            if (soundWorld != null && soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_UPDATE)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteVec3(origin)
-                soundWorld.writeDemo.WriteInt(listenerId)
-                soundWorld.writeDemo.WriteFloat(parms.minDistance)
-                soundWorld.writeDemo.WriteFloat(parms.maxDistance)
-                soundWorld.writeDemo.WriteFloat(parms.volume)
-                soundWorld.writeDemo.WriteFloat(parms.shakes)
-                soundWorld.writeDemo.WriteInt(parms.soundShaderFlags)
-                soundWorld.writeDemo.WriteInt(parms.soundClass)
+            if (soundWorld != null && soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_UPDATE)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteVec3(origin)
+                soundWorld!!.writeDemo!!.WriteInt(listenerId)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.minDistance)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.maxDistance)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.volume)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.shakes)
+                soundWorld!!.writeDemo!!.WriteInt(parms.soundShaderFlags)
+                soundWorld!!.writeDemo!!.WriteInt(parms.soundClass)
             }
             this.origin.set(origin)
             this.listenerId = listenerId
@@ -699,7 +687,7 @@ object snd_emitter {
          =====================
          */
         override fun StartSound(
-            shader: idSoundShader?,
+            shader: idSoundShader,
             channel: Int,
             diversity: Float /*= 0*/,
             soundShaderFlags: Int /*= 0*/,
@@ -709,27 +697,27 @@ object snd_emitter {
             if (null == shader) {
                 return 0
             }
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                 Common.common.Printf(
                     "StartSound %dms (%d,%d,%s) = ",
-                    soundWorld.gameMsec,
+                    soundWorld!!.gameMsec,
                     index,
                     channel,
                     shader.GetName()
                 )
             }
-            if (soundWorld != null && soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_START)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteHashString(shader.GetName())
-                soundWorld.writeDemo.WriteInt(channel)
-                soundWorld.writeDemo.WriteFloat(diversity)
-                soundWorld.writeDemo.WriteInt(soundShaderFlags)
+            if (soundWorld != null && soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_START)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteHashString(shader.GetName())
+                soundWorld!!.writeDemo!!.WriteInt(channel)
+                soundWorld!!.writeDemo!!.WriteFloat(diversity)
+                soundWorld!!.writeDemo!!.WriteInt(soundShaderFlags)
             }
 
             // build the channel parameters by taking the shader parms and optionally overriding
-            val chanParms = arrayOf<snd_shader.soundShaderParms_t?>(null)
+            val chanParms = Array(1) { snd_shader.soundShaderParms_t() }
             chanParms[0] = shader.parms
             OverrideParms(chanParms[0], parms, chanParms)
             chanParms[0].soundShaderFlags = chanParms[0].soundShaderFlags or soundShaderFlags
@@ -739,9 +727,9 @@ object snd_emitter {
 
             // this is the sample time it will be first mixed
             var start44kHz: Int
-            start44kHz = if (soundWorld.fpa[0] != null) {
+            start44kHz = if (soundWorld!!.fpa[0] != null) {
                 // if we are recording an AVI demo, don't use hardware time
-                soundWorld.lastAVI44kHz + Simd.MIXBUFFER_SAMPLES
+                soundWorld!!.lastAVI44kHz + Simd.MIXBUFFER_SAMPLES
             } else {
                 snd_system.soundSystemLocal.GetCurrent44kHzTime() + Simd.MIXBUFFER_SAMPLES
             }
@@ -750,7 +738,7 @@ object snd_emitter {
             // pick which sound to play from the shader
             //
             if (0 == shader.numEntries) {
-                if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+                if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                     Common.common.Printf("no samples in sound shader\n")
                 }
                 return 0 // no sounds
@@ -773,7 +761,7 @@ object snd_emitter {
                 }
                 i = 0
                 while (i < snd_local.SOUND_MAX_CHANNELS) {
-                    val chan = channels.get(i)
+                    val chan = channels[i]
                     if (chan.leadinSample === sample) {
                         choice = (choice + 1) % shader.numEntries
                         break
@@ -786,9 +774,9 @@ object snd_emitter {
             if (chanParms[0].soundShaderFlags and snd_shader.SSF_PLAY_ONCE != 0) {
                 i = 0
                 while (i < snd_local.SOUND_MAX_CHANNELS) {
-                    val chan = channels.get(i)
+                    val chan = channels[i]
                     if (chan.triggerState && chan.soundShader === shader) {
-                        if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+                        if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                             Common.common.Printf("PLAY_ONCE not restarting\n")
                         }
                         return 0
@@ -801,9 +789,9 @@ object snd_emitter {
             // if they are on different channels
             i = 0
             while (i < snd_local.SOUND_MAX_CHANNELS) {
-                val chan = channels.get(i)
+                val chan = channels[i]
                 if (chan.triggerState && chan.soundShader === shader && chan.trigger44kHzTime == start44kHz) {
-                    if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+                    if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                         Common.common.Printf("already started this frame\n")
                     }
                     return 0
@@ -813,20 +801,20 @@ object snd_emitter {
             Sys_EnterCriticalSection()
 
             // kill any sound that is currently playing on this channel
-            if (channel != snd_emitter.SCHANNEL_ANY) {
+            if (channel != SCHANNEL_ANY) {
                 i = 0
                 while (i < snd_local.SOUND_MAX_CHANNELS) {
-                    val chan = channels.get(i)
+                    val chan = channels[i]
                     if (chan.triggerState && chan.soundShader != null && chan.triggerChannel == channel) {
-                        if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
-                            Common.common.Printf("(override %s)", chan.soundShader.base.GetName())
+                        if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
+                            Common.common.Printf("(override %s)", chan.soundShader!!.base!!.GetName())
                         }
                         chan.Stop()
 
                         // if this was an onDemand sound, purge the sample now
-                        if (chan.leadinSample.onDemand) {
+                        if (chan.leadinSample!!.onDemand) {
                             chan.ALStop()
-                            chan.leadinSample.PurgeSoundSample()
+                            chan.leadinSample!!.PurgeSoundSample()
                         }
                         break
                     }
@@ -835,10 +823,10 @@ object snd_emitter {
             }
 
             // find a free channel to play the sound on
-            var chan: idSoundChannel?
+            var chan: idSoundChannel
             i = 0
             while (i < snd_local.SOUND_MAX_CHANNELS) {
-                chan = channels.get(i)
+                chan = channels[i]
                 if (!chan.triggerState) {
                     break
                 }
@@ -847,12 +835,12 @@ object snd_emitter {
             if (i == snd_local.SOUND_MAX_CHANNELS) {
                 // we couldn't find a channel for it
                 Sys_LeaveCriticalSection()
-                if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+                if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                     Common.common.Printf("no channels available\n")
                 }
                 return 0
             }
-            chan = channels.get(i)
+            chan = channels[i]
             if (shader.leadins[choice] != null) {
                 chan.leadinSample = shader.leadins[choice]
             } else {
@@ -860,20 +848,20 @@ object snd_emitter {
             }
 
             // if the sample is onDemand (voice mails, etc), load it now
-            if (chan.leadinSample.purged) {
+            if (chan.leadinSample!!.purged) {
                 val start = win_shared.Sys_Milliseconds()
-                chan.leadinSample.Load()
+                chan.leadinSample!!.Load()
                 val end = win_shared.Sys_Milliseconds()
-                Session.Companion.session.TimeHitch(end - start)
+                Session.session.TimeHitch(end - start)
                 // recalculate start44kHz, because loading may have taken a fair amount of time
-                if (TempDump.NOT(soundWorld.fpa[0])) {
+                if (TempDump.NOT(soundWorld!!.fpa[0])) {
                     start44kHz = snd_system.soundSystemLocal.GetCurrent44kHzTime() + Simd.MIXBUFFER_SAMPLES
                 }
             }
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
-                Common.common.Printf("'%s'\n", chan.leadinSample.name)
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
+                Common.common.Printf("'%s'\n", chan.leadinSample!!.name)
             }
-            if (idSoundSystemLocal.Companion.s_skipHelltimeFX.GetBool()) {
+            if (idSoundSystemLocal.s_skipHelltimeFX.GetBool()) {
                 chan.disallowSlow = true
             } else {
                 chan.disallowSlow = !allowSlow
@@ -885,7 +873,7 @@ object snd_emitter {
             chan.openalStreamingOffset = 0
             chan.trigger44kHzTime = start44kHz
             chan.parms = chanParms[0]
-            chan.triggerGame44kHzTime = soundWorld.game44kHz
+            chan.triggerGame44kHzTime = soundWorld!!.game44kHz
             chan.soundShader = shader
             chan.triggerChannel = channel
             chan.Start()
@@ -895,18 +883,18 @@ object snd_emitter {
 
             // spatialize it immediately, so it will start the next mix block
             // even if that happens before the next PlaceOrigin()
-            Spatialize(soundWorld.listenerPos, soundWorld.listenerArea, soundWorld.rw)
+            Spatialize(soundWorld!!.listenerPos, soundWorld!!.listenerArea, soundWorld!!.rw!!)
 
             // return length of sound in milliseconds
-            var length = chan.leadinSample.LengthIn44kHzSamples()
-            if (chan.leadinSample.objectInfo.nChannels == 2) {
+            var length = chan.leadinSample!!.LengthIn44kHzSamples()
+            if (chan.leadinSample!!.objectInfo.nChannels == 2) {
                 length /= 2 // stereo samples
             }
 
             // adjust the start time based on diversity for looping sounds, so they don't all start
             // at the same point
-            if (chan.parms.soundShaderFlags and snd_shader.SSF_LOOPING != 0 && TempDump.NOT(
-                    chan.leadinSample.LengthIn44kHzSamples().toDouble()
+            if (chan.parms!!.soundShaderFlags and snd_shader.SSF_LOOPING != 0 && TempDump.NOT(
+                    chan.leadinSample!!.LengthIn44kHzSamples().toDouble()
                 )
             ) {
                 chan.trigger44kHzTime -= (diversity * length).toInt()
@@ -922,38 +910,38 @@ object snd_emitter {
         }
 
         // pass SCHANNEL_ANY to effect all channels
-        override fun ModifySound(channel: Int, parms: snd_shader.soundShaderParms_t?) {
+        override fun ModifySound(channel: Int, parms: snd_shader.soundShaderParms_t) {
             if (null == parms) {
                 Common.common.Error("idSoundEmitterLocal::ModifySound: NULL parms")
             }
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                 Common.common.Printf("ModifySound(%d,%d)\n", index, channel)
             }
-            if (soundWorld != null && soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_MODIFY)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteInt(channel)
-                soundWorld.writeDemo.WriteFloat(parms.minDistance)
-                soundWorld.writeDemo.WriteFloat(parms.maxDistance)
-                soundWorld.writeDemo.WriteFloat(parms.volume)
-                soundWorld.writeDemo.WriteFloat(parms.shakes)
-                soundWorld.writeDemo.WriteInt(parms.soundShaderFlags)
-                soundWorld.writeDemo.WriteInt(parms.soundClass)
+            if (soundWorld != null && soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_MODIFY)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteInt(channel)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.minDistance)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.maxDistance)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.volume)
+                soundWorld!!.writeDemo!!.WriteFloat(parms.shakes)
+                soundWorld!!.writeDemo!!.WriteInt(parms.soundShaderFlags)
+                soundWorld!!.writeDemo!!.WriteInt(parms.soundClass)
             }
             for (i in 0 until snd_local.SOUND_MAX_CHANNELS) {
-                val chan = channels.get(i)
+                val chan = channels[i]
                 if (!chan.triggerState) {
                     continue
                 }
-                if (channel != snd_emitter.SCHANNEL_ANY && chan.triggerChannel != channel) {
+                if (channel != SCHANNEL_ANY && chan.triggerChannel != channel) {
                     continue
                 }
-                val chanParms = arrayOf(chan.parms)
-                OverrideParms(chan.parms, parms, chanParms)
+                val chanParms = arrayOf(chan.parms!!)
+                OverrideParms(chan.parms!!, parms, chanParms)
                 chan.parms = chanParms[0]
-                if (chan.parms.shakes > 0.0f && chan.soundShader != null) {
-                    chan.soundShader.CheckShakesAndOgg()
+                if (chan.parms!!.shakes > 0.0f && chan.soundShader != null) {
+                    chan.soundShader!!.CheckShakesAndOgg()
                 }
             }
         }
@@ -967,24 +955,24 @@ object snd_emitter {
          */
         override fun StopSound(channel: Int) {
             var i: Int
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                 Common.common.Printf("StopSound(%d,%d)\n", index, channel)
             }
-            if (soundWorld != null && soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_STOP)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteInt(channel)
+            if (soundWorld != null && soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_STOP)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteInt(channel)
             }
             Sys_EnterCriticalSection()
             i = 0
             while (i < snd_local.SOUND_MAX_CHANNELS) {
-                val chan = channels.get(i)
+                val chan = channels[i]
                 if (!chan.triggerState) {
                     i++
                     continue
                 }
-                if (channel != snd_emitter.SCHANNEL_ANY && chan.triggerChannel != channel) {
+                if (channel != SCHANNEL_ANY && chan.triggerChannel != channel) {
                     i++
                     continue
                 }
@@ -996,8 +984,8 @@ object snd_emitter {
                 chan.ALStop()
 
                 // if this was an onDemand sound, purge the sample now
-                if (chan.leadinSample.onDemand) {
-                    chan.leadinSample.PurgeSoundSample()
+                if (chan.leadinSample!!.onDemand) {
+                    chan.leadinSample!!.PurgeSoundSample()
                 }
                 chan.leadinSample = null
                 chan.soundShader = null
@@ -1014,34 +1002,34 @@ object snd_emitter {
          ===================
          */
         override fun FadeSound(channel: Int, to: Float, over: Float) {
-            if (idSoundSystemLocal.Companion.s_showStartSound.GetInteger() != 0) {
+            if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
                 Common.common.Printf("FadeSound(%d,%d,%f,%f )\n", index, channel, to, over)
             }
             if (TempDump.NOT(soundWorld)) {
                 return
             }
-            if (soundWorld.writeDemo != null) {
-                soundWorld.writeDemo.WriteInt(demoSystem_t.DS_SOUND)
-                soundWorld.writeDemo.WriteInt(soundDemoCommand_t.SCMD_FADE)
-                soundWorld.writeDemo.WriteInt(index)
-                soundWorld.writeDemo.WriteInt(channel)
-                soundWorld.writeDemo.WriteFloat(to)
-                soundWorld.writeDemo.WriteFloat(over)
+            if (soundWorld!!.writeDemo != null) {
+                soundWorld!!.writeDemo!!.WriteInt(demoSystem_t.DS_SOUND)
+                soundWorld!!.writeDemo!!.WriteInt(soundDemoCommand_t.SCMD_FADE)
+                soundWorld!!.writeDemo!!.WriteInt(index)
+                soundWorld!!.writeDemo!!.WriteInt(channel)
+                soundWorld!!.writeDemo!!.WriteFloat(to)
+                soundWorld!!.writeDemo!!.WriteFloat(over)
             }
             val start44kHz: Int
-            start44kHz = if (soundWorld.fpa[0] != null) {
+            start44kHz = if (soundWorld!!.fpa[0] != null) {
                 // if we are recording an AVI demo, don't use hardware time
-                soundWorld.lastAVI44kHz + Simd.MIXBUFFER_SAMPLES
+                soundWorld!!.lastAVI44kHz + Simd.MIXBUFFER_SAMPLES
             } else {
                 snd_system.soundSystemLocal.GetCurrent44kHzTime() + Simd.MIXBUFFER_SAMPLES
             }
             val length44kHz = snd_system.soundSystemLocal.MillisecondsToSamples((over * 1000).toInt())
             for (i in 0 until snd_local.SOUND_MAX_CHANNELS) {
-                val chan = channels.get(i)
+                val chan = channels[i]
                 if (!chan.triggerState) {
                     continue
                 }
-                if (channel != snd_emitter.SCHANNEL_ANY && chan.triggerChannel != channel) {
+                if (channel != SCHANNEL_ANY && chan.triggerChannel != channel) {
                     continue
                 }
 
@@ -1073,10 +1061,10 @@ object snd_emitter {
          ===================
          */
         override fun CurrentAmplitude(): Float {
-            if (idSoundSystemLocal.Companion.s_constantAmplitude.GetFloat() >= 0.0f) {
-                return idSoundSystemLocal.Companion.s_constantAmplitude.GetFloat()
+            if (idSoundSystemLocal.s_constantAmplitude.GetFloat() >= 0.0f) {
+                return idSoundSystemLocal.s_constantAmplitude.GetFloat()
             }
-            if (removeStatus > snd_emitter.REMOVE_STATUS_WAITSAMPLEFINISHED) {
+            if (removeStatus > REMOVE_STATUS_WAITSAMPLEFINISHED) {
                 return 0.0f
             }
             val localTime = snd_system.soundSystemLocal.GetCurrent44kHzTime()
@@ -1088,7 +1076,7 @@ object snd_emitter {
 
             // calculate a new value
             ampTime = localTime
-            amplitude = soundWorld.FindAmplitude(this, localTime, null, snd_emitter.SCHANNEL_ANY, false)
+            amplitude = soundWorld!!.FindAmplitude(this, localTime, null, SCHANNEL_ANY, false)
             return amplitude
         }
 
@@ -1102,11 +1090,11 @@ object snd_emitter {
             var i: Int
             i = 0
             while (i < snd_local.SOUND_MAX_CHANNELS) {
-                channels.get(i).ALStop()
-                channels.get(i).Clear()
+                channels[i].ALStop()
+                channels[i].Clear()
                 i++
             }
-            removeStatus = snd_emitter.REMOVE_STATUS_SAMPLEFINISHED
+            removeStatus = REMOVE_STATUS_SAMPLEFINISHED
             distance = 0.0f
             lastValidPortalArea = -1
             playing = false
@@ -1121,40 +1109,40 @@ object snd_emitter {
         }
 
         fun OverrideParms(
-            base: snd_shader.soundShaderParms_t?,
-            over: snd_shader.soundShaderParms_t?,
-            out: Array<snd_shader.soundShaderParms_t?>?
+            base: snd_shader.soundShaderParms_t,
+            over: snd_shader.soundShaderParms_t,
+            out: Array<snd_shader.soundShaderParms_t>
         ) {
             if (null == over) {
-                out.get(0) = base
+                out[0] = base
                 return
             }
             if (over.minDistance != 0f) {
-                out.get(0).minDistance = over.minDistance
+                out[0].minDistance = over.minDistance
             } else {
-                out.get(0).minDistance = base.minDistance
+                out[0].minDistance = base.minDistance
             }
             if (over.maxDistance != 0f) {
-                out.get(0).maxDistance = over.maxDistance
+                out[0].maxDistance = over.maxDistance
             } else {
-                out.get(0).maxDistance = base.maxDistance
+                out[0].maxDistance = base.maxDistance
             }
             if (over.shakes != 0f) {
-                out.get(0).shakes = over.shakes
+                out[0].shakes = over.shakes
             } else {
-                out.get(0).shakes = base.shakes
+                out[0].shakes = base.shakes
             }
             if (over.volume != 0f) {
-                out.get(0).volume = over.volume
+                out[0].volume = over.volume
             } else {
-                out.get(0).volume = base.volume
+                out[0].volume = base.volume
             }
             if (over.soundClass != 0) {
-                out.get(0).soundClass = over.soundClass
+                out[0].soundClass = over.soundClass
             } else {
-                out.get(0).soundClass = base.soundClass
+                out[0].soundClass = base.soundClass
             }
-            out.get(0).soundShaderFlags = base.soundShaderFlags or over.soundShaderFlags
+            out[0].soundShaderFlags = base.soundShaderFlags or over.soundShaderFlags
         }
 
         /*
@@ -1173,7 +1161,7 @@ object snd_emitter {
             if (playing) {
                 i = 0
                 while (i < snd_local.SOUND_MAX_CHANNELS) {
-                    val chan = channels.get(i)
+                    val chan = channels[i]
                     if (!chan.triggerState) {
                         i++
                         continue
@@ -1185,32 +1173,32 @@ object snd_emitter {
                     }
 
                     // see if this channel has completed
-                    if (0 == chan.parms.soundShaderFlags and snd_shader.SSF_LOOPING) {
+                    if (0 == chan.parms!!.soundShaderFlags and snd_shader.SSF_LOOPING) {
                         var   /*ALint*/state = AL10.AL_PLAYING
-                        if (idSoundSystemLocal.Companion.useOpenAL && AL10.alIsSource(chan.openalSource)) {
+                        if (idSoundSystemLocal.useOpenAL && AL10.alIsSource(chan.openalSource)) {
 //                            alGetSourcei(chan.openalSource, AL_SOURCE_STATE, state);
                             state = AL10.alGetSourcei(chan.openalSource, AL10.AL_SOURCE_STATE)
                         }
                         val slow = GetSlowChannel(chan)
-                        if (soundWorld.slowmoActive && slow.IsActive()) {
-                            if (slow.GetCurrentPosition().time >= chan.leadinSample.LengthIn44kHzSamples() / 2) {
+                        if (soundWorld!!.slowmoActive && slow.IsActive()) {
+                            if (slow.GetCurrentPosition()!!.time >= chan.leadinSample!!.LengthIn44kHzSamples() / 2) {
                                 chan.Stop()
                                 // if this was an onDemand sound, purge the sample now
-                                if (chan.leadinSample.onDemand) {
-                                    chan.leadinSample.PurgeSoundSample()
+                                if (chan.leadinSample!!.onDemand) {
+                                    chan.leadinSample!!.PurgeSoundSample()
                                 }
                                 i++
                                 continue
                             }
-                        } else if (chan.trigger44kHzTime + chan.leadinSample.LengthIn44kHzSamples() < current44kHzTime || state == AL10.AL_STOPPED) {
+                        } else if (chan.trigger44kHzTime + chan.leadinSample!!.LengthIn44kHzSamples() < current44kHzTime || state == AL10.AL_STOPPED) {
                             chan.Stop()
 
                             // free hardware resources
                             chan.ALStop()
 
                             // if this was an onDemand sound, purge the sample now
-                            if (chan.leadinSample.onDemand) {
-                                chan.leadinSample.PurgeSoundSample()
+                            if (chan.leadinSample!!.onDemand) {
+                                chan.leadinSample!!.PurgeSoundSample()
                             }
                             i++
                             continue
@@ -1218,11 +1206,11 @@ object snd_emitter {
                     }
 
                     // free decoder memory if no sound was decoded for a while
-                    if (chan.decoder != null && chan.decoder.GetLastDecodeTime() < current44kHzTime - snd_local.SOUND_DECODER_FREE_DELAY) {
-                        chan.decoder.ClearDecoder()
+                    if (chan.decoder != null && chan.decoder!!.GetLastDecodeTime() < current44kHzTime - snd_local.SOUND_DECODER_FREE_DELAY) {
+                        chan.decoder!!.ClearDecoder()
                     }
                     hasActive = true
-                    if (chan.parms.shakes > 0.0f) {
+                    if (chan.parms!!.shakes > 0.0f) {
                         hasShakes = true
                     }
                     i++
@@ -1232,9 +1220,9 @@ object snd_emitter {
             // mark the entire sound emitter as non-playing if there aren't any active channels
             if (!hasActive) {
                 playing = false
-                if (removeStatus == snd_emitter.REMOVE_STATUS_WAITSAMPLEFINISHED) {
+                if (removeStatus == REMOVE_STATUS_WAITSAMPLEFINISHED) {
                     // this can now be reused by the next request for a new soundEmitter
-                    removeStatus = snd_emitter.REMOVE_STATUS_SAMPLEFINISHED
+                    removeStatus = REMOVE_STATUS_SAMPLEFINISHED
                 }
             }
         }
@@ -1246,7 +1234,7 @@ object snd_emitter {
          Called once each sound frame by the main thread from idSoundWorldLocal::PlaceOrigin
          ===================
          */
-        fun Spatialize(listenerPos: idVec3?, listenerArea: Int, rw: idRenderWorld?) {
+        fun Spatialize(listenerPos: idVec3, listenerArea: Int, rw: idRenderWorld) {
             var i: Int
             val hasActive = false
 
@@ -1256,13 +1244,13 @@ object snd_emitter {
             maxDistance = 0f
             i = 0
             while (i < snd_local.SOUND_MAX_CHANNELS) {
-                val chan = channels.get(i)
+                val chan = channels[i]
                 if (!chan.triggerState) {
                     i++
                     continue
                 }
-                if (chan.parms.maxDistance > maxDistance) {
-                    maxDistance = chan.parms.maxDistance
+                if (chan.parms!!.maxDistance > maxDistance) {
+                    maxDistance = chan.parms!!.maxDistance
                 }
                 i++
             }
@@ -1271,7 +1259,7 @@ object snd_emitter {
             // work out where the sound comes from
             //
             val realOrigin = idVec3(origin.times(snd_shader.DOOM_TO_METERS))
-            val len = idVec3(listenerPos.minus(realOrigin))
+            val len = idVec3(listenerPos - realOrigin)
             realDistance = len.LengthFast()
             if (realDistance >= maxDistance) {
                 // no way to possibly hear it
@@ -1303,7 +1291,7 @@ object snd_emitter {
                     spatializedOrigin.set(origin) // sound is in our area
                     return
                 }
-                soundWorld.ResolveOrigin(0, null, soundInArea, 0.0f, origin, this)
+                soundWorld!!.ResolveOrigin(0, null, soundInArea, 0.0f, origin, this)
                 distance /= snd_shader.METERS_TO_DOOM
             } else {
                 // no portals available
@@ -1312,28 +1300,28 @@ object snd_emitter {
             }
         }
 
-        fun GetSlowChannel(chan: idSoundChannel?): idSlowChannel? {
-            return slowChannels.get(TempDump.indexOf(chan, channels)) //TODO: pointer subtraction
+        fun GetSlowChannel(chan: idSoundChannel): idSlowChannel {
+            return slowChannels[TempDump.indexOf(chan, channels as Array<Any?>?)] //TODO: pointer subtraction
         }
 
-        fun SetSlowChannel(chan: idSoundChannel?, slow: idSlowChannel?) {
-            slowChannels.get(TempDump.indexOf(chan, channels)) = slow
+        fun SetSlowChannel(chan: idSoundChannel?, slow: idSlowChannel) {
+            slowChannels[TempDump.indexOf(chan, channels as Array<Any?>?)] = slow
         }
 
         fun ResetSlowChannel(chan: idSoundChannel?) {
-            val index = TempDump.indexOf(chan, channels)
-            slowChannels.get(index).Reset()
+            val index = TempDump.indexOf(chan, channels as Array<Any?>?)
+            slowChannels[index].Reset()
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1342,14 +1330,8 @@ object snd_emitter {
         init {
             origin = idVec3()
             spatializedOrigin = idVec3()
-            channels = arrayOfNulls<idSoundChannel?>(snd_local.SOUND_MAX_CHANNELS)
-            for (c in channels.indices) {
-                channels.get(c) = idSoundChannel()
-            }
-            slowChannels = arrayOfNulls<idSlowChannel?>(snd_local.SOUND_MAX_CHANNELS)
-            for (s in slowChannels.indices) {
-                slowChannels.get(s) = idSlowChannel()
-            }
+            channels = Array(snd_local.SOUND_MAX_CHANNELS) { idSoundChannel() }
+            slowChannels = Array(snd_local.SOUND_MAX_CHANNELS) { idSlowChannel() }
             Clear()
         }
     }

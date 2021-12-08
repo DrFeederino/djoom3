@@ -178,8 +178,8 @@ object win_snd {
         }
 
         override fun Write(value: Boolean) {}
-        override fun GetMixBuffer(): ShortArray {
-            return shortArrayOf(128)
+        override fun GetMixBuffer(): IntArray {
+            return IntArray(128)
         }
 
         override fun Initialize(): Boolean {

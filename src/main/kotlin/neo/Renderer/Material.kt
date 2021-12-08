@@ -291,9 +291,9 @@ object Material {
     }
 
     class textureStage_t {
-        val cinematic: Array<idCinematic?>? = arrayOf(null)
-        val image: Array<idImage?>? = arrayOf(null)
-        val matrix: Array<IntArray?>? = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
+        val cinematic: Array<idCinematic?> = arrayOf(null)
+        val image: Array<idImage?> = arrayOf(null)
+        val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
 
         // dynamic image variables
         var dynamic: dynamicidImage_t? = Material.dynamicidImage_t.values()[0]
@@ -970,7 +970,7 @@ object Material {
         }
 
         // get a specific stage
-        fun GetStage(index: Int): shaderStage_t? {
+        fun GetStage(index: Int): shaderStage_t {
             assert(index >= 0 && index < numStages)
             return stages.get(index)
         }

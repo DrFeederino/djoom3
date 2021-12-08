@@ -315,7 +315,7 @@ object snd_local {
         abstract fun Write(flushing: Boolean)
         abstract fun GetNumberOfSpeakers(): Int
         abstract fun GetMixBufferSize(): Int
-        abstract fun GetMixBuffer(): ShortArray
+        abstract fun GetMixBuffer(): IntArray
 
         companion object {
             fun Alloc(): idAudioHardware {

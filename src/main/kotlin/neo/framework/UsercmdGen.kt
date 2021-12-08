@@ -27,17 +27,17 @@ import java.util.*
  *
  */
 object UsercmdGen {
-    val BUTTON_5: Int = Lib.Companion.BIT(5)
-    val BUTTON_6: Int = Lib.Companion.BIT(6)
-    val BUTTON_7: Int = Lib.Companion.BIT(7)
+    val BUTTON_5: Int = Lib.BIT(5)
+    val BUTTON_6: Int = Lib.BIT(6)
+    val BUTTON_7: Int = Lib.BIT(7)
 
     //
     // usercmd_t->button bits
-    val BUTTON_ATTACK: Int = Lib.Companion.BIT(0)
-    val BUTTON_MLOOK: Int = Lib.Companion.BIT(4)
-    val BUTTON_RUN: Int = Lib.Companion.BIT(1)
-    val BUTTON_SCORES: Int = Lib.Companion.BIT(3)
-    val BUTTON_ZOOM: Int = Lib.Companion.BIT(2)
+    val BUTTON_ATTACK: Int = Lib.BIT(0)
+    val BUTTON_MLOOK: Int = Lib.BIT(4)
+    val BUTTON_RUN: Int = Lib.BIT(1)
+    val BUTTON_SCORES: Int = Lib.BIT(3)
+    val BUTTON_ZOOM: Int = Lib.BIT(2)
 
     //
     // usercmd_t->impulse commands
@@ -256,10 +256,10 @@ object UsercmdGen {
         }
 
         fun ByteSwap() {            // on big endian systems, byte swap the shorts and ints
-            angles.get(0) = Lib.Companion.LittleShort(angles.get(0))
-            angles.get(1) = Lib.Companion.LittleShort(angles.get(1))
-            angles.get(2) = Lib.Companion.LittleShort(angles.get(2))
-            sequence = Lib.Companion.LittleLong(sequence)
+            angles[0] = Lib.LittleShort(angles[0])
+            angles[1] = Lib.LittleShort(angles[1])
+            angles[2] = Lib.LittleShort(angles[2])
+            sequence = Lib.LittleLong(sequence)
         }
 
         override fun hashCode(): Int {
@@ -283,7 +283,7 @@ object UsercmdGen {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as usercmd_t?
+            val other = obj as usercmd_t
             if (buttons != other.buttons) {
                 return false
             }
@@ -310,15 +310,15 @@ object UsercmdGen {
             } else flags == other.flags
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw TODO_Exception()
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw TODO_Exception()
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw TODO_Exception()
         }
 
@@ -383,7 +383,7 @@ object UsercmdGen {
         abstract fun GetDirectUsercmd(): usercmd_t?
     }
 
-    class userCmdString_t(var string: String?, var button: usercmdButton_t?)
+    class userCmdString_t(var string: String?, var button: usercmdButton_t)
 
     //    
     //   
@@ -412,12 +412,12 @@ object UsercmdGen {
         }
     }
 
-    internal class idUsercmdGenLocal : idUsercmdGen() {
-        private val buffered: Array<usercmd_t?>? = arrayOfNulls<usercmd_t?>(MAX_BUFFERED_USERCMD)
-        private val buttonState: IntArray? = IntArray(TempDump.etoi(usercmdButton_t.UB_MAX_BUTTONS))
-        private val joystickAxis: IntArray? =
+    class idUsercmdGenLocal : idUsercmdGen() {
+        private val buffered: Array<usercmd_t?> = arrayOfNulls<usercmd_t?>(MAX_BUFFERED_USERCMD)
+        private val buttonState: IntArray = IntArray(TempDump.etoi(usercmdButton_t.UB_MAX_BUTTONS))
+        private val joystickAxis: IntArray =
             IntArray(TempDump.etoi(joystickAxis_t.MAX_JOYSTICK_AXIS)) // set by joystick events
-        private val keyState: BooleanArray? = BooleanArray(KeyInput.K_LAST_KEY)
+        private val keyState: BooleanArray = BooleanArray(KeyInput.K_LAST_KEY)
         private val lastCommandTime = 0
 
         //
@@ -427,7 +427,7 @@ object UsercmdGen {
         //
         //
         private val toggled_zoom: buttonState_t?
-        private val viewangles: idVec3?
+        private val viewangles: idVec3 = idVec3()
 
         //
         private var cmd // the current cmd being built
@@ -564,7 +564,7 @@ object UsercmdGen {
          */
         override fun CommandStringUsercmdData(cmdString: String?): Int {
             for (ucs in userCmdStrings) {
-                if (idStr.Companion.Icmp(cmdString, ucs.string) == 0) {
+                if (idStr.Icmp(cmdString, ucs.string) == 0) {
                     return ucs.button.ordinal
                 }
             }
@@ -677,10 +677,10 @@ object UsercmdGen {
                 JoystickMove()
 
                 // check to make sure the angles haven't wrapped
-                if (viewangles.get(Angles.PITCH) - oldAngles.get(Angles.PITCH) > 90) {
-                    viewangles.set(Angles.PITCH, oldAngles.get(Angles.PITCH) + 90)
-                } else if (oldAngles.get(Angles.PITCH) - viewangles.get(Angles.PITCH) > 90) {
-                    viewangles.set(Angles.PITCH, oldAngles.get(Angles.PITCH) - 90)
+                if (viewangles.get(Angles.PITCH) - oldAngles[Angles.PITCH] > 90) {
+                    viewangles.set(Angles.PITCH, oldAngles[Angles.PITCH] + 90)
+                } else if (oldAngles[Angles.PITCH] - viewangles.get(Angles.PITCH) > 90) {
+                    viewangles.set(Angles.PITCH, oldAngles[Angles.PITCH] - 90)
                 }
             } else {
                 mouseDx = 0.0
@@ -688,7 +688,7 @@ object UsercmdGen {
             }
             i = 0
             while (i < 3) {
-                cmd.angles.get(i) = Math_h.ANGLE2SHORT(viewangles.get(i)).toShort()
+                cmd.angles[i] = Math_h.ANGLE2SHORT(viewangles.get(i)).toShort()
                 i++
             }
             cmd.mx = continuousMouseX.toInt().toShort()
@@ -980,7 +980,7 @@ object UsercmdGen {
             }
         }
 
-        private inner class MouseCursorCallback : GLFWCursorPosCallback() {
+        inner class MouseCursorCallback : GLFWCursorPosCallback() {
             private var prevX = 0.0
             private var prevY = 0.0
             override fun invoke(window: Long, xpos: Double, ypos: Double) {
@@ -1000,7 +1000,7 @@ object UsercmdGen {
             }
         }
 
-        private inner class MouseScrollCallback : GLFWScrollCallback() {
+        inner class MouseScrollCallback : GLFWScrollCallback() {
             override fun invoke(window: Long, xoffset: Double, yoffset: Double) {
                 val dwTimeStamp = System.nanoTime()
 
@@ -1018,7 +1018,7 @@ object UsercmdGen {
             }
         }
 
-        private inner class MouseButtonCallback : GLFWMouseButtonCallback() {
+        inner class MouseButtonCallback : GLFWMouseButtonCallback() {
             override fun invoke(window: Long, button: Int, action: Int, mods: Int) {
                 val dwTimeStamp = System.nanoTime()
                 //
@@ -1035,7 +1035,7 @@ object UsercmdGen {
             }
         }
 
-        private inner class KeyboardCallback : GLFWKeyCallback() {
+        inner class KeyboardCallback : GLFWKeyCallback() {
             override fun invoke(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
                 val ch = intArrayOf(0)
                 //                        //-+

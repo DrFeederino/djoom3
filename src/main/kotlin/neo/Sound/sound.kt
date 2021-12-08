@@ -94,7 +94,7 @@ object sound {
         abstract fun AllocSoundEmitter(): idSoundEmitter
 
         // for load games, index 0 will return NULL
-        abstract fun EmitterForIndex(index: Int): idSoundEmitter
+        abstract fun EmitterForIndex(index: Int): idSoundEmitter?
 
         // query sound samples from all emitters reaching a given position
         abstract fun CurrentShakeAmplitudeForPosition(time: Int, listenerPosition: idVec3): Float
@@ -212,7 +212,7 @@ object sound {
 
         // some tools, like the sound dialog, may be used in both the game and the editor
         // This can return NULL, so check!
-        abstract fun GetPlayingSoundWorld(): idSoundWorld
+        abstract fun GetPlayingSoundWorld(): idSoundWorld?
 
         // Mark all soundSamples as currently unused,
         // but don't free anything.

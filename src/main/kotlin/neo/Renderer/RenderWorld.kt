@@ -725,12 +725,12 @@ class RenderWorld {
 
     // exitPortal_t is returned by idRenderWorld::GetPortal()
     class exitPortal_t {
-        var areas: IntArray? = IntArray(2) // areas connected by this portal
+        var areas: IntArray = IntArray(2) // areas connected by this portal
         var blockingBits // PS_BLOCK_VIEW, PS_BLOCK_AIR, etc
                 = 0
         var   /*qhandle_t */portalHandle = 0
         var w // winding points have counter clockwise ordering seen from areas[0]
-                : idWinding? = null
+                : idWinding = idWinding()
     }
 
     // guiPoint_t is returned by idRenderWorld::GuiTrace()
@@ -872,7 +872,7 @@ class RenderWorld {
         abstract fun NumPortalsInArea(areaNum: Int): Int
 
         // returns one portal from an area
-        abstract fun GetPortal(areaNum: Int, portalNum: Int): exitPortal_t?
+        abstract fun GetPortal(areaNum: Int, portalNum: Int): exitPortal_t
 
         //-------------- Tracing  -----------------
         // Checks a ray trace against any gui surfaces in an entity, returning the

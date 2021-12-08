@@ -31,6 +31,8 @@ import neo.idlib.containers.List.idList
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Simd
 import neo.sys.win_main
+import neo.sys.win_main.Sys_EnterCriticalSection
+import neo.sys.win_main.Sys_LeaveCriticalSection
 import neo.sys.win_shared
 import neo.sys.win_snd
 import org.lwjgl.BufferUtils
@@ -38,8 +40,10 @@ import org.lwjgl.openal.AL
 import org.lwjgl.openal.AL10
 import org.lwjgl.openal.ALC
 import org.lwjgl.openal.ALC10
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.pow
 
 /**
  *
@@ -60,7 +64,7 @@ object snd_system {
 
      ===================================================================================
      */
-    internal class openalSource_t {
+    class openalSource_t {
         var chan: idSoundChannel? = null
         var   /*ALuint*/handle = 0
         var inUse = false
@@ -157,7 +161,7 @@ object snd_system {
 
             //
             //
-            val s_noSound: idCVar? = null
+            var s_noSound: idCVar
             val s_numberOfSpeakers: idCVar = idCVar(
                 "s_numberOfSpeakers",
                 "2",
@@ -279,13 +283,13 @@ object snd_system {
                 : idSoundWorldLocal? = null
         var efxloaded = false
         var finalMixBuffer // points inside realAccum at a 16 byte aligned boundary
-                : FloatArray
+                : FloatArray = FloatArray(6 * Simd.MIXBUFFER_SAMPLES + 16)
 
         //
         val fxList: idList<SoundFX> = idList()
 
         //
-        var graph: IntArray
+        var graph: IntArray? = null
 
         //
         var isInitialized = false
@@ -306,7 +310,7 @@ object snd_system {
         //
         var openalDevice: Long = 0
         var   /*ALsizei*/openalSourceCount = 0
-        var openalSources: Array<openalSource_t?> = arrayOfNulls<openalSource_t?>(256)
+        var openalSources: Array<openalSource_t> = Array(256) { openalSource_t() }
 
         //
         var realAccum: FloatArray = FloatArray(6 * Simd.MIXBUFFER_SAMPLES + 16)
@@ -343,14 +347,14 @@ object snd_system {
             meterTopsTime = IntArray(meterTopsTime.size)
             for (i in -600..599) {
                 val pt = i * 0.1f
-                volumesDB.get(i + 600) = Math.pow(2.0, (pt * (1.0f / 6.0f)).toDouble()).toFloat()
+                volumesDB[i + 600] = 2.0.pow((pt * (1.0f / 6.0f)).toDouble()).toFloat()
             }
 
             // make a 16 byte aligned finalMixBuffer
             finalMixBuffer = realAccum //(float[]) ((((int) realAccum) + 15) & ~15);
             graph = null
             if (!s_noSound.GetBool()) {
-                idSampleDecoder.Companion.Init()
+                idSampleDecoder.Init()
                 soundCache = idSoundCache()
             }
 
@@ -409,12 +413,12 @@ object snd_system {
                                 break
                             } else {
                                 // store in source array
-                                openalSources.get(openalSourceCount) = openalSource_t()
-                                openalSources.get(openalSourceCount).handle = handle
-                                openalSources.get(openalSourceCount).startTime = 0
-                                openalSources.get(openalSourceCount).chan = null
-                                openalSources.get(openalSourceCount).inUse = false
-                                openalSources.get(openalSourceCount).looping = false
+                                openalSources[openalSourceCount] = openalSource_t()
+                                openalSources[openalSourceCount].handle = handle
+                                openalSources[openalSourceCount].startTime = 0
+                                openalSources[openalSourceCount].chan = null
+                                openalSources[openalSourceCount].inUse = false
+                                openalSources[openalSourceCount].looping = false
 
                                 // initialise sources
                                 AL10.alSourcef(handle, AL10.AL_ROLLOFF_FACTOR, 0.0f)
@@ -460,7 +464,7 @@ object snd_system {
                 TestSound_f.INSTANCE,
                 CmdSystem.CMD_FL_SOUND or CmdSystem.CMD_FL_CHEAT,
                 "tests a sound",
-                ArgCompletion_SoundName.Companion.getInstance()
+                ArgCompletion_SoundName.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "s_restart",
@@ -487,17 +491,17 @@ object snd_system {
                 openalSourceCount += 8
                 for ( /*ALsizei*/i in openalSources.indices) {
                     // stop source
-                    if (openalSources.get(i) != null) {
-                        AL10.alSourceStop(openalSources.get(i).handle)
-                        AL10.alSourcei(openalSources.get(i).handle, AL10.AL_BUFFER, 0)
-                        AL10.alDeleteSources(openalSources.get(i).handle)
+                    if (openalSources[i] != null) {
+                        AL10.alSourceStop(openalSources[i].handle)
+                        AL10.alSourcei(openalSources[i].handle, AL10.AL_BUFFER, 0)
+                        AL10.alDeleteSources(openalSources[i].handle)
 
                         // clear entry in source array
-                        openalSources.get(i).handle = 0
-                        openalSources.get(i).startTime = 0
-                        openalSources.get(i).chan = null
-                        openalSources.get(i).inUse = false
-                        openalSources.get(i).looping = false
+                        openalSources[i].handle = 0
+                        openalSources[i].startTime = 0
+                        openalSources[i].chan = null
+                        openalSources[i].inUse = false
+                        openalSources[i].looping = false
                     }
                 }
             }
@@ -515,7 +519,7 @@ object snd_system {
                 openalDevice = 0
             }
             win_snd.Sys_FreeOpenAL()
-            idSampleDecoder.Companion.Shutdown()
+            idSampleDecoder.Shutdown()
         }
 
         override fun ClearBuffer() {
@@ -524,8 +528,8 @@ object snd_system {
             if (TempDump.NOT(snd_audio_hw)) {
                 return
             }
-            val fBlock = shortArrayOf(0)
-            val   /*ulong*/fBlockLen: Long = 0
+            val fBlock = intArrayOf(0)
+            val   /*ulong*/fBlockLen: Int = 0
 
             //TODO:see what this block does.
 //            if (!snd_audio_hw.Lock( /*(void **)*/fBlock, fBlockLen)) {
@@ -533,7 +537,7 @@ object snd_system {
 //            }
             if (fBlock[0] != 0) {
 //                SIMDProcessor.Memset(fBlock, 0, fBlockLen);
-                Arrays.fill(fBlock, 0, fBlockLen.toInt(), 0.toByte().toShort())
+                Arrays.fill(fBlock, 0, fBlockLen, 0)
                 //                snd_audio_hw.Unlock(fBlock, fBlockLen);
             }
         }
@@ -563,19 +567,19 @@ object snd_system {
             }
 
 //	delete snd_audio_hw;
-            snd_audio_hw = idAudioHardware.Companion.Alloc()
+            snd_audio_hw = idAudioHardware.Alloc()
             if (snd_audio_hw == null) {
                 return false
             }
             if (!useOpenAL) {
-                if (!snd_audio_hw.Initialize()) {
+                if (!snd_audio_hw!!.Initialize()) {
                     snd_audio_hw = null
                     return false
                 }
-                if (snd_audio_hw.GetNumberOfSpeakers() == 0) {
+                if (snd_audio_hw!!.GetNumberOfSpeakers() == 0) {
                     return false
                 }
-                s_numberOfSpeakers.SetInteger(snd_audio_hw.GetNumberOfSpeakers())
+                s_numberOfSpeakers.SetInteger(snd_audio_hw!!.GetNumberOfSpeakers())
             }
             isInitialized = true
             shutdown = false
@@ -605,11 +609,11 @@ object snd_system {
             } else {
                 // and here in bytes
                 // get the current byte position in the buffer where the sound hardware is currently reading
-                if (!snd_audio_hw.GetCurrentPosition(dwCurrentWritePos)) {
+                if (!snd_audio_hw!!.GetCurrentPosition(dwCurrentWritePos)) {
                     return 0
                 }
                 // mixBufferSize is in bytes
-                dwCurrentBlock = (dwCurrentWritePos / snd_audio_hw.GetMixBufferSize()).toInt()
+                dwCurrentBlock = (dwCurrentWritePos / snd_audio_hw!!.GetMixBufferSize()).toInt()
             }
             if (nextWriteBlock == -0x1) {
                 nextWriteBlock = dwCurrentBlock
@@ -619,10 +623,10 @@ object snd_system {
             }
 
             // lock the buffer so we can actually write to it
-            val fBlock: ShortArray? = null
+            val fBlock: IntArray = IntArray(1)
             val   /*ulong*/fBlockLen: Long = 0
             if (!useOpenAL) {
-                snd_audio_hw.Lock( /*(void **)*/fBlock, fBlockLen)
+                snd_audio_hw!!.Lock( /*(void **)*/fBlock, fBlockLen)
                 if (null == fBlock) {
                     return 0
                 }
@@ -630,7 +634,7 @@ object snd_system {
             var j: Int
             soundStats.runs++
             soundStats.activeSounds = 0
-            val numSpeakers = snd_audio_hw.GetNumberOfSpeakers()
+            val numSpeakers = snd_audio_hw!!.GetNumberOfSpeakers()
             nextWriteBlock++
             nextWriteBlock %= snd_local.ROOM_SLICES_IN_BUFFER
             val newPosition = nextWriteBlock * Simd.MIXBUFFER_SAMPLES
@@ -663,8 +667,8 @@ object snd_system {
             }
 
             // let the active sound world mix all the channels in unless muted or avi demo recording
-            if (!muted && currentSoundWorld != null && null == currentSoundWorld.fpa[0]) {
-                currentSoundWorld.MixLoop(newSoundTime, numSpeakers, finalMixBuffer)
+            if (!muted && currentSoundWorld != null && null == currentSoundWorld!!.fpa[0]) {
+                currentSoundWorld!!.MixLoop(newSoundTime, numSpeakers, finalMixBuffer)
             }
             if (useOpenAL) {
                 // disable audio hardware caching (this updates ALL settings since last alcSuspendContext)
@@ -683,13 +687,13 @@ object snd_system {
                 if (numSpeakers == 2 && s_reverse.GetBool()) {
                     j = 0
                     while (j < Simd.MIXBUFFER_SAMPLES) {
-                        val temp = fBlock.get(dest + j * 2)
-                        fBlock.get(dest + j * 2) = fBlock.get(dest + j * 2 + 1)
-                        fBlock.get(dest + j * 2 + 1) = temp
+                        val temp = fBlock[dest + j * 2]
+                        fBlock[dest + j * 2] = fBlock[dest + j * 2 + 1]
+                        fBlock[dest + j * 2 + 1] = temp
                         j++
                     }
                 }
-                snd_audio_hw.Unlock(fBlock, fBlockLen)
+                snd_audio_hw!!.Unlock(fBlock, fBlockLen)
             }
             CurrentSoundTime = newSoundTime
             soundStats.timeinprocess = win_shared.Sys_Milliseconds() - time
@@ -710,7 +714,7 @@ object snd_system {
                 return 0
             }
             if (!useOpenAL) {
-                snd_audio_hw.Flush()
+                snd_audio_hw!!.Flush()
             }
             val   /*unsigned int*/dwCurrentBlock = (inTime * 44.1f / Simd.MIXBUFFER_SAMPLES).toLong()
             if (nextWriteBlock == -0x1) {
@@ -723,7 +727,7 @@ object snd_system {
                 win_main.Sys_Printf("missed %d sound updates\n", dwCurrentBlock - nextWriteBlock)
             }
             val sampleTime = (dwCurrentBlock * Simd.MIXBUFFER_SAMPLES).toInt()
-            val numSpeakers = snd_audio_hw.GetNumberOfSpeakers()
+            val numSpeakers = snd_audio_hw!!.GetNumberOfSpeakers()
             if (useOpenAL) {
                 // enable audio hardware caching
                 ALC10.alcSuspendContext(openalContext)
@@ -734,14 +738,14 @@ object snd_system {
             }
 
             // let the active sound world mix all the channels in unless muted or avi demo recording
-            if (!muted && currentSoundWorld != null && null == currentSoundWorld.fpa[0]) {
-                currentSoundWorld.MixLoop(sampleTime, numSpeakers, finalMixBuffer)
+            if (!muted && currentSoundWorld != null && null == currentSoundWorld!!.fpa[0]) {
+                currentSoundWorld!!.MixLoop(sampleTime, numSpeakers, finalMixBuffer)
             }
             if (useOpenAL) {
                 // disable audio hardware caching (this updates ALL settings since last alcSuspendContext)
                 ALC10.alcProcessContext(openalContext)
             } else {
-                val dest = snd_audio_hw.GetMixBuffer()
+                val dest = snd_audio_hw!!.GetMixBuffer()
                 Simd.SIMDProcessor.MixedSoundToSamples(dest, finalMixBuffer, Simd.MIXBUFFER_SAMPLES * numSpeakers)
 
                 // allow swapping the left / right speaker channels for people with miswired systems
@@ -755,7 +759,7 @@ object snd_system {
                         j++
                     }
                 }
-                snd_audio_hw.Write(false)
+                snd_audio_hw!!.Write(false)
             }
 
             // only move to the next block if the write was successful
@@ -778,11 +782,11 @@ object snd_system {
                 return 0
             }
             inTime = win_shared.Sys_Milliseconds()
-            numSpeakers = snd_audio_hw.GetNumberOfSpeakers()
+            numSpeakers = snd_audio_hw!!.GetNumberOfSpeakers()
 
             // let the active sound world mix all the channels in unless muted or avi demo recording
-            if (!muted && currentSoundWorld != null && null == currentSoundWorld.fpa[0]) {
-                currentSoundWorld.MixLoop(soundTime, numSpeakers, mixBuffer)
+            if (!muted && currentSoundWorld != null && null == currentSoundWorld!!.fpa[0]) {
+                currentSoundWorld!!.MixLoop(soundTime, numSpeakers, mixBuffer)
             }
             CurrentSoundTime = soundTime
             return win_shared.Sys_Milliseconds() - inTime
@@ -807,14 +811,14 @@ object snd_system {
             //	memset( graph, 0, 256*128 * 4 );
             val accum = finalMixBuffer // unfortunately, these are already clamped
             val time = win_shared.Sys_Milliseconds()
-            val numSpeakers = snd_audio_hw.GetNumberOfSpeakers()
+            val numSpeakers = snd_audio_hw!!.GetNumberOfSpeakers()
             if (!waveform) {
                 j = 0
                 while (j < numSpeakers) {
                     var meter = 0
                     i = 0
                     while (i < Simd.MIXBUFFER_SAMPLES) {
-                        val result = Math.abs(accum.get(i * numSpeakers + j))
+                        val result = abs(accum[i * numSpeakers + j])
                         if (result > meter) {
                             meter = result.toInt()
                         }
@@ -840,7 +844,7 @@ object snd_system {
                     while (y < 128) {
                         x = 0
                         while (x < xsize) {
-                            graph.get((127 - y) * 256 + offset + x) = color
+                            graph!![(127 - y) * 256 + offset + x] = color
                             x++
                         }
                         // #if 0
@@ -855,20 +859,20 @@ object snd_system {
                         }
                         y++
                     }
-                    if (meter > meterTops.get(j)) {
-                        meterTops.get(j) = meter
-                        meterTopsTime.get(j) = time + s_meterTopTime.GetInteger()
-                    } else if (time > meterTopsTime.get(j) && meterTops.get(j) > 0) {
-                        meterTops.get(j)--
-                        if (meterTops.get(j) != 0) {
-                            meterTops.get(j)--
+                    if (meter > meterTops[j]) {
+                        meterTops[j] = meter
+                        meterTopsTime[j] = time + s_meterTopTime.GetInteger()
+                    } else if (time > meterTopsTime[j] && meterTops[j] > 0) {
+                        meterTops[j]--
+                        if (meterTops[j] != 0) {
+                            meterTops[j]--
                         }
                     }
                     j++
                 }
                 j = 0
                 while (j < numSpeakers) {
-                    val meter = meterTops.get(j)
+                    val meter = meterTops[j]
                     var offset: Int
                     var xsize: Int
                     if (numSpeakers == 6) {
@@ -892,7 +896,7 @@ object snd_system {
                     while (y < 128 && y < meter + 4) {
                         x = 0
                         while (x < xsize) {
-                            graph.get((127 - y) * 256 + offset + x) = color
+                            graph!![(127 - y) * 256 + offset + x] = color
                             x++
                         }
                         y++
@@ -910,7 +914,7 @@ object snd_system {
                     while (i < Simd.MIXBUFFER_SAMPLES) {
                         fmeter = 0.0f
                         for (x in 0 until step) {
-                            var result = accum.get((i + x) * numSpeakers + j)
+                            var result = accum[(i + x) * numSpeakers + j]
                             result = result / 32768.0f
                             fmeter += result
                         }
@@ -921,17 +925,17 @@ object snd_system {
                             fmeter = 1.0f
                         }
                         var meter = (fmeter * 63.0f).toInt()
-                        graph.get((meter + 64) * 256 + xx) = colors[j]
+                        graph!![(meter + 64) * 256 + xx] = colors[j]
                         if (meter < 0) {
                             meter = -meter
                         }
-                        if (meter > meterTops.get(xx)) {
-                            meterTops.get(xx) = meter
-                            meterTopsTime.get(xx) = time + 100
-                        } else if (time > meterTopsTime.get(xx) && meterTops.get(xx) > 0) {
-                            meterTops.get(xx)--
-                            if (meterTops.get(xx) != 0) {
-                                meterTops.get(xx)--
+                        if (meter > meterTops[xx]) {
+                            meterTops[xx] = meter
+                            meterTopsTime[xx] = time + 100
+                        } else if (time > meterTopsTime[xx] && meterTops[xx] > 0) {
+                            meterTops[xx]--
+                            if (meterTops[xx] != 0) {
+                                meterTops[xx]--
                             }
                         }
                         xx++
@@ -941,16 +945,16 @@ object snd_system {
                 }
                 i = 0
                 while (i < 256) {
-                    val meter = meterTops.get(i)
+                    val meter = meterTops[i]
                     for (y in -meter until meter) {
-                        graph.get((y + 64) * 256 + i) = colors[j]
+                        graph!![(y + 64) * 256 + i] = colors[j]
                     }
                     i++
                 }
             }
             ret.imageHeight = 128
             ret.imageWidth = 256
-            val image = BufferUtils.createByteBuffer(graph.size * 4)
+            val image = BufferUtils.createByteBuffer(graph!!.size * 4)
             image.asIntBuffer().put(graph)
             ret.image = image
             Sys_LeaveCriticalSection()
@@ -971,8 +975,8 @@ object snd_system {
                 firstChannel = index - firstEmitter * snd_local.SOUND_MAX_CHANNELS + 1
             }
             i = firstEmitter
-            while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.get(i)
+            while (i < sw!!.emitters.Num()) {
+                val sound = sw!!.emitters[i]
                 if (null == sound) {
                     i++
                     continue
@@ -986,18 +990,18 @@ object snd_system {
                         j++
                         continue
                     }
-                    val sample = chan.decoder.GetSample()
+                    val sample = chan.decoder!!.GetSample()
                     if (sample == null) {
                         j++
                         continue
                     }
-                    decoderInfo.name = sample.name
+                    decoderInfo.name.set(sample.name)
                     decoderInfo.format.set(if (sample.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV")
                     decoderInfo.numChannels = sample.objectInfo.nChannels
                     decoderInfo.numSamplesPerSecond = sample.objectInfo.nSamplesPerSec.toLong()
                     decoderInfo.num44kHzSamples = sample.LengthIn44kHzSamples()
                     decoderInfo.numBytes = sample.objectMemSize
-                    decoderInfo.looping = chan.parms.soundShaderFlags and snd_shader.SSF_LOOPING != 0
+                    decoderInfo.looping = chan.parms!!.soundShaderFlags and snd_shader.SSF_LOOPING != 0
                     decoderInfo.lastVolume = chan.lastVolume
                     decoderInfo.start44kHzTime = chan.trigger44kHzTime
                     decoderInfo.current44kHzTime = soundSystemLocal.GetCurrent44kHzTime()
@@ -1031,7 +1035,7 @@ object snd_system {
 
         // some tools, like the sound dialog, may be used in both the game and the editor
         // This can return NULL, so check!
-        override fun GetPlayingSoundWorld(): idSoundWorld {
+        override fun GetPlayingSoundWorld(): idSoundWorld? {
             return currentSoundWorld
         }
 
@@ -1039,7 +1043,7 @@ object snd_system {
             if (!isInitialized) {
                 return
             }
-            soundCache.BeginLevelLoad()
+            soundCache!!.BeginLevelLoad()
             if (efxloaded) {
                 EFXDatabase.UnloadFile()
                 efxloaded = false
@@ -1050,7 +1054,7 @@ object snd_system {
             if (!isInitialized) {
                 return
             }
-            soundCache.EndLevelLoad()
+            soundCache!!.EndLevelLoad()
             val efxname = idStr("efxs/")
             val mapname = idStr(mapString)
             mapname.SetFileExtension(".efx")
@@ -1065,7 +1069,7 @@ object snd_system {
         }
 
         override fun PrintMemInfo(mi: MemInfo_t) {
-            soundCache.PrintMemInfo(mi)
+            soundCache!!.PrintMemInfo(mi)
         }
 
         override fun IsEAXAvailable(): Int {
@@ -1119,10 +1123,10 @@ object snd_system {
             } else if (`val` <= -60.0f) {
                 return 0.0f
             } else if (`val` >= 60.0f) {
-                return Math.pow(2.0, (`val` * (1.0f / 6.0f)).toDouble()).toFloat()
+                return 2.0.pow((`val` * (1.0f / 6.0f)).toDouble()).toFloat()
             }
             val ival = ((`val` + 60.0f) * 10.0f).toInt()
-            return volumesDB.get(ival)
+            return volumesDB[ival]
         }
 
         fun SamplesToMilliseconds(samples: Int): Int {
@@ -1172,7 +1176,7 @@ object snd_system {
 
                 // fx loop
                 for (k in 0 until fxList.Num()) {
-                    val fx = fxList.get(k)
+                    val fx = fxList[k]
 
                     // skip if we're not the right channel
                     if (fx.GetChannel() != i) {
@@ -1193,7 +1197,7 @@ object snd_system {
                     }
                     j = 0
                     while (j < numSamples) {
-                        `in`[in_p + j] = samples.get(j * numSpeakers + i) * s_enviroSuitVolumeScale.GetFloat()
+                        `in`[in_p + j] = samples[j * numSpeakers + i] * s_enviroSuitVolumeScale.GetFloat()
                         j++
                     }
 
@@ -1213,7 +1217,7 @@ object snd_system {
                     )
                     j = 0
                     while (j < numSamples) {
-                        samples.get(j * numSpeakers + i) = out[out_p + j]
+                        samples[j * numSpeakers + i] = out[out_p + j]
                         j++
                     }
                 }
@@ -1242,22 +1246,22 @@ object snd_system {
                 // Then find oldest single shot quiet source,
                 // Then find oldest looping quiet source and
                 // Lastly find oldest single shot non quiet source..
-                if (!openalSources.get(i).inUse) {
+                if (!openalSources[i].inUse) {
                     iUnused = i
                     break
-                } else if (!openalSources.get(i).looping && openalSources.get(i).chan.lastVolume < snd_local.SND_EPSILON) {
-                    if (openalSources.get(i).startTime < timeOldestZeroVolSingleShot) {
-                        timeOldestZeroVolSingleShot = openalSources.get(i).startTime
+                } else if (!openalSources[i].looping && openalSources[i].chan!!.lastVolume < snd_local.SND_EPSILON) {
+                    if (openalSources[i].startTime < timeOldestZeroVolSingleShot) {
+                        timeOldestZeroVolSingleShot = openalSources[i].startTime
                         iOldestZeroVolSingleShot = i
                     }
-                } else if (openalSources.get(i).looping && openalSources.get(i).chan.lastVolume < snd_local.SND_EPSILON) {
-                    if (openalSources.get(i).startTime < timeOldestZeroVolLooping) {
-                        timeOldestZeroVolLooping = openalSources.get(i).startTime
+                } else if (openalSources[i].looping && openalSources[i].chan!!.lastVolume < snd_local.SND_EPSILON) {
+                    if (openalSources[i].startTime < timeOldestZeroVolLooping) {
+                        timeOldestZeroVolLooping = openalSources[i].startTime
                         iOldestZeroVolLooping = i
                     }
-                } else if (!openalSources.get(i).looping) {
-                    if (openalSources.get(i).startTime < timeOldestSingle) {
-                        timeOldestSingle = openalSources.get(i).startTime
+                } else if (!openalSources[i].looping) {
+                    if (openalSources[i].startTime < timeOldestSingle) {
+                        timeOldestSingle = openalSources[i].startTime
                         iOldestSingle = i
                     }
                 }
@@ -1274,25 +1278,25 @@ object snd_system {
             }
             return if (index != -1) {
                 // stop the channel that is being ripped off
-                if (openalSources.get(index).chan != null) {
+                if (openalSources[index].chan != null) {
                     // stop the channel only when not looping
-                    if (!openalSources.get(index).looping) {
-                        openalSources.get(index).chan.Stop()
+                    if (!openalSources[index].looping) {
+                        openalSources[index].chan!!.Stop()
                     } else {
-                        openalSources.get(index).chan.triggered = true
+                        openalSources[index].chan!!.triggered = true
                     }
 
                     // Free hardware resources
-                    openalSources.get(index).chan.ALStop()
+                    openalSources[index].chan!!.ALStop()
                 }
 
                 // Initialize structure
-                openalSources.get(index).startTime = time
-                openalSources.get(index).chan = chan
-                openalSources.get(index).inUse = true
-                openalSources.get(index).looping = looping
-                openalSources.get(index).stereo = stereo
-                openalSources.get(index).handle
+                openalSources[index].startTime = time
+                openalSources[index].chan = chan
+                openalSources[index].inUse = true
+                openalSources[index].looping = looping
+                openalSources[index].stereo = stereo
+                openalSources[index].handle
             } else {
                 0
             }
@@ -1302,9 +1306,9 @@ object snd_system {
             var   /*ALsizei*/i: Int
             i = 0
             while (i < openalSourceCount) {
-                if (openalSources.get(i).handle == handle) {
-                    if (openalSources.get(i).chan != null) {
-                        openalSources.get(i).chan.openalSource = 0
+                if (openalSources[i].handle == handle) {
+                    if (openalSources[i].chan != null) {
+                        openalSources[i].chan!!.openalSource = 0
                     }
                     // #if ID_OPENAL
                     // // Reset source EAX ROOM level when freeing stereo source
@@ -1314,11 +1318,11 @@ object snd_system {
                     // }
 // #endif
                     // Initialize structure
-                    openalSources.get(i).startTime = 0
-                    openalSources.get(i).chan = null
-                    openalSources.get(i).inUse = false
-                    openalSources.get(i).looping = false
-                    openalSources.get(i).stereo = false
+                    openalSources[i].startTime = 0
+                    openalSources[i].chan = null
+                    openalSources[i].inUse = false
+                    openalSources[i].looping = false
+                    openalSources[i].stereo = false
                 }
                 i++
             }
@@ -1339,7 +1343,7 @@ object snd_system {
             }
             val force = args.Argc() == 2
             soundSystem.SetMute(true)
-            soundSystemLocal.soundCache.ReloadSounds(force)
+            soundSystemLocal.soundCache!!.ReloadSounds(force)
             soundSystem.SetMute(false)
             Common.common.Printf("sound: changed sounds reloaded\n")
         }
@@ -1369,24 +1373,24 @@ object snd_system {
             var totalMemory = 0
             var totalPCMMemory = 0
             i = 0
-            while (i < soundSystemLocal.soundCache.GetNumObjects()) {
-                val sample = soundSystemLocal.soundCache.GetObject(i)
+            while (i < soundSystemLocal.soundCache!!.GetNumObjects()) {
+                val sample = soundSystemLocal.soundCache!!.GetObject(i)
                 if (TempDump.NOT(sample)) {
                     i++
                     continue
                 }
-                if (snd != null && sample.name.Find(snd, false) < 0) {
+                if (snd != null && sample!!.name.Find(snd, false) < 0) {
                     i++
                     continue
                 }
-                val info = sample.objectInfo
+                val info = sample!!.objectInfo
                 val stereo = if (info.nChannels == 2) "ST" else "  "
                 val format = if (info.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV"
                 val defaulted = if (sample.defaultSound) "(DEFAULTED)" else if (sample.purged) "(PURGED)" else ""
                 Common.common.Printf(
                     "%s %dkHz %6dms %5dkB %4s %s%s\n", stereo, sample.objectInfo.nSamplesPerSec / 1000,
                     soundSystemLocal.SamplesToMilliseconds(sample.LengthIn44kHzSamples()),
-                    sample.objectMemSize shr 10, format, sample.name, defaulted
+                    sample!!.objectMemSize shr 10, format, sample.name, defaulted
                 )
                 if (!sample.purged) {
                     totalSamples += sample.objectSize
@@ -1428,8 +1432,8 @@ object snd_system {
             numWaitingDecoders = 0
             numActiveDecoders = numWaitingDecoders
             i = 0
-            while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.get(i)
+            while (i < sw!!.emitters.Num()) {
+                val sound = sw.emitters[i]
                 if (TempDump.NOT(sound)) {
                     i++
                     continue
@@ -1443,14 +1447,14 @@ object snd_system {
                         j++
                         continue
                     }
-                    val sample = chan.decoder.GetSample()
+                    val sample = chan.decoder!!.GetSample()
                     if (sample != null) {
                         j++
                         continue
                     }
                     val format =
-                        if (chan.leadinSample.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV"
-                    Common.common.Printf("%3d waiting %s: %s\n", numWaitingDecoders, format, chan.leadinSample.name)
+                        if (chan.leadinSample!!.objectInfo.wFormatTag == snd_local.WAVE_FORMAT_TAG_OGG) "OGG" else "WAV"
+                    Common.common.Printf("%3d waiting %s: %s\n", numWaitingDecoders, format, chan.leadinSample!!.name)
                     numWaitingDecoders++
                     j++
                 }
@@ -1458,7 +1462,7 @@ object snd_system {
             }
             i = 0
             while (i < sw.emitters.Num()) {
-                val sound = sw.emitters.get(i)
+                val sound = sw.emitters[i]
                 if (TempDump.NOT(sound)) {
                     i++
                     continue
@@ -1472,7 +1476,7 @@ object snd_system {
                         j++
                         continue
                     }
-                    val sample = chan.decoder.GetSample()
+                    val sample = chan.decoder!!.GetSample()
                     if (sample == null) {
                         j++
                         continue
@@ -1482,7 +1486,7 @@ object snd_system {
                     val sampleTime = sample.LengthIn44kHzSamples() * sample.objectInfo.nChannels
                     var percent: Int
                     percent = if (localTime > sampleTime) {
-                        if (chan.parms.soundShaderFlags and snd_shader.SSF_LOOPING != 0) {
+                        if (chan.parms!!.soundShaderFlags and snd_shader.SSF_LOOPING != 0) {
                             localTime % sampleTime * 100 / sampleTime
                         } else {
                             100
@@ -1501,8 +1505,8 @@ object snd_system {
             Common.common.Printf("%d active decoders\n", numActiveDecoders)
             Common.common.Printf(
                 "%d kB decoder memory in %d blocks\n",
-                idSampleDecoder.Companion.GetUsedBlockMemory() shr 10,
-                idSampleDecoder.Companion.GetNumUsedBlocks()
+                idSampleDecoder.GetUsedBlockMemory() shr 10,
+                idSampleDecoder.GetNumUsedBlocks()
             )
         }
 
@@ -1524,9 +1528,7 @@ object snd_system {
                 Common.common.Printf("Usage: testSound <file>\n")
                 return
             }
-            if (soundSystemLocal.currentSoundWorld != null) {
-                soundSystemLocal.currentSoundWorld.PlayShaderDirectly(args.Argv(1))
-            }
+            soundSystemLocal.currentSoundWorld?.PlayShaderDirectly(args.Argv(1))
         }
 
         companion object {

@@ -624,13 +624,13 @@ object Simd {
         )
 
         abstract fun  /*VPCALL*/MixedSoundToSamples(
-            samples: ShortArray,
+            samples: IntArray,
             offset: Int,
             mixBuffer: FloatArray,
             numSamples: Int
         )
 
-        fun  /*VPCALL*/MixedSoundToSamples(samples: ShortArray, mixBuffer: FloatArray, numSamples: Int) {
+        fun  /*VPCALL*/MixedSoundToSamples(samples: IntArray, mixBuffer: FloatArray, numSamples: Int) {
             MixedSoundToSamples(samples, 0, mixBuffer, numSamples)
         }
 
