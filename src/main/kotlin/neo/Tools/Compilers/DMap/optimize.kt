@@ -1924,7 +1924,7 @@ object optimize {
         }
     }
 
-    internal class optVertex_s {
+    class optVertex_s {
         var addedToIsland = false
         var edges: optEdge_s? = null
         var emited // when regenerating triangles

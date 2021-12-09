@@ -36,39 +36,39 @@ object AASFile {
 
      ===============================================================================
      */
-    val AAS_FILEID: String? = "DewmAAS"
-    val AAS_FILEVERSION: String? = "1.07"
+    const val AAS_FILEID: String = "DewmAAS"
+    const val AAS_FILEVERSION: String = "1.07"
 
     //
     // bits for different bboxes
     const val AREACONTENTS_BBOX_BIT = 24
-    val AREACONTENTS_CLUSTERPORTAL: Int = Lib.Companion.BIT(2) // area is a cluster portal
-    val AREACONTENTS_OBSTACLE: Int = Lib.Companion.BIT(3) // area contains (part of) a dynamic obstacle
+    val AREACONTENTS_CLUSTERPORTAL: Int = Lib.BIT(2) // area is a cluster portal
+    val AREACONTENTS_OBSTACLE: Int = Lib.BIT(3) // area contains (part of) a dynamic obstacle
 
     //
     // area contents flags
-    val AREACONTENTS_SOLID: Int = Lib.Companion.BIT(0) // solid, not a valid area
-    val AREACONTENTS_TELEPORTER: Int = Lib.Companion.BIT(4) // area contains (part of) a teleporter trigger
-    val AREACONTENTS_WATER: Int = Lib.Companion.BIT(1) // area contains water
-    val AREA_CROUCH: Int = Lib.Companion.BIT(5) // AI cannot walk but can only crouch in this area
+    val AREACONTENTS_SOLID: Int = Lib.BIT(0) // solid, not a valid area
+    val AREACONTENTS_TELEPORTER: Int = Lib.BIT(4) // area contains (part of) a teleporter trigger
+    val AREACONTENTS_WATER: Int = Lib.BIT(1) // area contains water
+    val AREA_CROUCH: Int = Lib.BIT(5) // AI cannot walk but can only crouch in this area
 
     //
     // area flags
-    val AREA_FLOOR: Int = Lib.Companion.BIT(0) // AI can stand on the floor in this area
-    val AREA_GAP: Int = Lib.Companion.BIT(1) // area has a gap
-    val AREA_LADDER: Int = Lib.Companion.BIT(3) // area contains one or more ladder faces
-    val AREA_LEDGE: Int = Lib.Companion.BIT(2) // if entered the AI bbox partly floats above a ledge
-    val AREA_LIQUID: Int = Lib.Companion.BIT(4) // area contains a liquid
-    val AREA_REACHABLE_FLY: Int = Lib.Companion.BIT(7) // area is reachable by flying
-    val AREA_REACHABLE_WALK: Int = Lib.Companion.BIT(6) // area is reachable by walking or swimming
-    val FACE_FLOOR: Int = Lib.Companion.BIT(2) // standing on floor when on this face
-    val FACE_LADDER: Int = Lib.Companion.BIT(1) // ladder surface
-    val FACE_LIQUID: Int = Lib.Companion.BIT(3) // face seperating two areas with liquid
-    val FACE_LIQUIDSURFACE: Int = Lib.Companion.BIT(4) // face seperating liquid and air
+    val AREA_FLOOR: Int = Lib.BIT(0) // AI can stand on the floor in this area
+    val AREA_GAP: Int = Lib.BIT(1) // area has a gap
+    val AREA_LADDER: Int = Lib.BIT(3) // area contains one or more ladder faces
+    val AREA_LEDGE: Int = Lib.BIT(2) // if entered the AI bbox partly floats above a ledge
+    val AREA_LIQUID: Int = Lib.BIT(4) // area contains a liquid
+    val AREA_REACHABLE_FLY: Int = Lib.BIT(7) // area is reachable by flying
+    val AREA_REACHABLE_WALK: Int = Lib.BIT(6) // area is reachable by walking or swimming
+    val FACE_FLOOR: Int = Lib.BIT(2) // standing on floor when on this face
+    val FACE_LADDER: Int = Lib.BIT(1) // ladder surface
+    val FACE_LIQUID: Int = Lib.BIT(3) // face seperating two areas with liquid
+    val FACE_LIQUIDSURFACE: Int = Lib.BIT(4) // face seperating liquid and air
 
     //
     // face flags
-    val FACE_SOLID: Int = Lib.Companion.BIT(0) // solid at the other side
+    val FACE_SOLID: Int = Lib.BIT(0) // solid at the other side
 
     //
     const val MAX_AAS_BOUNDING_BOXES = 4
@@ -76,24 +76,24 @@ object AASFile {
 
     //
     const val MAX_REACH_PER_AREA = 256
-    val TFL_AIR: Int = Lib.Companion.BIT(22) // travel through air
+    val TFL_AIR: Int = Lib.BIT(22) // travel through air
     const val TFL_BARRIERJUMP = 1 shl 4 //BIT(4); // jumping onto a barrier
-    val TFL_CROUCH: Int = Lib.Companion.BIT(2) // crouching
-    val TFL_ELEVATOR: Int = Lib.Companion.BIT(10) // travel by elevator
-    val TFL_FLY: Int = Lib.Companion.BIT(11) // fly
+    val TFL_CROUCH: Int = Lib.BIT(2) // crouching
+    val TFL_ELEVATOR: Int = Lib.BIT(10) // travel by elevator
+    val TFL_FLY: Int = Lib.BIT(11) // fly
 
     //
     // travel flags
-    val TFL_INVALID: Int = Lib.Companion.BIT(0) // not valid
+    val TFL_INVALID: Int = Lib.BIT(0) // not valid
     const val TFL_JUMP = 1 shl 5 //BIT(5);        // jumping
-    val TFL_LADDER: Int = Lib.Companion.BIT(6) // climbing a ladder
-    val TFL_SPECIAL: Int = Lib.Companion.BIT(12) // special
-    val TFL_SWIM: Int = Lib.Companion.BIT(7) // swimming
-    val TFL_TELEPORT: Int = Lib.Companion.BIT(9) // teleportation
-    val TFL_WALK: Int = Lib.Companion.BIT(1) // walking
+    val TFL_LADDER: Int = Lib.BIT(6) // climbing a ladder
+    val TFL_SPECIAL: Int = Lib.BIT(12) // special
+    val TFL_SWIM: Int = Lib.BIT(7) // swimming
+    val TFL_TELEPORT: Int = Lib.BIT(9) // teleportation
+    val TFL_WALK: Int = Lib.BIT(1) // walking
     const val TFL_WALKOFFLEDGE = 1 shl 3 //BIT(3);// walking of a ledge
-    val TFL_WATER: Int = Lib.Companion.BIT(21) // travel through water
-    val TFL_WATERJUMP: Int = Lib.Companion.BIT(8) // jump out of the water
+    val TFL_WATER: Int = Lib.BIT(21) // travel through water
+    val TFL_WATERJUMP: Int = Lib.BIT(8) // jump out of the water
 
     //
     /*
@@ -101,7 +101,7 @@ object AASFile {
      Reachability_Write
      ================
      */
-    fun Reachability_Write(fp: idFile?, reach: idReachability?): Boolean {
+    fun Reachability_Write(fp: idFile, reach: idReachability): Boolean {
         fp.WriteFloatString(
             "\t\t%d %d (%f %f %f) (%f %f %f) %d %d",
             reach.travelType, reach.toAreaNum.toInt(), reach.start.x, reach.start.y, reach.start.z,
@@ -115,7 +115,7 @@ object AASFile {
      Reachability_Read
      ================
      */
-    fun Reachability_Read(src: idLexer?, reach: idReachability?): Boolean {
+    fun Reachability_Read(src: idLexer, reach: idReachability): Boolean {
         reach.travelType = src.ParseInt()
         reach.toAreaNum = src.ParseInt().toShort()
         src.Parse1DMatrix(3, reach.start)
@@ -130,13 +130,13 @@ object AASFile {
      Reachability_Special_Write
      ================
      */
-    fun Reachability_Special_Write(fp: idFile?, reach: idReachability_Special?): Boolean {
+    fun Reachability_Special_Write(fp: idFile, reach: idReachability_Special): Boolean {
         var i: Int
-        var keyValue: idKeyValue?
+        var keyValue: idKeyValue
         fp.WriteFloatString("\n\t\t{\n")
         i = 0
         while (i < reach.dict.GetNumKeyVals()) {
-            keyValue = reach.dict.GetKeyVal(i)
+            keyValue = reach.dict.GetKeyVal(i)!!
             fp.WriteFloatString("\t\t\t\"%s\" \"%s\"\n", keyValue.GetKey().toString(), keyValue.GetValue().toString())
             i++
         }
@@ -149,12 +149,12 @@ object AASFile {
      Reachability_Special_Read
      ================
      */
-    fun Reachability_Special_Read(src: idLexer?, reach: idReachability_Special?): Boolean {
+    fun Reachability_Special_Read(src: idLexer, reach: idReachability_Special): Boolean {
         val key = idToken()
         val value = idToken()
         src.ExpectTokenString("{")
         while (src.ReadToken(key)) {
-            if (key == "}") {
+            if (key.toString() == "}") {
                 return true
             }
             src.ExpectTokenType(Token.TT_STRING, 0, value)
@@ -172,7 +172,7 @@ object AASFile {
         var edgeNum // edge crossed by this reachability
                 = 0
         val end // end point of inter area movement
-                : idVec3?
+                : idVec3
         var fromAreaNum // number of area the reachability starts
                 : Short = 0
         var next // next reachability in list
@@ -182,7 +182,7 @@ object AASFile {
         var rev_next // next reachability in reversed list
                 : idReachability? = null
         val start // start point of inter area movement
-                : idVec3?
+                : idVec3
         var toAreaNum // number of the reachable area
                 : Short = 0
         /*unsigned short*/  var travelTime // travel time of the inter area movement
@@ -190,7 +190,7 @@ object AASFile {
         var travelType // type of travel required to get to the area
                 = 0
 
-        fun CopyBase(reach: idReachability?) {
+        fun CopyBase(reach: idReachability) {
             travelType = reach.travelType
             toAreaNum = reach.toAreaNum
             start.set(reach.start)
@@ -214,17 +214,17 @@ object AASFile {
     class idReachability_Swim : idReachability()
     class idReachability_Fly : idReachability()
     class idReachability_Special : idReachability() {
-        var dict: idDict? = null
+        var dict: idDict = idDict()
     }
 
     // edge
     class aasEdge_s {
-        var vertexNum: IntArray? = IntArray(2) // numbers of the vertexes of this edge
+        var vertexNum: IntArray = IntArray(2) // numbers of the vertexes of this edge
     }
 
     // area boundary face
     class aasFace_s {
-        var areas: ShortArray? = ShortArray(2) // area at the front and back of this face
+        var areas: ShortArray = ShortArray(2) // area at the front and back of this face
         var firstEdge // first edge in the edge index
                 = 0
         var flags // face flags
@@ -237,9 +237,9 @@ object AASFile {
 
     // area with a boundary of faces
     class aasArea_s {
-        var bounds // bounds of the area
-                : idBounds? = null
-        val center: idVec3? = idVec3() // center of the area an AI can move towards
+        val bounds // bounds of the area
+                : idBounds = idBounds()
+        val center: idVec3 = idVec3() // center of the area an AI can move towards
         var cluster // cluster the area belongs to, if negative it's a portal
                 : Short = 0
         var clusterAreaNum // number of the area in the cluster
@@ -263,7 +263,7 @@ object AASFile {
     // nodes of the bsp tree
     class aasNode_s {
         /*unsigned short*/
-        var children: IntArray? = IntArray(2) // child nodes, zero is solid, negative is -(area number)
+        var children: IntArray = IntArray(2) // child nodes, zero is solid, negative is -(area number)
         var planeNum // number of the plane that splits the subspace at this node
                 = 0
     }
@@ -272,8 +272,8 @@ object AASFile {
     class aasPortal_s {
         var areaNum // number of the area that is the actual portal
                 : Short = 0
-        var clusterAreaNum: ShortArray? = ShortArray(2) // number of this portal area in the front and back cluster
-        var clusters: ShortArray? = ShortArray(2) // number of cluster at the front and back of the portal
+        var clusterAreaNum: ShortArray = ShortArray(2) // number of this portal area in the front and back cluster
+        var clusters: ShortArray = ShortArray(2) // number of cluster at the front and back of the portal
         var maxAreaTravelTime // maximum travel time through the portal area
                 = 0
     }
@@ -298,7 +298,7 @@ object AASFile {
         var blockingAreaNum // area that could not be entered
                 = 0
         val endpos // end position of trace
-                : idVec3?
+                : idVec3
         var flags // areas with these flags block the trace
                 : Int
 
@@ -316,7 +316,7 @@ object AASFile {
         var planeNum // plane hit
                 = 0
         var points // points where the trace entered each new area
-                : Array<idVec3?>?
+                : Array<idVec3>?
         var travelFlags // areas with these travel flags block the trace
                 : Int
 
@@ -340,40 +340,40 @@ object AASFile {
      ===============================================================================
      */
     class idAASSettings {
-        var allowFlyReachabilities: CBool? = CBool(false)
-        var allowSwimReachabilities: CBool? = CBool(false)
-        var boundingBoxes: Array<idBounds?>? = arrayOfNulls<idBounds?>(AASFile.MAX_AAS_BOUNDING_BOXES)
-        var fileExtension: idStr?
+        var allowFlyReachabilities: CBool = CBool(false)
+        var allowSwimReachabilities: CBool = CBool(false)
+        var boundingBoxes: Array<idBounds> = Array(MAX_AAS_BOUNDING_BOXES) { idBounds() }
+        var fileExtension: idStr
 
         // physics settings
-        val gravity: idVec3?
-        val gravityDir: idVec3?
+        val gravity: idVec3
+        val gravityDir: idVec3
         var gravityValue: Float
-        val invGravityDir: idVec3?
-        var maxBarrierHeight: CFloat? = CFloat()
-        var maxFallHeight: CFloat? = CFloat()
-        var maxStepHeight: CFloat? = CFloat()
-        var maxWaterJumpHeight: CFloat? = CFloat()
-        var minFloorCos: CFloat? = CFloat()
+        val invGravityDir: idVec3
+        var maxBarrierHeight: CFloat = CFloat()
+        var maxFallHeight: CFloat = CFloat()
+        var maxStepHeight: CFloat = CFloat()
+        var maxWaterJumpHeight: CFloat = CFloat()
+        var minFloorCos: CFloat = CFloat()
         var noOptimize: Boolean
 
         // collision settings
         var numBoundingBoxes = 1
-        var playerFlood: CBool? = CBool(false)
+        var playerFlood: CBool = CBool(false)
 
         // fixed travel times
-        var tt_barrierJump: CInt? = CInt()
-        var tt_startCrouching: CInt? = CInt()
-        var tt_startWalkOffLedge: CInt? = CInt()
-        var tt_waterJump: CInt? = CInt()
-        var usePatches: CBool? = CBool(false)
-        var writeBrushMap: CBool? = CBool(false)
+        var tt_barrierJump: CInt = CInt()
+        var tt_startCrouching: CInt = CInt()
+        var tt_startWalkOffLedge: CInt = CInt()
+        var tt_waterJump: CInt = CInt()
+        var usePatches: CBool = CBool(false)
+        var writeBrushMap: CBool = CBool(false)
 
         @Throws(idException::class)
-        fun FromFile(fileName: idStr?): Boolean {
+        fun FromFile(fileName: idStr): Boolean {
             val src =
                 idLexer(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_NOSTRINGCONCAT)
-            val name: idStr?
+            val name: idStr
             name = fileName
             Common.common.Printf("loading %s\n", name)
             if (!src.LoadFile(name.toString())) {
@@ -392,7 +392,7 @@ object AASFile {
         }
 
         @Throws(idException::class)
-        fun FromParser(src: idLexer?): Boolean {
+        fun FromParser(src: idLexer): Boolean {
             val token = idToken()
             if (!src.ExpectTokenString("{")) {
                 return false
@@ -403,75 +403,75 @@ object AASFile {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
-                if (token == "bboxes") {
+                if (token.toString() == "bboxes") {
                     if (!ParseBBoxes(src)) {
                         return false
                     }
-                } else if (token == "usePatches") {
+                } else if (token.toString() == "usePatches") {
                     if (!ParseBool(src, usePatches)) {
                         return false
                     }
-                } else if (token == "writeBrushMap") {
+                } else if (token.toString() == "writeBrushMap") {
                     if (!ParseBool(src, writeBrushMap)) {
                         return false
                     }
-                } else if (token == "playerFlood") {
+                } else if (token.toString() == "playerFlood") {
                     if (!ParseBool(src, playerFlood)) {
                         return false
                     }
-                } else if (token == "allowSwimReachabilities") {
+                } else if (token.toString() == "allowSwimReachabilities") {
                     if (!ParseBool(src, allowSwimReachabilities)) {
                         return false
                     }
-                } else if (token == "allowFlyReachabilities") {
+                } else if (token.toString() == "allowFlyReachabilities") {
                     if (!ParseBool(src, allowFlyReachabilities)) {
                         return false
                     }
-                } else if (token == "fileExtension") {
+                } else if (token.toString() == "fileExtension") {
                     src.ExpectTokenString("=")
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
                     fileExtension = token
-                } else if (token == "gravity") {
+                } else if (token.toString() == "gravity") {
                     ParseVector(src, gravity)
                     gravityDir.set(gravity)
                     gravityValue = gravityDir.Normalize()
-                    invGravityDir.set(gravityDir.oNegative())
-                } else if (token == "maxStepHeight") {
+                    invGravityDir.set(-gravityDir)
+                } else if (token.toString() == "maxStepHeight") {
                     if (!ParseFloat(src, maxStepHeight)) {
                         return false
                     }
-                } else if (token == "maxBarrierHeight") {
+                } else if (token.toString() == "maxBarrierHeight") {
                     if (!ParseFloat(src, maxBarrierHeight)) {
                         return false
                     }
-                } else if (token == "maxWaterJumpHeight") {
+                } else if (token.toString() == "maxWaterJumpHeight") {
                     if (!ParseFloat(src, maxWaterJumpHeight)) {
                         return false
                     }
-                } else if (token == "maxFallHeight") {
+                } else if (token.toString() == "maxFallHeight") {
                     if (!ParseFloat(src, maxFallHeight)) {
                         return false
                     }
-                } else if (token == "minFloorCos") {
+                } else if (token.toString() == "minFloorCos") {
                     if (!ParseFloat(src, minFloorCos)) {
                         return false
                     }
-                } else if (token == "tt_barrierJump") {
+                } else if (token.toString() == "tt_barrierJump") {
                     if (!ParseInt(src, tt_barrierJump)) {
                         return false
                     }
-                } else if (token == "tt_startCrouching") {
+                } else if (token.toString() == "tt_startCrouching") {
                     if (!ParseInt(src, tt_startCrouching)) {
                         return false
                     }
-                } else if (token == "tt_waterJump") {
+                } else if (token.toString() == "tt_waterJump") {
                     if (!ParseInt(src, tt_waterJump)) {
                         return false
                     }
-                } else if (token == "tt_startWalkOffLedge") {
+                } else if (token.toString() == "tt_startWalkOffLedge") {
                     if (!ParseInt(src, tt_startWalkOffLedge)) {
                         return false
                     }
@@ -485,16 +485,16 @@ object AASFile {
             return true
         }
 
-        fun FromDict(name: String?, dict: idDict?): Boolean {
+        fun FromDict(name: String, dict: idDict): Boolean {
             val bounds = idBounds()
-            if (!dict.GetVector("mins", "0 0 0", bounds.get(0))) {
+            if (!dict.GetVector("mins", "0 0 0", bounds[0])) {
                 Common.common.Error("Missing 'mins' in entityDef '%s'", name)
             }
-            if (!dict.GetVector("maxs", "0 0 0", bounds.get(1))) {
+            if (!dict.GetVector("maxs", "0 0 0", bounds[1])) {
                 Common.common.Error("Missing 'maxs' in entityDef '%s'", name)
             }
             numBoundingBoxes = 1
-            boundingBoxes.get(0) = bounds
+            boundingBoxes[0] = bounds
             if (!dict.GetBool("usePatches", "0", usePatches)) {
                 Common.common.Error("Missing 'usePatches' in entityDef '%s'", name)
             }
@@ -518,7 +518,7 @@ object AASFile {
             }
             gravityDir.set(gravity)
             gravityValue = gravityDir.Normalize()
-            invGravityDir.set(gravityDir.oNegative())
+            invGravityDir.set(-gravityDir)
             if (!dict.GetFloat("maxStepHeight", "0", maxStepHeight)) {
                 Common.common.Error("Missing 'maxStepHeight' in entityDef '%s'", name)
             }
@@ -549,7 +549,7 @@ object AASFile {
             return true
         }
 
-        fun WriteToFile(fp: idFile?): Boolean {
+        fun WriteToFile(fp: idFile): Boolean {
             var i: Int
             fp.WriteFloatString("{\n")
             fp.WriteFloatString("\tbboxes\n\t{\n")
@@ -557,40 +557,40 @@ object AASFile {
             while (i < numBoundingBoxes) {
                 fp.WriteFloatString(
                     "\t\t(%f %f %f)-(%f %f %f)\n",
-                    boundingBoxes.get(i).get(0).x, boundingBoxes.get(i).get(0).y, boundingBoxes.get(i).get(0).z,
-                    boundingBoxes.get(i).get(1).x, boundingBoxes.get(i).get(1).y, boundingBoxes.get(i).get(1).z
+                    boundingBoxes[i][0].x, boundingBoxes[i][0].y, boundingBoxes[i][0].z,
+                    boundingBoxes[i][1].x, boundingBoxes[i][1].y, boundingBoxes[i][1].z
                 )
                 i++
             }
             fp.WriteFloatString("\t}\n")
-            fp.WriteFloatString("\tusePatches = %d\n", usePatches.isVal())
-            fp.WriteFloatString("\twriteBrushMap = %d\n", writeBrushMap.isVal())
-            fp.WriteFloatString("\tplayerFlood = %d\n", playerFlood.isVal())
-            fp.WriteFloatString("\tallowSwimReachabilities = %d\n", allowSwimReachabilities.isVal())
-            fp.WriteFloatString("\tallowFlyReachabilities = %d\n", allowFlyReachabilities.isVal())
+            fp.WriteFloatString("\tusePatches = %d\n", usePatches._val)
+            fp.WriteFloatString("\twriteBrushMap = %d\n", writeBrushMap._val)
+            fp.WriteFloatString("\tplayerFlood = %d\n", playerFlood._val)
+            fp.WriteFloatString("\tallowSwimReachabilities = %d\n", allowSwimReachabilities._val)
+            fp.WriteFloatString("\tallowFlyReachabilities = %d\n", allowFlyReachabilities._val)
             fp.WriteFloatString("\tfileExtension = \"%s\"\n", fileExtension)
             fp.WriteFloatString("\tgravity = (%f %f %f)\n", gravity.x, gravity.y, gravity.z)
-            fp.WriteFloatString("\tmaxStepHeight = %f\n", maxStepHeight.getVal())
-            fp.WriteFloatString("\tmaxBarrierHeight = %f\n", maxBarrierHeight.getVal())
-            fp.WriteFloatString("\tmaxWaterJumpHeight = %f\n", maxWaterJumpHeight.getVal())
-            fp.WriteFloatString("\tmaxFallHeight = %f\n", maxFallHeight.getVal())
-            fp.WriteFloatString("\tminFloorCos = %f\n", minFloorCos.getVal())
-            fp.WriteFloatString("\ttt_barrierJump = %d\n", tt_barrierJump.getVal())
-            fp.WriteFloatString("\ttt_startCrouching = %d\n", tt_startCrouching.getVal())
-            fp.WriteFloatString("\ttt_waterJump = %d\n", tt_waterJump.getVal())
-            fp.WriteFloatString("\ttt_startWalkOffLedge = %d\n", tt_startWalkOffLedge.getVal())
+            fp.WriteFloatString("\tmaxStepHeight = %f\n", maxStepHeight._val)
+            fp.WriteFloatString("\tmaxBarrierHeight = %f\n", maxBarrierHeight._val)
+            fp.WriteFloatString("\tmaxWaterJumpHeight = %f\n", maxWaterJumpHeight._val)
+            fp.WriteFloatString("\tmaxFallHeight = %f\n", maxFallHeight._val)
+            fp.WriteFloatString("\tminFloorCos = %f\n", minFloorCos._val)
+            fp.WriteFloatString("\ttt_barrierJump = %d\n", tt_barrierJump._val)
+            fp.WriteFloatString("\ttt_startCrouching = %d\n", tt_startCrouching._val)
+            fp.WriteFloatString("\ttt_waterJump = %d\n", tt_waterJump._val)
+            fp.WriteFloatString("\ttt_startWalkOffLedge = %d\n", tt_startWalkOffLedge._val)
             fp.WriteFloatString("}\n")
             return true
         }
 
-        fun ValidForBounds(bounds: idBounds?): Boolean {
+        fun ValidForBounds(bounds: idBounds): Boolean {
             var i: Int
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) < boundingBoxes.get(0).get(0, i)) {
+                if (bounds[0, i] < boundingBoxes[0][0, i]) {
                     return false
                 }
-                if (bounds.get(1, i) > boundingBoxes.get(0).get(1, i)) {
+                if (bounds[1, i] > boundingBoxes[0][1, i]) {
                     return false
                 }
                 i++
@@ -598,11 +598,11 @@ object AASFile {
             return true
         }
 
-        fun ValidEntity(classname: String?): Boolean {
+        fun ValidEntity(classname: String): Boolean {
             val use_aas = idStr()
             val size = idVec3()
             val bounds = idBounds()
-            if (playerFlood.isVal()) {
+            if (playerFlood._val) {
                 if (classname == "info_player_start" || classname == "info_player_deathmatch" || classname == "func_teleporter") {
                     return true
                 }
@@ -614,11 +614,11 @@ object AASFile {
                     use_aas
                 ) && TempDump.NOT(fileExtension.Icmp(use_aas).toDouble())
             ) {
-                if (decl.dict.GetVector("mins", null, bounds.get(0))) {
-                    decl.dict.GetVector("maxs", null, bounds.get(1))
+                if (decl.dict.GetVector("mins", null, bounds[0])) {
+                    decl.dict.GetVector("maxs", null, bounds[1])
                 } else if (decl.dict.GetVector("size", null, size)) {
-                    bounds.get(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
-                    bounds.get(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
+                    bounds[0].set(size.x * -0.5f, size.y * -0.5f, 0.0f)
+                    bounds[1].set(size.x * 0.5f, size.y * 0.5f, size.z)
                 }
                 if (!ValidForBounds(bounds)) {
                     Common.common.Error("%s cannot use %s\n", classname, fileExtension)
@@ -628,37 +628,37 @@ object AASFile {
             return false
         }
 
-        private fun ParseBool(src: idLexer?, b: CBool?): Boolean {
+        private fun ParseBool(src: idLexer, b: CBool): Boolean {
             if (!src.ExpectTokenString("=")) {
                 return false
             }
-            b.setVal(src.ParseBool())
+            b._val = (src.ParseBool())
             return true
         }
 
-        private fun ParseInt(src: idLexer?, i: CInt?): Boolean {
+        private fun ParseInt(src: idLexer, i: CInt): Boolean {
             if (!src.ExpectTokenString("=")) {
                 return false
             }
-            i.setVal(src.ParseInt())
+            i._val = (src.ParseInt())
             return true
         }
 
-        private fun ParseFloat(src: idLexer?, f: CFloat?): Boolean {
+        private fun ParseFloat(src: idLexer, f: CFloat): Boolean {
             if (!src.ExpectTokenString("=")) {
                 return false
             }
-            f.setVal(src.ParseFloat())
+            f._val = (src.ParseFloat())
             return true
         }
 
-        private fun ParseVector(src: idLexer?, vec: idVec3?): Boolean {
+        private fun ParseVector(src: idLexer, vec: idVec3): Boolean {
             return if (!src.ExpectTokenString("=")) {
                 false
             } else src.Parse1DMatrix(3, vec)
         }
 
-        private fun ParseBBoxes(src: idLexer?): Boolean {
+        private fun ParseBBoxes(src: idLexer): Boolean {
             val token = idToken()
             val bounds = idBounds()
             numBoundingBoxes = 0
@@ -666,16 +666,16 @@ object AASFile {
                 return false
             }
             while (src.ReadToken(token)) {
-                if (token == "}") {
+                if (token.toString() == "}") {
                     return true
                 }
                 src.UnreadToken(token)
-                src.Parse1DMatrix(3, bounds.get(0))
+                src.Parse1DMatrix(3, bounds[0])
                 if (!src.ExpectTokenString("-")) {
                     return false
                 }
-                src.Parse1DMatrix(3, bounds.get(1))
-                boundingBoxes.get(numBoundingBoxes++) = bounds
+                src.Parse1DMatrix(3, bounds[1])
+                boundingBoxes[numBoundingBoxes++] = bounds
             }
             return false
         }
@@ -683,29 +683,29 @@ object AASFile {
         //
         //
         init {
-            boundingBoxes.get(0) = idBounds(idVec3(-16, -16, 0), idVec3(16, 16, 72))
-            usePatches.setVal(false)
-            writeBrushMap.setVal(false)
-            playerFlood.setVal(false)
+            boundingBoxes[0] = idBounds(idVec3(-16f, -16f, 0f), idVec3(16f, 16f, 72f))
+            usePatches._val = (false)
+            writeBrushMap._val = (false)
+            playerFlood._val = (false)
             noOptimize = false
-            allowSwimReachabilities.setVal(false)
-            allowFlyReachabilities.setVal(false)
+            allowSwimReachabilities._val = (false)
+            allowFlyReachabilities._val = (false)
             fileExtension = idStr("aas48")
             // physics settings
-            gravity = idVec3(0, 0, -1066)
+            gravity = idVec3(0f, 0f, -1066f)
             gravityDir = gravity
             gravityValue = gravityDir.Normalize()
-            invGravityDir = gravityDir.oNegative()
-            maxStepHeight.setVal(14.0f)
-            maxBarrierHeight.setVal(32.0f)
-            maxWaterJumpHeight.setVal(20.0f)
-            maxFallHeight.setVal(64.0f)
-            minFloorCos.setVal(0.7f)
+            invGravityDir = -gravityDir
+            maxStepHeight._val = (14.0f)
+            maxBarrierHeight._val = (32.0f)
+            maxWaterJumpHeight._val = (20.0f)
+            maxFallHeight._val = (64.0f)
+            minFloorCos._val = (0.7f)
             // fixed travel times
-            tt_barrierJump.setVal(100)
-            tt_startCrouching.setVal(100)
-            tt_waterJump.setVal(100)
-            tt_startWalkOffLedge.setVal(100)
+            tt_barrierJump._val = (100)
+            tt_startCrouching._val = (100)
+            tt_waterJump._val = (100)
+            tt_startWalkOffLedge._val = (100)
         }
     }
 
@@ -732,25 +732,25 @@ object AASFile {
 
      */
     abstract class idAASFile protected constructor() {
-        val areas: idList<aasArea_s?>?
-        val clusters: idList<aasCluster_s?>?
+        val areas: idList<aasArea_s>
+        val clusters: idList<aasCluster_s>
         protected var   /*unsigned int*/crc: Long = 0
-        val edgeIndex: idList<Int?>?
-        val edges: idList<aasEdge_s?>?
-        val faceIndex: idList<Int?>?
-        val faces: idList<aasFace_s?>?
-        protected var name: idStr?
-        val nodes: idList<aasNode_s?>?
+        val edgeIndex: idList<Int>
+        val edges: idList<aasEdge_s>
+        val faceIndex: idList<Int>
+        val faces: idList<aasFace_s>
+        protected val name: idStr
+        val nodes: idList<aasNode_s>
 
         //
-        var planeList: idPlaneSet?
-        val portalIndex: idList<Int?>?
-        val portals: idList<aasPortal_s?>?
-        var settings: idAASSettings?
-        val vertices: idList<idVec3?>?
+        var planeList: idPlaneSet
+        val portalIndex: idList<Int>
+        val portals: idList<aasPortal_s>
+        var settings: idAASSettings
+        val vertices: idList<idVec3>
 
         // virtual 					~idAASFile() {}
-        fun GetName(): String? {
+        fun GetName(): String {
             return name.toString()
         }
 
@@ -762,24 +762,24 @@ object AASFile {
             return planeList.Num()
         }
 
-        fun GetPlane(index: Int): idPlane? {
-            return planeList.get(index)
+        fun GetPlane(index: Int): idPlane {
+            return planeList[index]
         }
 
         fun GetNumVertices(): Int {
             return vertices.Num()
         }
 
-        fun  /*aasVertex_t*/GetVertex(index: Int): idVec3? {
-            return vertices.get(index)
+        fun  /*aasVertex_t*/GetVertex(index: Int): idVec3 {
+            return vertices[index]
         }
 
         fun GetNumEdges(): Int {
             return edges.Num()
         }
 
-        fun GetEdge(index: Int): aasEdge_s? {
-            return edges.get(index)
+        fun GetEdge(index: Int): aasEdge_s {
+            return edges[index]
         }
 
         fun GetNumEdgeIndexes(): Int {
@@ -787,15 +787,15 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetEdgeIndex(index: Int): Int {
-            return edgeIndex.get(index)
+            return edgeIndex[index]
         }
 
         fun GetNumFaces(): Int {
             return faces.Num()
         }
 
-        fun GetFace(index: Int): aasFace_s? {
-            return faces.get(index)
+        fun GetFace(index: Int): aasFace_s {
+            return faces[index]
         }
 
         fun GetNumFaceIndexes(): Int {
@@ -803,31 +803,31 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetFaceIndex(index: Int): Int {
-            return faceIndex.get(index)
+            return faceIndex[index]
         }
 
         fun GetNumAreas(): Int {
             return areas.Num()
         }
 
-        fun GetArea(index: Int): aasArea_s? {
-            return areas.get(index)
+        fun GetArea(index: Int): aasArea_s {
+            return areas[index]
         }
 
         fun GetNumNodes(): Int {
             return nodes.Num()
         }
 
-        fun GetNode(index: Int): aasNode_s? {
-            return nodes.get(index)
+        fun GetNode(index: Int): aasNode_s {
+            return nodes[index]
         }
 
         fun GetNumPortals(): Int {
             return portals.Num()
         }
 
-        fun GetPortal(index: Int): aasPortal_s? {
-            return portals.get(index)
+        fun GetPortal(index: Int): aasPortal_s {
+            return portals[index]
         }
 
         fun GetNumPortalIndexes(): Int {
@@ -835,54 +835,54 @@ object AASFile {
         }
 
         fun  /*aasIndex_t*/GetPortalIndex(index: Int): Int {
-            return portalIndex.get(index)
+            return portalIndex[index]
         }
 
         fun GetNumClusters(): Int {
             return clusters.Num()
         }
 
-        fun GetCluster(index: Int): aasCluster_s? {
-            return clusters.get(index)
+        fun GetCluster(index: Int): aasCluster_s {
+            return clusters[index]
         }
 
-        fun GetSettings(): idAASSettings? {
+        fun GetSettings(): idAASSettings {
             return settings
         }
 
         fun SetPortalMaxTravelTime(index: Int, time: Int) {
-            portals.get(index).maxAreaTravelTime = time
+            portals[index].maxAreaTravelTime = time
         }
 
         fun SetAreaTravelFlag(index: Int, flag: Int) {
-            areas.get(index).travelFlags = areas.get(index).travelFlags or flag
+            areas[index].travelFlags = areas[index].travelFlags or flag
         }
 
         fun RemoveAreaTravelFlag(index: Int, flag: Int) {
-            areas.get(index).travelFlags = areas.get(index).travelFlags and flag.inv()
+            areas[index].travelFlags = areas[index].travelFlags and flag.inv()
         }
 
-        abstract fun EdgeCenter(edgeNum: Int): idVec3?
-        abstract fun FaceCenter(faceNum: Int): idVec3?
-        abstract fun AreaCenter(areaNum: Int): idVec3?
+        abstract fun EdgeCenter(edgeNum: Int): idVec3
+        abstract fun FaceCenter(faceNum: Int): idVec3
+        abstract fun AreaCenter(areaNum: Int): idVec3
 
         //
-        abstract fun EdgeBounds(edgeNum: Int): idBounds?
-        abstract fun FaceBounds(faceNum: Int): idBounds?
-        abstract fun AreaBounds(areaNum: Int): idBounds?
+        abstract fun EdgeBounds(edgeNum: Int): idBounds
+        abstract fun FaceBounds(faceNum: Int): idBounds
+        abstract fun AreaBounds(areaNum: Int): idBounds
 
         //
-        abstract fun PointAreaNum(origin: idVec3?): Int
+        abstract fun PointAreaNum(origin: idVec3): Int
         abstract fun PointReachableAreaNum(
-            origin: idVec3?,
-            searchBounds: idBounds?,
+            origin: idVec3,
+            searchBounds: idBounds,
             areaFlags: Int,
             excludeTravelFlags: Int
         ): Int
 
-        abstract fun BoundsReachableAreaNum(bounds: idBounds?, areaFlags: Int, excludeTravelFlags: Int): Int
-        abstract fun PushPointIntoAreaNum(areaNum: Int, point: idVec3?)
-        abstract fun Trace(trace: aasTrace_s?, start: idVec3?, end: idVec3?): Boolean
+        abstract fun BoundsReachableAreaNum(bounds: idBounds, areaFlags: Int, excludeTravelFlags: Int): Int
+        abstract fun PushPointIntoAreaNum(areaNum: Int, point: idVec3)
+        abstract fun Trace(trace: aasTrace_s, start: idVec3, end: idVec3): Boolean
         abstract fun PrintInfo()
 
         //
@@ -890,16 +890,16 @@ object AASFile {
         init {
             name = idStr()
             planeList = idPlaneSet()
-            vertices = idList<Any?>()
-            edges = idList<Any?>()
-            edgeIndex = idList<Any?>()
-            faces = idList<Any?>()
-            faceIndex = idList<Any?>()
-            areas = idList<Any?>()
-            nodes = idList<Any?>()
-            portals = idList<Any?>()
-            portalIndex = idList<Any?>()
-            clusters = idList<Any?>()
+            vertices = idList()
+            edges = idList()
+            edgeIndex = idList()
+            faces = idList()
+            faceIndex = idList()
+            areas = idList()
+            nodes = idList()
+            portals = idList()
+            portalIndex = idList()
+            clusters = idList()
             settings = idAASSettings()
         }
     }

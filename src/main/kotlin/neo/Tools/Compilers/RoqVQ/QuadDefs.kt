@@ -55,7 +55,7 @@ object QuadDefs {
                 = 0
     }
 
-    internal class quadcel {
+    class quadcel {
         var   /*unsigned int*/bitmap // ccc bitmap
                 : Long = 0
 
@@ -84,7 +84,7 @@ object QuadDefs {
         var motsnr // delta snr to previous image
                 = 0f
         var patsnr = 0f
-        var patten: IntArray? = IntArray(5) // which pattern
+        var patten: IntArray = IntArray(5) // which pattern
         var rsnr // what's the current snr
                 = 0f
         var size //  32, 16, 8, or 4
@@ -93,7 +93,7 @@ object QuadDefs {
                 : Long = 0
         var sldsnr // solid color snr
                 = 0f
-        var snr: FloatArray? = FloatArray(QuadDefs.DEAD + 1) // snrssss
+        var snr: FloatArray = FloatArray(QuadDefs.DEAD + 1) // snrssss
 
         //
         var status = 0
@@ -104,9 +104,9 @@ object QuadDefs {
     }
 
     internal class dataQuadCel {
-        var bitmaps: LongArray? = LongArray(7) // ccc bitmap
-        var cols: LongArray? = LongArray(8)
-        var snr: FloatArray? = FloatArray(QuadDefs.DEAD + 1) // snrssss
+        var bitmaps: LongArray = LongArray(7) // ccc bitmap
+        var cols: LongArray = LongArray(8)
+        var snr: FloatArray = FloatArray(QuadDefs.DEAD + 1) // snrssss
     }
 
     internal class norm {
@@ -116,13 +116,13 @@ object QuadDefs {
     }
 
     internal class dtlCel {
-        var a: IntArray? = IntArray(4)
-        var b: IntArray? = IntArray(4)
+        var a: IntArray = IntArray(4)
+        var b: IntArray = IntArray(4)
 
         /*unsigned*/
-        var dtlMap: CharArray? = CharArray(256)
-        var g: IntArray? = IntArray(4)
-        var r: IntArray? = IntArray(4)
+        var dtlMap: CharArray = CharArray(256)
+        var g: IntArray = IntArray(4)
+        var r: IntArray = IntArray(4)
         var ymean = 0f
     }
 

@@ -338,7 +338,7 @@ object Game_local {
             ModelManager.setRenderModelManagers(gameImport.renderModelManager)
             UserInterface.setUiManagers(gameImport.uiManager)
             DeclManager.setDeclManager(gameImport.declManager)
-            AASFileManager.setAASFileManager(gameImport.AASFileManager)
+            AASFileManager.setAASFileManagers(gameImport.AASFileManager)
             CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)
         }
 

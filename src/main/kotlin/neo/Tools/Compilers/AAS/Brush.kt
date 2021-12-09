@@ -12,12 +12,13 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.PlaneSet.idPlaneSet
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.sys.win_shared
-import java.util.*
+import kotlin.math.abs
 
 /**
  *
@@ -42,7 +43,7 @@ object Brush {
      ===============================================================================
      */
     const val BRUSH_PLANESIDE_FRONT = 1
-    const val BRUSH_PLANESIDE_BOTH = Brush.BRUSH_PLANESIDE_FRONT or Brush.BRUSH_PLANESIDE_BACK
+    const val BRUSH_PLANESIDE_BOTH = BRUSH_PLANESIDE_FRONT or BRUSH_PLANESIDE_BACK
     const val BRUSH_PLANE_DIST_EPSILON = 0.01f
     const val BRUSH_PLANE_NORMAL_EPSILON = 0.00001f
 
@@ -57,25 +58,25 @@ object Brush {
     const val SFL_SPLIT = 0x0001
     const val SFL_TESTED_SPLITTER = 0x0008
     const val SFL_USED_SPLITTER = 0x0004
-    private const val lastUpdateTime = 0
+    private var lastUpdateTime = 0
 
     /*
      ============
      DisplayRealTimeString
      ============
      */
-    fun DisplayRealTimeString(format: String?, vararg args: Any?) {
+    fun DisplayRealTimeString(format: String, vararg args: Any) {
 //        va_list argPtr;
         val buf: String //= new char[MAX_STRING_CHARS];
         val time: Int
         time = win_shared.Sys_Milliseconds()
-        if (time > Brush.lastUpdateTime + Brush.OUTPUT_UPDATE_TIME) {
+        if (time > lastUpdateTime + OUTPUT_UPDATE_TIME) {
 //            va_start(argPtr, string);
 //            vsprintf(buf, string, argPtr);
 //            va_end(argPtr);
-            buf = String.format(format, Arrays.toString(args))
+            buf = String.format(format, args.contentToString())
             Common.common.Printf(buf)
-            Brush.lastUpdateTime = time
+            lastUpdateTime = time
         }
     }
 
@@ -85,10 +86,10 @@ object Brush {
     //
     //===============================================================
     internal class idBrushSide {
-        private var flags: Int
-        private val plane: idPlane? = idPlane()
-        private var planeNum: Int
-        private var winding: idWinding?
+        var flags: Int
+        val plane: idPlane = idPlane()
+        var planeNum: Int
+        var winding: idWinding?
 
         // friend class idBrush;
         constructor() {
@@ -97,7 +98,7 @@ object Brush {
             winding = null
         }
 
-        constructor(plane: idPlane?, planeNum: Int) {
+        constructor(plane: idPlane, planeNum: Int) {
             flags = 0
             this.plane.set(plane)
             this.planeNum = planeNum
@@ -117,7 +118,7 @@ object Brush {
             flags = flags and flag.inv()
         }
 
-        fun GetPlane(): idPlane? {
+        fun GetPlane(): idPlane {
             return plane
         }
 
@@ -133,38 +134,38 @@ object Brush {
             return winding
         }
 
-        fun Copy(): idBrushSide? {
+        fun Copy(): idBrushSide {
             val side: idBrushSide
             side = idBrushSide(plane, planeNum)
             side.flags = flags
             if (winding != null) {
-                side.winding = winding.Copy()
+                side.winding = winding!!.Copy()
             } else {
                 side.winding = null
             }
             return side
         }
 
-        fun Split(splitPlane: idPlane?, front: Array<idBrushSide?>?, back: Array<idBrushSide?>?): Int {
+        fun Split(splitPlane: idPlane, front: Array<idBrushSide?>, back: Array<idBrushSide?>): Int {
             val frontWinding = idWinding()
             val backWinding = idWinding()
             assert(winding != null)
-            back.get(0) = null
-            front.get(0) = back.get(0)
-            winding.Split(splitPlane, 0.0f, frontWinding, backWinding)
-            if (!frontWinding.isNULL) {
-                front.get(0) = idBrushSide(plane, planeNum)
-                front.get(0).winding = frontWinding
-                front.get(0).flags = flags
+            back[0] = null
+            front[0] = back[0]
+            winding!!.Split(splitPlane, 0.0f, frontWinding, backWinding)
+            if (!frontWinding.isNULL()) {
+                front[0] = idBrushSide(plane, planeNum)
+                front[0]!!.winding = frontWinding
+                front[0]!!.flags = flags
             }
-            if (!backWinding.isNULL) {
-                back.get(0) = idBrushSide(plane, planeNum)
-                back.get(0).winding = backWinding
-                back.get(0).flags = flags
+            if (!backWinding.isNULL()) {
+                back[0] = idBrushSide(plane, planeNum)
+                back[0]!!.winding = backWinding
+                back[0]!!.flags = flags
             }
-            return if (!frontWinding.isNULL && !backWinding.isNULL) {
+            return if (!frontWinding.isNULL() && !backWinding.isNULL()) {
                 Plane.PLANESIDE_CROSS
-            } else if (!frontWinding.isNULL) {
+            } else if (!frontWinding.isNULL()) {
                 Plane.PLANESIDE_FRONT
             } else {
                 Plane.PLANESIDE_BACK
@@ -178,24 +179,24 @@ object Brush {
     //
     //===============================================================
     internal class idBrush {
-        private var NULL = true // used with the Split(....), see idWinding for more info.
-        private var bounds // brush bounds
-                : idBounds? = null
+        private var isEmpty = true // used with the Split(....), see idWinding for more info.
+        val bounds // brush bounds
+                : idBounds = idBounds()
         private var contents // contents of brush
                 : Int
         private var entityNum // entity number in editor
                 = 0
         private var flags // brush flags
                 = 0
-        private val next // next brush in list
+        var next // next brush in list
                 : idBrush? = null
         private var planeSide // side of a plane this brush is on
                 = 0
         private var primitiveNum // primitive number in editor
                 = 0
-        private var savedPlaneSide // saved plane side
+        var savedPlaneSide // saved plane side
                 = 0
-        private val sides: idList<idBrushSide?>? = idList() // list with sides
+        val sides: idList<idBrushSide> = idList() // list with sides
         private var windingsValid // set when side windings are valid
                 : Boolean
 
@@ -228,7 +229,7 @@ object Brush {
             return contents
         }
 
-        fun GetBounds(): idBounds? {
+        fun GetBounds(): idBounds {
             return bounds
         }
 
@@ -244,7 +245,7 @@ object Brush {
             w = null
             i = 0
             while (i < sides.Num()) {
-                w = sides.get(i).winding
+                w = sides[i].winding
                 if (w != null) {
                     break
                 }
@@ -253,18 +254,18 @@ object Brush {
             if (TempDump.NOT(w)) {
                 return 0.0f
             }
-            corner.set(w.get(0).ToVec3())
+            corner.set(w!![0].ToVec3())
 
             // create tetrahedrons to all other sides
             volume = 0.0f
             while (i < sides.Num()) {
-                w = sides.get(i).winding
+                w = sides[i].winding
                 if (TempDump.NOT(w)) {
                     i++
                     continue
                 }
-                d = -(corner.times(sides.get(i).plane.Normal()) - sides.get(i).plane.Dist())
-                area = w.GetArea()
+                d = -(corner.times(sides[i].plane.Normal()) - sides[i].plane.Dist())
+                area = w!!.GetArea()
                 volume += d * area
                 i++
             }
@@ -275,8 +276,8 @@ object Brush {
             return sides.Num()
         }
 
-        fun GetSide(i: Int): idBrushSide? {
-            return sides.get(i)
+        fun GetSide(i: Int): idBrushSide {
+            return sides[i]
         }
 
         fun SetPlaneSide(s: Int) {
@@ -291,18 +292,18 @@ object Brush {
             return savedPlaneSide
         }
 
-        fun FromSides(sideList: idList<idBrushSide?>?): Boolean {
+        fun FromSides(sideList: idList<idBrushSide>): Boolean {
             var i: Int
             i = 0
             while (i < sideList.Num()) {
-                sides.Append(sideList.get(i))
+                sides.Append(sideList[i])
                 i++
             }
             sideList.Clear()
             return CreateWindings()
         }
 
-        fun FromWinding(w: idWinding?, windingPlane: idPlane?): Boolean {
+        fun FromWinding(w: idWinding, windingPlane: idPlane): Boolean {
             var i: Int
             var j: Int
             var bestAxis: Int
@@ -314,48 +315,48 @@ object Brush {
             bestAxis = 0
             i = 1
             while (i < 3) {
-                if (Math.abs(windingPlane.Normal().get(i)) > Math.abs(windingPlane.Normal().get(bestAxis))) {
+                if (abs(windingPlane.Normal()[i]) > abs(windingPlane.Normal()[bestAxis])) {
                     bestAxis = i
                 }
                 i++
             }
             axialNormal.set(Vector.getVec3_origin())
-            if (windingPlane.Normal().get(bestAxis) > 0.0f) {
-                axialNormal.set(bestAxis, 1.0f)
+            if (windingPlane.Normal()[bestAxis] > 0.0f) {
+                axialNormal[bestAxis] = 1.0f
             } else {
-                axialNormal.set(bestAxis, -1.0f)
+                axialNormal[bestAxis] = -1.0f
             }
             i = 0
             while (i < w.GetNumPoints()) {
                 j = (i + 1) % w.GetNumPoints()
-                normal.set(w.get(j).ToVec3().minus(w.get(i).ToVec3()).Cross(axialNormal))
+                normal.set(w[j].ToVec3().minus(w[i].ToVec3()).Cross(axialNormal))
                 if (normal.Normalize() < 0.5f) {
                     i++
                     continue
                 }
                 plane.SetNormal(normal)
-                plane.FitThroughPoint(w.get(j).ToVec3())
+                plane.FitThroughPoint(w[j].ToVec3())
                 sides.Append(idBrushSide(plane, -1))
                 i++
             }
             if (sides.Num() < 4) {
                 i = 0
-                while (i < sides.Num()) {
-
-//			delete sides[i];
-                    sides.set(i, null)
-                    i++
-                }
-                sides.Clear()
+//                while (i < sides.Num()) {
+//
+////			delete sides[i];
+//                    sides.set(i, null)
+//                    i++
+//                }
+                sides.Clear() // this should be enough?
                 return false
             }
-            sides.get(0).winding = w.Copy()
+            sides[0].winding = w.Copy()
             windingsValid = true
             BoundBrush(null)
             return true
         }
 
-        fun FromBounds(bounds: idBounds?): Boolean {
+        fun FromBounds(bounds: idBounds): Boolean {
             var axis: Int
             var dir: Int
             val normal = idVec3()
@@ -365,9 +366,9 @@ object Brush {
                 dir = -1
                 while (dir <= 1) {
                     normal.set(Vector.getVec3_origin())
-                    normal.set(axis, dir.toFloat())
+                    normal[axis] = dir.toFloat()
                     plane.SetNormal(normal)
-                    plane.SetDist(dir * bounds.get(if (dir == 1) 1 else 0, axis))
+                    plane.SetDist(dir * bounds[if (dir == 1) 1 else 0, axis])
                     sides.Append(idBrushSide(plane, -1))
                     dir += 2
                 }
@@ -376,13 +377,13 @@ object Brush {
             return CreateWindings()
         }
 
-        fun Transform(origin: idVec3?, axis: idMat3?) {
+        fun Transform(origin: idVec3, axis: idMat3) {
             var i: Int
             var transformed = false
             if (axis.IsRotated()) {
                 i = 0
                 while (i < sides.Num()) {
-                    sides.get(i).plane.RotateSelf(Vector.getVec3_origin(), axis)
+                    sides[i].plane.RotateSelf(Vector.getVec3_origin(), axis)
                     i++
                 }
                 transformed = true
@@ -390,7 +391,7 @@ object Brush {
             if (origin != Vector.getVec3_origin()) {
                 i = 0
                 while (i < sides.Num()) {
-                    sides.get(i).plane.TranslateSelf(origin)
+                    sides[i].plane.TranslateSelf(origin)
                     i++
                 }
                 transformed = true
@@ -400,7 +401,7 @@ object Brush {
             }
         }
 
-        fun Copy(): idBrush? {
+        fun Copy(): idBrush {
             var i: Int
             val b: idBrush
             b = idBrush()
@@ -408,33 +409,33 @@ object Brush {
             b.primitiveNum = primitiveNum
             b.contents = contents
             b.windingsValid = windingsValid
-            b.bounds = bounds
+            b.bounds.set(bounds)
             i = 0
             while (i < sides.Num()) {
-                b.sides.Append(sides.get(i).Copy())
+                b.sides.Append(sides[i].Copy())
                 i++
             }
             return b
         }
 
-        fun TryMerge(brush: idBrush?, planeList: idPlaneSet?): Boolean {
+        fun TryMerge(brush: idBrush, planeList: idPlaneSet): Boolean {
             var i: Int
             var j: Int
             var k: Int
             var l: Int
             var m: Int
             var seperatingPlane: Int
-            val brushes = arrayOfNulls<idBrush?>(2)
+            val brushes = Array(2) { idBrush() }
             var w: idWinding?
-            var plane: idPlane?
+            var plane: idPlane
 
             // brush bounds should overlap
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) > brush.bounds.get(1, i) + 0.1f) {
+                if (bounds[0, i] > brush.bounds[1, i] + 0.1f) {
                     return false
                 }
-                if (bounds.get(1, i) < brush.bounds.get(0, i) - 0.1f) {
+                if (bounds[1, i] < brush.bounds[0, i] - 0.1f) {
                     return false
                 }
                 i++
@@ -481,7 +482,7 @@ object Brush {
                     l = 0
                     while (l < brushes[j].GetNumSides()) {
                         w = brushes[j].GetSide(l).GetWinding()
-                        if (TempDump.NOT(w)) {
+                        if (w == null) {
                             l++
                             continue
                         }
@@ -491,7 +492,7 @@ object Brush {
                         }
                         m = 0
                         while (m < w.GetNumPoints()) {
-                            if (plane.Distance(w.get(m).ToVec3()) > 0.1f) {
+                            if (plane.Distance(w[m].ToVec3()) > 0.1f) {
                                 return false
                             }
                             m++
@@ -514,7 +515,7 @@ object Brush {
                     j++
                 }
                 if (j < GetNumSides()) {
-                    sides.get(j).flags = sides.get(j).flags and brush.GetSide(i).GetFlags()
+                    sides[j].flags = sides[j].flags and brush.GetSide(i).GetFlags()
                     i++
                     continue
                 }
@@ -547,7 +548,7 @@ object Brush {
         }
 
         // returns true if the brushes did intersect
-        fun Subtract(b: idBrush?, list: idBrushList?): Boolean {
+        fun Subtract(b: idBrush, list: idBrushList): Boolean {
             var i: Int
             val front = idBrush()
             val back = idBrush()
@@ -556,13 +557,13 @@ object Brush {
             `in` = this
             i = 0
             while (i < b.sides.Num() && `in` != null) {
-                `in`.Split(b.sides.get(i).plane, b.sides.get(i).planeNum, front, back)
+                `in`.Split(b.sides[i].plane, b.sides[i].planeNum, front, back)
 
 //                if (!in.equals(this)) {
 //			delete in;
 //                    in = null;
 //                }
-                if (!front.isNULL()) {
+                if (front.isEmpty()) {
                     list.AddToTail(front)
                 }
                 `in` = back
@@ -580,7 +581,7 @@ object Brush {
 
         // split the brush into a front and back brush
         fun Split(
-            plane: idPlane?,
+            plane: idPlane,
             planeNum: Int,
             front: idBrush?,
             back: idBrush?
@@ -607,13 +608,13 @@ object Brush {
 //                back[0] = null;
 //            }
 //
-            res = bounds.PlaneSide(plane, -Brush.BRUSH_EPSILON)
+            res = bounds.PlaneSide(plane, -BRUSH_EPSILON)
             if (res == Plane.PLANESIDE_FRONT) {
-                front?.oSet(Copy())
+                front?.set(Copy())
                 return res
             }
             if (res == Plane.PLANESIDE_BACK) {
-                back?.oSet(Copy())
+                back?.set(Copy())
                 return res
             }
             maxBackWinding = FloatArray(sides.Num())
@@ -622,9 +623,9 @@ object Brush {
             maxFront = maxBack
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
+                side = sides[i]
                 w = side.winding
-                if (TempDump.NOT(w)) {
+                if (w == null) {
                     i++
                     continue
                 }
@@ -632,7 +633,7 @@ object Brush {
                 maxFrontWinding[i] = -10.0f
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    dist = plane.Distance(w.get(j).ToVec3())
+                    dist = plane.Distance(w[j].ToVec3())
                     if (dist > maxFrontWinding[i]) {
                         maxFrontWinding[i] = dist
                     }
@@ -649,18 +650,18 @@ object Brush {
                 }
                 i++
             }
-            if (maxFront < Brush.BRUSH_EPSILON) {
-                back?.oSet(Copy())
+            if (maxFront < BRUSH_EPSILON) {
+                back?.set(Copy())
                 return Plane.PLANESIDE_BACK
             }
-            if (maxBack > -Brush.BRUSH_EPSILON) {
-                front?.oSet(Copy())
+            if (maxBack > -BRUSH_EPSILON) {
+                front?.set(Copy())
                 return Plane.PLANESIDE_FRONT
             }
             mid = idWinding(plane.Normal(), plane.Dist())
             i = 0
             while (i < sides.Num() && mid != null) {
-                mid = mid.Clip(sides.get(i).plane.unaryMinus(), Brush.BRUSH_EPSILON, false)
+                mid = mid.Clip(sides[i].plane.unaryMinus(), BRUSH_EPSILON, false)
                 i++
             }
             if (mid != null) {
@@ -674,15 +675,15 @@ object Brush {
                                 + "( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )-( %1.2f %1.2f %1.2f )",
                         primitiveNum,
                         entityNum,
-                        bounds.get(0, 0),
-                        bounds.get(0, 1),
-                        bounds.get(0, 2),
-                        bounds.get(1, 0),
-                        bounds.get(1, 1),
-                        bounds.get(1, 2),
-                        bounds.get(1, 0) - bounds.get(0, 0),
-                        bounds.get(1, 1) - bounds.get(0, 1),
-                        bounds.get(1, 2) - bounds.get(0, 2)
+                        bounds[0, 0],
+                        bounds[0, 1],
+                        bounds[0, 2],
+                        bounds[1, 0],
+                        bounds[1, 1],
+                        bounds[1, 2],
+                        bounds[1, 0] - bounds[0, 0],
+                        bounds[1, 1] - bounds[0, 1],
+                        bounds[1, 2] - bounds[0, 2]
                     )
                     //			delete mid;
                     mid = null
@@ -690,49 +691,49 @@ object Brush {
             }
             if (TempDump.NOT(mid)) {
                 return if (maxFront > -maxBack) {
-                    front?.oSet(Copy())
+                    front?.set(Copy())
                     Plane.PLANESIDE_FRONT
                 } else {
-                    back?.oSet(Copy())
+                    back?.set(Copy())
                     Plane.PLANESIDE_BACK
                 }
             }
-            if (TempDump.NOT(front) && TempDump.NOT(back)) {
+            if (front == null && back == null) {
 //		delete mid;
                 return Plane.PLANESIDE_CROSS
             }
-            front.oSet(idBrush())
+            front!!.set(idBrush())
             front.SetContents(contents)
             front.SetEntityNum(entityNum)
             front.SetPrimitiveNum(primitiveNum)
-            back.oSet(idBrush())
+            back!!.set(idBrush())
             back.SetContents(contents)
             back.SetEntityNum(entityNum)
             back.SetPrimitiveNum(primitiveNum)
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
-                if (TempDump.NOT(side.winding)) {
+                side = sides[i]
+                if (side.winding == null) {
                     i++
                     continue
                 }
 
                 // if completely at the front
-                if (maxBackWinding[i] >= Brush.BRUSH_EPSILON) {
+                if (maxBackWinding[i] >= BRUSH_EPSILON) {
                     front.sides.Append(side.Copy())
                 } // if completely at the back
-                else if (maxFrontWinding[i] <= -Brush.BRUSH_EPSILON) {
+                else if (maxFrontWinding[i] <= -BRUSH_EPSILON) {
                     back.sides.Append(side.Copy())
                 } else {
                     // split the side
                     side.Split(plane, frontSide, backSide)
                     if (frontSide[0] != null) {
-                        front.sides.Append(frontSide[0])
-                    } else if (maxFrontWinding[i] > -Brush.BRUSH_EPSILON) {
+                        front.sides.Append(frontSide[0]!!)
+                    } else if (maxFrontWinding[i] > -BRUSH_EPSILON) {
                         // favor an overconstrained brush
                         side = side.Copy()
-                        side.winding = side.winding.Clip(
-                            idPlane(plane.Normal(), plane.Dist() - (Brush.BRUSH_EPSILON + 0.02f)),
+                        side.winding = side.winding!!.Clip(
+                            idPlane(plane.Normal(), plane.Dist() - (BRUSH_EPSILON + 0.02f)),
                             0.01f,
                             true
                         )
@@ -740,14 +741,14 @@ object Brush {
                         front.sides.Append(side)
                     }
                     if (backSide[0] != null) {
-                        back.sides.Append(backSide[0])
-                    } else if (maxBackWinding[i] < Brush.BRUSH_EPSILON) {
+                        back.sides.Append(backSide[0]!!)
+                    } else if (maxBackWinding[i] < BRUSH_EPSILON) {
                         // favor an overconstrained brush
                         side = side.Copy()
-                        side.winding = side.winding.Clip(
+                        side.winding = side.winding!!.Clip(
                             idPlane(
-                                plane.Normal().oNegative(),
-                                -(plane.Dist() + (Brush.BRUSH_EPSILON + 0.02f))
+                                -plane.Normal(),
+                                -(plane.Dist() + (BRUSH_EPSILON + 0.02f))
                             ), 0.01f, true
                         )
                         assert(side.winding != null)
@@ -757,14 +758,14 @@ object Brush {
                 i++
             }
             side = idBrushSide(plane.unaryMinus(), planeNum xor 1)
-            side.winding = mid.Reverse()
-            side.flags = side.flags or Brush.SFL_SPLIT
+            side.winding = mid!!.Reverse()
+            side.flags = side.flags or SFL_SPLIT
             front.sides.Append(side)
             front.windingsValid = true
             front.BoundBrush(this)
             side = idBrushSide(plane, planeNum)
             side.winding = mid
-            side.flags = side.flags or Brush.SFL_SPLIT
+            side.flags = side.flags or SFL_SPLIT
             back.sides.Append(side)
             back.windingsValid = true
             back.BoundBrush(this)
@@ -772,25 +773,25 @@ object Brush {
         }
 
         // expand the brush for an axial bounding box
-        fun ExpandForAxialBox(bounds: idBounds?) {
+        fun ExpandForAxialBox(bounds: idBounds) {
             var i: Int
             var j: Int
-            var side: idBrushSide?
+            var side: idBrushSide
             val v = idVec3()
             AddBevelsForAxialBox()
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
+                side = sides[i]
                 j = 0
                 while (j < 3) {
-                    if (side.plane.Normal().get(j) > 0.0f) {
-                        v.set(j, bounds.get(0, j))
+                    if (side.plane.Normal()[j] > 0.0f) {
+                        v[j] = bounds[0, j]
                     } else {
-                        v.set(j, bounds.get(1, j))
+                        v[j] = bounds[1, j]
                     }
                     j++
                 }
-                side.plane.SetDist(side.plane.Dist() + v.times(side.plane.Normal().oNegative()))
+                side.plane.SetDist(side.plane.Dist() + v.times(-side.plane.Normal()))
                 i++
             }
             if (!CreateWindings()) {
@@ -826,7 +827,7 @@ object Brush {
             bounds.Clear()
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
+                side = sides[i]
 
 //		if ( side.winding!=null ) {
 //			delete side.winding;
@@ -839,27 +840,24 @@ object Brush {
                         continue
                     }
                     // keep the winding if on the clip plane
-                    side.winding = side.winding.Clip(sides.get(j).plane.unaryMinus(), Brush.BRUSH_EPSILON, true)
+                    side.winding = side.winding!!.Clip(sides[j].plane.unaryMinus(), BRUSH_EPSILON, true)
                     j++
                 }
                 if (side.winding != null) {
                     j = 0
-                    while (j < side.winding.GetNumPoints()) {
-                        bounds.AddPoint(side.winding.get(j).ToVec3())
+                    while (j < side.winding!!.GetNumPoints()) {
+                        bounds.AddPoint(side.winding!![j].ToVec3())
                         j++
                     }
                 }
                 i++
             }
-            if (bounds.get(0, 0) > bounds.get(1, 0)) {
+            if (bounds[0, 0] > bounds[1, 0]) {
                 return false
             }
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || bounds.get(
-                        1,
-                        i
-                    ) > Lib.Companion.MAX_WORLD_COORD
+                if (bounds[0, i] < Lib.Companion.MIN_WORLD_COORD || bounds[1, i] > Lib.Companion.MAX_WORLD_COORD
                 ) {
                     return false
                 }
@@ -878,20 +876,20 @@ object Brush {
             bounds.Clear()
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
+                side = sides[i]
                 w = side.winding
-                if (TempDump.NOT(w)) {
+                if (w == null) {
                     i++
                     continue
                 }
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    bounds.AddPoint(w.get(j).ToVec3())
+                    bounds.AddPoint(w[j].ToVec3())
                     j++
                 }
                 i++
             }
-            if (bounds.get(0, 0) > bounds.get(1, 0)) {
+            if (bounds[0, 0] > bounds[1, 0]) {
                 if (original != null) {
                     val bm = idBrushMap("error_brush", "_original")
                     bm.WriteBrush(original)
@@ -905,10 +903,7 @@ object Brush {
             }
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || bounds.get(
-                        1,
-                        i
-                    ) > Lib.Companion.MAX_WORLD_COORD
+                if (bounds[0, i] < Lib.Companion.MIN_WORLD_COORD || bounds[1, i] > Lib.Companion.MAX_WORLD_COORD
                 ) {
                     if (original != null) {
                         val bm = idBrushMap("error_brush", "_original")
@@ -956,11 +951,11 @@ object Brush {
                     i = 0
                     while (i < sides.Num()) {
                         if (dir > 0) {
-                            if (sides.get(i).plane.Normal().get(axis) >= 0.9999f) {
+                            if (sides[i].plane.Normal()[axis] >= 0.9999f) {
                                 break
                             }
                         } else {
-                            if (sides.get(i).plane.Normal().get(axis) <= -0.9999f) {
+                            if (sides[i].plane.Normal()[axis] <= -0.9999f) {
                                 break
                             }
                         }
@@ -968,11 +963,11 @@ object Brush {
                     }
                     if (i >= sides.Num()) {
                         normal.set(Vector.getVec3_origin())
-                        normal.set(axis, dir.toFloat())
+                        normal[axis] = dir.toFloat()
                         plane.SetNormal(normal)
-                        plane.SetDist(dir * bounds.get(if (dir == 1) 1 else 0, axis))
+                        plane.SetDist(dir * bounds[if (dir == 1) 1 else 0, axis])
                         newSide = idBrushSide(plane, -1)
-                        newSide.SetFlag(Brush.SFL_BEVEL)
+                        newSide.SetFlag(SFL_BEVEL)
                         sides.Append(newSide)
                     }
                     dir += 2
@@ -989,23 +984,23 @@ object Brush {
             // test the non-axial plane edges
             i = 0
             while (i < sides.Num()) {
-                side = sides.get(i)
+                side = sides[i]
                 w = side.winding
-                if (TempDump.NOT(w)) {
+                if (w == null) {
                     i++
                     continue
                 }
                 j = 0
                 while (j < w.GetNumPoints()) {
                     k = (j + 1) % w.GetNumPoints()
-                    vec.set(w.get(j).ToVec3().minus(w.get(k).ToVec3()))
+                    vec.set(w[j].ToVec3().minus(w[k].ToVec3()))
                     if (vec.Normalize() < 0.5f) {
                         j++
                         continue
                     }
                     k = 0
                     while (k < 3) {
-                        if (vec.get(k) == 1.0f || vec.get(k) == -1.0f || vec.get(k) == 0.0f && vec.get((k + 1) % 3) == 0.0f) {
+                        if (vec[k] == 1.0f || vec[k] == -1.0f || vec[k] == 0.0f && vec[(k + 1) % 3] == 0.0f) {
                             break // axial
                         }
                         k++
@@ -1020,18 +1015,16 @@ object Brush {
                     while (axis < 3) {
                         dir = -1
                         while (dir <= 1) {
-
-
                             // construct a plane
                             normal.set(Vector.getVec3_origin())
-                            normal.set(axis, dir.toFloat())
+                            normal[axis] = dir.toFloat()
                             normal.set(vec.Cross(normal))
                             if (normal.Normalize() < 0.5f) {
                                 dir += 2
                                 continue
                             }
                             plane.SetNormal(normal)
-                            plane.FitThroughPoint(w.get(j).ToVec3())
+                            plane.FitThroughPoint(w[j].ToVec3())
 
                             // if all the points on all the sides are
                             // behind this plane, it is a proper edge bevel
@@ -1040,19 +1033,19 @@ object Brush {
 
 
                                 // if this plane has allready been used, skip it
-                                if (plane.Compare(sides.get(k).plane, 0.001f, 0.1f)) {
+                                if (plane.Compare(sides[k].plane, 0.001f, 0.1f)) {
                                     break
                                 }
-                                w2 = sides.get(k).winding
-                                if (TempDump.NOT(w2)) {
+                                w2 = sides[k].winding
+                                if (w2 == null) {
                                     k++
                                     continue
                                 }
                                 minBack = 0.0f
                                 l = 0
                                 while (l < w2.GetNumPoints()) {
-                                    d = plane.Distance(w2.get(l).ToVec3())
-                                    if (d > Brush.BRUSH_BEVEL_EPSILON) {
+                                    d = plane.Distance(w2[l].ToVec3())
+                                    if (d > BRUSH_BEVEL_EPSILON) {
                                         break // point at the front
                                     }
                                     if (d < minBack) {
@@ -1065,7 +1058,7 @@ object Brush {
                                     break
                                 }
                                 // if no points at the back then the winding is on the bevel plane
-                                if (minBack > -Brush.BRUSH_BEVEL_EPSILON) {
+                                if (minBack > -BRUSH_BEVEL_EPSILON) {
                                     break
                                 }
                                 k++
@@ -1077,7 +1070,7 @@ object Brush {
 
                             // add this plane
                             newSide = idBrushSide(plane, -1)
-                            newSide.SetFlag(Brush.SFL_BEVEL)
+                            newSide.SetFlag(SFL_BEVEL)
                             sides.Append(newSide)
                             dir += 2
                         }
@@ -1093,7 +1086,7 @@ object Brush {
             var i: Int
             i = 0
             while (i < sides.Num()) {
-                if (sides.get(i).winding != null) {
+                if (sides[i].winding != null) {
                     i++
                     continue
                 }
@@ -1104,12 +1097,12 @@ object Brush {
             return sides.Num() >= 4
         }
 
-        fun isNULL(): Boolean {
-            return NULL
+        fun isEmpty(): Boolean {
+            return isEmpty
         }
 
-        private fun oSet(Copy: idBrush?) {
-            NULL = false
+        private fun set(Copy: idBrush) {
+            isEmpty = false
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -1134,7 +1127,7 @@ object Brush {
         private var numBrushSides = 0
         private var numBrushes: Int
         private var tail: idBrush?
-        private fun oSet(keep: idBrushList?) {
+        private fun oSet(keep: idBrushList) {
             head = keep.head
             tail = keep.tail
             numBrushes = keep.numBrushes
@@ -1168,7 +1161,7 @@ object Brush {
             return numBrushes == 0
         }
 
-        fun GetBounds(): idBounds? {
+        fun GetBounds(): idBounds {
             val bounds = idBounds()
             var b: idBrush?
             bounds.Clear()
@@ -1181,13 +1174,11 @@ object Brush {
         }
 
         // add brush to the tail of the list
-        fun AddToTail(brush: idBrush?) {
+        fun AddToTail(brush: idBrush) {
             brush.next = null
-            if (tail != null) {
-                tail.next = brush
-            }
+            tail?.next = brush
             tail = brush
-            if (TempDump.NOT(head)) {
+            if (head == null) {
                 head = brush
             }
             numBrushes++
@@ -1195,18 +1186,16 @@ object Brush {
         }
 
         // add list to the tail of the list
-        fun AddToTail(list: idBrushList?) {
+        fun AddToTail(list: idBrushList) {
             var brush: idBrush?
             var next: idBrush?
             brush = list.head
             while (brush != null) {
                 next = brush.next
                 brush.next = null
-                if (tail != null) {
-                    tail.next = brush
-                }
+                tail?.next = brush
                 tail = brush
-                if (TempDump.NOT(head)) {
+                if (head == null) {
                     head = brush
                 }
                 numBrushes++
@@ -1219,7 +1208,7 @@ object Brush {
         }
 
         // add brush to the front of the list
-        fun AddToFront(brush: idBrush?) {
+        fun AddToFront(brush: idBrush) {
             brush.next = head
             head = brush
             if (TempDump.NOT(tail)) {
@@ -1230,7 +1219,7 @@ object Brush {
         }
 
         // add list to the front of the list
-        fun AddToFront(list: idBrushList?) {
+        fun AddToFront(list: idBrushList) {
             var brush: idBrush?
             var next: idBrush?
             brush = list.head
@@ -1251,7 +1240,7 @@ object Brush {
         }
 
         // remove the brush from the list
-        fun Remove(brush: idBrush?) {
+        fun Remove(brush: idBrush) {
             var b: idBrush?
             var last: idBrush?
             last = null
@@ -1276,7 +1265,7 @@ object Brush {
         }
 
         // remove the brush from the list and delete the brush
-        fun Delete(brush: idBrush?) {
+        fun Delete(brush: idBrush) {
             var b: idBrush?
             var last: idBrush?
             last = null
@@ -1302,7 +1291,7 @@ object Brush {
         }
 
         // returns a copy of the brush list
-        fun Copy(): idBrushList? {
+        fun Copy(): idBrushList {
             var brush: idBrush?
             val list: idBrushList
             list = idBrushList()
@@ -1332,10 +1321,10 @@ object Brush {
         // split the brushes in the list into two lists
         @JvmOverloads
         fun Split(
-            plane: idPlane?,
+            plane: idPlane,
             planeNum: Int,
-            frontList: idBrushList?,
-            backList: idBrushList?,
+            frontList: idBrushList,
+            backList: idBrushList,
             useBrushSavedPlaneSide: Boolean = false /*= false*/
         ) {
             var b: idBrush?
@@ -1347,10 +1336,10 @@ object Brush {
                 b = head
                 while (b != null) {
                     b.Split(plane, planeNum, front, back)
-                    if (!front.isNULL()) {
+                    if (!front.isEmpty()) {
                         frontList.AddToTail(front)
                     }
-                    if (!back.isNULL()) {
+                    if (!back.isEmpty()) {
                         backList.AddToTail(back)
                     }
                     b = b.next
@@ -1359,15 +1348,15 @@ object Brush {
             }
             b = head
             while (b != null) {
-                if (b.savedPlaneSide and Brush.BRUSH_PLANESIDE_BOTH != 0) {
+                if (b.savedPlaneSide and BRUSH_PLANESIDE_BOTH != 0) {
                     b.Split(plane, planeNum, front, back)
-                    if (!front.isNULL()) {
+                    if (!front.isEmpty()) {
                         frontList.AddToTail(front)
                     }
-                    if (!back.isNULL()) {
+                    if (!back.isEmpty()) {
                         backList.AddToTail(back)
                     }
-                } else if (b.savedPlaneSide and Brush.BRUSH_PLANESIDE_FRONT != 0) {
+                } else if (b.savedPlaneSide and BRUSH_PLANESIDE_FRONT != 0) {
                     frontList.AddToTail(b.Copy())
                 } else {
                     backList.AddToTail(b.Copy())
@@ -1389,7 +1378,7 @@ object Brush {
             var c1: Int
             var c2: Int
             val planeList = idPlaneSet()
-            if (Brush.OUTPUT_CHOP_STATS) {
+            if (OUTPUT_CHOP_STATS) {
                 Common.common.Printf("[Brush CSG]\n")
                 Common.common.Printf("%6d original brushes\n", Num())
             }
@@ -1401,10 +1390,10 @@ object Brush {
                     next = b2.next
                     i = 0
                     while (i < 3) {
-                        if (b1.bounds.get(0, i) >= b2.bounds.get(1, i)) {
+                        if (b1.bounds[0, i] >= b2.bounds[1, i]) {
                             break
                         }
-                        if (b1.bounds.get(1, i) <= b2.bounds.get(0, i)) {
+                        if (b1.bounds[1, i] <= b2.bounds[0, i]) {
                             break
                         }
                         i++
@@ -1438,7 +1427,7 @@ object Brush {
                     c2 = 999999
 
                     // if b2 may chop up b1
-                    if (TempDump.NOT(chopAllowed) || chopAllowed.run(b2, b1)) {
+                    if (chopAllowed == null || chopAllowed.run(b2, b1)) {
                         if (!b1.Subtract(b2, sub1)) {
                             // didn't really intersect
                             b2 = next
@@ -1453,7 +1442,7 @@ object Brush {
                     }
 
                     // if b1 may chop up b2
-                    if (TempDump.NOT(chopAllowed) || chopAllowed.run(b1, b2)) {
+                    if (chopAllowed == null || chopAllowed.run(b1, b2)) {
                         if (!b2.Subtract(b1, sub2)) {
                             // didn't really intersect
                             b2 = next
@@ -1498,14 +1487,14 @@ object Brush {
                     // b1 is no longer intersecting anything, so keep it
                     Remove(b1)
                     keep.AddToTail(b1)
-                    if (Brush.OUTPUT_CHOP_STATS) {
-                        Brush.DisplayRealTimeString("\r%6d", keep.numBrushes)
+                    if (OUTPUT_CHOP_STATS) {
+                        DisplayRealTimeString("\r%6d", keep.numBrushes)
                     }
                 }
                 b1 = Head()
             }
             oSet(keep)
-            if (Brush.OUTPUT_CHOP_STATS) {
+            if (OUTPUT_CHOP_STATS) {
                 Common.common.Printf("\r%6d output brushes\n", Num())
             }
         }
@@ -1536,7 +1525,7 @@ object Brush {
                     }
                     if (b1.TryMerge(b2, planeList)) {
                         Delete(b2)
-                        Brush.DisplayRealTimeString("\r%6d" + ++numMerges)
+                        DisplayRealTimeString("\r%6d" + ++numMerges)
                         nextb2 = Head()
                     }
                     b2 = nextb2
@@ -1547,22 +1536,22 @@ object Brush {
         }
 
         // set the given flag on all brush sides facing the plane
-        fun SetFlagOnFacingBrushSides(plane: idPlane?, flag: Int) {
+        fun SetFlagOnFacingBrushSides(plane: idPlane, flag: Int) {
             var i: Int
             var b: idBrush?
             var w: idWinding?
             b = head
             while (b != null) {
-                if (Math.abs(b.GetBounds().PlaneDistance(plane)) > 0.1f) {
+                if (abs(b.GetBounds().PlaneDistance(plane)) > 0.1f) {
                     b = b.next
                     continue
                 }
                 i = 0
                 while (i < b.GetNumSides()) {
                     w = b.GetSide(i).GetWinding()
-                    if (TempDump.NOT(w)) {
+                    if (w == null) {
                         if (b.GetSide(i).GetPlane()
-                                .Compare(plane, Brush.BRUSH_PLANE_NORMAL_EPSILON, Brush.BRUSH_PLANE_DIST_EPSILON)
+                                .Compare(plane, BRUSH_PLANE_NORMAL_EPSILON, BRUSH_PLANE_DIST_EPSILON)
                         ) {
                             b.GetSide(i).SetFlag(flag)
                         }
@@ -1579,7 +1568,7 @@ object Brush {
         }
 
         // get a list with planes for all brushes in the list
-        fun CreatePlaneList(planeList: idPlaneSet?) {
+        fun CreatePlaneList(planeList: idPlaneSet) {
             var i: Int
             var b: idBrush?
             var side: idBrushSide?
@@ -1592,8 +1581,8 @@ object Brush {
                     side.SetPlaneNum(
                         planeList.FindPlane(
                             side.GetPlane(),
-                            Brush.BRUSH_PLANE_NORMAL_EPSILON,
-                            Brush.BRUSH_PLANE_DIST_EPSILON
+                            BRUSH_PLANE_NORMAL_EPSILON,
+                            BRUSH_PLANE_DIST_EPSILON
                         )
                     )
                     i++
@@ -1603,7 +1592,7 @@ object Brush {
         }
 
         // write a brush map with the brushes in the list
-        fun WriteBrushMap(fileName: idStr?, ext: idStr?) {
+        fun WriteBrushMap(fileName: idStr, ext: idStr) {
             val map: idBrushMap
             map = idBrushMap(fileName, ext)
             map.WriteBrushList(this)
@@ -1624,25 +1613,25 @@ object Brush {
     //	idBrushMap
     //
     //===============================================================
-    internal class idBrushMap(fileName: String?, ext: String?) {
+    internal class idBrushMap(fileName: String, ext: String) {
         private var brushCount: Int
-        private val fp: idFile?
-        private var texture: idStr? = null
+        private val fp: idFile
+        private val texture: idStr = idStr()
 
         //
         //
-        constructor(fileName: idStr?, ext: idStr?) : this(fileName.toString(), ext.toString())
+        constructor(fileName: idStr, ext: idStr) : this(fileName.toString(), ext.toString())
 
         // ~idBrushMap( void );
-        fun SetTexture(textureName: idStr?) {
-            texture = textureName
+        fun SetTexture(textureName: idStr) {
+            texture.set(textureName)
         }
 
-        fun SetTexture(textureName: String?) {
+        fun SetTexture(textureName: String) {
             this.SetTexture(idStr(textureName))
         }
 
-        fun WriteBrush(brush: idBrush?) {
+        fun WriteBrush(brush: idBrush) {
             var i: Int
             var side: idBrushSide?
             if (TempDump.NOT(fp)) {
@@ -1654,9 +1643,9 @@ object Brush {
                 side = brush.GetSide(i)
                 fp.WriteFloatString(
                     " ( %f %f %f %f ) ",
-                    side.GetPlane().get(0),
-                    side.GetPlane().get(1),
-                    side.GetPlane().get(2),
+                    side.GetPlane()[0],
+                    side.GetPlane()[1],
+                    side.GetPlane()[2],
                     -side.GetPlane().Dist()
                 )
                 fp.WriteFloatString("( ( 0.031250 0 0 ) ( 0 0.031250 0 ) ) %s 0 0 0\n", texture)
@@ -1665,7 +1654,7 @@ object Brush {
             fp.WriteFloatString("}\n}\n")
         }
 
-        fun WriteBrushList(brushList: idBrushList?) {
+        fun WriteBrushList(brushList: idBrushList) {
             var b: idBrush?
             if (TempDump.NOT(fp)) {
                 return
@@ -1684,10 +1673,9 @@ object Brush {
             qpath.plusAssign(ext)
             qpath.SetFileExtension("map")
             Common.common.Printf("writing %s...\n", qpath)
-            fp = FileSystem_h.fileSystem.OpenFileWrite(qpath.toString(), "fs_devpath")
+            fp = FileSystem_h.fileSystem.OpenFileWrite(qpath.toString(), "fs_devpath")!!
             if (TempDump.NOT(fp)) {
                 Common.common.Error("Couldn't open %s\n", qpath)
-                return
             }
             texture.set("textures/washroom/btile01")
             fp.WriteFloatString("Version %1.2f\n", MapFile.CURRENT_MAP_VERSION.toFloat())

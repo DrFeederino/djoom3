@@ -17,9 +17,9 @@ object AASBuild_File {
     const val INTEGRAL_EPSILON = 0.01f
     const val VERTEX_EPSILON = 0.1f
     const val VERTEX_HASH_BOXSIZE = 1 shl 6 // must be power of 2
-    const val VERTEX_HASH_SIZE = AASBuild_File.VERTEX_HASH_BOXSIZE * AASBuild_File.VERTEX_HASH_BOXSIZE
+    const val VERTEX_HASH_SIZE = VERTEX_HASH_BOXSIZE * VERTEX_HASH_BOXSIZE
     var aas_edgeHash: idHashIndex? = null
-    var aas_vertexBounds: idBounds? = null
+    val aas_vertexBounds: idBounds = idBounds()
 
     //
     //

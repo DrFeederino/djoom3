@@ -105,9 +105,9 @@ object Player {
     const val DEATH_VOLUME = 15 // volume at death
     const val DMG_VOLUME = 5 // volume when taking damage
     const val DYING_HEARTRATE = 30 // used for volumen calc when dying/dead
-    val EV_Player_DisableWeapon: idEventDef? = idEventDef("disableWeapon")
-    val EV_Player_EnableWeapon: idEventDef? = idEventDef("enableWeapon")
-    val EV_Player_ExitTeleporter: idEventDef? = idEventDef("exitTeleporter")
+    val EV_Player_DisableWeapon: idEventDef = idEventDef("disableWeapon")
+    val EV_Player_EnableWeapon: idEventDef = idEventDef("enableWeapon")
+    val EV_Player_ExitTeleporter: idEventDef = idEventDef("exitTeleporter")
 
     /*
      ===============================================================================
@@ -117,21 +117,21 @@ object Player {
 
      ===============================================================================
      */
-    val EV_Player_GetButtons: idEventDef? = idEventDef("getButtons", null, 'd')
-    val EV_Player_GetCurrentWeapon: idEventDef? = idEventDef("getCurrentWeapon", null, 's')
-    val EV_Player_GetIdealWeapon: idEventDef? = idEventDef("getIdealWeapon", null, 's')
-    val EV_Player_GetMove: idEventDef? = idEventDef("getMove", null, 'v')
-    val EV_Player_GetPreviousWeapon: idEventDef? = idEventDef("getPreviousWeapon", null, 's')
-    val EV_Player_GetViewAngles: idEventDef? = idEventDef("getViewAngles", null, 'v')
-    val EV_Player_GetWeaponEntity: idEventDef? = idEventDef("getWeaponEntity", null, 'e')
-    val EV_Player_HideTip: idEventDef? = idEventDef("hideTip")
-    val EV_Player_InPDA: idEventDef? = idEventDef("inPDA", null, 'd')
-    val EV_Player_LevelTrigger: idEventDef? = idEventDef("levelTrigger")
-    val EV_Player_OpenPDA: idEventDef? = idEventDef("openPDA")
-    val EV_Player_SelectWeapon: idEventDef? = idEventDef("selectWeapon", "s")
-    val EV_Player_StopAudioLog: idEventDef? = idEventDef("stopAudioLog")
-    val EV_Player_StopFxFov: idEventDef? = idEventDef("stopFxFov")
-    val EV_SpectatorTouch: idEventDef? = idEventDef("spectatorTouch", "et")
+    val EV_Player_GetButtons: idEventDef = idEventDef("getButtons", null, 'd')
+    val EV_Player_GetCurrentWeapon: idEventDef = idEventDef("getCurrentWeapon", null, 's')
+    val EV_Player_GetIdealWeapon: idEventDef = idEventDef("getIdealWeapon", null, 's')
+    val EV_Player_GetMove: idEventDef = idEventDef("getMove", null, 'v')
+    val EV_Player_GetPreviousWeapon: idEventDef = idEventDef("getPreviousWeapon", null, 's')
+    val EV_Player_GetViewAngles: idEventDef = idEventDef("getViewAngles", null, 'v')
+    val EV_Player_GetWeaponEntity: idEventDef = idEventDef("getWeaponEntity", null, 'e')
+    val EV_Player_HideTip: idEventDef = idEventDef("hideTip")
+    val EV_Player_InPDA: idEventDef = idEventDef("inPDA", null, 'd')
+    val EV_Player_LevelTrigger: idEventDef = idEventDef("levelTrigger")
+    val EV_Player_OpenPDA: idEventDef = idEventDef("openPDA")
+    val EV_Player_SelectWeapon: idEventDef = idEventDef("selectWeapon", "s")
+    val EV_Player_StopAudioLog: idEventDef = idEventDef("stopAudioLog")
+    val EV_Player_StopFxFov: idEventDef = idEventDef("stopFxFov")
+    val EV_SpectatorTouch: idEventDef = idEventDef("spectatorTouch", "et")
     const val FOCUS_GUI_TIME = 500
     const val FOCUS_TIME = 300
 
@@ -211,29 +211,29 @@ object Player {
     const val ZERO_VOLUME = -40 // volume at zero
 
     class idItemInfo {
-        var icon: idStr? = idStr()
-        var name: idStr? = idStr()
+        var icon: idStr = idStr()
+        var name: idStr = idStr()
     }
 
     class idObjectiveInfo {
-        var screenshot: idStr? = idStr()
-        var text: idStr? = idStr()
-        var title: idStr? = idStr()
+        var screenshot: idStr = idStr()
+        var text: idStr = idStr()
+        var title: idStr = idStr()
     }
 
     class idLevelTriggerInfo {
-        var levelName: idStr? = idStr()
-        var triggerName: idStr? = idStr()
+        var levelName: idStr = idStr()
+        var triggerName: idStr = idStr()
     }
 
     // };
     class idInventory {
-        val ammo: IntArray? = IntArray(Weapon.AMMO_NUMTYPES)
-        val clip: IntArray? = IntArray(Player.MAX_WEAPONS)
+        val ammo: IntArray = IntArray(Weapon.AMMO_NUMTYPES)
+        val clip: IntArray = IntArray(Player.MAX_WEAPONS)
 
         //
-        val pdasViewed: IntArray? = IntArray(4) // 128 bit flags for indicating if a pda has been viewed
-        val powerupEndTime: IntArray? = IntArray(Player.MAX_POWERUPS)
+        val pdasViewed: IntArray = IntArray(4) // 128 bit flags for indicating if a pda has been viewed
+        val powerupEndTime: IntArray = IntArray(Player.MAX_POWERUPS)
 
         //
         // mp
@@ -248,12 +248,12 @@ object Player {
         //
         var deplete_armor = 0
         var deplete_rate = 0f
-        var emails: idStrList?
-        val items: idList<idDict?>?
+        var emails: idStrList
+        val items: idList<idDict>
         var lastGiveTime = 0
 
         //
-        val levelTriggers: idList<idLevelTriggerInfo?>?
+        val levelTriggers: idList<idLevelTriggerInfo>
         var maxHealth = 0
         var maxarmor = 0
         var nextArmorDepleteTime = 0
@@ -261,12 +261,12 @@ object Player {
 
         //
         var nextItemPickup = 0
-        val objectiveNames: idList<idObjectiveInfo?>? = idList()
+        val objectiveNames: idList<idObjectiveInfo> = idList()
         var onePickupTime = 0
         var pdaOpened = false
-        var pdaSecurity: idStrList?
-        var pdas: idStrList?
-        val pickupItemNames: idList<idItemInfo?>? = idList(idItemInfo::class.java)
+        var pdaSecurity: idStrList
+        var pdas: idStrList
+        val pickupItemNames: idList<idItemInfo> = idList(idItemInfo::class.java)
         var powerups = 0
         var selAudio = 0
         var selEMail = 0
@@ -275,14 +275,14 @@ object Player {
         var selPDA = 0
         var selVideo = 0
         var turkeyScore = false
-        var videos: idStrList?
+        var videos: idStrList
         var weaponPulse = false
         var weapons = 0
 
         // ~idInventory() { Clear(); }
         // save games
         // archives object for save game file
-        fun Save(savefile: idSaveGame?) {
+        fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(maxHealth)
             savefile.WriteInt(weapons)
@@ -296,29 +296,29 @@ object Player {
             savefile.WriteInt(nextArmorDepleteTime)
             i = 0
             while (i < Weapon.AMMO_NUMTYPES) {
-                savefile.WriteInt(ammo.get(i))
+                savefile.WriteInt(ammo[i])
                 i++
             }
             i = 0
             while (i < Player.MAX_WEAPONS) {
-                savefile.WriteInt(clip.get(i))
+                savefile.WriteInt(clip[i])
                 i++
             }
             i = 0
             while (i < Player.MAX_POWERUPS) {
-                savefile.WriteInt(powerupEndTime.get(i))
+                savefile.WriteInt(powerupEndTime[i])
                 i++
             }
             savefile.WriteInt(items.Num())
             i = 0
             while (i < items.Num()) {
-                savefile.WriteDict(items.get(i))
+                savefile.WriteDict(items[i])
                 i++
             }
-            savefile.WriteInt(pdasViewed.get(0))
-            savefile.WriteInt(pdasViewed.get(1))
-            savefile.WriteInt(pdasViewed.get(2))
-            savefile.WriteInt(pdasViewed.get(3))
+            savefile.WriteInt(pdasViewed[0])
+            savefile.WriteInt(pdasViewed[1])
+            savefile.WriteInt(pdasViewed[2])
+            savefile.WriteInt(pdasViewed[3])
             savefile.WriteInt(selPDA)
             savefile.WriteInt(selVideo)
             savefile.WriteInt(selEMail)
@@ -328,25 +328,25 @@ object Player {
             savefile.WriteInt(pdas.size())
             i = 0
             while (i < pdas.size()) {
-                savefile.WriteString(pdas.get(i))
+                savefile.WriteString(pdas[i])
                 i++
             }
             savefile.WriteInt(pdaSecurity.size())
             i = 0
             while (i < pdaSecurity.size()) {
-                savefile.WriteString(pdaSecurity.get(i))
+                savefile.WriteString(pdaSecurity[i])
                 i++
             }
             savefile.WriteInt(videos.size())
             i = 0
             while (i < videos.size()) {
-                savefile.WriteString(videos.get(i))
+                savefile.WriteString(videos[i])
                 i++
             }
             savefile.WriteInt(emails.size())
             i = 0
             while (i < emails.size()) {
-                savefile.WriteString(emails.get(i))
+                savefile.WriteString(emails[i])
                 i++
             }
             savefile.WriteInt(nextItemPickup)
@@ -355,23 +355,23 @@ object Player {
             savefile.WriteInt(pickupItemNames.Num())
             i = 0
             while (i < pickupItemNames.Num()) {
-                savefile.WriteString(pickupItemNames.get(i).icon)
-                savefile.WriteString(pickupItemNames.get(i).name)
+                savefile.WriteString(pickupItemNames[i].icon)
+                savefile.WriteString(pickupItemNames[i].name)
                 i++
             }
             savefile.WriteInt(objectiveNames.Num())
             i = 0
             while (i < objectiveNames.Num()) {
-                savefile.WriteString(objectiveNames.get(i).screenshot)
-                savefile.WriteString(objectiveNames.get(i).text)
-                savefile.WriteString(objectiveNames.get(i).title)
+                savefile.WriteString(objectiveNames[i].screenshot)
+                savefile.WriteString(objectiveNames[i].text)
+                savefile.WriteString(objectiveNames[i].title)
                 i++
             }
             savefile.WriteInt(levelTriggers.Num())
             i = 0
             while (i < levelTriggers.Num()) {
-                savefile.WriteString(levelTriggers.get(i).levelName)
-                savefile.WriteString(levelTriggers.get(i).triggerName)
+                savefile.WriteString(levelTriggers[i].levelName)
+                savefile.WriteString(levelTriggers[i].triggerName)
                 i++
             }
             savefile.WriteBool(ammoPulse)
@@ -381,7 +381,7 @@ object Player {
         }
 
         // unarchives object from save game file
-        fun Restore(savefile: idRestoreGame?) {
+        fun Restore(savefile: idRestoreGame) {
             var i: Int
             var num: Int
             maxHealth = savefile.ReadInt()
@@ -396,17 +396,17 @@ object Player {
             nextArmorDepleteTime = savefile.ReadInt()
             i = 0
             while (i < Weapon.AMMO_NUMTYPES) {
-                ammo.get(i) = savefile.ReadInt()
+                ammo[i] = savefile.ReadInt()
                 i++
             }
             i = 0
             while (i < Player.MAX_WEAPONS) {
-                clip.get(i) = savefile.ReadInt()
+                clip[i] = savefile.ReadInt()
                 i++
             }
             i = 0
             while (i < Player.MAX_POWERUPS) {
-                powerupEndTime.get(i) = savefile.ReadInt()
+                powerupEndTime[i] = savefile.ReadInt()
                 i++
             }
             num = savefile.ReadInt()
@@ -419,10 +419,10 @@ object Player {
             }
 
             // pdas
-            pdasViewed.get(0) = savefile.ReadInt()
-            pdasViewed.get(1) = savefile.ReadInt()
-            pdasViewed.get(2) = savefile.ReadInt()
-            pdasViewed.get(3) = savefile.ReadInt()
+            pdasViewed[0] = savefile.ReadInt()
+            pdasViewed[1] = savefile.ReadInt()
+            pdasViewed[2] = savefile.ReadInt()
+            pdasViewed[3] = savefile.ReadInt()
             selPDA = savefile.ReadInt()
             selVideo = savefile.ReadInt()
             selEMail = savefile.ReadInt()
@@ -547,7 +547,7 @@ object Player {
             armorPulse = false
         }
 
-        fun GivePowerUp(player: idPlayer?, powerup: Int, msec: Int) {
+        fun GivePowerUp(player: idPlayer, powerup: Int, msec: Int) {
             var msec = msec
             if (0 == msec) {
                 // get the duration from the .def files
@@ -562,25 +562,25 @@ object Player {
                 msec = def.dict.GetInt("time") * 1000
             }
             powerups = powerups or (1 shl powerup)
-            powerupEndTime.get(powerup) = Game_local.gameLocal.time + msec
+            powerupEndTime[powerup] = Game_local.gameLocal.time + msec
         }
 
         fun ClearPowerUps() {
             var i: Int
             i = 0
             while (i < Player.MAX_POWERUPS) {
-                powerupEndTime.get(i) = 0
+                powerupEndTime[i] = 0
                 i++
             }
             powerups = 0
         }
 
-        fun GetPersistantData(dict: idDict?) {
+        fun GetPersistantData(dict: idDict) {
             var i: Int
             var num: Int
-            var item: idDict?
+            var item: idDict
             var key: String
-            var kv: idKeyValue?
+            var kv: idKeyValue
             var name: String
 
             // armor
@@ -592,7 +592,7 @@ object Player {
             while (i < Weapon.AMMO_NUMTYPES) {
                 name = idWeapon.Companion.GetAmmoNameForNum(i)
                 if (name != null) {
-                    dict.SetInt(name, ammo.get(i))
+                    dict.SetInt(name, ammo[i])
                 }
                 i++
             }
@@ -601,7 +601,7 @@ object Player {
             num = 0
             i = 0
             while (i < items.Num()) {
-                item = items.get(i)
+                item = items[i]
 
                 // copy all keys with "inv_"
                 kv = item.MatchPrefix("inv_")
@@ -620,7 +620,7 @@ object Player {
             // pdas viewed
             i = 0
             while (i < 4) {
-                dict.SetInt(Str.va("pdasViewed_%d", i), pdasViewed.get(i))
+                dict.SetInt(Str.va("pdasViewed_%d", i), pdasViewed[i])
                 i++
             }
             dict.SetInt("selPDA", selPDA)
@@ -634,7 +634,7 @@ object Player {
             i = 0
             while (i < pdas.size()) {
                 key = String.format("pda_%d", i)
-                dict.Set(key, pdas.get(i))
+                dict.Set(key, pdas[i])
                 i++
             }
             dict.SetInt("pdas", pdas.size())
@@ -643,7 +643,7 @@ object Player {
             i = 0
             while (i < videos.size()) {
                 key = String.format("video_%d", i)
-                dict.Set(key, videos.get(i))
+                dict.Set(key, videos[i])
                 i++
             }
             dict.SetInt("videos", videos.size())
@@ -652,7 +652,7 @@ object Player {
             i = 0
             while (i < emails.size()) {
                 key = String.format("email_%d", i)
-                dict.Set(key, emails.get(i))
+                dict.Set(key, emails[i])
                 i++
             }
             dict.SetInt("emails", emails.size())
@@ -663,20 +663,20 @@ object Player {
             i = 0
             while (i < levelTriggers.Num()) {
                 key = String.format("levelTrigger_Level_%d", i)
-                dict.Set(key, levelTriggers.get(i).levelName)
+                dict.Set(key, levelTriggers[i].levelName)
                 key = String.format("levelTrigger_Trigger_%d", i)
-                dict.Set(key, levelTriggers.get(i).triggerName)
+                dict.Set(key, levelTriggers[i].triggerName)
                 i++
             }
         }
 
-        fun RestoreInventory(owner: idPlayer?, dict: idDict?) {
+        fun RestoreInventory(owner: idPlayer, dict: idDict) {
             var i: Int
             var num: Int
             var item: idDict
             val key = idStr()
             var itemname: String
-            var kv: idKeyValue?
+            var kv: idKeyValue
             var name: String
             Clear()
 
@@ -694,7 +694,7 @@ object Player {
             while (i < Weapon.AMMO_NUMTYPES) {
                 name = idWeapon.Companion.GetAmmoNameForNum(i)
                 if (name != null) {
-                    ammo.get(i) = dict.GetInt(name)
+                    ammo[i] = dict.GetInt(name)
                 }
                 i++
             }
@@ -705,7 +705,7 @@ object Player {
             i = 0
             while (i < num) {
                 item = idDict()
-                items.set(i, item)
+                items[i] = item
                 itemname = String.format("item_%d ", i)
                 kv = dict.MatchPrefix(itemname)
                 while (kv != null) {
@@ -720,7 +720,7 @@ object Player {
             // pdas viewed
             i = 0
             while (i < 4) {
-                pdasViewed.get(i) = dict.GetInt(Str.va("pdasViewed_%d", i))
+                pdasViewed[i] = dict.GetInt(Str.va("pdasViewed_%d", i))
                 i++
             }
             selPDA = dict.GetInt("selPDA")
@@ -736,7 +736,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("pda_%d", i)
-                pdas.set(i, dict.GetString(itemname, "default"))
+                pdas[i] = dict.GetString(itemname, "default")
                 i++
             }
 
@@ -746,7 +746,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("video_%d", i)
-                videos.set(i, dict.GetString(itemname, "default"))
+                videos[i] = dict.GetString(itemname, "default")
                 i++
             }
 
@@ -756,7 +756,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("email_%d", i)
-                emails.set(i, dict.GetString(itemname, "default"))
+                emails[i] = dict.GetString(itemname, "default")
                 i++
             }
 
@@ -785,11 +785,11 @@ object Player {
         }
 
         fun Give(
-            owner: idPlayer?,
-            spawnArgs: idDict?,
-            statname: String?,
-            value: String?,
-            idealWeapon: CInt?,
+            owner: idPlayer,
+            spawnArgs: idDict,
+            statname: String,
+            value: String,
+            idealWeapon: CInt,
             updateHud: Boolean
         ): Boolean {
             var i: Int
@@ -798,22 +798,22 @@ object Player {
             var len: Int
             var weaponString: idStr
             val max: Int
-            var weaponDecl: idDeclEntityDef?
+            var weaponDecl: idDeclEntityDef
             var tookWeapon: Boolean
             val amount: Int
             var info: idItemInfo
-            val name: String?
+            val name: String
             if (0 == idStr.Companion.Icmpn(statname, "ammo_", 5)) {
                 i = AmmoIndexForAmmoClass(statname)
                 max = MaxAmmoForAmmoClass(owner, statname)
-                if (ammo.get(i) >= max) {
+                if (ammo[i] >= max) {
                     return false
                 }
                 amount = value.toInt()
                 if (amount != 0) {
-                    ammo.get(i) += amount
-                    if (max > 0 && ammo.get(i) > max) {
-                        ammo.get(i) = max
+                    ammo[i] += amount
+                    if (max > 0 && ammo[i] > max) {
+                        ammo[i] = max
                     }
                     ammoPulse = true
                     name = AmmoPickupNameForIndex(i)
@@ -838,7 +838,7 @@ object Player {
                 i = WeaponIndexForAmmoClass(spawnArgs, statname + 7)
                 if (i != -1) {
                     // set, don't add. not going over the clip size limit.
-                    clip.get(i) = value.toInt()
+                    clip[i] = value.toInt()
                 }
             } else if (0 == idStr.Companion.Icmp(statname, "berserk")) {
                 GivePowerUp(owner, Player.BERSERK, Math_h.SEC2MS(value.toFloat()).toInt())
@@ -918,17 +918,17 @@ object Player {
             return true
         }
 
-        fun Drop(spawnArgs: idDict?, weapon_classname: Array<String?>?, weapon_index: Int) {
+        fun Drop(spawnArgs: idDict, weapon_classname: Array<String>, weapon_index: Int) {
             // remove the weapon bit
             // also remove the ammo associated with the weapon as we pushed it in the item
             var weapon_index = weapon_index
-            assert(weapon_index != -1 || weapon_classname.get(0) != null)
+            assert(weapon_index != -1 || weapon_classname[0] != null)
             if (weapon_index == -1) {
                 weapon_index = 0
                 while (weapon_index < Player.MAX_WEAPONS) {
                     if (TempDump.NOT(
                             idStr.Companion.Icmp(
-                                weapon_classname.get(0),
+                                weapon_classname[0],
                                 spawnArgs.GetString(Str.va("def_weapon%d", weapon_index))
                             ).toDouble()
                         )
@@ -938,24 +938,24 @@ object Player {
                     weapon_index++
                 }
                 if (weapon_index >= Player.MAX_WEAPONS) {
-                    idGameLocal.Companion.Error("Unknown weapon '%s'", weapon_classname.get(0))
+                    idGameLocal.Companion.Error("Unknown weapon '%s'", weapon_classname[0])
                 }
-            } else if (null == weapon_classname.get(0)) {
-                weapon_classname.get(0) = spawnArgs.GetString(Str.va("def_weapon%d", weapon_index))
+            } else if (null == weapon_classname[0]) {
+                weapon_classname[0] = spawnArgs.GetString(Str.va("def_weapon%d", weapon_index))
             }
             weapons = weapons and (-0x1 xor (1 shl weapon_index))
-            val ammo_i = AmmoIndexForWeaponClass(weapon_classname.get(0), null)
+            val ammo_i = AmmoIndexForWeaponClass(weapon_classname[0], null)
             if (ammo_i != 0) {
-                clip.get(weapon_index) = -1
-                ammo.get(ammo_i) = 0
+                clip[weapon_index] = -1
+                ammo[ammo_i] = 0
             }
         }
 
-        fun  /*ammo_t*/AmmoIndexForAmmoClass(ammo_classname: String?): Int {
+        fun  /*ammo_t*/AmmoIndexForAmmoClass(ammo_classname: String): Int {
             return idWeapon.Companion.GetAmmoNumForName(ammo_classname)
         }
 
-        fun MaxAmmoForAmmoClass(owner: idPlayer?, ammo_classname: String?): Int {
+        fun MaxAmmoForAmmoClass(owner: idPlayer, ammo_classname: String): Int {
             return owner.spawnArgs.GetInt(Str.va("max_%s", ammo_classname), "0")
         }
 
@@ -965,9 +965,9 @@ object Player {
          mapping could be prepared in the constructor
          ==============
          */
-        fun WeaponIndexForAmmoClass(spawnArgs: idDict?, ammo_classname: String?): Int {
+        fun WeaponIndexForAmmoClass(spawnArgs: idDict, ammo_classname: String): Int {
             var i: Int
-            var weapon_classname: String?
+            var weapon_classname: String
             i = 0
             while (i < Player.MAX_WEAPONS) {
                 weapon_classname = spawnArgs.GetString(Str.va("def_weapon%d", i))
@@ -988,7 +988,7 @@ object Player {
             return -1
         }
 
-        fun  /*ammo_t*/AmmoIndexForWeaponClass(weapon_classname: String?, ammoRequired: IntArray?): Int {
+        fun  /*ammo_t*/AmmoIndexForWeaponClass(weapon_classname: String, ammoRequired: IntArray): Int {
             val decl = Game_local.gameLocal.FindEntityDef(weapon_classname, false)
             if (null == decl) {
                 idGameLocal.Companion.Error("Unknown weapon in decl '%s'", weapon_classname)
@@ -999,14 +999,14 @@ object Player {
             return AmmoIndexForAmmoClass(decl.dict.GetString("ammoType"))
         }
 
-        fun AmmoPickupNameForIndex(ammonum: Int): String? {
+        fun AmmoPickupNameForIndex(ammonum: Int): String {
             return idWeapon.Companion.GetAmmoPickupNameForNum(ammonum)
         }
 
-        fun AddPickupName(name: String?, icon: String?) {
+        fun AddPickupName(name: String, icon: String) {
             val num: Int
             num = pickupItemNames.Num()
-            if (num == 0 || pickupItemNames.get(num - 1).name.Icmp(name) != 0) {
+            if (num == 0 || pickupItemNames[num - 1].name.Icmp(name) != 0) {
                 val info = pickupItemNames.Alloc()
                 if (idStr.Companion.Cmpn(name, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
                     info.name = idStr(Common.common.GetLanguageDict().GetString(name))
@@ -1024,9 +1024,9 @@ object Player {
             }
 
             // check if we have infinite ammo
-            return if (ammo.get(type) < 0) {
+            return if (ammo[type] < 0) {
                 -1
-            } else ammo.get(type) / amount
+            } else ammo[type] / amount
 
             // return how many shots we can fire
         }
@@ -1037,15 +1037,15 @@ object Player {
             }
 
             // take an ammo away if not infinite
-            if (ammo.get(type) >= 0) {
-                ammo.get(type) -= amount
+            if (ammo[type] >= 0) {
+                ammo[type] -= amount
                 ammoPredictTime =
                     Game_local.gameLocal.time // mp client: we predict this. mark time so we're not confused by snapshots
             }
             return true
         }
 
-        fun HasAmmo(weapon_classname: String?): Int {            // looks up the ammo information for the weapon class first
+        fun HasAmmo(weapon_classname: String): Int {            // looks up the ammo information for the weapon class first
             val ammoRequired = IntArray(1)
             val ammo_i = AmmoIndexForWeaponClass(weapon_classname, ammoRequired)
             return HasAmmo(ammo_i, ammoRequired[0])
@@ -1078,7 +1078,7 @@ object Player {
 
     class loggedAccel_t {
         val dir // scaled larger for running
-                : idVec3?
+                : idVec3
         var time = 0
 
         init {
@@ -1087,7 +1087,7 @@ object Player {
     }
 
     class aasLocation_t {
-        val pos: idVec3? = idVec3()
+        val pos: idVec3 = idVec3()
         var areaNum = 0
     }
 
@@ -1104,7 +1104,7 @@ object Player {
             //
             // mp stuff
             //        public static final idVec3[] colorBarTable = new idVec3[5];
-            val colorBarTable: Array<idVec3?>? = arrayOf(
+            val colorBarTable: Array<idVec3> = arrayOf(
                 idVec3(0.25f, 0.25f, 0.25f),
                 idVec3(1.00f, 0.00f, 0.00f),
                 idVec3(0.00f, 0.80f, 0.10f),
@@ -1115,135 +1115,135 @@ object Player {
 
             //
             private const val NUM_LOGGED_VIEW_ANGLES = 64 // for weapon turning angle offsets
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //	virtual					~idPlayer();
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idActor.Companion.getEventCallBacks())
                 eventCallbacks[Player.EV_Player_GetButtons] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetButtons() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetButtons() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_GetMove] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetMove() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetMove() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_GetViewAngles] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetViewAngles() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetViewAngles() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_StopFxFov] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_StopFxFov() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_StopFxFov() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_EnableWeapon] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_EnableWeapon() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_EnableWeapon() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_DisableWeapon] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_DisableWeapon() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_DisableWeapon() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_GetCurrentWeapon] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetCurrentWeapon() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetCurrentWeapon() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_GetPreviousWeapon] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetPreviousWeapon() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetPreviousWeapon() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_SelectWeapon] =
-                    eventCallback_t1<idPlayer?> { obj: T?, weaponName: idEventArg<*>? ->
+                    eventCallback_t1<idPlayer> { obj: T, weaponName: idEventArg<*> ->
                         neo.Game.obj.Event_SelectWeapon(neo.Game.weaponName)
-                    } as eventCallback_t1<idPlayer?>
+                    } as eventCallback_t1<idPlayer>
                 eventCallbacks[Player.EV_Player_GetWeaponEntity] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetWeaponEntity() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetWeaponEntity() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_OpenPDA] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_OpenPDA() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_OpenPDA() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_InPDA] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_InPDA() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_InPDA() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_ExitTeleporter] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_ExitTeleporter() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_ExitTeleporter() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_StopAudioLog] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_StopAudioLog() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_StopAudioLog() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_HideTip] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_HideTip() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_HideTip() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_LevelTrigger] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_LevelTrigger() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_LevelTrigger() } as eventCallback_t0<idPlayer>
                 eventCallbacks[AFEntity.EV_Gibbed] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_Gibbed() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_Gibbed() } as eventCallback_t0<idPlayer>
                 eventCallbacks[Player.EV_Player_GetIdealWeapon] =
-                    eventCallback_t0<idPlayer?> { obj: T? -> neo.Game.obj.Event_GetIdealWeapon() } as eventCallback_t0<idPlayer?>
+                    eventCallback_t0<idPlayer> { obj: T -> neo.Game.obj.Event_GetIdealWeapon() } as eventCallback_t0<idPlayer>
             }
         }
 
         val colorBar // used for scoreboard and hud display
-                : idVec3?
+                : idVec3
 
         //
         // the first person view values are always calculated, even
         // if a third person view is used
-        val firstPersonViewOrigin: idVec3?
-        val soulCubeProjectile: idEntityPtr<idProjectile?>?
+        val firstPersonViewOrigin: idVec3
+        val soulCubeProjectile: idEntityPtr<idProjectile>
 
         //
         val teleportEntity // while being teleported, this is set to the entity we'll use for exit
-                : idEntityPtr<idEntity?>?
+                : idEntityPtr<idEntity>
 
         //
-        val weapon: idEntityPtr<idWeapon?>?
+        val weapon: idEntityPtr<idWeapon>
 
         //
         private val aasLocation // for AI tracking the player
-                : idList<aasLocation_t?>?
-        private val baseSkinName: idStr?
-        private val centerView: idInterpolate<Float?>?
-        private val gibsDir: idVec3?
-        private val lastDamageDir: idVec3?
+                : idList<aasLocation_t>
+        private val baseSkinName: idStr
+        private val centerView: idInterpolate<Float>
+        private val gibsDir: idVec3
+        private val lastDamageDir: idVec3
         private val loggedAccel // [currentLoggedAccel & (NUM_LOGGED_ACCELS-1)]
-                : Array<loggedAccel_t?>?
+                : Array<loggedAccel_t>
         private val loggedViewAngles // [gameLocal.framenum&(LOGGED_VIEW_ANGLES-1)]
-                : Array<idAngles?>?
+                : Array<idAngles>
 
         //
-        private val pdaAudio: idStr?
-        private val pdaVideo: idStr?
-        private val pdaVideoWave: idStr?
+        private val pdaAudio: idStr
+        private val pdaVideo: idStr
+        private val pdaVideoWave: idStr
 
         //
         private val physicsObj // player physics
-                : idPhysics_Player?
+                : idPhysics_Player
 
         //
-        private val skin: idDeclSkin?
-        private val smoothedOrigin: idVec3?
-        private val viewBob: idVec3?
-        private val viewBobAngles: idAngles?
+        private val skin: idDeclSkin
+        private val smoothedOrigin: idVec3
+        private val viewBob: idVec3
+        private val viewBobAngles: idAngles
 
         //
-        private val zoomFov: idInterpolate<Float?>?
-        var AI_ATTACK_HELD: idScriptBool? = idScriptBool()
-        var AI_BACKWARD: idScriptBool? = idScriptBool()
-        var AI_CROUCH: idScriptBool? = idScriptBool()
-        var AI_DEAD: idScriptBool? = idScriptBool()
+        private val zoomFov: idInterpolate<Float>
+        var AI_ATTACK_HELD: idScriptBool = idScriptBool()
+        var AI_BACKWARD: idScriptBool = idScriptBool()
+        var AI_CROUCH: idScriptBool = idScriptBool()
+        var AI_DEAD: idScriptBool = idScriptBool()
 
         //
-        var AI_FORWARD: idScriptBool? = idScriptBool()
-        var AI_HARDLANDING: idScriptBool? = idScriptBool()
-        var AI_JUMP: idScriptBool? = idScriptBool()
-        var AI_ONGROUND: idScriptBool? = idScriptBool()
-        var AI_ONLADDER: idScriptBool? = idScriptBool()
-        var AI_PAIN: idScriptBool? = idScriptBool()
-        var AI_RELOAD: idScriptBool? = idScriptBool()
-        var AI_RUN: idScriptBool? = idScriptBool()
-        var AI_SOFTLANDING: idScriptBool? = idScriptBool()
-        var AI_STRAFE_LEFT: idScriptBool? = idScriptBool()
-        var AI_STRAFE_RIGHT: idScriptBool? = idScriptBool()
-        var AI_TELEPORT: idScriptBool? = idScriptBool()
-        var AI_TURN_LEFT: idScriptBool? = idScriptBool()
-        var AI_TURN_RIGHT: idScriptBool? = idScriptBool()
-        var AI_WEAPON_FIRED: idScriptBool? = idScriptBool()
+        var AI_FORWARD: idScriptBool = idScriptBool()
+        var AI_HARDLANDING: idScriptBool = idScriptBool()
+        var AI_JUMP: idScriptBool = idScriptBool()
+        var AI_ONGROUND: idScriptBool = idScriptBool()
+        var AI_ONLADDER: idScriptBool = idScriptBool()
+        var AI_PAIN: idScriptBool = idScriptBool()
+        var AI_RELOAD: idScriptBool = idScriptBool()
+        var AI_RUN: idScriptBool = idScriptBool()
+        var AI_SOFTLANDING: idScriptBool = idScriptBool()
+        var AI_STRAFE_LEFT: idScriptBool = idScriptBool()
+        var AI_STRAFE_RIGHT: idScriptBool = idScriptBool()
+        var AI_TELEPORT: idScriptBool = idScriptBool()
+        var AI_TURN_LEFT: idScriptBool = idScriptBool()
+        var AI_TURN_RIGHT: idScriptBool = idScriptBool()
+        var AI_WEAPON_FIRED: idScriptBool = idScriptBool()
 
         //
         var buttonMask: Int
         var cmdAngles // player cmd angles
-                : idAngles?
+                : idAngles
         var colorBarIndex: Int
         var deathClearContentsTime: Int
         var doingDeathSkin: Boolean
 
         //
-        var dragEntity: idDragEntity?
-        var firstPersonViewAxis: idMat3?
+        var dragEntity: idDragEntity
+        var firstPersonViewAxis: idMat3
         var forceRespawn: Boolean
         var forceScoreBoard: Boolean
         var forcedReady: Boolean
@@ -1252,7 +1252,7 @@ object Player {
                 : Float
         var healthPulse: Boolean
         var healthTake: Boolean
-        var heartInfo: idInterpolate<Float?>?
+        var heartInfo: idInterpolate<Float>
 
         //
         var heartRate: Int
@@ -1262,11 +1262,11 @@ object Player {
         var hiddenWeapon // if the weapon is hidden ( in noWeapons maps )
                 : Boolean
         var hud // MP: is NULL if not local player
-                : idUserInterface?
+                : idUserInterface
 
         //
         // inventory
-        var inventory: idInventory?
+        var inventory: idInventory
         var isChatting // replicated from server, true if the player is chatting.
                 : Boolean
         var isLagged // replicated from server, true if packets haven't been received from client.
@@ -1306,16 +1306,16 @@ object Player {
 
         //
         var noclip: Boolean
-        var objectiveSystem: idUserInterface?
+        var objectiveSystem: idUserInterface
         var objectiveSystemOpen: Boolean
         var oldButtons: Int
         var oldFlags: Int
 
         //
         var playerView // handles damage kicks and effects
-                : idPlayerView?
+                : idPlayerView
         var scoreBoardOpen: Boolean
-        var spawnAngles: idAngles?
+        var spawnAngles: idAngles
 
         //
         var spawnAnglesSet // on first usercmd, we must set deltaAngles
@@ -1336,9 +1336,9 @@ object Player {
 
         // };
         //
-        var usercmd: usercmd_t?
+        var usercmd: usercmd_t
         var viewAngles // player view angles
-                : idAngles?
+                : idAngles
         var wantSpectate // from userInfo
                 : Boolean
         var weaponGone // force stop firing
@@ -1370,16 +1370,16 @@ object Player {
 
         //
         private var currentWeapon: Int
-        private var cursor: idUserInterface?
-        private var focusCharacter: idAI?
+        private var cursor: idUserInterface
+        private var focusCharacter: idAI
 
         //
         // if there is a focusGUIent, the attack button will be changed into mouse clicks
-        private var focusGUIent: idEntity?
+        private var focusGUIent: idEntity
         private var focusTime: Int
         private var focusUI // focusGUIent->renderEntity.gui, gui2, or gui3
-                : idUserInterface?
-        private var focusVehicle: idAFEntity_Vehicle?
+                : idUserInterface
+        private var focusVehicle: idAFEntity_Vehicle
         private var fxFov: Boolean
 
         //
@@ -1393,13 +1393,13 @@ object Player {
         private var idealWeapon: Int
         private var influenceActive // level of influence.. 1 == no gun or hud .. 2 == 1 + no movement
                 : Int
-        private var influenceEntity: idEntity?
+        private var influenceEntity: idEntity
 
         //
         private var influenceFov: Float
-        private var influenceMaterial: idMaterial?
+        private var influenceMaterial: idMaterial
         private var influenceRadius: Float
-        private var influenceSkin: idDeclSkin?
+        private var influenceSkin: idDeclSkin
         private var isTelefragged // proper obituaries
                 : Boolean
         private var landChange: Int
@@ -1435,12 +1435,12 @@ object Player {
         private var oldViewYaw: Float
 
         //
-        private val playerIcon: idPlayerIcon? = null
-        private var powerUpSkin: idDeclSkin?
+        private val playerIcon: idPlayerIcon = null
+        private var powerUpSkin: idDeclSkin
         private var previousWeapon: Int
 
         //
-        private var privateCameraView: idCamera?
+        private var privateCameraView: idCamera
 
         //
         // mp
@@ -1452,7 +1452,7 @@ object Player {
         //
         private var selfSmooth: Boolean
         private var showWeaponViewModel: Boolean
-        private var smoothedAngles: idAngles?
+        private var smoothedAngles: idAngles
         private var smoothedFrame: Int
         private var smoothedOriginUpdated: Boolean
         private var stepUpDelta: Float
@@ -1581,13 +1581,13 @@ object Player {
             if (!Game_local.gameLocal.isMultiplayer && Game_local.gameLocal.serverInfo.FindKey("devmap") != null) {
                 // fire a trigger with the name "devmap"
                 val ent = Game_local.gameLocal.FindEntity("devmap")
-                ent?.ActivateTargets(this)
+                ent.ActivateTargets(this)
             }
             if (hud != null) {
                 // We can spawn with a full soul cube, so we need to make sure the hud knows this
                 if (weapon_soulcube > 0 && inventory.weapons and (1 shl weapon_soulcube) != 0) {
                     val max_souls = inventory.MaxAmmoForAmmoClass(this, "ammo_souls")
-                    if (inventory.ammo.get(idWeapon.Companion.GetAmmoNumForName("ammo_souls")) >= max_souls) {
+                    if (inventory.ammo[idWeapon.Companion.GetAmmoNumForName("ammo_souls")] >= max_souls) {
                         hud.HandleNamedEvent("soulCubeReady")
                     }
                 }
@@ -1596,7 +1596,7 @@ object Player {
             if (GetPDA() != null) {
                 // Add any emails from the inventory
                 for (i in 0 until inventory.emails.size()) {
-                    GetPDA().AddEmail(inventory.emails.get(i).toString())
+                    GetPDA().AddEmail(inventory.emails[i].toString())
                 }
                 GetPDA().SetSecurity(Common.common.GetLanguageDict().GetString("#str_00066"))
             }
@@ -1649,7 +1649,7 @@ object Player {
          ==============
          */
         override fun Think() {
-            val headRenderEnt: renderEntity_s?
+            val headRenderEnt: renderEntity_s
             UpdatePlayerIcons()
 
             // latch button actions
@@ -1685,18 +1685,18 @@ object Player {
 
             // log movement changes for weapon bobbing effects
             if (usercmd.forwardmove != oldCmd.forwardmove) {
-                val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
+                val acc = loggedAccel[currentLoggedAccel and NUM_LOGGED_ACCELS - 1]
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.set(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
-                acc.dir.set(1, acc.dir.set(2, 0f))
+                acc.dir[0] = (usercmd.forwardmove - oldCmd.forwardmove).toFloat()
+                acc.dir[1] = acc.dir.set(2, 0f)
             }
             if (usercmd.rightmove != oldCmd.rightmove) {
-                val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
+                val acc = loggedAccel[currentLoggedAccel and NUM_LOGGED_ACCELS - 1]
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.set(0, (usercmd.forwardmove - oldCmd.forwardmove).toFloat())
-                acc.dir.set(1, acc.dir.set(2, 0f))
+                acc.dir[0] = (usercmd.forwardmove - oldCmd.forwardmove).toFloat()
+                acc.dir[1] = acc.dir.set(2, 0f)
             }
 
             // freelook centering
@@ -1833,10 +1833,10 @@ object Player {
                 playerView.CalculateShake()
             }
             if (0 == thinkFlags and Entity.TH_THINK) {
-                Game_local.gameLocal.Printf("player %d not thinking?\n", entityNumber)
+                Game_local.gameLocal.Printf("player %d not thinking\n", entityNumber)
             }
             if (SysCvar.g_showEnemies.GetBool()) {
-                var ent: idActor?
+                var ent: idActor
                 var num = 0
                 ent = enemyList.Next()
                 while (ent != null) {
@@ -1854,7 +1854,7 @@ object Player {
         }
 
         // save games
-        override fun Save(savefile: idSaveGame?) {                    // archives object for save game file
+        override fun Save(savefile: idSaveGame) {                    // archives object for save game file
             var i: Int
             savefile.WriteUsercmd(usercmd)
             playerView.Save(savefile)
@@ -1931,8 +1931,8 @@ object Player {
             savefile.WriteInt(aasLocation.Num())
             i = 0
             while (i < aasLocation.Num()) {
-                savefile.WriteInt(aasLocation.get(i).areaNum)
-                savefile.WriteVec3(aasLocation.get(i).pos)
+                savefile.WriteInt(aasLocation[i].areaNum)
+                savefile.WriteVec3(aasLocation[i].pos)
                 i++
             }
             savefile.WriteInt(bobFoot)
@@ -1985,13 +1985,13 @@ object Player {
             savefile.WriteObject(privateCameraView)
             i = 0
             while (i < NUM_LOGGED_VIEW_ANGLES) {
-                savefile.WriteAngles(loggedViewAngles.get(i))
+                savefile.WriteAngles(loggedViewAngles[i])
                 i++
             }
             i = 0
             while (i < NUM_LOGGED_ACCELS) {
-                savefile.WriteInt(loggedAccel.get(i).time)
-                savefile.WriteVec3(loggedAccel.get(i).dir)
+                savefile.WriteInt(loggedAccel[i].time)
+                savefile.WriteVec3(loggedAccel[i].dir)
                 i++
             }
             savefile.WriteInt(currentLoggedAccel)
@@ -2028,7 +2028,7 @@ object Player {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {                    // unarchives object from save game file
+        override fun Restore(savefile: idRestoreGame) {                    // unarchives object from save game file
             var i: Int
             val num = CInt()
             val set = CFloat()
@@ -2057,7 +2057,7 @@ object Player {
             weapon.Restore(savefile)
             i = 0
             while (i < inventory.emails.size()) {
-                GetPDA().AddEmail(inventory.emails.get(i).toString())
+                GetPDA().AddEmail(inventory.emails[i].toString())
                 i++
             }
             savefile.ReadUserInterface(hud)
@@ -2124,8 +2124,8 @@ object Player {
             aasLocation.SetNum(num.getVal())
             i = 0
             while (i < num.getVal()) {
-                aasLocation.get(i).areaNum = savefile.ReadInt()
-                savefile.ReadVec3(aasLocation.get(i).pos)
+                aasLocation[i].areaNum = savefile.ReadInt()
+                savefile.ReadVec3(aasLocation[i].pos)
                 i++
             }
             bobFoot = savefile.ReadInt()
@@ -2186,13 +2186,13 @@ object Player {
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/privateCameraView)
             i = 0
             while (i < NUM_LOGGED_VIEW_ANGLES) {
-                savefile.ReadAngles(loggedViewAngles.get(i))
+                savefile.ReadAngles(loggedViewAngles[i])
                 i++
             }
             i = 0
             while (i < NUM_LOGGED_ACCELS) {
-                loggedAccel.get(i).time = savefile.ReadInt()
-                savefile.ReadVec3(loggedAccel.get(i).dir)
+                loggedAccel[i].time = savefile.ReadInt()
+                savefile.ReadVec3(loggedAccel[i].dir)
                 i++
             }
             currentLoggedAccel = savefile.ReadInt()
@@ -2225,7 +2225,7 @@ object Player {
             lastTeleFX = savefile.ReadInt()
 
             // set the pm_ cvars
-            var kv: idKeyValue?
+            var kv: idKeyValue
             kv = spawnArgs.MatchPrefix("pm_", null)
             while (kv != null) {
                 CVarSystem.cvarSystem.SetCVarString(kv.GetKey().toString(), kv.GetValue().toString())
@@ -2239,22 +2239,22 @@ object Player {
         }
 
         override fun Hide() {
-            val weap: idWeapon?
+            val weap: idWeapon
             super.Hide()
             weap = weapon.GetEntity()
-            weap?.HideWorldModel()
+            weap.HideWorldModel()
         }
 
         override fun Show() {
-            val weap: idWeapon?
+            val weap: idWeapon
             super.Show()
             weap = weapon.GetEntity()
-            weap?.ShowWorldModel()
+            weap.ShowWorldModel()
         }
 
         override fun Init() {
-            val value = arrayOf<String?>(null)
-            var kv: idKeyValue?
+            val value = arrayOf<String>(null)
+            var kv: idKeyValue
             noclip = false
             godmode = false
             oldButtons = 0
@@ -2495,7 +2495,7 @@ object Player {
 
         fun SetupWeaponEntity() {
             var w: Int
-            var weap: String?
+            var weap: String
             if (weapon.GetEntity() != null) {
                 // get rid of old weapon
                 weapon.GetEntity().Clear()
@@ -2523,8 +2523,8 @@ object Player {
          use normal spawn selection.
          ============
          */
-        fun SelectInitialSpawnPoint(origin: idVec3?, angles: idAngles?) {
-            val spot: idEntity?
+        fun SelectInitialSpawnPoint(origin: idVec3, angles: idAngles) {
+            val spot: idEntity
             val skin = idStr()
             spot = Game_local.gameLocal.SelectInitialSpawnPoint(this)
 
@@ -2568,7 +2568,7 @@ object Player {
          when called here with spectating set to true, just place yourself and init
          ============
          */
-        fun SpawnToPoint(spawn_origin: idVec3?, spawn_angles: idAngles?) {
+        fun SpawnToPoint(spawn_origin: idVec3, spawn_angles: idAngles) {
             val spec_origin = idVec3()
             assert(!Game_local.gameLocal.isClient)
             respawning = true
@@ -2654,12 +2654,12 @@ object Player {
         }
 
         fun SetClipModel() {
-            var bounds: idBounds? = idBounds()
+            var bounds: idBounds = idBounds()
             if (spectating) {
                 bounds = idBounds(Vector.getVec3_origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
             } else {
-                bounds.get(0).Set(-SysCvar.pm_bboxwidth.GetFloat() * 0.5f, -SysCvar.pm_bboxwidth.GetFloat() * 0.5f, 0f)
-                bounds.get(1).Set(
+                bounds[0].Set(-SysCvar.pm_bboxwidth.GetFloat() * 0.5f, -SysCvar.pm_bboxwidth.GetFloat() * 0.5f, 0f)
+                bounds[1].Set(
                     SysCvar.pm_bboxwidth.GetFloat() * 0.5f,
                     SysCvar.pm_bboxwidth.GetFloat() * 0.5f,
                     SysCvar.pm_normalheight.GetFloat()
@@ -2713,7 +2713,7 @@ object Player {
             }
         }
 
-        fun SetLevelTrigger(levelName: String?, triggerName: String?) {
+        fun SetLevelTrigger(levelName: String, triggerName: String) {
             if (levelName != null && !levelName.isEmpty() && triggerName != null && !triggerName.isEmpty()) {
                 val lti = idLevelTriggerInfo()
                 lti.levelName.set(levelName)
@@ -2723,7 +2723,7 @@ object Player {
         }
 
         fun UserInfoChanged(canModify: Boolean): Boolean {
-            val userInfo: idDict?
+            val userInfo: idDict
             var modifiedInfo: Boolean
             val spec: Boolean
             val newready: Boolean
@@ -2785,7 +2785,7 @@ object Player {
             return modifiedInfo
         }
 
-        fun GetUserInfo(): idDict? {
+        fun GetUserInfo(): idDict {
             return Game_local.gameLocal.userInfo[entityNumber]
         }
 
@@ -2793,14 +2793,14 @@ object Player {
             var i: Int
             var balanceTeam: Int
             val teamCount = IntArray(2)
-            var ent: idEntity?
+            var ent: idEntity
             teamCount[1] = 0
             teamCount[0] = teamCount[1]
             i = 0
             while (i < Game_local.gameLocal.numClients) {
                 ent = Game_local.gameLocal.entities[i]
                 if (ent != null && ent is idPlayer) {
-                    teamCount[(ent as idPlayer?).team]++
+                    teamCount[(ent as idPlayer).team]++
                 }
                 i++
             }
@@ -2824,7 +2824,7 @@ object Player {
         }
 
         fun CacheWeapons() {
-            var weap: String?
+            var weap: String
             var w: Int
 
             // check if we have any weapons
@@ -2945,23 +2945,23 @@ object Player {
             AI_DEAD.underscore(health <= 0)
         }
 
-        fun SetViewAngles(angles: idAngles?) {
+        fun SetViewAngles(angles: idAngles) {
             UpdateDeltaViewAngles(angles)
             viewAngles = angles
         }
 
         // delta view angles to allow movers to rotate the view of the player
-        fun UpdateDeltaViewAngles(angles: idAngles?) {
+        fun UpdateDeltaViewAngles(angles: idAngles) {
             // set the delta angle
             val delta = idAngles()
             for (i in 0..2) {
-                delta.set(i, angles.get(i) - Math_h.SHORT2ANGLE(usercmd.angles[i]))
+                delta[i] = angles[i] - Math_h.SHORT2ANGLE(usercmd.angles[i])
             }
             SetDeltaViewAngles(delta)
         }
 
-        override fun Collide(collision: trace_s?, velocity: idVec3?): Boolean {
-            val other: idEntity?
+        override fun Collide(collision: trace_s, velocity: idVec3): Boolean {
+            val other: idEntity
             if (Game_local.gameLocal.isClient) {
                 return false
             }
@@ -2981,14 +2981,14 @@ object Player {
             return false
         }
 
-        override fun GetAASLocation(aas: idAAS?, pos: idVec3?, areaNum: CInt?) {
+        override fun GetAASLocation(aas: idAAS, pos: idVec3, areaNum: CInt) {
             var i: Int
             if (aas != null) {
                 i = 0
                 while (i < aasLocation.Num()) {
                     if (aas === Game_local.gameLocal.GetAAS(i)) {
-                        areaNum.setVal(aasLocation.get(i).areaNum)
-                        pos.set(aasLocation.get(i).pos)
+                        areaNum.setVal(aasLocation[i].areaNum)
+                        pos.set(aasLocation[i].pos)
                         return
                     }
                     i++
@@ -3005,7 +3005,7 @@ object Player {
          Returns positions for the AI to aim at.
          =====================
          */
-        override fun GetAIAimTargets(lastSightPos: idVec3?, headPos: idVec3?, chestPos: idVec3?) {
+        override fun GetAIAimTargets(lastSightPos: idVec3, headPos: idVec3, chestPos: idVec3) {
             val offset = idVec3()
             val axis = idMat3()
             val origin = idVec3()
@@ -3023,7 +3023,7 @@ object Player {
          callback function for when another entity received damage from this entity.  damage can be adjusted and returned to the caller.
          ================
          */
-        override fun DamageFeedback(victim: idEntity?, inflictor: idEntity?, damage: CInt?) {
+        override fun DamageFeedback(victim: idEntity, inflictor: idEntity, damage: CInt) {
             assert(!Game_local.gameLocal.isClient)
             damage.setVal((PowerUpModifier(Player.BERSERK) * damage.getVal()).toInt())
             if (damage.getVal() != 0 && victim !== this && victim is idActor) {
@@ -3041,8 +3041,8 @@ object Player {
          =================
          */
         fun CalcDamagePoints(
-            inflictor: idEntity?, attacker: idEntity?, damageDef: idDict?,
-            damageScale: Float, location: Int, health: CInt?, armor: CInt?
+            inflictor: idEntity, attacker: idEntity, damageDef: idDict,
+            damageScale: Float, location: Int, health: CInt, armor: CInt
         ) {
             val damage = CInt()
             var armorSave: Int
@@ -3137,10 +3137,10 @@ object Player {
          ============
          */
         override fun Damage(
-            inflictor: idEntity?,
-            attacker: idEntity?,
-            dir: idVec3?,
-            damageDefName: String?,
+            inflictor: idEntity,
+            attacker: idEntity,
+            dir: idVec3,
+            damageDefName: String,
             damageScale: Float,
             location: Int
         ) {
@@ -3289,7 +3289,7 @@ object Player {
         }
 
         // use exitEntityNum to specify a teleport with private camera view and delayed exit
-        override fun Teleport(origin: idVec3?, angles: idAngles?, destination: idEntity?) {
+        override fun Teleport(origin: idVec3, angles: idAngles, destination: idEntity) {
             val org = idVec3()
             if (weapon.GetEntity() != null) {
                 weapon.GetEntity().LowerWeapon()
@@ -3342,7 +3342,7 @@ object Player {
             }
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity, attacker: idEntity, damage: Int, dir: idVec3, location: Int) {
             val delay: Float
             assert(!Game_local.gameLocal.isClient)
 
@@ -3390,7 +3390,7 @@ object Player {
                 LookAtKiller(inflictor, attacker)
             }
             if (Game_local.gameLocal.isMultiplayer || SysCvar.g_testDeath.GetBool()) {
-                var killer: idPlayer? = null
+                var killer: idPlayer = null
                 // no gibbing in MP. Event_Gib will early out in MP
                 if (attacker is idPlayer) {
                     killer = attacker
@@ -3409,9 +3409,9 @@ object Player {
             isChatting = false
         }
 
-        fun StartFxOnBone(fx: String?, bone: String?) {
+        fun StartFxOnBone(fx: String, bone: String) {
             val offset = idVec3()
-            var axis: idMat3? = idMat3()
+            var axis: idMat3 = idMat3()
             val   /*jointHandle_t*/jointHandle = GetAnimator().GetJointHandle(bone)
             if (jointHandle == Model.INVALID_JOINT) {
                 Game_local.gameLocal.Printf("Cannot find bone %s\n", bone)
@@ -3431,7 +3431,7 @@ object Player {
          Returns the renderView that was calculated for this tic
          ==================
          */
-        override fun GetRenderView(): renderView_s? {
+        override fun GetRenderView(): renderView_s {
             return renderView
         }
 
@@ -3534,7 +3534,7 @@ object Player {
                 //	Displays the view from the point of view of the "camera" joint in the player model
                 val axis = idMat3()
                 val origin = idVec3()
-                val ang: idAngles?
+                val ang: idAngles
                 ang = viewBobAngles.plus(playerView.AngleOffset())
                 ang.yaw += viewAxis.get(0).ToYaw()
                 val joint = animator.GetJointHandle("camera")
@@ -3554,7 +3554,7 @@ object Player {
             }
         }
 
-        fun DrawHUD(_hud: idUserInterface?) {
+        fun DrawHUD(_hud: idUserInterface) {
             if (TempDump.NOT(weapon.GetEntity()) || influenceActive != Player.INFLUENCE_NONE || privateCameraView != null || Game_local.gameLocal.GetCamera() != null || TempDump.NOT(
                     _hud
                 ) || !SysCvar.g_showHud.GetBool()
@@ -3586,7 +3586,7 @@ object Player {
          Called when a weapon fires, generates head twitches, etc
          ==================
          */
-        fun WeaponFireFeedback(weaponDef: idDict?) {
+        fun WeaponFireFeedback(weaponDef: idDict) {
             // force a blink
             blink_time = 0
 
@@ -3656,7 +3656,7 @@ object Player {
          Calculate the bobbing position of the view weapon
          ==============
          */
-        fun CalculateViewWeaponPos(origin: idVec3?, axis: idMat3?) {
+        fun CalculateViewWeaponPos(origin: idVec3, axis: idMat3) {
             var scale: Float
             val fracsin: Float
             val angles = idAngles()
@@ -3713,7 +3713,7 @@ object Player {
             axis.set(angles.ToMat3().times(viewAxis))
         }
 
-        override fun GetEyePosition(): idVec3? {
+        override fun GetEyePosition(): idVec3 {
             val org = idVec3()
 
             // use the smoothed origin if spectating another player in multiplayer
@@ -3725,8 +3725,8 @@ object Player {
             return org.oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
 
-        override fun GetViewPos(origin: idVec3?, axis: idMat3?) {
-            var angles: idAngles? = idAngles()
+        override fun GetViewPos(origin: idVec3, axis: idMat3) {
+            var angles: idAngles = idAngles()
 
             // if dead, fix the angle and don't add any kick
             if (health <= 0) {
@@ -3743,8 +3743,8 @@ object Player {
                 // adjust the origin based on the camera nodal distance (eye distance from neck)
                 origin.plusAssign(physicsObj.GetGravityNormal().times(SysCvar.g_viewNodalZ.GetFloat()))
                 origin.plusAssign(
-                    axis.get(0).times(SysCvar.g_viewNodalX.GetFloat())
-                        .oPlus(axis.get(2).times(SysCvar.g_viewNodalZ.GetFloat()))
+                    axis[0].times(SysCvar.g_viewNodalX.GetFloat())
+                        .oPlus(axis[2].times(SysCvar.g_viewNodalZ.GetFloat()))
                 )
             }
         }
@@ -3758,7 +3758,7 @@ object Player {
             val forwardScale = CFloat()
             val sideScale = CFloat()
             val origin = idVec3()
-            val angles: idAngles?
+            val angles: idAngles
             val axis = idMat3()
             val bounds: idBounds
             angles = viewAngles
@@ -3777,8 +3777,8 @@ object Player {
             angles.pitch *= 0.5f
             renderView.viewaxis = angles.ToMat3().times(physicsObj.GetGravityAxis())
             idMath.SinCos(Math_h.DEG2RAD(angle), sideScale, forwardScale)
-            view.minusAssign(renderView.viewaxis.get(0).times(range * forwardScale.getVal()))
-            view.plusAssign(renderView.viewaxis.get(1).times(range * sideScale.getVal()))
+            view.minusAssign(renderView.viewaxis[0].times(range * forwardScale.getVal()))
+            view.plusAssign(renderView.viewaxis[1].times(range * sideScale.getVal()))
             if (clip) {
                 // trace a ray from the origin to the viewpoint to make sure the view isn't
                 // in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
@@ -3797,7 +3797,7 @@ object Player {
 
             // select pitch to look at focus point from vieword
             focusPoint.minusAssign(view)
-            focusDist = idMath.Sqrt(focusPoint.get(0) * focusPoint.get(0) + focusPoint.get(1) * focusPoint.get(1))
+            focusDist = idMath.Sqrt(focusPoint[0] * focusPoint[0] + focusPoint[1] * focusPoint[1])
             if (focusDist < 1.0f) {
                 focusDist = 1.0f // should never happen
             }
@@ -3808,7 +3808,7 @@ object Player {
             renderView.viewID = 0
         }
 
-        fun Give(statname: String?, value: String?): Boolean {
+        fun Give(statname: String, value: String): Boolean {
             val amount: Int
             if (AI_DEAD.underscore()) {
                 return false
@@ -3857,7 +3857,7 @@ object Player {
             return true
         }
 
-        fun Give(statname: idStr?, value: idStr?): Boolean {
+        fun Give(statname: idStr, value: idStr): Boolean {
             return this.Give(statname.toString(), value.toString())
         }
 
@@ -3868,9 +3868,9 @@ object Player {
          Returns false if the item shouldn't be picked up
          ===============
          */
-        fun GiveItem(item: idItem?): Boolean {
+        fun GiveItem(item: idItem): Boolean {
             var i: Int
-            var arg: idKeyValue?
+            var arg: idKeyValue
             val attr = idDict()
             var gave: Boolean
             val numPickup: Int
@@ -3904,7 +3904,7 @@ object Player {
             return gave
         }
 
-        fun GiveItem(itemName: String?) {
+        fun GiveItem(itemName: String) {
             val args = idDict()
             args.Set("classname", itemName)
             args.Set("owner", name)
@@ -3934,7 +3934,7 @@ object Player {
             }
         }
 
-        fun GiveInventoryItem(item: idDict?): Boolean {
+        fun GiveInventoryItem(item: idDict): Boolean {
             if (Game_local.gameLocal.isMultiplayer && spectating) {
                 return false
             }
@@ -3955,12 +3955,12 @@ object Player {
             return true
         }
 
-        fun RemoveInventoryItem(item: idDict?) {
+        fun RemoveInventoryItem(item: idDict) {
             inventory.items.Remove(item)
             //	delete item;
         }
 
-        fun GiveInventoryItem(name: String?): Boolean {
+        fun GiveInventoryItem(name: String): Boolean {
             val args = idDict()
             args.Set("classname", name)
             args.Set("owner", this.name)
@@ -3968,28 +3968,28 @@ object Player {
             return true
         }
 
-        fun RemoveInventoryItem(name: String?) {
+        fun RemoveInventoryItem(name: String) {
             val item = FindInventoryItem(name)
-            item?.let { RemoveInventoryItem(it) }
+            item.let { RemoveInventoryItem(it) }
         }
 
-        fun FindInventoryItem(name: String?): idDict? {
+        fun FindInventoryItem(name: String): idDict {
             for (i in 0 until inventory.items.Num()) {
-                val iname = inventory.items.get(i).GetString("inv_name")
+                val iname = inventory.items[i].GetString("inv_name")
                 if (iname != null && !iname.isEmpty()) {
                     if (idStr.Companion.Icmp(name, iname) == 0) {
-                        return inventory.items.get(i)
+                        return inventory.items[i]
                     }
                 }
             }
             return null
         }
 
-        fun FindInventoryItem(name: idStr?): idDict? {
+        fun FindInventoryItem(name: idStr): idDict {
             return FindInventoryItem(name.toString())
         }
 
-        fun GivePDA(pdaName: idStr?, item: idDict?) {
+        fun GivePDA(pdaName: idStr, item: idDict) {
             if (Game_local.gameLocal.isMultiplayer && spectating) {
                 return
             }
@@ -4039,7 +4039,7 @@ object Player {
             }
         }
 
-        fun GiveVideo(videoName: String?, item: idDict?) {
+        fun GiveVideo(videoName: String, item: idDict) {
             if (videoName == null || videoName.isEmpty()) {
                 return
             }
@@ -4055,7 +4055,7 @@ object Player {
             }
         }
 
-        fun GiveEmail(emailName: String?) {
+        fun GiveEmail(emailName: String) {
             if (emailName == null || emailName.isEmpty()) {
                 return
             }
@@ -4066,7 +4066,7 @@ object Player {
             }
         }
 
-        fun GiveSecurity(security: String?) {
+        fun GiveSecurity(security: String) {
             GetPDA().SetSecurity(security)
             if (hud != null) {
                 hud.SetStateString("pda_security", "1")
@@ -4074,7 +4074,7 @@ object Player {
             }
         }
 
-        fun GiveObjective(title: String?, text: String?, screenshot: String?) {
+        fun GiveObjective(title: String, text: String, screenshot: String) {
             val info = idObjectiveInfo()
             info.title = idStr(title)
             info.text = idStr(text)
@@ -4086,10 +4086,10 @@ object Player {
             }
         }
 
-        fun CompleteObjective(title: String?) {
+        fun CompleteObjective(title: String) {
             val c = inventory.objectiveNames.Num()
             for (i in 0 until c) {
-                if (idStr.Companion.Icmp(inventory.objectiveNames.get(i).title.toString(), title) == 0) {
+                if (idStr.Companion.Icmp(inventory.objectiveNames[i].title.toString(), title) == 0) {
                     inventory.objectiveNames.RemoveIndex(i)
                     break
                 }
@@ -4101,8 +4101,8 @@ object Player {
         }
 
         fun GivePowerUp(powerup: Int, time: Int): Boolean {
-            val sound = arrayOf<String?>(null)
-            val skin = arrayOf<String?>(null)
+            val sound = arrayOf<String>(null)
+            val skin = arrayOf<String>(null)
             if (powerup >= 0 && powerup < Player.MAX_POWERUPS) {
                 if (Game_local.gameLocal.isServer) {
                     val msg = idBitMsg()
@@ -4115,7 +4115,7 @@ object Player {
                 if (powerup != Player.MEGAHEALTH) {
                     inventory.GivePowerUp(this, powerup, time)
                 }
-                val def: idDeclEntityDef?
+                val def: idDeclEntityDef
                 when (powerup) {
                     Player.BERSERK -> {
                         if (spawnArgs.GetString("snd_berserk_third", "", sound)) {
@@ -4229,7 +4229,7 @@ object Player {
             return mod
         }
 
-        fun SlotForWeapon(weaponName: String?): Int {
+        fun SlotForWeapon(weaponName: String): Int {
             var i: Int
             i = 0
             while (i < Player.MAX_WEAPONS) {
@@ -4257,7 +4257,7 @@ object Player {
         }
 
         fun NextWeapon() {
-            var weap: String?
+            var weap: String
             var w: Int
             if (!weaponEnabled || spectating || hiddenWeapon || Game_local.gameLocal.inCinematic || Game_local.gameLocal.world.spawnArgs.GetBool(
                     "no_Weapons"
@@ -4301,7 +4301,7 @@ object Player {
         }
 
         fun NextBestWeapon() {
-            var weap: String?
+            var weap: String
             var w = Player.MAX_WEAPONS
             if (Game_local.gameLocal.isClient || !weaponEnabled) {
                 return
@@ -4323,7 +4323,7 @@ object Player {
         }
 
         fun PrevWeapon() {
-            var weap: String?
+            var weap: String
             var w: Int
             if (!weaponEnabled || spectating || hiddenWeapon || Game_local.gameLocal.inCinematic || Game_local.gameLocal.world.spawnArgs.GetBool(
                     "no_Weapons"
@@ -4368,7 +4368,7 @@ object Player {
 
         fun SelectWeapon(num: Int, force: Boolean) {
             var num = num
-            var weap: String?
+            var weap: String
             if (!weaponEnabled || spectating || Game_local.gameLocal.inCinematic || health < 0) {
                 return
             }
@@ -4455,7 +4455,7 @@ object Player {
                 Common.common.DPrintf("idPlayer::DropWeapon: bad ammo setup\n")
                 return
             }
-            val item: idEntity?
+            val item: idEntity
             item = if (died) {
                 // ain't gonna throw you no weapon if I'm dead
                 weapon.GetEntity().DropItem(Vector.getVec3_origin(), 0, Player.WEAPON_DROP_TIME, died)
@@ -4495,7 +4495,7 @@ object Player {
          steal the target player's current weapon
          =================
          */
-        fun StealWeapon(player: idPlayer?) {
+        fun StealWeapon(player: idPlayer) {
             assert(!Game_local.gameLocal.isClient)
 
             // make sure there's something to steal
@@ -4535,8 +4535,8 @@ object Player {
             Give("weapon", weapon_classname)
             val ammo_i = player.inventory.AmmoIndexForWeaponClass(weapon_classname, null)
             idealWeapon = newweap
-            inventory.ammo.get(ammo_i) += ammoavailable
-            inventory.clip.get(newweap) = inclip
+            inventory.ammo[ammo_i] += ammoavailable
+            inventory.clip[newweap] = inclip
         }
 
         fun AddProjectilesFired(count: Int) {
@@ -4548,7 +4548,7 @@ object Player {
         }
 
         fun SetLastHitTime(time: Int) {
-            var aimed: idPlayer? = null
+            var aimed: idPlayer = null
             if (time != 0 && lastHitTime != time) {
                 lastHitToggle = lastHitToggle xor true //1;
             }
@@ -4618,7 +4618,7 @@ object Player {
             UpdateScript()
         }
 
-        fun RemoveWeapon(weap: String?) {
+        fun RemoveWeapon(weap: String) {
             if (weap != null && !weap.isEmpty()) {
                 val w = arrayOf(spawnArgs.GetString(weap))
                 inventory.Drop(spawnArgs, w, -1)
@@ -4639,16 +4639,16 @@ object Player {
             assert(hud != null)
             ammo_souls = idWeapon.Companion.GetAmmoNumForName("ammo_souls")
             max_souls = inventory.MaxAmmoForAmmoClass(this, "ammo_souls")
-            if (inventory.ammo.get(ammo_souls) < max_souls) {
-                inventory.ammo.get(ammo_souls)++
-                if (inventory.ammo.get(ammo_souls) >= max_souls) {
+            if (inventory.ammo[ammo_souls] < max_souls) {
+                inventory.ammo[ammo_souls]++
+                if (inventory.ammo[ammo_souls] >= max_souls) {
                     hud.HandleNamedEvent("soulCubeReady")
                     StartSound("snd_soulcube_ready", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
                 }
             }
         }
 
-        fun SetSoulCubeProjectile(projectile: idProjectile?) {
+        fun SetSoulCubeProjectile(projectile: idProjectile) {
             soulCubeProjectile.oSet(projectile)
         }
 
@@ -4796,7 +4796,7 @@ object Player {
                     airTics = 0
                     // check for damage
                     val damageDef = Game_local.gameLocal.FindEntityDefDict("damage_noair", false)
-                    val dmgTiming: Int = (1000 * (damageDef?.GetFloat("delay", "3.0") ?: 3)).toInt()
+                    val dmgTiming: Int = (1000 * (damageDef.GetFloat("delay", "3.0") : 3)).toInt()
                     if (Game_local.gameLocal.time > lastAirDamage + dmgTiming) {
                         Damage(null, null, Vector.getVec3_origin(), "damage_noair", 1.0f, 0)
                         lastAirDamage = Game_local.gameLocal.time
@@ -4821,7 +4821,7 @@ object Player {
             }
         }
 
-        override fun HandleSingleGuiCommand(entityGui: idEntity?, src: idLexer?): Boolean {
+        override fun HandleSingleGuiCommand(entityGui: idEntity, src: idLexer): Boolean {
             val token = idToken()
             if (!src.ReadToken(token)) {
                 return false
@@ -4870,7 +4870,7 @@ object Player {
             }
             if (token.Icmp("playpdavideo") == 0) {
                 if (objectiveSystem != null && objectiveSystemOpen && pdaVideo.Length() > 0) {
-                    val mat: idMaterial? = DeclManager.declManager.FindMaterial(pdaVideo)
+                    val mat: idMaterial = DeclManager.declManager.FindMaterial(pdaVideo)
                     if (mat != null) {
                         val c: Int = mat.GetNumStages()
                         for (i in 0 until c) {
@@ -5041,7 +5041,7 @@ object Player {
                 }
                 j = 0
                 while (j < c) {
-                    val item = inventory.items.get(j)
+                    val item = inventory.items[j]
                     if (!item.GetBool("inv_pda")) {
                         val iname = item.GetString("inv_name")
                         val iicon = item.GetString("inv_icon")
@@ -5093,9 +5093,9 @@ object Player {
             scoreBoardOpen = scoreBoardOpen xor true //1;
         }
 
-        fun RouteGuiMouse(gui: idUserInterface?) {
-            val ev: sysEvent_s?
-            val command: String?
+        fun RouteGuiMouse(gui: idUserInterface) {
+            val ev: sysEvent_s
+            val command: String
             if (usercmd.mx.toInt() != oldMouseX || usercmd.my.toInt() != oldMouseY) {
                 ev = idLib.sys.GenerateMouseMoveEvent(usercmd.mx - oldMouseX, usercmd.my - oldMouseY)
                 command = gui.HandleEvent(ev, Game_local.gameLocal.time)
@@ -5123,11 +5123,11 @@ object Player {
                     while (i < 5 && i < c) {
                         hud.SetStateString(
                             Str.va("itemtext%d", inventory.nextItemNum),
-                            inventory.pickupItemNames.get(0).name.toString()
+                            inventory.pickupItemNames[0].name.toString()
                         )
                         hud.SetStateString(
                             Str.va("itemicon%d", inventory.nextItemNum),
-                            inventory.pickupItemNames.get(0).icon.toString()
+                            inventory.pickupItemNames[0].icon.toString()
                         )
                         hud.HandleNamedEvent(Str.va("itemPickup%d", inventory.nextItemNum++))
                         inventory.pickupItemNames.RemoveIndex(0)
@@ -5181,19 +5181,19 @@ object Player {
             }
         }
 
-        fun GetPDA(): idDeclPDA? {
+        fun GetPDA(): idDeclPDA {
             return if (inventory.pdas.size() != 0) {
-                DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas.get(0)) as idDeclPDA
+                DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas[0]) as idDeclPDA
             } else {
                 null
             }
         }
 
-        fun GetVideo(index: Int): idDeclVideo? {
+        fun GetVideo(index: Int): idDeclVideo {
             return if (index >= 0 && index < inventory.videos.size()) {
                 DeclManager.declManager.FindType(
                     declType_t.DECL_VIDEO,
-                    inventory.videos.get(index),
+                    inventory.videos[index],
                     false
                 ) as idDeclVideo
             } else null
@@ -5203,7 +5203,7 @@ object Player {
             influenceFov = fov
         }
 
-        fun SetInfluenceView(mtr: String?, skinname: String?, radius: Float, ent: idEntity?) {
+        fun SetInfluenceView(mtr: String, skinname: String, radius: Float, ent: idEntity) {
             influenceMaterial = null
             influenceEntity = null
             influenceSkin = null
@@ -5229,7 +5229,7 @@ object Player {
                 if (level != 0) {
                     var ent = Game_local.gameLocal.spawnedEntities.Next()
                     while (ent != null) {
-                        (ent as? idProjectile)?.PostEventMS(Class.EV_Remove, 0)
+                        (ent as idProjectile).PostEventMS(Class.EV_Remove, 0)
                         ent = ent.spawnNode.Next()
                     }
                     if (weaponEnabled && weapon.GetEntity() != null) {
@@ -5249,7 +5249,7 @@ object Player {
             return influenceActive
         }
 
-        fun SetPrivateCameraView(camView: idCamera?) {
+        fun SetPrivateCameraView(camView: idCamera) {
             privateCameraView = camView
             if (camView != null) {
                 StopFiring()
@@ -5261,7 +5261,7 @@ object Player {
             }
         }
 
-        fun GetPrivateCameraView(): idCamera? {
+        fun GetPrivateCameraView(): idCamera {
             return privateCameraView
         }
 
@@ -5305,7 +5305,7 @@ object Player {
             }
         }
 
-        fun UpdateHudStats(_hud: idUserInterface?) {
+        fun UpdateHudStats(_hud: idUserInterface) {
             val staminapercentage: Int
             val max_stamina: Float
             assert(_hud != null)
@@ -5351,7 +5351,7 @@ object Player {
             UpdateHudAmmo(_hud)
         }
 
-        fun UpdateHudAmmo(_hud: idUserInterface?) {
+        fun UpdateHudAmmo(_hud: idUserInterface) {
             val inclip: Int
             val ammoamount: Int
             assert(weapon.GetEntity() != null)
@@ -5403,7 +5403,7 @@ object Player {
             }
         }
 
-        fun ShowTip(title: String?, tip: String?, autoHide: Boolean) {
+        fun ShowTip(title: String, tip: String, autoHide: Boolean) {
             if (tipUp) {
                 return
             }
@@ -5425,7 +5425,7 @@ object Player {
             return tipUp
         }
 
-        fun ShowObjective(obj: String?) {
+        fun ShowObjective(obj: String) {
             hud.HandleNamedEvent(obj)
             objectiveUp = true
         }
@@ -5436,7 +5436,7 @@ object Player {
         }
 
         override fun ClientPredictionThink() {
-            val headRenderEnt: renderEntity_s?
+            val headRenderEnt: renderEntity_s
             oldFlags = usercmd.flags.toInt()
             oldButtons = usercmd.buttons.toInt()
             usercmd = Game_local.gameLocal.usercmds[entityNumber]
@@ -5552,7 +5552,7 @@ object Player {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             physicsObj.WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             msg.WriteDeltaFloat(0f, deltaViewAngles.get(0))
@@ -5575,7 +5575,7 @@ object Player {
             msg.WriteBits(TempDump.btoi(isChatting), 1)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             var i: Int
             val oldHealth: Int
             val newIdealWeapon: Int
@@ -5618,7 +5618,7 @@ object Player {
             if (entityNumber != Game_local.gameLocal.localClientNum) {
                 i = 0
                 while (i < Weapon.AMMO_NUMTYPES) {
-                    inventory.ammo.get(i) = 999
+                    inventory.ammo[i] = 999
                     i++
                 }
             }
@@ -5697,7 +5697,7 @@ object Player {
             }
         }
 
-        fun WritePlayerStateToSnapshot(msg: idBitMsgDelta?) {
+        fun WritePlayerStateToSnapshot(msg: idBitMsgDelta) {
             var i: Int
             msg.WriteByte(bobCycle)
             msg.WriteLong(stepUpTime)
@@ -5706,17 +5706,17 @@ object Player {
             msg.WriteByte(inventory.armor)
             i = 0
             while (i < Weapon.AMMO_NUMTYPES) {
-                msg.WriteBits(inventory.ammo.get(i), Player.ASYNC_PLAYER_INV_AMMO_BITS)
+                msg.WriteBits(inventory.ammo[i], Player.ASYNC_PLAYER_INV_AMMO_BITS)
                 i++
             }
             i = 0
             while (i < Player.MAX_WEAPONS) {
-                msg.WriteBits(inventory.clip.get(i), Player.ASYNC_PLAYER_INV_CLIP_BITS)
+                msg.WriteBits(inventory.clip[i], Player.ASYNC_PLAYER_INV_CLIP_BITS)
                 i++
             }
         }
 
-        fun ReadPlayerStateFromSnapshot(msg: idBitMsgDelta?) {
+        fun ReadPlayerStateFromSnapshot(msg: idBitMsgDelta) {
             var i: Int
             var ammo: Int
             bobCycle = msg.ReadByte()
@@ -5728,18 +5728,18 @@ object Player {
             while (i < Weapon.AMMO_NUMTYPES) {
                 ammo = msg.ReadBits(Player.ASYNC_PLAYER_INV_AMMO_BITS)
                 if (Game_local.gameLocal.time >= inventory.ammoPredictTime) {
-                    inventory.ammo.get(i) = ammo
+                    inventory.ammo[i] = ammo
                 }
                 i++
             }
             i = 0
             while (i < Player.MAX_WEAPONS) {
-                inventory.clip.get(i) = msg.ReadBits(Player.ASYNC_PLAYER_INV_CLIP_BITS)
+                inventory.clip[i] = msg.ReadBits(Player.ASYNC_PLAYER_INV_CLIP_BITS)
                 i++
             }
         }
 
-        override fun ServerReceiveEvent(event: Int, time: Int, msg: idBitMsg?): Boolean {
+        override fun ServerReceiveEvent(event: Int, time: Int, msg: idBitMsg): Boolean {
             return if (idEntity_ServerReceiveEvent(event, time, msg)) {
                 true
             } else when (event) {
@@ -5753,7 +5753,7 @@ object Player {
             }
         }
 
-        override fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3): Boolean {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis)
                 return true
@@ -5791,8 +5791,8 @@ object Player {
             return true
         }
 
-        override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
-            val camera: idCamera?
+        override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
+            val camera: idCamera
             camera = if (privateCameraView != null) {
                 privateCameraView
             } else {
@@ -5811,7 +5811,7 @@ object Player {
             }
         }
 
-        override fun ClientReceiveEvent(event: Int, time: Int, msg: idBitMsg?): Boolean {
+        override fun ClientReceiveEvent(event: Int, time: Int, msg: idBitMsg): Boolean {
             val powerup: Int
             val start: Boolean
             return when (event) {
@@ -5864,11 +5864,11 @@ object Player {
             return teleportEntity.GetEntity() != null
         }
 
-        fun GetInfluenceEntity(): idEntity? {
+        fun GetInfluenceEntity(): idEntity {
             return influenceEntity
         }
 
-        fun GetInfluenceMaterial(): idMaterial? {
+        fun GetInfluenceMaterial(): idMaterial {
             return influenceMaterial
         }
 
@@ -5897,7 +5897,7 @@ object Player {
         }
 
         // for very specific usage. != GetPhysics()
-        fun GetPlayerPhysics(): idPhysics? {
+        fun GetPlayerPhysics(): idPhysics {
             return physicsObj
         }
 
@@ -5947,7 +5947,7 @@ object Player {
             } else {
                 0
             }
-            colorBar.set(colorBarTable.get(colorBarIndex))
+            colorBar.set(colorBarTable[colorBarIndex])
             if (PowerUpActive(Player.BERSERK)) {
                 powerUpSkin.oSet(DeclManager.declManager.FindSkin(baseSkinName.toString() + "_berserk"))
             }
@@ -5987,7 +5987,7 @@ object Player {
             selfSmooth = b
         }
 
-        private fun LookAtKiller(inflictor: idEntity?, attacker: idEntity?) {
+        private fun LookAtKiller(inflictor: idEntity, attacker: idEntity) {
             val dir = idVec3()
             if (this != attacker) {
                 dir.set(attacker.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
@@ -6017,7 +6017,7 @@ object Player {
             }
             if (SysCvar.g_editEntityMode.GetInteger() != 0) {
                 GetViewPos(muzzle, axis)
-                if (Game_local.gameLocal.editEntities.SelectEntity(muzzle, axis.get(0), this)) {
+                if (Game_local.gameLocal.editEntities.SelectEntity(muzzle, axis[0], this)) {
                     return
                 }
             }
@@ -6070,7 +6070,7 @@ object Player {
                     currentWeapon = idealWeapon
                     weaponGone = false
                     animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
-                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(currentWeapon))
+                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[currentWeapon])
                     animPrefix.Strip("weapon_")
                     weapon.GetEntity().NetCatchup()
                     val newstate = GetScriptFunction("NetCatchup")
@@ -6098,7 +6098,7 @@ object Player {
                         currentWeapon = idealWeapon
                         weaponGone = false
                         animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon)))
-                        weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(currentWeapon))
+                        weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[currentWeapon])
                         animPrefix.Strip("weapon_")
                         weapon.GetEntity().Raise()
                     }
@@ -6132,7 +6132,7 @@ object Player {
 
             // update our ammo clip in our inventory
             if (currentWeapon >= 0 && currentWeapon < Player.MAX_WEAPONS) {
-                inventory.clip.get(currentWeapon) = weapon.GetEntity().AmmoInClip()
+                inventory.clip[currentWeapon] = weapon.GetEntity().AmmoInClip()
                 if (hud != null && currentWeapon == idealWeapon) {
                     UpdateHudAmmo(hud)
                 }
@@ -6165,8 +6165,8 @@ object Player {
                 return
             }
             if (oldButtons xor usercmd.buttons and UsercmdGen.BUTTON_ATTACK != 0) {
-                val ev: sysEvent_s?
-                var command: String? = null
+                val ev: sysEvent_s
+                var command: String = null
                 val updateVisuals = booleanArrayOf(false)
                 val ui = ActiveGui()
                 if (ui != null) {
@@ -6205,7 +6205,7 @@ object Player {
             if (!weapon.GetEntity().IsLinked()) {
                 if (idealWeapon != -1) {
                     animPrefix.set(spawnArgs.GetString(Str.va("def_weapon%d", idealWeapon)))
-                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip.get(idealWeapon))
+                    weapon.GetEntity().GetWeaponDef(animPrefix.toString(), inventory.clip[idealWeapon])
                     assert(weapon.GetEntity().IsLinked())
                 } else {
                     return
@@ -6238,7 +6238,7 @@ object Player {
             assert(spectating)
             assert(!Game_local.gameLocal.isClient)
             assert(IsHidden())
-            val player: idPlayer?
+            val player: idPlayer
             if (!Game_local.gameLocal.isMultiplayer) {
                 return
             }
@@ -6253,7 +6253,7 @@ object Player {
         }
 
         private fun SpectateFreeFly(force: Boolean) {    // ignore the timeout to force when followed spec is no longer valid
-            val player: idPlayer?
+            val player: idPlayer
             val newOrig = idVec3()
             val spawn_origin = idVec3()
             val spawn_angles = idAngles()
@@ -6277,7 +6277,7 @@ object Player {
                     newOrig.Lerp(start, newOrig, t.fraction)
                     SetOrigin(newOrig)
                     val angle = player.viewAngles
-                    angle.set(2, 0f)
+                    angle[2] = 0f
                     SetViewAngles(angle)
                 } else {
                     SelectInitialSpawnPoint(spawn_origin, spawn_angles)
@@ -6291,7 +6291,7 @@ object Player {
         }
 
         private fun SpectateCycle() {
-            var player: idPlayer?
+            var player: idPlayer
             if (Game_local.gameLocal.time > lastSpectateChange) {
                 val latchedSpectator = spectator
                 spectator = Game_local.gameLocal.GetNextClientNum(spectator)
@@ -6316,15 +6316,15 @@ object Player {
          history in loggedViewAngles
          ==============
          */
-        private fun GunTurningOffset(): idAngles? {
+        private fun GunTurningOffset(): idAngles {
             var a = idAngles()
 
 //            a.Zero();
             if (Game_local.gameLocal.framenum < NUM_LOGGED_VIEW_ANGLES) {
                 return a
             }
-            val current = loggedViewAngles.get(Game_local.gameLocal.framenum and NUM_LOGGED_VIEW_ANGLES - 1)
-            val av: idAngles? //, base;
+            val current = loggedViewAngles[Game_local.gameLocal.framenum and NUM_LOGGED_VIEW_ANGLES - 1]
+            val av: idAngles //, base;
             val weaponAngleOffsetAverages = CInt()
             val weaponAngleOffsetScale = CFloat()
             val weaponAngleOffsetMax = CFloat()
@@ -6334,21 +6334,21 @@ object Player {
 
             // calcualte this so the wrap arounds work properly
             for (j in 1 until weaponAngleOffsetAverages.getVal()) {
-                val a2 = loggedViewAngles.get(Game_local.gameLocal.framenum - j and NUM_LOGGED_VIEW_ANGLES - 1)
+                val a2 = loggedViewAngles[Game_local.gameLocal.framenum - j and NUM_LOGGED_VIEW_ANGLES - 1]
                 val delta = a2.minus(current)
-                if (delta.get(1) > 180) {
+                if (delta[1] > 180) {
                     delta.minusAssign(1, 360f)
-                } else if (delta.get(1) < -180) {
+                } else if (delta[1] < -180) {
                     delta.plusAssign(1, 360f)
                 }
                 av.plusAssign(delta.times(1.0f / weaponAngleOffsetAverages.getVal()))
             }
             a = av.minus(current).times(weaponAngleOffsetScale.getVal())
             for (i in 0..2) {
-                if (a.get(i) < -weaponAngleOffsetMax.getVal()) {
-                    a.set(i, -weaponAngleOffsetMax.getVal())
-                } else if (a.get(i) > weaponAngleOffsetMax.getVal()) {
-                    a.set(i, weaponAngleOffsetMax.getVal())
+                if (a[i] < -weaponAngleOffsetMax.getVal()) {
+                    a[i] = -weaponAngleOffsetMax.getVal()
+                } else if (a[i] > weaponAngleOffsetMax.getVal()) {
+                    a[i] = weaponAngleOffsetMax.getVal()
                 }
             }
             return a
@@ -6366,7 +6366,7 @@ object Player {
          history in loggedAccelerations
          ==============
          */
-        private fun GunAcceleratingOffset(): idVec3? {
+        private fun GunAcceleratingOffset(): idVec3 {
             val ofs = idVec3()
             val weaponOffsetTime = CFloat()
             val weaponOffsetScale = CFloat()
@@ -6377,7 +6377,7 @@ object Player {
                 stop = 0
             }
             for (i in currentLoggedAccel - 1 downTo stop + 1) {
-                val acc = loggedAccel.get(i and NUM_LOGGED_ACCELS - 1)
+                val acc = loggedAccel[i and NUM_LOGGED_ACCELS - 1]
                 var f: Float
                 val t = (Game_local.gameLocal.time - acc.time).toFloat()
                 if (t >= weaponOffsetTime.getVal()) {
@@ -6397,7 +6397,7 @@ object Player {
          Check for hard landings that generate sound events
          =================
          */
-        private fun CrashLand(oldOrigin: idVec3?, oldVelocity: idVec3?) {
+        private fun CrashLand(oldOrigin: idVec3, oldVelocity: idVec3) {
             val origin = idVec3()
             val velocity = idVec3()
             val gravityVector = idVec3()
@@ -6413,7 +6413,7 @@ object Player {
             val b: Float
             val c: Float
             val den: Float
-            val waterLevel: waterLevel_t?
+            val waterLevel: waterLevel_t
             var noDamage: Boolean
             AI_SOFTLANDING.underscore(false)
             AI_HARDLANDING.underscore(false)
@@ -6518,14 +6518,14 @@ object Player {
             }
         }
 
-        private fun BobCycle(pushVelocity: idVec3?) {
+        private fun BobCycle(pushVelocity: idVec3) {
             val bobmove: Float
             val old: Int
             var deltaTime: Int
             val vel = idVec3()
             val gravityDir = idVec3()
             val velocity = idVec3()
-            val viewaxis: idMat3?
+            val viewaxis: idMat3
             var bob: Float
             var delta: Float
             val speed: Float
@@ -6578,9 +6578,9 @@ object Player {
             viewaxis = viewAngles.ToMat3().times(physicsObj.GetGravityAxis())
 
             // add angles based on velocity
-            delta = velocity.times(viewaxis.get(0))
+            delta = velocity.times(viewaxis[0])
             viewBobAngles.pitch += delta * SysCvar.pm_runpitch.GetFloat()
-            delta = velocity.times(viewaxis.get(1))
+            delta = velocity.times(viewaxis[1])
             viewBobAngles.roll -= delta * SysCvar.pm_runroll.GetFloat()
 
             // add angles based on bob
@@ -6668,7 +6668,7 @@ object Player {
             // circularly clamp the angles with deltas
             i = 0
             while (i < 3) {
-                cmdAngles.set(i, Math_h.SHORT2ANGLE(usercmd.angles[i]))
+                cmdAngles[i] = Math_h.SHORT2ANGLE(usercmd.angles[i])
                 if (influenceActive == Player.INFLUENCE_LEVEL3) {
                     viewAngles.plusAssign(
                         i,
@@ -6678,15 +6678,13 @@ object Player {
                             idMath.AngleDelta(
                                 idMath.AngleNormalize180(
                                     Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.get(i)
-                                ), viewAngles.get(i)
+                                ), viewAngles[i]
                             )
                         )
                     )
                 } else {
-                    viewAngles.set(
-                        i,
+                    viewAngles[i] =
                         idMath.AngleNormalize180(Math_h.SHORT2ANGLE(usercmd.angles[i]) + deltaViewAngles.get(i))
-                    )
                 }
                 i++
             }
@@ -6718,7 +6716,7 @@ object Player {
             SetAngles(idAngles(0, viewAngles.yaw, 0))
 
             // save in the log for analyzing weapon angle offsets
-            loggedViewAngles.get(Game_local.gameLocal.framenum and NUM_LOGGED_VIEW_ANGLES - 1) = viewAngles
+            loggedViewAngles[Game_local.gameLocal.framenum and NUM_LOGGED_VIEW_ANGLES - 1] = viewAngles
         }
 
         private fun EvaluateControls() {
@@ -6797,7 +6795,7 @@ object Player {
 
         private fun AdjustBodyAngles() {
 //            idMat3 lookAxis;
-            val legsAxis: idMat3?
+            val legsAxis: idMat3
             var blend: Boolean
             val diff: Float
             val frac: Float
@@ -6892,7 +6890,7 @@ object Player {
             val num: Int
             val size = idVec3()
             val bounds = idBounds()
-            var aas: idAAS?
+            var aas: idAAS
             val origin = idVec3()
             GetFloorPos(64.0f, origin)
             num = Game_local.gameLocal.NumAAS()
@@ -6900,16 +6898,16 @@ object Player {
             aasLocation.SetNum(num)
             i = 0
             while (i < aasLocation.Num()) {
-                aasLocation.set(i, aasLocation_t())
-                aasLocation.get(i).areaNum = 0
-                aasLocation.get(i).pos.set(origin)
+                aasLocation[i] = aasLocation_t()
+                aasLocation[i].areaNum = 0
+                aasLocation[i].pos.set(origin)
                 aas = Game_local.gameLocal.GetAAS(i)
                 if (aas != null && aas.GetSettings() != null) {
-                    size.set(aas.GetSettings().boundingBoxes[0].get(1))
-                    bounds.set(0, size.oNegative())
+                    size.set(aas.GetSettings().boundingBoxes[0][1])
+                    bounds[0] = size.oNegative()
                     size.z = 32.0f
-                    bounds.set(1, size)
-                    aasLocation.get(i).areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
+                    bounds[1] = size
+                    aasLocation[i].areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
                 }
                 i++
             }
@@ -6920,7 +6918,7 @@ object Player {
             var areaNum: Int
             val size = idVec3()
             val bounds = idBounds()
-            var aas: idAAS?
+            var aas: idAAS
             val origin = idVec3()
             if (!GetFloorPos(64.0f, origin)) {
                 return
@@ -6932,14 +6930,14 @@ object Player {
                     i++
                     continue
                 }
-                size.set(aas.GetSettings().boundingBoxes[0].get(1))
-                bounds.set(0, size.oNegative())
+                size.set(aas.GetSettings().boundingBoxes[0][1])
+                bounds[0] = size.oNegative()
                 size.z = 32.0f
-                bounds.set(1, size)
+                bounds[1] = size
                 areaNum = aas.PointReachableAreaNum(origin, bounds, AASFile.AREA_REACHABLE_WALK)
                 if (areaNum != 0) {
-                    aasLocation.get(i).pos.set(origin)
-                    aasLocation.get(i).areaNum = areaNum
+                    aasLocation[i].pos.set(origin)
+                    aasLocation[i].areaNum = areaNum
                 }
                 i++
             }
@@ -7041,11 +7039,11 @@ object Player {
             }
             if (AI_JUMP.underscore()) {
                 // bounce the view weapon
-                val acc = loggedAccel.get(currentLoggedAccel and NUM_LOGGED_ACCELS - 1)
+                val acc = loggedAccel[currentLoggedAccel and NUM_LOGGED_ACCELS - 1]
                 currentLoggedAccel++
                 acc.time = Game_local.gameLocal.time
-                acc.dir.set(2, 200f)
-                acc.dir.set(0, acc.dir.set(1, 0f))
+                acc.dir[2] = 200f
+                acc.dir[0] = acc.dir.set(1, 0f)
             }
             if (AI_ONLADDER.underscore()) {
                 val old_rung = (oldOrigin.z / Player.LADDER_RUNG_DISTANCE).toInt()
@@ -7063,7 +7061,7 @@ object Player {
             if (!Game_local.gameLocal.isClient) {
                 i = 0
                 while (i < Player.MAX_POWERUPS) {
-                    if (PowerUpActive(i) && inventory.powerupEndTime.get(i) <= Game_local.gameLocal.time) {
+                    if (PowerUpActive(i) && inventory.powerupEndTime[i] <= Game_local.gameLocal.time) {
                         ClearPowerup(i)
                     }
                     i++
@@ -7149,7 +7147,7 @@ object Player {
             }
             powerUpSkin = null
             inventory.powerups = inventory.powerups and (1 shl i).inv()
-            inventory.powerupEndTime.get(i) = 0
+            inventory.powerupEndTime[i] = 0
             when (i) {
                 Player.BERSERK -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_DEMONIC), false)
@@ -7194,25 +7192,25 @@ object Player {
          ================
          */
         private fun UpdateFocus() {
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
-            var clip: idClipModel?
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
+            var clip: idClipModel
             val listedClipModels: Int
-            val oldFocus: idEntity?
-            var ent: idEntity?
-            val oldUI: idUserInterface?
-            val oldChar: idAI?
+            val oldFocus: idEntity
+            var ent: idEntity
+            val oldUI: idUserInterface
+            val oldChar: idAI
             val oldTalkCursor: Int
-            val oldVehicle: idAFEntity_Vehicle?
+            val oldVehicle: idAFEntity_Vehicle
             var i: Int
             var j: Int
             val start = idVec3()
             val end = idVec3()
             val allowFocus: Boolean
-            var command: String?
+            var command: String
             val trace = trace_s()
-            var pt: guiPoint_t?
-            var kv: idKeyValue?
-            var ev: sysEvent_s?
+            var pt: guiPoint_t
+            var kv: idKeyValue
+            var ev: sysEvent_s
             var ui: idUserInterface
             if (Game_local.gameLocal.inCinematic) {
                 return
@@ -7269,7 +7267,7 @@ object Player {
                 }
                 if (allowFocus) {
                     if (ent is idAFAttachment) {
-                        val body = (ent as idAFAttachment?).GetBody()
+                        val body = (ent as idAFAttachment).GetBody()
                         if (body != null && body is idAI
                             && TempDump.etoi((body as idAI).GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)
                         ) {
@@ -7292,7 +7290,7 @@ object Player {
                         continue
                     }
                     if (ent is idAI) {
-                        if (TempDump.etoi((ent as idAI?).GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)) {
+                        if (TempDump.etoi((ent as idAI).GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)) {
                             Game_local.gameLocal.clip.TracePoint(
                                 trace,
                                 start,
@@ -7315,7 +7313,7 @@ object Player {
                         Game_local.gameLocal.clip.TracePoint(trace, start, end, Game_local.MASK_SHOT_RENDERMODEL, this)
                         if (trace.fraction < 1.0f && trace.c.entityNum == ent.entityNumber) {
                             ClearFocus()
-                            focusVehicle = ent as idAFEntity_Vehicle?
+                            focusVehicle = ent as idAFEntity_Vehicle
                             focusTime = Game_local.gameLocal.time + Player.FOCUS_TIME
                             break
                         }
@@ -7361,7 +7359,7 @@ object Player {
                         focusUI.SetStateInt("inv_count", inventory.items.Num())
                         j = 0
                         while (j < inventory.items.Num()) {
-                            val item = inventory.items.get(j)
+                            val item = inventory.items[j]
                             val iname = item.GetString("inv_name")
                             val iicon = item.GetString("inv_icon")
                             val itext = item.GetString("inv_text")
@@ -7377,7 +7375,7 @@ object Player {
                         }
                         j = 0
                         while (j < inventory.pdaSecurity.size()) {
-                            val p = inventory.pdaSecurity.get(j).toString()
+                            val p = inventory.pdaSecurity[j].toString()
                             if (TempDump.isNotNullOrEmpty(p)) {
                                 focusUI.SetStateInt(p, 1)
                             }
@@ -7458,7 +7456,7 @@ object Player {
             }
         }
 
-        private fun ActiveGui(): idUserInterface? {
+        private fun ActiveGui(): idUserInterface {
             return if (objectiveSystemOpen) {
                 objectiveSystem
             } else focusUI
@@ -7486,8 +7484,8 @@ object Player {
 
             // Mark in the bit array that this pda has been read
             if (currentPDA < 128) {
-                inventory.pdasViewed.get(currentPDA shr 5) =
-                    inventory.pdasViewed.get(currentPDA shr 5) or (1 shl (currentPDA and 31))
+                inventory.pdasViewed[currentPDA shr 5] =
+                    inventory.pdasViewed[currentPDA shr 5] or (1 shl (currentPDA and 31))
             }
             pdaAudio.set("")
             pdaVideo.set("")
@@ -7513,7 +7511,7 @@ object Player {
             j = 0
             while (j < inventory.pdas.size()) {
                 val pda =
-                    DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas.get(j), false) as idDeclPDA
+                    DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas[j], false) as idDeclPDA
                 if (pda == null) {
                     j++
                     continue
@@ -7523,7 +7521,7 @@ object Player {
                     // Special case for the first PDA
                     index = 0
                 }
-                if (j != currentPDA && j < 128 && inventory.pdasViewed.get(j shr 5) and (1 shl (j and 31)) != 0) {
+                if (j != currentPDA && j < 128 && inventory.pdasViewed[j shr 5] and (1 shl (j and 31)) != 0) {
                     // This pda has been read already, mark in gray
                     objectiveSystem.SetStateString(
                         Str.va("listPDA_item_%d", index),
@@ -7556,11 +7554,11 @@ object Player {
                         objectiveSystem.SetStateString("pda_name", CVarSystem.cvarSystem.GetCVarString("ui_name"))
                         AddGuiPDAData(declType_t.DECL_VIDEO, "listPDAVideo", pda, objectiveSystem)
                         sel = objectiveSystem.State().GetInt("listPDAVideo_sel_0", "0")
-                        var vid: idDeclVideo? = null
+                        var vid: idDeclVideo = null
                         if (sel >= 0 && sel < inventory.videos.size()) {
                             vid = DeclManager.declManager.FindType(
                                 declType_t.DECL_VIDEO,
-                                inventory.videos.get(sel),
+                                inventory.videos[sel],
                                 false
                             ) as idDeclVideo
                         }
@@ -7591,7 +7589,7 @@ object Player {
                         val audioCount = AddGuiPDAData(declType_t.DECL_AUDIO, "listPDAAudio", pda, objectiveSystem)
                         objectiveSystem.SetStateInt("audioLogCount", audioCount)
                         sel = objectiveSystem.State().GetInt("listPDAAudio_sel_0", "0")
-                        var aud: idDeclAudio? = null
+                        var aud: idDeclAudio = null
                         if (sel >= 0) {
                             aud = pda.GetAudioByIndex(sel)
                         }
@@ -7634,14 +7632,14 @@ object Player {
         //        private void ExtractEmailInfo(final idStr email, final String scan, idStr out);
         //
         private fun AddGuiPDAData(
-            dataType: declType_t?,
-            listName: String?,
-            src: idDeclPDA?,
-            gui: idUserInterface?
+            dataType: declType_t,
+            listName: String,
+            src: idDeclPDA,
+            gui: idUserInterface
         ): Int {
             val c: Int
             var i: Int
-            var work: String?
+            var work: String
             if (dataType == declType_t.DECL_EMAIL) {
                 c = src.GetNumEmails()
                 i = 0
@@ -7680,7 +7678,7 @@ object Player {
                 while (i < c) {
                     val video = GetVideo(i)
                     work = if (video == null) {
-                        Str.va("Video CD %s not found", inventory.videos.get(i).toString())
+                        Str.va("Video CD %s not found", inventory.videos[i].toString())
                     } else {
                         video.GetVideoName()
                     }
@@ -7703,15 +7701,15 @@ object Player {
                 objectiveSystem.SetStateString(Str.va("objective%d", i + 1), "1")
                 objectiveSystem.SetStateString(
                     Str.va("objectivetitle%d", i + 1),
-                    inventory.objectiveNames.get(i).title.toString()
+                    inventory.objectiveNames[i].title.toString()
                 )
                 objectiveSystem.SetStateString(
                     Str.va("objectivetext%d", i + 1),
-                    inventory.objectiveNames.get(i).text.toString()
+                    inventory.objectiveNames[i].text.toString()
                 )
                 objectiveSystem.SetStateString(
                     Str.va("objectiveshot%d", i + 1),
-                    inventory.objectiveNames.get(i).screenshot.toString()
+                    inventory.objectiveNames[i].screenshot.toString()
                 )
             }
             objectiveSystem.StateChanged(Game_local.gameLocal.time)
@@ -7721,7 +7719,7 @@ object Player {
             val trace = trace_s()
             val start = idVec3()
             val end = idVec3()
-            val ent: idEntity?
+            val ent: idEntity
             if (GetBindMaster() != null && GetBindMaster() is idAFEntity_Vehicle) {
                 Show()
                 (GetBindMaster() as idAFEntity_Vehicle).Use(this)
@@ -7733,7 +7731,7 @@ object Player {
                     ent = Game_local.gameLocal.entities[trace.c.entityNum]
                     if (ent != null && ent is idAFEntity_Vehicle) {
                         Hide()
-                        (ent as idAFEntity_Vehicle?).Use(this)
+                        (ent as idAFEntity_Vehicle).Use(this)
                     }
                 }
             }
@@ -7749,7 +7747,7 @@ object Player {
         }
 
         private fun Event_GetViewAngles() {
-            idThread.Companion.ReturnVector(idVec3(viewAngles.get(0), viewAngles.get(1), viewAngles.get(2)))
+            idThread.Companion.ReturnVector(idVec3(viewAngles[0], viewAngles[1], viewAngles[2]))
         }
 
         private fun Event_StopFxFov() {
@@ -7773,7 +7771,7 @@ object Player {
         }
 
         private fun Event_GetCurrentWeapon() {
-            val weapon: String?
+            val weapon: String
             if (currentWeapon >= 0) {
                 weapon = spawnArgs.GetString(Str.va("def_weapon%d", currentWeapon))
                 idThread.Companion.ReturnString(weapon)
@@ -7783,7 +7781,7 @@ object Player {
         }
 
         private fun Event_GetPreviousWeapon() {
-            val weapon: String?
+            val weapon: String
             if (previousWeapon >= 0) {
                 val pw = if (Game_local.gameLocal.world.spawnArgs.GetBool("no_Weapons")) 0 else previousWeapon
                 weapon = spawnArgs.GetString(Str.va("def_weapon%d", pw))
@@ -7793,7 +7791,7 @@ object Player {
             }
         }
 
-        private fun Event_SelectWeapon(weaponName: idEventArg<String?>?) {
+        private fun Event_SelectWeapon(weaponName: idEventArg<String>) {
             var i: Int
             var weaponNum: Int
             if (Game_local.gameLocal.isClient) {
@@ -7844,7 +7842,7 @@ object Player {
         }
 
         private fun Event_ExitTeleporter() {
-            val exitEnt: idEntity?
+            val exitEnt: idEntity
             val pushVel: Float
 
             // verify and setup
@@ -7897,16 +7895,16 @@ object Player {
             mapName.StripPath()
             mapName.StripFileExtension()
             for (i in inventory.levelTriggers.Num() - 1 downTo 0) {
-                if (idStr.Companion.Icmp(mapName, inventory.levelTriggers.get(i).levelName) == 0) {
-                    val ent = Game_local.gameLocal.FindEntity(inventory.levelTriggers.get(i).triggerName)
-                    ent?.PostEventMS(Entity.EV_Activate, 1f, this)
+                if (idStr.Companion.Icmp(mapName, inventory.levelTriggers[i].levelName) == 0) {
+                    val ent = Game_local.gameLocal.FindEntity(inventory.levelTriggers[i].triggerName)
+                    ent.PostEventMS(Entity.EV_Activate, 1f, this)
                 }
             }
         }
 
         private fun Event_Gibbed() {}
         private fun Event_GetIdealWeapon() {
-            val weapon: String?
+            val weapon: String
             if (idealWeapon >= 0) {
                 weapon = spawnArgs.GetString(Str.va("def_weapon%d", idealWeapon))
                 idThread.Companion.ReturnString(weapon)
@@ -7915,8 +7913,8 @@ object Player {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]
         }
 
         //

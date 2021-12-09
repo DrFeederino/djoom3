@@ -8,7 +8,7 @@ import neo.framework.Common
  */
 class NSBitmapImageRep {
     //    static class NSBitmapImageRep {
-    private var bmap: ByteArray?
+    private var bmap: ByteArray = ByteArray(0)
     private var height: Int
     private var   /*ID_TIME_T*/timestamp: Long = 0
     private var width: Int
@@ -16,13 +16,12 @@ class NSBitmapImageRep {
     //
     //
     constructor() {
-        bmap = null
         height = 0
         width = height
         timestamp = 0
     }
 
-    constructor(filename: String?) {
+    constructor(filename: String) {
         val w = intArrayOf(0)
         val h = intArrayOf(0)
         val t = longArrayOf(0)
@@ -43,19 +42,19 @@ class NSBitmapImageRep {
 
     // ~NSBitmapImageRep();
     // NSBitmapImageRep &	operator=( const NSBitmapImageRep &a );
-    fun oSet(a: NSBitmapImageRep?): NSBitmapImageRep? {
+    fun set(a: NSBitmapImageRep): NSBitmapImageRep {
 
         // check for assignment to self
         if (this == a) {
             return this
         }
-        if (bmap != null) {
-            bmap = null //Mem_Free(bmap);
+        if (bmap.isNotEmpty()) {
+            bmap = ByteArray(0) //Mem_Free(bmap);
         }
         bmap = ByteArray(a.width * a.height * 4) // Mem_Alloc(a.width * a.height * 4);
         //        System.arraycopy(a.bmap, 0, this.bmap, 0, a.width * a.height * 4);
         for (i in 0 until a.width * a.height * 4) {
-            bmap.get(i) = a.bmap[i]
+            bmap[i] = a.bmap[i]
         }
         width = a.width
         height = a.height
@@ -75,7 +74,7 @@ class NSBitmapImageRep {
         return height
     }
 
-    fun bitmapData(): ByteArray? {
+    fun bitmapData(): ByteArray {
         return bmap
     }
 

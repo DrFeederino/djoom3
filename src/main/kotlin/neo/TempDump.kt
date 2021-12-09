@@ -175,7 +175,7 @@ object TempDump {
      * @return substring before **index** + character + substring after
      * **index**.
      */
-    fun replaceByIndex(character: Char, index: Int, string: String): String {
+    fun replaceByIndex(character: kotlin.Char, index: Int, string: String): String {
         return string.substring(0, index) + character + string.substring(index + 1)
     }
 

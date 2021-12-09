@@ -29,7 +29,7 @@ object AAS_routing {
         var prev // previous in list
                 : idRoutingCache? = null
         var reachabilities // reachabilities used for routing
-                : ByteArray?
+                : ByteArray
         var size // size of cache
                 : Int
         var startTravelTime // travel time to start with
@@ -41,7 +41,7 @@ object AAS_routing {
         var travelFlags // combinations of the travel flags
                 : Int
         var travelTimes // travel time for every area
-                : IntArray?
+                : IntArray
         var type // portal or area cache
                 : Int
 
@@ -86,18 +86,15 @@ object AAS_routing {
                 : idRoutingUpdate? = null
         var prev // prev in list
                 : idRoutingUpdate? = null
-        val start: idVec3? = idVec3() // start point into area
+        val start: idVec3 = idVec3() // start point into area
         var tmpTravelTime // temporary travel time
                 = 0 //
-        //
     }
 
-    internal class idRoutingObstacle  //
-    //
-    {
+    internal class idRoutingObstacle {
         // friend class idAASLocal;
-        val areas: idList<Int?>? = idList<Any?>() // areas the bounds are in
-        var bounds // obstacle bounds
-                : idBounds? = null
+        val areas: idList<Int> = idList() // areas the bounds are in
+        val bounds // obstacle bounds
+                : idBounds = idBounds()
     }
 }

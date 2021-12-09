@@ -1,6 +1,5 @@
 package neo.Tools.Compilers.DMap
 
-import neo.TempDump
 import neo.Tools.Compilers.DMap.dmap.node_s
 import neo.Tools.Compilers.DMap.dmap.tree_s
 import neo.Tools.Compilers.DMap.dmap.uPortal_s
@@ -14,15 +13,15 @@ import neo.idlib.geometry.Winding.idWinding
  */
 object glfile {
     var c_glfaces = 0
-    private const val level = 128
-    fun PortalVisibleSides(p: uPortal_s?): Int {
+    private var level = 128
+    fun PortalVisibleSides(p: uPortal_s): Int {
         val fcon: Boolean
         val bcon: Boolean
-        if (TempDump.NOT(p.onnode)) {
+        if (p.onnode == null) {
             return 0 // outside
         }
-        fcon = p.nodes[0].opaque
-        bcon = p.nodes[1].opaque
+        fcon = p.nodes!![0]!!.opaque
+        bcon = p.nodes!![1]!!.opaque
 
         // same contents never create a face
         if (fcon == bcon) {
@@ -36,12 +35,12 @@ object glfile {
         } else 0
     }
 
-    fun OutputWinding(w: idWinding?, glview: idFile?) {
+    fun OutputWinding(w: idWinding, glview: idFile) {
         val light: Float
         var i: Int
         glview.WriteFloatString("%d\n", w.GetNumPoints())
-        glfile.level += 28
-        light = (glfile.level and 255) / 255.0f
+        level += 28
+        light = (level and 255) / 255.0f
         i = 0
         while (i < w.GetNumPoints()) {
             glview.WriteFloatString(
@@ -63,19 +62,19 @@ object glfile {
      OutputPortal
      =============
      */
-    fun OutputPortal(p: uPortal_s?, glview: idFile?) {
-        var w: idWinding?
+    fun OutputPortal(p: uPortal_s, glview: idFile) {
+        var w: idWinding
         val sides: Int
-        sides = glfile.PortalVisibleSides(p)
+        sides = PortalVisibleSides(p)
         if (0 == sides) {
             return
         }
-        glfile.c_glfaces++
-        w = p.winding
+        c_glfaces++
+        w = p.winding!!
         if (sides == 2) {        // back side
             w = w.Reverse()
         }
-        glfile.OutputWinding(w, glview)
+        OutputWinding(w, glview)
 
 //	if ( sides == 2 ) {
 //		delete w;
@@ -87,23 +86,23 @@ object glfile {
      WriteGLView_r
      =============
      */
-    fun WriteGLView_r(node: node_s?, glview: idFile?) {
+    fun WriteGLView_r(node: node_s, glview: idFile) {
         var p: uPortal_s?
         var nextp: uPortal_s?
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            glfile.WriteGLView_r(node.children[0], glview)
-            glfile.WriteGLView_r(node.children[1], glview)
+            WriteGLView_r(node.children[0]!!, glview)
+            WriteGLView_r(node.children[1]!!, glview)
             return
         }
 
         // write all the portals
         p = node.portals
         while (p != null) {
-            nextp = if (p.nodes[0] === node) {
-                glfile.OutputPortal(p, glview)
-                p.next[0]
+            nextp = if (p.nodes!![0] === node) {
+                OutputPortal(p, glview)
+                p.next!![0]!!
             } else {
-                p.next[1]
+                p.next!![1]!!
             }
             p = nextp
         }
@@ -114,16 +113,16 @@ object glfile {
      WriteGLView
      =============
      */
-    fun WriteGLView(tree: tree_s?, source: String?) {
+    fun WriteGLView(tree: tree_s, source: String) {
         val glview: idFile?
-        glfile.c_glfaces = 0
+        c_glfaces = 0
         Common.common.Printf("Writing %s\n", source)
         glview = FileSystem_h.fileSystem.OpenExplicitFileWrite(source)
-        if (TempDump.NOT(glview)) {
+        if (glview == null) {
             Common.common.Error("Couldn't open %s", source)
         }
-        glfile.WriteGLView_r(tree.headnode, glview)
+        WriteGLView_r(tree.headnode!!, glview!!)
         FileSystem_h.fileSystem.CloseFile(glview)
-        Common.common.Printf("%5d c_glfaces\n", glfile.c_glfaces)
+        Common.common.Printf("%5d c_glfaces\n", c_glfaces)
     }
 }

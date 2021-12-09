@@ -47,10 +47,10 @@ object gldraw {
         GL11.glMatrixMode(GL11.GL_PROJECTION)
         GL11.glLoadIdentity()
         GL11.glOrtho(
-            dmap.dmapGlobals.drawBounds.get(0, 0).toDouble(),
-            dmap.dmapGlobals.drawBounds.get(1, 0).toDouble(),
-            dmap.dmapGlobals.drawBounds.get(0, 1).toDouble(),
-            dmap.dmapGlobals.drawBounds.get(1, 1).toDouble(),
+            dmap.dmapGlobals.drawBounds[0, 0].toDouble(),
+            dmap.dmapGlobals.drawBounds[1, 0].toDouble(),
+            dmap.dmapGlobals.drawBounds[0, 1].toDouble(),
+            dmap.dmapGlobals.drawBounds[1, 1].toDouble(),
             -1.0,
             1.0
         )
@@ -100,7 +100,7 @@ object gldraw {
         GL11.glColor3f(0.0f, 0.0f, 0.0f)
     }
 
-    fun DrawWinding(w: idWinding?) {
+    fun DrawWinding(w: idWinding) {
         var i: Int
         if (!dmap.dmapGlobals.drawflag) {
             return
@@ -109,7 +109,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
+            GL11.glVertex3f(w[i][0], w[i][1], w[i][2])
             i++
         }
         GL11.glEnd()
@@ -117,14 +117,14 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
+            GL11.glVertex3f(w[i][0], w[i][1], w[i][2])
             i++
         }
         GL11.glEnd()
         GL11.glFlush()
     }
 
-    fun DrawAuxWinding(w: idWinding?) {
+    fun DrawAuxWinding(w: idWinding) {
         var i: Int
         if (!dmap.dmapGlobals.drawflag) {
             return
@@ -133,7 +133,7 @@ object gldraw {
         GL11.glBegin(GL11.GL_POLYGON)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
+            GL11.glVertex3f(w[i][0], w[i][1], w[i][2])
             i++
         }
         GL11.glEnd()
@@ -141,14 +141,14 @@ object gldraw {
         GL11.glBegin(GL11.GL_LINE_LOOP)
         i = 0
         while (i < w.GetNumPoints()) {
-            GL11.glVertex3f(w.get(i).get(0), w.get(i).get(1), w.get(i).get(2))
+            GL11.glVertex3f(w[i][0], w[i][1], w[i][2])
             i++
         }
         GL11.glEnd()
         GL11.glFlush()
     }
 
-    fun DrawLine(v1: idVec3?, v2: idVec3?, color: Int) {
+    fun DrawLine(v1: idVec3, v2: idVec3, color: Int) {
         if (!dmap.dmapGlobals.drawflag) {
             return
         }
@@ -205,7 +205,7 @@ object gldraw {
 //        }
     }
 
-    fun GLS_Winding(w: idWinding?, code: Int) {
+    fun GLS_Winding(w: idWinding, code: Int) {
         throw TODO_Exception()
         //        byte[] buf = new byte[1024];
 //        int i, j;
@@ -225,7 +225,7 @@ object gldraw {
 //        send(draw_socket, (String) buf, w.GetNumPoints() * 12 + 8, 0);
     }
 
-    fun GLS_Triangle(tri: mapTri_s?, code: Int) {
+    fun GLS_Triangle(tri: mapTri_s, code: Int) {
         throw TODO_Exception()
         //        idWinding w = new idWinding();
 //

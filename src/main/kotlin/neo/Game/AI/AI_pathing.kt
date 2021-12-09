@@ -73,7 +73,7 @@ object AI_pathing {
      LineIntersectsPath
      ============
      */
-    fun LineIntersectsPath(start: idVec2?, end: idVec2?, node: pathNode_s?): Boolean {
+    fun LineIntersectsPath(start: idVec2, end: idVec2, node: pathNode_s): Boolean {
         var d0: Float
         var d1: Float
         var d2: Float

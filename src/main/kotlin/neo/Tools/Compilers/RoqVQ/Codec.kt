@@ -2,11 +2,13 @@ package neo.Tools.Compilers.RoqVQ
 
 import neo.TempDump
 import neo.Tools.Compilers.RoqVQ.QuadDefs.quadcel
-import neo.framework.*
+import neo.framework.Common
+import neo.framework.FileSystem_h
 import neo.framework.File_h.idFile
+import neo.framework.Session
 import neo.idlib.math.Math_h.idMath
 import neo.sys.win_shared
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -26,16 +28,16 @@ object Codec {
     //#define VQDATA		double
     fun glimit(`val`: Float): Float {
         if (`val` < 0) {
-            return 0
+            return 0f
         }
         return if (`val` > 255) {
-            255
+            255f
         } else `val`
     }
 
     internal class codec {
-        private val codebook2: Array<DoubleArray?>?
-        private val codebook4: Array<DoubleArray?>?
+        private val codebook2: Array<DoubleArray>
+        private val codebook4: Array<DoubleArray>
         private val codebookmade: Int
         private val codebooksize: Int
         private var detail = false
@@ -44,24 +46,24 @@ object Codec {
         private var dxMean = 0
         private var dyMean = 0
         private var image: NSBitmapImageRep?
-        private val index2: IntArray? = IntArray(256)
+        private val index2: IntArray = IntArray(256)
         private var initRGBtab = 0
         private var luti: ByteArray?
 
         //
-        private val luty: ByteArray? = ByteArray(256)
+        private val luty: ByteArray = ByteArray(256)
         private var newImage: NSBitmapImageRep? = null
         private var numQuadCels = 0
         private var onQuad = 0
         private val overAmount: Int
         private var pixelsHigh = 0
         private var pixelsWide = 0
-        private val previousImage: Array<NSBitmapImageRep?>? =
-            arrayOfNulls<NSBitmapImageRep?>(2) // the ones in video ram and offscreen ram
-        private var qStatus: Array<quadcel?>?
+        private val previousImage: Array<NSBitmapImageRep?> =
+            arrayOfNulls(2) // the ones in video ram and offscreen ram
+        private var qStatus: Array<quadcel>
         private var slop: Int
-        private val used2: BooleanArray? = BooleanArray(256)
-        private val used4: BooleanArray? = BooleanArray(256)
+        private val used2: BooleanArray = BooleanArray(256)
+        private val used4: BooleanArray = BooleanArray(256)
 
         //
         //
@@ -76,26 +78,26 @@ object Codec {
             val wtype: Int
             var temp: Int
             val num = IntArray(QuadDefs.DEAD + 1)
-            var ilist: IntArray?
+            var ilist: IntArray
             val sRMSE: Float
             val numredo: Float
-            var flist: FloatArray?
-            var idataA: ByteArray?
-            var idataB: ByteArray?
+            var flist: FloatArray
+            var idataA: ByteArray
+            var idataB: ByteArray
             osize = 8
             image = Roq.theRoQ.CurrentImage()
             newImage = null //0;
-            pixelsHigh = image.pixelsHigh()
-            pixelsWide = image.pixelsWide()
+            pixelsHigh = image!!.pixelsHigh()
+            pixelsWide = image!!.pixelsWide()
             dimension2 = 12
             dimension4 = 48
-            if (image.hasAlpha() && Roq.theRoQ.ParamNoAlpha() == false) {
+            if (image!!.hasAlpha() && Roq.theRoQ.ParamNoAlpha() == false) {
                 dimension2 = 16
                 dimension4 = 64
             }
             idataA = ByteArray(16 * 16 * 4) // Mem_Alloc(16 * 16 * 4);
             idataB = ByteArray(16 * 16 * 4) // Mem_Alloc(16 * 16 * 4);
-            if (TempDump.NOT(previousImage.get(0))) {
+            if (TempDump.NOT(previousImage[0])) {
                 Common.common.Printf("sparseEncode: sparsely encoding a %d,%d image\n", pixelsWide, pixelsHigh)
             }
             InitImages()
@@ -103,12 +105,12 @@ object Codec {
             ilist = IntArray(numQuadCels + 1) // Mem_ClearedAlloc((numQuadCels + 1));
             fsize = 56 * 1024
             if (Roq.theRoQ.NumberOfFrames() > 2) {
-                fsize = if (previousImage.get(0) != null) {
+                fsize = if (previousImage[0] != null) {
                     Roq.theRoQ.NormalFrameSize()
                 } else {
                     Roq.theRoQ.FirstFrameSize()
                 }
-                if (Roq.theRoQ.HasSound() && fsize > 6000 && previousImage.get(0) != null) {
+                if (Roq.theRoQ.HasSound() && fsize > 6000 && previousImage[0] != null) {
                     fsize = 6000
                 }
             }
@@ -116,12 +118,12 @@ object Codec {
             if (fsize > 64000) {
                 fsize = 64000
             }
-            if (previousImage.get(0) != null && fsize > Roq.theRoQ.NormalFrameSize() * 2) {
+            if (previousImage[0] != null && fsize > Roq.theRoQ.NormalFrameSize() * 2) {
                 fsize = Roq.theRoQ.NormalFrameSize() * 2
             }
             dyMean = 0
             dxMean = dyMean
-            wtype = if (previousImage.get(0) != null) {
+            wtype = if (previousImage[0] != null) {
                 1
             } else {
                 0
@@ -130,36 +132,36 @@ object Codec {
             while (i < numQuadCels) {
                 j = 0
                 while (j < QuadDefs.DEAD) {
-                    qStatus.get(i).snr[j] = 9999
+                    qStatus[i].snr[j] = 9999f
                     j++
                 }
-                qStatus.get(i).mark = false
-                if (qStatus.get(i).size.toInt() == osize) {
-                    if (previousImage.get(0) != null) {
-                        GetData(idataA, qStatus.get(i).size.toInt(), qStatus.get(i).xat, qStatus.get(i).yat, image)
+                qStatus[i].mark = false
+                if (qStatus[i].size.toInt() == osize) {
+                    if (previousImage[0] != null) {
+                        GetData(idataA, qStatus[i].size.toInt(), qStatus[i].xat, qStatus[i].yat, image!!)
                         GetData(
                             idataB,
-                            qStatus.get(i).size.toInt(),
-                            qStatus.get(i).xat,
-                            qStatus.get(i).yat,
-                            previousImage.get(whichFrame and 1)
+                            qStatus[i].size.toInt(),
+                            qStatus[i].xat,
+                            qStatus[i].yat,
+                            previousImage[whichFrame and 1]!!
                         )
-                        qStatus.get(i).snr[QuadDefs.MOT] = Snr(idataA, idataB, qStatus.get(i).size.toInt())
+                        qStatus[i].snr[QuadDefs.MOT] = Snr(idataA, idataB, qStatus[i].size.toInt())
                         if (ComputeMotionBlock(
                                 idataA,
                                 idataB,
-                                qStatus.get(i).size.toInt()
+                                qStatus[i].size.toInt()
                             ) && !Roq.theRoQ.IsLastFrame()
                         ) {
-                            qStatus.get(i).mark = true
+                            qStatus[i].mark = true
                         }
-                        if (!qStatus.get(i).mark) {
+                        if (!qStatus[i].mark) {
                             FvqData(
                                 idataA,
-                                qStatus.get(i).size.toInt(),
-                                qStatus.get(i).xat,
-                                qStatus.get(i).yat,
-                                qStatus.get(i),
+                                qStatus[i].size.toInt(),
+                                qStatus[i].xat,
+                                qStatus[i].yat,
+                                qStatus[i],
                                 false
                             )
                         }
@@ -167,26 +169,26 @@ object Codec {
                     run {
                         val rsnr = floatArrayOf(0f)
                         val status = intArrayOf(0)
-                        LowestQuad(qStatus.get(i), status, rsnr, wtype)
-                        qStatus.get(i).status = status[0]
-                        qStatus.get(i).rsnr = rsnr[0]
+                        LowestQuad(qStatus[i], status, rsnr, wtype)
+                        qStatus[i].status = status[0]
+                        qStatus[i].rsnr = rsnr[0]
                     }
-                    if (qStatus.get(i).rsnr < 9999) {
+                    if (qStatus[i].rsnr < 9999) {
                         Roq.theRoQ.MarkQuadx(
-                            qStatus.get(i).xat,
-                            qStatus.get(i).yat,
-                            qStatus.get(i).size.toInt(),
-                            qStatus.get(i).rsnr,
-                            qStatus.get(i).status
+                            qStatus[i].xat,
+                            qStatus[i].yat,
+                            qStatus[i].size.toInt(),
+                            qStatus[i].rsnr,
+                            qStatus[i].status
                         )
                     }
                 } else {
-                    if (qStatus.get(i).size < osize) {
-                        qStatus.get(i).status = 0
-                        qStatus.get(i).size = 0
+                    if (qStatus[i].size < osize) {
+                        qStatus[i].status = 0
+                        qStatus[i].size = 0
                     } else {
-                        qStatus.get(i).status = QuadDefs.DEP
-                        qStatus.get(i).rsnr = 0f
+                        qStatus[i].status = QuadDefs.DEP
+                        qStatus[i].rsnr = 0f
                     }
                 }
                 i++
@@ -208,8 +210,8 @@ object Codec {
             onf = 0
             i = 0
             while (i < numQuadCels) {
-                if (qStatus.get(i).size.toInt() != 0 && qStatus.get(i).status != QuadDefs.DEP) {
-                    flist[onf] = qStatus.get(i).rsnr
+                if (qStatus[i].size.toInt() != 0 && qStatus[i].status != QuadDefs.DEP) {
+                    flist[onf] = qStatus[i].rsnr
                     ilist[onf] = i
                     onf++
                 }
@@ -238,45 +240,43 @@ object Codec {
             temp = 0
             i = 0
             while (i < numQuadCels) {
-                if (qStatus.get(i).size.toInt() == osize && qStatus.get(i).mark == false && qStatus.get(i).snr[QuadDefs.MOT] > 0) {
-                    GetData(idataA, qStatus.get(i).size.toInt(), qStatus.get(i).xat, qStatus.get(i).yat, image)
+                if (qStatus[i].size.toInt() == osize && qStatus[i].mark == false && qStatus[i].snr[QuadDefs.MOT] > 0) {
+                    GetData(idataA, qStatus[i].size.toInt(), qStatus[i].xat, qStatus[i].yat, image!!)
                     if (osize == 8) {
-                        VqData8(idataA, qStatus.get(i))
+                        VqData8(idataA, qStatus[i])
                     }
-                    if (previousImage.get(0) != null) {
+                    if (previousImage[0] != null) {
                         var dx: Int
                         var dy: Int
-                        dx = (qStatus.get(i).domain shr 8) - 128 - dxMean + 8
-                        dy = (qStatus.get(i).domain and 0xff) - 128 - dyMean + 8
+                        dx = (qStatus[i].domain shr 8) - 128 - dxMean + 8
+                        dy = (qStatus[i].domain and 0xff) - 128 - dyMean + 8
                         if (dx < 0 || dx > 15 || dy < 0 || dy > 15) {
-                            qStatus.get(i).snr[QuadDefs.FCC] = 9999
+                            qStatus[i].snr[QuadDefs.FCC] = 9999f
                             temp++
                             FvqData(
                                 idataA,
-                                qStatus.get(i).size.toInt(),
-                                qStatus.get(i).xat,
-                                qStatus.get(i).yat,
-                                qStatus.get(i),
+                                qStatus[i].size.toInt(),
+                                qStatus[i].xat,
+                                qStatus[i].yat,
+                                qStatus[i],
                                 true
                             )
-                            dx = (qStatus.get(i).domain shr 8) - 128 - dxMean + 8
-                            dy = (qStatus.get(i).domain and 0xff) - 128 - dyMean + 8
-                            if ((dx < 0 || dx > 15 || dy < 0 || dy > 15) && qStatus.get(i).snr[QuadDefs.FCC] != 9999 && qStatus.get(
-                                    i
-                                ).status == QuadDefs.FCC
+                            dx = (qStatus[i].domain shr 8) - 128 - dxMean + 8
+                            dy = (qStatus[i].domain and 0xff) - 128 - dyMean + 8
+                            if ((dx < 0 || dx > 15 || dy < 0 || dy > 15) && qStatus[i].snr[QuadDefs.FCC] != 9999f && qStatus[i].status == QuadDefs.FCC
                             ) {
                                 Common.common.Printf(
                                     "sparseEncode: something is wrong here, dx/dy is %d,%d after being clamped\n",
                                     dx,
                                     dy
                                 )
-                                Common.common.Printf("xat:    %d\n", qStatus.get(i).xat)
-                                Common.common.Printf("yat:    %d\n", qStatus.get(i).yat)
-                                Common.common.Printf("size    %d\n", qStatus.get(i).size)
-                                Common.common.Printf("type:   %d\n", qStatus.get(i).status)
-                                Common.common.Printf("mot:    %04x\n", qStatus.get(i).domain)
-                                Common.common.Printf("motsnr: %0f\n", qStatus.get(i).snr[QuadDefs.FCC])
-                                Common.common.Printf("rmse:   %0f\n", qStatus.get(i).rsnr)
+                                Common.common.Printf("xat:    %d\n", qStatus[i].xat)
+                                Common.common.Printf("yat:    %d\n", qStatus[i].yat)
+                                Common.common.Printf("size    %d\n", qStatus[i].size)
+                                Common.common.Printf("type:   %d\n", qStatus[i].status)
+                                Common.common.Printf("mot:    %04x\n", qStatus[i].domain)
+                                Common.common.Printf("motsnr: %0f\n", qStatus[i].snr[QuadDefs.FCC])
+                                Common.common.Printf("rmse:   %0f\n", qStatus[i].rsnr)
                                 Common.common.Error("need to go away now\n")
                             }
                         }
@@ -284,16 +284,16 @@ object Codec {
                     run {
                         val rsnr = floatArrayOf(0f)
                         val status = intArrayOf(0)
-                        LowestQuad(qStatus.get(i), status, rsnr, wtype)
-                        qStatus.get(i).status = status[0]
-                        qStatus.get(i).rsnr = rsnr[0]
+                        LowestQuad(qStatus[i], status, rsnr, wtype)
+                        qStatus[i].status = status[0]
+                        qStatus[i].rsnr = rsnr[0]
                     }
                     Roq.theRoQ.MarkQuadx(
-                        qStatus.get(i).xat,
-                        qStatus.get(i).yat,
-                        qStatus.get(i).size.toInt(),
-                        qStatus.get(i).rsnr,
-                        qStatus.get(i).status
+                        qStatus[i].xat,
+                        qStatus[i].yat,
+                        qStatus[i].size.toInt(),
+                        qStatus[i].rsnr,
+                        qStatus[i].status
                     )
                     /*
                      if (qStatus[i].status==FCC && qStatus[i].snr[FCC]>qStatus[i].snr[SLD]) {
@@ -324,8 +324,8 @@ object Codec {
             onf = 0
             i = 0
             while (i < numQuadCels) {
-                if (qStatus.get(i).size.toInt() != 0 && qStatus.get(i).status != QuadDefs.DEP) {
-                    flist[onf] = qStatus.get(i).rsnr
+                if (qStatus[i].size.toInt() != 0 && qStatus[i].status != QuadDefs.DEP) {
+                    flist[onf] = qStatus[i].rsnr
                     ilist[onf] = i
                     onf++
                 }
@@ -334,7 +334,7 @@ object Codec {
             Sort(flist, ilist, onf)
             ong = 0
             detail = false
-            while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf && flist[ong] > 0 && qStatus.get(ilist[ong]).mark == false) {
+            while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf && flist[ong] > 0 && qStatus[ilist[ong]].mark == false) {
 //		badsnr = [self getCurrentRMSE: qStatus];
                 osize = AddQuad(qStatus, ilist[ong++])
                 //		if ([self getCurrentRMSE: qStatus] >= badsnr) {
@@ -346,45 +346,45 @@ object Codec {
                 while (GetCurrentQuadOutputSize(qStatus) < fsize && ong < onf) {
 //			badsnr = [self getCurrentRMSE: qStatus];
                     i = ilist[ong++]
-                    if (qStatus.get(i).mark) {
+                    if (qStatus[i].mark) {
                         detail = false
-                        qStatus.get(i).mark = false
-                        GetData(idataA, qStatus.get(i).size.toInt(), qStatus.get(i).xat, qStatus.get(i).yat, image)
-                        if (qStatus.get(i).size.toInt() == 8) {
-                            VqData8(idataA, qStatus.get(i))
+                        qStatus[i].mark = false
+                        GetData(idataA, qStatus[i].size.toInt(), qStatus[i].xat, qStatus[i].yat, image!!)
+                        if (qStatus[i].size.toInt() == 8) {
+                            VqData8(idataA, qStatus[i])
                         }
-                        if (qStatus.get(i).size.toInt() == 4) {
-                            VqData4(idataA, qStatus.get(i))
+                        if (qStatus[i].size.toInt() == 4) {
+                            VqData4(idataA, qStatus[i])
                         }
-                        if (qStatus.get(i).size.toInt() == 4) {
-                            VqData2(idataA, qStatus.get(i))
+                        if (qStatus[i].size.toInt() == 4) {
+                            VqData2(idataA, qStatus[i])
                         }
-                        if (previousImage.get(0) != null) {
+                        if (previousImage[0] != null) {
                             FvqData(
                                 idataA,
-                                qStatus.get(i).size.toInt(),
-                                qStatus.get(i).xat,
-                                qStatus.get(i).yat,
-                                qStatus.get(i),
+                                qStatus[i].size.toInt(),
+                                qStatus[i].xat,
+                                qStatus[i].yat,
+                                qStatus[i],
                                 true
                             )
                         }
                         run {
                             val rsnr = floatArrayOf(0f)
                             val status = intArrayOf(0)
-                            LowestQuad(qStatus.get(i), status, rsnr, wtype)
-                            qStatus.get(i).status = status[0]
-                            qStatus.get(i).rsnr = rsnr[0]
+                            LowestQuad(qStatus[i], status, rsnr, wtype)
+                            qStatus[i].status = status[0]
+                            qStatus[i].rsnr = rsnr[0]
                         }
-                        if (qStatus.get(i).rsnr <= Codec.MIN_SNR) {
+                        if (qStatus[i].rsnr <= MIN_SNR) {
                             break
                         }
                         Roq.theRoQ.MarkQuadx(
-                            qStatus.get(i).xat,
-                            qStatus.get(i).yat,
-                            qStatus.get(i).size.toInt(),
-                            qStatus.get(i).rsnr,
-                            qStatus.get(i).status
+                            qStatus[i].xat,
+                            qStatus[i].yat,
+                            qStatus[i].size.toInt(),
+                            qStatus[i].rsnr,
+                            qStatus[i].status
                         )
                     }
                     //			if ([self getCurrentRMSE: qStatus] >= badsnr) {
@@ -411,7 +411,7 @@ object Codec {
                 GetCurrentRMSE(qStatus),
                 GetCurrentQuadOutputSize(qStatus)
             )
-            fsize = if (previousImage.get(0) != null) {
+            fsize = if (previousImage[0] != null) {
                 Roq.theRoQ.NormalFrameSize()
             } else {
                 Roq.theRoQ.FirstFrameSize()
@@ -426,9 +426,9 @@ object Codec {
                 j = 0
                 i = 0
                 while (i < numQuadCels) {
-                    if (qStatus.get(i).size.toInt() == 8 && qStatus.get(i).status != 0) {
-                        if (qStatus.get(i).status < QuadDefs.DEAD) {
-                            num[qStatus.get(i).status]++
+                    if (qStatus[i].size.toInt() == 8 && qStatus[i].status != 0) {
+                        if (qStatus[i].status < QuadDefs.DEAD) {
+                            num[qStatus[i].status]++
                         }
                         j++
                     }
@@ -449,9 +449,9 @@ object Codec {
                 }
                 i = 0
                 while (i < numQuadCels) {
-                    if (qStatus.get(i).size.toInt() == 4 && qStatus.get(i).status != 0) {
-                        if (qStatus.get(i).status < QuadDefs.DEAD) {
-                            num[qStatus.get(i).status]++
+                    if (qStatus[i].size.toInt() == 4 && qStatus[i].status != 0) {
+                        if (qStatus[i].status < QuadDefs.DEAD) {
+                            num[qStatus[i].status]++
                         }
                         j++
                     }
@@ -478,12 +478,8 @@ object Codec {
 
 //            Mem_Free(idataA);
 //            Mem_Free(idataB);
-            idataB = null
-            idataA = idataB
             //            Mem_Free(flist);
 //            Mem_Free(ilist);
-            flist = null
-            ilist = null
             if (newImage != null) {
 //                delete
                 newImage = null
@@ -498,25 +494,25 @@ object Codec {
             var fsize: Int
             val wtype: Int
             val num = IntArray(QuadDefs.DEAD + 1)
-            var ilist: IntArray?
+            var ilist: IntArray
             val sRMSE: Float
-            var flist: FloatArray?
-            var idataA: ByteArray?
-            var idataB: ByteArray?
+            var flist: FloatArray
+            var idataA: ByteArray
+            var idataB: ByteArray
             osize = 8
             image = Roq.theRoQ.CurrentImage()
             newImage = null //0;
-            pixelsHigh = image.pixelsHigh()
-            pixelsWide = image.pixelsWide()
+            pixelsHigh = image!!.pixelsHigh()
+            pixelsWide = image!!.pixelsWide()
             dimension2 = 12
             dimension4 = 48
-            if (image.hasAlpha() && Roq.theRoQ.ParamNoAlpha() == false) {
+            if (image!!.hasAlpha() && Roq.theRoQ.ParamNoAlpha() == false) {
                 dimension2 = 16
                 dimension4 = 64
             }
             idataA = ByteArray(16 * 16 * 4) // Mem_Alloc(16 * 16 * 4);
             idataB = ByteArray(16 * 16 * 4) // Mem_Alloc(16 * 16 * 4);
-            if (TempDump.NOT(previousImage.get(0))) {
+            if (TempDump.NOT(previousImage[0])) {
                 Common.common.Printf("sparseEncode: sparsely encoding a %d,%d image\n", pixelsWide, pixelsHigh)
             }
             InitImages()
@@ -524,18 +520,18 @@ object Codec {
             ilist = IntArray(numQuadCels + 1) // Mem_ClearedAlloc((numQuadCels + 1));
             fsize = 56 * 1024
             if (Roq.theRoQ.NumberOfFrames() > 2) {
-                fsize = if (previousImage.get(0) != null) {
+                fsize = if (previousImage[0] != null) {
                     Roq.theRoQ.NormalFrameSize()
                 } else {
                     Roq.theRoQ.FirstFrameSize()
                 }
-                if (Roq.theRoQ.HasSound() && fsize > 6000 && previousImage.get(0) != null) {
+                if (Roq.theRoQ.HasSound() && fsize > 6000 && previousImage[0] != null) {
                     fsize = 6000
                 }
             }
             dyMean = 0
             dxMean = dyMean
-            wtype = if (previousImage.get(0) != null) {
+            wtype = if (previousImage[0] != null) {
                 1
             } else {
                 0
@@ -544,45 +540,45 @@ object Codec {
             while (i < numQuadCels) {
                 j = 0
                 while (j < QuadDefs.DEAD) {
-                    qStatus.get(i).snr[j] = 9999
+                    qStatus[i].snr[j] = 9999f
                     j++
                 }
-                qStatus.get(i).mark = false
-                if (qStatus.get(i).size.toInt() == osize) {
-                    if (previousImage.get(0) != null) {
-                        GetData(idataA, qStatus.get(i).size.toInt(), qStatus.get(i).xat, qStatus.get(i).yat, image)
+                qStatus[i].mark = false
+                if (qStatus[i].size.toInt() == osize) {
+                    if (previousImage[0] != null) {
+                        GetData(idataA, qStatus[i].size.toInt(), qStatus[i].xat, qStatus[i].yat, image!!)
                         GetData(
                             idataB,
-                            qStatus.get(i).size.toInt(),
-                            qStatus.get(i).xat,
-                            qStatus.get(i).yat,
-                            previousImage.get(whichFrame and 1)
+                            qStatus[i].size.toInt(),
+                            qStatus[i].xat,
+                            qStatus[i].yat,
+                            previousImage[whichFrame and 1]!!
                         )
-                        qStatus.get(i).snr[QuadDefs.MOT] = Snr(idataA, idataB, qStatus.get(i).size.toInt())
+                        qStatus[i].snr[QuadDefs.MOT] = Snr(idataA, idataB, qStatus[i].size.toInt())
                     }
                     run {
                         val rsnr = floatArrayOf(0f)
                         val status = intArrayOf(0)
-                        LowestQuad(qStatus.get(i), status, rsnr, wtype)
-                        qStatus.get(i).status = status[0]
-                        qStatus.get(i).rsnr = rsnr[0]
+                        LowestQuad(qStatus[i], status, rsnr, wtype)
+                        qStatus[i].status = status[0]
+                        qStatus[i].rsnr = rsnr[0]
                     }
-                    if (qStatus.get(i).rsnr < 9999) {
+                    if (qStatus[i].rsnr < 9999) {
                         Roq.theRoQ.MarkQuadx(
-                            qStatus.get(i).xat,
-                            qStatus.get(i).yat,
-                            qStatus.get(i).size.toInt(),
-                            qStatus.get(i).rsnr,
-                            qStatus.get(i).status
+                            qStatus[i].xat,
+                            qStatus[i].yat,
+                            qStatus[i].size.toInt(),
+                            qStatus[i].rsnr,
+                            qStatus[i].status
                         )
                     }
                 } else {
-                    if (qStatus.get(i).size < osize) {
-                        qStatus.get(i).status = 0
-                        qStatus.get(i).size = 0
+                    if (qStatus[i].size < osize) {
+                        qStatus[i].status = 0
+                        qStatus[i].size = 0
                     } else {
-                        qStatus.get(i).status = QuadDefs.DEP
-                        qStatus.get(i).rsnr = 0f
+                        qStatus[i].status = QuadDefs.DEP
+                        qStatus[i].rsnr = 0f
                     }
                 }
                 i++
@@ -608,9 +604,9 @@ object Codec {
                 j = 0
                 i = 0
                 while (i < numQuadCels) {
-                    if (qStatus.get(i).size.toInt() == 8 && qStatus.get(i).status != 0) {
-                        if (qStatus.get(i).status < QuadDefs.DEAD) {
-                            num[qStatus.get(i).status]++
+                    if (qStatus[i].size.toInt() == 8 && qStatus[i].status != 0) {
+                        if (qStatus[i].status < QuadDefs.DEAD) {
+                            num[qStatus[i].status]++
                         }
                         j++
                     }
@@ -631,9 +627,9 @@ object Codec {
                 }
                 i = 0
                 while (i < numQuadCels) {
-                    if (qStatus.get(i).size.toInt() == 4 && qStatus.get(i).status != 0) {
-                        if (qStatus.get(i).status < QuadDefs.DEAD) {
-                            num[qStatus.get(i).status]++
+                    if (qStatus[i].size.toInt() == 4 && qStatus[i].status != 0) {
+                        if (qStatus[i].status < QuadDefs.DEAD) {
+                            num[qStatus[i].status]++
                         }
                         j++
                     }
@@ -659,12 +655,8 @@ object Codec {
 
 //            Mem_Free(idataA);
 //            Mem_Free(idataB);
-            idataB = null
-            idataA = idataB
             //            Mem_Free(flist);
 //            Mem_Free(ilist);
-            flist = null
-            ilist = null
             if (newImage != null) {
                 //delete newImage;
                 newImage = null
@@ -683,24 +675,24 @@ object Codec {
             var index1: Int
             var temp: Int
             var ftemp: Float
-            val lutimage: ByteArray?
+            val lutimage: ByteArray
             numQuadCels = (pixelsWide and 0xfff0) * (pixelsHigh and 0xfff0) / (QuadDefs.MINSIZE * QuadDefs.MINSIZE)
             numQuadCels += numQuadCels / 4 + numQuadCels / 16
 
 //            if (qStatus != null) {
 //                Mem_Free(qStatus);
 //            }
-            qStatus = arrayOfNulls<quadcel?>(numQuadCels) // Mem_ClearedAlloc(numQuadCels);
+            qStatus = Array(numQuadCels) { quadcel() } // Mem_ClearedAlloc(numQuadCels);
             InitQStatus()
             //
-            if (previousImage.get(0) != null) {
-                pixelsWide = previousImage.get(0).pixelsWide()
-                pixelsHigh = previousImage.get(0).pixelsHigh()
+            if (previousImage[0] != null) {
+                pixelsWide = previousImage[0]!!.pixelsWide()
+                pixelsHigh = previousImage[0]!!.pixelsHigh()
                 temp = whichFrame + 1 and 1
-                if (TempDump.NOT(*luti)) {
+                if (TempDump.NOT(luti)) {
                     luti = ByteArray(pixelsWide * pixelsHigh) // Mem_Alloc(pixelsWide * pixelsHigh);
                 }
-                lutimage = previousImage.get(temp).bitmapData()
+                lutimage = previousImage[temp]!!.bitmapData()
                 if (Roq.theRoQ.IsQuiet() == false) {
                     Common.common.Printf("initImage: remaking lut image using buffer %d\n", temp)
                 }
@@ -713,8 +705,8 @@ object Codec {
                         ftemp =
                             GDefs.RMULT * lutimage[index0 + 0] + GDefs.GMULT * lutimage[index0 + 1] + GDefs.BMULT * lutimage[index0 + 2]
                         temp = ftemp.toInt()
-                        luti.get(index1) = temp.toByte()
-                        index0 += previousImage.get(0).samplesPerPixel()
+                        luti!![index1] = temp.toByte()
+                        index0 += previousImage[0]!!.samplesPerPixel()
                         index1++
                         x++
                     }
@@ -734,10 +726,10 @@ object Codec {
             bigx = pixelsWide and 0xfff0
             bigy = pixelsHigh and 0xfff0
             if (startX >= lowx && startX + quadSize <= bigx && startY + quadSize <= bigy && startY >= lowy && quadSize <= QuadDefs.MAXSIZE) {
-                qStatus.get(onQuad).size = quadSize.toByte()
-                qStatus.get(onQuad).xat = startX
-                qStatus.get(onQuad).yat = startY
-                qStatus.get(onQuad).rsnr = 999999f
+                qStatus[onQuad].size = quadSize.toByte()
+                qStatus[onQuad].xat = startX
+                qStatus[onQuad].yat = startY
+                qStatus[onQuad].rsnr = 999999f
                 onQuad++
             }
             if (quadSize != QuadDefs.MINSIZE) {
@@ -755,7 +747,7 @@ object Codec {
             var y: Int
             i = 0
             while (i < numQuadCels) {
-                qStatus.get(i).size = 0
+                qStatus[i].size = 0
                 i++
             }
             onQuad = 0
@@ -770,7 +762,7 @@ object Codec {
             }
         }
 
-        fun Snr(old: ByteArray?, bnew: ByteArray?, size: Int): Float {
+        fun Snr(old: ByteArray, bnew: ByteArray, size: Int): Float {
             var i: Int
             var j: Int
             var fsnr: Float
@@ -783,7 +775,7 @@ object Codec {
             while (i < size) {
                 j = 0
                 while (j < size) {
-                    if (old.get(o_p + 3) != 0 || bnew.get(n_p + 3) != 0) {
+                    if (old[o_p + 3].toInt() != 0 || bnew[n_p + 3].toInt() != 0) {
                         ind += GDefs.RGBADIST(old, bnew, o_p, n_p)
                     }
                     o_p += 4
@@ -798,7 +790,7 @@ object Codec {
             return fsnr
         }
 
-        fun FvqData(bitmap: ByteArray?, size: Int, realx: Int, realy: Int, pquad: quadcel?, clamp: Boolean) {
+        fun FvqData(bitmap: ByteArray, size: Int, realx: Int, realy: Int, pquad: quadcel, clamp: Boolean) {
             var x: Int
             var y: Int
             val xLen: Int
@@ -819,33 +811,31 @@ object Codec {
             var breakHigh: Int
             var lowestSNR: Float
             var fmblur0: Float
-            var scale1: ByteArray?
-            var bitma2: ByteArray?
+            var scale1: ByteArray
+            var bitma2: ByteArray
             var searchY: Int
             var searchX: Int
             val xxMean: Int
             val yyMean: Int
-            if (TempDump.NOT(previousImage.get(0)) || dimension4 == 64) {
+            if (TempDump.NOT(previousImage[0]) || dimension4 == 64) {
                 return
             }
             x = 0
             while (x < size * size) {
                 fmblur0 =
-                    GDefs.RMULT * bitmap.get(x * 4 + 0) + GDefs.GMULT * bitmap.get(x * 4 + 1) + GDefs.BMULT * bitmap.get(
-                        x * 4 + 2
-                    )
-                luty.get(x) = fmblur0.toInt().toByte()
+                    GDefs.RMULT * bitmap[x * 4 + 0] + GDefs.GMULT * bitmap[x * 4 + 1] + GDefs.BMULT * bitmap[x * 4 + 2]
+                luty[x] = fmblur0.toInt().toByte()
                 x++
             }
-            if (TempDump.NOT(*luti)) {
+            if (TempDump.NOT(luti)) {
                 pquad.domain = 0x8080
-                pquad.snr[QuadDefs.FCC] = 9999
+                pquad.snr[QuadDefs.FCC] = 9999f
                 return
             }
             ony = realy - (realy and 0xfff0)
             onx = realx - (realx and 0xfff0)
-            xLen = previousImage.get(0).pixelsWide()
-            yLen = previousImage.get(0).pixelsHigh()
+            xLen = previousImage[0]!!.pixelsWide()
+            yLen = previousImage[0]!!.pixelsHigh()
             ripl = xLen - size
             breakHigh = 99999999
             fabort = 0
@@ -866,7 +856,7 @@ object Codec {
             xxMean = dxMean * depthx
             yyMean = dyMean * depthy
             if (realx - xxMean + searchX < 0 || realx - xxMean - searchX + depthx + size > xLen || realy - yyMean + searchY < 0 || realy - yyMean - searchY + depthy + size > yLen) {
-                pquad.snr[QuadDefs.FCC] = 9999
+                pquad.snr[QuadDefs.FCC] = 9999f
                 return
             }
             val sPsQ = -1
@@ -879,11 +869,11 @@ object Codec {
                 while (sY <= realy - yyMean + searchY && breakHigh != 0) {
                     temp1 = xLen * sY + sX
                     if (sX >= 0 && sX + size <= xLen && sY >= 0 && sY + size <= yLen) {
-                        bpp = previousImage.get(0).samplesPerPixel()
+                        bpp = previousImage[0]!!.samplesPerPixel()
                         ripl = (xLen - size) * bpp
                         mblur0 = 0
                         bitma2 = bitmap
-                        scale1 = previousImage.get(whichFrame + 1 and 1).bitmapData()
+                        scale1 = previousImage[whichFrame + 1 and 1]!!.bitmapData()
                         scale1 = Arrays.copyOfRange(scale1, temp1 * bpp, scale1.size)
                         //		mblur0 = 0;
 //		bitma2 = luty;
@@ -914,11 +904,11 @@ object Codec {
                 sX += depthx
             }
             if (lowX != -1 && lowY != -1) {
-                bpp = previousImage.get(0).samplesPerPixel()
+                bpp = previousImage[0]!!.samplesPerPixel()
                 ripl = (xLen - size) * bpp
                 mblur0 = 0
                 bitma2 = bitmap
-                scale1 = previousImage.get(whichFrame + 1 and 1).bitmapData()
+                scale1 = previousImage[whichFrame + 1 and 1]!!.bitmapData()
                 scale1 = Arrays.copyOfRange(scale1, (xLen * lowY + lowX) * bpp, scale1.size)
                 y = 0
                 while (y < size) {
@@ -949,7 +939,7 @@ object Codec {
         }
 
         fun GetData( /*unsigned*/
-            iData: ByteArray?, qSize: Int, startX: Int, startY: Int, bitmap: NSBitmapImageRep?
+            iData: ByteArray, qSize: Int, startX: Int, startY: Int, bitmap: NSBitmapImageRep
         ) {
             var x: Int
             var y: Int
@@ -957,7 +947,7 @@ object Codec {
             val bpp: Int
             var yend: Int
             var xend: Int
-            val iPlane = arrayOfNulls<ByteArray?>(5)
+            val iPlane = Array(5) { ByteArray(0) }
             var r: Int
             var g: Int
             var b: Int
@@ -982,14 +972,14 @@ object Codec {
                     yoff = y * bitmap.pixelsWide() * bpp
                     x = startX
                     while (x < xend) {
-                        r = iPlane[0].get(yoff + x * bpp + 0)
-                        g = iPlane[0].get(yoff + x * bpp + 1)
-                        b = iPlane[0].get(yoff + x * bpp + 2)
-                        a = iPlane[0].get(yoff + x * bpp + 3)
-                        iData.get(data_p++) = r.toByte()
-                        iData.get(data_p++) = g.toByte()
-                        iData.get(data_p++) = b.toByte()
-                        iData.get(data_p++) = a.toByte() //TODO:decide on either byte or char.
+                        r = iPlane[0][yoff + x * bpp + 0].toInt()
+                        g = iPlane[0][yoff + x * bpp + 1].toInt()
+                        b = iPlane[0][yoff + x * bpp + 2].toInt()
+                        a = iPlane[0][yoff + x * bpp + 3].toInt()
+                        iData[data_p++] = r.toByte()
+                        iData[data_p++] = g.toByte()
+                        iData[data_p++] = b.toByte()
+                        iData[data_p++] = a.toByte() //TODO:decide on either byte or char.
                         x++
                     }
                     y++
@@ -1001,13 +991,13 @@ object Codec {
                     yoff = y * bitmap.pixelsWide() * bpp
                     x = startX
                     while (x < xend) {
-                        r = iPlane[0].get(yoff + x * bpp + 0)
-                        g = iPlane[0].get(yoff + x * bpp + 1)
-                        b = iPlane[0].get(yoff + x * bpp + 2)
-                        iData.get(data_p++) = r.toByte()
-                        iData.get(data_p++) = g.toByte()
-                        iData.get(data_p++) = b.toByte()
-                        iData.get(data_p++) = 255.toByte()
+                        r = iPlane[0][yoff + x * bpp + 0].toInt()
+                        g = iPlane[0][yoff + x * bpp + 1].toInt()
+                        b = iPlane[0][yoff + x * bpp + 2].toInt()
+                        iData[data_p++] = r.toByte()
+                        iData[data_p++] = g.toByte()
+                        iData[data_p++] = b.toByte()
+                        iData[data_p++] = 255.toByte()
                         x++
                     }
                     y++
@@ -1015,7 +1005,7 @@ object Codec {
             }
         }
 
-        fun ComputeMotionBlock(old: ByteArray?, bnew: ByteArray?, size: Int): Boolean {
+        fun ComputeMotionBlock(old: ByteArray, bnew: ByteArray, size: Int): Boolean {
             var i: Int
             var j: Int
             var snr: Int
@@ -1038,10 +1028,10 @@ object Codec {
                 i++
             }
             snr /= size * size
-            return snr <= Codec.MOTION_MIN
+            return snr <= MOTION_MIN
         }
 
-        fun VqData8(cel: ByteArray?, pquad: quadcel?) {
+        fun VqData8(cel: ByteArray, pquad: quadcel) {
             val tempImage = ByteArray(8 * 8 * 4)
             var x: Int
             var y: Int
@@ -1055,14 +1045,14 @@ object Codec {
                 while (x < 4) {
                     temp = y * 64 + x * 8
                     tempImage[i++] =
-                        ((cel.get(temp + 0) + cel.get(temp + 4) + cel.get(temp + 32) + cel.get(temp + 36)) / 4).toByte()
+                        ((cel[temp + 0] + cel[temp + 4] + cel[temp + 32] + cel[temp + 36]) / 4).toByte()
                     tempImage[i++] =
-                        ((cel.get(temp + 1) + cel.get(temp + 5) + cel.get(temp + 33) + cel.get(temp + 37)) / 4).toByte()
+                        ((cel[temp + 1] + cel[temp + 5] + cel[temp + 33] + cel[temp + 37]) / 4).toByte()
                     tempImage[i++] =
-                        ((cel.get(temp + 2) + cel.get(temp + 6) + cel.get(temp + 34) + cel.get(temp + 38)) / 4).toByte()
+                        ((cel[temp + 2] + cel[temp + 6] + cel[temp + 34] + cel[temp + 38]) / 4).toByte()
                     if (dimension4 == 64) {
                         tempImage[i++] =
-                            ((cel.get(temp + 3) + cel.get(temp + 7) + cel.get(temp + 35) + cel.get(temp + 39)) / 4).toByte()
+                            ((cel[temp + 3] + cel[temp + 7] + cel[temp + 35] + cel[temp + 39]) / 4).toByte()
                     }
                     x++
                 }
@@ -1076,11 +1066,11 @@ object Codec {
                 while (x < 8) {
                     temp = y * 32 + x * 4
                     i = y / 2 * 4 * (dimension2 / 4) + x / 2 * (dimension2 / 4)
-                    tempImage[temp + 0] = codebook4.get(best).get(i + 0) as Byte
-                    tempImage[temp + 1] = codebook4.get(best).get(i + 1) as Byte
-                    tempImage[temp + 2] = codebook4.get(best).get(i + 2) as Byte
+                    tempImage[temp + 0] = codebook4[best][i + 0] as Byte
+                    tempImage[temp + 1] = codebook4[best][i + 1] as Byte
+                    tempImage[temp + 2] = codebook4[best][i + 2] as Byte
                     if (dimension4 == 64) {
-                        tempImage[temp + 3] = codebook4.get(best).get(i + 3) as Byte
+                        tempImage[temp + 3] = codebook4[best][i + 3] as Byte
                     } else {
                         tempImage[temp + 3] = 255.toByte()
                     }
@@ -1091,7 +1081,7 @@ object Codec {
             pquad.snr[QuadDefs.SLD] = Snr(cel, tempImage, 8) + 1.0f
         }
 
-        fun VqData4(cel: ByteArray?, pquad: quadcel?) {
+        fun VqData4(cel: ByteArray, pquad: quadcel) {
             val tempImage = ByteArray(64)
             var i: Int
             val best: Int
@@ -1105,11 +1095,11 @@ object Codec {
             }
             i = 0
             while (i < 16) {
-                tempImage[i * bpp + 0] = cel.get(i * 4 + 0)
-                tempImage[i * bpp + 1] = cel.get(i * 4 + 1)
-                tempImage[i * bpp + 2] = cel.get(i * 4 + 2)
+                tempImage[i * bpp + 0] = cel[i * 4 + 0]
+                tempImage[i * bpp + 1] = cel[i * 4 + 1]
+                tempImage[i * bpp + 2] = cel[i * 4 + 2]
                 if (dimension4 == 64) {
-                    tempImage[i * bpp + 3] = cel.get(i * 4 + 3)
+                    tempImage[i * bpp + 3] = cel[i * 4 + 3]
                 }
                 i++
             }
@@ -1117,11 +1107,11 @@ object Codec {
             pquad.patten[0] = best
             i = 0
             while (i < 16) {
-                tempImage[i * 4 + 0] = codebook4.get(best).get(i * bpp + 0) as Byte
-                tempImage[i * 4 + 1] = codebook4.get(best).get(i * bpp + 1) as Byte
-                tempImage[i * 4 + 2] = codebook4.get(best).get(i * bpp + 2) as Byte
+                tempImage[i * 4 + 0] = codebook4[best][i * bpp + 0] as Byte
+                tempImage[i * 4 + 1] = codebook4[best][i * bpp + 1] as Byte
+                tempImage[i * 4 + 2] = codebook4[best][i * bpp + 2] as Byte
                 if (dimension4 == 64) {
-                    tempImage[i * 4 + 3] = codebook4.get(best).get(i * bpp + 3) as Byte
+                    tempImage[i * 4 + 3] = codebook4[best][i * bpp + 3] as Byte
                 } else {
                     tempImage[i * 4 + 3] = 255.toByte()
                 }
@@ -1130,11 +1120,11 @@ object Codec {
             pquad.snr[QuadDefs.PAT] = Snr(cel, tempImage, 4)
         }
 
-        fun VqData2(cel: ByteArray?, pquad: quadcel?) {
+        fun VqData2(cel: ByteArray, pquad: quadcel) {
             val tempImage = ByteArray(16)
             val tempOut = ByteArray(64)
             var i: Int
-            val j: Int
+            var j: Int
             var best: Int
             var x: Int
             var y: Int
@@ -1156,11 +1146,11 @@ object Codec {
                     while (y < yy + 2) {
                         x = xx
                         while (x < xx + 2) {
-                            tempImage[i++] = cel.get(y * 16 + x * 4 + 0)
-                            tempImage[i++] = cel.get(y * 16 + x * 4 + 1)
-                            tempImage[i++] = cel.get(y * 16 + x * 4 + 2)
+                            tempImage[i++] = cel[y * 16 + x * 4 + 0]
+                            tempImage[i++] = cel[y * 16 + x * 4 + 1]
+                            tempImage[i++] = cel[y * 16 + x * 4 + 2]
                             if (dimension4 == 64) {
-                                tempImage[i++] = cel.get(y * 16 + x * 4 + 3)
+                                tempImage[i++] = cel[y * 16 + x * 4 + 3]
                             }
                             x++
                         }
@@ -1173,11 +1163,11 @@ object Codec {
                     while (y < yy + 2) {
                         x = xx
                         while (x < xx + 2) {
-                            tempOut[y * 16 + x * 4 + 0] = codebook2.get(best).get(i++) as Byte
-                            tempOut[y * 16 + x * 4 + 1] = codebook2.get(best).get(i++) as Byte
-                            tempOut[y * 16 + x * 4 + 2] = codebook2.get(best).get(i++) as Byte
+                            tempOut[y * 16 + x * 4 + 0] = codebook2[best][i++] as Byte
+                            tempOut[y * 16 + x * 4 + 1] = codebook2[best][i++] as Byte
+                            tempOut[y * 16 + x * 4 + 2] = codebook2[best][i++] as Byte
                             if (dimension4 == 64) {
-                                tempOut[y * 16 + x * 4 + 3] = codebook2.get(best).get(i++) as Byte
+                                tempOut[y * 16 + x * 4 + 3] = codebook2[best][i++] as Byte
                             } else {
                                 tempOut[y * 16 + x * 4 + 3] = 255.toByte()
                             }
@@ -1200,7 +1190,7 @@ object Codec {
             return dxMean
         }
 
-        fun SetPreviousImage(filename: String?, timage: NSBitmapImageRep?) {
+        fun SetPreviousImage(filename: String, timage: NSBitmapImageRep) {
 //	if (previousImage[0]) {
 //		delete previousImage[0];
 //	}
@@ -1212,32 +1202,32 @@ object Codec {
 //	previousImage[0] = new NSBitmapImageRep( );//TODO:remove unimportant stuff.
 //	previousImage[1] = new NSBitmapImageRep( );
             whichFrame = 1
-            previousImage.get(0) = timage
-            previousImage.get(1) = timage
-            pixelsHigh = previousImage.get(0).pixelsHigh()
-            pixelsWide = previousImage.get(0).pixelsWide()
+            previousImage[0] = timage
+            previousImage[1] = timage
+            pixelsHigh = previousImage[0]!!.pixelsHigh()
+            pixelsWide = previousImage[0]!!.pixelsWide()
             Common.common.Printf("setPreviousImage: %dx%d\n", pixelsWide, pixelsHigh)
         }
 
         fun BestCodeword( /*unsigned*/
-            tempvector: ByteArray?, dimension: Int, codebook: Array<DoubleArray?>?
+            tempvector: ByteArray, dimension: Int, codebook: Array<DoubleArray>
         ): Int {
             var   /*VQDATA*/dist: Double
             var   /*VQDATA*/bestDist = Double.MAX_VALUE //HUGE;
             val tempvq = DoubleArray(64)
             var bestIndex = -1
             for (i in 0 until dimension) {
-                tempvq[i] = tempvector.get(i) and 0xFF //unsign
+                tempvq[i] = (tempvector[i].toInt() and 0xFF).toDouble() //unsign
             }
             for (i in 0..255) {
                 dist = 0.0
                 var x = 0
                 while (x < dimension) {
-                    val   /*VQDATA*/r0 = codebook.get(i).get(x)
+                    val   /*VQDATA*/r0 = codebook[i][x]
                     val   /*VQDATA*/r1 = tempvq[x]
-                    val   /*VQDATA*/g0 = codebook.get(i).get(x + 1)
+                    val   /*VQDATA*/g0 = codebook[i][x + 1]
                     val   /*VQDATA*/g1 = tempvq[x + 1]
-                    val   /*VQDATA*/b0 = codebook.get(i).get(x + 2)
+                    val   /*VQDATA*/b0 = codebook[i][x + 2]
                     val   /*VQDATA*/b1 = tempvq[x + 2]
                     dist += (r0 - r1) * (r0 - r1)
                     if (dist >= bestDist) {
@@ -1267,9 +1257,9 @@ object Codec {
         private fun VQ(
             numEntries: Int,
             dimension: Int,
-            vectors: ByteArray?,
-            snr: FloatArray?,
-            codebook: Array<DoubleArray?>?,
+            vectors: ByteArray,
+            snr: FloatArray,
+            codebook: Array<DoubleArray>,
             optimize: Boolean
         ) {
             val startMsec = win_shared.Sys_Milliseconds()
@@ -1279,7 +1269,7 @@ object Codec {
                 //
                 for (i in 0 until numEntries) {
                     for (j in 0 until dimension) {
-                        codebook.get(i).get(j) = vectors.get(j + i * dimension)
+                        codebook[i][j] = vectors[j + i * dimension].toDouble()
                     }
                 }
                 return
@@ -1320,7 +1310,7 @@ object Codec {
                         ) {
                             inuse[j] = false
                             numFinalEntries--
-                            snr.get(i) += snr.get(j)
+                            snr[i] += snr[j]
                         }
                     }
                     j++
@@ -1382,13 +1372,13 @@ object Codec {
                                     // dist += idMath::Sqrt16( (r0-r1)*(r0-r1) + (g0-g1)*(g0-g1) + (b0-b1)*(b0-b1) );
 // #else
                                     // JDC: optimization
-                                    val dr = vectors.get(ibase + x) - vectors.get(jbase + x) and 0xFFFF
-                                    val dg = vectors.get(ibase + x + 1) - vectors.get(jbase + x + 1) and 0xFFFF
-                                    val db = vectors.get(ibase + x + 2) - vectors.get(jbase + x + 2) and 0xFFFF
+                                    val dr = vectors[ibase + x] - vectors[jbase + x] and 0xFFFF
+                                    val dg = vectors[ibase + x + 1] - vectors[jbase + x + 1] and 0xFFFF
+                                    val db = vectors[ibase + x + 2] - vectors[jbase + x + 2] and 0xFFFF
                                     dist += idMath.Sqrt16((dr * dr + dg * dg + db * db).toFloat()).toDouble()
                                     x += 3
                                 }
-                                simport = (snr.get(i) * snr.get(j)).toDouble()
+                                simport = (snr[i] * snr[j]).toDouble()
                                 dist *= simport
                                 if (dist < bestDist) {
                                     bestDist = dist
@@ -1418,7 +1408,7 @@ object Codec {
                         while (i < aentries) {
                             if (inuse[indexes[i]] && inuse[indexet[i]]) {
                                 if (snrs[i] < bestDist) {
-                                    bestDist = snrs[i]
+                                    bestDist = snrs[i].toDouble()
                                     bestIndex = indexes[i]
                                     bestOtherIndex = indexet[i]
                                 }
@@ -1463,7 +1453,7 @@ object Codec {
                                 }
                                 dist = 0.0
                                 jbase = j * dimension
-                                simport = (snr.get(i) * snr.get(j)).toDouble()
+                                simport = (snr[i] * snr[j]).toDouble()
                                 val scaledBestDist = (bestDist / simport).toFloat()
                                 x = 0
                                 while (x < dimension) {
@@ -1478,9 +1468,9 @@ object Codec {
                                     // dist += idMath::Sqrt16( (r0-r1)*(r0-r1) + (g0-g1)*(g0-g1) + (b0-b1)*(b0-b1) );
 // #else
                                     // JDC: optimization
-                                    val dr = vectors.get(ibase + x) - vectors.get(jbase + x) and 0xFFFF
-                                    val dg = vectors.get(ibase + x + 1) - vectors.get(jbase + x + 1) and 0xFFFF
-                                    val db = vectors.get(ibase + x + 2) - vectors.get(jbase + x + 2) and 0xFFFF
+                                    val dr = vectors[ibase + x] - vectors[jbase + x] and 0xFFFF
+                                    val dg = vectors[ibase + x + 1] - vectors[jbase + x + 1] and 0xFFFF
+                                    val db = vectors[ibase + x + 2] - vectors[jbase + x + 2] and 0xFFFF
                                     dist += idMath.Sqrt16((dr * dr + dg * dg + db * db).toFloat()).toDouble()
                                     if (dist > scaledBestDist) {
                                         break
@@ -1507,7 +1497,7 @@ object Codec {
                     //
                     inuse[bestIndex] = false
                     numFinalEntries--
-                    snr.get(bestOtherIndex) += snr.get(bestIndex)
+                    snr[bestOtherIndex] += snr[bestIndex]
                     if (numFinalEntries and 511 == 0) {
                         Common.common.Printf("VQ: has %d entries to process\n", numFinalEntries)
                         Session.Companion.session.UpdateScreen()
@@ -1524,7 +1514,7 @@ object Codec {
                     ibase = i * dimension
                     x = 0
                     while (x < dimension) {
-                        codebook.get(onEntry).get(x) = vectors.get(ibase + x) and 0xFF
+                        codebook[onEntry][x] = (vectors[ibase + x].toInt() and 0xFF).toDouble()
                         x++
                     }
                     if (onEntry == 0) {
@@ -1541,7 +1531,7 @@ object Codec {
             Common.common.Printf("VQ took %d msec\n", endMsec - startMsec)
         }
 
-        private fun Sort(list: FloatArray?, intIndex: IntArray?, numElements: Int) {
+        private fun Sort(list: FloatArray, intIndex: IntArray, numElements: Int) {
             // 3 is a fairly good choice (Sedgewick)
             var c: Int
             var d: Int
@@ -1558,15 +1548,15 @@ object Codec {
                     found = false
                     d = c - stride
                     while (d >= 0 && !found) { // move to left until correct place
-                        if (list.get(d) < list.get(d + stride)) {
+                        if (list[d] < list[d + stride]) {
                             var ftemp: Float
                             var itemp: Int
-                            ftemp = list.get(d)
-                            list.get(d) = list.get(d + stride)
-                            list.get(d + stride) = ftemp
-                            itemp = intIndex.get(d)
-                            intIndex.get(d) = intIndex.get(d + stride)
-                            intIndex.get(d + stride) = itemp
+                            ftemp = list[d]
+                            list[d] = list[d + stride]
+                            list[d + stride] = ftemp
+                            itemp = intIndex[d]
+                            intIndex[d] = intIndex[d + stride]
+                            intIndex[d + stride] = itemp
                             d -= stride // jump by stride factor
                         } else {
                             found = true
@@ -1577,7 +1567,7 @@ object Codec {
             }
         }
 
-        private fun Segment(alist: IntArray?, flist: FloatArray?, numElements: Int, rmse: Float) {
+        private fun Segment(alist: IntArray, flist: FloatArray, numElements: Int, rmse: Float) {
             var x: Int
             var y: Int
             var yy: Int
@@ -1595,16 +1585,16 @@ object Codec {
             var i: Int
             val len: Int
             val find = ByteArray(16)
-            var lineout: ByteArray?
-            var cbook: ByteArray?
-            var src: ByteArray?
-            var dst: ByteArray?
+            var lineout: ByteArray
+            var cbook: ByteArray
+            var src: ByteArray
+            var dst: ByteArray
             var fy: Float
             var fcr: Float
             var fcb: Float
-            var fpcb: idFile?
+            var fpcb: idFile
             //	char []cbFile = new char[256], tempcb= new char[256], temptb= new char[256];
-            var cbFile: String? = ""
+            var cbFile: String = ""
             val tempcb: String
             val temptb: String
             var doopen: Boolean
@@ -1645,7 +1635,7 @@ object Codec {
             cbFile = TempDump.replaceByIndex('0', onf, cbFile)
             lineout = ByteArray(4 * 1024) // Mem_ClearedAlloc(4 * 1024);
             Common.common.Printf("trying %s\n", cbFile)
-            fpcb = FileSystem_h.fileSystem.OpenFileRead(cbFile)
+            fpcb = FileSystem_h.fileSystem.OpenFileRead(cbFile)!!
             if (TempDump.NOT(fpcb)) {
                 doopen = true
                 Common.common.Printf("failed....\n")
@@ -1672,44 +1662,44 @@ object Codec {
                 while (x < 256) {
                     y = 0
                     while (y < dimension2) {
-                        codebook2.get(x).get(y) = 0
+                        codebook2[x][y] = 0.0
                         y++
                     }
                     y = 0
                     while (y < dimension4) {
-                        codebook4.get(x).get(y) = 0
+                        codebook4[x][y] = 0.0
                         y++
                     }
                     x++
                 }
-                bpp = image.samplesPerPixel()
+                bpp = image!!.samplesPerPixel()
                 cbook =
-                    ByteArray(3 * image.pixelsWide() * image.pixelsHigh()) // Mem_ClearedAlloc(3 * image.pixelsWide() * image.pixelsHigh());
-                var snrBook: FloatArray? =
-                    FloatArray(image.pixelsWide() * image.pixelsHigh()) // Mem_ClearedAlloc(image.pixelsWide() * image.pixelsHigh());
+                    ByteArray(3 * image!!.pixelsWide() * image!!.pixelsHigh()) // Mem_ClearedAlloc(3 * image.pixelsWide() * image.pixelsHigh());
+                var snrBook: FloatArray =
+                    FloatArray(image!!.pixelsWide() * image!!.pixelsHigh()) // Mem_ClearedAlloc(image.pixelsWide() * image.pixelsHigh());
                 dst = cbook
                 var numEntries = 0
                 var s_p = 0
                 var d_p = 0
                 i = 0
                 while (i < numQuadCels) {
-                    if (qStatus.get(i).size.toInt() == 8 && qStatus.get(i).rsnr >= Codec.MIN_SNR * 4) {
-                        y = qStatus.get(i).yat
-                        while (y < qStatus.get(i).yat + 8) {
-                            x = qStatus.get(i).xat
-                            while (x < qStatus.get(i).xat + 8) {
-                                if (qStatus.get(i).rsnr == 9999.0f) {
-                                    snrBook.get(numEntries) = 1.0f
+                    if (qStatus[i].size.toInt() == 8 && qStatus[i].rsnr >= MIN_SNR * 4) {
+                        y = qStatus[i].yat
+                        while (y < qStatus[i].yat + 8) {
+                            x = qStatus[i].xat
+                            while (x < qStatus[i].xat + 8) {
+                                if (qStatus[i].rsnr == 9999.0f) {
+                                    snrBook[numEntries] = 1.0f
                                 } else {
-                                    snrBook.get(numEntries) = qStatus.get(i).rsnr
+                                    snrBook[numEntries] = qStatus[i].rsnr
                                 }
                                 numEntries++
-                                src = image.bitmapData()
+                                src = image!!.bitmapData()
                                 yy = y
                                 while (yy < y + 4) {
                                     xx = x
                                     while (xx < x + 4) {
-                                        s_p = yy * (bpp * image.pixelsWide()) + xx * bpp
+                                        s_p = yy * (bpp * image!!.pixelsWide()) + xx * bpp
                                         //						memcpy( dst, src, 3); 
                                         System.arraycopy(src, s_p, dst, d_p, 3)
                                         //                                                dst += 3;
@@ -1735,15 +1725,15 @@ object Codec {
                     while (y < 4) {
                         x = 0
                         while (x < 4) {
-                            snrBook.get(numEntries) = 1.0f
+                            snrBook[numEntries] = 1.0f
                             numEntries++
                             yy = y
                             while (yy < y + 2) {
                                 xx = x
                                 while (xx < x + 2) {
-                                    dst[d_p + 0] = codebook4.get(i).get(yy * 12 + xx * 3 + 0) as Byte
-                                    dst[d_p + 1] = codebook4.get(i).get(yy * 12 + xx * 3 + 1) as Byte
-                                    dst[d_p + 2] = codebook4.get(i).get(yy * 12 + xx * 3 + 2) as Byte
+                                    dst[d_p + 0] = codebook4[i][yy * 12 + xx * 3 + 0] as Byte
+                                    dst[d_p + 1] = codebook4[i][yy * 12 + xx * 3 + 1] as Byte
+                                    dst[d_p + 2] = codebook4[i][yy * 12 + xx * 3 + 2] as Byte
                                     d_p += 3
                                     xx++
                                 }
@@ -1757,8 +1747,6 @@ object Codec {
                 }
                 Common.common.Printf("segment: %d 2x2 cels to vq\n", numEntries)
                 VQ(numEntries, dimension2, cbook, snrBook, codebook2, false)
-                cbook = null //Mem_Free(cbook);
-                snrBook = null //Mem_Free(snrBook);
                 index = 0
                 onf = 0
                 while (onf < 256) {
@@ -1767,20 +1755,20 @@ object Codec {
                     fcr = fcb
                     x = 0
                     while (x < 4) {
-                        fy = GDefs.RMULT * codebook2.get(onf).get(numc + 0) as Float + GDefs.GMULT * codebook2.get(onf)
-                            .get(numc + 1) as Float + GDefs.BMULT * codebook2.get(onf).get(numc + 2) as Float + 0.5f
+                        fy =
+                            GDefs.RMULT * codebook2[onf][numc + 0] as Float + GDefs.GMULT * codebook2[onf][numc + 1] as Float + GDefs.BMULT * codebook2[onf][numc + 2] as Float + 0.5f
                         if (fy < 0) {
                             fy = 0f
                         }
                         if (fy > 255) {
                             fy = 255f
                         }
-                        fcr += GDefs.RIEMULT * codebook2.get(onf).get(numc + 0) as Float
-                        fcr += GDefs.GIEMULT * codebook2.get(onf).get(numc + 1) as Float
-                        fcr += GDefs.BIEMULT * codebook2.get(onf).get(numc + 2) as Float
-                        fcb += GDefs.RQEMULT * codebook2.get(onf).get(numc + 0) as Float
-                        fcb += GDefs.GQEMULT * codebook2.get(onf).get(numc + 1) as Float
-                        fcb += GDefs.BQEMULT * codebook2.get(onf).get(numc + 2) as Float
+                        fcr += GDefs.RIEMULT * codebook2[onf][numc + 0] as Float
+                        fcr += GDefs.GIEMULT * codebook2[onf][numc + 1] as Float
+                        fcr += GDefs.BIEMULT * codebook2[onf][numc + 2] as Float
+                        fcb += GDefs.RQEMULT * codebook2[onf][numc + 0] as Float
+                        fcb += GDefs.GQEMULT * codebook2[onf][numc + 1] as Float
+                        fcb += GDefs.BQEMULT * codebook2[onf][numc + 2] as Float
                         lineout[index++] = fy.toInt().toByte()
                         numc += 3
                         x++
@@ -1814,12 +1802,12 @@ object Codec {
                             yy = y
                             while (yy < y + 2) {
                                 temp = yy * dimension2 + x * (dimension2 / 4)
-                                find[numc++] = (codebook4.get(onf).get(temp + 0) + 0.50f).toInt().toByte()
-                                find[numc++] = (codebook4.get(onf).get(temp + 1) + 0.50f).toInt().toByte()
-                                find[numc++] = (codebook4.get(onf).get(temp + 2) + 0.50f).toInt().toByte()
-                                find[numc++] = (codebook4.get(onf).get(temp + 3) + 0.50f).toInt().toByte()
-                                find[numc++] = (codebook4.get(onf).get(temp + 4) + 0.50f).toInt().toByte()
-                                find[numc++] = (codebook4.get(onf).get(temp + 5) + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 0] + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 1] + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 2] + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 3] + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 4] + 0.50f).toInt().toByte()
+                                find[numc++] = (codebook4[onf][temp + 5] + 0.50f).toInt().toByte()
                                 yy++
                             }
                             lineout[index++] = BestCodeword(find, dimension2, codebook2).toByte()
@@ -1829,7 +1817,7 @@ object Codec {
                     }
                     onf++
                 }
-                fpcb = FileSystem_h.fileSystem.OpenFileWrite(cbFile)
+                fpcb = FileSystem_h.fileSystem.OpenFileWrite(cbFile)!!
                 Common.common.Printf("made up %d entries\n", index)
                 fpcb.Write(ByteBuffer.wrap(lineout), index)
                 FileSystem_h.fileSystem.CloseFile(fpcb)
@@ -1838,27 +1826,27 @@ object Codec {
             y = 0
             while (y < 256) {
                 x = y * 6
-                y0 = lineout[x++]
-                y1 = lineout[x++]
-                y2 = lineout[x++]
-                y3 = lineout[x++]
-                cb = lineout[x++]
+                y0 = lineout[x++].toFloat()
+                y1 = lineout[x++].toFloat()
+                y2 = lineout[x++].toFloat()
+                y3 = lineout[x++].toFloat()
+                cb = lineout[x++].toFloat()
                 cb -= 128f
-                cr = lineout[x]
+                cr = lineout[x].toFloat()
                 cr -= 128f
                 x = 0
-                codebook2.get(y).get(x++) = Codec.glimit(y0 + 1.40200f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y0 - 0.34414f * cb - 0.71414f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y0 + 1.77200f * cb)
-                codebook2.get(y).get(x++) = Codec.glimit(y1 + 1.40200f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y1 - 0.34414f * cb - 0.71414f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y1 + 1.77200f * cb)
-                codebook2.get(y).get(x++) = Codec.glimit(y2 + 1.40200f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y2 - 0.34414f * cb - 0.71414f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y2 + 1.77200f * cb)
-                codebook2.get(y).get(x++) = Codec.glimit(y3 + 1.40200f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y3 - 0.34414f * cb - 0.71414f * cr)
-                codebook2.get(y).get(x++) = Codec.glimit(y3 + 1.77200f * cb)
+                codebook2[y][x++] = glimit(y0 + 1.40200f * cr).toDouble()
+                codebook2[y][x++] = glimit(y0 - 0.34414f * cb - 0.71414f * cr).toDouble()
+                codebook2[y][x++] = glimit(y0 + 1.77200f * cb).toDouble()
+                codebook2[y][x++] = glimit(y1 + 1.40200f * cr).toDouble()
+                codebook2[y][x++] = glimit(y1 - 0.34414f * cb - 0.71414f * cr).toDouble()
+                codebook2[y][x++] = glimit(y1 + 1.77200f * cb).toDouble()
+                codebook2[y][x++] = glimit(y2 + 1.40200f * cr).toDouble()
+                codebook2[y][x++] = glimit(y2 - 0.34414f * cb - 0.71414f * cr).toDouble()
+                codebook2[y][x++] = glimit(y2 + 1.77200f * cb).toDouble()
+                codebook2[y][x++] = glimit(y3 + 1.40200f * cr).toDouble()
+                codebook2[y][x++] = glimit(y3 - 0.34414f * cb - 0.71414f * cr).toDouble()
+                codebook2[y][x++] = glimit(y3 + 1.77200f * cb).toDouble()
                 y++
             }
             index = 6 * 256
@@ -1868,17 +1856,17 @@ object Codec {
                 while (y < 4) {
                     x = 0
                     while (x < 4) {
-                        best = lineout[index++]
+                        best = lineout[index++].toInt()
                         numc = 0
                         yy = y
                         while (yy < y + 2) {
                             temp = yy * dimension2 + x * (dimension2 / 4)
-                            codebook4.get(onf).get(temp + 0) = codebook2.get(best).get(numc++) //r
-                            codebook4.get(onf).get(temp + 1) = codebook2.get(best).get(numc++) //g
-                            codebook4.get(onf).get(temp + 2) = codebook2.get(best).get(numc++) //b
-                            codebook4.get(onf).get(temp + 3) = codebook2.get(best).get(numc++) //r a
-                            codebook4.get(onf).get(temp + 4) = codebook2.get(best).get(numc++) //g r
-                            codebook4.get(onf).get(temp + 5) = codebook2.get(best).get(numc++) //b g
+                            codebook4[onf][temp + 0] = codebook2[best][numc++] //r
+                            codebook4[onf][temp + 1] = codebook2[best][numc++] //g
+                            codebook4[onf][temp + 2] = codebook2[best][numc++] //b
+                            codebook4[onf][temp + 3] = codebook2[best][numc++] //r a
+                            codebook4[onf][temp + 4] = codebook2[best][numc++] //g r
+                            codebook4[onf][temp + 5] = codebook2[best][numc++] //b g
                             yy++
                         }
                         x += 2
@@ -1889,18 +1877,17 @@ object Codec {
             }
             Roq.theRoQ.WriteCodeBook(lineout)
             //PrepareCodeBook();
-            lineout = null //Mem_Free(lineout);
         }
 
-        private fun LowestQuad(qtemp: quadcel?, status: IntArray?, snr: FloatArray?, bweigh: Int) {
+        private fun LowestQuad(qtemp: quadcel, status: IntArray, snr: FloatArray, bweigh: Int) {
             var wtemp: Float
             val quickadd = FloatArray(QuadDefs.DEAD)
             var i: Int
-            quickadd[QuadDefs.CCC] = 1
-            quickadd[QuadDefs.SLD] = 1
-            quickadd[QuadDefs.MOT] = 1
-            quickadd[QuadDefs.FCC] = 1
-            quickadd[QuadDefs.PAT] = 1
+            quickadd[QuadDefs.CCC] = 1f
+            quickadd[QuadDefs.SLD] = 1f
+            quickadd[QuadDefs.MOT] = 1f
+            quickadd[QuadDefs.FCC] = 1f
+            quickadd[QuadDefs.PAT] = 1f
             /*
              if (slop > theRoQ->NormalFrameSize()) {
              quickadd[CCC] = 0.5f;
@@ -1910,18 +1897,18 @@ object Codec {
             i = QuadDefs.DEAD - 1
             while (i > 0) {
                 if (qtemp.snr[i] * quickadd[i] < wtemp) {
-                    status.get(0) = i
-                    snr.get(0) = qtemp.snr[i]
+                    status[0] = i
+                    snr[0] = qtemp.snr[i]
                     wtemp = qtemp.snr[i] * quickadd[i]
                 }
                 i--
             }
             if (qtemp.mark) {
-                status.get(0) = QuadDefs.MOT
+                status[0] = QuadDefs.MOT
             }
         }
 
-        private fun MakePreviousImage(pquad: Array<quadcel?>?) {
+        private fun MakePreviousImage(pquad: Array<quadcel>) {
             var i: Int
             var dy: Int
             var dx: Int
@@ -1933,61 +1920,61 @@ object Codec {
             val pWide: Int
             var x: Int
             var y: Int
-            val rgbmap: ByteArray?
-            var idataA: ByteArray?
-            val fccdictionary: ByteArray?
+            val rgbmap: ByteArray
+            var idataA: ByteArray
+            val fccdictionary: ByteArray
             var diff: Boolean
             i = 0
             while (i < 256) {
-                used4.get(i) = false
-                used2.get(i) = used4.get(i)
+                used4[i] = false
+                used2[i] = used4[i]
                 i++
             }
             pWide = pixelsWide and 0xfff0
-            if (TempDump.NOT(previousImage.get(0))) {
-                previousImage.get(0) = NSBitmapImageRep(pWide, pixelsHigh and 0xfff0)
-                previousImage.get(1) = NSBitmapImageRep(pWide, pixelsHigh and 0xfff0)
+            if (TempDump.NOT(previousImage[0])) {
+                previousImage[0] = NSBitmapImageRep(pWide, pixelsHigh and 0xfff0)
+                previousImage[1] = NSBitmapImageRep(pWide, pixelsHigh and 0xfff0)
             }
-            rgbmap = previousImage.get(whichFrame and 1).bitmapData()
+            rgbmap = previousImage[whichFrame and 1]!!.bitmapData()
             fccdictionary = if (whichFrame and 1 == 1) {
-                previousImage.get(0).bitmapData()
+                previousImage[0]!!.bitmapData()
             } else {
-                previousImage.get(1).bitmapData()
+                previousImage[1]!!.bitmapData()
             }
             idataA = ByteArray(16 * 16 * 4) // Mem_Alloc(16 * 16 * 4);
             i = 0
             while (i < numQuadCels) {
                 diff = false
-                size = pquad.get(i).size.toInt()
+                size = pquad[i].size.toInt()
                 if (size != 0) {
-                    when (pquad.get(i).status) {
+                    when (pquad[i].status) {
                         QuadDefs.DEP -> {}
                         QuadDefs.SLD -> {
-                            ind = pquad.get(i).patten[0]
-                            used4.get(ind) = true
+                            ind = pquad[i].patten[0]
+                            used4[ind] = true
                             dy = 0
                             while (dy < size) {
-                                pluck = ((dy + pquad.get(i).yat) * pWide + pquad.get(i).xat) * 4
+                                pluck = ((dy + pquad[i].yat) * pWide + pquad[i].xat) * 4
                                 dx = 0
                                 while (dx < size) {
                                     xx = (dy shr 1) * dimension2 + (dx shr 1) * (dimension2 / 4)
-                                    if (rgbmap[pluck + 0] != codebook4.get(ind).get(xx + 0)) {
+                                    if (rgbmap[pluck + 0].toDouble() != codebook4[ind][xx + 0]) {
                                         diff = true
                                     }
-                                    if (rgbmap[pluck + 1] != codebook4.get(ind).get(xx + 1)) {
+                                    if (rgbmap[pluck + 1].toDouble() != codebook4[ind][xx + 1]) {
                                         diff = true
                                     }
-                                    if (rgbmap[pluck + 2] != codebook4.get(ind).get(xx + 2)) {
+                                    if (rgbmap[pluck + 2].toDouble() != codebook4[ind][xx + 2]) {
                                         diff = true
                                     }
-                                    if (dimension4 == 64 && rgbmap[pluck + 3] != codebook4.get(ind).get(xx + 3)) {
+                                    if (dimension4 == 64 && rgbmap[pluck + 3].toDouble() != codebook4[ind][xx + 3]) {
                                         diff = true
                                     }
-                                    rgbmap[pluck + 0] = codebook4.get(ind).get(xx + 0) as Byte
-                                    rgbmap[pluck + 1] = codebook4.get(ind).get(xx + 1) as Byte
-                                    rgbmap[pluck + 2] = codebook4.get(ind).get(xx + 2) as Byte
+                                    rgbmap[pluck + 0] = codebook4[ind][xx + 0] as Byte
+                                    rgbmap[pluck + 1] = codebook4[ind][xx + 1] as Byte
+                                    rgbmap[pluck + 2] = codebook4[ind][xx + 2] as Byte
                                     if (dimension4 == 64) {
-                                        rgbmap[pluck + 3] = codebook4.get(ind).get(xx + 3) as Byte
+                                        rgbmap[pluck + 3] = codebook4[ind][xx + 3] as Byte
                                     } else {
                                         rgbmap[pluck + 3] = 255.toByte()
                                     }
@@ -2001,31 +1988,31 @@ object Codec {
                             }
                         }
                         QuadDefs.PAT -> {
-                            ind = pquad.get(i).patten[0]
-                            used4.get(ind) = true
+                            ind = pquad[i].patten[0]
+                            used4[ind] = true
                             dy = 0
                             while (dy < size) {
-                                pluck = ((dy + pquad.get(i).yat) * pWide + pquad.get(i).xat) * 4
+                                pluck = ((dy + pquad[i].yat) * pWide + pquad[i].xat) * 4
                                 dx = 0
                                 while (dx < size) {
                                     xx = dy * size * (dimension2 / 4) + dx * (dimension2 / 4)
-                                    if (rgbmap[pluck + 0] != codebook4.get(ind).get(xx + 0)) {
+                                    if (rgbmap[pluck + 0].toDouble() != codebook4[ind][xx + 0]) {
                                         diff = true
                                     }
-                                    if (rgbmap[pluck + 1] != codebook4.get(ind).get(xx + 1)) {
+                                    if (rgbmap[pluck + 1].toDouble() != codebook4[ind][xx + 1]) {
                                         diff = true
                                     }
-                                    if (rgbmap[pluck + 2] != codebook4.get(ind).get(xx + 2)) {
+                                    if (rgbmap[pluck + 2].toDouble() != codebook4[ind][xx + 2]) {
                                         diff = true
                                     }
-                                    if (dimension4 == 64 && rgbmap[pluck + 3] != codebook4.get(ind).get(xx + 3)) {
+                                    if (dimension4 == 64 && rgbmap[pluck + 3].toDouble() != codebook4[ind][xx + 3]) {
                                         diff = true
                                     }
-                                    rgbmap[pluck + 0] = codebook4.get(ind).get(xx + 0) as Byte
-                                    rgbmap[pluck + 1] = codebook4.get(ind).get(xx + 1) as Byte
-                                    rgbmap[pluck + 2] = codebook4.get(ind).get(xx + 2) as Byte
+                                    rgbmap[pluck + 0] = codebook4[ind][xx + 0] as Byte
+                                    rgbmap[pluck + 1] = codebook4[ind][xx + 1] as Byte
+                                    rgbmap[pluck + 2] = codebook4[ind][xx + 2] as Byte
                                     if (dimension4 == 64) {
-                                        rgbmap[pluck + 3] = codebook4.get(ind).get(xx + 3) as Byte
+                                        rgbmap[pluck + 3] = codebook4[ind][xx + 3] as Byte
                                     } else {
                                         rgbmap[pluck + 3] = 255.toByte()
                                     }
@@ -2044,33 +2031,32 @@ object Codec {
                             while (yy < 4) {
                                 xx = 0
                                 while (xx < 4) {
-                                    ind = pquad.get(i).patten[dx++]
-                                    used2.get(ind) = true
+                                    ind = pquad[i].patten[dx++]
+                                    used2[ind] = true
                                     dy = 0
                                     y = yy
                                     while (y < yy + 2) {
                                         x = xx
                                         while (x < xx + 2) {
-                                            pluck = ((y + pquad.get(i).yat) * pWide + (pquad.get(i).xat + x)) * 4
-                                            if (rgbmap[pluck + 0] != codebook2.get(ind).get(dy + 0)) {
+                                            pluck = ((y + pquad[i].yat) * pWide + (pquad[i].xat + x)) * 4
+                                            if (rgbmap[pluck + 0].toDouble() != codebook2[ind][dy + 0]) {
                                                 diff = true
                                             }
-                                            if (rgbmap[pluck + 1] != codebook2.get(ind).get(dy + 1)) {
+                                            if (rgbmap[pluck + 1].toDouble() != codebook2[ind][dy + 1]) {
                                                 diff = true
                                             }
-                                            if (rgbmap[pluck + 2] != codebook2.get(ind).get(dy + 2)) {
+                                            if (rgbmap[pluck + 2].toDouble() != codebook2[ind][dy + 2]) {
                                                 diff = true
                                             }
-                                            if (dimension4 == 64 && rgbmap[pluck + 3] != codebook2.get(ind)
-                                                    .get(dy + 3)
+                                            if (dimension4 == 64 && rgbmap[pluck + 3].toDouble() != codebook2[ind][dy + 3]
                                             ) {
                                                 diff = true
                                             }
-                                            rgbmap[pluck + 0] = codebook2.get(ind).get(dy + 0) as Byte
-                                            rgbmap[pluck + 1] = codebook2.get(ind).get(dy + 1) as Byte
-                                            rgbmap[pluck + 2] = codebook2.get(ind).get(dy + 2) as Byte
+                                            rgbmap[pluck + 0] = codebook2[ind][dy + 0] as Byte
+                                            rgbmap[pluck + 1] = codebook2[ind][dy + 1] as Byte
+                                            rgbmap[pluck + 2] = codebook2[ind][dy + 2] as Byte
                                             if (dimension4 == 64) {
-                                                rgbmap[pluck + 3] = codebook2.get(ind).get(dy + 3) as Byte
+                                                rgbmap[pluck + 3] = codebook2[ind][dy + 3] as Byte
                                                 dy += 4
                                             } else {
                                                 rgbmap[pluck + 3] = 255.toByte()
@@ -2104,20 +2090,20 @@ object Codec {
                             }
                         }
                         QuadDefs.FCC -> {
-                            dx = pquad.get(i).xat - ((pquad.get(i).domain shr 8) - 128)
-                            dy = pquad.get(i).yat - ((pquad.get(i).domain and 0xff) - 128)
-                            if (image.pixelsWide() == image.pixelsHigh() * 4) {
-                                dx = pquad.get(i).xat - ((pquad.get(i).domain shr 8) - 128) * 2
+                            dx = pquad[i].xat - ((pquad[i].domain shr 8) - 128)
+                            dy = pquad[i].yat - ((pquad[i].domain and 0xff) - 128)
+                            if (image!!.pixelsWide() == image!!.pixelsHigh() * 4) {
+                                dx = pquad[i].xat - ((pquad[i].domain shr 8) - 128) * 2
                             }
                             if (Roq.theRoQ.Scaleable()) {
-                                dx = pquad.get(i).xat - ((pquad.get(i).domain shr 8) - 128) * 2
-                                dy = pquad.get(i).yat - ((pquad.get(i).domain and 0xff) - 128) * 2
+                                dx = pquad[i].xat - ((pquad[i].domain shr 8) - 128) * 2
+                                dy = pquad[i].yat - ((pquad[i].domain and 0xff) - 128) * 2
                             }
                             //				if (pquad[i].yat == 0) common->Printf("dx = %d, dy = %d, xat = %d\n", dx, dy, pquad[i].xat);
                             ind = (dy * pWide + dx) * 4
                             dy = 0
                             while (dy < size) {
-                                pluck = ((dy + pquad.get(i).yat) * pWide + pquad.get(i).xat) * 4
+                                pluck = ((dy + pquad[i].yat) * pWide + pquad[i].xat) * 4
                                 dx = 0
                                 while (dx < size) {
                                     if (rgbmap[pluck + 0] != fccdictionary[ind + 0]) {
@@ -2150,9 +2136,9 @@ object Codec {
             if (whichFrame == 0) {
 //			memcpy( previousImage[1].bitmapData(), previousImage[0].bitmapData(), pWide*(pixelsHigh & 0xfff0)*4);
                 System.arraycopy(
-                    previousImage.get(0).bitmapData(),
+                    previousImage[0]!!.bitmapData(),
                     0,
-                    previousImage.get(1).bitmapData(),
+                    previousImage[1]!!.bitmapData(),
                     0,
                     pWide * (pixelsHigh and 0xfff0) * 4
                 )
@@ -2161,10 +2147,10 @@ object Codec {
             y = 0
             i = 0
             while (i < 256) {
-                if (used4.get(i)) {
+                if (used4[i]) {
                     x++
                 }
-                if (used2.get(i)) {
+                if (used2[i]) {
                     y++
                 }
                 i++
@@ -2172,10 +2158,9 @@ object Codec {
             if (Roq.theRoQ.IsQuiet() == false) {
                 Common.common.Printf("drawImage: used %d 4x4 and %d 2x2 VQ cels\n", x, y)
             }
-            idataA = null //Mem_Free(idataA);
         }
 
-        private fun GetCurrentRMSE(pquad: Array<quadcel?>?): Float {
+        private fun GetCurrentRMSE(pquad: Array<quadcel>): Float {
             var i: Int
             var j: Int
             var totalbits: Double
@@ -2183,13 +2168,13 @@ object Codec {
             j = 0
             i = 0
             while (i < numQuadCels) {
-                if (pquad.get(i).size.toInt() != 0 && pquad.get(i).status != 0 && pquad.get(i).status != QuadDefs.DEAD) {
-                    if (pquad.get(i).size.toInt() == 8) {
-                        totalbits += (pquad.get(i).rsnr * 4).toDouble()
+                if (pquad[i].size.toInt() != 0 && pquad[i].status != 0 && pquad[i].status != QuadDefs.DEAD) {
+                    if (pquad[i].size.toInt() == 8) {
+                        totalbits += (pquad[i].rsnr * 4).toDouble()
                         j += 4
                     }
-                    if (pquad.get(i).size.toInt() == 4) {
-                        totalbits += (pquad.get(i).rsnr * 1).toDouble()
+                    if (pquad[i].size.toInt() == 4) {
+                        totalbits += (pquad[i].rsnr * 1).toDouble()
                         j += 1
                     }
                 }
@@ -2199,7 +2184,7 @@ object Codec {
             return totalbits.toFloat()
         }
 
-        private fun GetCurrentQuadOutputSize(pquad: Array<quadcel?>?): Int {
+        private fun GetCurrentQuadOutputSize(pquad: Array<quadcel>): Int {
             var totalbits: Int
             var i: Int
             val totalbytes: Int
@@ -2214,8 +2199,8 @@ object Codec {
             quickadd[QuadDefs.DEAD] = 0
             i = 0
             while (i < numQuadCels) {
-                if (pquad.get(i).size.toInt() != 0 && pquad.get(i).size < 16) {
-                    totalbits += quickadd[pquad.get(i).status]
+                if (pquad[i].size.toInt() != 0 && pquad[i].size < 16) {
+                    totalbits += quickadd[pquad[i].status]
                 }
                 i++
             }
@@ -2223,17 +2208,17 @@ object Codec {
             return totalbytes
         }
 
-        private fun AddQuad(pquad: Array<quadcel?>?, lownum: Int): Int {
+        private fun AddQuad(pquad: Array<quadcel>, lownum: Int): Int {
             var lownum = lownum
             var i: Int
             val nx: Int
             val nsize: Int
             var newsnr: Float
             val cmul: Float
-            var idataA: ByteArray?
-            var idataB: ByteArray?
+            var idataA: ByteArray
+            var idataB: ByteArray
             if (lownum != -1) {
-                if (pquad.get(lownum).size.toInt() == 8) {
+                if (pquad[lownum].size.toInt() == 8) {
                     nx = 1
                     nsize = 4
                     cmul = 1f
@@ -2247,94 +2232,90 @@ object Codec {
                 idataB = ByteArray(8 * 8 * 4) // Mem_Alloc(8 * 8 * 4);
                 i = lownum + 1
                 while (i < lownum + nx * 4 + 1) {
-                    pquad.get(i).size = nsize.toByte()
-                    GetData(idataA, pquad.get(i).size.toInt(), pquad.get(i).xat, pquad.get(i).yat, image)
-                    VqData4(idataA, pquad.get(i))
-                    VqData2(idataA, pquad.get(i))
-                    if (previousImage.get(0) != null) {
+                    pquad[i].size = nsize.toByte()
+                    GetData(idataA, pquad[i].size.toInt(), pquad[i].xat, pquad[i].yat, image!!)
+                    VqData4(idataA, pquad[i])
+                    VqData2(idataA, pquad[i])
+                    if (previousImage[0] != null) {
                         FvqData(
                             idataA,
-                            pquad.get(i).size.toInt(),
-                            pquad.get(i).xat,
-                            pquad.get(i).yat,
-                            pquad.get(i),
+                            pquad[i].size.toInt(),
+                            pquad[i].xat,
+                            pquad[i].yat,
+                            pquad[i],
                             true
                         )
                         GetData(
                             idataB,
-                            pquad.get(i).size.toInt(),
-                            pquad.get(i).xat,
-                            pquad.get(i).yat,
-                            previousImage.get(whichFrame and 1)
+                            pquad[i].size.toInt(),
+                            pquad[i].xat,
+                            pquad[i].yat,
+                            previousImage[whichFrame and 1]!!
                         )
-                        pquad.get(i).snr[QuadDefs.MOT] = Snr(idataA, idataB, pquad.get(i).size.toInt())
+                        pquad[i].snr[QuadDefs.MOT] = Snr(idataA, idataB, pquad[i].size.toInt())
                         if (ComputeMotionBlock(
                                 idataA,
                                 idataB,
-                                pquad.get(i).size.toInt()
+                                pquad[i].size.toInt()
                             ) && !Roq.theRoQ.IsLastFrame() && !detail
                         ) {
-                            pquad.get(i).mark = true
+                            pquad[i].mark = true
                         }
                     }
                     run {
                         val rsnr = floatArrayOf(0f)
                         val status = intArrayOf(0)
-                        LowestQuad(pquad.get(i), status, rsnr, 1) //true);
-                        pquad.get(i).status = status[0]
-                        pquad.get(i).rsnr = rsnr[0]
+                        LowestQuad(pquad[i], status, rsnr, 1) //true);
+                        pquad[i].status = status[0]
+                        pquad[i].rsnr = rsnr[0]
                     }
-                    newsnr += pquad.get(i).rsnr
+                    newsnr += pquad[i].rsnr
                     i += nx
                 }
                 //                Mem_Free(idataA);
-                idataB = null
-                idataA = idataB //Mem_Free(idataB);
                 newsnr /= 4f
                 run {
                     val rsnr = floatArrayOf(0f)
                     val status = intArrayOf(0)
-                    LowestQuad(pquad.get(lownum), status, rsnr, 0) //false);
-                    pquad.get(lownum).status = status[0]
-                    pquad.get(lownum).rsnr = rsnr[0]
+                    LowestQuad(pquad[lownum], status, rsnr, 0) //false);
+                    pquad[lownum].status = status[0]
+                    pquad[lownum].rsnr = rsnr[0]
                 }
-                if (pquad.get(lownum + nx * 0 + 1).status == QuadDefs.MOT && pquad.get(lownum + nx * 1 + 1).status == QuadDefs.MOT && pquad.get(
-                        lownum + nx * 2 + 1
-                    ).status == QuadDefs.MOT && pquad.get(lownum + nx * 3 + 1).status == QuadDefs.MOT && nsize == 4
+                if (pquad[lownum + nx * 0 + 1].status == QuadDefs.MOT && pquad[lownum + nx * 1 + 1].status == QuadDefs.MOT && pquad[lownum + nx * 2 + 1].status == QuadDefs.MOT && pquad[lownum + nx * 3 + 1].status == QuadDefs.MOT && nsize == 4
                 ) {
                     newsnr = 9999f
-                    pquad.get(lownum).status = QuadDefs.MOT
+                    pquad[lownum].status = QuadDefs.MOT
                 }
-                if (pquad.get(lownum).rsnr > newsnr) {
-                    pquad.get(lownum).status = QuadDefs.DEP
-                    pquad.get(lownum).rsnr = 0f
+                if (pquad[lownum].rsnr > newsnr) {
+                    pquad[lownum].status = QuadDefs.DEP
+                    pquad[lownum].rsnr = 0f
                     i = lownum + 1
                     while (i < lownum + nx * 4 + 1) {
                         Roq.theRoQ.MarkQuadx(
-                            pquad.get(i).xat,
-                            pquad.get(i).yat,
+                            pquad[i].xat,
+                            pquad[i].yat,
                             nsize,
-                            pquad.get(i).rsnr,
-                            qStatus.get(i).status
+                            pquad[i].rsnr,
+                            qStatus[i].status
                         )
                         i += nx
                     }
                 } else {
                     Roq.theRoQ.MarkQuadx(
-                        pquad.get(lownum).xat,
-                        pquad.get(lownum).yat,
+                        pquad[lownum].xat,
+                        pquad[lownum].yat,
                         nsize * 2,
-                        pquad.get(lownum).rsnr,
-                        qStatus.get(lownum).status
+                        pquad[lownum].rsnr,
+                        qStatus[lownum].status
                     )
-                    pquad.get(lownum + nx * 0 + 1).status = 0
-                    pquad.get(lownum + nx * 1 + 1).status = 0
-                    pquad.get(lownum + nx * 2 + 1).status = 0
-                    pquad.get(lownum + nx * 3 + 1).status = 0
-                    pquad.get(lownum + nx * 0 + 1).size = 0
-                    pquad.get(lownum + nx * 1 + 1).size = 0
-                    pquad.get(lownum + nx * 2 + 1).size = 0
-                    pquad.get(lownum + nx * 3 + 1).size = 0
+                    pquad[lownum + nx * 0 + 1].status = 0
+                    pquad[lownum + nx * 1 + 1].status = 0
+                    pquad[lownum + nx * 2 + 1].status = 0
+                    pquad[lownum + nx * 3 + 1].status = 0
+                    pquad[lownum + nx * 0 + 1].size = 0
+                    pquad[lownum + nx * 1 + 1].size = 0
+                    pquad[lownum + nx * 2 + 1].size = 0
+                    pquad[lownum + nx * 3 + 1].size = 0
                 }
             } else {
                 lownum = -1
@@ -2355,23 +2336,13 @@ object Codec {
             var i: Int
             Common.common.Printf("init: initing.....\n")
             codebooksize = 256
-            codebook2 = arrayOfNulls<DoubleArray?>(256) // Mem_ClearedAlloc(256);
-            i = 0
-            while (i < 256) {
-                codebook2[i] = DoubleArray(16) // Mem_ClearedAlloc(16);
-                i++
-            }
-            codebook4 = arrayOfNulls<DoubleArray?>(256) // Mem_ClearedAlloc(256);
-            i = 0
-            while (i < 256) {
-                codebook4[i] = DoubleArray(64) // Mem_ClearedAlloc(64);
-                i++
-            }
-            previousImage.get(0) = null //0;
-            previousImage.get(1) = null //0;
+            codebook2 = Array(256) { DoubleArray(16) } // Mem_ClearedAlloc(256);
+            codebook4 = Array(256) { DoubleArray(64) } // Mem_ClearedAlloc(256);
+            previousImage[0] = null //0;
+            previousImage[1] = null //0;
             image = null //0;
             whichFrame = 0
-            qStatus = null //0;
+            qStatus = emptyArray() //0;
             luti = null //0;
             overAmount = 0
             codebookmade = 0

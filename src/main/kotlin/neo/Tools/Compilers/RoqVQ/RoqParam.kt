@@ -9,27 +9,28 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.idStrList
 import java.util.*
+import kotlin.math.abs
 
 /**
  *
  */
 object RoqParam {
     fun parseRange(
-        rangeStr: String?,
+        rangeStr: String,
         field: Int,
-        skipnum: IntArray?,
-        startnum: IntArray?,
-        endnum: IntArray?,
-        numfiles: IntArray?,
-        padding: BooleanArray?,
-        numpadding: IntArray?
+        skipnum: IntArray,
+        startnum: IntArray,
+        endnum: IntArray,
+        numfiles: IntArray,
+        padding: BooleanArray,
+        numpadding: IntArray
     ): Int {
         val start = CharArray(64)
         val end = CharArray(64)
         val skip = CharArray(64)
-        val stptr: Int
-        val enptr: Int
-        val skptr: Int
+        var stptr: Int
+        var enptr: Int
+        var skptr: Int
         var i: Int
         var realnum: Int
         i = 1
@@ -41,57 +42,57 @@ object RoqParam {
         enptr = skptr
         stptr = enptr
         do {
-            start[stptr++] = rangeStr.get(i++)
-        } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+            start[stptr++] = rangeStr[i++]
+        } while (rangeStr[i] in '0'..'9')
         start[stptr] = '\u0000'
-        if (rangeStr.get(i++) != '-') {
+        if (rangeStr[i++] != '-') {
             Common.common.Error("Error: invalid range on middle \n")
         }
         do {
-            end[enptr++] = rangeStr.get(i++)
-        } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+            end[enptr++] = rangeStr[i++]
+        } while (rangeStr[i] in '0'..'9')
         end[enptr] = '\u0000'
-        if (rangeStr.get(i) != ']') {
-            if (rangeStr.get(i++) != '+') {
+        if (rangeStr[i] != ']') {
+            if (rangeStr[i++] != '+') {
                 Common.common.Error("Error: invalid range on close\n")
             }
             do {
-                skip[skptr++] = rangeStr.get(i++)
-            } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+                skip[skptr++] = rangeStr[i++]
+            } while (rangeStr[i] in '0'..'9')
             skip[skptr] = '\u0000'
-            skipnum.get(field) = TempDump.atoi(skip)
+            skipnum[field] = TempDump.atoi(skip)
         } else {
-            skipnum.get(field) = 1
+            skipnum[field] = 1
         }
-        startnum.get(field) = TempDump.atoi(start)
-        endnum.get(field) = TempDump.atoi(end)
-        numfiles.get(field) = Math.abs(startnum.get(field) - endnum.get(field)) / skipnum.get(field) + 1
-        realnum += numfiles.get(field)
+        startnum[field] = TempDump.atoi(start)
+        endnum[field] = TempDump.atoi(end)
+        numfiles[field] = abs(startnum[field] - endnum[field]) / skipnum[field] + 1
+        realnum += numfiles[field]
         if (start[0] == '0' && start[1] != '\u0000') {
-            padding.get(field) = true
-            numpadding.get(field) = TempDump.strLen(start)
+            padding[field] = true
+            numpadding[field] = TempDump.strLen(start)
         } else {
-            padding.get(field) = false
+            padding[field] = false
         }
         return realnum
     }
 
     fun parseTimecodeRange(
-        rangeStr: String?,
+        rangeStr: String,
         field: Int,
-        skipnum: IntArray?,
-        startnum: IntArray?,
-        endnum: IntArray?,
-        numfiles: IntArray?,
-        padding: BooleanArray?,
-        numpadding: IntArray?
+        skipnum: IntArray,
+        startnum: IntArray,
+        endnum: IntArray,
+        numfiles: IntArray,
+        padding: BooleanArray,
+        numpadding: IntArray
     ): Int {
         val start = CharArray(64)
         val end = CharArray(64)
         val skip = CharArray(64)
-        val stptr: Int
-        val enptr: Int
-        val skptr: Int
+        var stptr: Int
+        var enptr: Int
+        var skptr: Int
         var i: Int
         var realnum: Int
         val hrs = intArrayOf(0)
@@ -107,65 +108,65 @@ object RoqParam {
         enptr = skptr
         stptr = enptr
         do {
-            start[stptr++] = rangeStr.get(i++)
-        } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+            start[stptr++] = rangeStr[i++]
+        } while (rangeStr[i] in '0'..'9')
         start[stptr] = '\u0000'
-        if (rangeStr.get(i++) != '-') {
+        if (rangeStr[i++] != '-') {
             Common.common.Error("Error: invalid range on middle \n")
         }
         do {
-            end[enptr++] = rangeStr.get(i++)
-        } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+            end[enptr++] = rangeStr[i++]
+        } while (rangeStr[i] in '0'..'9')
         end[enptr] = '\u0000'
-        if (rangeStr.get(i) != ']') {
-            if (rangeStr.get(i++) != '+') {
+        if (rangeStr[i] != ']') {
+            if (rangeStr[i++] != '+') {
                 Common.common.Error("Error: invalid range on close\n")
             }
             do {
-                skip[skptr++] = rangeStr.get(i++)
-            } while (rangeStr.get(i) >= '0' && rangeStr.get(i) <= '9')
+                skip[skptr++] = rangeStr[i++]
+            } while (rangeStr[i] in '0'..'9')
             skip[skptr] = '\u0000'
-            skipnum.get(field) = TempDump.atoi(skip)
+            skipnum[field] = TempDump.atoi(skip)
         } else {
-            skipnum.get(field) = 1
+            skipnum[field] = 1
         }
-        RoqParam.sscanf(start, "%2d%2d%2d%2d", hrs, mins, secs, frs)
-        startnum.get(field) = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0]
-        RoqParam.sscanf(end, "%2d%2d%2d%2d", hrs, mins, secs, frs)
-        endnum.get(field) = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0]
-        numfiles.get(field) = Math.abs(startnum.get(field) - endnum.get(field)) / skipnum.get(field) + 1
-        realnum += numfiles.get(field)
+        sscanf(start, "%2d%2d%2d%2d", hrs, mins, secs, frs)
+        startnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0]
+        sscanf(end, "%2d%2d%2d%2d", hrs, mins, secs, frs)
+        endnum[field] = hrs[0] * 30 * 60 * 60 + mins[0] * 60 * 30 + secs[0] * 30 + frs[0]
+        numfiles[field] = abs(startnum[field] - endnum[field]) / skipnum[field] + 1
+        realnum += numfiles[field]
         if (start[0] == '0' && start[1] != '\u0000') {
-            padding.get(field) = true
-            numpadding.get(field) = TempDump.strLen(start)
+            padding[field] = true
+            numpadding[field] = TempDump.strLen(start)
         } else {
-            padding.get(field) = false
+            padding[field] = false
         }
         return realnum
     }
 
-    fun sscanf(start: CharArray?, bla: String?, vararg args: IntArray?) {
+    fun sscanf(start: CharArray, bla: String, vararg args: IntArray) {
         Scanner(TempDump.ctos(start)).use { scanner ->
             for (a in args) {
-                a.get(0) = scanner.nextInt()
+                a[0] = scanner.nextInt()
             }
         }
     }
 
     internal class roqParam {
         var numInputFiles = 0
-        var outputFilename: idStr? = null
+        val outputFilename: idStr = idStr()
         private var addPath = false
-        private var currentFile: idStr? = null
-        private var currentPath: idStr? = null
+        private val currentFile: idStr = idStr()
+        private val currentPath: idStr = idStr()
         private var encodeVideo = false
-        private val endPal: idStr? = null
+        private val endPal: idStr = idStr()
         private var endPalette = false
-        private var endnum: IntArray?
-        private var endnum2: IntArray?
+        private var endnum: IntArray = IntArray(0)
+        private var endnum2: IntArray = IntArray(0)
         private var field = 0
-        private val file: idStrList? = null
-        private val file2: idStrList? = null
+        private val file: idStrList = idStrList()
+        private val file2: idStrList = idStrList()
         private var firstframesize = 0
         private var fixedPalette = false
         private var fullSearch = false
@@ -182,38 +183,38 @@ object RoqParam {
         private var makeVectors = false
         private var noAlphaAtAll = false
         private var normalframesize = 0
-        private var numfiles: IntArray?
-        private var numpadding: IntArray?
-        private var numpadding2: IntArray?
-        private val onFrame: IntArray? = intArrayOf(0)
-        private var padding: BooleanArray?
-        private var padding2: BooleanArray?
+        private var numfiles: IntArray = IntArray(0)
+        private var numpadding: IntArray = IntArray(0)
+        private var numpadding2: IntArray = IntArray(0)
+        private val onFrame: IntArray = intArrayOf(0)
+        private var padding: BooleanArray = BooleanArray(0)
+        private var padding2: BooleanArray = BooleanArray(0)
 
         //
-        private var range: IntArray?
+        private var range: IntArray = IntArray(0)
         private var realnum = 0
 
         //
         private var scaleDown = false
         private var screenShots = false
-        private var skipnum: IntArray?
-        private var skipnum2: IntArray?
-        private var soundfile: idStr? = null
-        private val startPal: idStr? = null
+        private var skipnum: IntArray = IntArray(0)
+        private var skipnum2: IntArray = IntArray(0)
+        private val soundfile: idStr = idStr()
+        private val startPal: idStr = idStr()
         private var startPalette = false
-        private var startnum: IntArray?
-        private var startnum2: IntArray?
-        private var tempFilename: idStr? = null
+        private var startnum: IntArray = IntArray(0)
+        private var startnum2: IntArray = IntArray(0)
+        private val tempFilename: idStr = idStr()
         private var twentyFourToThirty = false
         private var useTimecodeForRange = false
 
         //
         //
-        fun RoqFilename(): String? {
+        fun RoqFilename(): String {
             return outputFilename.toString()
         }
 
-        fun RoqTempFilename(): String? {
+        fun RoqTempFilename(): String {
             var i: Int
             var j: Int
             val len: Int
@@ -221,46 +222,46 @@ object RoqParam {
             len = outputFilename.Length()
             i = 0
             while (i < len) {
-                if (outputFilename.get(i) == '/') {
+                if (outputFilename[i] == '/') {
                     j = i
                 }
                 i++
             }
-            tempFilename = idStr(String.format("/%s.temp", outputFilename.toString().substring(j + 1)))
+            tempFilename.set(String.format("/%s.temp", outputFilename.toString().substring(j + 1)))
             return tempFilename.toString()
         }
 
-        fun GetNextImageFilename(): String? {
+        fun GetNextImageFilename(): String {
             val tempBuffer = idStr()
             var i: Int
             val len: Int
-            onFrame.get(0)++
+            onFrame[0]++
             GetNthInputFileName(tempBuffer, onFrame)
             if (justDeltaFlag == true) {
-                onFrame.get(0)--
+                onFrame[0]--
                 justDeltaFlag = false
             }
             if (addPath == true) {
                 currentFile.set(currentPath.toString() + "/" + tempBuffer)
             } else {
-                currentFile = tempBuffer
+                currentFile.set(tempBuffer)
             }
             len = currentFile.Length()
             i = 0
             while (i < len) {
-                if (currentFile.get(i) == '^') {
-                    currentFile.set(i, ' ')
+                if (currentFile[i] == '^') {
+                    currentFile[i] = ' '
                 }
                 i++
             }
             return currentFile.toString()
         }
 
-        fun SoundFilename(): String? {
+        fun SoundFilename(): String {
             return soundfile.toString()
         }
 
-        fun InitFromFile(fileName: String?) {
+        fun InitFromFile(fileName: String) {
             val src: idParser
             val token = idToken()
             var i: Int
@@ -286,9 +287,9 @@ object RoqParam {
             keyColor = false
             justDelta = false
             useTimecodeForRange = false
-            onFrame.get(0) = 0
+            onFrame[0] = 0
             numInputFiles = 0
-            currentPath = idStr('\u0000')
+            currentPath.set(idStr('\u0000'))
             make3DO = false
             makeVectors = false
             justDeltaFlag = false
@@ -309,7 +310,7 @@ object RoqParam {
                 if (token.Icmp("input_dir") == 0) {
                     src.ReadToken(token)
                     addPath = true
-                    currentPath = token
+                    currentPath.set(token)
                     //			common.Printf("  + input directory is %s\n", currentPath );
                     readarg++
                     continue
@@ -363,7 +364,7 @@ object RoqParam {
                 // soundfile for making a .RnR
                 if (token.Icmp("sound") == 0) {
                     src.ReadToken(token)
-                    soundfile = token
+                    soundfile.set(token)
                     hasSound = true
                     //			common.Printf("  + Using timecode as range\n");
                     continue
@@ -376,7 +377,7 @@ object RoqParam {
                 // outfile
                 if (token.Icmp("filename") == 0) {
                     src.ReadToken(token)
-                    outputFilename = token
+                    outputFilename.set(token)
                     i = outputFilename.Length()
                     //			common.Printf("  + output file is %s\n", outputFilename );
                     readarg++
@@ -489,9 +490,9 @@ object RoqParam {
                             var arg1: idStr
                             var arg2: idStr
                             var arg3: idStr
-                            file.set(field, token)
+                            file[field] = token
                             while (src.ReadTokenOnLine(token) && token.Icmp("[") != 0) {
-                                file.get(field).Append(token)
+                                file[field].Append(token)
                             }
                             arg1 = token
                             while (src.ReadTokenOnLine(token) && token.Icmp("[") != 0) {
@@ -507,16 +508,16 @@ object RoqParam {
 //						arg3 += token;
                                 arg3.Append(token)
                             }
-                            if (arg1.get(0) != '[') {
+                            if (arg1[0] != '[') {
 //						common.Printf("  + reading %s\n", file[field] );
-                                range.get(field) = 0
-                                numfiles.get(field) = 1
+                                range[field] = 0
+                                numfiles[field] = 1
                                 realnum++
                             } else {
-                                if (arg1.get(0) == '[') {
-                                    range.get(field) = 1
+                                if (arg1[0] == '[') {
+                                    range[field] = 1
                                     realnum += if (useTimecodeForRange) {
-                                        RoqParam.parseTimecodeRange(
+                                        parseTimecodeRange(
                                             arg1.toString(),
                                             field,
                                             skipnum,
@@ -528,7 +529,7 @@ object RoqParam {
                                         )
                                         //								common.Printf("  + reading %s from %d to %d\n", file[field], startnum[field], endnum[field]);
                                     } else {
-                                        RoqParam.parseRange(
+                                        parseRange(
                                             arg1.toString(),
                                             field,
                                             skipnum,
@@ -540,12 +541,12 @@ object RoqParam {
                                         )
                                         //								common.Printf("  + reading %s from %d to %d\n", file[field], startnum[field], endnum[field]);
                                     }
-                                } else if (arg1.get(0) != '[' && arg2.get(0) == '[' && arg3.get(0) == '[') {  //a double ranger...
+                                } else if (arg1[0] != '[' && arg2[0] == '[' && arg3[0] == '[') {  //a double ranger...
                                     var files1: Int
                                     var files2: Int
-                                    file2.set(field, arg1)
-                                    range.get(field) = 2
-                                    files1 = RoqParam.parseRange(
+                                    file2[field] = arg1
+                                    range[field] = 2
+                                    files1 = parseRange(
                                         arg2.toString(),
                                         field,
                                         skipnum,
@@ -556,7 +557,7 @@ object RoqParam {
                                         numpadding
                                     )
                                     //							common.Printf("  + reading %s from %d to %d\n", file[field], startnum[field], endnum[field]);
-                                    files2 = RoqParam.parseRange(
+                                    files2 = parseRange(
                                         arg3.toString(),
                                         field,
                                         skipnum2,
@@ -595,7 +596,7 @@ object RoqParam {
             //	delete src;
         }
 
-        fun GetNthInputFileName(fileName: idStr?, n: IntArray?) {
+        fun GetNthInputFileName(fileName: idStr, n: IntArray) {
             var i: Int
             var myfield: Int
             var index: Int
@@ -608,33 +609,33 @@ object RoqParam {
             var left: String
             var right: String
             var strp: Int
-            if (n.get(0) > realnum) {
-                n.get(0) = realnum
+            if (n[0] > realnum) {
+                n[0] = realnum
             }
             // overcome starting at zero by ++ing and then --ing.
             if (TwentyFourToThirty()) {
-                n.get(0)++
-                n.get(0) = n.get(0) / 5 * 4 + n.get(0) % 5
-                n.get(0)--
+                n[0]++
+                n[0] = n[0] / 5 * 4 + n[0] % 5
+                n[0]--
             }
             i = 0
             myfield = 0
-            while (i <= n.get(0)) {
-                i += numfiles.get(myfield++)
+            while (i <= n[0]) {
+                i += numfiles[myfield++]
             }
             myfield--
-            i -= numfiles.get(myfield)
-            if (range.get(myfield) == 1) {
-                left = file.get(myfield).toString()
+            i -= numfiles[myfield]
+            if (range[myfield] == 1) {
+                left = file[myfield].toString()
                 strp = left.indexOf("*")
                 strp++
                 right = String.format("%s", left.substring(strp))
-                index = if (startnum.get(myfield) <= endnum.get(myfield)) {
-                    startnum.get(myfield) + (n.get(0) - i) * skipnum.get(myfield)
+                index = if (startnum[myfield] <= endnum[myfield]) {
+                    startnum[myfield] + (n[0] - i) * skipnum[myfield]
                 } else {
-                    startnum.get(myfield) - (n.get(0) - i) * skipnum.get(myfield)
+                    startnum[myfield] - (n[0] - i) * skipnum[myfield]
                 }
-                if (padding.get(myfield) == true) {
+                if (padding[myfield] == true) {
                     if (useTimecodeForRange) {
                         hrs = index / (30 * 60 * 60)
                         mins = index / (30 * 60) % 60
@@ -659,7 +660,7 @@ object RoqParam {
                             String.format(
                                 "%s%s%s",
                                 left,
-                                tempfile.substring(32 - numpadding.get(myfield)),
+                                tempfile.substring(32 - numpadding[myfield]),
                                 right
                             )
                         )
@@ -687,51 +688,51 @@ object RoqParam {
                         fileName.set(String.format("%s%d%s", left, index, right))
                     }
                 }
-            } else if (range.get(myfield) == 2) {
-                left = file.get(myfield).toString()
+            } else if (range[myfield] == 2) {
+                left = file[myfield].toString()
                 strp = left.indexOf("*")
                 strp++
                 right = String.format("%s", left.substring(strp))
-                index = if (startnum.get(myfield) <= endnum.get(myfield)) {
-                    startnum.get(myfield) + (n.get(0) - i) * skipnum.get(myfield)
+                index = if (startnum[myfield] <= endnum[myfield]) {
+                    startnum[myfield] + (n[0] - i) * skipnum[myfield]
                 } else {
-                    startnum.get(myfield) - (n.get(0) - i) * skipnum.get(myfield)
+                    startnum[myfield] - (n[0] - i) * skipnum[myfield]
                 }
-                if (padding.get(myfield) == true) {
+                if (padding[myfield] == true) {
                     tempfile = String.format("%032d", index)
                     fileName.set(
                         String.format(
                             "%s%s%s",
                             left,
-                            tempfile.substring(32 - numpadding.get(myfield)),
+                            tempfile.substring(32 - numpadding[myfield]),
                             right
                         )
                     )
                 } else {
                     fileName.set(String.format("%s%d%s", left, index, right))
                 }
-                left = file2.get(myfield).toString()
+                left = file2[myfield].toString()
                 strp = left.indexOf("*")
                 strp++
                 right = String.format("%s", left.substring(strp))
-                index = if (startnum2.get(myfield) <= endnum2.get(myfield)) {
-                    startnum2.get(myfield) + (n.get(0) - i) * skipnum2.get(myfield)
+                index = if (startnum2[myfield] <= endnum2[myfield]) {
+                    startnum2[myfield] + (n[0] - i) * skipnum2[myfield]
                 } else {
-                    startnum2.get(myfield) - (n.get(0) - i) * skipnum2.get(myfield)
+                    startnum2[myfield] - (n[0] - i) * skipnum2[myfield]
                 }
-                if (padding2.get(myfield) == true) {
+                if (padding2[myfield] == true) {
                     tempfile = String.format("%032d", index)
-                    fileName.plusAssign(Str.va("\n%s%s%s", left, tempfile.substring(32 - numpadding2.get(myfield)), right))
+                    fileName.plusAssign(Str.va("\n%s%s%s", left, tempfile.substring(32 - numpadding2[myfield]), right))
                 } else {
                     fileName.plusAssign(Str.va("\n%s%d%s", left, index, right))
                 }
             } else {
-                fileName.set(file.get(myfield).toString())
+                fileName.set(file[myfield].toString())
             }
         }
 
         fun MoreFrames(): Boolean {
-            return onFrame.get(0) < numInputFiles
+            return onFrame[0] < numInputFiles
         }
 
         fun OutputVectors(): Boolean {

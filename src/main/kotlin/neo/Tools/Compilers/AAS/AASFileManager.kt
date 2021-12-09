@@ -1,7 +1,6 @@
 package neo.Tools.Compilers.AAS
 
 import neo.Tools.Compilers.AAS.AASFile.idAASFile
-import neo.Tools.Compilers.AAS.AASFileManager
 import neo.Tools.Compilers.AAS.AASFile_local.idAASFileLocal
 import neo.idlib.Text.Str.idStr
 
@@ -9,11 +8,11 @@ import neo.idlib.Text.Str.idStr
  *
  */
 object AASFileManager {
-    private val AASFileManagerLocal: idAASFileManagerLocal? = idAASFileManagerLocal()
-    var AASFileManager: idAASFileManager? = AASFileManager.AASFileManagerLocal
-    fun setAASFileManager(AASFileManager: idAASFileManager?) {
-        AASFileManager.AASFileManagerLocal = AASFileManager as idAASFileManagerLocal?
-        AASFileManager.AASFileManager = AASFileManager.AASFileManagerLocal
+    private var AASFileManagerLocal: idAASFileManagerLocal = idAASFileManagerLocal()
+    var AASFileManager: idAASFileManager = AASFileManagerLocal
+    fun setAASFileManagers(AASFileManager: idAASFileManager) {
+        this.AASFileManagerLocal = AASFileManager as idAASFileManagerLocal
+        this.AASFileManager = AASFileManagerLocal
     }
 
     /*
@@ -25,8 +24,8 @@ object AASFileManager {
      */
     abstract class idAASFileManager {
         //	virtual						~idAASFileManager( void ) {}
-        abstract fun LoadAAS(fileName: String?,    /*unsigned int*/mapFileCRC: Long): idAASFile?
-        abstract fun FreeAAS(file: idAASFile?)
+        abstract fun LoadAAS(fileName: String,    /*unsigned int*/mapFileCRC: Long): idAASFile?
+        abstract fun FreeAAS(file: idAASFile)
     }
 
     /*
@@ -38,7 +37,7 @@ object AASFileManager {
      */
     internal class idAASFileManagerLocal : idAASFileManager() {
         //        virtual						~idAASFileManagerLocal( void ) {}
-        override fun LoadAAS(fileName: String?, mapFileCRC: Long): idAASFile? {
+        override fun LoadAAS(fileName: String, mapFileCRC: Long): idAASFile? {
             val file = idAASFileLocal()
             return if (!file.Load(idStr(fileName), mapFileCRC)) {
 //		delete file;
@@ -46,7 +45,7 @@ object AASFileManager {
             } else file
         }
 
-        override fun FreeAAS(file: idAASFile?) {
+        override fun FreeAAS(file: idAASFile) {
 //            delete file
         }
     }

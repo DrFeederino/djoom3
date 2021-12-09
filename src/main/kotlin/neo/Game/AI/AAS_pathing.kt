@@ -19,7 +19,7 @@ object AAS_pathing {
 
     class wallEdge_s {
         var edgeNum = 0
-        var next: AAS_pathing.wallEdge_s? = null
-        var verts: IntArray? = IntArray(2)
+        var next: wallEdge_s? = null
+        var verts: IntArray = IntArray(2)
     }
 }

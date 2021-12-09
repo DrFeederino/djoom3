@@ -597,12 +597,12 @@ object ubrush {
         }
         if (d_front < 0.1) // PLANESIDE_EPSILON)
         {    // only on back
-            back.oSet(ubrush.CopyBrush(brush))
+            back.set(ubrush.CopyBrush(brush))
             return
         }
         if (d_back > -0.1) // PLANESIDE_EPSILON)
         {    // only on front
-            front.oSet(ubrush.CopyBrush(brush))
+            front.set(ubrush.CopyBrush(brush))
             return
         }
 
@@ -619,10 +619,10 @@ object ubrush {
             val side: Int
             side = ubrush.BrushMostlyOnSide(brush, plane)
             if (side == ubrush.PSIDE_FRONT) {
-                front.oSet(ubrush.CopyBrush(brush))
+                front.set(ubrush.CopyBrush(brush))
             }
             if (side == ubrush.PSIDE_BACK) {
-                back.oSet(ubrush.CopyBrush(brush))
+                back.set(ubrush.CopyBrush(brush))
             }
             return
         }
@@ -695,11 +695,11 @@ object ubrush {
             }
             if (b[0] != null) {
                 ubrush.FreeBrush(b[0])
-                front.oSet(ubrush.CopyBrush(brush))
+                front.set(ubrush.CopyBrush(brush))
             }
             if (b[1] != null) {
                 ubrush.FreeBrush(b[1])
-                back.oSet(ubrush.CopyBrush(brush))
+                back.set(ubrush.CopyBrush(brush))
             }
             return
         }
@@ -732,7 +732,7 @@ object ubrush {
                 i2++
             }
         }
-        front.oSet(b[0])
-        back.oSet(b[1])
+        front.set(b[0])
+        back.set(b[1])
     }
 }

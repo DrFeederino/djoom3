@@ -12,7 +12,7 @@ class AASBuild_local {
     //
     //===============================================================
     internal class aasProcNode_s {
-        var children: IntArray? = IntArray(2) // negative numbers are (-1 - areaNumber), 0 = solid
-        val plane: idPlane? = idPlane()
+        var children: IntArray = IntArray(2) // negative numbers are (-1 - areaNumber), 0 = solid
+        val plane: idPlane = idPlane()
     }
 }

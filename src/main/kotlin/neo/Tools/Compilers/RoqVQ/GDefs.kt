@@ -35,12 +35,8 @@ object GDefs {
     //#define RGBDIST( src0, src1 ) ( ((src0[0]-src1[0])*(src0[0]-src1[0])) + \
     //								((src0[1]-src1[1])*(src0[1]-src1[1])) + \
     //								((src0[2]-src1[2])*(src0[2]-src1[2])) )
-    fun RGBDIST(src0: IntArray?, src1: IntArray?, i0: Int, i1: Int): Int {
-        return (src0.get(i0 + 0) - src1.get(i1 + 0)) * (src0.get(i0 + 0) - src1.get(i1 + 0)) + (src0.get(i0 + 1) - src1.get(
-            i1 + 1
-        )) * (src0.get(i0 + 1) - src1.get(i1 + 1)) + (src0.get(i0 + 2) - src1.get(i1 + 2)) * (src0.get(i0 + 2) - src1.get(
-            i1 + 2
-        ))
+    fun RGBDIST(src0: IntArray, src1: IntArray, i0: Int, i1: Int): Int {
+        return (src0[i0 + 0] - src1[i1 + 0]) * (src0[i0 + 0] - src1[i1 + 0]) + (src0[i0 + 1] - src1[i1 + 1]) * (src0[i0 + 1] - src1[i1 + 1]) + (src0[i0 + 2] - src1[i1 + 2]) * (src0[i0 + 2] - src1[i1 + 2])
     }
 
     //
@@ -48,11 +44,7 @@ object GDefs {
     //								 ((src0[1]-src1[1])*(src0[1]-src1[1])) + \
     //								 ((src0[2]-src1[2])*(src0[2]-src1[2])) + \
     //								 ((src0[3]-src1[3])*(src0[3]-src1[3])) )
-    fun RGBADIST(src0: ByteArray?, src1: ByteArray?, i0: Int, i1: Int): Int {
-        return (src0.get(i0 + 0) - src1.get(i1 + 0)) * (src0.get(i0 + 0) - src1.get(i1 + 0)) + (src0.get(i0 + 1) - src1.get(
-            i1 + 1
-        )) * (src0.get(i0 + 1) - src1.get(i1 + 1)) + (src0.get(i0 + 2) - src1.get(i1 + 2)) * (src0.get(i0 + 2) - src1.get(
-            i1 + 2
-        )) + (src0.get(i0 + 3) - src1.get(i1 + 3)) * (src0.get(i0 + 3) - src1.get(i1 + 3))
+    fun RGBADIST(src0: ByteArray, src1: ByteArray, i0: Int, i1: Int): Int {
+        return (src0[i0 + 0] - src1[i1 + 0]) * (src0[i0 + 0] - src1[i1 + 0]) + (src0[i0 + 1] - src1[i1 + 1]) * (src0[i0 + 1] - src1[i1 + 1]) + (src0[i0 + 2] - src1[i1 + 2]) * (src0[i0 + 2] - src1[i1 + 2]) + (src0[i0 + 3] - src1[i1 + 3]) * (src0[i0 + 3] - src1[i1 + 3])
     }
 }

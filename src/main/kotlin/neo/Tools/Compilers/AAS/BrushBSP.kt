@@ -31,10 +31,10 @@ object BrushBSP {
     //
     const val BASE_WINDING_EPSILON = 0.001f
     const val BSP_GRID_SIZE = 512.0f
-    val NODE_DONE: Int = Lib.Companion.BIT(31)
+    val NODE_DONE: Int = Lib.BIT(31)
 
     //
-    val NODE_VISITED: Int = Lib.Companion.BIT(30)
+    val NODE_VISITED: Int = Lib.BIT(30)
 
     //
     const val OUPUT_BSP_STATS_PER_GRID_CELL = false
@@ -59,10 +59,10 @@ object BrushBSP {
                 : Int
         private var flags // portal flags
                 : Int
-        private val next: Array<idBrushBSPPortal?>? =
+        private val next: Array<idBrushBSPPortal?> =
             arrayOfNulls<idBrushBSPPortal?>(2) // next portal in list for both nodes
-        private val nodes: Array<idBrushBSPNode?>? = arrayOfNulls<idBrushBSPNode?>(2) // nodes this portal seperates
-        private val plane: idPlane? = idPlane() // portal plane
+        private val nodes: Array<idBrushBSPNode?> = arrayOfNulls<idBrushBSPNode?>(2) // nodes this portal seperates
+        private val plane: idPlane = idPlane() // portal plane
         private var planeNum // number of plane this portal is on
                 : Int
         private var winding // portal winding
@@ -97,18 +97,18 @@ object BrushBSP {
                     break
                 }
                 if (t.nodes.get(0) === l) {
-                    pp.oSet(t.next.get(0))
+                    pp.set(t.next.get(0))
                 } else if (t.nodes.get(1) === l) {
-                    pp.oSet(t.next.get(1))
+                    pp.set(t.next.get(1))
                 } else {
                     Common.common.Error("idBrushBSPPortal::RemoveFromNode: portal not bounding node")
                 }
             }
             if (nodes.get(0) === l) {
-                pp.oSet(next.get(0))
+                pp.set(next.get(0))
                 nodes.get(0) = null
             } else if (nodes.get(1) === l) {
-                pp.oSet(next.get(1))
+                pp.set(next.get(1))
                 nodes.get(1) = null
             } else {
                 Common.common.Error("idBrushBSPPortal::RemoveFromNode: mislinked portal")
@@ -128,40 +128,40 @@ object BrushBSP {
             winding.ReverseSelf()
         }
 
-        fun Split(splitPlane: idPlane?, front: idBrushBSPPortal?, back: idBrushBSPPortal?): Int {
+        fun Split(splitPlane: idPlane, front: idBrushBSPPortal, back: idBrushBSPPortal): Int {
             val frontWinding = idWinding()
             val backWinding = idWinding()
 
 //            front[0] = back[0] = null;
             winding.Split(splitPlane, 0.1f, frontWinding, backWinding)
-            if (!frontWinding.isNULL) {
-                front.oSet(idBrushBSPPortal())
+            if (!frontWinding.isNULL()) {
+                front.set(idBrushBSPPortal())
                 front.plane.set(plane)
                 front.planeNum = planeNum
                 front.flags = flags
                 front.winding = frontWinding
             }
-            if (!backWinding.isNULL) {
-                back.oSet(idBrushBSPPortal())
+            if (!backWinding.isNULL()) {
+                back.set(idBrushBSPPortal())
                 back.plane.set(plane)
                 back.planeNum = planeNum
                 back.flags = flags
                 back.winding = backWinding
             }
-            return if (!frontWinding.isNULL && !backWinding.isNULL) {
+            return if (!frontWinding.isNULL() && !backWinding.isNULL()) {
                 Plane.PLANESIDE_CROSS
-            } else if (!frontWinding.isNULL) {
+            } else if (!frontWinding.isNULL()) {
                 Plane.PLANESIDE_FRONT
             } else {
                 Plane.PLANESIDE_BACK
             }
         }
 
-        fun GetWinding(): idWinding? {
-            return winding
+        fun GetWinding(): idWinding {
+            return winding!!
         }
 
-        fun GetPlane(): idPlane? {
+        fun GetPlane(): idPlane {
             return plane
         }
 
@@ -193,7 +193,7 @@ object BrushBSP {
             return nodes.get(side)
         }
 
-        private fun oSet(idBrushBSPPortal: idBrushBSPPortal?) {
+        private fun set(idBrushBSPPortal: idBrushBSPPortal?) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -288,7 +288,7 @@ object BrushBSP {
             return contents
         }
 
-        fun GetPlane(): idPlane? {
+        fun GetPlane(): idPlane {
             return plane
         }
 
@@ -535,7 +535,7 @@ object BrushBSP {
         private var outside: idBrushBSPNode? = null
         private var outsideLeafNodes = 0
         private val portalPlanes: idPlaneSet? = null
-        private var root: idBrushBSPNode?
+        private var root: idBrushBSPNode = idBrushBSPNode()
         private var solidLeafNodes = 0
         private var treeBounds: idBounds? = null
 
@@ -843,12 +843,12 @@ object BrushBSP {
         }
 
         // bounds for the whole tree
-        fun GetTreeBounds(): idBounds? {
+        fun GetTreeBounds(): idBounds {
             return treeBounds
         }
 
         // root node of the tree
-        fun GetRootNode(): idBrushBSPNode? {
+        fun GetRootNode(): idBrushBSPNode {
             return root
         }
 
@@ -1466,12 +1466,12 @@ object BrushBSP {
 
                 // cut the portal into two portals, one on each side of the cut plane
                 p.winding.Split(plane, BrushBSP.SPLIT_WINDING_EPSILON, frontWinding, backWinding)
-                if (!frontWinding.isNULL() && frontWinding.IsTiny()) {
+                if (!frontWinding.isNULL()() && frontWinding.IsTiny()) {
 //			delete frontWinding;
                     frontWinding = null
                     //tinyportals++;
                 }
-                if (!backWinding.isNULL() && backWinding.IsTiny()) {
+                if (!backWinding.isNULL()() && backWinding.IsTiny()) {
 //			delete backWinding;
                     backWinding = null
                     //tinyportals++;
@@ -1532,10 +1532,10 @@ object BrushBSP {
 //	}
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || bounds.get(
+                if (bounds.get(0, i) < Lib.MIN_WORLD_COORD || bounds.get(
                         1,
                         i
-                    ) > Lib.Companion.MAX_WORLD_COORD
+                    ) > Lib.MAX_WORLD_COORD
                 ) {
                     Common.common.Warning("node with unbounded volume")
                     break

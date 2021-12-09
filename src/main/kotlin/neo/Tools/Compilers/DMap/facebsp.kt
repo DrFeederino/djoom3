@@ -29,7 +29,7 @@ object facebsp {
     var c_faceLeafs = 0
 
     //void RemovePortalFromNode( uPortal_s *portal, node_s *l );
-    fun NodeForPoint(node: node_s?, origin: idVec3?): node_s? {
+    fun NodeForPoint(node: node_s, origin: idVec3): node_s {
         var node = node
         var d: Float
         while (node.planenum != dmap.PLANENUM_LEAF) {
@@ -49,7 +49,7 @@ object facebsp {
      FreeTreePortals_r
      =============
      */
-    fun FreeTreePortals_r(node: node_s?) {
+    fun FreeTreePortals_r(node: node_s) {
         var p: uPortal_s?
         var nextp: uPortal_s?
         var s: Int
@@ -77,7 +77,7 @@ object facebsp {
      FreeTree_r
      =============
      */
-    fun FreeTree_r(node: node_s?) {
+    fun FreeTree_r(node: node_s) {
         // free children
         if (node.planenum != dmap.PLANENUM_LEAF) {
             facebsp.FreeTree_r(node.children[0])
@@ -97,7 +97,7 @@ object facebsp {
      FreeTree
      =============
      */
-    fun FreeTree(tree: tree_s?) {
+    fun FreeTree(tree: tree_s) {
         if (TempDump.NOT(tree)) {
             return
         }
@@ -142,7 +142,7 @@ object facebsp {
      AllocBspFace
      ================
      */
-    fun AllocBspFace(): bspface_s? {
+    fun AllocBspFace(): bspface_s {
         val f: bspface_s
         f = bspface_s() // Mem_Alloc(sizeof(f));
         //	memset( f, 0, sizeof(*f) );
@@ -154,7 +154,7 @@ object facebsp {
      FreeBspFace
      ================
      */
-    fun FreeBspFace(f: bspface_s?) {
+    fun FreeBspFace(f: bspface_s) {
         if (f.w != null) {
             //		delete f.w;
             f.w = null

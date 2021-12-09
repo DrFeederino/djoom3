@@ -23,8 +23,8 @@ class DeclEntityDef {
      ===============================================================================
      */
     class idDeclEntityDef : idDecl() {
-        var dict: idDict? = idDict()
-        override fun DefaultDefinition(): String? {
+        var dict: idDict = idDict()
+        override fun DefaultDefinition(): String {
             return """{
 	"DEFAULTED"	"1"
 }"""

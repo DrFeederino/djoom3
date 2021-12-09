@@ -155,8 +155,8 @@ object renderbump {
      an alpha test map.
      ================
      */
-    fun OutlineNormalMap(data: ByteBuffer?, width: Int, height: Int, emptyR: Int, emptyG: Int, emptyB: Int) {
-        var orig: ByteArray?
+    fun OutlineNormalMap(data: ByteBuffer, width: Int, height: Int, emptyR: Int, emptyG: Int, emptyB: Int) {
+        var orig: ByteArray
         var i: Int
         var j: Int
         var k: Int
@@ -203,14 +203,13 @@ object renderbump {
                     j++
                     continue  // no valid samples
                 }
-                data.put(out + 0, (128 + 127 * normal.get(0)).toByte())
-                data.put(out + 1, (128 + 127 * normal.get(1)).toByte())
-                data.put(out + 2, (128 + 127 * normal.get(2)).toByte())
+                data.put(out + 0, (128 + 127 * normal[0]).toByte())
+                data.put(out + 1, (128 + 127 * normal[1]).toByte())
+                data.put(out + 2, (128 + 127 * normal[2]).toByte())
                 j++
             }
             i++
         }
-        orig = null //Mem_Free(orig);
     }
 
     /*
@@ -222,8 +221,8 @@ object renderbump {
      an alpha test map.
      ================
      */
-    fun OutlineColorMap(data: ByteBuffer?, width: Int, height: Int, emptyR: Int, emptyG: Int, emptyB: Int) {
-        var orig: ByteArray?
+    fun OutlineColorMap(data: ByteBuffer, width: Int, height: Int, emptyR: Int, emptyG: Int, emptyB: Int) {
+        var orig: ByteArray
         var i: Int
         var j: Int
         var k: Int
@@ -269,9 +268,9 @@ object renderbump {
                     continue
                 }
                 normal.timesAssign(1.0f / count)
-                data.put(out + 0, normal.get(0).toByte())
-                data.put(out + 1, normal.get(1).toByte())
-                data.put(out + 2, normal.get(2).toByte())
+                data.put(out + 0, normal[0].toByte())
+                data.put(out + 1, normal[1].toByte())
+                data.put(out + 2, normal[2].toByte())
                 j++
             }
             i++
@@ -284,7 +283,7 @@ object renderbump {
      FreeTriHash
      ================
      */
-    fun FreeTriHash(hash: triHash_t?) {
+    fun FreeTriHash(hash: triHash_t) {
         for (i in 0 until hash.numLinkBlocks) {
             hash.linkBlocks.get(i) = null //Mem_Free(hash.linkBlocks[i]);
         }
@@ -296,7 +295,7 @@ object renderbump {
      CreateTriHash
      ================
      */
-    fun CreateTriHash(highMesh: srfTriangles_s?): triHash_t? {
+    fun CreateTriHash(highMesh: srfTriangles_s): triHash_t {
         val hash: triHash_t
         var i: Int
         var j: Int
@@ -304,7 +303,7 @@ object renderbump {
         var l: Int
         val bounds = idBounds()
         val triBounds = idBounds()
-        val iBounds = Array<IntArray?>(2) { IntArray(3) }
+        val iBounds = Array<IntArray>(2) { IntArray(3) }
         var maxLinks: Int
         var numLinks: Int
         hash = triHash_t() //Mem_Alloc(sizeof(hash));
@@ -322,12 +321,12 @@ object renderbump {
         // divide each axis as needed
         i = 0
         while (i < 3) {
-            hash.binSize.get(i) = (bounds.get(1, i) - bounds.get(0, i)) / renderbump.HASH_AXIS_BINS
+            hash.binSize.get(i) = (bounds[1, i] - bounds[0, i]) / renderbump.HASH_AXIS_BINS
             if (hash.binSize.get(i) <= 0) {
                 Common.common.FatalError(
                     "CreateTriHash: bad bounds: (%f %f %f) to (%f %f %f)",
-                    bounds.get(0, 0), bounds.get(0, 1), bounds.get(0, 2),
-                    bounds.get(1, 0), bounds.get(1, 1), bounds.get(1, 2)
+                    bounds[0, 0], bounds[0, 1], bounds[0, 2],
+                    bounds[1, 0], bounds[1, 1], bounds[1, 2]
                 )
             }
             i++
@@ -345,7 +344,7 @@ object renderbump {
         }
         numLinks = 0
         hash.linkBlocks.get(hash.numLinkBlocks) =
-            arrayOfNulls<triLink_t?>(renderbump.MAX_LINKS_PER_BLOCK) // Mem_Alloc(MAX_LINKS_PER_BLOCK * sizeof(triLink_t));
+            arrayOfNulls<triLink_t>(renderbump.MAX_LINKS_PER_BLOCK) // Mem_Alloc(MAX_LINKS_PER_BLOCK * sizeof(triLink_t));
         hash.numLinkBlocks++
         maxLinks = hash.numLinkBlocks * renderbump.MAX_LINKS_PER_BLOCK
 
@@ -362,14 +361,14 @@ object renderbump {
             }
             j = 0
             while (j < 3) {
-                iBounds[0].get(j) = ((triBounds.get(0, j) - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
+                iBounds[0].get(j) = ((triBounds[0, j] - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
                 iBounds[0].get(j) -= 0.001 // epsilon
                 if (iBounds[0].get(j) < 0) {
                     iBounds[0].get(j) = 0
                 } else if (iBounds[0].get(j) >= renderbump.HASH_AXIS_BINS) {
                     iBounds[0].get(j) = renderbump.HASH_AXIS_BINS - 1
                 }
-                iBounds[1].get(j) = ((triBounds.get(1, j) - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
+                iBounds[1].get(j) = ((triBounds[1, j] - hash.bounds.get(0, j)) / hash.binSize.get(j)).toInt()
                 iBounds[0].get(j) += 0.001 // epsilon
                 if (iBounds[1].get(j) < 0) {
                     iBounds[1].get(j) = 0
@@ -388,12 +387,12 @@ object renderbump {
                     while (l <= iBounds[1].get(2)) {
                         if (numLinks == maxLinks) {
                             hash.linkBlocks.get(hash.numLinkBlocks) =
-                                arrayOfNulls<triLink_t?>(renderbump.MAX_LINKS_PER_BLOCK) // Mem_Alloc(MAX_LINKS_PER_BLOCK * sizeof(triLink_t));
+                                arrayOfNulls<triLink_t>(renderbump.MAX_LINKS_PER_BLOCK) // Mem_Alloc(MAX_LINKS_PER_BLOCK * sizeof(triLink_t));
                             hash.numLinkBlocks++
                             maxLinks = hash.numLinkBlocks * renderbump.MAX_LINKS_PER_BLOCK
                         }
                         val link = hash.linkBlocks.get(numLinks / renderbump.MAX_LINKS_PER_BLOCK)
-                            .get(numLinks % renderbump.MAX_LINKS_PER_BLOCK) //TODO:pointer??
+                            .get(numLinks % renderbump.MAX_LINKS_PER_BLOCK) //TODO:pointer
                         link.faceNum = i / 3
                         link.nextLink = hash.binLinks.get(j).get(k).get(l).triLink
                         hash.binLinks.get(j).get(k).get(l).triLink = numLinks
@@ -411,16 +410,16 @@ object renderbump {
     }
 
     fun TraceToMeshFace(
-        highMesh: srfTriangles_s?, faceNum: Int, minDist: Float, maxDist: Float,
-        point: idVec3?, normal: idVec3?, sampledNormal: idVec3?, sampledColor: ByteArray? /*[4]*/
+        highMesh: srfTriangles_s, faceNum: Int, minDist: Float, maxDist: Float,
+        point: idVec3, normal: idVec3, sampledNormal: idVec3, sampledColor: ByteArray /*[4]*/
     ): Float {
         var j: Int
         var dist: Float
-        val v: Array<idVec3?> = idVec3.Companion.generateArray(3)
+        val v: Array<idVec3> = idVec3.Companion.generateArray(3)
         val plane = idPlane()
         val edge = idVec3()
         var d: Float
-        val dir: Array<idVec3?> = idVec3.Companion.generateArray(3)
+        val dir: Array<idVec3> = idVec3.Companion.generateArray(3)
         val baseArea: Float
         val bary = FloatArray(3)
         val testVert = idVec3()
@@ -518,14 +517,14 @@ object renderbump {
      ================
      */
     fun SampleHighMesh(
-        rb: renderBump_t?,
-        point: idVec3?,
-        direction: idVec3?,
-        sampledNormal: idVec3?,
-        sampledColor: ByteArray? /*[4]*/
+        rb: renderBump_t,
+        point: idVec3,
+        direction: idVec3,
+        sampledNormal: idVec3,
+        sampledColor: ByteArray /*[4]*/
     ): Boolean {
         val p = idVec3()
-        var bl: binLink_t?
+        var bl: binLink_t
         var linkNum: Int
         var faceNum: Int
         var dist: Float
@@ -559,9 +558,9 @@ object renderbump {
                         .oPlus(normal.times(-1.0f + 2.0f * i / renderbump.RAY_STEPS).oMultiply(rb.traceDist))
                 )
             ) //TODO:check if downcasting from doubles to floats has any effect
-            block[0] = Math.floor((p.get(0) / rb.hash.binSize.get(0)).toDouble()).toInt()
-            block[1] = Math.floor((p.get(1) / rb.hash.binSize.get(1)).toDouble()).toInt()
-            block[2] = Math.floor((p.get(2) / rb.hash.binSize.get(2)).toDouble()).toInt()
+            block[0] = Math.floor((p[0] / rb.hash.binSize.get(0)).toDouble()).toInt()
+            block[1] = Math.floor((p[1] / rb.hash.binSize.get(1)).toDouble()).toInt()
+            block[2] = Math.floor((p[2] / rb.hash.binSize.get(2)).toDouble()).toInt()
             if (block[0] < 0 || block[0] >= renderbump.HASH_AXIS_BINS) {
                 i++
                 continue
@@ -583,7 +582,7 @@ object renderbump {
             }
             bl.rayNumber = renderbump.rayNumber
             linkNum = bl.triLink
-            var link: triLink_t?
+            var link: triLink_t
             while (linkNum != -1) {
                 link = rb.hash.linkBlocks.get(linkNum / renderbump.MAX_LINKS_PER_BLOCK)
                     .get(linkNum % renderbump.MAX_LINKS_PER_BLOCK)
@@ -613,20 +612,20 @@ object renderbump {
      This may be negatove
      =============
      */
-    fun TriTextureArea(a: FloatArray? /*[2]*/, b: FloatArray? /*[2]*/, c: FloatArray? /*[2]*/): Float {
+    fun TriTextureArea(a: FloatArray /*[2]*/, b: FloatArray /*[2]*/, c: FloatArray /*[2]*/): Float {
         val d1 = idVec3()
         val d2 = idVec3()
         val cross = idVec3()
         val area: Float
-        d1.set(0, b.get(0) - a.get(0))
-        d1.set(1, b.get(1) - a.get(1))
-        d1.set(2, 0f)
-        d2.set(0, c.get(0) - a.get(0))
-        d2.set(1, c.get(1) - a.get(1))
-        d2.set(2, 0f)
+        d1[0] = b.get(0) - a.get(0)
+        d1[1] = b.get(1) - a.get(1)
+        d1[2] = 0f
+        d2[0] = c.get(0) - a.get(0)
+        d2[1] = c.get(1) - a.get(1)
+        d2[2] = 0f
         cross.set(d1.Cross(d2))
         area = 0.5f * cross.Length()
-        return if (cross.get(2) < 0) {
+        return if (cross[2] < 0) {
             -area
         } else {
             area
@@ -642,30 +641,30 @@ object renderbump {
      ================
      */
     fun RasterizeTriangle(
-        lowMesh: srfTriangles_s?,
-        lowMeshNormals: Array<idVec3?>?,
+        lowMesh: srfTriangles_s,
+        lowMeshNormals: Array<idVec3>,
         lowFaceNum: Int,
-        rbs: Array<renderBump_t?>?
+        rbs: Array<renderBump_t>
     ) {
         var i: Int
         var j: Int
         var k: Int
         var q: Int
-        val bounds = Array<FloatArray?>(2) { FloatArray(2) }
-        val ibounds = Array<FloatArray?>(2) { FloatArray(2) }
-        val verts = Array<FloatArray?>(3) { FloatArray(2) }
+        val bounds = Array<FloatArray>(2) { FloatArray(2) }
+        val ibounds = Array<FloatArray>(2) { FloatArray(2) }
+        val verts = Array<FloatArray>(3) { FloatArray(2) }
         val testVert = FloatArray(2)
         val bary = FloatArray(3)
         var localDest: ByteBuffer
         var globalDest: ByteBuffer
         var colorDest: ByteBuffer
-        val edge = Array<FloatArray?>(3) { FloatArray(3) }
+        val edge = Array<FloatArray>(3) { FloatArray(3) }
         val sampledNormal = idVec3()
         val sampledColor = ByteArray(4)
         val point = idVec3()
         val normal = idVec3()
         val traceNormal = idVec3()
-        val tangents: Array<idVec3?> = idVec3.Companion.generateArray(2)
+        val tangents: Array<idVec3> = idVec3.Companion.generateArray(2)
         var baseArea: Float
         var totalArea: Float
         var r: Int
@@ -676,12 +675,12 @@ object renderbump {
         // this is a brain-dead rasterizer, but compared to the ray trace,
         // nothing we do here is going to matter performance-wise
         // adjust for resolution and texel centers
-        verts[0].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.get(0) * rbs.get(0).width - 0.5f
-        verts[1].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.get(0) * rbs.get(0).width - 0.5f
-        verts[2].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.get(0) * rbs.get(0).width - 0.5f
-        verts[0].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st.get(1) * rbs.get(0).width - 0.5f
-        verts[1].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st.get(1) * rbs.get(0).width - 0.5f
-        verts[2].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st.get(1) * rbs.get(0).width - 0.5f
+        verts[0].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st[0] * rbs.get(0).width - 0.5f
+        verts[1].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st[0] * rbs.get(0).width - 0.5f
+        verts[2].get(0) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st[0] * rbs.get(0).width - 0.5f
+        verts[0].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st[1] * rbs.get(0).width - 0.5f
+        verts[1].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st[1] * rbs.get(0).width - 0.5f
+        verts[2].get(1) = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st[1] * rbs.get(0).width - 0.5f
 
         // find the texcoord bounding box
         bounds[0].get(0) = 99999
@@ -715,8 +714,8 @@ object renderbump {
         // calculate edge vectors
         i = 0
         while (i < 3) {
-            var v1: FloatArray?
-            var v2: FloatArray?
+            var v1: FloatArray
+            var v2: FloatArray
             v1 = verts[i]
             v2 = verts[(i + 1) % 3]
             edge[i].get(0) = v2.get(1) - v1.get(1)
@@ -853,9 +852,9 @@ object renderbump {
                 rb.edgeDistances.get(0 + k / 4) = if (edgeTexel) 1.0f else 0
 
                 // fill the object space normal map spot
-                r = (128 + 127 * sampledNormal.get(0)).toInt()
-                g = (128 + 127 * sampledNormal.get(1)).toInt()
-                b = (128 + 127 * sampledNormal.get(2)).toInt()
+                r = (128 + 127 * sampledNormal[0]).toInt()
+                g = (128 + 127 * sampledNormal[1]).toInt()
+                b = (128 + 127 * sampledNormal[2]).toInt()
                 globalDest.put(0, r.toByte())
                 globalDest.put(1, g.toByte())
                 globalDest.put(2, b.toByte())
@@ -866,9 +865,9 @@ object renderbump {
                 mat.InverseSelf()
                 localNormal.set(mat.times(sampledNormal))
                 localNormal.Normalize()
-                r = (128 + 127 * localNormal.get(0)).toInt()
-                g = (128 + 127 * localNormal.get(1)).toInt()
-                b = (128 + 127 * localNormal.get(2)).toInt()
+                r = (128 + 127 * localNormal[0]).toInt()
+                g = (128 + 127 * localNormal[1]).toInt()
+                b = (128 + 127 * localNormal[2]).toInt()
                 localDest.put(0, r.toByte())
                 localDest.put(1, g.toByte())
                 localDest.put(2, b.toByte())
@@ -892,7 +891,7 @@ object renderbump {
      into one surface
      ================
      */
-    fun CombineModelSurfaces(model: idRenderModel?): idRenderModel? {
+    fun CombineModelSurfaces(model: idRenderModel): idRenderModel {
         var totalVerts: Int
         var totalIndexes: Int
         var numIndexes: Int
@@ -955,7 +954,7 @@ object renderbump {
 
      ==============
      */
-    fun RenderBumpTriangles(lowMesh: srfTriangles_s?, rb: renderBump_t?) {
+    fun RenderBumpTriangles(lowMesh: srfTriangles_s, rb: renderBump_t) {
         throw TODO_Exception()
         //        int i, j;
 //
@@ -1030,7 +1029,7 @@ object renderbump {
 
      ==============
      */
-    fun WriteRenderBump(rb: renderBump_t?, outLinePixels: Int) {
+    fun WriteRenderBump(rb: renderBump_t, outLinePixels: Int) {
         var width: Int
         var height: Int
         var i: Int
@@ -1063,7 +1062,7 @@ object renderbump {
         // filter down if we are anti-aliasing
         i = 0
         while (i < rb.antiAlias) {
-            var old: ByteBuffer?
+            var old: ByteBuffer
             old = rb.localPic
             rb.localPic = Image_process.R_MipMap(rb.localPic, width, height, false)
             //Mem_Free(old);
@@ -1108,9 +1107,9 @@ object renderbump {
      InitRenderBump
      ===============
      */
-    fun InitRenderBump(rb: renderBump_t?) {
+    fun InitRenderBump(rb: renderBump_t) {
         val mesh: srfTriangles_s
-        val bounds: idBounds?
+        val bounds: idBounds
         var i: Int
         val c: Int
 
@@ -1194,11 +1193,11 @@ object renderbump {
     }
 
     internal class triHash_t {
-        var binLinks: Array<Array<Array<binLink_t?>?>?>? =
-            Array(renderbump.HASH_AXIS_BINS) { Array(renderbump.HASH_AXIS_BINS) { arrayOfNulls<binLink_t?>(renderbump.HASH_AXIS_BINS) } }
-        var binSize: FloatArray? = FloatArray(3)
-        var bounds: idBounds? = null
-        var linkBlocks: Array<Array<triLink_t?>?>? = arrayOfNulls<Array<triLink_t?>?>(renderbump.MAX_LINK_BLOCKS)
+        var binLinks: Array<Array<Array<binLink_t>>> =
+            Array(renderbump.HASH_AXIS_BINS) { Array(renderbump.HASH_AXIS_BINS) { arrayOfNulls<binLink_t>(renderbump.HASH_AXIS_BINS) } }
+        var binSize: FloatArray = FloatArray(3)
+        var bounds: idBounds = null
+        var linkBlocks: Array<Array<triLink_t>> = arrayOfNulls<Array<triLink_t>>(renderbump.MAX_LINK_BLOCKS)
         var numLinkBlocks = 0
         private fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
@@ -1207,18 +1206,18 @@ object renderbump {
 
     internal class renderBump_t {
         var antiAlias = 0
-        var colorPic: ByteBuffer? = null
+        var colorPic: ByteBuffer = null
         var edgeDistances // starts out -1 for untraced, for each texel, 0 = true interior, >0 = off-edge rasterization
-                : FloatArray?
-        var globalPic: ByteBuffer? = null
-        var hash: triHash_t? = null
-        var highModel: idRenderModel? = null
-        var highName: CharArray? = CharArray(renderbump.MAX_QPATH)
-        var localPic: ByteBuffer? = null
+                : FloatArray
+        var globalPic: ByteBuffer = null
+        var hash: triHash_t = null
+        var highModel: idRenderModel = null
+        var highName: CharArray = CharArray(renderbump.MAX_QPATH)
+        var localPic: ByteBuffer = null
         var mesh // high poly mesh
-                : srfTriangles_s? = null
+                : srfTriangles_s = null
         var outline = 0
-        var outputName: CharArray? = CharArray(renderbump.MAX_QPATH)
+        var outputName: CharArray = CharArray(renderbump.MAX_QPATH)
         var saveColorMap = false
         var saveGlobalMap = false
         var traceDist = 0f
@@ -1235,15 +1234,15 @@ object renderbump {
      */
     class RenderBump_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            val lowPoly: idRenderModel?
-            val source: String?
+        override fun run(args: CmdArgs.idCmdArgs) {
+            val lowPoly: idRenderModel
+            val source: String
             var i: Int
             var j: Int
             var cmdLine: String
             var numRenderBumps: Int
-            val renderBumps: Array<renderBump_t?>
-            var rb: renderBump_t? = renderBump_t()
+            val renderBumps: Array<renderBump_t>
+            var rb: renderBump_t = renderBump_t()
             var opt = renderBump_t()
             val startTime: Int
             val endTime: Int
@@ -1266,7 +1265,7 @@ object renderbump {
             }
 
 //        renderBumps = (renderBump_t) R_StaticAlloc(lowPoly.NumSurfaces() * sizeof(renderBumps));
-            renderBumps = arrayOfNulls<renderBump_t?>(lowPoly.NumSurfaces())
+            renderBumps = arrayOfNulls<renderBump_t>(lowPoly.NumSurfaces())
             numRenderBumps = 0
             i = 0
             while (i < lowPoly.NumSurfaces()) {
@@ -1302,7 +1301,7 @@ object renderbump {
                 Common.common.Printf("(rendering)\n")
                 j = 0
                 while (j < localArgs.Argc() - 2) {
-                    var s: String?
+                    var s: String
                     s = localArgs.Argv(j)
                     if (s[0] == '-') {
                         j++
@@ -1406,8 +1405,8 @@ object renderbump {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Dmap_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Dmap_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1429,10 +1428,10 @@ object renderbump {
      ==============
      */
     class RenderBumpFlat_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var width: Int
             var height: Int
-            val source: String?
+            val source: String
             var i: Int
             val bounds: idBounds
             var mesh: srfTriangles_s
@@ -1447,7 +1446,7 @@ object renderbump {
             // check options
             i = 1
             while (i < args.Argc() - 1) {
-                var s: String?
+                var s: String
                 s = args.Argv(i)
                 if (s[0] == '-') {
                     i++
@@ -1512,8 +1511,8 @@ object renderbump {
             qgl.qglMatrixMode(GL11.GL_PROJECTION)
             qgl.qglLoadIdentity()
             qgl.qglOrtho(
-                bounds.get(0, 0).toDouble(), bounds.get(1, 0).toDouble(), bounds.get(0, 2).toDouble(),
-                bounds.get(1, 2).toDouble(), -(bounds.get(0, 1) - 1).toDouble(), -(bounds.get(1, 1) + 1).toDouble()
+                bounds[0, 0].toDouble(), bounds[1, 0].toDouble(), bounds[0, 2].toDouble(),
+                bounds[1, 2].toDouble(), -(bounds[0, 1] - 1).toDouble(), -(bounds[1, 1] + 1).toDouble()
             )
             qgl.qglMatrixMode(GL11.GL_MODELVIEW)
             qgl.qglLoadIdentity()
@@ -1523,9 +1522,9 @@ object renderbump {
             var j: Int
             var k: Int
             var c = 0
-            var buffer: ByteBuffer?
-            var sumBuffer: IntArray?
-            var colorSumBuffer: IntArray?
+            var buffer: ByteBuffer
+            var sumBuffer: IntArray
+            var colorSumBuffer: IntArray
             val flat: Boolean
             var sample: Int
             sumBuffer = IntArray(width * height * 4 * 4) // Mem_Alloc(width * height * 4 * 4);
@@ -1539,11 +1538,9 @@ object renderbump {
             while (sample < 16) {
                 var xOff: Float
                 var yOff: Float
-                xOff = (sample and 3) / 4.0f * (bounds.get(1, 0) - bounds.get(
-                    0,
-                    0
-                )) / width //TODO:loss of precision, float instead of double.
-                yOff = sample / 4 / 4.0f * (bounds.get(1, 2) - bounds.get(0, 2)) / height
+                xOff =
+                    (sample and 3) / 4.0f * (bounds[1, 0] - bounds[0, 0]) / width //TODO:loss of precision, float instead of double.
+                yOff = sample / 4 / 4.0f * (bounds[1, 2] - bounds[0, 2]) / height
                 for (colorPass in 0..1) {
                     qgl.qglClearColor(0.5f, 0.5f, 0.5f, 0f)
                     qgl.qglClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
@@ -1559,7 +1556,7 @@ object renderbump {
                                 k = 0
                                 while (k < 3) {
                                     var v: Int
-                                    var a: FloatArray?
+                                    var a: FloatArray
                                     v = mesh.indexes[j + k]
                                     qgl.qglColor3ubv(mesh.verts[v].color)
                                     a = mesh.verts[v].xyz.ToFloatPtr()
@@ -1596,24 +1593,24 @@ object renderbump {
                                         qgl.qglColor3f(0.5f, 0.5f, 0.5f)
                                     } else {
                                         qgl.qglColor3f(
-                                            0.5f + 0.5f * plane.get(0),
-                                            0.5f - 0.5f * plane.get(2),
-                                            0.5f - 0.5f * plane.get(1)
+                                            0.5f + 0.5f * plane[0],
+                                            0.5f - 0.5f * plane[2],
+                                            0.5f - 0.5f * plane[1]
                                         )
                                     }
 
 //							qglVertex3f( (*a2)[0] + xOff, (*a2)[2] + yOff, (*a2)[1] );//TODO:check this pointer cast thing
 //							qglVertex3f( (*b2)[0] + xOff, (*b2)[2] + yOff, (*b2)[1] );
 //							qglVertex3f( (*c2)[0] + xOff, (*c2)[2] + yOff, (*c2)[1] );
-                                    qgl.qglVertex3f(a2.get(0) + xOff, a2.get(2) + yOff, a2.get(1))
-                                    qgl.qglVertex3f(b2.get(0) + xOff, b2.get(2) + yOff, b2.get(1))
-                                    qgl.qglVertex3f(c2.get(0) + xOff, c2.get(2) + yOff, c2.get(1))
+                                    qgl.qglVertex3f(a2[0] + xOff, a2[2] + yOff, a2[1])
+                                    qgl.qglVertex3f(b2[0] + xOff, b2[2] + yOff, b2[1])
+                                    qgl.qglVertex3f(c2[0] + xOff, c2[2] + yOff, c2[1])
                                 } else {
                                     k = 0
                                     while (k < 3) {
                                         var v: Int
-                                        var n: FloatArray?
-                                        var a: FloatArray?
+                                        var n: FloatArray
+                                        var a: FloatArray
                                         v = mesh.indexes[j + k]
                                         n = mesh.verts[v].normal.ToFloatPtr()
 
@@ -1655,13 +1652,13 @@ object renderbump {
                         i = 0
                         while (i < c) {
                             val v = idVec3()
-                            v.set(0, (buffer[i * 4 + 0] - 128) / 127.0f)
-                            v.set(1, (buffer[i * 4 + 1] - 128) / 127.0f)
-                            v.set(2, (buffer[i * 4 + 2] - 128) / 127.0f)
+                            v[0] = (buffer[i * 4 + 0] - 128) / 127.0f
+                            v[1] = (buffer[i * 4 + 1] - 128) / 127.0f
+                            v[2] = (buffer[i * 4 + 2] - 128) / 127.0f
                             v.Normalize()
-                            buffer.put(i * 4 + 0, (128 + 127 * v.get(0)).toByte())
-                            buffer.put(i * 4 + 1, (128 + 127 * v.get(1)).toByte())
-                            buffer.put(i * 4 + 2, (128 + 127 * v.get(2)).toByte())
+                            buffer.put(i * 4 + 0, (128 + 127 * v[0]).toByte())
+                            buffer.put(i * 4 + 1, (128 + 127 * v[1]).toByte())
+                            buffer.put(i * 4 + 2, (128 + 127 * v[2]).toByte())
                             i++
                         }
 
@@ -1735,8 +1732,8 @@ object renderbump {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = RenderBumpFlat_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = RenderBumpFlat_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

@@ -72,14 +72,14 @@ object tritjunction {
     //#define	SNAP_FRACTIONS	8
     //#define	SNAP_FRACTIONS	1
     //
-    const val VERTEX_EPSILON = 1.0 / tritjunction.SNAP_FRACTIONS
+    const val VERTEX_EPSILON = 1.0 / SNAP_FRACTIONS
 
     //
-    const val COLINEAR_EPSILON = 1.8 * tritjunction.VERTEX_EPSILON
+    const val COLINEAR_EPSILON = 1.8 * VERTEX_EPSILON
     val hashIntMins: IntArray? = IntArray(3)
     val hashIntScale: IntArray? = IntArray(3)
     val hashVerts: Array<Array<Array<hashVert_s?>?>?>? =
-        Array(tritjunction.HASH_BINS) { Array(tritjunction.HASH_BINS) { arrayOfNulls<hashVert_s?>(tritjunction.HASH_BINS) } }
+        Array(HASH_BINS) { Array(HASH_BINS) { arrayOfNulls<hashVert_s?>(HASH_BINS) } }
     var hashBounds: idBounds? = null
     val hashScale: idVec3? = idVec3()
     var numHashVerts = 0
@@ -97,24 +97,24 @@ object tritjunction {
         val block = IntArray(3)
         var i: Int
         var hv: hashVert_s?
-        tritjunction.numTotalVerts++
+        numTotalVerts++
 
         // snap the vert to integral values
         i = 0
         while (i < 3) {
-            iv[i] = Math.floor((v.get(i) + 0.5 / tritjunction.SNAP_FRACTIONS) * tritjunction.SNAP_FRACTIONS).toInt()
-            block[i] = (iv[i] - tritjunction.hashIntMins[i]) / tritjunction.hashIntScale[i]
+            iv[i] = Math.floor((v.get(i) + 0.5 / SNAP_FRACTIONS) * SNAP_FRACTIONS).toInt()
+            block[i] = (iv[i] - hashIntMins[i]) / hashIntScale[i]
             if (block[i] < 0) {
                 block[i] = 0
-            } else if (block[i] >= tritjunction.HASH_BINS) {
-                block[i] = tritjunction.HASH_BINS - 1
+            } else if (block[i] >= HASH_BINS) {
+                block[i] = HASH_BINS - 1
             }
             i++
         }
 
         // see if a vertex near enough already exists
         // this could still fail to find a near neighbor right at the hash block boundary
-        hv = tritjunction.hashVerts[block[0]][block[1]][block[2]]
+        hv = hashVerts[block[0]][block[1]][block[2]]
         while (hv != null) {
 
 //#if 0
@@ -126,7 +126,7 @@ object tritjunction {
             i = 0
             while (i < 3) {
                 var d: Int
-                d = hv.iv.get(i) - iv[i]
+                d = hv.iv[i] - iv[i]
                 if (d < -1 || d > 1) {
                     break
                 }
@@ -141,16 +141,16 @@ object tritjunction {
 
         // create a new one
         hv = hashVert_s() // Mem_Alloc(sizeof(hv));
-        hv.next = tritjunction.hashVerts[block[0]][block[1]][block[2]]
-        tritjunction.hashVerts[block[0]][block[1]][block[2]] = hv
-        hv.iv.get(0) = iv[0]
-        hv.iv.get(1) = iv[1]
-        hv.iv.get(2) = iv[2]
-        hv.v.set(0, iv[0] as Float / tritjunction.SNAP_FRACTIONS)
-        hv.v.set(1, iv[1] as Float / tritjunction.SNAP_FRACTIONS)
-        hv.v.set(2, iv[2] as Float / tritjunction.SNAP_FRACTIONS)
+        hv.next = hashVerts[block[0]][block[1]][block[2]]
+        hashVerts[block[0]][block[1]][block[2]] = hv
+        hv.iv[0] = iv[0]
+        hv.iv[1] = iv[1]
+        hv.iv[2] = iv[2]
+        hv.v[0] = iv[0] as Float / SNAP_FRACTIONS
+        hv.v[1] = iv[1] as Float / SNAP_FRACTIONS
+        hv.v[2] = iv[2] as Float / SNAP_FRACTIONS
         Vector.VectorCopy(hv.v, v)
-        tritjunction.numHashVerts++
+        numHashVerts++
         return hv
     }
 
@@ -173,23 +173,23 @@ object tritjunction {
         // add a 1.0 slop margin on each side
         i = 0
         while (i < 3) {
-            blocks.get(0).get(i) = ((bounds.get(0, i) - 1.0 - tritjunction.hashBounds.get(
+            blocks.get(0).get(i) = ((bounds[0, i] - 1.0 - hashBounds.get(
                 0,
                 i
-            )) / tritjunction.hashScale.get(i)).toInt()
+            )) / hashScale.get(i)).toInt()
             if (blocks.get(0).get(i) < 0) {
                 blocks.get(0).get(i) = 0
-            } else if (blocks.get(0).get(i) >= tritjunction.HASH_BINS) {
-                blocks.get(0).get(i) = tritjunction.HASH_BINS - 1
+            } else if (blocks.get(0).get(i) >= HASH_BINS) {
+                blocks.get(0).get(i) = HASH_BINS - 1
             }
-            blocks.get(1).get(i) = ((bounds.get(1, i) + 1.0 - tritjunction.hashBounds.get(
+            blocks.get(1).get(i) = ((bounds[1, i] + 1.0 - hashBounds.get(
                 0,
                 i
-            )) / tritjunction.hashScale.get(i)).toInt()
+            )) / hashScale.get(i)).toInt()
             if (blocks.get(1).get(i) < 0) {
                 blocks.get(1).get(i) = 0
-            } else if (blocks.get(1).get(i) >= tritjunction.HASH_BINS) {
-                blocks.get(1).get(i) = tritjunction.HASH_BINS - 1
+            } else if (blocks.get(1).get(i) >= HASH_BINS) {
+                blocks.get(1).get(i) = HASH_BINS - 1
             }
             i++
         }
@@ -210,19 +210,19 @@ object tritjunction {
 
         // clear the hash tables
 //        memset(hashVerts, 0, sizeof(hashVerts));
-        hashVert_s.memset(tritjunction.hashVerts)
-        tritjunction.numHashVerts = 0
-        tritjunction.numTotalVerts = 0
+        hashVert_s.memset(hashVerts)
+        numHashVerts = 0
+        numTotalVerts = 0
 
         // bound all the triangles to determine the bucket size
-        tritjunction.hashBounds.Clear()
+        hashBounds.Clear()
         group = groupList
         while (group != null) {
             a = group.triList
             while (a != null) {
-                tritjunction.hashBounds.AddPoint(a.v[0].xyz)
-                tritjunction.hashBounds.AddPoint(a.v[1].xyz)
-                tritjunction.hashBounds.AddPoint(a.v[2].xyz)
+                hashBounds.AddPoint(a.v[0].xyz)
+                hashBounds.AddPoint(a.v[1].xyz)
+                hashBounds.AddPoint(a.v[2].xyz)
                 a = a.next
             }
             group = group.nextGroup
@@ -231,20 +231,20 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            tritjunction.hashBounds.set(
+            hashBounds.set(
                 0,
                 i,
-                Math.floor((tritjunction.hashBounds.get(0, i) - 1).toDouble()).toFloat()
+                Math.floor((hashBounds.get(0, i) - 1).toDouble()).toFloat()
             )
-            tritjunction.hashBounds.set(1, i, Math.ceil((tritjunction.hashBounds.get(1, i) + 1).toDouble()).toFloat())
-            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.get(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
-            tritjunction.hashScale.set(
+            hashBounds.set(1, i, Math.ceil((hashBounds.get(1, i) + 1).toDouble()).toFloat())
+            hashIntMins[i] = (hashBounds.get(0, i) * SNAP_FRACTIONS).toInt()
+            hashScale.set(
                 i,
-                (tritjunction.hashBounds.get(1, i) - tritjunction.hashBounds.get(0, i)) / tritjunction.HASH_BINS
+                (hashBounds.get(1, i) - hashBounds.get(0, i)) / HASH_BINS
             )
-            tritjunction.hashIntScale[i] = (tritjunction.hashScale.get(i) * tritjunction.SNAP_FRACTIONS).toInt()
-            if (tritjunction.hashIntScale[i] < 1) {
-                tritjunction.hashIntScale[i] = 1
+            hashIntScale[i] = (hashScale.get(i) * SNAP_FRACTIONS).toInt()
+            if (hashIntScale[i] < 1) {
+                hashIntScale[i] = 1
             }
             i++
         }
@@ -262,7 +262,7 @@ object tritjunction {
             while (a != null) {
                 vert = 0
                 while (vert < 3) {
-                    a.hashVert[vert] = tritjunction.GetHashVert(a.v[vert].xyz)
+                    a.hashVert[vert] = GetHashVert(a.v[vert].xyz)
                     vert++
                 }
                 a = a.next
@@ -286,16 +286,16 @@ object tritjunction {
         var hv: hashVert_s?
         var next: hashVert_s?
         i = 0
-        while (i < tritjunction.HASH_BINS) {
+        while (i < HASH_BINS) {
             j = 0
-            while (j < tritjunction.HASH_BINS) {
+            while (j < HASH_BINS) {
                 k = 0
-                while (k < tritjunction.HASH_BINS) {
-                    hv = tritjunction.hashVerts[i][j][k]
+                while (k < HASH_BINS) {
+                    hv = hashVerts[i][j][k]
                     while (hv != null) {
                         next = hv.next
-                        tritjunction.hashVerts[i][j][k] = null
-                        hv = tritjunction.hashVerts[i][j][k] //Mem_Free(hv);
+                        hashVerts[i][j][k] = null
+                        hv = hashVerts[i][j][k] //Mem_Free(hv);
                         hv = next
                     }
                     k++
@@ -305,7 +305,7 @@ object tritjunction {
             i++
         }
         //        memset(hashVerts, 0, sizeof(hashVerts));
-        hashVert_s.memset(tritjunction.hashVerts)
+        hashVert_s.memset(hashVerts)
     }
 
     /*
@@ -364,7 +364,7 @@ object tritjunction {
             Vector.VectorMA(v1.xyz, d, dir, temp)
             Vector.VectorSubtract(temp, v, temp)
             off = temp.Length()
-            if (off <= -tritjunction.COLINEAR_EPSILON || off >= tritjunction.COLINEAR_EPSILON) {
+            if (off <= -COLINEAR_EPSILON || off >= COLINEAR_EPSILON) {
                 i++
                 continue
             }
@@ -373,11 +373,11 @@ object tritjunction {
             // but interpolate everything else from the original tri
             Vector.VectorCopy(v, split.xyz)
             frac = d / len
-            split.st.set(0, v1.st.get(0) + frac * (v2.st.get(0) - v1.st.get(0)))
-            split.st.set(1, v1.st.get(1) + frac * (v2.st.get(1) - v1.st.get(1)))
-            split.normal.set(0, v1.normal.get(0) + frac * (v2.normal.get(0) - v1.normal.get(0)))
-            split.normal.set(1, v1.normal.get(1) + frac * (v2.normal.get(1) - v1.normal.get(1)))
-            split.normal.set(2, v1.normal.get(2) + frac * (v2.normal.get(2) - v1.normal.get(2)))
+            split.st[0] = v1.st[0] + frac * (v2.st[0] - v1.st[0])
+            split.st[1] = v1.st[1] + frac * (v2.st[1] - v1.st[1])
+            split.normal[0] = v1.normal[0] + frac * (v2.normal[0] - v1.normal[0])
+            split.normal[1] = v1.normal[1] + frac * (v2.normal[1] - v1.normal[1])
+            split.normal[2] = v1.normal[2] + frac * (v2.normal[2] - v1.normal[2])
             split.normal.Normalize()
 
             // split the tri
@@ -432,14 +432,14 @@ object tritjunction {
         }
         fixed = tritools.CopyMapTri(tri)
         fixed.next = null
-        tritjunction.HashBlocksForTri(tri, blocks)
+        HashBlocksForTri(tri, blocks)
         i = blocks[0].get(0)
         while (i <= blocks[1].get(0)) {
             j = blocks[0].get(1)
             while (j <= blocks[1].get(1)) {
                 k = blocks[0].get(2)
                 while (k <= blocks[1].get(2)) {
-                    hv = tritjunction.hashVerts[i][j][k]
+                    hv = hashVerts[i][j][k]
                     while (hv != null) {
 
                         // fix all triangles in the list against this point
@@ -447,7 +447,7 @@ object tritjunction {
                         fixed = null
                         while (test != null) {
                             next = test.next
-                            a = tritjunction.FixTriangleAgainstHashVert(test, hv)
+                            a = FixTriangleAgainstHashVert(test, hv)
                             if (a != null) {
                                 // cut into two triangles
                                 a.next.next = fixed
@@ -503,12 +503,12 @@ object tritjunction {
         if (TempDump.NOT(groupList)) {
             return
         }
-        startCount = tritjunction.CountGroupListTris(groupList)
+        startCount = CountGroupListTris(groupList)
         if (dmap.dmapGlobals.verbose) {
             Common.common.Printf("----- FixAreaGroupsTjunctions -----\n")
             Common.common.Printf("%6d triangles in\n", startCount)
         }
-        tritjunction.HashTriangles(groupList)
+        HashTriangles(groupList)
         group = groupList
         while (group != null) {
 
@@ -520,7 +520,7 @@ object tritjunction {
             newList = null
             tri = group.triList
             while (tri != null) {
-                fixed = tritjunction.FixTriangleAgainstHash(tri)
+                fixed = FixTriangleAgainstHash(tri)
                 newList = tritools.MergeTriLists(newList, fixed)
                 tri = tri.next
             }
@@ -528,7 +528,7 @@ object tritjunction {
             group.triList = newList
             group = group.nextGroup
         }
-        endCount = tritjunction.CountGroupListTris(groupList)
+        endCount = CountGroupListTris(groupList)
         if (dmap.dmapGlobals.verbose) {
             Common.common.Printf("%6d triangles out\n", endCount)
         }
@@ -543,8 +543,8 @@ object tritjunction {
         var i: Int
         i = 0
         while (i < e.numAreas) {
-            tritjunction.FixAreaGroupsTjunctions(e.areas[i].groups)
-            tritjunction.FreeTJunctionHash()
+            FixAreaGroupsTjunctions(e.areas[i].groups)
+            FreeTJunctionHash()
             i++
         }
     }
@@ -564,21 +564,21 @@ object tritjunction {
 
         // clear the hash tables
 //        memset(hashVerts, 0, sizeof(hashVerts));
-        hashVert_s.memset(tritjunction.hashVerts)
-        tritjunction.numHashVerts = 0
-        tritjunction.numTotalVerts = 0
+        hashVert_s.memset(hashVerts)
+        numHashVerts = 0
+        numTotalVerts = 0
 
         // bound all the triangles to determine the bucket size
-        tritjunction.hashBounds.Clear()
+        hashBounds.Clear()
         areaNum = 0
         while (areaNum < e.numAreas) {
             group = e.areas[areaNum].groups
             while (group != null) {
                 a = group.triList
                 while (a != null) {
-                    tritjunction.hashBounds.AddPoint(a.v[0].xyz)
-                    tritjunction.hashBounds.AddPoint(a.v[1].xyz)
-                    tritjunction.hashBounds.AddPoint(a.v[2].xyz)
+                    hashBounds.AddPoint(a.v[0].xyz)
+                    hashBounds.AddPoint(a.v[1].xyz)
+                    hashBounds.AddPoint(a.v[2].xyz)
                     a = a.next
                 }
                 group = group.nextGroup
@@ -589,20 +589,20 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            tritjunction.hashBounds.set(
+            hashBounds.set(
                 0,
                 i,
-                Math.floor((tritjunction.hashBounds.get(0, i) - 1).toDouble()).toFloat()
+                Math.floor((hashBounds.get(0, i) - 1).toDouble()).toFloat()
             )
-            tritjunction.hashBounds.set(1, i, Math.ceil((tritjunction.hashBounds.get(1, i) + 1).toDouble()).toFloat())
-            tritjunction.hashIntMins[i] = (tritjunction.hashBounds.get(0, i) * tritjunction.SNAP_FRACTIONS).toInt()
-            tritjunction.hashScale.set(
+            hashBounds.set(1, i, Math.ceil((hashBounds.get(1, i) + 1).toDouble()).toFloat())
+            hashIntMins[i] = (hashBounds.get(0, i) * SNAP_FRACTIONS).toInt()
+            hashScale.set(
                 i,
-                (tritjunction.hashBounds.get(1, i) - tritjunction.hashBounds.get(0, i)) / tritjunction.HASH_BINS
+                (hashBounds.get(1, i) - hashBounds.get(0, i)) / HASH_BINS
             )
-            tritjunction.hashIntScale[i] = (tritjunction.hashScale.get(i) * tritjunction.SNAP_FRACTIONS).toInt()
-            if (tritjunction.hashIntScale[i] < 1) {
-                tritjunction.hashIntScale[i] = 1
+            hashIntScale[i] = (hashScale.get(i) * SNAP_FRACTIONS).toInt()
+            if (hashIntScale[i] < 1) {
+                hashIntScale[i] = 1
             }
             i++
         }
@@ -622,7 +622,7 @@ object tritjunction {
                 while (a != null) {
                     vert = 0
                     while (vert < 3) {
-                        a.hashVert[vert] = tritjunction.GetHashVert(a.v[vert].xyz)
+                        a.hashVert[vert] = GetHashVert(a.v[vert].xyz)
                         vert++
                     }
                     a = a.next
@@ -676,7 +676,7 @@ object tritjunction {
                     var j = 0
                     while (j < tri.numVerts) {
                         val v = idVec3(tri.verts[j].xyz.times(axis).oPlus(origin))
-                        tritjunction.GetHashVert(v)
+                        GetHashVert(v)
                         j += 3
                     }
                     i++
@@ -698,7 +698,7 @@ object tritjunction {
                 var newList: mapTri_s? = null
                 var tri = group.triList
                 while (tri != null) {
-                    val fixed = tritjunction.FixTriangleAgainstHash(tri)
+                    val fixed = FixTriangleAgainstHash(tri)
                     newList = tritools.MergeTriLists(newList, fixed)
                     tri = tri.next
                 }
@@ -710,20 +710,20 @@ object tritjunction {
         }
 
         // done
-        tritjunction.FreeTJunctionHash()
+        FreeTJunctionHash()
     }
 
-    internal class hashVert_s {
-        var iv: IntArray? = IntArray(3)
+    class hashVert_s {
+        var iv: IntArray = IntArray(3)
         var next: hashVert_s? = null
-        val v: idVec3? = idVec3()
+        val v: idVec3 = idVec3()
 
         companion object {
-            fun memset(hashVerts: Array<Array<Array<hashVert_s?>?>?>?) {
-                for (a in 0 until tritjunction.HASH_BINS) {
-                    for (b in 0 until tritjunction.HASH_BINS) {
-                        for (c in 0 until tritjunction.HASH_BINS) {
-                            hashVerts.get(a).get(b).get(c) = null
+            fun memset(hashVerts: Array<Array<Array<hashVert_s?>>>) {
+                for (a in 0 until HASH_BINS) {
+                    for (b in 0 until HASH_BINS) {
+                        for (c in 0 until HASH_BINS) {
+                            hashVerts[a][b][c] = null
                         }
                     }
                 }

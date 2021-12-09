@@ -22,10 +22,13 @@ import neo.idlib.Text.Token
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CInt
 import neo.idlib.containers.List.idList
-import neo.idlib.math.*
+import neo.idlib.math.Math_h
+import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import kotlin.math.abs
 
 /**
  *
@@ -49,25 +52,25 @@ object AASFile_local {
      */
     class idAASFileLocal : idAASFile() {
         // virtual 					~idAASFileLocal();
-        override fun EdgeCenter(edgeNum: Int): idVec3? {
-            val edge: aasEdge_s?
-            edge = edges.get(edgeNum)
-            return vertices.get(edge.vertexNum[0]).oPlus(vertices.get(edge.vertexNum[1])).oMultiply(0.5f)
+        override fun EdgeCenter(edgeNum: Int): idVec3 {
+            val edge: aasEdge_s
+            edge = edges[edgeNum]
+            return vertices[edge.vertexNum[0]] + vertices[edge.vertexNum[1]] * 0.5f
         }
 
-        override fun FaceCenter(faceNum: Int): idVec3? {
+        override fun FaceCenter(faceNum: Int): idVec3 {
             var i: Int
             var edgeNum: Int
-            val face: aasFace_s?
-            var edge: aasEdge_s?
+            val face: aasFace_s
+            var edge: aasEdge_s
             val center = idVec3(Vector.getVec3_origin())
-            face = faces.get(faceNum)
+            face = faces[faceNum]
             if (face.numEdges > 0) {
                 i = 0
                 while (i < face.numEdges) {
-                    edgeNum = edgeIndex.get(face.firstEdge + i)
-                    edge = edges.get(Math.abs(edgeNum))
-                    center.plusAssign(vertices.get(edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]))
+                    edgeNum = edgeIndex[face.firstEdge + i]
+                    edge = edges[abs(edgeNum)]
+                    center.plusAssign(vertices[edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]])
                     i++
                 }
                 center.divAssign(face.numEdges.toFloat())
@@ -75,17 +78,17 @@ object AASFile_local {
             return center
         }
 
-        override fun AreaCenter(areaNum: Int): idVec3? {
+        override fun AreaCenter(areaNum: Int): idVec3 {
             var i: Int
             var faceNum: Int
-            val area: aasArea_s?
+            val area: aasArea_s
             val center = idVec3(Vector.getVec3_origin())
-            area = areas.get(areaNum)
+            area = areas[areaNum]
             if (area.numFaces > 0) {
                 i = 0
                 while (i < area.numFaces) {
-                    faceNum = faceIndex.get(area.firstFace + i)
-                    center.plusAssign(FaceCenter(Math.abs(faceNum)))
+                    faceNum = faceIndex[area.firstFace + i]
+                    center.plusAssign(FaceCenter(abs(faceNum)))
                     i++
                 }
                 center.divAssign(area.numFaces.toFloat())
@@ -93,56 +96,56 @@ object AASFile_local {
             return center
         }
 
-        override fun EdgeBounds(edgeNum: Int): idBounds? {
-            val edge: aasEdge_s?
+        override fun EdgeBounds(edgeNum: Int): idBounds {
+            val edge: aasEdge_s
             val bounds = idBounds()
-            edge = edges.get(Math.abs(edgeNum))
-            bounds.set(0, bounds.set(1, vertices.get(edge.vertexNum[0])))
-            bounds.timesAssign(vertices.get(edge.vertexNum[1]))
+            edge = edges[abs(edgeNum)]
+            bounds[0] = bounds.set(1, vertices[edge.vertexNum[0]])
+            bounds.timesAssign(vertices[edge.vertexNum[1]])
             return bounds
         }
 
-        override fun FaceBounds(faceNum: Int): idBounds? {
+        override fun FaceBounds(faceNum: Int): idBounds {
             var i: Int
             var edgeNum: Int
-            val face: aasFace_s?
-            var edge: aasEdge_s?
+            val face: aasFace_s
+            var edge: aasEdge_s
             val bounds = idBounds()
-            face = faces.get(faceNum)
+            face = faces[faceNum]
             bounds.Clear()
             i = 0
             while (i < face.numEdges) {
-                edgeNum = edgeIndex.get(face.firstEdge + i)
-                edge = edges.get(Math.abs(edgeNum))
-                bounds.AddPoint(vertices.get(edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]))
+                edgeNum = edgeIndex[face.firstEdge + i]
+                edge = edges[abs(edgeNum)]
+                bounds.AddPoint(vertices[edge.vertexNum[Math_h.INTSIGNBITSET(edgeNum)]])
                 i++
             }
             return bounds
         }
 
-        override fun AreaBounds(areaNum: Int): idBounds? {
+        override fun AreaBounds(areaNum: Int): idBounds {
             var i: Int
             var faceNum: Int
-            val area: aasArea_s?
+            val area: aasArea_s
             val bounds = idBounds()
-            area = areas.get(areaNum)
+            area = areas[areaNum]
             bounds.Clear()
             i = 0
             while (i < area.numFaces) {
-                faceNum = faceIndex.get(area.firstFace + i)
-                bounds.timesAssign(FaceBounds(Math.abs(faceNum)))
+                faceNum = faceIndex[area.firstFace + i]
+                bounds.timesAssign(FaceBounds(abs(faceNum)))
                 i++
             }
             return bounds
         }
 
-        override fun PointAreaNum(origin: idVec3?): Int {
+        override fun PointAreaNum(origin: idVec3): Int {
             var nodeNum: Int
-            var node: aasNode_s?
+            var node: aasNode_s
             nodeNum = 1
             do {
-                node = nodes.get(nodeNum)
-                nodeNum = if (planeList.get(node.planeNum).Side(origin) == Plane.PLANESIDE_BACK) {
+                node = nodes[nodeNum]
+                nodeNum = if (planeList[node.planeNum].Side(origin) == Plane.PLANESIDE_BACK) {
                     node.children[1]
                 } else {
                     node.children[0]
@@ -155,8 +158,8 @@ object AASFile_local {
         }
 
         override fun PointReachableAreaNum(
-            origin: idVec3?,
-            searchBounds: idBounds?,
+            origin: idVec3,
+            searchBounds: idBounds,
             areaFlags: Int,
             excludeTravelFlags: Int
         ): Int {
@@ -168,14 +171,14 @@ object AASFile_local {
             val bounds = idBounds()
             var frak: Float
             val areaList = IntArray(32)
-            val pointList: Array<idVec3?> = idVec3.Companion.generateArray(32)
+            val pointList: Array<idVec3> = idVec3.generateArray(32)
             trace.areas = areaList
-            trace.points = idVec3.Companion.generateArray(32)
+            trace.points = idVec3.generateArray(32)
             trace.maxAreas = areaList.size
             trace.getOutOfSolid = 1 // true;
             areaNum = PointAreaNum(start)
             if (areaNum != 0) {
-                if (areas.get(areaNum).flags and areaFlags != 0 && areas.get(areaNum).travelFlags and excludeTravelFlags == 0) {
+                if (areas[areaNum].flags and areaFlags != 0 && areas[areaNum].travelFlags and excludeTravelFlags == 0) {
                     return areaNum
                 }
             } else {
@@ -184,7 +187,7 @@ object AASFile_local {
                 end.plusAssign(2, 32.0f)
                 Trace(trace, start, end)
                 if (trace.numAreas >= 1) {
-                    if (areas.get(0).flags and areaFlags != 0 && areas.get(0).travelFlags and excludeTravelFlags == 0) {
+                    if (areas[0].flags and areaFlags != 0 && areas[0].travelFlags and excludeTravelFlags == 0) {
                         return areaList[0]
                     }
                     start.set(pointList[0])
@@ -197,7 +200,7 @@ object AASFile_local {
             end.minusAssign(2, 32.0f)
             Trace(trace, start, end)
             if (trace.lastAreaNum != 0) {
-                if (areas.get(trace.lastAreaNum).flags and areaFlags != 0 && areas.get(trace.lastAreaNum).travelFlags and excludeTravelFlags == 0) {
+                if (areas[trace.lastAreaNum].flags and areaFlags != 0 && areas[trace.lastAreaNum].travelFlags and excludeTravelFlags == 0) {
                     return trace.lastAreaNum
                 }
                 start.set(trace.endpos)
@@ -207,10 +210,10 @@ object AASFile_local {
             i = 1
             while (i <= 12) {
                 frak = i * (1.0f / 12.0f)
-                bounds.set(0, origin.oPlus(searchBounds.get(0).times(frak)))
-                bounds.set(1, origin.oPlus(searchBounds.get(1).times(frak)))
+                bounds[0] = origin + searchBounds[0].times(frak)
+                bounds[1] = origin + searchBounds[1].times(frak)
                 areaNum = BoundsReachableAreaNum(bounds, areaFlags, excludeTravelFlags)
-                if (areaNum != 0 && areas.get(areaNum).flags and areaFlags != 0 && areas.get(areaNum).travelFlags and excludeTravelFlags == 0) {
+                if (areaNum != 0 && areas[areaNum].flags and areaFlags != 0 && areas[areaNum].travelFlags and excludeTravelFlags == 0) {
                     return areaNum
                 }
                 i++
@@ -218,23 +221,23 @@ object AASFile_local {
             return 0
         }
 
-        override fun BoundsReachableAreaNum(bounds: idBounds?, areaFlags: Int, excludeTravelFlags: Int): Int {
+        override fun BoundsReachableAreaNum(bounds: idBounds, areaFlags: Int, excludeTravelFlags: Int): Int {
             return BoundsReachableAreaNum_r(1, bounds, areaFlags, excludeTravelFlags)
         }
 
-        override fun PushPointIntoAreaNum(areaNum: Int, point: idVec3?) {
+        override fun PushPointIntoAreaNum(areaNum: Int, point: idVec3) {
             var i: Int
             var faceNum: Int
-            val area: aasArea_s?
-            var face: aasFace_s?
-            area = areas.get(areaNum)
+            val area: aasArea_s
+            var face: aasFace_s
+            area = areas[areaNum]
 
             // push the point to the right side of all area face planes
             i = 0
             while (i < area.numFaces) {
-                faceNum = faceIndex.get(area.firstFace + i)
-                face = faces.get(Math.abs(faceNum))
-                val plane = planeList.get(face.planeNum xor Math_h.INTSIGNBITSET(faceNum))
+                faceNum = faceIndex[area.firstFace + i]
+                face = faces[abs(faceNum)]
+                val plane = planeList[face.planeNum xor Math_h.INTSIGNBITSET(faceNum)]
                 val dist = plane.Distance(point)
 
                 // project the point onto the face plane if it is on the wrong side
@@ -245,7 +248,7 @@ object AASFile_local {
             }
         }
 
-        override fun Trace(trace: aasTrace_s?, start: idVec3?, end: idVec3?): Boolean {
+        override fun Trace(trace: aasTrace_s, start: idVec3, end: idVec3): Boolean {
             var side: Int
             var nodeNum: Int
             var tmpPlaneNum: Int
@@ -259,8 +262,8 @@ object AASFile_local {
             val v2 = idVec3()
             val tracestack = TempDump.allocArray(aasTraceStack_s::class.java, AASFile.MAX_AAS_TREE_DEPTH)
             var tstack_p: Int
-            var node: aasNode_s?
-            var plane: idPlane?
+            var node: aasNode_s
+            var plane: idPlane
             trace.numAreas = 0
             trace.lastAreaNum = 0
             trace.blockingAreaNum = 0
@@ -293,7 +296,7 @@ object AASFile_local {
                 // if it is an area
                 if (nodeNum < 0) {
                     // if can't enter the area
-                    if (areas.get(-nodeNum).flags and trace.flags != 0 || areas.get(-nodeNum).travelFlags and trace.travelFlags != 0) {
+                    if (areas[-nodeNum].flags and trace.flags != 0 || areas[-nodeNum].travelFlags and trace.travelFlags != 0) {
                         if (TempDump.NOT(trace.lastAreaNum.toDouble())) {
                             trace.fraction = 0.0f
                             v1.set(Vector.getVec3_origin())
@@ -306,7 +309,7 @@ object AASFile_local {
                         trace.blockingAreaNum = -nodeNum
                         trace.planeNum = tracestack[tstack_p].planeNum
                         // always take the plane with normal facing towards the trace start
-                        plane = planeList.get(trace.planeNum)
+                        plane = planeList[trace.planeNum]
                         if (v1.times(plane.Normal()) > 0.0f) {
                             trace.planeNum = trace.planeNum xor 1
                         }
@@ -315,10 +318,10 @@ object AASFile_local {
                     trace.lastAreaNum = -nodeNum
                     if (trace.numAreas < trace.maxAreas) {
                         if (trace.areas != null) {
-                            trace.areas[trace.numAreas] = -nodeNum
+                            trace.areas!![trace.numAreas] = -nodeNum
                         }
                         if (trace.points != null) {
-                            trace.points[trace.numAreas].set(tracestack[tstack_p].start)
+                            trace.points!![trace.numAreas].set(tracestack[tstack_p].start)
                         }
                         trace.numAreas++
                     }
@@ -339,7 +342,7 @@ object AASFile_local {
                     trace.blockingAreaNum = 0 // hit solid leaf
                     trace.planeNum = tracestack[tstack_p].planeNum
                     // always take the plane with normal facing towards the trace start
-                    plane = planeList.get(trace.planeNum)
+                    plane = planeList[trace.planeNum]
                     if (v1.times(plane.Normal()) > 0.0f) {
                         trace.planeNum = trace.planeNum xor 1
                     }
@@ -351,13 +354,13 @@ object AASFile_local {
                 }
 
                 // the node to test against
-                node = nodes.get(nodeNum)
+                node = nodes[nodeNum]
                 // start point of current line to test against node
                 cur_start.set(tracestack[tstack_p].start)
                 // end point of the current line to test against node
                 cur_end.set(tracestack[tstack_p].end)
                 // the current node plane
-                plane = planeList.get(node.planeNum)
+                plane = planeList[node.planeNum]
                 front = plane.Distance(cur_start).toDouble()
                 back = plane.Distance(cur_end).toDouble()
 
@@ -386,16 +389,16 @@ object AASFile_local {
                     // calculate the hit point with the node plane
                     // put the cross point TRACEPLANE_EPSILON on the near side
                     frac = if (front < 0) {
-                        (front + AASFile_local.TRACEPLANE_EPSILON) / (front - back)
+                        (front + TRACEPLANE_EPSILON) / (front - back)
                     } else {
-                        (front - AASFile_local.TRACEPLANE_EPSILON) / (front - back)
+                        (front - TRACEPLANE_EPSILON) / (front - back)
                     }
                     if (frac < 0) {
                         frac = 0.001 //0
                     } else if (frac > 1) {
                         frac = 0.999 //1
                     }
-                    cur_mid.set(cur_start.oPlus(cur_end.minus(cur_start).oMultiply(frac.toFloat()))) //TODO:downcast?
+                    cur_mid.set(cur_start + cur_end.minus(cur_start) * frac.toFloat()) //TODO:downcast?
 
                     // side the front part of the line is on
                     side = if (front < 0) 1 else 0
@@ -432,13 +435,13 @@ object AASFile_local {
             ReportRoutingEfficiency()
         }
 
-        fun Load(fileName: idStr?,    /*unsigned int*/mapFileCRC: Long): Boolean {
+        fun Load(fileName: idStr,    /*unsigned int*/mapFileCRC: Long): Boolean {
             val src =
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES)
             val token = idToken()
             val depth: Int
             val c: Int
-            name = fileName
+            name.set(fileName)
             crc = mapFileCRC
             Common.common.Printf("[Load AAS]\n")
             Common.common.Printf("loading %s\n", name)
@@ -449,7 +452,7 @@ object AASFile_local {
                 Common.common.Warning("Not an AAS file: '%s'", name)
                 return false
             }
-            if (!src.ReadToken(token) || token != AASFile.AAS_FILEVERSION) {
+            if (!src.ReadToken(token) || token.toString() != AASFile.AAS_FILEVERSION) {
                 Common.common.Warning(
                     "AAS file '%s' has version %s instead of %s",
                     name,
@@ -476,51 +479,51 @@ object AASFile_local {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "settings") {
+                if (token.toString() == "settings") {
                     if (!settings.FromParser(src)) {
                         return false
                     }
-                } else if (token == "planes") {
+                } else if (token.toString() == "planes") {
                     if (!ParsePlanes(src)) {
                         return false
                     }
-                } else if (token == "vertices") {
+                } else if (token.toString() == "vertices") {
                     if (!ParseVertices(src)) {
                         return false
                     }
-                } else if (token == "edges") {
+                } else if (token.toString() == "edges") {
                     if (!ParseEdges(src)) {
                         return false
                     }
-                } else if (token == "edgeIndex") {
+                } else if (token.toString() == "edgeIndex") {
                     if (!ParseIndex(src, edgeIndex)) {
                         return false
                     }
-                } else if (token == "faces") {
+                } else if (token.toString() == "faces") {
                     if (!ParseFaces(src)) {
                         return false
                     }
-                } else if (token == "faceIndex") {
+                } else if (token.toString() == "faceIndex") {
                     if (!ParseIndex(src, faceIndex)) {
                         return false
                     }
-                } else if (token == "areas") {
+                } else if (token.toString() == "areas") {
                     if (!ParseAreas(src)) {
                         return false
                     }
-                } else if (token == "nodes") {
+                } else if (token.toString() == "nodes") {
                     if (!ParseNodes(src)) {
                         return false
                     }
-                } else if (token == "portals") {
+                } else if (token.toString() == "portals") {
                     if (!ParsePortals(src)) {
                         return false
                     }
-                } else if (token == "portalIndex") {
+                } else if (token.toString() == "portalIndex") {
                     if (!ParseIndex(src, portalIndex)) {
                         return false
                     }
-                } else if (token == "clusters") {
+                } else if (token.toString() == "clusters") {
                     if (!ParseClusters(src)) {
                         return false
                     }
@@ -538,17 +541,17 @@ object AASFile_local {
             return true
         }
 
-        fun Write(fileName: idStr?,    /*unsigned int*/mapFileCRC: Long): Boolean {
+        fun Write(fileName: idStr,    /*unsigned int*/mapFileCRC: Long): Boolean {
             var i: Int
             var num: Int
             val aasFile: idFile?
             var reach: idReachability?
             Common.common.Printf("[Write AAS]\n")
             Common.common.Printf("writing %s\n", fileName)
-            name = fileName
+            name.set(fileName)
             crc = mapFileCRC
             aasFile = FileSystem_h.fileSystem.OpenFileWrite(fileName.toString(), "fs_devpath")
-            if (TempDump.NOT(aasFile)) {
+            if (aasFile == null) {
                 Common.common.Error("Error opening %s", fileName)
                 return false
             }
@@ -566,10 +569,10 @@ object AASFile_local {
                 aasFile.WriteFloatString(
                     "\t%d ( %f %f %f %f )\n",
                     i,
-                    planeList.get(i).Normal().x,
-                    planeList.get(i).Normal().y,
-                    planeList.get(i).Normal().z,
-                    planeList.get(i).Dist()
+                    planeList[i].Normal().x,
+                    planeList[i].Normal().y,
+                    planeList[i].Normal().z,
+                    planeList[i].Dist()
                 )
                 i++
             }
@@ -582,9 +585,9 @@ object AASFile_local {
                 aasFile.WriteFloatString(
                     "\t%d ( %f %f %f )\n",
                     i,
-                    vertices.get(i).x,
-                    vertices.get(i).y,
-                    vertices.get(i).z
+                    vertices[i].x,
+                    vertices[i].y,
+                    vertices[i].z
                 )
                 i++
             }
@@ -594,7 +597,7 @@ object AASFile_local {
             aasFile.WriteFloatString("edges %d {\n", edges.Num())
             i = 0
             while (i < edges.Num()) {
-                aasFile.WriteFloatString("\t%d ( %d %d )\n", i, edges.get(i).vertexNum[0], edges.get(i).vertexNum[1])
+                aasFile.WriteFloatString("\t%d ( %d %d )\n", i, edges[i].vertexNum[0], edges[i].vertexNum[1])
                 i++
             }
             aasFile.WriteFloatString("}\n")
@@ -603,7 +606,7 @@ object AASFile_local {
             aasFile.WriteFloatString("edgeIndex %d {\n", edgeIndex.Num())
             i = 0
             while (i < edgeIndex.Num()) {
-                aasFile.WriteFloatString("\t%d ( %d )\n", i, edgeIndex.get(i))
+                aasFile.WriteFloatString("\t%d ( %d )\n", i, edgeIndex[i])
                 i++
             }
             aasFile.WriteFloatString("}\n")
@@ -613,8 +616,8 @@ object AASFile_local {
             i = 0
             while (i < faces.Num()) {
                 aasFile.WriteFloatString(
-                    "\t%d ( %d %d %d %d %d %d )\n", i, faces.get(i).planeNum, faces.get(i).flags,
-                    faces.get(i).areas[0], faces.get(i).areas[1], faces.get(i).firstEdge, faces.get(i).numEdges
+                    "\t%d ( %d %d %d %d %d %d )\n", i, faces[i].planeNum, faces[i].flags,
+                    faces[i].areas[0], faces[i].areas[1], faces[i].firstEdge, faces[i].numEdges
                 )
                 i++
             }
@@ -624,7 +627,7 @@ object AASFile_local {
             aasFile.WriteFloatString("faceIndex %d {\n", faceIndex.Num())
             i = 0
             while (i < faceIndex.Num()) {
-                aasFile.WriteFloatString("\t%d ( %d )\n", i, faceIndex.get(i))
+                aasFile.WriteFloatString("\t%d ( %d )\n", i, faceIndex[i])
                 i++
             }
             aasFile.WriteFloatString("}\n")
@@ -634,7 +637,7 @@ object AASFile_local {
             i = 0
             while (i < areas.Num()) {
                 num = 0
-                reach = areas.get(i).reach
+                reach = areas[i].reach
                 while (reach != null) {
                     num++
                     reach = reach.next
@@ -642,15 +645,15 @@ object AASFile_local {
                 aasFile.WriteFloatString(
                     "\t%d ( %d %d %d %d %d %d ) %d {\n",
                     i,
-                    areas.get(i).flags,
-                    areas.get(i).contents,
-                    areas.get(i).firstFace,
-                    areas.get(i).numFaces,
-                    areas.get(i).cluster,
-                    areas.get(i).clusterAreaNum,
+                    areas[i].flags,
+                    areas[i].contents,
+                    areas[i].firstFace,
+                    areas[i].numFaces,
+                    areas[i].cluster,
+                    areas[i].clusterAreaNum,
                     num
                 )
-                reach = areas.get(i).reach
+                reach = areas[i].reach
                 while (reach != null) {
                     AASFile.Reachability_Write(aasFile, reach)
                     //                    switch (reach.travelType) {
@@ -659,7 +662,7 @@ object AASFile_local {
 //                            break;
 //                    }
                     if (reach.travelType == AASFile.TFL_SPECIAL) {
-                        AASFile.Reachability_Special_Write(aasFile, reach as idReachability_Special?)
+                        AASFile.Reachability_Special_Write(aasFile, reach as idReachability_Special)
                     }
                     aasFile.WriteFloatString("\n")
                     reach = reach.next
@@ -676,9 +679,9 @@ object AASFile_local {
                 aasFile.WriteFloatString(
                     "\t%d ( %d %d %d )\n",
                     i,
-                    nodes.get(i).planeNum,
-                    nodes.get(i).children[0],
-                    nodes.get(i).children[1]
+                    nodes[i].planeNum,
+                    nodes[i].children[0],
+                    nodes[i].children[1]
                 )
                 i++
             }
@@ -689,8 +692,8 @@ object AASFile_local {
             i = 0
             while (i < portals.Num()) {
                 aasFile.WriteFloatString(
-                    "\t%d ( %d %d %d %d %d )\n", i, portals.get(i).areaNum, portals.get(i).clusters[0],
-                    portals.get(i).clusters[1], portals.get(i).clusterAreaNum[0], portals.get(i).clusterAreaNum[1]
+                    "\t%d ( %d %d %d %d %d )\n", i, portals[i].areaNum, portals[i].clusters[0],
+                    portals[i].clusters[1], portals[i].clusterAreaNum[0], portals[i].clusterAreaNum[1]
                 )
                 i++
             }
@@ -700,7 +703,7 @@ object AASFile_local {
             aasFile.WriteFloatString("portalIndex %d {\n", portalIndex.Num())
             i = 0
             while (i < portalIndex.Num()) {
-                aasFile.WriteFloatString("\t%d ( %d )\n", i, portalIndex.get(i))
+                aasFile.WriteFloatString("\t%d ( %d )\n", i, portalIndex[i])
                 i++
             }
             aasFile.WriteFloatString("}\n")
@@ -710,8 +713,8 @@ object AASFile_local {
             i = 0
             while (i < clusters.Num()) {
                 aasFile.WriteFloatString(
-                    "\t%d ( %d %d %d %d )\n", i, clusters.get(i).numAreas, clusters.get(i).numReachableAreas,
-                    clusters.get(i).firstPortal, clusters.get(i).numPortals
+                    "\t%d ( %d %d %d %d )\n", i, clusters[i].numAreas, clusters[i].numReachableAreas,
+                    clusters[i].firstPortal, clusters[i].numPortals
                 )
                 i++
             }
@@ -750,7 +753,7 @@ object AASFile_local {
             total = 0
             i = 0
             while (i < clusters.Num()) {
-                n = clusters.get(i).numReachableAreas
+                n = clusters[i].numReachableAreas
                 numReachableAreas += n
                 total += n * n
                 i++
@@ -769,18 +772,18 @@ object AASFile_local {
             var edgeNum: Int
             var areaFirstFace: Int
             var faceFirstEdge: Int
-            var area: aasArea_s?
-            var face: aasFace_s?
-            var edge: aasEdge_s?
+            var area: aasArea_s
+            var face: aasFace_s
+            var edge: aasEdge_s
             var reach: idReachability?
-            val vertexRemap = idList<Int?>()
-            val edgeRemap = idList<Int?>()
-            val faceRemap = idList<Int?>()
-            val newVertices = idList<idVec3?>()
-            val newEdges = idList<aasEdge_s?>()
-            val newEdgeIndex = idList<Int?>()
-            val newFaces = idList<aasFace_s?>()
-            val newFaceIndex = idList<Int?>()
+            val vertexRemap = idList<Int>()
+            val edgeRemap = idList<Int>()
+            val faceRemap = idList<Int>()
+            val newVertices = idList<idVec3>()
+            val newEdges = idList<aasEdge_s>()
+            val newEdgeIndex = idList<Int>()
+            val newFaces = idList<aasFace_s>()
+            val newFaceIndex = idList<Int>()
             vertexRemap.AssureSize(vertices.Num(), -1)
             edgeRemap.AssureSize(edges.Num(), 0)
             faceRemap.AssureSize(faces.Num(), 0)
@@ -793,61 +796,61 @@ object AASFile_local {
             newFaceIndex.Resize(faceIndex.Num())
             i = 0
             while (i < areas.Num()) {
-                area = areas.get(i)
+                area = areas[i]
                 areaFirstFace = newFaceIndex.Num()
                 j = 0
                 while (j < area.numFaces) {
-                    faceNum = faceIndex.get(area.firstFace + j)
-                    face = faces.get(Math.abs(faceNum))
+                    faceNum = faceIndex[area.firstFace + j]
+                    face = faces[abs(faceNum)]
 
                     // store face
-                    if (TempDump.NOT(faceRemap.get(Math.abs(faceNum)))) {
-                        faceRemap.set(Math.abs(faceNum), newFaces.Num())
+                    if (TempDump.NOT(faceRemap[abs(faceNum)])) {
+                        faceRemap[abs(faceNum)] = newFaces.Num()
                         newFaces.Append(face)
 
                         // don't store edges for faces we don't care about
                         if (0 == face.flags and (AASFile.FACE_FLOOR or AASFile.FACE_LADDER)) {
-                            newFaces.get(newFaces.Num() - 1).firstEdge = 0
-                            newFaces.get(newFaces.Num() - 1).numEdges = 0
+                            newFaces[newFaces.Num() - 1].firstEdge = 0
+                            newFaces[newFaces.Num() - 1].numEdges = 0
                         } else {
 
                             // store edges
                             faceFirstEdge = newEdgeIndex.Num()
                             k = 0
                             while (k < face.numEdges) {
-                                edgeNum = edgeIndex.get(face.firstEdge + k)
-                                edge = edges.get(Math.abs(edgeNum))
-                                if (TempDump.NOT(edgeRemap.get(Math.abs(edgeNum)))) {
+                                edgeNum = edgeIndex[face.firstEdge + k]
+                                edge = edges[abs(edgeNum)]
+                                if (TempDump.NOT(edgeRemap[abs(edgeNum)])) {
                                     if (edgeNum < 0) {
-                                        edgeRemap.set(Math.abs(edgeNum), -newEdges.Num())
+                                        edgeRemap[abs(edgeNum)] = -newEdges.Num()
                                     } else {
-                                        edgeRemap.set(Math.abs(edgeNum), newEdges.Num())
+                                        edgeRemap[abs(edgeNum)] = newEdges.Num()
                                     }
 
                                     // remap vertices if not yet remapped
-                                    if (vertexRemap.get(edge.vertexNum[0]) == -1) {
-                                        vertexRemap.set(edge.vertexNum[0], newVertices.Num())
-                                        newVertices.Append(vertices.get(edge.vertexNum[0]))
+                                    if (vertexRemap[edge.vertexNum[0]] == -1) {
+                                        vertexRemap[edge.vertexNum[0]] = newVertices.Num()
+                                        newVertices.Append(vertices[edge.vertexNum[0]])
                                     }
-                                    if (vertexRemap.get(edge.vertexNum[1]) == -1) {
-                                        vertexRemap.set(edge.vertexNum[1], newVertices.Num())
-                                        newVertices.Append(vertices.get(edge.vertexNum[1]))
+                                    if (vertexRemap[edge.vertexNum[1]] == -1) {
+                                        vertexRemap[edge.vertexNum[1]] = newVertices.Num()
+                                        newVertices.Append(vertices[edge.vertexNum[1]])
                                     }
                                     newEdges.Append(edge)
-                                    newEdges.get(newEdges.Num() - 1).vertexNum[0] = vertexRemap.get(edge.vertexNum[0])
-                                    newEdges.get(newEdges.Num() - 1).vertexNum[1] = vertexRemap.get(edge.vertexNum[1])
+                                    newEdges[newEdges.Num() - 1].vertexNum[0] = vertexRemap[edge.vertexNum[0]]
+                                    newEdges[newEdges.Num() - 1].vertexNum[1] = vertexRemap[edge.vertexNum[1]]
                                 }
-                                newEdgeIndex.Append(edgeRemap.get(Math.abs(edgeNum)))
+                                newEdgeIndex.Append(edgeRemap[abs(edgeNum)])
                                 k++
                             }
-                            newFaces.get(newFaces.Num() - 1).firstEdge = faceFirstEdge
-                            newFaces.get(newFaces.Num() - 1).numEdges = newEdgeIndex.Num() - faceFirstEdge
+                            newFaces[newFaces.Num() - 1].firstEdge = faceFirstEdge
+                            newFaces[newFaces.Num() - 1].numEdges = newEdgeIndex.Num() - faceFirstEdge
                         }
                     }
                     if (faceNum < 0) {
-                        newFaceIndex.Append(-faceRemap.get(Math.abs(faceNum)))
+                        newFaceIndex.Append(-faceRemap[abs(faceNum)])
                     } else {
-                        newFaceIndex.Append(faceRemap.get(Math.abs(faceNum)))
+                        newFaceIndex.Append(faceRemap[abs(faceNum)])
                     }
                     j++
                 }
@@ -857,7 +860,7 @@ object AASFile_local {
                 // remap the reachability edges
                 reach = area.reach
                 while (reach != null) {
-                    reach.edgeNum = Math.abs(edgeRemap.get(reach.edgeNum))
+                    reach.edgeNum = abs(edgeRemap[reach.edgeNum])
                     reach = reach.next
                 }
                 i++
@@ -878,10 +881,10 @@ object AASFile_local {
             // link reversed reachabilities
             i = 0
             while (i < areas.Num()) {
-                reach = areas.get(i).reach
+                reach = areas[i].reach
                 while (reach != null) {
-                    reach.rev_next = areas.get(reach.toAreaNum.toInt()).rev_reach
-                    areas.get(reach.toAreaNum.toInt()).rev_reach = reach
+                    reach.rev_next = areas[reach.toAreaNum.toInt()].rev_reach
+                    areas[reach.toAreaNum.toInt()].rev_reach = reach
                     reach = reach.next
                 }
                 i++
@@ -892,8 +895,8 @@ object AASFile_local {
             var i: Int
             i = 0
             while (i < areas.Num()) {
-                areas.get(i).center.set(AreaReachableGoal(i))
-                areas.get(i).bounds = AreaBounds(i)
+                areas[i].center.set(AreaReachableGoal(i))
+                areas[i].bounds.set(AreaBounds(i))
                 i++
             }
         }
@@ -918,13 +921,13 @@ object AASFile_local {
             var nextReach: idReachability?
             i = 0
             while (i < areas.Num()) {
-                reach = areas.get(i).reach
+                reach = areas[i].reach
                 while (reach != null) {
                     nextReach = reach.next
                     reach = nextReach
                 }
-                areas.get(i).reach = null
-                areas.get(i).rev_reach = null
+                areas[i].reach = null
+                areas[i].rev_reach = null
                 i++
             }
         }
@@ -947,7 +950,7 @@ object AASFile_local {
             clusters.Append(cluster)
         }
 
-        private fun ParseIndex(src: idLexer?, indexes: idList<Int?>?): Boolean {
+        private fun ParseIndex(src: idLexer, indexes: idList<Int>): Boolean {
             var   /*aasIndex_s*/index: Int
             val numIndexes = src.ParseInt()
             indexes.Resize(numIndexes)
@@ -964,7 +967,7 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParsePlanes(src: idLexer?): Boolean {
+        private fun ParsePlanes(src: idLexer): Boolean {
             val numPlanes = src.ParseInt()
             planeList.Resize(numPlanes)
             if (!src.ExpectTokenString("{")) {
@@ -978,13 +981,13 @@ object AASFile_local {
                     return false
                 }
                 plane.SetNormal(vec.ToVec3())
-                plane.SetDist(vec.get(3))
+                plane.SetDist(vec[3])
                 planeList.Append(plane)
             }
             return src.ExpectTokenString("}")
         }
 
-        private fun ParseVertices(src: idLexer?): Boolean {
+        private fun ParseVertices(src: idLexer): Boolean {
             val numVertices = src.ParseInt()
             vertices.Resize(numVertices)
             if (!src.ExpectTokenString("{")) {
@@ -1001,7 +1004,7 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParseEdges(src: idLexer?): Boolean {
+        private fun ParseEdges(src: idLexer): Boolean {
             val numEdges = src.ParseInt()
             edges.Resize(numEdges)
             if (!src.ExpectTokenString("{")) {
@@ -1019,7 +1022,7 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParseFaces(src: idLexer?): Boolean {
+        private fun ParseFaces(src: idLexer): Boolean {
             val numFaces = src.ParseInt()
             faces.Resize(numFaces)
             if (!src.ExpectTokenString("{")) {
@@ -1041,8 +1044,8 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParseReachabilities(src: idLexer?, areaNum: Int): Boolean {
-            val area = areas.get(areaNum)
+        private fun ParseReachabilities(src: idLexer, areaNum: Int): Boolean {
+            val area = areas[areaNum]
             val num = src.ParseInt()
             src.ExpectTokenString("{")
             area.reach = null
@@ -1078,7 +1081,7 @@ object AASFile_local {
             return true
         }
 
-        private fun ParseAreas(src: idLexer?): Boolean {
+        private fun ParseAreas(src: idLexer): Boolean {
             val numAreas = src.ParseInt()
             areas.Resize(numAreas)
             if (!src.ExpectTokenString("{")) {
@@ -1105,7 +1108,7 @@ object AASFile_local {
             return true
         }
 
-        private fun ParseNodes(src: idLexer?): Boolean {
+        private fun ParseNodes(src: idLexer): Boolean {
             val numNodes = src.ParseInt()
             nodes.Resize(numNodes)
             if (!src.ExpectTokenString("{")) {
@@ -1124,7 +1127,7 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParsePortals(src: idLexer?): Boolean {
+        private fun ParsePortals(src: idLexer): Boolean {
             val numPortals = src.ParseInt()
             portals.Resize(numPortals)
             if (!src.ExpectTokenString("{")) {
@@ -1145,7 +1148,7 @@ object AASFile_local {
             return src.ExpectTokenString("}")
         }
 
-        private fun ParseClusters(src: idLexer?): Boolean {
+        private fun ParseClusters(src: idLexer): Boolean {
             val numClusters = src.ParseInt()
             clusters.Resize(numClusters)
             if (!src.ExpectTokenString("{")) {
@@ -1167,21 +1170,21 @@ object AASFile_local {
 
         private fun BoundsReachableAreaNum_r(
             nodeNum: Int,
-            bounds: idBounds?,
+            bounds: idBounds,
             areaFlags: Int,
             excludeTravelFlags: Int
         ): Int {
             var nodeNum = nodeNum
             var res: Int
-            var node: aasNode_s?
+            var node: aasNode_s
             while (nodeNum != 0) {
                 if (nodeNum < 0) {
-                    return if (areas.get(-nodeNum).flags and areaFlags != 0 && areas.get(-nodeNum).travelFlags and excludeTravelFlags == 0) {
+                    return if (areas[-nodeNum].flags and areaFlags != 0 && areas[-nodeNum].travelFlags and excludeTravelFlags == 0) {
                         -nodeNum
                     } else 0
                 }
-                node = nodes.get(nodeNum)
-                res = bounds.PlaneSide(planeList.get(node.planeNum))
+                node = nodes[nodeNum]
+                res = bounds.PlaneSide(planeList[node.planeNum])
                 if (res == Plane.PLANESIDE_BACK) {
                     nodeNum = node.children[1]
                 } else if (res == Plane.PLANESIDE_FRONT) {
@@ -1197,20 +1200,20 @@ object AASFile_local {
             return 0
         }
 
-        private fun MaxTreeDepth_r(nodeNum: Int, depth: CInt?, maxDepth: CInt?) {
+        private fun MaxTreeDepth_r(nodeNum: Int, depth: CInt, maxDepth: CInt) {
             var maxDepth = maxDepth
-            val node: aasNode_s?
+            val node: aasNode_s
             if (nodeNum <= 0) {
                 return
             }
-            depth.setVal(depth.getVal() + 1)
-            if (depth.getVal() > maxDepth.getVal()) {
+            depth._val = (depth._val + 1)
+            if (depth._val > maxDepth._val) {
                 maxDepth = depth
             }
-            node = nodes.get(nodeNum)
+            node = nodes[nodeNum]
             MaxTreeDepth_r(node.children[0], depth, maxDepth)
             MaxTreeDepth_r(node.children[1], depth, maxDepth)
-            depth.setVal(depth.getVal() - 1)
+            depth._val = (depth._val - 1)
         }
 
         private fun MaxTreeDepth(): Int {
@@ -1219,25 +1222,25 @@ object AASFile_local {
 
 //	depth = maxDepth = 0;
             MaxTreeDepth_r(1, depth, maxDepth)
-            return maxDepth.getVal()
+            return maxDepth._val
         }
 
         private fun AreaContentsTravelFlags(areaNum: Int): Int {
-            return if (areas.get(areaNum).contents and AASFile.AREACONTENTS_WATER != 0) {
+            return if (areas[areaNum].contents and AASFile.AREACONTENTS_WATER != 0) {
                 AASFile.TFL_WATER
             } else AASFile.TFL_AIR
         }
 
-        private fun AreaReachableGoal(areaNum: Int): idVec3? {
+        private fun AreaReachableGoal(areaNum: Int): idVec3 {
             var i: Int
             var faceNum: Int
             var numFaces: Int
-            val area: aasArea_s?
+            val area: aasArea_s
             val center = idVec3()
             val start = idVec3()
             val end = idVec3()
             val trace = aasTrace_s()
-            area = areas.get(areaNum)
+            area = areas[areaNum]
             if (0 == area.flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) || area.flags and AASFile.AREA_LIQUID != 0) {
                 return AreaCenter(areaNum)
             }
@@ -1245,12 +1248,12 @@ object AASFile_local {
             numFaces = 0
             i = 0
             while (i < area.numFaces) {
-                faceNum = faceIndex.get(area.firstFace + i)
-                if (0 == faces.get(Math.abs(faceNum)).flags and AASFile.FACE_FLOOR) {
+                faceNum = faceIndex[area.firstFace + i]
+                if (0 == faces[abs(faceNum)].flags and AASFile.FACE_FLOOR) {
                     i++
                     continue
                 }
-                center.plusAssign(FaceCenter(Math.abs(faceNum)))
+                center.plusAssign(FaceCenter(abs(faceNum)))
                 numFaces++
                 i++
             }
@@ -1271,7 +1274,7 @@ object AASFile_local {
             num = 0
             i = 0
             while (i < areas.Num()) {
-                reach = areas.get(i).reach
+                reach = areas[i].reach
                 while (reach != null) {
                     num++
                     reach = reach.next
@@ -1285,25 +1288,25 @@ object AASFile_local {
         // friend class idAASReach;
         // friend class idAASCluster;
         init {
-            planeList.SetGranularity(AASFile_local.AAS_PLANE_GRANULARITY)
-            vertices.SetGranularity(AASFile_local.AAS_VERTEX_GRANULARITY)
-            edges.SetGranularity(AASFile_local.AAS_EDGE_GRANULARITY)
-            edgeIndex.SetGranularity(AASFile_local.AAS_INDEX_GRANULARITY)
-            faces.SetGranularity(AASFile_local.AAS_LIST_GRANULARITY)
-            faceIndex.SetGranularity(AASFile_local.AAS_INDEX_GRANULARITY)
-            areas.SetGranularity(AASFile_local.AAS_LIST_GRANULARITY)
-            nodes.SetGranularity(AASFile_local.AAS_LIST_GRANULARITY)
-            portals.SetGranularity(AASFile_local.AAS_LIST_GRANULARITY)
-            portalIndex.SetGranularity(AASFile_local.AAS_INDEX_GRANULARITY)
-            clusters.SetGranularity(AASFile_local.AAS_LIST_GRANULARITY)
+            planeList.SetGranularity(AAS_PLANE_GRANULARITY)
+            vertices.SetGranularity(AAS_VERTEX_GRANULARITY)
+            edges.SetGranularity(AAS_EDGE_GRANULARITY)
+            edgeIndex.SetGranularity(AAS_INDEX_GRANULARITY)
+            faces.SetGranularity(AAS_LIST_GRANULARITY)
+            faceIndex.SetGranularity(AAS_INDEX_GRANULARITY)
+            areas.SetGranularity(AAS_LIST_GRANULARITY)
+            nodes.SetGranularity(AAS_LIST_GRANULARITY)
+            portals.SetGranularity(AAS_LIST_GRANULARITY)
+            portalIndex.SetGranularity(AAS_INDEX_GRANULARITY)
+            clusters.SetGranularity(AAS_LIST_GRANULARITY)
         }
     }
 
     class aasTraceStack_s {
-        val end: idVec3?
+        val end: idVec3
         var nodeNum = 0
         var planeNum = 0
-        val start: idVec3?
+        val start: idVec3
 
         init {
             start = idVec3()

@@ -1,6 +1,7 @@
 package neo.Tools.Compilers.DMap
 
 import neo.CM.CollisionModel_local
+import neo.Renderer.Material
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.tr_local.idRenderLightLocal
 import neo.TempDump
@@ -14,8 +15,8 @@ import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.framework.FileSystem_h
-import neo.idlib.*
 import neo.idlib.BV.Bounds.idBounds
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idLib
 import neo.idlib.MapFile.idMapEntity
 import neo.idlib.MapFile.idMapFile
@@ -44,14 +45,14 @@ object dmap {
     const val PLANENUM_LEAF = -1
 
     //
-    var dmapGlobals: dmapGlobals_t? = null
+    var dmapGlobals: dmapGlobals_t = dmapGlobals_t()
 
     /*
      ============
      ProcessModel
      ============
      */
-    fun ProcessModel(e: uEntity_t?, floodFill: Boolean): Boolean {
+    fun ProcessModel(e: uEntity_t, floodFill: Boolean): Boolean {
         val faces: bspface_s?
 
         // build a bsp tree using all of the sides
@@ -67,7 +68,7 @@ object dmap {
         ubrush.FilterBrushesIntoTree(e)
 
         // see if the bsp is completely enclosed
-        if (floodFill && !dmap.dmapGlobals.noFlood) {
+        if (floodFill && !dmapGlobals.noFlood) {
             if (portals.FloodEntities(e.tree)) {
                 // set the outside leafs to opaque
                 portals.FillOutside(e)
@@ -104,9 +105,9 @@ object dmap {
         usurface.Prelight(e)
 
         // optimizing is a superset of fixing tjunctions
-        if (!dmap.dmapGlobals.noOptimize) {
+        if (!dmapGlobals.noOptimize) {
             optimize.OptimizeEntity(e)
-        } else if (!dmap.dmapGlobals.noTJunc) {
+        } else if (!dmapGlobals.noTJunc) {
             tritjunction.FixEntityTjunctions(e)
         }
 
@@ -122,30 +123,30 @@ object dmap {
      */
     fun ProcessModels(): Boolean {
         val oldVerbose: Boolean
-        var entity: uEntity_t?
-        oldVerbose = dmap.dmapGlobals.verbose
-        dmap.dmapGlobals.entityNum = 0
-        while (dmap.dmapGlobals.entityNum < dmap.dmapGlobals.num_entities) {
-            entity = dmap.dmapGlobals.uEntities[dmap.dmapGlobals.entityNum]
+        var entity: uEntity_t
+        oldVerbose = dmapGlobals.verbose
+        dmapGlobals.entityNum = 0
+        while (dmapGlobals.entityNum < dmapGlobals.num_entities) {
+            entity = dmapGlobals.uEntities!![dmapGlobals.entityNum]
             if (TempDump.NOT(entity.primitives)) {
-                dmap.dmapGlobals.entityNum++
+                dmapGlobals.entityNum++
                 continue
             }
-            idLib.common.Printf("############### entity %d ###############\n", dmap.dmapGlobals.entityNum)
+            idLib.common.Printf("############### entity %d ###############\n", dmapGlobals.entityNum)
 
             // if we leaked, stop without any more processing
-            if (!dmap.ProcessModel(entity, dmap.dmapGlobals.entityNum == 0)) {
+            if (!ProcessModel(entity, dmapGlobals.entityNum == 0)) {
                 return false
             }
 
             // we usually don't want to see output for submodels unless
             // something strange is going on
-            if (!dmap.dmapGlobals.verboseentities) {
-                dmap.dmapGlobals.verbose = false
+            if (!dmapGlobals.verboseentities) {
+                dmapGlobals.verbose = false
             }
-            dmap.dmapGlobals.entityNum++
+            dmapGlobals.entityNum++
         }
-        dmap.dmapGlobals.verbose = oldVerbose
+        dmapGlobals.verbose = oldVerbose
         return true
     }
 
@@ -173,31 +174,31 @@ object dmap {
      ============
      */
     fun ResetDmapGlobals() {
-        dmap.dmapGlobals.mapFileBase[0] = '\u0000'
-        dmap.dmapGlobals.dmapFile = null
-        dmap.dmapGlobals.mapPlanes.Clear()
-        dmap.dmapGlobals.num_entities = 0
-        dmap.dmapGlobals.uEntities = null
-        dmap.dmapGlobals.entityNum = 0
-        dmap.dmapGlobals.mapLights.Clear()
-        dmap.dmapGlobals.verbose = false
-        dmap.dmapGlobals.glview = false
-        dmap.dmapGlobals.noOptimize = false
-        dmap.dmapGlobals.verboseentities = false
-        dmap.dmapGlobals.noCurves = false
-        dmap.dmapGlobals.fullCarve = false
-        dmap.dmapGlobals.noModelBrushes = false
-        dmap.dmapGlobals.noTJunc = false
-        dmap.dmapGlobals.nomerge = false
-        dmap.dmapGlobals.noFlood = false
-        dmap.dmapGlobals.noClipSides = false
-        dmap.dmapGlobals.noLightCarve = false
-        dmap.dmapGlobals.noShadow = false
-        dmap.dmapGlobals.shadowOptLevel = shadowOptLevel_t.SO_NONE
-        dmap.dmapGlobals.drawBounds.Clear()
-        dmap.dmapGlobals.drawflag = false
-        dmap.dmapGlobals.totalShadowTriangles = 0
-        dmap.dmapGlobals.totalShadowVerts = 0
+        dmapGlobals.mapFileBase[0] = '\u0000'
+        dmapGlobals.dmapFile = null
+        dmapGlobals.mapPlanes.Clear()
+        dmapGlobals.num_entities = 0
+        dmapGlobals.uEntities = null
+        dmapGlobals.entityNum = 0
+        dmapGlobals.mapLights.Clear()
+        dmapGlobals.verbose = false
+        dmapGlobals.glview = false
+        dmapGlobals.noOptimize = false
+        dmapGlobals.verboseentities = false
+        dmapGlobals.noCurves = false
+        dmapGlobals.fullCarve = false
+        dmapGlobals.noModelBrushes = false
+        dmapGlobals.noTJunc = false
+        dmapGlobals.nomerge = false
+        dmapGlobals.noFlood = false
+        dmapGlobals.noClipSides = false
+        dmapGlobals.noLightCarve = false
+        dmapGlobals.noShadow = false
+        dmapGlobals.shadowOptLevel = shadowOptLevel_t.SO_NONE
+        dmapGlobals.drawBounds.Clear()
+        dmapGlobals.drawflag = false
+        dmapGlobals.totalShadowTriangles = 0
+        dmapGlobals.totalShadowVerts = 0
     }
 
     /*
@@ -205,91 +206,91 @@ object dmap {
      Dmap
      ============
      */
-    fun Dmap(args: CmdArgs.idCmdArgs?) {
+    fun Dmap(args: CmdArgs.idCmdArgs) {
         var i: Int
         var start: Int
         var end: Int
-        var path: String? //= new char[1024];
-        var passedName: idStr? = idStr()
+        var path: String //= new char[1024];
+        var passedName = idStr()
         var leaked = false
         var noCM = false
         var noAAS = false
-        dmap.ResetDmapGlobals()
+        ResetDmapGlobals()
         if (args.Argc() < 2) {
-            dmap.DmapHelp()
+            DmapHelp()
             return
         }
         idLib.common.Printf("---- dmap ----\n")
-        dmap.dmapGlobals.fullCarve = true
-        dmap.dmapGlobals.shadowOptLevel =
+        dmapGlobals.fullCarve = true
+        dmapGlobals.shadowOptLevel =
             shadowOptLevel_t.SO_MERGE_SURFACES // create shadows by merging all surfaces, but no super optimization
         //	dmapGlobals.shadowOptLevel = SO_CLIP_OCCLUDERS;		// remove occluders that are completely covered
 //	dmapGlobals.shadowOptLevel = SO_SIL_OPTIMIZE;
 //	dmapGlobals.shadowOptLevel = SO_CULL_OCCLUDED;
-        dmap.dmapGlobals.noLightCarve = true
+        dmapGlobals.noLightCarve = true
         i = 1
         while (i < args.Argc()) {
             var s: String?
             s = args.Argv(i)
-            if (TempDump.isNotNullOrEmpty(s) && s.length > 0 && s.startsWith("-")) {
+            if (TempDump.isNotNullOrEmpty(s) && s.isNotEmpty() && s.startsWith("-")) {
                 s = s.substring(1)
-                if (s.length == 0 || s.startsWith("\u0000")) {
+                if (s.isEmpty() || s.startsWith("\u0000")) {
                     i++
                     continue
                 }
             }
-            if (TempDump.NOT(idStr.Companion.Icmp(s, "glview").toDouble())) {
-                dmap.dmapGlobals.glview = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "v").toDouble())) {
+            if (TempDump.NOT(idStr.Icmp(s, "glview").toDouble())) {
+                dmapGlobals.glview = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "v").toDouble())) {
                 idLib.common.Printf("verbose = true\n")
-                dmap.dmapGlobals.verbose = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "draw").toDouble())) {
+                dmapGlobals.verbose = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "draw").toDouble())) {
                 idLib.common.Printf("drawflag = true\n")
-                dmap.dmapGlobals.drawflag = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noFlood").toDouble())) {
+                dmapGlobals.drawflag = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noFlood").toDouble())) {
                 idLib.common.Printf("noFlood = true\n")
-                dmap.dmapGlobals.noFlood = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noLightCarve").toDouble())) {
+                dmapGlobals.noFlood = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noLightCarve").toDouble())) {
                 idLib.common.Printf("noLightCarve = true\n")
-                dmap.dmapGlobals.noLightCarve = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "lightCarve").toDouble())) {
+                dmapGlobals.noLightCarve = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "lightCarve").toDouble())) {
                 idLib.common.Printf("noLightCarve = false\n")
-                dmap.dmapGlobals.noLightCarve = false
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noOpt").toDouble())) {
+                dmapGlobals.noLightCarve = false
+            } else if (TempDump.NOT(idStr.Icmp(s, "noOpt").toDouble())) {
                 idLib.common.Printf("noOptimize = true\n")
-                dmap.dmapGlobals.noOptimize = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "verboseentities").toDouble())) {
+                dmapGlobals.noOptimize = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "verboseentities").toDouble())) {
                 idLib.common.Printf("verboseentities = true\n")
-                dmap.dmapGlobals.verboseentities = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noCurves").toDouble())) {
+                dmapGlobals.verboseentities = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noCurves").toDouble())) {
                 idLib.common.Printf("noCurves = true\n")
-                dmap.dmapGlobals.noCurves = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noModels").toDouble())) {
+                dmapGlobals.noCurves = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noModels").toDouble())) {
                 idLib.common.Printf("noModels = true\n")
-                dmap.dmapGlobals.noModelBrushes = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noClipSides").toDouble())) {
+                dmapGlobals.noModelBrushes = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noClipSides").toDouble())) {
                 idLib.common.Printf("noClipSides = true\n")
-                dmap.dmapGlobals.noClipSides = true
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noCarve").toDouble())) {
+                dmapGlobals.noClipSides = true
+            } else if (TempDump.NOT(idStr.Icmp(s, "noCarve").toDouble())) {
                 idLib.common.Printf("noCarve = true\n")
-                dmap.dmapGlobals.fullCarve = false
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "shadowOpt").toDouble())) {
-                dmap.dmapGlobals.shadowOptLevel = dmap.shadowOptLevel_t.values()[TempDump.atoi(args.Argv(i + 1))]
-                idLib.common.Printf("shadowOpt = %d\n", dmap.dmapGlobals.shadowOptLevel)
+                dmapGlobals.fullCarve = false
+            } else if (TempDump.NOT(idStr.Icmp(s, "shadowOpt").toDouble())) {
+                dmapGlobals.shadowOptLevel = shadowOptLevel_t.values()[TempDump.atoi(args.Argv(i + 1))]
+                idLib.common.Printf("shadowOpt = %d\n", dmapGlobals.shadowOptLevel)
                 i += 1
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noTjunc").toDouble())) {
+            } else if (TempDump.NOT(idStr.Icmp(s, "noTjunc").toDouble())) {
                 // triangle optimization won't work properly without tjunction fixing
                 idLib.common.Printf("noTJunc = true\n")
-                dmap.dmapGlobals.noTJunc = true
-                dmap.dmapGlobals.noOptimize = true
+                dmapGlobals.noTJunc = true
+                dmapGlobals.noOptimize = true
                 idLib.common.Printf("forcing noOptimize = true\n")
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noCM").toDouble())) {
+            } else if (TempDump.NOT(idStr.Icmp(s, "noCM").toDouble())) {
                 noCM = true
                 idLib.common.Printf("noCM = true\n")
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "noAAS").toDouble())) {
+            } else if (TempDump.NOT(idStr.Icmp(s, "noAAS").toDouble())) {
                 noAAS = true
                 idLib.common.Printf("noAAS = true\n")
-            } else if (TempDump.NOT(idStr.Companion.Icmp(s, "editorOutput").toDouble())) {
+            } else if (TempDump.NOT(idStr.Icmp(s, "editorOutput").toDouble())) {
                 if (BuildDefines._WIN32) {
                     Common.com_outputMsg = true
                 }
@@ -308,11 +309,11 @@ object dmap {
         }
         val stripped = passedName
         stripped.StripFileExtension()
-        idStr.Companion.Copynz(dmap.dmapGlobals.mapFileBase, stripped.c_str(), dmap.dmapGlobals.mapFileBase.size)
+        idStr.Copynz(dmapGlobals.mapFileBase, stripped.c_str(), dmapGlobals.mapFileBase.size)
         var region = false
         // if this isn't a regioned map, delete the last saved region map
-        if (passedName.Right(4) != ".reg") {
-            path = kotlin.String.format("%s.reg", *dmap.dmapGlobals.mapFileBase)
+        if (passedName.Right(4).toString() != ".reg") {
+            path = String.format("%s.reg", dmapGlobals.mapFileBase)
             FileSystem_h.fileSystem.RemoveFile(path)
         } else {
             region = true
@@ -320,7 +321,7 @@ object dmap {
         passedName = stripped
 
         // delete any old line leak files
-        path = kotlin.String.format("%s.lin", *dmap.dmapGlobals.mapFileBase)
+        path = kotlin.String.format("%s.lin", dmapGlobals.mapFileBase)
         FileSystem_h.fileSystem.RemoveFile(path)
 
         //
@@ -330,14 +331,14 @@ object dmap {
         if (!map.LoadDMapFile(passedName.toString())) {
             return
         }
-        if (dmap.ProcessModels()) {
+        if (ProcessModels()) {
             output.WriteOutputFile()
         } else {
             leaked = true
         }
         map.FreeDMapFile()
-        idLib.common.Printf("%d total shadow triangles\n", dmap.dmapGlobals.totalShadowTriangles)
-        idLib.common.Printf("%d total shadow verts\n", dmap.dmapGlobals.totalShadowVerts)
+        idLib.common.Printf("%d total shadow triangles\n", dmapGlobals.totalShadowTriangles)
+        idLib.common.Printf("%d total shadow verts\n", dmapGlobals.totalShadowVerts)
         end = win_shared.Sys_Milliseconds()
         idLib.common.Printf("-----------------------\n")
         idLib.common.Printf("%5.0f seconds for dmap\n", (end - start) * 0.001f)
@@ -349,7 +350,7 @@ object dmap {
 
                 // create the collision map
                 start = win_shared.Sys_Milliseconds()
-                CollisionModel_local.collisionModelManager.LoadMap(dmap.dmapGlobals.dmapFile)
+                CollisionModel_local.collisionModelManager.LoadMap(dmapGlobals.dmapFile)
                 CollisionModel_local.collisionModelManager.FreeMap()
                 end = win_shared.Sys_Milliseconds()
                 idLib.common.Printf("-------------------------------------\n")
@@ -357,16 +358,16 @@ object dmap {
             }
             if (!noAAS && !region) {
                 // create AAS files
-                RunAAS_f.Companion.getInstance().run(args)
+                RunAAS_f.getInstance().run(args)
             }
         }
 
         // free the common .map representation
 //        delete dmapGlobals.dmapFile;
-        dmap.dmapGlobals.dmapFile = null
+        dmapGlobals.dmapFile = null
 
         // clear the map plane list
-        dmap.dmapGlobals.mapPlanes.Clear()
+        dmapGlobals.mapPlanes.Clear()
         if (BuildDefines._WIN32) {
             throw TODO_Exception()
             //            if (com_outputMsg && com_hwndMsg != 0) {
@@ -383,7 +384,7 @@ object dmap {
     // multiple optimizeGroups will be merged together into .proc surfaces, but no further optimization
     // is done on them
     //=============================================================================
-    internal enum class shadowOptLevel_t {
+    enum class shadowOptLevel_t {
         SO_NONE,  // 0
         SO_MERGE_SURFACES,  // 1
         SO_CULL_OCCLUDED,  // 2
@@ -392,7 +393,7 @@ object dmap {
         SO_SIL_OPTIMIZE // 5
     }
 
-    internal class primitive_s {
+    class primitive_s {
         //
         // only one of these will be non-NULL
         var brush: bspbrush_s? = null
@@ -400,12 +401,12 @@ object dmap {
         var tris: mapTri_s? = null
     }
 
-    internal class uArea_t {
+    class uArea_t {
         var groups: optimizeGroup_s? = null // we might want to add other fields later
     }
 
-    internal class uEntity_t {
-        var areas: Array<uArea_t?>?
+    class uEntity_t {
+        var areas: Array<uArea_t?>? = null
         var mapEntity // points into mapFile_t data
                 : idMapEntity? = null
 
@@ -413,21 +414,19 @@ object dmap {
         var numAreas = 0
 
         //
-        val origin: idVec3? = idVec3()
+        val origin: idVec3 = idVec3()
         var primitives: primitive_s? = null
         var tree: tree_s? = null
     }
 
     // chains of mapTri_t are the general unit of processing
-    internal class mapTri_s {
-        var hashVert: Array<hashVert_s?>? = arrayOfNulls<hashVert_s?>(3)
-
-        //
-        var material: idMaterial? = null
+    class mapTri_s {
+        var hashVert: Array<hashVert_s> = Array(3) { hashVert_s() }
+        var material: Material.idMaterial? = null
         var mergeGroup // we want to avoid merging triangles
                 : Any? = null
         var next: mapTri_s? = null
-        var optVert: Array<optVertex_s?>? = arrayOfNulls<optVertex_s?>(3)
+        var optVert: Array<optVertex_s> = Array(3) { optVertex_s() }
 
         // from different fixed groups, like guiSurfs and mirrors
         var planeNum // not set universally, just in some areas
@@ -451,12 +450,12 @@ object dmap {
     }
 
     internal class parseMesh_s {
-        var material: idMaterial? = null
+        var material: Material.idMaterial? = null
         var mesh: mesh_t? = null
         var next: parseMesh_s? = null
     }
 
-    internal class bspface_s {
+    class bspface_s {
         // any non-portals
         var checked // used by SelectSplitPlaneNum()
                 = false
@@ -470,14 +469,14 @@ object dmap {
         }
     }
 
-    internal class textureVectors_t {
-        var v: Array<idVec4?>? =
-            idVec4.Companion.generateArray(2) // the offset value will always be in the 0.0 to 1.0 range
+    class textureVectors_t {
+        var v: Array<idVec4> =
+            idVec4.generateArray(2) // the offset value will always be in the 0.0 to 1.0 range
     }
 
-    internal class side_s {
+    class side_s {
         //
-        var material: idMaterial? = null
+        var material: Material.idMaterial? = null
         var planenum = 0
         var texVec: textureVectors_t? = null
         var visibleHull // also clipped to the solid parts of the world
@@ -487,7 +486,7 @@ object dmap {
         var winding // only clipped to the other sides of the brush
                 : idWinding? = null
 
-        constructor(`val`: side_s?) {
+        constructor(`val`: side_s) {
             material = `val`.material
             planenum = `val`.planenum
             texVec = `val`.texVec
@@ -498,15 +497,13 @@ object dmap {
         constructor()
     }
 
-    internal open class bspbrush_s {
+    open class bspbrush_s {
         //
-        var bounds: idBounds? = null
+        val bounds: idBounds = idBounds()
         var brushnum // editor numbering for messages
                 = 0
-
-        //
         var contentShader // one face's shader will determine the volume attributes
-                : idMaterial? = null
+                : Material.idMaterial? = null
 
         //
         var contents = 0
@@ -521,14 +518,14 @@ object dmap {
                 : bspbrush_s? = null
         var outputNumber // set when the brush is written to the file list
                 = 0
-        var sides: Array<side_s?>? = arrayOfNulls<side_s?>(6) // variably sized
+        var sides: Array<side_s> = Array(6) { side_s() } // variably sized
     }
 
-    internal class uBrush_t : bspbrush_s {
+    class uBrush_t : bspbrush_s {
         constructor()
 
         //copy constructor
-        constructor(brush: uBrush_t?) {
+        constructor(brush: uBrush_t) {
             next = brush.next
             original = brush.original
             entitynum = brush.entitynum
@@ -537,11 +534,11 @@ object dmap {
             contents = brush.contents
             opaque = brush.opaque
             outputNumber = brush.outputNumber
-            bounds = brush.bounds
+            bounds.set(brush.bounds)
             numsides = brush.numsides
             //System.arraycopy(brush.sides, 0, this.sides, 0, 6);
             for (i in 0..5) {
-                sides.get(i) = side_s(brush.sides.get(i))
+                sides[i] = side_s(brush.sides[i])
             }
         }
 
@@ -549,7 +546,7 @@ object dmap {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        fun oSet(CopyBrush: uBrush_t?) {
+        fun set(CopyBrush: uBrush_t) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -559,19 +556,19 @@ object dmap {
         var outputNumber = 0
     }
 
-    internal class node_s {
+    class node_s {
         // both leafs and nodes
         // needed for FindSideForPortal
         //
         var area // determined by flood filling up to areaportals
                 = 0
-        var bounds // valid after portalization
-                : idBounds? = null
+        val bounds // valid after portalization
+                : idBounds = idBounds()
 
         //
         var brushlist // fragments of all brushes in this leaf
                 : uBrush_t? = null
-        var children: Array<node_s?>? = arrayOfNulls<node_s?>(2)
+        var children: Array<node_s?> = arrayOfNulls<node_s?>(2)
         var nodeNumber // set after pruning
                 = 0
         var occupant // for leak file testing
@@ -602,12 +599,12 @@ object dmap {
     }
 
     //=============================================================================
-    internal class uPortal_s {
+    class uPortal_s {
         var next: Array<uPortal_s?>? = arrayOfNulls<uPortal_s?>(2)
         var nodes: Array<node_s?>? = arrayOfNulls<node_s?>(2) // [0] = front side of plane
         var onnode // NULL = outside box
                 : node_s? = null
-        val plane: idPlane? = idPlane()
+        val plane: idPlane = idPlane()
         var winding: idWinding? = null
         fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
@@ -615,7 +612,7 @@ object dmap {
     }
 
     // a tree_t is created by FaceBSP()
-    internal class tree_s {
+    class tree_s {
         var bounds: idBounds? = null
         var headnode: node_s? = null
         var outside_node: node_s? = null
@@ -624,23 +621,23 @@ object dmap {
         }
     }
 
-    internal class mapLight_t {
+    class mapLight_t {
         var def: idRenderLightLocal? = null
-        var name: CharArray? = CharArray(dmap.MAX_QPATH) // for naming the shadow volume surface and interactions
+        var name: CharArray = CharArray(MAX_QPATH) // for naming the shadow volume surface and interactions
         var shadowTris: srfTriangles_s? = null
     }
 
-    internal class optimizeGroup_s {
+    class optimizeGroup_s {
         var areaNum = 0
-        val axis: Array<idVec3?>? =
-            idVec3.Companion.generateArray(2) // orthogonal to the plane, so optimization can be 2D
+        val axis: Array<idVec3> =
+            idVec3.generateArray(2) // orthogonal to the plane, so optimization can be 2D
 
         //
-        var bounds // set in CarveGroupsByLight
-                : idBounds? = null
+        val bounds // set in CarveGroupsByLight
+                : idBounds = idBounds()
         var groupLights: Array<mapLight_t?>? =
-            arrayOfNulls<mapLight_t?>(dmap.MAX_GROUP_LIGHTS) // lights effecting this list
-        var material: idMaterial? = null
+            arrayOfNulls<mapLight_t?>(MAX_GROUP_LIGHTS) // lights effecting this list
+        var material: Material.idMaterial? = null
         var mergeGroup // if this differs (guiSurfs, mirrors, etc), the
                 : Any? = null
         var nextGroup: optimizeGroup_s? = null
@@ -674,26 +671,15 @@ object dmap {
 
     class dmapGlobals_t {
         // mapFileBase will contain the qpath without any extension: "maps/test_box"
-        //
         var dmapFile: idMapFile? = null
-
-        //
-        var drawBounds: idBounds? = null
+        val drawBounds: idBounds = idBounds()
         var drawflag = false
-
-        //
         var entityNum = 0
         var fullCarve = false
-
-        //
         var glview = false
-        var mapFileBase: CharArray? = CharArray(1024)
-
-        //
-        val mapLights: idList<mapLight_t?>? = idList()
-
-        //
-        var mapPlanes: idPlaneSet? = null
+        var mapFileBase: CharArray = CharArray(1024)
+        val mapLights: idList<mapLight_t> = idList()
+        var mapPlanes: idPlaneSet = idPlaneSet()
         var noClipSides // don't cut sides by solid leafs, use the entire thing
                 = false
         var noCurves = false
@@ -714,7 +700,7 @@ object dmap {
         //
         var totalShadowTriangles = 0
         var totalShadowVerts = 0
-        var uEntities: Array<uEntity_t?>?
+        var uEntities: Array<uEntity_t>? = null
 
         //
         var verbose = false
@@ -727,20 +713,20 @@ object dmap {
      ============
      */
     class Dmap_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             idLib.common.ClearWarnings("running dmap")
 
             // refresh the screen each time we print so it doesn't look
             // like it is hung
             idLib.common.SetRefreshOnPrint(true)
-            dmap.Dmap(args)
+            Dmap(args)
             idLib.common.SetRefreshOnPrint(false)
             idLib.common.PrintWarnings()
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Dmap_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Dmap_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

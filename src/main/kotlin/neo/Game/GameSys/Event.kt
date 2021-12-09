@@ -27,7 +27,6 @@ import neo.Game.SecurityCamera
 import neo.Game.Sound
 import neo.Game.Weapon
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.SERiAL
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
