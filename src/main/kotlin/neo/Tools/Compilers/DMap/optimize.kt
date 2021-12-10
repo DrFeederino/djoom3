@@ -1930,7 +1930,7 @@ object optimize {
         var emited // when regenerating triangles
                 = false
         var islandLink: optVertex_s? = null
-        val pv: idVec3? = idVec3() // projected against planar axis, third value is 0
+        val pv: idVec3 = idVec3() // projected against planar axis, third value is 0
         var v: idDrawVert? = null
     }
 

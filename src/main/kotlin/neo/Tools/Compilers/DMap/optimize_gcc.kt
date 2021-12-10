@@ -12,7 +12,7 @@ import neo.idlib.geometry.DrawVert.idDrawVert
 object optimize_gcc {
     //
     const val MAX_OPT_VERTEXES = 0x10000
-    val optVerts: Array<optVertex_s?>? = arrayOfNulls<optVertex_s?>(optimize_gcc.MAX_OPT_VERTEXES)
+    val optVerts: Array<optVertex_s> = Array(MAX_OPT_VERTEXES) { optVertex_s() }
     var numOptVerts = 0
 
     /*
@@ -21,14 +21,14 @@ object optimize_gcc {
      if you remove the 'return NULL;' after Error(), it only happens at -O3 / release
      see dmap.gcc.zip test map and .proc outputs
      */
-    var optBounds: idBounds? = null
+    val optBounds: idBounds = idBounds()
 
     /*
      ================
      FindOptVertex
      ================
      */
-    fun FindOptVertex(v: idDrawVert?, opt: optimizeGroup_s?): optVertex_s? {
+    fun FindOptVertex(v: idDrawVert, opt: optimizeGroup_s): optVertex_s? {
         var i: Int
         val x: Float
         val y: Float
@@ -40,25 +40,25 @@ object optimize_gcc {
 
         // should we match based on the t-junction fixing hash verts?
         i = 0
-        while (i < optimize_gcc.numOptVerts) {
-            if (optimize_gcc.optVerts[i].pv.get(0) == x && optimize_gcc.optVerts[i].pv.get(1) == y) {
-                return optimize_gcc.optVerts[i]
+        while (i < numOptVerts) {
+            if (optVerts[i].pv[0] == x && optVerts[i].pv[1] == y) {
+                return optVerts[i]
             }
             i++
         }
-        if (optimize_gcc.numOptVerts >= optimize_gcc.MAX_OPT_VERTEXES) {
+        if (numOptVerts >= MAX_OPT_VERTEXES) {
             Common.common.Error("MAX_OPT_VERTEXES")
             return null
         }
-        optimize_gcc.numOptVerts++
-        optimize_gcc.optVerts[i] = optVertex_s()
-        vert = optimize_gcc.optVerts[i]
+        numOptVerts++
+        optVerts[i] = optVertex_s()
+        vert = optVerts[i]
         //	memset( vert, 0, sizeof( *vert ) );
         vert.v = v
-        vert.pv.set(0, x)
-        vert.pv.set(1, y)
-        vert.pv.set(2, 0f)
-        optimize_gcc.optBounds.AddPoint(vert.pv)
+        vert.pv[0] = x
+        vert.pv[1] = y
+        vert.pv[2] = 0f
+        optBounds.AddPoint(vert.pv)
         return vert
     }
 }

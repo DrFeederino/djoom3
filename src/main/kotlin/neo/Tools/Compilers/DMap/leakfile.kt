@@ -8,7 +8,7 @@ import neo.framework.Common
 import neo.framework.FileSystem_h
 import neo.idlib.math.Vector.idVec3
 import java.io.IOException
-import java.nio.*
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.util.logging.Level
@@ -35,15 +35,15 @@ object leakfile {
      occupied leaf
      =============
      */
-    fun LeakFile(tree: tree_s?) {
+    fun LeakFile(tree: tree_s) {
         val mid = idVec3()
         //        FILE linefile;
         val filename: String?
         val ospath: String?
         var fprintf: ByteArray
-        var node: node_s?
+        var node: node_s
         var count: Int
-        if (TempDump.NOT(tree.outside_node.occupied.toDouble())) {
+        if (tree.outside_node.occupied == 0) {
             return
         }
         Common.common.Printf("--- LeakFile ---\n")
@@ -51,7 +51,7 @@ object leakfile {
         //
         // write the points to the file
         //
-        filename = kotlin.String.format("%s.lin", *dmap.dmapGlobals.mapFileBase)
+        filename = String.format("%s.lin", dmap.dmapGlobals.mapFileBase)
         ospath = FileSystem_h.fileSystem.RelativePathToOSPath(filename)
         try {
             FileChannel.open(Paths.get(ospath), TempDump.fopenOptions("w")).use { linefile ->
@@ -73,24 +73,24 @@ object leakfile {
                     p = node.portals
                     while (p != null) {
                         s = if (p.nodes[0] == node) 1 else 0
-                        if (p.nodes[s].occupied != 0
-                            && p.nodes[s].occupied < next
+                        if (p.nodes[s]!!.occupied != 0
+                            && p.nodes[s]!!.occupied < next
                         ) {
                             nextportal = p
                             nextnode = p.nodes[s]
-                            next = nextnode.occupied
+                            next = nextnode!!.occupied
                         }
                         p = p.next[1 xor s]
                     }
-                    node = nextnode
-                    mid.set(nextportal.winding.GetCenter())
-                    fprintf = String.format("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2)).toByteArray()
+                    node = nextnode!!
+                    mid.set(nextportal!!.winding!!.GetCenter())
+                    fprintf = String.format("%f %f %f\n", mid[0], mid[1], mid[2]).toByteArray()
                     linefile.write(ByteBuffer.wrap(fprintf))
                     count++
                 }
                 // add the occupant center
-                node.occupant.mapEntity.epairs.GetVector("origin", "", mid)
-                fprintf = String.format("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2)).toByteArray()
+                node.occupant!!.mapEntity!!.epairs.GetVector("origin", "", mid)
+                fprintf = String.format("%f %f %f\n", mid[0], mid[1], mid[2]).toByteArray()
                 linefile.write(ByteBuffer.wrap(fprintf))
                 Common.common.Printf("%5d point linefile\n", count + 1)
             }

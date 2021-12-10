@@ -416,7 +416,7 @@ object dmap {
         //
         val origin: idVec3 = idVec3()
         var primitives: primitive_s? = null
-        var tree: tree_s? = null
+        var tree: tree_s = tree_s()
     }
 
     // chains of mapTri_t are the general unit of processing
@@ -515,7 +515,7 @@ object dmap {
         var numsides = 0
         var opaque = false
         var original // chopped up brushes will reference the originals
-                : bspbrush_s? = null
+                : bspbrush_s = bspbrush_s()
         var outputNumber // set when the brush is written to the file list
                 = 0
         var sides: Array<side_s> = Array(6) { side_s() } // variably sized
@@ -600,8 +600,8 @@ object dmap {
 
     //=============================================================================
     class uPortal_s {
-        var next: Array<uPortal_s?>? = arrayOfNulls<uPortal_s?>(2)
-        var nodes: Array<node_s?>? = arrayOfNulls<node_s?>(2) // [0] = front side of plane
+        var next: Array<uPortal_s?> = arrayOfNulls<uPortal_s?>(2)
+        var nodes: Array<node_s?> = arrayOfNulls<node_s?>(2) // [0] = front side of plane
         var onnode // NULL = outside box
                 : node_s? = null
         val plane: idPlane = idPlane()
@@ -613,9 +613,9 @@ object dmap {
 
     // a tree_t is created by FaceBSP()
     class tree_s {
-        var bounds: idBounds? = null
-        var headnode: node_s? = null
-        var outside_node: node_s? = null
+        val bounds: idBounds = idBounds()
+        var headnode: node_s = node_s()
+        var outside_node: node_s = node_s()
         fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }

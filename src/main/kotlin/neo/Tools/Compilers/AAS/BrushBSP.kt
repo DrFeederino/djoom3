@@ -19,10 +19,13 @@ import neo.idlib.containers.PlaneSet.idPlaneSet
 import neo.idlib.containers.VectorSet.idVectorSet
 import neo.idlib.containers.idStrList
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
+import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.floor
 
 /**
  *
@@ -59,30 +62,30 @@ object BrushBSP {
                 : Int
         private var flags // portal flags
                 : Int
-        private val next: Array<idBrushBSPPortal?> =
+        val next: Array<idBrushBSPPortal?> =
             arrayOfNulls<idBrushBSPPortal?>(2) // next portal in list for both nodes
-        private val nodes: Array<idBrushBSPNode?> = arrayOfNulls<idBrushBSPNode?>(2) // nodes this portal seperates
-        private val plane: idPlane = idPlane() // portal plane
-        private var planeNum // number of plane this portal is on
+        val nodes: Array<idBrushBSPNode?> = arrayOfNulls<idBrushBSPNode?>(2) // nodes this portal seperates
+        val plane: idPlane = idPlane() // portal plane
+        var planeNum // number of plane this portal is on
                 : Int
-        private var winding // portal winding
+        var winding // portal winding
                 : idWinding?
 
         // ~idBrushBSPPortal();
-        fun AddToNodes(front: idBrushBSPNode?, back: idBrushBSPNode?) {
-            if (nodes.get(0) != null || nodes.get(1) != null) {
+        fun AddToNodes(front: idBrushBSPNode, back: idBrushBSPNode) {
+            if (nodes[0] != null || nodes[1] != null) {
                 Common.common.Error("AddToNode: allready included")
             }
             assert(front != null && back != null)
-            nodes.get(0) = front
-            next.get(0) = front.portals
+            nodes[0] = front
+            next[0] = front.portals
             front.portals = this
-            nodes.get(1) = back
-            next.get(1) = back.portals
+            nodes[1] = back
+            next[1] = back.portals
             back.portals = this
         }
 
-        fun RemoveFromNode(l: idBrushBSPNode?) {
+        fun RemoveFromNode(l: idBrushBSPNode) {
             val pp: idBrushBSPPortal?
             var t: idBrushBSPPortal?
 
@@ -90,26 +93,27 @@ object BrushBSP {
             pp = l.portals
             while (true) {
                 t = pp
-                if (TempDump.NOT(t)) {
+                if (t == null) {
                     Common.common.Error("idBrushBSPPortal::RemoveFromNode: portal not in node")
+                    return
                 }
                 if (t === this) {
                     break
                 }
-                if (t.nodes.get(0) === l) {
-                    pp.set(t.next.get(0))
-                } else if (t.nodes.get(1) === l) {
-                    pp.set(t.next.get(1))
+                if (t.nodes[0] === l) {
+                    pp!!.set(t.next[0]!!)
+                } else if (t.nodes[1] === l) {
+                    pp!!.set(t.next[1]!!)
                 } else {
                     Common.common.Error("idBrushBSPPortal::RemoveFromNode: portal not bounding node")
                 }
             }
-            if (nodes.get(0) === l) {
-                pp.set(next.get(0))
-                nodes.get(0) = null
-            } else if (nodes.get(1) === l) {
-                pp.set(next.get(1))
-                nodes.get(1) = null
+            if (nodes[0] === l) {
+                pp!!.set(next[0]!!)
+                nodes[0] = null
+            } else if (nodes[1] === l) {
+                pp!!.set(next[1]!!)
+                nodes[1] = null
             } else {
                 Common.common.Error("idBrushBSPPortal::RemoveFromNode: mislinked portal")
             }
@@ -118,14 +122,14 @@ object BrushBSP {
         fun Flip() {
             val frontNode: idBrushBSPNode?
             val backNode: idBrushBSPNode?
-            frontNode = nodes.get(0)
-            backNode = nodes.get(1)
+            frontNode = nodes[0]
+            backNode = nodes[1]
             frontNode?.let { RemoveFromNode(it) }
             backNode?.let { RemoveFromNode(it) }
-            AddToNodes(frontNode, backNode)
+            AddToNodes(frontNode!!, backNode!!)
             plane.set(plane.unaryMinus())
             planeNum = planeNum xor 1
-            winding.ReverseSelf()
+            winding!!.ReverseSelf()
         }
 
         fun Split(splitPlane: idPlane, front: idBrushBSPPortal, back: idBrushBSPPortal): Int {
@@ -133,7 +137,7 @@ object BrushBSP {
             val backWinding = idWinding()
 
 //            front[0] = back[0] = null;
-            winding.Split(splitPlane, 0.1f, frontWinding, backWinding)
+            winding!!.Split(splitPlane, 0.1f, frontWinding, backWinding)
             if (!frontWinding.isNULL()) {
                 front.set(idBrushBSPPortal())
                 front.plane.set(plane)
@@ -186,14 +190,14 @@ object BrushBSP {
         }
 
         fun Next(side: Int): idBrushBSPPortal? {
-            return next.get(side)
+            return next[side]
         }
 
         fun GetNode(side: Int): idBrushBSPNode? {
-            return nodes.get(side)
+            return nodes[side]
         }
 
-        private fun set(idBrushBSPPortal: idBrushBSPPortal?) {
+        private fun set(idBrushBSPPortal: idBrushBSPPortal) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -204,10 +208,10 @@ object BrushBSP {
         init {
             planeNum = -1
             winding = null
-            nodes.get(1) = null
-            nodes.get(0) = nodes.get(1)
-            next.get(1) = null
-            next.get(0) = next.get(1)
+            nodes[1] = null
+            nodes[0] = nodes[1]
+            next[1] = null
+            next[0] = next[1]
             faceNum = 0
             flags = 0
         }
@@ -221,25 +225,25 @@ object BrushBSP {
     internal class idBrushBSPNode {
         private var areaNum // number of the area created for this node
                 : Int
-        private val brushList // list with brushes for this node
-                : idBrushList? = null
-        private val children: Array<idBrushBSPNode?>? =
+        var brushList // list with brushes for this node
+                : idBrushList = idBrushList()
+        val children: Array<idBrushBSPNode?> =
             arrayOfNulls<idBrushBSPNode?>(2) // both are NULL if this is a leaf node
-        private var contents // node contents
+        var contents // node contents
                 : Int
         private var flags // node flags
                 : Int
-        private val occupied // true when portal is occupied
+        var occupied // true when portal is occupied
                 : Int
-        private var parent // parent of this node
+        var parent // parent of this node
                 : idBrushBSPNode? = null
 
         // friend class idBrushBSP;
         // friend class idBrushBSPPortal;
-        private val plane: idPlane? = idPlane() // split plane if this is not a leaf node
-        private val portals // portals of this node
+        val plane: idPlane = idPlane() // split plane if this is not a leaf node
+        var portals // portals of this node
                 : idBrushBSPPortal?
-        private val volume // node volume
+        var volume // node volume
                 : idBrush?
 
         // ~idBrushBSPNode();
@@ -253,7 +257,7 @@ object BrushBSP {
             }
         }
 
-        fun GetPortalBounds(): idBounds? {
+        fun GetPortalBounds(): idBounds {
             var s: Int
             var i: Int
             var p: idBrushBSPPortal?
@@ -261,19 +265,19 @@ object BrushBSP {
             bounds.Clear()
             p = portals
             while (p != null) {
-                s = if (p.nodes.get(1) == this) 1 else 0
+                s = if (p.nodes[1] == this) 1 else 0
                 i = 0
-                while (i < p.winding.GetNumPoints()) {
-                    bounds.AddPoint(p.winding.get(i).ToVec3())
+                while (i < p.winding!!.GetNumPoints()) {
+                    bounds.AddPoint(p.winding!![i].ToVec3())
                     i++
                 }
-                p = p.next.get(s)
+                p = p.next[s]
             }
             return bounds
         }
 
         fun GetChild(index: Int): idBrushBSPNode? {
-            return children.get(index)
+            return children[index]
         }
 
         fun GetParent(): idBrushBSPNode? {
@@ -327,15 +331,15 @@ object BrushBSP {
             center.set(Vector.getVec3_origin())
             p = portals
             while (p != null) {
-                s = if (p.nodes.get(1) === this) 1 else 0
-                center.plusAssign(p.winding.GetCenter())
+                s = if (p.nodes[1] === this) 1 else 0
+                center.plusAssign(p.winding!!.GetCenter())
                 n++
-                p = p.next.get(s)
+                p = p.next[s]
             }
             center.divAssign(n.toFloat())
             p = portals
             while (p != null) {
-                s = if (p.nodes.get(1) == this) 1 else 0
+                s = if (p.nodes[1] == this) 1 else 0
                 plane = if (s != 0) {
                     p.GetPlane().unaryMinus()
                 } else {
@@ -345,7 +349,7 @@ object BrushBSP {
                 if (d < 0.0f) {
                     return false
                 }
-                p = p.next.get(s)
+                p = p.next[s]
             }
             return true
         }
@@ -358,11 +362,11 @@ object BrushBSP {
             p = GetPortals()
             while (p != null) {
                 s = if (p.GetNode(1) === this) 1 else 0
-                if (0 == p.GetNode( /*!s*/TempDump.SNOT(s.toDouble())).GetFlags() and flag) {
+                if (0 == p.GetNode( /*!s*/TempDump.SNOT(s.toDouble()))!!.GetFlags() and flag) {
                     p = p.Next(s)
                     continue
                 }
-                p.GetNode( /*!s*/TempDump.SNOT(s.toDouble())).RemoveFlagFlood(flag)
+                p.GetNode( /*!s*/TempDump.SNOT(s.toDouble()))!!.RemoveFlagFlood(flag)
                 p = p.Next(s)
             }
         }
@@ -370,31 +374,23 @@ object BrushBSP {
         // recurse down the tree and remove the flag from all visited nodes
         fun RemoveFlagRecurse(flag: Int) {
             RemoveFlag(flag)
-            if (children.get(0) != null) {
-                children.get(0).RemoveFlagRecurse(flag)
-            }
-            if (children.get(1) != null) {
-                children.get(1).RemoveFlagRecurse(flag)
-            }
+            children[0]?.RemoveFlagRecurse(flag)
+            children[1]?.RemoveFlagRecurse(flag)
         }
 
         // first recurse down the tree and flood from there
         fun RemoveFlagRecurseFlood(flag: Int) {
             RemoveFlag(flag)
-            if (TempDump.NOT(children.get(0)) && TempDump.NOT(children.get(1))) {
+            if (TempDump.NOT(children[0]) && TempDump.NOT(children[1])) {
                 RemoveFlagFlood(flag)
             } else {
-                if (children.get(0) != null) {
-                    children.get(0).RemoveFlagRecurseFlood(flag)
-                }
-                if (children.get(1) != null) {
-                    children.get(1).RemoveFlagRecurseFlood(flag)
-                }
+                children[0]?.RemoveFlagRecurseFlood(flag)
+                children[1]?.RemoveFlagRecurseFlood(flag)
             }
         }
 
         // returns side of the plane the node is on
-        fun PlaneSide(plane: idPlane?, epsilon: Float /*= ON_EPSILON*/): Int {
+        fun PlaneSide(plane: idPlane, epsilon: Float /*= ON_EPSILON*/): Int {
             var s: Int
             var side: Int
             var p: idBrushBSPPortal?
@@ -404,8 +400,8 @@ object BrushBSP {
             front = back
             p = portals
             while (p != null) {
-                s = if (p.nodes.get(1) == this) 1 else 0
-                side = p.winding.PlaneSide(plane, epsilon)
+                s = if (p.nodes[1] == this) 1 else 0
+                side = p.winding!!.PlaneSide(plane, epsilon)
                 if (side == Plane.SIDE_CROSS || side == Plane.SIDE_ON) {
                     return side
                 }
@@ -421,7 +417,7 @@ object BrushBSP {
                     }
                     back = true
                 }
-                p = p.next.get(s)
+                p = p.next[s]
             }
             return if (front) {
                 Plane.SIDE_FRONT
@@ -429,24 +425,24 @@ object BrushBSP {
         }
 
         // split the leaf node with a plane
-        fun Split(splitPlane: idPlane?, splitPlaneNum: Int): Boolean {
+        fun Split(splitPlane: idPlane, splitPlaneNum: Int): Boolean {
             var s: Int
             var i: Int
             var mid: idWinding?
             var p: idBrushBSPPortal?
             val midPortal: idBrushBSPPortal
-            val newPortals = arrayOfNulls<idBrushBSPPortal?>(2)
-            val newNodes = arrayOfNulls<idBrushBSPNode?>(2)
+            val newPortals = Array(2) { idBrushBSPPortal() }
+            val newNodes = Array(2) { idBrushBSPNode() }
             mid = idWinding(splitPlane.Normal(), splitPlane.Dist())
             p = portals
             while (p != null && mid != null) {
-                s = if (p.nodes.get(1) == this) 1 else 0
+                s = if (p.nodes[1] == this) 1 else 0
                 mid = if (s != 0) {
                     mid.Clip(p.plane.unaryMinus(), 0.1f, false)
                 } else {
                     mid.Clip(p.plane, 0.1f, false)
                 }
-                p = p.next.get(s)
+                p = p.next[s]
             }
             if (TempDump.NOT(mid)) {
                 return false
@@ -455,7 +451,6 @@ object BrushBSP {
             // allocate two new nodes
             i = 0
             while (i < 2) {
-                newNodes[i] = idBrushBSPNode()
                 newNodes[i].flags = flags
                 newNodes[i].contents = contents
                 newNodes[i].parent = this
@@ -465,21 +460,21 @@ object BrushBSP {
             // split all portals of the node
             p = portals
             while (p != null) {
-                s = if (p.nodes.get(1) == this) 1 else 0
+                s = if (p.nodes[1] == this) 1 else 0
                 p.Split(splitPlane, newPortals[0], newPortals[1])
                 i = 0
                 while (i < 2) {
                     if (newPortals[i] != null) {
                         if (s != 0) {
-                            newPortals[i].AddToNodes(p.nodes.get(0), newNodes[i])
+                            newPortals[i].AddToNodes(p.nodes[0]!!, newNodes[i])
                         } else {
-                            newPortals[i].AddToNodes(newNodes[i], p.nodes.get(1))
+                            newPortals[i].AddToNodes(newNodes[i], p.nodes[1]!!)
                         }
                     }
                     i++
                 }
-                p.RemoveFromNode(p.nodes.get(0))
-                p.RemoveFromNode(p.nodes.get(1))
+                p.RemoveFromNode(p.nodes[0]!!)
+                p.RemoveFromNode(p.nodes[1]!!)
                 p = portals
             }
 
@@ -491,8 +486,8 @@ object BrushBSP {
             midPortal.AddToNodes(newNodes[0], newNodes[1])
 
             // set new child nodes
-            children.get(0) = newNodes[0]
-            children.get(1) = newNodes[1]
+            children[0] = newNodes[0]
+            children[1] = newNodes[1]
             plane.set(splitPlane)
             return true
         }
@@ -505,8 +500,8 @@ object BrushBSP {
             flags = 0
             volume = null
             portals = null
-            children.get(1) = null
-            children.get(0) = children.get(1)
+            children[1] = null
+            children[0] = children[1]
             areaNum = 0
             occupied = 0
         }
@@ -524,7 +519,7 @@ object BrushBSP {
         private var brushMap: idBrushMap?
         private var brushMapContents: Int
         private var insideLeafNodes = 0
-        private val leakOrigin: idVec3? = idVec3()
+        private val leakOrigin: idVec3 = idVec3()
         private var numGridCellSplits = 0
         private var numGridCells = 0
         private var numInsertedPoints = 0
@@ -532,38 +527,38 @@ object BrushBSP {
         private var numPortals = 0
         private var numPrunedSplits: Int
         private var numSplits: Int
-        private var outside: idBrushBSPNode? = null
+        private var outside: idBrushBSPNode = idBrushBSPNode()
         private var outsideLeafNodes = 0
-        private val portalPlanes: idPlaneSet? = null
+        private val portalPlanes: idPlaneSet = idPlaneSet()
         private var root: idBrushBSPNode = idBrushBSPNode()
         private var solidLeafNodes = 0
-        private var treeBounds: idBounds? = null
+        private val treeBounds: idBounds = idBounds()
 
         // build a bsp tree from a set of brushes
         fun Build(
-            brushList: idBrushList?, skipContents: Int,
-            ChopAllowed: Allowance? /*boolean (*ChopAllowed)( idBrush *b1, idBrush *b2 )*/,
-            MergeAllowed: Allowance?
+            brushList: idBrushList, skipContents: Int,
+            ChopAllowed: Allowance /*boolean (*ChopAllowed)( idBrush *b1, idBrush *b2 )*/,
+            MergeAllowed: Allowance
         ) /*boolean (*MergeAllowed)( idBrush *b1, idBrush *b2 ) )*/ {
             var i: Int
-            val gridCells = idList<idBrushBSPNode?>()
+            val gridCells = idList<idBrushBSPNode>()
             Common.common.Printf("[Brush BSP]\n")
             Common.common.Printf("%6d brushes\n", brushList.Num())
             BrushChopAllowed = ChopAllowed
             BrushMergeAllowed = MergeAllowed
             numGridCells = 0
-            treeBounds = brushList.GetBounds()
+            treeBounds.set(brushList.GetBounds())
             root = idBrushBSPNode()
             root.brushList = brushList
             root.volume = idBrush()
-            root.volume.FromBounds(treeBounds)
+            root.volume!!.FromBounds(treeBounds)
             root.parent = null
             BuildGrid_r(gridCells, root)
             Common.common.Printf("\r%6d grid cells\n", gridCells.Num())
-            if (BrushBSP.OUPUT_BSP_STATS_PER_GRID_CELL) {
+            if (OUPUT_BSP_STATS_PER_GRID_CELL) {
                 i = 0
                 while (i < gridCells.Num()) {
-                    ProcessGridCell(gridCells.get(i), skipContents)
+                    ProcessGridCell(gridCells[i], skipContents)
                     i++
                 }
             } else {
@@ -571,7 +566,7 @@ object BrushBSP {
                 i = 0
                 while (i < gridCells.Num()) {
                     Brush.DisplayRealTimeString("\r%6d", i * 100 / gridCells.Num())
-                    ProcessGridCell(gridCells.get(i), skipContents)
+                    ProcessGridCell(gridCells[i], skipContents)
                     i++
                 }
                 Common.common.Printf("\r%6d %%\n", 100)
@@ -603,7 +598,7 @@ object BrushBSP {
         }
 
         // remove subspaces outside the map not reachable by entities
-        fun RemoveOutside(mapFile: idMapFile?, contents: Int, classNames: idStrList?): Boolean {
+        fun RemoveOutside(mapFile: idMapFile, contents: Int, classNames: idStrList): Boolean {
             Common.common.Printf("[Remove Outside]\n")
             insideLeafNodes = 0
             outsideLeafNodes = insideLeafNodes
@@ -629,7 +624,7 @@ object BrushBSP {
          // write file with a trace going through a leak
          =============
          */
-        fun LeakFile(fileName: idStr?) {
+        fun LeakFile(fileName: idStr) {
             var count: Int
             var next: Int
             var s: Int
@@ -638,8 +633,8 @@ object BrushBSP {
             var node: idBrushBSPNode?
             var nextNode = idBrushBSPNode()
             var p: idBrushBSPPortal?
-            var nextPortal: idBrushBSPPortal? = idBrushBSPPortal()
-            val qpath: idStr?
+            var nextPortal = idBrushBSPPortal()
+            val qpath: idStr
             var name: idStr
             if (0 == outside.occupied) {
                 return
@@ -654,28 +649,28 @@ object BrushBSP {
             }
             count = 0
             node = outside
-            while (node.occupied > 1) {
+            while (node!!.occupied > 1) {
 
                 // find the best portal exit
                 next = node.occupied
                 p = node.portals
                 while (p != null) {
-                    s = if (p.nodes.get(0) == node) 1 else 0
-                    if (p.nodes.get(s).occupied != 0 && p.nodes.get(s).occupied < next) {
+                    s = if (p.nodes[0] == node) 1 else 0
+                    if (p.nodes[s]!!.occupied != 0 && p.nodes[s]!!.occupied < next) {
                         nextPortal = p
-                        nextNode = p.nodes.get(s)
+                        nextNode = p.nodes[s]!!
                         next = nextNode.occupied
                     }
-                    p = p.next.get( /*!s*/TempDump.SNOT(s.toDouble()))
+                    p = p.next[TempDump.SNOT(s.toDouble())]
                 }
                 node = nextNode
-                mid.set(nextPortal.winding.GetCenter())
-                lineFile.Printf("%f %f %f\n", mid.get(0), mid.get(1), mid.get(2))
+                mid.set(nextPortal.winding!!.GetCenter())
+                lineFile.Printf("%f %f %f\n", mid[0], mid[1], mid[2])
                 count++
             }
 
             // add the origin of the entity from which the leak was found
-            lineFile.Printf("%f %f %f\n", leakOrigin.get(0), leakOrigin.get(1), leakOrigin.get(2))
+            lineFile.Printf("%f %f %f\n", leakOrigin[0], leakOrigin[1], leakOrigin[2])
             FileSystem_h.fileSystem.CloseFile(lineFile)
         }
 
@@ -696,28 +691,27 @@ object BrushBSP {
          // try to merge the two leaf nodes at either side of the portal
          ============
          */
-        fun TryMergeLeafNodes(portal: idBrushBSPPortal?, side: Int): Boolean {
+        fun TryMergeLeafNodes(portal: idBrushBSPPortal, side: Int): Boolean {
             var i: Int
             var j: Int
             var k: Int
             var s1: Int
             var s2: Int
             var s: Int
-            val node1: idBrushBSPNode?
-            val node2: idBrushBSPNode?
-            val nodes = arrayOfNulls<idBrushBSPNode?>(2)
+            val node1: idBrushBSPNode
+            val node2: idBrushBSPNode
             var p1: idBrushBSPPortal?
             var p2: idBrushBSPPortal?
             var p: idBrushBSPPortal?
             var nextp: idBrushBSPPortal?
             var plane: idPlane?
-            var w: idWinding?
+            var w: idWinding
             val bounds = idBounds()
             val b = idBounds()
-            node1 = portal.nodes.get(side)
-            nodes[0] = node1
-            node2 = portal.nodes.get( /*!side*/TempDump.SNOT(side.toDouble()))
-            nodes[1] = node2
+            node1 = portal.nodes[side]!!
+            node2 = portal.nodes[TempDump.SNOT(side.toDouble())]!!
+            val nodes = arrayOf(node1, node2)
+
 
             // check if the merged node would still be convex
             i = 0
@@ -725,9 +719,9 @@ object BrushBSP {
                 j =  /*!i*/1 xor i
                 p1 = nodes[i].portals
                 while (p1 != null) {
-                    s1 = if (p1.nodes.get(1) == nodes[i]) 1 else 0
-                    if (p1.nodes.get( /*!s1*/TempDump.SNOT(s1.toDouble())) == nodes[j]) {
-                        p1 = p1.next.get(s1)
+                    s1 = if (p1.nodes[1] == nodes[i]) 1 else 0
+                    if (p1.nodes[TempDump.SNOT(s1.toDouble())] == nodes[j]) {
+                        p1 = p1.next[s1]
                         continue
                     }
                     plane = if (s1 != 0) {
@@ -739,22 +733,22 @@ object BrushBSP {
                     // all the non seperating portals of the other node should be at the front or on the plane
                     p2 = nodes[j].portals
                     while (p2 != null) {
-                        s2 = if (p2.nodes.get(1) == nodes[j]) 1 else 0
-                        if (p2.nodes.get( /*!s2*/TempDump.SNOT(s2.toDouble())) == nodes[i]) {
-                            p2 = p2.next.get(s2)
+                        s2 = if (p2.nodes[1] == nodes[j]) 1 else 0
+                        if (p2.nodes[TempDump.SNOT(s2.toDouble())] == nodes[i]) {
+                            p2 = p2.next[s2]
                             continue
                         }
-                        w = p2.winding
+                        w = p2.winding!!
                         k = 0
                         while (k < w.GetNumPoints()) {
-                            if (plane.Distance(w.get(k).ToVec3()) < -0.1f) {
+                            if (plane.Distance(w[k].ToVec3()) < -0.1f) {
                                 return false
                             }
                             k++
                         }
-                        p2 = p2.next.get(s2)
+                        p2 = p2.next[s2]
                     }
-                    p1 = p1.next.get(s1)
+                    p1 = p1.next[s1]
                 }
                 i++
             }
@@ -762,11 +756,11 @@ object BrushBSP {
             // remove all portals that seperate the two nodes
             p = node1.portals
             while (p != null) {
-                s = if (p.nodes.get(1) == node1) 1 else 0
-                nextp = p.next.get(s)
-                if (p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble())) == node2) {
-                    p.RemoveFromNode(p.nodes.get(0))
-                    p.RemoveFromNode(p.nodes.get(1))
+                s = if (p.nodes[1] == node1) 1 else 0
+                nextp = p.next[s]
+                if (p.nodes[TempDump.SNOT(s.toDouble())] == node2) {
+                    p.RemoveFromNode(p.nodes[0]!!)
+                    p.RemoveFromNode(p.nodes[1]!!)
                     //			delete p;
                 }
                 p = nextp
@@ -775,11 +769,11 @@ object BrushBSP {
             // move all portals of node2 to node1
             p = node2.portals
             while (p != null) {
-                s = if (p.nodes.get(1) == node2) 1 else 0
+                s = if (p.nodes[1] == node2) 1 else 0
                 nodes[s] = node1
-                nodes[TempDump.SNOT(s.toDouble())] = p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble()))
-                p.RemoveFromNode(p.nodes.get(0))
-                p.RemoveFromNode(p.nodes.get(1))
+                nodes[TempDump.SNOT(s.toDouble())] = p.nodes[TempDump.SNOT(s.toDouble())]!!
+                p.RemoveFromNode(p.nodes[0]!!)
+                p.RemoveFromNode(p.nodes[1]!!)
                 p.AddToNodes(nodes[0], nodes[1])
                 p = node2.portals
             }
@@ -788,10 +782,10 @@ object BrushBSP {
             bounds.Clear()
             p = node1.portals
             while (p != null) {
-                s = if (p.nodes.get(1) == node1) 1 else 0
+                s = if (p.nodes[1] == node1) 1 else 0
                 p.GetWinding().GetBounds(b)
                 bounds.timesAssign(b)
-                p = p.next.get(s)
+                p = p.next[s]
             }
 
             // replace every reference to node2 by a reference to node1
@@ -804,21 +798,21 @@ object BrushBSP {
         fun PruneMergedTree_r(node: idBrushBSPNode?) {
             var i: Int
             var leafNode: idBrushBSPNode?
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
-            PruneMergedTree_r(node.children.get(0))
-            PruneMergedTree_r(node.children.get(1))
+            PruneMergedTree_r(node.children[0])
+            PruneMergedTree_r(node.children[1])
             i = 0
             while (i < 2) {
-                if (node.children.get(i) != null) {
-                    leafNode = node.children.get(i).children.get(0)
-                    if (leafNode != null && leafNode == node.children.get(i).children.get(1)) {
-                        if (leafNode.parent == node.children.get(i)) {
+                if (node.children[i] != null) {
+                    leafNode = node.children[i]!!.children[0]
+                    if (leafNode != null && leafNode == node.children[i]!!.children[1]) {
+                        if (leafNode.parent == node.children[i]) {
                             leafNode.parent = node
                         }
                         //				delete node.children[i];
-                        node.children.get(i) = leafNode
+                        node.children[i] = leafNode
                     }
                 }
                 i++
@@ -827,17 +821,17 @@ object BrushBSP {
 
         // melt portal windings
         fun MeltPortals(skipContents: Int) {
-            val vertexList: idVectorSet<idVec3?> = idVectorSet<Any?>(3)
+            val vertexList: idVectorSet<idVec3> = idVectorSet(3)
             numInsertedPoints = 0
             Common.common.Printf("[Melt Portals]\n")
             RemoveColinearPoints_r(root, skipContents)
             MeltPortals_r(root, skipContents, vertexList)
-            root.RemoveFlagRecurse(BrushBSP.NODE_DONE)
+            root.RemoveFlagRecurse(NODE_DONE)
             Common.common.Printf("\r%6d points inserted\n", numInsertedPoints)
         }
 
         // write a map file with a brush for every leaf node that has the given contents
-        fun WriteBrushMap(fileName: idStr?, ext: idStr?, contents: Int) {
+        fun WriteBrushMap(fileName: idStr, ext: idStr, contents: Int) {
             brushMap = idBrushMap(fileName, ext)
             brushMapContents = contents
         }
@@ -853,36 +847,36 @@ object BrushBSP {
         }
 
         private fun RemoveMultipleLeafNodeReferences_r(node: idBrushBSPNode?) {
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
-            if (node.children.get(0) != null) {
-                if (node.children.get(0).parent != node) {
-                    node.children.get(0) = null
+            if (node.children[0] != null) {
+                if (node.children[0]!!.parent != node) {
+                    node.children[0] = null
                 } else {
-                    RemoveMultipleLeafNodeReferences_r(node.children.get(0))
+                    RemoveMultipleLeafNodeReferences_r(node.children[0])
                 }
             }
-            if (node.children.get(1) != null) {
-                if (node.children.get(1).parent !== node) {
-                    node.children.get(1) = null
+            if (node.children[1] != null) {
+                if (node.children[1]!!.parent !== node) {
+                    node.children[1] = null
                 } else {
-                    RemoveMultipleLeafNodeReferences_r(node.children.get(1))
+                    RemoveMultipleLeafNodeReferences_r(node.children[1])
                 }
             }
         }
 
         private fun Free_r(node: idBrushBSPNode?) {
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
-            Free_r(node.children.get(0))
-            Free_r(node.children.get(1))
+            Free_r(node.children[0])
+            Free_r(node.children[1])
 
 //	delete node;
         }
 
-        private fun IsValidSplitter(side: idBrushSide?): Boolean {
+        private fun IsValidSplitter(side: idBrushSide): Boolean {
             return TempDump.NOT((side.GetFlags() and (Brush.SFL_SPLIT or Brush.SFL_USED_SPLITTER)).toDouble())
         }
 
@@ -890,28 +884,28 @@ object BrushBSP {
         //        private void IncreaseNumSplits();
         //
         private fun BrushSplitterStats(
-            brush: idBrush?,
+            brush: idBrush,
             planeNum: Int,
-            planeList: idPlaneSet?,
-            testedPlanes: BooleanArray?,
-            stats: splitterStats_s?
+            planeList: idPlaneSet,
+            testedPlanes: BooleanArray,
+            stats: splitterStats_s
         ): Int {
             var i: Int
             var j: Int
             var num: Int
             val s: Int
             val lastNumSplits: Int
-            val plane: idPlane?
+            val plane: idPlane
             var w: idWinding?
             var d: Float
             var d_front: Float
             var d_back: Float
             var brush_front: Float
             var brush_back: Float
-            plane = planeList.get(planeNum)
+            plane = planeList[planeNum]
 
             // get the plane side for the brush bounds
-            s = brush.GetBounds().PlaneSide(plane, BrushBSP.SPLITTER_EPSILON)
+            s = brush.GetBounds().PlaneSide(plane, SPLITTER_EPSILON)
             if (s == Plane.PLANESIDE_FRONT) {
                 stats.numFront++
                 return Brush.BRUSH_PLANESIDE_FRONT
@@ -949,12 +943,12 @@ object BrushBSP {
                     continue
                 }
                 j = brush.GetSide(i).GetPlaneNum()
-                if (testedPlanes.get(j) || testedPlanes.get(j xor 1)) {
+                if (testedPlanes[j] || testedPlanes[j xor 1]) {
                     i++
                     continue
                 }
                 w = brush.GetSide(i).GetWinding()
-                if (TempDump.NOT(w)) {
+                if (w == null) {
                     i++
                     continue
                 }
@@ -962,7 +956,7 @@ object BrushBSP {
                 d_front = d_back
                 j = 0
                 while (j < w.GetNumPoints()) {
-                    d = plane.Distance(w.get(j).ToVec3())
+                    d = plane.Distance(w[j].ToVec3())
                     if (d > d_front) {
                         d_front = d
                     } else if (d < d_back) {
@@ -970,7 +964,7 @@ object BrushBSP {
                     }
                     j++
                 }
-                if (d_front > BrushBSP.SPLITTER_EPSILON && d_back < -BrushBSP.SPLITTER_EPSILON) {
+                if (d_front > SPLITTER_EPSILON && d_back < -SPLITTER_EPSILON) {
                     stats.numSplits++
                 }
                 if (d_front > brush_front) {
@@ -989,10 +983,10 @@ object BrushBSP {
         }
 
         private fun FindSplitter(
-            node: idBrushBSPNode?,
-            planeList: idPlaneSet?,
-            testedPlanes: BooleanArray?,
-            bestStats: Array<splitterStats_s?>?
+            node: idBrushBSPNode,
+            planeList: idPlaneSet,
+            testedPlanes: BooleanArray,
+            bestStats: Array<splitterStats_s>
         ): Int {
             var i: Int
             var planeNum: Int
@@ -1020,13 +1014,13 @@ object BrushBSP {
                         continue
                     }
                     planeNum = brush.GetSide(i).GetPlaneNum()
-                    if (testedPlanes.get(planeNum) || testedPlanes.get(planeNum xor 1)) {
+                    if (testedPlanes[planeNum] || testedPlanes[planeNum xor 1]) {
                         i++
                         continue
                     }
-                    testedPlanes.get(planeNum xor 1) = true
-                    testedPlanes.get(planeNum) = testedPlanes.get(planeNum xor 1)
-                    if (node.volume.Split(planeList.get(planeNum), planeNum, null, null) != Plane.PLANESIDE_CROSS) {
+                    testedPlanes[planeNum xor 1] = true
+                    testedPlanes[planeNum] = testedPlanes[planeNum xor 1]
+                    if (node.volume!!.Split(planeList[planeNum], planeNum, null, null) != Plane.PLANESIDE_CROSS) {
                         i++
                         continue
                     }
@@ -1058,11 +1052,11 @@ object BrushBSP {
                         continue
                     }
                     value =
-                        f * stats.numFacing - 10 * stats.numSplits - Math.abs(stats.numFront - stats.numBack) - stats.epsilonBrushes * 1000
+                        f * stats.numFacing - 10 * stats.numSplits - abs(stats.numFront - stats.numBack) - stats.epsilonBrushes * 1000
                     if (value > bestValue) {
                         bestValue = value
                         bestSplitter = planeNum
-                        bestStats.get(0) = stats
+                        bestStats[0] = stats
                         b = node.brushList.Head()
                         while (b != null) {
                             b.SavePlaneSide()
@@ -1076,7 +1070,7 @@ object BrushBSP {
             return bestSplitter
         }
 
-        private fun SetSplitterUsed(node: idBrushBSPNode?, planeNum: Int) {
+        private fun SetSplitterUsed(node: idBrushBSPNode, planeNum: Int) {
             var i: Int
             var numValidBrushSplitters: Int
             var brush: idBrush?
@@ -1104,27 +1098,27 @@ object BrushBSP {
         }
 
         private fun BuildBrushBSP_r(
-            node: idBrushBSPNode?,
-            planeList: idPlaneSet?,
-            testedPlanes: BooleanArray?,
+            node: idBrushBSPNode,
+            planeList: idPlaneSet,
+            testedPlanes: BooleanArray,
             skipContents: Int
-        ): idBrushBSPNode? {
+        ): idBrushBSPNode {
             val planeNum: Int
-            val bestStats = arrayOf<splitterStats_s?>(null)
+            val bestStats = arrayOf(splitterStats_s())
             planeNum = FindSplitter(node, planeList, testedPlanes, bestStats)
 
             // if no split plane found this is a leaf node
             if (planeNum == -1) {
                 node.SetContentsFromBrushes()
                 if (brushMap != null && node.contents and brushMapContents != 0) {
-                    brushMap.WriteBrush(node.volume)
+                    brushMap!!.WriteBrush(node.volume!!)
                 }
 
                 // free node memory
                 node.brushList.Free()
                 node.volume = null //delete node.volume;
-                node.children.get(1) = null
-                node.children.get(0) = node.children.get(1)
+                node.children[1] = null
+                node.children[0] = node.children[1]
                 return node
             }
             numSplits++
@@ -1134,41 +1128,41 @@ object BrushBSP {
             SetSplitterUsed(node, planeNum)
 
             // set node split plane
-            node.plane.set(planeList.get(planeNum))
+            node.plane.set(planeList[planeNum])
 
             // allocate children
-            node.children.get(0) = idBrushBSPNode()
-            node.children.get(1) = idBrushBSPNode()
+            node.children[0] = idBrushBSPNode()
+            node.children[1] = idBrushBSPNode()
 
             // split node volume and brush list for children
-            node.volume.Split(node.plane, -1, node.children.get(0).volume, node.children.get(1).volume)
-            node.brushList.Split(node.plane, -1, node.children.get(0).brushList, node.children.get(1).brushList, true)
-            node.children.get(1).parent = node
-            node.children.get(0).parent = node.children.get(1).parent
+            node.volume!!.Split(node.plane, -1, node.children[0]!!.volume, node.children[1]!!.volume)
+            node.brushList.Split(node.plane, -1, node.children[0]!!.brushList, node.children[1]!!.brushList, true)
+            node.children[1]!!.parent = node
+            node.children[0]!!.parent = node.children[1]!!.parent
 
             // free node memory
             node.brushList.Free()
             node.volume = null //delete node.volume;
 
             // process children
-            node.children.get(0) = BuildBrushBSP_r(node.children.get(0), planeList, testedPlanes, skipContents)
-            node.children.get(1) = BuildBrushBSP_r(node.children.get(1), planeList, testedPlanes, skipContents)
+            node.children[0] = BuildBrushBSP_r(node.children[0]!!, planeList, testedPlanes, skipContents)
+            node.children[1] = BuildBrushBSP_r(node.children[1]!!, planeList, testedPlanes, skipContents)
 
             // if both children contain the skip contents
-            if (node.children.get(0).contents and node.children.get(1).contents and skipContents != 0) {
-                node.contents = node.children.get(0).contents or node.children.get(1).contents
-                node.children.get(1) = null
-                node.children.get(0) = node.children.get(1) //delete node.children[0];delete node.children[1];
+            if (node.children[0]!!.contents and node.children[1]!!.contents and skipContents != 0) {
+                node.contents = node.children[0]!!.contents or node.children[1]!!.contents
+                node.children[1] = null
+                node.children[0] = node.children[1] //delete node.children[0];delete node.children[1];
                 numSplits--
                 numGridCellSplits--
             }
             return node
         }
 
-        private fun ProcessGridCell(node: idBrushBSPNode?, skipContents: Int): idBrushBSPNode? {
+        private fun ProcessGridCell(node: idBrushBSPNode, skipContents: Int): idBrushBSPNode {
             val planeList = idPlaneSet()
             val testedPlanes: BooleanArray
-            if (BrushBSP.OUPUT_BSP_STATS_PER_GRID_CELL) {
+            if (OUPUT_BSP_STATS_PER_GRID_CELL) {
                 Common.common.Printf("[Grid Cell %d]\n", ++numGridCells)
                 Common.common.Printf("%6d brushes\n", node.brushList.Num())
             }
@@ -1181,52 +1175,46 @@ object BrushBSP {
             //node->brushList.Merge( BrushMergeAllowed );
             // create a list with planes for this grid cell
             node.brushList.CreatePlaneList(planeList)
-            if (BrushBSP.OUPUT_BSP_STATS_PER_GRID_CELL) {
+            if (OUPUT_BSP_STATS_PER_GRID_CELL) {
                 Common.common.Printf("[Grid Cell BSP]\n")
             }
             testedPlanes = BooleanArray(planeList.Num())
             BuildBrushBSP_r(node, planeList, testedPlanes, skipContents)
 
 //            testedPlanes = null;//delete testedPlanes;
-            if (BrushBSP.OUPUT_BSP_STATS_PER_GRID_CELL) {
+            if (OUPUT_BSP_STATS_PER_GRID_CELL) {
                 Common.common.Printf("\r%6d splits\n", numGridCellSplits)
             }
             return node
         }
 
-        private fun BuildGrid_r(gridCells: idList<idBrushBSPNode?>?, node: idBrushBSPNode?) {
+        private fun BuildGrid_r(gridCells: idList<idBrushBSPNode>, node: idBrushBSPNode) {
             var axis: Int
             var dist = 0f
-            val bounds: idBounds?
+            val bounds: idBounds
             val normal = idVec3()
             val halfSize = idVec3()
             if (0 == node.brushList.Num()) {
 //		delete node.volume;
                 node.volume = null
-                node.children.get(1) = null
-                node.children.get(0) = node.children.get(1)
+                node.children[1] = null
+                node.children[0] = node.children[1]
                 return
             }
-            bounds = node.volume.GetBounds()
-            halfSize.set(bounds.get(1).minus(bounds.get(0)).oMultiply(0.5f))
+            bounds = node.volume!!.GetBounds()
+            halfSize.set(bounds[1].minus(bounds[0]).times(0.5f))
             axis = 0
             while (axis < 3) {
-                dist = if (halfSize.get(axis) > BrushBSP.BSP_GRID_SIZE) {
-                    (BrushBSP.BSP_GRID_SIZE * (Math.floor(
-                        ((bounds.get(
-                            0,
-                            axis
-                        ) + halfSize.get(axis)) / BrushBSP.BSP_GRID_SIZE).toDouble()
+                dist = if (halfSize[axis] > BSP_GRID_SIZE) {
+                    (BSP_GRID_SIZE * (floor(
+                        ((bounds[0, axis] + halfSize[axis]) / BSP_GRID_SIZE).toDouble()
                     ) + 1)).toFloat()
                 } else {
-                    (BrushBSP.BSP_GRID_SIZE * (Math.floor(
-                        (bounds.get(
-                            0,
-                            axis
-                        ) / BrushBSP.BSP_GRID_SIZE).toDouble()
+                    (BSP_GRID_SIZE * (floor(
+                        (bounds[0, axis] / BSP_GRID_SIZE).toDouble()
                     ) + 1)).toFloat()
                 }
-                if (dist > bounds.get(0, axis) + 1.0f && dist < bounds.get(1, axis) - 1.0f) {
+                if (dist > bounds[0, axis] + 1.0f && dist < bounds[1, axis] - 1.0f) {
                     break
                 }
                 axis++
@@ -1237,21 +1225,21 @@ object BrushBSP {
             }
             numSplits++
             normal.set(Vector.getVec3_origin())
-            normal.set(axis, 1.0f)
+            normal[axis] = 1.0f
             node.plane.SetNormal(normal)
             node.plane.SetDist(dist)
 
             // allocate children
-            node.children.get(0) = idBrushBSPNode()
-            node.children.get(1) = idBrushBSPNode()
+            node.children[0] = idBrushBSPNode()
+            node.children[1] = idBrushBSPNode()
 
             // split volume and brush list for children
-            node.volume.Split(node.plane, -1, node.children.get(0).volume, node.children.get(1).volume)
-            node.brushList.Split(node.plane, -1, node.children.get(0).brushList, node.children.get(1).brushList)
-            node.children.get(0).brushList.SetFlagOnFacingBrushSides(node.plane, Brush.SFL_USED_SPLITTER)
-            node.children.get(1).brushList.SetFlagOnFacingBrushSides(node.plane, Brush.SFL_USED_SPLITTER)
-            node.children.get(1).parent = node
-            node.children.get(0).parent = node.children.get(1).parent
+            node.volume!!.Split(node.plane, -1, node.children[0]!!.volume, node.children[1]!!.volume)
+            node.brushList.Split(node.plane, -1, node.children[0]!!.brushList, node.children[1]!!.brushList)
+            node.children[0]!!.brushList.SetFlagOnFacingBrushSides(node.plane, Brush.SFL_USED_SPLITTER)
+            node.children[1]!!.brushList.SetFlagOnFacingBrushSides(node.plane, Brush.SFL_USED_SPLITTER)
+            node.children[1]!!.parent = node
+            node.children[0]!!.parent = node.children[1]!!.parent
 
             // free node memory
             node.brushList.Free()
@@ -1259,39 +1247,39 @@ object BrushBSP {
             node.volume = null
 
             // process children
-            BuildGrid_r(gridCells, node.children.get(0))
-            BuildGrid_r(gridCells, node.children.get(1))
+            BuildGrid_r(gridCells, node.children[0]!!)
+            BuildGrid_r(gridCells, node.children[1]!!)
         }
 
-        private fun PruneTree_r(node: idBrushBSPNode?, contents: Int) {
+        private fun PruneTree_r(node: idBrushBSPNode, contents: Int) {
             var i: Int
             var s: Int
             val nodes = arrayOfNulls<idBrushBSPNode?>(2)
             var p: idBrushBSPPortal?
             var nextp: idBrushBSPPortal?
-            if (TempDump.NOT(node.children.get(0)) || TempDump.NOT(node.children.get(1))) {
+            if (node.children[0] == null || node.children[1] == null) {
                 return
             }
-            PruneTree_r(node.children.get(0), contents)
-            PruneTree_r(node.children.get(1), contents)
-            if (node.children.get(0).contents and node.children.get(1).contents and contents != 0) {
-                node.contents = node.children.get(0).contents or node.children.get(1).contents
+            PruneTree_r(node.children[0]!!, contents)
+            PruneTree_r(node.children[1]!!, contents)
+            if (node.children[0]!!.contents and node.children[1]!!.contents and contents != 0) {
+                node.contents = node.children[0]!!.contents or node.children[1]!!.contents
                 // move all child portals to parent
                 i = 0
                 while (i < 2) {
-                    p = node.children.get(i).portals
+                    p = node.children[i]!!.portals
                     while (p != null) {
-                        s = if (p.nodes.get(1) == node.children.get(i)) 1 else 0
-                        nextp = p.next.get(s)
+                        s = if (p.nodes[1] == node.children[i]) 1 else 0
+                        nextp = p.next[s]
                         nodes[s] = node
-                        nodes[TempDump.SNOT(s.toDouble())] = p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble()))
-                        p.RemoveFromNode(p.nodes.get(0))
-                        p.RemoveFromNode(p.nodes.get(1))
-                        if (nodes[TempDump.SNOT(s.toDouble())] == node.children.get( /*!i*/TempDump.SNOT(i.toDouble()))) {
+                        nodes[TempDump.SNOT(s.toDouble())] = p.nodes[TempDump.SNOT(s.toDouble())]
+                        p.RemoveFromNode(p.nodes[0]!!)
+                        p.RemoveFromNode(p.nodes[1]!!)
+                        if (nodes[TempDump.SNOT(s.toDouble())] == node.children[TempDump.SNOT(i.toDouble())]) {
 //					delete p;	// portal seperates both children
 //                            p = null;
                         } else {
-                            p.AddToNodes(nodes[0], nodes[1])
+                            p.AddToNodes(nodes[0]!!, nodes[1]!!)
                         }
                         p = nextp
                     }
@@ -1300,8 +1288,8 @@ object BrushBSP {
 
 //		delete node.children[0];
 //		delete node.children[1];
-                node.children.get(1) = null
-                node.children.get(0) = node.children.get(1)
+                node.children[1] = null
+                node.children[0] = node.children[1]
                 numPrunedSplits++
             }
         }
@@ -1310,7 +1298,7 @@ object BrushBSP {
             var i: Int
             var j: Int
             var n: Int
-            val bounds: idBounds?
+            val bounds: idBounds
             var p: idBrushBSPPortal
             val portals = arrayOfNulls<idBrushBSPPortal?>(6)
             val normal = idVec3()
@@ -1320,15 +1308,15 @@ object BrushBSP {
             bounds = treeBounds.Expand(32f)
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) > bounds.get(1, i)) {
+                if (bounds[0, i] > bounds[1, i]) {
                     Common.common.Error("empty BSP tree")
                 }
                 i++
             }
             outside = idBrushBSPNode()
-            outside.children.get(1) = null
-            outside.children.get(0) = outside.children.get(1)
-            outside.parent = outside.children.get(0)
+            outside.children[1] = null
+            outside.children[0] = outside.children[1]
+            outside.parent = outside.children[0]
             outside.brushList.Clear()
             outside.portals = null
             outside.contents = 0
@@ -1338,9 +1326,9 @@ object BrushBSP {
                 while (j < 2) {
                     p = idBrushBSPPortal()
                     normal.set(Vector.getVec3_origin())
-                    normal.set(i, if (j != 0) -1 else 1.toFloat())
+                    normal.set(i, if (j != 0) -1f else 1f)
                     p.plane.SetNormal(normal)
-                    p.plane.SetDist(if (j != 0) -bounds.get(j, i) else bounds.get(j, i))
+                    p.plane.SetDist(if (j != 0) -bounds[j, i] else bounds[j, i])
                     p.winding = idWinding(p.plane.Normal(), p.plane.Dist())
                     p.AddToNodes(root, outside)
                     n = j * 3 + i
@@ -1359,14 +1347,14 @@ object BrushBSP {
                         j++
                         continue
                     }
-                    portals[i].winding = portals[i].winding.Clip(portals[j].plane, Plane.ON_EPSILON)
+                    portals[i]!!.winding = portals[i]!!.winding!!.Clip(portals[j]!!.plane, Plane.ON_EPSILON)
                     j++
                 }
                 i++
             }
         }
 
-        private fun BaseWindingForNode(node: idBrushBSPNode?): idWinding? {
+        private fun BaseWindingForNode(node: idBrushBSPNode): idWinding? {
             var node = node
             var w: idWinding?
             var n: idBrushBSPNode?
@@ -1375,12 +1363,12 @@ object BrushBSP {
             // clip by all the parents
             n = node.parent
             while (n != null && w != null) {
-                w = if (n.children.get(0) == node) {
+                w = if (n.children[0] == node) {
                     // take front
-                    w.Clip(n.plane, BrushBSP.BASE_WINDING_EPSILON)
+                    w.Clip(n.plane, BASE_WINDING_EPSILON)
                 } else {
                     // take back
-                    w.Clip(n.plane.unaryMinus(), BrushBSP.BASE_WINDING_EPSILON)
+                    w.Clip(n.plane.unaryMinus(), BASE_WINDING_EPSILON)
                 }
                 node = n
                 n = n.parent
@@ -1396,7 +1384,7 @@ object BrushBSP {
          plane and clipping it by all of parents of this node
          ============
          */
-        private fun MakeNodePortal(node: idBrushBSPNode?) {
+        private fun MakeNodePortal(node: idBrushBSPNode) {
             val newPortal: idBrushBSPPortal
             var p: idBrushBSPPortal?
             var w: idWinding?
@@ -1406,18 +1394,18 @@ object BrushBSP {
             // clip the portal by all the other portals in the node
             p = node.portals
             while (p != null && w != null) {
-                if (p.nodes.get(0) === node) {
+                if (p.nodes[0] === node) {
                     side = 0
                     w = w.Clip(p.plane, 0.1f)
-                } else if (p.nodes.get(1) === node) {
+                } else if (p.nodes[1] === node) {
                     side = 1
                     w = w.Clip(p.plane.unaryMinus(), 0.1f)
                 } else {
                     Common.common.Error("MakeNodePortal: mislinked portal")
                 }
-                p = p.next.get(side)
+                p = p.next[side]
             }
-            if (TempDump.NOT(w)) {
+            if (w == null) {
                 return
             }
             if (w.IsTiny()) {
@@ -1427,7 +1415,7 @@ object BrushBSP {
             newPortal = idBrushBSPPortal()
             newPortal.plane.set(node.plane)
             newPortal.winding = w
-            newPortal.AddToNodes(node.children.get(0), node.children.get(1))
+            newPortal.AddToNodes(node.children[0]!!, node.children[1]!!)
         }
 
         /*
@@ -1437,7 +1425,7 @@ object BrushBSP {
          Move or split the portals that bound the node so that the node's children have portals instead of node.
          ============
          */
-        private fun SplitNodePortals(node: idBrushBSPNode?) {
+        private fun SplitNodePortals(node: idBrushBSPNode) {
             var side = 0
             var p: idBrushBSPPortal?
             var nextPortal: idBrushBSPPortal?
@@ -1448,30 +1436,30 @@ object BrushBSP {
             var frontWinding: idWinding? = idWinding()
             var backWinding: idWinding? = idWinding()
             val plane = node.plane
-            f = node.children.get(0)
-            b = node.children.get(1)
+            f = node.children[0]
+            b = node.children[1]
             p = node.portals
             while (p != null) {
-                if (p.nodes.get(0) == node) {
+                if (p.nodes[0] == node) {
                     side = 0
-                } else if (p.nodes.get(1) == node) {
+                } else if (p.nodes[1] == node) {
                     side = 1
                 } else {
                     Common.common.Error("idBrushBSP::SplitNodePortals: mislinked portal")
                 }
-                nextPortal = p.next.get(side)
-                otherNode = p.nodes.get( /*!side*/TempDump.SNOT(side.toDouble()))
-                p.RemoveFromNode(p.nodes.get(0))
-                p.RemoveFromNode(p.nodes.get(1))
+                nextPortal = p.next[side]
+                otherNode = p.nodes[TempDump.SNOT(side.toDouble())]
+                p.RemoveFromNode(p.nodes[0]!!)
+                p.RemoveFromNode(p.nodes[1]!!)
 
                 // cut the portal into two portals, one on each side of the cut plane
-                p.winding.Split(plane, BrushBSP.SPLIT_WINDING_EPSILON, frontWinding, backWinding)
-                if (!frontWinding.isNULL()() && frontWinding.IsTiny()) {
+                p.winding!!.Split(plane, SPLIT_WINDING_EPSILON, frontWinding!!, backWinding!!)
+                if (!frontWinding.isNULL() && frontWinding.IsTiny()) {
 //			delete frontWinding;
                     frontWinding = null
                     //tinyportals++;
                 }
-                if (!backWinding.isNULL()() && backWinding.IsTiny()) {
+                if (!backWinding.isNULL() && backWinding.IsTiny()) {
 //			delete backWinding;
                     backWinding = null
                     //tinyportals++;
@@ -1484,9 +1472,9 @@ object BrushBSP {
                 if (TempDump.NOT(frontWinding)) {
 //			delete backWinding;
                     if (side == 0) {
-                        p.AddToNodes(b, otherNode)
+                        p.AddToNodes(b!!, otherNode!!)
                     } else {
-                        p.AddToNodes(otherNode, b)
+                        p.AddToNodes(otherNode!!, b!!)
                     }
                     p = nextPortal
                     continue
@@ -1494,9 +1482,9 @@ object BrushBSP {
                 if (TempDump.NOT(backWinding)) {
 //			delete frontWinding;
                     if (side == 0) {
-                        p.AddToNodes(f, otherNode)
+                        p.AddToNodes(f!!, otherNode!!)
                     } else {
-                        p.AddToNodes(otherNode, f)
+                        p.AddToNodes(otherNode!!, f!!)
                     }
                     p = nextPortal
                     continue
@@ -1509,18 +1497,18 @@ object BrushBSP {
                 //		delete p.winding;
                 p.winding = frontWinding
                 if (side == 0) {
-                    p.AddToNodes(f, otherNode)
-                    newPortal.AddToNodes(b, otherNode)
+                    p.AddToNodes(f!!, otherNode!!)
+                    newPortal.AddToNodes(b!!, otherNode)
                 } else {
-                    p.AddToNodes(otherNode, f)
-                    newPortal.AddToNodes(otherNode, b)
+                    p.AddToNodes(otherNode!!, f!!)
+                    newPortal.AddToNodes(otherNode, b!!)
                 }
                 p = nextPortal
             }
             node.portals = null
         }
 
-        private fun MakeTreePortals_r(node: idBrushBSPNode?) {
+        private fun MakeTreePortals_r(node: idBrushBSPNode) {
             var i: Int
             val bounds: idBounds?
             numPortals++
@@ -1532,73 +1520,71 @@ object BrushBSP {
 //	}
             i = 0
             while (i < 3) {
-                if (bounds.get(0, i) < Lib.MIN_WORLD_COORD || bounds.get(
-                        1,
-                        i
-                    ) > Lib.MAX_WORLD_COORD
+                if (bounds[0, i] < Lib.MIN_WORLD_COORD || bounds[1, i] > Lib.MAX_WORLD_COORD
                 ) {
                     Common.common.Warning("node with unbounded volume")
                     break
                 }
                 i++
             }
-            if (TempDump.NOT(node.children.get(0)) || TempDump.NOT(node.children.get(1))) {
+            if (TempDump.NOT(node.children[0]) || TempDump.NOT(node.children[1])) {
                 return
             }
             MakeNodePortal(node)
             SplitNodePortals(node)
-            MakeTreePortals_r(node.children.get(0))
-            MakeTreePortals_r(node.children.get(1))
+            MakeTreePortals_r(node.children[0]!!)
+            MakeTreePortals_r(node.children[1]!!)
         }
 
         private fun FloodThroughPortals_r(node: idBrushBSPNode?, contents: Int, depth: Int) {
             var p: idBrushBSPPortal?
             var s: Int
+            if (node == null) {
+                Common.common.Error("FloodThroughPortals_r: NULL node\n")
+                return
+            }
             if (node.occupied != 0) {
                 Common.common.Error("FloodThroughPortals_r: node already occupied\n")
-            }
-            if (TempDump.NOT(node)) {
-                Common.common.Error("FloodThroughPortals_r: NULL node\n")
             }
             node.occupied = depth
             p = node.portals
             while (p != null) {
-                s = if (p.nodes.get(1) == node) 1 else 0
+                s = if (p.nodes[1] == node) 1 else 0
 
                 // if the node at the other side of the portal is removed
-                if (TempDump.NOT(p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble())))) {
-                    p = p.next.get(s)
+                if (TempDump.NOT(p.nodes[TempDump.SNOT(s.toDouble())])) {
+                    p = p.next[s]
                     continue
                 }
 
                 // if the node at the other side of the portal is occupied already
-                if (p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble())).occupied != 0) {
-                    p = p.next.get(s)
+                if (p.nodes[TempDump.SNOT(s.toDouble())]!!.occupied != 0) {
+                    p = p.next[s]
                     continue
                 }
 
                 // can't flood through the portal if it has the seperating contents at the other side
-                if (p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble())).contents and contents != 0) {
-                    p = p.next.get(s)
+                if (p.nodes[TempDump.SNOT(s.toDouble())]!!.contents and contents != 0) {
+                    p = p.next[s]
                     continue
                 }
 
                 // flood recursively through the current portal
-                FloodThroughPortals_r(p.nodes.get( /*!s*/TempDump.SNOT(s.toDouble())), contents, depth + 1)
-                p = p.next.get(s)
+                FloodThroughPortals_r(p.nodes[TempDump.SNOT(s.toDouble())], contents, depth + 1)
+                p = p.next[s]
             }
         }
 
-        private fun FloodFromOrigin(origin: idVec3?, contents: Int): Boolean {
+        private fun FloodFromOrigin(origin: idVec3, contents: Int): Boolean {
             var node: idBrushBSPNode?
 
             //find the leaf to start in
             node = root
-            while (node.children.get(0) != null && node.children.get(1) != null) {
+            while (node!!.children[0] != null && node.children[1] != null) {
                 node = if (node.plane.Side(origin) == Plane.PLANESIDE_BACK) {
-                    node.children.get(1)
+                    node.children[1]
                 } else {
-                    node.children.get(0)
+                    node.children[0]
                 }
             }
             if (TempDump.NOT(node)) {
@@ -1625,12 +1611,12 @@ object BrushBSP {
          Marks all nodes that can be reached by entites.
          ============
          */
-        private fun FloodFromEntities(mapFile: idMapFile?, contents: Int, classNames: idStrList?): Boolean {
+        private fun FloodFromEntities(mapFile: idMapFile, contents: Int, classNames: idStrList): Boolean {
             var i: Int
             var j: Int
             var inside: Boolean
             val origin = idVec3()
-            var mapEnt: idMapEntity?
+            var mapEnt: idMapEntity
             val classname = idStr()
             inside = false
             outside.occupied = 0
@@ -1649,7 +1635,7 @@ object BrushBSP {
                 }
                 j = 0
                 while (j < classNames.size()) {
-                    if (classname.Icmp(classNames.get(j)) == 0) {
+                    if (classname.Icmp(classNames[j]) == 0) {
                         break
                     }
                     j++
@@ -1679,12 +1665,12 @@ object BrushBSP {
         }
 
         private fun RemoveOutside_r(node: idBrushBSPNode?, contents: Int) {
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
-            if (node.children.get(0) != null || node.children.get(1) != null) {
-                RemoveOutside_r(node.children.get(0), contents)
-                RemoveOutside_r(node.children.get(1), contents)
+            if (node.children[0] != null || node.children[1] != null) {
+                RemoveOutside_r(node.children[0], contents)
+                RemoveOutside_r(node.children[1], contents)
                 return
             }
             if (0 == node.occupied) {
@@ -1699,26 +1685,26 @@ object BrushBSP {
             }
         }
 
-        private fun SetPortalPlanes_r(node: idBrushBSPNode?, planeList: idPlaneSet?) {
+        private fun SetPortalPlanes_r(node: idBrushBSPNode?, planeList: idPlaneSet) {
             var s: Int
             var p: idBrushBSPPortal?
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
             p = node.portals
             while (p != null) {
-                s = if (p.nodes.get(1) == node) 1 else 0
+                s = if (p.nodes[1] == node) 1 else 0
                 if (p.planeNum == -1) {
                     p.planeNum = planeList.FindPlane(
                         p.plane,
-                        BrushBSP.PORTAL_PLANE_NORMAL_EPSILON,
-                        BrushBSP.PORTAL_PLANE_DIST_EPSILON
+                        PORTAL_PLANE_NORMAL_EPSILON,
+                        PORTAL_PLANE_DIST_EPSILON
                     )
                 }
-                p = p.next.get(s)
+                p = p.next[s]
             }
-            SetPortalPlanes_r(node.children.get(0), planeList)
-            SetPortalPlanes_r(node.children.get(1), planeList)
+            SetPortalPlanes_r(node.children[0], planeList)
+            SetPortalPlanes_r(node.children[1], planeList)
         }
 
         /*
@@ -1733,21 +1719,21 @@ object BrushBSP {
         }
 
         private fun MergePortals_r(node: idBrushBSPNode?, skipContents: Int) {
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
             if (node.contents and skipContents != 0) {
                 return
             }
-            if (TempDump.NOT(node.children.get(0)) && TempDump.NOT(node.children.get(1))) {
+            if (TempDump.NOT(node.children[0]) && TempDump.NOT(node.children[1])) {
                 MergeLeafNodePortals(node, skipContents)
                 return
             }
-            MergePortals_r(node.children.get(0), skipContents)
-            MergePortals_r(node.children.get(1), skipContents)
+            MergePortals_r(node.children[0], skipContents)
+            MergePortals_r(node.children[1], skipContents)
         }
 
-        private fun MergeLeafNodePortals(node: idBrushBSPNode?, skipContents: Int) {
+        private fun MergeLeafNodePortals(node: idBrushBSPNode, skipContents: Int) {
             var s1: Int
             var s2: Int
             var foundPortal: Boolean
@@ -1769,14 +1755,14 @@ object BrushBSP {
                     nextp2 = p2.Next(s2)
 
                     // if both portals seperate the same leaf nodes
-                    if (p1.nodes.get( /*!s1*/TempDump.SNOT(s1.toDouble())) == p2.nodes.get( /*!s2*/TempDump.SNOT(s2.toDouble()))) {
+                    if (p1.nodes[TempDump.SNOT(s1.toDouble())] == p2.nodes[TempDump.SNOT(s2.toDouble())]) {
 
                         // add the winding of p2 to the winding of p1
-                        p1.winding.AddToConvexHull(p2.winding, p1.plane.Normal())
+                        p1.winding!!.AddToConvexHull(p2.winding, p1.plane.Normal())
 
                         // delete p2
-                        p2.RemoveFromNode(p2.nodes.get(0))
-                        p2.RemoveFromNode(p2.nodes.get(1))
+                        p2.RemoveFromNode(p2.nodes[0]!!)
+                        p2.RemoveFromNode(p2.nodes[1]!!)
                         //				delete p2;
                         numMergedPortals++
                         nextp1 = node.GetPortals()
@@ -1792,7 +1778,7 @@ object BrushBSP {
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
                 nextp1 = p1.Next(s1)
-                if (0 == p1.nodes.get( /*!s1*/TempDump.SNOT(s1.toDouble())).contents and skipContents) {
+                if (0 == p1.nodes[TempDump.SNOT(s1.toDouble())]!!.contents and skipContents) {
                     p1 = nextp1
                     continue
                 }
@@ -1808,7 +1794,7 @@ object BrushBSP {
                         continue
                     }
                     foundPortal = true
-                    if (0 == p2.nodes.get( /*!s2*/TempDump.SNOT(s2.toDouble())).contents and skipContents) {
+                    if (0 == p2.nodes[TempDump.SNOT(s2.toDouble())]!!.contents and skipContents) {
                         break
                     }
                     p2 = nextp2
@@ -1826,11 +1812,11 @@ object BrushBSP {
                         }
 
                         // add the winding of p2 to the winding of p1
-                        p1.winding.AddToConvexHull(p2.winding, p1.plane.Normal())
+                        p1.winding!!.AddToConvexHull(p2.winding, p1.plane.Normal())
 
                         // delete p2
-                        p2.RemoveFromNode(p2.nodes.get(0))
-                        p2.RemoveFromNode(p2.nodes.get(1))
+                        p2.RemoveFromNode(p2.nodes[0]!!)
+                        p2.RemoveFromNode(p2.nodes[1]!!)
                         //				delete p2;
                         numMergedPortals++
                         p2 = nextp2
@@ -1845,7 +1831,7 @@ object BrushBSP {
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
                 nextp1 = p1.Next(s1)
-                if (0 == p1.nodes.get( /*!s1*/TempDump.SNOT(s1.toDouble())).contents and skipContents) {
+                if (0 == p1.nodes[TempDump.SNOT(s1.toDouble())]!!.contents and skipContents) {
                     p1 = nextp1
                     continue
                 }
@@ -1853,7 +1839,7 @@ object BrushBSP {
                 while (p2 != null) {
                     s2 = if (p2.GetNode(1) == node) 1 else 0
                     nextp2 = p2.Next(s2)
-                    if (0 == p2.nodes.get( /*!s2*/TempDump.SNOT(s2.toDouble())).contents and skipContents) {
+                    if (0 == p2.nodes[TempDump.SNOT(s2.toDouble())]!!.contents and skipContents) {
                         p2 = nextp2
                         continue
                     }
@@ -1864,10 +1850,10 @@ object BrushBSP {
 
                     // try to merge the two portal windings
                     if (p2.planeNum == p1.planeNum) {
-                        newWinding = p1.winding.TryMerge(p2.winding, p1.plane.Normal())
+                        newWinding = p1.winding!!.TryMerge(p2.winding!!, p1.plane.Normal())
                     } else {
-                        reverse = p2.winding.Reverse()
-                        newWinding = p1.winding.TryMerge(reverse, p1.plane.Normal())
+                        reverse = p2.winding!!.Reverse()
+                        newWinding = p1.winding!!.TryMerge(reverse, p1.plane.Normal())
                         //				delete reverse;
                     }
 
@@ -1879,8 +1865,8 @@ object BrushBSP {
                         p1.winding = newWinding
 
                         // delete p2
-                        p2.RemoveFromNode(p2.nodes.get(0))
-                        p2.RemoveFromNode(p2.nodes.get(1))
+                        p2.RemoveFromNode(p2.nodes[0]!!)
+                        p2.RemoveFromNode(p2.nodes[1]!!)
                         //				delete p2;
                         numMergedPortals++
                         nextp1 = node.GetPortals()
@@ -1894,33 +1880,33 @@ object BrushBSP {
 
         private fun UpdateTreeAfterMerge_r(
             node: idBrushBSPNode?,
-            bounds: idBounds?,
+            bounds: idBounds,
             oldNode: idBrushBSPNode?,
             newNode: idBrushBSPNode?
         ) {
-            if (TempDump.NOT(node)) {
+            if (node == null) {
                 return
             }
-            if (TempDump.NOT(node.children.get(0)) && TempDump.NOT(node.children.get(1))) {
+            if (TempDump.NOT(node.children[0]) && TempDump.NOT(node.children[1])) {
                 return
             }
-            if (node.children.get(0) == oldNode) {
-                node.children.get(0) = newNode
+            if (node.children[0] == oldNode) {
+                node.children[0] = newNode
             }
-            if (node.children.get(1) == oldNode) {
-                node.children.get(1) = newNode
+            if (node.children[1] == oldNode) {
+                node.children[1] = newNode
             }
             when (bounds.PlaneSide(node.plane, 2.0f)) {
-                Plane.PLANESIDE_FRONT -> UpdateTreeAfterMerge_r(node.children.get(0), bounds, oldNode, newNode)
-                Plane.PLANESIDE_BACK -> UpdateTreeAfterMerge_r(node.children.get(1), bounds, oldNode, newNode)
+                Plane.PLANESIDE_FRONT -> UpdateTreeAfterMerge_r(node.children[0], bounds, oldNode, newNode)
+                Plane.PLANESIDE_BACK -> UpdateTreeAfterMerge_r(node.children[1], bounds, oldNode, newNode)
                 else -> {
-                    UpdateTreeAfterMerge_r(node.children.get(0), bounds, oldNode, newNode)
-                    UpdateTreeAfterMerge_r(node.children.get(1), bounds, oldNode, newNode)
+                    UpdateTreeAfterMerge_r(node.children[0], bounds, oldNode, newNode)
+                    UpdateTreeAfterMerge_r(node.children[1], bounds, oldNode, newNode)
                 }
             }
         }
 
-        private fun RemoveLeafNodeColinearPoints(node: idBrushBSPNode?) {
+        private fun RemoveLeafNodeColinearPoints(node: idBrushBSPNode) {
             var s1: Int
             var p1: idBrushBSPPortal?
 
@@ -1928,24 +1914,24 @@ object BrushBSP {
             p1 = node.GetPortals()
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
-                p1.winding.RemoveColinearPoints(p1.plane.Normal(), 0.1f)
+                p1.winding!!.RemoveColinearPoints(p1.plane.Normal(), 0.1f)
                 p1 = p1.Next(s1)
             }
         }
 
         private fun RemoveColinearPoints_r(node: idBrushBSPNode?, skipContents: Int) {
-            if (TempDump.NOT(node)) {
+            if (null == node) {
                 return
             }
             if (node.contents and skipContents != 0) {
                 return
             }
-            if (TempDump.NOT(node.children.get(0)) && TempDump.NOT(node.children.get(1))) {
+            if (TempDump.NOT(node.children[0]) && TempDump.NOT(node.children[1])) {
                 RemoveLeafNodeColinearPoints(node)
                 return
             }
-            RemoveColinearPoints_r(node.children.get(0), skipContents)
-            RemoveColinearPoints_r(node.children.get(1), skipContents)
+            RemoveColinearPoints_r(node.children[0], skipContents)
+            RemoveColinearPoints_r(node.children[1], skipContents)
         }
 
         /*
@@ -1956,29 +1942,29 @@ object BrushBSP {
          ============
          */
         private fun MeltFlood_r(
-            node: idBrushBSPNode?,
+            node: idBrushBSPNode,
             skipContents: Int,
-            bounds: idBounds?,
-            vertexList: idVectorSet<idVec3?>?
+            bounds: idBounds,
+            vertexList: idVectorSet<idVec3>
         ) {
             var s1: Int
             var i: Int
             var p1: idBrushBSPPortal?
             val b = idBounds()
             var w: idWinding?
-            node.SetFlag(BrushBSP.NODE_VISITED)
+            node.SetFlag(NODE_VISITED)
             p1 = node.GetPortals()
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
-                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble())).GetFlags() and BrushBSP.NODE_VISITED != 0) {
+                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble()))!!.GetFlags() and NODE_VISITED != 0) {
                     p1 = p1.Next(s1)
                     continue
                 }
                 w = p1.GetWinding()
                 i = 0
                 while (i < w.GetNumPoints()) {
-                    if (bounds.ContainsPoint(w.get(i).ToVec3())) {
-                        vertexList.FindVector(w.get(i).ToVec3(), BrushBSP.VERTEX_MELT_EPSILON)
+                    if (bounds.ContainsPoint(w[i].ToVec3())) {
+                        vertexList.FindVector(w[i].ToVec3(), VERTEX_MELT_EPSILON)
                     }
                     i++
                 }
@@ -1987,11 +1973,11 @@ object BrushBSP {
             p1 = node.GetPortals()
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
-                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble())).GetFlags() and BrushBSP.NODE_VISITED != 0) {
+                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble()))!!.GetFlags() and NODE_VISITED != 0) {
                     p1 = p1.Next(s1)
                     continue
                 }
-                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble())).GetContents() and skipContents != 0) {
+                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble()))!!.GetContents() and skipContents != 0) {
                     p1 = p1.Next(s1)
                     continue
                 }
@@ -2002,40 +1988,40 @@ object BrushBSP {
                     continue
                 }
                 MeltFlood_r(
-                    p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble())), skipContents, bounds, vertexList
+                    p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble()))!!, skipContents, bounds, vertexList
                 )
                 p1 = p1.Next(s1)
             }
         }
 
-        private fun MeltLeafNodePortals(node: idBrushBSPNode?, skipContents: Int, vertexList: idVectorSet<idVec3?>?) {
+        private fun MeltLeafNodePortals(node: idBrushBSPNode, skipContents: Int, vertexList: idVectorSet<idVec3>) {
             var s1: Int
             var i: Int
             var p1: idBrushBSPPortal?
             val bounds = idBounds()
-            if (node.GetFlags() and BrushBSP.NODE_DONE != 0) {
+            if (node.GetFlags() and NODE_DONE != 0) {
                 return
             }
-            node.SetFlag(BrushBSP.NODE_DONE)
+            node.SetFlag(NODE_DONE)
 
             // melt things together
             p1 = node.GetPortals()
             while (p1 != null) {
                 s1 = if (p1.GetNode(1) == node) 1 else 0
-                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble())).GetFlags() and BrushBSP.NODE_DONE != 0) {
+                if (p1.GetNode( /*!s1*/TempDump.SNOT(s1.toDouble()))!!.GetFlags() and NODE_DONE != 0) {
                     p1 = p1.Next(s1)
                     continue
                 }
-                p1.winding.GetBounds(bounds)
-                bounds.ExpandSelf(2 * BrushBSP.VERTEX_MELT_HASH_SIZE * BrushBSP.VERTEX_MELT_EPSILON)
-                vertexList.Init(bounds.get(0), bounds.get(1), BrushBSP.VERTEX_MELT_HASH_SIZE.toInt(), 128)
+                p1.winding!!.GetBounds(bounds)
+                bounds.ExpandSelf(2 * VERTEX_MELT_HASH_SIZE * VERTEX_MELT_EPSILON)
+                vertexList.Init(bounds[0], bounds[1], VERTEX_MELT_HASH_SIZE.toInt(), 128)
 
                 // get all vertices to be considered
                 MeltFlood_r(node, skipContents, bounds, vertexList)
-                node.RemoveFlagFlood(BrushBSP.NODE_VISITED)
+                node.RemoveFlagFlood(NODE_VISITED)
                 i = 0
                 while (i < vertexList.Num()) {
-                    if (p1.winding.InsertPointIfOnEdge(vertexList.get(i), p1.plane, 0.1f)) {
+                    if (p1.winding!!.InsertPointIfOnEdge(vertexList[i], p1.plane, 0.1f)) {
                         numInsertedPoints++
                     }
                     i++
@@ -2045,19 +2031,19 @@ object BrushBSP {
             Brush.DisplayRealTimeString("\r%6d", numInsertedPoints)
         }
 
-        private fun MeltPortals_r(node: idBrushBSPNode?, skipContents: Int, vertexList: idVectorSet<idVec3?>?) {
-            if (TempDump.NOT(node)) {
+        private fun MeltPortals_r(node: idBrushBSPNode?, skipContents: Int, vertexList: idVectorSet<idVec3>) {
+            if (node == null) {
                 return
             }
             if (node.contents and skipContents != 0) {
                 return
             }
-            if (TempDump.NOT(node.children.get(0)) && TempDump.NOT(node.children.get(1))) {
+            if (TempDump.NOT(node.children[0]) && TempDump.NOT(node.children[1])) {
                 MeltLeafNodePortals(node, skipContents, vertexList)
                 return
             }
-            MeltPortals_r(node.children.get(0), skipContents, vertexList)
-            MeltPortals_r(node.children.get(1), skipContents, vertexList)
+            MeltPortals_r(node.children[0], skipContents, vertexList)
+            MeltPortals_r(node.children[1], skipContents, vertexList)
         }
 
         /*

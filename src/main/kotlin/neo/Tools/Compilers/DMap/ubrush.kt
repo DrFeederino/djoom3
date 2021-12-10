@@ -226,10 +226,7 @@ object ubrush {
         }
         i = 0
         while (i < 3) {
-            if (brush.bounds.get(0, i) < Lib.Companion.MIN_WORLD_COORD || brush.bounds.get(
-                    1,
-                    i
-                ) > Lib.Companion.MAX_WORLD_COORD || brush.bounds.get(0, i) >= brush.bounds.get(1, i)
+            if (brush.bounds[0, i] < Lib.Companion.MIN_WORLD_COORD || brush.bounds[1, i] > Lib.Companion.MAX_WORLD_COORD || brush.bounds[0, i] >= brush.bounds[1, i]
             ) {
                 return false
             }
@@ -255,7 +252,7 @@ object ubrush {
         i = 0
         while (i < brush.numsides) {
             side = brush.sides[i]
-            plane = dmap.dmapGlobals.mapPlanes.get(side.planenum)
+            plane = dmap.dmapGlobals.mapPlanes[side.planenum]
             w = idWinding(plane)
             j = 0
             while (j < brush.numsides && w != null) {
@@ -267,7 +264,7 @@ object ubrush {
                     j++
                     continue  // back side clipaway
                 }
-                plane = dmap.dmapGlobals.mapPlanes.get(brush.sides[j].planenum xor 1)
+                plane = dmap.dmapGlobals.mapPlanes[brush.sides[j].planenum xor 1]
                 w = w.Clip(plane, 0f) //CLIP_EPSILON);
                 j++
             }
@@ -297,12 +294,12 @@ object ubrush {
         b.numsides = 6
         i = 0
         while (i < 3) {
-            plane.set(0, plane.set(1, plane.set(2, 0f)))
-            plane.set(i, 1f)
-            plane.set(3, -bounds.get(1, i))
+            plane[0] = plane.set(1, plane.set(2, 0f))
+            plane[i] = 1f
+            plane[3] = -bounds.get(1, i)
             b.sides[i].planenum = FindFloatPlane(plane)
-            plane.set(i, -1f)
-            plane.set(3, bounds.get(0, i))
+            plane[i] = -1f
+            plane[3] = bounds.get(0, i)
             b.sides[3 + i].planenum = FindFloatPlane(plane)
             i++
         }
@@ -323,8 +320,8 @@ object ubrush {
         var d: Float
         var area: Float
         var volume: Float
-        if (TempDump.NOT(brush)) {
-            return 0
+        if (brush == null) {
+            return 0f
         }
 
         // grab the first valid point as the corner
@@ -337,20 +334,20 @@ object ubrush {
             }
             i++
         }
-        if (TempDump.NOT(w)) {
-            return 0
+        if (w == null) {
+            return 0f
         }
-        Vector.VectorCopy(w.get(0), corner)
+        Vector.VectorCopy(w[0], corner)
 
         // make tetrahedrons to all other faces
         volume = 0f
         while (i < brush.numsides) {
             w = brush.sides[i].winding
-            if (TempDump.NOT(w)) {
+            if (w == null) {
                 i++
                 continue
             }
-            val plane = dmap.dmapGlobals.mapPlanes.get(brush.sides[i].planenum)
+            val plane = dmap.dmapGlobals.mapPlanes[brush.sides[i].planenum]
             d = -plane.Distance(corner)
             area = w.GetArea()
             volume += d * area
@@ -367,46 +364,47 @@ object ubrush {
      FIXME: use new brush format
      ==================
      */
-    fun WriteBspBrushMap(name: String?, list: uBrush_t?) {
-        var list = list
+    fun WriteBspBrushMap(name: String, list: uBrush_t) {
+        var list = list as uBrush_t?
         val f: idFile?
         var s: side_s?
         var i: Int
         var w: idWinding
         Common.common.Printf("writing %s\n", name)
         f = FileSystem_h.fileSystem.OpenFileWrite(name)
-        if (TempDump.NOT(f)) {
+        if (f == null) {
             Common.common.Error("Can't write %s\b", name)
+            return
         }
         f.Printf("{\n\"classname\" \"worldspawn\"\n")
         while (list != null) {
             f.Printf("{\n")
             s = list.sides[0.also { i = it }]
             while (i < list.numsides) {
-                w = idWinding(dmap.dmapGlobals.mapPlanes.get(s.planenum))
+                w = idWinding(dmap.dmapGlobals.mapPlanes[s.planenum])
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.get(0).get(0).toInt(),
-                    w.get(0).get(1).toInt(),
-                    w.get(0).get(2).toInt()
+                    w[0][0].toInt(),
+                    w[0][1].toInt(),
+                    w[0][2].toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.get(1).get(0).toInt(),
-                    w.get(1).get(1).toInt(),
-                    w.get(1).get(2).toInt()
+                    w[1][0].toInt(),
+                    w[1][1].toInt(),
+                    w[1][2].toInt()
                 )
                 f.Printf(
                     "( %d %d %d ) ",
-                    w.get(2).get(0).toInt(),
-                    w.get(2).get(1).toInt(),
-                    w.get(2).get(2).toInt()
+                    w[2][0].toInt(),
+                    w[2][1].toInt(),
+                    w[2][2].toInt()
                 )
                 f.Printf("notexture 0 0 0 1 1\n")
                 s = list.sides[++i]
             }
             f.Printf("}\n")
-            list = list.next as uBrush_t
+            list = list.next as uBrush_t?
         }
         f.Printf("}\n")
         FileSystem_h.fileSystem.CloseFile(f)
@@ -489,7 +487,7 @@ object ubrush {
      AllocTree
      ================
      */
-    fun AllocTree(): tree_s? {
+    fun AllocTree(): tree_s {
         val tree: tree_s
         tree = tree_s() // Mem_Alloc(sizeof(tree));
         //	memset (tree, 0, sizeof(*tree));
@@ -502,11 +500,8 @@ object ubrush {
      AllocNode
      ================
      */
-    fun AllocNode(): node_s? {
-        val node: node_s
-        node = node_s() // Mem_Alloc(sizeof(node));
-        //	memset (node, 0, sizeof(*node));
-        return node
+    fun AllocNode(): node_s {
+        return node_s()
     }
 
     //============================================================
@@ -570,7 +565,7 @@ object ubrush {
         var d: Float
         var d_front: Float
         var d_back: Float
-        val plane = dmap.dmapGlobals.mapPlanes.get(planenum)
+        val plane = dmap.dmapGlobals.mapPlanes[planenum]
 
         // check all points
         d_back = 0f
@@ -610,7 +605,7 @@ object ubrush {
         w = idWinding(plane)
         i = 0
         while (i < brush.numsides && w != null) {
-            val plane2 = dmap.dmapGlobals.mapPlanes.get(brush.sides[i].planenum xor 1)
+            val plane2 = dmap.dmapGlobals.mapPlanes[brush.sides[i].planenum xor 1]
             w = w.Clip(plane2, 0f) // PLANESIDE_EPSILON);
             i++
         }

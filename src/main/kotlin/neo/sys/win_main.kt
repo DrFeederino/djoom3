@@ -690,10 +690,10 @@ object win_main {
      be freed by the game later.
      ================
      */
-    fun Sys_QueEvent(time: Long, type: sysEventType_t, value: Int, value2: Int, ptrLength: Int, ptr: ByteBuffer) {
+    fun Sys_QueEvent(time: Long, type: sysEventType_t, value: Int, value2: Int, ptrLength: Int, ptr: ByteBuffer?) {
         val ev: sysEvent_s
         eventQue[eventHead and MASK_QUED_EVENTS] = sysEvent_s()
-        ev = eventQue[eventHead and MASK_QUED_EVENTS]!!
+        ev = eventQue[eventHead and MASK_QUED_EVENTS]
         if (eventHead - eventTail >= MAX_QUED_EVENTS) {
             Common.common.Printf("Sys_QueEvent: overflow\n")
             // we are discarding an event, but don't leak memory
