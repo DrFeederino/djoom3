@@ -207,7 +207,7 @@ object Material {
 
     // cross-blended terrain textures need to modulate the color by
     // the vertex color to smoothly blend between two textures
-    internal enum class stageVertexColor_t {
+    enum class stageVertexColor_t {
         SVC_IGNORE, SVC_MODULATE, SVC_INVERSE_MODULATE
     }
 

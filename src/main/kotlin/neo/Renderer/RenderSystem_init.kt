@@ -153,7 +153,7 @@ object RenderSystem_init {
 
     //
     val r_renderer // arb, nv10, nv20, r200, gl2, etc
-            : idCVar? = null
+            : idCVar = null
     val r_screenFraction // for testing fill rate, the resolution of the entire screen can be changed
             : idCVar? = null
     val r_shadowPolygonFactor // scale value for stencil shadow drawing
@@ -386,9 +386,9 @@ object RenderSystem_init {
     val r_useShadowVertexProgram // 1 = do the shadow projection in the vertex program on capable cards
             : idCVar? = null
     val r_useSilRemap // 1 = consider verts with the same XYZ, but different ST the same for shadows
-            : idCVar? = null
+            : idCVar
     val r_useStateCaching // avoid redundant state changes in GL_*() calls
-            : idCVar? = null
+            : idCVar
     val r_useTripleTextureARB // 1 = cards with 3+ texture units do a two pass instead of three pass
             : idCVar? = null
     val r_useTurboShadow // 1 = use the infinite projection with W technique for dynamic shadows

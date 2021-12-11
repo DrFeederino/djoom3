@@ -50,14 +50,14 @@ object ModelOverlay {
     }
 
     internal class overlayMaterial_s {
-        var material: idMaterial? = null
-        val surfaces: idList<overlaySurface_s?>? = idList<Any?>()
+        var material: Material.idMaterial? = null
+        val surfaces: idList<overlaySurface_s> = idList()
     }
 
-    internal class idRenderModelOverlay  // ~idRenderModelOverlay();
+    class idRenderModelOverlay  // ~idRenderModelOverlay();
     {
         //
-        private val materials: idList<overlayMaterial_s?>? = idList<Any?>()
+        private val materials: idList<overlayMaterial_s> = idList()
 
         /*
          =====================

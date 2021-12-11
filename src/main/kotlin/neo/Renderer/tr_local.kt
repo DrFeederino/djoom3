@@ -41,6 +41,7 @@ import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.*
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
@@ -53,7 +54,6 @@ import java.nio.channels.FileChannel
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.stream.Stream
 
 /**
  *
@@ -172,8 +172,8 @@ object tr_local {
     const val MAX_MULTITEXTURE_UNITS = 8
     const val MAX_RENDER_CROPS = 8
     const val SMP_FRAMES = 1
-    var backEnd: backEndState_t? = null
-    var frameData: frameData_t? = null
+    var backEnd: backEndState_t = backEndState_t()
+    var frameData: frameData_t = frameData_t()
     var glConfig: glconfig_s = glconfig_s() // outside of TR since it shouldn't be cleared during ref re-init
     var tr: idRenderSystemLocal = idRenderSystemLocal()
 
@@ -269,7 +269,7 @@ object tr_local {
         constructor()
 
         //copy constructor
-        constructor(other: idScreenRect?) {
+        constructor(other: idScreenRect) {
             x1 = other.x1
             y1 = other.y1
             x2 = other.x2
@@ -312,7 +312,7 @@ object tr_local {
             y2++
         }
 
-        fun Intersect(rect: idScreenRect?) {
+        fun Intersect(rect: idScreenRect) {
             if (rect.x1 > x1) {
                 x1 = rect.x1
             }
@@ -327,7 +327,7 @@ object tr_local {
             }
         }
 
-        fun Union(rect: idScreenRect?) {
+        fun Union(rect: idScreenRect) {
             if (rect.x1 < x1) {
                 x1 = rect.x1
             }
@@ -358,7 +358,7 @@ object tr_local {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as idScreenRect?
+            val other = obj as idScreenRect
             if (x1 != other.x1) {
                 return false
             }
@@ -371,7 +371,7 @@ object tr_local {
         }
 
         @Deprecated("")
-        fun Equals(rect: idScreenRect?): Boolean {
+        fun Equals(rect: idScreenRect): Boolean {
             return x1 == rect.x1 && x2 == rect.x2 && y1 == rect.y1 && y2 == rect.y2
         }
 
@@ -385,8 +385,8 @@ object tr_local {
 
         companion object {
             private var DBG_counter = 0
-            fun generateArray(length: Int): Array<idScreenRect?>? {
-                return Stream.generate { idScreenRect() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<idScreenRect> {
+                return Array(length) { idScreenRect() }
             }
         }
     }
@@ -399,13 +399,13 @@ object tr_local {
                 : vertCache_s? = null
         var geo: srfTriangles_s? = null
         var material // may be NULL for shadow volumes
-                : idMaterial? = null
+                : Material.idMaterial? = null
         var nextOnLight // viewLight chains
                 : drawSurf_s? = null
         var scissorRect // for scissor clipping, local inside renderView viewport
                 : idScreenRect? = null
         var shaderRegisters // evaluated and adjusted for referenceShaders
-                : FloatArray?
+                : FloatArray = FloatArray(0)
 
         // specular directions for non vertex program cards, skybox texcoords, etc
         var sort // material->sort, modified by gui / entity sort offsets
@@ -414,16 +414,14 @@ object tr_local {
 
         companion object {
             private var DBG_counter = 0
-            fun generateArray(length: Int): Array<drawSurf_s?>? {
-                return Stream.generate { drawSurf_s() }
-                    .limit(length.toLong())
-                    .toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<drawSurf_s> {
+                return Array(length) { drawSurf_s() }
             }
         }
     }
 
     class shadowFrustum_t {
-        val planes: Array<idPlane?>? = idPlane.Companion.generateArray(6)
+        val planes: Array<idPlane> = idPlane.generateArray(6)
 
         // positive sides facing inward
         // plane 5 is always the plane the projection is going to, the
@@ -480,24 +478,24 @@ object tr_local {
         abstract fun GetIndex(): Int
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane?>? /*[2]*/, material: idMaterial?)
+        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane?>? /*[2]*/, material: Material.idMaterial?)
         abstract fun RemoveDecals()
     }
 
     class idRenderLightLocal : idRenderLight() {
         //
         //
-        val frustum: Array<idPlane?>? =
-            idPlane.Companion.generateArray(6) // in global space, positive side facing out, last two are front/back
+        val frustum: Array<idPlane> =
+            idPlane.generateArray(6) // in global space, positive side facing out, last two are front/back
 
         //
         val globalLightOrigin // accounting for lightCenter and parallel
-                : idVec3?
+                : idVec3
 
         //
         //
         // derived information
-        val lightProject: Array<idPlane?>? = idPlane.Companion.generateArray(4)
+        val lightProject: Array<idPlane> = idPlane.generateArray(4)
 
         //                                                      // and should go in the dynamic frame memory, or kept
         //                                                      // in the cached memory
@@ -515,7 +513,7 @@ object tr_local {
         var foggedPortals: doublePortal_s?
         var frustumTris // triangulated frustumWindings[]
                 : srfTriangles_s?
-        var frustumWindings: Array<idWinding?>? = arrayOfNulls<idWinding?>(6) // used for culling
+        var frustumWindings: Array<idWinding?> = arrayOfNulls<idWinding?>(6) // used for culling
         var index // in world lightdefs
                 : Int
         var lastInteraction: idInteraction?
@@ -531,22 +529,22 @@ object tr_local {
 
         //
         var lightShader // guaranteed to be valid, even if parms.shader isn't
-                : idMaterial?
+                : Material.idMaterial?
 
         //                                                      // first added, so the prelight model is not valid
         //
-        var modelMatrix: FloatArray? = FloatArray(16) // this is just a rearrangement of parms.axis and parms.origin
+        var modelMatrix: FloatArray = FloatArray(16) // this is just a rearrangement of parms.axis and parms.origin
 
         //
         var numShadowFrustums // one for projected lights, usually six for point lights
                 : Int
         var parms // specification
-                : renderLight_s?
+                : renderLight_s
 
         //
         var references // each area the light is present in will have a lightRef
                 : areaReference_s?
-        var shadowFrustums: Array<shadowFrustum_t?>? = arrayOfNulls<shadowFrustum_t?>(6)
+        var shadowFrustums: Array<shadowFrustum_t> = Array(6) { shadowFrustum_t() }
 
         //
         var viewCount // if == tr.viewCount, the light is on the viewDef->viewLights list
@@ -570,19 +568,19 @@ object tr_local {
             //            memset(modelMatrix, 0, sizeof(modelMatrix));
 //            memset(shadowFrustums, 0, sizeof(shadowFrustums));
             for (s in shadowFrustums.indices) {
-                shadowFrustums.get(s) = shadowFrustum_t()
+                shadowFrustums[s] = shadowFrustum_t()
             }
             //            memset(lightProject, 0, sizeof(lightProject));
             for (l in lightProject.indices) {
-                lightProject.get(l) = idPlane()
+                lightProject[l] = idPlane()
             }
             //            memset(frustum, 0, sizeof(frustum));
             for (f in frustum.indices) {
-                frustum.get(f) = idPlane()
+                frustum[f] = idPlane()
             }
             //            memset(frustumWindings, 0, sizeof(frustumWindings));
             for (f in frustumWindings.indices) {
-                frustumWindings.get(f) = idWinding()
+                frustumWindings[f] = idWinding()
             }
             lightHasMoved = false
             world = null
@@ -646,11 +644,11 @@ object tr_local {
         var modelMatrix: FloatArray? = FloatArray(16) // this is just a rearrangement of parms.axis and parms.origin
         var overlay // blood overlays on animated models
                 : idRenderModelOverlay?
-        var parms: renderEntity_s?
+        var parms: renderEntity_s
 
         //
-        var referenceBounds // the local bounds used to place entityRefs, either from parms or a model
-                : idBounds?
+        val referenceBounds // the local bounds used to place entityRefs, either from parms or a model
+                : idBounds
 
         //
         // a viewEntity_t is created whenever a idRenderEntityLocal is considered for inclusion
@@ -689,7 +687,7 @@ object tr_local {
         }
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        override fun ProjectOverlay(localTextureAxis: Array<idPlane?>?, material: idMaterial?) {
+        override fun ProjectOverlay(localTextureAxis: Array<idPlane?>?, material: Material.idMaterial?) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
@@ -732,17 +730,17 @@ object tr_local {
     // a viewLight may exist even without any surfaces, and may be relevent for fogging,
     // but should never exist if its volume does not intersect the view frustum
     class viewLight_s {
-        val globalInteractions: Array<drawSurf_s?>? = arrayOf(null) // get shadows from everything
+        val globalInteractions: Array<drawSurf_s?> = arrayOf(null) // get shadows from everything
 
         //
-        val globalLightOrigin: idVec3? = idVec3() // global light origin used by backend
+        val globalLightOrigin: idVec3 = idVec3() // global light origin used by backend
 
         //
-        val globalShadows: Array<drawSurf_s?>? = arrayOf(null) // shadow everything
-        val lightProject: Array<idPlane?>? = idPlane.Companion.generateArray(4) // light project used by backend
-        val localInteractions: Array<drawSurf_s?>? = arrayOf(null) // don't get local shadows
-        val localShadows: Array<drawSurf_s?>? = arrayOf(null) // don't shadow local Surfaces
-        val translucentInteractions: Array<drawSurf_s?>? = arrayOf(null) // get shadows from everything
+        val globalShadows: Array<drawSurf_s?> = arrayOf(null) // shadow everything
+        val lightProject: Array<idPlane> = idPlane.Companion.generateArray(4) // light project used by backend
+        val localInteractions: Array<drawSurf_s?> = arrayOf(null) // don't get local shadows
+        val localShadows: Array<drawSurf_s?> = arrayOf(null) // don't shadow local Surfaces
+        val translucentInteractions: Array<drawSurf_s?> = arrayOf(null) // get shadows from everything
         var falloffImage // falloff image used by backend
                 : idImage? = null
         var fogPlane // fog plane for backend fog volume rendering
@@ -754,7 +752,7 @@ object tr_local {
         // back end should NOT reference the lightDef, because it can change when running SMP
         var lightDef: idRenderLightLocal? = null
         var lightShader // light shader used by backend
-                : idMaterial? = null
+                : Material.idMaterial? = null
         var next: viewLight_s? = null
 
         //
@@ -763,7 +761,7 @@ object tr_local {
         // seen through any portals
         var scissorRect: idScreenRect? = null
         var shaderRegisters // shader registers used by backend
-                : FloatArray?
+                : FloatArray
 
         //
         // if the view isn't inside the light, we can use the non-reversed
@@ -796,13 +794,13 @@ object tr_local {
 
         //
         // back end should NOT reference the entityDef, because it can change when running SMP
-        var entityDef: idRenderEntityLocal? = null
+        var entityDef: idRenderEntityLocal = idRenderEntityLocal()
         var modelDepthHack = 0f
 
         //
-        var modelMatrix: FloatArray? = FloatArray(16) // local coords to global coords
-        var modelViewMatrix: FloatArray? = FloatArray(16) // local coords to eye coords
-        var next: viewEntity_s? = null
+        var modelMatrix: FloatArray = FloatArray(16) // local coords to global coords
+        var modelViewMatrix: FloatArray = FloatArray(16) // local coords to eye coords
+        var next: viewEntity_s = viewEntity_s()
 
         //
         // for scissor clipping, local inside renderView viewport
@@ -810,7 +808,7 @@ object tr_local {
         // seen through any portals, but was created for shadow casting.
         // a viewEntity can have a non-empty scissorRect, meaning that an area
         // that it is in is visible, and still not be visible.
-        var scissorRect: idScreenRect? = idScreenRect()
+        var scissorRect: idScreenRect = idScreenRect()
 
         //
         var weaponDepthHack = false
@@ -819,7 +817,7 @@ object tr_local {
 //            TempDump.printCallStack("--------------"+DBG_COUNT);
         }
 
-        constructor(v: viewEntity_s?) {
+        constructor(v: viewEntity_s) {
             next = v.next
             entityDef = v.entityDef
             scissorRect = idScreenRect(v.scissorRect)
@@ -846,18 +844,18 @@ object tr_local {
     class viewDef_s {
         // specified in the call to DrawScene()
         val clipPlanes // in world space, the positive side
-                : Array<idPlane?>?
-        val frustum: Array<idPlane?>?
+                : Array<idPlane>
+        val frustum: Array<idPlane>
 
         //
-        val initialViewAreaOrigin: idVec3? = idVec3()
+        val initialViewAreaOrigin: idVec3 = idVec3()
 
         //
         var areaNum // -1 = not in a valid area
                 = 0
 
         //
-        var connectedAreas: BooleanArray?
+        var connectedAreas: BooleanArray
 
         //
         // drawSurfs are the visible surfaces of the viewEntities, sorted
@@ -895,14 +893,14 @@ object tr_local {
         var numViewEntitys = 0
 
         //
-        var projectionMatrix: FloatArray? = FloatArray(16)
-        var renderView: renderView_s?
+        var projectionMatrix: FloatArray = FloatArray(16)
+        var renderView: renderView_s
 
         //
         var renderWorld: idRenderWorldLocal? = null
 
         //
-        var scissor: idScreenRect?
+        var scissor: idScreenRect
         var subviewSurface: drawSurf_s? = null
 
         // for scissor clipping, local inside renderView viewport
@@ -914,7 +912,7 @@ object tr_local {
                 : viewDef_s? = null
         var viewEntitys // chain of all viewEntities effecting view, including off screen ones casting shadows
                 : viewEntity_s? = null
-        var viewFrustum: idFrustum?
+        var viewFrustum: idFrustum
 
         //
         var viewLights // chain of all viewLights effecting view
@@ -922,8 +920,8 @@ object tr_local {
 
         // of the plane is the visible side
         var viewport // in real pixels and proper Y flip
-                : idScreenRect?
-        var worldSpace: viewEntity_s?
+                : idScreenRect
+        var worldSpace: viewEntity_s
 
         // An array in frame temporary memory that lists if an area can be reached without
         // crossing a closed door.  This is used to avoid drawing interactions
@@ -931,14 +929,14 @@ object tr_local {
         constructor() {
             renderView = renderView_s()
             worldSpace = viewEntity_s()
-            clipPlanes = arrayOfNulls<idPlane?>(tr_local.MAX_CLIP_PLANES)
+            clipPlanes = arrayOfNulls<idPlane?>(MAX_CLIP_PLANES)
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
             frustum = idPlane.Companion.generateArray(5)
         }
 
-        constructor(v: viewDef_s?) {
+        constructor(v: viewDef_s) {
             renderView = renderView_s(v.renderView)
             System.arraycopy(v.projectionMatrix, 0, projectionMatrix, 0, 16)
             worldSpace = viewEntity_s(v.worldSpace)
@@ -950,9 +948,9 @@ object tr_local {
             isXraySubview = v.isXraySubview
             isEditor = v.isEditor
             numClipPlanes = v.numClipPlanes
-            clipPlanes = arrayOfNulls<idPlane?>(tr_local.MAX_CLIP_PLANES)
-            for (i in 0 until tr_local.MAX_CLIP_PLANES) {
-                if (v.clipPlanes.get(i) != null) clipPlanes[i].set(v.clipPlanes.get(i))
+            clipPlanes = idPlane.generateArray(MAX_CLIP_PLANES)
+            for (i in 0 until MAX_CLIP_PLANES) {
+                clipPlanes[i].set(v.clipPlanes[i])
             }
             viewport = idScreenRect(v.viewport)
             scissor = idScreenRect(v.scissor)
@@ -977,50 +975,50 @@ object tr_local {
     // simple interaction shader
     class drawInteraction_t {
         //
-        val diffuseColor: idVec4? =
+        val diffuseColor: idVec4 =
             idVec4() // may have a light color baked into it, will be < tr.backEndRendererMaxLight
 
         //                                                              // (not a bool just to avoid an uninitialized memory check of the pad region by valgrind)
         //
         // these are loaded into the vertex program
-        val localLightOrigin: idVec4? = idVec4()
-        val localViewOrigin: idVec4? = idVec4()
-        val specularColor: idVec4? =
+        val localLightOrigin: idVec4 = idVec4()
+        val localViewOrigin: idVec4 = idVec4()
+        val specularColor: idVec4 =
             idVec4() // may have a light color baked into it, will be < tr.backEndRendererMaxLight
 
         //
         var ambientLight // use tr.ambientNormalMap instead of normalization cube map
                 = 0
         var bumpImage: idImage? = null
-        var bumpMatrix: Array<idVec4?>? = idVec4.Companion.generateArray(2)
+        var bumpMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
         var diffuseImage: idImage? = null
-        var diffuseMatrix: Array<idVec4?>? = idVec4.Companion.generateArray(2)
+        var diffuseMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
         var lightFalloffImage: idImage? = null
 
         //
         var lightImage: idImage? = null
-        var lightProjection: Array<idVec4?>? =
-            arrayOfNulls<idVec4?>(4) // in local coordinates, possibly with a texture matrix baked in
+        var lightProjection: Array<idVec4> =
+            idVec4.generateArray(4) // in local coordinates, possibly with a texture matrix baked in
         var specularImage: idImage? = null
-        var specularMatrix: Array<idVec4?>? = idVec4.Companion.generateArray(2)
+        var specularMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
         var surf: drawSurf_s? = null
         var vertexColor // applies to both diffuse and specular
-                : stageVertexColor_t? = null
+                : stageVertexColor_t = stageVertexColor_t.SVC_IGNORE
 
-        fun oSet(d: drawInteraction_t?) {
+        fun oSet(d: drawInteraction_t) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
 
-    internal open class emptyCommand_t {
+    open class emptyCommand_t {
         var commandId: renderCommand_t? = null
         var next: emptyCommand_t? = null
-        fun oSet(c: emptyCommand_t?) {
+        fun oSet(c: emptyCommand_t) {
             commandId = c.commandId
             next = c.next
         }
 
-        fun oSet(next: renderCommand_t?) {
+        fun oSet(next: renderCommand_t) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -1031,7 +1029,7 @@ object tr_local {
         var frameCount = 0
     }
 
-    internal class drawSurfsCommand_t : emptyCommand_t() {
+    class drawSurfsCommand_t : emptyCommand_t() {
         //        renderCommand_t commandId, next;
         var viewDef: viewDef_s? = null
     }
@@ -1053,7 +1051,7 @@ object tr_local {
     // allocation of a new memory block that will
     // be discontinuous with the existing memory
     internal class frameMemoryBlock_s {
-        var base: ByteArray? = ByteArray(4) // dynamically allocated as [size]
+        var base: ByteArray = ByteArray(4) // dynamically allocated as [size]
         var next: frameMemoryBlock_s? = null
         var poop // so that base is 16 byte aligned
                 = 0
@@ -1065,7 +1063,7 @@ object tr_local {
     // contained in a frameData_t.  This entire structure is
     // duplicated so the front and back end can run in parallel
     // on an SMP machine (OBSOLETE: this capability has been removed)
-    internal class frameData_t {
+    class frameData_t {
         // one or more blocks of memory for all frame
         // temporary allocations
         //
@@ -1093,7 +1091,7 @@ object tr_local {
     /*
      ** performanceCounters_t
      */
-    internal class performanceCounters_t {
+    class performanceCounters_t {
         var c_alloc = 0
         var c_free // counts for R_StaticAllc/R_StaticFree
                 = 0
@@ -1190,7 +1188,7 @@ object tr_local {
     //
     // all state modified by the back end is separated
     // from the front end state
-    internal class backEndState_t {
+    class backEndState_t {
         //
         var c_copyFrameBuffer = 0
 
@@ -1212,12 +1210,12 @@ object tr_local {
         //
         // our OpenGL state deltas
         var glState: glstate_t?
-        var lightColor: FloatArray? = FloatArray(4) // evaluation of current light's color stage
+        var lightColor: FloatArray = FloatArray(4) // evaluation of current light's color stage
 
         //
         var lightScale // Every light color calaculation will be multiplied by this,
                 = 0f
-        var lightTextureMatrix: FloatArray? = FloatArray(16) // only if lightStage->texture.hasMatrix
+        var lightTextureMatrix: FloatArray = FloatArray(16) // only if lightStage->texture.hasMatrix
 
         // which will guarantee that the result is < tr.backEndRendererMaxLight
         // A card with high dynamic range will have this set to 1.0
@@ -1236,7 +1234,7 @@ object tr_local {
         }
     }
 
-    internal class renderCrop_t {
+    class renderCrop_t {
         var x = 0
         var y = 0
         var width = 0
@@ -1254,7 +1252,7 @@ object tr_local {
         //
         //
         //
-        val worlds: idList<idRenderWorldLocal?>?
+        val worlds: idList<idRenderWorldLocal>
         var DBG_viewCount // incremented every view (twice a scene if subviewed)
                 = 0
 
@@ -1265,8 +1263,8 @@ object tr_local {
         // determines how much overbrighting needs
         // to be done post-process
         //
-        var ambientLightVector // used for "ambient bump mapping"
-                : idVec4?
+        val ambientLightVector // used for "ambient bump mapping"
+                : idVec4
 
         //
         // determines which back end to use, and if vertex programs are in use
@@ -1278,7 +1276,7 @@ object tr_local {
 
         // many console commands need to know which world they should operate on
         //
-        var defaultMaterial: idMaterial? = null
+        var defaultMaterial: Material.idMaterial? = null
         var demoGuiModel: idGuiModel? = null
 
         //
@@ -1291,7 +1289,7 @@ object tr_local {
 
         //
         @Deprecated("")
-        var gammaTable: ShortArray? = ShortArray(256) // brightness / gamma modify this
+        var gammaTable: ShortArray = ShortArray(256) // brightness / gamma modify this
         var guiModel: idGuiModel? = null
 
         //
@@ -1301,17 +1299,17 @@ object tr_local {
 
         //
         var identitySpace // can use if we don't know viewDef->worldSpace is valid
-                : viewEntity_s? = null
+                : viewEntity_s = viewEntity_s()
 
         //
         var lockSurfacesCmd // use this when r_lockSurfaces = 1
-                : drawSurfsCommand_t? = null
+                : drawSurfsCommand_t = drawSurfsCommand_t()
         var   /*FILE*/logFile // for logging GL calls and frame breaks
                 : FileChannel? = null
 
         //
         var pc // performance counters
-                : performanceCounters_t? = null
+                : performanceCounters_t = performanceCounters_t()
         var primaryRenderView: renderView_s? = null
         var primaryView: viewDef_s? = null
 
@@ -1324,7 +1322,7 @@ object tr_local {
 
         //
         var renderCrops // = new renderCrop_t[MAX_RENDER_CROPS];
-                : Array<renderCrop_t?>?
+                : Array<renderCrop_t> = Array(MAX_RENDER_CROPS) { renderCrop_t() }
 
         //
         var sortOffset // for determinist sorting of equal sort materials
@@ -1345,7 +1343,7 @@ object tr_local {
         var testImage: idImage? = null
         var testVideo: idCinematic? = null
         var testVideoStartTime = 0f
-        var tiledViewport: IntArray? = IntArray(2)
+        var tiledViewport: IntArray = IntArray(2)
         var viewCount // incremented every view (twice a scene if subviewed)
                 = 0
 
@@ -1353,17 +1351,17 @@ object tr_local {
         var viewDef: viewDef_s? = null
 
         //
-        var viewportOffset: IntArray? = IntArray(2) // for doing larger-than-window tiled renderings
+        var viewportOffset: IntArray = IntArray(2) // for doing larger-than-window tiled renderings
         fun Clear() {
             registered = false
             frameCount = 0
             viewCount = 0
             staticAllocCount = 0
             frameShaderTime = 0.0f
-            viewportOffset.get(0) = 0
-            viewportOffset.get(1) = 0
-            tiledViewport.get(0) = 0
-            tiledViewport.get(1) = 0
+            viewportOffset[0] = 0
+            viewportOffset[1] = 0
+            tiledViewport[0] = 0
+            tiledViewport[1] = 0
             backEndRenderer = backEndName_t.BE_BAD
             backEndRendererHasVertexPrograms = false
             backEndRendererMaxLight = 1.0f
@@ -1388,10 +1386,6 @@ object tr_local {
             stencilIncr = 0
             stencilDecr = 0
             //            memset(renderCrops, 0, sizeof(renderCrops));
-            renderCrops = arrayOfNulls<renderCrop_t?>(tr_local.MAX_RENDER_CROPS)
-            for (r in renderCrops.indices) {
-                renderCrops.get(r) = renderCrop_t()
-            }
             currentRenderCrop = 0
             guiRecursionLevel = 0
             guiModel = null
@@ -1490,8 +1484,8 @@ object tr_local {
          Converts from SCREEN_WIDTH / SCREEN_HEIGHT coordinates to current cropped pixel coordinates
          =====================
          */
-        fun RenderViewToViewport(renderView: renderView_s?, viewport: idScreenRect?) {
-            val rc = renderCrops.get(currentRenderCrop)
+        fun RenderViewToViewport(renderView: renderView_s, viewport: idScreenRect) {
+            val rc = renderCrops[currentRenderCrop]
             val wRatio = rc.width.toFloat() / RenderSystem.SCREEN_WIDTH
             val hRatio = rc.height.toFloat() / RenderSystem.SCREEN_HEIGHT
             viewport.x1 = idMath.Ftoi(rc.x + renderView.x * wRatio)
@@ -1512,10 +1506,10 @@ object tr_local {
             viewCount = 1 // so cleared structures never match viewCount
             // we used to memset tr, but now that it is a class, we can't, so
             // there may be other state we need to reset
-            ambientLightVector.set(0, 0.5f)
-            ambientLightVector.set(1, 0.5f - 0.385f)
-            ambientLightVector.set(2, 0.8925f)
-            ambientLightVector.set(3, 1.0f)
+            ambientLightVector[0] = 0.5f
+            ambientLightVector[1] = 0.5f - 0.385f
+            ambientLightVector[2] = 0.8925f
+            ambientLightVector[3] = 1.0f
 
 //            memset(backEnd, 0, sizeof(backEnd));
             tr_local.backEnd = backEndState_t()
@@ -1535,9 +1529,9 @@ object tr_local {
             ModelManager.renderModelManager.Init()
 
             // set the identity space
-            identitySpace.modelMatrix.get(0 * 4 + 0) = 1.0f
-            identitySpace.modelMatrix.get(1 * 4 + 1) = 1.0f
-            identitySpace.modelMatrix.get(2 * 4 + 2) = 1.0f
+            identitySpace.modelMatrix[0 * 4 + 0] = 1.0f
+            identitySpace.modelMatrix[1 * 4 + 1] = 1.0f
+            identitySpace.modelMatrix[2 * 4 + 2] = 1.0f
 
             // determine which back end we will use
             // ??? this is invalid here as there is not enough information to set it up correctly
@@ -2061,7 +2055,7 @@ object tr_local {
                             SetColor(setColor)
                         } else {
                             color = idStr.Companion.ColorForIndex(string.get(s + 1))
-                            color.set(3, setColor.get(3))
+                            color[3] = setColor.get(3)
                             SetColor(color)
                         }
                     }
@@ -2140,7 +2134,7 @@ object tr_local {
                             SetColor(setColor)
                         } else {
                             color = idStr.Companion.ColorForIndex(string.get(s + 1).code)
-                            color.set(3, setColor.get(3))
+                            color[3] = setColor.get(3)
                             SetColor(color)
                         }
                     }
@@ -2177,16 +2171,16 @@ object tr_local {
             guiModel.Clear()
 
             // for the larger-than-window tiled rendering screenshots
-            if (tiledViewport.get(0) != 0) {
-                windowWidth = tiledViewport.get(0)
-                windowHeight = tiledViewport.get(1)
+            if (tiledViewport[0] != 0) {
+                windowWidth = tiledViewport[0]
+                windowHeight = tiledViewport[1]
             }
             tr_local.glConfig.vidWidth = windowWidth
             tr_local.glConfig.vidHeight = windowHeight
-            renderCrops.get(0).x = 0
-            renderCrops.get(0).y = 0
-            renderCrops.get(0).width = windowWidth
-            renderCrops.get(0).height = windowHeight
+            renderCrops[0].x = 0
+            renderCrops[0].y = 0
+            renderCrops[0].width = windowWidth
+            renderCrops[0].height = windowHeight
             currentRenderCrop = 0
 
             // screenFraction is just for quickly testing fill rate limitations
@@ -2409,7 +2403,7 @@ object tr_local {
                 height = MegaTexture.RoundDownToPowerOfTwo(height)
                 // FIXME: megascreenshots with offset viewports don't work right with this yet
             }
-            val rc = renderCrops.get(currentRenderCrop)
+            val rc = renderCrops[currentRenderCrop]
 
             // we might want to clip these to the crop window instead
             while (width > tr_local.glConfig.vidWidth) {
@@ -2424,7 +2418,7 @@ object tr_local {
             currentRenderCrop++
 
 //            rc = renderCrops[currentRenderCrop];
-            renderCrops.get(currentRenderCrop - 1) = renderCrops.get(currentRenderCrop)
+            renderCrops[currentRenderCrop - 1] = renderCrops[currentRenderCrop]
             rc.x = 0
             rc.y = 0
             rc.width = width
@@ -2455,7 +2449,7 @@ object tr_local {
                 textureRepeat_t.TR_REPEAT,
                 textureDepth_t.TD_DEFAULT
             )
-            val rc = renderCrops.get(currentRenderCrop)
+            val rc = renderCrops[currentRenderCrop]
             var cmd: copyRenderCommand_t?
             RenderSystem.R_GetCommandBuffer(copyRenderCommand_t().also { cmd = it /*sizeof(cmd)*/ })
             cmd.commandId = renderCommand_t.RC_COPY_RENDER
@@ -2471,7 +2465,7 @@ object tr_local {
             if (!tr_local.glConfig.isInitialized) {
                 return
             }
-            val rc = renderCrops.get(currentRenderCrop)
+            val rc = renderCrops[currentRenderCrop]
             guiModel.EmitFullScreen()
             guiModel.Clear()
             RenderSystem.R_IssueRenderCommands()

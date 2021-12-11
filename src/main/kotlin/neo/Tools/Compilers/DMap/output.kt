@@ -17,8 +17,9 @@ import neo.framework.File_h.idFile
 import neo.idlib.MapFile.idMapEntity
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Vector
+import kotlin.math.abs
 
 /**
  *
@@ -58,23 +59,23 @@ object output {
      AREANUM_DIFFERENT if not the same.
      =============
      */
-    fun PruneNodes_r(node: node_s?): Int {
+    fun PruneNodes_r(node: node_s): Int {
         val a1: Int
         val a2: Int
         if (node.planenum == dmap.PLANENUM_LEAF) {
             return node.area
         }
-        a1 = output.PruneNodes_r(node.children[0])
-        a2 = output.PruneNodes_r(node.children[1])
-        if (a1 != a2 || a1 == output.AREANUM_DIFFERENT) {
-            return output.AREANUM_DIFFERENT
+        a1 = PruneNodes_r(node.children[0])
+        a2 = PruneNodes_r(node.children[1])
+        if (a1 != a2 || a1 == AREANUM_DIFFERENT) {
+            return AREANUM_DIFFERENT
         }
 
         // free all the nodes below this point
-        facebsp.FreeTreePortals_r(node.children[0])
-        facebsp.FreeTreePortals_r(node.children[1])
-        facebsp.FreeTree_r(node.children[0])
-        facebsp.FreeTree_r(node.children[1])
+        facebsp.FreeTreePortals_r(node.children[0]!!)
+        facebsp.FreeTreePortals_r(node.children[1]!!)
+        facebsp.FreeTree_r(node.children[0]!!)
+        facebsp.FreeTree_r(node.children[1]!!)
 
         // change this node to a leaf
         node.planenum = dmap.PLANENUM_LEAF
@@ -82,20 +83,20 @@ object output {
         return a1
     }
 
-    fun WriteFloat(f: idFile?, v: Float) {
-        if (Math.abs(v - idMath.Rint(v)) < 0.001) {
+    fun WriteFloat(f: idFile, v: Float) {
+        if (abs(v - idMath.Rint(v)) < 0.001) {
             f.WriteFloatString("%d ", idMath.Rint(v).toInt())
         } else {
             f.WriteFloatString("%f ", v)
         }
     }
 
-    fun Write1DMatrix(f: idFile?, x: Int, m: FloatArray?) {
+    fun Write1DMatrix(f: idFile, x: Int, m: FloatArray) {
         var i: Int
         f.WriteFloatString("( ")
         i = 0
         while (i < x) {
-            output.WriteFloat(f, m.get(i))
+            WriteFloat(f, m[i])
             i++
         }
         f.WriteFloatString(") ")
@@ -108,13 +109,13 @@ object output {
         count = 0
         a = groups
         while (a != null) {
-            if (TempDump.NOT(a.triList)) {    // ignore groups with no tris
+            if (null == a.triList) {    // ignore groups with no tris
                 a = a.nextGroup
                 continue
             }
             b = groups
             while (b !== a) {
-                if (TempDump.NOT(b.triList)) {
+                if (null == b!!.triList) {
                     b = b.nextGroup
                     continue
                 }
@@ -127,7 +128,7 @@ object output {
                     continue
                 }
                 break
-                b = b.nextGroup
+                b = b!!.nextGroup // why tf is there break above?
             }
             if (a === b) {
                 count++
@@ -142,30 +143,28 @@ object output {
      MatchVert
      ==============
      */
-    fun MatchVert(a: idDrawVert?, b: idDrawVert?): Boolean {
-        if (Math.abs(a.xyz.get(0) - b.xyz.get(0)) > output.XYZ_EPSILON) {
+    fun MatchVert(a: idDrawVert, b: idDrawVert): Boolean {
+        if (abs(a.xyz[0] - b.xyz[0]) > XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.xyz.get(1) - b.xyz.get(1)) > output.XYZ_EPSILON) {
+        if (abs(a.xyz[1] - b.xyz[1]) > XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.xyz.get(2) - b.xyz.get(2)) > output.XYZ_EPSILON) {
+        if (abs(a.xyz[2] - b.xyz[2]) > XYZ_EPSILON) {
             return false
         }
-        if (Math.abs(a.st.get(0) - b.st.get(0)) > output.ST_EPSILON) {
+        if (abs(a.st[0] - b.st[0]) > ST_EPSILON) {
             return false
         }
-        if (Math.abs(a.st.get(1) - b.st.get(1)) > output.ST_EPSILON) {
+        if (abs(a.st[1] - b.st[1]) > ST_EPSILON) {
             return false
         }
 
         // if the normal is 0 (smoothed normals), consider it a match
-        return if (a.normal.get(0) == 0f && a.normal.get(1) == 0f && a.normal.get(2) == 0f && b.normal.get(0) == 0f && b.normal.get(
-                1
-            ) == 0f && b.normal.get(2) == 0f
+        return if (a.normal[0] == 0f && a.normal[1] == 0f && a.normal[2] == 0f && b.normal[0] == 0f && b.normal[1] == 0f && b.normal[2] == 0f
         ) {
             true
-        } else Vector.DotProduct(a.normal, b.normal) >= output.COSINE_EPSILON
+        } else Vector.DotProduct(a.normal, b.normal) >= COSINE_EPSILON
 
         // otherwise do a dot-product cosine check
     }
@@ -177,13 +176,13 @@ object output {
      Converts independent triangles to shared vertex triangles
      ====================
      */
-    fun ShareMapTriVerts(tris: mapTri_s?): srfTriangles_s? {
+    fun ShareMapTriVerts(tris: mapTri_s): srfTriangles_s {
         var step: mapTri_s?
         val count: Int
         var i: Int
         var j: Int
         var numVerts: Int
-        val numIndexes: Int
+        var numIndexes: Int
         val uTri: srfTriangles_s?
 
         // unique the vertexes
@@ -203,17 +202,17 @@ object output {
                 // search for a match
                 j = 0
                 while (j < numVerts) {
-                    if (output.MatchVert(uTri.verts[j], dv)) {
+                    if (MatchVert(uTri.verts[j]!!, dv)) {
                         break
                     }
                     j++
                 }
                 if (j == numVerts) {
                     numVerts++
-                    uTri.verts[j].xyz.set(dv.xyz)
-                    uTri.verts[j].normal.set(dv.normal)
-                    uTri.verts[j].st.set(0, dv.st.get(0))
-                    uTri.verts[j].st.set(1, dv.st.get(1))
+                    uTri.verts[j]!!.xyz.set(dv.xyz)
+                    uTri.verts[j]!!.normal.set(dv.normal)
+                    uTri.verts[j]!!.st[0] = dv.st[0]
+                    uTri.verts[j]!!.st[1] = dv.st[1]
                 }
                 uTri.indexes[numIndexes++] = j
                 i++
@@ -230,7 +229,7 @@ object output {
      CleanupUTriangles
      ==================
      */
-    fun CleanupUTriangles(tri: srfTriangles_s?) {
+    fun CleanupUTriangles(tri: srfTriangles_s) {
         // perform cleanup operations
         tr_trisurf.R_RangeCheckIndexes(tri)
         tr_trisurf.R_CreateSilIndexes(tri)
@@ -247,12 +246,12 @@ object output {
      Writes text verts and indexes to procfile
      ====================
      */
-    fun WriteUTriangles(uTris: srfTriangles_s?) {
+    fun WriteUTriangles(uTris: srfTriangles_s) {
         var col: Int
         var i: Int
 
         // emit this chain
-        output.procFile.WriteFloatString(
+        procFile!!.WriteFloatString(
             "/* numVerts = */ %d /* numIndexes = */ %d\n",
             uTris.numVerts, uTris.numIndexes
         )
@@ -262,40 +261,40 @@ object output {
         i = 0
         while (i < uTris.numVerts) {
             val vec = FloatArray(8)
-            val dv: idDrawVert?
-            dv = uTris.verts[i]
-            vec[0] = dv.xyz.get(0)
-            vec[1] = dv.xyz.get(1)
-            vec[2] = dv.xyz.get(2)
-            vec[3] = dv.st.get(0)
-            vec[4] = dv.st.get(1)
-            vec[5] = dv.normal.get(0)
-            vec[6] = dv.normal.get(1)
-            vec[7] = dv.normal.get(2)
-            output.Write1DMatrix(output.procFile, 8, vec)
+            val dv: idDrawVert
+            dv = uTris.verts[i]!!
+            vec[0] = dv.xyz[0]
+            vec[1] = dv.xyz[1]
+            vec[2] = dv.xyz[2]
+            vec[3] = dv.st[0]
+            vec[4] = dv.st[1]
+            vec[5] = dv.normal[0]
+            vec[6] = dv.normal[1]
+            vec[7] = dv.normal[2]
+            Write1DMatrix(procFile!!, 8, vec)
             if (++col == 3) {
                 col = 0
-                output.procFile.WriteFloatString("\n")
+                procFile!!.WriteFloatString("\n")
             }
             i++
         }
         if (col != 0) {
-            output.procFile.WriteFloatString("\n")
+            procFile!!.WriteFloatString("\n")
         }
 
         // indexes
         col = 0
         i = 0
         while (i < uTris.numIndexes) {
-            output.procFile.WriteFloatString("%d ", uTris.indexes[i])
+            procFile!!.WriteFloatString("%d ", uTris.indexes[i])
             if (++col == 18) {
                 col = 0
-                output.procFile.WriteFloatString("\n")
+                procFile!!.WriteFloatString("\n")
             }
             i++
         }
         if (col != 0) {
-            output.procFile.WriteFloatString("\n")
+            procFile!!.WriteFloatString("\n")
         }
     }
 
@@ -306,12 +305,12 @@ object output {
      Writes text verts and indexes to procfile
      ====================
      */
-    fun WriteShadowTriangles(tri: srfTriangles_s?) {
+    fun WriteShadowTriangles(tri: srfTriangles_s) {
         var col: Int
         var i: Int
 
         // emit this chain
-        output.procFile.WriteFloatString(
+        procFile!!.WriteFloatString(
             "/* numVerts = */ %d /* noCaps = */ %d /* noFrontCaps = */ %d /* numIndexes = */ %d /* planeBits = */ %d\n",
             tri.numVerts,
             tri.numShadowIndexesNoCaps,
@@ -324,30 +323,30 @@ object output {
         col = 0
         i = 0
         while (i < tri.numVerts) {
-            output.Write1DMatrix(output.procFile, 3, tri.shadowVertexes[i].xyz.ToFloatPtr())
+            Write1DMatrix(procFile!!, 3, tri.shadowVertexes[i].xyz.ToFloatPtr())
             if (++col == 5) {
                 col = 0
-                output.procFile.WriteFloatString("\n")
+                procFile!!.WriteFloatString("\n")
             }
             i++
         }
         if (col != 0) {
-            output.procFile.WriteFloatString("\n")
+            procFile!!.WriteFloatString("\n")
         }
 
         // indexes
         col = 0
         i = 0
         while (i < tri.numIndexes) {
-            output.procFile.WriteFloatString("%d ", tri.indexes[i])
+            procFile!!.WriteFloatString("%d ", tri.indexes[i])
             if (++col == 18) {
                 col = 0
-                output.procFile.WriteFloatString("\n")
+                procFile!!.WriteFloatString("\n")
             }
             i++
         }
         if (col != 0) {
-            output.procFile.WriteFloatString("\n")
+            procFile!!.WriteFloatString("\n")
         }
     }
 
@@ -359,7 +358,7 @@ object output {
      but the material and mergegroup must match
      =======================
      */
-    fun GroupsAreSurfaceCompatible(a: optimizeGroup_s?, b: optimizeGroup_s?): Boolean {
+    fun GroupsAreSurfaceCompatible(a: optimizeGroup_s, b: optimizeGroup_s): Boolean {
         return if (a.material != b.material) {
             false
         } else a.mergeGroup == b.mergeGroup
@@ -384,7 +383,7 @@ object output {
         var uTri: srfTriangles_s?
 
         //	mapTri_s	*tri;
-        internal class interactionTris_s {
+        class interactionTris_s {
             var light: mapLight_t? = null
             var next: interactionTris_s? = null
             var triList: mapTri_s? = null
@@ -394,19 +393,19 @@ object output {
         var checkInter: interactionTris_s? //, *nextInter;
         area = dmap.dmapGlobals.uEntities[entityNum].areas[areaNum]
         entity = dmap.dmapGlobals.uEntities[entityNum].mapEntity
-        numSurfaces = output.CountUniqueShaders(area.groups)
+        numSurfaces = CountUniqueShaders(area.groups)
         if (entityNum == 0) {
-            output.procFile.WriteFloatString(
+            procFile!!.WriteFloatString(
                 "model { /* name = */ \"_area%d\" /* numSurfaces = */ %d\n\n",
                 areaNum, numSurfaces
             )
         } else {
-            val name = arrayOf<String?>(null)
+            val name = arrayOf("")
             entity.epairs.GetString("name", "", name)
             if (TempDump.isNotNullOrEmpty(name[0])) {
                 Common.common.Error("Entity %d has surfaces, but no name key", entityNum)
             }
-            output.procFile.WriteFloatString(
+            procFile!!.WriteFloatString(
                 "model { /* name = */ \"%s\" /* numSurfaces = */ %d\n\n",
                 name, numSurfaces
             )
@@ -435,7 +434,7 @@ object output {
                     groupStep = groupStep.nextGroup
                     continue
                 }
-                if (!output.GroupsAreSurfaceCompatible(group, groupStep)) {
+                if (!GroupsAreSurfaceCompatible(group, groupStep)) {
                     groupStep = groupStep.nextGroup
                     continue
                 }
@@ -455,7 +454,7 @@ object output {
                         }
                         checkInter = checkInter.next
                     }
-                    if (TempDump.NOT(checkInter)) {
+                    if (null == checkInter) {
                         // create a new interaction
                         checkInter = interactionTris_s() // Mem_ClearedAlloc(sizeof(checkInter));
                         checkInter.light = groupStep.groupLights[i]
@@ -475,18 +474,18 @@ object output {
             if (surfaceNum >= numSurfaces) {
                 Common.common.Error("WriteOutputSurfaces: surfaceNum >= numSurfaces")
             }
-            output.procFile.WriteFloatString("/* surface %d */ { ", surfaceNum)
+            procFile!!.WriteFloatString("/* surface %d */ { ", surfaceNum)
             surfaceNum++
-            output.procFile.WriteFloatString("\"%s\" ", ambient.material.GetName())
-            uTri = output.ShareMapTriVerts(ambient)
+            procFile!!.WriteFloatString("\"%s\" ", ambient!!.material!!.GetName())
+            uTri = ShareMapTriVerts(ambient)
             tritools.FreeTriList(ambient)
-            output.CleanupUTriangles(uTri)
-            output.WriteUTriangles(uTri)
+            CleanupUTriangles(uTri)
+            WriteUTriangles(uTri)
             tr_trisurf.R_FreeStaticTriSurf(uTri)
-            output.procFile.WriteFloatString("}\n\n")
+            procFile!!.WriteFloatString("}\n\n")
             group = group.nextGroup
         }
-        output.procFile.WriteFloatString("}\n\n")
+        procFile!!.WriteFloatString("}\n\n")
     }
 
     /*
@@ -495,13 +494,13 @@ object output {
 
      ===============
      */
-    fun WriteNode_r(node: node_s?) {
+    fun WriteNode_r(node: node_s) {
         val child = IntArray(2)
         var i: Int
         if (node.planenum == dmap.PLANENUM_LEAF) {
             // we shouldn't get here unless the entire world
             // was a single leaf
-            output.procFile.WriteFloatString("/* node 0 */ ( 0 0 0 0 ) -1 -1\n")
+            procFile!!.WriteFloatString("/* node 0 */ ( 0 0 0 0 ) -1 -1\n")
             return
         }
         i = 0
@@ -513,27 +512,27 @@ object output {
             }
             i++
         }
-        val plane = dmap.dmapGlobals.mapPlanes.get(node.planenum)
-        output.procFile.WriteFloatString("/* node %d */ ", node.nodeNumber)
-        output.Write1DMatrix(output.procFile, 4, plane.ToFloatPtr())
-        output.procFile.WriteFloatString("%d %d\n", child[0], child[1])
+        val plane = dmap.dmapGlobals.mapPlanes[node.planenum]
+        procFile!!.WriteFloatString("/* node %d */ ", node.nodeNumber)
+        Write1DMatrix(procFile!!, 4, plane.ToFloatPtr())
+        procFile!!.WriteFloatString("%d %d\n", child[0], child[1])
         if (child[0] > 0) {
-            output.WriteNode_r(node.children[0])
+            WriteNode_r(node.children[0])
         }
         if (child[1] > 0) {
-            output.WriteNode_r(node.children[1])
+            WriteNode_r(node.children[1])
         }
     }
 
-    fun NumberNodes_r(node: node_s?, nextNumber: Int): Int {
+    fun NumberNodes_r(node: node_s, nextNumber: Int): Int {
         var nextNumber = nextNumber
         if (node.planenum == dmap.PLANENUM_LEAF) {
             return nextNumber
         }
         node.nodeNumber = nextNumber
         nextNumber++
-        nextNumber = output.NumberNodes_r(node.children[0], nextNumber)
-        nextNumber = output.NumberNodes_r(node.children[1], nextNumber)
+        nextNumber = NumberNodes_r(node.children[0], nextNumber)
+        nextNumber = NumberNodes_r(node.children[1], nextNumber)
         return nextNumber
     }
 
@@ -542,20 +541,20 @@ object output {
      WriteOutputNodes
      ====================
      */
-    fun WriteOutputNodes(node: node_s?) {
+    fun WriteOutputNodes(node: node_s) {
         val numNodes: Int
 
         // prune unneeded nodes and count
-        output.PruneNodes_r(node)
-        numNodes = output.NumberNodes_r(node, 0)
+        PruneNodes_r(node)
+        numNodes = NumberNodes_r(node, 0)
 
         // output
-        output.procFile.WriteFloatString("nodes { /* numNodes = */ %d\n\n", numNodes)
-        output.procFile.WriteFloatString("/* node format is: ( planeVector ) positiveChild negativeChild */\n")
-        output.procFile.WriteFloatString("/* a child number of 0 is an opaque, solid area */\n")
-        output.procFile.WriteFloatString("/* negative child numbers are areas: (-1-child) */\n")
-        output.WriteNode_r(node)
-        output.procFile.WriteFloatString("}\n\n")
+        procFile!!.WriteFloatString("nodes { /* numNodes = */ %d\n\n", numNodes)
+        procFile!!.WriteFloatString("/* node format is: ( planeVector ) positiveChild negativeChild */\n")
+        procFile!!.WriteFloatString("/* a child number of 0 is an opaque, solid area */\n")
+        procFile!!.WriteFloatString("/* negative child numbers are areas: (-1-child) */\n")
+        WriteNode_r(node)
+        procFile!!.WriteFloatString("}\n\n")
     }
 
     /*
@@ -563,30 +562,30 @@ object output {
      WriteOutputPortals
      ====================
      */
-    fun WriteOutputPortals(e: uEntity_t?) {
+    fun WriteOutputPortals(e: uEntity_t) {
         var i: Int
         var j: Int
         var iap: interAreaPortal_t?
-        var w: idWinding?
-        output.procFile.WriteFloatString(
+        var w: idWinding
+        procFile!!.WriteFloatString(
             "interAreaPortals { /* numAreas = */ %d /* numIAP = */ %d\n\n",
             e.numAreas, portals.numInterAreaPortals
         )
-        output.procFile.WriteFloatString("/* interAreaPortal format is: numPoints positiveSideArea negativeSideArea ( point) ... */\n")
+        procFile!!.WriteFloatString("/* interAreaPortal format is: numPoints positiveSideArea negativeSideArea ( point) ... */\n")
         i = 0
         while (i < portals.numInterAreaPortals) {
             iap = portals.interAreaPortals[i]
-            w = iap.side.winding
-            output.procFile.WriteFloatString("/* iap %d */ %d %d %d ", i, w.GetNumPoints(), iap.area0, iap.area1)
+            w = iap.side!!.winding!!
+            procFile!!.WriteFloatString("/* iap %d */ %d %d %d ", i, w.GetNumPoints(), iap.area0, iap.area1)
             j = 0
             while (j < w.GetNumPoints()) {
-                output.Write1DMatrix(output.procFile, 3, w.get(j).ToFloatPtr())
+                Write1DMatrix(procFile!!, 3, w.get(j).ToFloatPtr())
                 j++
             }
-            output.procFile.WriteFloatString("\n")
+            procFile!!.WriteFloatString("\n")
             i++
         }
-        output.procFile.WriteFloatString("}\n\n")
+        procFile!!.WriteFloatString("}\n\n")
     }
 
     /*
@@ -606,17 +605,17 @@ object output {
         }
         i = 0
         while (i < e.numAreas) {
-            output.WriteOutputSurfaces(entityNum, i)
+            WriteOutputSurfaces(entityNum, i)
             i++
         }
 
         // we will completely skip the portals and nodes if it is a single area
         if (entityNum == 0 && e.numAreas > 1) {
             // output the area portals
-            output.WriteOutputPortals(e)
+            WriteOutputPortals(e)
 
             // output the nodes
-            output.WriteOutputNodes(e.tree.headnode)
+            WriteOutputNodes(e.tree.headnode)
         }
     }
 
@@ -632,14 +631,15 @@ object output {
 
         // write the file
         Common.common.Printf("----- WriteOutputFile -----\n")
-        qpath = kotlin.String.format("%s." + RenderWorld.PROC_FILE_EXT, *dmap.dmapGlobals.mapFileBase)
+        qpath = String.format("%s." + RenderWorld.PROC_FILE_EXT, dmap.dmapGlobals.mapFileBase)
         Common.common.Printf("writing %s\n", qpath)
         // _D3XP used fs_cdpath
-        output.procFile = FileSystem_h.fileSystem.OpenFileWrite(qpath, "fs_devpath")
-        if (TempDump.NOT(output.procFile)) {
+        procFile = FileSystem_h.fileSystem.OpenFileWrite(qpath, "fs_devpath")
+        if (null == procFile) {
             Common.common.Error("Error opening %s", qpath)
+            return
         }
-        output.procFile.WriteFloatString("%s\n\n", RenderWorld.PROC_FILE_ID)
+        procFile!!.WriteFloatString("%s\n\n", RenderWorld.PROC_FILE_ID)
 
         // write the entity models and information, writing entities first
         i = dmap.dmapGlobals.num_entities - 1
@@ -649,25 +649,25 @@ object output {
                 i--
                 continue
             }
-            output.WriteOutputEntity(i)
+            WriteOutputEntity(i)
             i--
         }
 
         // write the shadow volumes
         i = 0
         while (i < dmap.dmapGlobals.mapLights.Num()) {
-            val light = dmap.dmapGlobals.mapLights.get(i)
+            val light = dmap.dmapGlobals.mapLights[i]
             if (TempDump.NOT(light.shadowTris)) {
                 i++
                 continue
             }
-            output.procFile.WriteFloatString("shadowModel { /* name = */ \"_prelight_%s\"\n\n", *light.name)
-            output.WriteShadowTriangles(light.shadowTris)
-            output.procFile.WriteFloatString("}\n\n")
+            procFile!!.WriteFloatString("shadowModel { /* name = */ \"_prelight_%s\"\n\n", light.name)
+            WriteShadowTriangles(light.shadowTris!!)
+            procFile!!.WriteFloatString("}\n\n")
             tr_trisurf.R_FreeStaticTriSurf(light.shadowTris)
             light.shadowTris = null
             i++
         }
-        FileSystem_h.fileSystem.CloseFile(output.procFile)
+        FileSystem_h.fileSystem.CloseFile(procFile)
     }
 }

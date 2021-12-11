@@ -503,7 +503,7 @@ object Model_local {
             return surfaces.Num() - overlaysAdded
         }
 
-        override fun Surface(surfaceNum: Int): modelSurface_s? {
+        override fun Surface(surfaceNum: Int): modelSurface_s {
             return surfaces.get(surfaceNum)
         }
 

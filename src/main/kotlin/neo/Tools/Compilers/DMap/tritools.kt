@@ -1,6 +1,5 @@
 package neo.Tools.Compilers.DMap
 
-import neo.TempDump
 import neo.Tools.Compilers.DMap.dmap.mapTri_s
 import neo.Tools.Compilers.DMap.optimize.optVertex_s
 import neo.Tools.Compilers.DMap.tritjunction.hashVert_s
@@ -25,11 +24,8 @@ object tritools {
      AllocTri
      ===============
      */
-    fun AllocTri(): mapTri_s? {
-        val tri: mapTri_s
-        tri = mapTri_s() // Mem_Alloc(sizeof(tri));
-        //	memset( tri, 0, sizeof( *tri ) );
-        return tri
+    fun AllocTri(): mapTri_s {
+        return mapTri_s()
     }
 
     /*
@@ -37,7 +33,7 @@ object tritools {
      FreeTri
      ===============
      */
-    fun FreeTri(tri: mapTri_s?) {
+    fun FreeTri(tri: mapTri_s) {
         tri.clear() //Mem_Free(tri);
     }
 
@@ -54,7 +50,7 @@ object tritools {
         while (prev != null && prev.next != null) {
             prev = prev.next
         }
-        prev.next = b
+        prev!!.next = b
         return a
     }
 
@@ -85,7 +81,7 @@ object tritools {
         tri = a
         while (tri != null) {
             var copy: mapTri_s?
-            copy = tritools.CopyMapTri(tri)
+            copy = CopyMapTri(tri)
             copy.next = testList
             testList = copy
             tri = tri.next
@@ -99,14 +95,14 @@ object tritools {
      =============
      */
     fun CountTriList( /*final*/
-        tri: mapTri_s?
+        tri: mapTri_s
     ): Int {
-        var tri = tri
+        var tris = tri as mapTri_s?
         var c: Int
         c = 0
-        while (tri != null) {
+        while (tris != null) {
             c++
-            tri = tri.next
+            tris = tris.next
         }
         return c
     }
@@ -116,8 +112,8 @@ object tritools {
      CopyMapTri
      ===============
      */
-    fun CopyMapTri(tri: mapTri_s?): mapTri_s? {
-        val t: mapTri_s?
+    fun CopyMapTri(tri: mapTri_s): mapTri_s {
+        val t: mapTri_s
 
 //        t = (mapTri_s) Mem_Alloc(sizeof(t));
         t = tri
@@ -129,8 +125,8 @@ object tritools {
      MapTriArea
      ===============
      */
-    fun MapTriArea(tri: mapTri_s?): Float {
-        return idWinding.Companion.TriangleArea(tri.v[0].xyz, tri.v[1].xyz, tri.v[2].xyz)
+    fun MapTriArea(tri: mapTri_s): Float {
+        return idWinding.TriangleArea(tri.v[0].xyz, tri.v[1].xyz, tri.v[2].xyz)
     }
 
     /*
@@ -147,8 +143,8 @@ object tritools {
         newList = null
         tri = list
         while (tri != null) {
-            if (tritools.MapTriArea(tri) > 0) {
-                copy = tritools.CopyMapTri(tri)
+            if (MapTriArea(tri) > 0) {
+                copy = CopyMapTri(tri)
                 copy.next = newList
                 newList = copy
             }
@@ -163,7 +159,7 @@ object tritools {
      ================
      */
     fun BoundTriList( /*final*/
-        list: mapTri_s?, b: idBounds?
+        list: mapTri_s?, b: idBounds
     ) {
         var list = list
         b.Clear()
@@ -180,12 +176,12 @@ object tritools {
      DrawTri
      ================
      */
-    fun DrawTri(tri: mapTri_s?) {
+    fun DrawTri(tri: mapTri_s) {
         val w = idWinding()
         w.SetNumPoints(3)
-        Vector.VectorCopy(tri.v[0].xyz, w.get(0))
-        Vector.VectorCopy(tri.v[1].xyz, w.get(1))
-        Vector.VectorCopy(tri.v[2].xyz, w.get(2))
+        Vector.VectorCopy(tri.v[0].xyz, w[0])
+        Vector.VectorCopy(tri.v[1].xyz, w[1])
+        Vector.VectorCopy(tri.v[2].xyz, w[2])
         gldraw.DrawWinding(w)
     }
 
@@ -221,13 +217,13 @@ object tritools {
      WindingForTri
      ================
      */
-    fun WindingForTri(tri: mapTri_s?): idWinding? {
+    fun WindingForTri(tri: mapTri_s): idWinding {
         val w: idWinding
         w = idWinding(3)
         w.SetNumPoints(3)
-        Vector.VectorCopy(tri.v[0].xyz, w.get(0))
-        Vector.VectorCopy(tri.v[1].xyz, w.get(1))
-        Vector.VectorCopy(tri.v[2].xyz, w.get(2))
+        Vector.VectorCopy(tri.v[0].xyz, w[0])
+        Vector.VectorCopy(tri.v[1].xyz, w[1])
+        Vector.VectorCopy(tri.v[2].xyz, w[2])
         return w
     }
 
@@ -238,11 +234,11 @@ object tritools {
      Regenerate the texcoords and colors on a fragmented tri from the plane equations
      ================
      */
-    fun TriVertsFromOriginal(tri: mapTri_s?, original: mapTri_s?) {
+    fun TriVertsFromOriginal(tri: mapTri_s, original: mapTri_s) {
         var i: Int
         var j: Int
         val denom: Float
-        denom = idWinding.Companion.TriangleArea(original.v[0].xyz, original.v[1].xyz, original.v[2].xyz)
+        denom = idWinding.TriangleArea(original.v[0].xyz, original.v[1].xyz, original.v[2].xyz)
         if (denom == 0f) {
             return  // original was degenerate, so it doesn't matter
         }
@@ -253,27 +249,17 @@ object tritools {
             var c: Float
 
             // find the barycentric coordinates
-            a = idWinding.Companion.TriangleArea(tri.v[i].xyz, original.v[1].xyz, original.v[2].xyz) / denom
-            b = idWinding.Companion.TriangleArea(tri.v[i].xyz, original.v[2].xyz, original.v[0].xyz) / denom
-            c = idWinding.Companion.TriangleArea(tri.v[i].xyz, original.v[0].xyz, original.v[1].xyz) / denom
+            a = idWinding.TriangleArea(tri.v[i].xyz, original.v[1].xyz, original.v[2].xyz) / denom
+            b = idWinding.TriangleArea(tri.v[i].xyz, original.v[2].xyz, original.v[0].xyz) / denom
+            c = idWinding.TriangleArea(tri.v[i].xyz, original.v[0].xyz, original.v[1].xyz) / denom
 
             // regenerate the interpolated values
-            tri.v[i].st.set(
-                0,
-                a * original.v[0].st.get(0) + b * original.v[1].st.get(0) + c * original.v[2].st.get(0)
-            )
-            tri.v[i].st.set(
-                1,
-                a * original.v[0].st.get(1) + b * original.v[1].st.get(1) + c * original.v[2].st.get(1)
-            )
+            tri.v[i].st[0] = a * original.v[0].st[0] + b * original.v[1].st[0] + c * original.v[2].st[0]
+            tri.v[i].st[1] = a * original.v[0].st[1] + b * original.v[1].st[1] + c * original.v[2].st[1]
             j = 0
             while (j < 3) {
-                tri.v[i].normal.set(
-                    j,
-                    a * original.v[0].normal.get(j) + b * original.v[1].normal.get(j) + c * original.v[2].normal.get(
-                        j
-                    )
-                )
+                tri.v[i].normal[j] =
+                    a * original.v[0].normal[j] + b * original.v[1].normal[j] + c * original.v[2].normal[j]
                 j++
             }
             tri.v[i].normal.Normalize()
@@ -297,14 +283,14 @@ object tritools {
         var i: Int
         var j: Int
         val vec = idVec3()
-        if (TempDump.NOT(w)) {
+        if (w == null) {
             return null
         }
         triList = null
         i = 2
         while (i < w.GetNumPoints()) {
-            tri = tritools.AllocTri()
-            tri = if (TempDump.NOT(originalTri)) {
+            tri = AllocTri()
+            tri = if (null == originalTri) {
 //			memset( tri, 0, sizeof( *tri ) );
                 mapTri_s()
             } else {
@@ -315,17 +301,17 @@ object tritools {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.set(w.get(0).ToVec3())
+                    vec.set(w[0].ToVec3())
                 } else if (j == 1) {
-                    vec.set(w.get(i - 1).ToVec3())
+                    vec.set(w[i - 1].ToVec3())
                 } else {
-                    vec.set(w.get(i).ToVec3())
+                    vec.set(w[i].ToVec3())
                 }
                 Vector.VectorCopy(vec, tri.v[j].xyz)
                 j++
             }
             if (originalTri != null) {
-                tritools.TriVertsFromOriginal(tri, originalTri)
+                TriVertsFromOriginal(tri, originalTri)
             }
             i++
         }
@@ -338,7 +324,7 @@ object tritools {
      ==================
      */
     fun ClipTriList(
-        list: mapTri_s?, plane: idPlane?, epsilon: Float,
+        list: mapTri_s?, plane: idPlane, epsilon: Float,
         front: mapTri_s?, back: mapTri_s?
     ) {
         var front = front
@@ -353,12 +339,12 @@ object tritools {
 //        back[0] = null;
         tri = list
         while (tri != null) {
-            w = tritools.WindingForTri(tri)
+            w = WindingForTri(tri)
             w.Split(plane, epsilon, frontW, backW)
-            newList = tritools.WindingToTriList(frontW, tri)
-            front = tritools.MergeTriLists(front, newList)
-            newList = tritools.WindingToTriList(backW, tri)
-            back = tritools.MergeTriLists(back, newList)
+            newList = WindingToTriList(frontW, tri)
+            front = MergeTriLists(front, newList)
+            newList = WindingToTriList(backW, tri)
+            back = MergeTriLists(back, newList)
             tri = tri.next
         }
     }
@@ -368,7 +354,7 @@ object tritools {
      PlaneForTri
      ==================
      */
-    fun PlaneForTri(tri: mapTri_s?, plane: idPlane?) {
+    fun PlaneForTri(tri: mapTri_s, plane: idPlane) {
         plane.FromPoints(tri.v[0].xyz, tri.v[1].xyz, tri.v[2].xyz)
     }
 }

@@ -7,14 +7,15 @@ import neo.Tools.Compilers.DMap.dmap.side_s
 import neo.Tools.Compilers.DMap.dmap.tree_s
 import neo.Tools.Compilers.DMap.dmap.uBrush_t
 import neo.Tools.Compilers.DMap.dmap.uEntity_t
+import neo.Tools.Compilers.DMap.map.FindFloatPlane
 import neo.framework.Common
 import neo.framework.FileSystem_h
 import neo.framework.File_h.idFile
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 
 /**
@@ -32,7 +33,7 @@ object ubrush {
 
     //
     const val PSIDE_FRONT = 1
-    const val PSIDE_BOTH = ubrush.PSIDE_FRONT or ubrush.PSIDE_BACK
+    const val PSIDE_BOTH = PSIDE_FRONT or PSIDE_BACK
 
     //
     var c_active_brushes = 0
@@ -75,7 +76,7 @@ object ubrush {
      ================
      */
     @Deprecated("")
-    fun AllocBrush(numsides: Int): Array<uBrush_t?>? {
+    fun AllocBrush(numsides: Int): Array<uBrush_t> {
         throw UnsupportedOperationException()
         //        uBrush_t[] bb;
 //        int c;
@@ -94,7 +95,7 @@ object ubrush {
      ================
      */
     @Deprecated("")
-    fun FreeBrush(brushes: uBrush_t?) {
+    fun FreeBrush(brushes: uBrush_t) {
         var i: Int
         i = 0
         while (i < brushes.numsides) {
@@ -109,7 +110,7 @@ object ubrush {
             i++
         }
         brushes.clear() //Mem_Free(brushes);
-        ubrush.c_active_brushes--
+        c_active_brushes--
     }
 
     /*
@@ -122,7 +123,7 @@ object ubrush {
         var next: uBrush_t
         while (brushes != null) {
             next = brushes.next as uBrush_t
-            ubrush.FreeBrush(brushes)
+            FreeBrush(brushes)
             brushes = next
         }
     }
@@ -134,7 +135,7 @@ object ubrush {
      Duplicates the brush, the sides, and the windings
      ==================
      */
-    fun CopyBrush(brush: uBrush_t?): uBrush_t? {
+    fun CopyBrush(brush: uBrush_t): uBrush_t {
         val newBrush: uBrush_t
         var size: Int
         var i: Int
@@ -144,11 +145,11 @@ object ubrush {
 //        newbrush = AllocBrush(brush.numsides);
 //        memcpy(newbrush, brush, size);
         newBrush = uBrush_t(brush)
-        ubrush.c_active_brushes++
+        c_active_brushes++
         i = 0
         while (i < brush.numsides) {
             if (brush.sides[i].winding != null) {
-                newBrush.sides[i].winding = brush.sides[i].winding.Copy()
+                newBrush.sides[i].winding = brush.sides[i].winding!!.Copy()
             }
             i++
         }
@@ -163,17 +164,17 @@ object ubrush {
     fun DrawBrushList(brush: uBrush_t?) {
         var brush = brush
         var i: Int
-        var s: side_s?
+        var s: side_s
         gldraw.GLS_BeginScene()
         while (brush != null) {
             i = 0
             while (i < brush.numsides) {
                 s = brush.sides[i]
-                if (TempDump.NOT(s.winding)) {
+                if (null == s.winding) {
                     i++
                     continue
                 }
-                gldraw.GLS_Winding(s.winding, 0)
+                gldraw.GLS_Winding(s.winding!!, 0)
                 i++
             }
             brush = brush.next as uBrush_t
@@ -186,12 +187,12 @@ object ubrush {
      PrintBrush
      =============
      */
-    fun PrintBrush(brush: uBrush_t?) {
+    fun PrintBrush(brush: uBrush_t) {
         var i: Int
         Common.common.Printf("brush: %p\n", brush)
         i = 0
         while (i < brush.numsides) {
-            brush.sides[i].winding.Print()
+            brush.sides[i].winding!!.Print()
             Common.common.Printf("\n")
             i++
         }
@@ -205,7 +206,7 @@ object ubrush {
      returns false if the brush doesn't enclose a valid volume
      ==================
      */
-    fun BoundBrush(brush: uBrush_t?): Boolean {
+    fun BoundBrush(brush: uBrush_t): Boolean {
         var i: Int
         var j: Int
         var w: idWinding?
@@ -213,13 +214,13 @@ object ubrush {
         i = 0
         while (i < brush.numsides) {
             w = brush.sides[i].winding
-            if (TempDump.NOT(w)) {
+            if (null == w) {
                 i++
                 continue
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                brush.bounds.AddPoint(w.get(j).ToVec3())
+                brush.bounds.AddPoint(w[j].ToVec3())
                 j++
             }
             i++
@@ -243,12 +244,12 @@ object ubrush {
      returns false if the brush doesn't enclose a valid volume
      ==================
      */
-    fun CreateBrushWindings(brush: uBrush_t?): Boolean {
+    fun CreateBrushWindings(brush: uBrush_t): Boolean {
         var i: Int
         var j: Int
         var w: idWinding?
-        var plane: idPlane?
-        var side: side_s?
+        var plane: idPlane
+        var side: side_s
         i = 0
         while (i < brush.numsides) {
             side = brush.sides[i]
@@ -275,7 +276,7 @@ object ubrush {
             side.winding = w
             i++
         }
-        return ubrush.BoundBrush(brush)
+        return BoundBrush(brush)
     }
 
     /*
@@ -285,12 +286,12 @@ object ubrush {
      Creates a new axial brush
      ==================
      */
-    fun BrushFromBounds(bounds: idBounds?): uBrush_t? {
+    fun BrushFromBounds(bounds: idBounds): uBrush_t {
         val b: uBrush_t
         var i: Int
         val plane = idPlane()
         b = uBrush_t() //AllocBrush(6);
-        ubrush.c_active_brushes++
+        c_active_brushes++
         b.numsides = 6
         i = 0
         while (i < 3) {
@@ -303,7 +304,7 @@ object ubrush {
             b.sides[3 + i].planenum = FindFloatPlane(plane)
             i++
         }
-        ubrush.CreateBrushWindings(b)
+        CreateBrushWindings(b)
         return b
     }
 
@@ -367,7 +368,7 @@ object ubrush {
     fun WriteBspBrushMap(name: String, list: uBrush_t) {
         var list = list as uBrush_t?
         val f: idFile?
-        var s: side_s?
+        var s: side_s
         var i: Int
         var w: idWinding
         Common.common.Printf("writing %s\n", name)
@@ -417,11 +418,11 @@ object ubrush {
 
      ====================
      */
-    fun FilterBrushIntoTree_r(b: uBrush_t?, node: node_s?): Int {
+    fun FilterBrushIntoTree_r(b: uBrush_t?, node: node_s): Int {
         val front = uBrush_t()
         val back = uBrush_t()
         var c: Int
-        if (TempDump.NOT(b)) {
+        if (null == b) {
             return 0
         }
 
@@ -438,11 +439,11 @@ object ubrush {
         }
 
         // split it by the node plane
-        ubrush.SplitBrush(b, node.planenum, front, back)
-        ubrush.FreeBrush(b)
+        SplitBrush(b, node.planenum, front, back)
+        FreeBrush(b)
         c = 0
-        c += ubrush.FilterBrushIntoTree_r(front, node.children[0])
-        c += ubrush.FilterBrushIntoTree_r(back, node.children[1])
+        c += FilterBrushIntoTree_r(front, node.children[0]!!)
+        c += FilterBrushIntoTree_r(back, node.children[1]!!)
         return c
     }
 
@@ -455,9 +456,9 @@ object ubrush {
      to materials
      =====================
      */
-    fun FilterBrushesIntoTree(e: uEntity_t?) {
+    fun FilterBrushesIntoTree(e: uEntity_t) {
         var prim: primitive_s?
-        var b: uBrush_t
+        var b: uBrush_t?
         var newb: uBrush_t?
         var r: Int
         var c_unique: Int
@@ -467,14 +468,14 @@ object ubrush {
         c_clusters = 0
         prim = e.primitives
         while (prim != null) {
-            b = prim.brush as uBrush_t
-            if (TempDump.NOT(b)) {
+            b = prim.brush as uBrush_t?
+            if (b == null) {
                 prim = prim.next
                 continue
             }
             c_unique++
-            newb = ubrush.CopyBrush(b)
-            r = ubrush.FilterBrushIntoTree_r(newb, e.tree.headnode)
+            newb = CopyBrush(b)
+            r = FilterBrushIntoTree_r(newb, e.tree.headnode)
             c_clusters += r
             prim = prim.next
         }
@@ -511,7 +512,7 @@ object ubrush {
 
      ==================
      */
-    fun BrushMostlyOnSide(brush: uBrush_t?, plane: idPlane?): Int {
+    fun BrushMostlyOnSide(brush: uBrush_t, plane: idPlane): Int {
         var i: Int
         var j: Int
         var w: idWinding?
@@ -519,24 +520,24 @@ object ubrush {
         var max: Float
         var side: Int
         max = 0f
-        side = ubrush.PSIDE_FRONT
+        side = PSIDE_FRONT
         i = 0
         while (i < brush.numsides) {
             w = brush.sides[i].winding
-            if (TempDump.NOT(w)) {
+            if (null == w) {
                 i++
                 continue
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                d = plane.Distance(w.get(j).ToVec3())
+                d = plane.Distance(w[j].ToVec3())
                 if (d > max) {
                     max = d
-                    side = ubrush.PSIDE_FRONT
+                    side = PSIDE_FRONT
                 }
                 if (-d > max) {
                     max = -d
-                    side = ubrush.PSIDE_BACK
+                    side = PSIDE_BACK
                 }
                 j++
             }
@@ -553,13 +554,13 @@ object ubrush {
      unchanged
      ================
      */
-    fun SplitBrush(brush: uBrush_t?, planenum: Int, front: uBrush_t?, back: uBrush_t?) {
-        val b = arrayOfNulls<uBrush_t?>(2)
+    fun SplitBrush(brush: uBrush_t, planenum: Int, front: uBrush_t, back: uBrush_t) {
+        val b = arrayOfNulls<uBrush_t>(2)
         var i: Int
         var j: Int
         var w: idWinding?
         val midwinding: idWinding?
-        val cw = arrayOfNulls<idWinding?>(2)
+        val cw = Array(2) { idWinding() }
         var s: side_s?
         var cs: side_s?
         var d: Float
@@ -573,13 +574,13 @@ object ubrush {
         i = 0
         while (i < brush.numsides) {
             w = brush.sides[i].winding
-            if (TempDump.NOT(w)) {
+            if (null == w) {
                 i++
                 continue
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                d = plane.Distance(w.get(j).ToVec3())
+                d = plane.Distance(w[j].ToVec3())
                 if (d > 0 && d > d_front) {
                     d_front = d
                 }
@@ -592,12 +593,12 @@ object ubrush {
         }
         if (d_front < 0.1) // PLANESIDE_EPSILON)
         {    // only on back
-            back.set(ubrush.CopyBrush(brush))
+            back.set(CopyBrush(brush))
             return
         }
         if (d_back > -0.1) // PLANESIDE_EPSILON)
         {    // only on front
-            front.set(ubrush.CopyBrush(brush))
+            front.set(CopyBrush(brush))
             return
         }
 
@@ -609,15 +610,15 @@ object ubrush {
             w = w.Clip(plane2, 0f) // PLANESIDE_EPSILON);
             i++
         }
-        if (TempDump.NOT(w) || w.IsTiny()) {
+        if (null == w || w.IsTiny()) {
             // the brush isn't really split
             val side: Int
-            side = ubrush.BrushMostlyOnSide(brush, plane)
-            if (side == ubrush.PSIDE_FRONT) {
-                front.set(ubrush.CopyBrush(brush))
+            side = BrushMostlyOnSide(brush, plane)
+            if (side == PSIDE_FRONT) {
+                front.set(CopyBrush(brush))
             }
-            if (side == ubrush.PSIDE_BACK) {
-                back.set(ubrush.CopyBrush(brush))
+            if (side == PSIDE_BACK) {
+                back.set(CopyBrush(brush))
             }
             return
         }
@@ -631,10 +632,10 @@ object ubrush {
         while (i < 2) {
             b[i] = uBrush_t(brush) //AllocBrush(brush.numsides + 1);
             //            memcpy(b[i], brush, sizeof(uBrush_t) - sizeof(brush.sides));
-            ubrush.c_active_brushes++
-            b[i].numsides = 0
-            b[i].next = null
-            b[i].original = brush.original
+            c_active_brushes++
+            b[i]!!.numsides = 0
+            b[i]!!.next = null
+            b[i]!!.original = brush.original
             i++
         }
 
@@ -643,7 +644,7 @@ object ubrush {
         while (i < brush.numsides) {
             s = brush.sides[i]
             w = s.winding
-            if (TempDump.NOT(w)) {
+            if (null == w) {
                 i++
                 continue
             }
@@ -660,9 +661,9 @@ object ubrush {
                  delete cw[j];
                  continue;
                  }
-                 */b[j].sides[b[j].numsides] = s
-                cs = b[j].sides[b[j].numsides]
-                b[j].numsides++
+                 */b[j]!!.sides[b[j]!!.numsides] = s
+                cs = b[j]!!.sides[b[j]!!.numsides]
+                b[j]!!.numsides++
                 //                cs = s;
                 cs.winding = cw[j]
                 j++
@@ -673,11 +674,11 @@ object ubrush {
         // see if we have valid polygons on both sides
         i = 0
         while (i < 2) {
-            if (!ubrush.BoundBrush(b[i])) {
+            if (!BoundBrush(b[i]!!)) {
                 break
             }
-            if (b[i].numsides < 3) {
-                ubrush.FreeBrush(b[i])
+            if (b[i]!!.numsides < 3) {
+                FreeBrush(b[i]!!)
                 b[i] = null
             }
             i++
@@ -689,12 +690,12 @@ object ubrush {
                 Common.common.Printf("split not on both sides\n")
             }
             if (b[0] != null) {
-                ubrush.FreeBrush(b[0])
-                front.set(ubrush.CopyBrush(brush))
+                FreeBrush(b[0]!!)
+                front.set(CopyBrush(brush))
             }
             if (b[1] != null) {
-                ubrush.FreeBrush(b[1])
-                back.set(ubrush.CopyBrush(brush))
+                FreeBrush(b[1]!!)
+                back.set(CopyBrush(brush))
             }
             return
         }
@@ -702,8 +703,8 @@ object ubrush {
         // add the midwinding to both sides
         i = 0
         while (i < 2) {
-            cs = b[i].sides[b[i].numsides]
-            b[i].numsides++
+            cs = b[i]!!.sides[b[i]!!.numsides]
+            b[i]!!.numsides++
             cs.planenum = planenum xor i xor 1
             cs.material = null
             if (i == 0) {
@@ -718,16 +719,16 @@ object ubrush {
             var i2: Int
             i2 = 0
             while (i2 < 2) {
-                v1 = ubrush.BrushVolume(b[i2])
+                v1 = BrushVolume(b[i2])
                 if (v1 < 1.0) {
-                    ubrush.FreeBrush(b[i2])
+                    FreeBrush(b[i2]!!)
                     b[i2] = null
                     //			common.Printf ("tiny volume after clip\n");
                 }
                 i2++
             }
         }
-        front.set(b[0])
-        back.set(b[1])
+        front.set(b[0]!!)
+        back.set(b[1]!!)
     }
 }

@@ -9,11 +9,13 @@ import neo.framework.Common
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Text.Str.idStr
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  *
@@ -76,12 +78,12 @@ object tritjunction {
 
     //
     const val COLINEAR_EPSILON = 1.8 * VERTEX_EPSILON
-    val hashIntMins: IntArray? = IntArray(3)
-    val hashIntScale: IntArray? = IntArray(3)
-    val hashVerts: Array<Array<Array<hashVert_s?>?>?>? =
+    val hashIntMins: IntArray = IntArray(3)
+    val hashIntScale: IntArray = IntArray(3)
+    val hashVerts: Array<Array<Array<hashVert_s?>>> =
         Array(HASH_BINS) { Array(HASH_BINS) { arrayOfNulls<hashVert_s?>(HASH_BINS) } }
-    var hashBounds: idBounds? = null
-    val hashScale: idVec3? = idVec3()
+    var hashBounds: idBounds = idBounds()
+    val hashScale: idVec3 = idVec3()
     var numHashVerts = 0
     var numTotalVerts = 0
 
@@ -92,7 +94,7 @@ object tritjunction {
      Also modifies the original vert to the snapped value
      ===============
      */
-    fun GetHashVert(v: idVec3?): hashVert_s? {
+    fun GetHashVert(v: idVec3): hashVert_s {
         val iv = IntArray(3)
         val block = IntArray(3)
         var i: Int
@@ -102,7 +104,7 @@ object tritjunction {
         // snap the vert to integral values
         i = 0
         while (i < 3) {
-            iv[i] = Math.floor((v.get(i) + 0.5 / SNAP_FRACTIONS) * SNAP_FRACTIONS).toInt()
+            iv[i] = floor((v[i] + 0.5 / SNAP_FRACTIONS) * SNAP_FRACTIONS).toInt()
             block[i] = (iv[i] - hashIntMins[i]) / hashIntScale[i]
             if (block[i] < 0) {
                 block[i] = 0
@@ -146,9 +148,9 @@ object tritjunction {
         hv.iv[0] = iv[0]
         hv.iv[1] = iv[1]
         hv.iv[2] = iv[2]
-        hv.v[0] = iv[0] as Float / SNAP_FRACTIONS
-        hv.v[1] = iv[1] as Float / SNAP_FRACTIONS
-        hv.v[2] = iv[2] as Float / SNAP_FRACTIONS
+        hv.v[0] = iv[0].toFloat() / SNAP_FRACTIONS
+        hv.v[1] = iv[1].toFloat() / SNAP_FRACTIONS
+        hv.v[2] = iv[2].toFloat() / SNAP_FRACTIONS
         Vector.VectorCopy(hv.v, v)
         numHashVerts++
         return hv
@@ -162,7 +164,7 @@ object tritjunction {
      bins that should hold the triangle
      ==================
      */
-    fun HashBlocksForTri(tri: mapTri_s?, blocks: Array<IntArray?>? /*[2][3]*/) {
+    fun HashBlocksForTri(tri: mapTri_s, blocks: Array<IntArray> /*[2][3]*/) {
         val bounds = idBounds()
         var i: Int
         bounds.Clear()
@@ -173,23 +175,17 @@ object tritjunction {
         // add a 1.0 slop margin on each side
         i = 0
         while (i < 3) {
-            blocks.get(0).get(i) = ((bounds[0, i] - 1.0 - hashBounds.get(
-                0,
-                i
-            )) / hashScale.get(i)).toInt()
-            if (blocks.get(0).get(i) < 0) {
-                blocks.get(0).get(i) = 0
-            } else if (blocks.get(0).get(i) >= HASH_BINS) {
-                blocks.get(0).get(i) = HASH_BINS - 1
+            blocks[0][i] = ((bounds[0, i] - 1.0 - hashBounds[0, i]) / hashScale[i]).toInt()
+            if (blocks[0][i] < 0) {
+                blocks[0][i] = 0
+            } else if (blocks[0][i] >= HASH_BINS) {
+                blocks[0][i] = HASH_BINS - 1
             }
-            blocks.get(1).get(i) = ((bounds[1, i] + 1.0 - hashBounds.get(
-                0,
-                i
-            )) / hashScale.get(i)).toInt()
-            if (blocks.get(1).get(i) < 0) {
-                blocks.get(1).get(i) = 0
-            } else if (blocks.get(1).get(i) >= HASH_BINS) {
-                blocks.get(1).get(i) = HASH_BINS - 1
+            blocks[1][i] = ((bounds[1, i] + 1.0 - hashBounds[0, i]) / hashScale[i]).toInt()
+            if (blocks[1][i] < 0) {
+                blocks[1][i] = 0
+            } else if (blocks[1][i] >= HASH_BINS) {
+                blocks[1][i] = HASH_BINS - 1
             }
             i++
         }
@@ -202,7 +198,7 @@ object tritjunction {
      Removes triangles that are degenerated or flipped backwards
      =================
      */
-    fun HashTriangles(groupList: optimizeGroup_s?) {
+    fun HashTriangles(groupList: optimizeGroup_s) {
         var a: mapTri_s?
         var vert: Int
         var i: Int
@@ -231,18 +227,11 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            hashBounds.set(
-                0,
-                i,
-                Math.floor((hashBounds.get(0, i) - 1).toDouble()).toFloat()
-            )
-            hashBounds.set(1, i, Math.ceil((hashBounds.get(1, i) + 1).toDouble()).toFloat())
-            hashIntMins[i] = (hashBounds.get(0, i) * SNAP_FRACTIONS).toInt()
-            hashScale.set(
-                i,
-                (hashBounds.get(1, i) - hashBounds.get(0, i)) / HASH_BINS
-            )
-            hashIntScale[i] = (hashScale.get(i) * SNAP_FRACTIONS).toInt()
+            hashBounds[0, i] = floor((hashBounds[0, i] - 1).toDouble()).toFloat()
+            hashBounds[1, i] = ceil((hashBounds[1, i] + 1).toDouble()).toFloat()
+            hashIntMins[i] = (hashBounds[0, i] * SNAP_FRACTIONS).toInt()
+            hashScale[i] = (hashBounds[1, i] - hashBounds[0, i]) / HASH_BINS
+            hashIntScale[i] = (hashScale[i] * SNAP_FRACTIONS).toInt()
             if (hashIntScale[i] < 1) {
                 hashIntScale[i] = 1
             }
@@ -254,7 +243,7 @@ object tritjunction {
         while (group != null) {
 
             // don't create tjunctions against discrete surfaces (blood decals, etc)
-            if (group.material != null && group.material.IsDiscrete()) {
+            if (group.material != null && group.material!!.IsDiscrete()) {
                 group = group.nextGroup
                 continue
             }
@@ -316,7 +305,7 @@ object tritjunction {
      on an edge of the given mapTri, otherwise returns NULL.
      ==================
      */
-    fun FixTriangleAgainstHashVert(a: mapTri_s?, hv: hashVert_s?): mapTri_s? {
+    fun FixTriangleAgainstHashVert(a: mapTri_s, hv: hashVert_s): mapTri_s? {
         var i: Int
         var v1: idDrawVert?
         var v2: idDrawVert?
@@ -413,12 +402,12 @@ object tritjunction {
      Potentially splits a triangle into a list of triangles based on tjunctions
      ==================
      */
-    fun FixTriangleAgainstHash(tri: mapTri_s?): mapTri_s? {
+    fun FixTriangleAgainstHash(tri: mapTri_s): mapTri_s? {
         var fixed: mapTri_s?
         var a: mapTri_s?
         var test: mapTri_s?
         var next: mapTri_s?
-        val blocks = Array<IntArray?>(2) { IntArray(3) }
+        val blocks = Array(2) { IntArray(3) }
         var i: Int
         var j: Int
         var k: Int
@@ -433,12 +422,12 @@ object tritjunction {
         fixed = tritools.CopyMapTri(tri)
         fixed.next = null
         HashBlocksForTri(tri, blocks)
-        i = blocks[0].get(0)
-        while (i <= blocks[1].get(0)) {
-            j = blocks[0].get(1)
-            while (j <= blocks[1].get(1)) {
-                k = blocks[0].get(2)
-                while (k <= blocks[1].get(2)) {
+        i = blocks[0][0]
+        while (i <= blocks[1][0]) {
+            j = blocks[0][1]
+            while (j <= blocks[1][1]) {
+                k = blocks[0][2]
+                while (k <= blocks[1][2]) {
                     hv = hashVerts[i][j][k]
                     while (hv != null) {
 
@@ -450,7 +439,7 @@ object tritjunction {
                             a = FixTriangleAgainstHashVert(test, hv)
                             if (a != null) {
                                 // cut into two triangles
-                                a.next.next = fixed
+                                a.next!!.next = fixed
                                 fixed = a
                                 tritools.FreeTri(test)
                             } else {
@@ -500,7 +489,7 @@ object tritjunction {
         if (dmap.dmapGlobals.noTJunc) {
             return
         }
-        if (TempDump.NOT(groupList)) {
+        if (null == groupList) {
             return
         }
         startCount = CountGroupListTris(groupList)
@@ -513,7 +502,7 @@ object tritjunction {
         while (group != null) {
 
             // don't touch discrete surfaces
-            if (group.material != null && group.material.IsDiscrete()) {
+            if (group.material != null && group.material!!.IsDiscrete()) {
                 group = group.nextGroup
                 continue
             }
@@ -539,7 +528,7 @@ object tritjunction {
      FixEntityTjunctions
      ==================
      */
-    fun FixEntityTjunctions(e: uEntity_t?) {
+    fun FixEntityTjunctions(e: uEntity_t) {
         var i: Int
         i = 0
         while (i < e.numAreas) {
@@ -554,7 +543,7 @@ object tritjunction {
      FixGlobalTjunctions
      ==================
      */
-    fun FixGlobalTjunctions(e: uEntity_t?) {
+    fun FixGlobalTjunctions(e: uEntity_t) {
         var a: mapTri_s?
         var vert: Int
         var i: Int
@@ -589,18 +578,11 @@ object tritjunction {
         // spread the bounds so it will never have a zero size
         i = 0
         while (i < 3) {
-            hashBounds.set(
-                0,
-                i,
-                Math.floor((hashBounds.get(0, i) - 1).toDouble()).toFloat()
-            )
-            hashBounds.set(1, i, Math.ceil((hashBounds.get(1, i) + 1).toDouble()).toFloat())
-            hashIntMins[i] = (hashBounds.get(0, i) * SNAP_FRACTIONS).toInt()
-            hashScale.set(
-                i,
-                (hashBounds.get(1, i) - hashBounds.get(0, i)) / HASH_BINS
-            )
-            hashIntScale[i] = (hashScale.get(i) * SNAP_FRACTIONS).toInt()
+            hashBounds[0, i] = floor((hashBounds[0, i] - 1).toDouble()).toFloat()
+            hashBounds[1, i] = ceil((hashBounds[1, i] + 1).toDouble()).toFloat()
+            hashIntMins[i] = (hashBounds[0, i] * SNAP_FRACTIONS).toInt()
+            hashScale[i] = (hashBounds[1, i] - hashBounds[0, i]) / HASH_BINS
+            hashIntScale[i] = (hashScale[i] * SNAP_FRACTIONS).toInt()
             if (hashIntScale[i] < 1) {
                 hashIntScale[i] = 1
             }
@@ -614,7 +596,7 @@ object tritjunction {
             while (group != null) {
 
                 // don't touch discrete surfaces
-                if (group.material != null && group.material.IsDiscrete()) {
+                if (group.material != null && group.material!!.IsDiscrete()) {
                     group = group.nextGroup
                     continue
                 }
@@ -638,7 +620,7 @@ object tritjunction {
             for (eNum in 1 until dmap.dmapGlobals.num_entities) {
                 val entity = dmap.dmapGlobals.uEntities[eNum]
                 val className = entity.mapEntity.epairs.GetString("classname")
-                if (idStr.Companion.Icmp(className, "func_static") != 0) {
+                if (idStr.Icmp(className, "func_static") != 0) {
                     continue
                 }
                 val modelName = entity.mapEntity.epairs.GetString("model")
@@ -648,10 +630,10 @@ object tritjunction {
                 if (!modelName.contains(".lwo") && !modelName.contains(".ase") && !modelName.contains(".ma")) {
                     continue
                 }
-                val model = ModelManager.renderModelManager.FindModel(modelName)
+                val model = ModelManager.renderModelManager.FindModel(modelName)!!
 
 //			common.Printf( "adding T junction verts for %s.\n", entity.mapEntity.epairs.GetString( "name" ) );
-                var axis: idMat3? = idMat3()
+                var axis = idMat3()
                 // get the rotation matrix in either full form, or single angle form
                 if (!entity.mapEntity.epairs.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", axis)) {
                     val angle = entity.mapEntity.epairs.GetFloat("angle")
@@ -665,17 +647,17 @@ object tritjunction {
                 i = 0
                 while (i < model.NumSurfaces()) {
                     val surface = model.Surface(i)
-                    val tri = surface.geometry
+                    val tri = surface.geometry!!
                     val mapTri = mapTri_s()
                     //				memset( &mapTri, 0, sizeof( mapTri ) );
                     mapTri.material = surface.shader
                     // don't let discretes (autosprites, etc) merge together
-                    if (mapTri.material.IsDiscrete()) {
+                    if (mapTri.material!!.IsDiscrete()) {
                         mapTri.mergeGroup = surface
                     }
                     var j = 0
                     while (j < tri.numVerts) {
-                        val v = idVec3(tri.verts[j].xyz.times(axis).oPlus(origin))
+                        val v = idVec3(tri.verts[j]!!.xyz.times(axis).plus(origin))
                         GetHashVert(v)
                         j += 3
                     }
@@ -691,7 +673,7 @@ object tritjunction {
             while (group != null) {
 
                 // don't touch discrete surfaces
-                if (group.material != null && group.material.IsDiscrete()) {
+                if (group.material != null && group.material!!.IsDiscrete()) {
                     group = group.nextGroup
                     continue
                 }

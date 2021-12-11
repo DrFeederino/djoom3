@@ -1,5 +1,6 @@
 package neo.Tools.Compilers.DMap
 
+import neo.Renderer.Material
 import neo.Renderer.Material.materialCoverage_t
 import neo.Renderer.ModelManager
 import neo.TempDump
@@ -13,17 +14,20 @@ import neo.Tools.Compilers.DMap.dmap.textureVectors_t
 import neo.Tools.Compilers.DMap.dmap.uArea_t
 import neo.Tools.Compilers.DMap.dmap.uBrush_t
 import neo.Tools.Compilers.DMap.dmap.uEntity_t
+import neo.Tools.Compilers.DMap.map.FindFloatPlane
 import neo.framework.Common
 import neo.idlib.Text.Str.idStr
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec5
 import neo.sys.win_shared
+import kotlin.math.abs
 
 /**
  *
@@ -31,7 +35,7 @@ import neo.sys.win_shared
 object usurface {
     //
     const val SNAP_FLOAT_TO_INT = 256
-    const val SNAP_INT_TO_FLOAT = 1.0 / usurface.SNAP_FLOAT_TO_INT
+    const val SNAP_INT_TO_FLOAT = 1.0 / SNAP_FLOAT_TO_INT
     const val TEXTURE_OFFSET_EQUAL_EPSILON = 0.005
     const val TEXTURE_VECTOR_EQUAL_EPSILON = 0.001
 
@@ -44,12 +48,12 @@ object usurface {
      The entire list is assumed to come from the same planar primitive
      ===============
      */
-    fun AddTriListToArea(e: uEntity_t?, triList: mapTri_s?, planeNum: Int, areaNum: Int, texVec: textureVectors_t?) {
+    fun AddTriListToArea(e: uEntity_t, triList: mapTri_s?, planeNum: Int, areaNum: Int, texVec: textureVectors_t) {
         val area: uArea_t?
         var group: optimizeGroup_s?
         var i: Int
         var j: Int
-        if (TempDump.NOT(triList)) {
+        if (triList == null) {
             return
         }
         area = e.areas[areaNum]
@@ -61,7 +65,7 @@ object usurface {
                 while (i < 2) {
                     j = 0
                     while (j < 3) {
-                        if (Math.abs(texVec.v[i].get(j) - group.texVec.v[i].get(j)) > usurface.TEXTURE_VECTOR_EQUAL_EPSILON) {
+                        if (abs(texVec.v[i][j] - group.texVec.v[i][j]) > TEXTURE_VECTOR_EQUAL_EPSILON) {
                             break
                         }
                         j++
@@ -69,7 +73,7 @@ object usurface {
                     if (j != 3) {
                         break
                     }
-                    if (Math.abs(texVec.v[i].get(3) - group.texVec.v[i].get(3)) > usurface.TEXTURE_OFFSET_EQUAL_EPSILON) {
+                    if (abs(texVec.v[i][3] - group.texVec.v[i][3]) > TEXTURE_OFFSET_EQUAL_EPSILON) {
                         break
                     }
                     i++
@@ -83,7 +87,7 @@ object usurface {
             }
             group = group.nextGroup
         }
-        if (TempDump.NOT(group)) {
+        if (null == group) {
             group = optimizeGroup_s() // Mem_Alloc(sizeof(group));
             //		memset( group, 0, sizeof( *group ) );
             group.planeNum = planeNum
@@ -101,42 +105,42 @@ object usurface {
      TexVecForTri
      ===================
      */
-    fun TexVecForTri(texVec: textureVectors_t?, tri: mapTri_s?) {
+    fun TexVecForTri(texVec: textureVectors_t, tri: mapTri_s) {
         val area: Float
         val inva: Float
         val temp = idVec3()
         val d0 = idVec5()
         val d1 = idVec5()
-        val a: idDrawVert?
-        val b: idDrawVert?
-        val c: idDrawVert?
+        val a: idDrawVert
+        val b: idDrawVert
+        val c: idDrawVert
         a = tri.v[0]
         b = tri.v[1]
         c = tri.v[2]
-        d0.set(0, b.xyz.get(0) - a.xyz.get(0))
-        d0.set(1, b.xyz.get(1) - a.xyz.get(1))
-        d0.set(2, b.xyz.get(2) - a.xyz.get(2))
-        d0.set(3, b.st.get(0) - a.st.get(0))
-        d0.set(4, b.st.get(1) - a.st.get(1))
-        d1.set(0, c.xyz.get(0) - a.xyz.get(0))
-        d1.set(1, c.xyz.get(1) - a.xyz.get(1))
-        d1.set(2, c.xyz.get(2) - a.xyz.get(2))
-        d1.set(3, c.st.get(0) - a.st.get(0))
-        d1.set(4, c.st.get(1) - a.st.get(1))
-        area = d0.get(3) * d1.get(4) - d0.get(4) * d1.get(3)
+        d0[0] = b.xyz[0] - a.xyz[0]
+        d0[1] = b.xyz[1] - a.xyz[1]
+        d0[2] = b.xyz[2] - a.xyz[2]
+        d0[3] = b.st[0] - a.st[0]
+        d0[4] = b.st[1] - a.st[1]
+        d1[0] = c.xyz[0] - a.xyz[0]
+        d1[1] = c.xyz[1] - a.xyz[1]
+        d1[2] = c.xyz[2] - a.xyz[2]
+        d1[3] = c.st[0] - a.st[0]
+        d1[4] = c.st[1] - a.st[1]
+        area = d0[3] * d1[4] - d0[4] * d1[3]
         inva = 1.0f / area
-        temp.set(0, (d0.get(0) * d1.get(4) - d0.get(4) * d1.get(0)) * inva)
-        temp.set(1, (d0.get(1) * d1.get(4) - d0.get(4) * d1.get(1)) * inva)
-        temp.set(2, (d0.get(2) * d1.get(4) - d0.get(4) * d1.get(2)) * inva)
+        temp[0] = (d0[0] * d1[4] - d0[4] * d1[0]) * inva
+        temp[1] = (d0[1] * d1[4] - d0[4] * d1[1]) * inva
+        temp[2] = (d0[2] * d1[4] - d0[4] * d1[2]) * inva
         temp.Normalize()
         texVec.v[0].set(temp)
-        texVec.v[0].set(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.get(0))
-        temp.set(0, (d0.get(3) * d1.get(0) - d0.get(0) * d1.get(3)) * inva)
-        temp.set(1, (d0.get(3) * d1.get(1) - d0.get(1) * d1.get(3)) * inva)
-        temp.set(2, (d0.get(3) * d1.get(2) - d0.get(2) * d1.get(3)) * inva)
+        texVec.v[0][3] = tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st[0]
+        temp[0] = (d0[3] * d1[0] - d0[0] * d1[3]) * inva
+        temp[1] = (d0[3] * d1[1] - d0[1] * d1[3]) * inva
+        temp[2] = (d0[3] * d1[2] - d0[2] * d1[3]) * inva
         temp.Normalize()
         texVec.v[1].set(temp)
-        texVec.v[1].set(3, tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st.get(1))
+        texVec.v[1][3] = tri.v[0].xyz.times(texVec.v[0].ToVec3()) - tri.v[0].st[1]
     }
 
     /*
@@ -145,18 +149,18 @@ object usurface {
      =================
      */
     //#define	SNAP_FLOAT_TO_INT	8
-    fun TriListForSide(s: side_s?, w: idWinding?): mapTri_s? {
+    fun TriListForSide(s: side_s, w: idWinding): mapTri_s? {
         var i: Int
         var j: Int
         var dv: idDrawVert
         var tri: mapTri_s?
         var triList: mapTri_s?
         val vec = idVec3()
-        val si: idMaterial?
+        val si: Material.idMaterial?
         si = s.material
 
         // skip any generated faces
-        if (TempDump.NOT(si)) {
+        if (null == si) {
             return null
         }
 
@@ -179,11 +183,11 @@ object usurface {
             j = 0
             while (j < 3) {
                 if (j == 0) {
-                    vec.set(w.get(0).ToVec3())
+                    vec.set(w[0].ToVec3())
                 } else if (j == 1) {
-                    vec.set(w.get(i - 1).ToVec3())
+                    vec.set(w[i - 1].ToVec3())
                 } else {
-                    vec.set(w.get(i).ToVec3())
+                    vec.set(w[i].ToVec3())
                 }
                 dv = tri.v[j]
                 //#if 0
@@ -196,11 +200,11 @@ object usurface {
                 //#endif
 
                 // calculate texture s/t from brush primitive texture matrix
-                dv.st.set(0, Vector.DotProduct(dv.xyz, s.texVec.v[0]) + s.texVec.v[0].get(3))
-                dv.st.set(1, Vector.DotProduct(dv.xyz, s.texVec.v[1]) + s.texVec.v[1].get(3))
+                dv.st[0] = Vector.DotProduct(dv.xyz, s.texVec.v[0]) + s.texVec.v[0][3]
+                dv.st[1] = Vector.DotProduct(dv.xyz, s.texVec.v[1]) + s.texVec.v[1][3]
 
                 // copy normal
-                dv.normal.set(dmap.dmapGlobals.mapPlanes.get(s.planenum).Normal())
+                dv.normal.set(dmap.dmapGlobals.mapPlanes[s.planenum].Normal())
                 if (dv.normal.Length() < 0.9 || dv.normal.Length() > 1.1) {
                     Common.common.Error("Bad normal in TriListForSide")
                 }
@@ -249,7 +253,7 @@ object usurface {
 
         // set merge groups if needed, to prevent multiple sides from being
         // merged into a single surface in the case of gui shaders, mirrors, and autosprites
-        if (s.material.IsDiscrete()) {
+        if (s.material!!.IsDiscrete()) {
             tri = triList
             while (tri != null) {
                 tri.mergeGroup = s
@@ -267,34 +271,34 @@ object usurface {
      Adds non-opaque leaf fragments to the convex hull
      ====================
      */
-    fun ClipSideByTree_r(w: idWinding?, side: side_s?, node: node_s?) {
+    fun ClipSideByTree_r(w: idWinding?, side: side_s, node: node_s) {
         val front = idWinding()
         val back = idWinding()
-        if (TempDump.NOT(w)) {
+        if (null == w) {
             return
         }
         if (node.planenum != dmap.PLANENUM_LEAF) {
             if (side.planenum == node.planenum) {
-                usurface.ClipSideByTree_r(w, side, node.children[0])
+                ClipSideByTree_r(w, side, node.children[0])
                 return
             }
             if (side.planenum == node.planenum xor 1) {
-                usurface.ClipSideByTree_r(w, side, node.children[1])
+                ClipSideByTree_r(w, side, node.children[1])
                 return
             }
-            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes[node.planenum], Plane.ON_EPSILON, front, back)
             //		delete w;
-            usurface.ClipSideByTree_r(front, side, node.children[0])
-            usurface.ClipSideByTree_r(back, side, node.children[1])
+            ClipSideByTree_r(front, side, node.children[0])
+            ClipSideByTree_r(back, side, node.children[1])
             return
         }
 
         // if opaque leaf, don't add
         if (!node.opaque) {
-            if (TempDump.NOT(side.visibleHull)) {
+            if (null == side.visibleHull) {
                 side.visibleHull = w.Copy()
             } else {
-                side.visibleHull.AddToConvexHull(w, dmap.dmapGlobals.mapPlanes.get(side.planenum).Normal())
+                side.visibleHull!!.AddToConvexHull(w, dmap.dmapGlobals.mapPlanes[side.planenum].Normal())
             }
         }
 
@@ -313,7 +317,7 @@ object usurface {
      to be trimmed off automatically.
      =====================
      */
-    fun ClipSidesByTree(e: uEntity_t?) {
+    fun ClipSidesByTree(e: uEntity_t) {
         var b: uBrush_t
         var i: Int
         var w: idWinding
@@ -331,18 +335,18 @@ object usurface {
             i = 0
             while (i < b.numsides) {
                 side = b.sides[i]
-                if (TempDump.NOT(side.winding)) {
+                if (null == side.winding) {
                     i++
                     continue
                 }
-                w = side.winding.Copy()
+                w = side.winding!!.Copy()
                 side.visibleHull = null
-                usurface.ClipSideByTree_r(w, side, e.tree.headnode)
+                ClipSideByTree_r(w, side, e.tree.headnode)
                 // for debugging, we can choose to use the entire original side
                 // but we skip this if the side was completely clipped away
                 if (side.visibleHull != null && dmap.dmapGlobals.noClipSides) {
                     //				delete side.visibleHull;
-                    side.visibleHull = side.winding.Copy()
+                    side.visibleHull = side.winding!!.Copy()
                 }
                 i++
             }
@@ -359,17 +363,17 @@ object usurface {
      The winding will be freed before it returns
      ====================
      */
-    fun ClipTriIntoTree_r(w: idWinding?, originalTri: mapTri_s?, e: uEntity_t?, node: node_s?) {
+    fun ClipTriIntoTree_r(w: idWinding?, originalTri: mapTri_s, e: uEntity_t, node: node_s) {
         val front = idWinding()
         val back = idWinding()
-        if (TempDump.NOT(w)) {
+        if (null == w) {
             return
         }
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
+            w.Split(dmap.dmapGlobals.mapPlanes[node.planenum], Plane.ON_EPSILON, front, back)
             //		delete w;
-            usurface.ClipTriIntoTree_r(front, originalTri, e, node.children[0])
-            usurface.ClipTriIntoTree_r(back, originalTri, e, node.children[1])
+            ClipTriIntoTree_r(front, originalTri, e, node.children[0])
+            ClipTriIntoTree_r(back, originalTri, e, node.children[1])
             return
         }
 
@@ -382,8 +386,8 @@ object usurface {
             list = tritools.WindingToTriList(w, originalTri)
             tritools.PlaneForTri(originalTri, plane)
             planeNum = FindFloatPlane(plane)
-            usurface.TexVecForTri(texVec, originalTri)
-            usurface.AddTriListToArea(e, list, planeNum, node.area, texVec)
+            TexVecForTri(texVec, originalTri)
+            AddTriListToArea(e, list, planeNum, node.area, texVec)
         }
 
         //	delete w;
@@ -400,10 +404,10 @@ object usurface {
 
      ====================
      */
-    fun CheckWindingInAreas_r(w: idWinding?, node: node_s?): Int {
+    fun CheckWindingInAreas_r(w: idWinding?, node: node_s): Int {
         val front = idWinding()
         val back = idWinding()
-        if (TempDump.NOT(w)) {
+        if (null == w) {
             return -1
         }
         if (node.planenum != dmap.PLANENUM_LEAF) {
@@ -417,10 +421,10 @@ object usurface {
             //			return CheckWindingInAreas_r( w, node.children[1] );
             //		}
             //#endif
-            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
-            a1 = usurface.CheckWindingInAreas_r(front, node.children[0])
+            w.Split(dmap.dmapGlobals.mapPlanes[node.planenum], Plane.ON_EPSILON, front, back)
+            a1 = CheckWindingInAreas_r(front, node.children[0])
             //		delete front;
-            a2 = usurface.CheckWindingInAreas_r(back, node.children[1])
+            a2 = CheckWindingInAreas_r(back, node.children[1])
             //		delete back;
             if (a1 == -2 || a2 == -2) {
                 return -2 // different
@@ -446,20 +450,20 @@ object usurface {
      the fragments to triangles and adds them to the area lists
      ====================
      */
-    fun PutWindingIntoAreas_r(e: uEntity_t?, w: idWinding?, side: side_s?, node: node_s?) {
+    fun PutWindingIntoAreas_r(e: uEntity_t, w: idWinding?, side: side_s, node: node_s) {
         val front = idWinding()
         val back = idWinding()
         val area: Int
-        if (TempDump.NOT(w)) {
+        if (null == w) {
             return
         }
         if (node.planenum != dmap.PLANENUM_LEAF) {
             if (side.planenum == node.planenum) {
-                usurface.PutWindingIntoAreas_r(e, w, side, node.children[0])
+                PutWindingIntoAreas_r(e, w, side, node.children[0])
                 return
             }
             if (side.planenum == node.planenum xor 1) {
-                usurface.PutWindingIntoAreas_r(e, w, side, node.children[1])
+                PutWindingIntoAreas_r(e, w, side, node.children[1])
                 return
             }
 
@@ -467,23 +471,23 @@ object usurface {
             // adding the "noFragment" flag to big surfaces like sky boxes
             // will avoid potentially dicing them up into tons of triangles
             // that take forever to optimize back together
-            if (!dmap.dmapGlobals.fullCarve || side.material.NoFragment()) {
-                area = usurface.CheckWindingInAreas_r(w, node)
+            if (!dmap.dmapGlobals.fullCarve || side.material!!.NoFragment()) {
+                area = CheckWindingInAreas_r(w, node)
                 if (area >= 0) {
                     val tri: mapTri_s?
 
                     // put in single area
-                    tri = usurface.TriListForSide(side, w)
-                    usurface.AddTriListToArea(e, tri, side.planenum, area, side.texVec)
+                    tri = TriListForSide(side, w)
+                    AddTriListToArea(e, tri, side.planenum, area, side.texVec)
                     return
                 }
             }
-            w.Split(dmap.dmapGlobals.mapPlanes.get(node.planenum), Plane.ON_EPSILON, front, back)
-            usurface.PutWindingIntoAreas_r(e, front, side, node.children[0])
+            w.Split(dmap.dmapGlobals.mapPlanes[node.planenum], Plane.ON_EPSILON, front, back)
+            PutWindingIntoAreas_r(e, front, side, node.children[0])
             //		if ( front ) {
             //			delete front;
             //		}
-            usurface.PutWindingIntoAreas_r(e, back, side, node.children[1])
+            PutWindingIntoAreas_r(e, back, side, node.children[1])
             //		if ( back ) {
             //			delete back;
             //		}
@@ -493,8 +497,8 @@ object usurface {
         // if opaque leaf, don't add
         if (node.area >= 0 && !node.opaque) {
             val tri: mapTri_s?
-            tri = usurface.TriListForSide(side, w)
-            usurface.AddTriListToArea(e, tri, side.planenum, node.area, side.texVec)
+            tri = TriListForSide(side, w)
+            AddTriListToArea(e, tri, side.planenum, node.area, side.texVec)
         }
     }
 
@@ -505,7 +509,7 @@ object usurface {
      Used for curves and inlined models
      ==================
      */
-    fun AddMapTriToAreas(tri: mapTri_s?, e: uEntity_t?) {
+    fun AddMapTriToAreas(tri: mapTri_s, e: uEntity_t) {
         val area: Int
         var w: idWinding?
 
@@ -516,11 +520,11 @@ object usurface {
         if (dmap.dmapGlobals.fullCarve) {
             // always fragment into areas
             w = tritools.WindingForTri(tri)
-            usurface.ClipTriIntoTree_r(w, tri, e, e.tree.headnode)
+            ClipTriIntoTree_r(w, tri, e, e.tree.headnode)
             return
         }
         w = tritools.WindingForTri(tri)
-        area = usurface.CheckWindingInAreas_r(w, e.tree.headnode)
+        area = CheckWindingInAreas_r(w, e.tree.headnode)
         //	delete w;
         if (area == -1) {
             return
@@ -536,12 +540,12 @@ object usurface {
             newTri.next = null
             tritools.PlaneForTri(tri, plane)
             planeNum = FindFloatPlane(plane)
-            usurface.TexVecForTri(texVec, newTri)
-            usurface.AddTriListToArea(e, newTri, planeNum, area, texVec)
+            TexVecForTri(texVec, newTri)
+            AddTriListToArea(e, newTri, planeNum, area, texVec)
         } else {
             // fragment into areas
             w = tritools.WindingForTri(tri)
-            usurface.ClipTriIntoTree_r(w, tri, e, e.tree.headnode)
+            ClipTriIntoTree_r(w, tri, e, e.tree.headnode)
         }
     }
 
@@ -551,7 +555,7 @@ object usurface {
 
      =====================
      */
-    fun PutPrimitivesInAreas(e: uEntity_t?) {
+    fun PutPrimitivesInAreas(e: uEntity_t) {
         var b: uBrush_t
         var i: Int
         var side: side_s?
@@ -560,7 +564,7 @@ object usurface {
         Common.common.Printf("----- PutPrimitivesInAreas -----\n")
 
         // allocate space for surface chains for each area
-        e.areas = arrayOfNulls(e.numAreas) // Mem_Alloc(e.numAreas);
+        e.areas = Array(e.numAreas) { uArea_t() } // Mem_Alloc(e.numAreas);
         //	memset( e.areas, 0, e.numAreas * sizeof( e.areas[0] ) );
 
         // for each primitive, clip it to the non-solid leafs
@@ -572,7 +576,7 @@ object usurface {
                 // add curve triangles
                 tri = prim.tris
                 while (tri != null) {
-                    usurface.AddMapTriToAreas(tri, e)
+                    AddMapTriToAreas(tri, e)
                     tri = tri.next
                 }
                 prim = prim.next
@@ -587,7 +591,7 @@ object usurface {
                     i++
                     continue
                 }
-                usurface.PutWindingIntoAreas_r(e, side.visibleHull, side, e.tree.headnode)
+                PutWindingIntoAreas_r(e, side.visibleHull, side, e.tree.headnode)
                 i++
             }
             prim = prim.next
@@ -599,7 +603,7 @@ object usurface {
             for (eNum in 1 until dmap.dmapGlobals.num_entities) {
                 val entity = dmap.dmapGlobals.uEntities[eNum]
                 val className = entity.mapEntity.epairs.GetString("classname")
-                if (idStr.Companion.Icmp(className, "func_static") != 0) {
+                if (idStr.Icmp(className, "func_static") != 0) {
                     continue
                 }
                 if (!entity.mapEntity.epairs.GetBool("inline") && !inlineAll) {
@@ -609,9 +613,9 @@ object usurface {
                 if (TempDump.isNotNullOrEmpty(modelName)) {
                     continue
                 }
-                val model = ModelManager.renderModelManager.FindModel(modelName)
+                val model = ModelManager.renderModelManager.FindModel(modelName)!!
                 Common.common.Printf("inlining %s.\n", entity.mapEntity.epairs.GetString("name"))
-                var axis: idMat3? = idMat3()
+                var axis = idMat3()
                 // get the rotation matrix in either full form, or single angle form
                 if (!entity.mapEntity.epairs.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", axis)) {
                     val angle = entity.mapEntity.epairs.GetFloat("angle")
@@ -630,18 +634,18 @@ object usurface {
                     //				memset( &mapTri, 0, sizeof( mapTri ) );
                     mapTri.material = surface.shader
                     // don't let discretes (autosprites, etc) merge together
-                    if (mapTri.material.IsDiscrete()) {
+                    if (mapTri.material!!.IsDiscrete()) {
                         mapTri.mergeGroup = surface
                     }
                     var j = 0
-                    while (j < tri2.numIndexes) {
+                    while (j < tri2!!.numIndexes) {
                         for (k in 0..2) {
                             val v = idVec3(tri2.verts[tri2.indexes[j + k]].xyz)
-                            mapTri.v[k].xyz.set(v.times(axis).oPlus(origin))
+                            mapTri.v[k].xyz.set(v.times(axis).plus(origin))
                             mapTri.v[k].normal.set(tri2.verts[tri2.indexes[j + k]].normal.times(axis))
-                            mapTri.v[k].st = tri2.verts[tri2.indexes[j + k]].st
+                            mapTri.v[k].st.set(tri2.verts[tri2.indexes[j + k]].st)
                         }
-                        usurface.AddMapTriToAreas(mapTri, e)
+                        AddMapTriToAreas(mapTri, e)
                         j += 3
                     }
                     i++
@@ -666,9 +670,9 @@ object usurface {
      will benefit from re-optimization.
      =================
      */
-    fun ClipTriByLight(light: mapLight_t?, tri: mapTri_s?, `in`: mapTri_s?, out: mapTri_s?) {
+    fun ClipTriByLight(light: mapLight_t, tri: mapTri_s, `in`: mapTri_s, out: mapTri_s) {
         var inside: idWinding?
-        var oldInside: idWinding?
+        var oldInside: idWinding? = null
         val outside = arrayOfNulls<idWinding?>(6)
         var hasOutside: Boolean
         var i: Int
@@ -680,10 +684,12 @@ object usurface {
         hasOutside = false
         i = 0
         while (i < 6) {
-            oldInside = inside
-            oldInside?.Split(light.def.frustum[i], 0f, outside[i], inside)
-            //			delete oldInside;
-                ?: (outside[i] = null)
+            if (oldInside != null) {
+                oldInside.Split(light.def.frustum[i], 0f, outside[i]!!, inside)
+                oldInside = null
+            } else {
+                outside[i] = null
+            }
             if (outside[i] != null) {
                 hasOutside = true
             }
@@ -738,7 +744,7 @@ object usurface {
      BoundOptimizeGroup
      =================
      */
-    fun BoundOptimizeGroup(group: optimizeGroup_s?) {
+    fun BoundOptimizeGroup(group: optimizeGroup_s) {
         group.bounds.Clear()
         var tri = group.triList
         while (tri != null) {
@@ -756,7 +762,7 @@ object usurface {
      Build the beam tree and shadow volume surface for a light
      ====================
      */
-    fun BuildLightShadows(e: uEntity_t?, light: mapLight_t?) {
+    fun BuildLightShadows(e: uEntity_t, light: mapLight_t) {
         var i: Int
         var group: optimizeGroup_s?
         var tri: mapTri_s?
@@ -785,21 +791,21 @@ object usurface {
                 while (group != null) {
 
                     // if the surface doesn't cast shadows, skip it
-                    if (!group.material.SurfaceCastsShadow()) {
+                    if (!group.material!!.SurfaceCastsShadow()) {
                         group = group.nextGroup
                         continue
                     }
 
                     // if the group doesn't face away from the light, it
                     // won't contribute to the shadow volume
-                    if (dmap.dmapGlobals.mapPlanes.get(group.planeNum).Distance(lightOrigin) > 0) {
+                    if (dmap.dmapGlobals.mapPlanes[group.planeNum].Distance(lightOrigin) > 0) {
                         group = group.nextGroup
                         continue
                     }
 
                     // if the group bounds doesn't intersect the light bounds,
                     // skip it
-                    if (!group.bounds.IntersectsBounds(light.def.frustumTris.bounds)) {
+                    if (!group.bounds.IntersectsBounds(light.def.frustumTris!!.bounds)) {
                         group = group.nextGroup
                         continue
                     }
@@ -813,7 +819,7 @@ object usurface {
                         val out = mapTri_s()
 
                         // clip it to the light frustum
-                        usurface.ClipTriByLight(light, tri, `in`, out)
+                        ClipTriByLight(light, tri, `in`, out)
                         tritools.FreeTriList(out)
                         shadowers = tritools.MergeTriLists(shadowers, `in`)
                         tri = tri.next
@@ -848,10 +854,10 @@ object usurface {
                     // if any surface is a shadow-casting perforated or translucent surface, we
                     // can't use the face removal optimizations because we can see through
                     // some of the faces
-                    if (group.material.Coverage() != materialCoverage_t.MC_OPAQUE) {
+                    if (group.material!!.Coverage() != materialCoverage_t.MC_OPAQUE) {
                         hasPerforatedSurface = true
                     }
-                    check.triList = tritools.MergeTriLists(check.triList, shadowers)
+                    check!!.triList = tritools.MergeTriLists(check.triList, shadowers)
                     group = group.nextGroup
                 }
                 i++
@@ -862,8 +868,8 @@ object usurface {
         light.shadowTris = shadowopt3.CreateLightShadow(shadowerGroups, light)
         if (light.shadowTris != null && hasPerforatedSurface) {
             // can't ever remove front faces, because we can see through some of them
-            light.shadowTris.numShadowIndexesNoFrontCaps = light.shadowTris.numIndexes
-            light.shadowTris.numShadowIndexesNoCaps = light.shadowTris.numShadowIndexesNoFrontCaps
+            light.shadowTris!!.numShadowIndexesNoFrontCaps = light.shadowTris!!.numIndexes
+            light.shadowTris!!.numShadowIndexesNoCaps = light.shadowTris!!.numShadowIndexesNoFrontCaps
         }
 
         // we don't need the original shadower triangles for anything else
@@ -878,7 +884,7 @@ object usurface {
      on which fragments are illuminated by the light's beam tree
      ====================
      */
-    fun CarveGroupsByLight(e: uEntity_t?, light: mapLight_t?) {
+    fun CarveGroupsByLight(e: uEntity_t, light: mapLight_t) {
         var i: Int
         var group: optimizeGroup_s?
         var newGroup: optimizeGroup_s?
@@ -898,9 +904,9 @@ object usurface {
             while (group != null) {
                 nextGroup = group.nextGroup
                 // if the surface doesn't get lit, don't carve it up
-                if (light.def.lightShader.IsFogLight() && !group.material.ReceivesFog()
-                    || !light.def.lightShader.IsFogLight() && !group.material.ReceivesLighting()
-                    || !group.bounds.IntersectsBounds(light.def.frustumTris.bounds)
+                if (light.def.lightShader.IsFogLight() && !group.material!!.ReceivesFog()
+                    || !light.def.lightShader.IsFogLight() && !group.material!!.ReceivesLighting()
+                    || !group.bounds.IntersectsBounds(light.def.frustumTris!!.bounds)
                 ) {
                     group.nextGroup = carvedGroups
                     carvedGroups = group
@@ -910,15 +916,15 @@ object usurface {
                 if (group.numGroupLights == dmap.MAX_GROUP_LIGHTS) {
                     Common.common.Error(
                         "MAX_GROUP_LIGHTS around %f %f %f",
-                        group.triList.v[0].xyz.get(0), group.triList.v[0].xyz.get(1), group.triList.v[0].xyz.get(2)
+                        group.triList!!.v[0].xyz[0], group.triList!!.v[0].xyz[1], group.triList!!.v[0].xyz[2]
                     )
                 }
 
                 // if the group doesn't face the light,
                 // it won't get carved at all
                 if (!light.def.lightShader.LightEffectsBackSides()
-                    && !group.material.ReceivesLightingOnBackSides()
-                    && dmap.dmapGlobals.mapPlanes.get(group.planeNum).Distance(light.def.parms.origin) <= 0
+                    && !group.material!!.ReceivesLightingOnBackSides()
+                    && dmap.dmapGlobals.mapPlanes[group.planeNum].Distance(light.def.parms.origin) <= 0
                 ) {
                     group.nextGroup = carvedGroups
                     carvedGroups = group
@@ -933,7 +939,7 @@ object usurface {
                 while (tri != null) {
                     val `in` = mapTri_s()
                     val out = mapTri_s()
-                    usurface.ClipTriByLight(light, tri, `in`, out)
+                    ClipTriByLight(light, tri, `in`, out)
                     inside = tritools.MergeTriLists(inside, `in`)
                     outside = tritools.MergeTriLists(outside, out)
                     tri = tri.next
@@ -975,7 +981,7 @@ object usurface {
      optimization won't cross light bounds
      =====================
      */
-    fun Prelight(e: uEntity_t?) {
+    fun Prelight(e: uEntity_t) {
         var i: Int
         var start: Int
         var end: Int
@@ -995,15 +1001,15 @@ object usurface {
                 val area = e.areas[i]
                 var group = area.groups
                 while (group != null) {
-                    usurface.BoundOptimizeGroup(group)
+                    BoundOptimizeGroup(group)
                     group = group.nextGroup
                 }
                 i++
             }
             i = 0
             while (i < dmap.dmapGlobals.mapLights.Num()) {
-                light = dmap.dmapGlobals.mapLights.get(i)
-                usurface.BuildLightShadows(e, light)
+                light = dmap.dmapGlobals.mapLights[i]
+                BuildLightShadows(e, light)
                 i++
             }
             end = win_shared.Sys_Milliseconds()
@@ -1016,8 +1022,8 @@ object usurface {
             // each light that illuminates them
             i = 0
             while (i < dmap.dmapGlobals.mapLights.Num()) {
-                light = dmap.dmapGlobals.mapLights.get(i)
-                usurface.CarveGroupsByLight(e, light)
+                light = dmap.dmapGlobals.mapLights[i]
+                CarveGroupsByLight(e, light)
                 i++
             }
             end = win_shared.Sys_Milliseconds()

@@ -127,7 +127,7 @@ object dmap {
         oldVerbose = dmapGlobals.verbose
         dmapGlobals.entityNum = 0
         while (dmapGlobals.entityNum < dmapGlobals.num_entities) {
-            entity = dmapGlobals.uEntities!![dmapGlobals.entityNum]
+            entity = dmapGlobals.uEntities[dmapGlobals.entityNum]
             if (TempDump.NOT(entity.primitives)) {
                 dmapGlobals.entityNum++
                 continue
@@ -178,7 +178,7 @@ object dmap {
         dmapGlobals.dmapFile = null
         dmapGlobals.mapPlanes.Clear()
         dmapGlobals.num_entities = 0
-        dmapGlobals.uEntities = null
+        dmapGlobals.uEntities = emptyArray()
         dmapGlobals.entityNum = 0
         dmapGlobals.mapLights.Clear()
         dmapGlobals.verbose = false
@@ -321,7 +321,7 @@ object dmap {
         passedName = stripped
 
         // delete any old line leak files
-        path = kotlin.String.format("%s.lin", dmapGlobals.mapFileBase)
+        path = String.format("%s.lin", dmapGlobals.mapFileBase)
         FileSystem_h.fileSystem.RemoveFile(path)
 
         //
@@ -406,9 +406,9 @@ object dmap {
     }
 
     class uEntity_t {
-        var areas: Array<uArea_t?>? = null
+        var areas: Array<uArea_t> = emptyArray()
         var mapEntity // points into mapFile_t data
-                : idMapEntity? = null
+                : idMapEntity = idMapEntity()
 
         //
         var numAreas = 0
@@ -433,7 +433,7 @@ object dmap {
                 = 0
 
         //
-        var v: Array<idDrawVert?>? = arrayOfNulls<idDrawVert?>(3)
+        var v: Array<idDrawVert> = Array(3) { idDrawVert() }
         fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
@@ -478,7 +478,7 @@ object dmap {
         //
         var material: Material.idMaterial? = null
         var planenum = 0
-        var texVec: textureVectors_t? = null
+        var texVec: textureVectors_t = textureVectors_t()
         var visibleHull // also clipped to the solid parts of the world
                 : idWinding? = null
 
@@ -568,7 +568,7 @@ object dmap {
         //
         var brushlist // fragments of all brushes in this leaf
                 : uBrush_t? = null
-        var children: Array<node_s?> = arrayOfNulls<node_s?>(2)
+        var children: Array<node_s> = Array(2) { node_s() }
         var nodeNumber // set after pruning
                 = 0
         var occupant // for leak file testing
@@ -622,7 +622,7 @@ object dmap {
     }
 
     class mapLight_t {
-        var def: idRenderLightLocal? = null
+        var def: idRenderLightLocal = idRenderLightLocal()
         var name: CharArray = CharArray(MAX_QPATH) // for naming the shadow volume surface and interactions
         var shadowTris: srfTriangles_s? = null
     }
@@ -635,8 +635,8 @@ object dmap {
         //
         val bounds // set in CarveGroupsByLight
                 : idBounds = idBounds()
-        var groupLights: Array<mapLight_t?>? =
-            arrayOfNulls<mapLight_t?>(MAX_GROUP_LIGHTS) // lights effecting this list
+        var groupLights: Array<mapLight_t> =
+            Array(MAX_GROUP_LIGHTS) { mapLight_t() } // lights effecting this list
         var material: Material.idMaterial? = null
         var mergeGroup // if this differs (guiSurfs, mirrors, etc), the
                 : Any? = null
@@ -656,7 +656,7 @@ object dmap {
 
         // groups will not be combined into model surfaces
         // after optimization
-        var texVec: textureVectors_t? = null
+        var texVec: textureVectors_t = textureVectors_t()
 
         //
         var triList: mapTri_s? = null
@@ -695,12 +695,12 @@ object dmap {
 
         //
         var num_entities = 0
-        var shadowOptLevel: shadowOptLevel_t? = null
+        var shadowOptLevel: shadowOptLevel_t = shadowOptLevel_t.SO_NONE
 
         //
         var totalShadowTriangles = 0
         var totalShadowVerts = 0
-        var uEntities: Array<uEntity_t>? = null
+        var uEntities: Array<uEntity_t> = emptyArray()
 
         //
         var verbose = false

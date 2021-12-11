@@ -53,7 +53,7 @@ object Model {
         DM_CONTINUOUS // must be recreated for every single view (time dependent things like particles)
     }
 
-    internal class silEdge_t {
+    class silEdge_t {
         // NOTE: making this a glIndex is dubious, as there can be 2x the faces as verts
         var   /*glIndex_t*/p1 = 0
         var p2 // planes defining the edge
@@ -112,7 +112,7 @@ object Model {
     }
 
     class shadowCache_s {
-        var xyz: idVec4? = idVec4() // we use homogenous coordinate tricks
+        var xyz: idVec4 = idVec4() // we use homogenous coordinate tricks
 
         constructor()
         internal constructor(Position: ByteBuffer?) {
@@ -140,11 +140,11 @@ object Model {
     // our only drawing geometry type
     class srfTriangles_s {
         val DBG_count = DBG_counter++
-        var bounds: idBounds? = idBounds() // for culling
+        val bounds: idBounds = idBounds() // for culling
         var facePlanes // [numIndexes/3] plane equations
-                : Array<idPlane?>?
+                : Array<idPlane>
         var indexes // indexes, allocated with special allocator
-                : IntArray?
+                : IntArray
         var numIndexes // for shadows, this has both front and rear end caps and silhouette planes
                 = 0
         var numShadowIndexesNoCaps // shadow volumes with the front and rear caps omitted
@@ -158,13 +158,13 @@ object Model {
         var shadowCapPlaneBits // bits 0-5 are set when that plane of the interacting light has triangles
                 = 0
         var shadowVertexes // these will be copied to shadowCache when it is going to be drawn.
-                : Array<shadowCache_s?>?
+                : Array<shadowCache_s>
         var silIndexes // indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
-                : IntArray?
+                : IntArray
         var tangentsCalculated // set when the vertex tangents have been calculated
                 = false
         var verts // vertices, allocated with special allocator
-                : Array<idDrawVert?>?
+                : Array<idDrawVert>
         var ambientCache // idDrawVert
                 : vertCache_s? = null
         var ambientSurface // for light interactions, point back at the original surface that generated
@@ -352,7 +352,7 @@ object Model {
         abstract fun NumBaseSurfaces(): Int
 
         // get a pointer to a surface
-        abstract fun Surface(surfaceNum: Int): modelSurface_s?
+        abstract fun Surface(surfaceNum: Int): modelSurface_s
 
         // Allocates surface triangles.
         // Allocates memory for srfTriangles_t::verts and srfTriangles_t::indexes

@@ -53,7 +53,7 @@ object ModelDecal {
         val textureAxis: Array<idPlane?>? = idPlane.Companion.generateArray(2)
     }
 
-    internal class idRenderModelDecal {
+    class idRenderModelDecal {
         private val indexStartTime: IntArray? = IntArray(MAX_DECAL_INDEXES)
         private val   /*glIndex_t*/indexes: IntArray? = IntArray(MAX_DECAL_INDEXES)
 

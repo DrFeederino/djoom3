@@ -1934,7 +1934,7 @@ object optimize {
         var v: idDrawVert? = null
     }
 
-    internal class optEdge_s {
+    class optEdge_s {
         var addedToIsland = false
         var combined // combined from two or more colinear edges
                 = false
@@ -1949,11 +1949,11 @@ object optimize {
         var v2link: optEdge_s? = null
     }
 
-    internal class optTri_s {
+    class optTri_s {
         var filled = false
-        val midpoint: idVec3? = idVec3()
+        val midpoint: idVec3 = idVec3()
         var next: optTri_s? = null
-        var v: Array<optVertex_s?>? = arrayOfNulls<optVertex_s?>(3)
+        var v: Array<optVertex_s?> = arrayOfNulls<optVertex_s?>(3)
     }
 
     internal class optIsland_t {

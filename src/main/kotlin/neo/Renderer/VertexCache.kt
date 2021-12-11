@@ -22,7 +22,7 @@ import java.nio.ByteBuffer
  *
  */
 object VertexCache {
-    val vertexCache: idVertexCache? = idVertexCache()
+    val vertexCache: idVertexCache = idVertexCache()
     const val EXPAND_HEADERS = 1024
 
     //
@@ -36,7 +36,7 @@ object VertexCache {
         TAG_TEMP // in frame temp area, not static area
     }
 
-    internal class vertCache_s : Iterable<vertCache_s?> {
+    class vertCache_s : Iterable<vertCache_s?> {
         //TODO:use iterators for all our makeshift linked lists.
         private val frameUsed // it can't be purged if near the current frame
                 = 0
