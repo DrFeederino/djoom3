@@ -89,7 +89,7 @@ object leakfile {
                     count++
                 }
                 // add the occupant center
-                node.occupant!!.mapEntity!!.epairs.GetVector("origin", "", mid)
+                node.occupant!!.mapEntity.epairs.GetVector("origin", "", mid)
                 fprintf = String.format("%f %f %f\n", mid[0], mid[1], mid[2]).toByteArray()
                 linefile.write(ByteBuffer.wrap(fprintf))
                 Common.common.Printf("%5d point linefile\n", count + 1)

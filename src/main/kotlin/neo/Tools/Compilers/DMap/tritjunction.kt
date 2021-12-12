@@ -468,7 +468,7 @@ object tritjunction {
         var c: Int
         c = 0
         while (groupList != null) {
-            c += tritools.CountTriList(groupList.triList)
+            c += tritools.CountTriList(groupList.triList!!)
             groupList.oSet(groupList.nextGroup)
         }
         return c

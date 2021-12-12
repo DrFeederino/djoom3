@@ -59,7 +59,7 @@ object ModelManager {
         abstract fun EndLevelLoad()
 
         // allocates a new empty render model.
-        abstract fun AllocModel(): idRenderModel?
+        abstract fun AllocModel(): idRenderModel
 
         // frees a render model
         abstract fun FreeModel(model: idRenderModel?)

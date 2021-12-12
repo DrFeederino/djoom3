@@ -275,7 +275,7 @@ object tr_stencilshadow {
 
      ====================
      */
-    fun R_LightProjectionMatrix(origin: idVec3?, rearPlane: idPlane?, mat: Array<idVec4?>? /*[4]*/) {
+    fun R_LightProjectionMatrix(origin: idVec3, rearPlane: idPlane, mat: Array<idVec4> /*[4]*/) {
         val lv = idVec4()
         val lg: Float
 

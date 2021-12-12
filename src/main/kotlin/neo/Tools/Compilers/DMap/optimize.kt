@@ -9,9 +9,9 @@ import neo.framework.Common
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.*
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Random.idRandom
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import org.lwjgl.opengl.GL11
 import java.util.*
@@ -35,16 +35,16 @@ object optimize {
     var numOptEdges = 0
     var numOptVerts = 0
     var numOriginalEdges = 0
-    var optBounds: idBounds? = null
-    var optEdges: Array<optEdge_s?>? = arrayOfNulls<optEdge_s?>(optimize.MAX_OPT_EDGES)
-    var optVerts: Array<optVertex_s?>? = arrayOfNulls<optVertex_s?>(optimize.MAX_OPT_VERTEXES)
+    val optBounds: idBounds = idBounds()
+    var optEdges: Array<optEdge_s> = Array(MAX_OPT_EDGES) { optEdge_s() }
+    var optVerts: Array<optVertex_s> = Array(MAX_OPT_VERTEXES) { optVertex_s() }
 
     //
     //static bool IsTriangleValid( const optVertex_s *v1, const optVertex_s *v2, const optVertex_s *v3 );
     //static bool IsTriangleDegenerate( const optVertex_s *v1, const optVertex_s *v2, const optVertex_s *v3 );
     //
-    var orandom: idRandom? = null
-    var originalEdges: Array<originalEdges_t?>?
+    var orandom: idRandom = idRandom()
+    var originalEdges: Array<originalEdges_t> = emptyArray()
 
     /*
 
@@ -60,7 +60,7 @@ object optimize {
      ValidateEdgeCounts
      ==============
      */
-    fun ValidateEdgeCounts(island: optIsland_t?) {
+    fun ValidateEdgeCounts(island: optIsland_t) {
         var vert: optVertex_s?
         var e: optEdge_s?
         var c: Int
@@ -91,14 +91,14 @@ object optimize {
      AllocEdge
      ====================
      */
-    fun AllocEdge(): optEdge_s? {
-        val e: optEdge_s?
-        if (optimize.numOptEdges == optimize.MAX_OPT_EDGES) {
+    fun AllocEdge(): optEdge_s {
+        val e: optEdge_s
+        if (numOptEdges == MAX_OPT_EDGES) {
             Common.common.Error("MAX_OPT_EDGES")
         }
-        optimize.optEdges[optimize.numOptEdges] = optEdge_s()
-        e = optimize.optEdges[optimize.numOptEdges]
-        optimize.numOptEdges++
+        optEdges[numOptEdges] = optEdge_s()
+        e = optEdges[numOptEdges]
+        numOptEdges++
         //	memset( e, 0, sizeof( *e ) );
         return e
     }
@@ -108,10 +108,10 @@ object optimize {
      RemoveEdgeFromVert
      ====================
      */
-    fun RemoveEdgeFromVert(e1: optEdge_s?, vert: optVertex_s?) {
+    fun RemoveEdgeFromVert(e1: optEdge_s, vert: optVertex_s?) {
         var prev: optEdge_s? //TODO:double check these references
         var e: optEdge_s?
-        if (TempDump.NOT(vert)) {
+        if (null == vert) {
             return
         }
         prev = vert.edges
@@ -143,10 +143,10 @@ object optimize {
      UnlinkEdge
      ====================
      */
-    fun UnlinkEdge(e: optEdge_s?, island: optIsland_t?) {
+    fun UnlinkEdge(e: optEdge_s, island: optIsland_t) {
         var prev: optEdge_s?
-        optimize.RemoveEdgeFromVert(e, e.v1)
-        optimize.RemoveEdgeFromVert(e, e.v2)
+        RemoveEdgeFromVert(e, e.v1)
+        RemoveEdgeFromVert(e, e.v2)
         prev = island.edges
         while (prev != null) {
             if (prev == e) {
@@ -164,11 +164,11 @@ object optimize {
      LinkEdge
      ====================
      */
-    fun LinkEdge(e: optEdge_s?) {
-        e.v1link = e.v1.edges
-        e.v1.edges = e
-        e.v2link = e.v2.edges
-        e.v2.edges = e
+    fun LinkEdge(e: optEdge_s) {
+        e.v1link = e.v1!!.edges
+        e.v1!!.edges = e
+        e.v2link = e.v2!!.edges
+        e.v2!!.edges = e
     }
 
     /*
@@ -176,7 +176,7 @@ object optimize {
      FindOptVertex
      ================
      */
-    fun FindOptVertex(v: idDrawVert?, opt: optimizeGroup_s?): optVertex_s? {
+    fun FindOptVertex(v: idDrawVert, opt: optimizeGroup_s): optVertex_s? {
         var i: Int
         val x: Float
         val y: Float
@@ -188,25 +188,25 @@ object optimize {
 
         // should we match based on the t-junction fixing hash verts?
         i = 0
-        while (i < optimize.numOptVerts) {
-            if (optimize.optVerts[i].pv.get(0) == x && optimize.optVerts[i].pv.get(1) == y) {
-                return optimize.optVerts[i]
+        while (i < numOptVerts) {
+            if (optVerts[i].pv[0] == x && optVerts[i].pv[1] == y) {
+                return optVerts[i]
             }
             i++
         }
-        if (optimize.numOptVerts >= optimize.MAX_OPT_VERTEXES) {
+        if (numOptVerts >= MAX_OPT_VERTEXES) {
             Common.common.Error("MAX_OPT_VERTEXES")
             return null
         }
-        optimize.numOptVerts++
-        optimize.optVerts[i] = optVertex_s()
-        vert = optimize.optVerts[i]
+        numOptVerts++
+        optVerts[i] = optVertex_s()
+        vert = optVerts[i]
         //	memset( vert, 0, sizeof( *vert ) );
         vert.v = v
-        vert.pv.set(0, x)
-        vert.pv.set(1, y)
-        vert.pv.set(2, 0f)
-        optimize.optBounds.AddPoint(vert.pv)
+        vert.pv[0] = x
+        vert.pv[1] = y
+        vert.pv[2] = 0f
+        optBounds.AddPoint(vert.pv)
         return vert
     }
 
@@ -223,15 +223,15 @@ object optimize {
         gldraw.Draw_ClearWindow()
         qgl.qglBegin(GL11.GL_LINES)
         i = 0
-        while (i < optimize.numOptEdges) {
-            if (optimize.optEdges[i].v1 == null) {
+        while (i < numOptEdges) {
+            if (optEdges[i].v1 == null) {
                 i++
                 continue
             }
             qgl.qglColor3f(1f, 0f, 0f)
-            qgl.qglVertex3fv(optimize.optEdges[i].v1.pv.ToFloatPtr())
+            qgl.qglVertex3fv(optEdges[i].v1!!.pv.ToFloatPtr())
             qgl.qglColor3f(0f, 0f, 0f)
-            qgl.qglVertex3fv(optimize.optEdges[i].v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(optEdges[i].v2!!.pv.ToFloatPtr())
             i++
         }
         qgl.qglEnd()
@@ -245,7 +245,7 @@ object optimize {
      DrawVerts
      ================
      */
-    fun DrawVerts(island: optIsland_t?) {
+    fun DrawVerts(island: optIsland_t) {
         var vert: optVertex_s?
         if (!dmap.dmapGlobals.drawflag) {
             return
@@ -270,7 +270,7 @@ object optimize {
      DrawEdges
      ================
      */
-    fun DrawEdges(island: optIsland_t?) {
+    fun DrawEdges(island: optIsland_t) {
         var edge: optEdge_s?
         if (!dmap.dmapGlobals.drawflag) {
             return
@@ -284,9 +284,9 @@ object optimize {
                 continue
             }
             qgl.qglColor3f(1f, 0f, 0f)
-            qgl.qglVertex3fv(edge.v1.pv.ToFloatPtr())
+            qgl.qglVertex3fv(edge.v1!!.pv.ToFloatPtr())
             qgl.qglColor3f(0f, 0f, 0f)
-            qgl.qglVertex3fv(edge.v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(edge.v2!!.pv.ToFloatPtr())
             edge = edge.islandLink
         }
         qgl.qglEnd()
@@ -300,7 +300,7 @@ object optimize {
      VertexBetween
      =================
      */
-    fun VertexBetween(p1: optVertex_s?, v1: optVertex_s?, v2: optVertex_s?): Boolean {
+    fun VertexBetween(p1: optVertex_s, v1: optVertex_s, v2: optVertex_s): Boolean {
         val d1 = idVec3()
         val d2 = idVec3()
         val d: Float
@@ -326,8 +326,8 @@ object optimize {
      ====================
      */
     fun EdgeIntersection(
-        p1: optVertex_s?, p2: optVertex_s?,
-        l1: optVertex_s?, l2: optVertex_s?, opt: optimizeGroup_s?
+        p1: optVertex_s, p2: optVertex_s,
+        l1: optVertex_s, l2: optVertex_s, opt: optimizeGroup_s
     ): optVertex_s? {
         val f: Float
         val v: idDrawVert
@@ -341,20 +341,20 @@ object optimize {
         dir1.set(p2.pv.minus(l1.pv))
         dir2.set(p2.pv.minus(l2.pv))
         cross2.set(dir1.Cross(dir2))
-        if (cross1.get(2) - cross2.get(2) == 0f) {
+        if (cross1[2] - cross2[2] == 0f) {
             return null
         }
-        f = cross1.get(2) / (cross1.get(2) - cross2.get(2))
+        f = cross1[2] / (cross1[2] - cross2[2])
 
         // FIXME: how are we freeing this, since it doesn't belong to a tri?
         v = idDrawVert() // Mem_Alloc(sizeof(v));
         //	memset( v, 0, sizeof( *v ) );
-        v.xyz.set(p1.v.xyz.times(1.0f - f).oPlus(p2.v.xyz.times(f)))
-        v.normal.set(p1.v.normal.times(1.0f - f).oPlus(p2.v.normal.times(f)))
+        v.xyz.set(p1.v.xyz.times(1.0f - f).plus(p2.v.xyz.times(f)))
+        v.normal.set(p1.v.normal.times(1.0f - f).plus(p2.v.normal.times(f)))
         v.normal.Normalize()
-        v.st.set(0, p1.v.st.get(0) * (1.0f - f) + p2.v.st.get(0) * f)
-        v.st.set(1, p1.v.st.get(1) * (1.0f - f) + p2.v.st.get(1) * f)
-        return optimize.FindOptVertex(v, opt)
+        v.st[0] = p1.v.st[0] * (1.0f - f) + p2.v.st[0] * f
+        v.st[1] = p1.v.st[1] * (1.0f - f) + p2.v.st[1] * f
+        return FindOptVertex(v, opt)
     }
 
     //#endif
@@ -365,11 +365,11 @@ object optimize {
      Colinear is considdered crossing.
      ====================
      */
-    fun PointsStraddleLine(p1: optVertex_s?, p2: optVertex_s?, l1: optVertex_s?, l2: optVertex_s?): Boolean {
+    fun PointsStraddleLine(p1: optVertex_s, p2: optVertex_s, l1: optVertex_s, l2: optVertex_s): Boolean {
         var t1: Boolean
         var t2: Boolean
-        t1 = optimize.IsTriangleDegenerate(l1, l2, p1)
-        t2 = optimize.IsTriangleDegenerate(l1, l2, p2)
+        t1 = IsTriangleDegenerate(l1, l2, p1)
+        t2 = IsTriangleDegenerate(l1, l2, p2)
         return if (t1 && t2) {
             // colinear case
             val s1: Float
@@ -378,22 +378,22 @@ object optimize {
             val s4: Float
             val positive: Boolean
             val negative: Boolean
-            s1 = p1.pv.minus(l1.pv).oMultiply(l2.pv.minus(l1.pv))
-            s2 = p2.pv.minus(l1.pv).oMultiply(l2.pv.minus(l1.pv))
-            s3 = p1.pv.minus(l2.pv).oMultiply(l2.pv.minus(l1.pv))
-            s4 = p2.pv.minus(l2.pv).oMultiply(l2.pv.minus(l1.pv))
+            s1 = p1.pv.minus(l1.pv).times(l2.pv.minus(l1.pv))
+            s2 = p2.pv.minus(l1.pv).times(l2.pv.minus(l1.pv))
+            s3 = p1.pv.minus(l2.pv).times(l2.pv.minus(l1.pv))
+            s4 = p2.pv.minus(l2.pv).times(l2.pv.minus(l1.pv))
             positive = s1 > 0 || s2 > 0 || s3 > 0 || s4 > 0
             negative = s1 < 0 || s2 < 0 || s3 < 0 || s4 < 0
             positive && negative
         } else if (p1 != l1 && p1 != l2 && p2 != l1 && p2 != l2) {
             // no shared verts
-            t1 = optimize.IsTriangleValid(l1, l2, p1)
-            t2 = optimize.IsTriangleValid(l1, l2, p2)
+            t1 = IsTriangleValid(l1, l2, p1)
+            t2 = IsTriangleValid(l1, l2, p2)
             if (t1 && t2) {
                 return false
             }
-            t1 = optimize.IsTriangleValid(l1, p1, l2)
-            t2 = optimize.IsTriangleValid(l1, p2, l2)
+            t1 = IsTriangleValid(l1, p1, l2)
+            t2 = IsTriangleValid(l1, p2, l2)
             !t1 || !t2
         } else {
             // a shared vert, not colinear, so not crossing
@@ -419,9 +419,9 @@ object optimize {
 
         // if both lines' verts are on opposite sides of the other
         // line, it is crossed
-        return if (!optimize.PointsStraddleLine(a1, a2, b1, b2)) {
+        return if (!PointsStraddleLine(a1!!, a2!!, b1!!, b2!!)) {
             false
-        } else optimize.PointsStraddleLine(b1, b2, a1, a2)
+        } else PointsStraddleLine(b1, b2, a1, a2)
     }
 
     /*
@@ -430,27 +430,27 @@ object optimize {
 
      ====================
      */
-    fun TryAddNewEdge(v1: optVertex_s?, v2: optVertex_s?, island: optIsland_t?): Boolean {
+    fun TryAddNewEdge(v1: optVertex_s, v2: optVertex_s, island: optIsland_t): Boolean {
         var e: optEdge_s?
 
         // if the new edge crosses any other edges, don't add it
         e = island.edges
         while (e != null) {
-            if (optimize.EdgesCross(e.v1, e.v2, v1, v2)) {
+            if (EdgesCross(e.v1, e.v2, v1, v2)) {
                 return false
             }
             e = e.islandLink
         }
         if (dmap.dmapGlobals.drawflag) {
             qgl.qglBegin(GL11.GL_LINES)
-            qgl.qglColor3f(0f, (128 + optimize.orandom.RandomInt(127.0)) / 255.0f, 0f)
+            qgl.qglColor3f(0f, (128 + orandom.RandomInt(127.0)) / 255.0f, 0f)
             qgl.qglVertex3fv(v1.pv.ToFloatPtr())
             qgl.qglVertex3fv(v2.pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglFlush()
         }
         // add it
-        e = optimize.AllocEdge()
+        e = AllocEdge()
         e.islandLink = island.edges
         island.edges = e
         e.v1 = v1
@@ -458,7 +458,7 @@ object optimize {
         e.created = true
 
         // link the edge to its verts
-        optimize.LinkEdge(e)
+        LinkEdge(e)
         return true
     }
 
@@ -470,15 +470,15 @@ object optimize {
      Add all possible edges between the verts
      ==================
      */
-    fun AddInteriorEdges(island: optIsland_t?) {
+    fun AddInteriorEdges(island: optIsland_t) {
         var c_addedEdges: Int
         var vert: optVertex_s?
         var vert2: optVertex_s?
         var c_verts: Int
-        var lengths: Array<edgeLength_t?>?
+        var lengths: Array<edgeLength_t>
         var numLengths: Int
         var i: Int
-        optimize.DrawVerts(island)
+        DrawVerts(island)
 
         // count the verts
         c_verts = 0
@@ -493,7 +493,7 @@ object optimize {
         }
 
         // allocate space for all the lengths
-        lengths = arrayOfNulls<edgeLength_t?>(c_verts * c_verts / 2) // Mem_Alloc(c_verts * c_verts / 2);
+        lengths = Array(c_verts * c_verts / 2) { edgeLength_t() } // Mem_Alloc(c_verts * c_verts / 2);
         numLengths = 0
         vert = island.verts
         while (vert != null) {
@@ -526,7 +526,7 @@ object optimize {
         c_addedEdges = 0
         i = 0
         while (i < numLengths) {
-            if (optimize.TryAddNewEdge(lengths[i].v1, lengths[i].v2, island)) {
+            if (TryAddNewEdge(lengths[i].v1!!, lengths[i].v2!!, island)) {
                 c_addedEdges++
             }
             i++
@@ -535,7 +535,6 @@ object optimize {
             Common.common.Printf("%6d tested segments\n", numLengths)
             Common.common.Printf("%6d added interior edges\n", c_addedEdges)
         }
-        lengths = null //Mem_Free(lengths);
     }
 
     /*
@@ -544,13 +543,13 @@ object optimize {
 
      ====================
      */
-    fun RemoveIfColinear(ov: optVertex_s?, island: optIsland_t?) {
+    fun RemoveIfColinear(ov: optVertex_s, island: optIsland_t) {
         var e: optEdge_s?
         var e1: optEdge_s?
         var e2: optEdge_s?
-        var v1: optVertex_s? = optVertex_s()
+        var v1 = optVertex_s()
         val v2: optVertex_s?
-        var v3: optVertex_s? = optVertex_s()
+        var v3 = optVertex_s()
         val dir1 = idVec3()
         val dir2 = idVec3()
         val len: Float
@@ -582,26 +581,26 @@ object optimize {
         }
 
         // can't remove if no edges
-        if (TempDump.NOT(e1)) {
+        if (null == e1) {
             return
         }
-        if (TempDump.NOT(e2)) {
+        if (null == e2) {
             // this may still happen legally when a tiny triangle is
             // the only thing in a group
             Common.common.Printf("WARNING: vertex with only one edge\n")
             return
         }
         if (e1.v1 == v2) {
-            v1 = e1.v2
+            v1 = e1.v2!!
         } else if (e1.v2 == v2) {
-            v1 = e1.v1
+            v1 = e1.v1!!
         } else {
             Common.common.Error("RemoveIfColinear: mislinked edge")
         }
         if (e2.v1 == v2) {
-            v3 = e2.v2
+            v3 = e2.v2!!
         } else if (e2.v2 == v2) {
-            v3 = e2.v1
+            v3 = e2.v1!!
         } else {
             Common.common.Error("RemoveIfColinear: mislinked edge")
         }
@@ -610,7 +609,7 @@ object optimize {
         }
 
         // they must point in opposite directions
-        dist = v3.pv.minus(v2.pv).oMultiply(v1.pv.minus(v2.pv))
+        dist = v3.pv.minus(v2.pv).times(v1.pv.minus(v2.pv))
         if (dist >= 0) {
             return
         }
@@ -623,7 +622,7 @@ object optimize {
         Vector.VectorMA(v1.v.xyz, dist, dir1, point)
         Vector.VectorSubtract(point, v2.v.xyz, offset)
         off = offset.Length()
-        if (off > optimize.COLINEAR_EPSILON) {
+        if (off > COLINEAR_EPSILON) {
             return
         }
         if (dmap.dmapGlobals.drawflag) {
@@ -642,8 +641,8 @@ object optimize {
         }
 
         // replace the two edges with a single edge
-        optimize.UnlinkEdge(e1, island)
-        optimize.UnlinkEdge(e2, island)
+        UnlinkEdge(e1, island)
+        UnlinkEdge(e2, island)
 
         // v2 should have no edges now
         if (v2.edges != null) {
@@ -659,9 +658,9 @@ object optimize {
             if (e.v1 === v1 && e.v2 === v3
                 || e.v1 === v3 && e.v2 === v1
             ) {
-                optimize.UnlinkEdge(e, island)
-                optimize.RemoveIfColinear(v1, island)
-                optimize.RemoveIfColinear(v3, island)
+                UnlinkEdge(e, island)
+                RemoveIfColinear(v1, island)
+                RemoveIfColinear(v3, island)
                 return
             }
             e = e.islandLink
@@ -669,20 +668,20 @@ object optimize {
 
         // if we can't add the combined edge, link
         // the originals back in
-        if (!optimize.TryAddNewEdge(v1, v3, island)) {
+        if (!TryAddNewEdge(v1, v3, island)) {
             e1.islandLink = island.edges
             island.edges = e1
-            optimize.LinkEdge(e1)
+            LinkEdge(e1)
             e2.islandLink = island.edges
             island.edges = e2
-            optimize.LinkEdge(e2)
+            LinkEdge(e2)
             return
         }
 
         // recursively try to combine both verts now,
         // because things may have changed since the last combine test
-        optimize.RemoveIfColinear(v1, island)
-        optimize.RemoveIfColinear(v3, island)
+        RemoveIfColinear(v1, island)
+        RemoveIfColinear(v3, island)
     }
 
     /*
@@ -690,7 +689,7 @@ object optimize {
      CombineColinearEdges
      ====================
      */
-    fun CombineColinearEdges(island: optIsland_t?) {
+    fun CombineColinearEdges(island: optIsland_t) {
         var c_edges: Int
         var ov: optVertex_s?
         var e: optEdge_s?
@@ -705,7 +704,7 @@ object optimize {
         }
         ov = island.verts
         while (ov != null) {
-            optimize.RemoveIfColinear(ov, island)
+            RemoveIfColinear(ov, island)
             ov = ov.islandLink
         }
         c_edges = 0
@@ -725,7 +724,7 @@ object optimize {
 
      ===================
      */
-    fun FreeOptTriangles(island: optIsland_t?) {
+    fun FreeOptTriangles(island: optIsland_t) {
         var opt: optTri_s?
         var next: optTri_s?
         opt = island.tris
@@ -747,26 +746,26 @@ object optimize {
      consider it invalid if any one of the possibilities is invalid.
      =================
      */
-    fun IsTriangleValid(v1: optVertex_s?, v2: optVertex_s?, v3: optVertex_s?): Boolean {
+    fun IsTriangleValid(v1: optVertex_s, v2: optVertex_s, v3: optVertex_s): Boolean {
         val d1 = idVec3()
         val d2 = idVec3()
         val normal = idVec3()
         d1.set(v2.pv.minus(v1.pv))
         d2.set(v3.pv.minus(v1.pv))
         normal.set(d1.Cross(d2))
-        if (normal.get(2) <= 0) {
+        if (normal[2] <= 0) {
             return false
         }
         d1.set(v3.pv.minus(v2.pv))
         d2.set(v1.pv.minus(v2.pv))
         normal.set(d1.Cross(d2))
-        if (normal.get(2) <= 0) {
+        if (normal[2] <= 0) {
             return false
         }
         d1.set(v1.pv.minus(v3.pv))
         d2.set(v2.pv.minus(v3.pv))
         normal.set(d1.Cross(d2))
-        return normal.get(2) > 0
+        return normal[2] > 0
     }
 
     /*
@@ -776,7 +775,7 @@ object optimize {
      Returns false if it is either front or back facing
      =================
      */
-    fun IsTriangleDegenerate(v1: optVertex_s?, v2: optVertex_s?, v3: optVertex_s?): Boolean {
+    fun IsTriangleDegenerate(v1: optVertex_s, v2: optVertex_s, v3: optVertex_s): Boolean {
 //#if 1
         val d1 = idVec3()
         val d2 = idVec3()
@@ -784,7 +783,7 @@ object optimize {
         d1.set(v2.pv.minus(v1.pv))
         d2.set(v3.pv.minus(v1.pv))
         normal.set(d1.Cross(d2))
-        return normal.get(2) == 0f
+        return normal[2] == 0f
         //#else
 //	return (bool)!IsTriangleValid( v1, v2, v3 );
 //#endif
@@ -797,7 +796,7 @@ object optimize {
      Tests if a 2D point is inside an original triangle
      ==================
      */
-    fun PointInTri(p: idVec3?, tri: mapTri_s?, island: optIsland_t?): Boolean {
+    fun PointInTri(p: idVec3, tri: mapTri_s, island: optIsland_t): Boolean {
         val d1 = idVec3()
         val d2 = idVec3()
         val normal = idVec3()
@@ -807,19 +806,19 @@ object optimize {
         d1.set(tri.optVert[0].pv.minus(p))
         d2.set(tri.optVert[1].pv.minus(p))
         normal.set(d1.Cross(d2))
-        if (normal.get(2) < 0) {
+        if (normal[2] < 0) {
             return false
         }
         d1.set(tri.optVert[1].pv.minus(p))
         d2.set(tri.optVert[2].pv.minus(p))
         normal.set(d1.Cross(d2))
-        if (normal.get(2) < 0) {
+        if (normal[2] < 0) {
             return false
         }
         d1.set(tri.optVert[2].pv.minus(p))
         d2.set(tri.optVert[0].pv.minus(p))
         normal.set(d1.Cross(d2))
-        return normal.get(2) >= 0
+        return normal[2] >= 0
     }
 
     //==================================================================
@@ -829,10 +828,10 @@ object optimize {
 
      ====================
      */
-    fun LinkTriToEdge(optTri: optTri_s?, edge: optEdge_s?) {
-        if (edge.v1 == optTri.v.get(0) && edge.v2 == optTri.v.get(1)
-            || edge.v1 == optTri.v.get(1) && edge.v2 == optTri.v.get(2)
-            || edge.v1 == optTri.v.get(2) && edge.v2 == optTri.v.get(0)
+    fun LinkTriToEdge(optTri: optTri_s, edge: optEdge_s) {
+        if (edge.v1 == optTri.v[0] && edge.v2 == optTri.v[1]
+            || edge.v1 == optTri.v[1] && edge.v2 == optTri.v[2]
+            || edge.v1 == optTri.v[2] && edge.v2 == optTri.v[0]
         ) {
             if (edge.backTri != null) {
                 Common.common.Printf("Warning: LinkTriToEdge: already in use\n")
@@ -841,9 +840,9 @@ object optimize {
             edge.backTri = optTri
             return
         }
-        if (edge.v1 == optTri.v.get(1) && edge.v2 == optTri.v.get(0)
-            || edge.v1 == optTri.v.get(2) && edge.v2 == optTri.v.get(1)
-            || edge.v1 == optTri.v.get(0) && edge.v2 == optTri.v.get(2)
+        if (edge.v1 == optTri.v[1] && edge.v2 == optTri.v[0]
+            || edge.v1 == optTri.v[2] && edge.v2 == optTri.v[1]
+            || edge.v1 == optTri.v[0] && edge.v2 == optTri.v[2]
         ) {
             if (edge.frontTri != null) {
                 Common.common.Printf("Warning: LinkTriToEdge: already in use\n")
@@ -860,27 +859,27 @@ object optimize {
      CreateOptTri
      ===============
      */
-    fun CreateOptTri(first: optVertex_s?, e1: optEdge_s?, e2: optEdge_s?, island: optIsland_t?) {
+    fun CreateOptTri(first: optVertex_s, e1: optEdge_s, e2: optEdge_s, island: optIsland_t) {
         var opposite: optEdge_s?
-        var second: optVertex_s? = optVertex_s()
-        var third: optVertex_s? = optVertex_s()
+        var second = optVertex_s()
+        var third = optVertex_s()
         val optTri: optTri_s
         var tri: mapTri_s?
         if (e1.v1 == first) {
-            second = e1.v2
+            second = e1.v2!!
         } else if (e1.v2 == first) {
-            second = e1.v1
+            second = e1.v1!!
         } else {
             Common.common.Error("CreateOptTri: mislinked edge")
         }
         if (e2.v1 == first) {
-            third = e2.v2
+            third = e2.v2!!
         } else if (e2.v2 == first) {
-            third = e2.v1
+            third = e2.v1!!
         } else {
             Common.common.Error("CreateOptTri: mislinked edge")
         }
-        if (!optimize.IsTriangleValid(first, second, third)) {
+        if (!IsTriangleValid(first, second, third)) {
             Common.common.Error("CreateOptTri: invalid")
         }
 
@@ -889,14 +888,14 @@ object optimize {
         if (dmap.dmapGlobals.drawflag) {
             qgl.qglColor3f(1f, 1f, 0f)
             qgl.qglBegin(GL11.GL_LINES)
-            qgl.qglVertex3fv(e1.v1.pv.ToFloatPtr())
-            qgl.qglVertex3fv(e1.v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(e1.v1!!.pv.ToFloatPtr())
+            qgl.qglVertex3fv(e1.v2!!.pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglFlush()
             qgl.qglColor3f(0f, 1f, 1f)
             qgl.qglBegin(GL11.GL_LINES)
-            qgl.qglVertex3fv(e2.v1.pv.ToFloatPtr())
-            qgl.qglVertex3fv(e2.v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(e2.v1!!.pv.ToFloatPtr())
+            qgl.qglVertex3fv(e2.v2!!.pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglFlush()
         }
@@ -920,19 +919,19 @@ object optimize {
         if (dmap.dmapGlobals.drawflag) {
             qgl.qglColor3f(1f, 0f, 1f)
             qgl.qglBegin(GL11.GL_LINES)
-            qgl.qglVertex3fv(opposite.v1.pv.ToFloatPtr())
-            qgl.qglVertex3fv(opposite.v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(opposite!!.v1!!.pv.ToFloatPtr())
+            qgl.qglVertex3fv(opposite.v2!!.pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglFlush()
         }
 
         // create new triangle
         optTri = optTri_s() // Mem_Alloc(sizeof(optTri));
-        optTri.v.get(0) = first
-        optTri.v.get(1) = second
-        optTri.v.get(2) = third
+        optTri.v[0] = first
+        optTri.v[1] = second
+        optTri.v[2] = third
         optTri.midpoint.set(
-            optTri.v.get(0).pv.oPlus(optTri.v.get(1).pv.oPlus(optTri.v.get(2).pv)).oMultiply(1.0f / 3.0f)
+            optTri.v[0].pv.plus(optTri.v[1].pv.plus(optTri.v[2].pv)).times(1.0f / 3.0f)
         )
         optTri.next = island.tris
         island.tris = optTri
@@ -947,9 +946,9 @@ object optimize {
 
         // find the midpoint, and scan through all the original triangles to
         // see if it is inside any of them
-        tri = island.group.triList
+        tri = island.group!!.triList
         while (tri != null) {
-            if (optimize.PointInTri(optTri.midpoint, tri, island)) {
+            if (PointInTri(optTri.midpoint, tri, island)) {
                 break
             }
             tri = tri.next
@@ -957,37 +956,37 @@ object optimize {
         optTri.filled = tri != null
         if (dmap.dmapGlobals.drawflag) {
             if (optTri.filled) {
-                qgl.qglColor3f((128 + optimize.orandom.RandomInt(127.0)) / 255.0f, 0f, 0f)
+                qgl.qglColor3f((128 + orandom.RandomInt(127.0)) / 255.0f, 0f, 0f)
             } else {
-                qgl.qglColor3f(0f, (128 + optimize.orandom.RandomInt(127.0)) / 255.0f, 0f)
+                qgl.qglColor3f(0f, (128 + orandom.RandomInt(127.0)) / 255.0f, 0f)
             }
             qgl.qglBegin(GL11.GL_TRIANGLES)
-            qgl.qglVertex3fv(optTri.v.get(0).pv.ToFloatPtr())
-            qgl.qglVertex3fv(optTri.v.get(1).pv.ToFloatPtr())
-            qgl.qglVertex3fv(optTri.v.get(2).pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[0].pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[1].pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[2].pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglColor3f(1f, 1f, 1f)
             qgl.qglBegin(GL11.GL_LINE_LOOP)
-            qgl.qglVertex3fv(optTri.v.get(0).pv.ToFloatPtr())
-            qgl.qglVertex3fv(optTri.v.get(1).pv.ToFloatPtr())
-            qgl.qglVertex3fv(optTri.v.get(2).pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[0].pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[1].pv.ToFloatPtr())
+            qgl.qglVertex3fv(optTri.v[2].pv.ToFloatPtr())
             qgl.qglEnd()
             qgl.qglFlush()
         }
 
         // link the triangle to it's edges
-        optimize.LinkTriToEdge(optTri, e1)
-        optimize.LinkTriToEdge(optTri, e2)
-        optimize.LinkTriToEdge(optTri, opposite)
+        LinkTriToEdge(optTri, e1)
+        LinkTriToEdge(optTri, e2)
+        LinkTriToEdge(optTri, opposite!!)
     }
 
     //==================================================================
     // debugging tool
-    fun ReportNearbyVertexes(v: optVertex_s?, island: optIsland_t?) {
+    fun ReportNearbyVertexes(v: optVertex_s, island: optIsland_t) {
         var ov: optVertex_s?
         var d: Float
         val vec = idVec3()
-        Common.common.Printf("verts near 0x%p (%f, %f)\n", v, v.pv.get(0), v.pv.get(1))
+        Common.common.Printf("verts near 0x%p (%f, %f)\n", v, v.pv[0], v.pv[1])
         ov = island.verts
         while (ov != null) {
             if (ov === v) {
@@ -997,7 +996,7 @@ object optimize {
             vec.set(ov.pv.minus(v.pv))
             d = vec.Length()
             if (d < 1) {
-                Common.common.Printf("0x%p = (%f, %f)\n", ov, ov.pv.get(0), ov.pv.get(1))
+                Common.common.Printf("0x%p = (%f, %f)\n", ov, ov.pv[0], ov.pv[1])
             }
             ov = ov.islandLink
         }
@@ -1010,7 +1009,7 @@ object optimize {
      Generate a new list of triangles from the optEdeges
      ====================
      */
-    fun BuildOptTriangles(island: optIsland_t?) {
+    fun BuildOptTriangles(island: optIsland_t) {
         var ov: optVertex_s?
         var second = optVertex_s()
         var third = optVertex_s()
@@ -1023,7 +1022,7 @@ object optimize {
         var checkNext: optEdge_s? = optEdge_s()
 
         // free them
-        optimize.FreeOptTriangles(island)
+        FreeOptTriangles(island)
 
         // clear the vertex emitted flags
         ov = island.verts
@@ -1069,10 +1068,10 @@ object optimize {
             e1 = ov.edges
             while (e1 != null) {
                 if (e1.v1 == ov) {
-                    second = e1.v2
+                    second = e1.v2!!
                     e1Next = e1.v1link
                 } else if (e1.v2 == ov) {
-                    second = e1.v1
+                    second = e1.v1!!
                     e1Next = e1.v2link
                 } else {
                     Common.common.Error("BuildOptTriangles: mislinked edge")
@@ -1086,10 +1085,10 @@ object optimize {
                 e2 = ov.edges
                 while (e2 != null) {
                     if (e2.v1 == ov) {
-                        third = e2.v2
+                        third = e2.v2!!
                         e2Next = e2.v1link
                     } else if (e2.v2 == ov) {
-                        third = e2.v1
+                        third = e2.v1!!
                         e2Next = e2.v2link
                     } else {
                         Common.common.Error("BuildOptTriangles: mislinked edge")
@@ -1106,7 +1105,7 @@ object optimize {
                     }
 
                     // if the triangle is backwards or degenerate, don't use it
-                    if (!optimize.IsTriangleValid(ov, second, third)) {
+                    if (!IsTriangleValid(ov, second, third)) {
                         e2 = e2Next
                         continue
                     }
@@ -1116,10 +1115,10 @@ object optimize {
                     check = ov.edges
                     while (check != null) {
                         if (check.v1 == ov) {
-                            middle = check.v2
+                            middle = check.v2!!
                             checkNext = check.v1link
                         } else if (check.v2 == ov) {
-                            middle = check.v1
+                            middle = check.v1!!
                             checkNext = check.v2link
                         } else {
                             Common.common.Error("BuildOptTriangles: mislinked edge")
@@ -1128,8 +1127,8 @@ object optimize {
                             check = checkNext
                             continue
                         }
-                        if (optimize.IsTriangleValid(ov, second, middle)
-                            && optimize.IsTriangleValid(ov, middle, third)
+                        if (IsTriangleValid(ov, second, middle)
+                            && IsTriangleValid(ov, middle, third)
                         ) {
                             break // should use the subdivided ones
                         }
@@ -1141,7 +1140,7 @@ object optimize {
                     }
 
                     // the triangle is valid
-                    optimize.CreateOptTri(ov, e1, e2, island)
+                    CreateOptTri(ov, e1, e2, island)
                     e2 = e2Next
                 }
                 e1 = e1Next
@@ -1161,7 +1160,7 @@ object optimize {
      Add new triangles to the group's regeneratedTris
      ====================
      */
-    fun RegenerateTriangles(island: optIsland_t?) {
+    fun RegenerateTriangles(island: optIsland_t) {
         var optTri: optTri_s?
         var tri: mapTri_s?
         var c_out: Int
@@ -1175,14 +1174,14 @@ object optimize {
 
             // create a new mapTri_s
             tri = tritools.AllocTri()
-            tri.material = island.group.material
-            tri.mergeGroup = island.group.mergeGroup
-            tri.v[0] = optTri.v.get(0).v
-            tri.v[1] = optTri.v.get(1).v
-            tri.v[2] = optTri.v.get(2).v
+            tri.material = island.group!!.material
+            tri.mergeGroup = island.group!!.mergeGroup
+            tri.v[0] = optTri.v[0].v
+            tri.v[1] = optTri.v[1].v
+            tri.v[2] = optTri.v[2].v
             val plane = idPlane()
             tritools.PlaneForTri(tri, plane)
-            if (plane.Normal().times(dmap.dmapGlobals.mapPlanes.get(island.group.planeNum).Normal()) <= 0) {
+            if (plane.Normal().times(dmap.dmapGlobals.mapPlanes[island.group!!.planeNum].Normal()) <= 0) {
                 // this can happen reasonably when a triangle is nearly degenerate in
                 // optimization planar space, and winds up being degenerate in 3D space
                 Common.common.Printf("WARNING: backwards triangle generated!\n")
@@ -1192,11 +1191,11 @@ object optimize {
                 continue
             }
             c_out++
-            tri.next = island.group.regeneratedTris
-            island.group.regeneratedTris = tri
+            tri.next = island.group!!.regeneratedTris
+            island.group!!.regeneratedTris = tri
             optTri = optTri.next
         }
-        optimize.FreeOptTriangles(island)
+        FreeOptTriangles(island)
         if (dmap.dmapGlobals.verbose) {
             Common.common.Printf("%6d tris out\n", c_out)
         }
@@ -1210,7 +1209,7 @@ object optimize {
      on both sides will be removed
      ====================
      */
-    fun RemoveInteriorEdges(island: optIsland_t?) {
+    fun RemoveInteriorEdges(island: optIsland_t) {
         var c_interiorEdges: Int
         var c_exteriorEdges: Int
         var e: optEdge_s?
@@ -1224,19 +1223,19 @@ object optimize {
 
             // we might remove the edge, so get the next link now
             next = e.islandLink
-            front = if (TempDump.NOT(e.frontTri)) {
+            front = if (null == e.frontTri) {
                 false
             } else {
-                e.frontTri.filled
+                e.frontTri!!.filled
             }
             back = if (TempDump.NOT(e.backTri)) {
                 false
             } else {
-                e.backTri.filled
+                e.backTri!!.filled
             }
             if (front == back) {
                 // free the edge
-                optimize.UnlinkEdge(e, island)
+                UnlinkEdge(e, island)
                 c_interiorEdges++
                 e = next
                 continue
@@ -1255,7 +1254,7 @@ object optimize {
      AddEdgeIfNotAlready
      =================
      */
-    fun AddEdgeIfNotAlready(v1: optVertex_s?, v2: optVertex_s?) {
+    fun AddEdgeIfNotAlready(v1: optVertex_s, v2: optVertex_s) {
         var e: optEdge_s?
 
         // make sure that there isn't an identical edge already added
@@ -1274,13 +1273,13 @@ object optimize {
         }
 
         // this edge is a keeper
-        e = optimize.AllocEdge()
+        e = AllocEdge()
         e.v1 = v1
         e.v2 = v2
         e.islandLink = null
 
         // link the edge to its verts
-        optimize.LinkEdge(e)
+        LinkEdge(e)
     }
 
     /*
@@ -1288,7 +1287,7 @@ object optimize {
      DrawOriginalEdges
      =================
      */
-    fun DrawOriginalEdges(numOriginalEdges: Int, originalEdges: Array<originalEdges_t?>?) {
+    fun DrawOriginalEdges(numOriginalEdges: Int, originalEdges: Array<originalEdges_t>) {
         var i: Int
         if (!dmap.dmapGlobals.drawflag) {
             return
@@ -1298,9 +1297,9 @@ object optimize {
         i = 0
         while (i < numOriginalEdges) {
             qgl.qglColor3f(1f, 0f, 0f)
-            qgl.qglVertex3fv(originalEdges.get(i).v1.pv.ToFloatPtr())
+            qgl.qglVertex3fv(originalEdges[i].v1.pv.ToFloatPtr())
             qgl.qglColor3f(0f, 0f, 0f)
-            qgl.qglVertex3fv(originalEdges.get(i).v2.pv.ToFloatPtr())
+            qgl.qglVertex3fv(originalEdges[i].v2.pv.ToFloatPtr())
             i++
         }
         qgl.qglEnd()
@@ -1312,19 +1311,19 @@ object optimize {
      AddOriginalTriangle
      =================
      */
-    fun AddOriginalTriangle(v: Array<optVertex_s?>? /*[3]*/) {
+    fun AddOriginalTriangle(v: Array<optVertex_s> /*[3]*/) {
         var v1: optVertex_s?
         var v2: optVertex_s?
 
         // if this triangle is backwards (possible with epsilon issues)
         // ignore it completely
-        if (!optimize.IsTriangleValid(v.get(0), v.get(1), v.get(2))) {
+        if (!IsTriangleValid(v[0], v[1], v[2])) {
             Common.common.Printf("WARNING: backwards triangle in input!\n")
             return
         }
         for (i in 0..2) {
-            v1 = v.get(i)
-            v2 = v.get((i + 1) % 3)
+            v1 = v[i]
+            v2 = v[(i + 1) % 3]
             if (v1 === v2) {
                 // this probably shouldn't happen, because the
                 // tri would be degenerate
@@ -1333,20 +1332,20 @@ object optimize {
             var j: Int
             // see if there is an existing one
             j = 0
-            while (j < optimize.numOriginalEdges) {
-                if (optimize.originalEdges[j].v1 === v1 && optimize.originalEdges[j].v2 === v2) {
+            while (j < numOriginalEdges) {
+                if (originalEdges[j].v1 === v1 && originalEdges[j].v2 === v2) {
                     break
                 }
-                if (optimize.originalEdges[j].v2 === v1 && optimize.originalEdges[j].v1 === v2) {
+                if (originalEdges[j].v2 === v1 && originalEdges[j].v1 === v2) {
                     break
                 }
                 j++
             }
-            if (j == optimize.numOriginalEdges) {
+            if (j == numOriginalEdges) {
                 // add it
-                optimize.originalEdges[j].v1 = v1
-                optimize.originalEdges[j].v2 = v2
-                optimize.numOriginalEdges++
+                originalEdges[j].v1 = v1
+                originalEdges[j].v2 = v2
+                numOriginalEdges++
             }
         }
     }
@@ -1356,33 +1355,33 @@ object optimize {
      AddOriginalEdges
      =================
      */
-    fun AddOriginalEdges(opt: optimizeGroup_s?) {
+    fun AddOriginalEdges(opt: optimizeGroup_s) {
         var tri: mapTri_s?
-        val v = arrayOfNulls<optVertex_s?>(3)
+        val v = Array(3) { optVertex_s() }
         val numTris: Int
         if (dmap.dmapGlobals.verbose) {
             Common.common.Printf("----\n")
-            Common.common.Printf("%6d original tris\n", tritools.CountTriList(opt.triList))
+            Common.common.Printf("%6d original tris\n", tritools.CountTriList(opt.triList!!))
         }
-        optimize.optBounds.Clear()
+        optBounds.Clear()
 
         // allocate space for max possible edges
-        numTris = tritools.CountTriList(opt.triList)
-        optimize.originalEdges = arrayOfNulls<originalEdges_t?>(numTris * 3) // Mem_Alloc(numTris * 3);
-        optimize.numOriginalEdges = 0
+        numTris = tritools.CountTriList(opt.triList!!)
+        originalEdges = Array(numTris * 3) { originalEdges_t() } // Mem_Alloc(numTris * 3);
+        numOriginalEdges = 0
 
         // add all unique triangle edges
-        optimize.numOptVerts = 0
-        optimize.numOptEdges = 0
+        numOptVerts = 0
+        numOptEdges = 0
         tri = opt.triList
         while (tri != null) {
-            tri.optVert[0] = optimize.FindOptVertex(tri.v[0], opt)
+            tri.optVert[0] = FindOptVertex(tri.v[0], opt)!!
             v[0] = tri.optVert[0]
-            tri.optVert[1] = optimize.FindOptVertex(tri.v[1], opt)
+            tri.optVert[1] = FindOptVertex(tri.v[1], opt)!!
             v[1] = tri.optVert[1]
-            tri.optVert[2] = optimize.FindOptVertex(tri.v[2], opt)
+            tri.optVert[2] = FindOptVertex(tri.v[2], opt)!!
             v[2] = tri.optVert[2]
-            optimize.AddOriginalTriangle(v)
+            AddOriginalTriangle(v)
             tri = tri.next
         }
     }
@@ -1392,51 +1391,51 @@ object optimize {
      SplitOriginalEdgesAtCrossings
      =====================
      */
-    fun SplitOriginalEdgesAtCrossings(opt: optimizeGroup_s?) {
+    fun SplitOriginalEdgesAtCrossings(opt: optimizeGroup_s) {
         var i: Int
         var j: Int
         var k: Int
         var l: Int
         val numOriginalVerts: Int
         var crossings: Array<edgeCrossing_s?>?
-        numOriginalVerts = optimize.numOptVerts
+        numOriginalVerts = numOptVerts
         // now split any crossing edges and create optEdges
         // linked to the vertexes
 
         // debug drawing bounds
-        dmap.dmapGlobals.drawBounds = optimize.optBounds
-        dmap.dmapGlobals.drawBounds.get(0).minusAssign(0, -2f)
-        dmap.dmapGlobals.drawBounds.get(0).minusAssign(1, -2f)
-        dmap.dmapGlobals.drawBounds.get(1).plusAssign(0, -2f)
-        dmap.dmapGlobals.drawBounds.get(1).plusAssign(1, -2f)
+        dmap.dmapGlobals.drawBounds.set(optBounds)
+        dmap.dmapGlobals.drawBounds[0].minusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds[0].minusAssign(1, -2f)
+        dmap.dmapGlobals.drawBounds[1].plusAssign(0, -2f)
+        dmap.dmapGlobals.drawBounds[1].plusAssign(1, -2f)
 
         // generate crossing points between all the original edges
-        crossings = arrayOfNulls<edgeCrossing_s?>(optimize.numOriginalEdges) // Mem_ClearedAlloc(numOriginalEdges);
+        crossings = arrayOfNulls<edgeCrossing_s?>(numOriginalEdges) // Mem_ClearedAlloc(numOriginalEdges);
         i = 0
-        while (i < optimize.numOriginalEdges) {
+        while (i < numOriginalEdges) {
             if (dmap.dmapGlobals.drawflag) {
-                optimize.DrawOriginalEdges(optimize.numOriginalEdges, optimize.originalEdges)
+                DrawOriginalEdges(numOriginalEdges, originalEdges)
                 qgl.qglBegin(GL11.GL_LINES)
                 qgl.qglColor3f(0f, 1f, 0f)
-                qgl.qglVertex3fv(optimize.originalEdges[i].v1.pv.ToFloatPtr())
+                qgl.qglVertex3fv(originalEdges[i].v1.pv.ToFloatPtr())
                 qgl.qglColor3f(0f, 0f, 1f)
-                qgl.qglVertex3fv(optimize.originalEdges[i].v2.pv.ToFloatPtr())
+                qgl.qglVertex3fv(originalEdges[i].v2.pv.ToFloatPtr())
                 qgl.qglEnd()
                 qgl.qglFlush()
             }
             j = i + 1
-            while (j < optimize.numOriginalEdges) {
+            while (j < numOriginalEdges) {
                 var v1: optVertex_s?
                 var v2: optVertex_s?
                 var v3: optVertex_s?
                 var v4: optVertex_s?
                 var newVert: optVertex_s?
                 var cross: edgeCrossing_s
-                v1 = optimize.originalEdges[i].v1
-                v2 = optimize.originalEdges[i].v2
-                v3 = optimize.originalEdges[j].v1
-                v4 = optimize.originalEdges[j].v2
-                if (!optimize.EdgesCross(v1, v2, v3, v4)) {
+                v1 = originalEdges[i].v1
+                v2 = originalEdges[i].v2
+                v3 = originalEdges[j].v1
+                v4 = originalEdges[j].v2
+                if (!EdgesCross(v1, v2, v3, v4)) {
                     j++
                     continue
                 }
@@ -1445,30 +1444,30 @@ object optimize {
                 // completely new points are created, and it only
                 // happens if there is overlapping coplanar
                 // geometry in the source triangles
-                newVert = optimize.EdgeIntersection(v1, v2, v3, v4, opt)
-                if (TempDump.NOT(newVert)) {
+                newVert = EdgeIntersection(v1, v2, v3, v4, opt)
+                if (null == newVert) {
 //common.Printf( "lines %i (%i to %i) and %i (%i to %i) are colinear\n", i, v1 - optVerts, v2 - optVerts,
 //		   j, v3 - optVerts, v4 - optVerts );	// !@#
                     // colinear, so add both verts of each edge to opposite
-                    if (optimize.VertexBetween(v3, v1, v2)) {
+                    if (VertexBetween(v3, v1, v2)) {
                         cross = edgeCrossing_s() // Mem_ClearedAlloc(sizeof(cross));
                         cross.ov = v3
                         cross.next = crossings[i]
                         crossings[i] = cross
                     }
-                    if (optimize.VertexBetween(v4, v1, v2)) {
+                    if (VertexBetween(v4, v1, v2)) {
                         cross = edgeCrossing_s() // Mem_ClearedAlloc(sizeof(cross));
                         cross.ov = v4
                         cross.next = crossings[i]
                         crossings[i] = cross
                     }
-                    if (optimize.VertexBetween(v1, v3, v4)) {
+                    if (VertexBetween(v1, v3, v4)) {
                         cross = edgeCrossing_s() // Mem_ClearedAlloc(sizeof(cross));
                         cross.ov = v1
                         cross.next = crossings[j]
                         crossings[j] = cross
                     }
-                    if (optimize.VertexBetween(v2, v3, v4)) {
+                    if (VertexBetween(v2, v3, v4)) {
                         cross = edgeCrossing_s() //) Mem_ClearedAlloc(sizeof(cross));
                         cross.ov = v2
                         cross.next = crossings[j]
@@ -1506,11 +1505,11 @@ object optimize {
         // now split each edge by its crossing points
         // colinear edges will have duplicated edges added, but it won't hurt anything
         i = 0
-        while (i < optimize.numOriginalEdges) {
+        while (i < numOriginalEdges) {
             var cross: edgeCrossing_s?
             var nextCross: edgeCrossing_s?
             var numCross: Int
-            var sorted: Array<optVertex_s?>?
+            var sorted: Array<optVertex_s>
             numCross = 0
             cross = crossings[i]
             while (cross != null) {
@@ -1518,9 +1517,9 @@ object optimize {
                 cross = cross.next
             }
             numCross += 2 // account for originals
-            sorted = arrayOfNulls<optVertex_s?>(numCross) // Mem_Alloc(numCross);
-            sorted[0] = optimize.originalEdges[i].v1
-            sorted[1] = optimize.originalEdges[i].v2
+            sorted = Array(numCross) { optVertex_s() } // Mem_Alloc(numCross);
+            sorted[0] = originalEdges[i].v1
+            sorted[1] = originalEdges[i].v2
             j = 2
             cross = crossings[i]
             while (cross != null) {
@@ -1547,32 +1546,31 @@ object optimize {
                             l++
                             continue
                         }
-                        if (optimize.VertexBetween(sorted[l], sorted[j], sorted[k])) {
+                        if (VertexBetween(sorted[l], sorted[j], sorted[k])) {
                             break
                         }
                         l++
                     }
                     if (l == numCross) {
 //common.Printf( "line %i fragment from point %i to %i\n", i, sorted[j] - optVerts, sorted[k] - optVerts );
-                        optimize.AddEdgeIfNotAlready(sorted[j], sorted[k])
+                        AddEdgeIfNotAlready(sorted[j], sorted[k])
                     }
                     k++
                 }
                 j++
             }
-            sorted = null //Mem_Free(sorted);
             i++
         }
         crossings = null //Mem_Free(crossings);
-        optimize.originalEdges = null //Mem_Free(originalEdges);
+        originalEdges = emptyArray() //Mem_Free(originalEdges);
 
         // check for duplicated edges
         i = 0
-        while (i < optimize.numOptEdges) {
+        while (i < numOptEdges) {
             j = i + 1
-            while (j < optimize.numOptEdges) {
-                if (optimize.optEdges[i].v1 === optimize.optEdges[j].v1 && optimize.optEdges[i].v2 === optimize.optEdges[j].v2
-                    || optimize.optEdges[i].v1 === optimize.optEdges[j].v2 && optimize.optEdges[i].v2 === optimize.optEdges[j].v1
+            while (j < numOptEdges) {
+                if (optEdges[i].v1 === optEdges[j].v1 && optEdges[i].v2 === optEdges[j].v2
+                    || optEdges[i].v1 === optEdges[j].v2 && optEdges[i].v2 === optEdges[j].v1
                 ) {
                     Common.common.Printf("duplicated optEdge\n")
                 }
@@ -1581,10 +1579,10 @@ object optimize {
             i++
         }
         if (dmap.dmapGlobals.verbose) {
-            Common.common.Printf("%6d original edges\n", optimize.numOriginalEdges)
-            Common.common.Printf("%6d edges after splits\n", optimize.numOptEdges)
+            Common.common.Printf("%6d original edges\n", numOriginalEdges)
+            Common.common.Printf("%6d edges after splits\n", numOptEdges)
             Common.common.Printf("%6d original vertexes\n", numOriginalVerts)
-            Common.common.Printf("%6d vertexes after splits\n", optimize.numOptVerts)
+            Common.common.Printf("%6d vertexes after splits\n", numOptVerts)
         }
     }
 
@@ -1598,12 +1596,12 @@ object optimize {
      won't be used in the retriangulation
      ===================
      */
-    fun CullUnusedVerts(island: optIsland_t?) {
+    fun CullUnusedVerts(island: optIsland_t) {
         var prev: optVertex_s?
         var vert: optVertex_s?
         var c_keep: Int
         var c_free: Int
-        var edge: optEdge_s?
+        var edge: optEdge_s
         c_keep = 0
         c_free = 0
         prev = island.verts
@@ -1614,14 +1612,14 @@ object optimize {
                 prev = vert.islandLink
                 c_free++
             } else {
-                edge = vert.edges
+                edge = vert.edges!!
                 if (edge.v1 == vert && TempDump.NOT(edge.v1link)
                     || edge.v2 == vert && TempDump.NOT(edge.v2link)
                 ) {
                     // is is occasionally possible to get a vert
                     // with only a single edge when colinear optimizations
                     // crunch down a complex sliver
-                    optimize.UnlinkEdge(edge, island)
+                    UnlinkEdge(edge, island)
                     // free it
                     prev = vert.islandLink
                     c_free++
@@ -1649,38 +1647,38 @@ object optimize {
      a new triangulation will be created.
      ====================
      */
-    fun OptimizeIsland(island: optIsland_t?) {
+    fun OptimizeIsland(island: optIsland_t) {
         // add space-filling fake edges so we have a complete
         // triangulation of a convex hull before optimization
-        optimize.AddInteriorEdges(island)
-        optimize.DrawEdges(island)
+        AddInteriorEdges(island)
+        DrawEdges(island)
 
         // determine all the possible triangles, and decide if
         // the are filled or empty
-        optimize.BuildOptTriangles(island)
+        BuildOptTriangles(island)
 
         // remove interior vertexes that have filled triangles
         // between all their edges
-        optimize.RemoveInteriorEdges(island)
-        optimize.DrawEdges(island)
-        optimize.ValidateEdgeCounts(island)
+        RemoveInteriorEdges(island)
+        DrawEdges(island)
+        ValidateEdgeCounts(island)
 
         // remove vertexes that only have two colinear edges
-        optimize.CombineColinearEdges(island)
-        optimize.CullUnusedVerts(island)
-        optimize.DrawEdges(island)
+        CombineColinearEdges(island)
+        CullUnusedVerts(island)
+        DrawEdges(island)
 
         // add new internal edges between the remaining exterior edges
         // to give us a full triangulation again
-        optimize.AddInteriorEdges(island)
-        optimize.DrawEdges(island)
+        AddInteriorEdges(island)
+        DrawEdges(island)
 
         // determine all the possible triangles, and decide if
         // the are filled or empty
-        optimize.BuildOptTriangles(island)
+        BuildOptTriangles(island)
 
         // make mapTri_s out of the filled optTri_s
-        optimize.RegenerateTriangles(island)
+        RegenerateTriangles(island)
     }
 
     /*
@@ -1688,7 +1686,7 @@ object optimize {
      AddVertexToIsland_r
      ================
      */
-    fun AddVertexToIsland_r(vert: optVertex_s?, island: optIsland_t?) {
+    fun AddVertexToIsland_r(vert: optVertex_s, island: optIsland_t) {
         var e: optEdge_s?
 
         // we can't just check islandLink, because the
@@ -1707,12 +1705,12 @@ object optimize {
                 island.edges = e
             }
             if (e.v1 == vert) {
-                optimize.AddVertexToIsland_r(e.v2, island)
+                AddVertexToIsland_r(e.v2!!, island)
                 e = e.v1link
                 continue
             }
             if (e.v2 == vert) {
-                optimize.AddVertexToIsland_r(e.v1, island)
+                AddVertexToIsland_r(e.v1!!, island)
                 e = e.v2link
                 continue
             }
@@ -1734,23 +1732,23 @@ object optimize {
      the source list has triangles not used in the optimization
      ====================
      */
-    fun SeparateIslands(opt: optimizeGroup_s?) {
+    fun SeparateIslands(opt: optimizeGroup_s) {
         var i: Int
         val island = optIsland_t()
         var numIslands: Int
-        optimize.DrawAllEdges()
+        DrawAllEdges()
         numIslands = 0
         i = 0
-        while (i < optimize.numOptVerts) {
-            if (optimize.optVerts[i].addedToIsland) {
+        while (i < numOptVerts) {
+            if (optVerts[i].addedToIsland) {
                 i++
                 continue
             }
             numIslands++
             //		memset( &island, 0, sizeof( island ) );
             island.group = opt
-            optimize.AddVertexToIsland_r(optimize.optVerts[i], island)
-            optimize.OptimizeIsland(island)
+            AddVertexToIsland_r(optVerts[i], island)
+            OptimizeIsland(island)
             i++
         }
         if (dmap.dmapGlobals.verbose) {
@@ -1758,10 +1756,10 @@ object optimize {
         }
     }
 
-    fun DontSeparateIslands(opt: optimizeGroup_s?) {
+    fun DontSeparateIslands(opt: optimizeGroup_s) {
         var i: Int
         val island: optIsland_t
-        optimize.DrawAllEdges()
+        DrawAllEdges()
 
 //	memset( &island, 0, sizeof( island ) );
         island = optIsland_t()
@@ -1769,18 +1767,18 @@ object optimize {
 
         // link everything together
         i = 0
-        while (i < optimize.numOptVerts) {
-            optimize.optVerts[i].islandLink = island.verts
-            island.verts = optimize.optVerts[i]
+        while (i < numOptVerts) {
+            optVerts[i].islandLink = island.verts
+            island.verts = optVerts[i]
             i++
         }
         i = 0
-        while (i < optimize.numOptEdges) {
-            optimize.optEdges[i].islandLink = island.edges
-            island.edges = optimize.optEdges[i]
+        while (i < numOptEdges) {
+            optEdges[i].islandLink = island.edges
+            island.edges = optEdges[i]
             i++
         }
-        optimize.OptimizeIsland(island)
+        OptimizeIsland(island)
     }
 
     /*
@@ -1790,11 +1788,11 @@ object optimize {
      This is a sloppy bounding box check
      ====================
      */
-    fun PointInSourceTris(x: Float, y: Float, z: Float, opt: optimizeGroup_s?): Boolean {
+    fun PointInSourceTris(x: Float, y: Float, z: Float, opt: optimizeGroup_s): Boolean {
         var tri: mapTri_s?
         val b = idBounds()
         val p = idVec3()
-        if (!opt.material.IsDrawn()) {
+        if (!opt.material!!.IsDrawn()) {
             return false
         }
         p.set(idVec3(x, y, z))
@@ -1817,7 +1815,7 @@ object optimize {
      OptimizeOptList
      ====================
      */
-    fun OptimizeOptList(opt: optimizeGroup_s?) {
+    fun OptimizeOptList(opt: optimizeGroup_s) {
         val oldNext: optimizeGroup_s?
 
         // fix the t junctions among this single list
@@ -1829,16 +1827,16 @@ object optimize {
         opt.nextGroup = oldNext
 
         // create the 2D vectors
-        dmap.dmapGlobals.mapPlanes.get(opt.planeNum).Normal().NormalVectors(opt.axis[0], opt.axis[1])
-        optimize.AddOriginalEdges(opt)
-        optimize.SplitOriginalEdgesAtCrossings(opt)
+        dmap.dmapGlobals.mapPlanes[opt.planeNum].Normal().NormalVectors(opt.axis[0], opt.axis[1])
+        AddOriginalEdges(opt)
+        SplitOriginalEdgesAtCrossings(opt)
 
 //#if 0
 //	// seperate any discontinuous areas for individual optimization
 //	// to reduce the scope of the problem
 //	SeparateIslands( opt );
 //#else
-        optimize.DontSeparateIslands(opt)
+        DontSeparateIslands(opt)
         //#endif
 
         // now free the hash verts
@@ -1884,7 +1882,7 @@ object optimize {
         val c_edge: Int
         val c_tjunc2: Int
         var group: optimizeGroup_s?
-        if (TempDump.NOT(groupList)) {
+        if (null == groupList) {
             return
         }
         c_in = tritjunction.CountGroupListTris(groupList)
@@ -1893,7 +1891,7 @@ object optimize {
         // re-introduce some t junctions
         group = groupList
         while (group != null) {
-            optimize.OptimizeOptList(group)
+            OptimizeOptList(group)
             group = group.nextGroup
         }
         c_edge = tritjunction.CountGroupListTris(groupList)
@@ -1902,7 +1900,7 @@ object optimize {
         tritjunction.FixAreaGroupsTjunctions(groupList)
         tritjunction.FreeTJunctionHash()
         c_tjunc2 = tritjunction.CountGroupListTris(groupList)
-        optimize.SetGroupTriPlaneNums(groupList)
+        SetGroupTriPlaneNums(groupList)
         Common.common.Printf("----- OptimizeAreaGroups Results -----\n")
         Common.common.Printf("%6d tris in\n", c_in)
         Common.common.Printf("%6d tris after edge removal optimization\n", c_edge)
@@ -1914,12 +1912,12 @@ object optimize {
      OptimizeEntity
      ==================
      */
-    fun OptimizeEntity(e: uEntity_t?) {
+    fun OptimizeEntity(e: uEntity_t) {
         var i: Int
         Common.common.Printf("----- OptimizeEntity -----\n")
         i = 0
         while (i < e.numAreas) {
-            optimize.OptimizeGroupList(e.areas[i].groups)
+            OptimizeGroupList(e.areas[i].groups)
             i++
         }
     }
@@ -1931,7 +1929,7 @@ object optimize {
                 = false
         var islandLink: optVertex_s? = null
         val pv: idVec3 = idVec3() // projected against planar axis, third value is 0
-        var v: idDrawVert? = null
+        var v: idDrawVert = idDrawVert()
     }
 
     class optEdge_s {
@@ -1953,10 +1951,10 @@ object optimize {
         var filled = false
         val midpoint: idVec3 = idVec3()
         var next: optTri_s? = null
-        var v: Array<optVertex_s?> = arrayOfNulls<optVertex_s?>(3)
+        var v: Array<optVertex_s> = Array(3) { optVertex_s() }
     }
 
-    internal class optIsland_t {
+    class optIsland_t {
         var edges: optEdge_s? = null
         var group: optimizeGroup_s? = null
         var tris: optTri_s? = null
@@ -1969,18 +1967,18 @@ object optimize {
         var v2: optVertex_s? = null
     }
 
-    internal class originalEdges_t {
-        var v1: optVertex_s? = null
-        var v2: optVertex_s? = null
+    class originalEdges_t {
+        var v1: optVertex_s = optVertex_s()
+        var v2: optVertex_s = optVertex_s()
     }
 
     internal class edgeCrossing_s {
         var next: edgeCrossing_s? = null
-        var ov: optVertex_s? = null
+        var ov: optVertex_s = optVertex_s()
     }
 
-    internal class LengthSort : cmp_t<edgeLength_t?> {
-        override fun compare(a: edgeLength_t?, b: edgeLength_t?): Int {
+    internal class LengthSort : cmp_t<edgeLength_t> {
+        override fun compare(a: edgeLength_t, b: edgeLength_t): Int {
             if (a.length < b.length) {
                 return -1
             }

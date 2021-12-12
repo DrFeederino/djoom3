@@ -298,13 +298,13 @@ object Image_process {
      smeared clamps...
      ================
      */
-    fun R_MipMap(`in`: ByteBuffer?, width: Int, height: Int, preserveBorder: Boolean): ByteBuffer? {
+    fun R_MipMap(`in`: ByteBuffer, width: Int, height: Int, preserveBorder: Boolean): ByteBuffer {
         var width = width
         var height = height
         var i: Int
         var j: Int
         var in_p: Int
-        val out: ByteBuffer?
+        val out: ByteBuffer
         var out_p: Int
         val row: Int
         val border = ByteArray(4)

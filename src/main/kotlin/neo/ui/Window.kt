@@ -2787,7 +2787,7 @@ object Window {
          Inserts the given window as a child into the given location in the zorder.
          ================
          */
-        fun InsertChild(win: idWindow, before: idWindow): Boolean {
+        fun InsertChild(win: idWindow, before: idWindow?): Boolean {
             AddChild(win)
             win.parent = this
             val dwt = drawWin_t()

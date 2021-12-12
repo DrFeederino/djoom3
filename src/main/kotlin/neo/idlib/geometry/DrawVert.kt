@@ -8,6 +8,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.abs
 
+
 /**
  *
  */
@@ -35,10 +36,10 @@ object DrawVert {
     class idDrawVert : SERiAL {
         private val DBG_count = DBG_counter++
         var color: ByteArray = ByteArray(4)
-        val normal: idVec3
-        val st: idVec2
-        val tangents: Array<idVec3>
-        val xyz: idVec3
+        var normal: idVec3
+        var st: idVec2
+        var tangents: Array<idVec3>
+        var xyz: idVec3
 
         @Transient
         private var VBO_OFFSET = 0
@@ -57,6 +58,13 @@ object DrawVert {
          */
         constructor(buffer: ByteBuffer) : this() {
             Read(buffer)
+        }
+
+        constructor (dv: idDrawVert) {
+            xyz = idVec3(dv.xyz)
+            st = idVec2(dv.st)
+            normal = idVec3(dv.normal)
+            tangents = arrayOf(idVec3(dv.tangents[0]), idVec3(dv.tangents[1]))
         }
 
         fun set(dv: idDrawVert) {

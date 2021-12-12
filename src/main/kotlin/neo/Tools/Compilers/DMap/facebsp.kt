@@ -68,7 +68,7 @@ object facebsp {
         while (p != null) {
             s = if (p.nodes[1] == node) 1 else 0
             nextp = p.next[s]
-            portals.RemovePortalFromNode(p, p.nodes[1 xor s])
+            portals.RemovePortalFromNode(p, p.nodes[1 xor s]!!)
             portals.FreePortal(p)
             p = nextp
         }

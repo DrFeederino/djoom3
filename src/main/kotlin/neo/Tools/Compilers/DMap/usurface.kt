@@ -783,7 +783,7 @@ object usurface {
         // if the light is no-shadows, don't add any surfaces
         // to the beam tree at all
         if (!light.def.parms.noShadows
-            && light.def.lightShader.LightCastsShadows()
+            && light.def.lightShader!!.LightCastsShadows()
         ) {
             i = 0
             while (i < e.numAreas) {
@@ -904,8 +904,8 @@ object usurface {
             while (group != null) {
                 nextGroup = group.nextGroup
                 // if the surface doesn't get lit, don't carve it up
-                if (light.def.lightShader.IsFogLight() && !group.material!!.ReceivesFog()
-                    || !light.def.lightShader.IsFogLight() && !group.material!!.ReceivesLighting()
+                if (light.def.lightShader!!.IsFogLight() && !group.material!!.ReceivesFog()
+                    || !light.def.lightShader!!.IsFogLight() && !group.material!!.ReceivesLighting()
                     || !group.bounds.IntersectsBounds(light.def.frustumTris!!.bounds)
                 ) {
                     group.nextGroup = carvedGroups
@@ -922,7 +922,7 @@ object usurface {
 
                 // if the group doesn't face the light,
                 // it won't get carved at all
-                if (!light.def.lightShader.LightEffectsBackSides()
+                if (light.def.lightShader!!.LightEffectsBackSides()
                     && !group.material!!.ReceivesLightingOnBackSides()
                     && dmap.dmapGlobals.mapPlanes[group.planeNum].Distance(light.def.parms.origin) <= 0
                 ) {

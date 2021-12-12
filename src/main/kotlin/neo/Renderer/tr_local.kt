@@ -77,7 +77,7 @@ object tr_local {
     const val GLS_DEPTHFUNC_ALWAYS = 0x00010000
 
     //
-    const val GLS_DEFAULT = tr_local.GLS_DEPTHFUNC_ALWAYS
+    const val GLS_DEFAULT = GLS_DEPTHFUNC_ALWAYS
     const val GLS_DEPTHFUNC_EQUAL = 0x00020000
     const val GLS_DEPTHFUNC_LESS = 0x0
 
@@ -102,7 +102,7 @@ object tr_local {
     //
     const val GLS_POLYMODE_LINE = 0x00002000
     const val GLS_REDMASK = 0x00000200
-    const val GLS_COLORMASK = tr_local.GLS_REDMASK or tr_local.GLS_GREENMASK or tr_local.GLS_BLUEMASK
+    const val GLS_COLORMASK = GLS_REDMASK or GLS_GREENMASK or GLS_BLUEMASK
     const val GLS_SRCBLEND_ALPHA_SATURATE = 0x00000009
     const val GLS_SRCBLEND_BITS = 0x0000000f
     const val GLS_SRCBLEND_DST_ALPHA = 0x00000007
@@ -160,7 +160,7 @@ object tr_local {
 
     //
     const val FOG_ENTER_SIZE = 64
-    const val FOG_ENTER = (tr_local.FOG_ENTER_SIZE + 1.0f) / (tr_local.FOG_ENTER_SIZE * 2)
+    const val FOG_ENTER = (FOG_ENTER_SIZE + 1.0f) / (FOG_ENTER_SIZE * 2)
 
     //=======================================================================
     // this is the inital allocation for max number of drawsurfs
@@ -641,7 +641,7 @@ object tr_local {
                 : Int
 
         //
-        var modelMatrix: FloatArray? = FloatArray(16) // this is just a rearrangement of parms.axis and parms.origin
+        var modelMatrix: FloatArray = FloatArray(16) // this is just a rearrangement of parms.axis and parms.origin
         var overlay // blood overlays on animated models
                 : idRenderModelOverlay?
         var parms: renderEntity_s
@@ -737,7 +737,7 @@ object tr_local {
 
         //
         val globalShadows: Array<drawSurf_s?> = arrayOf(null) // shadow everything
-        val lightProject: Array<idPlane> = idPlane.Companion.generateArray(4) // light project used by backend
+        val lightProject: Array<idPlane> = idPlane.generateArray(4) // light project used by backend
         val localInteractions: Array<drawSurf_s?> = arrayOf(null) // don't get local shadows
         val localShadows: Array<drawSurf_s?> = arrayOf(null) // don't shadow local Surfaces
         val translucentInteractions: Array<drawSurf_s?> = arrayOf(null) // get shadows from everything
@@ -933,7 +933,7 @@ object tr_local {
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
-            frustum = idPlane.Companion.generateArray(5)
+            frustum = idPlane.generateArray(5)
         }
 
         constructor(v: viewDef_s) {
@@ -990,9 +990,9 @@ object tr_local {
         var ambientLight // use tr.ambientNormalMap instead of normalization cube map
                 = 0
         var bumpImage: idImage? = null
-        var bumpMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
+        var bumpMatrix: Array<idVec4> = idVec4.generateArray(2)
         var diffuseImage: idImage? = null
-        var diffuseMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
+        var diffuseMatrix: Array<idVec4> = idVec4.generateArray(2)
         var lightFalloffImage: idImage? = null
 
         //
@@ -1000,7 +1000,7 @@ object tr_local {
         var lightProjection: Array<idVec4> =
             idVec4.generateArray(4) // in local coordinates, possibly with a texture matrix baked in
         var specularImage: idImage? = null
-        var specularMatrix: Array<idVec4> = idVec4.Companion.generateArray(2)
+        var specularMatrix: Array<idVec4> = idVec4.generateArray(2)
         var surf: drawSurf_s? = null
         var vertexColor // applies to both diffuse and specular
                 : stageVertexColor_t = stageVertexColor_t.SVC_IGNORE
@@ -1147,7 +1147,7 @@ object tr_local {
         var tmu: Array<tmu_t?>?
 
         init {
-            tmu = arrayOfNulls<tmu_t?>(tr_local.MAX_MULTITEXTURE_UNITS)
+            tmu = arrayOfNulls<tmu_t?>(MAX_MULTITEXTURE_UNITS)
             for (a in tmu.indices) {
                 tmu.get(a) = tmu_t()
             }
@@ -1408,22 +1408,22 @@ object tr_local {
             }
             val oldVPstate = backEndRendererHasVertexPrograms
             backEndRenderer = backEndName_t.BE_BAD
-            if (idStr.Companion.Icmp(RenderSystem_init.r_renderer.GetString(), "arb") == 0) {
+            if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "arb") == 0) {
                 backEndRenderer = backEndName_t.BE_ARB
-            } else if (idStr.Companion.Icmp(RenderSystem_init.r_renderer.GetString(), "arb2") == 0) {
-                if (tr_local.glConfig.allowARB2Path) {
+            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "arb2") == 0) {
+                if (glConfig.allowARB2Path) {
                     backEndRenderer = backEndName_t.BE_ARB2
                 }
-            } else if (idStr.Companion.Icmp(RenderSystem_init.r_renderer.GetString(), "nv10") == 0) {
-                if (tr_local.glConfig.allowNV10Path) {
+            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "nv10") == 0) {
+                if (glConfig.allowNV10Path) {
                     backEndRenderer = backEndName_t.BE_NV10
                 }
-            } else if (idStr.Companion.Icmp(RenderSystem_init.r_renderer.GetString(), "nv20") == 0) {
-                if (tr_local.glConfig.allowNV20Path) {
+            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "nv20") == 0) {
+                if (glConfig.allowNV20Path) {
                     backEndRenderer = backEndName_t.BE_NV20
                 }
-            } else if (idStr.Companion.Icmp(RenderSystem_init.r_renderer.GetString(), "r200") == 0) {
-                if (tr_local.glConfig.allowR200Path) {
+            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "r200") == 0) {
+                if (glConfig.allowR200Path) {
                     backEndRenderer = backEndName_t.BE_R200
                 }
             }
@@ -1431,13 +1431,13 @@ object tr_local {
             // fallback
             if (backEndRenderer == backEndName_t.BE_BAD) {
                 // choose the best
-                backEndRenderer = if (tr_local.glConfig.allowARB2Path) {
+                backEndRenderer = if (glConfig.allowARB2Path) {
                     backEndName_t.BE_ARB2
-                } else if (tr_local.glConfig.allowR200Path) {
+                } else if (glConfig.allowR200Path) {
                     backEndName_t.BE_R200
-                } else if (tr_local.glConfig.allowNV20Path) {
+                } else if (glConfig.allowNV20Path) {
                     backEndName_t.BE_NV20
-                } else if (tr_local.glConfig.allowNV10Path) {
+                } else if (glConfig.allowNV10Path) {
                     backEndName_t.BE_NV10
                 } else {
                     // the others are considered experimental
@@ -1512,7 +1512,7 @@ object tr_local {
             ambientLightVector[3] = 1.0f
 
 //            memset(backEnd, 0, sizeof(backEnd));
-            tr_local.backEnd = backEndState_t()
+            backEnd = backEndState_t()
             RenderSystem_init.R_InitCvars()
             RenderSystem_init.R_InitCommands()
             guiModel = idGuiModel()
@@ -1521,7 +1521,7 @@ object tr_local {
             demoGuiModel.Clear()
             tr_trisurf.R_InitTriSurfData()
             Image.globalImages.Init()
-            idCinematic.Companion.InitCinematic()
+            idCinematic.InitCinematic()
 
             // build brightness translation tables
             RenderSystem_init.R_SetColorMappings()
@@ -1543,11 +1543,11 @@ object tr_local {
         override fun Shutdown() {
             Common.common.Printf("idRenderSystem::Shutdown()\n")
             tr_font.R_DoneFreeType()
-            if (tr_local.glConfig.isInitialized) {
+            if (glConfig.isInitialized) {
                 Image.globalImages.PurgeAllImages()
             }
             ModelManager.renderModelManager.Shutdown()
-            idCinematic.Companion.ShutdownCinematic()
+            idCinematic.ShutdownCinematic()
             Image.globalImages.Shutdown()
 
             // close the r_logFile
@@ -1577,7 +1577,7 @@ object tr_local {
 
         override fun InitOpenGL() {
             // if OpenGL isn't started, start it now
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 val err: Int
                 RenderSystem_init.R_InitOpenGL()
                 Image.globalImages.ReloadAllImages()
@@ -1592,23 +1592,23 @@ object tr_local {
             // free the context and close the window
             tr_main.R_ShutdownFrameData()
             win_glimp.GLimp_Shutdown()
-            tr_local.glConfig.isInitialized = false
+            glConfig.isInitialized = false
         }
 
         override fun IsOpenGLRunning(): Boolean {
-            return tr_local.glConfig.isInitialized
+            return glConfig.isInitialized
         }
 
         override fun IsFullScreen(): Boolean {
-            return tr_local.glConfig.isFullscreen
+            return glConfig.isFullscreen
         }
 
         override fun GetScreenWidth(): Int {
-            return tr_local.glConfig.vidWidth
+            return glConfig.vidWidth
         }
 
         override fun GetScreenHeight(): Int {
-            return tr_local.glConfig.vidHeight
+            return glConfig.vidHeight
         }
 
         override fun AllocRenderWorld(): idRenderWorld? {
@@ -1696,7 +1696,7 @@ object tr_local {
                 var glyphScale =
                     1.0f // change the scale to be relative to 1 based on 72 dpi ( so dpi of 144 means a scale of .5 )
                 glyphScale *= 48.0f / pointSize
-                idStr.Companion.snPrintf(name, name.capacity(), "%s/fontImage_%d.dat", fontName, pointSize)
+                idStr.snPrintf(name, name.capacity(), "%s/fontImage_%d.dat", fontName, pointSize)
                 val outFont: fontInfo_t?
                 if (0 == fontCount) {
                     font.fontInfoSmall = fontInfo_t()
@@ -1708,9 +1708,9 @@ object tr_local {
                     font.fontInfoLarge = fontInfo_t()
                     outFont = font.fontInfoLarge
                 }
-                idStr.Companion.Copynz(outFont.name, name.toString())
+                idStr.Copynz(outFont.name, name.toString())
                 len = FileSystem_h.fileSystem.ReadFile(name.toString(), null, fTime)
-                if (len != fontInfo_t.Companion.BYTES) {
+                if (len != fontInfo_t.BYTES) {
                     Common.common.Warning("RegisterFont: couldn't find font: '%s'", name)
                     return false
                 }
@@ -1744,7 +1744,7 @@ object tr_local {
                 var mh = 0
                 i = RenderSystem.GLYPH_START
                 while (i < RenderSystem.GLYPH_END) {
-                    idStr.Companion.snPrintf(name, name.capacity(), "%s/%s", fontName, outFont.glyphs[i].shaderName)
+                    idStr.snPrintf(name, name.capacity(), "%s/%s", fontName, outFont.glyphs[i].shaderName)
                     outFont.glyphs[i].glyph = DeclManager.declManager.FindMaterial(name.toString())
                     outFont.glyphs[i].glyph.SetSort(Material.SS_GUI.toFloat())
                     if (mh < outFont.glyphs[i].height) {
@@ -1961,7 +1961,7 @@ object tr_local {
             t3: idVec2?,
             material: idMaterial?
         ) {
-            tr_local.tr.guiModel.DrawStretchTri(p1, p2, p3, t1, t2, t3, material)
+            tr.guiModel.DrawStretchTri(p1, p2, p3, t1, t2, t3, material)
         }
 
         override fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?) {
@@ -1969,8 +1969,8 @@ object tr_local {
         }
 
         override fun GetGLSettings(width: IntArray?, height: IntArray?) {
-            width.get(0) = tr_local.glConfig.vidWidth
-            height.get(0) = tr_local.glConfig.vidHeight
+            width.get(0) = glConfig.vidWidth
+            height.get(0) = glConfig.vidHeight
         }
 
         override fun PrintMemInfo(mi: MemInfo_t?) {
@@ -2049,12 +2049,12 @@ object tr_local {
             xx = x
             SetColor(setColor)
             while (s < string.size && string.get(s) != '\u0000') {
-                if (idStr.Companion.IsColor(TempDump.ctos(string).substring(s))) {
+                if (idStr.IsColor(TempDump.ctos(string).substring(s))) {
                     if (!forceColor) {
                         if (string.get(s + 1) == Str.C_COLOR_DEFAULT) {
                             SetColor(setColor)
                         } else {
-                            color = idStr.Companion.ColorForIndex(string.get(s + 1))
+                            color = idStr.ColorForIndex(string.get(s + 1))
                             color[3] = setColor.get(3)
                             SetColor(color)
                         }
@@ -2066,7 +2066,7 @@ object tr_local {
                 xx += RenderSystem.SMALLCHAR_WIDTH
                 s++
             }
-            SetColor(Lib.Companion.colorWhite)
+            SetColor(Lib.colorWhite)
         }
 
         override fun DrawBigChar(x: Int, y: Int, ch: Int, material: idMaterial?) {
@@ -2128,12 +2128,12 @@ object tr_local {
             xx = x
             SetColor(setColor)
             while (s < string.length) {
-                if (idStr.Companion.IsColor(string.substring(s))) {
+                if (idStr.IsColor(string.substring(s))) {
                     if (!forceColor) {
                         if (string.get(s + 1).code == Str.C_COLOR_DEFAULT) {
                             SetColor(setColor)
                         } else {
-                            color = idStr.Companion.ColorForIndex(string.get(s + 1).code)
+                            color = idStr.ColorForIndex(string.get(s + 1).code)
                             color[3] = setColor.get(3)
                             SetColor(color)
                         }
@@ -2145,13 +2145,13 @@ object tr_local {
                 xx += RenderSystem.BIGCHAR_WIDTH
                 s++
             }
-            SetColor(Lib.Companion.colorWhite)
+            SetColor(Lib.colorWhite)
         }
 
         override fun WriteDemoPics() {
-            Session.Companion.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-            Session.Companion.session.writeDemo.WriteInt(demoCommand_t.DC_GUI_MODEL)
-            guiModel.WriteToDemo(Session.Companion.session.writeDemo)
+            Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
+            Session.session.writeDemo.WriteInt(demoCommand_t.DC_GUI_MODEL)
+            guiModel.WriteToDemo(Session.session.writeDemo)
         }
 
         override fun DrawDemoPics() {
@@ -2162,7 +2162,7 @@ object tr_local {
             var windowWidth = windowWidth
             var windowHeight = windowHeight
             var cmd: setBufferCommand_t?
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2175,8 +2175,8 @@ object tr_local {
                 windowWidth = tiledViewport[0]
                 windowHeight = tiledViewport[1]
             }
-            tr_local.glConfig.vidWidth = windowWidth
-            tr_local.glConfig.vidHeight = windowHeight
+            glConfig.vidWidth = windowWidth
+            glConfig.vidHeight = windowHeight
             renderCrops[0].x = 0
             renderCrops[0].y = 0
             renderCrops[0].width = windowWidth
@@ -2221,7 +2221,7 @@ object tr_local {
         override fun EndFrame(frontEndMsec: IntArray?, backEndMsec: IntArray?) {
             var cmd: emptyCommand_t?
             DBG_EndFrame++
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2234,7 +2234,7 @@ object tr_local {
                 frontEndMsec[0] = pc.frontEndMsec
             }
             if (backEndMsec != null) {
-                backEndMsec[0] = tr_local.backEnd.pc.msec
+                backEndMsec[0] = backEnd.pc.msec
             }
 
             // print any other statistics and clear all of them
@@ -2259,9 +2259,9 @@ object tr_local {
 
             // we can now release the vertexes used this frame
             VertexCache.vertexCache.EndFrame()
-            if (Session.Companion.session.writeDemo != null) {
-                Session.Companion.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.Companion.session.writeDemo.WriteInt(demoCommand_t.DC_END_FRAME)
+            if (Session.session.writeDemo != null) {
+                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo.WriteInt(demoCommand_t.DC_END_FRAME)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_END_FRAME\n")
                 }
@@ -2360,7 +2360,7 @@ object tr_local {
         override fun CropRenderSize(width: Int, height: Int, makePowerOfTwo: Boolean, forceDimensions: Boolean) {
             var width = width
             var height = height
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2370,12 +2370,12 @@ object tr_local {
             if (width < 1 || height < 1) {
                 Common.common.Error("CropRenderSize: bad sizes")
             }
-            if (Session.Companion.session.writeDemo != null) {
-                Session.Companion.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.Companion.session.writeDemo.WriteInt(demoCommand_t.DC_CROP_RENDER)
-                Session.Companion.session.writeDemo.WriteInt(width)
-                Session.Companion.session.writeDemo.WriteInt(height)
-                Session.Companion.session.writeDemo.WriteInt(TempDump.btoi(makePowerOfTwo))
+            if (Session.session.writeDemo != null) {
+                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo.WriteInt(demoCommand_t.DC_CROP_RENDER)
+                Session.session.writeDemo.WriteInt(width)
+                Session.session.writeDemo.WriteInt(height)
+                Session.session.writeDemo.WriteInt(TempDump.btoi(makePowerOfTwo))
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_CROP_RENDER\n")
                 }
@@ -2406,13 +2406,13 @@ object tr_local {
             val rc = renderCrops[currentRenderCrop]
 
             // we might want to clip these to the crop window instead
-            while (width > tr_local.glConfig.vidWidth) {
+            while (width > glConfig.vidWidth) {
                 width = width shr 1
             }
-            while (height > tr_local.glConfig.vidHeight) {
+            while (height > glConfig.vidHeight) {
                 height = height shr 1
             }
-            if (currentRenderCrop == tr_local.MAX_RENDER_CROPS) {
+            if (currentRenderCrop == MAX_RENDER_CROPS) {
                 Common.common.Error("idRenderSystemLocal::CropRenderSize: currentRenderCrop == MAX_RENDER_CROPS")
             }
             currentRenderCrop++
@@ -2425,16 +2425,16 @@ object tr_local {
             rc.height = height
         }
 
-        override fun CaptureRenderToImage(imageName: String?) {
-            if (!tr_local.glConfig.isInitialized) {
+        override fun CaptureRenderToImage(imageName: String) {
+            if (!glConfig.isInitialized) {
                 return
             }
             guiModel.EmitFullScreen()
             guiModel.Clear()
-            if (Session.Companion.session.writeDemo != null) {
-                Session.Companion.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.Companion.session.writeDemo.WriteInt(demoCommand_t.DC_CAPTURE_RENDER)
-                Session.Companion.session.writeDemo.WriteHashString(imageName)
+            if (Session.session.writeDemo != null) {
+                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo.WriteInt(demoCommand_t.DC_CAPTURE_RENDER)
+                Session.session.writeDemo.WriteHashString(imageName)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_CAPTURE_RENDER: %s\n", imageName)
                 }
@@ -2450,7 +2450,7 @@ object tr_local {
                 textureDepth_t.TD_DEFAULT
             )
             val rc = renderCrops[currentRenderCrop]
-            var cmd: copyRenderCommand_t?
+            var cmd: copyRenderCommand_t
             RenderSystem.R_GetCommandBuffer(copyRenderCommand_t().also { cmd = it /*sizeof(cmd)*/ })
             cmd.commandId = renderCommand_t.RC_COPY_RENDER
             cmd.x = rc.x
@@ -2461,8 +2461,8 @@ object tr_local {
             guiModel.Clear()
         }
 
-        override fun CaptureRenderToFile(fileName: String?, fixAlpha: Boolean) {
-            if (!tr_local.glConfig.isInitialized) {
+        override fun CaptureRenderToFile(fileName: String, fixAlpha: Boolean) {
+            if (!glConfig.isInitialized) {
                 return
             }
             val rc = renderCrops[currentRenderCrop]
@@ -2488,7 +2488,7 @@ object tr_local {
         }
 
         override fun UnCrop() {
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
             if (currentRenderCrop < 1) {
@@ -2499,20 +2499,20 @@ object tr_local {
             guiModel.EmitFullScreen()
             guiModel.Clear()
             currentRenderCrop--
-            if (Session.Companion.session.writeDemo != null) {
-                Session.Companion.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.Companion.session.writeDemo.WriteInt(demoCommand_t.DC_UNCROP_RENDER)
+            if (Session.session.writeDemo != null) {
+                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo.WriteInt(demoCommand_t.DC_UNCROP_RENDER)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_UNCROP\n")
                 }
             }
         }
 
-        override fun GetCardCaps(oldCard: BooleanArray?, nv10or20: BooleanArray?) {
+        override fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray) {
             nv10or20.get(0) =
-                tr_local.tr.backEndRenderer == backEndName_t.BE_NV10 || tr_local.tr.backEndRenderer == backEndName_t.BE_NV20
+                tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
             oldCard.get(0) =
-                tr_local.tr.backEndRenderer == backEndName_t.BE_ARB || tr_local.tr.backEndRenderer == backEndName_t.BE_R200 || tr_local.tr.backEndRenderer == backEndName_t.BE_NV10 || tr_local.tr.backEndRenderer == backEndName_t.BE_NV20
+                tr.backEndRenderer == backEndName_t.BE_ARB || tr.backEndRenderer == backEndName_t.BE_R200 || tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
         }
 
         override fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean {
@@ -2595,7 +2595,7 @@ object tr_local {
      */
     class optimizedShadow_t {
         var indexes // caller should free
-                : IntArray?
+                : IntArray
 
         //
         // indexes must be sorted frontCap, rearCap, silPlanes so the caps can be removed
@@ -2606,7 +2606,7 @@ object tr_local {
         var numVerts = 0
         var totalIndexes = 0
         var verts // includes both front and back projections, caller should free
-                : Array<idVec3?>?
+                : Array<idVec3>
     }
 
     // deformable meshes precalculate as much as possible from a base frame, then generate
