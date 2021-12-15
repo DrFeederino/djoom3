@@ -12,6 +12,7 @@ import java.nio.ByteBuffer
 import java.nio.file.Paths
 import java.util.*
 
+
 /**
  *
  */
@@ -1333,8 +1334,8 @@ object Str {
         //public	friend int			vsprintf( idStr &dest, const char *fmt, va_list ap );
         fun vsprintf(string: idStr, fmt: String, vararg args: Any): Int { //char[] argptr) {
             val l: Int
-            val buffer = emptyArray<String?>() //new char[32000];
-            l = vsnPrintf(buffer, 32000, fmt, *args)
+            val buffer = emptyArray<String>() //new char[32000];
+            l = vsnPrintf(buffer, 32000, fmt, args)
             //	buffer[buffer.length-1] = '\0';
 
 //	string = buffer;
@@ -1549,6 +1550,15 @@ object Str {
                     i++
                 }
                 return i
+            }
+
+            fun IsNumeric(s: String): Boolean {
+                return try {
+                    s.toDouble()
+                    true
+                } catch (e: NumberFormatException) {
+                    false
+                }
             }
 
             fun ToLower(s: CharArray): CharArray {
@@ -2066,7 +2076,7 @@ object Str {
          or returns -1 on failure or if the buffer would be overflowed.
          ============
          */
-            fun vsnPrintf(dest: Array<String?>, size: Int, fmt: String, vararg args: Any): Int {
+            fun vsnPrintf(dest: Array<String>, size: Int, fmt: String, vararg args: Any): Int {
                 var ret = 0
 
 //#ifdef _WIN32
@@ -2081,7 +2091,7 @@ object Str {
 //            dest[size - 1] = '\0';
                 ret = String.format(fmt, *args).also { dest[0] = it }.length
                 if (ret < 0 || ret >= size) {
-                    dest[0] = null
+                    dest[0] = ""
                     return -1
                 }
                 return ret

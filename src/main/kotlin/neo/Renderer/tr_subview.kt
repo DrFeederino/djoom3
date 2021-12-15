@@ -25,7 +25,7 @@ object tr_subview {
      R_MirrorPoint
      =================
      */
-    fun R_MirrorPoint(`in`: idVec3?, surface: orientation_t?, camera: orientation_t?, out: idVec3?) {
+    fun R_MirrorPoint(`in`: idVec3, surface: orientation_t, camera: orientation_t, out: idVec3) {
         var i: Int
         val local = idVec3()
         val transformed = idVec3()
@@ -521,7 +521,7 @@ object tr_subview {
         var drawSurf: drawSurf_s?
         var i: Int
         var subviews: Boolean
-        var shader: idMaterial?
+        var shader: Material.idMaterial?
 
         // for testing the performance hit
         if (RenderSystem_init.r_skipSubviews.GetBool()) {
@@ -539,7 +539,7 @@ object tr_subview {
                 i++
                 continue
             }
-            if (tr_subview.R_GenerateSurfaceSubview(drawSurf)) {
+            if (R_GenerateSurfaceSubview(drawSurf)) {
                 subviews = true
             }
             i++
@@ -547,8 +547,8 @@ object tr_subview {
         return subviews
     }
 
-    internal class orientation_t {
-        var axis: idMat3? = idMat3()
-        val origin: idVec3? = idVec3()
+    class orientation_t {
+        var axis: idMat3 = idMat3()
+        val origin: idVec3 = idVec3()
     }
 }

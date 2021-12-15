@@ -5,7 +5,8 @@ import neo.TempDump.void_callback
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.File_h.idFile
-import neo.idlib.*
+import neo.idlib.CmdArgs
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
@@ -200,7 +201,7 @@ object KeyInput {
     const val MAX_KEYS = 256
 
     //
-    val cheatCodes: Array<String?>? = arrayOf(
+    val cheatCodes: Array<String?> = arrayOf(
         "iddqd",  // Invincibility
         "idkfa",  // All weapons, keys, ammo, and 200% armor
         "idfa",  // Reset ammunition
@@ -232,142 +233,142 @@ object KeyInput {
     //    
     //    
     // names not in this list can either be lowercase ascii, or '0xnn' hex sequences
-    val keynames: Array<keyname_t?>? = arrayOf(
-        keyname_t("TAB", KeyInput.K_TAB, "#str_07018"),
-        keyname_t("ENTER", KeyInput.K_ENTER, "#str_07019"),
-        keyname_t("ESCAPE", KeyInput.K_ESCAPE, "#str_07020"),
-        keyname_t("SPACE", KeyInput.K_SPACE, "#str_07021"),
-        keyname_t("BACKSPACE", KeyInput.K_BACKSPACE, "#str_07022"),
-        keyname_t("UPARROW", KeyInput.K_UPARROW, "#str_07023"),
-        keyname_t("DOWNARROW", KeyInput.K_DOWNARROW, "#str_07024"),
-        keyname_t("LEFTARROW", KeyInput.K_LEFTARROW, "#str_07025"),
-        keyname_t("RIGHTARROW", KeyInput.K_RIGHTARROW, "#str_07026"),  //
-        keyname_t("ALT", KeyInput.K_ALT, "#str_07027"),
-        keyname_t("RIGHTALT", KeyInput.K_RIGHT_ALT, "#str_07027"),
-        keyname_t("CTRL", KeyInput.K_CTRL, "#str_07028"),
-        keyname_t("SHIFT", KeyInput.K_SHIFT, "#str_07029"),  //
-        keyname_t("LWIN", KeyInput.K_LWIN, "#str_07030"),
-        keyname_t("RWIN", KeyInput.K_RWIN, "#str_07031"),
-        keyname_t("MENU", KeyInput.K_MENU, "#str_07032"),  //
-        keyname_t("COMMAND", KeyInput.K_COMMAND, "#str_07033"),  //
-        keyname_t("CAPSLOCK", KeyInput.K_CAPSLOCK, "#str_07034"),
-        keyname_t("SCROLL", KeyInput.K_SCROLL, "#str_07035"),
-        keyname_t("PRINTSCREEN", KeyInput.K_PRINT_SCR, "#str_07179"),  //
-        keyname_t("F1", KeyInput.K_F1, "#str_07036"),
-        keyname_t("F2", KeyInput.K_F2, "#str_07037"),
-        keyname_t("F3", KeyInput.K_F3, "#str_07038"),
-        keyname_t("F4", KeyInput.K_F4, "#str_07039"),
-        keyname_t("F5", KeyInput.K_F5, "#str_07040"),
-        keyname_t("F6", KeyInput.K_F6, "#str_07041"),
-        keyname_t("F7", KeyInput.K_F7, "#str_07042"),
-        keyname_t("F8", KeyInput.K_F8, "#str_07043"),
-        keyname_t("F9", KeyInput.K_F9, "#str_07044"),
-        keyname_t("F10", KeyInput.K_F10, "#str_07045"),
-        keyname_t("F11", KeyInput.K_F11, "#str_07046"),
-        keyname_t("F12", KeyInput.K_F12, "#str_07047"),  //
-        keyname_t("INS", KeyInput.K_INS, "#str_07048"),
-        keyname_t("DEL", KeyInput.K_DEL, "#str_07049"),
-        keyname_t("PGDN", KeyInput.K_PGDN, "#str_07050"),
-        keyname_t("PGUP", KeyInput.K_PGUP, "#str_07051"),
-        keyname_t("HOME", KeyInput.K_HOME, "#str_07052"),
-        keyname_t("END", KeyInput.K_END, "#str_07053"),  //
-        keyname_t("MOUSE1", KeyInput.K_MOUSE1, "#str_07054"),
-        keyname_t("MOUSE2", KeyInput.K_MOUSE2, "#str_07055"),
-        keyname_t("MOUSE3", KeyInput.K_MOUSE3, "#str_07056"),
-        keyname_t("MOUSE4", KeyInput.K_MOUSE4, "#str_07057"),
-        keyname_t("MOUSE5", KeyInput.K_MOUSE5, "#str_07058"),
-        keyname_t("MOUSE6", KeyInput.K_MOUSE6, "#str_07059"),
-        keyname_t("MOUSE7", KeyInput.K_MOUSE7, "#str_07060"),
-        keyname_t("MOUSE8", KeyInput.K_MOUSE8, "#str_07061"),  //
-        keyname_t("MWHEELUP", KeyInput.K_MWHEELUP, "#str_07131"),
-        keyname_t("MWHEELDOWN", KeyInput.K_MWHEELDOWN, "#str_07132"),  //
-        keyname_t("JOY1", KeyInput.K_JOY1, "#str_07062"),
-        keyname_t("JOY2", KeyInput.K_JOY2, "#str_07063"),
-        keyname_t("JOY3", KeyInput.K_JOY3, "#str_07064"),
-        keyname_t("JOY4", KeyInput.K_JOY4, "#str_07065"),
-        keyname_t("JOY5", KeyInput.K_JOY5, "#str_07066"),
-        keyname_t("JOY6", KeyInput.K_JOY6, "#str_07067"),
-        keyname_t("JOY7", KeyInput.K_JOY7, "#str_07068"),
-        keyname_t("JOY8", KeyInput.K_JOY8, "#str_07069"),
-        keyname_t("JOY9", KeyInput.K_JOY9, "#str_07070"),
-        keyname_t("JOY10", KeyInput.K_JOY10, "#str_07071"),
-        keyname_t("JOY11", KeyInput.K_JOY11, "#str_07072"),
-        keyname_t("JOY12", KeyInput.K_JOY12, "#str_07073"),
-        keyname_t("JOY13", KeyInput.K_JOY13, "#str_07074"),
-        keyname_t("JOY14", KeyInput.K_JOY14, "#str_07075"),
-        keyname_t("JOY15", KeyInput.K_JOY15, "#str_07076"),
-        keyname_t("JOY16", KeyInput.K_JOY16, "#str_07077"),
-        keyname_t("JOY17", KeyInput.K_JOY17, "#str_07078"),
-        keyname_t("JOY18", KeyInput.K_JOY18, "#str_07079"),
-        keyname_t("JOY19", KeyInput.K_JOY19, "#str_07080"),
-        keyname_t("JOY20", KeyInput.K_JOY20, "#str_07081"),
-        keyname_t("JOY21", KeyInput.K_JOY21, "#str_07082"),
-        keyname_t("JOY22", KeyInput.K_JOY22, "#str_07083"),
-        keyname_t("JOY23", KeyInput.K_JOY23, "#str_07084"),
-        keyname_t("JOY24", KeyInput.K_JOY24, "#str_07085"),
-        keyname_t("JOY25", KeyInput.K_JOY25, "#str_07086"),
-        keyname_t("JOY26", KeyInput.K_JOY26, "#str_07087"),
-        keyname_t("JOY27", KeyInput.K_JOY27, "#str_07088"),
-        keyname_t("JOY28", KeyInput.K_JOY28, "#str_07089"),
-        keyname_t("JOY29", KeyInput.K_JOY29, "#str_07090"),
-        keyname_t("JOY30", KeyInput.K_JOY30, "#str_07091"),
-        keyname_t("JOY31", KeyInput.K_JOY31, "#str_07092"),
-        keyname_t("JOY32", KeyInput.K_JOY32, "#str_07093"),  //
-        keyname_t("AUX1", KeyInput.K_AUX1, "#str_07094"),
-        keyname_t("AUX2", KeyInput.K_AUX2, "#str_07095"),
-        keyname_t("AUX3", KeyInput.K_AUX3, "#str_07096"),
-        keyname_t("AUX4", KeyInput.K_AUX4, "#str_07097"),
-        keyname_t("AUX5", KeyInput.K_AUX5, "#str_07098"),
-        keyname_t("AUX6", KeyInput.K_AUX6, "#str_07099"),
-        keyname_t("AUX7", KeyInput.K_AUX7, "#str_07100"),
-        keyname_t("AUX8", KeyInput.K_AUX8, "#str_07101"),
-        keyname_t("AUX9", KeyInput.K_AUX9, "#str_07102"),
-        keyname_t("AUX10", KeyInput.K_AUX10, "#str_07103"),
-        keyname_t("AUX11", KeyInput.K_AUX11, "#str_07104"),
-        keyname_t("AUX12", KeyInput.K_AUX12, "#str_07105"),
-        keyname_t("AUX13", KeyInput.K_AUX13, "#str_07106"),
-        keyname_t("AUX14", KeyInput.K_AUX14, "#str_07107"),
-        keyname_t("AUX15", KeyInput.K_AUX15, "#str_07108"),
-        keyname_t("AUX16", KeyInput.K_AUX16, "#str_07109"),  //
-        keyname_t("KP_HOME", KeyInput.K_KP_HOME, "#str_07110"),
-        keyname_t("KP_UPARROW", KeyInput.K_KP_UPARROW, "#str_07111"),
-        keyname_t("KP_PGUP", KeyInput.K_KP_PGUP, "#str_07112"),
-        keyname_t("KP_LEFTARROW", KeyInput.K_KP_LEFTARROW, "#str_07113"),
-        keyname_t("KP_5", KeyInput.K_KP_5, "#str_07114"),
-        keyname_t("KP_RIGHTARROW", KeyInput.K_KP_RIGHTARROW, "#str_07115"),
-        keyname_t("KP_END", KeyInput.K_KP_END, "#str_07116"),
-        keyname_t("KP_DOWNARROW", KeyInput.K_KP_DOWNARROW, "#str_07117"),
-        keyname_t("KP_PGDN", KeyInput.K_KP_PGDN, "#str_07118"),
-        keyname_t("KP_ENTER", KeyInput.K_KP_ENTER, "#str_07119"),
-        keyname_t("KP_INS", KeyInput.K_KP_INS, "#str_07120"),
-        keyname_t("KP_DEL", KeyInput.K_KP_DEL, "#str_07121"),
-        keyname_t("KP_SLASH", KeyInput.K_KP_SLASH, "#str_07122"),
-        keyname_t("KP_MINUS", KeyInput.K_KP_MINUS, "#str_07123"),
-        keyname_t("KP_PLUS", KeyInput.K_KP_PLUS, "#str_07124"),
-        keyname_t("KP_NUMLOCK", KeyInput.K_KP_NUMLOCK, "#str_07125"),
-        keyname_t("KP_STAR", KeyInput.K_KP_STAR, "#str_07126"),
-        keyname_t("KP_EQUALS", KeyInput.K_KP_EQUALS, "#str_07127"),  //
-        keyname_t("PAUSE", KeyInput.K_PAUSE, "#str_07128"),  //
-        keyname_t("SEMICOLON", ';', "#str_07129"),  // because a raw semicolon separates commands
-        keyname_t("APOSTROPHE", '\'', "#str_07130"),  // because a raw apostrophe messes with parsing
+    val keynames: Array<keyname_t> = arrayOf(
+        keyname_t("TAB", K_TAB, "#str_07018"),
+        keyname_t("ENTER", K_ENTER, "#str_07019"),
+        keyname_t("ESCAPE", K_ESCAPE, "#str_07020"),
+        keyname_t("SPACE", K_SPACE, "#str_07021"),
+        keyname_t("BACKSPACE", K_BACKSPACE, "#str_07022"),
+        keyname_t("UPARROW", K_UPARROW, "#str_07023"),
+        keyname_t("DOWNARROW", K_DOWNARROW, "#str_07024"),
+        keyname_t("LEFTARROW", K_LEFTARROW, "#str_07025"),
+        keyname_t("RIGHTARROW", K_RIGHTARROW, "#str_07026"),  //
+        keyname_t("ALT", K_ALT, "#str_07027"),
+        keyname_t("RIGHTALT", K_RIGHT_ALT, "#str_07027"),
+        keyname_t("CTRL", K_CTRL, "#str_07028"),
+        keyname_t("SHIFT", K_SHIFT, "#str_07029"),  //
+        keyname_t("LWIN", K_LWIN, "#str_07030"),
+        keyname_t("RWIN", K_RWIN, "#str_07031"),
+        keyname_t("MENU", K_MENU, "#str_07032"),  //
+        keyname_t("COMMAND", K_COMMAND, "#str_07033"),  //
+        keyname_t("CAPSLOCK", K_CAPSLOCK, "#str_07034"),
+        keyname_t("SCROLL", K_SCROLL, "#str_07035"),
+        keyname_t("PRINTSCREEN", K_PRINT_SCR, "#str_07179"),  //
+        keyname_t("F1", K_F1, "#str_07036"),
+        keyname_t("F2", K_F2, "#str_07037"),
+        keyname_t("F3", K_F3, "#str_07038"),
+        keyname_t("F4", K_F4, "#str_07039"),
+        keyname_t("F5", K_F5, "#str_07040"),
+        keyname_t("F6", K_F6, "#str_07041"),
+        keyname_t("F7", K_F7, "#str_07042"),
+        keyname_t("F8", K_F8, "#str_07043"),
+        keyname_t("F9", K_F9, "#str_07044"),
+        keyname_t("F10", K_F10, "#str_07045"),
+        keyname_t("F11", K_F11, "#str_07046"),
+        keyname_t("F12", K_F12, "#str_07047"),  //
+        keyname_t("INS", K_INS, "#str_07048"),
+        keyname_t("DEL", K_DEL, "#str_07049"),
+        keyname_t("PGDN", K_PGDN, "#str_07050"),
+        keyname_t("PGUP", K_PGUP, "#str_07051"),
+        keyname_t("HOME", K_HOME, "#str_07052"),
+        keyname_t("END", K_END, "#str_07053"),  //
+        keyname_t("MOUSE1", K_MOUSE1, "#str_07054"),
+        keyname_t("MOUSE2", K_MOUSE2, "#str_07055"),
+        keyname_t("MOUSE3", K_MOUSE3, "#str_07056"),
+        keyname_t("MOUSE4", K_MOUSE4, "#str_07057"),
+        keyname_t("MOUSE5", K_MOUSE5, "#str_07058"),
+        keyname_t("MOUSE6", K_MOUSE6, "#str_07059"),
+        keyname_t("MOUSE7", K_MOUSE7, "#str_07060"),
+        keyname_t("MOUSE8", K_MOUSE8, "#str_07061"),  //
+        keyname_t("MWHEELUP", K_MWHEELUP, "#str_07131"),
+        keyname_t("MWHEELDOWN", K_MWHEELDOWN, "#str_07132"),  //
+        keyname_t("JOY1", K_JOY1, "#str_07062"),
+        keyname_t("JOY2", K_JOY2, "#str_07063"),
+        keyname_t("JOY3", K_JOY3, "#str_07064"),
+        keyname_t("JOY4", K_JOY4, "#str_07065"),
+        keyname_t("JOY5", K_JOY5, "#str_07066"),
+        keyname_t("JOY6", K_JOY6, "#str_07067"),
+        keyname_t("JOY7", K_JOY7, "#str_07068"),
+        keyname_t("JOY8", K_JOY8, "#str_07069"),
+        keyname_t("JOY9", K_JOY9, "#str_07070"),
+        keyname_t("JOY10", K_JOY10, "#str_07071"),
+        keyname_t("JOY11", K_JOY11, "#str_07072"),
+        keyname_t("JOY12", K_JOY12, "#str_07073"),
+        keyname_t("JOY13", K_JOY13, "#str_07074"),
+        keyname_t("JOY14", K_JOY14, "#str_07075"),
+        keyname_t("JOY15", K_JOY15, "#str_07076"),
+        keyname_t("JOY16", K_JOY16, "#str_07077"),
+        keyname_t("JOY17", K_JOY17, "#str_07078"),
+        keyname_t("JOY18", K_JOY18, "#str_07079"),
+        keyname_t("JOY19", K_JOY19, "#str_07080"),
+        keyname_t("JOY20", K_JOY20, "#str_07081"),
+        keyname_t("JOY21", K_JOY21, "#str_07082"),
+        keyname_t("JOY22", K_JOY22, "#str_07083"),
+        keyname_t("JOY23", K_JOY23, "#str_07084"),
+        keyname_t("JOY24", K_JOY24, "#str_07085"),
+        keyname_t("JOY25", K_JOY25, "#str_07086"),
+        keyname_t("JOY26", K_JOY26, "#str_07087"),
+        keyname_t("JOY27", K_JOY27, "#str_07088"),
+        keyname_t("JOY28", K_JOY28, "#str_07089"),
+        keyname_t("JOY29", K_JOY29, "#str_07090"),
+        keyname_t("JOY30", K_JOY30, "#str_07091"),
+        keyname_t("JOY31", K_JOY31, "#str_07092"),
+        keyname_t("JOY32", K_JOY32, "#str_07093"),  //
+        keyname_t("AUX1", K_AUX1, "#str_07094"),
+        keyname_t("AUX2", K_AUX2, "#str_07095"),
+        keyname_t("AUX3", K_AUX3, "#str_07096"),
+        keyname_t("AUX4", K_AUX4, "#str_07097"),
+        keyname_t("AUX5", K_AUX5, "#str_07098"),
+        keyname_t("AUX6", K_AUX6, "#str_07099"),
+        keyname_t("AUX7", K_AUX7, "#str_07100"),
+        keyname_t("AUX8", K_AUX8, "#str_07101"),
+        keyname_t("AUX9", K_AUX9, "#str_07102"),
+        keyname_t("AUX10", K_AUX10, "#str_07103"),
+        keyname_t("AUX11", K_AUX11, "#str_07104"),
+        keyname_t("AUX12", K_AUX12, "#str_07105"),
+        keyname_t("AUX13", K_AUX13, "#str_07106"),
+        keyname_t("AUX14", K_AUX14, "#str_07107"),
+        keyname_t("AUX15", K_AUX15, "#str_07108"),
+        keyname_t("AUX16", K_AUX16, "#str_07109"),  //
+        keyname_t("KP_HOME", K_KP_HOME, "#str_07110"),
+        keyname_t("KP_UPARROW", K_KP_UPARROW, "#str_07111"),
+        keyname_t("KP_PGUP", K_KP_PGUP, "#str_07112"),
+        keyname_t("KP_LEFTARROW", K_KP_LEFTARROW, "#str_07113"),
+        keyname_t("KP_5", K_KP_5, "#str_07114"),
+        keyname_t("KP_RIGHTARROW", K_KP_RIGHTARROW, "#str_07115"),
+        keyname_t("KP_END", K_KP_END, "#str_07116"),
+        keyname_t("KP_DOWNARROW", K_KP_DOWNARROW, "#str_07117"),
+        keyname_t("KP_PGDN", K_KP_PGDN, "#str_07118"),
+        keyname_t("KP_ENTER", K_KP_ENTER, "#str_07119"),
+        keyname_t("KP_INS", K_KP_INS, "#str_07120"),
+        keyname_t("KP_DEL", K_KP_DEL, "#str_07121"),
+        keyname_t("KP_SLASH", K_KP_SLASH, "#str_07122"),
+        keyname_t("KP_MINUS", K_KP_MINUS, "#str_07123"),
+        keyname_t("KP_PLUS", K_KP_PLUS, "#str_07124"),
+        keyname_t("KP_NUMLOCK", K_KP_NUMLOCK, "#str_07125"),
+        keyname_t("KP_STAR", K_KP_STAR, "#str_07126"),
+        keyname_t("KP_EQUALS", K_KP_EQUALS, "#str_07127"),  //
+        keyname_t("PAUSE", K_PAUSE, "#str_07128"),  //
+        keyname_t("SEMICOLON", ';'.code, "#str_07129"),  // because a raw semicolon separates commands
+        keyname_t("APOSTROPHE", '\''.code, "#str_07130"),  // because a raw apostrophe messes with parsing
         //
         keyname_t(null, 0, null)
     )
 
     //
     // keys that can be set without a special name
-    val unnamedkeys: String? = "*,-=./[\\]1234567890abcdefghijklmnopqrstuvwxyz"
+    val unnamedkeys: String = "*,-=./[\\]1234567890abcdefghijklmnopqrstuvwxyz"
 
     //    
     //    
     //
     //
     var key_overstrikeMode = false
-    var keys: Array<idKey?>? = null
+    var keys: Array<idKey> = Array(MAX_KEYS) { idKey() }
     var lastKeyIndex = 0
 
     //
-    var lastKeys: CharArray? = CharArray(32)
+    var lastKeys: CharArray = CharArray(32)
 
     object idKeyInput {
         /*
@@ -378,7 +379,7 @@ object KeyInput {
          given keynum.
          ===================
          */
-        var tinystr: CharArray? = CharArray(5)
+        var tinystr: CharArray = CharArray(5)
 
         /*
          ============
@@ -386,14 +387,11 @@ object KeyInput {
          returns the localized name of the key for the binding
          ============
          */
-        private val keyName: CharArray = CharArray(Lib.Companion.MAX_STRING_CHARS)
+        private val keyName: CharArray = CharArray(Lib.MAX_STRING_CHARS)
 
         @Throws(idException::class)
         fun Init() {
-            KeyInput.keys = arrayOfNulls<idKey?>(KeyInput.MAX_KEYS)
-            for (k in KeyInput.keys.indices) {
-                KeyInput.keys[k] = idKey()
-            }
+            keys = Array(MAX_KEYS) { idKey() }
 
             // register our functions
             CmdSystem.cmdSystem.AddCommand(
@@ -432,7 +430,6 @@ object KeyInput {
 
         fun Shutdown() {
 //	delete [] keys;
-            KeyInput.keys = null
         }
 
         /*
@@ -445,19 +442,19 @@ object KeyInput {
          */
         @Throws(idException::class)
         fun PreliminaryKeyEvent(keyNum: Int, down: Boolean) {
-            KeyInput.keys[keyNum].down = down
-            if (KeyInput.ID_DOOM_LEGACY) {
+            keys[keyNum].down = down
+            if (ID_DOOM_LEGACY) {
                 if (down) {
-                    KeyInput.lastKeys[0 + (KeyInput.lastKeyIndex and 15)] = keyNum.toChar()
-                    KeyInput.lastKeys[16 + (KeyInput.lastKeyIndex and 15)] = keyNum.toChar()
-                    KeyInput.lastKeyIndex = KeyInput.lastKeyIndex + 1 and 15
+                    lastKeys[0 + (lastKeyIndex and 15)] = keyNum.toChar()
+                    lastKeys[16 + (lastKeyIndex and 15)] = keyNum.toChar()
+                    lastKeyIndex = lastKeyIndex + 1 and 15
                     var i = 0
-                    while (KeyInput.cheatCodes[i] != null) {
-                        val l = KeyInput.cheatCodes[i].length
+                    while (cheatCodes[i] != null) {
+                        val l = cheatCodes[i]!!.length
                         assert(l <= 16)
-                        if (idStr.Companion.Icmpn(
-                                TempDump.ctos(KeyInput.lastKeys).substring(16 + (KeyInput.lastKeyIndex and 15) - l),
-                                KeyInput.cheatCodes[i],
+                        if (idStr.Icmpn(
+                                TempDump.ctos(lastKeys)!!.substring(16 + (lastKeyIndex and 15) - l),
+                                cheatCodes[i]!!,
                                 l
                             ) == 0
                         ) {
@@ -473,30 +470,30 @@ object KeyInput {
         fun IsDown(keyNum: Int): Boolean {
             return if (keyNum == -1) {
                 false
-            } else KeyInput.keys[keyNum].down
+            } else keys[keyNum].down
         }
 
         fun GetUsercmdAction(keyNum: Int): Int {
-            return KeyInput.keys[keyNum].usercmdAction
+            return keys[keyNum].usercmdAction
         }
 
         fun GetOverstrikeMode(): Boolean {
-            return KeyInput.key_overstrikeMode
+            return key_overstrikeMode
         }
 
         fun SetOverstrikeMode(state: Boolean) {
-            KeyInput.key_overstrikeMode = state
+            key_overstrikeMode = state
         }
 
         @Throws(idException::class)
         fun ClearStates() {
             var i: Int
             i = 0
-            while (i < KeyInput.MAX_KEYS) {
-                if (KeyInput.keys[i].down) {
+            while (i < MAX_KEYS) {
+                if (keys[i].down) {
                     PreliminaryKeyEvent(i, false)
                 }
-                KeyInput.keys[i].down = false
+                keys[i].down = false
                 i++
             }
 
@@ -522,7 +519,7 @@ object KeyInput {
                 return -1
             }
             if (1 == str.length) {
-                return str[0]
+                return str[0].code
             }
 
             // check for hex code
@@ -550,9 +547,9 @@ object KeyInput {
 
             // scan for a text match
             kn = 0
-            while (kn < KeyInput.keynames.size) {
-                if (0 == idStr.Companion.Icmp(str, KeyInput.keynames[kn].name)) {
-                    return KeyInput.keynames[kn].keynum
+            while (kn < keynames.size) {
+                if (0 == idStr.Icmp(str, keynames[kn].name!!)) {
+                    return keynames[kn].keynum
                 }
                 kn++
             }
@@ -573,20 +570,20 @@ object KeyInput {
 
             // check for printable ascii (don't use quote)
             if (keyNum > 32 && keyNum < 127 && keyNum != '"'.code && keyNum != ';'.code && keyNum != '\''.code) {
-                tinystr.get(0) = win_input.Sys_MapCharForKey(keyNum)
-                tinystr.get(1) = 0
+                tinystr[0] = win_input.Sys_MapCharForKey(keyNum)
+                tinystr[1] = Char(0)
                 return TempDump.ctos(tinystr)
             }
 
             // check for a key string
-            for (kn in KeyInput.keynames) {
+            for (kn in keynames) {
                 if (keyNum == kn.keynum) {
-                    return if (!localized || kn.strId[0] != '#') {
+                    return if (!localized || kn.strId!![0] != '#') {
                         kn.name
                     } else {
                         if (BuildDefines.MACOS_X) {
                             when (kn.keynum) {
-                                KeyInput.K_ENTER, KeyInput.K_BACKSPACE, KeyInput.K_ALT, KeyInput.K_INS, KeyInput.K_PRINT_SCR -> Common.common.GetLanguageDict()
+                                K_ENTER, K_BACKSPACE, K_ALT, K_INS, K_PRINT_SCR -> Common.common.GetLanguageDict()
                                     .GetString(kn.strId)
                                 else -> Common.common.GetLanguageDict().GetString(kn.strId)
                             }
@@ -599,23 +596,23 @@ object KeyInput {
 
             // check for European high-ASCII characters
             if (localized && keyNum >= 161 && keyNum <= 255) {
-                tinystr.get(0) = keyNum.toChar()
-                tinystr.get(1) = 0
+                tinystr[0] = keyNum.toChar()
+                tinystr[1] = Char(0)
                 return TempDump.ctos(tinystr)
             }
 
             // make a hex string
             i = keyNum shr 4
             j = keyNum and 15
-            tinystr.get(0) = '0'
-            tinystr.get(1) = 'x'
-            tinystr.get(2) = (if (i > 9) i - 10 + 'a'.code else i + '0'.code).toChar()
-            tinystr.get(3) = (if (j > 9) j - 10 + 'a'.code else j + '0'.code).toChar()
-            tinystr.get(4) = 0
+            tinystr[0] = '0'
+            tinystr[1] = 'x'
+            tinystr[2] = (if (i > 9) i - 10 + 'a'.code else i + '0'.code).toChar()
+            tinystr[3] = (if (j > 9) j - 10 + 'a'.code else j + '0'.code).toChar()
+            tinystr[4] = Char(0)
             return TempDump.ctos(tinystr)
         }
 
-        fun SetBinding(keyNum: Int, binding: String?) {
+        fun SetBinding(keyNum: Int, binding: String) {
             if (keyNum == -1) {
                 return
             }
@@ -624,20 +621,20 @@ object KeyInput {
             UsercmdGen.usercmdGen.Clear()
 
             // allocate memory for new binding
-            KeyInput.keys[keyNum].binding = idStr(binding)
+            keys[keyNum].binding = idStr(binding)
 
             // find the action for the async command generation
-            KeyInput.keys[keyNum].usercmdAction = UsercmdGen.usercmdGen.CommandStringUsercmdData(binding)
+            keys[keyNum].usercmdAction = UsercmdGen.usercmdGen.CommandStringUsercmdData(binding)
 
             // consider this like modifying an archived cvar, so the
             // file write will be triggered at the next oportunity
             CVarSystem.cvarSystem.SetModifiedFlags(CVarSystem.CVAR_ARCHIVE)
         }
 
-        fun GetBinding(keyNum: Int): String? {
+        fun GetBinding(keyNum: Int): String {
             return if (keyNum == -1) {
                 ""
-            } else KeyInput.keys[keyNum].binding.toString()
+            } else keys[keyNum].binding.toString()
         }
 
         fun UnbindBinding(binding: String?): Boolean {
@@ -645,8 +642,8 @@ object KeyInput {
             var i: Int
             if (binding != null) {
                 i = 0
-                while (i < KeyInput.MAX_KEYS) {
-                    if (KeyInput.keys[i].binding.Icmp(binding) == 0) {
+                while (i < MAX_KEYS) {
+                    if (keys[i].binding.Icmp(binding) == 0) {
                         SetBinding(i, "")
                         unbound = true
                     }
@@ -661,8 +658,8 @@ object KeyInput {
             var count = 0
             if (binding != null) {
                 i = 0
-                while (i < KeyInput.MAX_KEYS) {
-                    if (KeyInput.keys[i].binding.Icmp(binding) == 0) {
+                while (i < MAX_KEYS) {
+                    if (keys[i].binding.Icmp(binding) == 0) {
                         count++
                     }
                     i++
@@ -675,15 +672,15 @@ object KeyInput {
         fun ExecKeyBinding(keyNum: Int): Boolean {
             // commands that are used by the async thread
             // don't add text
-            if (KeyInput.keys[keyNum].usercmdAction != 0) {
+            if (keys[keyNum].usercmdAction != 0) {
                 return false
             }
 
             // send the bound action
-            if (KeyInput.keys[keyNum].binding.Length() != 0) {
+            if (keys[keyNum].binding.Length() != 0) {
                 CmdSystem.cmdSystem.BufferCommandText(
                     cmdExecution_t.CMD_EXEC_APPEND,
-                    KeyInput.keys[keyNum].binding.toString()
+                    keys[keyNum].binding.toString()
                 )
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "\n")
             }
@@ -693,27 +690,27 @@ object KeyInput {
         @Throws(idException::class)
         fun KeysFromBinding(bind: String?): String {
             var i: Int
-            keyName.get(0) = '\u0000'
+            keyName[0] = '\u0000'
             if (bind != null) {
                 i = 0
-                while (i < KeyInput.MAX_KEYS) {
-                    if (KeyInput.keys[i].binding.Icmp(bind) == 0) {
-                        if (keyName.get(0) != '\u0000') {
-                            idStr.Companion.Append(
+                while (i < MAX_KEYS) {
+                    if (keys[i].binding.Icmp(bind) == 0) {
+                        if (keyName[0] != '\u0000') {
+                            idStr.Append(
                                 keyName,
-                                Lib.Companion.MAX_STRING_CHARS,
+                                Lib.MAX_STRING_CHARS,
                                 Common.common.GetLanguageDict().GetString("#str_07183")
                             )
                         }
-                        idStr.Companion.Append(keyName, keyName.size, KeyNumToString(i, true))
+                        idStr.Append(keyName, keyName.size, KeyNumToString(i, true)!!)
                     }
                     i++
                 }
             }
-            if (keyName.get(0) == '\u0000') {
-                idStr.Companion.Copynz(keyName, Common.common.GetLanguageDict().GetString("#str_07133"), keyName.size)
+            if (keyName[0] == '\u0000') {
+                idStr.Copynz(keyName, Common.common.GetLanguageDict().GetString("#str_07133"), keyName.size)
             }
-            idStr.Companion.ToLower(keyName)
+            idStr.ToLower(keyName)
             return TempDump.ctos(keyName)!!
         }
 
@@ -725,14 +722,14 @@ object KeyInput {
          */
         fun BindingFromKey(key: String?): String? {
             val keyNum = StringToKeyNum(key)
-            return if (keyNum < 0 || keyNum >= KeyInput.MAX_KEYS) {
+            return if (keyNum < 0 || keyNum >= MAX_KEYS) {
                 null
-            } else KeyInput.keys[keyNum].binding.toString()
+            } else keys[keyNum].binding.toString()
         }
 
-        fun KeyIsBoundTo(keyNum: Int, binding: String?): Boolean {
-            return if (keyNum >= 0 && keyNum < KeyInput.MAX_KEYS) {
-                KeyInput.keys[keyNum].binding.Icmp(binding) == 0
+        fun KeyIsBoundTo(keyNum: Int, binding: String): Boolean {
+            return if (keyNum >= 0 && keyNum < MAX_KEYS) {
+                keys[keyNum].binding.Icmp(binding) == 0
             } else false
         }
 
@@ -744,19 +741,19 @@ object KeyInput {
          ============
          */
         @Throws(idException::class)
-        fun WriteBindings(f: idFile?) {
+        fun WriteBindings(f: idFile) {
             var i: Int
             f.Printf("unbindall\n")
             i = 0
-            while (i < KeyInput.MAX_KEYS) {
-                if (KeyInput.keys[i].binding.Length() != 0) {
+            while (i < MAX_KEYS) {
+                if (keys[i].binding.Length() != 0) {
                     val name = KeyNumToString(i, false)
 
                     // handle the escape character nicely
                     if ("\\" == name) {
-                        f.Printf("bind \"\\\" \"%s\"\n", KeyInput.keys[i].binding)
+                        f.Printf("bind \"\\\" \"%s\"\n", keys[i].binding)
                     } else {
-                        f.Printf("bind \"%s\" \"%s\"\n", KeyNumToString(i, false), KeyInput.keys[i].binding)
+                        f.Printf("bind \"%s\" \"%s\"\n", KeyNumToString(i, false), keys[i].binding)
                     }
                 }
                 i++
@@ -765,37 +762,37 @@ object KeyInput {
 
         class ArgCompletion_KeyName : CmdSystem.argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 var kn: Int
                 var i: Int
                 i = 0
-                while (i < KeyInput.unnamedkeys.length - 1) {
-                    callback.run(Str.va("%s %c", args.Argv(0), KeyInput.unnamedkeys[i]))
+                while (i < unnamedkeys.length - 1) {
+                    callback.run(Str.va("%s %c", args.Argv(0), unnamedkeys[i]))
                     i++
                 }
                 kn = 0
-                while (kn < KeyInput.keynames.size) {
-                    callback.run(Str.va("%s %s", args.Argv(0), KeyInput.keynames[kn].name))
+                while (kn < keynames.size) {
+                    callback.run(Str.va("%s %s", args.Argv(0), keynames[kn].name!!))
                     kn++
                 }
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_KeyName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: CmdSystem.argCompletion_t = ArgCompletion_KeyName()
+                fun getInstance(): CmdSystem.argCompletion_t {
                     return instance
                 }
             }
         }
     }
 
-    internal class keyname_t(
+    class keyname_t(
         var name: String?, var keynum: Int, // localized string id
         var strId: String?
     )
 
-    private class idKey {
-        var binding: idStr?
+    class idKey {
+        var binding: idStr = idStr()
         var down = false
         var repeats // if > 1, it is autorepeating
                 = 0
@@ -816,7 +813,7 @@ object KeyInput {
      */
     internal class Key_Unbind_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val b: Int
             if (args.Argc() != 2) {
                 Common.common.Printf("unbind <key> : remove commands from a key\n")
@@ -834,8 +831,8 @@ object KeyInput {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Key_Unbind_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Key_Unbind_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -847,18 +844,18 @@ object KeyInput {
      ===================
      */
     internal class Key_Unbindall_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             i = 0
-            while (i < KeyInput.MAX_KEYS) {
+            while (i < MAX_KEYS) {
                 idKeyInput.SetBinding(i, "")
                 i++
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Key_Unbindall_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Key_Unbindall_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -871,7 +868,7 @@ object KeyInput {
      */
     internal class Key_Bind_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val c: Int
             val b: Int
@@ -887,8 +884,8 @@ object KeyInput {
                 return
             }
             if (c == 2) {
-                if (KeyInput.keys[b].binding.Length() != 0) {
-                    Common.common.Printf("\"%s\" = \"%s\"\n", args.Argv(1), KeyInput.keys[b].binding.toString())
+                if (keys[b].binding.Length() != 0) {
+                    Common.common.Printf("\"%s\" = \"%s\"\n", args.Argv(1), keys[b].binding.toString())
                 } else {
                     Common.common.Printf("\"%s\" is not bound\n", args.Argv(1))
                 }
@@ -910,8 +907,8 @@ object KeyInput {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Key_Bind_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Key_Bind_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -926,7 +923,7 @@ object KeyInput {
      */
     internal class Key_BindUnBindTwo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val c = args.Argc()
             if (c < 3) {
                 Common.common.Printf("bindunbindtwo <keynum> [command]\n")
@@ -941,8 +938,8 @@ object KeyInput {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Key_BindUnBindTwo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Key_BindUnBindTwo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -955,15 +952,15 @@ object KeyInput {
      */
     internal class Key_ListBinds_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             i = 0
-            while (i < KeyInput.MAX_KEYS) {
-                if (KeyInput.keys[i].binding.Length() != 0) {
+            while (i < MAX_KEYS) {
+                if (keys[i].binding.Length() != 0) {
                     Common.common.Printf(
                         "%s \"%s\"\n",
                         idKeyInput.KeyNumToString(i, false),
-                        KeyInput.keys[i].binding.toString()
+                        keys[i].binding.toString()
                     )
                 }
                 i++
@@ -971,8 +968,8 @@ object KeyInput {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Key_ListBinds_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Key_ListBinds_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

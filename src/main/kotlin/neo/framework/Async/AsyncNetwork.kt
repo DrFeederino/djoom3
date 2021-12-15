@@ -109,7 +109,7 @@ object AsyncNetwork {
     /*master_t*/
     internal class master_s {
         var address: netadr_t = netadr_t()
-        var cVar: idCVar? = null
+        lateinit var cVar: idCVar
         var resolved = false
     }
 
@@ -209,7 +209,7 @@ object AsyncNetwork {
             "client time out in seconds"
         )
         var serverDedicated // if set run a dedicated server
-                : idCVar? = null
+                : idCVar
         val serverDrawClient: idCVar = idCVar(
             "net_serverDrawClient",
             "-1",
@@ -468,19 +468,19 @@ object AsyncNetwork {
             if (null == masters[index].cVar) {
                 return false
             }
-            if (masters[index].cVar!!.GetString().isEmpty()) {
+            if (masters[index].cVar.GetString().isEmpty()) {
                 return false
             }
-            if (!masters[index].resolved || masters[index].cVar!!.IsModified()) {
-                masters[index].cVar!!.ClearModified()
-                if (!win_net.Sys_StringToNetAdr(masters[index].cVar!!.GetString(), masters[index].address, true)) {
+            if (!masters[index].resolved || masters[index].cVar.IsModified()) {
+                masters[index].cVar.ClearModified()
+                if (!win_net.Sys_StringToNetAdr(masters[index].cVar.GetString(), masters[index].address, true)) {
                     Common.common.Printf("Failed to resolve master%d: %s\n", index, masters[index].cVar!!.GetString())
                     masters[index].address = netadr_t() //memset( &masters[ index ].address, 0, sizeof( netadr_t ) );
                     masters[index].resolved = true
                     return false
                 }
-                if (masters[index].address.port.toInt() == 0) {
-                    masters[index].address.port = Licensee.IDNET_MASTER_PORT.toShort()
+                if (masters[index].address.port == 0) {
+                    masters[index].address.port = Licensee.IDNET_MASTER_PORT
                 }
                 masters[index].resolved = true
             }

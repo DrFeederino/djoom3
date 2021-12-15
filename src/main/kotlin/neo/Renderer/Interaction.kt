@@ -543,17 +543,17 @@ object Interaction {
     class srfCullInfo_t {
         //
         // Clip planes in surface space used to calculate the cull bits.
-        val localClipPlanes: Array<idPlane?>? = idPlane.Companion.generateArray(6)
+        val localClipPlanes: Array<idPlane> = idPlane.Companion.generateArray(6)
 
         //
         // For each vertex a byte with the bits [0-5] set if the
         // vertex is at the back side of the corresponding clip plane.
         // If the 'cullBits' pointer equals LIGHT_CULL_ALL_FRONT all
         // vertices are at the front of all the clip planes.
-        var cullBits: ByteArray?
+        var cullBits: ByteArray
 
         // For each triangle a byte set to 1 if facing the light origin.
-        var facing: ByteArray?
+        var facing: ByteArray
     }
 
     internal class surfaceInteraction_t {

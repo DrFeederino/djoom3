@@ -65,7 +65,7 @@ object Compressor {
                 return idCompressor_RunLength()
             }
 
-            fun AllocRunLength_ZeroBased(): idCompressor? {
+            fun AllocRunLength_ZeroBased(): idCompressor {
                 return idCompressor_RunLength_ZeroBased()
             }
 

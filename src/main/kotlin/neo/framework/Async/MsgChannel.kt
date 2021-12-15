@@ -12,7 +12,7 @@ import neo.sys.sys_public.idPort
 import neo.sys.sys_public.netadr_t
 import neo.sys.sys_public.netadrtype_t
 import neo.sys.win_net
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -61,19 +61,19 @@ object MsgChannel {
 
      */
     const val MAX_PACKETLEN = 1400 // max size of a network packet
-    const val FRAGMENT_SIZE = MsgChannel.MAX_PACKETLEN - 100
-    val net_channelShowDrop: idCVar? =
+    const val FRAGMENT_SIZE = MAX_PACKETLEN - 100
+    val net_channelShowDrop: idCVar =
         idCVar("net_channelShowDrop", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "show dropped packets")
 
     //
-    val net_channelShowPackets: idCVar? =
+    val net_channelShowPackets: idCVar =
         idCVar("net_channelShowPackets", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "show all packets")
 
     internal class idMsgChannel {
-        private val fragmentBuffer = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-        private val unsentBuffer = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
+        private val fragmentBuffer = ByteBuffer.allocate(MAX_MESSAGE_SIZE)
+        private val unsentBuffer = ByteBuffer.allocate(MAX_MESSAGE_SIZE)
         private var compressor // compressor used for data compression
-                : idCompressor? = null
+                : idCompressor = idCompressor.AllocRunLength_ZeroBased()
         private var fragmentLength = 0
 
         //
@@ -113,19 +113,19 @@ object MsgChannel {
         //
         // sequencing variables
         private var outgoingSequence = 0
-        private val reliableReceive: idMsgQueue? = null
+        private val reliableReceive: idMsgQueue = idMsgQueue()
 
         //
         // reliable messages
-        private val reliableSend: idMsgQueue? = null
+        private val reliableSend: idMsgQueue = idMsgQueue()
         private var remoteAddress // address of remote host
-                : netadr_t? = null
+                : netadr_t = netadr_t()
         private var unsentFragmentStart = 0
 
         //
         // outgoing fragment buffer
         private var unsentFragments = false
-        private val unsentMsg: idBitMsg? = null
+        private val unsentMsg: idBitMsg = idBitMsg()
 
         /*
          ==============
@@ -134,11 +134,11 @@ object MsgChannel {
          Opens a channel to a remote system.
          ==============
          */
-        fun Init(adr: netadr_t?, id: Int) {
+        fun Init(adr: netadr_t, id: Int) {
             remoteAddress = adr
             this.id = id
             maxRate = 50000
-            compressor = idCompressor.Companion.AllocRunLength_ZeroBased()
+            compressor = idCompressor.AllocRunLength_ZeroBased()
             lastSendTime = 0
             lastDataBytes = 0
             outgoingRateTime = 0
@@ -161,7 +161,7 @@ object MsgChannel {
         }
 
         fun Shutdown() {
-            compressor = null
+            //compressor = null
         }
 
         fun ResetRate() {
@@ -184,7 +184,7 @@ object MsgChannel {
         }
 
         // Returns the address of the entity at the other side of the channel.
-        fun GetRemoteAddress(): netadr_t? {
+        fun GetRemoteAddress(): netadr_t {
             return remoteAddress
         }
 
@@ -239,7 +239,7 @@ object MsgChannel {
          */
         // Sends an unreliable message, in order and without duplicates.
         @Throws(idException::class)
-        fun SendMessage(port: idPort?, time: Int, msg: idBitMsg?): Int {
+        fun SendMessage(port: idPort, time: Int, msg: idBitMsg): Int {
             val totalLength: Int
             if (remoteAddress.type == netadrtype_t.NA_BAD) {
                 return -1
@@ -249,7 +249,7 @@ object MsgChannel {
                 return -1
             }
             totalLength = 4 + reliableSend.GetTotalSize() + 4 + msg.GetSize()
-            if (totalLength > MsgChannel.MAX_MESSAGE_SIZE) {
+            if (totalLength > MAX_MESSAGE_SIZE) {
                 Common.common.Printf("idMsgChannel::SendMessage: message too large, length = %d\n", totalLength)
                 return -1
             }
@@ -257,7 +257,7 @@ object MsgChannel {
             unsentMsg.BeginWriting()
 
             // fragment large messages
-            if (totalLength >= MsgChannel.FRAGMENT_SIZE) {
+            if (totalLength >= FRAGMENT_SIZE) {
                 unsentFragments = true
                 unsentFragmentStart = 0
 
@@ -270,7 +270,7 @@ object MsgChannel {
             }
 
             // write the header
-            unsentMsg.WriteShort(id)
+            unsentMsg.WriteShort(id.toShort())
             unsentMsg.WriteLong(outgoingSequence)
 
             // write out the message data
@@ -281,7 +281,7 @@ object MsgChannel {
 
             // update rate control variables
             UpdateOutgoingRate(time, unsentMsg.GetSize())
-            if (MsgChannel.net_channelShowPackets.GetBool()) {
+            if (net_channelShowPackets.GetBool()) {
                 Common.common.Printf(
                     "%d send %4d : s = %d ack = %d\n",
                     id,
@@ -304,9 +304,9 @@ object MsgChannel {
          */
         // Sends the next fragment if the last message was too large to send at once.
         @Throws(idException::class)
-        fun SendNextFragment(port: idPort?, time: Int) {
+        fun SendNextFragment(port: idPort, time: Int) {
             val msg = idBitMsg()
-            val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_PACKETLEN)
+            val msgBuf = ByteBuffer.allocate(MAX_PACKETLEN)
             var fragLength: Int
             if (remoteAddress.type == netadrtype_t.NA_BAD) {
                 return
@@ -317,14 +317,14 @@ object MsgChannel {
 
             // write the packet
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteShort(id)
-            msg.WriteLong(outgoingSequence or MsgChannel.FRAGMENT_BIT)
-            fragLength = MsgChannel.FRAGMENT_SIZE
+            msg.WriteShort(id.toShort())
+            msg.WriteLong(outgoingSequence or FRAGMENT_BIT)
+            fragLength = FRAGMENT_SIZE
             if (unsentFragmentStart + fragLength > unsentMsg.GetSize()) {
                 fragLength = unsentMsg.GetSize() - unsentFragmentStart
             }
-            msg.WriteShort(unsentFragmentStart)
-            msg.WriteShort(fragLength)
+            msg.WriteShort(unsentFragmentStart.toShort())
+            msg.WriteShort(fragLength.toShort())
             msg.WriteData(unsentMsg.GetData(), unsentFragmentStart, fragLength)
 
             // send the packet
@@ -332,7 +332,7 @@ object MsgChannel {
 
             // update rate control variables
             UpdateOutgoingRate(time, msg.GetSize())
-            if (MsgChannel.net_channelShowPackets.GetBool()) {
+            if (net_channelShowPackets.GetBool()) {
                 Common.common.Printf(
                     "%d send %4d : s = %d fragment = %d,%d\n",
                     id,
@@ -348,7 +348,7 @@ object MsgChannel {
             // that is exactly the fragment length still needs to send
             // a second packet of zero length so that the other side
             // can tell there aren't more to follow
-            if (unsentFragmentStart == unsentMsg.GetSize() && fragLength != MsgChannel.FRAGMENT_SIZE) {
+            if (unsentFragmentStart == unsentMsg.GetSize() && fragLength != FRAGMENT_SIZE) {
                 outgoingSequence++
                 unsentFragments = false
             }
@@ -373,7 +373,7 @@ object MsgChannel {
         // is ready for further processing. In that case the read pointer of msg
         // points to the first byte ready for reading, and sequence is set to
         // the sequence number of the message.
-        fun Process(from: netadr_t?, time: Int, msg: idBitMsg?, sequence: CInt?): Boolean {
+        fun Process(from: netadr_t, time: Int, msg: idBitMsg, sequence: CInt): Boolean {
             val fragStart: Int
             val fragLength: Int
             val dropped: Int
@@ -392,11 +392,11 @@ object MsgChannel {
             UpdateIncomingRate(time, msg.GetSize())
 
             // get sequence numbers
-            sequence.setVal(msg.ReadLong())
+            sequence._val = (msg.ReadLong())
 
             // check for fragment information
-            fragmented = if (sequence.getVal() and MsgChannel.FRAGMENT_BIT != 0) {
-                sequence.setVal(sequence.getVal() and MsgChannel.FRAGMENT_BIT.inv())
+            fragmented = if (sequence._val and FRAGMENT_BIT != 0) {
+                sequence._val = (sequence._val and FRAGMENT_BIT.inv())
                 true
             } else {
                 false
@@ -404,36 +404,36 @@ object MsgChannel {
 
             // read the fragment information
             if (fragmented) {
-                fragStart = msg.ReadShort()
-                fragLength = msg.ReadShort()
+                fragStart = msg.ReadShort().toInt()
+                fragLength = msg.ReadShort().toInt()
             } else {
                 fragStart = 0 // stop warning message
                 fragLength = 0
             }
-            if (MsgChannel.net_channelShowPackets.GetBool()) {
+            if (net_channelShowPackets.GetBool()) {
                 if (fragmented) {
                     Common.common.Printf(
                         "%d recv %4d : s = %d fragment = %d,%d\n",
                         id,
                         msg.GetSize(),
-                        sequence.getVal(),
+                        sequence._val,
                         fragStart,
                         fragLength
                     )
                 } else {
-                    Common.common.Printf("%d recv %4d : s = %d\n", id, msg.GetSize(), sequence.getVal())
+                    Common.common.Printf("%d recv %4d : s = %d\n", id, msg.GetSize(), sequence._val)
                 }
             }
 
             //
             // discard out of order or duplicated packets
             //
-            if (sequence.getVal() <= incomingSequence) {
-                if (MsgChannel.net_channelShowDrop.GetBool() || MsgChannel.net_channelShowPackets.GetBool()) {
+            if (sequence._val <= incomingSequence) {
+                if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
                     Common.common.Printf(
                         "%s: out of order packet %d at %d\n",
                         win_net.Sys_NetAdrToString(remoteAddress),
-                        sequence.getVal(),
+                        sequence._val,
                         incomingSequence
                     )
                 }
@@ -443,14 +443,14 @@ object MsgChannel {
             //
             // dropped packets don't keep this message from being used
             //
-            dropped = sequence.getVal() - (incomingSequence + 1)
+            dropped = sequence._val - (incomingSequence + 1)
             if (dropped > 0) {
-                if (MsgChannel.net_channelShowDrop.GetBool() || MsgChannel.net_channelShowPackets.GetBool()) {
+                if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
                     Common.common.Printf(
                         "%s: dropped %d packets at %d\n",
                         win_net.Sys_NetAdrToString(remoteAddress),
                         dropped,
-                        sequence.getVal()
+                        sequence._val
                     )
                 }
                 UpdatePacketLoss(time, 0, dropped)
@@ -461,18 +461,18 @@ object MsgChannel {
             //
             if (fragmented) {
                 // make sure we have the correct sequence number
-                if (sequence.getVal() != fragmentSequence) {
-                    fragmentSequence = sequence.getVal()
+                if (sequence._val != fragmentSequence) {
+                    fragmentSequence = sequence._val
                     fragmentLength = 0
                 }
 
                 // if we missed a fragment, dump the message
                 if (fragStart != fragmentLength) {
-                    if (MsgChannel.net_channelShowDrop.GetBool() || MsgChannel.net_channelShowPackets.GetBool()) {
+                    if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
                         Common.common.Printf(
                             "%s: dropped a message fragment at seq %d\n",
                             win_net.Sys_NetAdrToString(remoteAddress),
-                            sequence.getVal()
+                            sequence._val
                         )
                     }
                     // we can still keep the part that we have so far,
@@ -483,7 +483,7 @@ object MsgChannel {
 
                 // copy the fragment to the fragment buffer
                 if (fragLength < 0 || fragLength > msg.GetRemaingData() || fragmentLength + fragLength > fragmentBuffer.capacity()) {
-                    if (MsgChannel.net_channelShowDrop.GetBool() || MsgChannel.net_channelShowPackets.GetBool()) {
+                    if (net_channelShowDrop.GetBool() || net_channelShowPackets.GetBool()) {
                         Common.common.Printf("%s: illegal fragment length\n", win_net.Sys_NetAdrToString(remoteAddress))
                     }
                     UpdatePacketLoss(time, 0, 1)
@@ -499,7 +499,7 @@ object MsgChannel {
                 UpdatePacketLoss(time, 1, 0)
 
                 // if this wasn't the last fragment, don't process anything
-                if (fragLength == MsgChannel.FRAGMENT_SIZE) {
+                if (fragLength == FRAGMENT_SIZE) {
                     return false
                 }
             } else {
@@ -514,7 +514,7 @@ object MsgChannel {
             fragMsg.Init(fragmentBuffer, fragmentLength)
             fragMsg.SetSize(fragmentLength)
             fragMsg.BeginReading()
-            incomingSequence = sequence.getVal()
+            incomingSequence = sequence._val
 
             // read the message data
             return ReadMessageData(msg, fragMsg)
@@ -522,7 +522,7 @@ object MsgChannel {
 
         //
         // Sends a reliable message, in order and without duplicates.
-        fun SendReliableMessage(msg: idBitMsg?): Boolean {
+        fun SendReliableMessage(msg: idBitMsg): Boolean {
             val result: Boolean
             assert(remoteAddress.type != netadrtype_t.NA_BAD)
             if (remoteAddress.type == netadrtype_t.NA_BAD) {
@@ -538,7 +538,7 @@ object MsgChannel {
 
         //
         // Returns true if a new reliable message is available and stores the message.
-        fun GetReliableMessage(msg: idBitMsg?): Boolean {
+        fun GetReliableMessage(msg: idBitMsg): Boolean {
             val size = CInt()
             val result: Boolean
             result = reliableReceive.Get(msg.GetData().array(), size)
@@ -554,9 +554,9 @@ object MsgChannel {
             reliableReceive.Init(0)
         }
 
-        private fun WriteMessageData(out: idBitMsg?, msg: idBitMsg?) {
+        private fun WriteMessageData(out: idBitMsg, msg: idBitMsg) {
             val tmp = idBitMsg()
-            val tmpBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
+            val tmpBuf = ByteBuffer.allocate(MAX_MESSAGE_SIZE)
             tmp.Init(tmpBuf, tmpBuf.capacity())
 
             // write acknowledgement of last received reliable message
@@ -577,7 +577,7 @@ object MsgChannel {
             tmp.WriteData(msg.GetData(), msg.GetSize())
 
             // write message size
-            out.WriteShort(tmp.GetSize())
+            out.WriteShort(tmp.GetSize().toShort())
 
             // compress message
             val file = idFile_BitMsg(out)
@@ -587,13 +587,13 @@ object MsgChannel {
             outgoingCompression = compressor.GetCompressionRatio()
         }
 
-        private fun ReadMessageData(out: idBitMsg?, msg: idBitMsg?): Boolean {
+        private fun ReadMessageData(out: idBitMsg, msg: idBitMsg): Boolean {
             val reliableAcknowledge: Int
             var reliableSequence: Int
             val reliableMessageSize = CInt()
 
             // read message size
-            out.SetSize(msg.ReadShort())
+            out.SetSize(msg.ReadShort().toInt())
 
             // decompress message
             val file = idFile_BitMsg(msg)
@@ -613,9 +613,9 @@ object MsgChannel {
             }
 
             // read reliable messages
-            reliableMessageSize.setVal(out.ReadShort())
-            while (reliableMessageSize.getVal() != 0) {
-                if (reliableMessageSize.getVal() <= 0 || reliableMessageSize.getVal() > out.GetSize() - out.GetReadCount()) {
+            reliableMessageSize._val = (out.ReadShort().toInt())
+            while (reliableMessageSize._val != 0) {
+                if (reliableMessageSize._val <= 0 || reliableMessageSize._val > out.GetSize() - out.GetReadCount()) {
                     Common.common.Printf("%s: bad reliable message\n", win_net.Sys_NetAdrToString(remoteAddress))
                     return false
                 }
@@ -626,11 +626,11 @@ object MsgChannel {
                             out.GetData().array(),
                             out.GetReadCount(),
                             out.GetData().capacity()
-                        ), reliableMessageSize.getVal()
+                        ), reliableMessageSize._val
                     )
                 }
-                out.ReadData(null, reliableMessageSize.getVal())
-                reliableMessageSize.setVal(out.ReadShort())
+                out.ReadData(null, reliableMessageSize._val)
+                reliableMessageSize._val = (out.ReadShort().toInt())
             }
             return true
         }
@@ -698,8 +698,8 @@ object MsgChannel {
         }
     }
 
-    internal inner class idMsgQueue {
-        private val buffer: ByteArray? = ByteArray(MsgChannel.MAX_MSG_QUEUE_SIZE)
+    internal class idMsgQueue {
+        private val buffer: ByteArray = ByteArray(MAX_MSG_QUEUE_SIZE)
         private var endIndex // index pointing to the first byte after the last message
                 = 0
         private var first // sequence number of first message in queue
@@ -716,7 +716,7 @@ object MsgChannel {
             startIndex = endIndex
         }
 
-        fun Add(data: ByteArray?, size: Int): Boolean {
+        fun Add(data: ByteArray, size: Int): Boolean {
             if (GetSpaceLeft() < size + 8) {
                 return false
             }
@@ -728,15 +728,15 @@ object MsgChannel {
             return true
         }
 
-        fun Get(data: ByteArray?, size: CInt?): Boolean {
+        fun Get(data: ByteArray?, size: CInt): Boolean {
             if (first == last) {
-                size.setVal(0)
+                size._val = (0)
                 return false
             }
             val sequence: Int
-            size.setVal(ReadShort())
+            size._val = (ReadShort())
             sequence = ReadLong()
-            ReadData(data, size.getVal())
+            ReadData(data, size._val)
             assert(sequence == first)
             first++
             return true
@@ -766,7 +766,7 @@ object MsgChannel {
             return last
         }
 
-        fun CopyToBuffer(buf: ByteArray?) {
+        fun CopyToBuffer(buf: ByteArray) {
             if (startIndex <= endIndex) {
 //		memcpy( buf, buffer + startIndex, endIndex - startIndex );
                 System.arraycopy(buffer, startIndex, buf, 0, endIndex - startIndex)
@@ -779,13 +779,13 @@ object MsgChannel {
         }
 
         private fun WriteByte(b: Byte) {
-            buffer.get(endIndex) = b
-            endIndex = endIndex + 1 and MsgChannel.MAX_MSG_QUEUE_SIZE - 1
+            buffer[endIndex] = b
+            endIndex = endIndex + 1 and MAX_MSG_QUEUE_SIZE - 1
         }
 
         private fun ReadByte(): Byte {
-            val b = buffer.get(startIndex)
-            startIndex = startIndex + 1 and MsgChannel.MAX_MSG_QUEUE_SIZE - 1
+            val b = buffer[startIndex]
+            startIndex = startIndex + 1 and MAX_MSG_QUEUE_SIZE - 1
             return b
         }
 
@@ -795,7 +795,7 @@ object MsgChannel {
         }
 
         private fun ReadShort(): Int {
-            return ReadByte() or (ReadByte() shl 8)
+            return ReadByte().toInt() or (ReadByte().toInt() shl 8)
         }
 
         private fun WriteLong(l: Int) {
@@ -806,12 +806,12 @@ object MsgChannel {
         }
 
         private fun ReadLong(): Int {
-            return ReadByte() or (ReadByte() shl 8) or (ReadByte() shl 16) or (ReadByte() shl 24)
+            return ReadByte().toInt() or (ReadByte().toInt() shl 8) or (ReadByte().toInt() shl 16) or (ReadByte().toInt() shl 24)
         }
 
-        private fun WriteData(data: ByteArray?, size: Int) {
+        private fun WriteData(data: ByteArray, size: Int) {
             for (i in 0 until size) {
-                WriteByte(data.get(i))
+                WriteByte(data[i])
             }
         }
 

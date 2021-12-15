@@ -753,7 +753,7 @@ object win_net {
      Sys_NetAdrToString
      =============
      */
-    fun Sys_NetAdrToString(a: netadr_t?): String? {
+    fun Sys_NetAdrToString(a: netadr_t): String {
         throw TODO_Exception()
         //	static int index = 0;
 //	static char buf[ 4 ][ 64 ];	// flip/flop

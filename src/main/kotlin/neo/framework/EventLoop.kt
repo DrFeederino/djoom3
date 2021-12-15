@@ -26,21 +26,21 @@ object EventLoop {
 
      ===============================================================================
      */
-    val eventLoop: idEventLoop? = idEventLoop()
+    val eventLoop: idEventLoop = idEventLoop()
     const val MAX_PUSHED_EVENTS = 64
-    val com_journalFile: idCVar? = idCVar(
+    val com_journalFile: idCVar = idCVar(
         "com_journal",
         "0",
         CVarSystem.CVAR_INIT or CVarSystem.CVAR_SYSTEM,
         "1 = record journal, 2 = play back journal",
-        0,
-        2,
+        0f,
+        2f,
         ArgCompletion_Integer(0, 2)
     )
 
     class idEventLoop     //					~idEventLoop( void );
     {
-        private val com_pushedEvents: Array<sysEvent_s?>? = arrayOfNulls<sysEvent_s?>(EventLoop.MAX_PUSHED_EVENTS)
+        private val com_pushedEvents: Array<sysEvent_s> = Array(MAX_PUSHED_EVENTS) { sysEvent_s() }
         var com_journalDataFile: idFile? = null
 
         // Journal file.
@@ -93,10 +93,10 @@ object EventLoop {
         // It is possible to get an event at the beginning of a frame that
         // has a time stamp lower than the last event from the previous frame.
         @Throws(idException::class)
-        fun GetEvent(): sysEvent_s? {
+        fun GetEvent(): sysEvent_s {
             if (com_pushedEventsHead > com_pushedEventsTail) {
                 com_pushedEventsTail++
-                return com_pushedEvents.get(com_pushedEventsTail - 1 and EventLoop.MAX_PUSHED_EVENTS - 1)
+                return com_pushedEvents[com_pushedEventsTail - 1 and MAX_PUSHED_EVENTS - 1]
             }
             return GetRealEvent()
         }
@@ -105,7 +105,7 @@ object EventLoop {
         @JvmOverloads
         @Throws(idException::class)
         fun RunEventLoop(commandExecution: Boolean = true /*= true*/): Int {
-            var ev: sysEvent_s?
+            var ev: sysEvent_s
             while (true) {
                 if (commandExecution) {
                     // execute any bound commands before processing another event
@@ -157,22 +157,22 @@ object EventLoop {
         }
 
         @Throws(idException::class)
-        private fun GetRealEvent(): sysEvent_s? {
+        private fun GetRealEvent(): sysEvent_s {
             var r: Int
-            val ev: sysEvent_s?
-            val event: ByteBuffer?
+            val ev: sysEvent_s
+            val event: ByteBuffer
 
             // either get an event from the system or the journal file
             if (com_journal.GetInteger() == 2) {
-                event = ByteBuffer.allocate(sysEvent_s.Companion.BYTES)
-                r = com_journalFile.Read(event)
+                event = ByteBuffer.allocate(sysEvent_s.BYTES)
+                r = com_journalFile!!.Read(event)
                 ev = sysEvent_s(event)
-                if (r != sysEvent_s.Companion.BYTES) {
+                if (r != sysEvent_s.BYTES) {
                     Common.common.FatalError("Error reading from journal file")
                 }
                 if (ev.evPtrLength != 0) {
                     ev.evPtr = ByteBuffer.allocate(ev.evPtrLength) //Mem_ClearedAlloc(ev.evPtrLength);
-                    r = com_journalFile.Read(ev.evPtr) //, ev.evPtrLength);
+                    r = com_journalFile!!.Read(ev.evPtr) //, ev.evPtrLength);
                     if (r != ev.evPtrLength) {
                         Common.common.FatalError("Error reading from journal file")
                     }
@@ -182,12 +182,12 @@ object EventLoop {
 
                 // write the journal value out if needed
                 if (com_journal.GetInteger() == 1) {
-                    r = com_journalFile.Write(ev.Write())
-                    if (r != sysEvent_s.Companion.BYTES) {
+                    r = com_journalFile!!.Write(ev.Write())
+                    if (r != sysEvent_s.BYTES) {
                         Common.common.FatalError("Error writing to journal file")
                     }
                     if (ev.evPtrLength != 0) {
-                        r = com_journalFile.Write(ev.evPtr, ev.evPtrLength)
+                        r = com_journalFile!!.Write(ev.evPtr, ev.evPtrLength)
                         if (r != ev.evPtrLength) {
                             Common.common.FatalError("Error writing to journal file")
                         }
@@ -198,17 +198,17 @@ object EventLoop {
         }
 
         @Throws(idException::class)
-        private fun ProcessEvent(ev: sysEvent_s?) {
+        private fun ProcessEvent(ev: sysEvent_s) {
             // track key up / down states
             if (ev.evType == sysEventType_t.SE_KEY) {
                 idKeyInput.PreliminaryKeyEvent(ev.evValue, ev.evValue2 != 0)
             }
             if (ev.evType == sysEventType_t.SE_CONSOLE) {
                 // from a text console outside the game window
-                CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, TempDump.bbtoa(ev.evPtr))
+                CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, TempDump.bbtoa(ev.evPtr!!))
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "\n")
             } else {
-                Session.Companion.session.ProcessEvent(ev)
+                Session.session.ProcessEvent(ev)
             }
 
             // free any block data
@@ -219,10 +219,10 @@ object EventLoop {
         }
 
         @Throws(idException::class)
-        private fun PushEvent(event: sysEvent_s?) {
-            val ev: sysEvent_s?
-            ev = com_pushedEvents.get(com_pushedEventsHead and EventLoop.MAX_PUSHED_EVENTS - 1)
-            if (com_pushedEventsHead - com_pushedEventsTail >= EventLoop.MAX_PUSHED_EVENTS) {
+        private fun PushEvent(event: sysEvent_s) {
+            val ev: sysEvent_s
+            ev = com_pushedEvents[com_pushedEventsHead and MAX_PUSHED_EVENTS - 1]
+            if (com_pushedEventsHead - com_pushedEventsTail >= MAX_PUSHED_EVENTS) {
 
                 // don't print the warning constantly, or it can give time for more...
                 if (!printedWarning) {
@@ -237,19 +237,19 @@ object EventLoop {
             } else {
                 printedWarning = false
             }
-            com_pushedEvents.get(com_pushedEventsHead and EventLoop.MAX_PUSHED_EVENTS - 1) = event
+            com_pushedEvents[com_pushedEventsHead and MAX_PUSHED_EVENTS - 1] = event
             com_pushedEventsHead++
         }
 
         companion object {
             //
-            private val com_journal: idCVar? = idCVar(
+            private val com_journal: idCVar = idCVar(
                 "com_journal",
                 "0",
                 CVarSystem.CVAR_INIT or CVarSystem.CVAR_SYSTEM,
                 "1 = record journal, 2 = play back journal",
-                0,
-                2,
+                0f,
+                2f,
                 ArgCompletion_Integer(0, 2)
             )
             var printedWarning = false

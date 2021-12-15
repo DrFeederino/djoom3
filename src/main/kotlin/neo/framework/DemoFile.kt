@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
  *
  */
 object DemoFile {
-    val DEMO_MAGIC: String? = Licensee.GAME_NAME + " RDEMO"
+    val DEMO_MAGIC: String = Licensee.GAME_NAME + " RDEMO"
 
     /*
      ===============================================================================

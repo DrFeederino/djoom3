@@ -22,10 +22,10 @@ import neo.idlib.math.Vector.idVec5
  */
 class GuiModel {
     internal class guiModelSurface_t {
-        val color: FloatArray? = FloatArray(4)
+        val color: FloatArray = FloatArray(4)
         var firstIndex = 0
         var firstVert = 0
-        var material: idMaterial? = null
+        var material: Material.idMaterial? = null
         var numIndexes = 0
         var numVerts = 0
     }
@@ -103,14 +103,14 @@ class GuiModel {
             }
         }
 
-        fun ReadFromDemo(demo: idDemoFile?) {
+        fun ReadFromDemo(demo: idDemoFile) {
             val i = CInt()
             var j: Int
             val k = CInt()
             val color = charArrayOf(0.toChar())
-            i.setVal(verts.Num())
+            i._val = (verts.Num())
             demo.ReadInt(i)
-            verts.SetNum(i.getVal(), false)
+            verts.SetNum(i._val, false)
             j = 0
             while (j < i.getVal()) {
                 demo.ReadVec3(verts[j].xyz)
@@ -128,20 +128,20 @@ class GuiModel {
                 verts[j].color[3] = color[0] as Byte
                 j++
             }
-            i.setVal(indexes.Num())
+            i._val = (indexes.Num())
             demo.ReadInt(i)
-            indexes.SetNum(i.getVal(), false)
+            indexes.SetNum(i._val, false)
             j = 0
-            while (j < i.getVal()) {
+            while (j < i._val) {
                 demo.ReadInt(k)
-                indexes[j] = k.getVal()
+                indexes[j] = k._val
                 j++
             }
-            i.setVal(surfaces.Num())
+            i._val = (surfaces.Num())
             demo.ReadInt(i)
-            surfaces.SetNum(i.getVal(), false)
+            surfaces.SetNum(i._val, false)
             j = 0
-            while (j < i.getVal()) {
+            while (j < i._val) {
                 val surf = surfaces[j]
 
 //                demo.ReadInt((int) surf.material);

@@ -28,10 +28,10 @@ object RenderWorld_portals {
         //
         var numPortalPlanes = 0
         var p: portal_s?
-        val portalPlanes: Array<idPlane?>? = idPlane.Companion.generateArray(RenderWorld_portals.MAX_PORTAL_PLANES + 1)
+        val portalPlanes: Array<idPlane> = idPlane.generateArray(MAX_PORTAL_PLANES + 1)
 
         //
-        var rect: idScreenRect?
+        var rect: idScreenRect
 
         // positive side is outside the visible frustum
         constructor() {
@@ -39,12 +39,12 @@ object RenderWorld_portals {
             rect = idScreenRect()
         }
 
-        constructor(p: portalStack_s?) {
+        constructor(p: portalStack_s) {
             this.p = p.p
             next = p.next
             rect = idScreenRect(p.rect)
             for (i in portalPlanes.indices) {
-                portalPlanes.get(i).set(p.portalPlanes.get(i))
+                portalPlanes[i].set(p.portalPlanes[i])
             }
         }
     }

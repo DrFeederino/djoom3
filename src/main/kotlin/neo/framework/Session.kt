@@ -8,7 +8,6 @@ import neo.Sound.sound.idSoundWorld
 import neo.TempDump
 import neo.TempDump.SERiAL
 import neo.TempDump.TODO_Exception
-import neo.framework.*
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
@@ -17,15 +16,17 @@ import neo.framework.FileSystem_h.backgroundDownload_s
 import neo.framework.FileSystem_h.findFile_t
 import neo.framework.Session_local.idSessionLocal
 import neo.framework.Session_local.timeDemo_t
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.sys.sys_public.sysEvent_s
 import neo.sys.win_main
+import neo.sys.win_main.Sys_EnterCriticalSection
+import neo.sys.win_main.Sys_LeaveCriticalSection
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -52,15 +53,15 @@ class Session {
         var health = 0
         var heartRate = 0
         var stamina = 0
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw TODO_Exception()
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw TODO_Exception()
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw TODO_Exception()
         }
 
@@ -76,7 +77,7 @@ class Session {
     //    
     //typedef const char * (*HandleGuiCommand_t)( const char * );
     abstract class HandleGuiCommand_t {
-        abstract fun run(input: String?): String?
+        abstract fun run(input: String): String
     }
 
     abstract class idSession {
@@ -125,7 +126,7 @@ class Session {
 
         // Processes the given event.
         @Throws(idException::class)
-        abstract fun ProcessEvent(event: sysEvent_s?): Boolean
+        abstract fun ProcessEvent(event: sysEvent_s): Boolean
 
         // Activates the main menu
         @Throws(idException::class)
@@ -146,67 +147,67 @@ class Session {
         // if MSG_CDKEY and want, returns the cd key or NULL if aborted
         // network tells wether one should still run the network loop in a wait dialog
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String? /*, final String title = NULL, boolean wait = false, final String fire_yes = NULL, final String fire_no = NULL, boolean network = false*/
-        ): String?
+            type: msgBoxType_t,
+            message: String /*, final String title = NULL, boolean wait = false, final String fire_yes = NULL, final String fire_no = NULL, boolean network = false*/
+        ): String
 
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String?,
-            title: String? /*, boolean wait = false, final String fire_yes = NULL, final String fire_no = NULL, boolean network = false*/
-        ): String?
+            type: msgBoxType_t,
+            message: String,
+            title: String /*, boolean wait = false, final String fire_yes = NULL, final String fire_no = NULL, boolean network = false*/
+        ): String
 
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String?,
+            type: msgBoxType_t,
+            message: String,
             title: String?,
             wait: Boolean /*, final String fire_yes = NULL, final String fire_no = NULL, boolean network = false*/
-        ): String?
+        ): String
 
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String?,
-            title: String?,
+            type: msgBoxType_t,
+            message: String,
+            title: String,
             wait: Boolean,
-            fire_yes: String? /*, final String fire_no = NULL, boolean network = false*/
-        ): String?
+            fire_yes: String /*, final String fire_no = NULL, boolean network = false*/
+        ): String
 
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String?,
-            title: String?,
+            type: msgBoxType_t,
+            message: String,
+            title: String,
             wait: Boolean,
-            fire_yes: String?,
-            fire_no: String? /*, boolean network = false*/
-        ): String?
+            fire_yes: String,
+            fire_no: String /*, boolean network = false*/
+        ): String
 
         abstract fun MessageBox(
-            type: msgBoxType_t?,
-            message: String?,
-            title: String?,
+            type: msgBoxType_t,
+            message: String,
+            title: String,
             wait: Boolean,
-            fire_yes: String?,
-            fire_no: String?,
+            fire_yes: String,
+            fire_no: String,
             network: Boolean
-        ): String?
+        ): String
 
         abstract fun StopBox()
 
         // monitor this download in a progress box to either abort or completion
         abstract fun DownloadProgressBox(
-            bgl: backgroundDownload_s?,
-            title: String? /*, int progress_start = 0, int progress_end = 100*/
+            bgl: backgroundDownload_s,
+            title: String /*, int progress_start = 0, int progress_end = 100*/
         )
 
         abstract fun DownloadProgressBox(
-            bgl: backgroundDownload_s?,
-            title: String?,
+            bgl: backgroundDownload_s,
+            title: String,
             progress_start: Int /*= 0, int progress_end = 100*/
         )
 
         abstract fun DownloadProgressBox(
-            bgl: backgroundDownload_s?,
-            title: String?,
+            bgl: backgroundDownload_s,
+            title: String,
             progress_start: Int,
             progress_end: Int
         )
@@ -227,14 +228,14 @@ class Session {
 
         // check keys for validity when typed in by the user ( with checksum verification )
         // store the new set of keys if they are found valid
-        abstract fun CheckKey(key: String?, netConnect: Boolean, offline_valid: BooleanArray? /*[ 2 ]*/): Boolean
+        abstract fun CheckKey(key: String, netConnect: Boolean, offline_valid: BooleanArray /*[ 2 ]*/): Boolean
 
         // verify the current set of keys for validity
         // strict -> keys in state CDKEY_CHECKING state are not ok
         abstract fun CDKeysAreValid(strict: Boolean): Boolean
 
         // wipe the key on file if the network check finds it invalid
-        abstract fun ClearCDKey(valid: BooleanArray? /*[ 2 ]*/)
+        abstract fun ClearCDKey(valid: BooleanArray /*[ 2 ]*/)
 
         // configure gui variables for mainmenu.gui and cd key state
         abstract fun SetCDKeyGuiVars()
@@ -242,7 +243,7 @@ class Session {
 
         // got reply from master about the keys. if !valid, auth_msg given
         abstract fun CDKeysAuthReply(valid: Boolean, auth_msg: String?)
-        abstract fun GetCurrentMapName(): String?
+        abstract fun GetCurrentMapName(): String
         abstract fun GetSaveGameVersion(): Int
     }
 
@@ -253,16 +254,16 @@ class Session {
      */
     internal class Session_RescanSI_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
             if (Game_local.game != null && idAsyncNetwork.server.IsActive()) {
-                Game_local.game.SetServerInfo(Session.Companion.sessLocal.mapSpawnData.serverInfo)
+                Game_local.game.SetServerInfo(sessLocal.mapSpawnData.serverInfo)
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_RescanSI_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_RescanSI_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -277,10 +278,10 @@ class Session {
      */
     internal class Session_Map_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val map: idStr
             val string: String
-            val ff: findFile_t?
+            val ff: findFile_t
             val rl_args = CmdArgs.idCmdArgs()
             map = idStr(args.Argv(1))
             if (0 == map.Length()) {
@@ -308,12 +309,12 @@ class Session {
                 else -> {}
             }
             CVarSystem.cvarSystem.SetCVarBool("developer", false)
-            Session.Companion.sessLocal.StartNewGame(map.toString(), true)
+            sessLocal.StartNewGame(map.toString(), true)
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_Map_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_Map_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -328,10 +329,10 @@ class Session {
      */
     internal class Session_DevMap_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val map: idStr
             val string: String
-            val ff: findFile_t?
+            val ff: findFile_t
             val rl_args = CmdArgs.idCmdArgs()
             map = idStr(args.Argv(1))
             if (0 == map.Length()) {
@@ -359,12 +360,12 @@ class Session {
                 else -> {}
             }
             CVarSystem.cvarSystem.SetCVarBool("developer", true)
-            Session.Companion.sessLocal.StartNewGame(map.toString(), true)
+            sessLocal.StartNewGame(map.toString(), true)
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_DevMap_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_DevMap_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -377,7 +378,7 @@ class Session {
      */
     internal class Session_TestMap_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val map: idStr
             var string: String
             map = idStr(args.Argv(1))
@@ -393,8 +394,8 @@ class Session {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_TestMap_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_TestMap_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -407,7 +408,7 @@ class Session {
      */
     internal class Sess_WritePrecache_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
                 Common.common.Printf("USAGE: writePrecache <execFile>\n")
                 return
@@ -416,14 +417,14 @@ class Session {
             str.DefaultFileExtension(".cfg")
             val f = FileSystem_h.fileSystem.OpenFileWrite(str.toString())
             DeclManager.declManager.WritePrecacheCommands(f)
-            ModelManager.renderModelManager.WritePrecacheCommands(f)
+            ModelManager.renderModelManager.WritePrecacheCommands(f!!)
             UserInterface.uiManager.WritePrecacheCommands(f)
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Sess_WritePrecache_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Sess_WritePrecache_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -431,14 +432,14 @@ class Session {
 
     internal class Session_PromptKey_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var retkey: String
             val valid = BooleanArray(2)
-            if (Session.Companion.recursed) {
+            if (recursed) {
                 Common.common.Warning("promptKey recursed - aborted")
                 return
             }
-            Session.Companion.recursed = true
+            recursed = true
             //HACKME::5:disable the serial messageBox
 //            do {
 //                // in case we're already waiting for an auth to come back to us ( may happen exceptionally )
@@ -491,12 +492,12 @@ class Session {
 //                    cmdSystem.ExecuteCommandBuffer();
 //                }
 //            } while (retkey != null);
-            Session.Companion.recursed = false
+            recursed = false
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_PromptKey_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_PromptKey_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -508,18 +509,18 @@ class Session {
      ================
      */
     internal class Session_DemoShot_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
-                val filename: String = Session.Companion.FindUnusedFileName("demos/shot%03i.demo")
-                Session.Companion.sessLocal.DemoShot(filename)
+                val filename: String = FindUnusedFileName("demos/shot%03i.demo")
+                sessLocal.DemoShot(filename)
             } else {
-                Session.Companion.sessLocal.DemoShot(Str.va("demos/shot_%s.demo", args.Argv(1)))
+                sessLocal.DemoShot(Str.va("demos/shot_%s.demo", args.Argv(1)))
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_DemoShot_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_DemoShot_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -531,18 +532,18 @@ class Session {
      ================
      */
     internal class Session_RecordDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
-                val filename: String = Session.Companion.FindUnusedFileName("demos/demo%03i.demo")
-                Session.Companion.sessLocal.StartRecordingRenderDemo(filename)
+                val filename: String = FindUnusedFileName("demos/demo%03i.demo")
+                sessLocal.StartRecordingRenderDemo(filename)
             } else {
-                Session.Companion.sessLocal.StartRecordingRenderDemo(Str.va("demos/%s.demo", args.Argv(1)))
+                sessLocal.StartRecordingRenderDemo(Str.va("demos/%s.demo", args.Argv(1)))
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_RecordDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_RecordDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -555,19 +556,19 @@ class Session {
      */
     internal class Session_CompressDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() == 2) {
-                Session.Companion.sessLocal.CompressDemoFile("2", args.Argv(1))
+                sessLocal.CompressDemoFile("2", args.Argv(1))
             } else if (args.Argc() == 3) {
-                Session.Companion.sessLocal.CompressDemoFile(args.Argv(2), args.Argv(1))
+                sessLocal.CompressDemoFile(args.Argv(2), args.Argv(1))
             } else {
                 Common.common.Printf("use: CompressDemo <file> [scheme]\nscheme is the same as com_compressDemo, defaults to 2")
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_CompressDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_CompressDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -579,13 +580,13 @@ class Session {
      ================
      */
     internal class Session_StopRecordingDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.StopRecordingRenderDemo()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.StopRecordingRenderDemo()
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_StopRecordingDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_StopRecordingDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -597,15 +598,15 @@ class Session {
      ================
      */
     internal class Session_PlayDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() >= 2) {
-                Session.Companion.sessLocal.StartPlayingRenderDemo(Str.va("demos/%s", args.Argv(1)))
+                sessLocal.StartPlayingRenderDemo(Str.va("demos/%s", args.Argv(1)))
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_PlayDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_PlayDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -617,15 +618,15 @@ class Session {
      ================
      */
     internal class Session_TimeDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() >= 2) {
-                Session.Companion.sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)), args.Argc() > 2)
+                sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)), args.Argc() > 2)
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_TimeDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_TimeDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -637,17 +638,17 @@ class Session {
      ================
      */
     internal class Session_TimeDemoQuit_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)))
-            if (Session.Companion.sessLocal.timeDemo == timeDemo_t.TD_YES) {
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)))
+            if (sessLocal.timeDemo == timeDemo_t.TD_YES) {
                 // this allows hardware vendors to automate some testing
-                Session.Companion.sessLocal.timeDemo = timeDemo_t.TD_YES_THEN_QUIT
+                sessLocal.timeDemo = timeDemo_t.TD_YES_THEN_QUIT
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_TimeDemoQuit_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_TimeDemoQuit_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -659,13 +660,13 @@ class Session {
      ================
      */
     internal class Session_AVIDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.AVIRenderDemo(Str.va("demos/%s", args.Argv(1)))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.AVIRenderDemo(Str.va("demos/%s", args.Argv(1)))
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_AVIDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_AVIDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -677,18 +678,18 @@ class Session {
      ================
      */
     internal class Session_AVIGame_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val Argv = arrayOf(args.Argv(1))
             val empty = !TempDump.isNotNullOrEmpty(Argv[0])
-            Session.Companion.sessLocal.AVIGame(Argv) //TODO:back reference
+            sessLocal.AVIGame(Argv) //TODO:back reference
             if (empty) {
                 args.set(Argv[0])
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_AVIGame_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_AVIGame_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -700,13 +701,13 @@ class Session {
      ================
      */
     internal class Session_AVICmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.AVICmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.AVICmdDemo(args.Argv(1))
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_AVICmdDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_AVICmdDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -719,20 +720,20 @@ class Session {
      */
     internal class Session_WriteCmdDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() == 1) {
-                val filename: String = Session.Companion.FindUnusedFileName("demos/cmdDemo%03i.cdemo")
-                Session.Companion.sessLocal.WriteCmdDemo(filename)
+                val filename: String = FindUnusedFileName("demos/cmdDemo%03i.cdemo")
+                sessLocal.WriteCmdDemo(filename)
             } else if (args.Argc() == 2) {
-                Session.Companion.sessLocal.WriteCmdDemo(Str.va("demos/%s.cdemo", args.Argv(1)))
+                sessLocal.WriteCmdDemo(Str.va("demos/%s.cdemo", args.Argv(1)))
             } else {
                 Common.common.Printf("usage: writeCmdDemo [demoName]\n")
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_WriteCmdDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_WriteCmdDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -744,13 +745,13 @@ class Session {
      ================
      */
     internal class Session_PlayCmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.StartPlayingCmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.StartPlayingCmdDemo(args.Argv(1))
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_PlayCmdDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_PlayCmdDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -762,13 +763,13 @@ class Session {
      ================
      */
     internal class Session_TimeCmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.TimeCmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.TimeCmdDemo(args.Argv(1))
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_TimeCmdDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_TimeCmdDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -780,17 +781,17 @@ class Session {
      ================
      */
     internal class Session_Disconnect_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.Stop()
-            Session.Companion.sessLocal.StartMenu()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.Stop()
+            sessLocal.StartMenu()
             if (snd_system.soundSystem != null) {
                 snd_system.soundSystem.SetMute(false)
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_Disconnect_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_Disconnect_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -802,20 +803,18 @@ class Session {
      ================
      */
     internal class Session_EndOfDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.Stop()
-            Session.Companion.sessLocal.StartMenu()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.Stop()
+            sessLocal.StartMenu()
             if (snd_system.soundSystem != null) {
                 snd_system.soundSystem.SetMute(false)
             }
-            if (Session.Companion.sessLocal.guiActive != null) {
-                Session.Companion.sessLocal.guiActive.HandleNamedEvent("endOfDemo")
-            }
+            sessLocal.guiActive?.HandleNamedEvent("endOfDemo")
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_EndOfDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_EndOfDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -828,19 +827,19 @@ class Session {
      */
     internal class Session_ExitCmdDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            if (null == Session.Companion.sessLocal.cmdDemoFile) {
+        override fun run(args: CmdArgs.idCmdArgs) {
+            if (null == sessLocal.cmdDemoFile) {
                 Common.common.Printf("not reading from a cmdDemo\n")
                 return
             }
-            FileSystem_h.fileSystem.CloseFile(Session.Companion.sessLocal.cmdDemoFile)
-            Common.common.Printf("Command demo exited at logIndex %d\n", Session.Companion.sessLocal.logIndex)
-            Session.Companion.sessLocal.cmdDemoFile = null
+            FileSystem_h.fileSystem.CloseFile(sessLocal.cmdDemoFile)
+            Common.common.Printf("Command demo exited at logIndex %d\n", sessLocal.logIndex)
+            sessLocal.cmdDemoFile = null
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_ExitCmdDemo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_ExitCmdDemo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -852,13 +851,13 @@ class Session {
      ================
      */
     internal class Session_TestGUI_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Session.Companion.sessLocal.TestGUI(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs) {
+            sessLocal.TestGUI(args.Argv(1))
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_TestGUI_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_TestGUI_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -871,19 +870,19 @@ class Session {
      */
     internal class LoadGame_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             Console.console.Close()
-            if (args.Argc() < 2 || idStr.Companion.Icmp(args.Argv(1), "quick") == 0) {
+            if (args.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
                 val saveName = Common.common.GetLanguageDict().GetString("#str_07178")
-                Session.Companion.sessLocal.LoadGame(saveName)
+                sessLocal.LoadGame(saveName)
             } else {
-                Session.Companion.sessLocal.LoadGame(args.Argv(1))
+                sessLocal.LoadGame(args.Argv(1))
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = LoadGame_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = LoadGame_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -896,22 +895,22 @@ class Session {
      */
     internal class SaveGame_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            if (args.Argc() < 2 || idStr.Companion.Icmp(args.Argv(1), "quick") == 0) {
+        override fun run(args: CmdArgs.idCmdArgs) {
+            if (args.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
                 val saveName = Common.common.GetLanguageDict().GetString("#str_07178")
-                if (Session.Companion.sessLocal.SaveGame(saveName)) {
+                if (sessLocal.SaveGame(saveName)) {
                     Common.common.Printf("%s\n", saveName)
                 }
             } else {
-                if (Session.Companion.sessLocal.SaveGame(args.Argv(1))) {
+                if (sessLocal.SaveGame(args.Argv(1))) {
                     Common.common.Printf("Saved %s\n", args.Argv(1))
                 }
             }
         }
 
         companion object {
-            private val instance: cmdFunction_t? = SaveGame_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = SaveGame_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -923,14 +922,14 @@ class Session {
      ===============
      */
     internal class TakeViewNotes_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val p = if (args.Argc() > 1) args.Argv(1) else ""
-            Session.Companion.sessLocal.TakeNotes(p)
+            sessLocal.TakeNotes(p)
         }
 
         companion object {
-            private val instance: cmdFunction_t? = TakeViewNotes_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = TakeViewNotes_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -942,14 +941,14 @@ class Session {
      ===============
      */
     internal class TakeViewNotes2_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val p = if (args.Argc() > 1) args.Argv(1) else ""
-            Session.Companion.sessLocal.TakeNotes(p, true)
+            sessLocal.TakeNotes(p, true)
         }
 
         companion object {
-            private val instance: cmdFunction_t? = TakeViewNotes2_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = TakeViewNotes2_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -964,7 +963,7 @@ class Session {
      ===============
      */
     internal class Session_Hitch_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val sw = snd_system.soundSystem.GetPlayingSoundWorld()
             if (sw != null) {
                 snd_system.soundSystem.SetMute(true)
@@ -984,8 +983,8 @@ class Session {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Session_Hitch_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Session_Hitch_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1002,7 +1001,7 @@ class Session {
 
      ===============================================================================
      */
-        val session: idSession = Session.Companion.sessLocal
+        val session: idSession = sessLocal
         var PREVIEW_HEIGHT = 298
         var PREVIEW_WIDTH = 398
 
@@ -1039,7 +1038,7 @@ class Session {
      FindUnusedFileName
      ================
      */
-        fun FindUnusedFileName(format: String?): String? {
+        fun FindUnusedFileName(format: String): String {
             var i: Int
             var filename = "" //=new char[1024];
             i = 0

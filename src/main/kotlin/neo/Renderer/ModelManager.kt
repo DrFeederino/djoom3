@@ -62,7 +62,7 @@ object ModelManager {
         abstract fun AllocModel(): idRenderModel
 
         // frees a render model
-        abstract fun FreeModel(model: idRenderModel?)
+        abstract fun FreeModel(model: idRenderModel)
 
         // returns NULL if modelName is NULL or an empty string, otherwise
         // it will create a default model if not loadable
@@ -78,15 +78,15 @@ object ModelManager {
         }
 
         // returns the default cube model
-        abstract fun DefaultModel(): idRenderModel?
+        abstract fun DefaultModel(): idRenderModel
 
         // world map parsing will add all the inline models with this call
-        abstract fun AddModel(model: idRenderModel?)
+        abstract fun AddModel(model: idRenderModel)
 
         // when a world map unloads, it removes its internal models from the list
         // before freeing them.
         // There may be an issue with multiple renderWorlds that share data...
-        abstract fun RemoveModel(model: idRenderModel?)
+        abstract fun RemoveModel(model: idRenderModel)
 
         // the reloadModels console command calls this, but it can
         // also be explicitly invoked
@@ -96,13 +96,13 @@ object ModelManager {
         }
 
         // write "touchModel <model>" commands for each non-world-map model
-        abstract fun WritePrecacheCommands(f: idFile?)
+        abstract fun WritePrecacheCommands(f: idFile)
 
         // called during vid_restart
         abstract fun FreeModelVertexCaches()
 
         // print memory info
-        abstract fun PrintMemInfo(mi: MemInfo_t?)
+        abstract fun PrintMemInfo(mi: MemInfo_t)
     }
 
     class idRenderModelManagerLocal : idRenderModelManager() {
@@ -111,7 +111,7 @@ object ModelManager {
         private val hash: idHashIndex?
         private var insideLevelLoad // don't actually load now
                 : Boolean
-        private val models: idList<idRenderModel?>?
+        private val models: idList<idRenderModel>
         private var spriteModel: idRenderModel?
         private val trailModel: idRenderModel?
 
@@ -534,8 +534,8 @@ object ModelManager {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ListModels_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ListModels_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }

@@ -820,7 +820,7 @@ object File_h {
         }
 
         // returns const pointer to the memory buffer
-        fun GetDataPtr(): ByteBuffer? {
+        fun GetDataPtr(): ByteBuffer {
             return filePtr
         }
 
@@ -945,11 +945,11 @@ object File_h {
                 : FileChannel?
 
         // public	virtual					~idFile_Permanent( void );
-        override fun GetName(): String? {
+        override fun GetName(): String {
             return name.toString()
         }
 
-        override fun GetFullPath(): String? {
+        override fun GetFullPath(): String {
             return fullPath.toString()
         }
 

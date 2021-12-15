@@ -36,7 +36,7 @@ object EditField {
 
     class idEditField {
         private var autoComplete: autoComplete_s?
-        private val buffer: CharArray? = CharArray(EditField.MAX_EDIT_LINE)
+        private val buffer: CharArray = CharArray(EditField.MAX_EDIT_LINE)
         private var cursor = 0
         private var scroll = 0
         private var widthInChars = 0
@@ -349,7 +349,7 @@ object EditField {
 //            Heap.Mem_Free(cbd);
         }
 
-        fun GetBuffer(): CharArray? {
+        fun GetBuffer(): CharArray {
             return buffer
         }
 

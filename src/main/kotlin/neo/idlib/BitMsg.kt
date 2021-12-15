@@ -679,15 +679,15 @@ object BitMsg {
         }
 
         //
-        fun ReadData(data: ByteBuffer, length: Int): Int {
+        fun ReadData(data: ByteBuffer?, length: Int): Int {
             val cnt: Int
             ReadByteAlign()
             cnt = readCount
             if (readCount + length > curSize) {
-                data.put(readData.array(), readCount, GetRemaingData())
+                data!!.put(readData.array(), readCount, GetRemaingData())
                 readCount = curSize
             } else {
-                data.put(readData.array(), readCount, length)
+                data!!.put(readData.array(), readCount, length)
                 readCount += length
             }
             return readCount - cnt
@@ -702,7 +702,7 @@ object BitMsg {
                 adr.ip[i] = ReadByte().toChar()
                 i++
             }
-            adr.port = ReadUShort().toShort()
+            adr.port = ReadUShort().toInt()
         }
 
         @Throws(idException::class)

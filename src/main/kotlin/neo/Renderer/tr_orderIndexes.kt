@@ -14,8 +14,8 @@ object tr_orderIndexes {
      */
     const val CACHE_SIZE = 24
     const val STALL_SIZE = 8
-    fun R_MeshCost(numIndexes: Int, indexes: IntArray?): Int {
-        val inCache = IntArray(tr_orderIndexes.CACHE_SIZE)
+    fun R_MeshCost(numIndexes: Int, indexes: IntArray): Int {
+        val inCache = IntArray(CACHE_SIZE)
         var i: Int
         var j: Int
         var v: Int
@@ -23,7 +23,7 @@ object tr_orderIndexes {
         var c_loads: Int
         var fifo: Int
         i = 0
-        while (i < tr_orderIndexes.CACHE_SIZE) {
+        while (i < CACHE_SIZE) {
             inCache[i] = -1
             i++
         }
@@ -32,19 +32,19 @@ object tr_orderIndexes {
         fifo = 0
         i = 0
         while (i < numIndexes) {
-            v = indexes.get(i)
+            v = indexes[i]
             j = 0
-            while (j < tr_orderIndexes.CACHE_SIZE) {
-                if (inCache[(fifo + j) % tr_orderIndexes.CACHE_SIZE] == v) {
+            while (j < CACHE_SIZE) {
+                if (inCache[(fifo + j) % CACHE_SIZE] == v) {
                     break
                 }
                 j++
             }
-            if (j == tr_orderIndexes.CACHE_SIZE) {
+            if (j == CACHE_SIZE) {
                 c_loads++
-                inCache[fifo % tr_orderIndexes.CACHE_SIZE] = v
+                inCache[fifo % CACHE_SIZE] = v
                 fifo++
-            } else if (j < tr_orderIndexes.STALL_SIZE) {
+            } else if (j < STALL_SIZE) {
                 c_stalls++
             }
             i++
@@ -61,7 +61,7 @@ object tr_orderIndexes {
      ====================
      */
     @Throws(idException::class)
-    fun R_OrderIndexes(numIndexes: Int, indexes: IntArray?) {
+    fun R_OrderIndexes(numIndexes: Int, indexes: IntArray) {
         var numIndexes = numIndexes
         val triangleUsed: BooleanArray
         val numTris: Int
@@ -72,8 +72,8 @@ object tr_orderIndexes {
         var tri: Int
         var i: Int
         var vref: vertRef_s?
-        val vrefs: Array<vertRef_s?>
-        val vrefTable: Array<vertRef_s?>
+        val vrefs: Array<vertRef_s>
+        val vrefTable: Array<vertRef_s>
         var numVerts: Int
         var v1: Int
         var v2: Int
@@ -98,17 +98,17 @@ object tr_orderIndexes {
         numVerts = 0
         i = 0
         while (i < numIndexes) {
-            if (indexes.get(i) > numVerts) {
-                numVerts = indexes.get(i)
+            if (indexes[i] > numVerts) {
+                numVerts = indexes[i]
             }
             i++
         }
         numVerts++
 
         // create a table of triangles used by each vertex
-        vrefs = arrayOfNulls<vertRef_s?>(numVerts)
+        vrefs = Array(numVerts) { vertRef_s() }
         //	memset( vrefs, 0, numVerts * sizeof( *vrefs ) );
-        vrefTable = arrayOfNulls<vertRef_s?>(numIndexes)
+        vrefTable = Array(numIndexes) { vertRef_s() }
         i = 0
         while (i < numIndexes) {
             tri = i / 3
@@ -138,9 +138,9 @@ object tr_orderIndexes {
                 // emit this tri
                 base = oldIndexes //[tri * 3];
                 base_index = tri * 3
-                indexes.get(numIndexes + 0) = base[base_index + 0]
-                indexes.get(numIndexes + 1) = base[base_index + 1]
-                indexes.get(numIndexes + 2) = base[base_index + 2]
+                indexes[numIndexes + 0] = base[base_index + 0]
+                indexes[numIndexes + 1] = base[base_index + 1]
+                indexes[numIndexes + 2] = base[base_index + 2]
                 numIndexes += 3
                 triangleUsed[tri] = true
 

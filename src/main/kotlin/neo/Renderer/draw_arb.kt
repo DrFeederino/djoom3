@@ -1,6 +1,5 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Material.stageVertexColor_t
 import neo.Renderer.Model.lightingCache_s
 import neo.Renderer.tr_local.drawInteraction_t
@@ -8,7 +7,6 @@ import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.viewLight_s
 import neo.Renderer.tr_render.DrawInteraction
-import neo.TempDump
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.math.Vector.idVec4
 import org.lwjgl.opengl.ARBTextureEnvCombine
@@ -61,7 +59,7 @@ object draw_arb {
      */
     fun RB_CreateDrawInteractions(surfs: drawSurf_s?) {
         var surf = surfs
-        if (TempDump.NOT(surf)) {
+        if (null == surf) {
             return
         }
 
@@ -90,7 +88,7 @@ object draw_arb {
 
      ==================
      */
-    fun RB_RenderViewLight(vLight: viewLight_s?) {
+    fun RB_RenderViewLight(vLight: viewLight_s) {
         tr_local.backEnd.vLight = vLight
 
         // do fogging later

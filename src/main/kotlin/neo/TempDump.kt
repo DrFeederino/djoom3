@@ -610,7 +610,7 @@ object TempDump {
 
     abstract class void_callback<type> {
         @Throws(idException::class)
-        abstract fun run(vararg objects: type?)
+        abstract fun run(vararg objects: type)
     }
 
     abstract class argCompletion_t<E> {

@@ -1,5 +1,6 @@
 package neo.framework
 
+import neo.Renderer.Material
 import neo.TempDump
 import neo.TempDump.SERiAL
 import neo.framework.DeclManager.declType_t
@@ -10,7 +11,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.idStrList
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -25,13 +26,13 @@ class DeclSkin {
      */
     internal class skinMapping_t {
         var from // 0 == any unmatched shader
-                : idMaterial? = null
-        var to: idMaterial? = null
+                : Material.idMaterial? = null
+        var to: Material.idMaterial? = null
     }
 
     class idDeclSkin : idDecl(), SERiAL {
-        private val associatedModels: idStrList? = idStrList()
-        private val mappings: idList<skinMapping_t?>? = idList()
+        private val associatedModels: idStrList = idStrList()
+        private val mappings: idList<skinMapping_t> = idList()
 
         //
         //
@@ -57,14 +58,14 @@ class DeclSkin {
             }
         }
 
-        override fun DefaultDefinition(): String? {
+        override fun DefaultDefinition(): String {
             return """{
 	"*"	"_default"
 }"""
         }
 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             val token = idToken()
             val token2 = idToken()
@@ -105,9 +106,9 @@ class DeclSkin {
             mappings.Clear()
         }
 
-        fun RemapShaderBySkin(shader: idMaterial?): idMaterial? {
+        fun RemapShaderBySkin(shader: Material.idMaterial?): Material.idMaterial? {
             var i: Int
-            if (TempDump.NOT(shader)) {
+            if (null == shader) {
                 return null
             }
 
@@ -117,7 +118,7 @@ class DeclSkin {
             }
             i = 0
             while (i < mappings.Num()) {
-                val map = mappings.get(i)
+                val map = mappings[i]
 
                 // null = wildcard match
                 if (TempDump.NOT(map.from) || map.from == shader) {
@@ -135,26 +136,26 @@ class DeclSkin {
             return associatedModels.size()
         }
 
-        fun GetAssociatedModel(index: Int): String? {
+        fun GetAssociatedModel(index: Int): String {
             return if (index >= 0 && index < associatedModels.size()) {
-                associatedModels.get(index).toString()
+                associatedModels[index].toString()
             } else ""
         }
 
-        fun oSet(skin: idDeclSkin?) {
+        fun oSet(skin: idDeclSkin) {
             mappings.set(skin.mappings)
             associatedModels.set(skin.associatedModels)
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }

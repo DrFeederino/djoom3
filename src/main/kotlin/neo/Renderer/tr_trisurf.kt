@@ -596,7 +596,7 @@ object tr_trisurf {
      R_AllocStaticTriSurfShadowVerts
      =================
      */
-    fun R_AllocStaticTriSurfShadowVerts(tri: srfTriangles_s?, numVerts: Int) {
+    fun R_AllocStaticTriSurfShadowVerts(tri: srfTriangles_s, numVerts: Int) {
         assert(tri.shadowVertexes == null)
         tri.shadowVertexes = shadowCache_s.generateArray(numVerts) //triShadowVertexAllocator.Alloc(numVerts);
     }

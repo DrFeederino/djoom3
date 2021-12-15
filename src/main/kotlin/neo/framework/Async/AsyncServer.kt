@@ -34,9 +34,8 @@ import neo.sys.win_main
 import neo.sys.win_net
 import neo.sys.win_shared
 import java.math.BigInteger
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
-import java.util.stream.Stream
 
 /**
  *
@@ -68,14 +67,14 @@ object AsyncServer {
 
     //
     // must be kept in sync with authReplyMsg_t
-    val authReplyMsg: Array<String?>? = arrayOf( //	"Waiting for authorization",
+    val authReplyMsg: Array<String> = arrayOf( //	"Waiting for authorization",
         "#str_07204",  //	"Client unknown to auth",
         "#str_07205",  //	"Access denied - CD Key in use",
         "#str_07206",  //	"Auth custom message", // placeholder - we propagate a message from the master
         "#str_07207",  //	"Authorize Server - Waiting for client"
         "#str_07208"
     )
-    val authReplyStr: Array<String?>? = arrayOf(
+    val authReplyStr: Array<String> = arrayOf(
         "AUTH_NONE",
         "AUTH_OK",
         "AUTH_WAIT",
@@ -122,46 +121,42 @@ object AsyncServer {
     internal class challenge_s {
         var OS = 0
         var address // client address
-                : netadr_t? = null
+                : netadr_t = netadr_t()
         var authReply // cd key check replies
-                : authReply_t? = null
+                : authReply_t = authReply_t.AUTH_NONE
         var authReplyMsg // default auth messages
-                : authReplyMsg_t? = null
-        var authReplyPrint // custom msg
-                : idStr?
+                : authReplyMsg_t = authReplyMsg_t.AUTH_REPLY_WAITING
+        val authReplyPrint // custom msg
+                : idStr = idStr()
         var authState // local state regarding the client
-                : authState_t? = null
+                : authState_t = authState_t.CDK_WAIT
         var challenge // challenge code
                 = 0
         var clientId // client identification
                 = 0
         var connected // true if the client is connected
                 = false
-        var guid: CharArray? = CharArray(12) // guid
+        var guid: CharArray = CharArray(12) // guid
         var pingTime // time the challenge response was sent to client
                 = 0
         var time // time the challenge was created
                 = 0
-
-        init {
-            authReplyPrint = idStr()
-        }
     } /*challenge_t*/
 
     internal class serverClient_s {
         var OS = 0
         var acknowledgeSnapshotSequence = 0
-        var channel: idMsgChannel? = idMsgChannel()
+        var channel: idMsgChannel = idMsgChannel()
         var clientAheadTime = 0
         var clientId = 0
         var clientPing = 0
         var clientPrediction = 0
         var clientRate = 0
-        var clientState: serverClientState_t? = null
+        var clientState: serverClientState_t = serverClientState_t.SCS_FREE
         var gameFrame = 0
         var gameInitSequence = 0
         var gameTime = 0
-        var guid: CharArray? = CharArray(12) // Even Balance - M. Quinn
+        var guid: CharArray = CharArray(12) // Even Balance - M. Quinn
         var lastConnectTime = 0
         var lastEmptyTime = 0
         var lastInputTime = 0
@@ -177,16 +172,15 @@ object AsyncServer {
 
     class idAsyncServer {
         private val serverPort // UDP port
-                : idPort?
-        private val stats_outrate: IntArray? = IntArray(stats_numsamples)
+                : idPort
+        private val stats_outrate: IntArray = IntArray(stats_numsamples)
         private var active // true if server is active
                 : Boolean
 
         //
-        private val challenges: Array<challenge_s?>? =
-            arrayOfNulls<challenge_s?>(AsyncServer.MAX_CHALLENGES) // to prevent invalid IPs from connecting
-        private val clients: Array<serverClient_s?>? =
-            arrayOfNulls<serverClient_s?>(AsyncNetwork.MAX_ASYNC_CLIENTS) // clients
+        private var challenges: Array<challenge_s>// to prevent invalid IPs from connecting
+        private val clients: Array<serverClient_s> =
+            Array(AsyncNetwork.MAX_ASYNC_CLIENTS) { serverClient_s() } // clients
         private var gameFrame // local game frame
                 : Int
 
@@ -213,11 +207,11 @@ object AsyncServer {
                 : Boolean
 
         //
-        private var rconAddress: netadr_t? = null
+        private var rconAddress: netadr_t = netadr_t()
         private var realTime // absolute time
                 : Int
         private var serverDataChecksum // checksum of the data used by the server
-                : BigInteger?
+                : BigInteger
         private var serverId // server identification
                 : Int
 
@@ -232,8 +226,8 @@ object AsyncServer {
         private var stats_current: Int
         private var stats_max: Int
         private var stats_max_index: Int
-        private var userCmds: Array<Array<usercmd_t?>?>? =
-            Array(AsyncNetwork.MAX_USERCMD_BACKUP) { arrayOfNulls<usercmd_t?>(AsyncNetwork.MAX_ASYNC_CLIENTS) }
+        private var userCmds: Array<Array<usercmd_t>> =
+            Array(AsyncNetwork.MAX_USERCMD_BACKUP) { Array(AsyncNetwork.MAX_ASYNC_CLIENTS) { usercmd_t() } }
 
         fun InitPort(): Boolean {
             var lastPort: Int
@@ -268,8 +262,8 @@ object AsyncServer {
 
         fun ClosePort() {
             serverPort.Close()
-            for (i in 0 until AsyncServer.MAX_CHALLENGES) {
-                challenges.get(i).authReplyPrint.Clear()
+            for (i in 0 until MAX_CHALLENGES) {
+                challenges[i].authReplyPrint.Clear()
             }
         }
 
@@ -280,7 +274,7 @@ object AsyncServer {
             val from = netadr_t()
 
             // shutdown any current game
-            Session.Companion.session.Stop()
+            Session.session.Stop()
             if (active) {
                 return
             }
@@ -338,9 +332,9 @@ object AsyncServer {
             while (j < 4) {
                 i = 0
                 while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                    if (clients.get(i).clientState == serverClientState_t.SCS_ZOMBIE) {
-                        if (clients.get(i).channel.UnsentFragmentsLeft()) {
-                            clients.get(i).channel.SendNextFragment(serverPort, serverTime)
+                    if (clients[i].clientState == serverClientState_t.SCS_ZOMBIE) {
+                        if (clients[i].channel.UnsentFragmentsLeft()) {
+                            clients[i].channel.SendNextFragment(serverPort, serverTime)
                         } else {
                             SendEmptyToClient(i, true)
                         }
@@ -356,7 +350,7 @@ object AsyncServer {
             active = false
 
             // shutdown any current game
-            Session.Companion.session.Stop()
+            Session.session.Stop()
         }
 
         @Throws(idException::class)
@@ -365,9 +359,9 @@ object AsyncServer {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             val mapName: idStr
-            val ff: findFile_t?
+            val ff: findFile_t
             var addonReload = false
-            val bestGameType = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            val bestGameType = CharArray(Lib.MAX_STRING_CHARS)
             assert(active)
 
             // reset any pureness
@@ -384,7 +378,7 @@ object AsyncServer {
             // initialize map settings
             CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "rescanSI")
             mapName =
-                idStr(String.format("maps/%s", Session.Companion.sessLocal.mapSpawnData.serverInfo.GetString("si_map")))
+                idStr(String.format("maps/%s", Session.sessLocal.mapSpawnData.serverInfo.GetString("si_map")))
             mapName.SetFileExtension(".map")
             ff = FileSystem_h.fileSystem.FindFile(mapName.toString(), !serverReloadingEngine)
             when (ff) {
@@ -414,11 +408,11 @@ object AsyncServer {
                 // can fix by reconnecting without reloading and waiting for the server to tell..
                 i = 0
                 while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                    if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal && i != localClientNum) {
+                    if (clients[i].clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal && i != localClientNum) {
                         msg.Init(msgBuf, msgBuf.capacity())
-                        msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_RELOAD.ordinal)
+                        msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_RELOAD.ordinal.toByte())
                         SendReliableMessage(i, msg)
-                        clients.get(i).clientState =
+                        clients[i].clientState =
                             serverClientState_t.SCS_ZOMBIE // so we don't bother sending a disconnect
                     }
                     i++
@@ -443,7 +437,7 @@ object AsyncServer {
             gameTimeResidual = 0
             //            memset(userCmds, 0, sizeof(userCmds));
             userCmds =
-                Array(AsyncNetwork.MAX_USERCMD_BACKUP) { arrayOfNulls<usercmd_t?>(AsyncNetwork.MAX_ASYNC_CLIENTS) }
+                Array(AsyncNetwork.MAX_USERCMD_BACKUP) { Array(AsyncNetwork.MAX_ASYNC_CLIENTS) { usercmd_t() } }
             if (idAsyncNetwork.serverDedicated.GetInteger() == 0) {
                 InitLocalClient(0)
             } else {
@@ -452,11 +446,11 @@ object AsyncServer {
             // re-initialize all connected clients for the new map
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal && i != localClientNum) {
-                    InitClient(i, clients.get(i).clientId, clients.get(i).clientRate)
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal && i != localClientNum) {
+                    InitClient(i, clients[i].clientId, clients[i].clientRate)
                     SendGameInitToClient(i)
-                    if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetBool("si_pure")) {
-                        clients.get(i).clientState = serverClientState_t.SCS_PUREWAIT
+                    if (Session.sessLocal.mapSpawnData.serverInfo.GetBool("si_pure")) {
+                        clients[i].clientState = serverClientState_t.SCS_PUREWAIT
                     }
                 }
                 i++
@@ -464,9 +458,9 @@ object AsyncServer {
 
             // setup the game pak checksums
             // since this is not dependant on si_pure we catch anything bad before loading map
-            if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0) {
+            if (Session.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0) {
                 if (!FileSystem_h.fileSystem.UpdateGamePakChecksums()) {
-                    Session.Companion.session.MessageBox(
+                    Session.session.MessageBox(
                         msgBoxType_t.MSG_OK,
                         Common.common.GetLanguageDict().GetString("#str_04337"),
                         Common.common.GetLanguageDict().GetString("#str_04338"),
@@ -478,21 +472,21 @@ object AsyncServer {
             }
 
             // load map
-            Session.Companion.sessLocal.ExecuteMapChange()
+            Session.sessLocal.ExecuteMapChange()
             if (localClientNum >= 0) {
                 BeginLocalClient()
             } else {
                 Game_local.game.SetLocalClient(-1)
             }
-            if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0) {
+            if (Session.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0) {
                 // lock down the pak list
                 FileSystem_h.fileSystem.UpdatePureServerChecksums()
                 // tell the clients so they can work out their pure lists
                 i = 0
                 while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                    if (clients.get(i).clientState == serverClientState_t.SCS_PUREWAIT) {
+                    if (clients[i].clientState == serverClientState_t.SCS_PUREWAIT) {
                         if (!SendReliablePureToClient(i)) {
-                            clients.get(i).clientState = serverClientState_t.SCS_CONNECTED
+                            clients[i].clientState = serverClientState_t.SCS_CONNECTED
                         }
                     }
                     i++
@@ -508,7 +502,7 @@ object AsyncServer {
             return serverPort.GetPort()
         }
 
-        fun GetBoundAdr(): netadr_t? {
+        fun GetBoundAdr(): netadr_t {
             return serverPort.GetAdr()
         }
 
@@ -526,7 +520,7 @@ object AsyncServer {
             rate = 0
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
                     rate += client.channel.GetOutgoingRate()
                 }
@@ -541,7 +535,7 @@ object AsyncServer {
             rate = 0
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.isClientConnected()) {
                     rate += client.channel.GetIncomingRate()
                 }
@@ -551,11 +545,11 @@ object AsyncServer {
         }
 
         fun IsClientInGame(clientNum: Int): Boolean {
-            return clients.get(clientNum).clientState.ordinal >= serverClientState_t.SCS_INGAME.ordinal
+            return clients[clientNum].clientState.ordinal >= serverClientState_t.SCS_INGAME.ordinal
         }
 
         fun GetClientPing(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 99999
             } else {
@@ -564,7 +558,7 @@ object AsyncServer {
         }
 
         fun GetClientPrediction(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 99999
             } else {
@@ -573,7 +567,7 @@ object AsyncServer {
         }
 
         fun GetClientTimeSinceLastPacket(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 99999
             } else {
@@ -582,7 +576,7 @@ object AsyncServer {
         }
 
         fun GetClientTimeSinceLastInput(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 99999
             } else {
@@ -591,7 +585,7 @@ object AsyncServer {
         }
 
         fun GetClientOutgoingRate(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 -1
             } else {
@@ -600,7 +594,7 @@ object AsyncServer {
         }
 
         fun GetClientIncomingRate(clientNum: Int): Int {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 -1
             } else {
@@ -609,7 +603,7 @@ object AsyncServer {
         }
 
         fun GetClientOutgoingCompression(clientNum: Int): Float {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 0.0f
             } else {
@@ -618,7 +612,7 @@ object AsyncServer {
         }
 
         fun GetClientIncomingCompression(clientNum: Int): Float {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 0.0f
             } else {
@@ -627,7 +621,7 @@ object AsyncServer {
         }
 
         fun GetClientIncomingPacketLoss(clientNum: Int): Float {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             return if (client.isClientConnected()) {
                 0.0f
             } else {
@@ -638,7 +632,7 @@ object AsyncServer {
         fun GetNumClients(): Int {
             var ret = 0
             for (i in 0 until AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
                     ret++
                 }
             }
@@ -648,8 +642,8 @@ object AsyncServer {
         fun GetNumIdleClients(): Int {
             var ret = 0
             for (i in 0 until AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
-                    if (serverTime - clients.get(i).lastInputTime > AsyncServer.NOINPUT_IDLE_TIME) {
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
+                    if (serverTime - clients[i].lastInputTime > NOINPUT_IDLE_TIME) {
                         ret++
                     }
                 }
@@ -698,7 +692,7 @@ object AsyncServer {
                     )
                     if (newPacket) {
                         msg.Init(msgBuf, msgBuf.capacity())
-                        msg.SetSize(size.getVal())
+                        msg.SetSize(size._val)
                         msg.BeginReading()
                         if (ProcessMessage(from, msg)) {
                             return  // return because rcon was used
@@ -717,11 +711,11 @@ object AsyncServer {
             if (idAsyncNetwork.idleServer.GetBool() == (0 == GetNumClients() || GetNumIdleClients() != GetNumClients())) {
                 idAsyncNetwork.idleServer.SetBool(!idAsyncNetwork.idleServer.GetBool())
                 // the need to propagate right away, only this
-                Session.Companion.sessLocal.mapSpawnData.serverInfo.Set(
+                Session.sessLocal.mapSpawnData.serverInfo.Set(
                     "si_idleServer",
                     idAsyncNetwork.idleServer.GetString()
                 )
-                Game_local.game.SetServerInfo(Session.Companion.sessLocal.mapSpawnData.serverInfo)
+                Game_local.game.SetServerInfo(Session.sessLocal.mapSpawnData.serverInfo)
             }
 
             // make sure the time doesn't wrap
@@ -732,7 +726,7 @@ object AsyncServer {
 
             // check for synchronized cvar changes
             if (CVarSystem.cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_NETWORKSYNC != 0) {
-                val newCvars: idDict?
+                val newCvars: idDict
                 newCvars = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC)
                 SendSyncedCvarsBroadcast(newCvars)
                 CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_NETWORKSYNC)
@@ -741,7 +735,7 @@ object AsyncServer {
             // check for user info changes of the local client
             if (CVarSystem.cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_USERINFO != 0) {
                 if (localClientNum >= 0) {
-                    val newInfo: idDict?
+                    val newInfo: idDict
                     Game_local.game.ThrottleUserInfo()
                     newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO)
                     SendUserInfoBroadcast(localClientNum, newInfo)
@@ -759,7 +753,7 @@ object AsyncServer {
                 DuplicateUsercmds(gameFrame, gameTime)
 
                 // advance game
-                val ret = Game_local.game.RunFrame(userCmds.get(gameFrame and AsyncNetwork.MAX_USERCMD_BACKUP - 1))
+                val ret = Game_local.game.RunFrame(userCmds[gameFrame and AsyncNetwork.MAX_USERCMD_BACKUP - 1])
                 idAsyncNetwork.ExecuteSessionCommand(ret.sessionCommand)
 
                 // update time
@@ -774,7 +768,7 @@ object AsyncServer {
             // send snapshots to connected clients
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState == serverClientState_t.SCS_FREE || i == localClientNum) {
                     i++
                     continue
@@ -783,7 +777,7 @@ object AsyncServer {
                 // modify maximum rate if necesary
                 if (idAsyncNetwork.serverMaxClientRate.IsModified()) {
                     client.channel.SetMaxOutgoingRate(
-                        Lib.Companion.Min(
+                        Lib.Min(
                             client.clientRate,
                             idAsyncNetwork.serverMaxClientRate.GetInteger()
                         )
@@ -854,36 +848,36 @@ object AsyncServer {
             }
             while (serverPort.GetPacket(from, msgBuf, size, msgBuf.capacity())) {
                 msg.Init(msgBuf, msgBuf.capacity())
-                msg.SetSize(size.getVal())
+                msg.SetSize(size._val)
                 msg.BeginReading()
-                id = msg.ReadShort()
+                id = msg.ReadShort().toInt()
                 if (id == MsgChannel.CONNECTIONLESS_MESSAGE_ID) {
                     ConnectionlessMessage(from, msg)
                 }
             }
         }
 
-        fun RemoteConsoleOutput(string: String?) {
+        fun RemoteConsoleOutput(string: String) {
             noRconOutput = false
             PrintOOB(rconAddress, SERVER_PRINT.SERVER_PRINT_RCON.ordinal, string)
         }
 
-        fun SendReliableGameMessage(clientNum: Int, msg: idBitMsg?) {
+        fun SendReliableGameMessage(clientNum: Int, msg: idBitMsg) {
             var i: Int
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal)
+            outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal.toByte())
             outMsg.WriteData(msg.GetData(), msg.GetSize())
             if (clientNum >= 0 && clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(clientNum).clientState == serverClientState_t.SCS_INGAME) {
+                if (clients[clientNum].clientState == serverClientState_t.SCS_INGAME) {
                     SendReliableMessage(clientNum, outMsg)
                 }
                 return
             }
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState != serverClientState_t.SCS_INGAME) {
+                if (clients[i].clientState != serverClientState_t.SCS_INGAME) {
                     i++
                     continue
                 }
@@ -892,13 +886,13 @@ object AsyncServer {
             }
         }
 
-        fun SendReliableGameMessageExcluding(clientNum: Int, msg: idBitMsg?) {
+        fun SendReliableGameMessageExcluding(clientNum: Int, msg: idBitMsg) {
             var i: Int
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             assert(clientNum >= 0 && clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS)
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal)
+            outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal.toByte())
             outMsg.WriteData(msg.GetData(), msg.GetSize())
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
@@ -906,7 +900,7 @@ object AsyncServer {
                     i++
                     continue
                 }
-                if (clients.get(i).clientState != serverClientState_t.SCS_INGAME) {
+                if (clients[i].clientState != serverClientState_t.SCS_INGAME) {
                     i++
                     continue
                 }
@@ -915,7 +909,7 @@ object AsyncServer {
             }
         }
 
-        fun LocalClientSendReliableMessage(msg: idBitMsg?) {
+        fun LocalClientSendReliableMessage(msg: idBitMsg) {
             if (localClientNum < 0) {
                 Common.common.Printf("LocalClientSendReliableMessage: no local client\n")
                 return
@@ -939,7 +933,7 @@ object AsyncServer {
             if (serverTime < nextHeartbeatTime) {
                 return
             }
-            nextHeartbeatTime = serverTime + AsyncServer.HEARTBEAT_MSEC
+            nextHeartbeatTime = serverTime + HEARTBEAT_MSEC
             for (i in 0 until AsyncNetwork.MAX_MASTER_SERVERS) {
                 val adr = netadr_t()
                 if (idAsyncNetwork.GetMasterAddress(i, adr)) {
@@ -947,32 +941,32 @@ object AsyncServer {
                     val outMsg = idBitMsg()
                     val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
                     outMsg.Init(msgBuf, msgBuf.capacity())
-                    outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+                    outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                     outMsg.WriteString("heartbeat")
                     serverPort.SendPacket(adr, outMsg.GetData(), outMsg.GetSize())
                 }
             }
         }
 
-        fun DropClient(clientNum: Int, reason: String?): String? {
+        fun DropClient(clientNum: Int, reason: String): String {
             var i: Int
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            val returnString: String?
-            val client = clients.get(clientNum)
+            val returnString: String
+            val client = clients[clientNum]
             if (client.clientState.ordinal <= serverClientState_t.SCS_ZOMBIE.ordinal) {
                 return ""
             }
             if (client.clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal && clientNum != localClientNum) {
                 msg.Init(msgBuf, msgBuf.capacity())
-                msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_DISCONNECT.ordinal)
+                msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_DISCONNECT.ordinal.toByte())
                 msg.WriteLong(clientNum)
                 msg.WriteString(reason)
                 i = 0
                 while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
 
                     // clientNum so SCS_PUREWAIT client gets it's own disconnect msg
-                    if (i == clientNum || clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
+                    if (i == clientNum || clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
                         SendReliableMessage(i, msg)
                     }
                     i++
@@ -984,7 +978,7 @@ object AsyncServer {
                 cmdExecution_t.CMD_EXEC_NOW,
                 Str.va(
                     "addChatLine \"%s^0 %s\"",
-                    Session.Companion.sessLocal.mapSpawnData.userInfo.get(clientNum).GetString("ui_name"),
+                    Session.sessLocal.mapSpawnData.userInfo[clientNum].GetString("ui_name"),
                     reason
                 )
             )
@@ -1005,9 +999,9 @@ object AsyncServer {
             ProcessConnectionLessMessages()
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal) {
-                    if (clients.get(i).channel.UnsentFragmentsLeft()) {
-                        clients.get(i).channel.SendNextFragment(serverPort, serverTime)
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal) {
+                    if (clients[i].channel.UnsentFragmentsLeft()) {
+                        clients[i].channel.SendNextFragment(serverPort, serverTime)
                     } else {
                         SendEmptyToClient(i)
                     }
@@ -1036,10 +1030,10 @@ object AsyncServer {
 
         //
         fun UpdateAsyncStatsAvg() {
-            stats_average_sum -= stats_outrate.get(stats_current)
-            stats_outrate.get(stats_current) = idAsyncNetwork.server.GetOutgoingRate()
-            if (stats_outrate.get(stats_current) > stats_max) {
-                stats_max = stats_outrate.get(stats_current)
+            stats_average_sum -= stats_outrate[stats_current]
+            stats_outrate[stats_current] = idAsyncNetwork.server.GetOutgoingRate()
+            if (stats_outrate[stats_current] > stats_max) {
+                stats_max = stats_outrate[stats_current]
                 stats_max_index = stats_current
             } else if (stats_current == stats_max_index) {
                 // find the new max
@@ -1047,19 +1041,19 @@ object AsyncServer {
                 stats_max = 0
                 i = 0
                 while (i < stats_numsamples) {
-                    if (stats_outrate.get(i) > stats_max) {
-                        stats_max = stats_outrate.get(i)
+                    if (stats_outrate[i] > stats_max) {
+                        stats_max = stats_outrate[i]
                         stats_max_index = i
                     }
                     i++
                 }
             }
-            stats_average_sum += stats_outrate.get(stats_current)
+            stats_average_sum += stats_outrate[stats_current]
             stats_current++
             stats_current %= stats_numsamples
         }
 
-        fun GetAsyncStatsAvgMsg(msg: idStr?) {
+        fun GetAsyncStatsAvgMsg(msg: idStr) {
             msg.set(
                 String.format(
                     "avrg out: %d B/s - max %d B/s ( over %d ms )",
@@ -1081,34 +1075,34 @@ object AsyncServer {
             var i: Int
             Common.common.Printf(
                 "server '%s' IP = %s\nprotocol %d.%d OS mask 0x%x\n",
-                Session.Companion.sessLocal.mapSpawnData.serverInfo.GetString("si_name"),
+                Session.sessLocal.mapSpawnData.serverInfo.GetString("si_name"),
                 win_net.Sys_NetAdrToString(serverPort.GetAdr()),
                 Licensee.ASYNC_PROTOCOL_MAJOR,
                 AsyncNetwork.ASYNC_PROTOCOL_MINOR,
                 FileSystem_h.fileSystem.GetOSMask()
             )
-            Session.Companion.sessLocal.mapSpawnData.serverInfo.Print()
+            Session.sessLocal.mapSpawnData.serverInfo.Print()
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState.ordinal < serverClientState_t.SCS_CONNECTED.ordinal) {
                     i++
                     continue
                 }
                 Common.common.Printf(
                     "client %2d: %s, ping = %d, rate = %d\n", i,
-                    Session.Companion.sessLocal.mapSpawnData.userInfo.get(i).GetString("ui_name", "Player"),
+                    Session.sessLocal.mapSpawnData.userInfo[i].GetString("ui_name", "Player"),
                     client.clientPing, client.channel.GetMaxOutgoingRate()
                 )
                 i++
             }
         }
 
-        private fun PrintOOB(to: netadr_t?, opcode: Int, string: String?) {
+        private fun PrintOOB(to: netadr_t, opcode: Int, string: String) {
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("print")
             outMsg.WriteLong(opcode)
             outMsg.WriteString(string)
@@ -1125,25 +1119,25 @@ object AsyncServer {
             // duplicate previous user commands if no new commands are available for a client
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState == serverClientState_t.SCS_FREE) {
+                if (clients[i].clientState == serverClientState_t.SCS_FREE) {
                     i++
                     continue
                 }
                 if (idAsyncNetwork.DuplicateUsercmd(
-                        userCmds.get(previousIndex).get(i),
-                        userCmds.get(currentIndex).get(i),
+                        userCmds[previousIndex][i],
+                        userCmds[currentIndex][i],
                         frame,
                         time
                     )
                 ) {
-                    clients.get(i).numDuplicatedUsercmds++
+                    clients[i].numDuplicatedUsercmds++
                 }
                 i++
             }
         }
 
         private fun ClearClient(clientNum: Int) {
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             client.clientId = 0
             client.clientState = serverClientState_t.SCS_FREE
             client.clientPrediction = 0
@@ -1168,10 +1162,10 @@ object AsyncServer {
         private fun InitClient(clientNum: Int, clientId: Int, clientRate: Int) {
             var i: Int
             // clear the user info
-            Session.Companion.sessLocal.mapSpawnData.userInfo.get(clientNum).Clear() // always start with a clean base
+            Session.sessLocal.mapSpawnData.userInfo[clientNum].Clear() // always start with a clean base
 
             // clear the server client
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             client.clientId = clientId
             client.clientState = serverClientState_t.SCS_CONNECTED
             client.clientPrediction = 0
@@ -1182,7 +1176,7 @@ object AsyncServer {
             client.channel.ResetRate()
             client.clientRate = if (clientRate != 0) clientRate else idAsyncNetwork.serverMaxClientRate.GetInteger()
             client.channel.SetMaxOutgoingRate(
-                Lib.Companion.Min(
+                Lib.Min(
                     idAsyncNetwork.serverMaxClientRate.GetInteger(),
                     client.clientRate
                 )
@@ -1200,7 +1194,7 @@ object AsyncServer {
             // clear the user commands
             i = 0
             while (i < AsyncNetwork.MAX_USERCMD_BACKUP) {
-                userCmds.get(i).get(clientNum) = usercmd_t()
+                userCmds[i][clientNum] = usercmd_t()
                 i++
             }
 
@@ -1214,9 +1208,9 @@ object AsyncServer {
             InitClient(clientNum, 0, 0)
             //	memset( &badAddress, 0, sizeof( badAddress ) );
             badAddress.type = netadrtype_t.NA_BAD
-            clients.get(clientNum).channel.Init(badAddress, serverId)
-            clients.get(clientNum).clientState = serverClientState_t.SCS_INGAME
-            Session.Companion.sessLocal.mapSpawnData.userInfo.get(clientNum)
+            clients[clientNum].channel.Init(badAddress, serverId)
+            clients[clientNum].clientState = serverClientState_t.SCS_INGAME
+            Session.sessLocal.mapSpawnData.userInfo[clientNum]
                 .set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
         }
 
@@ -1224,7 +1218,7 @@ object AsyncServer {
             Game_local.game.SetLocalClient(localClientNum)
             Game_local.game.SetUserInfo(
                 localClientNum,
-                Session.Companion.sessLocal.mapSpawnData.userInfo.get(localClientNum),
+                Session.sessLocal.mapSpawnData.userInfo[localClientNum],
                 false,
                 false
             )
@@ -1237,19 +1231,19 @@ object AsyncServer {
                 return
             }
             index = gameFrame and AsyncNetwork.MAX_USERCMD_BACKUP - 1
-            userCmds.get(index).get(localClientNum) = UsercmdGen.usercmdGen.GetDirectUsercmd()
-            userCmds.get(index).get(localClientNum).gameFrame = gameFrame
-            userCmds.get(index).get(localClientNum).gameTime = gameTime
+            userCmds[index][localClientNum] = UsercmdGen.usercmdGen.GetDirectUsercmd()
+            userCmds[index][localClientNum].gameFrame = gameFrame
+            userCmds[index][localClientNum].gameTime = gameTime
             if (idAsyncNetwork.UsercmdInputChanged(
-                    userCmds.get(gameFrame - 1 and AsyncNetwork.MAX_USERCMD_BACKUP - 1).get(localClientNum),
-                    userCmds.get(index).get(localClientNum)
+                    userCmds[gameFrame - 1 and AsyncNetwork.MAX_USERCMD_BACKUP - 1][localClientNum],
+                    userCmds[index][localClientNum]
                 )
             ) {
-                clients.get(localClientNum).lastInputTime = serverTime
+                clients[localClientNum].lastInputTime = serverTime
             }
-            clients.get(localClientNum).gameFrame = gameFrame
-            clients.get(localClientNum).gameTime = gameTime
-            clients.get(localClientNum).lastPacketTime = serverTime
+            clients[localClientNum].gameFrame = gameFrame
+            clients[localClientNum].gameTime = gameTime
+            clients[localClientNum].lastPacketTime = serverTime
         }
 
         private fun CheckClientTimeouts() {
@@ -1260,7 +1254,7 @@ object AsyncServer {
             clientTimeout = serverTime - idAsyncNetwork.serverClientTimeout.GetInteger() * 1000
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (i == localClientNum) {
                     i++
                     continue
@@ -1285,36 +1279,36 @@ object AsyncServer {
             }
         }
 
-        private fun SendPrintBroadcast(string: String?) {
+        private fun SendPrintBroadcast(string: String) {
             var i: Int
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PRINT.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PRINT.ordinal.toByte())
             msg.WriteString(string)
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
                     SendReliableMessage(i, msg)
                 }
                 i++
             }
         }
 
-        private fun SendPrintToClient(clientNum: Int, string: String?) {
+        private fun SendPrintToClient(clientNum: Int, string: String) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             if (client.clientState.ordinal < serverClientState_t.SCS_CONNECTED.ordinal) {
                 return
             }
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PRINT.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PRINT.ordinal.toByte())
             msg.WriteString(string)
             SendReliableMessage(clientNum, msg)
         }
 
-        private fun SendUserInfoBroadcast(userInfoNum: Int, info: idDict?, sendToAll: Boolean = false /*= false */) {
+        private fun SendUserInfoBroadcast(userInfoNum: Int, info: idDict, sendToAll: Boolean = false /*= false */) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             var gameInfo: idDict?
@@ -1332,47 +1326,47 @@ object AsyncServer {
                 CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_USERINFO) // don't emit back
             }
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_CLIENTINFO.ordinal)
-            msg.WriteByte(userInfoNum)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_CLIENTINFO.ordinal.toByte())
+            msg.WriteByte(userInfoNum.toByte())
             if (gameModifiedInfo || sendToAll) {
                 msg.WriteBits(0, 1)
             } else {
                 msg.WriteBits(1, 1)
             }
             if (BuildDefines.ID_CLIENTINFO_TAGS) {
-                msg.WriteLong(Session.Companion.sessLocal.mapSpawnData.userInfo.get(userInfoNum).Checksum().toInt())
+                msg.WriteLong(Session.sessLocal.mapSpawnData.userInfo[userInfoNum].Checksum().toInt())
                 Common.common.DPrintf(
                     "broadcast for client %d: 0x%x\n",
                     userInfoNum,
-                    Session.Companion.sessLocal.mapSpawnData.userInfo.get(userInfoNum).Checksum()
+                    Session.sessLocal.mapSpawnData.userInfo[userInfoNum].Checksum()
                 )
-                Session.Companion.sessLocal.mapSpawnData.userInfo.get(userInfoNum).Print()
+                Session.sessLocal.mapSpawnData.userInfo[userInfoNum].Print()
             }
             if (gameModifiedInfo || sendToAll) {
                 msg.WriteDeltaDict(gameInfo, null)
             } else {
-                msg.WriteDeltaDict(gameInfo, Session.Companion.sessLocal.mapSpawnData.userInfo.get(userInfoNum))
+                msg.WriteDeltaDict(gameInfo, Session.sessLocal.mapSpawnData.userInfo[userInfoNum])
             }
             for (i in 0 until AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal && (sendToAll || i != userInfoNum || gameModifiedInfo)) {
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal && (sendToAll || i != userInfoNum || gameModifiedInfo)) {
                     SendReliableMessage(i, msg)
                 }
             }
-            Session.Companion.sessLocal.mapSpawnData.userInfo.get(userInfoNum) = gameInfo
+            Session.sessLocal.mapSpawnData.userInfo[userInfoNum] = gameInfo
         }
 
-        private fun SendUserInfoToClient(clientNum: Int, userInfoNum: Int, info: idDict?) {
+        private fun SendUserInfoToClient(clientNum: Int, userInfoNum: Int, info: idDict) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            if (clients.get(clientNum).clientState.ordinal < serverClientState_t.SCS_CONNECTED.compareTo(
+            if (clients[clientNum].clientState.ordinal < serverClientState_t.SCS_CONNECTED.compareTo(
                     serverClientState_t.SCS_FREE
                 )
             ) {
                 return
             }
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_CLIENTINFO.ordinal)
-            msg.WriteByte(userInfoNum)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_CLIENTINFO.ordinal.toByte())
+            msg.WriteByte(userInfoNum.toByte())
             msg.WriteBits(0, 1)
             if (BuildDefines.ID_CLIENTINFO_TAGS) {
                 msg.WriteLong(0)
@@ -1382,31 +1376,31 @@ object AsyncServer {
             SendReliableMessage(clientNum, msg)
         }
 
-        private fun SendSyncedCvarsBroadcast(cvars: idDict?) {
+        private fun SendSyncedCvarsBroadcast(cvars: idDict) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             var i: Int
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_SYNCEDCVARS.ordinal)
-            msg.WriteDeltaDict(cvars, Session.Companion.sessLocal.mapSpawnData.syncedCVars)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_SYNCEDCVARS.ordinal.toByte())
+            msg.WriteDeltaDict(cvars, Session.sessLocal.mapSpawnData.syncedCVars)
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
+                if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal) {
                     SendReliableMessage(i, msg)
                 }
                 i++
             }
-            Session.Companion.sessLocal.mapSpawnData.syncedCVars.set(cvars)
+            Session.sessLocal.mapSpawnData.syncedCVars.set(cvars)
         }
 
-        private fun SendSyncedCvarsToClient(clientNum: Int, cvars: idDict?) {
+        private fun SendSyncedCvarsToClient(clientNum: Int, cvars: idDict) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            if (clients.get(clientNum).clientState.ordinal < serverClientState_t.SCS_CONNECTED.ordinal) {
+            if (clients[clientNum].clientState.ordinal < serverClientState_t.SCS_CONNECTED.ordinal) {
                 return
             }
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_SYNCEDCVARS.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_SYNCEDCVARS.ordinal.toByte())
             msg.WriteDeltaDict(cvars, null)
             SendReliableMessage(clientNum, msg)
         }
@@ -1415,7 +1409,7 @@ object AsyncServer {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_APPLYSNAPSHOT.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_APPLYSNAPSHOT.ordinal.toByte())
             msg.WriteLong(sequence)
             SendReliableMessage(clientNum, msg)
         }
@@ -1423,11 +1417,11 @@ object AsyncServer {
         private fun SendEmptyToClient(clientNum: Int, force: Boolean = false /*= false*/): Boolean {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             if (client.lastEmptyTime > realTime) {
                 client.lastEmptyTime = realTime
             }
-            if (!force && realTime - client.lastEmptyTime < AsyncServer.EMPTY_RESEND_TIME) {
+            if (!force && realTime - client.lastEmptyTime < EMPTY_RESEND_TIME) {
                 return false
             }
             if (idAsyncNetwork.verbose.GetInteger() != 0) {
@@ -1441,7 +1435,7 @@ object AsyncServer {
             }
             msg.Init(msgBuf, msgBuf.capacity())
             msg.WriteLong(gameInitId)
-            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_EMPTY.ordinal)
+            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_EMPTY.ordinal.toByte())
             client.channel.SendMessage(serverPort, serverTime, msg)
             client.lastEmptyTime = realTime
             return true
@@ -1450,11 +1444,11 @@ object AsyncServer {
         private fun SendPingToClient(clientNum: Int): Boolean {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             if (client.lastPingTime > realTime) {
                 client.lastPingTime = realTime
             }
-            if (realTime - client.lastPingTime < AsyncServer.PING_RESEND_TIME) {
+            if (realTime - client.lastPingTime < PING_RESEND_TIME) {
                 return false
             }
             if (idAsyncNetwork.verbose.GetInteger() == 2) {
@@ -1468,7 +1462,7 @@ object AsyncServer {
             }
             msg.Init(msgBuf, msgBuf.capacity())
             msg.WriteLong(gameInitId)
-            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_PING.ordinal)
+            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_PING.ordinal.toByte())
             msg.WriteLong(realTime)
             client.channel.SendMessage(serverPort, serverTime, msg)
             client.lastPingTime = realTime
@@ -1487,7 +1481,7 @@ object AsyncServer {
                     gameTime
                 )
             }
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
 
             // clear the unsent fragments. might flood winsock but that's ok
             while (client.channel.UnsentFragmentsLeft()) {
@@ -1495,10 +1489,10 @@ object AsyncServer {
             }
             msg.Init(msgBuf, msgBuf.capacity())
             msg.WriteLong(gameInitId)
-            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_GAMEINIT.ordinal)
+            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_GAMEINIT.ordinal.toByte())
             msg.WriteLong(gameFrame)
             msg.WriteLong(gameTime)
-            msg.WriteDeltaDict(Session.Companion.sessLocal.mapSpawnData.serverInfo, null)
+            msg.WriteDeltaDict(Session.sessLocal.mapSpawnData.serverInfo, null)
             client.gameInitSequence = client.channel.SendMessage(serverPort, serverTime, msg)
         }
 
@@ -1511,7 +1505,7 @@ object AsyncServer {
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             var last: usercmd_t?
             val clientInPVS = ByteArray(AsyncNetwork.MAX_ASYNC_CLIENTS shr 3)
-            var client = clients.get(clientNum)
+            var client = clients[clientNum]
             if (serverTime - client.lastSnapshotTime < idAsyncNetwork.serverSnapshotDelay.GetInteger()) {
                 return false
             }
@@ -1531,12 +1525,12 @@ object AsyncServer {
             // write the snapshot
             msg.Init(msgBuf, msgBuf.capacity())
             msg.WriteLong(gameInitId)
-            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_SNAPSHOT.ordinal)
+            msg.WriteByte(SERVER_UNRELIABLE.SERVER_UNRELIABLE_MESSAGE_SNAPSHOT.ordinal.toByte())
             msg.WriteLong(client.snapshotSequence)
             msg.WriteLong(gameFrame)
             msg.WriteLong(gameTime)
-            msg.WriteByte(idMath.ClampChar(client.numDuplicatedUsercmds).code)
-            msg.WriteShort(idMath.ClampShort(client.clientAheadTime).toInt())
+            msg.WriteByte(idMath.ClampChar(client.numDuplicatedUsercmds).code.toByte())
+            msg.WriteShort(idMath.ClampShort(client.clientAheadTime))
 
             // write the game snapshot
             Game_local.game.ServerWriteSnapshot(
@@ -1552,14 +1546,14 @@ object AsyncServer {
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
 
-                /*serverClient_t*/client = clients.get(i)
+                /*serverClient_t*/client = clients[i]
                 if (client.clientState == serverClientState_t.SCS_FREE || i == clientNum) {
                     i++
                     continue
                 }
 
                 // if the client is not in the PVS
-                if (0 == clientInPVS[i shr 3] and (1 shl (i and 7))) {
+                if (0 == clientInPVS[i shr 3].toInt() and (1 shl (i and 7))) {
                     i++
                     continue
                 }
@@ -1571,19 +1565,19 @@ object AsyncServer {
 
                 // Max( 1, to always send at least one cmd, which we know we have because we call DuplicateUsercmds in RunFrame
                 numUsercmds =
-                    Lib.Companion.Max(1, Lib.Companion.Min(client.gameFrame, gameFrame + maxRelay) - gameFrame)
-                msg.WriteByte(i)
-                msg.WriteByte(numUsercmds)
+                    Lib.Max(1, Lib.Min(client.gameFrame, gameFrame + maxRelay) - gameFrame)
+                msg.WriteByte(i.toByte())
+                msg.WriteByte(numUsercmds.toByte())
                 j = 0
                 while (j < numUsercmds) {
                     index = gameFrame + j and AsyncNetwork.MAX_USERCMD_BACKUP - 1
-                    idAsyncNetwork.WriteUserCmdDelta(msg, userCmds.get(index).get(i), last)
-                    last = userCmds.get(index).get(i)
+                    idAsyncNetwork.WriteUserCmdDelta(msg, userCmds[index][i], last)
+                    last = userCmds[index][i]
                     j++
                 }
                 i++
             }
-            msg.WriteByte(AsyncNetwork.MAX_ASYNC_CLIENTS)
+            msg.WriteByte(AsyncNetwork.MAX_ASYNC_CLIENTS.toByte())
             client.channel.SendMessage(serverPort, serverTime, msg)
             client.lastSnapshotTime = serverTime
             client.snapshotSequence++
@@ -1592,7 +1586,7 @@ object AsyncServer {
         }
 
         @Throws(idException::class)
-        private fun ProcessUnreliableClientMessage(clientNum: Int, msg: idBitMsg?) {
+        private fun ProcessUnreliableClientMessage(clientNum: Int, msg: idBitMsg) {
             var i: Int
             val id: Int
             val acknowledgeSequence: Int
@@ -1601,7 +1595,7 @@ object AsyncServer {
             val numUsercmds: Int
             var index: Int
             var last: usercmd_t?
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             if (client.clientState == serverClientState_t.SCS_ZOMBIE) {
                 return
             }
@@ -1624,7 +1618,7 @@ object AsyncServer {
 
                     // send game init to client
                     SendGameInitToClient(clientNum)
-                    if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetBool("si_pure")) {
+                    if (Session.sessLocal.mapSpawnData.serverInfo.GetBool("si_pure")) {
                         client.clientState = serverClientState_t.SCS_PUREWAIT
                         if (!SendReliablePureToClient(clientNum)) {
                             client.clientState = serverClientState_t.SCS_CONNECTED
@@ -1647,14 +1641,14 @@ object AsyncServer {
                 // send the user info of other clients
                 i = 0
                 while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                    if (clients.get(i).clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal && i != clientNum) {
-                        SendUserInfoToClient(clientNum, i, Session.Companion.sessLocal.mapSpawnData.userInfo.get(i))
+                    if (clients[i].clientState.ordinal >= serverClientState_t.SCS_CONNECTED.ordinal && i != clientNum) {
+                        SendUserInfoToClient(clientNum, i, Session.sessLocal.mapSpawnData.userInfo[i])
                     }
                     i++
                 }
 
                 // send synchronized cvars to client
-                SendSyncedCvarsToClient(clientNum, Session.Companion.sessLocal.mapSpawnData.syncedCVars)
+                SendSyncedCvarsToClient(clientNum, Session.sessLocal.mapSpawnData.syncedCVars)
                 SendEnterGameToClient(clientNum)
 
                 // get the client running in the game
@@ -1671,7 +1665,7 @@ object AsyncServer {
             }
 
             // process the unreliable message
-            id = msg.ReadByte()
+            id = msg.ReadByte().toInt()
             when (CLIENT_UNRELIABLE.values()[id]) {
                 CLIENT_UNRELIABLE.CLIENT_UNRELIABLE_MESSAGE_EMPTY -> {
                     if (idAsyncNetwork.verbose.GetInteger() != 0) {
@@ -1682,26 +1676,26 @@ object AsyncServer {
                     client.clientPing = realTime - msg.ReadLong()
                 }
                 CLIENT_UNRELIABLE.CLIENT_UNRELIABLE_MESSAGE_USERCMD -> {
-                    client.clientPrediction = msg.ReadShort()
+                    client.clientPrediction = msg.ReadShort().toInt()
 
                     // read user commands
                     clientGameFrame = msg.ReadLong()
-                    numUsercmds = msg.ReadByte()
+                    numUsercmds = msg.ReadByte().toInt()
                     last = null
                     i = clientGameFrame - numUsercmds + 1
                     while (i <= clientGameFrame) {
                         index = i and AsyncNetwork.MAX_USERCMD_BACKUP - 1
-                        idAsyncNetwork.ReadUserCmdDelta(msg, userCmds.get(index).get(clientNum), last)
-                        userCmds.get(index).get(clientNum).gameFrame = i
-                        userCmds.get(index).get(clientNum).duplicateCount = 0
+                        idAsyncNetwork.ReadUserCmdDelta(msg, userCmds[index][clientNum], last)
+                        userCmds[index][clientNum].gameFrame = i
+                        userCmds[index][clientNum].duplicateCount = 0
                         if (idAsyncNetwork.UsercmdInputChanged(
-                                userCmds.get(i - 1 and AsyncNetwork.MAX_USERCMD_BACKUP - 1).get(clientNum),
-                                userCmds.get(index).get(clientNum)
+                                userCmds[i - 1 and AsyncNetwork.MAX_USERCMD_BACKUP - 1][clientNum],
+                                userCmds[index][clientNum]
                             )
                         ) {
                             client.lastInputTime = serverTime
                         }
-                        last = userCmds.get(index).get(clientNum)
+                        last = userCmds[index][clientNum]
                         i++
                     }
                     if (last != null) {
@@ -1728,18 +1722,18 @@ object AsyncServer {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             var id: Int
-            val client = clients.get(clientNum)
+            val client = clients[clientNum]
             msg.Init(msgBuf, msgBuf.capacity())
             while (client.channel.GetReliableMessage(msg)) {
-                id = msg.ReadByte()
+                id = msg.ReadByte().toInt()
                 when (CLIENT_RELIABLE.values()[id]) {
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_CLIENTINFO -> {
                         val info = idDict()
-                        msg.ReadDeltaDict(info, Session.Companion.sessLocal.mapSpawnData.userInfo.get(clientNum))
+                        msg.ReadDeltaDict(info, Session.sessLocal.mapSpawnData.userInfo[clientNum])
                         SendUserInfoBroadcast(clientNum, info)
                     }
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_PRINT -> {
-                        val string = CharArray(Lib.Companion.MAX_STRING_CHARS)
+                        val string = CharArray(Lib.MAX_STRING_CHARS)
                         msg.ReadString(string, string.size)
                         Common.common.Printf("%s\n", TempDump.ctos(string))
                     }
@@ -1761,7 +1755,7 @@ object AsyncServer {
         }
 
         @Throws(idException::class)
-        private fun ProcessChallengeMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessChallengeMessage(from: netadr_t, msg: idBitMsg) {
             var i: Int
             val clientId: Int
             var oldest: Int
@@ -1774,64 +1768,64 @@ object AsyncServer {
 
             // see if we already have a challenge for this ip
             i = 0
-            while (i < AsyncServer.MAX_CHALLENGES) {
-                if (!challenges.get(i).connected && win_net.Sys_CompareNetAdrBase(
+            while (i < MAX_CHALLENGES) {
+                if (!challenges[i].connected && win_net.Sys_CompareNetAdrBase(
                         from,
-                        challenges.get(i).address
-                    ) && clientId == challenges.get(i).clientId
+                        challenges[i].address
+                    ) && clientId == challenges[i].clientId
                 ) {
                     break
                 }
-                if (challenges.get(i).time < oldestTime) {
-                    oldestTime = challenges.get(i).time
+                if (challenges[i].time < oldestTime) {
+                    oldestTime = challenges[i].time
                     oldest = i
                 }
                 i++
             }
-            if (i >= AsyncServer.MAX_CHALLENGES) {
+            if (i >= MAX_CHALLENGES) {
                 // this is the first time this client has asked for a challenge
                 val random = Random()
                 i = oldest
-                challenges.get(i).address = from
-                challenges.get(i).clientId = clientId
+                challenges[i].address = from
+                challenges[i].clientId = clientId
                 // note: in C++ rand() is an int value in range [0, 32767]. The upper bound is at least 32767, however depends on impl.
-                challenges.get(i).challenge = random.nextInt(32767) shl 16 xor random.nextInt(32767) xor serverTime
-                challenges.get(i).time = serverTime
-                challenges.get(i).connected = false
-                challenges.get(i).authState = authState_t.CDK_WAIT
-                challenges.get(i).authReply = authReply_t.AUTH_NONE
-                challenges.get(i).authReplyMsg = authReplyMsg_t.AUTH_REPLY_WAITING
-                challenges.get(i).authReplyPrint = idStr("")
-                challenges.get(i).guid.get(0) = '\u0000'
+                challenges[i].challenge = random.nextInt(32767) shl 16 xor random.nextInt(32767) xor serverTime
+                challenges[i].time = serverTime
+                challenges[i].connected = false
+                challenges[i].authState = authState_t.CDK_WAIT
+                challenges[i].authReply = authReply_t.AUTH_NONE
+                challenges[i].authReplyMsg = authReplyMsg_t.AUTH_REPLY_WAITING
+                challenges[i].authReplyPrint.set("")
+                challenges[i].guid[0] = '\u0000'
             }
-            challenges.get(i).pingTime = serverTime
+            challenges[i].pingTime = serverTime
             Common.common.Printf(
                 "sending challenge 0x%x to %s\n",
-                challenges.get(i).challenge,
+                challenges[i].challenge,
                 win_net.Sys_NetAdrToString(from)
             )
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("challengeResponse")
-            outMsg.WriteLong(challenges.get(i).challenge)
-            outMsg.WriteShort(serverId)
+            outMsg.WriteLong(challenges[i].challenge)
+            outMsg.WriteShort(serverId.toShort())
             outMsg.WriteString(CVarSystem.cvarSystem.GetCVarString("fs_game_base"))
             outMsg.WriteString(CVarSystem.cvarSystem.GetCVarString("fs_game"))
             serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
             if (win_net.Sys_IsLANAddress(from)) {
                 // no CD Key check for LAN clients
-                challenges.get(i).authState = authState_t.CDK_OK
+                challenges[i].authState = authState_t.CDK_OK
             } else {
                 if (idAsyncNetwork.LANServer.GetBool()) {
                     Common.common.Printf(
                         "net_LANServer is enabled. Client %s is not a LAN address, will be rejected\n",
                         win_net.Sys_NetAdrToString(from)
                     )
-                    challenges.get(i).authState = authState_t.CDK_ONLYLAN
+                    challenges[i].authState = authState_t.CDK_ONLYLAN
                 } else {
                     // emit a cd key confirmation request
                     outMsg.BeginWriting()
-                    outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+                    outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                     outMsg.WriteString("srvAuth")
                     outMsg.WriteLong(AsyncNetwork.ASYNC_PROTOCOL_VERSION)
                     outMsg.WriteNetadr(from)
@@ -1844,7 +1838,7 @@ object AsyncServer {
         }
 
         @Throws(idException::class)
-        private fun ProcessConnectMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessConnectMessage(from: netadr_t, msg: idBitMsg) {
             var clientNum = 0
             val protocol: Int
             val clientDataChecksum: Int
@@ -1862,7 +1856,7 @@ object AsyncServer {
             val OS: Int
             var numClients: Int
             protocol = msg.ReadLong()
-            OS = msg.ReadShort()
+            OS = msg.ReadShort().toInt()
 
             // check the protocol version
             if (protocol != AsyncNetwork.ASYNC_PROTOCOL_VERSION) {
@@ -1880,20 +1874,20 @@ object AsyncServer {
             }
             clientDataChecksum = msg.ReadLong()
             challenge = msg.ReadLong()
-            clientId = msg.ReadShort()
+            clientId = msg.ReadShort().toInt()
             clientRate = msg.ReadLong()
 
             // check the client data - only for non pure servers
-            if (0 == Session.Companion.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") && clientDataChecksum != serverDataChecksum.toInt()) {
+            if (0 == Session.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") && clientDataChecksum != serverDataChecksum.toInt()) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, "#str_04842")
                 return
             }
             if (ValidateChallenge(from, challenge, clientId).also { ichallenge = it } == -1) {
                 return
             }
-            challenges.get(ichallenge).OS = OS
+            challenges[ichallenge].OS = OS
             msg.ReadString(guid, guid.size)
-            when (challenges.get(ichallenge).authState) {
+            when (challenges[ichallenge].authState) {
                 authState_t.CDK_PUREWAIT -> {
                     SendPureServerMessage(from, OS)
                     return
@@ -1904,50 +1898,48 @@ object AsyncServer {
                     return
                 }
                 authState_t.CDK_WAIT -> {
-                    if (challenges.get(ichallenge).authReply == authReply_t.AUTH_NONE && Lib.Companion.Min(
+                    if (challenges[ichallenge].authReply == authReply_t.AUTH_NONE && Lib.Min(
                             serverTime - lastAuthTime,
-                            serverTime - challenges.get(ichallenge).time
-                        ) > AsyncServer.AUTHORIZE_TIMEOUT
+                            serverTime - challenges[ichallenge].time
+                        ) > AUTHORIZE_TIMEOUT
                     ) {
                         Common.common.DPrintf("%s: Authorize server timed out\n", win_net.Sys_NetAdrToString(from))
-                        break // will continue with the connecting process
+                        //return // will continue with the connecting process
                     }
-                    val msg2: String?
-                    val l_msg: String?
-                    msg2 = if (challenges.get(ichallenge).authReplyMsg != authReplyMsg_t.AUTH_REPLY_PRINT) {
-                        AsyncServer.authReplyMsg[challenges.get(ichallenge).authReplyMsg.ordinal]
+                    val msg2: String
+                    val l_msg: String
+                    msg2 = if (challenges[ichallenge].authReplyMsg != authReplyMsg_t.AUTH_REPLY_PRINT) {
+                        authReplyMsg[challenges[ichallenge].authReplyMsg.ordinal]
                     } else {
-                        challenges.get(ichallenge).authReplyPrint.toString()
+                        challenges[ichallenge].authReplyPrint.toString()
                     }
                     l_msg = Common.common.GetLanguageDict().GetString(msg2)
                     Common.common.DPrintf("%s: %s\n", win_net.Sys_NetAdrToString(from), l_msg)
-                    if (challenges.get(ichallenge).authReplyMsg == authReplyMsg_t.AUTH_REPLY_UNKNOWN || challenges.get(
-                            ichallenge
-                        ).authReplyMsg == authReplyMsg_t.AUTH_REPLY_WAITING
+                    if (challenges[ichallenge].authReplyMsg == authReplyMsg_t.AUTH_REPLY_UNKNOWN || challenges[ichallenge].authReplyMsg == authReplyMsg_t.AUTH_REPLY_WAITING
                     ) {
                         // the client may be trying to connect to us in LAN mode, and the server disagrees
                         // let the client know so it would switch to authed connection
                         val outMsg2 = idBitMsg()
                         val msgBuf2 = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
                         outMsg2.Init(msgBuf2, msgBuf2.capacity())
-                        outMsg2.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+                        outMsg2.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                         outMsg2.WriteString("authrequired")
                         serverPort.SendPacket(from, outMsg2.GetData(), outMsg2.GetSize())
                     }
                     PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, msg2)
 
                     // update the guid in the challenges
-                    idStr.Companion.snPrintf(
-                        challenges.get(ichallenge).guid,
-                        challenges.get(ichallenge).guid.size,
-                        TempDump.ctos(guid)
+                    idStr.snPrintf(
+                        challenges[ichallenge].guid,
+                        challenges[ichallenge].guid.size,
+                        TempDump.ctos(guid)!!
                     )
 
                     // once auth replied denied, stop sending further requests
-                    if (challenges.get(ichallenge).authReply != authReply_t.AUTH_DENY) {
+                    if (challenges[ichallenge].authReply != authReply_t.AUTH_DENY) {
                         // emit a cd key confirmation request
                         outMsg.Init(msgBuf, msgBuf.capacity())
-                        outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+                        outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                         outMsg.WriteString("srvAuth")
                         outMsg.WriteLong(AsyncNetwork.ASYNC_PROTOCOL_VERSION)
                         outMsg.WriteNetadr(from)
@@ -1959,12 +1951,12 @@ object AsyncServer {
                     }
                     return
                 }
-                else -> assert(challenges.get(ichallenge).authState == authState_t.CDK_OK || challenges.get(ichallenge).authState == authState_t.CDK_PUREOK)
+                else -> assert(challenges[ichallenge].authState == authState_t.CDK_OK || challenges[ichallenge].authState == authState_t.CDK_PUREOK)
             }
             numClients = 0
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState.ordinal >= serverClientState_t.SCS_PUREWAIT.ordinal) {
                     numClients++
                 }
@@ -1975,7 +1967,7 @@ object AsyncServer {
             // if authState == CDK_PUREOK, the check was already performed once before entering pure checks
             // but meanwhile, the max players may have been reached
             msg.ReadString(password, password.size)
-            val reason = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            val reason = CharArray(Lib.MAX_STRING_CHARS)
             val reply = Game_local.game.ServerAllowClient(
                 numClients,
                 win_net.Sys_NetAdrToString(from),
@@ -1988,7 +1980,7 @@ object AsyncServer {
 
                 // SERVER_PRINT_GAMEDENY passes the game opcode through. Don't use PrintOOB
                 outMsg.Init(msgBuf, msgBuf.capacity())
-                outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+                outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                 outMsg.WriteString("print")
                 outMsg.WriteLong(SERVER_PRINT.SERVER_PRINT_GAMEDENY.ordinal)
                 outMsg.WriteLong(reply.ordinal)
@@ -1998,28 +1990,28 @@ object AsyncServer {
             }
 
             // enter pure checks if necessary
-            if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0 && challenges.get(ichallenge).authState != authState_t.CDK_PUREOK) {
+            if (Session.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0 && challenges[ichallenge].authState != authState_t.CDK_PUREOK) {
                 if (SendPureServerMessage(from, OS)) {
-                    challenges.get(ichallenge).authState = authState_t.CDK_PUREWAIT
+                    challenges[ichallenge].authState = authState_t.CDK_PUREWAIT
                     return
                 }
             }
 
             // push back decl checksum here when running pure. just an additional safe check
-            if (Session.Companion.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0 && clientDataChecksum != serverDataChecksum.toInt()) {
+            if (Session.sessLocal.mapSpawnData.serverInfo.GetInt("si_pure") != 0 && clientDataChecksum != serverDataChecksum.toInt()) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, "#str_04844")
                 return
             }
-            ping = serverTime - challenges.get(ichallenge).pingTime
+            ping = serverTime - challenges[ichallenge].pingTime
             Common.common.Printf("challenge from %s connecting with %d ping\n", win_net.Sys_NetAdrToString(from), ping)
-            challenges.get(ichallenge).connected = true
+            challenges[ichallenge].connected = true
 
             // find a slot for the client
             islot = 0
             while (islot < 3) {
                 clientNum = 0
                 while (clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                    val client = clients.get(clientNum)
+                    val client = clients[clientNum]
                     if (islot == 0) {
                         // if this slot uses the same IP and port
                         if (win_net.Sys_CompareNetAdrBase(from, client.channel.GetRemoteAddress())
@@ -2046,10 +2038,10 @@ object AsyncServer {
                 }
                 if (clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS) {
                     // initialize
-                    clients.get(clientNum).channel.Init(from, serverId)
-                    clients.get(clientNum).OS = OS
-                    System.arraycopy(guid, 0, clients.get(clientNum).guid, 0, 12)
-                    clients.get(clientNum).guid.get(11) = 0
+                    clients[clientNum].channel.Init(from, serverId)
+                    clients[clientNum].OS = OS
+                    System.arraycopy(guid, 0, clients[clientNum].guid, 0, 12)
+                    clients[clientNum].guid[11] = Char(0)
                     break
                 }
                 islot++
@@ -2064,32 +2056,32 @@ object AsyncServer {
 
             // send connect response message
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("connectResponse")
             outMsg.WriteLong(clientNum)
             outMsg.WriteLong(gameInitId)
             outMsg.WriteLong(gameFrame)
             outMsg.WriteLong(gameTime)
-            outMsg.WriteDeltaDict(Session.Companion.sessLocal.mapSpawnData.serverInfo, null)
+            outMsg.WriteDeltaDict(Session.sessLocal.mapSpawnData.serverInfo, null)
             serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
             InitClient(clientNum, clientId, clientRate)
-            clients.get(clientNum).gameInitSequence = 1
-            clients.get(clientNum).snapshotSequence = 1
+            clients[clientNum].gameInitSequence = 1
+            clients[clientNum].snapshotSequence = 1
 
             // clear the challenge struct so a reconnect from this client IP starts clean
-            challenges.get(ichallenge) = challenge_s()
+            challenges[ichallenge] = challenge_s()
         }
 
-        private fun ProcessRemoteConsoleMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessRemoteConsoleMessage(from: netadr_t, msg: idBitMsg) {
             val msgBuf = StringBuilder(952)
-            val string = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            val string = CharArray(Lib.MAX_STRING_CHARS)
             if (idAsyncNetwork.serverRemoteConsolePassword.GetString().isEmpty()) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, "#str_04846")
                 return
             }
             msg.ReadString(string, string.size)
-            if (idStr.Companion.Icmp(
-                    TempDump.ctos(string),
+            if (idStr.Icmp(
+                    TempDump.ctos(string)!!,
                     idAsyncNetwork.serverRemoteConsolePassword.GetString()
                 ) != 0
             ) {
@@ -2101,14 +2093,14 @@ object AsyncServer {
             rconAddress = from
             noRconOutput = true
             Common.common.BeginRedirect(msgBuf, msgBuf.capacity(), RConRedirect.getInstance())
-            CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, TempDump.ctos(string))
+            CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, TempDump.ctos(string)!!)
             Common.common.EndRedirect()
             if (noRconOutput) {
                 PrintOOB(rconAddress, SERVER_PRINT.SERVER_PRINT_RCON.ordinal, "#str_04848")
             }
         }
 
-        private fun ProcessGetInfoMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessGetInfoMessage(from: netadr_t, msg: idBitMsg) {
             var i: Int
             val challenge: Int
             val outMsg = idBitMsg()
@@ -2119,46 +2111,46 @@ object AsyncServer {
             Common.common.DPrintf("Sending info response to %s\n", win_net.Sys_NetAdrToString(from))
             challenge = msg.ReadLong()
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("infoResponse")
             outMsg.WriteLong(challenge)
             outMsg.WriteLong(AsyncNetwork.ASYNC_PROTOCOL_VERSION)
-            outMsg.WriteDeltaDict(Session.Companion.sessLocal.mapSpawnData.serverInfo, null)
+            outMsg.WriteDeltaDict(Session.sessLocal.mapSpawnData.serverInfo, null)
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState.ordinal < serverClientState_t.SCS_CONNECTED.ordinal) {
                     i++
                     continue
                 }
-                outMsg.WriteByte(i)
-                outMsg.WriteShort(client.clientPing)
+                outMsg.WriteByte(i.toByte())
+                outMsg.WriteShort(client.clientPing.toShort())
                 outMsg.WriteLong(client.channel.GetMaxOutgoingRate())
                 outMsg.WriteString(
-                    Session.Companion.sessLocal.mapSpawnData.userInfo.get(i).GetString("ui_name", "Player")
+                    Session.sessLocal.mapSpawnData.userInfo[i].GetString("ui_name", "Player")
                 )
                 i++
             }
-            outMsg.WriteByte(AsyncNetwork.MAX_ASYNC_CLIENTS)
+            outMsg.WriteByte(AsyncNetwork.MAX_ASYNC_CLIENTS.toByte())
             outMsg.WriteLong(FileSystem_h.fileSystem.GetOSMask())
             serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
         }
 
-        private fun ConnectionlessMessage(from: netadr_t?, msg: idBitMsg?): Boolean {
+        private fun ConnectionlessMessage(from: netadr_t, msg: idBitMsg): Boolean {
             val chrs =
-                CharArray(Lib.Companion.MAX_STRING_CHARS * 2) // M. Quinn - Even Balance - PB Packets need more than 1024
-            val string: String?
+                CharArray(Lib.MAX_STRING_CHARS * 2) // M. Quinn - Even Balance - PB Packets need more than 1024
+            val string: String
             msg.ReadString(chrs, chrs.size)
-            string = TempDump.ctos(chrs)
+            string = TempDump.ctos(chrs)!!
 
             // info request
-            if (idStr.Companion.Icmp(string, "getInfo") == 0) {
+            if (idStr.Icmp(string, "getInfo") == 0) {
                 ProcessGetInfoMessage(from, msg)
                 return false
             }
 
             // remote console
-            if (idStr.Companion.Icmp(string, "rcon") == 0) {
+            if (idStr.Icmp(string, "rcon") == 0) {
                 ProcessRemoteConsoleMessage(from, msg)
                 return true
             }
@@ -2168,30 +2160,30 @@ object AsyncServer {
             }
 
             // challenge from a client
-            if (idStr.Companion.Icmp(string, "challenge") == 0) {
+            if (idStr.Icmp(string, "challenge") == 0) {
                 ProcessChallengeMessage(from, msg)
                 return false
             }
 
             // connect from a client
-            if (idStr.Companion.Icmp(string, "connect") == 0) {
+            if (idStr.Icmp(string, "connect") == 0) {
                 ProcessConnectMessage(from, msg)
                 return false
             }
 
             // pure mesasge from a client
-            if (idStr.Companion.Icmp(string, "pureClient") == 0) {
+            if (idStr.Icmp(string, "pureClient") == 0) {
                 ProcessPureMessage(from, msg)
                 return false
             }
 
             // download request
-            if (idStr.Companion.Icmp(string, "downloadRequest") == 0) {
+            if (idStr.Icmp(string, "downloadRequest") == 0) {
                 ProcessDownloadRequestMessage(from, msg)
             }
 
             // auth server
-            if (idStr.Companion.Icmp(string, "auth") == 0) {
+            if (idStr.Icmp(string, "auth") == 0) {
                 if (!win_net.Sys_CompareNetAdrBase(from, idAsyncNetwork.GetMasterAddress())) {
                     Common.common.Printf("auth: bad source %s\n", win_net.Sys_NetAdrToString(from))
                     return false
@@ -2205,13 +2197,13 @@ object AsyncServer {
             return false
         }
 
-        private fun ProcessMessage(from: netadr_t?, msg: idBitMsg?): Boolean {
+        private fun ProcessMessage(from: netadr_t, msg: idBitMsg): Boolean {
             var i: Int
             val id: Int
             val sequence = CInt()
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            id = msg.ReadShort()
+            id = msg.ReadShort().toInt()
 
             // check for a connectionless message
             if (id == MsgChannel.CONNECTIONLESS_MESSAGE_ID) {
@@ -2225,7 +2217,7 @@ object AsyncServer {
             // find out which client the message is from
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState == serverClientState_t.SCS_FREE) {
                     i++
                     continue
@@ -2258,38 +2250,38 @@ object AsyncServer {
             // if we received a sequenced packet from an address we don't recognize,
             // send an out of band disconnect packet to it
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("disconnect")
             serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
             return false
         }
 
         @Throws(idException::class)
-        private fun ProcessAuthMessage(msg: idBitMsg?) {
+        private fun ProcessAuthMessage(msg: idBitMsg) {
             val client_from = netadr_t()
             val client_guid = CharArray(12)
-            val string = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            val string = CharArray(Lib.MAX_STRING_CHARS)
             var i: Int
             val clientId: Int
             val reply: authReply_t
             var replyMsg = authReplyMsg_t.AUTH_REPLY_WAITING
             val replyPrintMsg = idStr()
-            reply = AsyncServer.authReply_t.values()[msg.ReadByte()]
+            reply = authReply_t.values()[msg.ReadByte().toInt()]
             if (reply.ordinal <= 0 || reply.ordinal >= authReply_t.AUTH_MAXSTATES.ordinal) {
                 Common.common.DPrintf("auth: invalid reply %d\n", reply)
                 return
             }
-            clientId = msg.ReadShort()
+            clientId = msg.ReadShort().toInt()
             msg.ReadNetadr(client_from)
             msg.ReadString(client_guid, client_guid.size)
             if (reply != authReply_t.AUTH_OK) {
-                replyMsg = AsyncServer.authReplyMsg_t.values()[msg.ReadByte()]
+                replyMsg = authReplyMsg_t.values()[msg.ReadByte().toInt()]
                 if (replyMsg.ordinal <= 0 || replyMsg.ordinal >= authReplyMsg_t.AUTH_REPLY_MAXSTATES.ordinal) {
                     Common.common.DPrintf("auth: invalid reply msg %d\n", replyMsg)
                     return
                 }
                 if (replyMsg == authReplyMsg_t.AUTH_REPLY_PRINT) {
-                    msg.ReadString(string, Lib.Companion.MAX_STRING_CHARS)
+                    msg.ReadString(string, Lib.MAX_STRING_CHARS)
                     replyPrintMsg.set(TempDump.ctos(string))
                 }
             }
@@ -2297,40 +2289,40 @@ object AsyncServer {
 
             // no message parsing below
             i = 0
-            while (i < AsyncServer.MAX_CHALLENGES) {
-                if (!challenges.get(i).connected && challenges.get(i).clientId == clientId) {
+            while (i < MAX_CHALLENGES) {
+                if (!challenges[i].connected && challenges[i].clientId == clientId) {
                     // return if something is wrong
                     // break if we have found a valid auth
-                    if (0 == TempDump.strLen(challenges.get(i).guid)) {
+                    if (0 == TempDump.strLen(challenges[i].guid)) {
                         Common.common.DPrintf(
                             "auth: client %s has no guid yet\n",
-                            win_net.Sys_NetAdrToString(challenges.get(i).address)
+                            win_net.Sys_NetAdrToString(challenges[i].address)
                         )
                         return
                     }
-                    if (idStr.Companion.Cmp(challenges.get(i).guid, client_guid) != 0) {
+                    if (idStr.Cmp(challenges[i].guid, client_guid) != 0) {
                         Common.common.DPrintf(
                             "auth: client %s %s not matched, auth server says guid %s\n",
-                            win_net.Sys_NetAdrToString(challenges.get(i).address),
-                            challenges.get(i).guid,
+                            win_net.Sys_NetAdrToString(challenges[i].address),
+                            challenges[i].guid,
                             client_guid
                         )
                         return
                     }
-                    if (!win_net.Sys_CompareNetAdrBase(client_from, challenges.get(i).address)) {
+                    if (!win_net.Sys_CompareNetAdrBase(client_from, challenges[i].address)) {
                         // let auth work when server and master don't see the same IP
                         Common.common.DPrintf(
                             "auth: matched guid '%s' for != IPs %s and %s\n",
                             client_guid,
                             win_net.Sys_NetAdrToString(client_from),
-                            win_net.Sys_NetAdrToString(challenges.get(i).address)
+                            win_net.Sys_NetAdrToString(challenges[i].address)
                         )
                     }
                     break
                 }
                 i++
             }
-            if (i >= AsyncServer.MAX_CHALLENGES) {
+            if (i >= MAX_CHALLENGES) {
                 Common.common.DPrintf(
                     "auth: failed client lookup %s %s\n",
                     win_net.Sys_NetAdrToString(client_from),
@@ -2338,23 +2330,23 @@ object AsyncServer {
                 )
                 return
             }
-            if (challenges.get(i).authState != authState_t.CDK_WAIT) {
+            if (challenges[i].authState != authState_t.CDK_WAIT) {
                 Common.common.DWarning(
                     "auth: challenge 0x%x %s authState %d != CDK_WAIT",
-                    challenges.get(i).challenge,
-                    win_net.Sys_NetAdrToString(challenges.get(i).address),
-                    challenges.get(i).authState
+                    challenges[i].challenge,
+                    win_net.Sys_NetAdrToString(challenges[i].address),
+                    challenges[i].authState
                 )
                 return
             }
-            idStr.Companion.snPrintf(challenges.get(i).guid, 12, TempDump.ctos(client_guid))
+            idStr.snPrintf(challenges[i].guid, 12, TempDump.ctos(client_guid)!!)
             if (reply == authReply_t.AUTH_OK) {
-                challenges.get(i).authState = authState_t.CDK_OK
+                challenges[i].authState = authState_t.CDK_OK
                 Common.common.Printf("client %s %s is authed\n", win_net.Sys_NetAdrToString(client_from), client_guid)
             } else {
-                val msg1: String?
+                val msg1: String
                 msg1 = if (replyMsg != authReplyMsg_t.AUTH_REPLY_PRINT) {
-                    AsyncServer.authReplyMsg[replyMsg.ordinal]
+                    authReplyMsg[replyMsg.ordinal]
                 } else {
                     replyPrintMsg.toString()
                 }
@@ -2364,17 +2356,17 @@ object AsyncServer {
                     "auth: client %s %s - %s %s\n",
                     win_net.Sys_NetAdrToString(client_from),
                     client_guid,
-                    AsyncServer.authReplyStr[reply.ordinal],
+                    authReplyStr[reply.ordinal],
                     l_msg
                 )
-                challenges.get(i).authReply = reply
-                challenges.get(i).authReplyMsg = replyMsg
-                challenges.get(i).authReplyPrint = replyPrintMsg
+                challenges[i].authReply = reply
+                challenges[i].authReplyMsg = replyMsg
+                challenges[i].authReplyPrint.set(replyPrintMsg)
             }
         }
 
         private fun SendPureServerMessage(
-            to: netadr_t?,
+            to: netadr_t,
             OS: Int
         ): Boolean {                                        // returns false if no pure paks on the list
             val outMsg = idBitMsg()
@@ -2392,7 +2384,7 @@ object AsyncServer {
 
             // send our list of required paks
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("pureServer")
             i = 0
             while (serverChecksums[i] != 0) {
@@ -2401,46 +2393,46 @@ object AsyncServer {
             outMsg.WriteLong(0)
 
             // write the pak checksum for game code
-            outMsg.WriteLong(gamePakChecksum.getVal())
+            outMsg.WriteLong(gamePakChecksum._val)
             serverPort.SendPacket(to, outMsg.GetData(), outMsg.GetSize())
             return true
         }
 
-        private fun ProcessPureMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessPureMessage(from: netadr_t, msg: idBitMsg) {
             var iclient: Int
             val challenge: Int
             val clientId: Int
             val reply = idStr()
             challenge = msg.ReadLong()
-            clientId = msg.ReadShort()
+            clientId = msg.ReadShort().toInt()
             if (ValidateChallenge(from, challenge, clientId).also { iclient = it } == -1) {
                 return
             }
-            if (challenges.get(iclient).authState != authState_t.CDK_PUREWAIT) {
+            if (challenges[iclient].authState != authState_t.CDK_PUREWAIT) {
                 Common.common.DPrintf(
                     "client %s: got pure message, not in CDK_PUREWAIT\n",
                     win_net.Sys_NetAdrToString(from)
                 )
                 return
             }
-            if (!VerifyChecksumMessage(iclient, from, msg, reply, challenges.get(iclient).OS)) {
+            if (!VerifyChecksumMessage(iclient, from, msg, reply, challenges[iclient].OS)) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, reply.toString())
                 return
             }
             Common.common.DPrintf("client %s: passed pure checks\n", win_net.Sys_NetAdrToString(from))
-            challenges.get(iclient).authState =
+            challenges[iclient].authState =
                 authState_t.CDK_PUREOK // next connect message will get the client through completely
         }
 
         private fun ValidateChallenge(
-            from: netadr_t?,
+            from: netadr_t,
             challenge: Int,
             clientId: Int
         ): Int {    // returns -1 if validate failed
             var i: Int
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                val client = clients.get(i)
+                val client = clients[i]
                 if (client.clientState == serverClientState_t.SCS_FREE) {
                     i++
                     continue
@@ -2448,7 +2440,7 @@ object AsyncServer {
                 if (win_net.Sys_CompareNetAdrBase(from, client.channel.GetRemoteAddress())
                     && (clientId == client.clientId || from.port == client.channel.GetRemoteAddress().port)
                 ) {
-                    if (serverTime - client.lastConnectTime < AsyncServer.MIN_RECONNECT_TIME) {
+                    if (serverTime - client.lastConnectTime < MIN_RECONNECT_TIME) {
                         Common.common.Printf("%s: reconnect rejected : too soon\n", win_net.Sys_NetAdrToString(from))
                         return -1
                     }
@@ -2457,19 +2449,19 @@ object AsyncServer {
                 i++
             }
             i = 0
-            while (i < AsyncServer.MAX_CHALLENGES) {
+            while (i < MAX_CHALLENGES) {
                 if (win_net.Sys_CompareNetAdrBase(
                         from,
-                        challenges.get(i).address
-                    ) && from.port == challenges.get(i).address.port
+                        challenges[i].address
+                    ) && from.port == challenges[i].address.port
                 ) {
-                    if (challenge == challenges.get(i).challenge) {
+                    if (challenge == challenges[i].challenge) {
                         break
                     }
                 }
                 i++
             }
-            if (i == AsyncServer.MAX_CHALLENGES) {
+            if (i == MAX_CHALLENGES) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_BADCHALLENGE.ordinal, "#str_04840")
                 return -1
             }
@@ -2482,7 +2474,7 @@ object AsyncServer {
             val serverChecksums = IntArray(FileSystem_h.MAX_PURE_PAKS)
             var i: Int
             val gamePakChecksum = CInt()
-            FileSystem_h.fileSystem.GetPureServerChecksums(serverChecksums, clients.get(clientNum).OS, gamePakChecksum)
+            FileSystem_h.fileSystem.GetPureServerChecksums(serverChecksums, clients[clientNum].OS, gamePakChecksum)
             if (0 == serverChecksums[0]) {
                 // happens if you run fully expanded assets with si_pure 1
                 Common.common.Warning("pure server has no pak files referenced")
@@ -2494,19 +2486,19 @@ object AsyncServer {
                 gameInitId
             )
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PURE.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_PURE.ordinal.toByte())
             msg.WriteLong(gameInitId)
             i = 0
             while (serverChecksums[i] != 0) {
                 msg.WriteLong(serverChecksums[i++])
             }
             msg.WriteLong(0)
-            msg.WriteLong(gamePakChecksum.getVal())
+            msg.WriteLong(gamePakChecksum._val)
             SendReliableMessage(clientNum, msg)
             return true
         }
 
-        private fun ProcessReliablePure(clientNum: Int, msg: idBitMsg?) {
+        private fun ProcessReliablePure(clientNum: Int, msg: idBitMsg) {
             val reply = idStr()
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
@@ -2520,29 +2512,29 @@ object AsyncServer {
                 )
                 return
             }
-            if (clients.get(clientNum).clientState != serverClientState_t.SCS_PUREWAIT) {
+            if (clients[clientNum].clientState != serverClientState_t.SCS_PUREWAIT) {
                 // should not happen unless something is very wrong. still, don't let this crash us, just get rid of the client
                 Common.common.DPrintf(
                     "client %d: got reliable pure while != SCS_PUREWAIT, sending a reload\n",
                     clientNum
                 )
                 outMsg.Init(msgBuf, msgBuf.capacity())
-                outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_RELOAD.ordinal)
+                outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_RELOAD.ordinal.toByte())
                 SendReliableMessage(clientNum, msg)
                 // go back to SCS_CONNECTED to sleep on the client until it goes away for a reconnect
-                clients.get(clientNum).clientState = serverClientState_t.SCS_CONNECTED
+                clients[clientNum].clientState = serverClientState_t.SCS_CONNECTED
                 return
             }
-            if (!VerifyChecksumMessage(clientNum, null, msg, reply, clients.get(clientNum).OS)) {
+            if (!VerifyChecksumMessage(clientNum, null, msg, reply, clients[clientNum].OS)) {
                 reply.set(DropClient(clientNum, reply.toString()))
                 return
             }
             Common.common.DPrintf("client %d: passed pure checks (reliable channel)\n", clientNum)
-            clients.get(clientNum).clientState = serverClientState_t.SCS_CONNECTED
+            clients[clientNum].clientState = serverClientState_t.SCS_CONNECTED
         }
 
         private fun VerifyChecksumMessage(
-            clientNum: Int, from: netadr_t?, msg: idBitMsg?, reply: idStr?,
+            clientNum: Int, from: netadr_t?, msg: idBitMsg, reply: idStr,
             OS: Int
         ): Boolean { // if from is null, clientNum is used for error messages
             var i: Int
@@ -2575,7 +2567,7 @@ object AsyncServer {
             assert(serverChecksums[0] != 0)
 
             // compare the lists
-            if (serverGamePakChecksum.getVal() != gamePakChecksum) {
+            if (serverGamePakChecksum._val != gamePakChecksum) {
                 Common.common.Printf(
                     "client %s: invalid game code pak ( 0x%x )\n",
                     if (from != null) win_net.Sys_NetAdrToString(from) else Str.va("%d", clientNum),
@@ -2611,13 +2603,13 @@ object AsyncServer {
 
         private fun SendReliableMessage(
             clientNum: Int,
-            msg: idBitMsg?
+            msg: idBitMsg
         ) {                // checks for overflow and disconnects the faulty client
             if (clientNum == localClientNum) {
                 return
             }
-            if (!clients.get(clientNum).channel.SendReliableMessage(msg)) {
-                clients.get(clientNum).channel.ClearReliableMessages()
+            if (!clients[clientNum].channel.SendReliableMessage(msg)) {
+                clients[clientNum].channel.ClearReliableMessages()
                 DropClient(clientNum, "#str_07136")
             }
         }
@@ -2636,14 +2628,14 @@ object AsyncServer {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             msg.Init(msgBuf, msgBuf.capacity())
-            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_ENTERGAME.ordinal)
+            msg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_ENTERGAME.ordinal.toByte())
             SendReliableMessage(clientNum, msg)
         }
 
         @Throws(idException::class)
-        private fun ProcessDownloadRequestMessage(from: netadr_t?, msg: idBitMsg?) {
+        private fun ProcessDownloadRequestMessage(from: netadr_t, msg: idBitMsg) {
             val challenge: Int
-            val clientId: Int
+            val clientId: Short
             var iclient: Int
             var numPaks: Int
             var i: Int
@@ -2652,7 +2644,7 @@ object AsyncServer {
             val dlSize = IntArray(FileSystem_h.MAX_PURE_PAKS) // sizes
             val pakNames = idStrList() // relative path
             val pakURLs = idStrList() // game URLs
-            val pakbuf = CharArray(Lib.Companion.MAX_STRING_CHARS)
+            val pakbuf = CharArray(Lib.MAX_STRING_CHARS)
             val paklist = idStr()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             val tmpBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
@@ -2663,10 +2655,10 @@ object AsyncServer {
             challenge = msg.ReadLong()
             clientId = msg.ReadShort()
             dlRequest = msg.ReadLong()
-            if (ValidateChallenge(from, challenge, clientId).also { iclient = it } == -1) {
+            if (ValidateChallenge(from, challenge, clientId.toInt()).also { iclient = it } == -1) {
                 return
             }
-            if (challenges.get(iclient).authState != authState_t.CDK_PUREWAIT) {
+            if (challenges[iclient].authState != authState_t.CDK_PUREWAIT) {
                 Common.common.DPrintf(
                     "client %s: got download request message, not in CDK_PUREWAIT\n",
                     win_net.Sys_NetAdrToString(from)
@@ -2718,25 +2710,25 @@ object AsyncServer {
             // read the message and pass it to the game code
             Common.common.DPrintf("got download request for %d paks - %s\n", numPaks - voidSlots, paklist.toString())
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID)
+            outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("downloadInfo")
             outMsg.WriteLong(dlRequest)
             if (!Game_local.game.DownloadRequest(
                     win_net.Sys_NetAdrToString(from),
-                    TempDump.ctos(challenges.get(iclient).guid),
+                    TempDump.ctos(challenges[iclient].guid),
                     paklist.toString(),
                     pakbuf
                 )
             ) {
                 Common.common.DPrintf("game: no downloads\n")
-                outMsg.WriteByte(SERVER_DL.SERVER_DL_NONE.ordinal)
+                outMsg.WriteByte(SERVER_DL.SERVER_DL_NONE.ordinal.toByte())
                 serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
                 return
             }
-            var token: String?
+            var token: String
             var type = 0
             var next: Int
-            token = TempDump.ctos(pakbuf)
+            token = TempDump.ctos(pakbuf)!!
             next = token.indexOf(';')
             while (TempDump.isNotNullOrEmpty(token)) {
                 if (next != -1) {
@@ -2746,7 +2738,7 @@ object AsyncServer {
                     type = token.toInt()
                 } else if (type == SERVER_DL.SERVER_DL_REDIRECT.ordinal) {
                     Common.common.DPrintf("download request: redirect to URL %s\n", token)
-                    outMsg.WriteByte(SERVER_DL.SERVER_DL_REDIRECT.ordinal)
+                    outMsg.WriteByte(SERVER_DL.SERVER_DL_REDIRECT.ordinal.toByte())
                     outMsg.WriteString(token)
                     serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
                     return
@@ -2755,13 +2747,11 @@ object AsyncServer {
                 } else {
                     Common.common.DPrintf("wrong op type %d\n", type)
                     next = -1
-                    token = null
                 }
                 if (next != -1) {
                     token = token.substring(++next)
                     next = token.indexOf(';')
                 } else {
-                    token = null
                 }
             }
             if (type == SERVER_DL.SERVER_DL_LIST.ordinal) {
@@ -2769,19 +2759,19 @@ object AsyncServer {
                 var numActualPaks = 0
 
                 // put the answer packet together
-                outMsg.WriteByte(SERVER_DL.SERVER_DL_LIST.ordinal)
+                outMsg.WriteByte(SERVER_DL.SERVER_DL_LIST.ordinal.toByte())
                 tmpMsg.Init(tmpBuf, MsgChannel.MAX_MESSAGE_SIZE)
                 i = 0
                 while (i < pakURLs.size()) {
                     tmpMsg.BeginWriting()
                     if (0 == dlSize[i] || 0 == pakURLs[i].Length()) {
                         // still send the relative path so the client knows what it missed
-                        tmpMsg.WriteByte(SERVER_PAK.SERVER_PAK_NO.ordinal)
+                        tmpMsg.WriteByte(SERVER_PAK.SERVER_PAK_NO.ordinal.toByte())
                         tmpMsg.WriteString(pakNames[i].toString())
                     } else {
                         totalDlSize += dlSize[i]
                         numActualPaks++
-                        tmpMsg.WriteByte(SERVER_PAK.SERVER_PAK_YES.ordinal)
+                        tmpMsg.WriteByte(SERVER_PAK.SERVER_PAK_YES.ordinal.toByte())
                         tmpMsg.WriteString(pakNames[i].toString())
                         tmpMsg.WriteString(pakURLs[i].toString())
                         tmpMsg.WriteLong(dlSize[i])
@@ -2791,14 +2781,14 @@ object AsyncServer {
                     if (outMsg.GetRemainingSpace() - tmpMsg.GetSize() > 5) {
                         outMsg.WriteData(tmpMsg.GetData(), tmpMsg.GetSize())
                     } else {
-                        outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal)
+                        outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal.toByte())
                         break
                     }
                     i++
                 }
                 if (i == pakURLs.size()) {
                     // put a closure even if size not exceeded
-                    outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal)
+                    outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal.toByte())
                 }
                 Common.common.DPrintf("download request: download %d paks, %d bytes\n", numActualPaks, totalDlSize)
                 serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
@@ -2826,15 +2816,13 @@ object AsyncServer {
             gameFrame = 0
             gameTime = 0
             gameTimeResidual = 0
-            challenges = Stream.generate { challenge_s() }
-                .limit(AsyncServer.MAX_CHALLENGES.toLong())
-                .toArray { _Dummy_.__Array__() }
+            challenges = Array(MAX_CHALLENGES) { challenge_s() }
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                clients.get(i) = serverClient_s()
+                clients[i] = serverClient_s()
                 ClearClient(i)
                 for (j in 0 until AsyncNetwork.MAX_USERCMD_BACKUP) {
-                    userCmds.get(j).get(i) = usercmd_t()
+                    userCmds[j][i] = usercmd_t()
                 }
                 i++
             }
@@ -2858,15 +2846,15 @@ object AsyncServer {
      RConRedirect
      ==================
      */
-    internal class RConRedirect : void_callback<String?>() {
+    internal class RConRedirect : void_callback<String>() {
         @Throws(idException::class)
-        override fun run(vararg objects: String?) {
+        override fun run(vararg objects: String) {
             idAsyncNetwork.server.RemoteConsoleOutput(objects[0])
         }
 
         companion object {
-            private val instance: void_callback<*>? = RConRedirect()
-            fun getInstance(): void_callback<*>? {
+            private val instance: void_callback<String> = RConRedirect()
+            fun getInstance(): void_callback<String> {
                 return instance
             }
         }

@@ -2,11 +2,11 @@ package neo.framework
 
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local
-import neo.Renderer.*
 import neo.Renderer.GuiModel.idGuiModel
+import neo.Renderer.Image
+import neo.Renderer.RenderSystem
 import neo.Sound.snd_system
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.TODO_Exception
 import neo.TempDump.void_callback
 import neo.Tools.Compilers.AAS.AASBuild.RunAASDir_f
@@ -17,7 +17,6 @@ import neo.Tools.Compilers.RenderBump.renderbump.RenderBumpFlat_f
 import neo.Tools.Compilers.RenderBump.renderbump.RenderBump_f
 import neo.Tools.Compilers.RoqVQ.Roq.RoQFileEncode_f
 import neo.Tools.edit_public
-import neo.framework.*
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork
 import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem.cmdExecution_t
@@ -28,11 +27,12 @@ import neo.framework.FileSystem_h.idFileList
 import neo.framework.File_h.idFile
 import neo.framework.File_h.idFile_Memory
 import neo.framework.KeyInput.idKeyInput
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Dict_h.idDict.ListKeys_f
 import neo.idlib.Dict_h.idDict.ListValues_f
 import neo.idlib.LangDict.idLangDict
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.MapFile.idMapFile
@@ -48,9 +48,11 @@ import neo.idlib.math.Simd.idSIMD
 import neo.idlib.math.Simd.idSIMD.Test_f
 import neo.idlib.math.Vector.idVec4
 import neo.sys.*
+import neo.sys.win_main.Sys_EnterCriticalSection
+import neo.sys.win_main.Sys_LeaveCriticalSection
 import neo.ui.UserInterface
 import java.io.IOException
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -66,19 +68,19 @@ object Common {
     //
     //#ifdef _WIN32
     val DMAP_MSGID: String = "DMAPOutput"
-    val EDITOR_AAS: Int = Lib.Companion.BIT(11)
-    val EDITOR_AF: Int = Lib.Companion.BIT(8)
-    val EDITOR_DEBUGGER: Int = Lib.Companion.BIT(3)
-    val EDITOR_DECL: Int = Lib.Companion.BIT(7)
-    val EDITOR_GUI: Int = Lib.Companion.BIT(2)
-    val EDITOR_LIGHT: Int = Lib.Companion.BIT(5)
-    val EDITOR_MATERIAL: Int = Lib.Companion.BIT(12)
+    val EDITOR_AAS: Int = Lib.BIT(11)
+    val EDITOR_AF: Int = Lib.BIT(8)
+    val EDITOR_DEBUGGER: Int = Lib.BIT(3)
+    val EDITOR_DECL: Int = Lib.BIT(7)
+    val EDITOR_GUI: Int = Lib.BIT(2)
+    val EDITOR_LIGHT: Int = Lib.BIT(5)
+    val EDITOR_MATERIAL: Int = Lib.BIT(12)
     const val EDITOR_NONE = 0
-    val EDITOR_PARTICLE: Int = Lib.Companion.BIT(9)
-    val EDITOR_PDA: Int = Lib.Companion.BIT(10)
-    val EDITOR_RADIANT: Int = Lib.Companion.BIT(1)
-    val EDITOR_SCRIPT: Int = Lib.Companion.BIT(4)
-    val EDITOR_SOUND: Int = Lib.Companion.BIT(6)
+    val EDITOR_PARTICLE: Int = Lib.BIT(9)
+    val EDITOR_PDA: Int = Lib.BIT(10)
+    val EDITOR_RADIANT: Int = Lib.BIT(1)
+    val EDITOR_SCRIPT: Int = Lib.BIT(4)
+    val EDITOR_SOUND: Int = Lib.BIT(6)
 
     //
     //
@@ -102,12 +104,12 @@ object Common {
         "com_asyncSound",
         "2",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
-        Common.ASYNCSOUND_INFO
+        ASYNCSOUND_INFO
     ) else if (BuildDefines.__linux__) idCVar(
         "com_asyncSound",
         "3",
         CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
-        Common.ASYNCSOUND_INFO
+        ASYNCSOUND_INFO
     ) else idCVar(
         "com_asyncSound",
         "1",
@@ -218,8 +220,8 @@ object Common {
         "0",
         CVarSystem.CVAR_SYSTEM,
         "print time with each console print, 1 = msec, 2 = sec",
-        0,
-        2,
+        0f,
+        2f,
         ArgCompletion_Integer(0, 2)
     )
     val com_updateLoadSize: idCVar = idCVar(
@@ -245,7 +247,7 @@ object Common {
     //
     val com_version: idCVar = idCVar(
         "si_version",
-        Common.version.string,
+        version.string,
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM or CVarSystem.CVAR_SERVERINFO,
         "engine version"
     )
@@ -278,9 +280,9 @@ object Common {
     var com_msgID: Long = -1
 
     //
-    private val commonLocal: idCommonLocal = idCommonLocal()
-    val common: /*final*/idCommon = Common.commonLocal
-    fun LoadMapLocalizeData(listHash: ListHash?) {
+    private var commonLocal: idCommonLocal = idCommonLocal()
+    var common: /*final*/idCommon = commonLocal
+    fun LoadMapLocalizeData(listHash: ListHash) {
         throw TODO_Exception()
         //        String fileName = "map_localize.cfg";
 //        Object[] buffer = {null};
@@ -311,7 +313,7 @@ object Common {
 //        }
     }
 
-    fun LoadGuiParmExcludeList(list: idStrList?) {
+    fun LoadGuiParmExcludeList(list: idStrList) {
         throw TODO_Exception()
         //        String fileName = "guiparm_exclude.cfg";
 //        Object[] buffer = {null};
@@ -331,17 +333,17 @@ object Common {
 //        }
     }
 
-    fun TestMapVal(str: idStr?): Boolean {
+    fun TestMapVal(str: idStr): Boolean {
         //Already Localized?
         return str.Find("#str_") == -1
     }
 
-    fun TestMapVal(str: String?): Boolean {
+    fun TestMapVal(str: String): Boolean {
         return str.contains("#str_")
     }
 
     //#endif
-    fun TestGuiParm(parm: String?, value: String?, excludeList: idStrList?): Boolean {
+    fun TestGuiParm(parm: String, value: String, excludeList: idStrList): Boolean {
         val testVal = idStr(value)
 
         //Already Localized?
@@ -375,21 +377,21 @@ object Common {
     //    
     //    
     //============================================================================
-    fun TestGuiParm(parm: idStr?, value: idStr?, excludeList: idStrList?): Boolean {
-        return Common.TestGuiParm(parm.toString(), value.toString(), excludeList)
+    fun TestGuiParm(parm: idStr, value: idStr, excludeList: idStrList): Boolean {
+        return TestGuiParm(parm.toString(), value.toString(), excludeList)
     }
 
-    fun GetFileList(dir: String?, ext: String?, list: idStrList?) {
+    fun GetFileList(dir: String, ext: String, list: idStrList) {
 
         //Recurse Subdirectories
         val dirList = idStrList()
         sys_public.Sys_ListFiles(dir, "/", dirList)
         for (i in 0 until dirList.size()) {
-            if (dirList[i] == "." || dirList[i] == "..") {
+            if (dirList[i].toString() == "." || dirList[i].toString() == "..") {
                 continue
             }
             val fullName = Str.va("%s/%s", dir, dirList[i])
-            Common.GetFileList(fullName, ext, list)
+            GetFileList(fullName, ext, list)
         }
         val fileList = idStrList()
         sys_public.Sys_ListFiles(dir, ext, fileList)
@@ -400,10 +402,10 @@ object Common {
     }
 
     fun LocalizeMap(
-        mapName: String?,
-        langDict: idLangDict?,
-        listHash: ListHash?,
-        excludeList: idStrList?,
+        mapName: String,
+        langDict: idLangDict,
+        listHash: ListHash,
+        excludeList: idStrList,
         writeFile: Boolean
     ): Int {
         throw TODO_Exception()
@@ -485,9 +487,9 @@ object Common {
 //	return strCount;
     }
 
-    fun setCommon(common: idCommon?) {
-        Common.commonLocal = common as idCommonLocal?
-        Common.common = Common.commonLocal
+    fun setCommons(common: idCommon) {
+        commonLocal = common as idCommonLocal
+        Common.common = commonLocal
     }
 
     internal enum class errorParm_t {
@@ -498,7 +500,7 @@ object Common {
 
     class MemInfo_t {
         var assetTotals = 0
-        var filebase: idStr? = null
+        val filebase: idStr = idStr()
 
         //
         // subsystem totals
@@ -524,7 +526,7 @@ object Common {
         // Initialize everything.
         // if the OS allows, pass argc/argv directly (without executable name)
         // otherwise pass the command line in a single string (without executable name)
-        abstract fun Init(argc: Int, argv: Array<String?>?, cmdline: String?)
+        abstract fun Init(argc: Int, argv: Array<String>, cmdline: String)
 
         // Shuts down everything.
         abstract fun Shutdown()
@@ -553,20 +555,20 @@ object Common {
         abstract fun StartupVariable(match: String?, once: Boolean)
 
         // Initializes a tool with the given dictionary.
-        abstract fun InitTool(toolFlag_t: Int, dict: idDict?)
+        abstract fun InitTool(toolFlag_t: Int, dict: idDict)
 
         // Activates or deactivates a tool.
         abstract fun ActivateTool(active: Boolean)
 
         // Writes the user's configuration to a file
-        abstract fun WriteConfigToFile(filename: String?)
+        abstract fun WriteConfigToFile(filename: String)
 
         // Writes cvars with the given flags to a file.
         @Throws(idException::class)
-        abstract fun WriteFlaggedCVarsToFile(filename: String?, flags: Int, setCmd: String?)
+        abstract fun WriteFlaggedCVarsToFile(filename: String, flags: Int, setCmd: String)
 
         // Begins redirection of console output to the given buffer.
-        abstract fun BeginRedirect(buffer: StringBuilder?, buffersize: Int, flush: void_callback<String?>?)
+        abstract fun BeginRedirect(buffer: StringBuilder?, buffersize: Int, flush: void_callback<String>?)
 
         // Stops redirection of console output.
         abstract fun EndRedirect()
@@ -575,47 +577,47 @@ object Common {
         abstract fun SetRefreshOnPrint(set: Boolean)
 
         // Prints message to the console, which may cause a screen update if com_refreshOnPrint is set.
-        abstract fun Printf(fmt: String?, vararg args: Any?) /*id_attribute((format(printf,2,3)))*/
+        abstract fun Printf(fmt: String, vararg args: Any) /*id_attribute((format(printf,2,3)))*/
 
         // Same as Printf, with a more usable API - Printf pipes to this.
-        abstract fun VPrintf(fmt: String?, vararg args: Any?)
+        abstract fun VPrintf(fmt: String, vararg args: Any)
 
         // Prints message that only shows up if the "developer" cvar is set,
         // and NEVER forces a screen update, which could cause reentrancy problems.
-        abstract fun DPrintf(fmt: String?, vararg args: Any?) /* id_attribute((format(printf,2,3)))*/
+        abstract fun DPrintf(fmt: String, vararg args: Any) /* id_attribute((format(printf,2,3)))*/
 
         // Prints WARNING %s message and adds the warning message to a queue for printing later on.
-        abstract fun Warning(fmt: String?, vararg args: Any?) /* id_attribute((format(printf,2,3)))*/
+        abstract fun Warning(fmt: String, vararg args: Any) /* id_attribute((format(printf,2,3)))*/
 
         // Prints WARNING %s message in yellow that only shows up if the "developer" cvar is set.
         @Throws(idException::class)
-        abstract fun DWarning(fmt: String?, vararg args: Any?)
+        abstract fun DWarning(fmt: String, vararg args: Any)
 
         // Prints all queued warnings.
         @Throws(idException::class)
         abstract fun PrintWarnings()
 
         // Removes all queued warnings.
-        abstract fun ClearWarnings(reason: String?)
+        abstract fun ClearWarnings(reason: String)
 
         // Issues a C++ throw. Normal errors just abort to the game loop,
         // which is appropriate for media or dynamic logic errors.
         @Throws(idException::class)
-        abstract fun Error(fmt: String?, vararg args: Any?)
+        abstract fun Error(fmt: String, vararg args: Any)
 
         // Fatal errors quit all the way to a system dialog box, which is appropriate for
         // static internal errors or cases where the system may be corrupted.
         @Throws(idException::class)
-        abstract fun FatalError(fmt: String?, vararg args: Any?)
+        abstract fun FatalError(fmt: String, vararg args: Any)
 
         // Returns a pointer to the dictionary with language specific strings.
         abstract fun GetLanguageDict(): idLangDict
 
         // Returns key bound to the command
-        abstract fun KeysFromBinding(bind: String?): String?
+        abstract fun KeysFromBinding(bind: String): String
 
         // Returns the binding bound to the key
-        abstract fun BindingFromKey(key: String?): String?
+        abstract fun BindingFromKey(key: String): String
 
         // Directly sample a button.
         abstract fun ButtonState(key: Int): Int
@@ -624,16 +626,16 @@ object Common {
         abstract fun KeyState(key: Int): Int
     }
 
-    internal class version_s {
+    class version_s {
         //        char[] string = new char[256];
-        val string: String?
+        val string: String
 
         init {
             string = String.format(
                 "%s.%d%s %s %s",
                 Licensee.ENGINE_VERSION,
                 BuildVersion.BUILD_NUMBER,
-                Common.BUILD_DEBUG,
+                BUILD_DEBUG,
                 sys_public.BUILD_STRING,
                 SysCvar.__DATE__ /*, __TIME__*/
             )
@@ -642,8 +644,8 @@ object Common {
 
     class idCommonLocal : idCommon() {
         private val com_asyncStats // indexed by com_ticNumber
-                : Array<asyncStats_t?>?
-        var com_consoleLines: Array<CmdArgs.idCmdArgs?>?
+                : Array<asyncStats_t>
+        var com_consoleLines: Array<CmdArgs.idCmdArgs>
         var com_numConsoleLines = 0
 
         //#ifdef ID_WRITE_VERSION
@@ -659,10 +661,10 @@ object Common {
         //        private static final Lock SINGLE_ASYNC_TIC_LOCK = new ReentrantLock();//TODO:collect the locks into a single bundle.
         //
         //
-        private val errorList: idStrList?
+        private val errorList: idStrList
 
         //
-        private val errorMessage: Array<String?> = arrayOf(null) //new char[MAX_PRINT_MSG_SIZE];
+        private val errorMessage: Array<String> = arrayOf("") //new char[MAX_PRINT_MSG_SIZE];
 
         //
         private val gameDLL: Int
@@ -680,17 +682,17 @@ object Common {
 
         //
         private var rd_buffersize = 0
-        private var rd_flush /*)( const char *buffer )*/: void_callback<String?>? = null
-        private var warningCaption: idStr? = null
-        private val warningList: idStrList?
-        override fun Init(argc: Int, argv: Array<String?>?, cmdline: String?) {
+        private var rd_flush /*)( const char *buffer )*/: void_callback<String>? = null
+        private val warningCaption: idStr = idStr()
+        private val warningList: idStrList = idStrList()
+        override fun Init(argc: Int, argv: Array<String>, cmdline: String) {
             var argc = argc
             var argv = argv
             try {
 
                 // set interface pointers used by idLib
                 idLib.sys = sys_public.sys
-                idLib.common = Common.common
+                idLib.common = common
                 idLib.cvarSystem = CVarSystem.cvarSystem
                 idLib.fileSystem = FileSystem_h.fileSystem
 
@@ -722,10 +724,10 @@ object Common {
                 StartupVariable("win_outputDebugString", false)
 
                 // register all static CVars
-                idCVar.Companion.RegisterStaticVars()
+                idCVar.RegisterStaticVars()
 
                 // print engine version
-                Printf("%s\n", Common.version.string)
+                Printf("%s\n", version.string)
 
                 // initialize key input/binding, done early so bind command exists
                 idKeyInput.Init()
@@ -753,20 +755,20 @@ object Common {
 
                 // init commands
                 InitCommands()
-                if (Common.ID_WRITE_VERSION) {
-                    config_compressor = idCompressor.Companion.AllocArithmetic()
+                if (ID_WRITE_VERSION) {
+                    config_compressor = idCompressor.AllocArithmetic()
                 }
 
                 // game specific initialization
                 InitGame()
 
                 // don't add startup commands if no CD key is present
-                if (BuildDefines.ID_ENFORCE_KEY && (!Session.Companion.session.CDKeysAreValid(false) || !AddStartupCommands())
+                if (BuildDefines.ID_ENFORCE_KEY && (!Session.session.CDKeysAreValid(false) || !AddStartupCommands())
                     || !AddStartupCommands()
                 ) {
 
                     // if the user didn't give any commands, run default action
-                    Session.Companion.session.StartMenu(true)
+                    Session.session.StartMenu(true)
                 }
                 Printf("--- Common Initialization Complete ---\n")
 
@@ -807,7 +809,7 @@ object Common {
 
             // shut down the console command system
             CmdSystem.cmdSystem.Shutdown()
-            if (Common.ID_WRITE_VERSION) {
+            if (ID_WRITE_VERSION) {
                 //	delete config_compressor;
                 config_compressor = null
             }
@@ -828,7 +830,7 @@ object Common {
 
         override fun Quit() {
             if (BuildDefines.ID_ALLOW_TOOLS) {
-                if (Common.com_editors and Common.EDITOR_RADIANT != 0) {
+                if (com_editors and EDITOR_RADIANT != 0) {
                     edit_public.RadiantInit()
                     return
                 }
@@ -871,24 +873,24 @@ object Common {
                 WriteConfiguration()
 
                 // change SIMD implementation if required
-                if (Common.com_forceGenericSIMD.IsModified()) {
+                if (com_forceGenericSIMD.IsModified()) {
                     InitSIMD()
                 }
                 EventLoop.eventLoop.RunEventLoop()
-                Common.com_frameTime = Common.com_ticNumber * UsercmdGen.USERCMD_MSEC
+                com_frameTime = com_ticNumber * UsercmdGen.USERCMD_MSEC
                 //                System.out.println(System.nanoTime()+"com_frameTime=>"+com_frameTime);
                 idAsyncNetwork.RunFrame()
                 if (idAsyncNetwork.IsActive()) {
                     if (idAsyncNetwork.serverDedicated.GetInteger() != 1) {
-                        Session.Companion.session.GuiFrameEvents()
-                        Session.Companion.session.UpdateScreen(false)
+                        Session.session.GuiFrameEvents()
+                        Session.session.UpdateScreen(false)
                     }
                 } else {
-                    Session.Companion.session.Frame()
-                    idGuiModel.Companion.bla = true
+                    Session.session.Frame()
+                    idGuiModel.bla = true
 
                     // normal, in-sequence screen update
-                    Session.Companion.session.UpdateScreen(false)
+                    Session.session.UpdateScreen(false)
                     //                    int a = GuiModel.idGuiModel.bla1;
 //                    a = GuiModel.idGuiModel.bla2;
 //                    a = GuiModel.idGuiModel.bla3;
@@ -896,26 +898,26 @@ object Common {
                 }
 
                 // report timing information
-                if (Common.com_speeds.GetBool()) {
+                if (com_speeds.GetBool()) {
 //			 int	lastTime;
                     val nowTime = win_shared.Sys_Milliseconds()
                     val com_frameMsec = nowTime - lastTime
                     lastTime = nowTime
                     Printf(
                         "frame:%d all:%3d gfr:%3d rf:%3d bk:%3d\n",
-                        Common.com_frameNumber,
+                        com_frameNumber,
                         com_frameMsec,
-                        Common.time_gameFrame,
-                        Common.time_frontend,
-                        Common.time_backend
+                        time_gameFrame,
+                        time_frontend,
+                        time_backend
                     )
-                    Common.time_gameFrame = 0
-                    Common.time_gameDraw = 0
+                    time_gameFrame = 0
+                    time_gameDraw = 0
                 }
-                Common.com_frameNumber++
+                com_frameNumber++
 
                 // set idLib frame number for frame based memory dumps
-                idLib.frameNumber = Common.com_frameNumber
+                idLib.frameNumber = com_frameNumber
                 //
 //                // the FPU stack better be empty at this point or some bad code or compiler bug left values on the stack
 //                if (!Sys_FPU_StackIsEmpty()) {
@@ -931,12 +933,12 @@ object Common {
         override fun GUIFrame(execCmd: Boolean, network: Boolean) {
             win_main.Sys_GenerateEvents()
             EventLoop.eventLoop.RunEventLoop(execCmd) // and execute any commands
-            Common.com_frameTime = Common.com_ticNumber * UsercmdGen.USERCMD_MSEC
+            com_frameTime = com_ticNumber * UsercmdGen.USERCMD_MSEC
             if (network) {
                 idAsyncNetwork.RunFrame()
             }
-            Session.Companion.session.Frame()
-            Session.Companion.session.UpdateScreen(false)
+            Session.session.Frame()
+            Session.session.UpdateScreen(false)
         }
 
         /*
@@ -965,7 +967,7 @@ object Common {
             if (0 == lastTicMsec) {
                 lastTicMsec = msec - UsercmdGen.USERCMD_MSEC
             }
-            if (!Common.com_preciseTic.GetBool()) {
+            if (!com_preciseTic.GetBool()) {
                 // just run a single tic, even if the exact msec isn't precise
                 SingleAsyncTic()
                 return
@@ -973,7 +975,7 @@ object Common {
             var ticMsec = UsercmdGen.USERCMD_MSEC
 
             // the number of msec per tic can be varies with the timescale cvar
-            val timescale = Common.com_timescale.GetFloat()
+            val timescale = com_timescale.GetFloat()
             if (timescale != 1.0f) {
                 ticMsec /= timescale.toInt()
                 if (ticMsec < 1) {
@@ -1011,18 +1013,18 @@ object Common {
             i = 0
             while (i < com_numConsoleLines) {
 //                if ( strcmp( com_consoleLines[ i ].Argv( 0 ), "set" ) ) {//TODO:strcmp equals returns false.
-                if ("set" != com_consoleLines.get(i).Argv(0)) {
+                if ("set" != com_consoleLines[i].Argv(0)) {
                     i++
                     continue
                 }
-                s = com_consoleLines.get(i).Argv(1)
-                if (null == match || 0 == idStr.Companion.Icmp(s, match)) {
-                    CVarSystem.cvarSystem.SetCVarString(s, com_consoleLines.get(i).Argv(2))
+                s = com_consoleLines[i].Argv(1)
+                if (null == match || 0 == idStr.Icmp(s, match)) {
+                    CVarSystem.cvarSystem.SetCVarString(s, com_consoleLines[i].Argv(2))
                     if (once) {
                         // kill the line
                         var j = i + 1
                         while (j < com_numConsoleLines) {
-                            com_consoleLines.get(j - 1) = com_consoleLines.get(j)
+                            com_consoleLines[j - 1] = com_consoleLines[j]
                             j++
                         }
                         com_numConsoleLines--
@@ -1033,15 +1035,15 @@ object Common {
             }
         }
 
-        override fun InitTool(toolFlag_t: Int, dict: idDict?) {
+        override fun InitTool(toolFlag_t: Int, dict: idDict) {
             if (BuildDefines.ID_ALLOW_TOOLS) {
-                if (toolFlag_t and Common.EDITOR_SOUND != 0) {
+                if (toolFlag_t and EDITOR_SOUND != 0) {
                     edit_public.SoundEditorInit(dict)
-                } else if (toolFlag_t and Common.EDITOR_LIGHT != 0) {
+                } else if (toolFlag_t and EDITOR_LIGHT != 0) {
                     edit_public.LightEditorInit(dict)
-                } else if (toolFlag_t and Common.EDITOR_PARTICLE != 0) {
+                } else if (toolFlag_t and EDITOR_PARTICLE != 0) {
                     edit_public.ParticleEditorInit(dict)
-                } else if (toolFlag_t and Common.EDITOR_AF != 0) {
+                } else if (toolFlag_t and EDITOR_AF != 0) {
                     edit_public.AFEditorInit(dict)
                 }
             }
@@ -1055,18 +1057,18 @@ object Common {
          ==================
          */
         override fun ActivateTool(active: Boolean) {
-            Common.com_editorActive = active
+            com_editorActive = active
             win_input.Sys_GrabMouseCursor(!active)
         }
 
-        override fun WriteConfigToFile(filename: String?) {
+        override fun WriteConfigToFile(filename: String) {
             val f: idFile?
             f = FileSystem_h.fileSystem.OpenFileWrite(filename)
             if (null == f) {
                 Printf("Couldn't write %s.\n", filename)
                 return
             }
-            if (Common.ID_WRITE_VERSION) {
+            if (ID_WRITE_VERSION) {
 //                long ID_TIME_T;
                 val curTime: String
                 val runtag: String
@@ -1076,11 +1078,11 @@ object Common {
                 //                ID_TIME_T = time(null);
                 curTime = Date().toString()
                 runtag = String.format("%s - %s", CVarSystem.cvarSystem.GetCVarString("si_version"), curTime)
-                config_compressor.Init(compressed, true, 8)
-                config_compressor.WriteString(runtag) //
-                config_compressor.FinishCompress()
+                config_compressor!!.Init(compressed, true, 8)
+                config_compressor!!.WriteString(runtag) //
+                config_compressor!!.FinishCompress()
                 out.Encode( /*(const byte *)*/compressed.GetDataPtr(), compressed.Length())
-                f.Printf("// %s\n", *out.c_str())
+                f.Printf("// %s\n", out.c_str())
             }
             idKeyInput.WriteBindings(f)
             CVarSystem.cvarSystem.WriteFlaggedVariables(CVarSystem.CVAR_ARCHIVE, "seta", f)
@@ -1088,7 +1090,7 @@ object Common {
         }
 
         @Throws(idException::class)
-        override fun WriteFlaggedCVarsToFile(filename: String?, flags: Int, setCmd: String?) {
+        override fun WriteFlaggedCVarsToFile(filename: String, flags: Int, setCmd: String) {
             val f: idFile?
             f = FileSystem_h.fileSystem.OpenFileWrite(filename)
             if (null == f) {
@@ -1099,7 +1101,7 @@ object Common {
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
-        override fun BeginRedirect(buffer: StringBuilder?, buffersize: Int, flush: void_callback<String?>?) {
+        override fun BeginRedirect(buffer: StringBuilder?, buffersize: Int, flush: void_callback<String>?) {
             if (null == buffer || 0 == buffersize || null == flush) {
                 return
             }
@@ -1111,8 +1113,8 @@ object Common {
         }
 
         override fun EndRedirect() {
-            if (rd_flush != null && rd_buffer.length != 0) { // '\0') {
-                rd_flush.run(rd_buffer.toString())
+            if (rd_flush != null && rd_buffer!!.isNotEmpty()) { // '\0') {
+                rd_flush!!.run(rd_buffer.toString())
             }
             rd_buffer = null
             rd_buffersize = 0
@@ -1132,7 +1134,7 @@ object Common {
          A raw string should NEVER be passed as fmt, because of "%f" type crashers.
          ==================
          */
-        override fun Printf(fmt: String?, vararg args: Any?) {
+        override fun Printf(fmt: String, vararg args: Any) {
 //	va_list argptr;
 //	va_start( argptr, fmt );
             VPrintf(fmt, *args)
@@ -1146,8 +1148,8 @@ object Common {
          A raw string should NEVER be passed as fmt, because of "%f" type crashes.
          ==================
          */
-        override fun VPrintf(fmt: String?, vararg args: Any?) {
-            val msg = arrayOf<String?>(null) //new char(MAX_PRINT_MSG_SIZE);
+        override fun VPrintf(fmt: String, vararg args: Any) {
+            val msg = arrayOf("") //new char(MAX_PRINT_MSG_SIZE);
             val timeLength: Int
 
             // if the cvar system is not initialized
@@ -1157,9 +1159,9 @@ object Common {
 
             // optionally put a timestamp at the beginning of each print,
             // so we can see how long different init sections are taking
-            if (Common.com_timestampPrints.GetInteger() != 0) {
+            if (com_timestampPrints.GetInteger() != 0) {
                 var t = win_shared.Sys_Milliseconds()
-                if (Common.com_timestampPrints.GetInteger() == 1) {
+                if (com_timestampPrints.GetInteger() == 1) {
                     t /= 1000
                 }
                 //                sprintf(msg, "[%i]", t);
@@ -1170,19 +1172,19 @@ object Common {
             }
 
             // don't overflow
-            if (idStr.Companion.vsnPrintf(msg, Common.MAX_PRINT_MSG_SIZE - timeLength - 1, fmt, *args) < 0) {
+            if (idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE - timeLength - 1, fmt, *args) < 0) {
                 msg[0] = "\n"
                 //                msg[0][msg[0].length - 2] = '\n';
 //                msg[0][msg[0].length - 1] = '\0'; // avoid output garbling
                 win_main.Sys_Printf("idCommon::VPrintf: truncated to %d characters\n", msg[0].length /*- 1*/)
             }
             if (rd_buffer != null) {
-                if (msg[0].length + rd_buffer.length > rd_buffersize - 1) {
-                    rd_flush.run(rd_buffer.toString())
+                if (msg[0].length + rd_buffer!!.length > rd_buffersize - 1) {
+                    rd_flush!!.run(rd_buffer.toString())
                     //			*rd_buffer = 0;
                 }
                 //		strcat( rd_buffer, msg );
-                rd_buffer.append(msg[0])
+                rd_buffer!!.append(msg[0])
                 return
             }
 
@@ -1190,7 +1192,7 @@ object Common {
             Console.console.Print(msg[0])
 
             // remove any color codes
-            idStr.Companion.RemoveColors(msg[0])
+            idStr.RemoveColors(msg[0])
 
             // echo to dedicated console and early console
             win_main.Sys_Printf("%s", msg[0])
@@ -1205,13 +1207,13 @@ object Common {
 //#endif
 //#endif
             // logFile
-            if (Common.com_logFile.GetInteger() != 0 && !logFileFailed && FileSystem_h.fileSystem.IsInitialized()) {
+            if (com_logFile.GetInteger() != 0 && !logFileFailed && FileSystem_h.fileSystem.IsInitialized()) {
 //		static bool recursing;
                 if (null == logFile && !recursing) {
                     val newTime = Date().toString()
-                    val fileName = if (!Common.com_logFileName.GetString()
+                    val fileName = if (!com_logFileName.GetString()
                             .isEmpty()
-                    ) Common.com_logFileName.GetString() else "qconsole.log"
+                    ) com_logFileName.GetString() else "qconsole.log"
 
                     // fileSystem.OpenFileWrite can cause recursive prints into here
                     recursing = true
@@ -1221,16 +1223,16 @@ object Common {
                         FatalError("failed to open log file '%s'\n", fileName)
                     }
                     recursing = false
-                    if (Common.com_logFile.GetInteger() > 1) {
+                    if (com_logFile.GetInteger() > 1) {
                         // force it to not buffer so we get valid
                         // data even if we are crashing
-                        logFile.ForceFlush()
+                        logFile!!.ForceFlush()
                     }
                     Printf("log file '%s' opened on %s\n", fileName, newTime)
                 }
                 if (logFile != null) {
-                    logFile.WriteString(msg[0])
-                    logFile.Flush() // ForceFlush doesn't help a whole lot
+                    logFile!!.WriteString(msg[0])
+                    logFile!!.Flush() // ForceFlush doesn't help a whole lot
                 }
             }
 
@@ -1238,11 +1240,11 @@ object Common {
             if (com_errorEntered != TempDump.etoi(errorParm_t.ERP_FATAL)) {
                 // update the console if we are in a long-running command, like dmap
                 if (com_refreshOnPrint) {
-                    Session.Companion.session.UpdateScreen()
+                    Session.session.UpdateScreen()
                 }
 
                 // let session redraw the animated loading screen if necessary
-                Session.Companion.session.PacifierUpdate()
+                Session.session.PacifierUpdate()
             }
 
 //            if (_WIN32) {
@@ -1272,15 +1274,15 @@ object Common {
          prints message that only shows up if the "developer" cvar is set
          ==================
          */
-        override fun DPrintf(fmt: String?, vararg args: Any?) {
+        override fun DPrintf(fmt: String, vararg args: Any) {
 //	va_list		argptr;
-            val msg = arrayOf<String?>(null) //new char[MAX_PRINT_MSG_SIZE];
-            if (!CVarSystem.cvarSystem.IsInitialized() || !Common.com_developer.GetBool()) {
+            val msg = arrayOf<String>("") //new char[MAX_PRINT_MSG_SIZE];
+            if (!CVarSystem.cvarSystem.IsInitialized() || !com_developer.GetBool()) {
                 return  // don't confuse non-developers with techie stuff...
             }
 
 //	va_start( argptr, fmt );
-            idStr.Companion.vsnPrintf(msg, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = '\0';
 //
@@ -1298,12 +1300,12 @@ object Common {
          prints WARNING %s and adds the warning message to a queue to be printed later on
          ==================
          */
-        override fun Warning(fmt: String?, vararg args: Any?) {
+        override fun Warning(fmt: String, vararg args: Any) {
 //	va_list		argptr;
-            val msg = arrayOf<String?>(null) //[MAX_PRINT_MSG_SIZE];
+            val msg = arrayOf<String>("") //[MAX_PRINT_MSG_SIZE];
 
 //	va_start( argptr, fmt );
-            idStr.Companion.vsnPrintf(msg, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = 0;
             Printf(
@@ -1312,7 +1314,7 @@ object Common {
     
     """.trimIndent(), msg[0]
             )
-            if (warningList.size() < Common.MAX_WARNING_LIST) {
+            if (warningList.size() < MAX_WARNING_LIST) {
                 warningList.addUnique(msg[0])
             }
         }
@@ -1325,15 +1327,15 @@ object Common {
          ==================
          */
         @Throws(idException::class)
-        override fun DWarning(fmt: String?, vararg args: Any?) {
+        override fun DWarning(fmt: String, vararg args: Any) {
 //	va_list		argptr;
-            val msg = arrayOf<String?>(null) //new char[MAX_PRINT_MSG_SIZE];
-            if (!Common.com_developer.GetBool()) {
+            val msg = arrayOf<String>("") //new char[MAX_PRINT_MSG_SIZE];
+            if (!com_developer.GetBool()) {
                 return  // don't confuse non-developers with techie stuff...
             }
 
 //	va_start( argptr, fmt );
-            idStr.Companion.vsnPrintf(msg, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = '\0';
             Printf(
@@ -1359,26 +1361,26 @@ object Common {
                     """
     ${Str.S_COLOR_YELLOW}WARNING: ${Str.S_COLOR_RED}%s
     
-    """.trimIndent(), warningList.get(i)
+    """.trimIndent(), warningList[i]
                 )
                 i++
             }
             if (warningList.size() != 0) {
-                if (warningList.size() >= Common.MAX_WARNING_LIST) {
-                    Printf("more than %d warnings\n", Common.MAX_WARNING_LIST)
+                if (warningList.size() >= MAX_WARNING_LIST) {
+                    Printf("more than %d warnings\n", MAX_WARNING_LIST)
                 } else {
                     Printf("%d warnings\n", warningList.size())
                 }
             }
         }
 
-        override fun ClearWarnings(reason: String?) {
-            warningCaption = idStr(reason)
+        override fun ClearWarnings(reason: String) {
+            warningCaption.set(reason)
             warningList.clear()
         }
 
         @Throws(idException::class)
-        override fun Error(fmt: String?, vararg args: Any?) {
+        override fun Error(fmt: String, vararg args: Any) {
 //	va_list		argptr;
             val currentTime: Int
             var code = TempDump.etoi(errorParm_t.ERP_DROP)
@@ -1423,39 +1425,39 @@ object Common {
             com_errorEntered = code
 
 //	va_start (argptr,fmt);
-            idStr.Companion.vsnPrintf(errorMessage, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
             //	va_end (argptr);
 //            errorMessage[errorMessage[.length - 1] = '\0';//TODO:is this needed?
 
             // copy the error message to the clip board
-            win_main.Sys_SetClipboardData(errorMessage.get(0))
+            win_main.Sys_SetClipboardData(errorMessage[0])
 
             // add the message to the error list
-            errorList.addUnique(idStr(errorMessage.get(0)))
+            errorList.addUnique(idStr(errorMessage[0]))
 
             // Dont shut down the session for gui editor or debugger
-            if (0 == Common.com_editors and (Common.EDITOR_GUI or Common.EDITOR_DEBUGGER)) {
-                Session.Companion.session.Stop()
+            if (0 == com_editors and (EDITOR_GUI or EDITOR_DEBUGGER)) {
+                Session.session.Stop()
             }
             if (code == TempDump.etoi(errorParm_t.ERP_DISCONNECT)) {
                 com_errorEntered = 0
-                throw idException(errorMessage.get(0))
+                throw idException(errorMessage[0])
                 // The gui editor doesnt want thing to com_error so it handles exceptions instead
-            } else if (Common.com_editors and (Common.EDITOR_GUI or Common.EDITOR_DEBUGGER) != 0) {
+            } else if (com_editors and (EDITOR_GUI or EDITOR_DEBUGGER) != 0) {
                 com_errorEntered = 0
-                throw idException(errorMessage.get(0))
+                throw idException(errorMessage[0])
             } else if (code == TempDump.etoi(errorParm_t.ERP_DROP)) {
-                Printf("********************\nERROR: %s\n********************\n", errorMessage.get(0))
+                Printf("********************\nERROR: %s\n********************\n", errorMessage[0])
                 com_errorEntered = 0
-                throw idException(errorMessage.get(0))
+                throw idException(errorMessage[0])
             } else {
-                Printf("********************\nERROR: %s\n********************\n", errorMessage.get(0))
+                Printf("********************\nERROR: %s\n********************\n", errorMessage[0])
             }
             if (CVarSystem.cvarSystem.GetCVarBool("r_fullscreen")) {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "vid_restart partial windowed\n")
             }
             Shutdown()
-            win_main.Sys_Error("%s", errorMessage.get(0))
+            win_main.Sys_Error("%s", errorMessage[0])
         }
 
         /*
@@ -1466,7 +1468,7 @@ object Common {
          ==================
          */
         @Throws(idException::class)
-        override fun FatalError(fmt: String?, vararg args: Any?) {
+        override fun FatalError(fmt: String, vararg args: Any) {
 //	va_list		argptr;
 
             // if we got a recursive error, make it fatal
@@ -1476,13 +1478,13 @@ object Common {
                 // process immediately, which will prevent a
                 // full screen rendering window covering the
                 // error dialog
-                win_main.Sys_Printf("FATAL: recursed fatal error:\n%s\n", errorMessage.get(0))
+                win_main.Sys_Printf("FATAL: recursed fatal error:\n%s\n", errorMessage[0])
 
 //		va_start( argptr, fmt );
-                idStr.Companion.vsnPrintf(errorMessage, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+                idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
                 //		va_end( argptr );
 //                errorMessage[errorMessage.length - 1] = '\0';//TODO:useless
-                win_main.Sys_Printf("%s\n", errorMessage.get(0))
+                win_main.Sys_Printf("%s\n", errorMessage[0])
 
                 // write the console to a log file?
                 win_main.Sys_Quit()
@@ -1490,15 +1492,15 @@ object Common {
             com_errorEntered = TempDump.etoi(errorParm_t.ERP_FATAL)
 
 //	va_start( argptr, fmt );
-            idStr.Companion.vsnPrintf(errorMessage, Common.MAX_PRINT_MSG_SIZE, fmt, *args)
+            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
             //	va_end( argptr );
 //            errorMessage[errorMessage.length - 1] = '\0';
             if (CVarSystem.cvarSystem.GetCVarBool("r_fullscreen")) {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "vid_restart partial windowed\n")
             }
-            win_main.Sys_SetFatalError(errorMessage.get(0))
+            win_main.Sys_SetFatalError(errorMessage[0])
             Shutdown()
-            win_main.Sys_Error("%s", errorMessage.get(0))
+            win_main.Sys_Error("%s", errorMessage[0])
         }
 
         override fun GetLanguageDict(): idLangDict {
@@ -1514,7 +1516,7 @@ object Common {
          Returns the key bound to the command
          ===============
          */
-        override fun KeysFromBinding(bind: String?): String? {
+        override fun KeysFromBinding(bind: String): String {
             return idKeyInput.KeysFromBinding(bind)
         }
 
@@ -1524,8 +1526,8 @@ object Common {
          Returns the binding bound to key
          ===============
          */
-        override fun BindingFromKey(key: String?): String? {
-            return idKeyInput.BindingFromKey(key)
+        override fun BindingFromKey(key: String): String {
+            return idKeyInput.BindingFromKey(key)!!
         }
 
         //
@@ -1585,14 +1587,14 @@ object Common {
 
             // initialize string database right off so we can use it for loading messages
             InitLanguageDict()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04344"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04344"))
 
             // load the font, etc
             Console.console.LoadGraphics()
 
             // init journalling, etc
             EventLoop.eventLoop.Init()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04345"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04345"))
 
             // exec the startup scripts
             CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "exec editor.cfg\n")
@@ -1626,11 +1628,11 @@ object Common {
 
             // init the user command input code
             UsercmdGen.usercmdGen.Init()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04346"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04346"))
 
             // start the sound system, but don't do any hardware operations yet
             snd_system.soundSystem.Init()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04347"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04347"))
 
             // init async network
             idAsyncNetwork.Init()
@@ -1643,25 +1645,25 @@ object Common {
                     CVarSystem.cvarSystem.SetCVarBool("s_noSound", true)
                 } else {
                     // init OpenGL, which will open a window and connect sound and input hardware
-                    PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04348"))
+                    PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04348"))
                     InitRenderSystem()
                 }
             }
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04349"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04349"))
 
             // initialize the user interfaces
             UserInterface.uiManager.Init()
 
             // startup the script debugger
             // DebuggerServerInit();
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04350"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04350"))
 
             // load the game dll
             LoadGameDLL()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04351"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04351"))
 
             // init the session
-            Session.Companion.session.Init()
+            Session.session.Init()
 
             // have to do this twice.. first one sets the correct r_mode for the renderer init
             // this time around the backend is all setup correct.. a bit fugly but do not want
@@ -1687,7 +1689,7 @@ object Common {
             idAsyncNetwork.client.Shutdown()
 
             // shut down the session
-            Session.Companion.session.Shutdown()
+            Session.session.Shutdown()
 
             // shut down the user interfaces
             UserInterface.uiManager.Shutdown()
@@ -1762,11 +1764,11 @@ object Common {
         }
 
         @Throws(idException::class)
-        fun LocalizeGui(fileName: String?, langDict: idLangDict?) {
+        fun LocalizeGui(fileName: String, langDict: idLangDict) {
             val out = idStr()
             val ws = idStr()
             var work: idStr
-            val buffer = arrayOf<ByteBuffer?>(null)
+            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
             out.Empty()
             var k: Int
             var ch: Char
@@ -1778,9 +1780,9 @@ object Common {
             if (FileSystem_h.fileSystem.ReadFile(fileName, buffer) > 0) {
                 src.LoadMemory(TempDump.bbtocb(buffer[0]), TempDump.bbtocb(buffer[0]).capacity(), fileName)
                 if (src.IsLoaded()) {
-                    val outFile = FileSystem_h.fileSystem.OpenFileWrite(fileName)
-                    Common.common.Printf("Processing %s\n", fileName)
-                    Session.Companion.session.UpdateScreen()
+                    val outFile = FileSystem_h.fileSystem.OpenFileWrite(fileName)!!
+                    common.Printf("Processing %s\n", fileName)
+                    Session.session.UpdateScreen()
                     val token = idToken()
                     while (src.ReadToken(token)) {
                         src.GetLastWhiteSpace(ws)
@@ -1805,7 +1807,7 @@ object Common {
                                 out.Append("\"")
                                 k = 0
                                 while (k < token.Length()) {
-                                    ch = token.get(k)
+                                    ch = token[k]
                                     if (ch == '\t') {
                                         out.Append(slash)
                                         out.Append(tab)
@@ -1829,7 +1831,7 @@ object Common {
                                 out.Append("\"")
                                 k = 0
                                 while (k < token.Length()) {
-                                    ch = token.get(k)
+                                    ch = token[k]
                                     if (ch == '\t') {
                                         out.Append(slash)
                                         out.Append(tab)
@@ -1853,15 +1855,15 @@ object Common {
         }
 
         @Throws(idException::class)
-        fun LocalizeMapData(fileName: String?, langDict: idLangDict?) {
-            val buffer = arrayOf<ByteBuffer?>(null)
+        fun LocalizeMapData(fileName: String, langDict: idLangDict) {
+            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
             val src =
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
-            Common.common.SetRefreshOnPrint(true)
+            common.SetRefreshOnPrint(true)
             if (FileSystem_h.fileSystem.ReadFile(fileName, buffer) > 0) {
                 src.LoadMemory(TempDump.bbtocb(buffer[0]), TempDump.bbtocb(buffer[0]).capacity(), fileName)
                 if (src.IsLoaded()) {
-                    Common.common.Printf("Processing %s\n", fileName)
+                    common.Printf("Processing %s\n", fileName)
                     var mapFileName: idStr?
                     val token = idToken()
                     val token2 = idToken()
@@ -1871,27 +1873,27 @@ object Common {
                         replaceArgs.Clear()
                         src.ExpectTokenString("{")
                         while (src.ReadToken(token)) {
-                            if (token == "}") {
+                            if (token.toString() == "}") {
                                 break
                             }
                             if (src.ReadToken(token2)) {
-                                if (token2 == "}") {
+                                if (token2.toString() == "}") {
                                     break
                                 }
                                 replaceArgs.AddKeyVal(token.toString(), token2.toString())
                             }
                         }
-                        Common.common.Printf("  localizing map %s...\n", mapFileName)
+                        common.Printf("  localizing map %s...\n", mapFileName)
                         LocalizeSpecificMapData(mapFileName.toString(), langDict, replaceArgs)
                     }
                 }
                 FileSystem_h.fileSystem.FreeFile(buffer)
             }
-            Common.common.SetRefreshOnPrint(false)
+            common.SetRefreshOnPrint(false)
         }
 
         @Throws(idException::class)
-        fun LocalizeSpecificMapData(fileName: String?, langDict: idLangDict?, replaceArgs: idLangDict?) {
+        fun LocalizeSpecificMapData(fileName: String, langDict: idLangDict, replaceArgs: idLangDict) {
 //	idStr out, ws, work;
             val map = idMapFile()
             if (map.Parse(fileName, false, false)) {
@@ -1917,7 +1919,7 @@ object Common {
 
         @Throws(idException::class)
         fun SetMachineSpec() {
-            val cpuid_t = win_main.Sys_GetProcessorId().toLong()
+            val cpuid_t = win_main.Sys_GetProcessorId()
             val ghz = win_cpu.Sys_ClockTicksPerSecond() * 0.000000001f
             val cores = Runtime.getRuntime().availableProcessors()
             val vidRam = 512 // Sys_GetVideoRam();
@@ -1934,20 +1936,22 @@ object Common {
 """, cores, ghz, sysRam, vidRam,
                 if (oldCard[0]) "a less than optimal video architecture" else "an optimal video architecture"
             )
+            val cpuGhz = if (cpuid_t and sys_public.CPUID_AMD != 0) 1.9 else 2.19
+            val cpuGhzPart2 = if (cpuid_t and sys_public.CPUID_AMD != 0) 1.1 else 1.25
             if (ghz >= 2.75f && vidRam >= 512 && sysRam >= 1024 && !oldCard[0]) { //TODO:try to make this shit work.
                 Printf("This system qualifies for Ultra quality!\n")
-                Common.com_machineSpec.SetInteger(3)
-            } else if (ghz >= if (cpuid_t and sys_public.CPUID_AMD != 0L) 1.9f else 2.19f && vidRam >= 256 && sysRam >= 512 && !oldCard[0]) {
+                com_machineSpec.SetInteger(3)
+            } else if (ghz >= cpuGhz && vidRam >= 256 && sysRam >= 512 && !oldCard[0]) {
                 Printf("This system qualifies for High quality!\n")
-                Common.com_machineSpec.SetInteger(2)
-            } else if (ghz >= if (cpuid_t and sys_public.CPUID_AMD != 0L) 1.1f else 1.25f && vidRam >= 128 && sysRam >= 384) {
+                com_machineSpec.SetInteger(2)
+            } else if (ghz >= cpuGhzPart2 && vidRam >= 128 && sysRam >= 384) {
                 Printf("This system qualifies for Medium quality.\n")
-                Common.com_machineSpec.SetInteger(1)
+                com_machineSpec.SetInteger(1)
             } else {
                 Printf("This system qualifies for Low quality.\n")
-                Common.com_machineSpec.SetInteger(0)
+                com_machineSpec.SetInteger(0)
             }
-            Common.com_videoRam.SetInteger(vidRam)
+            com_videoRam.SetInteger(vidRam)
         }
 
         @Throws(idException::class)
@@ -2000,49 +2004,49 @@ object Common {
                 // compilers
                 CmdSystem.cmdSystem.AddCommand(
                     "dmap",
-                    Dmap_f.Companion.getInstance(),
+                    Dmap_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "compiles a map",
-                    ArgCompletion_MapName.Companion.getInstance()
+                    ArgCompletion_MapName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "renderbump",
-                    RenderBump_f.Companion.getInstance(),
+                    RenderBump_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "renders a bump map",
-                    ArgCompletion_ModelName.Companion.getInstance()
+                    ArgCompletion_ModelName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "renderbumpFlat",
-                    RenderBumpFlat_f.Companion.getInstance(),
+                    RenderBumpFlat_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "renders a flat bump map",
-                    ArgCompletion_ModelName.Companion.getInstance()
+                    ArgCompletion_ModelName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "runAAS",
-                    RunAAS_f.Companion.getInstance(),
+                    RunAAS_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "compiles an AAS file for a map",
-                    ArgCompletion_MapName.Companion.getInstance()
+                    ArgCompletion_MapName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "runAASDir",
-                    RunAASDir_f.Companion.getInstance(),
+                    RunAASDir_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "compiles AAS files for all maps in a folder",
-                    ArgCompletion_MapName.Companion.getInstance()
+                    ArgCompletion_MapName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "runReach",
-                    RunReach_f.Companion.getInstance(),
+                    RunReach_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "calculates reachability for an AAS file",
-                    ArgCompletion_MapName.Companion.getInstance()
+                    ArgCompletion_MapName.getInstance()
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "roq",
-                    RoQFileEncode_f.Companion.getInstance(),
+                    RoQFileEncode_f.getInstance(),
                     CmdSystem.CMD_FL_TOOL,
                     "encodes a roq file"
                 )
@@ -2120,7 +2124,7 @@ object Common {
             }
             CmdSystem.cmdSystem.AddCommand(
                 "printMemInfo",
-                Common.PrintMemInfo_f.Companion.getInstance(),
+                PrintMemInfo_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM,
                 "prints memory debugging data"
             )
@@ -2130,31 +2134,31 @@ object Common {
 //            cmdSystem.AddCommand("memoryDumpCompressed", Mem_DumpCompressed_f.getInstance(), CMD_FL_SYSTEM | CMD_FL_CHEAT, "creates a compressed memory dump");
             CmdSystem.cmdSystem.AddCommand(
                 "showStringMemory",
-                idStr.ShowMemoryUsage_f.Companion.getInstance(),
+                idStr.ShowMemoryUsage_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM,
                 "shows memory used by strings"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "showDictMemory",
-                idDict.ShowMemoryUsage_f.Companion.getInstance(),
+                idDict.ShowMemoryUsage_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM,
                 "shows memory used by dictionaries"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listDictKeys",
-                ListKeys_f.Companion.getInstance(),
+                ListKeys_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM or CmdSystem.CMD_FL_CHEAT,
                 "lists all keys used by dictionaries"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listDictValues",
-                ListValues_f.Companion.getInstance(),
+                ListValues_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM or CmdSystem.CMD_FL_CHEAT,
                 "lists all values used by dictionaries"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testSIMD",
-                Test_f.Companion.getInstance(),
+                Test_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM or CmdSystem.CMD_FL_CHEAT,
                 "test SIMD code"
             )
@@ -2212,16 +2216,16 @@ object Common {
         }
 
         private fun InitRenderSystem() {
-            if (Common.com_skipRenderer.GetBool()) {
+            if (com_skipRenderer.GetBool()) {
                 return
             }
             RenderSystem.renderSystem.InitOpenGL()
-            PrintLoadingMessage(Common.common.GetLanguageDict().GetString("#str_04343"))
+            PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04343"))
         }
 
         private fun InitSIMD() {
-            idSIMD.InitProcessor("doom", Common.com_forceGenericSIMD.GetBool())
-            Common.com_forceGenericSIMD.ClearModified()
+            idSIMD.InitProcessor("doom", com_forceGenericSIMD.GetBool())
+            com_forceGenericSIMD.ClearModified()
         }
 
         /*
@@ -2243,23 +2247,23 @@ object Common {
             // quote every token, so args with semicolons can work
             i = 0
             while (i < com_numConsoleLines) {
-                if (0 == com_consoleLines.get(i).Argc()) {
+                if (0 == com_consoleLines[i].Argc()) {
                     i++
                     continue
                 }
 
                 // set commands won't override menu startup
-                if (idStr.Companion.Icmpn(com_consoleLines.get(i).Argv(0), "set", 3) != 0) {
+                if (idStr.Icmpn(com_consoleLines[i].Argv(0), "set", 3) != 0) {
                     added = true
                 }
                 // directly as tokenized so nothing gets screwed
-                CmdSystem.cmdSystem.BufferCommandArgs(cmdExecution_t.CMD_EXEC_APPEND, com_consoleLines.get(i))
+                CmdSystem.cmdSystem.BufferCommandArgs(cmdExecution_t.CMD_EXEC_APPEND, com_consoleLines[i])
                 i++
             }
             return added
         }
 
-        private fun ParseCommandLine(argc: Int, argv: Array<String?>?) {
+        private fun ParseCommandLine(argc: Int, argv: Array<String>) {
             var i: Int
             val current_count: Int
             com_numConsoleLines = 0
@@ -2267,14 +2271,14 @@ object Common {
             // API says no program path
             i = 0
             while (i < argc) {
-                if (argv.get(i).get(0) == '+') {
+                if (argv[i][0] == '+') {
                     com_numConsoleLines++
-                    com_consoleLines.get(com_numConsoleLines - 1).AppendArg(argv.get(i).substring(1))
+                    com_consoleLines[com_numConsoleLines - 1].AppendArg(argv[i].substring(1))
                 } else {
                     if (0 == com_numConsoleLines) {
                         com_numConsoleLines++
                     }
-                    com_consoleLines.get(com_numConsoleLines - 1).AppendArg(argv.get(i))
+                    com_consoleLines[com_numConsoleLines - 1].AppendArg(argv[i])
                 }
                 i++
             }
@@ -2296,10 +2300,10 @@ object Common {
             var i: Int
             i = 0
             while (i < com_numConsoleLines) {
-                if (0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "safe")
-                    || 0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "cvar_restart")
+                if (0 == idStr.Icmp(com_consoleLines[i].Argv(0), "safe")
+                    || 0 == idStr.Icmp(com_consoleLines[i].Argv(0), "cvar_restart")
                 ) {
-                    com_consoleLines.get(i).Clear()
+                    com_consoleLines[i].Clear()
                     return true
                 }
                 i++
@@ -2319,32 +2323,32 @@ object Common {
             var i: Int
             i = 0
             while (i < com_numConsoleLines) {
-                if (0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "guieditor")) {
-                    Common.com_editors = Common.com_editors or Common.EDITOR_GUI
-                } else if (0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "debugger")) {
-                    Common.com_editors = Common.com_editors or Common.EDITOR_DEBUGGER
-                } else if (0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "editor")) {
-                    Common.com_editors = Common.com_editors or Common.EDITOR_RADIANT
+                if (0 == idStr.Icmp(com_consoleLines[i].Argv(0), "guieditor")) {
+                    com_editors = com_editors or EDITOR_GUI
+                } else if (0 == idStr.Icmp(com_consoleLines[i].Argv(0), "debugger")) {
+                    com_editors = com_editors or EDITOR_DEBUGGER
+                } else if (0 == idStr.Icmp(com_consoleLines[i].Argv(0), "editor")) {
+                    com_editors = com_editors or EDITOR_RADIANT
                 } // Nerve: Add support for the material editor
-                else if (0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "materialEditor")) {
-                    Common.com_editors = Common.com_editors or Common.EDITOR_MATERIAL
+                else if (0 == idStr.Icmp(com_consoleLines[i].Argv(0), "materialEditor")) {
+                    com_editors = com_editors or EDITOR_MATERIAL
                 }
-                if (0 == idStr.Companion.Icmp(
-                        com_consoleLines.get(i).Argv(0),
+                if (0 == idStr.Icmp(
+                        com_consoleLines[i].Argv(0),
                         "renderbump"
-                    ) || 0 == idStr.Companion.Icmp(
-                        com_consoleLines.get(i).Argv(0),
+                    ) || 0 == idStr.Icmp(
+                        com_consoleLines[i].Argv(0),
                         "editor"
-                    ) || 0 == idStr.Companion.Icmp(
-                        com_consoleLines.get(i).Argv(0),
+                    ) || 0 == idStr.Icmp(
+                        com_consoleLines[i].Argv(0),
                         "guieditor"
-                    ) || 0 == idStr.Companion.Icmp(
-                        com_consoleLines.get(i).Argv(0),
+                    ) || 0 == idStr.Icmp(
+                        com_consoleLines[i].Argv(0),
                         "debugger"
-                    ) || 0 == idStr.Companion.Icmp(
-                        com_consoleLines.get(i).Argv(0),
+                    ) || 0 == idStr.Icmp(
+                        com_consoleLines[i].Argv(0),
                         "dmap"
-                    ) || 0 == idStr.Companion.Icmp(com_consoleLines.get(i).Argv(0), "materialEditor")
+                    ) || 0 == idStr.Icmp(com_consoleLines[i].Argv(0), "materialEditor")
                 ) {
                     CVarSystem.cvarSystem.SetCVarBool("r_fullscreen", false)
                     return
@@ -2355,7 +2359,7 @@ object Common {
 
         private fun CloseLogFile() {
             if (logFile != null) {
-                Common.com_logFile.SetBool(false) // make sure no further VPrintf attempts to open the log file again
+                com_logFile.SetBool(false) // make sure no further VPrintf attempts to open the log file again
                 FileSystem_h.fileSystem.CloseFile(logFile)
                 logFile = null
             }
@@ -2380,13 +2384,13 @@ object Common {
             CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_ARCHIVE)
 
             // disable printing out the "Writing to:" message
-            val developer = Common.com_developer.GetBool()
-            Common.com_developer.SetBool(false)
+            val developer = com_developer.GetBool()
+            com_developer.SetBool(false)
             WriteConfigToFile(Licensee.CONFIG_FILE)
-            Session.Companion.session.WriteCDKey()
+            Session.session.WriteCDKey()
 
             // restore the developer cvar
-            Common.com_developer.SetBool(developer)
+            com_developer.SetBool(developer)
         }
 
         private fun DumpWarnings() {
@@ -2402,12 +2406,12 @@ object Common {
                 warningList.sort()
                 i = 0
                 while (i < warningList.size()) {
-                    warningList.get(i).RemoveColors()
-                    warningFile.Printf("WARNING: %s\n", warningList.get(i))
+                    warningList[i].RemoveColors()
+                    warningFile.Printf("WARNING: %s\n", warningList[i])
                     i++
                 }
-                if (warningList.size() >= Common.MAX_WARNING_LIST) {
-                    warningFile.Printf("\nmore than %d warnings!\n", Common.MAX_WARNING_LIST)
+                if (warningList.size() >= MAX_WARNING_LIST) {
+                    warningFile.Printf("\nmore than %d warnings!\n", MAX_WARNING_LIST)
                 } else {
                     warningFile.Printf("\n%d warnings.\n", warningList.size())
                 }
@@ -2415,8 +2419,8 @@ object Common {
                 errorList.sort()
                 i = 0
                 while (i < errorList.size()) {
-                    errorList.get(i).RemoveColors()
-                    warningFile.Printf("ERROR: %s", errorList.get(i))
+                    errorList[i].RemoveColors()
+                    warningFile.Printf("ERROR: %s", errorList[i])
                     i++
                 }
                 warningFile.ForceFlush()
@@ -2440,21 +2444,21 @@ object Common {
             Sys_EnterCriticalSection()
             try {
                 val stat =
-                    com_asyncStats.get(Common.com_ticNumber and MAX_ASYNC_STATS - 1) //memset( stat, 0, sizeof( *stat ) );
+                    com_asyncStats[com_ticNumber and MAX_ASYNC_STATS - 1] //memset( stat, 0, sizeof( *stat ) );
                 stat.milliseconds = win_shared.Sys_Milliseconds()
                 stat.deltaMsec =
-                    stat.milliseconds - com_asyncStats.get(Common.com_ticNumber - 1 and MAX_ASYNC_STATS - 1).milliseconds
-                if (UsercmdGen.usercmdGen != null && Common.com_asyncInput.GetBool()) {
+                    stat.milliseconds - com_asyncStats[com_ticNumber - 1 and MAX_ASYNC_STATS - 1].milliseconds
+                if (UsercmdGen.usercmdGen != null && com_asyncInput.GetBool()) {
                     UsercmdGen.usercmdGen.UsercmdInterrupt()
                 }
-                when (Common.com_asyncSound.GetInteger()) {
+                when (com_asyncSound.GetInteger()) {
                     1 -> snd_system.soundSystem.AsyncUpdate(stat.milliseconds)
                     3 -> snd_system.soundSystem.AsyncUpdateWrite(stat.milliseconds)
                 }
 
                 // we update com_ticNumber after all the background tasks
                 // have completed their work for this tic
-                Common.com_ticNumber++
+                com_ticNumber++
                 //                System.out.println(System.nanoTime()+"com_ticNumber=" + com_ticNumber);
                 stat.timeConsumed = win_shared.Sys_Milliseconds() - stat.milliseconds
             } finally {
@@ -2573,14 +2577,14 @@ object Common {
             RenderSystem.renderSystem.EndFrame(null, null)
         }
 
-        private fun FilterLangList(list: idStrList?, lang: idStr?) {
-            var temp: idStr?
+        private fun FilterLangList(list: idStrList, lang: idStr) {
+            var temp: idStr
             var i = 0
             while (i < list.size()) {
                 temp = list.get(i)
                 temp = temp.Right(temp.Length() - "strings/".length)
                 temp = temp.Left(lang.Length())
-                if (idStr.Companion.Icmp(temp, lang) != 0) {
+                if (idStr.Icmp(temp, lang) != 0) {
                     list.removeAtIndex(i)
                     i--
                 }
@@ -2615,19 +2619,12 @@ object Common {
         init {
 
 //	strcpy( errorMessage, "" );
-            warningList = idStrList()
             errorList = idStrList()
             languageDict = idLangDict()
             gameDLL = 0
-            com_asyncStats = arrayOfNulls<asyncStats_t?>(MAX_ASYNC_STATS)
-            for (c in com_asyncStats.indices) {
-                com_asyncStats[c] = asyncStats_t()
-            }
-            com_consoleLines = arrayOfNulls<CmdArgs.idCmdArgs?>(MAX_CONSOLE_LINES)
-            for (c in com_consoleLines.indices) {
-                com_consoleLines.get(c) = CmdArgs.idCmdArgs()
-            }
-            if (Common.ID_WRITE_VERSION) {
+            com_asyncStats = Array(MAX_ASYNC_STATS) { asyncStats_t() }
+            com_consoleLines = Array(MAX_CONSOLE_LINES) { CmdArgs.idCmdArgs() }
+            if (ID_WRITE_VERSION) {
                 config_compressor = null
             }
         }
@@ -2641,13 +2638,13 @@ object Common {
      ==================
      */
     internal class Com_Editor_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             edit_public.RadiantInit()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_Editor_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2660,17 +2657,17 @@ object Common {
      */
     internal class Com_ScriptDebugger_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             // Make sure it wasnt on the command line
-            if (0 == Common.com_editors and Common.EDITOR_DEBUGGER) {
-                Common.common.Printf("Script debugger is currently disabled\n")
+            if (0 == com_editors and EDITOR_DEBUGGER) {
+                common.Printf("Script debugger is currently disabled\n")
                 // DebuggerClientLaunch();
             }
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_ScriptDebugger_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2682,13 +2679,13 @@ object Common {
      =============
      */
     internal class Com_EditGUIs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             edit_public.GUIEditorInit()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditGUIs_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2700,7 +2697,7 @@ object Common {
      =============
      */
     internal class Com_MaterialEditor_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             // Turn off sounds
             snd_system.soundSystem.SetMute(true)
             edit_public.MaterialEditorInit()
@@ -2708,7 +2705,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_MaterialEditor_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2723,18 +2720,18 @@ object Common {
      */
     internal class PrintMemInfo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val mi = MemInfo_t() //memset( &mi, 0, sizeof( mi ) );
-            mi.filebase = idStr(Session.Companion.session.GetCurrentMapName())
+            mi.filebase.set(Session.session.GetCurrentMapName())
             RenderSystem.renderSystem.PrintMemInfo(mi) // textures and models
             snd_system.soundSystem.PrintMemInfo(mi) // sounds
-            Common.common.Printf(" Used image memory: %s bytes\n", idStr.Companion.FormatNumber(mi.imageAssetsTotal))
+            common.Printf(" Used image memory: %s bytes\n", idStr.FormatNumber(mi.imageAssetsTotal))
             mi.assetTotals += mi.imageAssetsTotal
-            Common.common.Printf(" Used model memory: %s bytes\n", idStr.Companion.FormatNumber(mi.modelAssetsTotal))
+            common.Printf(" Used model memory: %s bytes\n", idStr.FormatNumber(mi.modelAssetsTotal))
             mi.assetTotals += mi.modelAssetsTotal
-            Common.common.Printf(" Used sound memory: %s bytes\n", idStr.Companion.FormatNumber(mi.soundAssetsTotal))
+            common.Printf(" Used sound memory: %s bytes\n", idStr.FormatNumber(mi.soundAssetsTotal))
             mi.assetTotals += mi.soundAssetsTotal
-            Common.common.Printf(" Used asset memory: %s bytes\n", idStr.Companion.FormatNumber(mi.assetTotals))
+            common.Printf(" Used asset memory: %s bytes\n", idStr.FormatNumber(mi.assetTotals))
 
             // write overview file
             val f: idFile?
@@ -2744,19 +2741,19 @@ object Common {
             }
             f.Printf(
                 "total(%s ) image(%s ) model(%s ) sound(%s ): %s\n",
-                idStr.Companion.FormatNumber(mi.assetTotals),
-                idStr.Companion.FormatNumber(mi.imageAssetsTotal),
-                idStr.Companion.FormatNumber(mi.modelAssetsTotal),
-                idStr.Companion.FormatNumber(mi.soundAssetsTotal),
+                idStr.FormatNumber(mi.assetTotals),
+                idStr.FormatNumber(mi.imageAssetsTotal),
+                idStr.FormatNumber(mi.modelAssetsTotal),
+                idStr.FormatNumber(mi.soundAssetsTotal),
                 mi.filebase
             )
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
         companion object {
-            private val instance: cmdFunction_t = Common.PrintMemInfo_f()
-            fun getInstance(): cmdFunction_t? {
-                return Common.PrintMemInfo_f.Companion.instance
+            private val instance: cmdFunction_t = PrintMemInfo_f()
+            fun getInstance(): cmdFunction_t {
+                return instance
             }
         }
     }
@@ -2767,14 +2764,14 @@ object Common {
      ==================
      */
     internal class Com_EditLights_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.LightEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.LightEditorInit(idDict())
             CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 1)
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditLights_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2786,14 +2783,14 @@ object Common {
      ==================
      */
     internal class Com_EditSounds_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.SoundEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.SoundEditorInit(idDict())
             CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 2)
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditSounds_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2805,13 +2802,13 @@ object Common {
      ==================
      */
     internal class Com_EditDecls_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.DeclBrowserInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.DeclBrowserInit(idDict())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditDecls_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2823,13 +2820,13 @@ object Common {
      ==================
      */
     internal class Com_EditAFs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.AFEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.AFEditorInit(idDict())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditAFs_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2841,13 +2838,13 @@ object Common {
      ==================
      */
     internal class Com_EditParticles_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.ParticleEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.ParticleEditorInit(idDict())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditParticles_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2859,13 +2856,13 @@ object Common {
      ==================
      */
     internal class Com_EditScripts_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.ScriptEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.ScriptEditorInit(idDict())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditScripts_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2877,13 +2874,13 @@ object Common {
      ==================
      */
     internal class Com_EditPDAs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            edit_public.PDAEditorInit(null)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            edit_public.PDAEditorInit(idDict())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_EditPDAs_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2898,21 +2895,21 @@ object Common {
      */
     internal class Com_Error_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            if (!Common.com_developer.GetBool()) {
-                Common.commonLocal.Printf("error may only be used in developer mode\n")
+        override fun run(args: CmdArgs.idCmdArgs) {
+            if (!com_developer.GetBool()) {
+                commonLocal.Printf("error may only be used in developer mode\n")
                 return
             }
             if (args.Argc() > 1) {
-                Common.commonLocal.FatalError("Testing fatal error")
+                commonLocal.FatalError("Testing fatal error")
             } else {
-                Common.commonLocal.Error("Testing drop error")
+                commonLocal.Error("Testing drop error")
             }
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_Error_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2927,16 +2924,16 @@ object Common {
      */
     internal class Com_Freeze_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val s: Float
             val start: Int
             var now: Int
             if (args.Argc() != 2) {
-                Common.commonLocal.Printf("freeze <seconds>\n")
+                commonLocal.Printf("freeze <seconds>\n")
                 return
             }
-            if (!Common.com_developer.GetBool()) {
-                Common.commonLocal.Printf("freeze may only be used in developer mode\n")
+            if (!com_developer.GetBool()) {
+                commonLocal.Printf("freeze may only be used in developer mode\n")
                 return
             }
             s = args.Argv(1).toInt().toFloat()
@@ -2951,7 +2948,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_Freeze_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2966,9 +2963,9 @@ object Common {
      */
     internal class Com_Crash_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            if (!Common.com_developer.GetBool()) {
-                Common.commonLocal.Printf("crash may only be used in developer mode\n")
+        override fun run(args: CmdArgs.idCmdArgs) {
+            if (!com_developer.GetBool()) {
+                commonLocal.Printf("crash may only be used in developer mode\n")
                 //                return;
             }
 
@@ -2977,7 +2974,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_Crash_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2989,13 +2986,13 @@ object Common {
      =================
      */
     internal class Com_Quit_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Common.commonLocal.Quit()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            commonLocal.Quit()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_Quit_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3010,21 +3007,21 @@ object Common {
      */
     internal class Com_WriteConfig_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val filename: idStr
             if (args.Argc() != 2) {
-                Common.commonLocal.Printf("Usage: writeconfig <filename>\n")
+                commonLocal.Printf("Usage: writeconfig <filename>\n")
                 return
             }
             filename = idStr(args.Argv(1))
             filename.DefaultFileExtension(".cfg")
-            Common.commonLocal.Printf("Writing %s.\n", filename)
-            Common.commonLocal.WriteConfigToFile(filename.toString())
+            commonLocal.Printf("Writing %s.\n", filename)
+            commonLocal.WriteConfigToFile(filename.toString())
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_WriteConfig_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3037,13 +3034,13 @@ object Common {
      */
     internal class Com_SetMachineSpec_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Common.commonLocal.SetMachineSpec()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            commonLocal.SetMachineSpec()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_SetMachineSpec_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3059,8 +3056,8 @@ object Common {
     // boolean OSX_GetCPUIdentification( int& cpuId, boolean& oldArchitecture );
     // #endif
     internal class Com_ExecMachineSpec_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            if (Common.com_machineSpec.GetInteger() == 3) {
+        override fun run(args: CmdArgs.idCmdArgs) {
+            if (com_machineSpec.GetInteger() == 3) {
                 CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
@@ -3081,7 +3078,7 @@ object Common {
                 CVarSystem.cvarSystem.SetCVarInteger("r_mode", 5, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
-            } else if (Common.com_machineSpec.GetInteger() == 2) {
+            } else if (com_machineSpec.GetInteger() == 2) {
                 CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
@@ -3102,7 +3099,7 @@ object Common {
                 CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("r_mode", 4, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
-            } else if (Common.com_machineSpec.GetInteger() == 1) {
+            } else if (com_machineSpec.GetInteger() == 1) {
                 CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
@@ -3198,7 +3195,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_ExecMachineSpec_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3211,40 +3208,40 @@ object Common {
      */
     internal class Com_ReloadEngine_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var menu = false
-            if (!Common.commonLocal.IsInitialized()) {
+            if (!commonLocal.IsInitialized()) {
                 return
             }
-            if (args.Argc() > 1 && idStr.Companion.Icmp(args.Argv(1), "menu") == 0) {
+            if (args.Argc() > 1 && idStr.Icmp(args.Argv(1), "menu") == 0) {
                 menu = true
             }
-            Common.common.Printf("============= ReloadEngine start =============\n")
+            common.Printf("============= ReloadEngine start =============\n")
             if (!menu) {
                 win_syscon.Sys_ShowConsole(1, false)
             }
-            Common.commonLocal.ShutdownGame(true)
-            Common.commonLocal.InitGame()
+            commonLocal.ShutdownGame(true)
+            commonLocal.InitGame()
             if (!menu && !idAsyncNetwork.serverDedicated.GetBool()) {
                 win_syscon.Sys_ShowConsole(0, false)
             }
-            Common.common.Printf("============= ReloadEngine end ===============\n")
+            common.Printf("============= ReloadEngine end ===============\n")
             if (!CmdSystem.cmdSystem.PostReloadEngine()) {
                 if (menu) {
-                    Session.Companion.session.StartMenu()
+                    Session.session.StartMenu()
                 }
             }
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_ReloadEngine_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
     }
 
-    internal class ListHash : HashMap<String?, idStrList?>()
+    class ListHash : HashMap<String, idStrList>()
 
     /*
      =================
@@ -3253,54 +3250,54 @@ object Common {
      */
     internal class Com_LocalizeMaps_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() < 2) {
-                Common.common.Printf("Usage: localizeMaps <count | dictupdate | all> <map>\n")
+                common.Printf("Usage: localizeMaps <count | dictupdate | all> <map>\n")
                 return
             }
             var strCount = 0
             val count: Boolean
             var dictUpdate = false
             var write = false
-            if (idStr.Companion.Icmp(args.Argv(1), "count") == 0) {
+            if (idStr.Icmp(args.Argv(1), "count") == 0) {
                 count = true
-            } else if (idStr.Companion.Icmp(args.Argv(1), "dictupdate") == 0) {
+            } else if (idStr.Icmp(args.Argv(1), "dictupdate") == 0) {
                 count = true
                 dictUpdate = true
-            } else if (idStr.Companion.Icmp(args.Argv(1), "all") == 0) {
+            } else if (idStr.Icmp(args.Argv(1), "all") == 0) {
                 count = true
                 dictUpdate = true
                 write = true
             } else {
-                Common.common.Printf("Invalid Command\n")
-                Common.common.Printf("Usage: localizeMaps <count | dictupdate | all>\n")
+                common.Printf("Invalid Command\n")
+                common.Printf("Usage: localizeMaps <count | dictupdate | all>\n")
                 return
             }
             val strTable = idLangDict()
-            val filename = Str.va("strings/english%.3i.lang", Common.com_product_lang_ext.GetInteger())
+            val filename = Str.va("strings/english%.3i.lang", com_product_lang_ext.GetInteger())
             if (strTable.Load(filename) == false) {
                 //This is a new file so set the base index
-                strTable.SetBaseID(Common.com_product_lang_ext.GetInteger() * 100000)
+                strTable.SetBaseID(com_product_lang_ext.GetInteger() * 100000)
             }
-            Common.common.SetRefreshOnPrint(true)
+            common.SetRefreshOnPrint(true)
             val listHash = ListHash()
-            Common.LoadMapLocalizeData(listHash)
+            LoadMapLocalizeData(listHash)
             val excludeList = idStrList()
-            Common.LoadGuiParmExcludeList(excludeList)
+            LoadGuiParmExcludeList(excludeList)
             if (args.Argc() == 3) {
-                strCount += Common.LocalizeMap(args.Argv(2), strTable, listHash, excludeList, write)
+                strCount += LocalizeMap(args.Argv(2), strTable, listHash, excludeList, write)
             } else {
                 val files = idStrList()
-                Common.GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
+                GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
                 for (i in 0 until files.size()) {
                     val file = FileSystem_h.fileSystem.OSPathToRelativePath(files[i].toString())
-                    strCount += Common.LocalizeMap(file, strTable, listHash, excludeList, write)
+                    strCount += LocalizeMap(file, strTable, listHash, excludeList, write)
                 }
             }
             if (count) {
-                Common.common.Printf("Localize String Count: %d\n", strCount)
+                common.Printf("Localize String Count: %d\n", strCount)
             }
-            Common.common.SetRefreshOnPrint(false)
+            common.SetRefreshOnPrint(false)
             if (dictUpdate) {
                 strTable.Save(filename)
             }
@@ -3308,7 +3305,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_LocalizeMaps_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3321,19 +3318,19 @@ object Common {
      */
     internal class Com_LocalizeGuis_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
-                Common.common.Printf("Usage: localizeGuis <all | gui>\n")
+                common.Printf("Usage: localizeGuis <all | gui>\n")
                 return
             }
             val strTable = idLangDict()
-            val filename = Str.va("strings/english%.3i.lang", Common.com_product_lang_ext.GetInteger())
+            val filename = Str.va("strings/english%.3i.lang", com_product_lang_ext.GetInteger())
             if (strTable.Load(filename) == false) {
                 //This is a new file so set the base index
-                strTable.SetBaseID(Common.com_product_lang_ext.GetInteger() * 100000)
+                strTable.SetBaseID(com_product_lang_ext.GetInteger() * 100000)
             }
-            var files: idFileList?
-            if (idStr.Companion.Icmp(args.Argv(1), "all") == 0) {
+            var files: idFileList
+            if (idStr.Icmp(args.Argv(1), "all") == 0) {
                 val game = CVarSystem.cvarSystem.GetCVarString("fs_game")
                 files = if (!game.isEmpty()) {
                     FileSystem_h.fileSystem.ListFilesTree("guis", "*.gui", true, game)
@@ -3341,7 +3338,7 @@ object Common {
                     FileSystem_h.fileSystem.ListFilesTree("guis", "*.gui", true)
                 }
                 for (i in 0 until files.GetNumFiles()) {
-                    Common.commonLocal.LocalizeGui(files.GetFile(i), strTable)
+                    commonLocal.LocalizeGui(files.GetFile(i), strTable)
                 }
                 FileSystem_h.fileSystem.FreeFileList(files)
                 files = if (game.length != 0) {
@@ -3350,18 +3347,18 @@ object Common {
                     FileSystem_h.fileSystem.ListFilesTree("guis", "*.pd", true, "d3xp")
                 }
                 for (i in 0 until files.GetNumFiles()) {
-                    Common.commonLocal.LocalizeGui(files.GetFile(i), strTable)
+                    commonLocal.LocalizeGui(files.GetFile(i), strTable)
                 }
                 FileSystem_h.fileSystem.FreeFileList(files)
             } else {
-                Common.commonLocal.LocalizeGui(args.Argv(1), strTable)
+                commonLocal.LocalizeGui(args.Argv(1), strTable)
             }
             strTable.Save(filename)
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_LocalizeGuis_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3369,16 +3366,16 @@ object Common {
 
     internal class Com_LocalizeGuiParmsTest_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Common.common.SetRefreshOnPrint(true)
-            val localizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_localize.csv")
-            val noLocalizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_nolocalize.csv")
+        override fun run(args: CmdArgs.idCmdArgs) {
+            common.SetRefreshOnPrint(true)
+            val localizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_localize.csv")!!
+            val noLocalizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_nolocalize.csv")!!
             val excludeList = idStrList()
-            Common.LoadGuiParmExcludeList(excludeList)
+            LoadGuiParmExcludeList(excludeList)
             val files = idStrList()
-            Common.GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
+            GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
             for (i in 0 until files.size()) {
-                Common.common.Printf("Testing Map '%s'\n", files[i])
+                common.Printf("Testing Map '%s'\n", files[i])
                 val map = idMapFile()
                 val file = FileSystem_h.fileSystem.OSPathToRelativePath(files[i].toString())
                 if (map.Parse(file, false, false)) {
@@ -3388,7 +3385,7 @@ object Common {
                         if (ent != null) {
                             var kv = ent.epairs.MatchPrefix("gui_parm")
                             while (kv != null) {
-                                if (Common.TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
+                                if (TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
                                     val out = Str.va("%s,%s,%s\r\n", kv.GetValue(), kv.GetKey(), file)
                                     localizeFile.WriteString(out)
                                 } else {
@@ -3403,12 +3400,12 @@ object Common {
             }
             FileSystem_h.fileSystem.CloseFile(localizeFile)
             FileSystem_h.fileSystem.CloseFile(noLocalizeFile)
-            Common.common.SetRefreshOnPrint(false)
+            common.SetRefreshOnPrint(false)
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_LocalizeGuiParmsTest_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3416,15 +3413,15 @@ object Common {
 
     internal class Com_LocalizeMapsTest_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val listHash = ListHash()
-            Common.LoadMapLocalizeData(listHash)
-            Common.common.SetRefreshOnPrint(true)
-            val localizeFile = FileSystem_h.fileSystem.OpenFileWrite("map_localize.csv")
+            LoadMapLocalizeData(listHash)
+            common.SetRefreshOnPrint(true)
+            val localizeFile = FileSystem_h.fileSystem.OpenFileWrite("map_localize.csv")!!
             val files = idStrList()
-            Common.GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
+            GetFileList("z:/d3xp/d3xp/maps/game", "*.map", files)
             for (i in 0 until files.size()) {
-                Common.common.Printf("Testing Map '%s'\n", files[i])
+                common.Printf("Testing Map '%s'\n", files[i])
                 val map = idMapFile()
                 val file = FileSystem_h.fileSystem.OSPathToRelativePath(files[i].toString())
                 if (map.Parse(file, false, false)) {
@@ -3451,11 +3448,11 @@ object Common {
                             if (list != null) {
                                 for (k in 0 until list.size()) {
                                     val `val` = ent.epairs.GetString(list[k].toString(), "")
-                                    if ( /*static*/className == "info_location" && list[k] == "location") {
+                                    if ( /*static*/className == "info_location" && list[k].toString() == "location") {
                                         hasLocation = true
                                     }
-                                    if (TempDump.isNotNullOrEmpty(`val`) && Common.TestMapVal(`val`)) {
-                                        if (!hasLocation || list[k] == "location") {
+                                    if (TempDump.isNotNullOrEmpty(`val`) && TestMapVal(`val`)) {
+                                        if (!hasLocation || list[k].toString() == "location") {
                                             val out = Str.va("%s,%s,%s\r\n", `val`, list[k], file)
                                             localizeFile.WriteString(out)
                                         }
@@ -3466,7 +3463,7 @@ object Common {
                             if (list != null) {
                                 for (k in 0 until list.size()) {
                                     val `val` = ent.epairs.GetString(list[k].toString(), "")
-                                    if (TempDump.isNotNullOrEmpty(`val`) && Common.TestMapVal(`val`)) {
+                                    if (TempDump.isNotNullOrEmpty(`val`) && TestMapVal(`val`)) {
                                         val out = Str.va("%s,%s,%s\r\n", `val`, list[k], file)
                                         localizeFile.WriteString(out)
                                     }
@@ -3477,12 +3474,12 @@ object Common {
                 }
             }
             FileSystem_h.fileSystem.CloseFile(localizeFile)
-            Common.common.SetRefreshOnPrint(false)
+            common.SetRefreshOnPrint(false)
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_LocalizeMapsTest_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3494,13 +3491,13 @@ object Common {
      =================
      */
     internal class Com_StartBuild_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             Image.globalImages.StartBuild()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_StartBuild_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3512,7 +3509,7 @@ object Common {
      =================
      */
     internal class Com_FinishBuild_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (Game_local.game != null) {
                 Game_local.game.CacheDictionaryMedia(null)
             }
@@ -3521,7 +3518,7 @@ object Common {
 
         companion object {
             private val instance: cmdFunction_t = Com_FinishBuild_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3534,31 +3531,31 @@ object Common {
      */
     internal class Com_Help_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Common.common.Printf("\nCommonly used commands:\n")
-            Common.common.Printf("  spawnServer      - start the server.\n")
-            Common.common.Printf("  disconnect       - shut down the server.\n")
-            Common.common.Printf("  listCmds         - list all console commands.\n")
-            Common.common.Printf("  listCVars        - list all console variables.\n")
-            Common.common.Printf("  kick             - kick a client by number.\n")
-            Common.common.Printf("  gameKick         - kick a client by name.\n")
-            Common.common.Printf("  serverNextMap    - immediately load next map.\n")
-            Common.common.Printf("  serverMapRestart - restart the current map.\n")
-            Common.common.Printf("  serverForceReady - force all players to ready status.\n")
-            Common.common.Printf("\nCommonly used variables:\n")
-            Common.common.Printf("  si_name          - server name (change requires a restart to see)\n")
-            Common.common.Printf("  si_gametype      - type of game.\n")
-            Common.common.Printf("  si_fragLimit     - max kills to win (or lives in Last Man Standing).\n")
-            Common.common.Printf("  si_timeLimit     - maximum time a game will last.\n")
-            Common.common.Printf("  si_warmup        - do pre-game warmup.\n")
-            Common.common.Printf("  si_pure          - pure server.\n")
-            Common.common.Printf("  g_mapCycle       - name of .scriptcfg file for cycling maps.\n")
-            Common.common.Printf("See mapcycle.scriptcfg for an example of a mapcyle script.\n\n")
+        override fun run(args: CmdArgs.idCmdArgs) {
+            common.Printf("\nCommonly used commands:\n")
+            common.Printf("  spawnServer      - start the server.\n")
+            common.Printf("  disconnect       - shut down the server.\n")
+            common.Printf("  listCmds         - list all console commands.\n")
+            common.Printf("  listCVars        - list all console variables.\n")
+            common.Printf("  kick             - kick a client by number.\n")
+            common.Printf("  gameKick         - kick a client by name.\n")
+            common.Printf("  serverNextMap    - immediately load next map.\n")
+            common.Printf("  serverMapRestart - restart the current map.\n")
+            common.Printf("  serverForceReady - force all players to ready status.\n")
+            common.Printf("\nCommonly used variables:\n")
+            common.Printf("  si_name          - server name (change requires a restart to see)\n")
+            common.Printf("  si_gametype      - type of game.\n")
+            common.Printf("  si_fragLimit     - max kills to win (or lives in Last Man Standing).\n")
+            common.Printf("  si_timeLimit     - maximum time a game will last.\n")
+            common.Printf("  si_warmup        - do pre-game warmup.\n")
+            common.Printf("  si_pure          - pure server.\n")
+            common.Printf("  g_mapCycle       - name of .scriptcfg file for cycling maps.\n")
+            common.Printf("See mapcycle.scriptcfg for an example of a mapcyle script.\n\n")
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_Help_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -3571,13 +3568,13 @@ object Common {
      */
     internal class Com_ReloadLanguage_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            Common.commonLocal.InitLanguageDict()
+        override fun run(args: CmdArgs.idCmdArgs) {
+            commonLocal.InitLanguageDict()
         }
 
         companion object {
             private val instance: cmdFunction_t = Com_ReloadLanguage_f()
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

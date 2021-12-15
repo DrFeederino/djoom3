@@ -1,13 +1,14 @@
 package neo.Renderer
 
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  *
  */
 object tr_font {
     const val BUILD_FREETYPE = false
-    var fdFile: ByteArray?
+    var fdFile: ByteArray = ByteArray(0)
 
     //    static FT_Library ftLibrary = null;
     var fdOffset = 0
@@ -216,8 +217,8 @@ object tr_font {
      */
     fun readInt(): Int {
         val i: Int =
-            tr_font.fdFile[tr_font.fdOffset] + (tr_font.fdFile[tr_font.fdOffset + 1] shl 8) + (tr_font.fdFile[tr_font.fdOffset + 2] shl 16) + (tr_font.fdFile[tr_font.fdOffset + 3] shl 24)
-        tr_font.fdOffset += 4
+            fdFile[fdOffset] + (fdFile[fdOffset + 1].toInt() shl 8) + (fdFile[fdOffset + 2].toInt() shl 16) + (fdFile[fdOffset + 3].toInt() shl 24)
+        fdOffset += 4
         return i
     }
 
@@ -228,8 +229,8 @@ object tr_font {
      */
     fun readFloat(): Float {
         val me = poor()
-        me.setFfred(tr_font.fdFile, tr_font.fdOffset)
-        tr_font.fdOffset += 4
+        me.setFfred(fdFile, fdOffset)
+        fdOffset += 4
         return me.getFfred()
     }
 
@@ -239,7 +240,7 @@ object tr_font {
      ============
      */
     fun R_InitFreeType() {
-        if (tr_font.BUILD_FREETYPE) {
+        if (BUILD_FREETYPE) {
 //            if (FT_Init_FreeType(ftLibrary)) {
 //                common.Printf("R_InitFreeType: Unable to initialize FreeType.\n");
 //            }
@@ -253,7 +254,7 @@ object tr_font {
      ============
      */
     fun R_DoneFreeType() {
-        if (tr_font.BUILD_FREETYPE) {
+        if (BUILD_FREETYPE) {
 //            if (ftLibrary) {
 //                FT_Done_FreeType(ftLibrary);
 //                ftLibrary = null;

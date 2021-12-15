@@ -23,27 +23,27 @@ object tr_polytope {
      =====================
      */
     @Throws(idException::class)
-    fun R_PolytopeSurface(numPlanes: Int, planes: Array<idPlane?>?, windings: Array<idWinding?>?): srfTriangles_s? {
+    fun R_PolytopeSurface(numPlanes: Int, planes: Array<idPlane>, windings: Array<idWinding>?): srfTriangles_s? {
         var i: Int
         var j: Int
         val tri: srfTriangles_s
-        val planeWindings = arrayOfNulls<idFixedWinding?>(tr_polytope.MAX_POLYTOPE_PLANES)
+        val planeWindings = Array(MAX_POLYTOPE_PLANES) { idFixedWinding() }
         var numVerts: Int
         var numIndexes: Int
-        if (numPlanes > tr_polytope.MAX_POLYTOPE_PLANES) {
-            Common.common.Error("R_PolytopeSurface: more than %d planes", tr_polytope.MAX_POLYTOPE_PLANES)
+        if (numPlanes > MAX_POLYTOPE_PLANES) {
+            Common.common.Error("R_PolytopeSurface: more than %d planes", MAX_POLYTOPE_PLANES)
         }
         numVerts = 0
         numIndexes = 0
         i = 0
         while (i < numPlanes) {
-            val plane = planes.get(i)
+            val plane = planes[i]
             planeWindings[i] = idFixedWinding()
             val w = planeWindings[i]
             w.BaseForPlane(plane)
             j = 0
             while (j < numPlanes) {
-                val plane2 = planes.get(j)
+                val plane2 = planes[j]
                 if (j == i) {
                     j++
                     continue

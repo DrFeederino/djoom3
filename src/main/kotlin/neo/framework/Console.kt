@@ -1,12 +1,11 @@
 package neo.framework
 
+import neo.Renderer.Material
 import neo.Renderer.RenderSystem
 import neo.Sound.snd_system
 import neo.Sound.sound.soundDecoderInfo_t
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.Tools.edit_public
-import neo.framework.*
 import neo.framework.Async.AsyncNetwork
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork
 import neo.framework.CVarSystem.idCVar
@@ -15,7 +14,8 @@ import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.EditField.idEditField
 import neo.framework.File_h.idFile
 import neo.framework.KeyInput.idKeyInput
-import neo.idlib.*
+import neo.idlib.CmdArgs
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
@@ -26,6 +26,7 @@ import neo.sys.sys_public.sysEvent_s
 import neo.sys.win_input
 import neo.sys.win_main
 import neo.sys.win_shared
+import kotlin.experimental.and
 
 /**
  *
@@ -71,21 +72,21 @@ object Console {
      SCR_DrawTextLeftAlign
      ==================
      */
-    fun SCR_DrawTextLeftAlign(y: FloatArray?, fmt: String?, vararg text: Any?) {
-        val string = arrayOf<String?>(null) //new char[MAX_STRING_CHARS];
+    fun SCR_DrawTextLeftAlign(y: FloatArray, fmt: String, vararg text: Any) {
+        val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
         //	va_list argptr;
 //	va_start( argptr, text );
-        idStr.Companion.vsnPrintf(string, Lib.Companion.MAX_STRING_CHARS, fmt, *text)
+        idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
         //	va_end( argptr );
         RenderSystem.renderSystem.DrawSmallStringExt(
             0,
-            (y.get(0) + 2).toInt(),
+            (y[0] + 2).toInt(),
             string[0].toCharArray(),
-            Lib.Companion.colorWhite,
+            Lib.colorWhite,
             true,
             localConsole.charSetShader
         )
-        y.get(0) += RenderSystem.SMALLCHAR_HEIGHT + 4
+        y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
     }
 
     /*
@@ -93,25 +94,25 @@ object Console {
      SCR_DrawTextRightAlign
      ==================
      */
-    fun SCR_DrawTextRightAlign(y: FloatArray?, fmt: String?, vararg text: Any?) {
-        val string = arrayOf<String?>(null) //new char[MAX_STRING_CHARS];
+    fun SCR_DrawTextRightAlign(y: FloatArray, fmt: String, vararg text: Any) {
+        val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
         //	va_list argptr;
 //	va_start( argptr, text );
-        val i: Int = idStr.Companion.vsnPrintf(string, Lib.Companion.MAX_STRING_CHARS, fmt, *text)
+        val i: Int = idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
         //	va_end( argptr );
         RenderSystem.renderSystem.DrawSmallStringExt(
             635 - i * RenderSystem.SMALLCHAR_WIDTH,
-            (y.get(0) + 2).toInt(),
+            (y[0] + 2).toInt(),
             string[0].toCharArray(),
-            Lib.Companion.colorWhite,
+            Lib.colorWhite,
             true,
             localConsole.charSetShader
         )
-        y.get(0) += RenderSystem.SMALLCHAR_HEIGHT + 4
+        y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
     }
 
     fun SCR_DrawFPS(y: Float): Float {
-        val s: String?
+        val s: String
         val w: Int
         var i: Int
         var total: Int
@@ -145,7 +146,7 @@ object Console {
                 635 - w,
                 idMath.FtoiFast(y) + 2,
                 s,
-                Lib.Companion.colorWhite,
+                Lib.colorWhite,
                 true,
                 localConsole.charSetShader
             )
@@ -307,7 +308,7 @@ object Console {
         abstract fun LoadGraphics()
 
         @Throws(idException::class)
-        abstract fun ProcessEvent(event: sysEvent_s?, forceAccept: Boolean): Boolean
+        abstract fun ProcessEvent(event: sysEvent_s, forceAccept: Boolean): Boolean
 
         // the system code can release the mouse pointer when the console is active
         abstract fun Active(): Boolean
@@ -318,15 +319,15 @@ object Console {
         // some console commands, like timeDemo, will force the console closed before they start
         abstract fun Close()
         abstract fun Draw(forceFullScreen: Boolean)
-        abstract fun Print(text: String?)
+        abstract fun Print(text: String)
     }
 
     // the console will query the cvar and command systems for
     // command completion information
     class idConsoleLocal : idConsole() {
         companion object {
-            private val con_noPrint: idCVar? = null
-            private val con_notifyTime: idCVar? = idCVar(
+            private val con_noPrint: idCVar
+            private val con_notifyTime: idCVar = idCVar(
                 "con_notifyTime",
                 "3",
                 CVarSystem.CVAR_SYSTEM,
@@ -334,7 +335,7 @@ object Console {
             )
 
             //
-            private val con_speed: idCVar? =
+            private val con_speed: idCVar =
                 idCVar("con_speed", "3", CVarSystem.CVAR_SYSTEM, "speed at which the console moves up and down")
 
             /*
@@ -366,24 +367,24 @@ object Console {
         }
 
         //
-        private val historyEditLines: Array<idEditField?>? = arrayOfNulls<idEditField?>(COMMAND_HISTORY)
+        private val historyEditLines: Array<idEditField> = Array(COMMAND_HISTORY) { idEditField() }
 
         //
-        private val text: ShortArray? = ShortArray(CON_TEXTSIZE)
+        private val text: ShortArray = ShortArray(CON_TEXTSIZE)
 
         //
-        private val times: IntArray? =
+        private val times: IntArray =
             IntArray(NUM_CON_TIMES) // cls.realtime time the line was generated for transparent notify lines
 
         //============================
-        var charSetShader: idMaterial? = null
+        var charSetShader: Material.idMaterial? = null
 
         //
-        private val color: idVec4? = null
+        private val color: idVec4 = idVec4()
 
         //
-        private var consoleField: idEditField? = null
-        private var consoleShader: idMaterial? = null
+        private var consoleField: idEditField = idEditField()
+        private var consoleShader: Material.idMaterial? = null
         private var current // line where next message will be printed
                 = 0
         private var display // bottom of console displays this line
@@ -419,7 +420,7 @@ object Console {
                 = 0
 
         //
-        private var whiteShader: idMaterial? = null
+        private var whiteShader: Material.idMaterial? = null
         private var x // offset in current line for next print
                 = 0
 
@@ -433,8 +434,8 @@ object Console {
             consoleField.SetWidthInChars(LINE_WIDTH)
             i = 0
             while (i < COMMAND_HISTORY) {
-                historyEditLines.get(i) = idEditField() //.Clear();
-                historyEditLines.get(i).SetWidthInChars(LINE_WIDTH)
+                historyEditLines[i] = idEditField() //.Clear();
+                historyEditLines[i].SetWidthInChars(LINE_WIDTH)
                 i++
             }
             CmdSystem.cmdSystem.AddCommand(
@@ -472,7 +473,7 @@ object Console {
         }
 
         @Throws(idException::class)
-        override fun ProcessEvent(event: sysEvent_s?, forceAccept: Boolean): Boolean {
+        override fun ProcessEvent(event: sysEvent_s, forceAccept: Boolean): Boolean {
             var consoleKey: Boolean
             consoleKey =
                 event.evType == sysEventType_t.SE_KEY && (event.evValue == win_input.Sys_GetConsoleKey(false).code || event.evValue == win_input.Sys_GetConsoleKey(
@@ -551,7 +552,7 @@ object Console {
             var i: Int
             i = 0
             while (i < NUM_CON_TIMES) {
-                times.get(i) = 0
+                times[i] = 0
                 i++
             }
         }
@@ -570,9 +571,9 @@ object Console {
          Handles cursor positioning, line wrapping, etc
          ================
          */
-        override fun Print(txt: String?) {
+        override fun Print(txt: String) {
             var y: Int
-            var c: Int
+            var c = 0
             var l: Int
             var color: Int
             var txt_p = 0
@@ -582,16 +583,16 @@ object Console {
                     edit_public.MaterialEditorPrintConsole(txt)
                 }
             }
-            color = idStr.Companion.ColorIndex(Str.C_COLOR_CYAN)
+            color = idStr.ColorIndex(Str.C_COLOR_CYAN)
             while (txt_p < txt.length
-                && txt.get(txt_p).also { c = it } != 0
+                && txt[txt_p].also { c = it.code } != Char(0)
             ) {
-                if (idStr.Companion.IsColor(txt.substring(txt_p))) {
-                    val colorChar: Char = txt.get(txt_p + 1)
+                if (idStr.IsColor(txt.substring(txt_p))) {
+                    val colorChar: Char = txt[txt_p + 1]
                     color = if (colorChar.code == Str.C_COLOR_DEFAULT) {
-                        idStr.Companion.ColorIndex(Str.C_COLOR_CYAN)
+                        idStr.ColorIndex(Str.C_COLOR_CYAN)
                     } else {
-                        idStr.Companion.ColorIndex(colorChar.code)
+                        idStr.ColorIndex(colorChar.code)
                     }
                     txt_p += 2
                     continue
@@ -600,11 +601,11 @@ object Console {
 
                 // if we are about to print a new word, check to see
                 // if we should wrap to the new line
-                if (c > ' '.code && (x == 0 || text.get(y * LINE_WIDTH + x - 1) <= ' ')) {
+                if (c > ' '.code && (x == 0 || text[y * LINE_WIDTH + x - 1] <= ' '.code)) {
                     // count word length
                     l = 0
                     while (l < LINE_WIDTH && l < txt.length) {
-                        if (txt.get(l) <= ' ') {
+                        if (txt[l] <= ' ') {
                             break
                         }
                         l++
@@ -617,18 +618,18 @@ object Console {
                 }
                 txt_p++
                 when (c) {
-                    '\n' -> Linefeed()
-                    '\t' -> do {
-                        text.get(y * LINE_WIDTH + x) = (color shl 8 or ' '.code).toShort()
+                    '\n'.code -> Linefeed()
+                    '\t'.code -> do {
+                        text[y * LINE_WIDTH + x] = (color shl 8 or ' '.code).toShort()
                         x++
                         if (x >= LINE_WIDTH) {
                             Linefeed()
                             x = 0
                         }
                     } while (x and 3 != 0)
-                    '\r' -> x = 0
+                    '\r'.code -> x = 0
                     else -> {
-                        text.get(y * LINE_WIDTH + x) = (color shl 8 or c).toShort()
+                        text[y * LINE_WIDTH + x] = (color shl 8 or c).toShort()
                         x++
                         if (x >= LINE_WIDTH) {
                             Linefeed()
@@ -640,7 +641,7 @@ object Console {
 
             // mark time for transparent overlay
             if (current >= 0) {
-                times.get(current % NUM_CON_TIMES) = Common.com_frameTime
+                times[current % NUM_CON_TIMES] = Common.com_frameTime
             }
         }
 
@@ -699,7 +700,7 @@ object Console {
          ================
          */
         @Throws(idException::class)
-        fun Dump(fileName: String?) {
+        fun Dump(fileName: String) {
             var l: Int
             var x: Int
             var i: Int
@@ -721,7 +722,7 @@ object Console {
                 line = l % TOTAL_LINES * LINE_WIDTH
                 x = 0
                 while (x < LINE_WIDTH) {
-                    if (text.get(line + x) and 0xff > ' '.code) {
+                    if (text[line + x] and 0xff > ' '.code) {
                         break
                     }
                     x++
@@ -737,13 +738,13 @@ object Console {
                 line = l % TOTAL_LINES * LINE_WIDTH
                 i = 0
                 while (i < LINE_WIDTH) {
-                    buffer[i] = (text.get(line + i) and 0xff).toChar()
+                    buffer[i] = (text[line + i] and 0xff).toChar()
                     i++
                 }
                 x = LINE_WIDTH - 1
                 while (x >= 0) {
                     if (buffer[x] <= ' ') {
-                        buffer[x] = 0
+                        buffer[x] = Char(0)
                     } else {
                         break
                     }
@@ -751,7 +752,7 @@ object Console {
                 }
                 buffer[x + 1] = '\r'
                 buffer[x + 2] = '\n'
-                buffer[x + 3] = 0
+                buffer[x + 3] = Char(0)
                 f.WriteString(buffer)
                 l++
             }
@@ -764,7 +765,7 @@ object Console {
             var i: Int
             i = 0
             while (i < CON_TEXTSIZE) {
-                text.get(i) = (idStr.Companion.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
+                text[i] = (idStr.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
                 i++
             }
             Bottom() // go to end
@@ -794,18 +795,18 @@ object Console {
 
             // enter finishes the line
             if (key == KeyInput.K_ENTER || key == KeyInput.K_KP_ENTER) {
-                val buffer = TempDump.ctos(consoleField.GetBuffer())
+                val buffer = TempDump.ctos(consoleField.GetBuffer())!!
                 Common.common.Printf("]%s\n", buffer)
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, buffer) // valid command
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "\n")
 
                 // copy line to history buffer
-                historyEditLines.get(nextHistoryLine % COMMAND_HISTORY) = consoleField
+                historyEditLines[nextHistoryLine % COMMAND_HISTORY] = consoleField
                 nextHistoryLine++
                 historyLine = nextHistoryLine
                 consoleField = idEditField()
                 consoleField.SetWidthInChars(LINE_WIDTH)
-                Session.Companion.session.UpdateScreen() // force an update, because the command
+                Session.session.UpdateScreen() // force an update, because the command
                 // may take some time
                 return
             }
@@ -818,22 +819,22 @@ object Console {
 
             // command history (ctrl-p ctrl-n for unix style)
             if (key == KeyInput.K_UPARROW
-                || key.lowercaseChar() == 'p' && idKeyInput.IsDown(KeyInput.K_CTRL)
+                || key == 'p'.code && idKeyInput.IsDown(KeyInput.K_CTRL)
             ) {
                 if (nextHistoryLine - historyLine < COMMAND_HISTORY && historyLine > 0) {
                     historyLine--
                 }
-                consoleField = historyEditLines.get(historyLine % COMMAND_HISTORY)
+                consoleField = historyEditLines[historyLine % COMMAND_HISTORY]
                 return
             }
             if (key == KeyInput.K_DOWNARROW
-                || key.lowercaseChar() == 'n' && idKeyInput.IsDown(KeyInput.K_CTRL)
+                || key == 'n'.code && idKeyInput.IsDown(KeyInput.K_CTRL)
             ) {
                 if (historyLine == nextHistoryLine) {
                     return
                 }
                 historyLine++
-                consoleField = historyEditLines.get(historyLine % COMMAND_HISTORY)
+                consoleField = historyEditLines[historyLine % COMMAND_HISTORY]
                 return
             }
 
@@ -882,7 +883,7 @@ object Console {
 
             // mark time for transparent overlay
             if (current >= 0) {
-                times.get(current % NUM_CON_TIMES) = Common.com_frameTime
+                times[current % NUM_CON_TIMES] = Common.com_frameTime
             }
             x = 0
             if (display == current) {
@@ -891,8 +892,8 @@ object Console {
             current++
             i = 0
             while (i < LINE_WIDTH) {
-                text.get(current % TOTAL_LINES * LINE_WIDTH + i) =
-                    (idStr.Companion.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
+                text[current % TOTAL_LINES * LINE_WIDTH + i] =
+                    (idStr.ColorIndex(Str.C_COLOR_CYAN) shl 8 or ' '.code).toShort()
                 i++
             }
         }
@@ -949,7 +950,7 @@ object Console {
                     )
                 }
             }
-            RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(Str.C_COLOR_CYAN))
+            RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(Str.C_COLOR_CYAN))
             RenderSystem.renderSystem.DrawSmallChar(
                 1 * RenderSystem.SMALLCHAR_WIDTH,
                 y,
@@ -976,8 +977,8 @@ object Console {
             if (con_noPrint.GetBool()) {
                 return
             }
-            currentColor = idStr.Companion.ColorIndex(Str.C_COLOR_WHITE)
-            RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(currentColor))
+            currentColor = idStr.ColorIndex(Str.C_COLOR_WHITE)
+            RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(currentColor))
             v = 0
             i = current - NUM_CON_TIMES + 1
             while (i <= current) {
@@ -985,7 +986,7 @@ object Console {
                     i++
                     continue
                 }
-                time = times.get(i % NUM_CON_TIMES)
+                time = times[i % NUM_CON_TIMES]
                 if (time == 0) {
                     i++
                     continue
@@ -999,18 +1000,18 @@ object Console {
                 //		text_p = text + (i % TOTAL_LINES)*LINE_WIDTH;
                 x = 0
                 while (x < LINE_WIDTH) {
-                    if (text.get(text_p + x) and 0xff == ' '.code) {
+                    if (text[text_p + x].toInt() and 0xff == ' '.code) {
                         x++
                         continue
                     }
-                    if (idStr.Companion.ColorIndex(text.get(text_p + x) shr 8) != currentColor) {
-                        currentColor = idStr.Companion.ColorIndex(text.get(text_p + x) shr 8)
-                        RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(currentColor))
+                    if (idStr.ColorIndex(text[text_p + x].toInt() shr 8) != currentColor) {
+                        currentColor = idStr.ColorIndex(text[text_p + x].toInt() shr 8)
+                        RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(currentColor))
                     }
                     RenderSystem.renderSystem.DrawSmallChar(
                         (x + 1) * RenderSystem.SMALLCHAR_WIDTH,
                         v,
-                        text.get(text_p + x) and 0xff,
+                        text[text_p + x].toInt() and 0xff,
                         localConsole.charSetShader
                     )
                     x++
@@ -1018,7 +1019,7 @@ object Console {
                 v += RenderSystem.SMALLCHAR_HEIGHT
                 i++
             }
-            RenderSystem.renderSystem.SetColor(Lib.Companion.colorCyan)
+            RenderSystem.renderSystem.SetColor(Lib.colorCyan)
         }
 
         /*
@@ -1062,7 +1063,7 @@ object Console {
                     consoleShader
                 )
             }
-            RenderSystem.renderSystem.SetColor(Lib.Companion.colorCyan)
+            RenderSystem.renderSystem.SetColor(Lib.colorCyan)
             RenderSystem.renderSystem.DrawStretchPic(
                 0f,
                 y,
@@ -1074,10 +1075,10 @@ object Console {
                 0f,
                 whiteShader
             )
-            RenderSystem.renderSystem.SetColor(Lib.Companion.colorWhite)
+            RenderSystem.renderSystem.SetColor(Lib.colorWhite)
 
             // draw the version number
-            RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(Str.C_COLOR_CYAN))
+            RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(Str.C_COLOR_CYAN))
             val version = Str.va("%s.%d", Licensee.ENGINE_VERSION, BuildVersion.BUILD_NUMBER).toCharArray()
             i = version.size
             x = 0
@@ -1085,7 +1086,7 @@ object Console {
                 RenderSystem.renderSystem.DrawSmallChar(
                     RenderSystem.SCREEN_WIDTH - (i - x) * RenderSystem.SMALLCHAR_WIDTH,
                     lines - (RenderSystem.SMALLCHAR_HEIGHT + RenderSystem.SMALLCHAR_HEIGHT / 2),
-                    version[x],
+                    version[x].code,
                     localConsole.charSetShader
                 )
                 x++
@@ -1099,7 +1100,7 @@ object Console {
             // draw from the bottom up
             if (display != current) {
                 // draw arrows to show the buffer is backscrolled
-                RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(Str.C_COLOR_CYAN))
+                RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(Str.C_COLOR_CYAN))
                 x = 0
                 while (x < LINE_WIDTH) {
                     RenderSystem.renderSystem.DrawSmallChar(
@@ -1117,8 +1118,8 @@ object Console {
             if (x == 0) {
                 row--
             }
-            currentColor = idStr.Companion.ColorIndex(Str.C_COLOR_WHITE)
-            RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(currentColor))
+            currentColor = idStr.ColorIndex(Str.C_COLOR_WHITE)
+            RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(currentColor))
             i = 0
             while (i < rows) {
                 if (row < 0) {
@@ -1134,18 +1135,18 @@ object Console {
                 text_p = row % TOTAL_LINES * LINE_WIDTH
                 x = 0
                 while (x < LINE_WIDTH) {
-                    if (text.get(text_p + x) and 0xff == ' '.code) {
+                    if (text[text_p + x].toInt() and 0xff == ' '.code) {
                         x++
                         continue
                     }
-                    if (idStr.Companion.ColorIndex(text.get(text_p + x) shr 8) != currentColor) {
-                        currentColor = idStr.Companion.ColorIndex(text.get(text_p + x) shr 8)
-                        RenderSystem.renderSystem.SetColor(idStr.Companion.ColorForIndex(currentColor))
+                    if (idStr.ColorIndex(text[text_p + x].toInt() shr 8) != currentColor) {
+                        currentColor = idStr.ColorIndex(text[text_p + x].toInt() shr 8)
+                        RenderSystem.renderSystem.SetColor(idStr.ColorForIndex(currentColor))
                     }
                     RenderSystem.renderSystem.DrawSmallChar(
                         (x + 1) * RenderSystem.SMALLCHAR_WIDTH,
                         idMath.FtoiFast(y),
-                        text.get(text_p + x) and 0xff,
+                        text[text_p + x].toInt() and 0xff,
                         localConsole.charSetShader
                     )
                     x++
@@ -1157,7 +1158,7 @@ object Console {
 
             // draw the input prompt, user text, and cursor if desired
             DrawInput()
-            RenderSystem.renderSystem.SetColor(Lib.Companion.colorCyan)
+            RenderSystem.renderSystem.SetColor(Lib.colorCyan)
         }
 
         //
@@ -1234,13 +1235,13 @@ object Console {
      ==============
      */
     private class Con_Clear_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             localConsole.Clear()
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Con_Clear_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Con_Clear_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1253,7 +1254,7 @@ object Console {
      */
     private class Con_Dump_f private constructor() : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (args.Argc() != 2) {
                 Common.common.Printf("usage: conDump <filename>\n")
                 return
@@ -1264,8 +1265,8 @@ object Console {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Con_Dump_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Con_Dump_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

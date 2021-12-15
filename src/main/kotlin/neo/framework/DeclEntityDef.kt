@@ -31,7 +31,7 @@ class DeclEntityDef {
         }
 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             val token = idToken()
             val token2 = idToken()
@@ -68,7 +68,7 @@ class DeclEntityDef {
             // if they don't conflict.  We can't have circular recursions, because each entityDef will
             // never be parsed mroe than once
             // find all of the dicts first, because copying inherited values will modify the dict
-            val defList = idList<idDeclEntityDef?>()
+            val defList = idList<idDeclEntityDef>()
             while (true) {
                 val kv: idKeyValue?
                 kv = dict.MatchPrefix("inherit", null)
@@ -76,7 +76,11 @@ class DeclEntityDef {
                     break
                 }
                 val copy =  /*static_cast<const idDeclEntityDef *>*/
-                    DeclManager.declManager.FindType(declType_t.DECL_ENTITYDEF, kv.GetValue(), false) as idDeclEntityDef
+                    DeclManager.declManager.FindType(
+                        declType_t.DECL_ENTITYDEF,
+                        kv.GetValue(),
+                        false
+                    ) as idDeclEntityDef?
                 if (null == copy) {
                     src.Warning("Unknown entityDef '%s' inherited by '%s'", kv.GetValue(), GetName())
                 } else {
@@ -89,7 +93,7 @@ class DeclEntityDef {
 
             // now copy over the inherited key / value pairs
             for (i in 0 until defList.Num()) {
-                dict.SetDefaults(defList.get(i).dict)
+                dict.SetDefaults(defList[i].dict)
             }
 
             // precache all referenced media

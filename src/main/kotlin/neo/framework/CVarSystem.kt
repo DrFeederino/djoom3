@@ -96,26 +96,26 @@ object CVarSystem {
      ===============================================================================
      */
     const val CVAR_ALL = -1 // all flags
-    val CVAR_ARCHIVE: Int = Lib.Companion.BIT(17) // set to cause it to be saved to a config file
-    val CVAR_BOOL: Int = Lib.Companion.BIT(0) // variable is a boolean
-    val CVAR_CHEAT: Int = Lib.Companion.BIT(13) // variable is considered a cheat
-    val CVAR_FLOAT: Int = Lib.Companion.BIT(2) // variable is a float
-    val CVAR_GAME: Int = Lib.Companion.BIT(7) // game variable
-    val CVAR_GUI: Int = Lib.Companion.BIT(6) // gui variable
-    val CVAR_INIT: Int = Lib.Companion.BIT(15) // can only be set from the command-line
-    val CVAR_INTEGER: Int = Lib.Companion.BIT(1) // variable is an longeger
-    val CVAR_MODIFIED: Int = Lib.Companion.BIT(18) // set when the variable is modified
-    val CVAR_NETWORKSYNC: Int = Lib.Companion.BIT(11) // cvar is synced from the server to clients
-    val CVAR_NOCHEAT: Int = Lib.Companion.BIT(14) // variable is not considered a cheat
-    val CVAR_RENDERER: Int = Lib.Companion.BIT(4) // renderer variable
-    val CVAR_ROM: Int = Lib.Companion.BIT(16) // display only; cannot be set by user at all
-    val CVAR_SERVERINFO: Int = Lib.Companion.BIT(10) // sent from servers; available to menu
-    val CVAR_SOUND: Int = Lib.Companion.BIT(5) // sound variable
-    val CVAR_STATIC: Int = Lib.Companion.BIT(12) // statically declared; not user created
-    val CVAR_SYSTEM: Int = Lib.Companion.BIT(3) // system variable
-    val CVAR_TOOL: Int = Lib.Companion.BIT(8) // tool variable
-    val CVAR_USERINFO: Int = Lib.Companion.BIT(9) // sent to servers; available to menu
-    private val FORMAT_STRING: String? = "%-32s "
+    val CVAR_ARCHIVE: Int = Lib.BIT(17) // set to cause it to be saved to a config file
+    val CVAR_BOOL: Int = Lib.BIT(0) // variable is a boolean
+    val CVAR_CHEAT: Int = Lib.BIT(13) // variable is considered a cheat
+    val CVAR_FLOAT: Int = Lib.BIT(2) // variable is a float
+    val CVAR_GAME: Int = Lib.BIT(7) // game variable
+    val CVAR_GUI: Int = Lib.BIT(6) // gui variable
+    val CVAR_INIT: Int = Lib.BIT(15) // can only be set from the command-line
+    val CVAR_INTEGER: Int = Lib.BIT(1) // variable is an longeger
+    val CVAR_MODIFIED: Int = Lib.BIT(18) // set when the variable is modified
+    val CVAR_NETWORKSYNC: Int = Lib.BIT(11) // cvar is synced from the server to clients
+    val CVAR_NOCHEAT: Int = Lib.BIT(14) // variable is not considered a cheat
+    val CVAR_RENDERER: Int = Lib.BIT(4) // renderer variable
+    val CVAR_ROM: Int = Lib.BIT(16) // display only; cannot be set by user at all
+    val CVAR_SERVERINFO: Int = Lib.BIT(10) // sent from servers; available to menu
+    val CVAR_SOUND: Int = Lib.BIT(5) // sound variable
+    val CVAR_STATIC: Int = Lib.BIT(12) // statically declared; not user created
+    val CVAR_SYSTEM: Int = Lib.BIT(3) // system variable
+    val CVAR_TOOL: Int = Lib.BIT(8) // tool variable
+    val CVAR_USERINFO: Int = Lib.BIT(9) // sent to servers; available to menu
+    private val FORMAT_STRING: String = "%-32s "
 
     //
     //
@@ -124,7 +124,7 @@ object CVarSystem {
     private const val NUM_DESCRIPTION_CHARS = CVarSystem.NUM_COLUMNS - CVarSystem.NUM_NAME_CHARS
     private var localCVarSystem: idCVarSystemLocal = idCVarSystemLocal()
     var cvarSystem: idCVarSystem = localCVarSystem
-    fun CreateColumn(textString: String?, columnWidth: Int, indent: String?, string: idStr?): String? {
+    fun CreateColumn(textString: String, columnWidth: Int, indent: String, string: idStr): String {
         var i: Int
         var lastLine: Int
         val text = textString.toCharArray()
@@ -197,7 +197,7 @@ object CVarSystem {
         // Always use one of the following constructors.
         constructor(name: String?, value: String?, flags: Int, description: String?) {
             if (null == valueCompletion && flags and CVarSystem.CVAR_BOOL != 0) {
-                valueCompletion = ArgCompletion_Boolean.Companion.getInstance()
+                valueCompletion = ArgCompletion_Boolean.getInstance()
             }
             Init(name, value, flags, description, 1f, -1f, null, null)
         }
@@ -211,7 +211,7 @@ object CVarSystem {
         ) {
             var valueCompletion = valueCompletion
             if (null == valueCompletion && flags and CVarSystem.CVAR_BOOL != 0) {
-                valueCompletion = ArgCompletion_Boolean.Companion.getInstance()
+                valueCompletion = ArgCompletion_Boolean.getInstance()
             }
             Init(name, value, flags, description, 1f, -1f, null, valueCompletion)
         }
@@ -284,7 +284,7 @@ object CVarSystem {
             return result
         }
 
-        fun GetName(): String? {
+        fun GetName(): String {
             return internalVar.name
         }
 
@@ -511,7 +511,7 @@ object CVarSystem {
 
         // Moves CVars to and from dictionaries.
         @Throws(idException::class)
-        abstract fun MoveCVarsToDict(flags: Int): idDict?
+        abstract fun MoveCVarsToDict(flags: Int): idDict
 
         @Throws(idException::class)
         abstract fun SetCVarsFromDict(dict: idDict?)
@@ -657,7 +657,7 @@ object CVarSystem {
             if (flags and CVarSystem.CVAR_BOOL != 0) {
                 integerValue = if (TempDump.atoi(value) != 0) 1 else 0
                 floatValue = integerValue.toFloat()
-                if (idStr.Companion.Icmp(value, "0") != 0 && idStr.Companion.Icmp(value, "1") != 0) {
+                if (idStr.Icmp(value, "0") != 0 && idStr.Icmp(value, "1") != 0) {
                     valueString = idStr(integerValue != 0)
                     value = valueString.toString()
                 }
@@ -729,7 +729,7 @@ object CVarSystem {
 
         fun Set(newValue: String?, force: Boolean, fromServer: Boolean) {
             var newValue = newValue
-            if (Session.Companion.session != null && Session.Companion.session.IsMultiplayer() && !fromServer) {
+            if (Session.session != null && Session.session.IsMultiplayer() && !fromServer) {
 // #ifndef ID_TYPEINFO
                 // if ( ( flags & CVAR_NETWORKSYNC ) && idAsyncNetwork::client.IsActive() ) {
                 // common.Printf( "%s is a synced over the network and cannot be changed on a multiplayer client.\n", nameString.c_str() );
@@ -811,8 +811,8 @@ object CVarSystem {
      ===============================================================================
      */
     internal class idCVarSystemLocal : idCVarSystem() {
-        private val cvarHash: idHashIndex?
-        private val cvars: idList<idInternalCVar?>?
+        private val cvarHash: idHashIndex
+        private val cvars: idList<idInternalCVar>
         private var initialized = false
         private var modifiedFlags: Int
 
@@ -848,7 +848,7 @@ object CVarSystem {
             CmdSystem.cmdSystem.AddCommand("reset", Reset_f.getInstance(), CmdSystem.CMD_FL_SYSTEM, "resets a cvar")
             CmdSystem.cmdSystem.AddCommand(
                 "listCvars",
-                CVarSystem.idCVarSystemLocal.List_f.Companion.getInstance(),
+                CVarSystem.idCVarSystemLocal.List_f.getInstance(),
                 CmdSystem.CMD_FL_SYSTEM,
                 "lists cvars"
             )
@@ -979,7 +979,7 @@ object CVarSystem {
         @Throws(idException::class)
         override fun CommandCompletion(callback: void_callback<String?>?) {
             for (i in 0 until cvars.Num()) {
-                callback.run(cvars.get(i).GetName())
+                callback.run(cvars[i].GetName())
             }
         }
 
@@ -988,11 +988,11 @@ object CVarSystem {
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(cmdString, false)
             for (i in 0 until cvars.Num()) {
-                if (null == cvars.get(i).valueCompletion) {
+                if (null == cvars[i].valueCompletion) {
                     continue
                 }
-                if (idStr.Companion.Icmp(args.Argv(0), cvars.get(i).nameString.toString()) == 0) {
-                    cvars.get(i).valueCompletion.run(args, callback)
+                if (idStr.Icmp(args.Argv(0), cvars[i].nameString.toString()) == 0) {
+                    cvars[i].valueCompletion.run(args, callback)
                     break
                 }
             }
@@ -1013,7 +1013,7 @@ object CVarSystem {
         @Throws(idException::class)
         override fun ResetFlaggedVariables(flags: Int) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.get(i)
+                val cvar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
                     cvar.Set(null, true, true)
                 }
@@ -1022,7 +1022,7 @@ object CVarSystem {
 
         override fun RemoveFlaggedAutoCompletion(flags: Int) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.get(i)
+                val cvar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
                     cvar.valueCompletion = null
                 }
@@ -1039,7 +1039,7 @@ object CVarSystem {
          */
         override fun WriteFlaggedVariables(flags: Int, setCmd: String?, f: idFile?) {
             for (i in 0 until cvars.Num()) {
-                val cvar = cvars.get(i)
+                val cvar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
                     f.Printf("%s %s \"%s\"\n", setCmd, cvar.GetName(), cvar.GetString())
                 }
@@ -1047,10 +1047,10 @@ object CVarSystem {
         }
 
         @Throws(idException::class)
-        override fun MoveCVarsToDict(flags: Int): idDict? {
+        override fun MoveCVarsToDict(flags: Int): idDict {
             moveCVarsToDict.Clear()
             for (i in 0 until cvars.Num()) {
-                val cvar: idCVar? = cvars.get(i)
+                val cvar: idCVar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
                     moveCVarsToDict.Set(cvar.GetName(), cvar.GetString())
                 }
@@ -1074,8 +1074,8 @@ object CVarSystem {
             val hash = cvarHash.GenerateKey(name, false)
             var i = cvarHash.First(hash)
             while (i != -1) {
-                if (cvars.get(i).nameString.Icmp(name) == 0) {
-                    return cvars.get(i)
+                if (cvars[i].nameString.Icmp(name) == 0) {
+                    return cvars[i]
                 }
                 i = cvarHash.Next(i)
             }
@@ -1135,7 +1135,7 @@ object CVarSystem {
                     text = cvar.GetString()
                     i = 2
                     while (i < argc) {
-                        if (0 == idStr.Companion.Icmp(text, args.Argv(i))) {
+                        if (0 == idStr.Icmp(text, args.Argv(i))) {
                             // point to next value
                             i++
                             break
@@ -1305,7 +1305,7 @@ object CVarSystem {
             companion object {
                 private val instance: cmdFunction_t? = CVarSystem.idCVarSystemLocal.List_f()
                 fun getInstance(): cmdFunction_t? {
-                    return CVarSystem.idCVarSystemLocal.List_f.Companion.instance
+                    return CVarSystem.idCVarSystemLocal.List_f.instance
                 }
             }
         }
@@ -1317,7 +1317,7 @@ object CVarSystem {
                 var cvar: idInternalCVar?
                 i = 0
                 while (i < localCVarSystem.cvars.Num()) {
-                    cvar = localCVarSystem.cvars.get(i)
+                    cvar = localCVarSystem.cvars[i]
 
                     // don't mess with rom values
                     if (cvar.flags and (CVarSystem.CVAR_ROM or CVarSystem.CVAR_INIT) != 0) {
@@ -1341,8 +1341,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Restart_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Restart_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1350,7 +1350,7 @@ object CVarSystem {
 
         companion object {
             // use a static dictionary to MoveCVarsToDict can be used from game
-            private val moveCVarsToDict: idDict? = idDict()
+            private val moveCVarsToDict: idDict = idDict()
 
             //
             //public						~idCVarSystemLocal() {}
@@ -1367,12 +1367,12 @@ object CVarSystem {
                 val cvarList = idList<idInternalCVar?>()
                 argNum = 1
                 var show: show? = show.SHOW_VALUE
-                if (idStr.Companion.Icmp(args.Argv(argNum), "-") == 0 || idStr.Companion.Icmp(
+                if (idStr.Icmp(args.Argv(argNum), "-") == 0 || idStr.Icmp(
                         args.Argv(argNum),
                         "/"
                     ) == 0
                 ) {
-                    if (idStr.Companion.Icmp(args.Argv(argNum + 1), "help") == 0 || idStr.Companion.Icmp(
+                    if (idStr.Icmp(args.Argv(argNum + 1), "help") == 0 || idStr.Icmp(
                             args.Argv(
                                 argNum + 1
                             ), "?"
@@ -1380,14 +1380,14 @@ object CVarSystem {
                     ) {
                         argNum = 3
                         show = show.SHOW_DESCRIPTION
-                    } else if (idStr.Companion.Icmp(
+                    } else if (idStr.Icmp(
                             args.Argv(argNum + 1),
                             "type"
-                        ) == 0 || idStr.Companion.Icmp(args.Argv(argNum + 1), "range") == 0
+                        ) == 0 || idStr.Icmp(args.Argv(argNum + 1), "range") == 0
                     ) {
                         argNum = 3
                         show = show.SHOW_TYPE
-                    } else if (idStr.Companion.Icmp(args.Argv(argNum + 1), "flags") == 0) {
+                    } else if (idStr.Icmp(args.Argv(argNum + 1), "flags") == 0) {
                         argNum = 3
                         show = show.SHOW_FLAGS
                     }
@@ -1400,7 +1400,7 @@ object CVarSystem {
                 }
                 i = 0
                 while (i < localCVarSystem.cvars.Num()) {
-                    cvar = localCVarSystem.cvars.get(i)
+                    cvar = localCVarSystem.cvars[i]
                     if (0L == cvar.GetFlags() and flags) {
                         i++
                         continue
@@ -1417,7 +1417,7 @@ object CVarSystem {
                     show.SHOW_VALUE -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.get(i)
+                            cvar = cvarList[i]
                             idLib.common.Printf(
                                 """
     ${CVarSystem.FORMAT_STRING}${Str.S_COLOR_WHITE}"%s"
@@ -1432,7 +1432,7 @@ object CVarSystem {
                         indent.Insert("\n", 0)
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.get(i)
+                            cvar = cvarList[i]
                             idLib.common.Printf(
                                 """
     ${CVarSystem.FORMAT_STRING}${Str.S_COLOR_WHITE}%s
@@ -1452,7 +1452,7 @@ object CVarSystem {
                     show.SHOW_TYPE -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.get(i)
+                            cvar = cvarList[i]
                             if (cvar.GetFlags() and CVarSystem.CVAR_BOOL != 0) {
                                 idLib.common.Printf(
                                     """
@@ -1526,7 +1526,7 @@ object CVarSystem {
                     show.SHOW_FLAGS -> {
                         i = 0
                         while (i < cvarList.Num()) {
-                            cvar = cvarList.get(i)
+                            cvar = cvarList[i]
                             idLib.common.Printf(CVarSystem.FORMAT_STRING, cvar.GetName())
                             string = ""
                             string += if (cvar.GetFlags() and CVarSystem.CVAR_BOOL != 0) {
@@ -1597,7 +1597,7 @@ object CVarSystem {
     // NOTE: the const wonkyness is required to make msvc happy
     class idListSortCompare : cmp_t<idInternalCVar> {
         override fun compare(a: idInternalCVar, b: idInternalCVar): Int {
-            return idStr.Companion.Icmp(a.GetName(), b.GetName())
+            return idStr.Icmp(a.GetName(), b.GetName())
         }
     }
 

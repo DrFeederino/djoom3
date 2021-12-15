@@ -22,16 +22,16 @@ class DeclTable {
     class idDeclTable : idDecl() {
         private var clamp = false
         private var snap = false
-        private val values: idList<Float?>? = idList()
+        private val values: idList<Float> = idList()
 
         //
         //
-        override fun DefaultDefinition(): String? {
+        override fun DefaultDefinition(): String {
             return "{ { 0 } }"
         }
 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             val token = idToken()
             var v: Float
@@ -45,7 +45,7 @@ class DeclTable {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
                 if (token.Icmp("snap") == 0) {
@@ -63,10 +63,10 @@ class DeclTable {
                         }
                         values.Append(v)
                         src.ReadToken(token)
-                        if (token == "}") {
+                        if (token.toString() == "}") {
                             break
                         }
-                        if (token == ",") {
+                        if (token.toString() == ",") {
                             continue
                         }
                         src.Warning("expected comma or brace")
@@ -82,7 +82,7 @@ class DeclTable {
 
             // copy the 0 element to the end, so lerping doesn't
             // need to worry about the wrap case
-            val `val`: Float = values.get(0) // template bug requires this to not be in the Append()?
+            val `val`: Float = values[0] // template bug requires this to not be in the Append()?
             values.Append(`val`)
             return true
         }
@@ -104,9 +104,9 @@ class DeclTable {
             if (clamp) {
                 index *= (domain - 1).toFloat()
                 if (index >= domain - 1) {
-                    return values.get(domain - 1)
+                    return values[domain - 1]
                 } else if (index <= 0) {
-                    return values.get(0)
+                    return values[0]
                 }
                 iIndex = idMath.Ftoi(index)
                 iFrac = index - iIndex
@@ -122,8 +122,8 @@ class DeclTable {
             return if (!snap) {
                 // we duplicated the 0 index at the end at creation time, so we
                 // don't need to worry about wrapping the filter
-                values.get(iIndex) * (1.0f - iFrac) + values.get(iIndex + 1) * iFrac
-            } else values.get(iIndex)
+                values[iIndex] * (1.0f - iFrac) + values[iIndex + 1] * iFrac
+            } else values[iIndex]
         }
     }
 }

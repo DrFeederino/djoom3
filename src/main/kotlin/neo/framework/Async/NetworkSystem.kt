@@ -10,11 +10,11 @@ object NetworkSystem {
     /**
      * Disclaimer: Use at own risk! @see https://www.ietf.org/rfc/rfc3514.txt
      */
-    private val networkSystemLocal: idNetworkSystem? = idNetworkSystem()
-    var networkSystem: idNetworkSystem? = NetworkSystem.networkSystemLocal
-    fun setNetworkSystem(networkSystem: idNetworkSystem?) {
-        NetworkSystem.networkSystemLocal = networkSystem
-        NetworkSystem.networkSystem = NetworkSystem.networkSystemLocal
+    private var networkSystemLocal: idNetworkSystem = idNetworkSystem()
+    var networkSystem: idNetworkSystem = networkSystemLocal
+    fun setNetworkSystems(networkSystem: idNetworkSystem) {
+        networkSystemLocal = networkSystem
+        NetworkSystem.networkSystem = networkSystemLocal
     }
 
     /*
@@ -26,13 +26,13 @@ object NetworkSystem {
      */
     class idNetworkSystem {
         //	virtual					~idNetworkSystem( void ) {}
-        fun ServerSendReliableMessage(clientNum: Int, msg: idBitMsg?) {
+        fun ServerSendReliableMessage(clientNum: Int, msg: idBitMsg) {
             if (idAsyncNetwork.server.IsActive()) {
                 idAsyncNetwork.server.SendReliableGameMessage(clientNum, msg)
             }
         }
 
-        fun ServerSendReliableMessageExcluding(clientNum: Int, msg: idBitMsg?) {
+        fun ServerSendReliableMessageExcluding(clientNum: Int, msg: idBitMsg) {
             if (idAsyncNetwork.server.IsActive()) {
                 idAsyncNetwork.server.SendReliableGameMessageExcluding(clientNum, msg)
             }
@@ -80,7 +80,7 @@ object NetworkSystem {
             } else 0.0f
         }
 
-        fun ClientSendReliableMessage(msg: idBitMsg?) {
+        fun ClientSendReliableMessage(msg: idBitMsg) {
             if (idAsyncNetwork.client.IsActive()) {
                 idAsyncNetwork.client.SendReliableGameMessage(msg)
             } else if (idAsyncNetwork.server.IsActive()) {

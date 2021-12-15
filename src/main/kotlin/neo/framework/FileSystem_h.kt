@@ -316,11 +316,11 @@ object FileSystem_h {
 
     class urlDownload_s {
         var dlerror //[ MAX_STRING_CHARS ];
-                : String? = null
+                : String = ""
         var dlnow = 0
         var dlstatus = 0
         var dltotal = 0
-        var status: dlStatus_t? = null
+        var status: dlStatus_t = dlStatus_t.DL_WAIT
         var url: idStr = idStr()
 
         constructor()
@@ -427,10 +427,10 @@ object FileSystem_h {
         }
 
         fun GetFile(index: Int): String {
-            return list.get(index).toString()
+            return list[index].toString()
         }
 
-        fun GetList(): idStrList? {
+        fun GetList(): idStrList {
             return list
         }
 
@@ -517,20 +517,20 @@ object FileSystem_h {
         // Directory should not have either a leading or trailing '/'
         // The returned files include a full relative path.
         // The extension must include a leading dot and may not contain wildcards.
-        abstract fun ListFilesTree(relativePath: String?, extension: String?): idFileList?
-        abstract fun ListFilesTree(relativePath: String?, extension: String?, sort: Boolean): idFileList?
+        abstract fun ListFilesTree(relativePath: String?, extension: String?): idFileList
+        abstract fun ListFilesTree(relativePath: String?, extension: String?, sort: Boolean): idFileList
         abstract fun ListFilesTree(
             relativePath: String?,
             extension: String?,
             sort: Boolean,
             gamedir: String?
-        ): idFileList?
+        ): idFileList
 
         // Frees the given file list.
         abstract fun FreeFileList(fileList: idFileList?)
 
         // Converts a relative path to a full OS path.
-        abstract fun OSPathToRelativePath(OSPath: String?): String?
+        abstract fun OSPathToRelativePath(OSPath: String?): String
 
         // Converts a full OS path to a relative path.
         abstract fun RelativePathToOSPath(relativePath: String, basePath: String /* = "fs_devpath"*/): String
@@ -597,18 +597,18 @@ object FileSystem_h {
         // A 0 byte will always be appended at the end, so string ops are safe.
         // The buffer should be considered read-only, because it may be cached for other uses.
         abstract fun ReadFile(relativePath: String?, buffer: Array<ByteBuffer?>?, timestamp: LongArray?): Int
-        abstract fun ReadFile(relativePath: String?, buffer: Array<ByteBuffer?>?): Int
-        fun ReadFile(name: idStr?, buffer: Array<ByteBuffer?>?, timeStamp: LongArray?): Int {
+        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>): Int
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>, timeStamp: LongArray): Int {
             return ReadFile(name.toString(), buffer, timeStamp)
         }
 
-        fun ReadFile(name: idStr?, buffer: Array<ByteBuffer?>?): Int {
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>): Int {
             return ReadFile(name.toString(), buffer)
         }
 
         // Frees the memory allocated by ReadFile.
         @Deprecated("")
-        abstract fun FreeFile(buffer: Array<ByteBuffer?>?)
+        abstract fun FreeFile(buffer: Array<ByteBuffer>)
 
         // Writes a complete file, will create any needed subdirectories.
         // Returns the length of the file, or -1 on failure.
@@ -694,7 +694,7 @@ object FileSystem_h {
 
         // look for a file in the loaded paks or the addon paks
         // if the file is found in addons, FS's internal structures are ready for a reloadEngine
-        abstract fun FindFile(path: String?, scheduleAddons: Boolean): findFile_t?
+        abstract fun FindFile(path: String?, scheduleAddons: Boolean): findFile_t
 
         // get map/addon decls and take into account addon paks that are not on the search list
         // the decl 'name' is in the "path" entry of the dict
@@ -1200,7 +1200,7 @@ object FileSystem_h {
             extension: String?,
             sort: Boolean,
             gamedir: String?
-        ): idFileList? {
+        ): idFileList {
             val hashIndex = idHashIndex(4096, 4096)
             val extensionList = idStrList()
             val fileList = idFileList()
@@ -1230,7 +1230,7 @@ object FileSystem_h {
 
          ================
          */
-        override fun OSPathToRelativePath(OSPath: String?): String? {
+        override fun OSPathToRelativePath(OSPath: String?): String {
             val relativePath: String? //=new char[MAX_STRING_CHARS];
             var s: Int
             var base: Int
@@ -1392,11 +1392,11 @@ object FileSystem_h {
             val path = idStr(OSPath)
             ofs = 1
             while (ofs < path.Length()) {
-                if (path.get(ofs) == sys_public.PATHSEPERATOR_CHAR) {
+                if (path[ofs] == sys_public.PATHSEPERATOR_CHAR) {
                     // create the directory
-                    path.set(ofs, '0')
+                    path[ofs] = '0'
                     win_main.Sys_Mkdir(path)
-                    path.set(ofs, sys_public.PATHSEPERATOR_CHAR)
+                    path[ofs] = sys_public.PATHSEPERATOR_CHAR
                 }
                 ofs++
             }
@@ -2797,7 +2797,7 @@ object FileSystem_h {
             return pak.checksum
         }
 
-        override fun FindFile(path: String?, scheduleAddons: Boolean): findFile_t? {
+        override fun FindFile(path: String?, scheduleAddons: Boolean): findFile_t {
             val pak = arrayOfNulls<pack_t?>(1)
             val f = OpenFileReadFlags(
                 path,
@@ -3396,7 +3396,7 @@ object FileSystem_h {
             GetFileList(relativePath, slash, folders, folderHashIndex, true, gamedir)
             i = 0
             while (i < folders.size()) {
-                if (folders[i].get(0) == '.') {
+                if (folders[i][0] == '.') {
                     i++
                     continue
                 }
@@ -4243,7 +4243,7 @@ object FileSystem_h {
                 } else {
                     relativePath = idStr(args.Argv(1))
                     extension = idStr(args.Argv(2))
-                    if (extension.get(0) != '.') {
+                    if (extension[0] != '.') {
                         idLib.common.Warning("extension should have a leading dot")
                     }
                 }
@@ -4285,7 +4285,7 @@ object FileSystem_h {
                 } else {
                     relativePath = idStr(args.Argv(1))
                     extension = idStr(args.Argv(2))
-                    if (extension.get(0) != '.') {
+                    if (extension[0] != '.') {
                         idLib.common.Warning("extension should have a leading dot")
                     }
                 }

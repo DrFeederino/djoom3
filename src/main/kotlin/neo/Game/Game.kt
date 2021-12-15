@@ -121,8 +121,8 @@ object Game {
                 = 0
         var health = 0
         var heartRate = 0
-        var sessionCommand: CharArray? =
-            CharArray(Lib.Companion.MAX_STRING_CHARS) // "map", "disconnect", "victory", etc
+        var sessionCommand: CharArray =
+            CharArray(Lib.MAX_STRING_CHARS) // "map", "disconnect", "victory", etc
         var stamina = 0
         var syncNextGameFrame // used when cinematics are skipped to prevent session from simulating several game frames to
                 = false // keep the game time in sync with real time
@@ -190,7 +190,7 @@ object Game {
         abstract fun SpawnPlayer(clientNum: Int)
 
         // Runs a game frame, may return a session command for level changing, etc
-        abstract fun RunFrame(clientCmds: Array<usercmd_t?>?): gameReturn_t?
+        abstract fun RunFrame(clientCmds: Array<usercmd_t>): gameReturn_t
 
         // Makes rendering and sound system calls to display for a given clientNum.
         abstract fun Draw(clientNum: Int): Boolean
@@ -199,7 +199,7 @@ object Game {
         abstract fun HandleESC(gui: idUserInterface?): escReply_t?
 
         // get the games menu if appropriate ( multiplayer )
-        abstract fun StartMenu(): idUserInterface?
+        abstract fun StartMenu(): idUserInterface
 
         // When the game is running it's own UI fullscreen, GUI commands are passed through here
         // return NULL once the fullscreen UI mode should stop, or "main" to go to main menu
@@ -215,7 +215,7 @@ object Game {
             guid: String?,
             password: String?,
             reason: CharArray? /*[MAX_STRING_CHARS]*/
-        ): allowReply_t?
+        ): allowReply_t
 
         // Connects a client.
         abstract fun ServerClientConnect(clientNum: Int, guid: String?)
@@ -242,7 +242,7 @@ object Game {
         abstract fun ServerApplySnapshot(clientNum: Int, sequence: Int): Boolean
 
         // Processes a reliable message from a client.
-        abstract fun ServerProcessReliableMessage(clientNum: Int, msg: idBitMsg?)
+        abstract fun ServerProcessReliableMessage(clientNum: Int, msg: idBitMsg)
 
         // Reads a snapshot and updates the client game state.
         abstract fun ClientReadSnapshot(
@@ -264,9 +264,9 @@ object Game {
         // Runs prediction on entities at the client.
         abstract fun ClientPrediction(
             clientNum: Int,
-            clientCmds: Array<usercmd_t?>?,
+            clientCmds: Array<usercmd_t>,
             lastPredictFrame: Boolean
-        ): gameReturn_t?
+        ): gameReturn_t
 
         // Used to manage divergent time-lines
         abstract fun SelectTimeGroup(timeGroup: Int)
@@ -683,7 +683,7 @@ object Game {
                 return
             }
             if (numJoints != model.NumJoints()) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "ANIM_CreateAnimFrame: different # of joints in renderEntity_t than in model (%s)",
                     model.Name()
                 )
@@ -693,7 +693,7 @@ object Game {
                 return
             }
             if (null == joints) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "ANIM_CreateAnimFrame: NULL joint frame pointer on model (%s)",
                     model.Name()
                 )
@@ -706,7 +706,7 @@ object Game {
                 )
                 i = 0
                 while (i < numJoints) {
-                    joints.get(i).SetRotation(idMat3.Companion.getMat3_identity())
+                    joints.get(i).SetRotation(idMat3.getMat3_identity())
                     joints.get(i).SetTranslation(offset)
                     i++
                 }
@@ -909,7 +909,7 @@ object Game {
                 while (ent != null) {
                     if (ent is idAFEntity_Base) {
                         af = ent as idAFEntity_Base?
-                        if (idStr.Companion.Icmp(decl.GetName(), af.GetAFName()) == 0) {
+                        if (idStr.Icmp(decl.GetName(), af.GetAFName()) == 0) {
                             af.LoadAF()
                         }
                     }
@@ -1014,15 +1014,15 @@ object Game {
             ANIM_CreateAnimFrame(md5, MD5anim, ent.numJoints, ent.joints, 1, modelDef.GetVisualOffset(), false)
 
             // buffers to store the initial origin and axis for each body
-            val bodyOrigin: Array<idVec3?> = idVec3.Companion.generateArray(af.bodies.Num())
+            val bodyOrigin: Array<idVec3?> = idVec3.generateArray(af.bodies.Num())
             bodyAxis = arrayOfNulls<idMat3?>(af.bodies.Num())
-            val newBodyOrigin: Array<idVec3?> = idVec3.Companion.generateArray(af.bodies.Num())
+            val newBodyOrigin: Array<idVec3?> = idVec3.generateArray(af.bodies.Num())
             newBodyAxis = arrayOfNulls<idMat3?>(af.bodies.Num())
 
             // finish the AF positions
             data.ent = ent
             data.joints = MD5joints
-            af.Finish(AFEntity.GetJointTransform.Companion.INSTANCE, ent.joints, data)
+            af.Finish(AFEntity.GetJointTransform.INSTANCE, ent.joints, data)
 
             // get the initial origin and axis for each AF body
             i = 0
@@ -1091,7 +1091,7 @@ object Game {
             jointMod =
                 arrayOfNulls<declAFJointMod_t?>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
             val modifiedOrigin: Array<idVec3?> =
-                idVec3.Companion.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
+                idVec3.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
             modifiedAxis = arrayOfNulls<idMat3?>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
             for (m in modifiedAxis.indices) {
                 modifiedAxis[m] = idMat3()
@@ -1227,7 +1227,7 @@ object Game {
             // can only have MAX_GENTITIES, so if we have a spot available, we're guaranteed to find one
             id = 0
             while (id < Game_local.MAX_GENTITIES) {
-                idStr.Companion.snPrintf(name, name.capacity(), "%s_%d", classname, id)
+                idStr.snPrintf(name, name.capacity(), "%s_%d", classname, id)
                 if (TempDump.NOT(Game_local.gameLocal.FindEntity(name.toString()))) {
                     return name.toString()
                 }
@@ -1235,7 +1235,7 @@ object Game {
             }
 
             // id == MAX_GENTITIES + 1, which can't be in use if we get here
-            idStr.Companion.snPrintf(name, name.capacity(), "%s_%d", classname, id)
+            idStr.snPrintf(name, name.capacity(), "%s_%d", classname, id)
             return name.toString()
         }
 

@@ -179,13 +179,11 @@ object CmdSystem {
         }
 
         //	template<final String *strings>
-        class ArgCompletion_String(private val listDeclStrings: Array<String?>) : argCompletion_t() {
+        class ArgCompletion_String(private val listDeclStrings: Array<String>) : argCompletion_t() {
             @Throws(idException::class)
             override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
-                var i = 0
-                while (listDeclStrings.get(i) != null) {
-                    callback.run(Str.va("%s %s", args.Argv(0), listDeclStrings.get(i)))
-                    i++
+                for (decl in listDeclStrings) {
+                    callback.run(Str.va("%s %s", args.Argv(0), decl))
                 }
             }
         }
@@ -244,7 +242,7 @@ object CmdSystem {
 
             companion object {
                 private val instance: argCompletion_t = ArgCompletion_ModelName()
-                fun getInstance(): argCompletion_t? {
+                fun getInstance(): argCompletion_t {
                     return instance
                 }
             }
@@ -359,7 +357,7 @@ object CmdSystem {
         var function: cmdFunction_t? = null
         var name: String? = null
         var next: commandDef_s? = null
-        private fun oSet(last: commandDef_s?) {
+        private fun set(last: commandDef_s) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -367,16 +365,16 @@ object CmdSystem {
     internal class idCmdSystemLocal : idCmdSystem() {
         //
         private var commands: commandDef_s? = null
-        private val completionParms: idStrList?
-        private var completionString: idStr?
+        private val completionParms: idStrList
+        private val completionString: idStr
 
         // a command stored to be executed after a reloadEngine and all associated commands have been processed
-        private var postReload: CmdArgs.idCmdArgs?
-        private var textBuf: ByteArray? = ByteArray(MAX_CMD_BUFFER)
+        private var postReload: CmdArgs.idCmdArgs
+        private var textBuf: ByteArray = ByteArray(MAX_CMD_BUFFER)
         private var textLength = 0
 
         // piggybacks on the text buffer, avoids tokenize again and screwing it up
-        private val tokenizedCmds: idList<CmdArgs.idCmdArgs?>?
+        private val tokenizedCmds: idList<CmdArgs.idCmdArgs>
 
         //
         //
@@ -422,7 +420,7 @@ object CmdSystem {
                 CMD_FL_SYSTEM,
                 "delays remaining buffered commands one or more frames"
             )
-            completionString = idStr("*")
+            completionString.set("*")
             textLength = 0
         }
 
@@ -445,10 +443,10 @@ object CmdSystem {
 
         @Throws(idException::class)
         override fun AddCommand(
-            cmdName: String?,
-            function: cmdFunction_t?,
+            cmdName: String,
+            function: cmdFunction_t,
             flags: Long,
-            description: String?,
+            description: String,
             argCompletion: argCompletion_t?
         ) {
             var cmd: commandDef_s?
@@ -456,7 +454,7 @@ object CmdSystem {
             // fail if the command already exists
             cmd = commands
             while (cmd != null) {
-                if (idStr.Cmp(cmdName, cmd.name) == 0) {
+                if (idStr.Cmp(cmdName, cmd.name!!) == 0) {
                     if (function !== cmd.function) {
                         idLib.common.Printf("idCmdSystemLocal::AddCommand: %s already defined\n", cmdName)
                     }
@@ -474,17 +472,17 @@ object CmdSystem {
             commands = cmd
         }
 
-        override fun RemoveCommand(cmdName: String?) {
+        override fun RemoveCommand(cmdName: String) {
             var cmd: commandDef_s?
             var last: commandDef_s?
             last = commands.also { cmd = it }
             while (cmd != null) {
-                if (idStr.Cmp(cmdName, cmd.name) == 0) {
+                if (idStr.Cmp(cmdName, cmd!!.name!!) == 0) {
                     if (cmd === commands) { //first iteration.
-                        commands = cmd.next //TODO:BOINTER. edit: check if this equals **last;
+                        commands = cmd!!.next //TODO:BOINTER. edit: check if this equals **last;
                     } else { //set last.next to last.next.next,
                         //where last.next is the current cmd. so basically setting overwriting the current node.
-                        last.next = cmd.next
+                        last!!.next = cmd!!.next
                     }
                     //                    cmd.name = cmd.description = null;
 //                    Mem_Free(cmd.name);
@@ -493,7 +491,7 @@ object CmdSystem {
                     return
                 }
                 last = cmd
-                cmd = cmd.next
+                cmd = cmd!!.next
             }
         }
 
@@ -510,17 +508,17 @@ object CmdSystem {
         }
 
         @Throws(idException::class)
-        override fun CommandCompletion(callback: void_callback<String?>?) {
+        override fun CommandCompletion(callback: void_callback<String>) {
             var cmd: commandDef_s?
             cmd = commands
             while (cmd != null) {
-                callback.run(cmd.name)
+                callback.run(cmd.name!!)
                 cmd = cmd.next
             }
         }
 
         @Throws(idException::class)
-        override fun ArgCompletion(cmdString: String?, callback: void_callback<String?>?) {
+        override fun ArgCompletion(cmdString: String, callback: void_callback<String>) {
             var cmd: commandDef_s?
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(cmdString, false)
@@ -530,8 +528,8 @@ object CmdSystem {
                     cmd = cmd.next
                     continue
                 }
-                if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
-                    cmd.argCompletion.run(args, callback)
+                if (idStr.Icmp(args.Argv(0), cmd.name!!) == 0) {
+                    cmd.argCompletion!!.run(args, callback)
                     break
                 }
                 cmd = cmd.next
@@ -539,7 +537,7 @@ object CmdSystem {
         }
 
         @Throws(idException::class)
-        override fun BufferCommandText(exec: cmdExecution_t?, text: String?) {
+        override fun BufferCommandText(exec: cmdExecution_t, text: String) {
             when (exec) {
                 cmdExecution_t.CMD_EXEC_NOW -> {
                     ExecuteCommandText(text)
@@ -562,7 +560,7 @@ object CmdSystem {
             var text: CharArray? = null
             var txt: String
             var quotes: Int
-            var args: CmdArgs.idCmdArgs? = CmdArgs.idCmdArgs()
+            var args: CmdArgs.idCmdArgs = CmdArgs.idCmdArgs()
             while (textLength != 0) {
                 DBG_ExecuteCommandBuffer++
                 if (wait != 0) {
@@ -592,7 +590,7 @@ object CmdSystem {
                 val bla = String(text)
                 txt = bla.substring(0, i) //do not use ctos!
                 if (0 == idStr.Cmp(txt, "_execTokenized")) {
-                    args = tokenizedCmds.get(0)
+                    args = tokenizedCmds[0]
                     tokenizedCmds.RemoveIndex(0)
                 } else {
                     args.TokenizeString(txt, false)
@@ -635,7 +633,7 @@ object CmdSystem {
                 val parm: idStr
                 val path = idStr()
                 var names: idFileList?
-                completionString = idStr(string)
+                completionString.set(string)
                 completionParms.clear()
                 parm = idStr(args.Argv(1))
                 parm.ExtractFilePath(path)
@@ -683,7 +681,7 @@ object CmdSystem {
             }
             i = 0
             while (i < completionParms.size()) {
-                callback.run(completionParms.get(i).toString())
+                callback.run(completionParms[i].toString())
                 i++
             }
         }
@@ -770,31 +768,31 @@ object CmdSystem {
             while (cmd != null) {
 
 //                cmd = prev;
-                if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
+                if (idStr.Icmp(args.Argv(0), cmd!!.name!!) == 0) {
                     // rearrange the links so that the command will be
                     // near the head of the list next time it is used
                     if (cmd !== commands) { //no re-arranging necessary for first element.
-                        prev.next = cmd.next
-                        cmd.next = commands
+                        prev!!.next = cmd!!.next
+                        cmd!!.next = commands
                         commands = cmd
                     }
-                    if (cmd.flags and (CMD_FL_CHEAT or CMD_FL_TOOL) != 0L && Session.session != null && Session.session.IsMultiplayer() && !CVarSystem.cvarSystem.GetCVarBool(
+                    if (cmd!!.flags and (CMD_FL_CHEAT or CMD_FL_TOOL) != 0L && Session.session != null && Session.session.IsMultiplayer() && !CVarSystem.cvarSystem.GetCVarBool(
                             "net_allowCheats"
                         )
                     ) {
-                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd.name)
+                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd!!.name)
                         return
                     }
                     // perform the action
-                    if (null == cmd.function) {
+                    if (null == cmd!!.function) {
                         break
                     } else {
-                        cmd.function.run(args)
+                        cmd!!.function!!.run(args)
                     }
                     return
                 }
                 prev = cmd
-                cmd = cmd.next
+                cmd = cmd!!.next
             }
 
             // check cvars
@@ -837,7 +835,7 @@ object CmdSystem {
             // move the existing command text
             i = textLength - 1
             while (i >= 0) {
-                textBuf.get(i + len) = textBuf.get(i)
+                textBuf[i + len] = textBuf[i]
                 i--
             }
 
@@ -846,7 +844,7 @@ object CmdSystem {
             System.arraycopy(text.toByteArray(), 0, textBuf, 0, len - 1)
 
             // add a \n
-            textBuf.get(len - 1) = '\n'
+            textBuf[len - 1] = '\n'.code.toByte()
             textLength += len
         }
 
@@ -979,7 +977,7 @@ object CmdSystem {
                     return
                 }
                 idLib.common.Printf("execing %s\n", args.Argv(1))
-                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0].array()))
+                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0]!!.array()))
                 FileSystem_h.fileSystem.FreeFile(f)
             }
 
@@ -1054,7 +1052,7 @@ object CmdSystem {
          */
         private class Parse_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
                 i = 0
                 while (i < args.Argc()) {
@@ -1119,7 +1117,7 @@ object CmdSystem {
                 var i: Int
                 var match: String
                 var cmd: commandDef_s?
-                val cmdList = idList<commandDef_s?>()
+                val cmdList = idList<commandDef_s>()
                 if (args.Argc() > 1) {
                     match = args.Args(1, -1)
                     match = match.replace(" ".toRegex(), "")
@@ -1132,7 +1130,7 @@ object CmdSystem {
                         cmd = cmd.next
                         continue
                     }
-                    if (!match.isEmpty() && idStr(cmd.name).Filter(match, false)) {
+                    if (!match.isEmpty() && idStr(cmd.name!!).Filter(match, false)) {
                         cmd = cmd.next
                         continue
                     }
@@ -1142,7 +1140,7 @@ object CmdSystem {
                 cmdList.Sort()
                 i = 0
                 while (i < cmdList.Num()) {
-                    cmd = cmdList.get(i)
+                    cmd = cmdList[i]
                     idLib.common.Printf("  %-21s %s\n", cmd.name, cmd.description)
                     i++
                 }
@@ -1166,7 +1164,7 @@ object CmdSystem {
     // NOTE: the const wonkyness is required to make msvc happy
     class idListSortCompare : cmp_t<commandDef_s> {
         override fun compare(a: commandDef_s, b: commandDef_s): Int {
-            return idStr.Icmp(a.name, b.name)
+            return idStr.Icmp(a.name!!, b.name!!)
         }
     }
 }

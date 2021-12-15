@@ -77,7 +77,7 @@ object ServerScan {
     )
 
     //
-    var l_serverScan: idServerScan? = null
+    var l_serverScan: idServerScan = idServerScan()
 
     //    
     enum class scan_state_t {
@@ -96,18 +96,18 @@ object ServerScan {
     }
 
     // the menu gui uses a hard-coded control type to display a list of network games
-    internal class networkServer_t {
+    class networkServer_t {
         var OSMask = 0
-        var adr: netadr_t? = null
+        var adr: netadr_t = netadr_t()
         var challenge = 0
         var clients = 0
         var id // idnet mode sends an id for each server in list
                 = 0
-        var nickname: Array<CharArray?>? = Array(AsyncNetwork.MAX_NICKLEN) { CharArray(AsyncNetwork.MAX_ASYNC_CLIENTS) }
+        var nickname: Array<CharArray> = Array(AsyncNetwork.MAX_NICKLEN) { CharArray(AsyncNetwork.MAX_ASYNC_CLIENTS) }
         var ping = 0
-        var pings: ShortArray? = ShortArray(AsyncNetwork.MAX_ASYNC_CLIENTS)
-        var rate: IntArray? = IntArray(AsyncNetwork.MAX_ASYNC_CLIENTS)
-        var serverInfo: idDict? = null
+        var pings: ShortArray = ShortArray(AsyncNetwork.MAX_ASYNC_CLIENTS)
+        var rate: IntArray = IntArray(AsyncNetwork.MAX_ASYNC_CLIENTS)
+        var serverInfo: idDict = idDict()
     }
 
     /*
@@ -150,7 +150,7 @@ object ServerScan {
         //
         private var lan_pingtime // holds the time of LAN scan
                 = 0
-        private var listGUI: idListGUI? = null
+        private var listGUI: idListGUI = UserInterface.uiManager.AllocListGUI()
 
         ///
         private var m_pGUI: idUserInterface? = null
@@ -187,7 +187,7 @@ object ServerScan {
                 }
                 val id = info.GetValue().toString().toInt()
                 net_info.Delete(serv.toString())
-                val iserv = net_servers.get(id)
+                val iserv = net_servers[id]
                 server.ping = win_shared.Sys_Milliseconds() - iserv.time
                 server.id = iserv.id
             } else {
@@ -228,7 +228,7 @@ object ServerScan {
 
         //
         // add an internet server - ( store a numeric id along with it )
-        fun AddServer(id: Int, srv: String?) {
+        fun AddServer(id: Int, srv: String) {
             val s = inServer_t()
             incoming_net = true
             incoming_lastTime = win_shared.Sys_Milliseconds() + INCOMING_TIMEOUT
@@ -239,8 +239,8 @@ object ServerScan {
                 Common.common.DPrintf("idServerScan::AddServer: failed to parse server %s\n", srv)
                 return
             }
-            if (0 == s.adr.port.toInt()) {
-                s.adr.port = Licensee.PORT_SERVER.toShort()
+            if (0 == s.adr.port) {
+                s.adr.port = Licensee.PORT_SERVER
             }
             net_servers.Append(s)
         }
@@ -257,7 +257,7 @@ object ServerScan {
         // we are done filling up the list of server entries
         fun EndServers() {
             incoming_net = false
-            ServerScan.l_serverScan = this
+            l_serverScan = this
             m_sortedServers.Sort(Cmp())
             ApplyFilter()
         }
@@ -286,10 +286,10 @@ object ServerScan {
             listGUI.Clear()
             GUIUpdateSelected()
             Common.common.DPrintf("NetScan with challenge %d\n", challenge)
-            while (cur_info < Lib.Companion.Min(net_servers.Num(), MAX_PINGREQUESTS)) {
-                val serv = net_servers.get(cur_info).adr
+            while (cur_info < Lib.Min(net_servers.Num(), MAX_PINGREQUESTS)) {
+                val serv = net_servers[cur_info].adr
                 EmitGetInfo(serv)
-                net_servers.get(cur_info).time = win_shared.Sys_Milliseconds()
+                net_servers[cur_info].time = win_shared.Sys_Milliseconds()
                 net_info.SetInt(win_net.Sys_NetAdrToString(serv), cur_info)
                 cur_info++
             }
@@ -326,9 +326,9 @@ object ServerScan {
             // check for timeouts
             var i = 0
             while (i < net_info.GetNumKeyVals()) {
-                if (timeout_limit > net_servers.get(net_info.GetKeyVal(i).GetValue().toString().toInt()).time) {
-                    Common.common.DPrintf("timeout %s\n", net_info.GetKeyVal(i).GetKey().toString())
-                    net_info.Delete(net_info.GetKeyVal(i).GetKey().toString())
+                if (timeout_limit > net_servers[net_info.GetKeyVal(i)!!.GetValue().toString().toInt()].time) {
+                    Common.common.DPrintf("timeout %s\n", net_info.GetKeyVal(i)!!.GetKey().toString())
+                    net_info.Delete(net_info.GetKeyVal(i)!!.GetKey().toString())
                 } else {
                     i++
                 }
@@ -336,9 +336,9 @@ object ServerScan {
 
             // possibly send more queries
             while (cur_info < net_servers.Num() && net_info.GetNumKeyVals() < MAX_PINGREQUESTS) {
-                val serv = net_servers.get(cur_info).adr
+                val serv = net_servers[cur_info].adr
                 EmitGetInfo(serv)
-                net_servers.get(cur_info).time = win_shared.Sys_Milliseconds()
+                net_servers[cur_info].time = win_shared.Sys_Milliseconds()
                 net_info.SetInt(win_net.Sys_NetAdrToString(serv), cur_info)
                 cur_info++
             }
@@ -356,12 +356,12 @@ object ServerScan {
             return scan_state
         }
 
-        fun SetState(scan_state: scan_state_t?) {
+        fun SetState(scan_state: scan_state_t) {
             this.scan_state = scan_state
         }
 
         //	
-        fun GetBestPing(serv: networkServer_t?): Boolean {
+        fun GetBestPing(serv: networkServer_t): Boolean {
             var serv = serv
             var i: Int
             val ic: Int
@@ -392,11 +392,11 @@ object ServerScan {
         }
 
         //
-        fun GUIConfig(pGUI: idUserInterface?, name: String?) {
+        fun GUIConfig(pGUI: idUserInterface, name: String) {
             m_pGUI = pGUI
-            if (listGUI == null) {
-                listGUI = UserInterface.uiManager.AllocListGUI()
-            }
+//            if (listGUI == null) {
+//                listGUI = UserInterface.uiManager.AllocListGUI()
+//            }
             listGUI.Config(pGUI, name)
         }
 
@@ -404,47 +404,47 @@ object ServerScan {
         @Throws(idException::class)
         fun GUIUpdateSelected() {
             val screenshot = StringBuffer() //new char[MAX_STRING_CHARS];
-            if (TempDump.NOT(m_pGUI)) {
+            if (null == m_pGUI) {
                 return
             }
             val i = listGUI.GetSelection(null, 0)
             if (i == -1 || i >= Num()) {
-                m_pGUI.SetStateString("server_name", "")
-                m_pGUI.SetStateString("player1", "")
-                m_pGUI.SetStateString("player2", "")
-                m_pGUI.SetStateString("player3", "")
-                m_pGUI.SetStateString("player4", "")
-                m_pGUI.SetStateString("player5", "")
-                m_pGUI.SetStateString("player6", "")
-                m_pGUI.SetStateString("player7", "")
-                m_pGUI.SetStateString("player8", "")
-                m_pGUI.SetStateString("server_map", "")
-                m_pGUI.SetStateString("browser_levelshot", "")
-                m_pGUI.SetStateString("server_gameType", "")
-                m_pGUI.SetStateString("server_IP", "")
-                m_pGUI.SetStateString("server_passworded", "")
+                m_pGUI!!.SetStateString("server_name", "")
+                m_pGUI!!.SetStateString("player1", "")
+                m_pGUI!!.SetStateString("player2", "")
+                m_pGUI!!.SetStateString("player3", "")
+                m_pGUI!!.SetStateString("player4", "")
+                m_pGUI!!.SetStateString("player5", "")
+                m_pGUI!!.SetStateString("player6", "")
+                m_pGUI!!.SetStateString("player7", "")
+                m_pGUI!!.SetStateString("player8", "")
+                m_pGUI!!.SetStateString("server_map", "")
+                m_pGUI!!.SetStateString("browser_levelshot", "")
+                m_pGUI!!.SetStateString("server_gameType", "")
+                m_pGUI!!.SetStateString("server_IP", "")
+                m_pGUI!!.SetStateString("server_passworded", "")
             } else {
-                m_pGUI.SetStateString("server_name", get(i).serverInfo.GetString("si_name"))
+                m_pGUI!!.SetStateString("server_name", get(i).serverInfo.GetString("si_name"))
                 for (j in 0..7) {
                     if (get(i).clients > j) {
-                        m_pGUI.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(get(i).nickname.get(j)))
+                        m_pGUI!!.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(get(i).nickname[j])!!)
                     } else {
-                        m_pGUI.SetStateString(Str.va("player%d", j + 1), "")
+                        m_pGUI!!.SetStateString(Str.va("player%d", j + 1), "")
                     }
                 }
-                m_pGUI.SetStateString("server_map", get(i).serverInfo.GetString("si_mapName"))
+                m_pGUI!!.SetStateString("server_map", get(i).serverInfo.GetString("si_mapName"))
                 FileSystem_h.fileSystem.FindMapScreenshot(
                     get(i).serverInfo.GetString("si_map"),
                     screenshot,
-                    Lib.Companion.MAX_STRING_CHARS
+                    Lib.MAX_STRING_CHARS
                 )
-                m_pGUI.SetStateString("browser_levelshot", screenshot.toString())
-                m_pGUI.SetStateString("server_gameType", get(i).serverInfo.GetString("si_gameType"))
-                m_pGUI.SetStateString("server_IP", win_net.Sys_NetAdrToString(get(i).adr))
+                m_pGUI!!.SetStateString("browser_levelshot", screenshot.toString())
+                m_pGUI!!.SetStateString("server_gameType", get(i).serverInfo.GetString("si_gameType"))
+                m_pGUI!!.SetStateString("server_IP", win_net.Sys_NetAdrToString(get(i).adr))
                 if (get(i).serverInfo.GetBool("si_usePass")) {
-                    m_pGUI.SetStateString("server_passworded", "PASSWORD REQUIRED")
+                    m_pGUI!!.SetStateString("server_passworded", "PASSWORD REQUIRED")
                 } else {
-                    m_pGUI.SetStateString("server_passworded", "")
+                    m_pGUI!!.SetStateString("server_passworded", "")
                 }
             }
         }
@@ -452,9 +452,9 @@ object ServerScan {
         fun Shutdown() {
             m_pGUI = null
             if (listGUI != null) {
-                listGUI.Config(null, null)
+                //listGUI.Config(null, null)
                 UserInterface.uiManager.FreeListGUI(listGUI)
-                listGUI = null
+                //listGUI = null
             }
             screenshot.Clear()
         }
@@ -467,9 +467,9 @@ object ServerScan {
             listGUI.Clear()
             i = if (m_sortAscending) 0 else m_sortedServers.Num() - 1
             while (if (m_sortAscending) i < m_sortedServers.Num() else i >= 0) {
-                serv = get(m_sortedServers.oGet(i))
+                serv = get(m_sortedServers[i])
                 if (!IsFiltered(serv)) {
-                    GUIAdd(m_sortedServers.get(i), serv)
+                    GUIAdd(m_sortedServers[i], serv)
                 }
                 i += if (m_sortAscending) 1 else -1
             }
@@ -478,8 +478,8 @@ object ServerScan {
         }
 
         // there is an internal toggle, call twice with same sort to switch
-        fun SetSorting(sort: serverSort_t?) {
-            ServerScan.l_serverScan = this
+        fun SetSorting(sort: serverSort_t) {
+            l_serverScan = this
             if (sort == m_sort) {
                 m_sortAscending = !m_sortAscending
             } else {
@@ -504,7 +504,7 @@ object ServerScan {
             net_servers.Clear()
             cur_info = 0
             if (listGUI != null) {
-                listGUI.Clear()
+                listGUI!!.Clear()
             }
             incoming_useTimeout = false
             m_sortedServers.Clear()
@@ -515,12 +515,12 @@ object ServerScan {
         }
 
         @Throws(idException::class)
-        private fun GUIAdd(id: Int, server: networkServer_t?) {
+        private fun GUIAdd(id: Int, server: networkServer_t) {
             var name = server.serverInfo.GetString("si_name", Licensee.GAME_NAME + " Server")
             var d3xp = false
             var mod = false
-            if (0 == idStr.Companion.Icmp(server.serverInfo.GetString("fs_game"), "d3xp")
-                || 0 == idStr.Companion.Icmp(server.serverInfo.GetString("fs_game_base"), "d3xp")
+            if (0 == idStr.Icmp(server.serverInfo.GetString("fs_game"), "d3xp")
+                || 0 == idStr.Icmp(server.serverInfo.GetString("fs_game_base"), "d3xp")
             ) {
                 d3xp = true
             }
@@ -552,7 +552,7 @@ object ServerScan {
         }
 
         @Throws(idException::class)
-        private fun IsFiltered(server: networkServer_t?): Boolean {
+        private fun IsFiltered(server: networkServer_t): Boolean {
             var i: Int
             var keyval: idKeyValue?
             if (server.OSMask and (1 shl sys_public.BUILD_OS_ID) == 0) {
@@ -560,25 +560,25 @@ object ServerScan {
             }
             // password filter
             keyval = server.serverInfo.FindKey("si_usePass")
-            if (keyval != null && ServerScan.gui_filter_password.GetInteger() == 1) {
+            if (keyval != null && gui_filter_password.GetInteger() == 1) {
                 // show passworded only
-                if (keyval.GetValue().get(0) == '0') {
+                if (keyval.GetValue()[0] == '0') {
                     return true
                 }
-            } else if (keyval != null && ServerScan.gui_filter_password.GetInteger() == 2) {
+            } else if (keyval != null && gui_filter_password.GetInteger() == 2) {
                 // show no password only
-                if (keyval.GetValue().get(0) != '0') {
+                if (keyval.GetValue()[0] != '0') {
                     return true
                 }
             }
             // players filter
             keyval = server.serverInfo.FindKey("si_maxPlayers")
             if (keyval != null) {
-                if (ServerScan.gui_filter_players.GetInteger() == 1 && server.clients == keyval.GetValue().toString()
+                if (gui_filter_players.GetInteger() == 1 && server.clients == keyval.GetValue().toString()
                         .toInt()
                 ) {
                     return true
-                } else if (ServerScan.gui_filter_players.GetInteger() == 2 && (0 == server.clients || server.clients == keyval.GetValue()
+                } else if (gui_filter_players.GetInteger() == 2 && (0 == server.clients || server.clients == keyval.GetValue()
                         .toString().toInt())
                 ) {
                     return true
@@ -586,28 +586,28 @@ object ServerScan {
             }
             // gametype filter
             keyval = server.serverInfo.FindKey("si_gameType")
-            if (keyval != null && ServerScan.gui_filter_gameType.GetInteger() != 0) {
+            if (keyval != null && gui_filter_gameType.GetInteger() != 0) {
                 i = 0
-                while (ServerScan.l_gameTypes[i] != null) {
-                    if (0 == keyval.GetValue().Icmp(ServerScan.l_gameTypes[i])) {
+                while (l_gameTypes[i] != null) {
+                    if (0 == keyval.GetValue().Icmp(l_gameTypes[i]!!)) {
                         break
                     }
                     i++
                 }
-                if (ServerScan.l_gameTypes[i] != null && i != ServerScan.gui_filter_gameType.GetInteger() - 1) {
+                if (l_gameTypes[i] != null && i != gui_filter_gameType.GetInteger() - 1) {
                     return true
                 }
             }
             // idle server filter
             keyval = server.serverInfo.FindKey("si_idleServer")
-            if (keyval != null && 0 == ServerScan.gui_filter_idle.GetInteger()) {
+            if (keyval != null && 0 == gui_filter_idle.GetInteger()) {
                 if (0 == keyval.GetValue().Icmp("1")) {
                     return true
                 }
             }
 
             // autofilter D3XP games if the user does not has the XP installed
-            if (!FileSystem_h.fileSystem.HasD3XP() && 0 == idStr.Companion.Icmp(
+            if (!FileSystem_h.fileSystem.HasD3XP() && 0 == idStr.Icmp(
                     server.serverInfo.GetString("fs_game"),
                     "d3xp"
                 )
@@ -616,24 +616,24 @@ object ServerScan {
             }
 
             // filter based on the game doom or XP
-            if (ServerScan.gui_filter_game.GetInteger() == 1) { //Only Doom
-                return idStr.Companion.Icmp(server.serverInfo.GetString("fs_game"), "") != 0
-            } else if (ServerScan.gui_filter_game.GetInteger() == 2) { //Only D3XP
-                return idStr.Companion.Icmp(server.serverInfo.GetString("fs_game"), "d3xp") != 0
+            if (gui_filter_game.GetInteger() == 1) { //Only Doom
+                return idStr.Icmp(server.serverInfo.GetString("fs_game"), "") != 0
+            } else if (gui_filter_game.GetInteger() == 2) { //Only D3XP
+                return idStr.Icmp(server.serverInfo.GetString("fs_game"), "d3xp") != 0
             }
             return false
         }
 
-        private class Cmp : cmp_t<Int?> {
-            override fun compare(a: Int?, b: Int?): Int {
-                val serv1: networkServer_t?
-                val serv2: networkServer_t?
+        private class Cmp : cmp_t<Int> {
+            override fun compare(a: Int, b: Int): Int {
+                val serv1: networkServer_t
+                val serv2: networkServer_t
                 val s1 = idStr()
                 val s2 = idStr()
                 val ret: Int
-                serv1 = ServerScan.l_serverScan.get(a)
-                serv2 = ServerScan.l_serverScan.get(b)
-                when (ServerScan.l_serverScan.m_sort) {
+                serv1 = l_serverScan[a]
+                serv2 = l_serverScan[b]
+                when (l_serverScan.m_sort) {
                     serverSort_t.SORT_PING -> {
                         ret = if (serv1.ping < serv2.ping) -1 else if (serv1.ping > serv2.ping) 1 else 0
                         return ret

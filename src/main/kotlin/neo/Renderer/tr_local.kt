@@ -397,7 +397,7 @@ object tr_local {
                 = 0
         var dynamicTexCoords // float * in vertex cache memory
                 : vertCache_s? = null
-        var geo: srfTriangles_s? = null
+        var geo: srfTriangles_s = srfTriangles_s()
         var material // may be NULL for shadow volumes
                 : Material.idMaterial? = null
         var nextOnLight // viewLight chains
@@ -410,7 +410,7 @@ object tr_local {
         // specular directions for non vertex program cards, skybox texcoords, etc
         var sort // material->sort, modified by gui / entity sort offsets
                 = 0f
-        var space: viewEntity_s? = null
+        var space: viewEntity_s = viewEntity_s()
 
         companion object {
             private var DBG_counter = 0

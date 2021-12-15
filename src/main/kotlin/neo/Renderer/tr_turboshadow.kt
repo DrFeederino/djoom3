@@ -1,6 +1,5 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Interaction.srfCullInfo_t
 import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.silEdge_t
@@ -10,6 +9,7 @@ import neo.Renderer.tr_local.idRenderLightLocal
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import kotlin.experimental.and
 
 /**
  *
@@ -39,17 +39,17 @@ object tr_turboshadow {
      =====================
      */
     fun R_CreateVertexProgramTurboShadowVolume(
-        ent: idRenderEntityLocal?,
-        tri: srfTriangles_s?,
-        light: idRenderLightLocal?,
-        cullInfo: srfCullInfo_t?
+        ent: idRenderEntityLocal,
+        tri: srfTriangles_s,
+        light: idRenderLightLocal,
+        cullInfo: srfCullInfo_t
     ): srfTriangles_s? {
         var i: Int
         var j: Int
         val newTri: srfTriangles_s?
         var sil: Int
         var indexes: IntArray?
-        val facing: ByteArray?
+        val facing: ByteArray
         Interaction.R_CalcInteractionFacing(ent, tri, light, cullInfo)
         if (RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
             Interaction.R_CalcInteractionCullBits(ent, tri, light, cullInfo)
@@ -76,11 +76,11 @@ object tr_turboshadow {
             val cullBits = cullInfo.cullBits
             j = 0.also { i = it }
             while (i < tri.numIndexes) {
-                if (0 == modifyFacing[j]) {
+                if (0 == modifyFacing[j].toInt()) {
                     val i1 = indexes[i + 0]
                     val i2 = indexes[i + 1]
                     val i3 = indexes[i + 2]
-                    if (cullBits[i1] and cullBits[i2] and cullBits[i3] != 0) {
+                    if ((cullBits[i1] and cullBits[i2] and cullBits[i3]).toInt() != 0) {
                         modifyFacing[j] = 1
                     } else {
                         numShadowingFaces++
@@ -115,24 +115,24 @@ object tr_turboshadow {
         sil = 0
         i = tri.numSilEdges
         while (i > 0) {
-            val f1: Int = facing[tri.silEdges[sil].p1]
-            val f2: Int = facing[tri.silEdges[sil].p2]
+            val f1: Int = facing[tri.silEdges[sil]!!.p1].toInt()
+            val f2: Int = facing[tri.silEdges[sil]!!.p2].toInt()
             if (0 == f1 xor f2) {
                 i--
                 sil++
                 continue
             }
-            val v1 = tri.silEdges[sil].v1 shl 1
-            val v2 = tri.silEdges[sil].v2 shl 1
+            val v1 = tri.silEdges[sil]!!.v1 shl 1
+            val v2 = tri.silEdges[sil]!!.v2 shl 1
 
             // set the two triangle winding orders based on facing
             // without using a poorly-predictable branch
-            shadowIndexes.get(shadowIndex + 0) = v1
-            shadowIndexes.get(shadowIndex + 1) = v2 xor f1
-            shadowIndexes.get(shadowIndex + 2) = v2 xor f2
-            shadowIndexes.get(shadowIndex + 3) = v1 xor f2
-            shadowIndexes.get(shadowIndex + 4) = v1 xor f1
-            shadowIndexes.get(shadowIndex + 5) = v2 xor 1
+            shadowIndexes[shadowIndex + 0] = v1
+            shadowIndexes[shadowIndex + 1] = v2 xor f1
+            shadowIndexes[shadowIndex + 2] = v2 xor f2
+            shadowIndexes[shadowIndex + 3] = v1 xor f2
+            shadowIndexes[shadowIndex + 4] = v1 xor f1
+            shadowIndexes[shadowIndex + 5] = v2 xor 1
             shadowIndex += 6
             i--
             sil++
@@ -164,7 +164,7 @@ object tr_turboshadow {
         i = 0
         j = 0
         while (i < tri.numIndexes) {
-            if (facing[j] != 0) {
+            if (facing[j].toInt() != 0) {
                 i += 3
                 j++
                 continue
@@ -191,18 +191,18 @@ object tr_turboshadow {
      =====================
      */
     fun R_CreateTurboShadowVolume(
-        ent: idRenderEntityLocal?,
-        tri: srfTriangles_s?,
-        light: idRenderLightLocal?,
-        cullInfo: srfCullInfo_t?
+        ent: idRenderEntityLocal,
+        tri: srfTriangles_s,
+        light: idRenderLightLocal,
+        cullInfo: srfCullInfo_t
     ): srfTriangles_s? {
         var i: Int
         var j: Int
         val localLightOrigin = idVec3()
-        val newTri: srfTriangles_s?
-        var sil: silEdge_t?
-        var indexes: IntArray?
-        val facing: ByteArray?
+        val newTri: srfTriangles_s
+        var sil: silEdge_t
+        var indexes: IntArray
+        val facing: ByteArray
         Interaction.R_CalcInteractionFacing(ent, tri, light, cullInfo)
         if (RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
             Interaction.R_CalcInteractionCullBits(ent, tri, light, cullInfo)
@@ -229,11 +229,11 @@ object tr_turboshadow {
             val cullBits = cullInfo.cullBits
             j = 0.also { i = it }
             while (i < tri.numIndexes) {
-                if (0 == modifyFacing[j]) {
+                if (0 == modifyFacing[j].toInt()) {
                     val i1 = indexes[i + 0]
                     val i2 = indexes[i + 1]
                     val i3 = indexes[i + 2]
-                    if (cullBits[i1] and cullBits[i2] and cullBits[i3] != 0) {
+                    if ((cullBits[i1] and cullBits[i2] and cullBits[i3]).toInt() != 0) {
                         modifyFacing[j] = 1
                     } else {
                         numShadowingFaces++
@@ -248,12 +248,12 @@ object tr_turboshadow {
             return null
         }
         newTri = tr_trisurf.R_AllocStaticTriSurf()
-        val shadowVerts: Array<shadowCache_s?>?
+        val shadowVerts: Array<shadowCache_s>
         shadowVerts = if (tr_local.USE_TRI_DATA_ALLOCATOR) {
             tr_trisurf.R_AllocStaticTriSurfShadowVerts(newTri, tri.numVerts * 2)
             newTri.shadowVertexes
         } else {
-            shadowCache_s.Companion.generateArray(tri.numVerts * 2)
+            shadowCache_s.generateArray(tri.numVerts * 2)
         }
         tr_main.R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, localLightOrigin)
         val vertRemap = IntArray(tri.numVerts)
@@ -261,7 +261,7 @@ object tr_turboshadow {
         i = 0
         j = 0
         while (i < tri.numIndexes) {
-            if (facing[j] != 0) {
+            if (facing[j].toInt() != 0) {
                 i += 3
                 j++
                 continue
@@ -275,15 +275,15 @@ object tr_turboshadow {
             j++
         }
         run {
-            val shadows = arrayOfNulls<idVec4?>(shadowVerts.size)
+            val shadows = idVec4.generateArray(shadowVerts.size)
             for (a in shadows.indices) {
-                shadows[a] = shadowVerts.get(a).xyz
+                shadows[a] = shadowVerts[a].xyz
             }
             newTri.numVerts =
                 Simd.SIMDProcessor.CreateShadowCache(shadows, vertRemap, localLightOrigin, tri.verts, tri.numVerts)
         }
-        tr_turboshadow.c_turboUsedVerts += newTri.numVerts
-        tr_turboshadow.c_turboUnusedVerts += tri.numVerts * 2 - newTri.numVerts
+        c_turboUsedVerts += newTri.numVerts
+        c_turboUnusedVerts += tri.numVerts * 2 - newTri.numVerts
         if (tr_local.USE_TRI_DATA_ALLOCATOR) {
             tr_trisurf.R_ResizeStaticTriSurfShadowVerts(newTri, newTri.numVerts)
         } else {
@@ -309,14 +309,14 @@ object tr_turboshadow {
         var sil_index = 0
         var shadowIndex = 0
         // create new triangles along sil planes
-        sil = tri.silEdges[sil_index]
+        sil = tri.silEdges[sil_index]!!
         i = tri.numSilEdges
         while (i > 0) {
-            val f1: Int = facing[sil.p1]
-            val f2: Int = facing[sil.p2]
+            val f1: Int = facing[sil.p1].toInt()
+            val f2: Int = facing[sil.p2].toInt()
             if (0 == f1 xor f2) {
                 i--
-                sil = tri.silEdges[++sil_index]
+                sil = tri.silEdges[++sil_index]!!
                 continue
             }
             val v1 = vertRemap[sil.v1]
@@ -324,15 +324,15 @@ object tr_turboshadow {
 
             // set the two triangle winding orders based on facing
             // without using a poorly-predictable branch
-            shadowIndexes.get(shadowIndex + 0) = v1
-            shadowIndexes.get(shadowIndex + 1) = v2 xor f1
-            shadowIndexes.get(shadowIndex + 2) = v2 xor f2
-            shadowIndexes.get(shadowIndex + 3) = v1 xor f2
-            shadowIndexes.get(shadowIndex + 4) = v1 xor f1
-            shadowIndexes.get(shadowIndex + 5) = v2 xor 1
+            shadowIndexes[shadowIndex + 0] = v1
+            shadowIndexes[shadowIndex + 1] = v2 xor f1
+            shadowIndexes[shadowIndex + 2] = v2 xor f2
+            shadowIndexes[shadowIndex + 3] = v1 xor f2
+            shadowIndexes[shadowIndex + 4] = v1 xor f1
+            shadowIndexes[shadowIndex + 5] = v2 xor 1
             shadowIndex += 6
             i--
-            sil = tri.silEdges[++sil_index]
+            sil = tri.silEdges[++sil_index]!!
         }
         val numShadowIndexes = shadowIndex
 
@@ -361,7 +361,7 @@ object tr_turboshadow {
         i = 0
         j = 0
         while (i < tri.numIndexes) {
-            if (facing[j] != 0) {
+            if (facing[j].toInt() != 0) {
                 i += 3
                 j++
                 continue

@@ -12,6 +12,7 @@ import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
+import kotlin.math.floor
 
 /**
  *
@@ -32,7 +33,7 @@ object tr_guisurf {
      the axis will give a 0.0 to 1.0 range in S and T when inside the gui surface
      ================
      */
-    fun R_SurfaceToTextureAxis(tri: srfTriangles_s?, origin: idVec3?, axis: Array<idVec3?>? /*[3]*/) {
+    fun R_SurfaceToTextureAxis(tri: srfTriangles_s, origin: idVec3, axis: Array<idVec3> /*[3]*/) {
         val area: Float
         val inva: Float
         val d0 = FloatArray(5)
@@ -40,27 +41,27 @@ object tr_guisurf {
         val a: idDrawVert?
         val b: idDrawVert?
         val c: idDrawVert?
-        val bounds = Array<FloatArray?>(2) { FloatArray(2) }
+        val bounds = Array<FloatArray>(2) { FloatArray(2) }
         val boundsOrg = FloatArray(2)
         var i: Int
         var j: Int
         var v: Float
 
         // find the bounds of the texture
-        bounds[0].get(1) = 999999
-        bounds[0].get(0) = bounds[0].get(1)
-        bounds[1].get(1) = -999999
-        bounds[1].get(0) = bounds[1].get(1)
+        bounds[0][1] = 999999f
+        bounds[0][0] = bounds[0][1]
+        bounds[1][1] = -999999f
+        bounds[1][0] = bounds[1][1]
         i = 0
         while (i < tri.numVerts) {
             j = 0
             while (j < 2) {
-                v = tri.verts[i].st.get(j)
-                if (v < bounds[0].get(j)) {
-                    bounds[0].get(j) = v
+                v = tri.verts[i].st[j]
+                if (v < bounds[0][j]) {
+                    bounds[0][j] = v
                 }
-                if (v > bounds[1].get(j)) {
-                    bounds[1].get(j) = v
+                if (v > bounds[1][j]) {
+                    bounds[1][j] = v
                 }
                 j++
             }
@@ -70,42 +71,42 @@ object tr_guisurf {
         // use the floor of the midpoint as the origin of the
         // surface, which will prevent a slight misalignment
         // from throwing it an entire cycle off
-        boundsOrg[0] = Math.floor((bounds[0].get(0) + bounds[1].get(0)) * 0.5).toFloat()
-        boundsOrg[1] = Math.floor((bounds[0].get(1) + bounds[1].get(1)) * 0.5).toFloat()
+        boundsOrg[0] = floor((bounds[0][0] + bounds[1][0]) * 0.5).toFloat()
+        boundsOrg[1] = floor((bounds[0][1] + bounds[1][1]) * 0.5).toFloat()
 
         // determine the world S and T vectors from the first drawSurf triangle
         a = tri.verts[tri.indexes[0]]
         b = tri.verts[tri.indexes[1]]
         c = tri.verts[tri.indexes[2]]
         Vector.VectorSubtract(b.xyz, a.xyz, d0)
-        d0[3] = b.st.get(0) - a.st.get(0)
-        d0[4] = b.st.get(1) - a.st.get(1)
+        d0[3] = b.st[0] - a.st[0]
+        d0[4] = b.st[1] - a.st[1]
         Vector.VectorSubtract(c.xyz, a.xyz, d1)
-        d1[3] = c.st.get(0) - a.st.get(0)
-        d1[4] = c.st.get(1) - a.st.get(1)
+        d1[3] = c.st[0] - a.st[0]
+        d1[4] = c.st[1] - a.st[1]
         area = d0[3] * d1[4] - d0[4] * d1[3]
         if (area.toDouble() == 0.0) {
-            axis.get(0).Zero()
-            axis.get(1).Zero()
-            axis.get(2).Zero()
+            axis[0].Zero()
+            axis[1].Zero()
+            axis[2].Zero()
             return  // degenerate
         }
         inva = 1.0f / area
-        axis.get(0).set(0, (d0[0] * d1[4] - d0[4] * d1[0]) * inva)
-        axis.get(0).set(1, (d0[1] * d1[4] - d0[4] * d1[1]) * inva)
-        axis.get(0).set(2, (d0[2] * d1[4] - d0[4] * d1[2]) * inva)
-        axis.get(1).set(0, (d0[3] * d1[0] - d0[0] * d1[3]) * inva)
-        axis.get(1).set(1, (d0[3] * d1[1] - d0[1] * d1[3]) * inva)
-        axis.get(1).set(2, (d0[3] * d1[2] - d0[2] * d1[3]) * inva)
+        axis[0][0] = (d0[0] * d1[4] - d0[4] * d1[0]) * inva
+        axis[0][1] = (d0[1] * d1[4] - d0[4] * d1[1]) * inva
+        axis[0][2] = (d0[2] * d1[4] - d0[4] * d1[2]) * inva
+        axis[1][0] = (d0[3] * d1[0] - d0[0] * d1[3]) * inva
+        axis[1][1] = (d0[3] * d1[1] - d0[1] * d1[3]) * inva
+        axis[1][2] = (d0[3] * d1[2] - d0[2] * d1[3]) * inva
         val plane = idPlane()
         plane.FromPoints(a.xyz, b.xyz, c.xyz)
-        axis.get(2).set(0, plane.get(0))
-        axis.get(2).set(1, plane.get(1))
-        axis.get(2).set(2, plane.get(2))
+        axis[2][0] = plane[0]
+        axis[2][1] = plane[1]
+        axis[2][2] = plane[2]
 
         // take point 0 and project the vectors to the texture origin
-        Vector.VectorMA(a.xyz, boundsOrg[0] - a.st.get(0), axis.get(0), origin)
-        Vector.VectorMA(origin, boundsOrg[1] - a.st.get(1), axis.get(1), origin)
+        Vector.VectorMA(a.xyz, boundsOrg[0] - a.st[0], axis[0], origin)
+        Vector.VectorMA(origin, boundsOrg[1] - a.st[1], axis[1], origin)
     }
 
     /*
@@ -116,9 +117,9 @@ object tr_guisurf {
      call the GUI generator to create quads for it.
      =================
      */
-    fun R_RenderGuiSurf(gui: idUserInterface?, drawSurf: drawSurf_s?) {
+    fun R_RenderGuiSurf(gui: idUserInterface, drawSurf: drawSurf_s) {
         val origin = idVec3()
-        val axis: Array<idVec3?> = idVec3.Companion.generateArray(3)
+        val axis: Array<idVec3> = idVec3.generateArray(3)
 
         // for testing the performance hit
         if (RenderSystem_init.r_skipGuiShaders.GetInteger() == 1) {
@@ -135,22 +136,22 @@ object tr_guisurf {
         tr_guisurf.R_SurfaceToTextureAxis(drawSurf.geo, origin, axis)
         val guiModelMatrix = FloatArray(16)
         val modelMatrix = FloatArray(16)
-        guiModelMatrix[0] = axis[0].get(0) / 640.0f
-        guiModelMatrix[4] = axis[1].get(0) / 480.0f
-        guiModelMatrix[8] = axis[2].get(0)
-        guiModelMatrix[12] = origin.get(0)
-        guiModelMatrix[1] = axis[0].get(1) / 640.0f
-        guiModelMatrix[5] = axis[1].get(1) / 480.0f
-        guiModelMatrix[9] = axis[2].get(1)
-        guiModelMatrix[13] = origin.get(1)
-        guiModelMatrix[2] = axis[0].get(2) / 640.0f
-        guiModelMatrix[6] = axis[1].get(2) / 480.0f
-        guiModelMatrix[10] = axis[2].get(2)
-        guiModelMatrix[14] = origin.get(2)
-        guiModelMatrix[3] = 0
-        guiModelMatrix[7] = 0
-        guiModelMatrix[11] = 0
-        guiModelMatrix[15] = 1
+        guiModelMatrix[0] = axis[0][0] / 640.0f
+        guiModelMatrix[4] = axis[1][0] / 480.0f
+        guiModelMatrix[8] = axis[2][0]
+        guiModelMatrix[12] = origin[0]
+        guiModelMatrix[1] = axis[0][1] / 640.0f
+        guiModelMatrix[5] = axis[1][1] / 480.0f
+        guiModelMatrix[9] = axis[2][1]
+        guiModelMatrix[13] = origin[1]
+        guiModelMatrix[2] = axis[0][2] / 640.0f
+        guiModelMatrix[6] = axis[1][2] / 480.0f
+        guiModelMatrix[10] = axis[2][2]
+        guiModelMatrix[14] = origin[2]
+        guiModelMatrix[3] = 0f
+        guiModelMatrix[7] = 0f
+        guiModelMatrix[11] = 0f
+        guiModelMatrix[15] = 1f
         tr_main.myGlMultMatrix(
             guiModelMatrix, drawSurf.space.modelMatrix,
             modelMatrix

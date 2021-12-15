@@ -49,356 +49,356 @@ import java.util.*
  */
 object RenderSystem_init {
     val r_brightness // changes gamma tables
-            : idCVar? = null
+            : idCVar
     val r_cgFragmentProfile // arbfp1, fp30
-            : idCVar? = null
+            : idCVar
 
     //
     val r_cgVertexProfile // arbvp1, vp20, vp30
-            : idCVar? = null
+            : idCVar
 
     //
     val r_checkBounds // compare all surface bounds with precalculated ones
-            : idCVar? = null
+            : idCVar
     val r_clear // force screen clear every frame
-            : idCVar? = null
-    val r_customHeight: idCVar? = null
-    val r_customWidth: idCVar? = null
+            : idCVar
+    val r_customHeight: idCVar
+    val r_customWidth: idCVar
     val r_debugArrowStep // step size of arrow cone line rotation in degrees
-            : idCVar? = null
+            : idCVar
 
     //
     val r_debugLineDepthTest // perform depth test on debug lines
-            : idCVar? = null
+            : idCVar
     val r_debugLineWidth // width of debug lines
-            : idCVar? = null
-    val r_debugPolygonFilled: idCVar? = null
+            : idCVar
+    val r_debugPolygonFilled: idCVar
 
     //
-    val r_debugRenderToTexture: idCVar? = null
+    val r_debugRenderToTexture: idCVar
     val r_demonstrateBug // used during development to show IHV's their problems
-            : idCVar? = null
+            : idCVar
     val r_displayRefresh // optional display refresh rate option for vid mode
-            : idCVar? = null
+            : idCVar
 
     //
     //
     //
     // cvars
     //
-    val r_ext_vertex_array_range: idCVar? = null
+    val r_ext_vertex_array_range: idCVar
 
     //
     val r_finish // force a call to glFinish() every frame
-            : idCVar? = null
+            : idCVar
     val r_flareSize // scale the flare deforms from the material def
-            : idCVar? = null
+            : idCVar
 
     //
     val r_forceLoadImages // draw all images to screen after registration
-            : idCVar? = null
+            : idCVar
     val r_frontBuffer // draw to front buffer for debugging
-            : idCVar? = null
+            : idCVar
     val r_fullscreen // 0 = windowed, 1 = full screen
-            : idCVar? = null
+            : idCVar
 
     //
     val r_gamma // changes gamma tables
-            : idCVar? = null
+            : idCVar
     val r_glDriver // "opengl32", etc
-            : idCVar? = null
+            : idCVar
 
     //
     val r_ignore // used for random debugging without defining new vars
-            : idCVar? = null
+            : idCVar
     val r_ignore2 // used for random debugging without defining new vars
-            : idCVar? = null
+            : idCVar
 
     //
-    val r_ignoreGLErrors: idCVar? = null
+    val r_ignoreGLErrors: idCVar
 
     //
-    val r_inhibitFragmentProgram: idCVar? = null
+    val r_inhibitFragmentProgram: idCVar
 
     //
     val r_jitter // randomly subpixel jitter the projection matrix
-            : idCVar? = null
+            : idCVar
     val r_jointNameOffset // offset of joint names when r_showskel is set to 1
-            : idCVar? = null
+            : idCVar
     val r_jointNameScale // size of joint names when r_showskel is set to 1
-            : idCVar? = null
+            : idCVar
     val r_lightAllBackFaces // light all the back faces, even when they would be shadowed
-            : idCVar? = null
+            : idCVar
     val r_lightScale // all light intensities are multiplied by this, which is normally 2
-            : idCVar? = null
+            : idCVar
     val r_lightSourceRadius // for soft-shadow sampling
-            : idCVar? = null
-    val r_lockSurfaces: idCVar? = null
+            : idCVar
+    val r_lockSurfaces: idCVar
     val r_logFile // number of frames to emit GL logs
-            : idCVar? = null
+            : idCVar
 
     //
     val r_materialOverride // override all materials
-            : idCVar? = null
+            : idCVar
     val r_mode // video mode number
-            : idCVar? = null
+            : idCVar
     val r_multiSamples // number of antialiasing samples
-            : idCVar? = null
+            : idCVar
     val r_offsetFactor // polygon offset parameter
-            : idCVar? = null
+            : idCVar
     val r_offsetUnits // polygon offset parameter
-            : idCVar? = null
+            : idCVar
     val r_orderIndexes // perform index reorganization to optimize vertex use
-            : idCVar? = null
+            : idCVar
 
     //
     val r_renderer // arb, nv10, nv20, r200, gl2, etc
             : idCVar = null
     val r_screenFraction // for testing fill rate, the resolution of the entire screen can be changed
-            : idCVar? = null
+            : idCVar
     val r_shadowPolygonFactor // scale value for stencil shadow drawing
-            : idCVar? = null
+            : idCVar
     val r_shadowPolygonOffset // bias value added to depth test for stencil shadow drawing
-            : idCVar? = null
+            : idCVar
     val r_shadows // enable shadows
-            : idCVar? = null
+            : idCVar
     val r_showAlloc // report alloc/free counts
-            : idCVar? = null
+            : idCVar
     val r_showCull // report sphere and box culling stats
-            : idCVar? = null
+            : idCVar
     val r_showDefs // report the number of modeDefs and lightDefs in view
-            : idCVar? = null
+            : idCVar
     val r_showDemo // report reads and writes to the demo file
-            : idCVar? = null
+            : idCVar
     val r_showDepth // display the contents of the depth buffer and the depth range
-            : idCVar? = null
+            : idCVar
     val r_showDominantTri // draw lines from vertexes to center of dominant triangles
-            : idCVar? = null
+            : idCVar
     val r_showDynamic // report stats on dynamic surface generation
-            : idCVar? = null
+            : idCVar
     val r_showEdges // draw the sil edges
-            : idCVar? = null
+            : idCVar
     val r_showEntityScissors // show entity scissor rectangles
-            : idCVar? = null
+            : idCVar
     val r_showImages // draw all images to screen instead of rendering
-            : idCVar? = null
+            : idCVar
     val r_showIntensity // draw the screen colors based on intensity, red = 0, green = 128, blue = 255
-            : idCVar? = null
+            : idCVar
     val r_showInteractionFrustums // show a frustum for each interaction
-            : idCVar? = null
+            : idCVar
 
     //
     val r_showInteractionScissors // show screen rectangle which contains the interaction frustum
-            : idCVar? = null
+            : idCVar
     val r_showInteractions // report interaction generation activity
-            : idCVar? = null
+            : idCVar
     val r_showLightCount // colors surfaces based on light count
-            : idCVar? = null
+            : idCVar
     val r_showLightScale // report the scale factor applied to drawing for overbrights
-            : idCVar? = null
+            : idCVar
     val r_showLightScissors // show light scissor rectangles
-            : idCVar? = null
+            : idCVar
     val r_showLights // 1 = print light info, 2 = also draw volumes
-            : idCVar? = null
+            : idCVar
     val r_showMemory // print frame memory utilization
-            : idCVar? = null
+            : idCVar
     val r_showNormals // draws wireframe normals
-            : idCVar? = null
+            : idCVar
     val r_showOverDraw // show overdraw
-            : idCVar? = null
+            : idCVar
     val r_showPortals // draw portal outlines in color based on passed / not passed
-            : idCVar? = null
+            : idCVar
     val r_showPrimitives // report vertex/index/draw counts
             : idCVar = null
     val r_showShadowCount // colors screen based on shadow volume depth complexity
-            : idCVar? = null
+            : idCVar
     val r_showShadows // visualize the stencil shadow volumes
-            : idCVar? = null
+            : idCVar
     val r_showSilhouette // highlight edges that are casting shadow planes
-            : idCVar? = null
+            : idCVar
     val r_showSkel // draw the skeleton when model animates
-            : idCVar? = null
+            : idCVar
     val r_showSmp // show which end (front or back) is blocking
-            : idCVar? = null
+            : idCVar
     val r_showSurfaceInfo // show surface material name under crosshair
-            : idCVar? = null
+            : idCVar
     val r_showSurfaces // report surface/light/shadow counts
-            : idCVar? = null
+            : idCVar
     val r_showTangentSpace // shade triangles by tangent space
-            : idCVar? = null
+            : idCVar
     val r_showTexturePolarity // shade triangles by texture area polarity
-            : idCVar? = null
+            : idCVar
     val r_showTextureVectors // draw each triangles texture (tangent) vectors
-            : idCVar? = null
+            : idCVar
     val r_showTrace // show the intersection of an eye trace with the world
-            : idCVar? = null
+            : idCVar
     val r_showTris // enables wireframe rendering of the world
-            : idCVar? = null
+            : idCVar
 
     //
     val r_showUnsmoothedTangents // highlight geometry rendered with unsmoothed tangents
-            : idCVar? = null
+            : idCVar
     val r_showUpdates // report entity and light updates and ref counts
-            : idCVar? = null
+            : idCVar
     val r_showVertexColor // draws all triangles with the solid vertex color
-            : idCVar? = null
+            : idCVar
     val r_showViewEntitys // displays the bounding boxes of all view models and optionally the index
-            : idCVar? = null
+            : idCVar
     val r_singleArea // only draw the portal area the view is actually in
-            : idCVar? = null
+            : idCVar
     val r_singleEntity // suppress all but one entity
-            : idCVar? = null
+            : idCVar
 
     //
     val r_singleLight // suppress all but one light
-            : idCVar? = null
+            : idCVar
     val r_singleSurface // suppress all but one surface on each entity
-            : idCVar? = null
+            : idCVar
     val r_singleTriangle // only draw a single triangle per primitive
-            : idCVar? = null
+            : idCVar
     val r_skipAmbient // bypasses all non-interaction drawing
-            : idCVar? = null
+            : idCVar
     val r_skipBackEnd // don't draw anything
-            : idCVar? = null
+            : idCVar
     val r_skipBlendLights // skip all blend lights
-            : idCVar? = null
+            : idCVar
     val r_skipBump // uses a flat surface instead of the bump map
-            : idCVar? = null
+            : idCVar
     val r_skipCopyTexture // do all rendering, but don't actually copyTexSubImage2D
-            : idCVar? = null
+            : idCVar
     val r_skipDeforms // leave all deform materials in their original state
-            : idCVar? = null
+            : idCVar
     val r_skipDiffuse // use black for diffuse
-            : idCVar? = null
+            : idCVar
     val r_skipDynamicTextures // don't dynamically create textures
-            : idCVar? = null
+            : idCVar
     val r_skipFogLights // skip all fog lights
-            : idCVar? = null
+            : idCVar
     val r_skipFrontEnd // bypasses all front end work, but 2D gui rendering still draws
-            : idCVar? = null
+            : idCVar
     val r_skipGuiShaders // 1 = don't render any gui elements on surfaces
-            : idCVar? = null
+            : idCVar
     val r_skipInteractions // skip all light/surface interaction drawing
-            : idCVar? = null
+            : idCVar
     val r_skipLightScale // don't do any post-interaction light scaling, makes things dim on low-dynamic range cards
-            : idCVar? = null
+            : idCVar
     val r_skipNewAmbient // bypasses all vertex/fragment program ambients
-            : idCVar? = null
+            : idCVar
     val r_skipOverlays // skip overlay surfaces
-            : idCVar? = null
+            : idCVar
     val r_skipParticles // 1 = don't render any particles
-            : idCVar? = null
+            : idCVar
 
     //
     val r_skipPostProcess // skip all post-process renderings
-            : idCVar? = null
-    val r_skipROQ: idCVar? = null
+            : idCVar
+    val r_skipROQ: idCVar
     val r_skipRender // skip 3D rendering, but pass 2D
-            : idCVar? = null
+            : idCVar
     val r_skipRenderContext // NULL the rendering context during backend 3D rendering
-            : idCVar? = null
+            : idCVar
     val r_skipSpecular // use black for specular
-            : idCVar? = null
+            : idCVar
     val r_skipSubviews // 1 = don't render any mirrors / cameras / etc
-            : idCVar? = null
+            : idCVar
     val r_skipSuppress // ignore the per-view suppressions
-            : idCVar? = null
+            : idCVar
     val r_skipTranslucent // skip the translucent interaction rendering
-            : idCVar? = null
+            : idCVar
     val r_skipUpdates // 1 = don't accept any entity or light updates, making everything static
-            : idCVar? = null
+            : idCVar
     val r_subviewOnly // 1 = don't render main view, allowing subviews to be debugged
-            : idCVar? = null
+            : idCVar
     val r_swapInterval // changes wglSwapIntarval
-            : idCVar? = null
+            : idCVar
 
     //
     val r_testARBProgram // experiment with vertex/fragment programs
-            : idCVar? = null
+            : idCVar
 
     //
     val r_testGamma // draw a grid pattern to test gamma levels
-            : idCVar? = null
+            : idCVar
     val r_testGammaBias // draw a grid pattern to test gamma levels
-            : idCVar? = null
+            : idCVar
     val r_testStepGamma // draw a grid pattern to test gamma levels
-            : idCVar? = null
+            : idCVar
     val r_useCachedDynamicModels // 1 = cache snapshots of dynamic models
-            : idCVar? = null
+            : idCVar
     val r_useClippedLightScissors // 0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always
-            : idCVar? = null
+            : idCVar
     val r_useCombinerDisplayLists // if 1, put all nvidia register combiner programming in display lists
-            : idCVar? = null
+            : idCVar
     val r_useConstantMaterials // 1 = use pre-calculated material registers if possible
-            : idCVar? = null
+            : idCVar
     val r_useCulling // 0 = none, 1 = sphere, 2 = sphere + box
-            : idCVar? = null
+            : idCVar
     val r_useDeferredTangents // 1 = don't always calc tangents after deform
-            : idCVar? = null
+            : idCVar
     val r_useDepthBoundsTest // use depth bounds test to reduce shadow fill
-            : idCVar? = null
+            : idCVar
     val r_useEntityCallbacks // if 0, issue the callback immediately at update time, rather than defering
-            : idCVar? = null
+            : idCVar
     val r_useEntityCulling // 0 = none, 1 = box
-            : idCVar? = null
+            : idCVar
     val r_useEntityScissors // 1 = use custom scissor rectangle for each entity
-            : idCVar? = null
+            : idCVar
     val r_useExternalShadows // 1 = skip drawing caps when outside the light volume
-            : idCVar? = null
+            : idCVar
     val r_useFrustumFarDistance // if != 0 force the view frustum far distance to this distance
-            : idCVar? = null
+            : idCVar
     val r_useIndexBuffers // if 0, don't use ARB_vertex_buffer_object for indexes
-            : idCVar? = null
+            : idCVar
     val r_useInfiniteFarZ // 1 = use the no-far-clip-plane trick
-            : idCVar? = null
+            : idCVar
     val r_useInteractionCulling // 1 = cull interactions
-            : idCVar? = null
+            : idCVar
     val r_useInteractionScissors // 1 = use a custom scissor rectangle for each interaction
-            : idCVar? = null
+            : idCVar
     val r_useInteractionTable // create a full entityDefs * lightDefs table to make finding interactions faster
-            : idCVar? = null
+            : idCVar
     val r_useLightCulling // 0 = none, 1 = box, 2 = exact clip of polyhedron faces
-            : idCVar? = null
+            : idCVar
     val r_useLightPortalFlow // 1 = do a more precise area reference determination
-            : idCVar? = null
+            : idCVar
     val r_useLightScissors // 1 = use custom scissor rectangle for each light
-            : idCVar? = null
+            : idCVar
 
     //
     val r_useNV20MonoLights // 1 = allow an interaction pass optimization
-            : idCVar? = null
+            : idCVar
     val r_useNodeCommonChildren // stop pushing reference bounds early when possible
-            : idCVar? = null
+            : idCVar
     val r_useOptimizedShadows // 1 = use the dmap generated static shadow volumes
-            : idCVar? = null
+            : idCVar
     val r_usePortals // 1 = use portals to perform area culling, otherwise draw everything
-            : idCVar? = null
+            : idCVar
     val r_usePreciseTriangleInteractions // 1 = do winding clipping to determine if each ambiguous tri should be lit
-            : idCVar? = null
+            : idCVar
     val r_useScissor // 1 = scissor clip as portals and lights are processed
-            : idCVar? = null
+            : idCVar
     val r_useShadowCulling // try to cull shadows from partially visible lights
-            : idCVar? = null
+            : idCVar
     val r_useShadowProjectedCull // 1 = discard triangles outside light volume before shadowing
-            : idCVar? = null
+            : idCVar
     val r_useShadowSurfaceScissor // 1 = scissor shadows by the scissor rect of the interaction surfaces
-            : idCVar? = null
+            : idCVar
     val r_useShadowVertexProgram // 1 = do the shadow projection in the vertex program on capable cards
-            : idCVar? = null
+            : idCVar
     val r_useSilRemap // 1 = consider verts with the same XYZ, but different ST the same for shadows
             : idCVar
     val r_useStateCaching // avoid redundant state changes in GL_*() calls
             : idCVar
     val r_useTripleTextureARB // 1 = cards with 3+ texture units do a two pass instead of three pass
-            : idCVar? = null
+            : idCVar
     val r_useTurboShadow // 1 = use the infinite projection with W technique for dynamic shadows
-            : idCVar? = null
+            : idCVar
     val r_useTwoSidedStencil // 1 = do stencil shadows in one pass with different ops on each side
-            : idCVar? = null
+            : idCVar
     val r_useVertexBuffers // if 0, don't use ARB_vertex_buffer_object for vertexes
-            : idCVar? = null
+            : idCVar
     val r_znear // near Z clip plane
-            : idCVar? = null
+            : idCVar
 
     /*
      ==================
@@ -1471,7 +1471,7 @@ object RenderSystem_init {
      */
     internal class R_EnvShot_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
-            var fullname: String? = null
+            var fullname: String
             val baseName: String?
             var i: Int
             val axis = arrayOfNulls<idMat3?>(6)

@@ -5,7 +5,7 @@ package neo.Renderer
  */
 object simplex {
     const val NUM_SIMPLEX_CHARS = 95
-    val simplex /*[NUM_SIMPLEX_CHARS][112]*/: Array<IntArray?>? = arrayOf(
+    val simplex /*[NUM_SIMPLEX_CHARS][112]*/: Array<IntArray> = arrayOf(
         intArrayOf(
             0, 16,  /* Ascii 32 */
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,

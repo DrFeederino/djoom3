@@ -328,11 +328,11 @@ object Game_local {
         if (gameImport.version == Game.GAME_API_VERSION) {
             // set interface pointers used by the game
             sys_public.setSysLocal(gameImport.sys)
-            Common.setCommon(gameImport.common)
+            Common.setCommons(gameImport.common)
             CmdSystem.setCmdSystems(gameImport.cmdSystem)
             CVarSystem.setCvarSystems(gameImport.cvarSystem)
             FileSystem_h.setFileSystem(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
-            NetworkSystem.setNetworkSystem(gameImport.networkSystem)
+            NetworkSystem.setNetworkSystems(gameImport.networkSystem)
             RenderSystem.setRenderSystem(gameImport.renderSystem)
             snd_system.setSoundSystems(gameImport.soundSystem)
             ModelManager.setRenderModelManagers(gameImport.renderModelManager)
@@ -1576,7 +1576,7 @@ object Game_local {
             mpGame.SpawnPlayer(clientNum)
         }
 
-        override fun RunFrame(clientCmds: Array<usercmd_t?>?): gameReturn_t? {
+        override fun RunFrame(clientCmds: Array<usercmd_t>): gameReturn_t {
             var ent: idEntity?
             var num: Int
             var ms: Float
@@ -1820,7 +1820,7 @@ object Game_local {
             } else escReply_t.ESC_MAIN
         }
 
-        override fun StartMenu(): idUserInterface? {
+        override fun StartMenu(): idUserInterface {
             return if (!isMultiplayer) {
                 null
             } else mpGame.StartMenu()
@@ -1839,7 +1839,7 @@ object Game_local {
             guid: String?,
             password: String?,
             reason: CharArray? /*[MAX_STRING_CHARS]*/
-        ): allowReply_t? {
+        ): allowReply_t {
             reason.get(0) = '\u0000'
             if (serverInfo.GetInt("si_pure") != 0 && !mpGame.IsPureReady()) {
                 idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07139")
@@ -2181,7 +2181,7 @@ object Game_local {
             return ApplySnapshot(clientNum, sequence)
         }
 
-        override fun ServerProcessReliableMessage(clientNum: Int, msg: idBitMsg?) {
+        override fun ServerProcessReliableMessage(clientNum: Int, msg: idBitMsg) {
             val id: Int
             id = msg.ReadByte()
             when (id) {
@@ -2453,9 +2453,9 @@ object Game_local {
 
         override fun ClientPrediction(
             clientNum: Int,
-            clientCmds: Array<usercmd_t?>?,
+            clientCmds: Array<usercmd_t>,
             lastPredictFrame: Boolean
-        ): gameReturn_t? {
+        ): gameReturn_t {
             var ent: idEntity?
             val player: idPlayer?
             val ret = gameReturn_t()

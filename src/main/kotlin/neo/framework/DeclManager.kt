@@ -665,7 +665,7 @@ object DeclManager {
         abstract fun RegisterDeclFolder(folder: String?, extension: String?, defaultType: declType_t?)
 
         // Returns a checksum for all loaded decl text.
-        abstract fun GetChecksum(): BigInteger?
+        abstract fun GetChecksum(): BigInteger
 
         // Returns the number of decl types.
         abstract fun GetNumDeclTypes(): Int

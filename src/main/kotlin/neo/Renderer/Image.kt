@@ -95,10 +95,10 @@ object Image {
 
     // do this with a pointer, in case we want to make the actual manager
     // a private virtual subclass
-    private val imageManager: idImageManager? = idImageManager()
+    private val imageManager: idImageManager = idImageManager()
 
     // pointer to global list for the rest of the system
-    var globalImages: idImageManager? = Image.imageManager
+    var globalImages: idImageManager = Image.imageManager
     fun DDS_MAKEFOURCC(a: Int, b: Int, c: Int, d: Int): Int {
         return a shl 0 or (b shl 8) or (c shl 16) or (d shl 24)
     }

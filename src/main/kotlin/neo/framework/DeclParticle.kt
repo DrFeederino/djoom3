@@ -28,7 +28,7 @@ import java.util.*
  *
  */
 object DeclParticle {
-    val ParticleCustomDesc: Array<ParticleParmDesc?>? = arrayOf(
+    val ParticleCustomDesc: Array<ParticleParmDesc> = arrayOf(
         ParticleParmDesc("standard", 0, "Standard"),
         ParticleParmDesc("helix", 5, "sizeX Y Z radialSpeed axialSpeed"),
         ParticleParmDesc("flies", 3, "radialSpeed axialSpeed size"),
@@ -38,16 +38,16 @@ object DeclParticle {
 
     //const int CustomParticleCount = sizeof( ParticleCustomDesc ) / sizeof( const ParticleParmDesc );
     val CustomParticleCount = DeclParticle.ParticleCustomDesc.size
-    val ParticleDirectionDesc: Array<ParticleParmDesc?>? = arrayOf(
+    val ParticleDirectionDesc: Array<ParticleParmDesc> = arrayOf(
         ParticleParmDesc("cone", 1, ""),
         ParticleParmDesc("outward", 1, "")
     )
-    val ParticleDistributionDesc: Array<ParticleParmDesc?>? = arrayOf(
+    val ParticleDistributionDesc: Array<ParticleParmDesc> = arrayOf(
         ParticleParmDesc("rect", 3, ""),
         ParticleParmDesc("cylinder", 4, ""),
         ParticleParmDesc("sphere", 3, "")
     )
-    val ParticleOrientationDesc: Array<ParticleParmDesc?>? = arrayOf(
+    val ParticleOrientationDesc: Array<ParticleParmDesc> = arrayOf(
         ParticleParmDesc("view", 0, ""),
         ParticleParmDesc("aimed", 2, ""),
         ParticleParmDesc("x", 0, ""),
@@ -85,7 +85,7 @@ object DeclParticle {
 
      ===============================================================================
      */
-    internal class ParticleParmDesc(val name: String?, var count: Int, val desc: String?)
+    class ParticleParmDesc(val name: String, var count: Int, val desc: String)
 
     /*
      ====================================================================================

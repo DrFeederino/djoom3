@@ -35,15 +35,15 @@ object tr_main {
      R_ShowColoredScreenRect
      ======================
      */
-    val colors /*[]*/: Array<idVec4?>? = arrayOf(
-        Lib.Companion.colorRed,
-        Lib.Companion.colorGreen,
-        Lib.Companion.colorBlue,
-        Lib.Companion.colorYellow,
-        Lib.Companion.colorMagenta,
-        Lib.Companion.colorCyan,
-        Lib.Companion.colorWhite,
-        Lib.Companion.colorPurple
+    val colors /*[]*/: Array<idVec4> = arrayOf(
+        Lib.colorRed,
+        Lib.colorGreen,
+        Lib.colorBlue,
+        Lib.colorYellow,
+        Lib.colorMagenta,
+        Lib.colorCyan,
+        Lib.colorWhite,
+        Lib.colorPurple
     )
 
     /*
@@ -591,7 +591,7 @@ object tr_main {
     ): Boolean {
         var i: Int
         var j: Int
-        val transformed: Array<idVec3?> = idVec3.Companion.generateArray(8)
+        val transformed: Array<idVec3?> = idVec3.generateArray(8)
         val dists = FloatArray(8)
         val v = idVec3()
         var frust: idPlane?
@@ -1035,7 +1035,7 @@ object tr_main {
         if (tr_local.tr.viewDef.renderView.cramZNear) {
             dNear *= 0.25f
         }
-        dFar = Lib.Companion.MAX_WORLD_SIZE.toFloat()
+        dFar = Lib.MAX_WORLD_SIZE.toFloat()
         dLeft = (dFar * Math.tan(Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_x * 0.5f).toDouble())).toFloat()
         dUp = (dFar * Math.tan(Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_y * 0.5f).toDouble())).toFloat()
         tr_local.tr.viewDef.viewFrustum.SetOrigin(tr_local.tr.viewDef.renderView.vieworg)
@@ -1160,7 +1160,7 @@ object tr_main {
         }
 
         // write everything needed to the demo file
-        if (Session.Companion.session.writeDemo != null) {
+        if (Session.session.writeDemo != null) {
 //		static_cast<idRenderWorldLocal *>(parms.renderWorld)->WriteVisibleDefs( tr.viewDef );
             parms.renderWorld.WriteVisibleDefs(tr_local.tr.viewDef)
         }

@@ -12,7 +12,7 @@ class Session_menu {
      idListSaveGameCompare
      ===============
      */
-    internal class idListSaveGameCompare : cmp_t<fileTIME_T?> {
+    internal class idListSaveGameCompare : cmp_t<fileTIME_T> {
         /**
          * Ordinary sort, but with **null** objects at the end.
          */

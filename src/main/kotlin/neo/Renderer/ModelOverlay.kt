@@ -27,24 +27,24 @@ object ModelOverlay {
     const val MAX_OVERLAY_SURFACES = 16
 
     internal class overlayVertex_s {
-        var st: FloatArray? = FloatArray(2)
+        var st: FloatArray = FloatArray(2)
         var vertexNum = 0
 
         constructor()
-        constructor(`val`: overlayVertex_s?) {
+        constructor(`val`: overlayVertex_s) {
             vertexNum = `val`.vertexNum
             System.arraycopy(`val`.st, 0, st, 0, st.size)
         }
     }
 
     private class overlaySurface_s {
-        var indexes: IntArray?
+        var indexes: IntArray
         var numIndexes = 0
         var numVerts = 0
         var surfaceId = 0
-        var surfaceNum: CInt? = CInt()
-        var verts: Array<overlayVertex_s?>?
-        private fun clear() {
+        var surfaceNum: CInt = CInt()
+        var verts: Array<overlayVertex_s>
+        fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -218,7 +218,7 @@ object ModelOverlay {
         }
 
         // Creates new model surfaces for baseModel, which should be a static instantiation of a dynamic model.
-        fun AddOverlaySurfacesToModel(baseModel: idRenderModel?) {
+        fun AddOverlaySurfacesToModel(baseModel: idRenderModel) {
             var i: Int
             var j: Int
             var k: Int
@@ -260,7 +260,7 @@ object ModelOverlay {
                     i++
                 }
                 if (staticModel.FindSurfaceWithId(-1 - k, surfaceNum)) {
-                    newSurf = staticModel.surfaces.get(surfaceNum.getVal())
+                    newSurf = staticModel.surfaces.get(surfaceNum._val)
                 } else {
                     newSurf = staticModel.surfaces.Alloc()
                     newSurf.geometry = null
@@ -284,8 +284,8 @@ object ModelOverlay {
                     surf = materials.get(k).surfaces.get(i)
 
                     // get the model surface for this overlay surface
-                    baseSurf = if (surf.surfaceNum.getVal() < staticModel.NumSurfaces()) {
-                        staticModel.Surface(surf.surfaceNum.getVal())
+                    baseSurf = if (surf.surfaceNum._val < staticModel.NumSurfaces()) {
+                        staticModel.Surface(surf.surfaceNum._val)
                     } else {
                         null
                     }
@@ -294,7 +294,7 @@ object ModelOverlay {
                     if (null == baseSurf || baseSurf.id != surf.surfaceId) {
                         // find the surface with the correct id
                         baseSurf = if (staticModel.FindSurfaceWithId(surf.surfaceId, surf.surfaceNum)) {
-                            staticModel.Surface(surf.surfaceNum.getVal())
+                            staticModel.Surface(surf.surfaceNum._val)
                         } else {
                             // the surface with this id no longer exists
                             FreeSurface(surf)
@@ -341,16 +341,16 @@ object ModelOverlay {
             }
         }
 
-        fun ReadFromDemoFile(f: idDemoFile?) {
+        fun ReadFromDemoFile(f: idDemoFile) {
             // FIXME: implement
         }
 
-        fun WriteToDemoFile(f: idDemoFile?) {
+        fun WriteToDemoFile(f: idDemoFile) {
             // FIXME: implement
         }
 
         //
-        private fun FreeSurface(surface: overlaySurface_s?) {
+        private fun FreeSurface(surface: overlaySurface_s) {
             if (surface.verts != null) {
 //                Mem_Free(surface.verts);
                 surface.verts = null
@@ -363,21 +363,21 @@ object ModelOverlay {
         }
 
         companion object {
-            fun Alloc(): idRenderModelOverlay? {
+            fun Alloc(): idRenderModelOverlay {
                 return idRenderModelOverlay()
             }
 
             @Deprecated("")
-            fun Free(overlay: idRenderModelOverlay?) {
+            fun Free(overlay: idRenderModelOverlay) {
 //	delete overlay;
             }
 
             // Removes overlay surfaces from the model.
-            fun RemoveOverlaySurfacesFromModel(baseModel: idRenderModel?) {
+            fun RemoveOverlaySurfacesFromModel(baseModel: idRenderModel) {
                 val staticModel: idRenderModelStatic?
 
 //	assert( dynamic_cast<idRenderModelStatic *>(baseModel) != NULL );
-                staticModel = baseModel as idRenderModelStatic?
+                staticModel = baseModel as idRenderModelStatic
                 staticModel.DeleteSurfacesWithNegativeId()
                 staticModel.overlaysAdded = 0
             }

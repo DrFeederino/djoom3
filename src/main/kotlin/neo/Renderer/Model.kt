@@ -129,10 +129,8 @@ object Model {
                 return data.flip()
             }
 
-            fun generateArray(length: Int): Array<shadowCache_s?>? {
-                return Stream.generate { shadowCache_s() }
-                    .limit(length.toLong())
-                    .toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<shadowCache_s> {
+                return Array(length) { shadowCache_s() }
             }
         }
     }
@@ -210,7 +208,7 @@ object Model {
         var shadowCache // shadowCache_t
                 : vertCache_s? = null
         var silEdges // silhouette edges
-                : Array<silEdge_t?>?
+                : Array<silEdge_t?>
 
         override fun toString(): String {
             return "srfTriangles_s{" +

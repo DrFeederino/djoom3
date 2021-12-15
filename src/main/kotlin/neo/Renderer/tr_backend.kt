@@ -46,7 +46,7 @@ object tr_backend {
      This routine is responsible for setting the most commonly changed state
      ====================
      */
-    private const val DBG_GL_State = 0
+    private var DBG_GL_State = 0
 
     /*
      ======================
@@ -58,7 +58,7 @@ object tr_backend {
      */
     fun RB_SetDefaultGLState() {
         var i: Int
-        tr_backend.RB_LogComment("--- R_SetDefaultGLState ---\n")
+        RB_LogComment("--- R_SetDefaultGLState ---\n")
         qgl.qglClearDepth(1.0)
         qgl.qglColor4f(1f, 1f, 1f, 1f)
 
@@ -90,14 +90,14 @@ object tr_backend {
         }
         i = tr_local.glConfig.maxTextureUnits - 1
         while (i >= 0) {
-            tr_backend.GL_SelectTexture(i)
+            GL_SelectTexture(i)
 
             // object linear texgen is our default
             qgl.qglTexGenf(GL11.GL_S, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
             qgl.qglTexGenf(GL11.GL_T, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
             qgl.qglTexGenf(GL11.GL_R, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
             qgl.qglTexGenf(GL11.GL_Q, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
-            tr_backend.GL_TexEnv(GL11.GL_MODULATE)
+            GL_TexEnv(GL11.GL_MODULATE)
             qgl.qglDisable(GL11.GL_TEXTURE_2D)
             if (tr_local.glConfig.texture3DAvailable) {
                 qgl.qglDisable(GL12.GL_TEXTURE_3D)
@@ -119,9 +119,9 @@ object tr_backend {
         if (TempDump.NOT(tr_local.tr.logFile)) {
             return
         }
-        tr_backend.fprintf(tr_local.tr.logFile, "// ")
+        fprintf(tr_local.tr.logFile, "// ")
         //	va_start( marker, comment );
-        tr_backend.vfprintf(tr_local.tr.logFile, *comment)
+        vfprintf(tr_local.tr.logFile, *comment)
         //	va_end( marker );
     }
 
@@ -141,7 +141,7 @@ object tr_backend {
         }
         qgl.qglActiveTextureARB(ARBMultitexture.GL_TEXTURE0_ARB + unit)
         qgl.qglClientActiveTextureARB(ARBMultitexture.GL_TEXTURE0_ARB + unit)
-        tr_backend.RB_LogComment("glActiveTextureARB( %d );\nglClientActiveTextureARB( %d );\n", unit, unit)
+        RB_LogComment("glActiveTextureARB( %d );\nglClientActiveTextureARB( %d );\n", unit, unit)
         tr_local.backEnd.glState.currenttmu = unit
     }
 
@@ -179,8 +179,8 @@ object tr_backend {
         tr_local.backEnd.glState.faceCulling = cullType
     }
 
-    fun GL_Cull(cullType: Enum<*>?) {
-        tr_backend.GL_Cull(cullType.ordinal)
+    fun GL_Cull(cullType: Enum<*>) {
+        GL_Cull(cullType.ordinal)
     }
 
     /*
@@ -225,7 +225,7 @@ object tr_backend {
      */
     fun GL_State(stateBits: Int) {
         val diff: Int
-        tr_backend.DBG_GL_State++
+        DBG_GL_State++
         if (!RenderSystem_init.r_useStateCaching.GetBool() || tr_local.backEnd.glState.forceGlState) {
             // make sure everything is set all the time, so we
             // can see if our delta checking is screwing up
@@ -405,12 +405,12 @@ object tr_backend {
         qgl.qglOrtho(0.0, 640.0, 480.0, 0.0, 0.0, 1.0) // always assume 640x480 virtual coordinates
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
         qgl.qglLoadIdentity()
-        tr_backend.GL_State(
+        GL_State(
             tr_local.GLS_DEPTHFUNC_ALWAYS
                     or tr_local.GLS_SRCBLEND_SRC_ALPHA
                     or tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA
         )
-        tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
+        GL_Cull(cullType_t.CT_TWO_SIDED)
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         qgl.qglDisable(GL11.GL_STENCIL_TEST)
     }
@@ -470,7 +470,7 @@ object tr_backend {
         var h: Float
         val start: Int
         val end: Int
-        tr_backend.RB_SetGL2D()
+        RB_SetGL2D()
 
         //qglClearColor( 0.2, 0.2, 0.2, 1 );
         //qglClear( GL_COLOR_BUFFER_BIT );
@@ -520,14 +520,14 @@ object tr_backend {
     fun RB_SwapBuffers(data: Any?) {
         // texture swapping test
         if (RenderSystem_init.r_showImages.GetInteger() != 0) {
-            tr_backend.RB_ShowImages()
+            RB_ShowImages()
         }
 
         // force a gl sync if requested
         if (RenderSystem_init.r_finish.GetBool()) {
             qgl.qglFinish()
         }
-        tr_backend.RB_LogComment("***************** RB_SwapBuffers *****************\n\n\n")
+        RB_LogComment("***************** RB_SwapBuffers *****************\n\n\n")
 
         // don't flip if drawing to front buffer
         if (!RenderSystem_init.r_frontBuffer.GetBool()) {
@@ -548,7 +548,7 @@ object tr_backend {
         if (RenderSystem_init.r_skipCopyTexture.GetBool()) {
             return
         }
-        tr_backend.RB_LogComment("***************** RB_CopyRender *****************\n")
+        RB_LogComment("***************** RB_CopyRender *****************\n")
         if (cmd.image != null) {
             val imageWidth = CInt(cmd.imageWidth)
             val imageHeight = CInt(cmd.imageHeight)
@@ -569,10 +569,10 @@ object tr_backend {
         if (renderCommand_t.RC_NOP == cmds.commandId && null == cmds.next) {
             return
         }
-        tr_backend.backEndStartTime = win_shared.Sys_Milliseconds()
+        backEndStartTime = win_shared.Sys_Milliseconds()
 
         // needed for editor rendering
-        tr_backend.RB_SetDefaultGLState()
+        RB_SetDefaultGLState()
 
         // upload any image loads that have completed
         Image.globalImages.CompleteBackgroundImageLoads()
@@ -588,15 +588,15 @@ object tr_backend {
                     }
                 }
                 renderCommand_t.RC_SET_BUFFER -> {
-                    tr_backend.RB_SetBuffer(cmds)
+                    RB_SetBuffer(cmds)
                     c_setBuffers++
                 }
                 renderCommand_t.RC_SWAP_BUFFERS -> {
-                    tr_backend.RB_SwapBuffers(cmds)
+                    RB_SwapBuffers(cmds)
                     c_swapBuffers++
                 }
                 renderCommand_t.RC_COPY_RENDER -> {
-                    tr_backend.RB_CopyRender(cmds)
+                    RB_CopyRender(cmds)
                     c_copyRenders++
                 }
                 else -> Common.common.Error("RB_ExecuteBackEndCommands: bad commandId")
@@ -609,8 +609,8 @@ object tr_backend {
         tr_local.backEnd.glState.tmu[0].current2DMap = -1
 
         // stop rendering on this thread
-        tr_backend.backEndFinishTime = win_shared.Sys_Milliseconds()
-        tr_local.backEnd.pc.msec = tr_backend.backEndFinishTime - tr_backend.backEndStartTime
+        backEndFinishTime = win_shared.Sys_Milliseconds()
+        tr_local.backEnd.pc.msec = backEndFinishTime - backEndStartTime
         if (RenderSystem_init.r_debugRenderToTexture.GetInteger() == 1) {
             Common.common.Printf(
                 "3d: %d, 2d: %d, SetBuf: %d, SwpBuf: %d, CpyRenders: %d, CpyFrameBuf: %d\n",

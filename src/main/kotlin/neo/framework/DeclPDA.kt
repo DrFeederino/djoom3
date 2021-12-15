@@ -23,13 +23,13 @@ class DeclPDA {
     class idDeclEmail  //
     //
         : idDecl() {
-        private var date: idStr? = null
-        private var from: idStr? = null
-        private var image: idStr? = null
-        private var subject: idStr? = null
-        private var text: idStr? = null
-        private var to: idStr? = null
-        override fun DefaultDefinition(): String? {
+        private lateinit var date: idStr
+        private lateinit var from: idStr
+        private lateinit var image: idStr
+        private lateinit var subject: idStr
+        private lateinit var text: idStr
+        private lateinit var to: idStr
+        override fun DefaultDefinition(): String {
             run {
                 return """{
 	{
@@ -42,7 +42,7 @@ class DeclPDA {
         }
 
         @Throws(idException::class)
-        override fun Parse(_text: String?, textLength: Int): Boolean {
+        override fun Parse(_text: String, textLength: Int): Boolean {
             val src = idLexer()
             src.LoadMemory(_text, textLength, GetFileName(), GetLineNum())
             src.SetFlags(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT or Lexer.LEXFL_NOFATALERRORS)
@@ -54,7 +54,7 @@ class DeclPDA {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
                 if (0 == token.Icmp("subject")) {
@@ -79,11 +79,11 @@ class DeclPDA {
                 }
                 if (0 == token.Icmp("text")) {
                     src.ReadToken(token)
-                    if (token != "{") {
+                    if (token.toString() != "{") {
                         src.Warning("Email decl '%s' had a parse error", GetName())
                         return false
                     }
-                    while (src.ReadToken(token) && token != "}") {
+                    while (src.ReadToken(token) && token.toString() != "}") {
                         text.Append(token)
                     }
                     continue
@@ -114,27 +114,27 @@ class DeclPDA {
         }
 
         //
-        fun GetFrom(): String? {
+        fun GetFrom(): String {
             return from.toString()
         }
 
-        fun GetBody(): String? {
+        fun GetBody(): String {
             return text.toString()
         }
 
-        fun GetSubject(): String? {
+        fun GetSubject(): String {
             return subject.toString()
         }
 
-        fun GetDate(): String? {
+        fun GetDate(): String {
             return date.toString()
         }
 
-        fun GetTo(): String? {
+        fun GetTo(): String {
             return to.toString()
         }
 
-        fun GetImage(): String? {
+        fun GetImage(): String {
             return image.toString()
         }
     }
@@ -142,13 +142,13 @@ class DeclPDA {
     class idDeclVideo  //
     //
         : idDecl() {
-        private var audio //TODO:construction!?
-                : idStr? = null
-        private var info: idStr? = null
-        private var preview: idStr? = null
-        private var video: idStr? = null
-        private var videoName: idStr? = null
-        override fun DefaultDefinition(): String? {
+        private lateinit var audio //TODO:construction!?
+                : idStr
+        private lateinit var info: idStr
+        private lateinit var preview: idStr
+        private lateinit var video: idStr
+        private lateinit var videoName: idStr
+        override fun DefaultDefinition(): String {
             return """{
 	{
 		name	5Default Video
@@ -157,7 +157,7 @@ class DeclPDA {
         }
 
         @Throws(idException::class)
-        override fun Parse(_text: String?, textLength: Int): Boolean {
+        override fun Parse(_text: String, textLength: Int): Boolean {
             val src = idLexer()
             src.LoadMemory(_text, textLength, GetFileName(), GetLineNum())
             src.SetFlags(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT or Lexer.LEXFL_NOFATALERRORS)
@@ -169,7 +169,7 @@ class DeclPDA {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
                 if (0 == token.Icmp("name")) {
@@ -219,23 +219,23 @@ class DeclPDA {
             Common.common.Printf("Implement me\n")
         }
 
-        fun GetRoq(): String? {
+        fun GetRoq(): String {
             return video.toString()
         }
 
-        fun GetWave(): String? {
+        fun GetWave(): String {
             return audio.toString()
         }
 
-        fun GetVideoName(): String? {
+        fun GetVideoName(): String {
             return videoName.toString()
         }
 
-        fun GetInfo(): String? {
+        fun GetInfo(): String {
             return info.toString()
         }
 
-        fun GetPreview(): String? {
+        fun GetPreview(): String {
             return preview.toString()
         }
     }
@@ -243,13 +243,13 @@ class DeclPDA {
     class idDeclAudio  //
     //
         : idDecl() {
-        private var audio: idStr? = null
-        private var audioName: idStr? = null
-        private var info: idStr? = null
-        private var preview //TODO:construction!?
-                : idStr? = null
+        private lateinit var audio: idStr
+        private lateinit var audioName: idStr
+        private lateinit var info: idStr
+        private lateinit var preview //TODO:construction!
+                : idStr
 
-        override fun DefaultDefinition(): String? {
+        override fun DefaultDefinition(): String {
             return """{
 	{
 		name	5Default Audio
@@ -258,7 +258,7 @@ class DeclPDA {
         }
 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum())
             src.SetFlags(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT or Lexer.LEXFL_NOFATALERRORS)
@@ -270,7 +270,7 @@ class DeclPDA {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
                 if (0 == token.Icmp("name")) {
@@ -314,44 +314,44 @@ class DeclPDA {
             Common.common.Printf("Implement me\n")
         }
 
-        fun GetAudioName(): String? {
+        fun GetAudioName(): String {
             return audioName.toString()
         }
 
-        fun GetWave(): String? {
+        fun GetWave(): String {
             return audio.toString()
         }
 
-        fun GetInfo(): String? {
+        fun GetInfo(): String {
             return info.toString()
         }
 
-        fun GetPreview(): String? {
+        fun GetPreview(): String {
             return preview.toString()
         }
     }
 
     class idDeclPDA : idDecl() {
-        private val audios: idStrList?
-        private val emails: idStrList?
-        private val fullName: idStr?
-        private val icon: idStr?
-        private val id: idStr?
+        private val audios: idStrList
+        private val emails: idStrList
+        private val fullName: idStr
+        private val icon: idStr
+        private val id: idStr
         private var originalEmails: Int
         private var originalVideos: Int
-        private val pdaName: idStr?
-        private val post: idStr?
-        private val security: idStr?
-        private val title: idStr?
-        private val videos: idStrList?
-        override fun DefaultDefinition(): String? {
+        private val pdaName: idStr
+        private val post: idStr
+        private val security: idStr
+        private val title: idStr
+        private val videos: idStrList
+        override fun DefaultDefinition(): String {
             return """{
 	name  "default pda"
 }"""
         }
 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             val src = idLexer()
             val token = idToken()
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum())
@@ -363,7 +363,7 @@ class DeclPDA {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "}") {
+                if (token.toString() == "}") {
                     break
                 }
                 if (0 == token.Icmp("name")) {
@@ -448,7 +448,7 @@ class DeclPDA {
         }
 
         @Throws(idException::class)
-        fun AddVideo(_name: String?, unique: Boolean /*= true*/) {
+        fun AddVideo(_name: String, unique: Boolean /*= true*/) {
             val name = idStr(_name)
             if (unique && videos.Find(name) != null) {
                 return
@@ -461,7 +461,7 @@ class DeclPDA {
         }
 
         @Throws(idException::class)
-        fun AddAudio(_name: String?, unique: Boolean /*= true*/) {
+        fun AddAudio(_name: String, unique: Boolean /*= true*/) {
             val name = idStr(_name)
             if (unique && audios.Find(name) != null) {
                 return
@@ -475,7 +475,7 @@ class DeclPDA {
 
         @JvmOverloads
         @Throws(idException::class)
-        fun AddEmail(_name: String?, unique: Boolean = true /*= true*/) {
+        fun AddEmail(_name: String, unique: Boolean = true /*= true*/) {
             val name = idStr(_name)
             if (unique && emails.Find(name) != null) {
                 return
@@ -535,35 +535,35 @@ class DeclPDA {
             } else null
         }
 
-        fun SetSecurity(sec: String?) {
+        fun SetSecurity(sec: String) {
             security.set(sec)
         }
 
-        fun GetPdaName(): String? {
+        fun GetPdaName(): String {
             return pdaName.toString()
         }
 
-        fun GetSecurity(): String? {
+        fun GetSecurity(): String {
             return security.toString()
         }
 
-        fun GetFullName(): String? {
+        fun GetFullName(): String {
             return fullName.toString()
         }
 
-        fun GetIcon(): String? {
+        fun GetIcon(): String {
             return icon.toString()
         }
 
-        fun GetPost(): String? {
+        fun GetPost(): String {
             return post.toString()
         }
 
-        fun GetID(): String? {
+        fun GetID(): String {
             return id.toString()
         }
 
-        fun GetTitle(): String? {
+        fun GetTitle(): String {
             return title.toString()
         }
 
