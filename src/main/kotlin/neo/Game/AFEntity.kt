@@ -918,22 +918,22 @@ object AFEntity {
             i = 0
             while (i < list.Num()) {
                 if (gibNonSolid) {
-                    list.get(i).GetPhysics().SetContents(0)
-                    list.get(i).GetPhysics().SetClipMask(0)
-                    list.get(i).GetPhysics().UnlinkClip()
-                    list.get(i).GetPhysics().PutToRest()
+                    list[i].GetPhysics().SetContents(0)
+                    list[i].GetPhysics().SetClipMask(0)
+                    list[i].GetPhysics().UnlinkClip()
+                    list[i].GetPhysics().PutToRest()
                 } else {
-                    list.get(i).GetPhysics().SetContents(Material.CONTENTS_CORPSE)
-                    list.get(i).GetPhysics().SetClipMask(Material.CONTENTS_SOLID)
-                    velocity.set(list.get(i).GetPhysics().GetAbsBounds().GetCenter().minus(entityCenter))
+                    list[i].GetPhysics().SetContents(Material.CONTENTS_CORPSE)
+                    list[i].GetPhysics().SetClipMask(Material.CONTENTS_SOLID)
+                    velocity.set(list[i].GetPhysics().GetAbsBounds().GetCenter().minus(entityCenter))
                     velocity.NormalizeFast()
                     velocity.plusAssign(if (i and 1 == 1) dir else dir.oNegative())
-                    list.get(i).GetPhysics().SetLinearVelocity(velocity.times(75f))
+                    list[i].GetPhysics().SetLinearVelocity(velocity.times(75f))
                 }
-                list.get(i).GetRenderEntity().noShadow = true
-                list.get(i).GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                list[i].GetRenderEntity().noShadow = true
+                list[i].GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
                     Game_local.gameLocal.time * 0.001f
-                list.get(i).PostEventSec(Class.EV_Remove, 4.0f)
+                list[i].PostEventSec(Class.EV_Remove, 4.0f)
                 i++
             }
         }
@@ -1786,7 +1786,7 @@ object AFEntity {
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(Vector.RAD2DEG(wheelAngles.get(i)))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose()).get(2))
+                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose())[2])
                     animator.SetJointAxis(wheelJoints.get(i), jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -2010,7 +2010,7 @@ object AFEntity {
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(Vector.RAD2DEG(wheelAngles.get(i)))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose()).get(2))
+                    rotation.SetVec(wheels.get(i).GetWorldAxis().times(axis.Transpose())[2])
                     animator.SetJointAxis(wheelJoints.get(i), jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -2305,30 +2305,30 @@ object AFEntity {
      */
     class jointTransformData_t {
         var ent: renderEntity_s? = null
-        var joints: Array<idMD5Joint?>?
+        var joints: Array<idMD5Joint>
     }
 
     internal class GetJointTransform private constructor() : getJointTransform_t() {
         override fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: String?,
-            origin: idVec3?,
-            axis: idMat3?
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: String,
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
         override fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: idStr?,
-            origin: idVec3?,
-            axis: idMat3?
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: idStr,
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             var i: Int
             //        jointTransformData_t *data = reinterpret_cast<jointTransformData_t *>(model);
-            val data = model as jointTransformData_t?
+            val data = model as jointTransformData_t
             i = 0
             while (i < data.ent.numJoints) {
                 if (data.joints.get(i).name.Icmp(jointName) == 0) {
@@ -2339,13 +2339,13 @@ object AFEntity {
             if (i >= data.ent.numJoints) {
                 return false
             }
-            origin.set(frame.get(i).ToVec3())
-            axis.set(frame.get(i).ToMat3())
+            origin.set(frame[i].ToVec3())
+            axis.set(frame[i].ToMat3())
             return true
         }
 
         companion object {
-            val INSTANCE: getJointTransform_t? = AFEntity.GetJointTransform()
+            val INSTANCE: getJointTransform_t = GetJointTransform()
         }
     }
 }

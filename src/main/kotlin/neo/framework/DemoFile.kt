@@ -33,38 +33,38 @@ object DemoFile {
         private var compressor: idCompressor? = null
 
         //
-        private val demoStrings: idList<idStr?>?
+        private val demoStrings: idList<idStr>
         private var f: idFile? = null
         private var fLog: idFile? = null
-        private var fileImage: ByteBuffer? = null
+        private var fileImage: ByteBuffer = ByteBuffer.allocate(0)
         private var log = false
-        private var logStr: idStr? = null
+        private val logStr: idStr = idStr()
 
         //
         //
         private var writing = false
-        override fun GetName(): String? {
-            return if (f != null) f.GetName() else ""
+        override fun GetName(): String {
+            return if (f != null) f!!.GetName() else ""
         }
 
-        override fun GetFullPath(): String? {
-            return if (f != null) f.GetFullPath() else ""
+        override fun GetFullPath(): String {
+            return if (f != null) f!!.GetFullPath() else ""
         }
 
         fun SetLog(b: Boolean, p: String?) {
             log = b
             if (p != null) {
-                logStr = idStr(p)
+                logStr.set(p)
             }
         }
 
         fun Log(p: String?) {
-            if (fLog != null && p != null && !p.isEmpty()) {
-                fLog.WriteString(p /*, strlen(p)*/)
+            if (fLog != null && p != null && p.isNotEmpty()) {
+                fLog!!.WriteString(p /*, strlen(p)*/)
             }
         }
 
-        fun OpenForReading(fileName: String?): Boolean {
+        fun OpenForReading(fileName: String): Boolean {
             val magicBuffer = ByteBuffer.allocate(magicLen)
             val compression = CInt()
             val fileLength: Int
@@ -73,10 +73,10 @@ object DemoFile {
             if (null == f) {
                 return false
             }
-            fileLength = f.Length()
+            fileLength = f!!.Length()
             if (com_preloadDemos.GetBool()) {
                 fileImage = ByteBuffer.allocate(fileLength) // Mem_Alloc(fileLength);
-                f.Read(fileImage, fileLength)
+                f!!.Read(fileImage, fileLength)
                 FileSystem_h.fileSystem.CloseFile(f)
                 f = idFile_Memory(
                     Str.va("preloaded(%s)", fileName),
@@ -88,22 +88,22 @@ object DemoFile {
                 fLog = FileSystem_h.fileSystem.OpenFileWrite("demoread.log")
             }
             writing = false
-            f.Read(magicBuffer) //, magicLen);
-            if (DemoFile.DEMO_MAGIC == String(magicBuffer.array()).substring(0, magicLen)) {
+            f!!.Read(magicBuffer) //, magicLen);
+            if (DEMO_MAGIC == String(magicBuffer.array()).substring(0, magicLen)) {
 //	if ( memcmp(magicBuffer, DEMO_MAGIC, magicLen) == 0 ) {
-                f.ReadInt(compression)
+                f!!.ReadInt(compression)
             } else {
                 // Ideally we would error out if the magic string isn't there,
                 // but for backwards compatibility we are going to assume it's just an uncompressed demo file
-                compression.setVal(0)
-                f.Rewind()
+                compression._val = 0
+                f!!.Rewind()
             }
-            compressor = AllocCompressor(compression.getVal())
-            compressor.Init(f, false, 8)
+            compressor = AllocCompressor(compression._val)
+            compressor!!.Init(f!!, false, 8)
             return true
         }
 
-        fun OpenForWriting(fileName: String?): Boolean {
+        fun OpenForWriting(fileName: String): Boolean {
             Close()
             f = FileSystem_h.fileSystem.OpenFileWrite(fileName)
             if (f == null) {
@@ -113,17 +113,17 @@ object DemoFile {
                 fLog = FileSystem_h.fileSystem.OpenFileWrite("demowrite.log")
             }
             writing = true
-            f.WriteString(DemoFile.DEMO_MAGIC /*, sizeof(DEMO_MAGIC)*/)
-            f.WriteInt(com_compressDemos.GetInteger())
-            f.Flush()
+            f!!.WriteString(DEMO_MAGIC /*, sizeof(DEMO_MAGIC)*/)
+            f!!.WriteInt(com_compressDemos.GetInteger())
+            f!!.Flush()
             compressor = AllocCompressor(com_compressDemos.GetInteger())
-            compressor.Init(f, true, 8)
+            compressor!!.Init(f!!, true, 8)
             return true
         }
 
         fun Close() {
             if (writing && compressor != null) {
-                compressor.FinishCompress()
+                compressor!!.FinishCompress()
             }
             if (f != null) {
                 FileSystem_h.fileSystem.CloseFile(f)
@@ -133,9 +133,9 @@ object DemoFile {
                 FileSystem_h.fileSystem.CloseFile(fLog)
                 fLog = null
             }
-            if (fileImage != null) {
+            if (fileImage.capacity() > 0) {
 //                Mem_Free(fileImage);
-                fileImage = null
+                fileImage = ByteBuffer.allocate(0)
             }
             if (compressor != null) {
 //		delete compressor;
@@ -145,14 +145,14 @@ object DemoFile {
         }
 
         @Throws(idException::class)
-        fun ReadHashString(): String? {
+        fun ReadHashString(): String {
             val index = CInt()
             if (log && fLog != null) {
                 val text = Str.va("%s > Reading hash string\n", logStr.toString())
-                fLog.WriteString(text)
+                fLog!!.WriteString(text)
             }
             ReadInt(index)
-            if (index.getVal() == -1) {
+            if (index._val == -1) {
                 // read a new string for the table
                 val str: idStr?
                 val data = idStr()
@@ -161,21 +161,21 @@ object DemoFile {
                 demoStrings.Append(str)
                 return str.toString()
             }
-            if (index.getVal() < -1 || index.getVal() >= demoStrings.Num()) {
+            if (index._val < -1 || index._val >= demoStrings.Num()) {
                 Close()
                 Common.common.Error("demo hash index out of range")
             }
-            return demoStrings.get(index.getVal()).toString() //TODO:return c_str?
+            return demoStrings[index._val].toString() //TODO:return c_str?
         }
 
-        fun WriteHashString(str: String?) {
+        fun WriteHashString(str: String) {
             if (log && fLog != null) {
                 val text = Str.va("%s > Writing hash string\n", logStr.toString())
-                fLog.WriteString(text)
+                fLog!!.WriteString(text)
             }
             // see if it is already in the has table
             for (i in 0 until demoStrings.Num()) {
-                if (demoStrings.get(i).toString() == str) {
+                if (demoStrings[i].toString() == str) {
                     WriteInt(i)
                     return
                 }
@@ -191,7 +191,7 @@ object DemoFile {
         }
 
         @Throws(idException::class)
-        fun ReadDict(dict: idDict?) {
+        fun ReadDict(dict: idDict) {
             var i: Int
             val c = CInt()
             var key: String?
@@ -199,7 +199,7 @@ object DemoFile {
             dict.Clear()
             ReadInt(c)
             i = 0
-            while (i < c.getVal()) {
+            while (i < c._val) {
                 key = ReadHashString()
                 `val` = ReadHashString()
                 dict.Set(key, `val`)
@@ -207,21 +207,21 @@ object DemoFile {
             }
         }
 
-        fun WriteDict(dict: idDict?) {
+        fun WriteDict(dict: idDict) {
             var i: Int
             val c: Int
             c = dict.GetNumKeyVals()
             WriteInt(c)
             i = 0
             while (i < c) {
-                WriteHashString(dict.GetKeyVal(i).GetKey().toString())
-                WriteHashString(dict.GetKeyVal(i).GetValue().toString())
+                WriteHashString(dict.GetKeyVal(i)!!.GetKey().toString())
+                WriteHashString(dict.GetKeyVal(i)!!.GetValue().toString())
                 i++
             }
         }
 
-        override fun Read(buffer: ByteBuffer?, len: Int): Int {
-            val read = compressor.Read(buffer, len)
+        override fun Read(buffer: ByteBuffer, len: Int): Int {
+            val read = compressor!!.Read(buffer, len)
             if (read == 0 && len >= 4) {
 //                *(demoSystem_t *)buffer = DS_FINISHED;
                 buffer.putInt(demoSystem_t.DS_FINISHED.ordinal)
@@ -229,13 +229,13 @@ object DemoFile {
             return read
         }
 
-        override fun Write(buffer: ByteBuffer?, len: Int): Int {
-            return compressor.Write(buffer, len)
+        override fun Write(buffer: ByteBuffer, len: Int): Int {
+            return compressor!!.Write(buffer, len)
         }
 
         companion object {
-            const val magicLen = DemoFile.DEMO_MAGIC.length
-            private val com_compressDemos: idCVar? = idCVar(
+            val magicLen = DEMO_MAGIC.length
+            private val com_compressDemos: idCVar = idCVar(
                 "com_compressDemos",
                 "1",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
@@ -250,26 +250,26 @@ object DemoFile {
             )
 
             //
-            private val com_logDemos: idCVar? = idCVar(
+            private val com_logDemos: idCVar = idCVar(
                 "com_logDemos",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL,
                 "Write demo.log with debug information in it"
             )
-            private val com_preloadDemos: idCVar? = idCVar(
+            private val com_preloadDemos: idCVar = idCVar(
                 "com_preloadDemos",
                 "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
                 "Load the whole demo in to RAM before running it"
             )
 
-            private fun AllocCompressor(type: Int): idCompressor? {
+            private fun AllocCompressor(type: Int): idCompressor {
                 return when (type) {
-                    0 -> idCompressor.Companion.AllocNoCompression()
-                    1 -> idCompressor.Companion.AllocLZW()
-                    2 -> idCompressor.Companion.AllocLZSS()
-                    3 -> idCompressor.Companion.AllocHuffman()
-                    else -> idCompressor.Companion.AllocLZW()
+                    0 -> idCompressor.AllocNoCompression()
+                    1 -> idCompressor.AllocLZW()
+                    2 -> idCompressor.AllocLZSS()
+                    3 -> idCompressor.AllocHuffman()
+                    else -> idCompressor.AllocLZW()
                 }
             }
         }

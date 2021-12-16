@@ -596,13 +596,13 @@ object FileSystem_h {
         // As a quick check for existance. -1 length == not present.
         // A 0 byte will always be appended at the end, so string ops are safe.
         // The buffer should be considered read-only, because it may be cached for other uses.
-        abstract fun ReadFile(relativePath: String?, buffer: Array<ByteBuffer?>?, timestamp: LongArray?): Int
-        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>): Int
-        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>, timeStamp: LongArray): Int {
+        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?, timestamp: LongArray?): Int
+        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?): Int
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>?, timeStamp: LongArray?): Int {
             return ReadFile(name.toString(), buffer, timeStamp)
         }
 
-        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>): Int {
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>?): Int {
             return ReadFile(name.toString(), buffer)
         }
 
@@ -851,7 +851,7 @@ object FileSystem_h {
                 : Array<idDEntry?>?
 
         //
-        private val gamePakForOS: IntArray? = IntArray(FileSystem_h.MAX_GAME_OS)
+        private val gamePakForOS: IntArray = IntArray(FileSystem_h.MAX_GAME_OS)
         private val addonChecksums // list of checksums that should go to the search list directly ( for restarts )
                 : idList<Int?>?
 
@@ -1845,7 +1845,7 @@ object FileSystem_h {
          timestamp can be NULL if not required
          ============
          */
-        override fun ReadFile(relativePath: String?, buffer: Array<ByteBuffer?>?, timestamp: LongArray?): Int {
+        override fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?, timestamp: LongArray?): Int {
             val f: idFile?
             val buf: ByteBuffer?
             val len = CInt()

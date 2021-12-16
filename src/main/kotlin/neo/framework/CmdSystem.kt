@@ -780,7 +780,7 @@ object CmdSystem {
                             "net_allowCheats"
                         )
                     ) {
-                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd!!.name)
+                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd!!.name!!)
                         return
                     }
                     // perform the action
@@ -962,7 +962,7 @@ object CmdSystem {
         private class Exec_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
             override fun run(args: CmdArgs.idCmdArgs) {
-                val f = arrayOf<ByteBuffer?>(null)
+                val f = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
                 val len: Int
                 val filename: idStr
                 if (args.Argc() != 2) {
@@ -1141,7 +1141,7 @@ object CmdSystem {
                 i = 0
                 while (i < cmdList.Num()) {
                     cmd = cmdList[i]
-                    idLib.common.Printf("  %-21s %s\n", cmd.name, cmd.description)
+                    idLib.common.Printf("  %-21s %s\n", cmd.name!!, cmd.description!!)
                     i++
                 }
                 idLib.common.Printf("%d commands\n", cmdList.Num())

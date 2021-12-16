@@ -60,432 +60,8 @@ import java.util.logging.Logger
 /**
  *
  */
-object Common {
-    val ASYNCSOUND_INFO: String =
-        "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix"
-    val DMAP_DONE: String = "DMAPDone"
+class Common {
 
-    //
-    //#ifdef _WIN32
-    val DMAP_MSGID: String = "DMAPOutput"
-    val EDITOR_AAS: Int = Lib.BIT(11)
-    val EDITOR_AF: Int = Lib.BIT(8)
-    val EDITOR_DEBUGGER: Int = Lib.BIT(3)
-    val EDITOR_DECL: Int = Lib.BIT(7)
-    val EDITOR_GUI: Int = Lib.BIT(2)
-    val EDITOR_LIGHT: Int = Lib.BIT(5)
-    val EDITOR_MATERIAL: Int = Lib.BIT(12)
-    const val EDITOR_NONE = 0
-    val EDITOR_PARTICLE: Int = Lib.BIT(9)
-    val EDITOR_PDA: Int = Lib.BIT(10)
-    val EDITOR_RADIANT: Int = Lib.BIT(1)
-    val EDITOR_SCRIPT: Int = Lib.BIT(4)
-    val EDITOR_SOUND: Int = Lib.BIT(6)
-
-    //
-    //
-    val STRTABLE_ID: String = "#str_"
-    val STRTABLE_ID_LENGTH = STRTABLE_ID.length //5
-    val com_allowConsole: idCVar = idCVar(
-        "com_allowConsole",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "allow toggling console with the tilde key"
-    )
-    val com_asyncInput: idCVar = idCVar(
-        "com_asyncInput",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
-        "sample input from the async thread"
-    )
-
-    //
-    val com_asyncSound: idCVar = if (BuildDefines.MACOS_X) idCVar(
-        "com_asyncSound",
-        "2",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
-        ASYNCSOUND_INFO
-    ) else if (BuildDefines.__linux__) idCVar(
-        "com_asyncSound",
-        "3",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
-        ASYNCSOUND_INFO
-    ) else idCVar(
-        "com_asyncSound",
-        "1",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM,
-        ASYNCSOUND_INFO,
-        0f,
-        1f
-    )
-    val com_developer: idCVar = idCVar(
-        "developer",
-        "1",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "developer mode"
-    )
-
-    //
-    val com_forceGenericSIMD: idCVar = idCVar(
-        "com_forceGenericSIMD",
-        "1",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "force generic platform independent SIMD"
-    )
-    val com_logFile: idCVar = idCVar(
-        "logFile",
-        "0",
-        CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "1 = buffer log, 2 = flush after each print",
-        0f,
-        2f,
-        ArgCompletion_Integer(0, 2)
-    )
-    val com_logFileName: idCVar = idCVar(
-        "logFileName",
-        "qconsole.log",
-        CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "name of log file, if empty, qconsole.log will be used"
-    )
-    val com_machineSpec: idCVar = idCVar(
-        "com_machineSpec",
-        "-1",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
-        "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality"
-    )
-    val com_makingBuild: idCVar =
-        idCVar("com_makingBuild", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "1 when making a build")
-    val com_memoryMarker: idCVar = idCVar(
-        "com_memoryMarker",
-        "-1",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT,
-        "used as a marker for memory stats"
-    )
-    val com_preciseTic: idCVar = idCVar(
-        "com_preciseTic",
-        "1",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
-        "run one game tick every async thread update"
-    )
-
-    //
-    val com_product_lang_ext: idCVar = idCVar(
-        "com_product_lang_ext",
-        "1",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
-        "Extension to use when creating language files."
-    )
-    val com_purgeAll: idCVar = idCVar(
-        "com_purgeAll",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
-        "purge everything between level loads"
-    )
-    val com_showAsyncStats: idCVar = idCVar(
-        "com_showAsyncStats",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "show async network stats"
-    )
-    val com_showFPS: idCVar = idCVar(
-        "com_showFPS",
-        "1",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_NOCHEAT,
-        "show frames rendered per second"
-    )
-    val com_showMemoryUsage: idCVar = idCVar(
-        "com_showMemoryUsage",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "show total and per frame memory usage"
-    )
-    val com_showSoundDecoders: idCVar = idCVar(
-        "com_showSoundDecoders",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "show sound decoders"
-    )
-    val com_skipRenderer: idCVar =
-        idCVar("com_skipRenderer", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "skip the renderer completely")
-    val com_speeds: idCVar = idCVar(
-        "com_speeds",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "show engine timings"
-    )
-    val com_timescale: idCVar =
-        idCVar("timescale", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_FLOAT, "scales the time", 0.1f, 10.0f)
-    val com_timestampPrints: idCVar = idCVar(
-        "com_timestampPrints",
-        "0",
-        CVarSystem.CVAR_SYSTEM,
-        "print time with each console print, 1 = msec, 2 = sec",
-        0f,
-        2f,
-        ArgCompletion_Integer(0, 2)
-    )
-    val com_updateLoadSize: idCVar = idCVar(
-        "com_updateLoadSize",
-        "0",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
-        "update the load size after loading a map"
-    )
-    val com_videoRam: idCVar = idCVar(
-        "com_videoRam",
-        "512",
-        CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
-        "holds the last amount of detected video ram"
-    )
-    val BUILD_DEBUG: String = if (BuildDefines._DEBUG) "-debug" else ""
-    const val ID_WRITE_VERSION = false
-    const val MAX_PRINT_MSG_SIZE = 4096
-    const val MAX_WARNING_LIST = 256
-    val version: version_s = version_s()
-
-    //
-    //
-    //
-    val com_version: idCVar = idCVar(
-        "si_version",
-        version.string,
-        CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM or CVarSystem.CVAR_SERVERINFO,
-        "engine version"
-    )
-    var com_editorActive // true if an editor has focus
-            = false
-    var com_editors // currently opened editor(s)
-            = 0
-    var com_frameNumber // variable frame number
-            = 0
-
-    @Volatile
-    var com_frameTime // time for the current frame in milliseconds
-            = 0
-    var   /*HWND*/com_hwndMsg: Long = 0
-    var com_outputMsg = false
-
-    @Volatile
-    var com_ticNumber // 60 hz tics
-            = 0
-    var time_backend // renderSystem backend time
-            = 0
-    var time_frontend // renderSystem frontend time
-            = 0
-    var time_gameDraw = 0
-
-    //
-    //
-    // com_speeds times
-    var time_gameFrame = 0
-    var com_msgID: Long = -1
-
-    //
-    private var commonLocal: idCommonLocal = idCommonLocal()
-    var common: /*final*/idCommon = commonLocal
-    fun LoadMapLocalizeData(listHash: ListHash) {
-        throw TODO_Exception()
-        //        String fileName = "map_localize.cfg";
-//        Object[] buffer = {null};
-//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
-//
-//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
-//            src.LoadMemory(buffer, strlen(buffer), fileName);
-//            if (src.IsLoaded()) {
-//                String classname;
-//                idToken token = new idToken();
-//
-//                while (src.ReadToken(token)) {
-//                    classname = token.toString();
-//                    src.ExpectTokenString("{");
-//
-//                    idStrList list = new idStrList();
-//                    while (src.ReadToken(token)) {
-//                        if (token.equals("}")) {
-//                            break;
-//                        }
-//                        list.Append(token);
-//                    }
-//
-//                    listHash.Set(classname, list);
-//                }
-//            }
-//            fileSystem.FreeFile(buffer);
-//        }
-    }
-
-    fun LoadGuiParmExcludeList(list: idStrList) {
-        throw TODO_Exception()
-        //        String fileName = "guiparm_exclude.cfg";
-//        Object[] buffer = {null};
-//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
-//
-//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
-//            src.LoadMemory(buffer, strlen(buffer), fileName);
-//            if (src.IsLoaded()) {
-////			idStr classname;
-//                idToken token = new idToken();
-//
-//                while (src.ReadToken(token)) {
-//                    list.Append(token);
-//                }
-//            }
-//            fileSystem.FreeFile(buffer);
-//        }
-    }
-
-    fun TestMapVal(str: idStr): Boolean {
-        //Already Localized?
-        return str.Find("#str_") == -1
-    }
-
-    fun TestMapVal(str: String): Boolean {
-        return str.contains("#str_")
-    }
-
-    //#endif
-    fun TestGuiParm(parm: String, value: String, excludeList: idStrList): Boolean {
-        val testVal = idStr(value)
-
-        //Already Localized?
-        if (testVal.Find("#str_") != -1) {
-            return false
-        }
-
-        //Numeric
-        if (testVal.IsNumeric()) {
-            return false
-        }
-
-        //Contains ::
-        if (testVal.Find("::") != -1) {
-            return false
-        }
-
-        //Contains /
-        return if (testVal.Find("/") != -1) {
-            false
-        } else excludeList.Find(testVal) == 0
-    }
-
-    //
-    //    
-    //    
-    //    
-    //    
-    //    
-    //    
-    //    
-    //    
-    //============================================================================
-    fun TestGuiParm(parm: idStr, value: idStr, excludeList: idStrList): Boolean {
-        return TestGuiParm(parm.toString(), value.toString(), excludeList)
-    }
-
-    fun GetFileList(dir: String, ext: String, list: idStrList) {
-
-        //Recurse Subdirectories
-        val dirList = idStrList()
-        sys_public.Sys_ListFiles(dir, "/", dirList)
-        for (i in 0 until dirList.size()) {
-            if (dirList[i].toString() == "." || dirList[i].toString() == "..") {
-                continue
-            }
-            val fullName = Str.va("%s/%s", dir, dirList[i])
-            GetFileList(fullName, ext, list)
-        }
-        val fileList = idStrList()
-        sys_public.Sys_ListFiles(dir, ext, fileList)
-        for (i in 0 until fileList.size()) {
-            val fullName = idStr(Str.va("%s/%s", dir, fileList[i]))
-            list.add(fullName)
-        }
-    }
-
-    fun LocalizeMap(
-        mapName: String,
-        langDict: idLangDict,
-        listHash: ListHash,
-        excludeList: idStrList,
-        writeFile: Boolean
-    ): Int {
-        throw TODO_Exception()
-        //	common.Printf("Localizing Map '%s'\n", mapName);
-//
-//	int strCount = 0;
-//
-//	idMapFile map = new idMapFile();
-//	if ( map.Parse(mapName, false, false ) ) {
-//		int count = map.GetNumEntities();
-//		for ( int j = 0; j < count; j++ ) {
-//			idMapEntity ent = map.GetEntity( j );
-//			if ( ent !=null) {
-//
-//				String className = ent.epairs.GetString("classname");
-//
-//				//Hack: for info_location
-//				boolean hasLocation = false;
-//
-//				idStrList []list={null};
-//				listHash.Get(className, list);
-//				if(list[0]!=null) {
-//
-//					for(int k = 0; k < list[0].Num(); k++) {
-//
-//						String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
-//
-//						if(val.Length() && className == "info_location" && (*list[0])[k] == "location") {
-//							hasLocation = true;
-//						}
-//
-//						if(val.Length() && TestMapVal(val)) {
-//
-//							if(!hasLocation || (*list[0])[k] == "location") {
-//								//Localize it!!!
-//								strCount++;
-//								ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
-//							}
-//						}
-//					}
-//				}
-//
-//				listHash.Get("all", &list[0]);
-//				if(list[0]) {
-//					for(int k = 0; k < list[0].Num(); k++) {
-//						idStr val = ent.epairs.GetString((*list[0])[k], "");
-//						if(val.Length() && TestMapVal(val)) {
-//							//Localize it!!!
-//							strCount++;
-//							ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
-//						}
-//					}
-//				}
-//
-//				//Localize the gui_parms
-//				const idKeyValue* kv = ent.epairs.MatchPrefix("gui_parm");
-//				while( kv ) {
-//					if(TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
-//						//Localize It!
-//						strCount++;
-//						ent.epairs.Set( kv.GetKey(), langDict.AddString( kv.GetValue() ) );
-//					}
-//					kv = ent.epairs.MatchPrefix( "gui_parm", kv );
-//				}
-//			}
-//		}
-//		if(writeFile && strCount > 0)  {
-//			//Before we write the map file lets make a backup of the original
-//			idStr file =  fileSystem.RelativePathToOSPath(mapName);
-//			idStr bak = file.Left(file.Length() - 4);
-//			bak.Append(".bak_loc");
-//			fileSystem.CopyFile( file, bak );
-//
-//			map.Write( mapName, ".map" );
-//		}
-//	}
-//
-//	common.Printf("Count: %d\n", strCount);
-//	return strCount;
-    }
 
     fun setCommons(common: idCommon) {
         commonLocal = common as idCommonLocal
@@ -3577,6 +3153,430 @@ object Common {
             fun getInstance(): cmdFunction_t {
                 return instance
             }
+        }
+    }
+
+    companion object {
+        const val ASYNCSOUND_INFO: String =
+            "0: mix sound inline, 1: memory mapped async mix, 2: callback mixing, 3: write async mix"
+        const val DMAP_DONE: String = "DMAPDone"
+        const val EDITOR_NONE = 0
+
+        //
+        //#ifdef _WIN32
+        val DMAP_MSGID: String = "DMAPOutput"
+        val EDITOR_AAS: Int = Lib.BIT(11)
+        val EDITOR_AF: Int = Lib.BIT(8)
+        val EDITOR_DEBUGGER: Int = Lib.BIT(3)
+        val EDITOR_DECL: Int = Lib.BIT(7)
+        val EDITOR_GUI: Int = Lib.BIT(2)
+        val EDITOR_LIGHT: Int = Lib.BIT(5)
+        val EDITOR_MATERIAL: Int = Lib.BIT(12)
+        val EDITOR_PARTICLE: Int = Lib.BIT(9)
+        val EDITOR_PDA: Int = Lib.BIT(10)
+        val EDITOR_RADIANT: Int = Lib.BIT(1)
+        val EDITOR_SCRIPT: Int = Lib.BIT(4)
+        val EDITOR_SOUND: Int = Lib.BIT(6)
+
+        //
+        //
+        val STRTABLE_ID: String = "#str_"
+        val STRTABLE_ID_LENGTH = STRTABLE_ID.length //5
+        val com_allowConsole: idCVar = idCVar(
+            "com_allowConsole",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "allow toggling console with the tilde key"
+        )
+        val com_asyncInput: idCVar = idCVar(
+            "com_asyncInput",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
+            "sample input from the async thread"
+        )
+
+        //
+        val com_asyncSound: idCVar = if (BuildDefines.MACOS_X) idCVar(
+            "com_asyncSound",
+            "2",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
+            Companion.ASYNCSOUND_INFO
+        ) else if (BuildDefines.__linux__) idCVar(
+            "com_asyncSound",
+            "3",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM,
+            Companion.ASYNCSOUND_INFO
+        ) else idCVar(
+            "com_asyncSound",
+            "1",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM,
+            Companion.ASYNCSOUND_INFO,
+            0f,
+            1f
+        )
+        val com_developer: idCVar = idCVar(
+            "developer",
+            "1",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "developer mode"
+        )
+
+        //
+        val com_forceGenericSIMD: idCVar = idCVar(
+            "com_forceGenericSIMD",
+            "1",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "force generic platform independent SIMD"
+        )
+        val com_logFile: idCVar = idCVar(
+            "logFile",
+            "0",
+            CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "1 = buffer log, 2 = flush after each print",
+            0f,
+            2f,
+            ArgCompletion_Integer(0, 2)
+        )
+        val com_logFileName: idCVar = idCVar(
+            "logFileName",
+            "qconsole.log",
+            CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "name of log file, if empty, qconsole.log will be used"
+        )
+        val com_machineSpec: idCVar = idCVar(
+            "com_machineSpec",
+            "-1",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
+            "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality"
+        )
+        val com_makingBuild: idCVar =
+            idCVar("com_makingBuild", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "1 when making a build")
+        val com_memoryMarker: idCVar = idCVar(
+            "com_memoryMarker",
+            "-1",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INIT,
+            "used as a marker for memory stats"
+        )
+        val com_preciseTic: idCVar = idCVar(
+            "com_preciseTic",
+            "1",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
+            "run one game tick every async thread update"
+        )
+
+        //
+        val com_product_lang_ext: idCVar = idCVar(
+            "com_product_lang_ext",
+            "1",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
+            "Extension to use when creating language files."
+        )
+        val com_purgeAll: idCVar = idCVar(
+            "com_purgeAll",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
+            "purge everything between level loads"
+        )
+        val com_showAsyncStats: idCVar = idCVar(
+            "com_showAsyncStats",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "show async network stats"
+        )
+        val com_showFPS: idCVar = idCVar(
+            "com_showFPS",
+            "1",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_NOCHEAT,
+            "show frames rendered per second"
+        )
+        val com_showMemoryUsage: idCVar = idCVar(
+            "com_showMemoryUsage",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "show total and per frame memory usage"
+        )
+        val com_showSoundDecoders: idCVar = idCVar(
+            "com_showSoundDecoders",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "show sound decoders"
+        )
+        val com_skipRenderer: idCVar =
+            idCVar(
+                "com_skipRenderer",
+                "0",
+                CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
+                "skip the renderer completely"
+            )
+        val com_speeds: idCVar = idCVar(
+            "com_speeds",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "show engine timings"
+        )
+        val com_timescale: idCVar =
+            idCVar("timescale", "1", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_FLOAT, "scales the time", 0.1f, 10.0f)
+        val com_timestampPrints: idCVar = idCVar(
+            "com_timestampPrints",
+            "0",
+            CVarSystem.CVAR_SYSTEM,
+            "print time with each console print, 1 = msec, 2 = sec",
+            0f,
+            2f,
+            ArgCompletion_Integer(0, 2)
+        )
+        val com_updateLoadSize: idCVar = idCVar(
+            "com_updateLoadSize",
+            "0",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
+            "update the load size after loading a map"
+        )
+        val com_videoRam: idCVar = idCVar(
+            "com_videoRam",
+            "512",
+            CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
+            "holds the last amount of detected video ram"
+        )
+        val BUILD_DEBUG: String = if (BuildDefines._DEBUG) "-debug" else ""
+        const val ID_WRITE_VERSION = false
+        const val MAX_PRINT_MSG_SIZE = 4096
+        const val MAX_WARNING_LIST = 256
+        val version: version_s = version_s()
+
+        //
+        //
+        //
+        val com_version: idCVar = idCVar(
+            "si_version",
+            version.string,
+            CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ROM or CVarSystem.CVAR_SERVERINFO,
+            "engine version"
+        )
+        var com_editorActive // true if an editor has focus
+                = false
+        var com_editors // currently opened editor(s)
+                = 0
+        var com_frameNumber // variable frame number
+                = 0
+
+        @Volatile
+        var com_frameTime // time for the current frame in milliseconds
+                = 0
+        var   /*HWND*/com_hwndMsg: Long = 0
+        var com_outputMsg = false
+
+        @Volatile
+        var com_ticNumber // 60 hz tics
+                = 0
+        var time_backend // renderSystem backend time
+                = 0
+        var time_frontend // renderSystem frontend time
+                = 0
+        var time_gameDraw = 0
+
+        //
+        //
+        // com_speeds times
+        var time_gameFrame = 0
+        var com_msgID: Long = -1
+
+        //
+        private var commonLocal: idCommonLocal = idCommonLocal()
+        var common: /*final*/idCommon = commonLocal
+
+        fun LoadMapLocalizeData(listHash: ListHash) {
+            throw TODO_Exception()
+            //        String fileName = "map_localize.cfg";
+//        Object[] buffer = {null};
+//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
+//
+//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
+//            src.LoadMemory(buffer, strlen(buffer), fileName);
+//            if (src.IsLoaded()) {
+//                String classname;
+//                idToken token = new idToken();
+//
+//                while (src.ReadToken(token)) {
+//                    classname = token.toString();
+//                    src.ExpectTokenString("{");
+//
+//                    idStrList list = new idStrList();
+//                    while (src.ReadToken(token)) {
+//                        if (token.equals("}")) {
+//                            break;
+//                        }
+//                        list.Append(token);
+//                    }
+//
+//                    listHash.Set(classname, list);
+//                }
+//            }
+//            fileSystem.FreeFile(buffer);
+//        }
+        }
+
+        fun LoadGuiParmExcludeList(list: idStrList) {
+            throw TODO_Exception()
+            //        String fileName = "guiparm_exclude.cfg";
+//        Object[] buffer = {null};
+//        idLexer src = new idLexer(LEXFL_NOFATALERRORS | LEXFL_NOSTRINGCONCAT | LEXFL_ALLOWMULTICHARLITERALS | LEXFL_ALLOWBACKSLASHSTRINGCONCAT);
+//
+//        if (fileSystem.ReadFile(fileName, buffer) > 0) {
+//            src.LoadMemory(buffer, strlen(buffer), fileName);
+//            if (src.IsLoaded()) {
+////			idStr classname;
+//                idToken token = new idToken();
+//
+//                while (src.ReadToken(token)) {
+//                    list.Append(token);
+//                }
+//            }
+//            fileSystem.FreeFile(buffer);
+//        }
+        }
+
+        fun TestMapVal(str: idStr): Boolean {
+            //Already Localized?
+            return str.Find("#str_") == -1
+        }
+
+        fun TestMapVal(str: String): Boolean {
+            return str.contains("#str_")
+        }
+
+        //#endif
+        fun TestGuiParm(parm: String, value: String, excludeList: idStrList): Boolean {
+            val testVal = idStr(value)
+
+            //Already Localized?
+            if (testVal.Find("#str_") != -1) {
+                return false
+            }
+
+            //Numeric
+            if (testVal.IsNumeric()) {
+                return false
+            }
+
+            //Contains ::
+            if (testVal.Find("::") != -1) {
+                return false
+            }
+
+            //Contains /
+            return if (testVal.Find("/") != -1) {
+                false
+            } else excludeList.Find(testVal) == 0
+        }
+
+        fun TestGuiParm(parm: idStr, value: idStr, excludeList: idStrList): Boolean {
+            return TestGuiParm(parm.toString(), value.toString(), excludeList)
+        }
+
+        fun GetFileList(dir: String, ext: String, list: idStrList) {
+
+            //Recurse Subdirectories
+            val dirList = idStrList()
+            sys_public.Sys_ListFiles(dir, "/", dirList)
+            for (i in 0 until dirList.size()) {
+                if (dirList[i].toString() == "." || dirList[i].toString() == "..") {
+                    continue
+                }
+                val fullName = Str.va("%s/%s", dir, dirList[i])
+                GetFileList(fullName, ext, list)
+            }
+            val fileList = idStrList()
+            sys_public.Sys_ListFiles(dir, ext, fileList)
+            for (i in 0 until fileList.size()) {
+                val fullName = idStr(Str.va("%s/%s", dir, fileList[i]))
+                list.add(fullName)
+            }
+        }
+
+        fun LocalizeMap(
+            mapName: String,
+            langDict: idLangDict,
+            listHash: ListHash,
+            excludeList: idStrList,
+            writeFile: Boolean
+        ): Int {
+            throw TODO_Exception()
+            //	common.Printf("Localizing Map '%s'\n", mapName);
+//
+//	int strCount = 0;
+//
+//	idMapFile map = new idMapFile();
+//	if ( map.Parse(mapName, false, false ) ) {
+//		int count = map.GetNumEntities();
+//		for ( int j = 0; j < count; j++ ) {
+//			idMapEntity ent = map.GetEntity( j );
+//			if ( ent !=null) {
+//
+//				String className = ent.epairs.GetString("classname");
+//
+//				//Hack: for info_location
+//				boolean hasLocation = false;
+//
+//				idStrList []list={null};
+//				listHash.Get(className, list);
+//				if(list[0]!=null) {
+//
+//					for(int k = 0; k < list[0].Num(); k++) {
+//
+//						String val = ent.epairs.GetString(list[0].oGet(k).toString(), "");
+//
+//						if(val.Length() && className == "info_location" && (*list[0])[k] == "location") {
+//							hasLocation = true;
+//						}
+//
+//						if(val.Length() && TestMapVal(val)) {
+//
+//							if(!hasLocation || (*list[0])[k] == "location") {
+//								//Localize it!!!
+//								strCount++;
+//								ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
+//							}
+//						}
+//					}
+//				}
+//
+//				listHash.Get("all", &list[0]);
+//				if(list[0]) {
+//					for(int k = 0; k < list[0].Num(); k++) {
+//						idStr val = ent.epairs.GetString((*list[0])[k], "");
+//						if(val.Length() && TestMapVal(val)) {
+//							//Localize it!!!
+//							strCount++;
+//							ent.epairs.Set( (*list[0])[k], langDict.AddString( val ) );
+//						}
+//					}
+//				}
+//
+//				//Localize the gui_parms
+//				const idKeyValue* kv = ent.epairs.MatchPrefix("gui_parm");
+//				while( kv ) {
+//					if(TestGuiParm(kv.GetKey(), kv.GetValue(), excludeList)) {
+//						//Localize It!
+//						strCount++;
+//						ent.epairs.Set( kv.GetKey(), langDict.AddString( kv.GetValue() ) );
+//					}
+//					kv = ent.epairs.MatchPrefix( "gui_parm", kv );
+//				}
+//			}
+//		}
+//		if(writeFile && strCount > 0)  {
+//			//Before we write the map file lets make a backup of the original
+//			idStr file =  fileSystem.RelativePathToOSPath(mapName);
+//			idStr bak = file.Left(file.Length() - 4);
+//			bak.Append(".bak_loc");
+//			fileSystem.CopyFile( file, bak );
+//
+//			map.Write( mapName, ".map" );
+//		}
+//	}
+//
+//	common.Printf("Count: %d\n", strCount);
+//	return strCount;
         }
     }
 }

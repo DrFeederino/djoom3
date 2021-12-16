@@ -337,7 +337,7 @@ object Game_local {
             snd_system.setSoundSystems(gameImport.soundSystem)
             ModelManager.setRenderModelManagers(gameImport.renderModelManager)
             UserInterface.setUiManagers(gameImport.uiManager)
-            DeclManager.setDeclManager(gameImport.declManager)
+            DeclManager.setDeclManagers(gameImport.declManager)
             AASFileManager.setAASFileManagers(gameImport.AASFileManager)
             CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)
         }

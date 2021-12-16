@@ -753,7 +753,7 @@ object KeyInput {
                     if ("\\" == name) {
                         f.Printf("bind \"\\\" \"%s\"\n", keys[i].binding)
                     } else {
-                        f.Printf("bind \"%s\" \"%s\"\n", KeyNumToString(i, false), keys[i].binding)
+                        f.Printf("bind \"%s\" \"%s\"\n", KeyNumToString(i, false)!!, keys[i].binding)
                     }
                 }
                 i++
@@ -959,7 +959,7 @@ object KeyInput {
                 if (keys[i].binding.Length() != 0) {
                     Common.common.Printf(
                         "%s \"%s\"\n",
-                        idKeyInput.KeyNumToString(i, false),
+                        idKeyInput.KeyNumToString(i, false)!!,
                         keys[i].binding.toString()
                     )
                 }

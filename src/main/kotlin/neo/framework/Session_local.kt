@@ -153,7 +153,7 @@ object Session_local {
         var guiLoading: idUserInterface?
         var guiMainMenu: idUserInterface?
         var guiMainMenu_MapList // easy map list handling
-                : idListGUI = idListGUI()
+                : idListGUI = UserInterface.uiManager.AllocListGUI()
 
         //
         var guiMsg: idUserInterface?
@@ -1424,12 +1424,12 @@ object Session_local {
             var chk8: Int //TODO:bitwise ops on longs!?
             val edited_key = BooleanArray(2)
             assert(key.length == (CDKEY_BUF_LEN - 1) * 2 + 4 + 3 + 4)
-            edited_key[0] = key.get(0) == '1'
+            edited_key[0] = key[0] == '1'
             idStr.Copynz(lkey[0], key + 2, CDKEY_BUF_LEN)
             idStr.ToUpper(lkey[0])
             idStr.Copynz(l_chk[0], key + CDKEY_BUF_LEN + 2, 3)
             idStr.ToUpper(l_chk[0])
-            edited_key[1] = key.get(CDKEY_BUF_LEN + 2 + 3) == '1'
+            edited_key[1] = key[CDKEY_BUF_LEN + 2 + 3] == '1'
             idStr.Copynz(lkey[1], key + CDKEY_BUF_LEN + 7, CDKEY_BUF_LEN)
             idStr.ToUpper(lkey[1])
             idStr.Copynz(l_chk[1], key + CDKEY_BUF_LEN * 2 + 7, 3)
@@ -1439,8 +1439,8 @@ object Session_local {
             } else {
                 1
             }
-            offline_valid.get(1) = true
-            offline_valid.get(0) = offline_valid.get(1)
+            offline_valid[1] = true
+            offline_valid[0] = offline_valid[1]
             i_key = 0
             while (i_key < imax) {
 
@@ -1449,7 +1449,7 @@ object Session_local {
                 i = 0
                 while (i < CDKEY_BUF_LEN - 1) {
                     if (-1 == CDKEY_DIGITS.indexOf(lkey[i_key].get(i))) {
-                        offline_valid.get(i_key) = false
+                        offline_valid[i_key] = false
                         i++
                         continue
                     }
@@ -1462,14 +1462,14 @@ object Session_local {
                         checksum and 0xff xor (checksum and 0xff00 shr 8 xor (checksum and 0xff0000 shr 16 xor (checksum and -0x1000000 shr 24)))
                     idStr.snPrintf(s_chk, 3, "%02X", chk8)
                     if (idStr.Icmp(TempDump.ctos(l_chk[i_key]), TempDump.ctos(s_chk)) != 0) {
-                        offline_valid.get(i_key) = false
+                        offline_valid[i_key] = false
                         i_key++
                         continue
                     }
                 }
                 i_key++
             }
-            if (!offline_valid.get(0) || !offline_valid.get(1)) {
+            if (!offline_valid[0] || !offline_valid[1]) {
                 return false
             }
 
@@ -1553,8 +1553,8 @@ object Session_local {
             }
         }
 
-        override fun ClearCDKey(valid: BooleanArray?) {
-            if (!valid.get(0)) {
+        override fun ClearCDKey(valid: BooleanArray) {
+            if (!valid[0]) {
 //		memset( cdkey, 0, CDKEY_BUF_LEN );
                 Arrays.fill(cdkey, '0') //TODO:is '0' the same as 0????
                 cdkey_state = cdKeyState_t.CDKEY_UNKNOWN
@@ -1562,7 +1562,7 @@ object Session_local {
                 // if a key was in checking and not explicitely asked for clearing, put it back to ok
                 cdkey_state = cdKeyState_t.CDKEY_OK
             }
-            if (!valid.get(1)) {
+            if (!valid[1]) {
 //		memset( xpkey, 0, CDKEY_BUF_LEN );
                 Arrays.fill(cdkey, '0')
                 xpkey_state = cdKeyState_t.CDKEY_UNKNOWN

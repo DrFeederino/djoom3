@@ -172,7 +172,7 @@ object EventLoop {
                 }
                 if (ev.evPtrLength != 0) {
                     ev.evPtr = ByteBuffer.allocate(ev.evPtrLength) //Mem_ClearedAlloc(ev.evPtrLength);
-                    r = com_journalFile!!.Read(ev.evPtr) //, ev.evPtrLength);
+                    r = com_journalFile!!.Read(ev.evPtr!!) //, ev.evPtrLength);
                     if (r != ev.evPtrLength) {
                         Common.common.FatalError("Error reading from journal file")
                     }
@@ -187,7 +187,7 @@ object EventLoop {
                         Common.common.FatalError("Error writing to journal file")
                     }
                     if (ev.evPtrLength != 0) {
-                        r = com_journalFile!!.Write(ev.evPtr, ev.evPtrLength)
+                        r = com_journalFile!!.Write(ev.evPtr!!, ev.evPtrLength)
                         if (r != ev.evPtrLength) {
                             Common.common.FatalError("Error writing to journal file")
                         }

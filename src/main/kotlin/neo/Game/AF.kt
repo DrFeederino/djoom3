@@ -253,7 +253,7 @@ object AF {
             )
 
             // set all vector positions from model joints
-            file.Finish(AF.GetJointTransform.Companion.INSTANCE, joints, animator)
+            file.Finish(GetJointTransform.Companion.INSTANCE, joints, animator)
 
             // initialize articulated figure physics
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
@@ -1359,7 +1359,7 @@ object AF {
         }
 
         companion object {
-            val INSTANCE: getJointTransform_t? = AF.GetJointTransform()
+            val INSTANCE: getJointTransform_t = GetJointTransform()
         }
     }
 }

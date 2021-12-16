@@ -5,14 +5,7 @@ import neo.Game.Game_local
 import neo.TempDump
 import neo.TempDump.void_callback
 import neo.framework.*
-import neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE
-import neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_DL
-import neo.framework.Async.AsyncNetwork.SERVER_PAK
-import neo.framework.Async.AsyncNetwork.SERVER_PRINT
-import neo.framework.Async.AsyncNetwork.SERVER_RELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork
+import neo.framework.Async.AsyncNetwork.*
 import neo.framework.Async.MsgChannel.idMsgChannel
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.FileSystem_h.findFile_t
@@ -1735,7 +1728,7 @@ object AsyncServer {
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_PRINT -> {
                         val string = CharArray(Lib.MAX_STRING_CHARS)
                         msg.ReadString(string, string.size)
-                        Common.common.Printf("%s\n", TempDump.ctos(string))
+                        Common.common.Printf("%s\n", TempDump.ctos(string)!!)
                     }
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_DISCONNECT -> {
                         DropClient(clientNum, "#str_07138")

@@ -8,7 +8,6 @@ import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.deferredEntityCallback_t
 import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.sound.idSoundEmitter
-import neo.TempDump.CPP_class.Char
 import neo.framework.DeclSkin.idDeclSkin
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.CmdArgs
@@ -322,10 +321,10 @@ object TempDump {
         return atof(ascii.toString())
     }
 
-    fun ctos(ascii: CharArray): String? { //TODO:rename this moronic overloading!
-        if (NOT(ascii)) {
-            return null
-        }
+    fun ctos(ascii: CharArray): String { //TODO:rename this moronic overloading!
+//        if (NOT(ascii)) {
+//            return null
+//        }
         for (a in ascii.indices) {
             if ('\u0000' == ascii[a]) {
                 return String(ascii).substring(0, a)
@@ -334,7 +333,7 @@ object TempDump {
         return String(ascii)
     }
 
-    fun ctos(ascii: Char): String? {
+    fun ctos(ascii: kotlin.Char): String {
         return "" + ascii
     }
 

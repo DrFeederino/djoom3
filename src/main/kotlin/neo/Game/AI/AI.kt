@@ -58,7 +58,6 @@ import neo.Tools.Compilers.AAS.AASFile
 import neo.Tools.Compilers.AAS.AASFile.idAASSettings
 import neo.Tools.Compilers.AAS.AASFile.idReachability
 import neo.framework.CmdSystem.cmdFunction_t
-import neo.framework.DeclAF.idAFVector.type
 import neo.framework.DeclManager
 import neo.framework.DeclManager.declType_t
 import neo.framework.DeclParticle.idDeclParticle

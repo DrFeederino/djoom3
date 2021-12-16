@@ -13,9 +13,10 @@ import neo.idlib.containers.CInt
 import neo.idlib.containers.List.idList
 import neo.idlib.geometry.JointTransform.idJointMat
 import neo.idlib.geometry.TraceModel.traceModel_t
-import neo.idlib.math.*
+import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 
@@ -40,37 +41,38 @@ class DeclAF {
 
     abstract class getJointTransform_t {
         abstract fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: String?,
-            origin: idVec3?,
-            axis: idMat3?
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: String,
+            origin: idVec3,
+            axis: idMat3
         ): Boolean
 
         abstract fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: idStr?,
-            origin: idVec3?,
-            axis: idMat3?
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: idStr,
+            origin: idVec3,
+            axis: idMat3
         ): Boolean //TODO:phase out overload
     }
 
     class idAFVector {
         private val DBG_count = DBG_counter++
-        var joint1: idStr?
-        var joint2: idStr?
-        var type: type?
+        var joint1: idStr
+        var joint2: idStr
+        var idAFVectorType: idFVectorTypes = idFVectorTypes.VEC_COORDS
+
         private var negate: Boolean
-        private val vec: idVec3?
+        private val vec: idVec3
 
         @Throws(idException::class)
-        fun Parse(src: idLexer?): Boolean {
+        fun Parse(src: idLexer): Boolean {
             val token = idToken()
             if (!src.ReadToken(token)) {
                 return false
             }
-            if (token == "-") {
+            if (token.toString() == "-") {
                 negate = true
                 if (!src.ReadToken(token)) {
                     return false
@@ -78,22 +80,22 @@ class DeclAF {
             } else {
                 negate = false
             }
-            if (token == "(") {
-                type = type.VEC_COORDS
+            if (token.toString() == "(") {
+                idAFVectorType = idFVectorTypes.VEC_COORDS
                 vec.x = src.ParseFloat()
                 src.ExpectTokenString(",")
                 vec.y = src.ParseFloat()
                 src.ExpectTokenString(",")
                 vec.z = src.ParseFloat()
                 src.ExpectTokenString(")")
-            } else if (token == "joint") {
-                type = type.VEC_JOINT
+            } else if (token.toString() == "joint") {
+                idAFVectorType = idFVectorTypes.VEC_JOINT
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
                 joint1.set(token)
                 src.ExpectTokenString(")")
-            } else if (token == "bonecenter") {
-                type = type.VEC_BONECENTER
+            } else if (token.toString() == "bonecenter") {
+                idAFVectorType = idFVectorTypes.VEC_BONECENTER
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
                 joint1.set(token)
@@ -101,8 +103,8 @@ class DeclAF {
                 src.ReadToken(token)
                 joint2.set(token)
                 src.ExpectTokenString(")")
-            } else if (token == "bonedir") {
-                type = type.VEC_BONEDIR
+            } else if (token.toString() == "bonedir") {
+                idAFVectorType = idFVectorTypes.VEC_BONEDIR
                 src.ExpectTokenString("(")
                 src.ReadToken(token)
                 joint1.set(token)
@@ -119,23 +121,23 @@ class DeclAF {
 
         @Throws(idException::class)
         fun Finish(
-            fileName: String?,
-            GetJointTransform: getJointTransform_t?,
-            frame: Array<idJointMat?>?,
-            model: Any?
+            fileName: String,
+            GetJointTransform: getJointTransform_t,
+            frame: Array<idJointMat>,
+            model: Any
         ): Boolean {
             val axis = idMat3()
             val start = idVec3()
             val end = idVec3()
-            when (type) {
-                type.VEC_COORDS -> {}
-                type.VEC_JOINT -> {
+            when (idAFVectorType) {
+                idFVectorTypes.VEC_COORDS -> {}
+                idFVectorTypes.VEC_JOINT -> {
                     if (!GetJointTransform.run(model, frame, joint1, vec, axis)) {
                         Common.common.Warning("invalid joint %s in joint() in '%s'", joint1.toString(), fileName)
                         vec.Zero()
                     }
                 }
-                type.VEC_BONECENTER -> {
+                idFVectorTypes.VEC_BONECENTER -> {
                     if (!GetJointTransform.run(model, frame, joint1, start, axis)) {
                         Common.common.Warning("invalid joint %s in bonecenter() in '%s'", joint1.toString(), fileName)
                         start.Zero()
@@ -144,9 +146,9 @@ class DeclAF {
                         Common.common.Warning("invalid joint %s in bonecenter() in '%s'", joint2.toString(), fileName)
                         end.Zero()
                     }
-                    vec.set(start.oPlus(end).oMultiply(0.5f))
+                    vec.set(start.plus(end).times(0.5f))
                 }
-                type.VEC_BONEDIR -> {
+                idFVectorTypes.VEC_BONEDIR -> {
                     if (!GetJointTransform.run(model, frame, joint1, start, axis)) {
                         Common.common.Warning("invalid joint %s in bonedir() in '%s'", joint1.toString(), fileName)
                         start.Zero()
@@ -162,26 +164,26 @@ class DeclAF {
                 }
             }
             if (negate) {
-                vec.set(vec.oNegative())
+                vec.set(-vec)
             }
             return true
         }
 
-        fun Write(f: idFile?): Boolean {
+        fun Write(f: idFile): Boolean {
             if (negate) {
                 f.WriteFloatString("-")
             }
-            when (type) {
-                type.VEC_COORDS -> {
+            when (idAFVectorType) {
+                idFVectorTypes.VEC_COORDS -> {
                     f.WriteFloatString("( %f, %f, %f )", vec.x, vec.y, vec.z)
                 }
-                type.VEC_JOINT -> {
+                idFVectorTypes.VEC_JOINT -> {
                     f.WriteFloatString("joint( \"%s\" )", joint1.toString())
                 }
-                type.VEC_BONECENTER -> {
+                idFVectorTypes.VEC_BONECENTER -> {
                     f.WriteFloatString("bonecenter( \"%s\", \"%s\" )", joint1.toString(), joint2.toString())
                 }
-                type.VEC_BONEDIR -> {
+                idFVectorTypes.VEC_BONEDIR -> {
                     f.WriteFloatString("bonedir( \"%s\", \"%s\" )", joint1.toString(), joint2.toString())
                 }
                 else -> {}
@@ -189,20 +191,20 @@ class DeclAF {
             return true
         }
 
-        fun ToString(str: idStr?, precision: Int /*= 8*/): String? {
-            when (type) {
-                type.VEC_COORDS -> {
+        fun ToString(str: idStr, precision: Int /*= 8*/): String {
+            when (idAFVectorType) {
+                idFVectorTypes.VEC_COORDS -> {
                     val format: String //[128];
                     format = String.format("( %%.%df, %%.%df, %%.%df )", precision, precision, precision)
                     str.set(String.format(format, vec.x, vec.y, vec.z))
                 }
-                type.VEC_JOINT -> {
+                idFVectorTypes.VEC_JOINT -> {
                     str.set(String.format("joint( \"%s\" )", joint1.toString()))
                 }
-                type.VEC_BONECENTER -> {
+                idFVectorTypes.VEC_BONECENTER -> {
                     str.set(String.format("bonecenter( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
                 }
-                type.VEC_BONEDIR -> {
+                idFVectorTypes.VEC_BONEDIR -> {
                     str.set(String.format("bonedir( \"%s\", \"%s\" )", joint1.toString(), joint2.toString()))
                 }
                 else -> {}
@@ -213,11 +215,11 @@ class DeclAF {
             return str.toString()
         }
 
-        fun ToVec3(): idVec3? {
+        fun ToVec3(): idVec3 {
             return vec
         }
 
-        internal enum class type {
+        enum class idFVectorTypes {
             VEC_COORDS, VEC_JOINT, VEC_BONECENTER, VEC_BONEDIR
         } //public	idVec3 &				ToVec3( void ) { return vec; }
 
@@ -228,7 +230,7 @@ class DeclAF {
         }
 
         init {
-            type = type.VEC_COORDS
+            idAFVectorType = idFVectorTypes.VEC_COORDS
             joint1 = idStr()
             joint2 = idStr()
             vec = idVec3()
@@ -237,28 +239,29 @@ class DeclAF {
     }
 
     class idDeclAF_Body {
-        var angles: idAngles? = null
+        val angles: idAngles = idAngles()
         var angularFriction = 0f
-        var clipMask: CInt? = CInt()
+        var clipMask: CInt = CInt()
         var contactFriction = 0f
-        var contactMotorDirection: idAFVector? = null
-        var containedJoints: idStr?
-        var contents: CInt? = CInt()
+        var contactMotorDirection: idAFVector = idAFVector()
+        val containedJoints: idStr = idStr()
+        var contents: CInt = CInt()
         var density = 0f
-        var frictionDirection: idAFVector? = null
-        var inertiaScale: idMat3? = null
-        var jointMod: declAFJointMod_t? = null
-        var jointName: idStr?
+        var frictionDirection: idAFVector = idAFVector()
+        val inertiaScale: idMat3 = idMat3()
+        var jointMod: declAFJointMod_t = declAFJointMod_t.DECLAF_JOINTMOD_AXIS
+        val jointName: idStr = idStr()
         var linearFriction = 0f
-        var modelType: traceModel_t? = null
-        var name: idStr?
+        var modelType: traceModel_t = traceModel_t.TRM_BOX
+        val name: idStr = idStr()
         var numSides = 0
-        var origin: idAFVector? = null
+        var origin: idAFVector = idAFVector()
         var selfCollision = false
-        var v1: idAFVector? = null
-        var v2: idAFVector? = null
+        var v1: idAFVector = idAFVector()
+        var v2: idAFVector = idAFVector()
         var width = 0f
-        fun SetDefault(file: idDeclAF?) {
+
+        fun SetDefault(file: idDeclAF) {
             name.set("noname")
             modelType = traceModel_t.TRM_BOX
             v1 = idAFVector()
@@ -272,10 +275,10 @@ class DeclAF {
             numSides = 3
             origin = idAFVector()
             origin.ToVec3().Zero()
-            angles = idAngles()
+            angles.set(idAngles())
             angles.Zero()
             density = 0.2f
-            inertiaScale = idMat3.Companion.getMat3_identity()
+            inertiaScale.set(idMat3.getMat3_identity())
             linearFriction = file.defaultLinearFriction
             angularFriction = file.defaultAngularFriction
             contactFriction = file.defaultContactFriction
@@ -288,44 +291,37 @@ class DeclAF {
             jointMod = declAFJointMod_t.DECLAF_JOINTMOD_AXIS
             containedJoints.set("*origin")
         }
-
-        //
-        init {
-            name = idStr()
-            jointName = idStr()
-            containedJoints = idStr()
-        }
     }
 
     class idDeclAF_Constraint {
-        var anchor: idAFVector? = null
-        var anchor2: idAFVector? = null
-        var axis: idAFVector? = idAFVector()
-        var body1: idStr? = idStr()
-        var body2: idStr? = idStr()
+        var anchor: idAFVector = idAFVector()
+        var anchor2: idAFVector = idAFVector()
+        var axis: idAFVector = idAFVector()
+        val body1: idStr = idStr()
+        val body2: idStr = idStr()
         var compress = 0f
         var damping = 0f
         var friction = 0f
 
         //
         var limit = 0
-        var limitAngles: FloatArray? = FloatArray(3)
-        var limitAxis: idAFVector? = idAFVector()
+        var limitAngles: FloatArray = FloatArray(3)
+        var limitAxis: idAFVector = idAFVector()
         var maxLength = 0f
         var minLength = 0f
-        var name: idStr? = idStr()
+        val name: idStr = idStr()
         var restLength = 0f
-        var shaft: Array<idAFVector?>? = arrayOf(idAFVector(), idAFVector())
+        var shaft: Array<idAFVector> = arrayOf(idAFVector(), idAFVector())
         var stretch = 0f
-        var type: declAFConstraintType_t? = null
+        var type: declAFConstraintType_t = declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT
 
         //
         //
-        fun SetDefault(file: idDeclAF?) {
+        fun SetDefault(file: idDeclAF) {
             name.set("noname")
             type = declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT
             if (file.bodies.Num() != 0) {
-                body1.set(file.bodies.get(0).name)
+                body1.set(file.bodies[0].name)
             } else {
                 body1.set("world")
             }
@@ -334,46 +330,44 @@ class DeclAF {
             anchor = idAFVector()
             anchor2 = idAFVector()
             axis.ToVec3().set(1.0f, 0.0f, 0.0f)
-            shaft.get(0).ToVec3().set(0.0f, 0.0f, -1.0f)
-            shaft.get(1).ToVec3().set(0.0f, 0.0f, 1.0f)
+            shaft[0].ToVec3().set(0.0f, 0.0f, -1.0f)
+            shaft[1].ToVec3().set(0.0f, 0.0f, 1.0f)
             limit = LIMIT_NONE
-            limitAngles.get(2) = 0.0f
-            limitAngles.get(1) = limitAngles.get(2)
-            limitAngles.get(0) = limitAngles.get(1)
+            limitAngles[2] = 0.0f
+            limitAngles[1] = limitAngles[2]
+            limitAngles[0] = limitAngles[1]
             limitAxis.ToVec3().set(0.0f, 0.0f, -1.0f)
         }
 
         companion object {
             const val LIMIT_CONE = 0
-
-            //
             const val LIMIT_NONE = -1
             const val LIMIT_PYRAMID = 1
         }
     }
 
     class idDeclAF : idDecl() {
-        val bodies: idList<idDeclAF_Body?>? = idList(idDeclAF_Body::class.java)
-        val constraints: idList<idDeclAF_Constraint?>? = idList(idDeclAF_Constraint::class.java)
-        var clipMask: CInt? = CInt()
-        var contents: CInt? = CInt()
+        val bodies: idList<idDeclAF_Body> = idList()
+        val constraints: idList<idDeclAF_Constraint> = idList()
+        var clipMask: CInt = CInt()
+        var contents: CInt = CInt()
         var defaultAngularFriction = 0f
         var defaultConstraintFriction = 0f
         var defaultContactFriction = 0f
         var defaultLinearFriction = 0f
         var maxMoveTime = 0f
         var minMoveTime = 0f
-        var model: idStr? = null
+        val model: idStr = idStr()
         var modified = false
         var noMoveRotation = 0f
         var noMoveTime = 0f
         var noMoveTranslation = 0f
         var selfCollision = false
-        var skin: idStr? = null
-        var suspendAcceleration: idVec2? = idVec2()
-        var suspendVelocity: idVec2? = idVec2()
+        val skin: idStr = idStr()
+        var suspendAcceleration: idVec2 = idVec2()
+        var suspendVelocity: idVec2 = idVec2()
         var totalMass = 0f
-        override fun DefaultDefinition(): String? {
+        override fun DefaultDefinition(): String {
             return """{
 	settings {
 		model ""
@@ -408,7 +402,7 @@ class DeclAF {
 
         // 
         @Throws(idException::class)
-        override fun Parse(text: String?, textLength: Int): Boolean {
+        override fun Parse(text: String, textLength: Int): Boolean {
             var i: Int
             var j: Int
             val src = idLexer()
@@ -449,7 +443,7 @@ class DeclAF {
                     if (!ParseSpring(src)) {
                         return false
                     }
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown keyword %s", token)
@@ -462,8 +456,8 @@ class DeclAF {
                 // check for multiple bodies with the same name
                 j = i + 1
                 while (j < bodies.Num()) {
-                    if (bodies.get(i).name === bodies.get(j).name) {
-                        src.Error("two bodies with the same name \"%s\"", bodies.get(i).name)
+                    if (bodies[i].name === bodies[j].name) {
+                        src.Error("two bodies with the same name \"%s\"", bodies[i].name)
                     }
                     j++
                 }
@@ -475,17 +469,17 @@ class DeclAF {
                 // check for multiple constraints with the same name
                 j = i + 1
                 while (j < constraints.Num()) {
-                    if (constraints.get(i).name === constraints.get(j).name) {
-                        src.Error("two constraints with the same name \"%s\"", constraints.get(i).name)
+                    if (constraints[i].name === constraints[j].name) {
+                        src.Error("two constraints with the same name \"%s\"", constraints[i].name)
                     }
                     j++
                 }
                 // check if there are two valid bodies set
-                if (constraints.get(i).body1.IsEmpty()) {
-                    src.Error("no valid body1 specified for constraint '%s'", constraints.get(i).name)
+                if (constraints[i].body1.IsEmpty()) {
+                    src.Error("no valid body1 specified for constraint '%s'", constraints[i].name)
                 }
-                if (constraints.get(i).body2.IsEmpty()) {
-                    src.Error("no valid body2 specified for constraint '%s'", constraints.get(i).name)
+                if (constraints[i].body2.IsEmpty()) {
+                    src.Error("no valid body2 specified for constraint '%s'", constraints[i].name)
                 }
                 i++
             }
@@ -493,11 +487,11 @@ class DeclAF {
             // make sure the body which modifies the origin comes first
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.get(i).jointName == "origin") {
+                if (bodies[i].jointName.toString() == "origin") {
                     if (i != 0) {
-                        val b = bodies.get(0)
-                        bodies.set(0, bodies.get(i))
-                        bodies.set(i, b)
+                        val b = bodies[0]
+                        bodies[0] = bodies[i]
+                        bodies[i] = b
                     }
                     break
                 }
@@ -521,22 +515,22 @@ class DeclAF {
             minMoveTime = -1.0f
             maxMoveTime = -1.0f
             selfCollision = true
-            contents.setVal(Material.CONTENTS_CORPSE)
-            clipMask.setVal(Material.CONTENTS_SOLID or Material.CONTENTS_CORPSE)
+            contents._val = (Material.CONTENTS_CORPSE)
+            clipMask._val = (Material.CONTENTS_SOLID or Material.CONTENTS_CORPSE)
             bodies.DeleteContents(true)
             constraints.DeleteContents(true)
         }
 
         @Throws(idException::class)  /*virtual */   fun Finish(
-            GetJointTransform: getJointTransform_t?,
-            frame: Array<idJointMat?>?,
-            model: Any?
+            GetJointTransform: getJointTransform_t,
+            frame: Array<idJointMat>,
+            model: Any
         ) {
             var i: Int
             val name = GetName()
             i = 0
             while (i < bodies.Num()) {
-                val body = bodies.get(i)
+                val body = bodies[i]
                 body.v1.Finish(name, GetJointTransform, frame, model)
                 body.v2.Finish(name, GetJointTransform, frame, model)
                 body.origin.Finish(name, GetJointTransform, frame, model)
@@ -546,11 +540,11 @@ class DeclAF {
             }
             i = 0
             while (i < constraints.Num()) {
-                val constraint = constraints.get(i)
+                val constraint = constraints[i]
                 constraint.anchor.Finish(name, GetJointTransform, frame, model)
                 constraint.anchor2.Finish(name, GetJointTransform, frame, model)
-                constraint.shaft.get(0).Finish(name, GetJointTransform, frame, model)
-                constraint.shaft.get(1).Finish(name, GetJointTransform, frame, model)
+                constraint.shaft[0].Finish(name, GetJointTransform, frame, model)
+                constraint.shaft[1].Finish(name, GetJointTransform, frame, model)
                 constraint.axis.Finish(name, GetJointTransform, frame, model)
                 constraint.limitAxis.Finish(name, GetJointTransform, frame, model)
                 i++
@@ -566,7 +560,7 @@ class DeclAF {
             return true
         }
 
-        fun NewBody(name: String?) {
+        fun NewBody(name: String) {
             val body: idDeclAF_Body
             body = idDeclAF_Body()
             body.SetDefault(this)
@@ -582,22 +576,22 @@ class DeclAF {
          all constraint body references
          ================
          */
-        fun RenameBody(oldName: String?, newName: String?) {
+        fun RenameBody(oldName: String, newName: String) {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.get(i).name.Icmp(oldName) == 0) {
-                    bodies.get(i).name.set(newName)
+                if (bodies[i].name.Icmp(oldName) == 0) {
+                    bodies[i].name.set(newName)
                     break
                 }
                 i++
             }
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.get(i).body1.Icmp(oldName) == 0) {
-                    constraints.get(i).body1.set(newName)
-                } else if (constraints.get(i).body2.Icmp(oldName) == 0) {
-                    constraints.get(i).body2.set(newName)
+                if (constraints[i].body1.Icmp(oldName) == 0) {
+                    constraints[i].body1.set(newName)
+                } else if (constraints[i].body2.Icmp(oldName) == 0) {
+                    constraints[i].body2.set(newName)
                 }
                 i++
             }
@@ -612,11 +606,11 @@ class DeclAF {
          all constraints that reference the body
          ================
          */
-        fun DeleteBody(name: String?) {
+        fun DeleteBody(name: String) {
             var i: Int
             i = 0
             while (i < bodies.Num()) {
-                if (bodies.get(i).name.Icmp(name) == 0) {
+                if (bodies[i].name.Icmp(name) == 0) {
 //			delete bodies.oGet(i);
                     bodies.RemoveIndex(i)
                     break
@@ -625,8 +619,8 @@ class DeclAF {
             }
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.get(i).body1.Icmp(name) == 0
-                    || constraints.get(i).body2.Icmp(name) == 0
+                if (constraints[i].body1.Icmp(name) == 0
+                    || constraints[i].body2.Icmp(name) == 0
                 ) {
 //			delete constraints.oGet(i);
                     constraints.RemoveIndex(i)
@@ -636,7 +630,7 @@ class DeclAF {
             }
         }
 
-        fun NewConstraint(name: String?) {
+        fun NewConstraint(name: String) {
             val constraint: idDeclAF_Constraint
             constraint = idDeclAF_Constraint()
             constraint.SetDefault(this)
@@ -645,23 +639,23 @@ class DeclAF {
         }
 
         // 
-        fun RenameConstraint(oldName: String?, newName: String?) {
+        fun RenameConstraint(oldName: String, newName: String) {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.get(i).name.Icmp(oldName) == 0) {
-                    constraints.get(i).name.set(newName)
+                if (constraints[i].name.Icmp(oldName) == 0) {
+                    constraints[i].name.set(newName)
                     return
                 }
                 i++
             }
         }
 
-        fun DeleteConstraint(name: String?) {
+        fun DeleteConstraint(name: String) {
             var i: Int
             i = 0
             while (i < constraints.Num()) {
-                if (constraints.get(i).name.Icmp(name) == 0) {
+                if (constraints[i].name.Icmp(name) == 0) {
 //			delete constraints.oGet(i);
                     constraints.RemoveIndex(i)
                     return
@@ -671,7 +665,7 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseContents(src: idLexer?, c: CInt?): Boolean {
+        private fun ParseContents(src: idLexer, c: CInt): Boolean {
             val token = idToken()
             val str = idStr()
             while (src.ReadToken(token)) {
@@ -681,17 +675,18 @@ class DeclAF {
                 }
                 str.Append(",")
             }
-            c.setVal(ContentsFromString(str.toString()))
+            c._val = (ContentsFromString(str.toString()))
             return true
         }
 
         @Throws(idException::class)
-        private fun ParseBody(src: idLexer?): Boolean {
+        private fun ParseBody(src: idLexer): Boolean {
             var hasJoint = false
             val token = idToken()
             val angles = idAFVector()
-            val body: idDeclAF_Body? // = new idDeclAF_Body();
-            body = bodies.Alloc()
+            val body: idDeclAF_Body // = new idDeclAF_Body();
+            body = idDeclAF_Body() // instead of bodies.Alloc()
+            bodies.Append(body)
             body.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -795,7 +790,7 @@ class DeclAF {
                     if (!angles.Parse(src)) {
                         return false
                     }
-                    body.angles = idAngles(angles.ToVec3().x, angles.ToVec3().y, angles.ToVec3().z)
+                    body.angles.set(idAngles(angles.ToVec3().x, angles.ToVec3().y, angles.ToVec3().z))
                 } else if (0 == token.Icmp("joint")) {
                     if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)) {
                         return false
@@ -836,7 +831,7 @@ class DeclAF {
                     if (!body.contactMotorDirection.Parse(src)) {
                         return false
                     }
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in body", token.toString())
@@ -851,15 +846,16 @@ class DeclAF {
                 src.Error("no joint set for body")
                 return false
             }
-            body.clipMask.setVal(body.clipMask.getVal() or Material.CONTENTS_MOVEABLECLIP)
+            body.clipMask._val = (body.clipMask._val or Material.CONTENTS_MOVEABLECLIP)
             return true
         }
 
         @Throws(idException::class)
-        private fun ParseFixed(src: idLexer?): Boolean {
+        private fun ParseFixed(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint?
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint
+            constraint = idDeclAF_Constraint()//constraints.Alloc()
+            constraints.Append(constraint)
             constraint.SetDefault(this) //TODO:make sure this order is correct.
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -875,7 +871,7 @@ class DeclAF {
                 } else if (0 == token.Icmp("body2")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
                     constraint.body2.set(token)
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in ball and socket joint", token.toString())
@@ -886,10 +882,11 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseBallAndSocketJoint(src: idLexer?): Boolean {
+        private fun ParseBallAndSocketJoint(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint? //= new idDeclAF_Constraint();
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint //= new idDeclAF_Constraint();
+            constraint = idDeclAF_Constraint() // instead of constraints.Alloc() stuff
+            constraints.Append(constraint)
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -901,7 +898,7 @@ class DeclAF {
             constraint.name.set(token)
             constraint.friction = 0.5f
             constraint.anchor.ToVec3().Zero()
-            constraint.shaft.get(0).ToVec3().Zero()
+            constraint.shaft[0].ToVec3().Zero()
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
@@ -919,9 +916,9 @@ class DeclAF {
                     ) {
                         return false
                     }
-                    constraint.limitAngles.get(0) = src.ParseFloat()
+                    constraint.limitAngles[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")
-                        || !constraint.shaft.get(0).Parse(src)
+                        || !constraint.shaft[0].Parse(src)
                     ) {
                         return false
                     }
@@ -932,24 +929,24 @@ class DeclAF {
                     ) {
                         return false
                     }
-                    constraint.limitAngles.get(0) = src.ParseFloat()
+                    constraint.limitAngles[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(1) = src.ParseFloat()
+                    constraint.limitAngles[1] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(2) = src.ParseFloat()
+                    constraint.limitAngles[2] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")
-                        || !constraint.shaft.get(0).Parse(src)
+                        || !constraint.shaft[0].Parse(src)
                     ) {
                         return false
                     }
                     constraint.limit = idDeclAF_Constraint.LIMIT_PYRAMID
                 } else if (0 == token.Icmp("friction")) {
                     constraint.friction = src.ParseFloat()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in ball and socket joint", token.toString())
@@ -960,10 +957,10 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseUniversalJoint(src: idLexer?): Boolean {
+        private fun ParseUniversalJoint(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint? // = new idDeclAF_Constraint;
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint // = new idDeclAF_Constraint;
+            constraint = constraints.Alloc()!!
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -975,8 +972,8 @@ class DeclAF {
             constraint.name.set(token)
             constraint.friction = 0.5f
             constraint.anchor.ToVec3().Zero()
-            constraint.shaft.get(0).ToVec3().Zero()
-            constraint.shaft.get(1).ToVec3().Zero()
+            constraint.shaft[0].ToVec3().Zero()
+            constraint.shaft[1].ToVec3().Zero()
             while (src.ReadToken(token)) {
                 if (0 == token.Icmp("body1")) {
                     src.ExpectTokenType(Token.TT_STRING, 0, token)
@@ -989,9 +986,9 @@ class DeclAF {
                         return false
                     }
                 } else if (0 == token.Icmp("shafts")) {
-                    if (!constraint.shaft.get(0).Parse(src)
+                    if (!constraint.shaft[0].Parse(src)
                         || !src.ExpectTokenString(",")
-                        || !constraint.shaft.get(1).Parse(src)
+                        || !constraint.shaft[1].Parse(src)
                     ) {
                         return false
                     }
@@ -1001,7 +998,7 @@ class DeclAF {
                     ) {
                         return false
                     }
-                    constraint.limitAngles.get(0) = src.ParseFloat()
+                    constraint.limitAngles[0] = src.ParseFloat()
                     constraint.limit = idDeclAF_Constraint.LIMIT_CONE
                 } else if (0 == token.Icmp("pyramidlimit")) {
                     if (!constraint.limitAxis.Parse(src)
@@ -1009,19 +1006,19 @@ class DeclAF {
                     ) {
                         return false
                     }
-                    constraint.limitAngles.get(0) = src.ParseFloat()
+                    constraint.limitAngles[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(1) = src.ParseFloat()
+                    constraint.limitAngles[1] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(2) = src.ParseFloat()
+                    constraint.limitAngles[2] = src.ParseFloat()
                     constraint.limit = idDeclAF_Constraint.LIMIT_PYRAMID
                 } else if (0 == token.Icmp("friction")) {
                     constraint.friction = src.ParseFloat()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in universal joint", token.toString())
@@ -1032,10 +1029,11 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseHinge(src: idLexer?): Boolean {
+        private fun ParseHinge(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint? // = new idDeclAF_Constraint;
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint // = new idDeclAF_Constraint;
+            constraint = idDeclAF_Constraint()
+            constraints.Append(constraint)// constraints.Alloc()
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -1064,19 +1062,19 @@ class DeclAF {
                         return false
                     }
                 } else if (0 == token.Icmp("limit")) {
-                    constraint.limitAngles.get(0) = src.ParseFloat()
+                    constraint.limitAngles[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(1) = src.ParseFloat()
+                    constraint.limitAngles[1] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    constraint.limitAngles.get(2) = src.ParseFloat()
+                    constraint.limitAngles[2] = src.ParseFloat()
                     constraint.limit = idDeclAF_Constraint.LIMIT_CONE
                 } else if (0 == token.Icmp("friction")) {
                     constraint.friction = src.ParseFloat()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in hinge", token.toString())
@@ -1087,10 +1085,11 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseSlider(src: idLexer?): Boolean {
+        private fun ParseSlider(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint? // = new idDeclAF_Constraint;
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint // = new idDeclAF_Constraint;
+            constraint = idDeclAF_Constraint()
+            constraints.Append(constraint) //constraints.Alloc()
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -1114,7 +1113,7 @@ class DeclAF {
                     }
                 } else if (0 == token.Icmp("friction")) {
                     constraint.friction = src.ParseFloat()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in slider", token.toString())
@@ -1125,10 +1124,11 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseSpring(src: idLexer?): Boolean {
+        private fun ParseSpring(src: idLexer): Boolean {
             val token = idToken()
-            val constraint: idDeclAF_Constraint? // = new idDeclAF_Constraint;
-            constraint = constraints.Alloc()
+            val constraint: idDeclAF_Constraint // = new idDeclAF_Constraint;
+            constraint = idDeclAF_Constraint()
+            constraints.Append(constraint)//constraints.Alloc()
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")
@@ -1168,7 +1168,7 @@ class DeclAF {
                     constraint.minLength = src.ParseFloat()
                 } else if (0 == token.Icmp("maxLength")) {
                     constraint.maxLength = src.ParseFloat()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in spring", token.toString())
@@ -1179,7 +1179,7 @@ class DeclAF {
         }
 
         @Throws(idException::class)
-        private fun ParseSettings(src: idLexer?): Boolean {
+        private fun ParseSettings(src: idLexer): Boolean {
             val token = idToken()
             if (!src.ExpectTokenString("{")) {
                 return false
@@ -1197,12 +1197,12 @@ class DeclAF {
                     if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)) {
                         return false
                     }
-                    model = token
+                    model.set(token)
                 } else if (0 == token.Icmp("skin")) {
                     if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)) {
                         return false
                     }
-                    skin = token
+                    skin.set(token)
                 } else if (0 == token.Icmp("friction")) {
                     defaultLinearFriction = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
@@ -1219,19 +1219,19 @@ class DeclAF {
                 } else if (0 == token.Icmp("totalMass")) {
                     totalMass = src.ParseFloat()
                 } else if (0 == token.Icmp("suspendSpeed")) {
-                    suspendVelocity.set(0, src.ParseFloat())
+                    suspendVelocity[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendVelocity.set(1, src.ParseFloat())
+                    suspendVelocity[1] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendAcceleration.set(0, src.ParseFloat())
+                    suspendAcceleration[0] = src.ParseFloat()
                     if (!src.ExpectTokenString(",")) {
                         return false
                     }
-                    suspendAcceleration.set(1, src.ParseFloat())
+                    suspendAcceleration[1] = src.ParseFloat()
                 } else if (0 == token.Icmp("noMoveTime")) {
                     noMoveTime = src.ParseFloat()
                 } else if (0 == token.Icmp("noMoveTranslation")) {
@@ -1248,7 +1248,7 @@ class DeclAF {
                     ParseContents(src, clipMask)
                 } else if (0 == token.Icmp("selfCollision")) {
                     selfCollision = src.ParseBool()
-                } else if (token == "}") {
+                } else if (token.toString() == "}") {
                     break
                 } else {
                     src.Error("unknown token %s in settings", token.toString())
@@ -1259,7 +1259,7 @@ class DeclAF {
         }
 
         //
-        private fun WriteBody(f: idFile?, body: idDeclAF_Body?): Boolean {
+        private fun WriteBody(f: idFile, body: idDeclAF_Body): Boolean {
             val str = idStr()
             f.WriteFloatString("\nbody \"%s\" {\n", body.name.toString())
             f.WriteFloatString("\tjoint \"%s\"\n", body.jointName.toString())
@@ -1316,13 +1316,13 @@ class DeclAF {
                 f.WriteFloatString("\tangles ( %f, %f, %f )\n", body.angles.pitch, body.angles.yaw, body.angles.roll)
             }
             f.WriteFloatString("\tdensity %f\n", body.density)
-            if (body.inertiaScale != idMat3.Companion.getMat3_identity()) {
+            if (body.inertiaScale != idMat3.getMat3_identity()) {
                 val ic = body.inertiaScale
                 f.WriteFloatString(
                     "\tinertiaScale (%f %f %f %f %f %f %f %f %f)\n",
-                    ic.get(0).get(0), ic.get(0).get(1), ic.get(0).get(2),
-                    ic.get(1).get(0), ic.get(1).get(1), ic.get(1).get(2),
-                    ic.get(2).get(0), ic.get(2).get(1), ic.get(2).get(2)
+                    ic[0][0], ic[0][1], ic[0][2],
+                    ic[1][0], ic[1][1], ic[1][2],
+                    ic[2][0], ic[2][1], ic[2][2]
                 )
             }
             if (body.linearFriction != -1f) {
@@ -1333,8 +1333,8 @@ class DeclAF {
                     body.contactFriction
                 )
             }
-            f.WriteFloatString("\tcontents %s\n", ContentsToString(body.contents.getVal(), str))
-            f.WriteFloatString("\tclipMask %s\n", ContentsToString(body.clipMask.getVal(), str))
+            f.WriteFloatString("\tcontents %s\n", ContentsToString(body.contents._val, str))
+            f.WriteFloatString("\tclipMask %s\n", ContentsToString(body.clipMask._val, str))
             f.WriteFloatString("\tselfCollision %d\n", body.selfCollision)
             if (body.frictionDirection.ToVec3() !== Vector.getVec3_origin()) {
                 f.WriteFloatString("\tfrictionDirection ")
@@ -1351,7 +1351,7 @@ class DeclAF {
             return true
         }
 
-        private fun WriteFixed(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteFixed(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nfixed \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1359,7 +1359,7 @@ class DeclAF {
             return true
         }
 
-        private fun WriteBallAndSocketJoint(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteBallAndSocketJoint(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nballAndSocketJoint \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1370,21 +1370,21 @@ class DeclAF {
             if (c.limit == idDeclAF_Constraint.LIMIT_CONE) {
                 f.WriteFloatString("\tconeLimit ")
                 c.limitAxis.Write(f)
-                f.WriteFloatString(", %f, ", c.limitAngles.get(0))
-                c.shaft.get(0).Write(f)
+                f.WriteFloatString(", %f, ", c.limitAngles[0])
+                c.shaft[0].Write(f)
                 f.WriteFloatString("\n")
             } else if (c.limit == idDeclAF_Constraint.LIMIT_PYRAMID) {
                 f.WriteFloatString("\tpyramidLimit ")
                 c.limitAxis.Write(f)
-                f.WriteFloatString(", %f, %f, %f, ", c.limitAngles.get(0), c.limitAngles.get(1), c.limitAngles.get(2))
-                c.shaft.get(0).Write(f)
+                f.WriteFloatString(", %f, %f, %f, ", c.limitAngles[0], c.limitAngles[1], c.limitAngles[2])
+                c.shaft[0].Write(f)
                 f.WriteFloatString("\n")
             }
             f.WriteFloatString("}\n")
             return true
         }
 
-        private fun WriteUniversalJoint(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteUniversalJoint(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nuniversalJoint \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1392,25 +1392,25 @@ class DeclAF {
             c.anchor.Write(f)
             f.WriteFloatString("\n")
             f.WriteFloatString("\tshafts ")
-            c.shaft.get(0).Write(f)
+            c.shaft[0].Write(f)
             f.WriteFloatString(", ")
-            c.shaft.get(1).Write(f)
+            c.shaft[1].Write(f)
             f.WriteFloatString("\n")
             f.WriteFloatString("\tfriction %f\n", c.friction)
             if (c.limit == idDeclAF_Constraint.LIMIT_CONE) {
                 f.WriteFloatString("\tconeLimit ")
                 c.limitAxis.Write(f)
-                f.WriteFloatString(", %f\n", c.limitAngles.get(0))
+                f.WriteFloatString(", %f\n", c.limitAngles[0])
             } else if (c.limit == idDeclAF_Constraint.LIMIT_PYRAMID) {
                 f.WriteFloatString("\tpyramidLimit ")
                 c.limitAxis.Write(f)
-                f.WriteFloatString(", %f, %f, %f\n", c.limitAngles.get(0), c.limitAngles.get(1), c.limitAngles.get(2))
+                f.WriteFloatString(", %f, %f, %f\n", c.limitAngles[0], c.limitAngles[1], c.limitAngles[2])
             }
             f.WriteFloatString("}\n")
             return true
         }
 
-        private fun WriteHinge(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteHinge(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nhinge \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1423,14 +1423,14 @@ class DeclAF {
             f.WriteFloatString("\tfriction %f\n", c.friction)
             if (c.limit == idDeclAF_Constraint.LIMIT_CONE) {
                 f.WriteFloatString("\tlimit ")
-                f.WriteFloatString("%f, %f, %f", c.limitAngles.get(0), c.limitAngles.get(1), c.limitAngles.get(2))
+                f.WriteFloatString("%f, %f, %f", c.limitAngles[0], c.limitAngles[1], c.limitAngles[2])
                 f.WriteFloatString("\n")
             }
             f.WriteFloatString("}\n")
             return true
         }
 
-        private fun WriteSlider(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteSlider(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nslider \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1442,7 +1442,7 @@ class DeclAF {
             return true
         }
 
-        private fun WriteSpring(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteSpring(f: idFile, c: idDeclAF_Constraint): Boolean {
             f.WriteFloatString("\nspring \"%s\" {\n", c.name)
             f.WriteFloatString("\tbody1 \"%s\"\n", c.body1)
             f.WriteFloatString("\tbody2 \"%s\"\n", c.body2)
@@ -1463,7 +1463,7 @@ class DeclAF {
             return true
         }
 
-        private fun WriteConstraint(f: idFile?, c: idDeclAF_Constraint?): Boolean {
+        private fun WriteConstraint(f: idFile, c: idDeclAF_Constraint): Boolean {
             when (c.type) {
                 declAFConstraintType_t.DECLAF_CONSTRAINT_FIXED -> return WriteFixed(f, c)
                 declAFConstraintType_t.DECLAF_CONSTRAINT_BALLANDSOCKETJOINT -> return WriteBallAndSocketJoint(f, c)
@@ -1476,7 +1476,7 @@ class DeclAF {
             return false
         }
 
-        private fun WriteSettings(f: idFile?): Boolean {
+        private fun WriteSettings(f: idFile): Boolean {
             val str = idStr()
             f.WriteFloatString("\nsettings {\n")
             f.WriteFloatString("\tmodel \"%s\"\n", model)
@@ -1490,10 +1490,10 @@ class DeclAF {
             )
             f.WriteFloatString(
                 "\tsuspendSpeed %f, %f, %f, %f\n",
-                suspendVelocity.get(0),
-                suspendVelocity.get(1),
-                suspendAcceleration.get(0),
-                suspendAcceleration.get(1)
+                suspendVelocity[0],
+                suspendVelocity[1],
+                suspendAcceleration[0],
+                suspendAcceleration[1]
             )
             f.WriteFloatString("\tnoMoveTime %f\n", noMoveTime)
             f.WriteFloatString("\tnoMoveTranslation %f\n", noMoveTranslation)
@@ -1501,8 +1501,8 @@ class DeclAF {
             f.WriteFloatString("\tminMoveTime %f\n", minMoveTime)
             f.WriteFloatString("\tmaxMoveTime %f\n", maxMoveTime)
             f.WriteFloatString("\ttotalMass %f\n", totalMass)
-            f.WriteFloatString("\tcontents %s\n", ContentsToString(contents.getVal(), str))
-            f.WriteFloatString("\tclipMask %s\n", ContentsToString(clipMask.getVal(), str))
+            f.WriteFloatString("\tcontents %s\n", ContentsToString(contents._val, str))
+            f.WriteFloatString("\tclipMask %s\n", ContentsToString(clipMask._val, str))
             f.WriteFloatString("\tselfCollision %d\n", selfCollision)
             f.WriteFloatString("}\n")
             return true
@@ -1527,14 +1527,14 @@ class DeclAF {
             }
             i = 0
             while (i < bodies.Num()) {
-                if (!WriteBody(f, bodies.get(i))) {
+                if (!WriteBody(f, bodies[i])) {
                     return false
                 }
                 i++
             }
             i = 0
             while (i < constraints.Num()) {
-                if (!WriteConstraint(f, constraints.get(i))) {
+                if (!WriteConstraint(f, constraints[i])) {
                     return false
                 }
                 i++
@@ -1548,7 +1548,7 @@ class DeclAF {
             //public virtual					~idDeclAF( void );
             // 
             @Throws(idException::class)
-            fun ContentsFromString(str: String?): Int {
+            fun ContentsFromString(str: String): Int {
                 var c: Int
                 val token = idToken()
                 val src = idLexer(str, str.length, "idDeclAF::ContentsFromString")
@@ -1566,7 +1566,7 @@ class DeclAF {
                         c or Material.CONTENTS_PLAYERCLIP
                     } else if (token.Icmp("monsterclip") == 0) {
                         c or Material.CONTENTS_MONSTERCLIP
-                    } else return if (token == ",") {
+                    } else return if (token.toString() == ",") {
                         continue
                     } else {
                         c
@@ -1575,7 +1575,7 @@ class DeclAF {
                 return c
             }
 
-            fun ContentsToString(contents: Int, str: idStr?): String? {
+            fun ContentsToString(contents: Int, str: idStr): String {
                 str.set("")
                 if (contents and Material.CONTENTS_SOLID != 0) {
                     if (str.Length() != 0) {
@@ -1613,20 +1613,20 @@ class DeclAF {
                 return str.toString()
             }
 
-            fun JointModFromString(str: String?): declAFJointMod_t? {
-                if (idStr.Companion.Icmp(str, "orientation") == 0) {
+            fun JointModFromString(str: String): declAFJointMod_t {
+                if (idStr.Icmp(str, "orientation") == 0) {
                     return declAFJointMod_t.DECLAF_JOINTMOD_AXIS
                 }
-                if (idStr.Companion.Icmp(str, "position") == 0) {
+                if (idStr.Icmp(str, "position") == 0) {
                     return declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN
                 }
-                return if (idStr.Companion.Icmp(str, "both") == 0) {
+                return if (idStr.Icmp(str, "both") == 0) {
                     declAFJointMod_t.DECLAF_JOINTMOD_BOTH
                 } else declAFJointMod_t.DECLAF_JOINTMOD_AXIS
             }
 
             //public virtual void			FreeData( void );
-            fun JointModToString(jointMod: declAFJointMod_t?): String? {
+            fun JointModToString(jointMod: declAFJointMod_t): String {
                 when (jointMod) {
                     declAFJointMod_t.DECLAF_JOINTMOD_AXIS -> {
                         return "orientation"

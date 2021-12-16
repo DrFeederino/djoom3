@@ -25,47 +25,7 @@ import neo.sys.win_syscon
 import kotlin.experimental.and
 import kotlin.math.abs
 
-object AsyncNetwork {
-    /*
-     DOOM III gold:	    33
-     1.1 beta patch:	34
-     1.1 patch:		    35
-     1.2 XP:			36-39
-     1.3 patch:		    40
-     1.3.1:			    41
-     */
-    const val ASYNC_PROTOCOL_MINOR = 41
-    const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + ASYNC_PROTOCOL_MINOR
-
-    //
-    // special game init ids
-    const val GAME_INIT_ID_INVALID = -1
-    const val GAME_INIT_ID_MAP_LOAD = -2
-
-    //
-    const val MAX_ASYNC_CLIENTS = 32
-
-    //
-    // index 0 is hardcoded to be the idnet master
-    // which leaves 4 to user customization
-    const val MAX_MASTER_SERVERS = 5
-
-    //
-    const val MAX_NICKLEN = 32
-
-    //
-    // max number of servers that will be scanned for at a single IP address
-    const val MAX_SERVER_PORTS = 8
-
-    //
-    const val MAX_USERCMD_BACKUP = 256
-    const val MAX_USERCMD_DUPLICATION = 25
-    const val MAX_USERCMD_RELAY = 10
-    fun MAJOR_VERSION(v: Int): Int {
-        return v shr 16
-    }
-
-    //
+class AsyncNetwork {
     // reliable client -> server messages
     enum class CLIENT_RELIABLE {
         CLIENT_RELIABLE_MESSAGE_PURE, CLIENT_RELIABLE_MESSAGE_CLIENTINFO, CLIENT_RELIABLE_MESSAGE_PRINT, CLIENT_RELIABLE_MESSAGE_DISCONNECT, CLIENT_RELIABLE_MESSAGE_GAME
@@ -836,6 +796,47 @@ object AsyncNetwork {
             for (m in masters.indices) {
                 masters[m] = master_s()
             }
+        }
+    }
+
+    companion object {
+        /*
+                 DOOM III gold:	    33
+                 1.1 beta patch:	34
+                 1.1 patch:		    35
+                 1.2 XP:			36-39
+                 1.3 patch:		    40
+                 1.3.1:			    41
+                 */
+        const val ASYNC_PROTOCOL_MINOR = 41
+        const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + Companion.ASYNC_PROTOCOL_MINOR
+
+        //
+        // special game init ids
+        const val GAME_INIT_ID_INVALID = -1
+        const val GAME_INIT_ID_MAP_LOAD = -2
+
+        //
+        const val MAX_ASYNC_CLIENTS = 32
+
+        //
+        // index 0 is hardcoded to be the idnet master
+        // which leaves 4 to user customization
+        const val MAX_MASTER_SERVERS = 5
+
+        //
+        const val MAX_NICKLEN = 32
+
+        //
+        // max number of servers that will be scanned for at a single IP address
+        const val MAX_SERVER_PORTS = 8
+
+        //
+        const val MAX_USERCMD_BACKUP = 256
+        const val MAX_USERCMD_DUPLICATION = 25
+        const val MAX_USERCMD_RELAY = 10
+        fun MAJOR_VERSION(v: Int): Int {
+            return v shr 16
         }
     }
 }

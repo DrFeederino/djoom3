@@ -504,13 +504,13 @@ object ServerScan {
             net_servers.Clear()
             cur_info = 0
             if (listGUI != null) {
-                listGUI!!.Clear()
+                listGUI.Clear()
             }
             incoming_useTimeout = false
             m_sortedServers.Clear()
         }
 
-        private fun EmitGetInfo(serv: netadr_t?) {
+        private fun EmitGetInfo(serv: netadr_t) {
             idAsyncNetwork.client.GetServerInfo(serv)
         }
 

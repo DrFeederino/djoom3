@@ -28,263 +28,7 @@ import neo.sys.win_main
 import neo.sys.win_shared
 import kotlin.experimental.and
 
-/**
- *
- */
-object Console {
-    //
-    const val COMMAND_HISTORY = 64
-    const val CONSOLE_FIRSTREPEAT = 200
-    const val CONSOLE_REPEAT = 100
-    const val CON_TEXTSIZE = 0x30000
-
-    /*
-     ==================
-     SCR_DrawFPS
-     ==================
-     */
-    const val FPS_FRAMES = 4
-
-    /**
-     *
-     */
-    const val LINE_WIDTH = 78
-    const val NUM_CON_TIMES = 4
-    const val TOTAL_LINES = CON_TEXTSIZE / LINE_WIDTH
-    val localConsole: idConsoleLocal = idConsoleLocal()
-    val console: idConsole = localConsole // statically initialized to an idConsoleLocal
-
-    //    
-    var index = 0
-
-    /*
-     =============================================================================
-
-     Misc stats
-
-     =============================================================================
-     */
-    var previous = 0
-    var previousTimes: IntArray = IntArray(FPS_FRAMES)
-
-    /*
-     ==================
-     SCR_DrawTextLeftAlign
-     ==================
-     */
-    fun SCR_DrawTextLeftAlign(y: FloatArray, fmt: String, vararg text: Any) {
-        val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
-        //	va_list argptr;
-//	va_start( argptr, text );
-        idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
-        //	va_end( argptr );
-        RenderSystem.renderSystem.DrawSmallStringExt(
-            0,
-            (y[0] + 2).toInt(),
-            string[0].toCharArray(),
-            Lib.colorWhite,
-            true,
-            localConsole.charSetShader
-        )
-        y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
-    }
-
-    /*
-     ==================
-     SCR_DrawTextRightAlign
-     ==================
-     */
-    fun SCR_DrawTextRightAlign(y: FloatArray, fmt: String, vararg text: Any) {
-        val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
-        //	va_list argptr;
-//	va_start( argptr, text );
-        val i: Int = idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
-        //	va_end( argptr );
-        RenderSystem.renderSystem.DrawSmallStringExt(
-            635 - i * RenderSystem.SMALLCHAR_WIDTH,
-            (y[0] + 2).toInt(),
-            string[0].toCharArray(),
-            Lib.colorWhite,
-            true,
-            localConsole.charSetShader
-        )
-        y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
-    }
-
-    fun SCR_DrawFPS(y: Float): Float {
-        val s: String
-        val w: Int
-        var i: Int
-        var total: Int
-        var fps: Int
-        val t: Int
-        val frameTime: Int
-
-        // don't use serverTime, because that will be drifting to
-        // correct for internet lag changes, timescales, timedemos, etc
-        t = win_shared.Sys_Milliseconds()
-        frameTime = t - previous
-        previous = t
-        previousTimes[index % FPS_FRAMES] = frameTime
-        index++
-        if (index > FPS_FRAMES) {
-            // average multiple frames together to smooth changes out a bit
-            total = 0
-            i = 0
-            while (i < FPS_FRAMES) {
-                total += previousTimes[i]
-                i++
-            }
-            if (0 == total) {
-                total = 1
-            }
-            fps = 10000 * FPS_FRAMES / total
-            fps = (fps + 5) / 10
-            s = Str.va("%dfps", fps)
-            w = s.length * RenderSystem.BIGCHAR_WIDTH
-            RenderSystem.renderSystem.DrawBigStringExt(
-                635 - w,
-                idMath.FtoiFast(y) + 2,
-                s,
-                Lib.colorWhite,
-                true,
-                localConsole.charSetShader
-            )
-        }
-        return y + RenderSystem.BIGCHAR_HEIGHT + 4
-    }
-
-    /*
-     ==================
-     SCR_DrawMemoryUsage
-     ==================
-     */
-    fun SCR_DrawMemoryUsage(y: Float): Float {
-        //memoryStats_t[] allocs = new memoryStats_t[1], frees = new memoryStats_t[1];
-        val yy = floatArrayOf(y)
-
-//        Mem_GetStats(allocs);
-//        SCR_DrawTextRightAlign(yy, "total allocated memory: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10);
-//
-//        Mem_GetFrameStats(allocs, frees);
-//        SCR_DrawTextRightAlign(yy, "frame alloc: %4d, %4dkB  frame free: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10, frees[0].num, frees[0].totalSize >> 10);
-//
-//        Mem_ClearFrameStats();
-        return yy[0]
-    }
-
-    /*
-     ==================
-     SCR_DrawAsyncStats
-     ==================
-     */
-    fun SCR_DrawAsyncStats(y: Float): Float {
-        var i: Int
-        var outgoingRate: Int
-        var incomingRate: Int
-        var outgoingCompression: Float
-        var incomingCompression: Float
-        val yy = floatArrayOf(y)
-        if (idAsyncNetwork.server.IsActive()) {
-            SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay())
-            SCR_DrawTextRightAlign(
-                yy,
-                "total outgoing rate = %d KB/s",
-                idAsyncNetwork.server.GetOutgoingRate() shr 10
-            )
-            SCR_DrawTextRightAlign(
-                yy,
-                "total incoming rate = %d KB/s",
-                idAsyncNetwork.server.GetIncomingRate() shr 10
-            )
-            i = 0
-            while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
-                outgoingRate = idAsyncNetwork.server.GetClientOutgoingRate(i)
-                incomingRate = idAsyncNetwork.server.GetClientIncomingRate(i)
-                outgoingCompression = idAsyncNetwork.server.GetClientOutgoingCompression(i)
-                incomingCompression = idAsyncNetwork.server.GetClientIncomingCompression(i)
-                if (outgoingRate != -1 && incomingRate != -1) {
-                    SCR_DrawTextRightAlign(
-                        yy,
-                        "client %d: out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
-                        i,
-                        outgoingRate,
-                        outgoingCompression,
-                        incomingRate,
-                        incomingCompression
-                    )
-                }
-                i++
-            }
-            val msg = idStr()
-            idAsyncNetwork.server.GetAsyncStatsAvgMsg(msg)
-            SCR_DrawTextRightAlign(yy, msg.toString())
-        } else if (idAsyncNetwork.client.IsActive()) {
-            outgoingRate = idAsyncNetwork.client.GetOutgoingRate()
-            incomingRate = idAsyncNetwork.client.GetIncomingRate()
-            outgoingCompression = idAsyncNetwork.client.GetOutgoingCompression()
-            incomingCompression = idAsyncNetwork.client.GetIncomingCompression()
-            if (outgoingRate != -1 && incomingRate != -1) {
-                SCR_DrawTextRightAlign(
-                    yy,
-                    "out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
-                    outgoingRate,
-                    outgoingCompression,
-                    incomingRate,
-                    incomingCompression
-                )
-            }
-            SCR_DrawTextRightAlign(
-                yy,
-                "packet loss = %d%%, client prediction = %d",
-                idAsyncNetwork.client.GetIncomingPacketLoss().toInt(),
-                idAsyncNetwork.client.GetPrediction()
-            )
-            SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames())
-        }
-        return yy[0]
-    }
-
-    /*
-     ==================
-     SCR_DrawSoundDecoders
-     ==================
-     */
-    fun SCR_DrawSoundDecoders(y: Float): Float {
-        var index: Int
-        var numActiveDecoders: Int
-        val decoderInfo = soundDecoderInfo_t()
-        val yy = floatArrayOf(y)
-        index = -1
-        numActiveDecoders = 0
-        while (snd_system.soundSystem.GetSoundDecoderInfo(index, decoderInfo).also { index = it } != -1) {
-            val localTime = decoderInfo.current44kHzTime - decoderInfo.start44kHzTime
-            val sampleTime = decoderInfo.num44kHzSamples / decoderInfo.numChannels
-            var percent: Int
-            percent = if (localTime > sampleTime) {
-                if (decoderInfo.looping) {
-                    localTime % sampleTime * 100 / sampleTime
-                } else {
-                    100
-                }
-            } else {
-                localTime * 100 / sampleTime
-            }
-            SCR_DrawTextLeftAlign(
-                yy,
-                "%3d: %3d%% (%1.2f) %s: %s (%dkB)",
-                numActiveDecoders,
-                percent,
-                decoderInfo.lastVolume,
-                decoderInfo.format.toString(),
-                decoderInfo.name.toString(),
-                decoderInfo.numBytes shr 10
-            )
-            numActiveDecoders++
-        }
-        return yy[0]
-    }
-
+class Console {
     /*
      ===============================================================================
 
@@ -1270,5 +1014,262 @@ object Console {
                 return instance
             }
         }
+    }
+
+    companion object {
+        const val CONSOLE_FIRSTREPEAT = 200
+        const val CONSOLE_REPEAT = 100
+        const val CON_TEXTSIZE = 0x30000
+
+        //
+        const val COMMAND_HISTORY = 64
+
+        /**
+         *
+         */
+        const val LINE_WIDTH = 78
+
+        /*
+                 ==================
+                 SCR_DrawFPS
+                 ==================
+                 */
+        const val FPS_FRAMES = 4
+        const val TOTAL_LINES = CON_TEXTSIZE / LINE_WIDTH
+        const val NUM_CON_TIMES = 4
+        val localConsole: idConsoleLocal = idConsoleLocal()
+        val console: idConsole = localConsole // statically initialized to an idConsoleLocal
+
+        //
+        var index = 0
+
+        /*
+         =============================================================================
+
+         Misc stats
+
+         =============================================================================
+         */
+        var previous = 0
+        var previousTimes: IntArray = IntArray(FPS_FRAMES)
+
+        /*
+     ==================
+     SCR_DrawTextLeftAlign
+     ==================
+     */
+        fun SCR_DrawTextLeftAlign(y: FloatArray, fmt: String, vararg text: Any) {
+            val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
+            //	va_list argptr;
+//	va_start( argptr, text );
+            idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
+            //	va_end( argptr );
+            RenderSystem.renderSystem.DrawSmallStringExt(
+                0,
+                (y[0] + 2).toInt(),
+                string[0].toCharArray(),
+                Lib.colorWhite,
+                true,
+                localConsole.charSetShader
+            )
+            y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
+        }
+
+        /*
+         ==================
+         SCR_DrawTextRightAlign
+         ==================
+         */
+        fun SCR_DrawTextRightAlign(y: FloatArray, fmt: String, vararg text: Any) {
+            val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
+            //	va_list argptr;
+//	va_start( argptr, text );
+            val i: Int = idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
+            //	va_end( argptr );
+            RenderSystem.renderSystem.DrawSmallStringExt(
+                635 - i * RenderSystem.SMALLCHAR_WIDTH,
+                (y[0] + 2).toInt(),
+                string[0].toCharArray(),
+                Lib.colorWhite,
+                true,
+                localConsole.charSetShader
+            )
+            y[0] = y[0] + RenderSystem.SMALLCHAR_HEIGHT + 4
+        }
+
+        fun SCR_DrawFPS(y: Float): Float {
+            val s: String
+            val w: Int
+            var i: Int
+            var total: Int
+            var fps: Int
+            val t: Int
+            val frameTime: Int
+
+            // don't use serverTime, because that will be drifting to
+            // correct for internet lag changes, timescales, timedemos, etc
+            t = win_shared.Sys_Milliseconds()
+            frameTime = t - previous
+            previous = t
+            previousTimes[index % FPS_FRAMES] = frameTime
+            index++
+            if (index > FPS_FRAMES) {
+                // average multiple frames together to smooth changes out a bit
+                total = 0
+                i = 0
+                while (i < FPS_FRAMES) {
+                    total += previousTimes[i]
+                    i++
+                }
+                if (0 == total) {
+                    total = 1
+                }
+                fps = 10000 * FPS_FRAMES / total
+                fps = (fps + 5) / 10
+                s = Str.va("%dfps", fps)
+                w = s.length * RenderSystem.BIGCHAR_WIDTH
+                RenderSystem.renderSystem.DrawBigStringExt(
+                    635 - w,
+                    idMath.FtoiFast(y) + 2,
+                    s,
+                    Lib.colorWhite,
+                    true,
+                    localConsole.charSetShader
+                )
+            }
+            return y + RenderSystem.BIGCHAR_HEIGHT + 4
+        }
+
+        /*
+         ==================
+         SCR_DrawMemoryUsage
+         ==================
+         */
+        fun SCR_DrawMemoryUsage(y: Float): Float {
+            //memoryStats_t[] allocs = new memoryStats_t[1], frees = new memoryStats_t[1];
+            val yy = floatArrayOf(y)
+
+//        Mem_GetStats(allocs);
+//        SCR_DrawTextRightAlign(yy, "total allocated memory: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10);
+//
+//        Mem_GetFrameStats(allocs, frees);
+//        SCR_DrawTextRightAlign(yy, "frame alloc: %4d, %4dkB  frame free: %4d, %4dkB", allocs[0].num, allocs[0].totalSize >> 10, frees[0].num, frees[0].totalSize >> 10);
+//
+//        Mem_ClearFrameStats();
+            return yy[0]
+        }
+
+        /*
+         ==================
+         SCR_DrawAsyncStats
+         ==================
+         */
+        fun SCR_DrawAsyncStats(y: Float): Float {
+            var i: Int
+            var outgoingRate: Int
+            var incomingRate: Int
+            var outgoingCompression: Float
+            var incomingCompression: Float
+            val yy = floatArrayOf(y)
+            if (idAsyncNetwork.server.IsActive()) {
+                SCR_DrawTextRightAlign(yy, "server delay = %d msec", idAsyncNetwork.server.GetDelay())
+                SCR_DrawTextRightAlign(
+                    yy,
+                    "total outgoing rate = %d KB/s",
+                    idAsyncNetwork.server.GetOutgoingRate() shr 10
+                )
+                SCR_DrawTextRightAlign(
+                    yy,
+                    "total incoming rate = %d KB/s",
+                    idAsyncNetwork.server.GetIncomingRate() shr 10
+                )
+                i = 0
+                while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
+                    outgoingRate = idAsyncNetwork.server.GetClientOutgoingRate(i)
+                    incomingRate = idAsyncNetwork.server.GetClientIncomingRate(i)
+                    outgoingCompression = idAsyncNetwork.server.GetClientOutgoingCompression(i)
+                    incomingCompression = idAsyncNetwork.server.GetClientIncomingCompression(i)
+                    if (outgoingRate != -1 && incomingRate != -1) {
+                        SCR_DrawTextRightAlign(
+                            yy,
+                            "client %d: out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
+                            i,
+                            outgoingRate,
+                            outgoingCompression,
+                            incomingRate,
+                            incomingCompression
+                        )
+                    }
+                    i++
+                }
+                val msg = idStr()
+                idAsyncNetwork.server.GetAsyncStatsAvgMsg(msg)
+                SCR_DrawTextRightAlign(yy, msg.toString())
+            } else if (idAsyncNetwork.client.IsActive()) {
+                outgoingRate = idAsyncNetwork.client.GetOutgoingRate()
+                incomingRate = idAsyncNetwork.client.GetIncomingRate()
+                outgoingCompression = idAsyncNetwork.client.GetOutgoingCompression()
+                incomingCompression = idAsyncNetwork.client.GetIncomingCompression()
+                if (outgoingRate != -1 && incomingRate != -1) {
+                    SCR_DrawTextRightAlign(
+                        yy,
+                        "out rate = %d B/s (% -2.1f%%), in rate = %d B/s (% -2.1f%%)",
+                        outgoingRate,
+                        outgoingCompression,
+                        incomingRate,
+                        incomingCompression
+                    )
+                }
+                SCR_DrawTextRightAlign(
+                    yy,
+                    "packet loss = %d%%, client prediction = %d",
+                    idAsyncNetwork.client.GetIncomingPacketLoss().toInt(),
+                    idAsyncNetwork.client.GetPrediction()
+                )
+                SCR_DrawTextRightAlign(yy, "predicted frames: %d", idAsyncNetwork.client.GetPredictedFrames())
+            }
+            return yy[0]
+        }
+
+        /*
+         ==================
+         SCR_DrawSoundDecoders
+         ==================
+         */
+        fun SCR_DrawSoundDecoders(y: Float): Float {
+            var index: Int
+            var numActiveDecoders: Int
+            val decoderInfo = soundDecoderInfo_t()
+            val yy = floatArrayOf(y)
+            index = -1
+            numActiveDecoders = 0
+            while (snd_system.soundSystem.GetSoundDecoderInfo(index, decoderInfo).also { index = it } != -1) {
+                val localTime = decoderInfo.current44kHzTime - decoderInfo.start44kHzTime
+                val sampleTime = decoderInfo.num44kHzSamples / decoderInfo.numChannels
+                var percent: Int
+                percent = if (localTime > sampleTime) {
+                    if (decoderInfo.looping) {
+                        localTime % sampleTime * 100 / sampleTime
+                    } else {
+                        100
+                    }
+                } else {
+                    localTime * 100 / sampleTime
+                }
+                SCR_DrawTextLeftAlign(
+                    yy,
+                    "%3d: %3d%% (%1.2f) %s: %s (%dkB)",
+                    numActiveDecoders,
+                    percent,
+                    decoderInfo.lastVolume,
+                    decoderInfo.format.toString(),
+                    decoderInfo.name.toString(),
+                    decoderInfo.numBytes shr 10
+                )
+                numActiveDecoders++
+            }
+            return yy[0]
+        }
+
     }
 }
