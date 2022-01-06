@@ -145,11 +145,7 @@ import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Decl
 import neo.framework.DeclEntityDef.idDeclEntityDef
-import neo.framework.DeclManager.declState_t
-import neo.framework.DeclManager.declType_t
-import neo.framework.DeclManager.idDecl
-import neo.framework.DeclManager.idListDecls_f
-import neo.framework.DeclManager.idPrintDecls_f
+import neo.framework.DeclManager.*
 import neo.framework.File_h.idFile
 import neo.framework.UsercmdGen.usercmd_t
 import neo.idlib.*
@@ -195,119 +191,11 @@ import java.util.stream.Stream
 /**
  *
  */
-object Game_local {
-    //
-    // if set to 1 the server sends the client PVS with snapshots and the client compares against what it sees
-    //#ifndef ASYNC_WRITE_PVS
-    const val ASYNC_WRITE_PVS = false
+class Game_local {
+
 
     //
-    val CINEMATIC_SKIP_DELAY = Math_h.SEC2MS(2.0f).toDouble()
-
-    //
-    const val DEFAULT_GRAVITY = 1066.0f
-    val DEFAULT_GRAVITY_STRING: String? = "1066"
-    val DEFAULT_GRAVITY_VEC3: idVec3? = idVec3(0, 0, -DEFAULT_GRAVITY)
-    const val GAME_RELIABLE_MESSAGE_CALLVOTE = 14
-    const val GAME_RELIABLE_MESSAGE_CASTVOTE = 15
-    const val GAME_RELIABLE_MESSAGE_CHAT = 4
-    const val GAME_RELIABLE_MESSAGE_DB = 8
-    const val GAME_RELIABLE_MESSAGE_DELETE_ENT = 3
-    const val GAME_RELIABLE_MESSAGE_DROPWEAPON = 10
-    const val GAME_RELIABLE_MESSAGE_EVENT = 24
-
-    // enum {
-    const val GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP = 0
-    const val GAME_RELIABLE_MESSAGE_KILL = 9
-    const val GAME_RELIABLE_MESSAGE_MENU = 22
-    const val GAME_RELIABLE_MESSAGE_PORTAL = 19
-    const val GAME_RELIABLE_MESSAGE_PORTALSTATES = 18
-    const val GAME_RELIABLE_MESSAGE_REMAP_DECL = 1
-    const val GAME_RELIABLE_MESSAGE_RESTART = 11
-    const val GAME_RELIABLE_MESSAGE_SERVERINFO = 12
-    const val GAME_RELIABLE_MESSAGE_SOUND_EVENT = 6
-    const val GAME_RELIABLE_MESSAGE_SOUND_INDEX = 7
-    const val GAME_RELIABLE_MESSAGE_SPAWN_PLAYER = 2
-    const val GAME_RELIABLE_MESSAGE_STARTSTATE = 21
-    const val GAME_RELIABLE_MESSAGE_STARTVOTE = 16
-    const val GAME_RELIABLE_MESSAGE_TCHAT = 5
-    const val GAME_RELIABLE_MESSAGE_TOURNEYLINE = 13
-    const val GAME_RELIABLE_MESSAGE_UPDATEVOTE = 17
-    const val GAME_RELIABLE_MESSAGE_VCHAT = 20
-    const val GAME_RELIABLE_MESSAGE_WARMUPTIME = 23
-
-    //
-    // the "gameversion" client command will print this plus compile date
-    val GAME_VERSION: String? = "baseDOOM-1"
-    const val GENTITYNUM_BITS = 12
-    const val LAGO_HEIGHT = 44
-    val LAGO_IMAGE: String? = "textures/sfx/lagometer.tga"
-    const val LAGO_IMG_HEIGHT = 64
-
-    /*
-     ===============================================================================
-
-     Local implementation of the public game interface.
-
-     ===============================================================================
-     */
-    const val LAGO_IMG_WIDTH = 64
-    val LAGO_MATERIAL: String? = "textures/sfx/lagometer"
-    const val LAGO_WIDTH = 64
-
-    //
-    // content masks
-    const val MASK_ALL = -1
-    val MASK_DEADSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP
-    val MASK_MONSTERSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_MONSTERCLIP or Material.CONTENTS_BODY
-    val MASK_OPAQUE = Material.CONTENTS_OPAQUE
-    val MASK_PLAYERSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP or Material.CONTENTS_BODY
-    val MASK_SHOT_BOUNDINGBOX = Material.CONTENTS_SOLID or Material.CONTENTS_BODY
-    val MASK_SHOT_RENDERMODEL = Material.CONTENTS_SOLID or Material.CONTENTS_RENDERMODEL
-    val MASK_SOLID = Material.CONTENTS_SOLID
-    val MASK_WATER = Material.CONTENTS_WATER
-
-    //
-    const val MAX_CLIENTS = 32
-    const val MAX_ENTITY_STATE_SIZE = 512
-    const val MAX_EVENT_PARAM_SIZE = 128
-
-    //============================================================================
-    //============================================================================
-    const val MAX_GAME_MESSAGE_SIZE = 8192
-
-    //
-    const val MAX_GENTITIES = 1 shl GENTITYNUM_BITS
-    const val ENTITYNUM_NONE = MAX_GENTITIES - 1
-    const val ENTITYNUM_WORLD = MAX_GENTITIES - 2
-
-    // };
-    const val ENTITYNUM_MAX_NORMAL = MAX_GENTITIES - 2
-    const val ENTITY_PVS_SIZE = MAX_GENTITIES + 31 shr 5
-
-    //============================================================================
-    val NUM_RENDER_PORTAL_BITS = idMath.BitsForInteger(TempDump.etoi(portalConnection_t.PS_BLOCK_ALL))
-    val animationLib: idAnimManager = idAnimManager()
-
-    //============================================================================
-    // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden
-    val gameLocal: idGameLocal =
-        idGameLocal() //TODO:these globals should either be collected to a single file, or always be set at the top.
-    val game: idGame = gameLocal // statically pointed at an idGameLocal
-
-    //============================================================================
-    const val GAME_DLL = true //TODO:find correct location
-
-    //
-    val com_forceGenericSIMD: idCVar = idCVar(
-        "com_forceGenericSIMD",
-        "1",
-        CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
-        "force generic platform independent SIMD"
-    )
-
-    //
-    private val gameExport: gameExport_t? = gameExport_t()
+    private val gameExport: gameExport_t = gameExport_t()
 
     //#endif
     //    #ifdef ID_DEBUG_UNINITIALIZED_MEMORY
@@ -331,7 +219,7 @@ object Game_local {
             Common.setCommons(gameImport.common)
             CmdSystem.setCmdSystems(gameImport.cmdSystem)
             CVarSystem.setCvarSystems(gameImport.cvarSystem)
-            FileSystem_h.setFileSystem(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
+            FileSystem_h.setFileSystems(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
             NetworkSystem.setNetworkSystems(gameImport.networkSystem)
             RenderSystem.setRenderSystem(gameImport.renderSystem)
             snd_system.setSoundSystems(gameImport.soundSystem)
@@ -350,7 +238,7 @@ object Game_local {
 
         // setup export interface
         gameExport.version = Game.GAME_API_VERSION
-        gameExport.game = game
+        gameExport.game = Companion.game
         gameExport.gameEdit = GameEdit.gameEdit
         return gameExport
     }
@@ -6384,7 +6272,7 @@ object Game_local {
         }
 
         class NextMap_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running\n")
                     return
@@ -6395,8 +6283,8 @@ object Game_local {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = NextMap_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = NextMap_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -6521,5 +6409,114 @@ object Game_local {
     }
 
     //============================================================================
-    class idGameError(text: String?) : idException(text)
+    class idGameError(text: String) : idException(text)
+    companion object {
+        //
+        const val DEFAULT_GRAVITY = 1066.0f
+
+        //============================================================================
+        // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden
+        val gameLocal: idGameLocal =
+            idGameLocal() //TODO:these globals should either be collected to a single file, or always be set at the top.
+        val game: idGame = gameLocal // statically pointed at an idGameLocal
+
+        // if set to 1 the server sends the client PVS with snapshots and the client compares against what it sees
+        //#ifndef ASYNC_WRITE_PVS
+        const val ASYNC_WRITE_PVS = false
+        const val CINEMATIC_SKIP_DELAY = Math_h.SEC2MS(2.0f).toDouble()
+        const val DEFAULT_GRAVITY_STRING: String = "1066"
+        const val DEFAULT_GRAVITY_VEC3: idVec3 = idVec3(0f, 0f, -Companion.DEFAULT_GRAVITY)
+        const val GAME_RELIABLE_MESSAGE_CALLVOTE = 14
+        const val GAME_RELIABLE_MESSAGE_CASTVOTE = 15
+        const val GAME_RELIABLE_MESSAGE_CHAT = 4
+        const val GAME_RELIABLE_MESSAGE_DB = 8
+        const val GAME_RELIABLE_MESSAGE_DELETE_ENT = 3
+        const val GAME_RELIABLE_MESSAGE_DROPWEAPON = 10
+        const val GAME_RELIABLE_MESSAGE_EVENT = 24
+
+        // enum {
+        const val GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP = 0
+        const val GAME_RELIABLE_MESSAGE_KILL = 9
+        const val GAME_RELIABLE_MESSAGE_MENU = 22
+        const val GAME_RELIABLE_MESSAGE_PORTAL = 19
+        const val GAME_RELIABLE_MESSAGE_PORTALSTATES = 18
+        const val GAME_RELIABLE_MESSAGE_REMAP_DECL = 1
+        const val GAME_RELIABLE_MESSAGE_RESTART = 11
+        const val GAME_RELIABLE_MESSAGE_SERVERINFO = 12
+        const val GAME_RELIABLE_MESSAGE_SOUND_EVENT = 6
+        const val GAME_RELIABLE_MESSAGE_SOUND_INDEX = 7
+        const val GAME_RELIABLE_MESSAGE_SPAWN_PLAYER = 2
+        const val GAME_RELIABLE_MESSAGE_STARTSTATE = 21
+        const val GAME_RELIABLE_MESSAGE_STARTVOTE = 16
+        const val GAME_RELIABLE_MESSAGE_TCHAT = 5
+        const val GAME_RELIABLE_MESSAGE_TOURNEYLINE = 13
+        const val GAME_RELIABLE_MESSAGE_UPDATEVOTE = 17
+        const val GAME_RELIABLE_MESSAGE_VCHAT = 20
+        const val GAME_RELIABLE_MESSAGE_WARMUPTIME = 23
+
+        //
+        // the "gameversion" client command will print this plus compile date
+        const val GAME_VERSION: String = "baseDOOM-1"
+        const val GENTITYNUM_BITS = 12
+        const val LAGO_HEIGHT = 44
+        const val LAGO_IMAGE: String = "textures/sfx/lagometer.tga"
+        const val LAGO_IMG_HEIGHT = 64
+
+        /*
+         ===============================================================================
+
+         Local implementation of the public game interface.
+
+         ===============================================================================
+         */
+        const val LAGO_IMG_WIDTH = 64
+        const val LAGO_MATERIAL: String = "textures/sfx/lagometer"
+        const val LAGO_WIDTH = 64
+
+        //
+        // content masks
+        const val MASK_ALL = -1
+        val MASK_DEADSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP
+        val MASK_MONSTERSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_MONSTERCLIP or Material.CONTENTS_BODY
+        val MASK_OPAQUE = Material.CONTENTS_OPAQUE
+        val MASK_PLAYERSOLID = Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP or Material.CONTENTS_BODY
+        val MASK_SHOT_BOUNDINGBOX = Material.CONTENTS_SOLID or Material.CONTENTS_BODY
+        val MASK_SHOT_RENDERMODEL = Material.CONTENTS_SOLID or Material.CONTENTS_RENDERMODEL
+        val MASK_SOLID = Material.CONTENTS_SOLID
+        val MASK_WATER = Material.CONTENTS_WATER
+
+        //
+        const val MAX_CLIENTS = 32
+        const val MAX_ENTITY_STATE_SIZE = 512
+        const val MAX_EVENT_PARAM_SIZE = 128
+
+        //============================================================================
+        //============================================================================
+        const val MAX_GAME_MESSAGE_SIZE = 8192
+
+        //
+        const val MAX_GENTITIES = 1 shl GENTITYNUM_BITS
+        const val ENTITYNUM_NONE = MAX_GENTITIES - 1
+        const val ENTITYNUM_WORLD = MAX_GENTITIES - 2
+
+        // };
+        const val ENTITYNUM_MAX_NORMAL = MAX_GENTITIES - 2
+        const val ENTITY_PVS_SIZE = MAX_GENTITIES + 31 shr 5
+
+        //============================================================================
+        val NUM_RENDER_PORTAL_BITS = idMath.BitsForInteger(TempDump.etoi(portalConnection_t.PS_BLOCK_ALL))
+        val animationLib: idAnimManager = idAnimManager()
+
+
+        //============================================================================
+        const val GAME_DLL = true //TODO:find correct location
+
+        //
+        val com_forceGenericSIMD: idCVar = idCVar(
+            "com_forceGenericSIMD",
+            "1",
+            CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
+            "force generic platform independent SIMD"
+        )
+    }
 }

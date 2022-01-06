@@ -52,7 +52,7 @@ class BindWindow {
             } else {
                 if (key == KeyInput.K_MOUSE1) {
                     waitingOnKey = true
-                    gui.SetBindHandler(this)
+                    gui!!.SetBindHandler(this)
                     return ""
                 }
             }
@@ -61,7 +61,7 @@ class BindWindow {
 
         override fun PostParse() {
             super.PostParse()
-            bindName.SetGuiInfo(gui.GetStateDict(), bindName.c_str())
+            bindName.SetGuiInfo(gui!!.GetStateDict(), bindName.c_str())
             bindName.Update()
             //bindName = state.GetString("bind");
             flags = flags or (Window.WIN_HOLDCAPTURE or Window.WIN_CANFOCUS)
@@ -76,7 +76,7 @@ class BindWindow {
             } else {
                 Common.common.GetLanguageDict().GetString("#str_07001")
             }
-            if (waitingOnKey || hover && TempDump.NOT(noEvents) && Contains(gui.CursorX(), gui.CursorY())) {
+            if (waitingOnKey || hover && TempDump.NOT(noEvents) && Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 color = hoverColor.oCastIdVec4()
             } else {
                 hover = false

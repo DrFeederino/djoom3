@@ -8,10 +8,7 @@ import neo.Renderer.RenderWorld.portalConnection_t
 import neo.Sound.snd_emitter.idSoundChannel
 import neo.Sound.snd_emitter.idSoundEmitterLocal
 import neo.Sound.snd_emitter.idSoundFade
-import neo.Sound.snd_local.idSampleDecoder
-import neo.Sound.snd_local.mminfo_s
-import neo.Sound.snd_local.pcmwaveformat_s
-import neo.Sound.snd_local.soundDemoCommand_t
+import neo.Sound.snd_local.*
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.snd_system.idSoundSystemLocal
 import neo.Sound.sound.SCHANNEL_ANY
@@ -531,7 +528,7 @@ class snd_world {
             i = 0
             while (i < 6) {
                 if (fpa[i] != null) {
-                    FileSystem_h.fileSystem.CloseFile(fpa[i])
+                    FileSystem_h.fileSystem.CloseFile(fpa[i]!!)
                     fpa[i] = null
                 }
                 i++
@@ -589,7 +586,7 @@ class snd_world {
                     i++
                 }
                 FileSystem_h.fileSystem.CloseFile(wO)
-                FileSystem_h.fileSystem.CloseFile(lL)
+                FileSystem_h.fileSystem.CloseFile(lL!!)
                 FileSystem_h.fileSystem.CloseFile(rL)
                 FileSystem_h.fileSystem.RemoveFile(aviDemoPath.toString() + "channel_right.raw")
                 FileSystem_h.fileSystem.RemoveFile(aviDemoPath.toString() + "channel_left.raw")

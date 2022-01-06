@@ -102,7 +102,7 @@ class Common {
         // Initialize everything.
         // if the OS allows, pass argc/argv directly (without executable name)
         // otherwise pass the command line in a single string (without executable name)
-        abstract fun Init(argc: Int, argv: Array<String>, cmdline: String)
+        abstract fun Init(argc: Int, argv: Array<String>?, cmdline: String)
 
         // Shuts down everything.
         abstract fun Shutdown()
@@ -261,7 +261,7 @@ class Common {
         private var rd_flush /*)( const char *buffer )*/: void_callback<String>? = null
         private val warningCaption: idStr = idStr()
         private val warningList: idStrList = idStrList()
-        override fun Init(argc: Int, argv: Array<String>, cmdline: String) {
+        override fun Init(argc: Int, argv: Array<String>?, cmdline: String) {
             var argc = argc
             var argv = argv
             try {
@@ -288,7 +288,7 @@ class Common {
                     argv = args.GetArgs(cArg)
                     argc = cArg[0]
                 }
-                ParseCommandLine(argc, argv)
+                ParseCommandLine(argc, argv as Array<String>)
 
                 // init console command system
                 CmdSystem.cmdSystem.Init()
@@ -787,9 +787,8 @@ class Common {
 //		static bool recursing;
                 if (null == logFile && !recursing) {
                     val newTime = Date().toString()
-                    val fileName = if (!com_logFileName.GetString()
-                            .isEmpty()
-                    ) com_logFileName.GetString() else "qconsole.log"
+                    val fileName =
+                        if (!com_logFileName.GetString()!!.isEmpty()) com_logFileName.GetString()!! else "qconsole.log"
 
                     // fileSystem.OpenFileWrite can cause recursive prints into here
                     recursing = true
@@ -1147,10 +1146,10 @@ class Common {
             )
             val sysDetect = null == file
             if (!sysDetect) {
-                FileSystem_h.fileSystem.CloseFile(file)
+                FileSystem_h.fileSystem.CloseFile(file!!)
             } else {
                 file = FileSystem_h.fileSystem.OpenFileWrite(Licensee.CONFIG_SPEC)
-                FileSystem_h.fileSystem.CloseFile(file)
+                FileSystem_h.fileSystem.CloseFile(file!!)
             }
             val args = CmdArgs.idCmdArgs()
             if (sysDetect) {
@@ -1936,7 +1935,7 @@ class Common {
         private fun CloseLogFile() {
             if (logFile != null) {
                 com_logFile.SetBool(false) // make sure no further VPrintf attempts to open the log file again
-                FileSystem_h.fileSystem.CloseFile(logFile)
+                FileSystem_h.fileSystem.CloseFile(logFile!!)
                 logFile = null
             }
         }

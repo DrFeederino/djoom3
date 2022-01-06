@@ -693,11 +693,11 @@ object CmdSystem {
             if (DeclManager.declManager == null) {
                 return
             }
-            num = DeclManager.declManager!!.GetNumDecls(declType_t.values()[type])
+            num = DeclManager.declManager.GetNumDecls(declType_t.values()[type])
             i = 0
             while (i < num) {
                 callback.run(
-                    args.Argv(0) + " " + DeclManager.declManager!!.DeclByIndex(
+                    args.Argv(0) + " " + DeclManager.declManager.DeclByIndex(
                         declType_t.values()[type],
                         i,
                         false
@@ -977,7 +977,7 @@ object CmdSystem {
                     return
                 }
                 idLib.common.Printf("execing %s\n", args.Argv(1))
-                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0]!!.array()))
+                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0].array()))
                 FileSystem_h.fileSystem.FreeFile(f)
             }
 

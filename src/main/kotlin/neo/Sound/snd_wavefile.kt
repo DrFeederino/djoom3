@@ -1,9 +1,6 @@
 package neo.Sound
 
-import neo.Sound.snd_local.mminfo_s
-import neo.Sound.snd_local.pcmwaveformat_s
-import neo.Sound.snd_local.waveformatex_s
-import neo.Sound.snd_local.waveformatextensible_s
+import neo.Sound.snd_local.*
 import neo.Sound.snd_system.idSoundSystemLocal
 import neo.TempDump
 import neo.TempDump.TODO_Exception
@@ -214,7 +211,7 @@ object snd_wavefile {
                 return CloseOGG()
             }
             if (mhmmio != null) {
-                FileSystem_h.fileSystem.CloseFile(mhmmio)
+                FileSystem_h.fileSystem.CloseFile(mhmmio!!)
                 mhmmio = null
             }
             return 0
@@ -362,7 +359,7 @@ object snd_wavefile {
                 val d_buffer = BufferUtils.createByteBuffer(buffer.capacity()).put(buffer).rewind()
                 val ov = STBVorbis.stb_vorbis_open_memory(d_buffer, error, null)
                 if (error[0] != 0) {
-                    FileSystem_h.fileSystem.CloseFile(mhmmio)
+                    FileSystem_h.fileSystem.CloseFile(mhmmio!!)
                     mhmmio = null
                     return -1
                 }
@@ -375,7 +372,7 @@ object snd_wavefile {
                     (STBVorbis.stb_vorbis_stream_length_in_samples(ov) * vi.channels()).toLong() // pcm samples * num channels
                 mbIsReadingFromMemory = false
                 if (idSoundSystemLocal.s_realTimeDecoding.GetBool()) {
-                    FileSystem_h.fileSystem.CloseFile(mhmmio)
+                    FileSystem_h.fileSystem.CloseFile(mhmmio!!)
                     mhmmio = null
                     mpwfx.Format.wFormatTag = snd_local.WAVE_FORMAT_TAG_OGG
                     mhmmio = FileSystem_h.fileSystem.OpenFileRead(strFileName)

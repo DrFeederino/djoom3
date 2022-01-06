@@ -34,8 +34,8 @@ class WorldSpawn {
     class idWorldspawn : idEntity() {
         companion object {
             //	CLASS_PROTOTYPE( idWorldspawn );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?> {
                 return eventCallbacks
             }
 

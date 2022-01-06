@@ -661,7 +661,7 @@ object UsercmdGen {
                 toggled_crouch.SetKeyState(ButtonState(usercmdButton_t.UB_DOWN), in_toggleCrouch.GetBool())
                 toggled_run.SetKeyState(
                     ButtonState(usercmdButton_t.UB_SPEED),
-                    in_toggleRun.GetBool() && idAsyncNetwork.IsActive()
+                    in_toggleRun.GetBool() && idAsyncNetwork.Companion.IsActive()
                 )
                 toggled_zoom.SetKeyState(ButtonState(usercmdButton_t.UB_ZOOM), in_toggleZoom.GetBool())
 

@@ -668,6 +668,6 @@ object output {
             light.shadowTris = null
             i++
         }
-        FileSystem_h.fileSystem.CloseFile(procFile)
+        FileSystem_h.fileSystem.CloseFile(procFile!!)
     }
 }

@@ -77,7 +77,7 @@ object DemoFile {
             if (com_preloadDemos.GetBool()) {
                 fileImage = ByteBuffer.allocate(fileLength) // Mem_Alloc(fileLength);
                 f!!.Read(fileImage, fileLength)
-                FileSystem_h.fileSystem.CloseFile(f)
+                FileSystem_h.fileSystem.CloseFile(f!!)
                 f = idFile_Memory(
                     Str.va("preloaded(%s)", fileName),
                     fileImage,
@@ -126,11 +126,11 @@ object DemoFile {
                 compressor!!.FinishCompress()
             }
             if (f != null) {
-                FileSystem_h.fileSystem.CloseFile(f)
+                FileSystem_h.fileSystem.CloseFile(f!!)
                 f = null
             }
             if (fLog != null) {
-                FileSystem_h.fileSystem.CloseFile(fLog)
+                FileSystem_h.fileSystem.CloseFile(fLog!!)
                 fLog = null
             }
             if (fileImage.capacity() > 0) {

@@ -48,9 +48,7 @@ import kotlin.math.pow
 /**
  *
  */
-object snd_system {
-    var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
-    var soundSystem: idSoundSystem = soundSystemLocal
+class snd_system {
 
     fun setSoundSystems(soundSystem: idSoundSystem) {
         soundSystemLocal = soundSystem as idSoundSystemLocal
@@ -429,7 +427,7 @@ object snd_system {
                         }
                         Common.common.Printf(
                             "OpenAL: found %s\n",
-                            ALC10.alcGetString(openalDevice, ALC10.ALC_DEVICE_SPECIFIER)
+                            ALC10.alcGetString(openalDevice, ALC10.ALC_DEVICE_SPECIFIER)!!
                         )
                         Common.common.Printf("OpenAL: found %d hardware voices\n", openalSourceCount)
 
@@ -1556,5 +1554,10 @@ object snd_system {
         companion object {
             val INSTANCE: cmdFunction_t = SoundSystemRestart_f()
         }
+    }
+
+    companion object {
+        var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
+        var soundSystem: idSoundSystem = soundSystemLocal
     }
 }

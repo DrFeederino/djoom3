@@ -16,18 +16,7 @@ import java.nio.ByteBuffer
 /**
  *
  */
-object EventLoop {
-    /*
-     ===============================================================================
-
-     The event loop receives events from the system and dispatches them to
-     the various parts of the engine. The event loop also handles journaling.
-     The file system copies .cfg files to the journaled file.
-
-     ===============================================================================
-     */
-    val eventLoop: idEventLoop = idEventLoop()
-    const val MAX_PUSHED_EVENTS = 64
+class EventLoop {
     val com_journalFile: idCVar = idCVar(
         "com_journal",
         "0",
@@ -81,11 +70,11 @@ object EventLoop {
         // Closes the journal file if needed.
         fun Shutdown() {
             if (com_journalFile != null) {
-                FileSystem_h.fileSystem.CloseFile(com_journalFile)
+                FileSystem_h.fileSystem.CloseFile(com_journalFile!!)
                 com_journalFile = null
             }
             if (com_journalDataFile != null) {
-                FileSystem_h.fileSystem.CloseFile(com_journalDataFile)
+                FileSystem_h.fileSystem.CloseFile(com_journalDataFile!!)
                 com_journalDataFile = null
             }
         }
@@ -254,5 +243,20 @@ object EventLoop {
             )
             var printedWarning = false
         }
+    }
+
+    companion object {
+        const val MAX_PUSHED_EVENTS = 64
+
+        /*
+                 ===============================================================================
+
+                 The event loop receives events from the system and dispatches them to
+                 the various parts of the engine. The event loop also handles journaling.
+                 The file system copies .cfg files to the journaled file.
+
+                 ===============================================================================
+                 */
+        val eventLoop: idEventLoop = idEventLoop()
     }
 }

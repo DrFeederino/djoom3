@@ -83,7 +83,7 @@ object win_main {
     //            = 0;
     const val SET_THREAD_AFFINITY = false
     const val WIN98_BUILD_NUMBER = 1998
-    val sys_cmdline: StringBuilder = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
+    val sys_cmdline: StringBuilder = StringBuilder(Lib.MAX_STRING_CHARS)
     val sys_showMallocs: idCVar = idCVar("sys_showMallocs", "0", CVarSystem.CVAR_SYSTEM, "")
     var   /*HANDLE*/hTimer: ScheduledExecutorService? = null
     var debug_current_alloc/*unsigned*/ = 0
@@ -147,7 +147,7 @@ object win_main {
      */
     fun Sys_CreateThread(
         function: xthread_t,
-        parms: Any,
+        parms: Any?,
         priority: xthreadPriority,
         info: xthreadInfo,
         name: String,
@@ -223,7 +223,7 @@ object win_main {
     fun Sys_EnterCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
         //		Sys_DebugPrintf( "busy lock '%s' in thread '%s'\n", lock->name, Sys_GetThreadName() );
-        win_local.Companion.win32.criticalSections[index].lock()
+        win_local.win32.criticalSections[index].lock()
     }
 
     /*
@@ -234,8 +234,8 @@ object win_main {
     @JvmOverloads
     fun Sys_LeaveCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
-        if ((win_local.Companion.win32.criticalSections[index] as ReentrantLock).isLocked) {
-            win_local.Companion.win32.criticalSections[index].unlock()
+        if ((win_local.win32.criticalSections[index] as ReentrantLock).isLocked) {
+            win_local.win32.criticalSections[index].unlock()
         }
     }
 
@@ -363,10 +363,10 @@ object win_main {
     fun Sys_Printf(fmt: String, vararg arg: Any) {
         val msg = StringBuilder(MAXPRINTMSG)
         msg.append(String.format(fmt, *arg))
-        if (Win32Vars_t.Companion.win_outputDebugString.GetBool()) {
+        if (Win32Vars_t.win_outputDebugString.GetBool()) {
             print(msg) //OutputDebugString(msg);
         }
-        if (Win32Vars_t.Companion.win_outputEditString.GetBool()) {
+        if (Win32Vars_t.win_outputEditString.GetBool()) {
             win_syscon.Conbuf_AppendText(msg.toString())
         }
     }
@@ -872,7 +872,7 @@ object win_main {
         if (DEBUG) {
             CmdSystem.cmdSystem.AddCommand(
                 "createResourceIDs",
-                CreateResourceIDs_f.Companion.INSTANCE,
+                CreateResourceIDs_f.INSTANCE,
                 CmdSystem.CMD_FL_TOOL,
                 "assigns resource IDs in _resouce.h files"
             )
@@ -884,12 +884,12 @@ object win_main {
         //
         // Windows user name
         //
-        Win32Vars_t.Companion.win_username.SetString(win_shared.Sys_GetCurrentUser())
+        Win32Vars_t.win_username.SetString(win_shared.Sys_GetCurrentUser())
 
         //
         // Windows version
         //
-        Win32Vars_t.Companion.sys_arch.SetString(System.getProperty("os.name"))
+        Win32Vars_t.sys_arch.SetString(System.getProperty("os.name"))
         //	win32.osversion.dwOSVersionInfoSize = sizeof( win32.osversion );
 //
 //	if ( !GetVersionEx( (LPOSVERSIONINFO)&win32.osversion ) )
@@ -942,47 +942,47 @@ object win_main {
         //
         // CPU type
         //
-        if (TempDump.NOT(idStr.Companion.Icmp(Win32Vars_t.Companion.sys_cpustring.GetString(), "detect").toDouble())) {
+        if (TempDump.NOT(idStr.Icmp(Win32Vars_t.sys_cpustring.GetString()!!, "detect").toDouble())) {
             val string: idStr
             Common.common.Printf("%1.0f MHz ", win_cpu.Sys_ClockTicksPerSecond() / 1000000.0f)
-            win_local.Companion.win32.cpuid = win_cpu.Sys_GetCPUId()
+            win_local.win32.cpuid = win_cpu.Sys_GetCPUId()
             string = idStr() //Clear();
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_AMD != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_AMD != 0) {
                 string.plusAssign("AMD CPU")
-            } else if (win_local.Companion.win32.cpuid and sys_public.CPUID_INTEL != 0) {
+            } else if (win_local.win32.cpuid and sys_public.CPUID_INTEL != 0) {
                 string.plusAssign("Intel CPU")
-            } else if (win_local.Companion.win32.cpuid and sys_public.CPUID_UNSUPPORTED != 0) {
+            } else if (win_local.win32.cpuid and sys_public.CPUID_UNSUPPORTED != 0) {
                 string.plusAssign("unsupported CPU")
             } else {
                 string.plusAssign("generic CPU")
             }
             string.plusAssign(" with ")
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_MMX != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_MMX != 0) {
                 string.plusAssign("MMX & ")
             }
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_3DNOW != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_3DNOW != 0) {
                 string.plusAssign("3DNow! & ")
             }
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_SSE != 0) {
                 string.plusAssign("SSE & ")
             }
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE2 != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_SSE2 != 0) {
                 string.plusAssign("SSE2 & ")
             }
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_SSE3 != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_SSE3 != 0) {
                 string.plusAssign("SSE3 & ")
             }
-            if (win_local.Companion.win32.cpuid and sys_public.CPUID_HTT != 0) {
+            if (win_local.win32.cpuid and sys_public.CPUID_HTT != 0) {
                 string.plusAssign("HTT & ")
             }
             string.StripTrailing(" & ")
             string.StripTrailing(" with ")
-            Win32Vars_t.Companion.sys_cpustring.SetString(string.toString())
+            Win32Vars_t.sys_cpustring.SetString(string.toString())
         } else {
             Common.common.Printf("forcing CPU type to ")
             val src = idLexer(
-                Win32Vars_t.Companion.sys_cpustring.GetString(),
-                Win32Vars_t.Companion.sys_cpustring.GetString().length,
+                Win32Vars_t.sys_cpustring.GetString()!!,
+                Win32Vars_t.sys_cpustring.GetString()!!.length,
                 "sys_cpustring"
             )
             val token = idToken()
@@ -1011,13 +1011,13 @@ object win_main {
             if (id == sys_public.CPUID_NONE) {
                 Common.common.Printf(
                     "WARNING: unknown sys_cpustring '%s'\n",
-                    Win32Vars_t.Companion.sys_cpustring.GetString()
+                    Win32Vars_t.sys_cpustring.GetString()!!
                 )
                 id = sys_public.CPUID_GENERIC
             }
-            win_local.Companion.win32.cpuid =  /*(cpuid_t)*/id
+            win_local.win32.cpuid =  /*(cpuid_t)*/id
         }
-        Common.common.Printf("%s\n", Win32Vars_t.Companion.sys_cpustring.GetString())
+        Common.common.Printf("%s\n", Win32Vars_t.sys_cpustring.GetString()!!)
         Common.common.Printf("%d MB System Memory\n", win_shared.Sys_GetSystemRam())
         Common.common.Printf("%d MB Video Memory\n", win_shared.Sys_GetVideoRam())
     }
@@ -1038,7 +1038,7 @@ object win_main {
      ================
      */
     fun  /*cpuid_t*/Sys_GetProcessorId(): Int {
-        return win_local.Companion.win32.cpuid
+        return win_local.win32.cpuid
     }
 
     /*
@@ -1061,11 +1061,11 @@ object win_main {
     fun Win_Frame() {
 
         // if "viewlog" has been modified, show or hide the log console
-        if (Win32Vars_t.Companion.win_viewlog.IsModified()) {
+        if (Win32Vars_t.win_viewlog.IsModified()) {
             if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated!!.GetInteger() != 1) {
-                win_syscon.Sys_ShowConsole(Win32Vars_t.Companion.win_viewlog.GetInteger(), false)
+                win_syscon.Sys_ShowConsole(Win32Vars_t.win_viewlog.GetInteger(), false)
             }
-            Win32Vars_t.Companion.win_viewlog.ClearModified()
+            Win32Vars_t.win_viewlog.ClearModified()
         }
     }
 
@@ -1475,7 +1475,7 @@ object win_main {
 //#endif
 //
 //	win32.hInstance = hInstance;
-        idStr.Companion.Copynz(sys_cmdline, *lpCmdLine)
+        idStr.Copynz(sys_cmdline, *lpCmdLine)
 
         // done before Com/Sys_Init since we need this for error output
         win_syscon.Sys_CreateConsole()
@@ -1485,7 +1485,7 @@ object win_main {
 //
         for (i in 0 until sys_public.MAX_CRITICAL_SECTIONS) {
 //            InitializeCriticalSection( &win32.criticalSections[i] );
-            win_local.Companion.win32.criticalSections[i] =
+            win_local.win32.criticalSections[i] =
                 ReentrantLock() //TODO: see if we can use synchronized blocks instead?
         }
         // get the initial time base
@@ -1513,7 +1513,7 @@ object win_main {
         Sys_StartAsyncThread()
 
         // hide or show the early console as necessary
-        if (Win32Vars_t.Companion.win_viewlog.GetInteger() != 0 || Common.com_skipRenderer.GetBool()
+        if (Win32Vars_t.win_viewlog.GetInteger() != 0 || Common.com_skipRenderer.GetBool()
             || idAsyncNetwork.serverDedicated!!.GetInteger() != 0
         ) {
             win_syscon.Sys_ShowConsole(1, true)

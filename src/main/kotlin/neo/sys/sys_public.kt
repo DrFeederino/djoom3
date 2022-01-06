@@ -61,14 +61,14 @@ object sys_public {
     const val FPU_EXCEPTION_NUMERIC_UNDERFLOW = 16
     const val MAX_CRITICAL_SECTIONS = 4
     const val MAX_THREADS = 10
-    val g_threads: Array<xthreadInfo?> = arrayOfNulls<xthreadInfo?>(MAX_THREADS)
+    val g_threads: Array<xthreadInfo> = Array(MAX_THREADS) { xthreadInfo() }
     const val MAX_TRIGGER_EVENTS = 4
     const val TRIGGER_EVENT_THREE = 3
     const val TRIGGER_EVENT_TWO = 2
 
     // enum {
     const val TRIGGER_EVENT_ZERO = 0
-    val udpPorts: Array<idUDPLag?> = arrayOfNulls<idUDPLag?>(65536)
+    val udpPorts: Array<idUDPLag> = Array(65536) { idUDPLag() }
     var sys: idSys = sys_local.sysLocal
     fun <T> __id_attribute__(input: T): T {
 //        DebugPrintf( final String...fmt)id_attribute((format(printf,2,3)));
@@ -231,7 +231,7 @@ object sys_public {
         // if the InitForPort fails, the idPort.port field will remain 0
         fun InitForPort(portNumber: Int): Boolean {
 //            int len = sizeof(struct     sockaddr_in );
-            netSocket = win_net.NET_IPSocket(win_net.net_ip.GetString(), portNumber, bound_to)
+            netSocket = win_net.NET_IPSocket(win_net.net_ip.GetString()!!, portNumber, bound_to)
             if (netSocket <= 0) {
                 netSocket = 0
                 bound_to = netadr_t() // memset( &bound_to, 0, sizeof( bound_to ) );
@@ -257,7 +257,7 @@ object sys_public {
         fun Close() {
             if (netSocket != 0) {
                 if (udpPorts[bound_to.port] != null) {
-                    udpPorts[bound_to.port] = null // delete udpPorts[bound_to.port ];
+                    //udpPorts[bound_to.port] = null // delete udpPorts[bound_to.port ];
                 }
                 //                closesocket(netSocket); //TODO:
                 netSocket = 0

@@ -514,7 +514,7 @@ object win_glimp {
             }
         } catch (ex: IOException) {
             Logger.getLogger(win_glimp::class.java.name).log(Level.SEVERE, null, ex)
-            idLib.common.Warning("---GLimp_EnableLogging---\n%s\n---", ex.message)
+            idLib.common.Warning("---GLimp_EnableLogging---\n%s\n---", ex.message!!)
         }
     }
 

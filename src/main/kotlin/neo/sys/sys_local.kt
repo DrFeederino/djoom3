@@ -18,78 +18,14 @@ import java.util.*
 /**
  *
  */
-object sys_local {
-    val sysLanguageNames: Array<String?> = arrayOf(
-        "english", "spanish", "italian", "german", "french", "russian",
-        "polish", "korean", "japanese", "chinese", null
-    )
-
-    //
-    val sys_lang: idCVar = idCVar(
-        "sys_lang",
-        "english",
-        CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
-        "",
-        sysLanguageNames,
-        ArgCompletion_String(sysLanguageNames)
-    )
-    var sysLocal: idSysLocal = idSysLocal()
+class sys_local {
 
     /*
      =================
      Sys_TimeStampToStr
      =================
      */
-    var timeString //= new char[MAX_STRING_CHARS];
-            : String? = null
 
-    fun Sys_TimeStampToStr(   /*ID_TIME_T*/timeStamp: Long): String {
-//        timeString[0] = '\0';
-
-//        tm time = localtime(timeStamp);
-        val time = Date()
-        val out: String
-        val lang = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
-        out = if (lang.Icmp("english") == 0) {
-            // english gets "month/day/year  hour:min" + "am" or "pm"
-            SimpleDateFormat("MM/dd/yyyy\thh:mmaa").format(time).lowercase(Locale.getDefault())
-            //            out.oSet(va("%02d", time.tm_mon + 1));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%02d", time.tm_mday));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%d", time.tm_year + 1900));
-//            out.oPluSet("\t");
-//            if (time.tm_hour > 12) {
-//                out.oPluSet(va("%02d", time.tm_hour - 12));
-//            } else if (time.tm_hour == 0) {
-//                out.oPluSet("12");
-//            } else {
-//                out.oPluSet(va("%02d", time.tm_hour));
-//            }
-//            out.oPluSet(":");
-//            out.oPluSet(va("%02d", time.tm_min));
-//            if (time.tm_hour >= 12) {
-//                out.oPluSet("pm");
-//            } else {
-//                out.oPluSet("am");
-//            }
-        } else {
-            // europeans get "day/month/year  24hour:min"
-            SimpleDateFormat("dd/MM/yyyy\tHH:mm").format(time)
-            //            out.oSet(va("%02d", time.tm_mday));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%02d", time.tm_mon + 1));
-//            out.oPluSet("/");
-//            out.oPluSet(va("%d", time.tm_year + 1900));
-//            out.oPluSet("\t");
-//            out.oPluSet(va("%02d", time.tm_hour));
-//            out.oPluSet(":");
-//            out.oPluSet(va("%02d", time.tm_min));
-        }
-        //        idStr.Copynz(timeString, out, sizeof(timeString));
-//
-        return out.also { timeString = it }
-    }
 
     /*
      ==============================================================
@@ -263,6 +199,72 @@ object sys_local {
 
         companion object {
             var doexit_spamguard = false
+        }
+    }
+
+    companion object {
+        var timeString //= new char[MAX_STRING_CHARS];
+                : String? = null
+        var sysLocal: idSysLocal = idSysLocal()
+        val sysLanguageNames: Array<String> = arrayOf(
+            "english", "spanish", "italian", "german", "french", "russian",
+            "polish", "korean", "japanese", "chinese"
+        )
+        val sys_lang: idCVar = idCVar(
+            "sys_lang",
+            "english",
+            CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
+            "",
+            Companion.sysLanguageNames,
+            ArgCompletion_String(Companion.sysLanguageNames)
+        )
+
+        fun Sys_TimeStampToStr(   /*ID_TIME_T*/timeStamp: Long): String {
+//        timeString[0] = '\0';
+
+//        tm time = localtime(timeStamp);
+            val time = Date()
+            val out: String
+            val lang = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
+            out = if (lang.Icmp("english") == 0) {
+                // english gets "month/day/year  hour:min" + "am" or "pm"
+                SimpleDateFormat("MM/dd/yyyy\thh:mmaa").format(time).lowercase(Locale.getDefault())
+                //            out.oSet(va("%02d", time.tm_mon + 1));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%02d", time.tm_mday));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%d", time.tm_year + 1900));
+//            out.oPluSet("\t");
+//            if (time.tm_hour > 12) {
+//                out.oPluSet(va("%02d", time.tm_hour - 12));
+//            } else if (time.tm_hour == 0) {
+//                out.oPluSet("12");
+//            } else {
+//                out.oPluSet(va("%02d", time.tm_hour));
+//            }
+//            out.oPluSet(":");
+//            out.oPluSet(va("%02d", time.tm_min));
+//            if (time.tm_hour >= 12) {
+//                out.oPluSet("pm");
+//            } else {
+//                out.oPluSet("am");
+//            }
+            } else {
+                // europeans get "day/month/year  24hour:min"
+                SimpleDateFormat("dd/MM/yyyy\tHH:mm").format(time)
+                //            out.oSet(va("%02d", time.tm_mday));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%02d", time.tm_mon + 1));
+//            out.oPluSet("/");
+//            out.oPluSet(va("%d", time.tm_year + 1900));
+//            out.oPluSet("\t");
+//            out.oPluSet(va("%02d", time.tm_hour));
+//            out.oPluSet(":");
+//            out.oPluSet(va("%02d", time.tm_min));
+            }
+            //        idStr.Copynz(timeString, out, sizeof(timeString));
+//
+            return out.also { timeString = it }
         }
     }
 }

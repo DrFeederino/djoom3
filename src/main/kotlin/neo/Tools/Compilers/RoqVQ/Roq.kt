@@ -198,7 +198,7 @@ object Roq {
 
         fun CloseRoQFile(which: Boolean) {
             Common.common.Printf("closeRoQFile: closing RoQ file\n")
-            FileSystem_h.fileSystem.CloseFile(RoQFile)
+            FileSystem_h.fileSystem.CloseFile(RoQFile!!)
         }
 
         fun InitRoQFile(RoQFilename: String) {
@@ -648,7 +648,7 @@ object Roq {
 
         private fun CloseRoQFile() {
             Common.common.Printf("closeRoQFile: closing RoQ file\n")
-            FileSystem_h.fileSystem.CloseFile(RoQFile)
+            FileSystem_h.fileSystem.CloseFile(RoQFile!!)
         }
 
         /*

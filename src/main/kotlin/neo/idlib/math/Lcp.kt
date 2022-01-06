@@ -16,7 +16,7 @@ import kotlin.math.abs
 /**
  *
  */
-object Lcp {
+class Lcp {
     const val LCP_ACCEL_EPSILON = 1e-5f
     const val LCP_BOUND_EPSILON = 1e-5f
     const val LCP_DELTA_ACCEL_EPSILON = 1e-9f

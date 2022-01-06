@@ -14,25 +14,7 @@ import java.nio.FloatBuffer
 /**
  *
  */
-object snd_local {
-    //
-    const val PRIMARYFREQ = 44100 // samples per second
-
-    //  
-    //    static final idBlockAlloc<idSampleDecoderLocal> sampleDecoderAllocator = new idBlockAlloc<>(64);
-    //    static final idDynamicBlockAlloc<Byte> decoderMemoryAllocator = new idDynamicBlockAlloc<>(1 << 20, 128);
-    //
-    const val MIN_OGGVORBIS_MEMORY = 768 * 1024
-
-    //
-    const val ROOM_SLICES_IN_BUFFER = 10
-    const val SND_EPSILON = 1.0f / 32768.0f // if volume is below this, it will always multiply to zero
-    const val SOUND_DECODER_FREE_DELAY = 1000 * Simd.MIXBUFFER_SAMPLES / UsercmdGen.USERCMD_MSEC // four seconds
-    const val SOUND_MAX_CHANNELS = 8
-    const val WAVE_FORMAT_TAG_OGG = 2
-
-    /* flags for wFormatTag field of WAVEFORMAT */ // enum {
-    const val WAVE_FORMAT_TAG_PCM = 1
+class snd_local {
 
     // demo sound commands
     enum class soundDemoCommand_t {
@@ -322,5 +304,26 @@ object snd_local {
                 return idAudioHardwareWIN32()
             }
         }
+    }
+
+    companion object {
+        //
+        //    static final idBlockAlloc<idSampleDecoderLocal> sampleDecoderAllocator = new idBlockAlloc<>(64);
+        //    static final idDynamicBlockAlloc<Byte> decoderMemoryAllocator = new idDynamicBlockAlloc<>(1 << 20, 128);
+        //
+        const val MIN_OGGVORBIS_MEMORY = 768 * 1024
+
+        /* flags for wFormatTag field of WAVEFORMAT */ // enum {
+        const val WAVE_FORMAT_TAG_PCM = 1
+        const val WAVE_FORMAT_TAG_OGG = 2
+
+        //
+        const val PRIMARYFREQ = 44100 // samples per second
+
+        //
+        const val ROOM_SLICES_IN_BUFFER = 10
+        const val SND_EPSILON = 1.0f / 32768.0f // if volume is below this, it will always multiply to zero
+        const val SOUND_DECODER_FREE_DELAY = 1000 * Simd.MIXBUFFER_SAMPLES / UsercmdGen.USERCMD_MSEC // four seconds
+        const val SOUND_MAX_CHANNELS = 8
     }
 }

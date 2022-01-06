@@ -27,7 +27,7 @@ object win_snd {
                 ALC.create()
             } catch (ex: UnsatisfiedLinkError) {
                 Logger.getLogger(win_snd::class.java.name).log(Level.SEVERE, null, ex)
-                Common.common.Warning("LoadLibrary %s failed.", idSoundSystemLocal.Companion.s_libOpenAL.GetString())
+                Common.common.Warning("LoadLibrary %s failed.", idSoundSystemLocal.Companion.s_libOpenAL.GetString()!!)
                 return false
             } catch (ex: IllegalStateException) {
                 return "ALC has already been created." == ex.message

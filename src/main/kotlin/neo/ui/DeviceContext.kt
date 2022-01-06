@@ -27,14 +27,7 @@ import neo.ui.Rectangle.idRegion
 /**
  *
  */
-object DeviceContext {
-    const val BLINK_DIVISOR = 200
-    const val VIRTUAL_HEIGHT = 480
-    const val VIRTUAL_WIDTH = 640
-    val gui_mediumFontLimit: idCVar =
-        idCVar("gui_mediumFontLimit", "0.60", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
-    val gui_smallFontLimit: idCVar =
-        idCVar("gui_smallFontLimit", "0.30", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
+class DeviceContext {
 
     class idDeviceContext {
         private val cursorImages: Array<idMaterial> = Array(CURSOR.CURSOR_COUNT.ordinal) { idMaterial() }
@@ -81,7 +74,7 @@ object DeviceContext {
         fun Init() {
             xScale = 0f
             SetSize(VIRTUAL_WIDTH.toFloat(), VIRTUAL_HEIGHT.toFloat())
-            whiteImage = DeclManager.declManager.FindMaterial("guis/assets/white.tga")
+            whiteImage = DeclManager.declManager.FindMaterial("guis/assets/white.tga")!!
             whiteImage.SetSort(Material.SS_GUI.toFloat())
             mbcs = false
             SetupFonts()
@@ -96,23 +89,23 @@ object DeviceContext {
             colorBlack.set(idVec4(0f, 0f, 0f, 1f))
             colorNone.set(idVec4(0f, 0f, 0f, 0f))
             cursorImages[CURSOR.CURSOR_ARROW.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/guicursor_arrow.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/guicursor_arrow.tga")!!
             cursorImages[CURSOR.CURSOR_HAND.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/guicursor_hand.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/guicursor_hand.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbarh.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbarh.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbarv.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbarv.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_thumb.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_thumb.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_right.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_right.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_left.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_left.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")!!
             cursorImages[CURSOR.CURSOR_ARROW.ordinal].SetSort(Material.SS_GUI.toFloat())
             cursorImages[CURSOR.CURSOR_HAND.ordinal].SetSort(Material.SS_GUI.toFloat())
             scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal].SetSort(Material.SS_GUI.toFloat())
@@ -1350,5 +1343,15 @@ object DeviceContext {
         init {
             Clear()
         }
+    }
+
+    companion object {
+        const val BLINK_DIVISOR = 200
+        const val VIRTUAL_HEIGHT = 480
+        const val VIRTUAL_WIDTH = 640
+        val gui_mediumFontLimit: idCVar =
+            idCVar("gui_mediumFontLimit", "0.60", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
+        val gui_smallFontLimit: idCVar =
+            idCVar("gui_smallFontLimit", "0.30", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
     }
 }

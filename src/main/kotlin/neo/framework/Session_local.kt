@@ -210,7 +210,7 @@ object Session_local {
         //
         var menuActive = false
         var menuSoundWorld // so the game soundWorld can be muted
-                : idSoundWorld = idSoundWorld
+                : idSoundWorld?
         var modsList: idStrList = idStrList()
         var msgFireBack: Array<idStr> = arrayOf(idStr(), idStr())
         var msgIgnoreButtons = false
@@ -254,7 +254,7 @@ object Session_local {
         private var authEmitTimeout = 0
 
         //
-        private var authMsg: idStr? = idStr()
+        private var authMsg: idStr = idStr()
         private var authWaitBox = false
         private var cdkey_state: cdKeyState_t = cdKeyState_t.CDKEY_UNKNOWN
         private var xpkey_state: cdKeyState_t = cdKeyState_t.CDKEY_UNKNOWN
@@ -469,8 +469,8 @@ object Session_local {
                 UserInterface.uiManager.FindGui("guis/mainmenu.gui", true, false, true)
             }
             guiMainMenu_MapList = UserInterface.uiManager.AllocListGUI()
-            guiMainMenu_MapList.Config(guiMainMenu, "mapList")
-            idAsyncNetwork.client.serverList.GUIConfig(guiMainMenu, "serverList")
+            guiMainMenu_MapList.Config(guiMainMenu!!, "mapList")
+            idAsyncNetwork.client.serverList.GUIConfig(guiMainMenu!!, "serverList")
             guiRestartMenu = UserInterface.uiManager.FindGui("guis/restart.gui", true, false, true)
             guiGameOver = UserInterface.uiManager.FindGui("guis/gameover.gui", true, false, true)
             guiMsg = UserInterface.uiManager.FindGui("guis/msg.gui", true, false, true)
@@ -1907,7 +1907,7 @@ object Session_local {
                 }
                 val readVersion = CInt()
                 savegameFile.ReadInt(readVersion)
-                savegameVersion = readVersion.getVal()
+                savegameVersion = readVersion._val
 
                 // map
                 savegameFile.ReadString(saveMap)
@@ -2710,7 +2710,7 @@ object Session_local {
             while (skipFrames > -1) {
                 val ds = CInt(demoSystem_t.DS_FINISHED.ordinal)
                 readDemo.ReadInt(ds)
-                if (ds.getVal() == demoSystem_t.DS_FINISHED.ordinal) {
+                if (ds._val == demoSystem_t.DS_FINISHED.ordinal) {
                     if (numDemoFrames != 1) {
                         // if the demo has a single frame (a demoShot), continuously replay
                         // the renderView that has already been read
@@ -2719,26 +2719,26 @@ object Session_local {
                     }
                     break
                 }
-                if (ds.getVal() == demoSystem_t.DS_RENDER.ordinal) {
+                if (ds._val == demoSystem_t.DS_RENDER.ordinal) {
                     val demoTimeOffset = CInt()
                     if (rw.ProcessDemoCommand(readDemo, currentDemoRenderView, demoTimeOffset)) {
                         // a view is ready to render
                         skipFrames--
                         numDemoFrames++
                     }
-                    this.demoTimeOffset = demoTimeOffset.getVal()
+                    this.demoTimeOffset = demoTimeOffset._val
                     continue
                 }
-                if (ds.getVal() == demoSystem_t.DS_SOUND.ordinal) {
+                if (ds._val == demoSystem_t.DS_SOUND.ordinal) {
                     sw.ProcessDemoCommand(readDemo)
                     continue
                 }
                 // appears in v1.2, with savegame format 17
-                if (ds.getVal() == demoSystem_t.DS_VERSION.ordinal) {
+                if (ds._val == demoSystem_t.DS_VERSION.ordinal) {
                     val renderdemoVersion = CInt()
                     readDemo.ReadInt(renderdemoVersion)
-                    this.renderdemoVersion = renderdemoVersion.getVal()
-                    Common.common.Printf("reading a v%d render demo\n", renderdemoVersion.getVal())
+                    this.renderdemoVersion = renderdemoVersion._val
+                    Common.common.Printf("reading a v%d render demo\n", renderdemoVersion._val)
                     // set the savegameVersion to current for render demo paths that share the savegame paths
                     savegameVersion = Licensee.SAVEGAME_VERSION
                     continue
@@ -3291,7 +3291,7 @@ object Session_local {
 
         @Throws(idException::class)
         fun HandleSaveGameMenuCommand(args: CmdArgs.idCmdArgs?, icmd: CInt?): Boolean {
-            val cmd = args.Argv(icmd.getVal() - 1)
+            val cmd = args.Argv(icmd._val - 1)
             if (0 == idStr.Icmp(cmd, "loadGame")) {
                 val choice = guiActive.State().GetInt("loadgame_sel_0")
                 if (choice >= 0 && choice < loadGameList.size()) {
@@ -3304,7 +3304,7 @@ object Session_local {
                 if (saveGameName != null && saveGameName.isEmpty()) {
 
                     // First see if the file already exists unless they pass '1' to authorize the overwrite
-                    if (icmd.getVal() == args.Argc() || args.Argv(icmd.increment()).toInt() == 0) {
+                    if (icmd._val == args.Argc() || args.Argv(icmd.increment()).toInt() == 0) {
                         var saveFileName = idStr(saveGameName)
                         Session.sessLocal.ScrubSaveGameFileName(saveFileName)
                         saveFileName = idStr("savegames/$saveFileName")
@@ -3442,8 +3442,8 @@ object Session_local {
             val icmd = CInt()
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(menuCommand, false)
-            icmd.setVal(0)
-            while (icmd.getVal() < args.Argc()) {
+            icmd._val = (0)
+            while (icmd._val < args.Argc()) {
                 val cmd = args.Argv(icmd.increment())
                 if (HandleSaveGameMenuCommand(args, icmd)) {
                     continue
@@ -3455,7 +3455,7 @@ object Session_local {
                 }
                 if (0 == idStr.Icmp(cmd, "startGame")) {
                     CVarSystem.cvarSystem.SetCVarInteger("g_skill", guiMainMenu.State().GetInt("skill"))
-                    if (icmd.getVal() < args.Argc()) {
+                    if (icmd._val < args.Argc()) {
                         StartNewGame(args.Argv(icmd.increment()))
                     } else {
                         if (BuildDefines.ID_DEMO_BUILD) {
@@ -3686,7 +3686,7 @@ object Session_local {
                 }
                 if (0 == idStr.Icmp(cmd, "mpSkin")) {
                     var skin: idStr
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         skin = idStr(args.Argv(icmd.increment()))
                         CVarSystem.cvarSystem.SetCVarString("ui_skin", skin.toString())
                         SetMainMenuSkin()
@@ -3706,7 +3706,7 @@ object Session_local {
                     continue
                 }
                 if (0 == idStr.Icmp(cmd, "bind")) {
-                    if (args.Argc() - icmd.getVal() >= 2) {
+                    if (args.Argc() - icmd._val >= 2) {
                         val key = args.Argv(icmd.increment()).toInt()
                         val bind = args.Argv(icmd.increment())
                         if (idKeyInput.NumBinds(bind) >= 2 && !idKeyInput.KeyIsBoundTo(key, bind)) {
@@ -3718,19 +3718,19 @@ object Session_local {
                     continue
                 }
                 if (0 == idStr.Icmp(cmd, "play")) {
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         var snd = idStr(args.Argv(icmd.increment()))
                         var channel = 1
                         if (snd.Length() == 1) {
                             channel = snd.toString().toInt()
-                            snd = idStr(args.Argv(icmd.getVal()))
+                            snd = idStr(args.Argv(icmd._val))
                         }
                         menuSoundWorld.PlayShaderDirectly(snd.toString(), channel)
                     }
                     continue
                 }
                 if (0 == idStr.Icmp(cmd, "music")) {
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         val snd = idStr(args.Argv(icmd.increment()))
                         menuSoundWorld.PlayShaderDirectly(snd.toString(), 2)
                     }
@@ -3740,8 +3740,8 @@ object Session_local {
                 // triggered from mainmenu or mpmain
                 if (0 == idStr.Icmp(cmd, "sound")) {
                     var vcmd = idStr()
-                    if (args.Argc() - icmd.getVal() >= 1) {
-                        vcmd = idStr(args.Argv(icmd.getVal()))
+                    if (args.Argc() - icmd._val >= 1) {
+                        vcmd = idStr(args.Argv(icmd._val))
                     }
                     if (0 == vcmd.Length() || 0 == vcmd.Icmp("speakers")) {
                         val old = CVarSystem.cvarSystem.GetCVarInteger("s_numberOfSpeakers")
@@ -3823,7 +3823,7 @@ object Session_local {
                 }
                 if (0 == idStr.Icmp(cmd, "video")) {
                     var vcmd = idStr()
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         vcmd = idStr(args.Argv(icmd.increment()))
                     }
                     val oldSpec = Common.com_machineSpec.GetInteger()
@@ -3850,7 +3850,7 @@ object Session_local {
                     continue
                 }
                 if (0 == idStr.Icmp(cmd, "clearBind")) {
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         idKeyInput.UnbindBinding(args.Argv(icmd.increment()))
                         guiMainMenu.SetKeyBindingNames()
                     }
@@ -3868,8 +3868,8 @@ object Session_local {
 
                     //Backup the language so we can restore it after defaults.
                     val lang = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
-                    CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, args.Argv(icmd.getVal()))
-                    if (idStr.Icmp("cvar_restart", args.Argv(icmd.getVal() - 1)) == 0) {
+                    CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, args.Argv(icmd._val))
+                    if (idStr.Icmp("cvar_restart", args.Argv(icmd._val - 1)) == 0) {
                         CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "exec default.cfg")
                         CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "setMachineSpec\n")
 
@@ -3923,7 +3923,7 @@ object Session_local {
                 // triggered from mainmenu or mpmain
                 if (0 == idStr.Icmp(cmd, "punkbuster")) {
                     var vcmd: idStr
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         vcmd = idStr(args.Argv(icmd.increment()))
                     }
                     // filtering PB based on enabled/disabled
@@ -4012,8 +4012,8 @@ object Session_local {
             val icmd = CInt()
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(menuCommand, false)
-            icmd.setVal(0)
-            while (icmd.getVal() < args.Argc()) {
+            icmd._val = (0)
+            while (icmd._val < args.Argc()) {
                 val cmd = args.Argv(icmd.increment())
                 if (HandleSaveGameMenuCommand(args, icmd)) {
                     continue
@@ -4035,7 +4035,7 @@ object Session_local {
                     continue
                 }
                 if (0 == idStr.Icmp(cmd, "play")) {
-                    if (args.Argc() - icmd.getVal() >= 1) {
+                    if (args.Argc() - icmd._val >= 1) {
                         val snd = args.Argv(icmd.increment())
                         sw.PlayShaderDirectly(snd)
                     }
@@ -4148,7 +4148,7 @@ object Session_local {
                     workName = fileList[i]
                     workName.Append("/")
                     workName.Append(p)
-                    val workNote = CInt(noteNumber.getVal())
+                    val workNote = CInt(noteNumber._val)
                     RenderSystem_init.R_ScreenshotFilename(workNote, workName.toString(), shotName)
                     noteNum = shotName
                     noteNum.StripPath()
@@ -4186,7 +4186,7 @@ object Session_local {
                     win_main.Sys_Sleep(500)
                 }
                 if (file != null) {
-                    file.WriteInt(noteNumber.getVal()) //, 4);
+                    file.WriteInt(noteNumber._val) //, 4);
                     FileSystem_h.fileSystem.CloseFile(file)
                 }
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "closeViewNotes\n")
@@ -4320,28 +4320,28 @@ object Session_local {
 
             // flag for in-game menu
             if (mapSpawned) {
-                guiMainMenu.SetStateString("inGame", if (IsMultiplayer()) "2" else "1")
+                guiMainMenu!!.SetStateString("inGame", if (IsMultiplayer()) "2" else "1")
             } else {
-                guiMainMenu.SetStateString("inGame", "0")
+                guiMainMenu!!.SetStateString("inGame", "0")
             }
             SetCDKeyGuiVars()
             if (BuildDefines.ID_DEMO_BUILD) {
-                guiMainMenu.SetStateString("nightmare", "0")
+                guiMainMenu!!.SetStateString("nightmare", "0")
             } else {
-                guiMainMenu.SetStateString(
+                guiMainMenu!!.SetStateString(
                     "nightmare",
                     if (CVarSystem.cvarSystem.GetCVarBool("g_nightmare")) "1" else "0"
                 )
             }
-            guiMainMenu.SetStateString("browser_levelshot", "guis/assets/splash/pdtempa")
+            guiMainMenu!!.SetStateString("browser_levelshot", "guis/assets/splash/pdtempa")
             SetMainMenuSkin()
             // Mods Menu
             SetModsMenuGuiVars()
-            guiMsg.SetStateString("visible_hasxp", if (FileSystem_h.fileSystem.HasD3XP()) "1" else "0")
+            guiMsg!!.SetStateString("visible_hasxp", if (FileSystem_h.fileSystem.HasD3XP()) "1" else "0")
             if (BuildDefines.__linux__) {
-                guiMainMenu.SetStateString("driver_prompt", "1")
+                guiMainMenu!!.SetStateString("driver_prompt", "1")
             } else {
-                guiMainMenu.SetStateString("driver_prompt", "0")
+                guiMainMenu!!.SetStateString("driver_prompt", "0")
             }
             SetPbMenuGuiVars()
         }
@@ -4354,20 +4354,20 @@ object Session_local {
             // Build the gui list
             i = 0
             while (i < list.GetNumMods()) {
-                guiActive.SetStateString(Str.va("modsList_item_%d", i), list.GetDescription(i))
-                modsList.set(i, list.GetMod(i))
+                guiActive!!.SetStateString(Str.va("modsList_item_%d", i), list.GetDescription(i))
+                modsList[i] = list.GetMod(i)
                 i++
             }
-            guiActive.DeleteStateVar(Str.va("modsList_item_%d", list.GetNumMods()))
-            guiActive.SetStateString("modsList_sel_0", "-1")
+            guiActive!!.DeleteStateVar(Str.va("modsList_item_%d", list.GetNumMods()))
+            guiActive!!.SetStateString("modsList_sel_0", "-1")
             FileSystem_h.fileSystem.FreeModList(list)
         }
 
         fun SetMainMenuSkin() {
             // skins
-            var str: idStr? = idStr(CVarSystem.cvarSystem.GetCVarString("mod_validSkins"))
+            var str: idStr = idStr(CVarSystem.cvarSystem.GetCVarString("mod_validSkins"))
             val uiSkin = idStr(CVarSystem.cvarSystem.GetCVarString("ui_skin"))
-            var skin: idStr?
+            var skin: idStr
             var skinId = 1
             var count = 1
             while (str.Length() != 0) {
@@ -4385,9 +4385,9 @@ object Session_local {
                 count++
             }
             for (i in 0 until count) {
-                guiMainMenu.SetStateInt(Str.va("skin%d", i + 1), 0)
+                guiMainMenu!!.SetStateInt(Str.va("skin%d", i + 1), 0)
             }
-            guiMainMenu.SetStateInt(Str.va("skin%d", skinId), 1)
+            guiMainMenu!!.SetStateInt(Str.va("skin%d", skinId), 1)
         }
 
         fun SetPbMenuGuiVars() {}

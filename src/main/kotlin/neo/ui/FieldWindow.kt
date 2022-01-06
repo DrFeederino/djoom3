@@ -37,7 +37,7 @@ class FieldWindow {
         override fun Draw(time: Int, x: Float, y: Float) {
             val scale = textScale.oCastFloat()
             val len = text.Length()
-            cursorPos = gui.State().GetInt(cursorVar.toString())
+            cursorPos = gui!!.State().GetInt(cursorVar.toString())
             if (len != lastTextLength || cursorPos != lastCursorPos) {
                 CalcPaintOffset(len)
             }

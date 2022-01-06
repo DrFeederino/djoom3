@@ -2,10 +2,13 @@ package neo.ui
 
 import neo.Renderer.Material
 import neo.TempDump
-import neo.framework.*
+import neo.framework.CmdSystem
 import neo.framework.CmdSystem.cmdExecution_t
+import neo.framework.Common
+import neo.framework.DeclManager
 import neo.framework.DemoFile.idDemoFile
 import neo.framework.File_h.idFile
+import neo.framework.Session
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Lexer
 import neo.idlib.Text.Parser.idParser
@@ -173,7 +176,7 @@ object GuiScript {
                         str.set(Common.common.GetLanguageDict().GetString(str.c_str()))
                     } else if (precacheBackground) {
                         val mat = DeclManager.declManager.FindMaterial(str.c_str())
-                        mat.SetSort(Material.SS_GUI.toFloat())
+                        mat!!.SetSort(Material.SS_GUI.toFloat())
                     } else if (precacheSounds) {
                         // Search for "play <...>"
                         val token = idToken()

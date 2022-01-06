@@ -31,22 +31,7 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.atan2
 
-/**
- *
- */
-object GameBearShootWindow {
-    const val BEAR_GRAVITY = 240
-    const val BEAR_SHRINK_TIME = 2000f
-    const val BEAR_SIZE = 24f
-
-    //
-    const val MAX_WINDFORCE = 100f
-
-    //
-    val bearTurretAngle: idCVar = idCVar("bearTurretAngle", "0", CVarSystem.CVAR_FLOAT, "")
-    val bearTurretForce: idCVar = idCVar("bearTurretForce", "200", CVarSystem.CVAR_FLOAT, "")
-
-    //
+class GameBearShootWindow {
     /*
      *****************************************************************************
      * BSEntity
@@ -452,7 +437,7 @@ object GameBearShootWindow {
         }
 
         private fun UpdateBear() {
-            val time = gui.GetTime()
+            val time = gui!!.GetTime()
             var startShrink = false
 
             // Apply gravity
@@ -528,7 +513,7 @@ object GameBearShootWindow {
                 bearScale *= BEAR_SIZE
                 bear.SetSize(bearScale, bearScale)
                 if (bearScale < 0) {
-                    gui.HandleNamedEvent("EnableFireButton")
+                    gui!!.HandleNamedEvent("EnableFireButton")
                     bearIsShrinking = false
                     bearScale = 0f
                     if (bearHitTarget) {
@@ -584,8 +569,8 @@ object GameBearShootWindow {
             val right = idVec2()
             val dot: Float
             val angle: Float
-            pt.x = gui.CursorX()
-            pt.y = gui.CursorY()
+            pt.x = gui!!.CursorX()
+            pt.y = gui!!.CursorY()
             turretOrig.set(80f, 348f)
             pt -= turretOrig
             pt.NormalizeFast()
@@ -599,7 +584,7 @@ object GameBearShootWindow {
         private fun UpdateButtons() {
             if (onFire.oCastBoolean()) {
                 val vec = idVec2()
-                gui.HandleNamedEvent("DisableFireButton")
+                gui!!.HandleNamedEvent("DisableFireButton")
                 Session.session.sw.PlayShaderDirectly("arcade_sargeshoot")
                 bear.SetVisible(true)
                 bearScale = 1f
@@ -644,7 +629,7 @@ object GameBearShootWindow {
                 onContinue.data = false
             }
             if (gamerunning.oCastBoolean() == true) {
-                val current_time = gui.GetTime()
+                val current_time = gui!!.GetTime()
                 val rnd = idRandom(current_time)
 
                 // Check for button presses
@@ -693,7 +678,7 @@ object GameBearShootWindow {
                 // Update countdown timer
                 timeRemaining -= timeSlice
                 timeRemaining = idMath.ClampFloat(0f, 99999f, timeRemaining)
-                gui.SetStateString("time_remaining", Str.va("%2.1f", timeRemaining))
+                gui!!.SetStateString("time_remaining", Str.va("%2.1f", timeRemaining))
                 if (timeRemaining <= 0f && !gameOver) {
                     gameOver = true
                     updateScore = true
@@ -707,16 +692,16 @@ object GameBearShootWindow {
 
         private fun UpdateScore() {
             if (gameOver) {
-                gui.HandleNamedEvent("GameOver")
+                gui!!.HandleNamedEvent("GameOver")
                 return
             }
             goalsHit++
-            gui.SetStateString("player_score", Str.va("%d", goalsHit))
+            gui!!.SetStateString("player_score", Str.va("%d", goalsHit))
 
             // Check for level progression
             if (0 == goalsHit % 5) {
                 currentLevel++
-                gui.SetStateString("current_level", Str.va("%d", currentLevel))
+                gui!!.SetStateString("current_level", Str.va("%d", currentLevel))
                 Session.session.sw.PlayShaderDirectly("arcade_levelcomplete1", 3)
                 timeRemaining += 30f
             }
@@ -741,5 +726,14 @@ object GameBearShootWindow {
             }
             return super.ParseInternalVar(_name, src)
         }
+    }
+
+    companion object {
+        const val BEAR_GRAVITY = 240
+        const val BEAR_SHRINK_TIME = 2000f
+        const val BEAR_SIZE = 24f
+        const val MAX_WINDFORCE = 100f
+        val bearTurretAngle: idCVar = idCVar("bearTurretAngle", "0", CVarSystem.CVAR_FLOAT, "")
+        val bearTurretForce: idCVar = idCVar("bearTurretForce", "200", CVarSystem.CVAR_FLOAT, "")
     }
 }

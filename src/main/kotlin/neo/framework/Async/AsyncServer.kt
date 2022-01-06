@@ -706,7 +706,7 @@ object AsyncServer {
                 // the need to propagate right away, only this
                 Session.sessLocal.mapSpawnData.serverInfo.Set(
                     "si_idleServer",
-                    idAsyncNetwork.idleServer.GetString()
+                    idAsyncNetwork.idleServer.GetString()!!
                 )
                 Game_local.game.SetServerInfo(Session.sessLocal.mapSpawnData.serverInfo)
             }
@@ -2068,14 +2068,14 @@ object AsyncServer {
         private fun ProcessRemoteConsoleMessage(from: netadr_t, msg: idBitMsg) {
             val msgBuf = StringBuilder(952)
             val string = CharArray(Lib.MAX_STRING_CHARS)
-            if (idAsyncNetwork.serverRemoteConsolePassword.GetString().isEmpty()) {
+            if (idAsyncNetwork.serverRemoteConsolePassword.GetString()!!.isEmpty()) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, "#str_04846")
                 return
             }
             msg.ReadString(string, string.size)
             if (idStr.Icmp(
-                    TempDump.ctos(string)!!,
-                    idAsyncNetwork.serverRemoteConsolePassword.GetString()
+                    TempDump.ctos(string),
+                    idAsyncNetwork.serverRemoteConsolePassword.GetString()!!
                 ) != 0
             ) {
                 PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, "#str_04847")

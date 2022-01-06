@@ -27,7 +27,7 @@ import neo.ui.Window.idWindow
 import neo.ui.Winvar.idWinBool
 import neo.ui.Winvar.idWinStr
 import neo.ui.Winvar.idWinVar
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -111,7 +111,7 @@ object EditWindow {
                 rect.w -= sizeBias
                 rect.h = (breaks.Num() + 1) * lineHeight
             }
-            if (hover && !noEvents.oCastBoolean() && Contains(gui.CursorX(), gui.CursorY())) {
+            if (hover && !noEvents.oCastBoolean() && Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 color = hoverColor.oCastIdVec4()
             } else {
                 hover = false
@@ -447,7 +447,7 @@ object EditWindow {
                 if (text.GetName() == null) {
                     idLib.common.Warning(
                         "idEditWindow::InitCvar: gui '%s' window '%s' has an empty cvar string",
-                        gui.GetSourceFile(),
+                        gui!!.GetSourceFile(),
                         name
                     )
                 }
@@ -458,7 +458,7 @@ object EditWindow {
             if (null == cvar) {
                 idLib.common.Warning(
                     "idEditWindow::InitCvar: gui '%s' window '%s' references undefined cvar '%s'",
-                    gui.GetSourceFile(),
+                    gui!!.GetSourceFile(),
                     name,
                     cvarStr.c_str()
                 )
@@ -501,7 +501,7 @@ object EditWindow {
             cvar = null
             liveUpdate.data = true
             readonly = false
-            scroller = idSliderWindow(dc!!, gui)
+            scroller = idSliderWindow(dc!!, gui!!)
         }
 
         private fun EnsureCursorVisible() {
@@ -603,7 +603,7 @@ object EditWindow {
                 barImage = "guis/assets/scrollbarh.tga"
                 scrollerName = "_scrollerWinH"
             }
-            val mat = DeclManager.declManager.FindMaterial(barImage)
+            val mat = DeclManager.declManager.FindMaterial(barImage)!!
             mat.SetSort(Material.SS_GUI.toFloat())
             sizeBias = mat.GetImageWidth().toFloat()
             val scrollRect = idRectangle()

@@ -9,7 +9,7 @@ import neo.idlib.Lib.idLib
 /**
  *
  */
-object Game_network {
+class Game_network {
     /*
      ===============================================================================
 

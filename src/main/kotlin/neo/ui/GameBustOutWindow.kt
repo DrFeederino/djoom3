@@ -828,7 +828,7 @@ object GameBustOutWindow {
                 UpdatePowerups()
                 i = 0
                 while (i < entities.Num()) {
-                    entities[i].Update(timeSlice, gui.GetTime())
+                    entities[i].Update(timeSlice, gui!!.GetTime())
                     i++
                 }
 
@@ -868,7 +868,7 @@ object GameBustOutWindow {
                 if (collision != collideDir_t.COLLIDE_NONE) {
                     var ball: BOEntity
                     when (pUp.powerup) {
-                        powerupType_t.POWERUP_BIGPADDLE -> bigPaddleTime = gui.GetTime() + 15000
+                        powerupType_t.POWERUP_BIGPADDLE -> bigPaddleTime = gui!!.GetTime() + 15000
                         powerupType_t.POWERUP_MULTIBALL ->                             // Create 2 new balls in the spot of the existing ball
                         {
                             var b = 0
@@ -903,9 +903,9 @@ object GameBustOutWindow {
         private fun UpdatePaddle() {
             val cursorPos = idVec2()
             val oldPos = paddle.x
-            cursorPos.x = gui.CursorX()
-            cursorPos.y = gui.CursorY()
-            if (bigPaddleTime > gui.GetTime()) {
+            cursorPos.x = gui!!.CursorX()
+            cursorPos.y = gui!!.CursorY()
+            if (bigPaddleTime > gui!!.GetTime()) {
                 paddle.x = cursorPos.x - 80f
                 paddle.width = 160f
                 paddle.ent!!.width = 160f
@@ -966,7 +966,7 @@ object GameBustOutWindow {
                     if (ball.velocity.y > 0) {
                         val paddleVec = idVec2(paddleVelocity * 2, 0f)
                         var centerX: Float
-                        centerX = if (bigPaddleTime > gui.GetTime()) {
+                        centerX = if (bigPaddleTime > gui!!.GetTime()) {
                             paddle.x + 80f
                         } else {
                             paddle.x + 48f
@@ -1069,29 +1069,29 @@ object GameBustOutWindow {
 
         private fun UpdateScore() {
             if (gameOver) {
-                gui.HandleNamedEvent("GameOver") //TODO:put text in property files for localization.
+                gui!!.HandleNamedEvent("GameOver") //TODO:put text in property files for localization.
                 return
             }
 
             // Check for level progression
             if (numBricks == 0) {
                 ClearBalls()
-                gui.HandleNamedEvent("levelComplete")
+                gui!!.HandleNamedEvent("levelComplete")
             }
 
             // Check for new ball score
             if (gameScore >= nextBallScore) {
                 ballsRemaining++
-                gui.HandleNamedEvent("extraBall")
+                gui!!.HandleNamedEvent("extraBall")
 
                 // Play sound
                 Session.session.sw.PlayShaderDirectly("arcade_extraball", S_UNIQUE_CHANNEL)
                 nextBallScore = gameScore + 10000
             }
-            gui.SetStateString("player_score", Str.va("%d", gameScore))
-            gui.SetStateString("balls_remaining", Str.va("%d", ballsRemaining))
-            gui.SetStateString("current_level", Str.va("%d", currentLevel))
-            gui.SetStateString("next_ball_score", Str.va("%d", nextBallScore))
+            gui!!.SetStateString("player_score", Str.va("%d", gameScore))
+            gui!!.SetStateString("balls_remaining", Str.va("%d", ballsRemaining))
+            gui!!.SetStateString("current_level", Str.va("%d", currentLevel))
+            gui!!.SetStateString("next_ball_score", Str.va("%d", nextBallScore))
         }
 
         private fun CreateNewBall(): BOEntity {

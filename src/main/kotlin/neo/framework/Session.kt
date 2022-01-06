@@ -416,8 +416,8 @@ class Session {
             val str = idStr(args.Argv(1))
             str.DefaultFileExtension(".cfg")
             val f = FileSystem_h.fileSystem.OpenFileWrite(str.toString())
-            DeclManager.declManager.WritePrecacheCommands(f)
-            ModelManager.renderModelManager.WritePrecacheCommands(f!!)
+            DeclManager.declManager.WritePrecacheCommands(f!!)
+            ModelManager.renderModelManager.WritePrecacheCommands(f)
             UserInterface.uiManager.WritePrecacheCommands(f)
             FileSystem_h.fileSystem.CloseFile(f)
         }
@@ -832,7 +832,7 @@ class Session {
                 Common.common.Printf("not reading from a cmdDemo\n")
                 return
             }
-            FileSystem_h.fileSystem.CloseFile(sessLocal.cmdDemoFile)
+            FileSystem_h.fileSystem.CloseFile(sessLocal.cmdDemoFile!!)
             Common.common.Printf("Command demo exited at logIndex %d\n", sessLocal.logIndex)
             sessLocal.cmdDemoFile = null
         }

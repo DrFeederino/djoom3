@@ -141,16 +141,16 @@ class SliderWindow {
                 RouteMouseCoords(0.0f, 0.0f)
                 return ""
             }
-            if (key == KeyInput.K_RIGHTARROW || key == KeyInput.K_KP_RIGHTARROW || key == KeyInput.K_MOUSE2 && gui.CursorY() > thumbRect.y) {
+            if (key == KeyInput.K_RIGHTARROW || key == KeyInput.K_KP_RIGHTARROW || key == KeyInput.K_MOUSE2 && gui!!.CursorY() > thumbRect.y) {
                 value.data = value.data + stepSize
             }
-            if (key == KeyInput.K_LEFTARROW || key == KeyInput.K_KP_LEFTARROW || key == KeyInput.K_MOUSE2 && gui.CursorY() < thumbRect.y) {
+            if (key == KeyInput.K_LEFTARROW || key == KeyInput.K_KP_LEFTARROW || key == KeyInput.K_MOUSE2 && gui!!.CursorY() < thumbRect.y) {
                 value.data = value.data - stepSize
             }
             if (buddyWin != null) {
                 buddyWin!!.HandleBuddyUpdate(this)
             } else {
-                gui.SetStateFloat(cvarStr.data.toString(), value.data)
+                gui!!.SetStateFloat(cvarStr.data.toString(), value.data)
                 UpdateCvar(false)
             }
             return ""
@@ -205,7 +205,7 @@ class SliderWindow {
             }
             thumbRect.w = thumbWidth
             thumbRect.h = thumbHeight
-            if (hover && !noEvents.oCastBoolean() && Contains(gui.CursorX(), gui.CursorY())) {
+            if (hover && !noEvents.oCastBoolean() && Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 color.set(hoverColor.data)
             } else {
                 hover = false
@@ -260,13 +260,13 @@ class SliderWindow {
             if (vertical) {
                 r.y += thumbHeight / 2
                 r.h -= thumbHeight
-                if (gui.CursorY() >= r.y && gui.CursorY() <= r.Bottom()) {
-                    pct = (gui.CursorY() - r.y) / r.h
+                if (gui!!.CursorY() >= r.y && gui!!.CursorY() <= r.Bottom()) {
+                    pct = (gui!!.CursorY() - r.y) / r.h
                     if (verticalFlip) {
                         pct = 1f - pct
                     }
                     value.data = low + (high - low) * pct
-                } else if (gui.CursorY() < r.y) {
+                } else if (gui!!.CursorY() < r.y) {
                     if (verticalFlip) {
                         value.data = high
                     } else {
@@ -282,10 +282,10 @@ class SliderWindow {
             } else {
                 r.x += thumbWidth / 2
                 r.w -= thumbWidth
-                if (gui.CursorX() >= r.x && gui.CursorX() <= r.Right()) {
-                    pct = (gui.CursorX() - r.x) / r.w
+                if (gui!!.CursorX() >= r.x && gui!!.CursorX() <= r.Right()) {
+                    pct = (gui!!.CursorX() - r.x) / r.w
                     value.data = low + (high - low) * pct
-                } else if (gui.CursorX() < r.x) {
+                } else if (gui!!.CursorX() < r.x) {
                     value.data = low
                 } else {
                     value.data = high
@@ -294,7 +294,7 @@ class SliderWindow {
             if (buddyWin != null) {
                 buddyWin!!.HandleBuddyUpdate(this)
             } else {
-                gui.SetStateFloat(cvarStr.data.toString(), value.data)
+                gui!!.SetStateFloat(cvarStr.data.toString(), value.data)
             }
             UpdateCvar(false)
             return ""
@@ -382,7 +382,7 @@ class SliderWindow {
                 if (null == buddyWin) {
                     Common.common.Warning(
                         "idSliderWindow.InitCvar: gui '%s' window '%s' has an empty cvar string",
-                        gui.GetSourceFile(),
+                        gui!!.GetSourceFile(),
                         name
                     )
                 }
@@ -394,7 +394,7 @@ class SliderWindow {
             if (null == cvar) {
                 Common.common.Warning(
                     "idSliderWindow.InitCvar: gui '%s' window '%s' references undefined cvar '%s'",
-                    gui.GetSourceFile(),
+                    gui!!.GetSourceFile(),
                     name,
                     cvarStr.c_str()
                 )
@@ -412,11 +412,11 @@ class SliderWindow {
             }
             if (force || liveUpdate.oCastBoolean()) {
                 value.data = cvar!!.GetFloat()
-                if (value.data != gui.State().GetFloat(cvarStr.data.toString())) {
+                if (value.data != gui!!.State().GetFloat(cvarStr.data.toString())) {
                     if (read) {
-                        gui.SetStateFloat(cvarStr.data.toString(), value.data)
+                        gui!!.SetStateFloat(cvarStr.data.toString(), value.data)
                     } else {
-                        value.data = gui.State().GetFloat(cvarStr.data.toString())
+                        value.data = gui!!.State().GetFloat(cvarStr.data.toString())
                         cvar!!.SetFloat(value.data)
                     }
                 }

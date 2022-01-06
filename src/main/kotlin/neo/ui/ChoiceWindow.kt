@@ -162,7 +162,7 @@ class ChoiceWindow {
                 shadowRect.y += textShadow.code.toFloat()
                 dc!!.DrawText(shadowText, textScale.data, textAlign.code, Lib.colorBlack, shadowRect, false, -1)
             }
-            if (hover && TempDump.NOT(noEvents) && Contains(gui.CursorX(), gui.CursorY())) {
+            if (hover && TempDump.NOT(noEvents) && Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 color = hoverColor.oCastIdVec4()
             } else {
                 hover = false
@@ -299,7 +299,7 @@ class ChoiceWindow {
                 if (null == cvar) {
                     Common.common.Warning(
                         "idChoiceWindow::InitVars: gui '%s' window '%s' references undefined cvar '%s'",
-                        gui.GetSourceFile(),
+                        gui!!.GetSourceFile(),
                         name,
                         cvarStr.c_str()
                     )
@@ -310,7 +310,7 @@ class ChoiceWindow {
             if (guiStr.Length() != 0) {
                 updateStr.Append(guiStr)
             }
-            updateStr.SetGuiInfo(gui.GetStateDict())
+            updateStr.SetGuiInfo(gui!!.GetStateDict())
             updateStr.Update()
         }
 
@@ -321,7 +321,7 @@ class ChoiceWindow {
             if (force || liveUpdate.data) {
                 if (cvar != null && cvarStr.NeedsUpdate()) {
                     if (read) {
-                        cvarStr.set(cvar!!.GetString())
+                        cvarStr.set(cvar!!.GetString()!!)
                     } else {
                         cvar!!.SetString(cvarStr.c_str())
                     }
@@ -399,7 +399,7 @@ class ChoiceWindow {
                 if (choices.size() != values.size()) {
                     Common.common.Warning(
                         "idChoiceWindow:: gui '%s' window '%s' has value count unequal to choices count",
-                        gui.GetSourceFile(),
+                        gui!!.GetSourceFile(),
                         name
                     )
                 }

@@ -25,7 +25,7 @@ import neo.ui.UserInterface.idUserInterface
 /**
  *
  */
-object ServerScan {
+class ServerScan {
     /*
      ===============================================================================
 
@@ -35,49 +35,7 @@ object ServerScan {
 
      ===============================================================================
      */
-    val gui_filter_game: idCVar = idCVar(
-        "gui_filter_game",
-        "0",
-        CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
-        "Game filter"
-    )
-    val gui_filter_gameType: idCVar = idCVar(
-        "gui_filter_gameType",
-        "0",
-        CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
-        "Gametype filter"
-    )
-    val gui_filter_idle: idCVar = idCVar(
-        "gui_filter_idle",
-        "0",
-        CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
-        "Idle servers filter"
-    )
-    val gui_filter_password: idCVar = idCVar(
-        "gui_filter_password",
-        "0",
-        CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
-        "Password filter"
-    )
-    val gui_filter_players: idCVar = idCVar(
-        "gui_filter_players",
-        "0",
-        CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
-        "Players filter"
-    )
 
-    //
-    val l_gameTypes: Array<String?> = arrayOf(
-        "Deathmatch",
-        "Tourney",
-        "Team DM",
-        "Last Man",
-        "CTF",
-        null
-    )
-
-    //
-    var l_serverScan: idServerScan = idServerScan()
 
     //    
     enum class scan_state_t {
@@ -673,6 +631,47 @@ object ServerScan {
             private const val MAX_PINGREQUESTS = 32 // how many servers to query at once
             private const val REFRESH_START = 10000 // how long to wait when sending the initial refresh request
             private const val REPLY_TIMEOUT = 999 // how long should we wait for a reply from a game server
+            val gui_filter_game: idCVar = idCVar(
+                "gui_filter_game",
+                "0",
+                CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
+                "Game filter"
+            )
+            val gui_filter_gameType: idCVar = idCVar(
+                "gui_filter_gameType",
+                "0",
+                CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
+                "Gametype filter"
+            )
+            val gui_filter_idle: idCVar = idCVar(
+                "gui_filter_idle",
+                "0",
+                CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
+                "Idle servers filter"
+            )
+            val gui_filter_password: idCVar = idCVar(
+                "gui_filter_password",
+                "0",
+                CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
+                "Password filter"
+            )
+            val gui_filter_players: idCVar = idCVar(
+                "gui_filter_players",
+                "0",
+                CVarSystem.CVAR_GUI or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
+                "Players filter"
+            )
+
+            //
+            val l_gameTypes: Array<String?> = arrayOf(
+                "Deathmatch",
+                "Tourney",
+                "Team DM",
+                "Last Man",
+                "CTF",
+                null
+            )
+            var l_serverScan: idServerScan = idServerScan()
         }
 
         //

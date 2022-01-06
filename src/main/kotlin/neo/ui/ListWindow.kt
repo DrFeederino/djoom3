@@ -111,7 +111,7 @@ object ListWindow {
                 }
                 if (key == KeyInput.K_MOUSE1 || key == KeyInput.K_MOUSE2) {
                     // If the user clicked in the scroller, then ignore it
-                    if (scroller.Contains(gui.CursorX(), gui.CursorY())) {
+                    if (scroller.Contains(gui!!.CursorX(), gui!!.CursorY())) {
                         return ret
                     }
                 }
@@ -125,8 +125,8 @@ object ListWindow {
                     key = KeyInput.K_DOWNARROW
                 }
                 if (key == KeyInput.K_MOUSE1) {
-                    if (Contains(gui.CursorX(), gui.CursorY())) {
-                        val cur = ((gui.CursorY() - actualY - pixelOffset) / vert).toInt() + top
+                    if (Contains(gui!!.CursorX(), gui!!.CursorY())) {
+                        val cur = ((gui!!.CursorY() - actualY - pixelOffset) / vert).toInt() + top
                         if (cur >= 0 && cur < listItems.size()) {
                             if (multipleSel && idKeyInput.IsDown(KeyInput.K_CTRL)) {
                                 if (IsSelected(cur)) {
@@ -135,13 +135,13 @@ object ListWindow {
                                     AddCurrentSel(cur)
                                 }
                             } else {
-                                if (IsSelected(cur) && gui.GetTime() < clickTime + doubleClickSpeed) {
+                                if (IsSelected(cur) && gui!!.GetTime() < clickTime + doubleClickSpeed) {
                                     // Double-click causes ON_ENTER to get run
                                     RunScript(TempDump.etoi(ON.ON_ENTER))
                                     return cmd.toString()
                                 }
                                 SetCurrentSel(cur)
-                                clickTime = gui.GetTime()
+                                clickTime = gui!!.GetTime()
                             }
                         } else {
                             SetCurrentSel(listItems.size() - 1)
@@ -167,10 +167,10 @@ object ListWindow {
                 if (!idStr.Companion.CharIsPrintable(key)) {
                     return ret
                 }
-                if (gui.GetTime() > typedTime + 1000) {
+                if (gui!!.GetTime() > typedTime + 1000) {
                     typed.set("")
                 }
-                typedTime = gui.GetTime()
+                typedTime = gui!!.GetTime()
                 typed.Append(key.toChar())
                 for (i in 0 until listItems.size()) {
                     if (idStr.Companion.Icmpn(typed, listItems[i], typed.Length()) == 0) {
@@ -214,12 +214,12 @@ object ListWindow {
             }
             if (currentSel.Num() > 0) {
                 for (i in 0 until currentSel.Num()) {
-                    gui.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel[i])
+                    gui!!.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel[i])
                 }
             } else {
-                gui.SetStateInt(Str.va("%s_sel_0", listName), 0)
+                gui!!.SetStateInt(Str.va("%s_sel_0", listName), 0)
             }
-            gui.SetStateInt(Str.va("%s_numsel", listName), currentSel.Num())
+            gui!!.SetStateInt(Str.va("%s_numsel", listName), currentSel.Num())
             return ret
         }
 
@@ -376,7 +376,7 @@ object ListWindow {
                     rect.w = width
                 }
             }
-            if (noEvents.oCastBoolean() || !Contains(gui.CursorX(), gui.CursorY())) {
+            if (noEvents.oCastBoolean() || !Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 hover = false
             }
             for (i in top until count) {
@@ -391,7 +391,7 @@ object ListWindow {
                 }
                 rect.y++
                 rect.h = lineHeight - 1
-                color = if (hover && !noEvents.oCastBoolean() && Contains(rect, gui.CursorX(), gui.CursorY())) {
+                color = if (hover && !noEvents.oCastBoolean() && Contains(rect, gui!!.CursorX(), gui!!.CursorY())) {
                     hoverColor.data
                 } else {
                     foreColor.data
@@ -406,7 +406,7 @@ object ListWindow {
                         if (tab >= tabInfo.Num()) {
                             Common.common.Warning(
                                 "idListWindow::Draw: gui '%s' window '%s' tabInfo.Num() exceeded",
-                                gui.GetSourceFile(),
+                                gui!!.GetSourceFile(),
                                 name
                             )
                             break
@@ -448,7 +448,7 @@ object ListWindow {
                                     iconRect.y,
                                     iconRect.w,
                                     iconRect.h,
-                                    iconMat,
+                                    iconMat!!,
                                     idVec4(1.0f, 1.0f, 1.0f, 1.0f),
                                     1.0f,
                                     1.0f
@@ -495,7 +495,7 @@ object ListWindow {
             var strName: idStr
             listItems.clear()
             for (i in 0 until Window.MAX_LIST_ITEMS) {
-                if (gui.State().GetString(Str.va("%s_item_%d", listName, i), "", str)) {
+                if (gui!!.State().GetString(Str.va("%s_item_%d", listName, i), "", str)) {
                     if (str.Length() != 0) {
                         listItems.add(str)
                     }
@@ -510,7 +510,7 @@ object ListWindow {
             } else {
                 scroller.SetRange(0.0f, listItems.size() - fit + 1.0f, 1.0f)
             }
-            SetCurrentSel(gui.State().GetInt(Str.va("%s_sel_0", listName)))
+            SetCurrentSel(gui!!.State().GetInt(Str.va("%s_sel_0", listName)))
             var value = scroller.GetValue()
             if (value > listItems.size() - 1) {
                 value = (listItems.size() - 1).toFloat()
@@ -568,7 +568,7 @@ object ListWindow {
                 val mat: idMaterial?
                 ParseString(src, matName)
                 mat = DeclManager.declManager.FindMaterial(matName)
-                mat.SetImageClassifications(1) // just for resource tracking
+                mat!!.SetImageClassifications(1) // just for resource tracking
                 if (mat != null && !mat.TestMaterialFlag(Material.MF_DEFAULTED)) {
                     mat.SetSort(Material.SS_GUI.toFloat())
                 }
@@ -586,7 +586,7 @@ object ListWindow {
             top = 0
             sizeBias = 0f
             horizontal = false
-            scroller = idSliderWindow(dc!!, gui)
+            scroller = idSliderWindow(dc!!, gui!!)
             multipleSel = false
         }
 
@@ -606,7 +606,7 @@ object ListWindow {
                 scrollerName = "_scrollerWinH"
             }
             val mat = DeclManager.declManager.FindMaterial(barImage)
-            mat.SetSort(Material.SS_GUI.toFloat())
+            mat!!.SetSort(Material.SS_GUI.toFloat())
             sizeBias = mat.GetImageWidth().toFloat()
             val scrollRect = idRectangle()
             if (horizontal) {

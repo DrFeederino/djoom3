@@ -551,7 +551,7 @@ object AASBuild {
             i = 0
             while (i < mapBrush.GetNumSides()) {
                 mapSide = mapBrush.GetSide(i)
-                mat = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())
+                mat = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())!!
                 contents = contents or mat.GetContentFlags()
                 plane = mapSide.GetPlane()
                 plane.FixDegeneracies(Plane.DEGENERATE_DIST_EPSILON)
@@ -600,8 +600,8 @@ object AASBuild {
             val d2 = idVec3()
             var brush: idBrush
             val mesh: idSurface_Patch
-            val mat: Material.idMaterial?
-            mat = DeclManager.declManager.FindMaterial(mapPatch.GetMaterial())
+            val mat: Material.idMaterial
+            mat = DeclManager.declManager.FindMaterial(mapPatch.GetMaterial())!!
             contents = ContentsForAAS(mat.GetContentFlags())
             if (0 == contents) {
                 return brushList

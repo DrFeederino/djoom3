@@ -51,54 +51,60 @@ import java.nio.*
 /**
  *
  */
-object Image {
-    //
-    const val MAX_IMAGE_NAME = 256
+class Image {
+    companion object {
+        //
+        const val MAX_IMAGE_NAME = 256
 
-    //
-    // pixel format flags
-    const val DDSF_ALPHAPIXELS = 0x00000001
+        //
+        // pixel format flags
+        const val DDSF_ALPHAPIXELS = 0x00000001
 
-    //
-    // surface description flags
-    const val DDSF_CAPS = 0x00000001
+        //
+        // surface description flags
+        const val DDSF_CAPS = 0x00000001
 
-    //
-    // dwCaps1 flags
-    const val DDSF_COMPLEX = 0x00000008
-    const val DDSF_DEPTH = 0x00800000
-    const val DDSF_FOURCC = 0x00000004
-    const val DDSF_HEIGHT = 0x00000002
+        //
+        // dwCaps1 flags
+        const val DDSF_COMPLEX = 0x00000008
+        const val DDSF_DEPTH = 0x00800000
+        const val DDSF_FOURCC = 0x00000004
+        const val DDSF_HEIGHT = 0x00000002
 
-    //
-    // our extended flags
-    const val DDSF_ID_INDEXCOLOR = 0x10000000
-    const val DDSF_ID_MONOCHROME = 0x20000000
-    const val DDSF_LINEARSIZE = 0x00080000
-    const val DDSF_MIPMAP = 0x00400000
-    const val DDSF_MIPMAPCOUNT = 0x00020000
-    const val DDSF_PITCH = 0x00000008
-    const val DDSF_PIXELFORMAT = 0x00001000
-    const val DDSF_RGB = 0x00000040
-    const val DDSF_RGBA = 0x00000041
-    const val DDSF_TEXTURE = 0x00001000
-    const val DDSF_WIDTH = 0x00000004
+        //
+        // our extended flags
+        const val DDSF_ID_INDEXCOLOR = 0x10000000
+        const val DDSF_ID_MONOCHROME = 0x20000000
+        const val DDSF_LINEARSIZE = 0x00080000
+        const val DDSF_MIPMAP = 0x00400000
+        const val DDSF_MIPMAPCOUNT = 0x00020000
+        const val DDSF_PITCH = 0x00000008
+        const val DDSF_PIXELFORMAT = 0x00001000
+        const val DDSF_RGB = 0x00000040
+        const val DDSF_RGBA = 0x00000041
+        const val DDSF_TEXTURE = 0x00001000
+        const val DDSF_WIDTH = 0x00000004
 
-    //
-    const val MAX_TEXTURE_LEVELS = 14
-    private const val DDS_MAKEFOURCC_DXT1 = 'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('1'.code shl 24)
-    private const val DDS_MAKEFOURCC_DXT3 = 'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('3'.code shl 24)
+        //
+        const val MAX_TEXTURE_LEVELS = 14
+        private const val DDS_MAKEFOURCC_DXT1 =
+            'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('1'.code shl 24)
+        private const val DDS_MAKEFOURCC_DXT3 =
+            'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('3'.code shl 24)
 
-    //
-    private const val DDS_MAKEFOURCC_DXT5 = 'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('5'.code shl 24)
-    private const val DDS_MAKEFOURCC_RXGB = 'R'.code shl 0 or ('X'.code shl 8) or ('G'.code shl 16) or ('B'.code shl 24)
+        //
+        private const val DDS_MAKEFOURCC_DXT5 =
+            'D'.code shl 0 or ('X'.code shl 8) or ('T'.code shl 16) or ('5'.code shl 24)
+        private const val DDS_MAKEFOURCC_RXGB =
+            'R'.code shl 0 or ('X'.code shl 8) or ('G'.code shl 16) or ('B'.code shl 24)
 
-    // do this with a pointer, in case we want to make the actual manager
-    // a private virtual subclass
-    private val imageManager: idImageManager = idImageManager()
+        // do this with a pointer, in case we want to make the actual manager
+        // a private virtual subclass
+        private val imageManager: idImageManager = idImageManager()
 
-    // pointer to global list for the rest of the system
-    var globalImages: idImageManager = Image.imageManager
+        // pointer to global list for the rest of the system
+        var globalImages: idImageManager = Image.imageManager
+    }
     fun DDS_MAKEFOURCC(a: Int, b: Int, c: Int, d: Int): Int {
         return a shl 0 or (b shl 8) or (c shl 16) or (d shl 24)
     }

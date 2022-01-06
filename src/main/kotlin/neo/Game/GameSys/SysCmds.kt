@@ -902,8 +902,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Kick_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Kick_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

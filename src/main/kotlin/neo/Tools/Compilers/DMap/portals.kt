@@ -591,7 +591,7 @@ object portals {
                 // have origins outside the light
                 mapEnt.epairs.GetString("texture", "", v)
                 if (TempDump.isNotNullOrEmpty(v[0])) {
-                    val mat: Material.idMaterial = DeclManager.declManager.FindMaterial(v[0])
+                    val mat: Material.idMaterial = DeclManager.declManager.FindMaterial(v[0])!!
                     if (mat.IsFogLight()) {
                         i++
                         continue

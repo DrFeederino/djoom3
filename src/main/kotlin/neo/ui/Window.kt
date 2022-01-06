@@ -226,7 +226,7 @@ object Window {
         var foreColor: idWinVec4 = idWinVec4()
 
         //
-        protected var gui: idUserInterfaceLocal
+        protected var gui: idUserInterfaceLocal?
 
         //
         var hideCursor: idWinBool = idWinBool()
@@ -290,7 +290,7 @@ object Window {
         protected var xOffset = 0f
         protected var yOffset = 0f
 
-        constructor(gui: idUserInterfaceLocal) {
+        constructor(gui: idUserInterfaceLocal?) {
             dc = null
             this.gui = gui
             CommonInit()
@@ -329,7 +329,7 @@ object Window {
             // only one child can have the focus
             var lastFocus: idWindow? = null
             if (w.flags and WIN_CANFOCUS != 0) {
-                lastFocus = gui.GetDesktop().focusedChild
+                lastFocus = gui!!.GetDesktop().focusedChild
                 if (lastFocus != null) {
                     lastFocus.flags = lastFocus.flags and WIN_FOCUS.inv()
                     lastFocus.LoseFocus()
@@ -347,7 +347,7 @@ object Window {
                 }
                 w.flags = w.flags or WIN_FOCUS
                 w.GainFocus()
-                gui.GetDesktop().focusedChild = w
+                gui!!.GetDesktop().focusedChild = w
             }
             return lastFocus
         }
@@ -366,7 +366,7 @@ object Window {
             }
             w.flags = w.flags or WIN_CAPTURE
             w.GainCapture()
-            gui.GetDesktop().captureChild = w
+            gui!!.GetDesktop().captureChild = w
             return last
         }
 
@@ -492,7 +492,7 @@ object Window {
         }
 
         fun GetGui(): idUserInterfaceLocal {
-            return gui
+            return gui!!
         }
 
         fun Contains(x: Float, y: Float): Boolean {
@@ -778,7 +778,7 @@ object Window {
                         clientRect.h
                     )
                     buff += out
-                    out = String.format("Cursor: %0.1f : %0.1f\n", gui.CursorX(), gui.CursorY())
+                    out = String.format("Cursor: %0.1f : %0.1f\n", gui!!.CursorX(), gui!!.CursorY())
                     buff += out
 
                     //idRectangle tempRect = textRect;
@@ -991,7 +991,7 @@ object Window {
                         dw.win!!.Parse(src, rebuild)
                         RestoreExpressionParseState()
                     } else {
-                        val win = idWindow(dc!!, gui)
+                        val win = idWindow(dc!!, gui!!)
                         SaveExpressionParseState()
                         win.Parse(src, rebuild)
                         RestoreExpressionParseState()
@@ -1014,7 +1014,7 @@ object Window {
                         }
                     }
                 } else if (token.toString() == "editDef") {
-                    val win = idEditWindow(dc!!, gui)
+                    val win = idEditWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1024,7 +1024,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "choiceDef") {
-                    val win = idChoiceWindow(dc!!, gui)
+                    val win = idChoiceWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1034,7 +1034,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "sliderDef") {
-                    val win = idSliderWindow(dc!!, gui)
+                    val win = idSliderWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1044,7 +1044,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "markerDef") {
-                    val win = idMarkerWindow(dc!!, gui)
+                    val win = idMarkerWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1054,7 +1054,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "bindDef") {
-                    val win = idBindWindow(dc!!, gui)
+                    val win = idBindWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1064,7 +1064,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "listDef") {
-                    val win = idListWindow(dc!!, gui)
+                    val win = idListWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1074,7 +1074,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "fieldDef") {
-                    val win = idFieldWindow(dc!!, gui)
+                    val win = idFieldWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1084,7 +1084,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "renderDef") {
-                    val win = idRenderWindow(dc!!, gui)
+                    val win = idRenderWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1094,7 +1094,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "gameSSDDef") {
-                    val win = idGameSSDWindow(dc!!, gui)
+                    val win = idGameSSDWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1104,7 +1104,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "gameBearShootDef") {
-                    val win = idGameBearShootWindow(dc!!, gui)
+                    val win = idGameBearShootWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1114,7 +1114,7 @@ object Window {
                     dwt.win = win
                     drawWindows.Append(dwt)
                 } else if (token.toString() == "gameBustOutDef") {
-                    val win = idGameBustOutWindow(dc!!, gui)
+                    val win = idGameBustOutWindow(dc!!, gui!!)
                     SaveExpressionParseState()
                     win.Parse(src, rebuild)
                     RestoreExpressionParseState()
@@ -1233,12 +1233,12 @@ object Window {
                     // FIXME: how about we add the var to the desktop instead of this window so it won't get deleted
                     //        when this window is destoyed which even happens during parsing with simple windows ?
                     //definedVars.Append(var);
-                    gui.GetDesktop().definedVars.Append(`var`)
-                    gui.GetDesktop().regList.AddReg(
+                    gui!!.GetDesktop().definedVars.Append(`var`)
+                    gui!!.GetDesktop().regList.AddReg(
                         work.toString(),
                         TempDump.etoi(REGTYPE.VEC4),
                         src,
-                        gui.GetDesktop(),
+                        gui!!.GetDesktop(),
                         `var`
                     )
 
@@ -1354,7 +1354,7 @@ object Window {
                 if (expressionRegisters.Num() != 0 && ops.Num() != 0) {
                     EvalRegs()
                 }
-                RunTimeEvents(gui.GetTime())
+                RunTimeEvents(gui!!.GetTime())
                 CalcRects(0f, 0f)
                 dc!!.SetCursor(TempDump.etoi(CURSOR.CURSOR_ARROW))
             }
@@ -1365,13 +1365,13 @@ object Window {
                     if (event.evValue == KeyInput.K_MOUSE1) {
                         if (0 == event.evValue2 && GetCaptureChild() != null) {
                             GetCaptureChild()!!.LoseCapture()
-                            gui.GetDesktop().captureChild = null
+                            gui!!.GetDesktop().captureChild = null
                             return ""
                         }
                         var c = children.Num()
                         while (--c >= 0) {
                             if (children[c].visible.data
-                                && children[c].Contains(children[c].drawRect, gui.CursorX(), gui.CursorY())
+                                && children[c].Contains(children[c].drawRect, gui!!.CursorX(), gui!!.CursorY())
                                 && !children[c].noEvents.data
                             ) {
                                 val child = children[c]
@@ -1382,7 +1382,7 @@ object Window {
                                         SetCapture(child)
                                     }
                                 }
-                                if (child.Contains(child.clientRect, gui.CursorX(), gui.CursorY())) {
+                                if (child.Contains(child.clientRect, gui!!.CursorX(), gui!!.CursorY())) {
                                     //if ((gui_edit.GetBool() && (child.flags & WIN_SELECTED)) || (!gui_edit.GetBool() && (child.flags & WIN_MOVABLE))) {
                                     //	SetCapture(child);
                                     //}
@@ -1415,13 +1415,13 @@ object Window {
                     } else if (event.evValue == KeyInput.K_MOUSE2) {
                         if (0 == event.evValue2 && GetCaptureChild() != null) {
                             GetCaptureChild()!!.LoseCapture()
-                            gui.GetDesktop().captureChild = null
+                            gui!!.GetDesktop().captureChild = null
                             return ""
                         }
                         var c = children.Num()
                         while (--c >= 0) {
                             if (children[c].visible.data
-                                && children[c].Contains(children[c].drawRect, gui.CursorX(), gui.CursorY())
+                                && children[c].Contains(children[c].drawRect, gui!!.CursorX(), gui!!.CursorY())
                                 && !children[c].noEvents.data
                             ) {
                                 val child = children[c]
@@ -1431,8 +1431,8 @@ object Window {
                                 }
                                 if (child.Contains(
                                         child.clientRect,
-                                        gui.CursorX(),
-                                        gui.CursorY()
+                                        gui!!.CursorX(),
+                                        gui!!.CursorY()
                                     ) || GetCaptureChild() === child
                                 ) {
                                     if (gui_edit.GetBool() && child.flags and WIN_SELECTED != 0 || !gui_edit.GetBool() && child.flags and WIN_MOVABLE != 0) {
@@ -1452,7 +1452,7 @@ object Window {
                         if (gui_edit.GetBool()) {
                             val c = children.Num()
                             for (i in 0 until c) {
-                                if (children[i].drawRect.Contains(gui.CursorX(), gui.CursorY())) {
+                                if (children[i].drawRect.Contains(gui!!.CursorX(), gui!!.CursorY())) {
                                     if (event.evValue2 != 0) {
                                         children[i].flags = children[i].flags xor WIN_SELECTED
                                         if (children[i].flags and WIN_SELECTED != 0) {
@@ -1519,7 +1519,7 @@ object Window {
                                     // We didn't find anything, so go back up to our parent
                                     child = parent
                                     parent = child.GetParent()
-                                    if (parent === gui.GetDesktop()) {
+                                    if (parent === gui!!.GetDesktop()) {
                                         // We got back to the desktop, so wrap around but don't actually go to the desktop
                                         parent = null
                                         child = null
@@ -1573,14 +1573,14 @@ object Window {
                     }
                 }
             }
-            gui.GetReturnCmd().set(cmd)
-            if (gui.GetPendingCmd().Length() != 0) {
-                gui.GetReturnCmd().plusAssign(" ; ")
-                gui.GetReturnCmd().plusAssign(gui.GetPendingCmd())
-                gui.GetPendingCmd().Clear()
+            gui!!.GetReturnCmd().set(cmd)
+            if (gui!!.GetPendingCmd().Length() != 0) {
+                gui!!.GetReturnCmd().plusAssign(" ; ")
+                gui!!.GetReturnCmd().plusAssign(gui!!.GetPendingCmd())
+                gui!!.GetPendingCmd().Clear()
             }
             cmd.set("")
-            return gui.GetReturnCmd().toString()
+            return gui!!.GetReturnCmd().toString()
         }
 
         fun CalcRects(x: Float, y: Float) {
@@ -1604,7 +1604,7 @@ object Window {
             if (RenderSystem_init.r_skipGuiShaders!!.GetInteger() == 1 || dc == null) {
                 return
             }
-            val time = gui.GetTime()
+            val time = gui!!.GetTime()
             if (flags and WIN_DESKTOP != 0 && RenderSystem_init.r_skipGuiShaders!!.GetInteger() != 3) {
                 RunTimeEvents(time)
             }
@@ -1616,7 +1616,7 @@ object Window {
                     Str.va(
                         " %0.1f seconds\n%s",
                         (time - timeLine).toFloat() / 1000,
-                        gui.State().GetString("name")
+                        gui!!.State().GetString("name")
                     ), 0.35f, 0, idDeviceContext.colorWhite, idRectangle(100f, 0f, 80f, 80f), false
                 )
             }
@@ -1627,8 +1627,8 @@ object Window {
                         "x: %d y: %d  cursorx: %d cursory: %d",
                         rect.x().toInt(),
                         rect.y().toInt(),
-                        gui.CursorX().toInt(),
-                        gui.CursorY().toInt()
+                        gui!!.CursorX().toInt(),
+                        gui!!.CursorY().toInt()
                     )
                 )
                 dc!!.DrawText(
@@ -1692,14 +1692,14 @@ object Window {
             drawCursorTotal++
             if (gui_edit.GetBool()
                 || (flags and WIN_DESKTOP != 0 && 0 == flags and WIN_NOCURSOR && !hideCursor.data
-                        && (gui.Active() || flags and WIN_MENUGUI != 0))
+                        && (gui!!.Active() || flags and WIN_MENUGUI != 0))
             ) {
                 dc!!.SetTransformInfo(Vector.getVec3_origin(), idMat3.getMat3_identity())
-                gui.DrawCursor()
+                gui!!.DrawCursor()
             }
             if (gui_debug.GetInteger() != 0 && flags and WIN_DESKTOP != 0) {
                 dc!!.EnableClipping(false)
-                str = idStr(String.format("x: %.1f y: %.1f", gui.CursorX(), gui.CursorY()))
+                str = idStr(String.format("x: %.1f y: %.1f", gui!!.CursorX(), gui!!.CursorY()))
                 dc!!.DrawText(
                     str.toString(),
                     0.25f,
@@ -1709,7 +1709,7 @@ object Window {
                     false
                 )
                 dc!!.DrawText(
-                    gui.GetSourceFile(),
+                    gui!!.GetSourceFile(),
                     0.25f,
                     0,
                     idDeviceContext.colorWhite,
@@ -1882,8 +1882,8 @@ object Window {
                 val child = children[--c]
                 if (child.visible.data && !child.noEvents.data && child.Contains(
                         child.drawRect,
-                        gui.CursorX(),
-                        gui.CursorY()
+                        gui!!.CursorX(),
+                        gui!!.CursorY()
                     )
                 ) {
                     dc!!.SetCursor(child.cursor.code)
@@ -1893,7 +1893,7 @@ object Window {
                             overChild!!.MouseExit()
                             str = overChild!!.cmd.toString()
                             if (TempDump.isNotNullOrEmpty(str)) {
-                                gui.GetDesktop().AddCommand(str)
+                                gui!!.GetDesktop().AddCommand(str)
                                 overChild!!.cmd.set("")
                             }
                         }
@@ -1901,7 +1901,7 @@ object Window {
                         overChild!!.MouseEnter()
                         str = overChild!!.cmd.toString()
                         if (TempDump.isNotNullOrEmpty(str)) {
-                            gui.GetDesktop().AddCommand(str)
+                            gui!!.GetDesktop().AddCommand(str)
                             overChild!!.cmd.set("")
                         }
                     } else {
@@ -1916,7 +1916,7 @@ object Window {
                 overChild!!.MouseExit()
                 str = overChild!!.cmd.toString()
                 if (TempDump.isNotNullOrEmpty(str)) {
-                    gui.GetDesktop().AddCommand(str)
+                    gui!!.GetDesktop().AddCommand(str)
                     overChild!!.cmd.set("")
                 }
                 overChild = null
@@ -1944,7 +1944,7 @@ object Window {
                     Redraw(0.0f, 0.0f)
                 }
                 if (background != null && background!!.CinematicLength() != 0) {
-                    background!!.UpdateCinematic(gui.GetTime())
+                    background!!.UpdateCinematic(gui!!.GetTime())
                 }
             }
         }
@@ -1978,11 +1978,11 @@ object Window {
             var winName = idStr("")
             dw.simp = null
             dw.win = null
-            var offset = gui.GetDesktop().GetWinVarOffset(trans.data!!, dw)
+            var offset = gui!!.GetDesktop().GetWinVarOffset(trans.data!!, dw)
             if (dw.win != null || dw.simp != null) {
                 winName = idStr(if (dw.win != null) dw.win!!.GetName() else dw.simp!!.name.toString())
             }
-            fdw = gui.GetDesktop().FindChildByName(winName.toString())
+            fdw = gui!!.GetDesktop().FindChildByName(winName.toString())
             if (offset != -1 && fdw != null && (fdw.win != null || fdw.simp != null)) {
                 savefile.WriteInt(offset)
                 WriteSaveGameString(winName.toString(), savefile)
@@ -2296,7 +2296,7 @@ object Window {
             var c = transitions.Num()
             i = 0
             while (i < c) {
-                val dw = gui.GetDesktop().FindChildByName(transitions[i].data!!.c_str())
+                val dw = gui!!.GetDesktop().FindChildByName(transitions[i].data!!.c_str())
                 //		delete transitions[i].data;
                 transitions[i].data = null
                 if (dw != null && (dw.win != null || dw.simp != null)) { //TODO:
@@ -2425,12 +2425,12 @@ object Window {
         fun AddTransition(dest: idWinVar, from: idVec4, to: idVec4, time: Int, accelTime: Float, decelTime: Float) {
             val data = idTransitionData()
             data.data = dest
-            data.interp.Init(gui.GetTime().toFloat(), accelTime * time, decelTime * time, time.toFloat(), from, to)
+            data.interp.Init(gui!!.GetTime().toFloat(), accelTime * time, decelTime * time, time.toFloat(), from, to)
             transitions.Append(data)
         }
 
         fun ResetTime(t: Int) {
-            timeLine = gui.GetTime() - t
+            timeLine = gui!!.GetTime() - t
             var i: Int
             var c = timeLineEvents.Num()
             i = 0
@@ -2445,7 +2445,7 @@ object Window {
             i = 0
             while (i < c) {
                 val data = transitions[i]
-                if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
+                if (data.interp.IsDone(gui!!.GetTime().toFloat()) && data.data != null) {
                     transitions.RemoveIndex(i)
                     i--
                     c--
@@ -2456,7 +2456,7 @@ object Window {
 
         fun ResetCinematics() {
             if (background != null) {
-                background!!.ResetCinematicTime(gui.GetTime())
+                background!!.ResetCinematicTime(gui!!.GetTime())
             }
         }
 
@@ -2586,7 +2586,7 @@ object Window {
                 i++
             }
             if (expressionRegisters.Num() == precompiled.MAX_EXPRESSION_REGISTERS) {
-                Common.common.Warning("expressionConstant: gui %s hit MAX_EXPRESSION_REGISTERS", gui.GetSourceFile())
+                Common.common.Warning("expressionConstant: gui %s hit MAX_EXPRESSION_REGISTERS", gui!!.GetSourceFile())
                 return 0
             }
             val c = expressionRegisters.Num()
@@ -2666,13 +2666,13 @@ object Window {
 
         fun GetFocusedChild(): idWindow? {
             return if (flags and WIN_DESKTOP != 0) {
-                gui.GetDesktop().focusedChild
+                gui!!.GetDesktop().focusedChild
             } else null
         }
 
         fun GetCaptureChild(): idWindow? {
             return if (flags and WIN_DESKTOP != 0) {
-                gui.GetDesktop().captureChild
+                gui!!.GetDesktop().captureChild
             } else null
         }
 
@@ -3000,7 +3000,7 @@ object Window {
                 } else {
                     r = data.data as idWinRectangle?
                 }
-                if (data.interp.IsDone(gui.GetTime().toFloat()) && data.data != null) {
+                if (data.interp.IsDone(gui!!.GetTime().toFloat()) && data.data != null) {
                     if (v4 != null) {
                         v4.set(data.interp.GetEndValue())
                     } else `val`?.set(data.interp.GetEndValue()[0]) ?: r!!.set(data.interp.GetEndValue())
@@ -3008,14 +3008,14 @@ object Window {
                     clear = false
                     if (data.data != null) {
                         if (v4 != null) {
-                            v4.set(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
-                        } else `val`?.set(data.interp.GetCurrentValue(gui.GetTime().toFloat())[0])
-                            ?: r!!.set(data.interp.GetCurrentValue(gui.GetTime().toFloat()))
+                            v4.set(data.interp.GetCurrentValue(gui!!.GetTime().toFloat()))
+                        } else `val`?.set(data.interp.GetCurrentValue(gui!!.GetTime().toFloat())[0])
+                            ?: r!!.set(data.interp.GetCurrentValue(gui!!.GetTime().toFloat()))
                     } else {
                         Common.common.Warning(
                             "Invalid transitional data for window %s in gui %s",
                             GetName(),
-                            gui.GetSourceFile()
+                            gui!!.GetSourceFile()
                         )
                     }
                 }
@@ -3032,20 +3032,20 @@ object Window {
                 return
             }
             if (timeLine == -1) {
-                timeLine = gui.GetTime()
+                timeLine = gui!!.GetTime()
             }
             cmd.set("")
             val c = timeLineEvents.Num()
             if (c > 0) {
                 for (i in 0 until c) {
-                    if (timeLineEvents[i].pending && gui.GetTime() - timeLine >= timeLineEvents[i].time) {
+                    if (timeLineEvents[i].pending && gui!!.GetTime() - timeLine >= timeLineEvents[i].time) {
                         timeLineEvents[i].pending = false
                         RunScriptList(timeLineEvents[i].event)
                     }
                 }
             }
-            if (gui.Active()) {
-                gui.GetPendingCmd().plusAssign(cmd)
+            if (gui!!.Active()) {
+                gui!!.GetPendingCmd().plusAssign(cmd)
             }
         }
 
@@ -3111,7 +3111,7 @@ object Window {
 
         protected fun ExpressionTemporary(): Int {
             if (expressionRegisters.Num() == precompiled.MAX_EXPRESSION_REGISTERS) {
-                Common.common.Warning("expressionTemporary: gui %s hit MAX_EXPRESSION_REGISTERS", gui.GetSourceFile())
+                Common.common.Warning("expressionTemporary: gui %s hit MAX_EXPRESSION_REGISTERS", gui!!.GetSourceFile())
                 return 0
             }
             var i = expressionRegisters.Num()
@@ -3122,7 +3122,7 @@ object Window {
 
         protected fun ExpressionOp(): wexpOp_t {
             if (ops.Num() == precompiled.MAX_EXPRESSION_OPS) {
-                Common.common.Warning("expressionOp: gui %s hit MAX_EXPRESSION_OPS", gui.GetSourceFile())
+                Common.common.Warning("expressionOp: gui %s hit MAX_EXPRESSION_OPS", gui!!.GetSourceFile())
                 return ops[0]
             }
             val wop = wexpOp_t()
@@ -3374,7 +3374,7 @@ object Window {
             }
 
             // copy the local and global parameters
-            registers[TempDump.etoi(wexpRegister_t.WEXP_REG_TIME)] = gui.GetTime().toFloat()
+            registers[TempDump.etoi(wexpRegister_t.WEXP_REG_TIME)] = gui!!.GetTime().toFloat()
             i = 0
             while (i < oc) {
                 op = ops[i]
@@ -3389,7 +3389,7 @@ object Window {
                     wexpOpType_t.WOP_TYPE_MULTIPLY -> registers[op.c] =
                         registers[op.getA()] * registers[op.b]
                     wexpOpType_t.WOP_TYPE_DIVIDE -> if (registers[op.b] == 0.0f) {
-                        Common.common.Warning("Divide by zero in window '%s' in %s", GetName(), gui.GetSourceFile())
+                        Common.common.Warning("Divide by zero in window '%s' in %s", GetName(), gui!!.GetSourceFile())
                         registers[op.c] = registers[op.getA()]
                     } else {
                         registers[op.c] = registers[op.getA()] / registers[op.b]

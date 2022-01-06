@@ -150,8 +150,8 @@ object GameSSDWindow {
 
         fun InitCrosshairs() {
             crosshairMaterial[CROSSHAIR_STANDARD] =
-                DeclManager.declManager.FindMaterial(CROSSHAIR_STANDARD_MATERIAL)
-            crosshairMaterial[CROSSHAIR_SUPER] = DeclManager.declManager.FindMaterial(CROSSHAIR_SUPER_MATERIAL)
+                DeclManager.declManager.FindMaterial(CROSSHAIR_STANDARD_MATERIAL)!!
+            crosshairMaterial[CROSSHAIR_SUPER] = DeclManager.declManager.FindMaterial(CROSSHAIR_SUPER_MATERIAL)!!
             crosshairWidth = 64f
             crosshairHeight = 64f
             currentCrosshair = CROSSHAIR_STANDARD
@@ -1596,8 +1596,8 @@ object GameSSDWindow {
                 //The last thing to draw is the crosshair
                 val cursor = idVec2()
                 //GetCursor(cursor);
-                cursor.x = gui.CursorX()
-                cursor.y = gui.CursorY()
+                cursor.x = gui!!.CursorX()
+                cursor.y = gui!!.CursorY()
                 crosshair.Draw(dc!!, cursor)
             }
         }
@@ -1616,13 +1616,13 @@ object GameSSDWindow {
             }
             entities.Append(pointsEnt!!)
             gameStats.score += points
-            gui.SetStateString("player_score", Str.va("%d", gameStats.score))
+            gui!!.SetStateString("player_score", Str.va("%d", gameStats.score))
         }
 
         fun AddDamage(damage: Int) {
             gameStats.health -= damage
-            gui.SetStateString("player_health", Str.va("%d", gameStats.health))
-            gui.HandleNamedEvent("playerDamage")
+            gui!!.SetStateString("player_health", Str.va("%d", gameStats.health))
+            gui!!.HandleNamedEvent("playerDamage")
             if (gameStats.health <= 0) {
                 //The player is dead
                 GameOver()
@@ -1630,7 +1630,7 @@ object GameSSDWindow {
         }
 
         fun OnNuke() {
-            gui.HandleNamedEvent("nuke")
+            gui!!.HandleNamedEvent("nuke")
 
             //Destory All Asteroids
             for (i in 0 until entities.Num()) {
@@ -1663,7 +1663,7 @@ object GameSSDWindow {
         }
 
         fun OnRescueAll() {
-            gui.HandleNamedEvent("rescueAll")
+            gui!!.HandleNamedEvent("rescueAll")
 
             //Rescue All Astronauts
             for (i in 0 until entities.Num()) {
@@ -1917,7 +1917,7 @@ object GameSSDWindow {
 
         private fun GameOver() {
             StopGame()
-            gui.HandleNamedEvent("gameOver")
+            gui!!.HandleNamedEvent("gameOver")
         }
 
         //Starting the Game
@@ -1947,7 +1947,7 @@ object GameSSDWindow {
                 (gameStats.levelStats.hitCount.toFloat() / gameStats.levelStats.shotCount.toFloat() * 100.0f).toInt()
             }
             var accuracyPoints: Int = Lib.Max(0, accuracy - 50) * 20
-            gui.SetStateString("player_accuracy_score", Str.va("%d", accuracyPoints))
+            gui!!.SetStateString("player_accuracy_score", Str.va("%d", accuracyPoints))
             gameStats.score += accuracyPoints
             val saveAccuracy: Int
             val totalAst = gameStats.levelStats.savedAstronauts + gameStats.levelStats.killedAstronauts
@@ -1957,7 +1957,7 @@ object GameSSDWindow {
                 (gameStats.levelStats.savedAstronauts.toFloat() / totalAst.toFloat() * 100.0f).toInt()
             }
             accuracyPoints = Lib.Max(0, saveAccuracy - 50) * 20
-            gui.SetStateString("save_accuracy_score", Str.va("%d", accuracyPoints))
+            gui!!.SetStateString("save_accuracy_score", Str.va("%d", accuracyPoints))
             gameStats.score += accuracyPoints
             StopSuperBlaster()
             gameStats.nextLevel++
@@ -1969,13 +1969,13 @@ object GameSSDWindow {
                 //Make sure we don't go above the levelcount
                 //min(gameStats.nextLevel, levelCount-1);
                 StopGame()
-                gui.HandleNamedEvent("levelComplete")
+                gui!!.HandleNamedEvent("levelComplete")
             }
         }
 
         private fun GameComplete() {
             StopGame()
-            gui.HandleNamedEvent("gameComplete")
+            gui!!.HandleNamedEvent("gameComplete")
         }
 
         private fun UpdateGame() {
@@ -2008,8 +2008,8 @@ object GameSSDWindow {
                 //Find if we are targeting and enemy
                 val cursor = idVec2()
                 //GetCursor(cursor);
-                cursor.x = gui.CursorX()
-                cursor.y = gui.CursorY()
+                cursor.x = gui!!.CursorX()
+                cursor.y = gui!!.CursorY()
                 gameStats.levelStats.targetEnt = EntityHitTest(cursor)
 
                 //Update from back to front
@@ -2126,8 +2126,8 @@ object GameSSDWindow {
             val cursorWorld = GetCursorWorld()
             val cursor = idVec2()
             //GetCursor(cursor);
-            cursor.x = gui.CursorX()
-            cursor.y = gui.CursorY()
+            cursor.x = gui!!.CursorX()
+            cursor.y = gui!!.CursorY()
             if (key == KeyInput.K_MOUSE1) {
                 gameStats.levelStats.shotCount++
                 if (gameStats.levelStats.targetEnt != null) {
@@ -2248,15 +2248,15 @@ object GameSSDWindow {
         }
 
         private fun RefreshGuiData() {
-            gui.SetStateString("nextLevel", Str.va("%d", gameStats.nextLevel + 1))
-            gui.SetStateString("currentLevel", Str.va("%d", gameStats.currentLevel + 1))
+            gui!!.SetStateString("nextLevel", Str.va("%d", gameStats.nextLevel + 1))
+            gui!!.SetStateString("currentLevel", Str.va("%d", gameStats.currentLevel + 1))
             val accuracy: Float
             accuracy = if (0 == gameStats.levelStats.shotCount) {
                 0f
             } else {
                 gameStats.levelStats.hitCount.toFloat() / gameStats.levelStats.shotCount.toFloat() * 100.0f
             }
-            gui.SetStateString("player_accuracy", Str.va("%d%%", accuracy.toInt()))
+            gui!!.SetStateString("player_accuracy", Str.va("%d%%", accuracy.toInt()))
             val saveAccuracy: Float
             val totalAst = gameStats.levelStats.savedAstronauts + gameStats.levelStats.killedAstronauts
             saveAccuracy = if (0 == totalAst) {
@@ -2264,32 +2264,32 @@ object GameSSDWindow {
             } else {
                 gameStats.levelStats.savedAstronauts.toFloat() / totalAst.toFloat() * 100.0f
             }
-            gui.SetStateString("save_accuracy", Str.va("%d%%", saveAccuracy.toInt()))
+            gui!!.SetStateString("save_accuracy", Str.va("%d%%", saveAccuracy.toInt()))
             if (gameStats.levelStats.targetEnt != null) {
                 var dist = (gameStats.levelStats.targetEnt!!.position.z / 100.0f).toInt()
                 dist *= 100
-                gui.SetStateString("target_info", Str.va("%d meters", dist))
+                gui!!.SetStateString("target_info", Str.va("%d meters", dist))
             } else {
-                gui.SetStateString("target_info", "No Target")
+                gui!!.SetStateString("target_info", "No Target")
             }
-            gui.SetStateString("player_health", Str.va("%d", gameStats.health))
-            gui.SetStateString("player_score", Str.va("%d", gameStats.score))
-            gui.SetStateString("player_prebonusscore", Str.va("%d", gameStats.prebonusscore))
-            gui.SetStateString(
+            gui!!.SetStateString("player_health", Str.va("%d", gameStats.health))
+            gui!!.SetStateString("player_score", Str.va("%d", gameStats.score))
+            gui!!.SetStateString("player_prebonusscore", Str.va("%d", gameStats.prebonusscore))
+            gui!!.SetStateString(
                 "level_complete",
                 Str.va("%d/%d", gameStats.levelStats.savedAstronauts, levelData[gameStats.currentLevel].needToWin)
             )
             if (superBlasterTimeout != 0) {
                 val timeRemaining = (superBlasterTimeout - ssdTime) / 1000.0f
-                gui.SetStateString("super_blaster_time", Str.va("%.2f", timeRemaining))
+                gui!!.SetStateString("super_blaster_time", Str.va("%.2f", timeRemaining))
             }
         }
 
         private fun GetCursorWorld(): idVec2 {
             val cursor = idVec2()
             //GetCursor(cursor);
-            cursor.x = gui.CursorX()
-            cursor.y = gui.CursorY()
+            cursor.x = gui!!.CursorX()
+            cursor.y = gui!!.CursorY()
             cursor.x = cursor.x - 0.5f * V_WIDTH
             cursor.y = -(cursor.y - 0.5f * V_HEIGHT)
             return cursor
@@ -2408,13 +2408,13 @@ object GameSSDWindow {
         }
 
         private fun StartSuperBlaster() {
-            gui.HandleNamedEvent("startSuperBlaster")
+            gui!!.HandleNamedEvent("startSuperBlaster")
             gameStats.currentWeapon = 1
             superBlasterTimeout = ssdTime + 10000
         }
 
         private fun StopSuperBlaster() {
-            gui.HandleNamedEvent("stopSuperBlaster")
+            gui!!.HandleNamedEvent("stopSuperBlaster")
             gameStats.currentWeapon = 0
             superBlasterTimeout = 0
         } // void FreeSoundEmitter(bool immediate);

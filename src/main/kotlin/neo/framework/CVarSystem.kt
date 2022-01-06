@@ -12,8 +12,7 @@ import neo.Renderer.VertexCache.idVertexCache
 import neo.Sound.snd_system
 import neo.TempDump
 import neo.TempDump.void_callback
-import neo.framework.*
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork
+import neo.framework.Async.AsyncNetwork
 import neo.framework.Async.ServerScan
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Boolean
@@ -23,12 +22,14 @@ import neo.framework.FileSystem_h.idFileSystemLocal
 import neo.framework.File_h.idFile
 import neo.framework.Session_local.idSessionLocal
 import neo.framework.UsercmdGen.idUsercmdGenLocal
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Dict_h.idDict
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.FindChar
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.containers.List.idList
@@ -132,7 +133,7 @@ object CVarSystem {
     val fileSystem = idFileSystemLocal()
     val session = idSessionLocal()
     val usr = idUsercmdGenLocal()
-    val async = idAsyncNetwork()
+    val async = AsyncNetwork.idAsyncNetwork()
     val scan = ServerScan()
     val image = neo.Renderer.Image()
     val texture = idMegaTexture()
@@ -213,7 +214,7 @@ object CVarSystem {
                 : String? = null
         protected var next // next statically declared cvar
                 : idCVar? = null
-        protected var value // value
+        var value // value
                 : String? = null
         var valueCompletion // value auto-completion function
                 : CmdSystem.argCompletion_t? = null
@@ -222,7 +223,7 @@ object CVarSystem {
         protected var valueMin // minimum value
                 = 0f
         protected var valueStrings // valid value strings
-                : Array<String>?
+                : Array<String>? = null
 
         //
         //
@@ -232,7 +233,7 @@ object CVarSystem {
         }
 
         // Always use one of the following constructors.
-        constructor(name: String?, value: String?, flags: Int, description: String?) {
+        constructor(name: String, value: String, flags: Int, description: String) {
             if (null == valueCompletion && flags and CVAR_BOOL != 0) {
                 valueCompletion = ArgCompletion_Boolean.getInstance()
             }
@@ -240,11 +241,11 @@ object CVarSystem {
         }
 
         constructor(
-            name: String?,
-            value: String?,
+            name: String,
+            value: String,
             flags: Int,
-            description: String?,
-            valueCompletion: CmdSystem.argCompletion_t?
+            description: String,
+            valueCompletion: CmdSystem.argCompletion_t
         ) {
             var valueCompletion = valueCompletion
             if (null == valueCompletion && flags and CVAR_BOOL != 0) {
@@ -258,18 +259,18 @@ object CVarSystem {
         }
 
         constructor(
-            name: String?,
-            value: String?,
+            name: String,
+            value: String,
             flags: Int,
-            description: String?,
+            description: String,
             valueMin: Float,
             valueMax: Float,
-            valueCompletion: CmdSystem.argCompletion_t?
+            valueCompletion: CmdSystem.argCompletion_t
         ) {
             Init(name, value, flags, description, valueMin, valueMax, null, valueCompletion)
         }
 
-        constructor(name: String?, value: String?, flags: Int, description: String?, valueStrings: Array<String?>?) {
+        constructor(name: String, value: String, flags: Int, description: String, valueStrings: Array<String>?) {
             Init(name, value, flags, description, 1f, -1f, valueStrings, null)
         }
 
@@ -287,7 +288,7 @@ object CVarSystem {
         override fun equals(o: Any?): Boolean {
             if (this === o) return true
             if (o !is idCVar) return false
-            val idCVar = o as idCVar?
+            val idCVar = o as idCVar
             if (flags != idCVar.flags) return false
             if (java.lang.Float.compare(idCVar.floatValue, floatValue) != 0) return false
             if (integerValue != idCVar.integerValue) return false
@@ -322,23 +323,23 @@ object CVarSystem {
         }
 
         fun GetName(): String {
-            return internalVar.name
+            return internalVar!!.name!!
         }
 
         fun GetFlags(): Int {
-            return internalVar.flags
+            return internalVar!!.flags
         }
 
         fun GetDescription(): String? {
-            return internalVar.description
+            return internalVar!!.description
         }
 
         fun GetMinValue(): Float {
-            return internalVar.valueMin
+            return internalVar!!.valueMin
         }
 
         fun GetMaxValue(): Float {
-            return internalVar.valueMax
+            return internalVar!!.valueMax
         }
 
         fun GetValueStrings(): Array<String>? {
@@ -350,19 +351,19 @@ object CVarSystem {
         }
 
         fun IsModified(): Boolean {
-            return internalVar.flags and CVAR_MODIFIED != 0
+            return internalVar!!.flags and CVAR_MODIFIED != 0
         }
 
         fun SetModified() {
-            internalVar.flags = internalVar.flags or CVAR_MODIFIED
+            internalVar!!.flags = internalVar!!.flags or CVAR_MODIFIED
         }
 
         fun ClearModified() {
-            internalVar.flags = internalVar.flags and CVAR_MODIFIED.inv()
+            internalVar!!.flags = internalVar!!.flags and CVAR_MODIFIED.inv()
         }
 
-        fun GetString(): String {
-            return internalVar.value
+        fun GetString(): String? {
+            return internalVar!!.value
         }
 
         fun GetBool(): Boolean {
@@ -370,30 +371,30 @@ object CVarSystem {
         }
 
         fun GetInteger(): Int {
-            return internalVar.integerValue
+            return internalVar!!.integerValue
         }
 
         fun GetFloat(): Float {
-            return internalVar.floatValue
+            return internalVar!!.floatValue
         }
 
         fun SetString(value: String?) {
-            internalVar.InternalSetString(value)
+            internalVar!!.InternalSetString(value)
         }
 
         fun SetBool(value: Boolean) {
-            internalVar.InternalSetBool(value)
+            internalVar!!.InternalSetBool(value)
         }
 
         fun SetInteger(value: Int) {
-            internalVar.InternalSetInteger(value)
+            internalVar!!.InternalSetInteger(value)
         }
 
         fun SetFloat(value: Float) {
-            internalVar.InternalSetFloat(value)
+            internalVar!!.InternalSetFloat(value)
         }
 
-        fun SetInternalVar(cvar: idCVar?) {
+        fun SetInternalVar(cvar: idCVar) {
             internalVar = cvar
         }
 
@@ -416,7 +417,7 @@ object CVarSystem {
             description: String,
             valueMin: Float,
             valueMax: Float,
-            valueStrings: Array<String>,
+            valueStrings: Array<String>?,
             valueCompletion: CmdSystem.argCompletion_t?
         ) {
             this.name = name
@@ -446,7 +447,7 @@ object CVarSystem {
         protected open fun InternalSetFloat(newValue: Float) {}
 
         companion object {
-            private val ID_CVAR_0xFFFFFFFF: idCVar? = idCVar()
+            private val ID_CVAR_0xFFFFFFFF: idCVar = idCVar()
 
             //
             private var staticVars: idCVar? = null
@@ -497,27 +498,27 @@ object CVarSystem {
 
         // Registers a CVar.
         @Throws(idException::class)
-        abstract fun Register(cvar: idCVar?)
+        abstract fun Register(cvar: idCVar)
 
         // Finds the CVar with the given name.
         // Returns NULL if there is no CVar with the given name.
-        abstract fun Find(name: String?): idCVar?
+        abstract fun Find(name: String): idCVar?
 
         // Sets the value of a CVar by name.
-        abstract fun SetCVarString(name: String?, value: String?)
-        abstract fun SetCVarString(name: String?, value: String?, flags: Int)
-        abstract fun SetCVarBool(name: String?, value: Boolean)
-        abstract fun SetCVarBool(name: String?, value: Boolean, flags: Int)
-        abstract fun SetCVarInteger(name: String?, value: Int)
-        abstract fun SetCVarInteger(name: String?, value: Int, flags: Int)
-        abstract fun SetCVarFloat(name: String?, value: Float)
-        abstract fun SetCVarFloat(name: String?, value: Float, flags: Int)
+        abstract fun SetCVarString(name: String, value: String)
+        abstract fun SetCVarString(name: String, value: String, flags: Int)
+        abstract fun SetCVarBool(name: String, value: Boolean)
+        abstract fun SetCVarBool(name: String, value: Boolean, flags: Int)
+        abstract fun SetCVarInteger(name: String, value: Int)
+        abstract fun SetCVarInteger(name: String, value: Int, flags: Int)
+        abstract fun SetCVarFloat(name: String, value: Float)
+        abstract fun SetCVarFloat(name: String, value: Float, flags: Int)
 
         // Gets the value of a CVar by name.
         abstract fun GetCVarString(name: String): String
-        abstract fun GetCVarBool(name: String?): Boolean
-        abstract fun GetCVarInteger(name: String?): Int
-        abstract fun GetCVarFloat(name: String?): Float
+        abstract fun GetCVarBool(name: String): Boolean
+        abstract fun GetCVarInteger(name: String): Int
+        abstract fun GetCVarFloat(name: String): Float
 
         // Called by the command system when argv(0) doesn't match a known command.
         // Returns true if argv(0) is a variable reference and prints or changes the CVar.
@@ -544,31 +545,28 @@ object CVarSystem {
         abstract fun RemoveFlaggedAutoCompletion(flags: Int)
 
         // Writes variables with one of the given flags set to the given file.
-        abstract fun WriteFlaggedVariables(flags: Int, setCmd: String?, f: idFile?)
+        abstract fun WriteFlaggedVariables(flags: Int, setCmd: String, f: idFile)
 
         // Moves CVars to and from dictionaries.
         @Throws(idException::class)
         abstract fun MoveCVarsToDict(flags: Int): idDict
 
         @Throws(idException::class)
-        abstract fun SetCVarsFromDict(dict: idDict?)
+        abstract fun SetCVarsFromDict(dict: idDict)
     }
 
     class idInternalCVar : idCVar {
         // friend class idCVarSystemLocal;
         private val descriptionString // description
                 : idStr = idStr()
-        private val nameString // name
+        val nameString // name
                 : idStr = idStr()
-        private val resetString // resetting will change to this value
+        val resetString // resetting will change to this value
                 : idStr = idStr()
-        private val valueString // value
+        val valueString // value
                 : idStr = idStr()
 
-        //
-        //
-        constructor() {}
-        constructor(newName: String, newValue: String, newFlags: Int) {
+        constructor(newName: String, newValue: String, newFlags: Int) : super(newName, newValue, newFlags, "") {
             nameString.set(newName)
             name = newName
             valueString.set(newValue)
@@ -586,7 +584,7 @@ object CVarSystem {
             internalVar = this
         }
 
-        constructor(cvar: idCVar) {
+        constructor(cvar: idCVar) : super(cvar.GetName(), cvar.value!!, cvar.GetFlags(), cvar.GetDescription()!!) {
             nameString.set(cvar.GetName())
             name = cvar.GetName()
             valueString.set(cvar.GetString())
@@ -597,7 +595,7 @@ object CVarSystem {
             flags = cvar.GetFlags() or CVAR_MODIFIED
             valueMin = cvar.GetMinValue()
             valueMax = cvar.GetMaxValue()
-            valueStrings = CopyValueStrings(cvar.GetValueStrings())
+            valueStrings = CopyValueStrings(cvar.GetValueStrings()!!)
             valueCompletion = cvar.GetValueCompletion()
             UpdateValue()
             UpdateCheat()
@@ -606,7 +604,7 @@ object CVarSystem {
 
         //	// virtual					~idInternalCVar( void );
         //
-        fun CopyValueStrings(strings: Array<String?>?): Array<String?>? {
+        fun CopyValueStrings(strings: Array<String>): Array<String> {
 //	int i, totalLength;
 //	const char **ptr;
 //	char *str;
@@ -633,18 +631,18 @@ object CVarSystem {
 //	return ptr;
 
 //            return Arrays.copyOf(strings, strings.length);
-            return strings?.clone()
+            return strings.clone()
         }
 
         @Throws(idException::class)
-        fun Update(cvar: idCVar?) {
+        fun Update(cvar: idCVar) {
 
             // if this is a statically declared variable
             if (cvar.GetFlags() and CVAR_STATIC != 0) {
                 if (flags and CVAR_STATIC != 0) {
 
                     // the code has more than one static declaration of the same variable, make sure they have the same properties
-                    if (resetString.Icmp(cvar.GetString()) != 0) {
+                    if (resetString.Icmp(cvar.GetString()!!) != 0) {
                         idLib.common.Warning(
                             "CVar '%s' declared multiple times with different initial value",
                             nameString
@@ -662,13 +660,13 @@ object CVarSystem {
                 }
 
                 // the code is now specifying a variable that the user already set a value for, take the new value as the reset value
-                resetString = idStr(cvar.GetString())
-                descriptionString = idStr(cvar.GetDescription())
+                resetString.set(cvar.GetString()!!)
+                descriptionString.set(cvar.GetDescription()!!)
                 description = cvar.GetDescription()
                 valueMin = cvar.GetMinValue()
                 valueMax = cvar.GetMaxValue()
                 //                Mem_Free(valueStrings);
-                valueStrings = CopyValueStrings(cvar.GetValueStrings())
+                valueStrings = CopyValueStrings(cvar.GetValueStrings()!!)
                 valueCompletion = cvar.GetValueCompletion()
                 UpdateValue()
                 cvarSystem.SetModifiedFlags(cvar.GetFlags())
@@ -678,13 +676,13 @@ object CVarSystem {
 
             // only allow one non-empty reset string without a warning
             if (resetString.Length() == 0) {
-                resetString = idStr(cvar.GetString())
-            } else if (cvar.GetString() != null && resetString.Cmp(cvar.GetString()) != 0) {
+                resetString.set(cvar.GetString()!!)
+            } else if (cvar.GetString() != null && resetString.Cmp(cvar.GetString()!!) != 0) {
                 idLib.common.Warning(
                     "cvar \"%s\" given initial values: \"%s\" and \"%s\"\n",
                     nameString,
                     resetString,
-                    cvar.GetString()
+                    cvar.GetString()!!
                 )
             }
         }
@@ -692,14 +690,14 @@ object CVarSystem {
         fun UpdateValue() {
             var clamped = false
             if (flags and CVAR_BOOL != 0) {
-                integerValue = if (TempDump.atoi(value) != 0) 1 else 0
+                integerValue = if (TempDump.atoi(value!!) != 0) 1 else 0
                 floatValue = integerValue.toFloat()
-                if (idStr.Icmp(value, "0") != 0 && idStr.Icmp(value, "1") != 0) {
-                    valueString = idStr(integerValue != 0)
+                if (idStr.Icmp(value!!, "0") != 0 && idStr.Icmp(value!!, "1") != 0) {
+                    valueString.set((integerValue != 0).toString())
                     value = valueString.toString()
                 }
             } else if (flags and CVAR_INTEGER != 0) {
-                integerValue = TempDump.atoi(value)
+                integerValue = TempDump.atoi(value!!)
                 if (valueMin < valueMax) {
                     if (integerValue < valueMin) {
                         integerValue = valueMin.toInt()
@@ -709,13 +707,13 @@ object CVarSystem {
                         clamped = true
                     }
                 }
-                if (clamped || !idStr.Companion.IsNumeric(value) || FindChar(value, '.') != 0) {
-                    valueString = idStr(integerValue)
+                if (clamped || !idStr.Companion.IsNumeric(value!!) || FindChar(value!!, '.') != 0) {
+                    valueString.set(integerValue.toString())
                     value = valueString.toString()
                 }
                 floatValue = integerValue.toFloat()
             } else if (flags and CVAR_FLOAT != 0) {
-                floatValue = TempDump.atof(value)
+                floatValue = TempDump.atof(value!!)
                 if (valueMin < valueMax) {
                     if (floatValue < valueMin) {
                         floatValue = valueMin
@@ -725,27 +723,27 @@ object CVarSystem {
                         clamped = true
                     }
                 }
-                if (clamped || !idStr.Companion.IsNumeric(value)) {
-                    valueString = idStr(floatValue)
+                if (clamped || !idStr.Companion.IsNumeric(value!!)) {
+                    valueString.set(floatValue.toString())
                     value = valueString.toString()
                 }
                 integerValue = floatValue.toInt()
             } else {
-                if (valueStrings != null && valueStrings.size > 0) {
+                if (valueStrings != null && valueStrings!!.size > 0) {
                     integerValue = 0
                     var i = 0
-                    while (valueStrings.get(i) != null) {
-                        if (valueString.Icmp(valueStrings.get(i)) == 0) {
+                    while (valueStrings!![i] != null) {
+                        if (valueString.Icmp(valueStrings!![i]) == 0) {
                             integerValue = i
                             break
                         }
                         i++
                     }
-                    valueString = idStr(valueStrings.get(integerValue))
-                    value = valueStrings.get(integerValue)
+                    valueString.set(valueStrings!![integerValue])
+                    value = valueStrings!![integerValue]
                     floatValue = integerValue.toFloat()
                 } else if (valueString.Length() < 32) {
-                    floatValue = TempDump.atof(value)
+                    floatValue = TempDump.atof(value!!)
                     integerValue = floatValue.toInt()
                 } else {
                     floatValue = 0.0f
@@ -802,7 +800,7 @@ object CVarSystem {
             if (valueString.Icmp(newValue) == 0) {
                 return
             }
-            valueString = idStr(newValue)
+            valueString.set(newValue)
             value = newValue
             UpdateValue()
             SetModified()
@@ -810,7 +808,7 @@ object CVarSystem {
         }
 
         fun Reset() {
-            valueString = resetString
+            valueString.set(resetString)
             value = valueString.toString()
             UpdateValue()
         }
@@ -820,7 +818,7 @@ object CVarSystem {
         }
 
         @Throws(idException::class)
-        private fun InternalServerSetString(newValue: String?) {
+        fun InternalServerSetString(newValue: String?) {
             Set(newValue, true, true)
         }
 
@@ -910,7 +908,7 @@ object CVarSystem {
         }
 
         @Throws(idException::class)
-        override fun Register(cvar: idCVar?) {
+        override fun Register(cvar: idCVar) {
             val hash: Int
             var internal: idInternalCVar?
             cvar.SetInternalVar(cvar)
@@ -925,62 +923,62 @@ object CVarSystem {
             cvar.SetInternalVar(internal)
         }
 
-        override fun Find(name: String?): idCVar? {
+        override fun Find(name: String): idCVar? {
             return FindInternal(name)
         }
 
-        override fun SetCVarString(name: String?, value: String? /*, int flags = 0*/) {
+        override fun SetCVarString(name: String, value: String /*, int flags = 0*/) {
             SetCVarString(name, value, 0)
         }
 
         //public	 void			SetCVarBool( final String name, const boolean value/*, int flags = 0*/);
-        override fun SetCVarString(name: String?, value: String?, flags: Int) {
+        override fun SetCVarString(name: String, value: String, flags: Int) {
             SetInternal(name, value, flags)
         }
 
-        override fun SetCVarBool(name: String?, value: Boolean) {
+        override fun SetCVarBool(name: String, value: Boolean) {
             SetCVarBool(name, value, 0)
         }
 
-        override fun SetCVarBool(name: String?, value: Boolean, flags: Int) {
+        override fun SetCVarBool(name: String, value: Boolean, flags: Int) {
             SetInternal(name, "" + value, flags)
         }
 
         //public	 void			SetCVarInteger( final String name, const int value/*, int flags = 0*/ );
-        override fun SetCVarInteger(name: String?, value: Int) {
+        override fun SetCVarInteger(name: String, value: Int) {
             SetCVarInteger(name, value, 0)
         }
 
-        override fun SetCVarInteger(name: String?, value: Int, flags: Int) {
+        override fun SetCVarInteger(name: String, value: Int, flags: Int) {
             SetInternal(name, "" + value, flags)
         }
 
-        override fun SetCVarFloat(name: String?, value: Float) {
+        override fun SetCVarFloat(name: String, value: Float) {
             SetCVarFloat(name, value, 0)
         }
 
-        override fun SetCVarFloat(name: String?, value: Float, flags: Int) {
+        override fun SetCVarFloat(name: String, value: Float, flags: Int) {
             SetInternal(name, "" + value, flags)
         }
 
         override fun GetCVarString(name: String): String {
             val internal = FindInternal(name)
             return if (internal != null) {
-                internal.GetString()
+                internal.GetString()!!
             } else ""
         }
 
-        override fun GetCVarBool(name: String?): Boolean {
+        override fun GetCVarBool(name: String): Boolean {
             val internal = FindInternal(name)
             return internal?.GetBool() ?: false
         }
 
-        override fun GetCVarInteger(name: String?): Int {
+        override fun GetCVarInteger(name: String): Int {
             val internal = FindInternal(name)
             return internal?.GetInteger() ?: 0
         }
 
-        override fun GetCVarFloat(name: String?): Float {
+        override fun GetCVarFloat(name: String): Float {
             val internal = FindInternal(name)
             return internal?.GetFloat() ?: 0.0f
         }
@@ -998,12 +996,12 @@ object CVarSystem {
                     """"%s" is:"%s"${Str.S_COLOR_WHITE} default:"%s"
 """, internal.nameString, internal.valueString, internal.resetString
                 )
-                if ( /*idStr.Length*/internal.GetDescription().length > 0) {
+                if ( /*idStr.Length*/internal.GetDescription()!!.length > 0) {
                     idLib.common.Printf(
                         """
     ${Str.S_COLOR_WHITE}%s
     
-    """.trimIndent(), internal.GetDescription()
+    """.trimIndent(), internal.GetDescription()!!
                     )
                 }
             } else {
@@ -1014,14 +1012,14 @@ object CVarSystem {
         }
 
         @Throws(idException::class)
-        override fun CommandCompletion(callback: void_callback<String?>?) {
+        override fun CommandCompletion(callback: void_callback<String>) {
             for (i in 0 until cvars.Num()) {
                 callback.run(cvars[i].GetName())
             }
         }
 
         @Throws(idException::class)
-        override fun ArgCompletion(cmdString: String?, callback: void_callback<String?>?) {
+        override fun ArgCompletion(cmdString: String, callback: void_callback<String>) {
             val args = CmdArgs.idCmdArgs()
             args.TokenizeString(cmdString, false)
             for (i in 0 until cvars.Num()) {
@@ -1029,7 +1027,7 @@ object CVarSystem {
                     continue
                 }
                 if (idStr.Icmp(args.Argv(0), cvars[i].nameString.toString()) == 0) {
-                    cvars[i].valueCompletion.run(args, callback)
+                    cvars[i].valueCompletion!!.run(args, callback)
                     break
                 }
             }
@@ -1074,11 +1072,11 @@ object CVarSystem {
          with the "flags" flag set to true.
          ============
          */
-        override fun WriteFlaggedVariables(flags: Int, setCmd: String?, f: idFile?) {
+        override fun WriteFlaggedVariables(flags: Int, setCmd: String, f: idFile) {
             for (i in 0 until cvars.Num()) {
                 val cvar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
-                    f.Printf("%s %s \"%s\"\n", setCmd, cvar.GetName(), cvar.GetString())
+                    f.Printf("%s %s \"%s\"\n", setCmd, cvar.GetName(), cvar.GetString()!!)
                 }
             }
         }
@@ -1089,7 +1087,7 @@ object CVarSystem {
             for (i in 0 until cvars.Num()) {
                 val cvar: idCVar = cvars[i]
                 if (cvar.GetFlags() and flags != 0) {
-                    moveCVarsToDict.Set(cvar.GetName(), cvar.GetString())
+                    moveCVarsToDict.Set(cvar.GetName(), cvar.GetString()!!)
                 }
             }
             return moveCVarsToDict
@@ -1098,10 +1096,10 @@ object CVarSystem {
         //
         //public	void					RegisterInternal( idCVar cvar );
         @Throws(idException::class)
-        override fun SetCVarsFromDict(dict: idDict?) {
+        override fun SetCVarsFromDict(dict: idDict) {
             var internal: idInternalCVar?
             for (i in 0 until dict.GetNumKeyVals()) {
-                val kv = dict.GetKeyVal(i)
+                val kv = dict.GetKeyVal(i)!!
                 internal = FindInternal(kv.GetKey().toString())
                 internal?.InternalServerSetString(kv.GetValue().toString())
             }
@@ -1119,7 +1117,7 @@ object CVarSystem {
             return null
         }
 
-        fun SetInternal(name: String?, value: String?, flags: Int) {
+        fun SetInternal(name: String, value: String, flags: Int) {
             val hash: Int
             var internal: idInternalCVar?
             internal = FindInternal(name)
@@ -1134,7 +1132,7 @@ object CVarSystem {
             }
         }
 
-        internal enum class show {
+        enum class show {
             SHOW_VALUE, SHOW_DESCRIPTION, SHOW_TYPE, SHOW_FLAGS
         }
 
@@ -1169,7 +1167,7 @@ object CVarSystem {
                 }
                 if (argc > 3) {
                     // cycle through multiple values
-                    text = cvar.GetString()
+                    text = cvar.GetString()!!
                     i = 2
                     while (i < argc) {
                         if (0 == idStr.Icmp(text, args.Argv(i))) {
@@ -1203,8 +1201,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Toggle_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Toggle_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1219,8 +1217,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Set_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Set_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1259,8 +1257,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SetU_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SetU_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1279,8 +1277,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SetT_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SetT_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1303,8 +1301,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = SetA_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = SetA_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1326,8 +1324,8 @@ object CVarSystem {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = Reset_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = Reset_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1336,12 +1334,12 @@ object CVarSystem {
         internal class List_f : cmdFunction_t() {
             @Throws(idException::class)
             override fun run(args: CmdArgs.idCmdArgs) {
-                ListByFlags(args, CVAR_ALL.toLong())
+                ListByFlags(args, CVAR_ALL)
             }
 
             companion object {
-                private val instance: cmdFunction_t? = List_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = List_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1393,17 +1391,17 @@ object CVarSystem {
             //public						~idCVarSystemLocal() {}
             //
             @Throws(idException::class)
-            fun ListByFlags(args: CmdArgs.idCmdArgs,    /*cvarFlags_t*/flags: Long) {
+            fun ListByFlags(args: CmdArgs.idCmdArgs,    /*cvarFlags_t*/flags: Int) {
                 var i: Int
                 var argNum: Int
                 val match: idStr
                 val indent = idStr()
                 val str = idStr()
                 var string: String
-                var cvar: idInternalCVar?
-                val cvarList = idList<idInternalCVar?>()
+                var cvar: idInternalCVar
+                val cvarList = idList<idInternalCVar>()
                 argNum = 1
-                var show: show? = show.SHOW_VALUE
+                var showType: show = show.SHOW_VALUE
                 if (idStr.Icmp(args.Argv(argNum), "-") == 0 || idStr.Icmp(
                         args.Argv(argNum),
                         "/"
@@ -1416,17 +1414,17 @@ object CVarSystem {
                         ) == 0
                     ) {
                         argNum = 3
-                        show = show.SHOW_DESCRIPTION
+                        showType = show.SHOW_DESCRIPTION
                     } else if (idStr.Icmp(
                             args.Argv(argNum + 1),
                             "type"
                         ) == 0 || idStr.Icmp(args.Argv(argNum + 1), "range") == 0
                     ) {
                         argNum = 3
-                        show = show.SHOW_TYPE
+                        showType = show.SHOW_TYPE
                     } else if (idStr.Icmp(args.Argv(argNum + 1), "flags") == 0) {
                         argNum = 3
-                        show = show.SHOW_FLAGS
+                        showType = show.SHOW_FLAGS
                     }
                 }
                 if (args.Argc() > argNum) {
@@ -1438,7 +1436,7 @@ object CVarSystem {
                 i = 0
                 while (i < localCVarSystem.cvars.Num()) {
                     cvar = localCVarSystem.cvars[i]
-                    if (0L == cvar.GetFlags() and flags) {
+                    if (0 == cvar.GetFlags() and flags) {
                         i++
                         continue
                     }
@@ -1450,7 +1448,7 @@ object CVarSystem {
                     i++
                 }
                 cvarList.Sort()
-                when (show) {
+                when (showType) {
                     show.SHOW_VALUE -> {
                         i = 0
                         while (i < cvarList.Num()) {
@@ -1477,7 +1475,7 @@ object CVarSystem {
     """.trimIndent(),
                                 cvar.nameString,
                                 CreateColumn(
-                                    cvar.GetDescription(),
+                                    cvar.GetDescription()!!,
                                     NUM_DESCRIPTION_CHARS,
                                     indent.toString(),
                                     str
@@ -1535,11 +1533,11 @@ object CVarSystem {
                                     cvar.GetName()
                                 )
                                 var j = 0
-                                while (cvar.GetValueStrings().get(j) != null) {
+                                while (cvar.GetValueStrings()!![j] != null) {
                                     if (j != 0) {
-                                        idLib.common.Printf(Str.S_COLOR_WHITE + ", %s", cvar.GetValueStrings().get(j))
+                                        idLib.common.Printf(Str.S_COLOR_WHITE + ", %s", cvar.GetValueStrings()!![j])
                                     } else {
-                                        idLib.common.Printf(Str.S_COLOR_WHITE + "%s", cvar.GetValueStrings().get(j))
+                                        idLib.common.Printf(Str.S_COLOR_WHITE + "%s", cvar.GetValueStrings()!![j])
                                     }
                                     j++
                                 }
@@ -1617,8 +1615,6 @@ object CVarSystem {
             }
         }
 
-        //
-        //
         init {
             cvars = idList()
             cvarHash = idHashIndex()

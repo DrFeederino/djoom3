@@ -383,12 +383,12 @@ object map {
      ================
      */
     fun ParsePatch(patch: idMapPatch, primitiveNum: Int) {
-        val mat: Material.idMaterial?
+        val mat: Material.idMaterial
         if (dmap.dmapGlobals.noCurves) {
             return
         }
         c_numMapPatches++
-        mat = DeclManager.declManager.FindMaterial(patch.GetMaterial())
+        mat = DeclManager.declManager.FindMaterial(patch.GetMaterial())!!
         val cp = idSurface_Patch(patch)
         if (patch.GetExplicitlySubdivided()) {
             cp.SubdivideExplicit(patch.GetHorzSubdivisions(), patch.GetVertSubdivisions(), true)

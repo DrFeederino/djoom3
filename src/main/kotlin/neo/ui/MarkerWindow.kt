@@ -34,7 +34,7 @@ class MarkerWindow {
     }
 
     class idMarkerWindow : idWindow {
-        private val loggedStats: Array<logStats_t?> = arrayOfNulls<logStats_t?>(Session.MAX_LOGGED_STATS)
+        private val loggedStats: Array<logStats_t> = Array(Session.MAX_LOGGED_STATS) { logStats_t() }
         private var currentMarker = 0
         private var currentTime = 0
         private var imageBuff: IntArray? = null
@@ -75,25 +75,25 @@ class MarkerWindow {
             }
             val key = event.evValue
             if (event.evValue2 != 0 && key == KeyInput.K_MOUSE1) {
-                gui.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
                 val c = markerTimes.Num()
                 var i: Int
                 i = 0
                 while (i < c) {
                     val md = markerTimes[i]
-                    if (md.rect.Contains(gui.CursorX(), gui.CursorY())) {
+                    if (md.rect.Contains(gui!!.CursorX(), gui!!.CursorY())) {
                         currentMarker = i
-                        gui.SetStateInt("currentMarker", md.time)
+                        gui!!.SetStateInt("currentMarker", md.time)
                         stopTime = md.time
-                        gui.GetDesktop().SetChildWinVarVal(
+                        gui!!.GetDesktop().SetChildWinVarVal(
                             "markerText",
                             "text",
                             Str.va("Marker set at %.2i:%.2i", md.time / 60 / 60, md.time / 60 % 60)
                         )
-                        gui.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
-                        gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                        gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
-                        gui.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
+                        gui!!.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
+                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
+                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
                         break
                     }
                     i++
@@ -101,26 +101,26 @@ class MarkerWindow {
                 if (i == c) {
                     // no marker selected;
                     currentMarker = -1
-                    gui.SetStateInt("currentMarker", currentTime)
+                    gui!!.SetStateInt("currentMarker", currentTime)
                     stopTime = currentTime
-                    gui.GetDesktop().SetChildWinVarVal(
+                    gui!!.GetDesktop().SetChildWinVarVal(
                         "markerText",
                         "text",
                         Str.va("Marker set at %.2i:%.2i", currentTime / 60 / 60, currentTime / 60 % 60)
                     )
-                    gui.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
                 }
-                val pct = gui.State().GetFloat("loadPct")
-                val len = gui.State().GetInt("loadLength")
+                val pct = gui!!.State().GetFloat("loadPct")
+                val len = gui!!.State().GetInt("loadLength")
                 if (stopTime > len * pct) {
                     return "cmdDemoGotoMarker"
                 }
             } else if (key == KeyInput.K_MOUSE2) {
                 stopTime = -1
-                gui.GetDesktop().SetChildWinVarVal("markerText", "text", "")
-                gui.SetStateInt("currentMarker", -1)
+                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+                gui!!.SetStateInt("currentMarker", -1)
                 return "cmdDemoGotoMarker"
             } else if (key == KeyInput.K_SPACE) {
                 return "cmdDemoPauseFrame"
@@ -131,7 +131,7 @@ class MarkerWindow {
         override fun Draw(time: Int, x: Float, y: Float) {
             var pct: Float
             var r = idRectangle(clientRect)
-            var len = gui.State().GetInt("loadLength")
+            var len = gui!!.State().GetInt("loadLength")
             if (len == 0) {
                 len = 1
             }
@@ -151,11 +151,11 @@ class MarkerWindow {
                 }
             }
             r.y += 10f
-            if (r.w > 0 && r.Contains(gui.CursorX(), gui.CursorY())) {
-                pct = (gui.CursorX() - r.x) / r.w
+            if (r.w > 0 && r.Contains(gui!!.CursorX(), gui!!.CursorY())) {
+                pct = (gui!!.CursorX() - r.x) / r.w
                 currentTime = (len * pct).toInt()
-                r.x = if (gui.CursorX() > r.x + r.w - 40) gui.CursorX() - 40 else gui.CursorX()
-                r.y = gui.CursorY() - 15
+                r.x = if (gui!!.CursorX() > r.x + r.w - 40) gui!!.CursorX() - 40 else gui!!.CursorX()
+                r.y = gui!!.CursorY() - 15
                 r.w = 40f
                 r.h = 20f
                 dc!!.DrawText(
@@ -182,30 +182,30 @@ class MarkerWindow {
             val r = idRectangle()
             var i: Int
             val c = markerTimes.Num()
-            var len = gui.State().GetInt("loadLength")
+            var len = gui!!.State().GetInt("loadLength")
             if (len == 0) {
                 len = 1
             }
             i = 0
             while (i < c) {
                 val md = markerTimes[i]
-                if (md.rect.Contains(gui.CursorY(), gui.CursorX())) {
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
+                if (md.rect.Contains(gui!!.CursorY(), gui!!.CursorX())) {
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
                     break
                 }
                 i++
             }
             if (i >= c) {
                 if (currentMarker == -1) {
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
                 } else {
                     val md = markerTimes[currentMarker]
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                    gui.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
                 }
             }
             return ret
@@ -215,13 +215,13 @@ class MarkerWindow {
             super.Activate(activate, act)
             if (activate) {
                 var i: Int
-                gui.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
                 imageBuff = IntArray(512 * 64 * 4) // Mem_Alloc(512 * 64 * 4);
                 markerTimes.Clear()
                 currentMarker = -1
                 currentTime = -1
                 stopTime = -1
-                statData.set(gui.State().GetString("statData"))
+                statData.set(gui!!.State().GetString("statData"))
                 numStats = 0
                 if (statData.Length() != 0) {
                     val file = idLib.fileSystem.OpenFileRead(statData.toString())
@@ -257,7 +257,7 @@ class MarkerWindow {
                     while (i < markers.GetNumFiles()) {
                         name = idStr(markers.GetFile(i))
                         val md = markerData_t()
-                        md.mat = DeclManager.declManager.FindMaterial(name)
+                        md.mat = DeclManager.declManager.FindMaterial(name)!!
                         md.mat.SetSort(Material.SS_GUI.toFloat())
                         name.StripPath()
                         name.StripFileExtension()
