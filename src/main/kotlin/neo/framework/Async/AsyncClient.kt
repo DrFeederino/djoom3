@@ -5,14 +5,7 @@ import neo.Game.Game_local
 import neo.Sound.snd_system
 import neo.TempDump
 import neo.framework.*
-import neo.framework.Async.AsyncNetwork.CLIENT_RELIABLE
-import neo.framework.Async.AsyncNetwork.CLIENT_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_DL
-import neo.framework.Async.AsyncNetwork.SERVER_PAK
-import neo.framework.Async.AsyncNetwork.SERVER_PRINT
-import neo.framework.Async.AsyncNetwork.SERVER_RELIABLE
-import neo.framework.Async.AsyncNetwork.SERVER_UNRELIABLE
-import neo.framework.Async.AsyncNetwork.idAsyncNetwork
+import neo.framework.Async.AsyncNetwork.*
 import neo.framework.Async.MsgChannel.idMsgChannel
 import neo.framework.Async.ServerScan.idServerScan
 import neo.framework.Async.ServerScan.networkServer_t
@@ -344,7 +337,7 @@ object AsyncClient {
         }
 
         fun GetServerInfo(address: String?) {
-            var adr: netadr_t = netadr_t()
+            var adr = netadr_t()
             if (address != null && !address.isEmpty()) {
                 if (!win_net.Sys_StringToNetAdr(address, adr, true)) {
                     Common.common.Printf("Couldn't get server address for \"%s\"\n", address)
@@ -433,7 +426,7 @@ object AsyncClient {
         }
 
         fun RemoteConsole(command: String?) {
-            var adr: netadr_t = netadr_t()
+            var adr = netadr_t()
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             if (!InitPort()) {
@@ -821,7 +814,7 @@ object AsyncClient {
             if (lastEmptyTime > realTime) {
                 lastEmptyTime = realTime
             }
-            if (!force && realTime - lastEmptyTime < AsyncClient.EMPTY_RESEND_TIME) {
+            if (!force && realTime - lastEmptyTime < EMPTY_RESEND_TIME) {
                 return
             }
             if (idAsyncNetwork.verbose.GetInteger() != 0) {
@@ -1088,7 +1081,7 @@ object AsyncClient {
                             clientPrediction
                         )
                         delta = gameTime - (snapshotGameTime + clientPrediction)
-                        clientPredictTime -= delta / AsyncClient.PREDICTION_FAST_ADJUST + (1 - (Math_h.INTSIGNBITSET(
+                        clientPredictTime -= delta / PREDICTION_FAST_ADJUST + (1 - (Math_h.INTSIGNBITSET(
                             delta
                         ) shl 1))
                         lastSnapshotTime = clientTime
@@ -1261,7 +1254,7 @@ object AsyncClient {
             msg.ReadString(serverGameBase, Lib.MAX_STRING_CHARS)
             msg.ReadString(serverGame, Lib.MAX_STRING_CHARS)
             serverGameStr = TempDump.ctos(serverGame)!!
-            serverGameBaseStr = TempDump.ctos(serverGameBase)!!
+            serverGameBaseStr = TempDump.ctos(serverGameBase)
 
             // the server is running a different game... we need to reload in the correct fs_game
             // even pure pak checks would fail if we didn't, as there are files we may not even see atm
@@ -1506,12 +1499,12 @@ object AsyncClient {
                 Common.common.Printf("clientState != CS_CONNECTING, not waiting for game auth, authKey ignored\n")
                 return
             }
-            authMsg = AsyncClient.authKeyMsg_t.values()[msg.ReadByte().toInt()] //TODO:out of bounds check.
+            authMsg = authKeyMsg_t.values()[msg.ReadByte().toInt()] //TODO:out of bounds check.
             if (authMsg == authKeyMsg_t.AUTHKEY_BADKEY) {
                 valid[1] = true
                 valid[0] = valid[1]
                 //                key_index = 0;
-                authBadStatus = AsyncClient.authBadKeyStatus_t.values()[msg.ReadByte().toInt()]
+                authBadStatus = authBadKeyStatus_t.values()[msg.ReadByte().toInt()]
                 when (authBadStatus) {
                     authBadKeyStatus_t.AUTHKEY_BAD_INVALID -> {
                         valid[0] = msg.ReadByte().toInt() == 1
@@ -1736,7 +1729,7 @@ object AsyncClient {
         private fun SetupConnection() {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            if (clientTime - lastConnectTime < AsyncClient.SETUP_CONNECTION_RESEND_TIME) {
+            if (clientTime - lastConnectTime < SETUP_CONNECTION_RESEND_TIME) {
                 return
             }
             if (clientState == clientState_t.CS_CHALLENGING) {

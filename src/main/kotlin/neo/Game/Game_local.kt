@@ -527,7 +527,7 @@ class Game_local {
         var num_entities // current number <= MAX_GENTITIES
                 = 0
         var persistentLevelInfo: idDict? = idDict() // contains args that are kept around between levels
-        var persistentPlayerInfo: Array<idDict?>? = arrayOfNulls<idDict?>(MAX_CLIENTS)
+        var persistentPlayerInfo: Array<idDict?> = arrayOfNulls<idDict?>(MAX_CLIENTS)
         var previousTime // time in msec of last frame
                 = 0
 
@@ -858,8 +858,8 @@ class Game_local {
             }
         }
 
-        override fun GetPersistentPlayerInfo(clientNum: Int): idDict? {
-            val ent: idEntity?
+        override fun GetPersistentPlayerInfo(clientNum: Int): idDict {
+            val ent: idEntity
             persistentPlayerInfo.get(clientNum).Clear()
             ent = entities.get(clientNum)
             if (ent != null && ent is idPlayer) {

@@ -49,6 +49,52 @@ import java.util.*
  */
 class RenderSystem_init {
     companion object {
+        /*
+ ==================
+ R_ScreenshotFilename
+
+ Returns a filename with digits appended
+ if we have saved a previous screenshot, don't scan
+ from the beginning, because recording demo avis can involve
+ thousands of shots
+ ==================
+ */
+        public fun R_ScreenshotFilename(lastNumber: CInt?, base: String?, fileName: idStr?) {
+            var a: Int
+            var b: Int
+            var c: Int
+            var d: Int
+            var e: Int
+            val restrict = idLib.cvarSystem.GetCVarBool("fs_restrict")
+            idLib.cvarSystem.SetCVarBool("fs_restrict", false)
+            lastNumber.increment()
+            if (lastNumber.getVal() > 99999) {
+                lastNumber.setVal(99999)
+            }
+            while (lastNumber.getVal() < 99999) {
+                var frac = lastNumber.getVal()
+                a = frac / 10000
+                frac -= a * 10000
+                b = frac / 1000
+                frac -= b * 1000
+                c = frac / 100
+                frac -= c * 100
+                d = frac / 10
+                frac -= d * 10
+                e = frac
+                fileName.set(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e))
+                if (lastNumber.getVal() == 99999) {
+                    break
+                }
+                val len = FileSystem_h.fileSystem.ReadFile(fileName.toString(), null, null)
+                if (len <= 0) {
+                    break
+                }
+                lastNumber.increment()
+            }
+            idLib.cvarSystem.SetCVarBool("fs_restrict", restrict)
+        }
+
         val r_brightness // changes gamma tables
                 : idCVar
         val r_cgFragmentProfile // arbfp1, fp30
@@ -507,51 +553,7 @@ class RenderSystem_init {
         }
     }
 
-    /*
-     ==================
-     R_ScreenshotFilename
 
-     Returns a filename with digits appended
-     if we have saved a previous screenshot, don't scan
-     from the beginning, because recording demo avis can involve
-     thousands of shots
-     ==================
-     */
-    fun R_ScreenshotFilename(lastNumber: CInt?, base: String?, fileName: idStr?) {
-        var a: Int
-        var b: Int
-        var c: Int
-        var d: Int
-        var e: Int
-        val restrict = idLib.cvarSystem.GetCVarBool("fs_restrict")
-        idLib.cvarSystem.SetCVarBool("fs_restrict", false)
-        lastNumber.increment()
-        if (lastNumber.getVal() > 99999) {
-            lastNumber.setVal(99999)
-        }
-        while (lastNumber.getVal() < 99999) {
-            var frac = lastNumber.getVal()
-            a = frac / 10000
-            frac -= a * 10000
-            b = frac / 1000
-            frac -= b * 1000
-            c = frac / 100
-            frac -= c * 100
-            d = frac / 10
-            frac -= d * 10
-            e = frac
-            fileName.set(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e))
-            if (lastNumber.getVal() == 99999) {
-                break
-            }
-            val len = FileSystem_h.fileSystem.ReadFile(fileName.toString(), null, null)
-            if (len <= 0) {
-                break
-            }
-            lastNumber.increment()
-        }
-        idLib.cvarSystem.SetCVarBool("fs_restrict", restrict)
-    }
 
     /*
      =================
@@ -1344,8 +1346,8 @@ class RenderSystem_init {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_SizeUp_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_SizeUp_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2323,7 +2325,6 @@ class RenderSystem_init {
             } else idStr.Companion.Icmp(a.GetName(), b.GetName())
         }
     }
-
     init {
         RenderSystem_init.r_ext_vertex_array_range = null
         RenderSystem_init.r_inhibitFragmentProgram = idCVar(

@@ -453,7 +453,7 @@ object EditField {
             var i: Int
             if (idStr.Icmpn(
                     s,
-                    TempDump.ctos(globalAutoComplete.completionString)!!,
+                    TempDump.ctos(globalAutoComplete.completionString),
                     TempDump.strLen(globalAutoComplete.completionString)
                 ) != 0
             ) {

@@ -76,8 +76,8 @@ object AAS_routing {
         // friend class idAASLocal;
         var areaNum // area number of this update
                 = 0
-        var areaTravelTimes // travel times within the area
-                : IntBuffer? = null
+        lateinit var areaTravelTimes // travel times within the area
+                : IntBuffer
         var cluster // cluster number of this update
                 = 0
         var isInList // true if the update is in the list

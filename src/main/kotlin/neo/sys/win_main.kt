@@ -85,7 +85,7 @@ object win_main {
     const val WIN98_BUILD_NUMBER = 1998
     val sys_cmdline: StringBuilder = StringBuilder(Lib.MAX_STRING_CHARS)
     val sys_showMallocs: idCVar = idCVar("sys_showMallocs", "0", CVarSystem.CVAR_SYSTEM, "")
-    var   /*HANDLE*/hTimer: ScheduledExecutorService? = null
+    lateinit var   /*HANDLE*/hTimer: ScheduledExecutorService
     var debug_current_alloc/*unsigned*/ = 0
     var debug_current_alloc_count/*unsigned*/ = 0
     var debug_frame_alloc/*unsigned*/ = 0

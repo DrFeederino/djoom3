@@ -154,7 +154,7 @@ object Game {
         abstract fun SetServerInfo(serverInfo: idDict?)
 
         // The session calls this before moving the single player game to a new level.
-        abstract fun GetPersistentPlayerInfo(clientNum: Int): idDict?
+        abstract fun GetPersistentPlayerInfo(clientNum: Int): idDict
 
         // The session calls this right before a new level is loaded.
         abstract fun SetPersistentPlayerInfo(clientNum: Int, playerInfo: idDict?)

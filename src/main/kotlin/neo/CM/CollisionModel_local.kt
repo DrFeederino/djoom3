@@ -6486,9 +6486,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         }
 
         private fun ConvertPatch(model: cm_model_s, patch: idMapPatch, primitiveNum: Int) {
-            val material: idMaterial?
+            val material: idMaterial
             val cp: idSurface_Patch?
-            material = DeclManager.declManager!!.FindMaterial(patch.GetMaterial())
+            material = DeclManager.declManager.FindMaterial(patch.GetMaterial())!!
             if (0 == material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                 return
             }
@@ -6530,7 +6530,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < mapBrush.GetNumSides()) {
                 mapSide = mapBrush.GetSide(i)
-                material = DeclManager.declManager!!.FindMaterial(mapSide.GetMaterial())
+                material = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())!!
                 if (0 == material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
@@ -6561,7 +6561,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val brush: cm_brush_s?
             val planes: Array<idPlane> = idPlane.generateArray(mapBrush.GetNumSides())
             val w = idFixedWinding()
-            var material: idMaterial? = null
+            var material: idMaterial = idMaterial() // check if works
             contents = 0
             bounds.Clear()
             i = 0
@@ -6576,7 +6576,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < mapBrush.GetNumSides() - 1) {
                 mapSide = mapBrush.GetSide(i)
-                material = DeclManager.declManager!!.FindMaterial(mapSide.GetMaterial())
+                material = DeclManager.declManager.FindMaterial(mapSide.GetMaterial())!!
                 contents = contents or (material.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL)
                 w.BaseForPlane(planes[i].unaryMinus())
                 j = 0

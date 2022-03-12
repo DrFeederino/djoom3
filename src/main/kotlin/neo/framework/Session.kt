@@ -184,12 +184,12 @@ class Session {
         abstract fun MessageBox(
             type: msgBoxType_t,
             message: String,
-            title: String,
+            title: String?,
             wait: Boolean,
-            fire_yes: String,
-            fire_no: String,
+            fire_yes: String?,
+            fire_no: String?,
             network: Boolean
-        ): String
+        ): String?
 
         abstract fun StopBox()
 

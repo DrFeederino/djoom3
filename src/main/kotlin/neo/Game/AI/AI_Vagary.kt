@@ -28,15 +28,14 @@ object AI_Vagary {
      Vagary specific AI code
 
      ***********************************************************************/
-    private val AI_Vagary_ChooseObjectToThrow: idEventDef? = idEventDef("vagary_ChooseObjectToThrow", "vvfff", 'e')
-    private val AI_Vagary_ThrowObjectAtEnemy: idEventDef? = idEventDef("vagary_ThrowObjectAtEnemy", "ef")
+    private val AI_Vagary_ChooseObjectToThrow: idEventDef = idEventDef("vagary_ChooseObjectToThrow", "vvfff", 'e')
+    private val AI_Vagary_ThrowObjectAtEnemy: idEventDef = idEventDef("vagary_ThrowObjectAtEnemy", "ef")
 
-    //
     class idAI_Vagary : idAI() {
         companion object {
             //CLASS_PROTOTYPE( idAI_Vagary );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
@@ -55,7 +54,7 @@ object AI_Vagary {
 
         private fun Event_ChooseObjectToThrow(
             mins: idEventArg<idVec3?>?, maxs: idEventArg<idVec3?>?,
-            speed: idEventArg<Float?>?, minDist: idEventArg<Float?>?, offset: idEventArg<Float?>?
+            speed: idEventArg<Float?>?, minDist: idEventArg<Float?>?, offset: idEventArg<Float>
         ) {
             var ent: idEntity
             val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
