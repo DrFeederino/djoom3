@@ -204,8 +204,6 @@ class Game_local {
     //#define protected	public
     //#endif
     //
-    var gameRenderWorld: idRenderWorld? = null
-    var gameSoundWorld: idSoundWorld? = null
 
     /*
      ===========
@@ -479,10 +477,10 @@ class Game_local {
                 = 0f
 
         //
-        var clip: idClip? = idClip() // collision detection
+        var clip: idClip = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: Array<idEntity?>? = arrayOfNulls<idEntity?>(MAX_GENTITIES) // index to entities
+        var entities: Array<idEntity?> = arrayOfNulls<idEntity>(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
         var entityHash: idHashIndex? = idHashIndex() // hash table to quickly find entities by name
@@ -537,7 +535,7 @@ class Game_local {
         var pvs: idPVS? = idPVS() // potential visible set
 
         //
-        var random: idRandom? = idRandom() // random number generator used throughout the game
+        var random: idRandom = idRandom() // random number generator used throughout the game
         var realClientTime // real client time
                 = 0
         var serverInfo: idDict? = idDict() // all the tunable parameters, like numclients, etc
@@ -555,8 +553,8 @@ class Game_local {
                 = false
         var sortTeamMasters // true if active lists needs to be reordered to place physics team masters before their slaves
                 = false
-        var spawnIds: IntArray? = IntArray(MAX_GENTITIES) // for use in idEntityPtr
-        var spawnedEntities: idLinkList<idEntity?>? = idLinkList() // all spawned entities
+        var spawnIds: IntArray = IntArray(MAX_GENTITIES) // for use in idEntityPtr
+        var spawnedEntities: idLinkList<idEntity> = idLinkList() // all spawned entities
 
         //
         var sufaceTypeNames: Array<String?>? =
@@ -6413,6 +6411,9 @@ class Game_local {
     companion object {
         //
         const val DEFAULT_GRAVITY = 1066.0f
+
+        lateinit var gameRenderWorld: idRenderWorld
+        lateinit var gameSoundWorld: idSoundWorld
 
         //============================================================================
         // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden

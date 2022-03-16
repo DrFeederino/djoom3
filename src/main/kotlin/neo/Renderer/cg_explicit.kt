@@ -5,8 +5,6 @@ package neo.Renderer
  */
 object cg_explicit {
     const val CG_ARRAY = 2
-
-    //
     const val CG_ATTR0 = 2113
     const val CG_ATTR1 = 2114
     const val CG_ATTR10 = 2123
@@ -71,7 +69,6 @@ object cg_explicit {
     const val CG_BLENDWEIGHT7 = 3035
     const val CG_BLENDWEIGHT8 = 3036
     const val CG_BLENDWEIGHT9 = 3037
-
     //
     const val CG_C = 2178
     const val CG_COL0 = 2245
@@ -80,7 +77,6 @@ object cg_explicit {
     const val CG_COL3 = 2248
     const val CG_COLOR0 = 2757
     const val CG_COLOR1 = 2758
-
     // } CGtype;
     const val CG_COLOR10 = 2767
     const val CG_COLOR11 = 2768
@@ -103,7 +99,6 @@ object cg_explicit {
     const val CG_COMPILED_PROGRAM = 4107
     const val CG_CONSTANT = 4104
     const val CG_CONST_EYE = 3291
-
     //
     const val CG_DEFAULT = 4111
     const val CG_DEPTH0 = 2933

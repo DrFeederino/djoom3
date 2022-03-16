@@ -119,9 +119,9 @@ import java.lang.Class
  *
  */
 object Class {
-    val EV_Remove: idEventDef? = idEventDef("<immediateremove>", null)
-    val EV_SafeRemove: idEventDef? = idEventDef("remove", null)
-    var classHierarchy: idHierarchy<idTypeInfo?>? = idHierarchy()
+    val EV_Remove: idEventDef = idEventDef("<immediateremove>", null)
+    val EV_SafeRemove: idEventDef = idEventDef("remove", null)
+    var classHierarchy: idHierarchy<idTypeInfo?> = idHierarchy()
     var eventCallbackMemory = 0
 
     // this is the head of a singly linked list of all the idTypes
@@ -330,7 +330,7 @@ object Class {
     abstract class idClass /*<nameOfClass>*/ {
         companion object {
             //        public static final idTypeInfo Type = null;
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //
             private var initialized = false
@@ -346,7 +346,7 @@ object Class {
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
@@ -592,7 +592,7 @@ object Class {
 
         abstract fun CreateInstance(): idClass?
         abstract fun  /*idTypeInfo*/GetType(): Class<out idClass?>?
-        abstract fun getEventCallBack(event: idEventDef?): eventCallback_t<*>?
+        abstract fun getEventCallBack(event: idEventDef): eventCallback_t<*>
 
         // virtual						~idClass();
         protected open fun _deconstructor() {

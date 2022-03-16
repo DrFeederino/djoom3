@@ -175,7 +175,6 @@ class RenderWorld {
         val axis: idMat3
         var bodyId = 0
 
-        //
         // Entities that are expensive to generate, like skeletal models, can be
         // deferred until their bounds are found to be in view, in the frustum
         // of a shadowing light that is in view, or contacted by a trace / overlay test.
@@ -186,7 +185,7 @@ class RenderWorld {
         // want to be called again next time the entity is referenced (ie, if the
         // callback has now made the entity valid until the next updateEntity)
         var bounds // only needs to be set for deferred models and md5s
-                : idBounds?
+                : idBounds = idBounds()
         var callback: deferredEntityCallback_t? = null
 
         //

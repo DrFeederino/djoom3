@@ -71,7 +71,7 @@ object AAS {
         abstract fun Test(origin: idVec3)
 
         // Get the AAS settings.
-        abstract fun GetSettings(): idAASSettings
+        abstract fun GetSettings(): idAASSettings?
 
         // Returns the number of the area the origin is in.
         abstract fun PointAreaNum(origin: idVec3): Int
@@ -140,7 +140,7 @@ object AAS {
             goalAreaNum: Int,
             travelFlags: Int,
             travelTime: CInt,
-            reach: Array<idReachability>
+            reach: Array<idReachability?>
         ): Boolean
 
         // Creates a walk path towards the goal.

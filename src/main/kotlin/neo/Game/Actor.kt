@@ -23,9 +23,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.IK.idIK_Walk
 import neo.Game.Item.idMoveableItem
 import neo.Game.Light.idLight
@@ -434,7 +432,7 @@ object Actor {
         //
         var team: Int
         var viewAxis // view axis of the actor
-                : idMat3?
+                : idMat3
         protected var allowEyeFocus: Boolean
 
         //
@@ -463,9 +461,9 @@ object Actor {
 
         //
         protected var deltaViewAngles // delta angles relative to view input angles
-                : idAngles?
+                : idAngles
         protected val eyeOffset // offset of eye relative to physics origin
-                : idVec3?
+                : idVec3
         protected var finalBoss: Boolean
 
         //
@@ -1613,7 +1611,7 @@ object Actor {
         }
 
         // delta view angles to allow movers to rotate the view of the actor
-        fun GetDeltaViewAngles(): idAngles? {
+        fun GetDeltaViewAngles(): idAngles {
             return deltaViewAngles
         }
 
@@ -2786,7 +2784,7 @@ object Actor {
             idThread.Companion.ReturnEntity(head.GetEntity())
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
             return eventCallbacks.get(event)
         }
 

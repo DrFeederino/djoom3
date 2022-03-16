@@ -20,9 +20,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Physics.Physics.idPhysics
 import neo.Game.Physics.Physics.impactInfo_s
@@ -265,7 +263,7 @@ object Entity {
             const val MAX_PVS_AREAS = 4
 
             //	ABSTRACT_PROTOTYPE( idEntity );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
             var DBG_name: String? = ""
 
             /* **********************************************************************
@@ -919,7 +917,7 @@ object Entity {
         //
         var entityNumber // index into the entity list
                 : Int
-        var fl: entityFlags_s?
+        var fl: entityFlags_s
 
         //
         //
@@ -944,11 +942,11 @@ object Entity {
         var snapshotSequence // last snapshot this entity was in
                 : Int
         var spawnArgs // key/value pairs used to spawn and initialize entity
-                : idDict?
+                : idDict
 
         //
         var spawnNode // for being linked into spawnedEntities list
-                : idLinkList<idEntity?>?
+                : idLinkList<idEntity>
 
         //
         var thinkFlags // TH_? flags
@@ -981,7 +979,7 @@ object Entity {
                 : Int
 
         // set by default. Triggers are static.
-        private var physics: idPhysics? = idPhysics_Static() // physics used for this entity
+        private var physics: idPhysics = idPhysics_Static() // physics used for this entity
 
         //
         private var signals: signalList_t?
@@ -998,7 +996,7 @@ object Entity {
             return this.javaClass
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
             return eventCallbacks.get(event)
         }
 
@@ -2465,7 +2463,7 @@ object Entity {
         }
 
         // get the physics object used by this entity
-        fun GetPhysics(): idPhysics? {
+        fun GetPhysics(): idPhysics {
             return physics
         }
 
@@ -4990,7 +4988,7 @@ object Entity {
             return super.ServerReceiveEvent(event, time, msg)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
             return eventCallbacks.get(event)
         }
 

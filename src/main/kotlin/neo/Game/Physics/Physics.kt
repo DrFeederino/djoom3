@@ -94,8 +94,8 @@ object Physics {
             SetClipModel(idClipModel(idTraceModel(bounds)), density)
         }
 
-        abstract fun GetClipModel(id: Int /*= 0*/): idClipModel?
-        fun GetClipModel(): idClipModel? {
+        abstract fun GetClipModel(id: Int /*= 0*/): idClipModel
+        fun GetClipModel(): idClipModel {
             return GetClipModel(0)
         }
 
@@ -136,13 +136,13 @@ object Physics {
         }
 
         // get the bounds of a specific clip model or the whole physics object
-        abstract fun GetBounds(id: Int /*= -1*/): idBounds?
-        fun GetBounds(): idBounds? {
+        abstract fun GetBounds(id: Int /*= -1*/): idBounds
+        fun GetBounds(): idBounds {
             return GetBounds(-1)
         }
 
-        abstract fun GetAbsBounds(id: Int /*= -1*/): idBounds?
-        fun GetAbsBounds(): idBounds? {
+        abstract fun GetAbsBounds(id: Int /*= -1*/): idBounds
+        fun GetAbsBounds(): idBounds {
             return GetAbsBounds(-1)
         }
 
@@ -192,16 +192,16 @@ object Physics {
         }
 
         // get the position and orientation in world space
-        abstract fun GetOrigin(id: Int /*= 0*/): idVec3?
-        fun GetOrigin(): idVec3? {
+        abstract fun GetOrigin(id: Int /*= 0*/): idVec3
+        fun GetOrigin(): idVec3 {
             return GetOrigin(0)
         }
 
-        fun GetAxis(): idMat3? {
+        fun GetAxis(): idMat3 {
             return GetAxis(0)
         }
 
-        abstract fun GetAxis(id: Int /*= 0*/): idMat3?
+        abstract fun GetAxis(id: Int /*= 0*/): idMat3
 
         // set linear and angular velocity
         abstract fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/)
@@ -215,20 +215,20 @@ object Physics {
         }
 
         // get linear and angular velocity
-        abstract fun GetLinearVelocity(id: Int /*= 0*/): idVec3?
-        fun GetLinearVelocity(): idVec3? {
+        abstract fun GetLinearVelocity(id: Int /*= 0*/): idVec3
+        fun GetLinearVelocity(): idVec3 {
             return GetLinearVelocity(0)
         }
 
-        abstract fun GetAngularVelocity(id: Int /*= 0*/): idVec3?
-        fun GetAngularVelocity(): idVec3? {
+        abstract fun GetAngularVelocity(id: Int /*= 0*/): idVec3
+        fun GetAngularVelocity(): idVec3 {
             return GetAngularVelocity(0)
         }
 
         // gravity
-        abstract fun SetGravity(newGravity: idVec3?)
-        abstract fun GetGravity(): idVec3?
-        abstract fun GetGravityNormal(): idVec3?
+        abstract fun SetGravity(newGravity: idVec3)
+        abstract fun GetGravity(): idVec3
+        abstract fun GetGravityNormal(): idVec3
 
         // get first collision when translating or rotating this physics object
         abstract fun ClipTranslation(results: trace_s?, translation: idVec3?, model: idClipModel?)

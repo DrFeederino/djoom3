@@ -150,11 +150,11 @@ object Cinematic {
     /**
      * The original file[] was a byte array.
      */
-    private fun expandBuffer(tempFile: ByteBuffer): IntArray? {
-        for (f in file.indices) {
-            file[f] = tempFile.get(f) and 0xFF
+    private fun expandBuffer(tempFile: ByteBuffer): IntArray {
+        for (f in file!!.indices) {
+            file!![f] = (tempFile.get(f) and 0xFF.toByte()).toInt()
         }
-        return file
+        return file!!
     }
 
     /**
@@ -223,7 +223,7 @@ object Cinematic {
         }
 
         // the pointers in cinData_t will remain valid until the next UpdateForTime() call
-        open fun ImageForTime(milliseconds: Int): cinData_t? {
+        open fun ImageForTime(milliseconds: Int): cinData_t {
             //	memset( &c, 0, sizeof( c ) );
             return cinData_t()
         }
@@ -236,7 +236,7 @@ object Cinematic {
 
         @Deprecated("") //remove if not used.
         @Throws(CloneNotSupportedException::class)
-        protected abstract fun clone(): idCinematic
+        abstract override fun clone(): idCinematic
 
         companion object {
             // initialize cinematic play back data
@@ -259,7 +259,7 @@ object Cinematic {
                     ROQ_VR_tab[i] = (t_vr * x + (1 shl 5)).toLong()
                     ROQ_UG_tab[i] = (-t_ug * x).toLong()
                     ROQ_VG_tab[i] = (-t_vg * x + (1 shl 5)).toLong()
-                    ROQ_YY_tab[i] = i shl 6 or (i shr 2)
+                    ROQ_YY_tab[i] = (i shl 6 or (i shr 2)).toLong()
                     i++
                 }
                 file = IntArray(65536) // Mem_Alloc(65536);
@@ -316,7 +316,7 @@ object Cinematic {
         }
 
         //						~idSndWindow() {}
-        private constructor(window: idSndWindow?) {
+        private constructor(window: idSndWindow) {
             showWaveform = window.showWaveform
         }
 
@@ -327,7 +327,7 @@ object Cinematic {
             return true
         }
 
-        override fun ImageForTime(milliseconds: Int): cinData_t? {
+        override fun ImageForTime(milliseconds: Int): cinData_t {
             return snd_system.soundSystem.ImageForTime(milliseconds, showWaveform)
         }
 
@@ -336,7 +336,7 @@ object Cinematic {
         }
 
         @Throws(CloneNotSupportedException::class)
-        override fun clone(): idCinematic? {
+        override fun clone(): idCinematic {
             return idSndWindow(this)
         }
     }
@@ -356,7 +356,7 @@ object Cinematic {
         private var dirty = false
         private var drawX: Long = 0
         private var drawY: Long = 0
-        private var fileName: idStr? = null
+        private val fileName: idStr = idStr()
         private var frameRate = 0f
         private var half = false
         private var iFile: idFile?
@@ -393,10 +393,10 @@ object Cinematic {
         private var maxSize = 0
         private var minSize = 0
 
-        private constructor(local: idCinematicLocal?) : this() {
+        private constructor(local: idCinematicLocal) : this() {
             System.arraycopy(local.mComp, 0, mComp, 0, mComp.size)
             qStatus = local.qStatus //pointer
-            fileName = local.fileName
+            fileName.set(local.fileName)
             CIN_WIDTH = local.CIN_WIDTH
             CIN_HEIGHT = local.CIN_HEIGHT
             iFile = local.iFile //pointer
@@ -435,34 +435,36 @@ object Cinematic {
             inMemory = local.inMemory
         }
 
-        override fun InitFromFile(qpath: String?, amilooping: Boolean): Boolean {
+        override fun InitFromFile(qpath: String, amilooping: Boolean): Boolean {
             val RoQID: Int
             val tempFile: ByteBuffer?
             debugInitFromFile++
             Close()
             inMemory = false
             animationLength = 100000
-            fileName = if (!qpath.contains("/") && !qpath.contains("\\")) {
-                idStr(String.format("video/%s", qpath))
-            } else {
-                idStr(String.format("%s", qpath))
-            }
+            fileName.set(
+                if (!qpath.contains("/") && !qpath.contains("\\")) {
+                    idStr(String.format("video/%s", qpath))
+                } else {
+                    idStr(String.format("%s", qpath))
+                }
+            )
             iFile = FileSystem_h.fileSystem.OpenFileRead(fileName.toString())
             if (null == iFile) {
                 return false
             }
-            ROQSize = iFile.Length().toLong()
+            ROQSize = iFile!!.Length().toLong()
             looping = amilooping
             CIN_HEIGHT = DEFAULT_CIN_HEIGHT
             CIN_WIDTH = DEFAULT_CIN_WIDTH
             samplesPerPixel = 4
             startTime = 0 //Sys_Milliseconds();
             buf = null
-            tempFile = ByteBuffer.allocate(file.size)
-            iFile.Read(tempFile, 16)
+            tempFile = ByteBuffer.allocate(file!!.size)
+            iFile!!.Read(tempFile, 16)
             file = expandBuffer(tempFile)
-            RoQID = file[0] + (file[1] shl 8)
-            frameRate = file[6]
+            RoQID = file!![0] + (file!![1] shl 8)
+            frameRate = file!![6].toFloat()
             if (frameRate == 32.0f) {
                 frameRate = 1000.0f / 32.0f
             }
@@ -477,7 +479,7 @@ object Cinematic {
             return false
         }
 
-        override fun ImageForTime(thisTime: Int): cinData_t? {
+        override fun ImageForTime(thisTime: Int): cinData_t {
             var thisTime = thisTime
             debugImageForTime++
             val cinData: cinData_t
@@ -541,7 +543,7 @@ object Cinematic {
             cinData.imageWidth = CIN_WIDTH
             cinData.imageHeight = CIN_HEIGHT
             cinData.status = status
-            cinData.image = TempDump.wrapToNativeBuffer(buf.slice().array())
+            cinData.image = TempDump.wrapToNativeBuffer(buf!!.slice().array())
             //            if (tr_render.variable >= 189) {
 //            flushBufferToDisk(buf);
 //            }
@@ -564,7 +566,7 @@ object Cinematic {
 
         override fun ResetTime(time: Int) {
             startTime =
-                (if (tr_local.backEnd.viewDef != null) 1000 * tr_local.backEnd.viewDef.floatTime else -1).toInt()
+                (if (tr_local.backEnd.viewDef != null) 1000 * tr_local.backEnd.viewDef!!.floatTime else -1).toInt()
             status = cinStatus_t.FMV_PLAY
         }
 
@@ -581,7 +583,7 @@ object Cinematic {
             roq_flags = (file[14] + file[15] * 256).toLong()
         }
 
-        private fun blitVQQuad32fs(status: Array<ByteBuffer?>, data: IntArray, offset: Int = 0) {
+        private fun blitVQQuad32fs(status: Array<ByteBuffer>, data: IntArray, offset: Int = 0) {
             var newd: Short
             var celdata: Int
             var code: Int
@@ -606,7 +608,7 @@ object Cinematic {
                 when (code) {
                     0x8000 -> {
                         blit8_32(
-                            vqPoint(vq8, (data[offset + d_index] * 128).toLong()),
+                            vqPoint(vq8!!, (data[offset + d_index] * 128).toLong()),
                             status[index],
                             samplesPerLine
                         )
@@ -630,7 +632,7 @@ object Cinematic {
                                 0x8000 -> {
                                     blit4_32(
                                         vqPoint(
-                                            vq4,
+                                            vq4!!,
                                             (data[offset + d_index] * 32).toLong()
                                         ), status[index], samplesPerLine
                                     )
@@ -639,28 +641,28 @@ object Cinematic {
                                 0xc000 -> {
                                     blit2_32(
                                         vqPoint(
-                                            vq2,
+                                            vq2!!,
                                             (data[offset + d_index] * 8).toLong()
                                         ), status[index], samplesPerLine
                                     )
                                     d_index++
                                     blit2_32(
                                         vqPoint(
-                                            vq2,
+                                            vq2!!,
                                             (data[offset + d_index] * 8).toLong()
                                         ), point(status[index], 8), samplesPerLine
                                     )
                                     d_index++
                                     blit2_32(
                                         vqPoint(
-                                            vq2,
+                                            vq2!!,
                                             (data[offset + d_index] * 8).toLong()
                                         ), point(status[index], samplesPerLine * 2), samplesPerLine
                                     )
                                     d_index++
                                     blit2_32(
                                         vqPoint(
-                                            vq2,
+                                            vq2!!,
                                             (data[offset + d_index] * 8).toLong()
                                         ), point(status[index], samplesPerLine * 2 + 8), samplesPerLine
                                     )
@@ -668,7 +670,7 @@ object Cinematic {
                                 }
                                 0x4000 -> {
                                     move4_32(
-                                        point(status[index], mComp.get(data[offset + d_index])),
+                                        point(status[index], mComp[data[offset + d_index]]),
                                         status[index],
                                         samplesPerLine
                                     )
@@ -681,7 +683,7 @@ object Cinematic {
                     }
                     0x4000 -> {
                         move8_32(
-                            point(status[index], mComp.get(data[offset + d_index])),
+                            point(status[index], mComp[data[offset + d_index]]),
                             status[index],
                             samplesPerLine
                         )
@@ -699,10 +701,10 @@ object Cinematic {
             }
             status = cinStatus_t.FMV_IDLE
             if (iFile != null) {
-                FileSystem_h.fileSystem.CloseFile(iFile)
+                FileSystem_h.fileSystem.CloseFile(iFile!!)
                 iFile = null
             }
-            fileName = idStr("")
+            fileName.set(idStr(""))
         }
 
         private fun RoQInterrupt() {
@@ -729,12 +731,12 @@ object Cinematic {
                 when (roq_id) {
                     ROQ_QUAD_VQ -> {
                         if (numQuads and 1 == 1L) {
-                            normalBuffer0 = t.get(1)
+                            normalBuffer0 = t[1]
                             RoQPrepMcomp(roqF0, roqF1)
                             blitVQQuad32fs(qStatus[1], file, framedata)
                             buf = point(image, screenDelta.toLong())
                         } else {
-                            normalBuffer0 = t.get(0)
+                            normalBuffer0 = t[0]
                             RoQPrepMcomp(roqF0, roqF1)
                             blitVQQuad32fs(qStatus[0], file, framedata)
                             buf = image
@@ -773,7 +775,7 @@ object Cinematic {
                     }
                     ROQ_QUAD_HANG -> RoQFrameSize = 0
                     ROQ_QUAD_JPEG -> if (0L == numQuads) {
-                        normalBuffer0 = t.get(0)
+                        normalBuffer0 = t[0]
                         JPEGBlit(image, file, framedata, RoQFrameSize)
                         //				memcpy(image+screenDelta, image, samplesPerLine*ysize);
                         System.arraycopy(image, 0, image, screenDelta, samplesPerLine.toInt() * ySize)
@@ -1507,8 +1509,8 @@ object Cinematic {
             }
             half = false
             smoothedDouble = false
-            t.get(0) = screenDelta //t[0] = (0 - (unsigned int)image)+(unsigned int)image+screenDelta;
-            t.get(1) = -screenDelta //t[1] = (0 - ((unsigned int)image + screenDelta))+(unsigned int)image;
+            t[0] = screenDelta.toLong() //t[0] = (0 - (unsigned int)image)+(unsigned int)image+screenDelta;
+            t[1] = (-screenDelta).toLong() //t[1] = (0 - ((unsigned int)image + screenDelta))+(unsigned int)image;
             drawX = CIN_WIDTH.toLong()
             drawY = CIN_HEIGHT.toLong()
         }
@@ -1532,7 +1534,7 @@ object Cinematic {
                 x = 0
                 while (x < 16) {
                     temp = (x + xOff - 8) * j
-                    mComp.get(x * 16 + y) = normalBuffer0 - (temp2 + temp) and 0xFFFFFFFFL
+                    mComp[x * 16 + y] = normalBuffer0 - (temp2 + temp) and 0xFFFFFFFFL
                     x++
                 }
                 y++
@@ -1541,9 +1543,9 @@ object Cinematic {
 
         private fun RoQReset() {
             val tempFile: ByteBuffer?
-            tempFile = ByteBuffer.allocate(file.size)
-            iFile.Seek(0, fsOrigin_t.FS_SEEK_SET)
-            iFile.Read(tempFile, 16)
+            tempFile = ByteBuffer.allocate(file!!.size)
+            iFile!!.Seek(0, fsOrigin_t.FS_SEEK_SET)
+            iFile!!.Read(tempFile, 16)
             file = expandBuffer(tempFile)
             RoQ_init()
             status = cinStatus_t.FMV_LOOPED

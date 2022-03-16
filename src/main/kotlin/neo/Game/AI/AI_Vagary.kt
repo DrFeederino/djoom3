@@ -12,7 +12,6 @@ import neo.Game.Game_local
 import neo.Game.Moveable.idMoveable
 import neo.Game.Physics.Physics.idPhysics
 import neo.Game.Script.Script_Thread.idThread
-import neo.TempDump
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
 import neo.idlib.math.Vector.idVec3
@@ -20,16 +19,18 @@ import neo.idlib.math.Vector.idVec3
 /**
  *
  */
-object AI_Vagary {
-    /* **********************************************************************
+class AI_Vagary {
+    companion object {
+        /* **********************************************************************
 
-     game/ai/AI_Vagary.cpp
+         game/ai/AI_Vagary.cpp
 
-     Vagary specific AI code
+         Vagary specific AI code
 
-     ***********************************************************************/
-    private val AI_Vagary_ChooseObjectToThrow: idEventDef = idEventDef("vagary_ChooseObjectToThrow", "vvfff", 'e')
-    private val AI_Vagary_ThrowObjectAtEnemy: idEventDef = idEventDef("vagary_ThrowObjectAtEnemy", "ef")
+         ***********************************************************************/
+        private val AI_Vagary_ChooseObjectToThrow: idEventDef = idEventDef("vagary_ChooseObjectToThrow", "vvfff", 'e')
+        private val AI_Vagary_ThrowObjectAtEnemy: idEventDef = idEventDef("vagary_ThrowObjectAtEnemy", "ef")
+    }
 
     class idAI_Vagary : idAI() {
         companion object {
@@ -40,37 +41,37 @@ object AI_Vagary {
             }
 
             init {
-                eventCallbacks.putAll(idAI.Companion.getEventCallBacks())
-                eventCallbacks[AI_Vagary.AI_Vagary_ChooseObjectToThrow] =
-                    eventCallback_t5<idAI_Vagary?> { obj: T?, mins: idEventArg<*>? ->
-                        neo.Game.AI.obj.Event_ChooseObjectToThrow(neo.Game.AI.mins)
-                    } as eventCallback_t5<idAI_Vagary?>
-                eventCallbacks[AI_Vagary.AI_Vagary_ThrowObjectAtEnemy] =
-                    eventCallback_t2<idAI_Vagary?> { obj: T?, _ent: idEventArg<*>? ->
-                        neo.Game.AI.obj.Event_ThrowObjectAtEnemy(neo.Game.AI._ent)
-                    } as eventCallback_t2<idAI_Vagary?>
+                eventCallbacks.putAll(idAI.getEventCallBacks())
+                eventCallbacks[AI_Vagary_ChooseObjectToThrow] =
+                    eventCallback_t5<idAI_Vagary> { obj: Any?, mins: idEventArg<*>? ->
+                        idAI_Vagary::Event_ChooseObjectToThrow
+                    } as eventCallback_t5<idAI_Vagary>
+                eventCallbacks[AI_Vagary_ThrowObjectAtEnemy] =
+                    eventCallback_t2<idAI_Vagary> { obj: Any?, _ent: idEventArg<*>? ->
+                        idAI_Vagary::Event_ThrowObjectAtEnemy
+                    } as eventCallback_t2<idAI_Vagary>
             }
         }
 
         private fun Event_ChooseObjectToThrow(
-            mins: idEventArg<idVec3?>?, maxs: idEventArg<idVec3?>?,
-            speed: idEventArg<Float?>?, minDist: idEventArg<Float?>?, offset: idEventArg<Float>
+            mins: idEventArg<idVec3>, maxs: idEventArg<idVec3>,
+            speed: idEventArg<Float>, minDist: idEventArg<Float>, offset: idEventArg<Float>
         ) {
             var ent: idEntity
-            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
+            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
             val numListedEntities: Int
             var i: Int
             var index: Int
             var dist: Float
             val vel = idVec3()
-            val offsetVec = idVec3(0, 0, offset.value)
+            val offsetVec = idVec3(0f, 0f, offset.value!!)
             val enemyEnt: idEntity? = enemy.GetEntity()
             if (null == enemyEnt) {
-                idThread.Companion.ReturnEntity(null)
+                idThread.ReturnEntity(null)
             }
-            val enemyEyePos = idVec3(lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset))
+            val enemyEyePos = lastVisibleEnemyPos + lastVisibleEnemyEyeOffset
             val myBounds = physicsObj.GetAbsBounds()
-            val checkBounds = idBounds(mins.value, maxs.value)
+            val checkBounds = idBounds(mins.value!!, maxs.value!!)
             checkBounds.TranslateSelf(physicsObj.GetOrigin())
             numListedEntities =
                 Game_local.gameLocal.clip.EntitiesTouchingBounds(checkBounds, -1, entityList, Game_local.MAX_GENTITIES)
@@ -95,7 +96,7 @@ object AI_Vagary {
                 val entPhys = ent.GetPhysics()
                 val entOrg = entPhys.GetOrigin()
                 dist = entOrg.minus(enemyEyePos).LengthFast()
-                if (dist < minDist.value) {
+                if (dist < minDist.value!!) {
                     i++
                     index++
                     continue
@@ -107,48 +108,48 @@ object AI_Vagary {
                     index++
                     continue
                 }
-                if (idAI.Companion.PredictTrajectory(
-                        entPhys.GetOrigin().oPlus(offsetVec),
+                if (PredictTrajectory(
+                        entPhys.GetOrigin() + offsetVec,
                         enemyEyePos,
-                        speed.value,
+                        speed.value!!,
                         entPhys.GetGravity(),
                         entPhys.GetClipModel(),
                         entPhys.GetClipMask(),
-                        Lib.Companion.MAX_WORLD_SIZE.toFloat(),
+                        Lib.MAX_WORLD_SIZE.toFloat(),
                         null,
                         enemyEnt,
                         if (SysCvar.ai_debugTrajectory.GetBool()) 4000 else 0,
                         vel
                     )
                 ) {
-                    idThread.Companion.ReturnEntity(ent)
+                    idThread.ReturnEntity(ent)
                     return
                 }
                 i++
                 index++
             }
-            idThread.Companion.ReturnEntity(null)
+            idThread.ReturnEntity(null)
         }
 
-        private fun Event_ThrowObjectAtEnemy(_ent: idEventArg<idEntity?>?, _speed: idEventArg<Float?>?) {
-            val ent = _ent.value
-            val speed: Float = _speed.value
+        private fun Event_ThrowObjectAtEnemy(_ent: idEventArg<idEntity>, _speed: idEventArg<Float>) {
+            val ent = _ent.value!!
+            val speed: Float = _speed.value!!
             val vel = idVec3()
             val enemyEnt: idEntity?
             val entPhys: idPhysics?
             entPhys = ent.GetPhysics()
             enemyEnt = enemy.GetEntity()
-            if (TempDump.NOT(enemyEnt)) {
-                vel.set(viewAxis.get(0).times(physicsObj.GetGravityAxis()).times(speed))
+            if (null == enemyEnt) {
+                vel.set((viewAxis[0] * physicsObj.GetGravityAxis()) * speed)
             } else {
-                idAI.Companion.PredictTrajectory(
+                PredictTrajectory(
                     entPhys.GetOrigin(),
-                    lastVisibleEnemyPos.oPlus(lastVisibleEnemyEyeOffset),
+                    lastVisibleEnemyPos + lastVisibleEnemyEyeOffset,
                     speed,
                     entPhys.GetGravity(),
                     entPhys.GetClipModel(),
                     entPhys.GetClipMask(),
-                    Lib.Companion.MAX_WORLD_SIZE.toFloat(),
+                    Lib.MAX_WORLD_SIZE.toFloat(),
                     null,
                     enemyEnt,
                     if (SysCvar.ai_debugTrajectory.GetBool()) 4000 else 0,
@@ -158,13 +159,14 @@ object AI_Vagary {
             }
             entPhys.SetLinearVelocity(vel)
             if (ent is idMoveable) {
-                val ment = ent as idMoveable?
+                val ment = ent
                 ment.EnableDamage(true, 2.5f)
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
+
     }
 }

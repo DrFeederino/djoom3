@@ -35,8 +35,8 @@ import java.util.*
  */
 object Clip {
     const val MAX_SECTOR_DEPTH = 12
-    const val MAX_SECTORS = (1 shl Clip.MAX_SECTOR_DEPTH + 1) - 1
-    val vec3_boxEpsilon: idVec3? =
+    const val MAX_SECTORS = (1 shl MAX_SECTOR_DEPTH + 1) - 1
+    val vec3_boxEpsilon: idVec3 =
         idVec3(CollisionModel.CM_BOX_EPSILON, CollisionModel.CM_BOX_EPSILON, CollisionModel.CM_BOX_EPSILON)
 
     //    public static final idBlockAlloc<clipLink_s> clipLinkAllocator = new idBlockAlloc<>(1024);
@@ -47,8 +47,8 @@ object Clip {
 
      ===============================================================
      */
-    val traceModelCache: idList<trmCache_s?>? = idList()
-    val traceModelHash: idHashIndex? = idHashIndex()
+    val traceModelCache: idList<trmCache_s> = idList()
+    val traceModelHash: idHashIndex = idHashIndex()
 
     /*
      ===============================================================================
@@ -71,11 +71,11 @@ object Clip {
      ============
      */
     fun TestHugeTranslation(
-        results: trace_s?,
+        results: trace_s,
         mdl: idClipModel?,
-        start: idVec3?,
-        end: idVec3?,
-        trmAxis: idMat3?
+        start: idVec3,
+        end: idVec3,
+        trmAxis: idMat3
     ): Boolean {
         if (mdl != null && end.minus(start).LengthSqr() > Math_h.Square(CollisionModel.CM_MAX_TRACE_DIST)) {
             // assert (false);
@@ -89,8 +89,8 @@ object Clip {
                 Game_local.gameLocal.Printf(
                     "huge translation for clip model %d on entity %d '%s'\n",
                     mdl.GetId(),
-                    mdl.GetEntity().entityNumber,
-                    mdl.GetEntity().GetName()
+                    mdl.GetEntity()!!.entityNumber,
+                    mdl.GetEntity()!!.GetName()
                 )
             } else {
                 Game_local.gameLocal.Printf("huge translation for clip model %d\n", mdl.GetId())
@@ -122,25 +122,18 @@ object Clip {
     }
 
     class trmCache_s {
-        val centerOfMass: idVec3?
-        var inertiaTensor: idMat3?
+        val centerOfMass: idVec3 = idVec3()
+        var inertiaTensor: idMat3 = idMat3()
         var refCount = 0
-        var trm: idTraceModel? = null
+        var trm: idTraceModel = idTraceModel()
         var volume = 0f
-
-        init {
-            centerOfMass = idVec3()
-            inertiaTensor = idMat3()
-        }
     }
 
     class idClipModel {
-        private val absBounds: idBounds? = idBounds() // absolute bounds
-        private val axis: idMat3? = idMat3() // orientation of clip model
-        private val bounds: idBounds? = idBounds() // bounds
-        private val origin: idVec3? = idVec3() // origin of clip model
-
-        //
+        private val absBounds: idBounds = idBounds() // absolute bounds
+        private val axis: idMat3 = idMat3() // orientation of clip model
+        private val bounds: idBounds = idBounds() // bounds
+        private val origin: idVec3 = idVec3() // origin of clip model
         private var clipLinks // links into sectors
                 : clipLink_s? = null
         private var   /*cmHandle_t*/collisionModelHandle // handle to collision model
@@ -154,7 +147,7 @@ object Clip {
         private var id // id for entities that use multiple clip models
                 = 0
         private var material // material for trace models
-                : idMaterial? = null
+                : Material.idMaterial? = null
         private var owner // owner of the entity that owns this clip model
                 : idEntity? = null
         private var renderModelHandle // render model def handle
@@ -168,12 +161,12 @@ object Clip {
             Init()
         }
 
-        constructor(name: String?) {
+        constructor(name: String) {
             Init()
             LoadModel(name)
         }
 
-        constructor(trm: idTraceModel?) {
+        constructor(trm: idTraceModel) {
             Init()
             LoadModel(trm)
         }
@@ -206,7 +199,7 @@ object Clip {
             touchCount = -1
         }
 
-        fun LoadModel(name: String?): Boolean {
+        fun LoadModel(name: String): Boolean {
             renderModelHandle = -1
             if (traceModelIndex != -1) {
                 FreeTraceModel(traceModelIndex)
@@ -218,7 +211,7 @@ object Clip {
                 run {
                     val contents = CInt()
                     CollisionModel_local.collisionModelManager.GetModelContents(collisionModelHandle, contents)
-                    this.contents = contents.getVal()
+                    this.contents = contents._val
                 }
                 true
             } else {
@@ -227,7 +220,7 @@ object Clip {
             }
         }
 
-        fun LoadModel(trm: idTraceModel?) {
+        fun LoadModel(trm: idTraceModel) {
             collisionModelHandle = 0
             renderModelHandle = -1
             if (traceModelIndex != -1) {
@@ -295,7 +288,7 @@ object Clip {
             }
             traceModelIndex = savefile.ReadInt()
             if (traceModelIndex >= 0) {
-                Clip.traceModelCache.get(traceModelIndex).refCount++
+                traceModelCache.get(traceModelIndex).refCount++
             }
             renderModelHandle = savefile.ReadInt()
             savefile.ReadBool(linked)
@@ -334,8 +327,8 @@ object Clip {
 
             // because movement is clipped an epsilon away from an actual edge,
             // we must fully check even when bounding boxes don't quite touch
-            absBounds.minusAssign(0, Clip.vec3_boxEpsilon)
-            absBounds.timesAssign(1, Clip.vec3_boxEpsilon)
+            absBounds.minusAssign(0, vec3_boxEpsilon)
+            absBounds.timesAssign(1, vec3_boxEpsilon)
             Link_r(clp.clipSectors.get(0)) //TODO:check if [0] is good enough. upd: seems it is
         }
 
@@ -446,19 +439,19 @@ object Clip {
             return owner
         }
 
-        fun GetBounds(): idBounds? {
+        fun GetBounds(): idBounds {
             return idBounds(bounds)
         }
 
-        fun GetAbsBounds(): idBounds? {
+        fun GetAbsBounds(): idBounds {
             return idBounds(absBounds)
         }
 
-        fun GetOrigin(): idVec3? {
+        fun GetOrigin(): idVec3 {
             return origin
         }
 
-        fun GetAxis(): idMat3? {
+        fun GetAxis(): idMat3 {
             return axis
         }
 
@@ -514,7 +507,7 @@ object Clip {
                     entity.name
                 )
             }
-            val entry: trmCache_s? = Clip.traceModelCache.get(traceModelIndex)
+            val entry: trmCache_s? = traceModelCache.get(traceModelIndex)
             mass.setVal(Math.abs(entry.volume * density)) // a hack-fix
             centerOfMass.set(entry.centerOfMass)
             inertiaTensor.set(entry.inertiaTensor.times(density))
@@ -587,16 +580,16 @@ object Clip {
             }
 
             fun ClearTraceModelCache() {
-                Clip.traceModelCache.DeleteContents(true)
-                Clip.traceModelHash.Free()
+                traceModelCache.DeleteContents(true)
+                traceModelHash.Free()
             }
 
             fun SaveTraceModels(savefile: idSaveGame?) {
                 var i: Int
-                savefile.WriteInt(Clip.traceModelCache.Num())
+                savefile.WriteInt(traceModelCache.Num())
                 i = 0
-                while (i < Clip.traceModelCache.Num()) {
-                    val entry: trmCache_s? = Clip.traceModelCache.get(i)
+                while (i < traceModelCache.Num()) {
+                    val entry: trmCache_s? = traceModelCache.get(i)
                     savefile.WriteTraceModel(entry.trm)
                     savefile.WriteFloat(entry.volume)
                     savefile.WriteVec3(entry.centerOfMass)
@@ -610,17 +603,17 @@ object Clip {
                 val num = CInt()
                 ClearTraceModelCache()
                 savefile.ReadInt(num)
-                Clip.traceModelCache.SetNum(num.getVal())
+                traceModelCache.SetNum(num._val)
                 i = 0
-                while (i < num.getVal()) {
+                while (i < num._val) {
                     val entry = trmCache_s()
                     savefile.ReadTraceModel(entry.trm)
                     entry.volume = savefile.ReadFloat()
                     savefile.ReadVec3(entry.centerOfMass)
                     savefile.ReadMat3(entry.inertiaTensor)
                     entry.refCount = 0
-                    Clip.traceModelCache.set(i, entry)
-                    Clip.traceModelHash.Add(GetTraceModelHashKey(entry.trm), i)
+                    traceModelCache.set(i, entry)
+                    traceModelHash.Add(GetTraceModelHashKey(entry.trm), i)
                     i++
                 }
             }
@@ -631,38 +624,38 @@ object Clip {
                 val traceModelIndex: Int
                 val entry: trmCache_s
                 hashKey = GetTraceModelHashKey(trm)
-                i = Clip.traceModelHash.First(hashKey)
+                i = traceModelHash.First(hashKey)
                 while (i >= 0) {
-                    if (Clip.traceModelCache.get(i).trm == trm) {
-                        Clip.traceModelCache.get(i).refCount++
+                    if (traceModelCache.get(i).trm == trm) {
+                        traceModelCache.get(i).refCount++
                         return i
                     }
-                    i = Clip.traceModelHash.Next(i)
+                    i = traceModelHash.Next(i)
                 }
                 entry = trmCache_s()
                 entry.trm = trm
                 val volume = CFloat()
                 entry.trm.GetMassProperties(1.0f, volume, entry.centerOfMass, entry.inertiaTensor)
-                entry.volume = volume.getVal()
+                entry.volume = volume._val
                 entry.refCount = 1
-                traceModelIndex = Clip.traceModelCache.Append(entry)
-                Clip.traceModelHash.Add(hashKey, traceModelIndex)
+                traceModelIndex = traceModelCache.Append(entry)
+                traceModelHash.Add(hashKey, traceModelIndex)
                 return traceModelIndex
             }
 
             private fun FreeTraceModel(traceModelIndex: Int) {
-                if (traceModelIndex < 0 || traceModelIndex >= Clip.traceModelCache.Num() || Clip.traceModelCache.get(
+                if (traceModelIndex < 0 || traceModelIndex >= traceModelCache.Num() || traceModelCache.get(
                         traceModelIndex
                     ).refCount <= 0
                 ) {
                     Game_local.gameLocal.Warning("idClipModel::FreeTraceModel: tried to free uncached trace model")
                     return
                 }
-                Clip.traceModelCache.get(traceModelIndex).refCount--
+                traceModelCache.get(traceModelIndex).refCount--
             }
 
             private fun GetCachedTraceModel(traceModelIndex: Int): idTraceModel? {
-                return Clip.traceModelCache.get(traceModelIndex).trm
+                return traceModelCache.get(traceModelIndex).trm
             }
 
             private fun GetTraceModelHashKey(trm: idTraceModel?): Int {
@@ -706,7 +699,7 @@ object Clip {
             val maxSector = Vector.getVec3_origin()
 
             // clear clip sectors
-            clipSectors = arrayOfNulls<clipSector_s?>(Clip.MAX_SECTORS)
+            clipSectors = arrayOfNulls<clipSector_s?>(MAX_SECTORS)
             //	memset( clipSectors, 0, MAX_SECTORS * sizeof( clipSector_t ) );
             numClipSectors = 0
             touchCount = -1
@@ -773,7 +766,7 @@ object Clip {
             val radius: Float
             val trace = trace_s()
             val trm: idTraceModel?
-            if (Clip.TestHugeTranslation(results, mdl, start, end, trmAxis)) {
+            if (TestHugeTranslation(results, mdl, start, end, trmAxis)) {
                 return true
             }
             trm = TraceModelForClipModel(mdl)
@@ -945,7 +938,7 @@ object Clip {
             val endRotation: idRotation
             val trm: idTraceModel?
             assert(rotation.GetOrigin() == start)
-            if (Clip.TestHugeTranslation(results, mdl, start, end, trmAxis)) {
+            if (TestHugeTranslation(results, mdl, start, end, trmAxis)) {
                 return true
             }
             if (mdl != null && rotation.GetAngle() != 0.0f && rotation.GetVec() != Vector.getVec3_origin()) {
@@ -1430,7 +1423,7 @@ object Clip {
             val radius: Float
             val trace = trace_s()
             val trm: idTraceModel?
-            if (Clip.TestHugeTranslation(results, mdl, start, end, trmAxis)) {
+            if (TestHugeTranslation(results, mdl, start, end, trmAxis)) {
                 return
             }
             trm = TraceModelForClipModel(mdl)
@@ -1551,7 +1544,7 @@ object Clip {
         fun EntitiesTouchingBounds(
             bounds: idBounds?,
             contentMask: Int,
-            entityList: Array<idEntity?>?,
+            entityList: Array<idEntity>,
             maxCount: Int
         ): Int {
             val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
@@ -1586,9 +1579,9 @@ object Clip {
         }
 
         fun ClipModelsTouchingBounds(
-            bounds: idBounds?,
+            bounds: idBounds,
             contentMask: Int,
-            clipModelList: Array<idClipModel?>?,
+            clipModelList: Array<idClipModel>,
             maxCount: Int
         ): Int {
             val parms = listParms_s()
@@ -1601,8 +1594,8 @@ object Clip {
                 assert(false)
                 return 0
             }
-            parms.bounds.set(0, bounds.get(0).minus(Clip.vec3_boxEpsilon))
-            parms.bounds.set(1, bounds.get(1).oPlus(Clip.vec3_boxEpsilon))
+            parms.bounds.set(0, bounds.get(0).minus(vec3_boxEpsilon))
+            parms.bounds.set(1, bounds.get(1).oPlus(vec3_boxEpsilon))
             parms.contentMask = contentMask
             parms.list = clipModelList
             parms.count = 0
@@ -1732,7 +1725,7 @@ object Clip {
             val back: idBounds
             clipSectors.get(numClipSectors++) = clipSector_s()
             anode = clipSectors.get(numClipSectors++)
-            if (depth == Clip.MAX_SECTOR_DEPTH) {
+            if (depth == MAX_SECTOR_DEPTH) {
                 anode.axis = -1
                 anode.children.get(1) = null
                 anode.children.get(0) = anode.children.get(1)
@@ -1923,7 +1916,7 @@ object Clip {
                     trace.c.contents = modelTrace.material.GetContentFlags()
                     trace.c.material = modelTrace.material
                     // NOTE: trace.c.id will be the joint number
-                    touch.id = Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(modelTrace.jointNumber)
+                    touch.id = JOINT_HANDLE_TO_CLIPMODEL_ID(modelTrace.jointNumber)
                 }
             }
         }

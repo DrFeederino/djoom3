@@ -34,7 +34,7 @@ class Physics_Actor {
         protected var clipModel // clip model used for collision detection
                 : idClipModel? = null
         protected var clipModelAxis // axis of clip model aligned with gravity direction
-                : idMat3?
+                : idMat3
 
         //
         // results of last evaluate
@@ -177,7 +177,7 @@ class Physics_Actor {
             }
         }
 
-        fun GetGravityAxis(): idMat3? {
+        fun GetGravityAxis(): idMat3 {
             return clipModelAxis
         }
 
