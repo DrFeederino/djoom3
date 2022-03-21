@@ -80,7 +80,7 @@ object RenderWorld_local {
                 = 0
         var next // next portal of the area
                 : portal_s? = null
-        val plane: idPlane? = idPlane() // view must be on the positive side of the plane to cross
+        val plane: idPlane = idPlane() // view must be on the positive side of the plane to cross
         var w // winding points have counter clockwise ordering seen this area
                 : idWinding?
 
@@ -134,7 +134,7 @@ object RenderWorld_local {
         var children: IntArray? = IntArray(2) // negative numbers are (-1 - areaNumber), 0 = solid
         var commonChildrenArea // if all children are either solid or a single area,
                 = 0
-        val plane: idPlane? =
+        val plane: idPlane =
             idPlane() //                              // this is the area number, else CHILDREN_HAVE_MULTIPLE_AREAS
     }
 
@@ -548,7 +548,7 @@ object RenderWorld_local {
 
         override fun ProjectDecalOntoWorld(
             winding: idFixedWinding?,
-            projectionOrigin: idVec3?,
+            projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
             material: idMaterial?,
@@ -629,7 +629,7 @@ object RenderWorld_local {
         override fun ProjectDecal(
             entityHandle: Int,
             winding: idFixedWinding?,
-            projectionOrigin: idVec3?,
+            projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
             material: idMaterial?,
@@ -678,7 +678,7 @@ object RenderWorld_local {
             def.decals.CreateDecal(model, localInfo)
         }
 
-        override fun ProjectOverlay(entityHandle: Int, localTextureAxis: Array<idPlane?>?, material: idMaterial?) {
+        override fun ProjectOverlay(entityHandle: Int, localTextureAxis: Array<idPlane>?, material: idMaterial?) {
             if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
@@ -847,7 +847,7 @@ object RenderWorld_local {
          it will return 0 <= value < tr.world->numPortalAreas
          ===============
          */
-        override fun PointInArea(point: idVec3?): Int {
+        override fun PointInArea(point: idVec3): Int {
             var node: areaNode_t?
             var nodeNum: Int
             var d: Float
@@ -886,7 +886,7 @@ object RenderWorld_local {
          returns the total number of areas the bounds are in
          ===================
          */
-        override fun BoundsInAreas(bounds: idBounds?, areas: IntArray?, maxAreas: Int): Int {
+        override fun BoundsInAreas(bounds: idBounds, areas: IntArray?, maxAreas: Int): Int {
             val numAreas = IntArray(1)
             assert(areas != null)
             assert(
@@ -960,7 +960,7 @@ object RenderWorld_local {
          start / end are in global world coordinates.
          ================
          */
-        override fun GuiTrace(entityHandle: Int, start: idVec3?, end: idVec3?): guiPoint_t? {
+        override fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t? {
             var local: localTrace_t?
             val localStart = idVec3()
             val localEnd = idVec3()
@@ -1013,7 +1013,7 @@ object RenderWorld_local {
                 local = tr_trace.R_LocalTrace(localStart, localEnd, 0.0f, tri)
                 if (local.fraction < 1.0) {
                     val origin = idVec3()
-                    val axis: Array<idVec3?> = idVec3.Companion.generateArray(3)
+                    val axis: Array<idVec3> = idVec3.Companion.generateArray(3)
                     val cursor = idVec3()
                     val axisLen = FloatArray(2)
                     tr_guisurf.R_SurfaceToTextureAxis(tri, origin, axis)
@@ -1033,8 +1033,8 @@ object RenderWorld_local {
         override fun ModelTrace(
             trace: modelTrace_s?,
             entityHandle: Int,
-            start: idVec3?,
-            end: idVec3?,
+            start: idVec3,
+            end: idVec3,
             radius: Float
         ): Boolean {
             var i: Int
@@ -1120,8 +1120,8 @@ object RenderWorld_local {
 
         override fun Trace(
             trace: modelTrace_s?,
-            start: idVec3?,
-            end: idVec3?,
+            start: idVec3,
+            end: idVec3,
             radius: Float,
             skipDynamic: Boolean,
             skipPlayer: Boolean /*_D3XP*/
@@ -1278,7 +1278,7 @@ object RenderWorld_local {
             return trace.fraction < 1.0f
         }
 
-        override fun FastWorldTrace(results: modelTrace_s?, start: idVec3?, end: idVec3?): Boolean {
+        override fun FastWorldTrace(results: modelTrace_s?, start: idVec3, end: idVec3): Boolean {
 //            memset(results, 0, sizeof(modelTrace_t));
             results.clear()
             results.fraction = 1.0f
@@ -1294,11 +1294,11 @@ object RenderWorld_local {
             tr_rendertools.RB_ClearDebugText(time)
         }
 
-        override fun DebugLine(color: idVec4?, start: idVec3?, end: idVec3?, lifetime: Int, depthTest: Boolean) {
+        override fun DebugLine(color: idVec4, start: idVec3, end: idVec3, lifetime: Int, depthTest: Boolean) {
             tr_rendertools.RB_AddDebugLine(color, start, end, lifetime, depthTest)
         }
 
-        override fun DebugArrow(color: idVec4?, start: idVec3?, end: idVec3?, size: Int, lifetime: Int) {
+        override fun DebugArrow(color: idVec4, start: idVec3, end: idVec3, size: Int, lifetime: Int) {
             val forward = idVec3()
             val right = idVec3()
             val up = idVec3()
@@ -1350,10 +1350,10 @@ object RenderWorld_local {
         }
 
         override fun DebugWinding(
-            color: idVec4?,
+            color: idVec4,
             w: idWinding?,
-            origin: idVec3?,
-            axis: idMat3?,
+            origin: idVec3,
+            axis: idMat3,
             lifetime: Int,
             depthTest: Boolean
         ) {
@@ -1374,9 +1374,9 @@ object RenderWorld_local {
         }
 
         override fun DebugCircle(
-            color: idVec4?,
-            origin: idVec3?,
-            dir: idVec3?,
+            color: idVec4,
+            origin: idVec3,
+            dir: idVec3,
             radius: Float,
             numSteps: Int,
             lifetime: Int,
@@ -1402,7 +1402,7 @@ object RenderWorld_local {
             }
         }
 
-        override fun DebugSphere(color: idVec4?, sphere: idSphere?, lifetime: Int, depthTest: Boolean) {
+        override fun DebugSphere(color: idVec4, sphere: idSphere?, lifetime: Int, depthTest: Boolean) {
             var i: Int
             var j: Int
             var n: Int
@@ -1412,7 +1412,7 @@ object RenderWorld_local {
             val p = idVec3()
             val lastp = idVec3()
             num = 360 / 15
-            val lastArray: Array<idVec3?> = idVec3.Companion.generateArray(num)
+            val lastArray: Array<idVec3> = idVec3.Companion.generateArray(num)
             lastArray[0].set(sphere.GetOrigin().oPlus(idVec3(0, 0, sphere.GetRadius())))
             n = 1
             while (n < num) {
@@ -1449,9 +1449,9 @@ object RenderWorld_local {
             }
         }
 
-        override fun DebugBounds(color: idVec4?, bounds: idBounds?, org: idVec3?, lifetime: Int) {
+        override fun DebugBounds(color: idVec4, bounds: idBounds, org: idVec3, lifetime: Int) {
             var i: Int
-            val v: Array<idVec3?> = idVec3.Companion.generateArray(8)
+            val v: Array<idVec3> = idVec3.Companion.generateArray(8)
             if (bounds.IsCleared()) {
                 return
             }
@@ -1471,9 +1471,9 @@ object RenderWorld_local {
             }
         }
 
-        override fun DebugBox(color: idVec4?, box: idBox?, lifetime: Int) {
+        override fun DebugBox(color: idVec4, box: idBox?, lifetime: Int) {
             var i: Int
-            val v: Array<idVec3?> = idVec3.Companion.generateArray(8)
+            val v: Array<idVec3> = idVec3.Companion.generateArray(8)
             box.ToPoints(v)
             i = 0
             while (i < 4) {
@@ -1484,9 +1484,9 @@ object RenderWorld_local {
             }
         }
 
-        override fun DebugFrustum(color: idVec4?, frustum: idFrustum?, showFromOrigin: Boolean, lifetime: Int) {
+        override fun DebugFrustum(color: idVec4, frustum: idFrustum?, showFromOrigin: Boolean, lifetime: Int) {
             var i: Int
-            val v: Array<idVec3?> = idVec3.Companion.generateArray(8)
+            val v: Array<idVec3> = idVec3.Companion.generateArray(8)
             frustum.ToPoints(v)
             if (frustum.GetNearDistance() > 0.0f) {
                 i = 0
@@ -1520,9 +1520,9 @@ object RenderWorld_local {
          ============
          */
         override fun DebugCone(
-            color: idVec4?,
-            apex: idVec3?,
-            dir: idVec3?,
+            color: idVec4,
+            apex: idVec3,
+            dir: idVec3,
             radius1: Float,
             radius2: Float,
             lifetime: Int
@@ -1575,7 +1575,7 @@ object RenderWorld_local {
         }
 
         @JvmOverloads
-        fun DebugScreenRect(color: idVec4?, rect: idScreenRect?, viewDef: viewDef_s?, lifetime: Int = 0) {
+        fun DebugScreenRect(color: idVec4, rect: idScreenRect?, viewDef: viewDef_s?, lifetime: Int = 0) {
             var i: Int
             val centerx: Float
             val centery: Float
@@ -1583,7 +1583,7 @@ object RenderWorld_local {
             val hScale: Float
             val vScale: Float
             val bounds = idBounds()
-            val p: Array<idVec3?> = idVec3.Companion.generateArray(4)
+            val p: Array<idVec3> = idVec3.Companion.generateArray(4)
             centerx = (viewDef.viewport.x2 - viewDef.viewport.x1) * 0.5f
             centery = (viewDef.viewport.y2 - viewDef.viewport.y1) * 0.5f
             dScale = RenderSystem_init.r_znear.GetFloat() + 1.0f
@@ -1616,7 +1616,7 @@ object RenderWorld_local {
             }
         }
 
-        override fun DebugAxis(origin: idVec3?, axis: idMat3?) {
+        override fun DebugAxis(origin: idVec3, axis: idMat3) {
             val start = idVec3(origin)
             val end = idVec3(start.oPlus(axis.get(0).times(20.0f)))
             DebugArrow(Lib.Companion.colorWhite, start, end, 2)
@@ -1636,16 +1636,16 @@ object RenderWorld_local {
             tr_rendertools.RB_ClearDebugPolygons(time)
         }
 
-        override fun DebugPolygon(color: idVec4?, winding: idWinding?, lifeTime: Int, depthTest: Boolean) {
+        override fun DebugPolygon(color: idVec4, winding: idWinding?, lifeTime: Int, depthTest: Boolean) {
             tr_rendertools.RB_AddDebugPolygon(color, winding, lifeTime, depthTest)
         }
 
         override fun DrawText(
             text: String?,
-            origin: idVec3?,
+            origin: idVec3,
             scale: Float,
-            color: idVec4?,
-            viewAxis: idMat3?,
+            color: idVec4,
+            viewAxis: idMat3,
             align: Int,
             lifetime: Int,
             depthTest: Boolean
@@ -2285,7 +2285,7 @@ object RenderWorld_local {
             return true
         }
 
-        fun FloodViewThroughArea_r(origin: idVec3?, areaNum: Int, ps: portalStack_s?) {
+        fun FloodViewThroughArea_r(origin: idVec3, areaNum: Int, ps: portalStack_s?) {
             var p: portal_s?
             var d: Float
             val area: portalArea_s?
@@ -2427,7 +2427,7 @@ object RenderWorld_local {
          Zero planes assumes an unbounded volume.
          =======================
          */
-        fun FlowViewThroughPortals(origin: idVec3?, numPlanes: Int, planes: Array<idPlane?>?) {
+        fun FlowViewThroughPortals(origin: idVec3, numPlanes: Int, planes: Array<idPlane>?) {
             val ps = portalStack_s()
             var i: Int
             ps.next = null
@@ -2616,7 +2616,7 @@ object RenderWorld_local {
         fun FloodFrustumAreas_r(
             frustum: idFrustum?,
             areaNum: Int,
-            bounds: idBounds?,
+            bounds: idBounds,
             areas: areaNumRef_s?
         ): areaNumRef_s? {
             var areas = areas
@@ -3030,7 +3030,7 @@ object RenderWorld_local {
          Returns 0 if no portal contacts the bounds
          ==============
          */
-        override fun  /*qhandle_t*/FindPortal(b: idBounds?): Int {
+        override fun  /*qhandle_t*/FindPortal(b: idBounds): Int {
             var i: Int
             var j: Int
             val wb = idBounds()
@@ -3234,7 +3234,7 @@ object RenderWorld_local {
         override fun ProcessDemoCommand(
             readDemo: idDemoFile?,
             renderView: renderView_s?,
-            demoTimeOffset: CInt?
+            demoTimeOffset: CInt
         ): Boolean {
             var newMap = false
             val viewShadow = renderViewShadow()
@@ -3248,7 +3248,7 @@ object RenderWorld_local {
                 // a demoShot may not have an endFrame, but it is still valid
                 return false
             }
-            dc = demoCommand_t.values()[d.getVal()]
+            dc = demoCommand_t.values()[d._val]
             when (dc) {
                 demoCommand_t.DC_LOADMAP -> {
                     // read the initial data
@@ -3264,7 +3264,7 @@ object RenderWorld_local {
                         i++
                     }
                     // the internal version value got replaced by DS_VERSION at toplevel
-                    if (header.version.getVal() != 4) {
+                    if (header.version._val != 4) {
                         Common.common.Error("Demo version mismatch.\n")
                     }
                     if (RenderSystem_init.r_showDemo.GetBool()) {
@@ -3305,8 +3305,8 @@ object RenderWorld_local {
                     }
 
                     // possibly change the time offset if this is from a new map
-                    if (newMap && demoTimeOffset.getVal() != 0) {
-                        demoTimeOffset.setVal(viewShadow.time.getVal() - EventLoop.eventLoop.Milliseconds())
+                    if (newMap && demoTimeOffset._val != 0) {
+                        demoTimeOffset.setVal(viewShadow.time._val - EventLoop.eventLoop.Milliseconds())
                     }
                     renderView.atomicSet(viewShadow)
                     return false
@@ -3317,9 +3317,9 @@ object RenderWorld_local {
                         return false
                     }
                     if (RenderSystem_init.r_showDemo.GetBool()) {
-                        Common.common.Printf("DC_DELETE_ENTITYDEF: %d\n", h.getVal())
+                        Common.common.Printf("DC_DELETE_ENTITYDEF: %d\n", h._val)
                     }
-                    FreeEntityDef(h.getVal())
+                    FreeEntityDef(h._val)
                 }
                 demoCommand_t.DC_UPDATE_LIGHTDEF -> ReadRenderLight()
                 demoCommand_t.DC_DELETE_LIGHTDEF -> {
@@ -3327,9 +3327,9 @@ object RenderWorld_local {
                         return false
                     }
                     if (RenderSystem_init.r_showDemo.GetBool()) {
-                        Common.common.Printf("DC_DELETE_LIGHTDEF: %d\n", h.getVal())
+                        Common.common.Printf("DC_DELETE_LIGHTDEF: %d\n", h._val)
                     }
-                    FreeLightDef(h.getVal())
+                    FreeLightDef(h._val)
                 }
                 demoCommand_t.DC_CAPTURE_RENDER -> {
                     if (RenderSystem_init.r_showDemo.GetBool()) {
@@ -3341,11 +3341,11 @@ object RenderWorld_local {
                     if (RenderSystem_init.r_showDemo.GetBool()) {
                         Common.common.Printf("DC_CROP_RENDER\n")
                     }
-                    val size = Stream.generate { CInt() }.limit(3).toArray<CInt?> { _Dummy_.__Array__() }
+                    val size = Stream.generate { CInt() }.limit(3).toArray<CInt> { _Dummy_.__Array__() }
                     readDemo.ReadInt(size[0])
                     readDemo.ReadInt(size[1])
                     readDemo.ReadInt(size[2])
-                    RenderSystem.renderSystem.CropRenderSize(size[0].getVal(), size[1].getVal(), size[2].getVal() != 0)
+                    RenderSystem.renderSystem.CropRenderSize(size[0]._val, size[1]._val, size[2]._val != 0)
                 }
                 demoCommand_t.DC_UNCROP_RENDER -> {
                     if (RenderSystem_init.r_showDemo.GetBool()) {
@@ -3372,12 +3372,12 @@ object RenderWorld_local {
                     }
                 }
                 demoCommand_t.DC_SET_PORTAL_STATE -> {
-                    val data = Stream.generate { CInt() }.limit(2).toArray<CInt?> { _Dummy_.__Array__() }
+                    val data = Stream.generate { CInt() }.limit(2).toArray<CInt> { _Dummy_.__Array__() }
                     readDemo.ReadInt(data[0])
                     readDemo.ReadInt(data[1])
-                    SetPortalState(data[0].getVal(), data[1].getVal())
+                    SetPortalState(data[0]._val, data[1]._val)
                     if (RenderSystem_init.r_showDemo.GetBool()) {
-                        Common.common.Printf("DC_SET_PORTAL_STATE: %d %d\n", data[0].getVal(), data[1].getVal())
+                        Common.common.Printf("DC_SET_PORTAL_STATE: %d %d\n", data[0]._val, data[1]._val)
                     }
                 }
                 demoCommand_t.DC_END_FRAME -> return true
@@ -3401,9 +3401,9 @@ object RenderWorld_local {
             header.version.setVal(4)
             header.sizeofRenderEntity.setVal(4)
             header.sizeofRenderLight.setVal(4)
-            Session.Companion.session.writeDemo.WriteInt(header.version.getVal())
-            Session.Companion.session.writeDemo.WriteInt(header.sizeofRenderEntity.getVal())
-            Session.Companion.session.writeDemo.WriteInt(header.sizeofRenderLight.getVal())
+            Session.Companion.session.writeDemo.WriteInt(header.version._val)
+            Session.Companion.session.writeDemo.WriteInt(header.sizeofRenderEntity._val)
+            Session.Companion.session.writeDemo.WriteInt(header.sizeofRenderLight._val)
             for (i in 0..255) {
                 Session.Companion.session.writeDemo.WriteChar(header.mapname[i] as Short)
             }
@@ -3691,7 +3691,7 @@ object RenderWorld_local {
             val index = CInt()
             var i: Int
             Session.Companion.session.readDemo.ReadInt(index)
-            if (index.getVal() < 0) {
+            if (index._val < 0) {
                 Common.common.Error("ReadRenderEntity: index < 0")
             }
 
@@ -3772,17 +3772,17 @@ object RenderWorld_local {
             if (shadow.referenceSound != null) {
 //		int	index;
                 Session.Companion.session.readDemo.ReadInt(index)
-                shadow.referenceSound = Session.Companion.session.sw.EmitterForIndex(index.getVal())
+                shadow.referenceSound = Session.Companion.session.sw.EmitterForIndex(index._val)
             }
-            if (shadow.numJoints.getVal() != 0) {
-                shadow.joints = arrayOfNulls(shadow.numJoints.getVal()) //Mem_Alloc16(ent.numJoints);
+            if (shadow.numJoints._val != 0) {
+                shadow.joints = arrayOfNulls(shadow.numJoints._val) //Mem_Alloc16(ent.numJoints);
                 i = 0
-                while (i < shadow.numJoints.getVal()) {
+                while (i < shadow.numJoints._val) {
                     val data = shadow.joints[i].ToFloatPtr()
                     for (j in 0..11) {
                         val d = CFloat()
                         Session.Companion.session.readDemo.ReadFloat(d)
-                        data[j] = d.getVal()
+                        data[j] = d._val
                     }
                     i++
                 }
@@ -3818,11 +3818,11 @@ object RenderWorld_local {
                 shadow.xrayIndex.setVal(0)
             }
             ent.atomicSet(shadow)
-            UpdateEntityDef(index.getVal(), ent)
+            UpdateEntityDef(index._val, ent)
             if (RenderSystem_init.r_showDemo.GetBool()) {
                 Common.common.Printf(
                     "DC_UPDATE_ENTITYDEF: %d = %s\n",
-                    index.getVal(),
+                    index._val,
                     if (shadow.hModel != null) shadow.hModel.Name() else "NULL"
                 )
             }
@@ -3833,7 +3833,7 @@ object RenderWorld_local {
             val light = renderLight_s()
             val index = CInt()
             Session.Companion.session.readDemo.ReadInt(index)
-            if (index.getVal() < 0) {
+            if (index._val < 0) {
                 Common.common.Error("ReadRenderLight: index < 0 ")
             }
             Session.Companion.session.readDemo.ReadMat3(shadow.axis)
@@ -3859,7 +3859,7 @@ object RenderWorld_local {
             for (i in 0 until Material.MAX_ENTITY_SHADER_PARMS) {
                 val parm = CFloat()
                 Session.Companion.session.readDemo.ReadFloat(parm)
-                shadow.shaderParms[i] = parm.getVal()
+                shadow.shaderParms[i] = parm._val
             }
             //            session.readDemo.ReadInt((int) shadow.referenceSound);
             Session.Companion.session.readDemo.Read(shadow.referenceSound)
@@ -3874,12 +3874,12 @@ object RenderWorld_local {
             if (shadow.referenceSound != null) {
 //		int	index;
                 Session.Companion.session.readDemo.ReadInt(index)
-                shadow.referenceSound = Session.Companion.session.sw.EmitterForIndex(index.getVal())
+                shadow.referenceSound = Session.Companion.session.sw.EmitterForIndex(index._val)
             }
             light.atomicSet(shadow)
-            UpdateLightDef(index.getVal(), light)
+            UpdateLightDef(index._val, light)
             if (RenderSystem_init.r_showDemo.GetBool()) {
-                Common.common.Printf("DC_UPDATE_LIGHTDEF: %d\n", index.getVal())
+                Common.common.Printf("DC_UPDATE_LIGHTDEF: %d\n", index._val)
             }
         }
 
@@ -3938,8 +3938,8 @@ object RenderWorld_local {
             nodeNum: Int,
             p1f: Float,
             p2f: Float,
-            p1: idVec3?,
-            p2: idVec3?
+            p1: idVec3,
+            p2: idVec3
         ) {
             val t1: Float
             val t2: Float
@@ -3988,7 +3988,7 @@ object RenderWorld_local {
             RecurseProcBSP_r(results, nodeNum, node.children.get(side xor 1), midf, p2f, mid, p2)
         }
 
-        fun BoundsInAreas_r(nodeNum: Int, bounds: idBounds?, areas: IntArray?, numAreas: IntArray?, maxAreas: Int) {
+        fun BoundsInAreas_r(nodeNum: Int, bounds: idBounds, areas: IntArray?, numAreas: IntArray?, maxAreas: Int) {
             var nodeNum = nodeNum
             var side: Int
             var i: Int
@@ -4069,7 +4069,7 @@ object RenderWorld_local {
             light: idRenderLightLocal?,
             sphere: idSphere?,
             numPoints: Int,
-            points: Array<idVec3?>?,
+            points: Array<idVec3>?,
             nodeNum: Int
         ) {
             var nodeNum = nodeNum
@@ -4210,7 +4210,7 @@ object RenderWorld_local {
             def: idRenderEntityLocal?,
             light: idRenderLightLocal?,
             numPoints: Int,
-            points: Array<idVec3?>?
+            points: Array<idVec3>?
         ) {
             var i: Int
             var radSquared: Float

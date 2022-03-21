@@ -61,7 +61,7 @@ object Simd {
 
         fun InitProcessor(module: String, forceGeneric: Boolean) {
             /*cpuid_t*/
-            val cpuid: Int = idLib.sys!!.GetProcessorId()
+            val cpuid: Int = idLib.sys.GetProcessorId()
             val newProcessor: idSIMDProcessor = generic //TODO:add useSSE to startup sequence.
             //            if (forceGeneric) {
 //

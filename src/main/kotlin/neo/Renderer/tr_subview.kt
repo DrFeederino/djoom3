@@ -46,7 +46,7 @@ object tr_subview {
      R_MirrorVector
      =================
      */
-    fun R_MirrorVector(`in`: idVec3?, surface: orientation_t?, camera: orientation_t?, out: idVec3?) {
+    fun R_MirrorVector(`in`: idVec3, surface: orientation_t?, camera: orientation_t?, out: idVec3) {
         var i: Int
         var d: Float
         out.set(Vector.getVec3_origin())
@@ -66,7 +66,7 @@ object tr_subview {
      FIXME: check for degenerate triangle?
      =============
      */
-    fun R_PlaneForSurface(tri: srfTriangles_s?, plane: idPlane?) {
+    fun R_PlaneForSurface(tri: srfTriangles_s?, plane: idPlane) {
         val v1: idDrawVert?
         val v2: idDrawVert?
         val v3: idDrawVert?
@@ -89,7 +89,7 @@ object tr_subview {
      OPTIMIZE: we could also take exact portal passing into consideration
      =========================
      */
-    fun R_PreciseCullSurface(drawSurf: drawSurf_s?, ndcBounds: idBounds?): Boolean {
+    fun R_PreciseCullSurface(drawSurf: drawSurf_s?, ndcBounds: idBounds): Boolean {
         val tri: srfTriangles_s?
         val numTriangles: Int
         val clip = idPlane()

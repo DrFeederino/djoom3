@@ -231,17 +231,17 @@ class MarkerWindow {
                         i = 0
                         while (i < numStats) {
                             file.Read(loggedStats[i])
-                            if (loggedStats[i]!!.health < 0) {
-                                loggedStats[i]!!.health = 0
+                            if (loggedStats[i].health < 0) {
+                                loggedStats[i].health = 0
                             }
-                            if (loggedStats[i]!!.stamina < 0) {
-                                loggedStats[i]!!.stamina = 0
+                            if (loggedStats[i].stamina < 0) {
+                                loggedStats[i].stamina = 0
                             }
-                            if (loggedStats[i]!!.heartRate < 0) {
-                                loggedStats[i]!!.heartRate = 0
+                            if (loggedStats[i].heartRate < 0) {
+                                loggedStats[i].heartRate = 0
                             }
-                            if (loggedStats[i]!!.combat < 0) {
-                                loggedStats[i]!!.combat = 0
+                            if (loggedStats[i].combat < 0) {
+                                loggedStats[i].combat = 0
                             }
                             i++
                         }
@@ -279,23 +279,23 @@ class MarkerWindow {
                     while (i < numStats - 1) {
                         x1 += step
                         x2 = x1 + step
-                        y1 = 63 * (loggedStats[i]!!.health.toFloat() / HEALTH_MAX)
-                        y2 = 63 * (loggedStats[i + 1]!!.health.toFloat() / HEALTH_MAX)
+                        y1 = 63 * (loggedStats[i].health.toFloat() / HEALTH_MAX)
+                        y2 = 63 * (loggedStats[i + 1].health.toFloat() / HEALTH_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xffff01)
-                        y1 = 63 * (loggedStats[i]!!.heartRate.toFloat() / RATE_MAX)
-                        y2 = 63 * (loggedStats[i + 1]!!.heartRate.toFloat() / RATE_MAX)
+                        y1 = 63 * (loggedStats[i].heartRate.toFloat() / RATE_MAX)
+                        y2 = 63 * (loggedStats[i + 1].heartRate.toFloat() / RATE_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xff0100)
                         // stamina not quite as high on graph so health does not get obscured with both at 100%
-                        y1 = 62 * (loggedStats[i]!!.stamina.toFloat() / STAMINA_MAX)
-                        y2 = 62 * (loggedStats[i + 1]!!.stamina.toFloat() / STAMINA_MAX)
+                        y1 = 62 * (loggedStats[i].stamina.toFloat() / STAMINA_MAX)
+                        y2 = 62 * (loggedStats[i + 1].stamina.toFloat() / STAMINA_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0x10000)
-                        y1 = 63 * (loggedStats[i]!!.combat.toFloat() / COMBAT_MAX)
-                        y2 = 63 * (loggedStats[i + 1]!!.combat.toFloat() / COMBAT_MAX)
+                        y1 = 63 * (loggedStats[i].combat.toFloat() / COMBAT_MAX)
+                        y2 = 63 * (loggedStats[i + 1].combat.toFloat() / COMBAT_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xff0001)
                         i++
                     }
                     val stage = background!!.GetStage(0)
-                    stage?.texture?.image?.get(0)
+                    stage.texture?.image?.get(0)
                         ?.UploadScratch(TempDump.wrapToNativeBuffer(TempDump.itob(imageBuff!!)), 512, 64)
                     //                    Mem_Free(imageBuff);
                     imageBuff = null

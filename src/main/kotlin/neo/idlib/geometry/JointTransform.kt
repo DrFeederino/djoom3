@@ -51,8 +51,7 @@ class JointTransform {
         private val DBG_count = DBG_counter++
         private val mat: FloatArray = FloatArray(3 * 4)
 
-        constructor() {
-        }
+        constructor()
 
         constructor(mat: FloatArray) {
             System.arraycopy(mat, 0, this.mat, 0, this.mat.size)

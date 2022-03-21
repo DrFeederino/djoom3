@@ -29,7 +29,7 @@ object tr_shadowbounds {
     }
 
     //int MyArrayVec4::max_size = 0;
-    fun homogeneous_difference(a: idVec4?, b: idVec4?): idVec3? {
+    fun homogeneous_difference(a: idVec4, b: idVec4): idVec3 {
         val v = idVec3()
         v.x = b.x * a.w - a.x * b.w
         v.y = b.y * a.w - a.y * b.w
@@ -38,12 +38,12 @@ object tr_shadowbounds {
     }
 
     // handles positive w only
-    fun compute_homogeneous_plane(a: idVec4?, b: idVec4?, c: idVec4?): idVec4? {
+    fun compute_homogeneous_plane(a: idVec4, b: idVec4, c: idVec4): idVec4 {
         var a = a
         var b = b
         var c = c
         val v = idVec4()
-        var t: idVec4?
+        var t: idVec4
         if (a.get(3) == 0f) {
             t = a
             a = b
@@ -74,7 +74,7 @@ object tr_shadowbounds {
 
     //int MyArrayPoly::max_size = 0;
     // make a unit cube
-    fun PolyhedronFromBounds(b: idBounds?): polyhedron? {
+    fun PolyhedronFromBounds(b: idBounds): polyhedron? {
 
 //       3----------2
 //       |\        /|
@@ -121,7 +121,7 @@ object tr_shadowbounds {
         return p2
     }
 
-    fun make_sv(oc: polyhedron?, light: idVec4?): polyhedron? {
+    fun make_sv(oc: polyhedron?, light: idVec4): polyhedron? {
         var index = 0
         for (i in 0..5) {
             if (oc.p.oGet(i).plane.times(light) > 0) {
@@ -241,7 +241,7 @@ object tr_shadowbounds {
         }
     }
 
-    fun make_idMat4(m: FloatArray?): idMat4? {
+    fun make_idMat4(m: FloatArray?): idMat4 {
         return idMat4(
             m.get(0), m.get(4), m.get(8), m.get(12),
             m.get(1), m.get(5), m.get(9), m.get(13),
@@ -250,11 +250,11 @@ object tr_shadowbounds {
         )
     }
 
-    fun v4to3(v: idVec4?): idVec3? {
+    fun v4to3(v: idVec4): idVec3 {
         return idVec3(v.x / v.w, v.y / v.w, v.z / v.w)
     }
 
-    fun draw_polyhedron(viewDef: viewDef_s?, p: polyhedron?, color: idVec4?) {
+    fun draw_polyhedron(viewDef: viewDef_s?, p: polyhedron?, color: idVec4) {
         for (i in 0 until p.e.size()) {
             viewDef.renderWorld.DebugLine(
                 color,
@@ -264,7 +264,7 @@ object tr_shadowbounds {
         }
     }
 
-    fun draw_segments(viewDef: viewDef_s?, s: MySegments?, color: idVec4?) {
+    fun draw_segments(viewDef: viewDef_s?, s: MySegments?, color: idVec4) {
         var i = 0
         while (i < s.size()) {
             viewDef.renderWorld.DebugLine(color, tr_shadowbounds.v4to3(s.oGet(i)), tr_shadowbounds.v4to3(s.oGet(i + 1)))
@@ -272,7 +272,7 @@ object tr_shadowbounds {
         }
     }
 
-    fun world_to_hclip(viewDef: viewDef_s?, global: idVec4?, clip: idVec4?) {
+    fun world_to_hclip(viewDef: viewDef_s?, global: idVec4, clip: idVec4) {
         var i: Int
         val view = idVec4()
         i = 0
@@ -463,13 +463,13 @@ object tr_shadowbounds {
         private const val N = 4
     }
 
-    internal object MyArrayVec4 : MyArray<idVec4?>() {
+    internal object MyArrayVec4 : MyArray<idVec4>() {
         private const val N = 16
     }
 
     internal class poly {
         var ni: MyArrayInt? = null
-        var plane: idVec4? = null
+        var plane: idVec4 = null
         var vi: MyArrayInt? = null
     }
 
@@ -577,7 +577,7 @@ object tr_shadowbounds {
             }
         }
 
-        fun transform(m: idMat4?) {
+        fun transform(m: idMat4) {
             for (i in 0 until v.size()) {
                 v.oSet(i, m.times(v.oGet(i)))
             }
@@ -585,7 +585,7 @@ object tr_shadowbounds {
         }
     }
 
-    internal object MySegments : MyArray<idVec4?>() {
+    internal object MySegments : MyArray<idVec4>() {
         private const val N = 36
     }
 }

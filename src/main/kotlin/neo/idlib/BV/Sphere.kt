@@ -204,7 +204,7 @@ class Sphere {
         }
 
         fun IntersectsSphere(s: idSphere): Boolean {    // includes touching
-            val r = s.radius + radius;
+            val r = s.radius + radius
             if ((s.origin - origin).LengthSqr() > r * r) {
                 return false
             }
@@ -329,9 +329,9 @@ class Sphere {
 
         fun AxisProjection(dir: idVec3, min: CFloat, max: CFloat) {
             val d: Float
-            d = dir * origin;
-            min._val = d - radius;
-            max._val = d + radius;
+            d = dir * origin
+            min._val = d - radius
+            max._val = d + radius
         }
     }
 }

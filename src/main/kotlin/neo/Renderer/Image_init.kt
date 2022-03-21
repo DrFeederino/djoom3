@@ -1,10 +1,7 @@
 package neo.Renderer
 
 import neo.Renderer.*
-import neo.Renderer.Image.GeneratorFunction
-import neo.Renderer.Image.idImage
-import neo.Renderer.Image.idImageManager
-import neo.Renderer.Image.textureDepth_t
+import neo.Renderer.Image.*
 import neo.Renderer.Material.textureFilter_t
 import neo.Renderer.Material.textureRepeat_t
 import neo.TempDump
@@ -394,9 +391,9 @@ object Image_init {
                     while (j < classifications[i].Num()) {
                         partialSize += sortedArray.get(classifications[i].get(j)).image.StorageSize()
                         if (overSized) {
-                            if (sortedArray.get(classifications[i].get(j)).image.uploadWidth.getVal() > Image_init.IC_Info[i].maxWidth && sortedArray.get(
+                            if (sortedArray.get(classifications[i].get(j)).image.uploadWidth._val > Image_init.IC_Info[i].maxWidth && sortedArray.get(
                                     classifications[i].get(j)
-                                ).image.uploadHeight.getVal() > Image_init.IC_Info[i].maxHeight
+                                ).image.uploadHeight._val > Image_init.IC_Info[i].maxHeight
                             ) {
                                 overSizedList.Append(classifications[i].get(j))
                             }
@@ -1010,9 +1007,9 @@ object Image_init {
             // flat normal map for default bunp mapping
             i = 0
             while (i < idImage.Companion.DEFAULT_SIZE) {
-                data[i + red] = (255 * tr_local.tr.ambientLightVector.get(0)).toByte()
-                data[i + 1] = (255 * tr_local.tr.ambientLightVector.get(1)).toByte()
-                data[i + 2] = (255 * tr_local.tr.ambientLightVector.get(2)).toByte()
+                data[i + red] = (255 * tr_local.tr.ambientLightVector.get(0)).toInt().toByte()
+                data[i + 1] = (255 * tr_local.tr.ambientLightVector.get(1)).toInt().toByte()
+                data[i + 2] = (255 * tr_local.tr.ambientLightVector.get(2)).toInt().toByte()
                 data[i + alpha] = 255.toByte()
                 i += 4
             }

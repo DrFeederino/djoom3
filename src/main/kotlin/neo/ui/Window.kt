@@ -316,7 +316,7 @@ object Window {
             //}
             val c = children.Num()
             for (i in 0 until c) {
-                children[i]!!.SetDC(d)
+                children[i].SetDC(d)
             }
         }
 
@@ -750,7 +750,7 @@ object Window {
         fun DebugDraw(time: Int, x: Float, y: Float) {
             if (dc != null) {
                 dc!!.EnableClipping(false)
-                if (gui_debug!!.GetInteger() == 1) {
+                if (gui_debug.GetInteger() == 1) {
                     dc!!.DrawRect(drawRect.x, drawRect.y, drawRect.w, drawRect.h, 1f, idDeviceContext.colorRed)
                 } else if (gui_debug.GetInteger() == 2) {
 //			char out[1024];
@@ -1601,14 +1601,14 @@ object Window {
 
         fun Redraw(x: Float, y: Float) {
             var str: idStr
-            if (RenderSystem_init.r_skipGuiShaders!!.GetInteger() == 1 || dc == null) {
+            if (RenderSystem_init.r_skipGuiShaders.GetInteger() == 1 || dc == null) {
                 return
             }
             val time = gui!!.GetTime()
-            if (flags and WIN_DESKTOP != 0 && RenderSystem_init.r_skipGuiShaders!!.GetInteger() != 3) {
+            if (flags and WIN_DESKTOP != 0 && RenderSystem_init.r_skipGuiShaders.GetInteger() != 3) {
                 RunTimeEvents(time)
             }
-            if (RenderSystem_init.r_skipGuiShaders!!.GetInteger() == 2) {
+            if (RenderSystem_init.r_skipGuiShaders.GetInteger() == 2) {
                 return
             }
             if (flags and WIN_SHOWTIME != 0) {
@@ -3217,7 +3217,7 @@ object Window {
             if (token.toString() == "-") {
                 src.ReadToken(token)
                 if (token.type == Token.TT_NUMBER || token.toString() == ".") {
-                    return ExpressionConstant(-token.GetFloatValue() as Float)
+                    return ExpressionConstant(-token.GetFloatValue())
                 }
                 src.Warning("Bad negative number '%s'", token)
                 return 0

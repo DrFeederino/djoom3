@@ -161,7 +161,7 @@ object GameSSDWindow {
             dc.DrawMaterial(
                 cursor.x - crosshairWidth / 2, cursor.y - crosshairHeight / 2,
                 crosshairWidth, crosshairHeight,
-                crosshairMaterial[currentCrosshair]!!, Lib.colorWhite, 1.0f, 1.0f
+                crosshairMaterial[currentCrosshair], Lib.colorWhite, 1.0f, 1.0f
             )
         }
 

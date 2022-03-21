@@ -115,15 +115,15 @@ object tr_turboshadow {
         sil = 0
         i = tri.numSilEdges
         while (i > 0) {
-            val f1: Int = facing[tri.silEdges[sil]!!.p1].toInt()
-            val f2: Int = facing[tri.silEdges[sil]!!.p2].toInt()
+            val f1: Int = facing[tri.silEdges[sil].p1].toInt()
+            val f2: Int = facing[tri.silEdges[sil].p2].toInt()
             if (0 == f1 xor f2) {
                 i--
                 sil++
                 continue
             }
-            val v1 = tri.silEdges[sil]!!.v1 shl 1
-            val v2 = tri.silEdges[sil]!!.v2 shl 1
+            val v1 = tri.silEdges[sil].v1 shl 1
+            val v2 = tri.silEdges[sil].v2 shl 1
 
             // set the two triangle winding orders based on facing
             // without using a poorly-predictable branch
@@ -309,14 +309,14 @@ object tr_turboshadow {
         var sil_index = 0
         var shadowIndex = 0
         // create new triangles along sil planes
-        sil = tri.silEdges[sil_index]!!
+        sil = tri.silEdges[sil_index]
         i = tri.numSilEdges
         while (i > 0) {
             val f1: Int = facing[sil.p1].toInt()
             val f2: Int = facing[sil.p2].toInt()
             if (0 == f1 xor f2) {
                 i--
-                sil = tri.silEdges[++sil_index]!!
+                sil = tri.silEdges[++sil_index]
                 continue
             }
             val v1 = vertRemap[sil.v1]
@@ -332,7 +332,7 @@ object tr_turboshadow {
             shadowIndexes[shadowIndex + 5] = v2 xor 1
             shadowIndex += 6
             i--
-            sil = tri.silEdges[++sil_index]!!
+            sil = tri.silEdges[++sil_index]
         }
         val numShadowIndexes = shadowIndex
 

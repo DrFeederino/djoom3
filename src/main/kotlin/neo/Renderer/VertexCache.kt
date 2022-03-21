@@ -515,11 +515,11 @@ object VertexCache {
             return AllocFrameTemp(DrawVert.toByteBuffer(data), size)
         }
 
-        fun AllocFrameTemp(data: Array<idVec3?>?, size: Int): vertCache_s? {
+        fun AllocFrameTemp(data: Array<idVec3>?, size: Int): vertCache_s? {
             return AllocFrameTemp(idVec3.Companion.toByteBuffer(data), size)
         }
 
-        fun AllocFrameTemp(data: Array<idVec4?>?, size: Int): vertCache_s? {
+        fun AllocFrameTemp(data: Array<idVec4>?, size: Int): vertCache_s? {
             return AllocFrameTemp(idVec4.Companion.toByteBuffer(data), size)
         }
 

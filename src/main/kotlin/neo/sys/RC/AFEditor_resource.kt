@@ -333,6 +333,7 @@ object AFEditor_resource {
     const val IDD_DIALOG_AF_PROPERTIES = 103
     const val IDD_DIALOG_AF_VIEW = 102
     const val IDI_ICON2 = 112
+
     // Next default values for new objects
     // 
     // #ifdef APSTUDIO_INVOKED

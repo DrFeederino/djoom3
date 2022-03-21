@@ -291,13 +291,13 @@ object Game {
     //};
     class refSound_t {
         // with idSoundWorld::AllocSoundEmitter() when needed
-        val origin: idVec3?
+        val origin: idVec3
         var diversity // 0.0 to 1.0 value used to select which
                 = 0f
         var listenerId // SSF_PRIVATE_SOUND only plays if == listenerId from PlaceListener
                 = 0
         var parms // override volume, flags, etc
-                : snd_shader.soundShaderParms_t?
+                : snd_shader.soundShaderParms_t
         var referenceSound // this is the interface to the sound system, created
                 : idSoundEmitter? = null
 
@@ -366,14 +366,14 @@ object Game {
                     args.GetFloat("light", "300", radius)
                     renderLight.lightRadius.set(
                         0,
-                        renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius.getVal()))
+                        renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius._val))
                     )
                 }
             }
 
             // get the rotation matrix in either full form, or single angle form
             val angles = idAngles()
-            var mat: idMat3? = idMat3()
+            var mat: idMat3 = idMat3()
             if (!args.GetMatrix("light_rotation", "1 0 0 0 1 0 0 0 1", mat)) {
                 if (!args.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", mat)) {
                     angles.set(1, args.GetFloat("angle", "0"))
@@ -562,7 +562,7 @@ object Game {
             return args?.let { ANIM_GetModelFromEntityDef(it) }
         }
 
-        fun ANIM_GetModelOffsetFromEntityDef(classname: String?): idVec3? {
+        fun ANIM_GetModelOffsetFromEntityDef(classname: String?): idVec3 {
             val args: idDict?
             val modelDef: idDeclModelDef?
             args = Game_local.gameLocal.FindEntityDefDict(classname, false)
@@ -637,7 +637,7 @@ object Game {
             val modelDef: idDeclModelDef
             modelname = args.GetString("model")
             modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef
-            return modelDef?.NumAnims() ?: 0
+            return modelDef.NumAnims()
         }
 
         fun ANIM_GetAnimNameFromEntityDef(args: idDict?, animNum: Int): String? {
@@ -672,7 +672,7 @@ object Game {
             numJoints: Int,
             joints: Array<idJointMat?>?,
             time: Int,
-            offset: idVec3?,
+            offset: idVec3,
             remove_origin_offset: Boolean
         ) {
             var i: Int
@@ -877,7 +877,7 @@ object Game {
             ent = Game_local.gameLocal.spawnedEntities.Next()
             while (ent != null) {
                 if (ent is idAFEntity_Base) {
-                    af = ent as idAFEntity_Base?
+                    af = ent
                     if (name.Icmp(af.GetAFName()) == 0) {
                         af.LoadAF()
                         af.GetAFPhysics().PutToRest()
@@ -908,7 +908,7 @@ object Game {
                 ent = Game_local.gameLocal.spawnedEntities.Next()
                 while (ent != null) {
                     if (ent is idAFEntity_Base) {
-                        af = ent as idAFEntity_Base?
+                        af = ent
                         if (idStr.Icmp(decl.GetName(), af.GetAFName()) == 0) {
                             af.LoadAF()
                         }
@@ -921,8 +921,8 @@ object Game {
 
         fun AF_CreateMesh(
             args: idDict?,
-            meshOrigin: idVec3?,
-            meshAxis: idMat3?,
+            meshOrigin: idVec3,
+            meshAxis: idMat3,
             poseIsSet: BooleanArray?
         ): idRenderModel? {
             var meshAxis = meshAxis
@@ -932,10 +932,10 @@ object Game {
             var fb: idDeclAF_Body? = idDeclAF_Body()
             val ent: renderEntity_s
             val origin = idVec3()
-            var axis: idMat3? = idMat3()
-            val bodyAxis: Array<idMat3?>
-            val newBodyAxis: Array<idMat3?>
-            val modifiedAxis: Array<idMat3?>
+            var axis: idMat3 = idMat3()
+            val bodyAxis: Array<idMat3>
+            val newBodyAxis: Array<idMat3>
+            val modifiedAxis: Array<idMat3>
             val jointMod: Array<declAFJointMod_t?>
             val angles = idAngles()
             val defArgs: idDict?
@@ -1014,10 +1014,10 @@ object Game {
             ANIM_CreateAnimFrame(md5, MD5anim, ent.numJoints, ent.joints, 1, modelDef.GetVisualOffset(), false)
 
             // buffers to store the initial origin and axis for each body
-            val bodyOrigin: Array<idVec3?> = idVec3.generateArray(af.bodies.Num())
-            bodyAxis = arrayOfNulls<idMat3?>(af.bodies.Num())
-            val newBodyOrigin: Array<idVec3?> = idVec3.generateArray(af.bodies.Num())
-            newBodyAxis = arrayOfNulls<idMat3?>(af.bodies.Num())
+            val bodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
+            bodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
+            val newBodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
+            newBodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
 
             // finish the AF positions
             data.ent = ent
@@ -1090,9 +1090,9 @@ object Game {
             // buffer to store the joint mods
             jointMod =
                 arrayOfNulls<declAFJointMod_t?>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
-            val modifiedOrigin: Array<idVec3?> =
+            val modifiedOrigin: Array<idVec3> =
                 idVec3.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
-            modifiedAxis = arrayOfNulls<idMat3?>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
+            modifiedAxis = arrayOfNulls<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
             for (m in modifiedAxis.indices) {
                 modifiedAxis[m] = idMat3()
             }
@@ -1240,27 +1240,27 @@ object Game {
         }
 
         // Entity methods.
-        fun EntityGetOrigin(ent: idEntity?, org: idVec3?) {
+        fun EntityGetOrigin(ent: idEntity?, org: idVec3) {
             if (ent != null) {
                 org.set(ent.GetPhysics().GetOrigin())
             }
         }
 
-        fun EntityGetAxis(ent: idEntity?, axis: idMat3?) {
+        fun EntityGetAxis(ent: idEntity?, axis: idMat3) {
             if (ent != null) {
                 axis.set(ent.GetPhysics().GetAxis())
             }
         }
 
-        fun EntitySetOrigin(ent: idEntity?, org: idVec3?) {
+        fun EntitySetOrigin(ent: idEntity?, org: idVec3) {
             ent?.SetOrigin(org)
         }
 
-        fun EntitySetAxis(ent: idEntity?, axis: idMat3?) {
+        fun EntitySetAxis(ent: idEntity?, axis: idMat3) {
             ent?.SetAxis(axis)
         }
 
-        fun EntityTranslate(ent: idEntity?, org: idVec3?) {
+        fun EntityTranslate(ent: idEntity?, org: idVec3) {
             ent?.GetPhysics()?.Translate(org)
         }
 
@@ -1301,7 +1301,7 @@ object Game {
         }
 
         fun EntityDelete(ent: idEntity?) {}
-        fun EntitySetColor(ent: idEntity?, color: idVec3?) {
+        fun EntitySetColor(ent: idEntity?, color: idVec3) {
             ent?.SetColor(color)
         }
 
@@ -1310,11 +1310,11 @@ object Game {
             return Game_local.gameLocal.GetLocalPlayer() != null
         }
 
-        fun PlayerGetOrigin(org: idVec3?) {
+        fun PlayerGetOrigin(org: idVec3) {
             org.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
         }
 
-        fun PlayerGetAxis(axis: idMat3?) {
+        fun PlayerGetAxis(axis: idMat3) {
             axis.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetAxis())
         }
 
@@ -1322,7 +1322,7 @@ object Game {
             angles.set(Game_local.gameLocal.GetLocalPlayer().viewAngles)
         }
 
-        fun PlayerGetEyePosition(org: idVec3?) {
+        fun PlayerGetEyePosition(org: idVec3) {
             org.set(Game_local.gameLocal.GetLocalPlayer().GetEyePosition())
         }
 
@@ -1432,7 +1432,7 @@ object Game {
             }
         }
 
-        fun MapEntityTranslate(name: String?, v: idVec3?) {
+        fun MapEntityTranslate(name: String?, v: idVec3) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
                 val mapent = mapFile.FindEntity(name)

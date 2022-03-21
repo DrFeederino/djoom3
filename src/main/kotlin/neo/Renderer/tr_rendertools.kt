@@ -90,7 +90,7 @@ object tr_rendertools {
     var rb_numDebugLines = 0
     var rb_numDebugPolygons = 0
     var rb_numDebugText = 0
-    fun RB_DrawBounds(bounds: idBounds?) {
+    fun RB_DrawBounds(bounds: idBounds) {
         if (bounds.IsCleared()) {
             return
         }
@@ -836,7 +836,7 @@ object tr_rendertools {
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE)
         qgl.qglPolygonOffset(-1f, -2f)
         qgl.qglEnable(GL11.GL_POLYGON_OFFSET_LINE)
-        val trans: Array<idVec3?> = idVec3.Companion.generateArray(3)
+        val trans: Array<idVec3> = idVec3.Companion.generateArray(3)
         val matrix = FloatArray(16)
 
         // transform the object verts into global space
@@ -1377,7 +1377,7 @@ object tr_rendertools {
                 val d0 = FloatArray(5)
                 val d1 = FloatArray(5)
                 val mid = idVec3()
-                val tangents: Array<idVec3?> = idVec3.Companion.generateArray(2)
+                val tangents: Array<idVec3> = idVec3.Companion.generateArray(2)
                 a = tri.verts[tri.indexes[j + 0]]
                 b = tri.verts[tri.indexes[j + 1]]
                 c = tri.verts[tri.indexes[j + 2]]
@@ -1716,10 +1716,10 @@ object tr_rendertools {
      */
     fun RB_AddDebugText(
         text: String?,
-        origin: idVec3?,
+        origin: idVec3,
         scale: Float,
-        color: idVec4?,
-        viewAxis: idMat3?,
+        color: idVec4,
+        viewAxis: idMat3,
         align: Int,
         lifetime: Int,
         depthTest: Boolean
@@ -1793,7 +1793,7 @@ object tr_rendertools {
      align can be 0-left, 1-center (default), 2-right
      ================
      */
-    fun RB_DrawText(text: String?, origin: idVec3?, scale: Float, color: idVec4?, viewAxis: idMat3?, align: Int) {
+    fun RB_DrawText(text: String?, origin: idVec3, scale: Float, color: idVec4, viewAxis: idMat3, align: Int) {
         var i: Int
         var j: Int
         val len: Int
@@ -1982,7 +1982,7 @@ object tr_rendertools {
      RB_AddDebugLine
      ================
      */
-    fun RB_AddDebugLine(color: idVec4?, start: idVec3?, end: idVec3?, lifeTime: Int, depthTest: Boolean) {
+    fun RB_AddDebugLine(color: idVec4, start: idVec3, end: idVec3, lifeTime: Int, depthTest: Boolean) {
         val line: debugLine_s?
         if (tr_rendertools.rb_numDebugLines < tr_rendertools.MAX_DEBUG_LINES) {
             tr_rendertools.rb_debugLines[tr_rendertools.rb_numDebugLines++] = debugLine_s()
@@ -2096,7 +2096,7 @@ object tr_rendertools {
      RB_AddDebugPolygon
      ================
      */
-    fun RB_AddDebugPolygon(color: idVec4?, winding: idWinding?, lifeTime: Int, depthTest: Boolean) {
+    fun RB_AddDebugPolygon(color: idVec4, winding: idWinding?, lifeTime: Int, depthTest: Boolean) {
         val poly: debugPolygon_s?
         if (tr_rendertools.rb_numDebugPolygons < tr_rendertools.MAX_DEBUG_POLYGONS) {
             poly = tr_rendertools.rb_debugPolygons[tr_rendertools.rb_numDebugPolygons++]
@@ -2345,9 +2345,9 @@ object tr_rendertools {
             w = 0.25f
             h = 0.25f
         } else {
-            max = Math.max(image.uploadWidth.getVal(), image.uploadHeight.getVal())
-            w = 0.25f * image.uploadWidth.getVal() / max
-            h = 0.25f * image.uploadHeight.getVal() / max
+            max = Math.max(image.uploadWidth._val, image.uploadHeight._val)
+            w = 0.25f * image.uploadWidth._val / max
+            h = 0.25f * image.uploadHeight._val / max
             w *= tr_local.glConfig.vidHeight.toFloat() / tr_local.glConfig.vidWidth
         }
         qgl.qglLoadIdentity()
@@ -2435,21 +2435,21 @@ object tr_rendertools {
 
     internal class debugLine_s {
         var depthTest = false
-        val end: idVec3? = idVec3()
+        val end: idVec3 = idVec3()
         var lifeTime = 0
-        var rgb: idVec4? = null
-        val start: idVec3? = idVec3()
+        var rgb: idVec4 = null
+        val start: idVec3 = idVec3()
     }
 
     class debugText_s {
         var align: Int
-        var color: idVec4?
+        var color: idVec4
         var depthTest: Boolean
         var lifeTime: Int
-        val origin: idVec3?
+        val origin: idVec3
         var scale: Float
         var text: idStr?
-        var viewAxis: idMat3?
+        var viewAxis: idMat3
 
         init {
             text = idStr()
@@ -2466,7 +2466,7 @@ object tr_rendertools {
     internal class debugPolygon_s {
         var depthTest = false
         var lifeTime = 0
-        var rgb: idVec4? = null
+        var rgb: idVec4 = null
         var winding: idWinding? = idWinding()
     }
 

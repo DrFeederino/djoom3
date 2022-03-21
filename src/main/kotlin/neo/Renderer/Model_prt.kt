@@ -114,7 +114,7 @@ object Model_prt {
                 val surfaceNum = CInt()
                 var surf: modelSurface_s?
                 if (staticModel.FindSurfaceWithId(stageNum, surfaceNum)) {
-                    surf = staticModel.surfaces.get(surfaceNum.getVal())
+                    surf = staticModel.surfaces.get(surfaceNum._val)
                     tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry)
                 } else {
                     surf = staticModel.surfaces.Alloc()
@@ -205,7 +205,7 @@ object Model_prt {
             return staticModel
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds? {
+        override fun Bounds(ent: renderEntity_s?): idBounds {
             return particleSystem.bounds
         }
 

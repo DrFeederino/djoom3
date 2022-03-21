@@ -3,9 +3,9 @@ package neo.Game.Physics
 import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Physics.Force.idForce
 import neo.Game.Physics.Physics.idPhysics
-import neo.framework.UsercmdGen
+import neo.framework.UsercmdGen.USERCMD_MSEC
 import neo.idlib.containers.CFloat
-import neo.idlib.math.Math_h
+import neo.idlib.math.Math_h.MS2SEC
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Rotation.idRotation
@@ -28,11 +28,11 @@ class Force_Drag {
         // properties
         private var damping = 0.5f
         private val dragPosition // drag towards this position
-                : idVec3?
+                : idVec3 = Vector.getVec3_zero()
         private var id // clip model id of physics object
                 = 0
         private val p // position on clip model
-                : idVec3?
+                : idVec3 = Vector.getVec3_zero()
 
         //
         // positioning
@@ -48,25 +48,25 @@ class Force_Drag {
         }
 
         // set physics object being dragged
-        fun SetPhysics(phys: idPhysics?, id: Int, p: idVec3?) {
+        fun SetPhysics(phys: idPhysics?, id: Int, p: idVec3) {
             physics = phys
             this.id = id
             this.p.set(p)
         }
 
         // set position to drag towards
-        fun SetDragPosition(pos: idVec3?) {
+        fun SetDragPosition(pos: idVec3) {
             dragPosition.set(pos)
         }
 
         // get the position dragged towards
-        fun GetDragPosition(): idVec3? {
+        fun GetDragPosition(): idVec3 {
             return dragPosition
         }
 
         // get the position on the dragged physics object
-        fun GetDraggedPosition(): idVec3? {
-            return physics.GetOrigin(id).oPlus(p.times(physics.GetAxis(id)))
+        fun GetDraggedPosition(): idVec3 {
+            return (physics!!.GetOrigin(id) + p * physics!!.GetAxis(id))
         }
 
         // common force interface
@@ -85,40 +85,35 @@ class Force_Drag {
             if (null == physics) {
                 return
             }
-            clipModel = physics.GetClipModel(id)
+            clipModel = physics!!.GetClipModel(id)
             if (clipModel != null && clipModel.IsTraceModel()) {
                 clipModel.GetMassProperties(1.0f, mass, centerOfMass, inertiaTensor)
             } else {
                 centerOfMass.Zero()
             }
-            centerOfMass.set(physics.GetOrigin(id).oPlus(centerOfMass.times(physics.GetAxis(id))))
-            dragOrigin.set(physics.GetOrigin(id).oPlus(p.times(physics.GetAxis(id))))
-            dir1.set(dragPosition.minus(centerOfMass))
-            dir2.set(dragOrigin.minus(centerOfMass))
+
+            centerOfMass.set(physics!!.GetOrigin(id) + centerOfMass * physics!!.GetAxis(id))
+            dragOrigin.set(physics!!.GetOrigin(id) + p * physics!!.GetAxis(id))
+
+            dir1.set(dragPosition - centerOfMass)
+            dir2.set(dragOrigin - centerOfMass)
+
             l1 = dir1.Normalize()
             l2 = dir2.Normalize()
+
             rotation.Set(centerOfMass, dir2.Cross(dir1), Vector.RAD2DEG(idMath.ACos(dir1.times(dir2))))
-            physics.SetAngularVelocity(
-                rotation.ToAngularVelocity().div(Math_h.MS2SEC(UsercmdGen.USERCMD_MSEC.toFloat())), id
-            )
+            physics!!.SetAngularVelocity(rotation.ToAngularVelocity() / MS2SEC(USERCMD_MSEC.toFloat()), id)
             velocity.set(
-                physics.GetLinearVelocity(id).times(damping)
-                    .oPlus(dir1.times((l1 - l2) * (1.0f - damping) / Math_h.MS2SEC(UsercmdGen.USERCMD_MSEC.toFloat())))
+                physics!!.GetLinearVelocity(id) * damping + dir1 * ((l1 - l2) * (1.0f - damping) / MS2SEC(USERCMD_MSEC.toFloat()))
             )
-            physics.SetLinearVelocity(velocity, id)
+            physics!!.SetLinearVelocity(velocity, id)
         }
 
-        override fun RemovePhysics(phys: idPhysics?) {
+        override fun RemovePhysics(phys: idPhysics) {
             if (physics == phys) {
                 physics = null
             }
         }
 
-        //
-        //
-        init {
-            p = Vector.getVec3_zero()
-            dragPosition = Vector.getVec3_zero()
-        }
     }
 }

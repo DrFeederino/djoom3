@@ -33,9 +33,7 @@ import neo.framework.CmdSystem
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_Integer
 import neo.framework.DeclManager
-import neo.framework.DeclManager.declState_t
-import neo.framework.DeclManager.declType_t
-import neo.framework.DeclManager.idDecl
+import neo.framework.DeclManager.*
 import neo.framework.DeclSkin.idDeclSkin
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Dict_h.idDict
@@ -219,13 +217,13 @@ object Anim_Blend {
             return numAnims
         }
 
-        fun TotalMovementDelta(): idVec3? {
+        fun TotalMovementDelta(): idVec3 {
             return if (null == anims.get(0)) {
                 Vector.getVec3_zero()
             } else anims.get(0).TotalMovementDelta()
         }
 
-        fun GetOrigin(offset: idVec3?, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
+        fun GetOrigin(offset: idVec3, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
             if (null == anims.get(animNum)) {
                 offset.Zero()
                 return false
@@ -234,7 +232,7 @@ object Anim_Blend {
             return true
         }
 
-        fun GetOriginRotation(rotation: idQuat?, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
+        fun GetOriginRotation(rotation: idQuat, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
             if (null == anims.get(animNum)) {
                 rotation.set(0.0f, 0.0f, 0.0f, 1.0f)
                 return false
@@ -243,7 +241,7 @@ object Anim_Blend {
             return true
         }
 
-        fun GetBounds(bounds: idBounds?, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
+        fun GetBounds(bounds: idBounds, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
             if (null == anims.get(animNum)) {
                 return false
             }
@@ -304,7 +302,6 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_EVENTFUNCTION
                 val ev: idEventDef = idEventDef.Companion.FindEvent(token.toString())
-                    ?: return Str.va("Event '%s' not found", token)
                 if (ev.GetNumArgs() != 0) {
                     return Str.va("Event '%s' has arguments", token)
                 }
@@ -1415,9 +1412,9 @@ object Anim_Blend {
         }
 
         fun SetupJoints(
-            numJoints: CInt?,
+            numJoints: CInt,
             jointList: Array<idJointMat?>?,
-            frameBounds: idBounds?,
+            frameBounds: idBounds,
             removeOriginOffset: Boolean
         ): Array<idJointMat?>? {
             val num: Int
@@ -1519,7 +1516,7 @@ object Anim_Blend {
                 if (!subtract) {
                     jointList.add(joint.num)
                 } else {
-                    jointList.remove(joint.num as Int)
+                    jointList.remove(joint.num)
                 }
                 if (getChildren) {
                     // include all joint's children
@@ -1538,7 +1535,7 @@ object Anim_Blend {
                         if (!subtract) {
                             jointList.add(child.num)
                         } else {
-                            jointList.remove(child.num as Int)
+                            jointList.remove(child.num)
                         }
                         i++
                         child_i++
@@ -1703,7 +1700,7 @@ object Anim_Blend {
             return channelJoints.get(channel).toArray(IntFunction<Array<Int?>?> { _Dummy_.__Array__() })
         }
 
-        fun GetVisualOffset(): idVec3? {
+        fun GetVisualOffset(): idVec3 {
             return offset
         }
 
@@ -2125,7 +2122,7 @@ object Anim_Blend {
             channel: Int,
             numJoints: Int,
             blendFrame: Array<idJointQuat?>?,
-            blendWeight: CFloat?,
+            blendWeight: CFloat,
             removeOriginOffset: Boolean,
             overrideBlend: Boolean,
             printInfo: Boolean
@@ -2142,7 +2139,7 @@ object Anim_Blend {
             val time: Int
             val anim = Anim() ?: return false
             val weight = GetWeight(currentTime)
-            if (blendWeight.getVal() > 0.0f) {
+            if (blendWeight._val > 0.0f) {
                 if (endtime >= 0 && currentTime >= endtime) {
                     return false
                 }
@@ -2153,7 +2150,7 @@ object Anim_Blend {
                     blendWeight.setVal(1.0f - weight)
                 }
             }
-            jointFrame = if (channel == Anim.ANIMCHANNEL_ALL && 0f == blendWeight.getVal()) {
+            jointFrame = if (channel == Anim.ANIMCHANNEL_ALL && 0f == blendWeight._val) {
                 // we don't need a temporary buffer, so just store it directly in the blend frame
                 blendFrame
             } else {
@@ -2243,7 +2240,7 @@ object Anim_Blend {
                     jointFrame.get(0).q.set(-0.70710677f, 0.0f, 0.0f, 0.70710677f)
                 }
             }
-            if (0f == blendWeight.getVal()) {
+            if (0f == blendWeight._val) {
                 blendWeight.setVal(weight)
                 if (channel != Anim.ANIMCHANNEL_ALL) {
                     val index = modelDef.GetChannelJoints(channel)
@@ -2257,8 +2254,8 @@ object Anim_Blend {
                     }
                 }
             } else {
-                blendWeight.setVal(blendWeight.getVal() + weight)
-                lerp = weight / blendWeight.getVal()
+                blendWeight.setVal(blendWeight._val + weight)
+                lerp = weight / blendWeight._val
                 Simd.SIMDProcessor.BlendJoints(
                     blendFrame,
                     jointFrame,
@@ -2291,8 +2288,8 @@ object Anim_Blend {
 
         private fun BlendOrigin(
             currentTime: Int,
-            blendPos: idVec3?,
-            blendWeight: CFloat?,
+            blendPos: idVec3,
+            blendWeight: CFloat,
             removeOriginOffset: Boolean
         ) {
             val lerp: Float
@@ -2321,17 +2318,17 @@ object Anim_Blend {
                 pos.plusAssign(animpos.times(animWeights.get(i)))
                 i++
             }
-            if (0f == blendWeight.getVal()) {
+            if (0f == blendWeight._val) {
                 blendPos.set(pos)
                 blendWeight.setVal(weight)
             } else {
-                lerp = weight / (blendWeight.getVal() + weight)
+                lerp = weight / (blendWeight._val + weight)
                 blendPos.plusAssign(pos.minus(blendPos).oMultiply(lerp))
-                blendWeight.setVal(blendWeight.getVal() + weight)
+                blendWeight.setVal(blendWeight._val + weight)
             }
         }
 
-        private fun BlendDelta(fromtime: Int, totime: Int, blendDelta: idVec3?, blendWeight: CFloat?) {
+        private fun BlendDelta(fromtime: Int, totime: Int, blendDelta: idVec3, blendWeight: CFloat) {
             val pos1 = idVec3()
             val pos2 = idVec3()
             val animpos = idVec3()
@@ -2366,17 +2363,17 @@ object Anim_Blend {
                 i++
             }
             delta.set(pos2.minus(pos1))
-            if (0f == blendWeight.getVal()) {
+            if (0f == blendWeight._val) {
                 blendDelta.set(delta)
                 blendWeight.setVal(weight)
             } else {
-                lerp = weight / (blendWeight.getVal() + weight)
+                lerp = weight / (blendWeight._val + weight)
                 blendDelta.plusAssign(delta.minus(blendDelta).oMultiply(lerp))
-                blendWeight.setVal(blendWeight.getVal() + weight)
+                blendWeight.setVal(blendWeight._val + weight)
             }
         }
 
-        private fun BlendDeltaRotation(fromtime: Int, totime: Int, blendDelta: idQuat?, blendWeight: CFloat?) {
+        private fun BlendDeltaRotation(fromtime: Int, totime: Int, blendDelta: idQuat, blendWeight: CFloat) {
             val q1 = idQuat()
             val q2 = idQuat()
             val q3 = idQuat()
@@ -2424,17 +2421,17 @@ object Anim_Blend {
                 i++
             }
             q3.set(q1.Inverse().times(q2))
-            if (0f == blendWeight.getVal()) {
+            if (0f == blendWeight._val) {
                 blendDelta.set(q3)
                 blendWeight.setVal(weight)
             } else {
-                lerp = weight / (blendWeight.getVal() + weight)
+                lerp = weight / (blendWeight._val + weight)
                 blendDelta.Slerp(blendDelta, q3, lerp)
-                blendWeight.setVal(blendWeight.getVal() + weight)
+                blendWeight.setVal(blendWeight._val + weight)
             }
         }
 
-        private fun AddBounds(currentTime: Int, bounds: idBounds?, removeOriginOffset: Boolean): Boolean {
+        private fun AddBounds(currentTime: Int, bounds: idBounds, removeOriginOffset: Boolean): Boolean {
             var i: Int
             val num: Int
             val b = idBounds()
@@ -2466,7 +2463,7 @@ object Anim_Blend {
             return true
         }
 
-        fun Save(savefile: idSaveGame?) {
+        fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(starttime)
             savefile.WriteInt(endtime)
@@ -2495,7 +2492,7 @@ object Anim_Blend {
          unarchives object from save game file
          =====================
          */
-        fun Restore(savefile: idRestoreGame?, modelDef: idDeclModelDef?) {
+        fun Restore(savefile: idRestoreGame, modelDef: idDeclModelDef?) {
             var i: Int
             this.modelDef = modelDef
             starttime = savefile.ReadInt()
@@ -2806,7 +2803,7 @@ object Anim_Blend {
      ==============================================================================================
      */
     class idAnimator {
-        private val AFPoseBounds: idBounds?
+        private val AFPoseBounds: idBounds
         private val AFPoseJointFrame: ArrayList<idJointQuat?>?
         private val AFPoseJointMods: ArrayList<idAFPoseJointMod?>?
         private val AFPoseJoints: ArrayList<Int?>?
@@ -2823,14 +2820,14 @@ object Anim_Blend {
         private var forceUpdate: Boolean
 
         //
-        private val frameBounds: idBounds?
+        private val frameBounds: idBounds
         private var joints: Array<idJointMat?>?
 
         //
         private var lastTransformTime // mutable because the value is updated in CreateFrame
                 : Int
         private var modelDef: idDeclModelDef?
-        private val numJoints: CInt?
+        private val numJoints: CInt
         private var removeOriginOffset: Boolean
 
         //
@@ -2839,7 +2836,7 @@ object Anim_Blend {
         fun  /*size_t*/Allocated(): Int {
             val   /*size_t*/size: Int
             size =
-                jointMods.size + numJoints.getVal() + AFPoseJointMods.size + AFPoseJointFrame.size + AFPoseJoints.size
+                jointMods.size + numJoints._val + AFPoseJointMods.size + AFPoseJointFrame.size + AFPoseJoints.size
             return size
         }
 
@@ -2850,7 +2847,7 @@ object Anim_Blend {
          archives object for save game file
          =====================
          */
-        fun Save(savefile: idSaveGame?) {                // archives object for save game file
+        fun Save(savefile: idSaveGame) {                // archives object for save game file
             var i: Int
             var j: Int
             savefile.WriteModelDef(modelDef)
@@ -2865,9 +2862,9 @@ object Anim_Blend {
                 savefile.WriteInt(TempDump.etoi(jointMods.get(i).transform_axis))
                 i++
             }
-            savefile.WriteInt(numJoints.getVal())
+            savefile.WriteInt(numJoints._val)
             i = 0
-            while (i < numJoints.getVal()) {
+            while (i < numJoints._val) {
                 val data = joints.get(i).ToFloatPtr()
                 j = 0
                 while (j < 12) {
@@ -2926,16 +2923,16 @@ object Anim_Blend {
          unarchives object from save game file
          =====================
          */
-        fun Restore(savefile: idRestoreGame?) {                    // unarchives object from save game file
+        fun Restore(savefile: idRestoreGame) {                    // unarchives object from save game file
             var i: Int
             var j: Int
             val num = CInt()
             savefile.ReadModelDef(modelDef)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/entity)
             savefile.ReadInt(num)
-            //jointMods.SetNum(num.getVal());
+            //jointMods.SetNum(num._val);
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 if (i >= jointMods.size) {
                     jointMods.add(jointMod_t())
                 } else {
@@ -2949,9 +2946,9 @@ object Anim_Blend {
                 i++
             }
             numJoints.setVal(savefile.ReadInt())
-            joints = arrayOfNulls<idJointMat?>(numJoints.getVal())
+            joints = arrayOfNulls<idJointMat?>(numJoints._val)
             i = 0
-            while (i < numJoints.getVal()) {
+            while (i < numJoints._val) {
                 val data = joints.get(i).ToFloatPtr()
                 j = 0
                 while (j < 12) {
@@ -2967,9 +2964,9 @@ object Anim_Blend {
             AFPoseBlendWeight = savefile.ReadFloat()
             savefile.ReadInt(num)
             //AFPoseJoints.SetGranularity(1);
-            //AFPoseJoints.SetNum(num.getVal());
+            //AFPoseJoints.SetNum(num._val);
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 if (i >= AFPoseJoints.size) {
                     AFPoseJoints.add(savefile.ReadInt())
                 } else {
@@ -2979,9 +2976,9 @@ object Anim_Blend {
             }
             savefile.ReadInt(num)
             //AFPoseJointMods.SetGranularity(1);
-            //AFPoseJointMods.SetNum(num.getVal());
+            //AFPoseJointMods.SetNum(num._val);
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 AFPoseJointMods.get(i).mod = AFJointModType_t.values()[savefile.ReadInt()]
                 savefile.ReadMat3(AFPoseJointMods.get(i).axis)
                 savefile.ReadVec3(AFPoseJointMods.get(i).origin)
@@ -2989,9 +2986,9 @@ object Anim_Blend {
             }
             savefile.ReadInt(num)
             //AFPoseJointFrame.SetGranularity(1);
-            //AFPoseJointFrame.SetNum(num.getVal());
+            //AFPoseJointFrame.SetNum(num._val);
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 AFPoseJointFrame.get(i).q.x = savefile.ReadFloat()
                 AFPoseJointFrame.get(i).q.y = savefile.ReadFloat()
                 AFPoseJointFrame.get(i).q.z = savefile.ReadFloat()
@@ -3126,11 +3123,11 @@ object Anim_Blend {
 
         fun GetJoints(renderEntity: renderEntity_s?): Int {
             renderEntity.joints = joints
-            return numJoints.getVal()
+            return numJoints._val
         }
 
         fun NumJoints(): Int {
-            return numJoints.getVal()
+            return numJoints._val
         }
 
         fun  /*jointHandle_t*/GetFirstChild(   /*jointHandle_t*/jointnum: Int): Int {
@@ -3294,7 +3291,7 @@ object Anim_Blend {
                     )
                 ) {
                     hasAnim = true
-                    if (baseBlend.getVal() >= 1.0f) {
+                    if (baseBlend._val >= 1.0f) {
                         break
                     }
                 }
@@ -3302,7 +3299,7 @@ object Anim_Blend {
             }
 
             // only blend other channels if there's enough space to blend into
-            if (baseBlend.getVal() < 1.0f) {
+            if (baseBlend._val < 1.0f) {
                 i = Anim.ANIMCHANNEL_ALL + 1
                 while (i < Anim.ANIM_NumAnimChannels) {
                     if (0 == modelDef.NumJointsOnChannel(i)) {
@@ -3314,7 +3311,7 @@ object Anim_Blend {
                         i++
                         continue
                     }
-                    blendWeight.setVal(baseBlend.getVal())
+                    blendWeight.setVal(baseBlend._val)
                     blend = channels.get(i)
                     j = 0
                     while (j < Anim.ANIM_MaxAnimsPerChannel) {
@@ -3330,14 +3327,14 @@ object Anim_Blend {
                             )
                         ) {
                             hasAnim = true
-                            if (blendWeight.getVal() >= 1.0f) {
+                            if (blendWeight._val >= 1.0f) {
                                 // fully blended
                                 break
                             }
                         }
                         j++
                     }
-                    if (debugInfo && 0 == AFPoseJoints.size && 0f == blendWeight.getVal()) {
+                    if (debugInfo && 0 == AFPoseJoints.size && 0f == blendWeight._val) {
                         Game_local.gameLocal.Printf(
                             "%d: %s using default pose in model '%s'\n",
                             Game_local.gameLocal.time,
@@ -3352,7 +3349,7 @@ object Anim_Blend {
             // blend in the eyelids
             if (modelDef.NumJointsOnChannel(Anim.ANIMCHANNEL_EYELIDS) != 0) {
                 blend = channels.get(Anim.ANIMCHANNEL_EYELIDS)
-                blendWeight.setVal(baseBlend.getVal())
+                blendWeight.setVal(baseBlend._val)
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     if (blend.get(j).BlendAnim(
@@ -3367,7 +3364,7 @@ object Anim_Blend {
                         )
                     ) {
                         hasAnim = true
-                        if (blendWeight.getVal() >= 1.0f) {
+                        if (blendWeight._val >= 1.0f) {
                             // fully blended
                             break
                         }
@@ -3499,7 +3496,7 @@ object Anim_Blend {
             return forceUpdate && IsAnimating(currentTime)
         }
 
-        fun GetDelta(fromtime: Int, totime: Int, delta: idVec3?) {
+        fun GetDelta(fromtime: Int, totime: Int, delta: idVec3) {
             var i: Int
             var blend: Array<idAnimBlend?>?
             val blendWeight = CFloat()
@@ -3526,7 +3523,7 @@ object Anim_Blend {
             }
         }
 
-        fun GetDeltaRotation(fromtime: Int, totime: Int, delta: idMat3?): Boolean {
+        fun GetDeltaRotation(fromtime: Int, totime: Int, delta: idMat3): Boolean {
             var i: Int
             var blend: Array<idAnimBlend?>?
             val blendWeight = CFloat()
@@ -3551,7 +3548,7 @@ object Anim_Blend {
                     i++
                 }
             }
-            return if (blendWeight.getVal() > 0.0f) {
+            return if (blendWeight._val > 0.0f) {
                 delta.set(q.ToMat3())
                 true
             } else {
@@ -3560,7 +3557,7 @@ object Anim_Blend {
             }
         }
 
-        fun GetOrigin(currentTime: Int, pos: idVec3?) {
+        fun GetOrigin(currentTime: Int, pos: idVec3) {
             var i: Int
             var blend: Array<idAnimBlend?>?
             val blendWeight = CFloat()
@@ -3588,7 +3585,7 @@ object Anim_Blend {
             pos.plusAssign(modelDef.GetVisualOffset())
         }
 
-        fun GetBounds(currentTime: Int, bounds: idBounds?): Boolean {
+        fun GetBounds(currentTime: Int, bounds: idBounds): Boolean {
             var i: Int
             var j: Int
             var blend: Array<idAnimBlend?>
@@ -3741,10 +3738,10 @@ object Anim_Blend {
             }
         }
 
-        fun SetJointPos(   /*jointHandle_t*/jointnum: Int, transform_type: jointModTransform_t?, pos: idVec3?) {
+        fun SetJointPos(   /*jointHandle_t*/jointnum: Int, transform_type: jointModTransform_t?, pos: idVec3) {
             var i: Int
             var jointMod: jointMod_t?
-            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints.getVal()) {
+            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints._val) {
                 return
             }
             jointMod = null
@@ -3777,10 +3774,10 @@ object Anim_Blend {
             ForceUpdate()
         }
 
-        fun SetJointAxis(   /*jointHandle_t*/jointnum: Int, transform_type: jointModTransform_t?, mat: idMat3?) {
+        fun SetJointAxis(   /*jointHandle_t*/jointnum: Int, transform_type: jointModTransform_t?, mat: idMat3) {
             var i: Int
             var jointMod: jointMod_t?
-            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints.getVal()) {
+            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints._val) {
                 return
             }
             jointMod = null
@@ -3815,7 +3812,7 @@ object Anim_Blend {
 
         fun ClearJoint(   /*jointHandle_t*/jointnum: Int) {
             var i: Int
-            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints.getVal()) {
+            if (null == modelDef || null == modelDef.ModelHandle() || jointnum < 0 || jointnum >= numJoints._val) {
                 return
             }
             i = 0
@@ -3863,8 +3860,8 @@ object Anim_Blend {
 
         fun SetAFPoseJointMod(   /*jointHandle_t*/jointNum: Int,
                                                   mod: AFJointModType_t?,
-                                                  axis: idMat3?,
-                                                  origin: idVec3?
+                                                  axis: idMat3,
+                                                  origin: idVec3
         ) {
             if (jointNum >= AFPoseJointMods.size) {
                 for (i in AFPoseJointMods.size..jointNum) {
@@ -3888,7 +3885,7 @@ object Anim_Blend {
             }
         }
 
-        fun FinishAFPose(animNum: Int, bounds: idBounds?, time: Int) {
+        fun FinishAFPose(animNum: Int, bounds: idBounds, time: Int) {
             var i: Int
             var j: Int
             val numJoints: Int
@@ -4083,7 +4080,7 @@ object Anim_Blend {
             if (null == modelDef) {
                 idGameLocal.Companion.Error("idAnimator::GetChannelForJoint: NULL model")
             }
-            if (joint < 0 || joint >= numJoints.getVal()) {
+            if (joint < 0 || joint >= numJoints._val) {
                 idGameLocal.Companion.Error("idAnimator::GetChannelForJoint: invalid joint num (%d)", joint)
             }
             return modelDef.GetJoint(joint).channel
@@ -4091,8 +4088,8 @@ object Anim_Blend {
 
         fun GetJointTransform(   /*jointHandle_t*/jointHandle: Int,
                                                   currentTime: Int,
-                                                  offset: idVec3?,
-                                                  axis: idMat3?
+                                                  offset: idVec3,
+                                                  axis: idMat3
         ): Boolean {
             if (null == modelDef || jointHandle < 0 || jointHandle >= modelDef.NumJoints()) {
                 return false
@@ -4105,8 +4102,8 @@ object Anim_Blend {
 
         fun GetJointLocalTransform(   /*jointHandle_t*/jointHandle: Int,
                                                        currentTime: Int,
-                                                       offset: idVec3?,
-                                                       axis: idMat3?
+                                                       offset: idVec3,
+                                                       axis: idMat3
         ): Boolean {
             if (null == modelDef) {
                 return false
@@ -4175,7 +4172,7 @@ object Anim_Blend {
             return anim?.Length() ?: 0
         }
 
-        fun TotalMovementDelta(animNum: Int): idVec3? {
+        fun TotalMovementDelta(animNum: Int): idVec3 {
             val anim = GetAnim(animNum)
             return if (anim != null) {
                 anim.TotalMovementDelta()

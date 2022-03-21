@@ -249,7 +249,7 @@ object List {
         operator fun get(index: Int): T {
             assert(index >= 0)
             assert(index < num)
-            return list!![index] as T
+            return list!![index]
         }
 
         //public	T &			operator[]( int index );

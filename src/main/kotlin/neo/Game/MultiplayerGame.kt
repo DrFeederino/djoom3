@@ -315,8 +315,8 @@ object MultiplayerGame {
                         while (i < Game_local.gameLocal.numClients) {
                             val ent = Game_local.gameLocal.entities[i]
                             if (ent != null && ent is idPlayer) {
-                                if (!(ent as idPlayer).wantSpectate) {
-                                    CheckRespawns(ent as idPlayer)
+                                if (!ent.wantSpectate) {
+                                    CheckRespawns(ent)
                                 }
                             }
                             i++
@@ -951,7 +951,7 @@ object MultiplayerGame {
             mainGui.SetStateInt(Str.va("skin%d", skinId), 1)
         }
 
-        fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        fun WriteToSnapshot(msg: idBitMsgDelta) {
             var i: Int
             var value: Int
             msg.WriteByte(TempDump.etoi(gameState))
@@ -982,7 +982,7 @@ object MultiplayerGame {
             }
         }
 
-        fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        fun ReadFromSnapshot(msg: idBitMsgDelta) {
             var i: Int
             val newState: MultiplayerGame.idMultiplayerGame.gameState_t
             newState = MultiplayerGame.idMultiplayerGame.gameState_t.values()[msg.ReadByte()]
@@ -1578,7 +1578,7 @@ object MultiplayerGame {
         fun WantKilled(clientNum: Int) {
             val ent = Game_local.gameLocal.entities[clientNum]
             if (ent != null && ent is idPlayer) {
-                (ent as idPlayer).Kill(false, false)
+                ent.Kill(false, false)
             }
         }
 
@@ -1594,7 +1594,7 @@ object MultiplayerGame {
                 if (null == ent || ent !is idPlayer) {
                     continue
                 }
-                p = ent as idPlayer
+                p = ent
                 if (countSpectators || CanPlay(p)) {
                     c++
                 }
@@ -1611,7 +1611,7 @@ object MultiplayerGame {
             if (null == ent || ent !is idPlayer) {
                 return
             }
-            (ent as idPlayer).DropWeapon(false)
+            ent.DropWeapon(false)
         }
 
         fun MapRestart() {
@@ -2082,7 +2082,7 @@ object MultiplayerGame {
                     i++
                     continue
                 }
-                player = ent as idPlayer?
+                player = ent
                 if (!CanPlay(player)) {
                     i++
                     continue
@@ -2139,7 +2139,7 @@ object MultiplayerGame {
         }
 
         // updates the passed gui with current score information
-        private fun UpdateRankColor(gui: idUserInterface?, mask: String?, i: Int, vec: idVec3?) {
+        private fun UpdateRankColor(gui: idUserInterface?, mask: String?, i: Int, vec: idVec3) {
             for (j in 1..3) {
                 gui.SetStateFloat(Str.va(mask, i, j), vec.get(j - 1))
             }
@@ -2243,7 +2243,7 @@ object MultiplayerGame {
                             continue
                         }
                     }
-                    p = ent as idPlayer?
+                    p = ent
                     if (gameState == MultiplayerGame.idMultiplayerGame.gameState_t.WARMUP) {
                         if (k == 0 && p.spectating) {
                             i++
@@ -2550,7 +2550,7 @@ object MultiplayerGame {
                     i++
                     continue
                 }
-                p = ent as idPlayer?
+                p = ent
                 if (CanPlay(p) && !p.IsReady()) {
                     return false
                 }
@@ -2588,7 +2588,7 @@ object MultiplayerGame {
                         i++
                         continue
                     }
-                    if (!CanPlay(ent as idPlayer)) {
+                    if (!CanPlay(ent)) {
                         i++
                         continue
                     }
@@ -2670,7 +2670,7 @@ object MultiplayerGame {
                     i++
                     continue
                 }
-                p = ent as idPlayer?
+                p = ent
                 p.SetLeader(false)
                 if (!CanPlay(p)) {
                     i++
@@ -2754,7 +2754,7 @@ object MultiplayerGame {
                             i++
                             continue
                         }
-                        val p = ent as idPlayer
+                        val p = ent
                         p.SetLeader(false) // don't carry the flag from previous games
                         if (Game_local.gameLocal.gameType == gameType_t.GAME_TOURNEY && currentTourneyPlayer.get(0) != i && currentTourneyPlayer.get(
                                 1
@@ -2768,8 +2768,8 @@ object MultiplayerGame {
                                 if (Game_local.gameLocal.gameType == gameType_t.GAME_LASTMAN) fragLimit else 0
                             playerState.get(i).fragCount = startingCount
                             playerState.get(i).teamFragCount = startingCount
-                            if (!(ent as idPlayer).wantSpectate) {
-                                (ent as idPlayer).ServerSpectate(false)
+                            if (!ent.wantSpectate) {
+                                ent.ServerSpectate(false)
                                 if (Game_local.gameLocal.gameType == gameType_t.GAME_TOURNEY) {
                                     p.tourneyRank = 0
                                 }
@@ -2793,8 +2793,8 @@ object MultiplayerGame {
                             i++
                             continue
                         }
-                        (ent as idPlayer).forcedReady = false
-                        (ent as idPlayer).ServerSpectate(true)
+                        ent.forcedReady = false
+                        ent.ServerSpectate(true)
                         i++
                     }
                     UpdateWinsLosses(player)
@@ -2826,7 +2826,7 @@ object MultiplayerGame {
                     if (null == ent || ent !is idPlayer) {
                         continue
                     }
-                    val player = ent as idPlayer
+                    val player = ent
                     if (Game_local.gameLocal.gameType == gameType_t.GAME_TDM) {
                         if (player === winner || player !== winner && player.team == winner.team) {
                             playerState.get(i).wins++
@@ -2896,7 +2896,7 @@ object MultiplayerGame {
                         j++
                         continue
                     }
-                    p = ent as idPlayer?
+                    p = ent
                     if (p.wantSpectate) {
                         j++
                         continue
@@ -3157,7 +3157,7 @@ object MultiplayerGame {
                 if (null == ent || ent !is idPlayer) {
                     continue
                 }
-                val p = ent as idPlayer
+                val p = ent
                 // once we hit sudden death, nobody respawns till game has ended
                 if (WantRespawn(p) || p === spectator) {
                     if (gameState == MultiplayerGame.idMultiplayerGame.gameState_t.SUDDENDEATH && Game_local.gameLocal.gameType != gameType_t.GAME_LASTMAN) {
@@ -3273,7 +3273,7 @@ object MultiplayerGame {
                 if (null == ent || ent !is idPlayer) {
                     continue
                 }
-                val p = ent as idPlayer
+                val p = ent
                 if (!p.IsReady()) {
                     PrintMessageEvent(-1, msg_evt_t.MSG_FORCEREADY, i)
                     p.forcedReady = true
@@ -3380,7 +3380,7 @@ object MultiplayerGame {
                 if (null == ent || ent !is idPlayer) {
                     continue
                 }
-                val player = ent as idPlayer
+                val player = ent
                 if (player.team == team) {
                     playerState.get(player.entityNumber).teamFragCount += delta
                 }
@@ -3512,8 +3512,8 @@ object MultiplayerGame {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ForceReady_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ForceReady_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -3534,8 +3534,8 @@ object MultiplayerGame {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = DropWeapon_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = DropWeapon_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -3547,8 +3547,8 @@ object MultiplayerGame {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = MessageMode_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = MessageMode_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -3560,8 +3560,8 @@ object MultiplayerGame {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = VoiceChat_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = VoiceChat_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -3573,8 +3573,8 @@ object MultiplayerGame {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = VoiceChatTeam_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = VoiceChatTeam_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }

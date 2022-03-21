@@ -60,7 +60,7 @@ object Script_Interpreter {
         private var localstackUsed = 0
         private var maxLocalstackUsed = 0
         private var maxStackDepth = 0
-        private var multiFrameEvent: idEventDef? = null
+        private var multiFrameEvent: idEventDef = null
 
         //
         //
@@ -261,7 +261,7 @@ object Script_Interpreter {
             var pos: Int
             val start: Int
             val data = arrayOfNulls<idEventArg<*>?>(Event.D_EVENT_MAXARGS)
-            val evdef: idEventDef?
+            val evdef: idEventDef
             val format: CharArray
             if (TempDump.NOT(func)) {
                 Error("NULL function")
@@ -356,7 +356,7 @@ object Script_Interpreter {
             var pos: Int
             val start: Int
             val data = arrayOfNulls<idEventArg<*>?>(Event.D_EVENT_MAXARGS)
-            val evdef: idEventDef?
+            val evdef: idEventDef
             val format: String?
             if (TempDump.NOT(func)) {
                 Error("NULL function")
@@ -417,7 +417,7 @@ object Script_Interpreter {
         }
 
         // save games
-        fun Save(savefile: idSaveGame?) {                // archives object for save game file
+        fun Save(savefile: idSaveGame) {                // archives object for save game file
             var i: Int
             savefile.WriteInt(callStackDepth)
             i = 0
@@ -456,7 +456,7 @@ object Script_Interpreter {
             savefile.WriteBool(debug)
         }
 
-        fun Restore(savefile: idRestoreGame?) {                // unarchives object from save game file
+        fun Restore(savefile: idRestoreGame) {                // unarchives object from save game file
             var i: Int
             val funcname = idStr()
             val func_index = CInt()
@@ -465,8 +465,8 @@ object Script_Interpreter {
             while (i < callStackDepth) {
                 callStack.get(i).s = savefile.ReadInt()
                 savefile.ReadInt(func_index)
-                if (func_index.getVal() >= 0) {
-                    callStack.get(i).f = Game_local.gameLocal.program.GetFunction(func_index.getVal())
+                if (func_index._val >= 0) {
+                    callStack.get(i).f = Game_local.gameLocal.program.GetFunction(func_index._val)
                 } else {
                     callStack.get(i).f = null
                 }
@@ -479,8 +479,8 @@ object Script_Interpreter {
             localstackBase = savefile.ReadInt()
             maxLocalstackUsed = savefile.ReadInt()
             savefile.ReadInt(func_index)
-            currentFunction = if (func_index.getVal() >= 0) {
-                Game_local.gameLocal.program.GetFunction(func_index.getVal())
+            currentFunction = if (func_index._val >= 0) {
+                Game_local.gameLocal.program.GetFunction(func_index._val)
             } else {
                 null
             }
@@ -634,7 +634,7 @@ object Script_Interpreter {
             }
         }
 
-        fun BeginMultiFrameEvent(ent: idEntity?, event: idEventDef?): Boolean {
+        fun BeginMultiFrameEvent(ent: idEntity?, event: idEventDef): Boolean {
             if (eventEntity != ent) {
                 Error("idInterpreter::BeginMultiFrameEvent called with wrong entity")
             }
@@ -648,7 +648,7 @@ object Script_Interpreter {
             return true
         }
 
-        fun EndMultiFrameEvent(ent: idEntity?, event: idEventDef?) {
+        fun EndMultiFrameEvent(ent: idEntity?, event: idEventDef) {
             if (multiFrameEvent != event) {
                 Error("idInterpreter::EndMultiFrameEvent called with wrong event")
             }

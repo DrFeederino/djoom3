@@ -31,16 +31,16 @@ class Force {
         open fun Evaluate(time: Int) {}
 
         // removes any pointers to the physics object
-        open fun RemovePhysics(phys: idPhysics?) {}
-        override fun CreateInstance(): idClass? {
+        open fun RemovePhysics(phys: idPhysics) {}
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun  /*idTypeInfo*/GetType(): Class<*>? {
+        override fun  /*idTypeInfo*/GetType(): Class<out idClass> {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return null
         }
 
@@ -50,12 +50,12 @@ class Force {
 
         companion object {
             // CLASS_PROTOTYPE( idForce );
-            private val forceList: idList<idForce?>? = idList()
-            fun DeletePhysics(phys: idPhysics?) {
+            private val forceList: idList<idForce> = idList()
+            fun DeletePhysics(phys: idPhysics) {
                 var i: Int
                 i = 0
                 while (i < forceList.Num()) {
-                    forceList.get(i).RemovePhysics(phys)
+                    forceList[i].RemovePhysics(phys)
                     i++
                 }
             }

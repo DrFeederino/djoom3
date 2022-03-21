@@ -498,8 +498,8 @@ class win_net {
                     NetworkInterface.getNetworkInterfaces() //if( ( dwRetVal = GetAdaptersInfo( pAdapterInfo, &ulOutBufLen) ) != NO_ERROR ) {
                 while (pAdapterInfo.hasMoreElements()) {
                     pAdapter = pAdapterInfo.nextElement()!!
-                    Common.common.Printf("Found interface: %s %s - ", pAdapter.getName(), pAdapter.getDisplayName())
-                    pIPAddrStrings = pAdapter.getInetAddresses()
+                    Common.common.Printf("Found interface: %s %s - ", pAdapter.name, pAdapter.displayName)
+                    pIPAddrStrings = pAdapter.inetAddresses
                     while (pIPAddrStrings.hasMoreElements()) {
                         pIPAddr = pIPAddrStrings.nextElement()
                         /*unsigned*/
@@ -512,18 +512,18 @@ class win_net {
 //                            foundLoopback = true;
 //                        }
 //                    foundLoopback |= pIPAddr.isLoopbackAddress();
-                        ip_a = TempDump.ntohl(pIPAddr.getAddress())
-                        if (pAdapter.getInterfaceAddresses() != null && pAdapter.getInterfaceAddresses().size > 0) {
-                            ip_m = pAdapter.getInterfaceAddresses()[0].networkPrefixLength.toLong()
+                        ip_a = TempDump.ntohl(pIPAddr.address)
+                        if (pAdapter.interfaceAddresses != null && pAdapter.interfaceAddresses.size > 0) {
+                            ip_m = pAdapter.interfaceAddresses[0].networkPrefixLength.toLong()
                         }
 
                         //skip null netmasks
                         if (TempDump.NOT(ip_m.toDouble())) {
-                            Common.common.Printf("%s NULL netmask - skipped", pIPAddr.getHostAddress())
+                            Common.common.Printf("%s NULL netmask - skipped", pIPAddr.hostAddress)
                             //                        pIPAddr = pIPAddr.Next;
                             continue
                         }
-                        Common.common.Printf("%s/%s", pIPAddr.getHostAddress(), ip_m)
+                        Common.common.Printf("%s/%s", pIPAddr.hostAddress, ip_m)
                         netint[num_interfaces] = net_interface(ip_a, ip_m)
                         num_interfaces++
                         if (num_interfaces >= Companion.MAX_INTERFACES) {

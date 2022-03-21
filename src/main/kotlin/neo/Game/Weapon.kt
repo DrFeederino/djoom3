@@ -23,9 +23,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Item.idMoveableItem
 import neo.Game.MultiplayerGame.gameType_t
 import neo.Game.Player.idPlayer
@@ -68,47 +66,36 @@ import neo.idlib.math.Vector.idVec3
 import neo.ui.UserInterface
 import java.nio.*
 
-/**
- *
- */
 object Weapon {
-    //
     const val AMMO_NUMTYPES = 16
-    val EV_Weapon_AddToClip: idEventDef? = idEventDef("addToClip", "d")
-    val EV_Weapon_AllowDrop: idEventDef? = idEventDef("allowDrop", "d")
-    val EV_Weapon_AmmoAvailable: idEventDef? = idEventDef("ammoAvailable", null, 'f')
-    val EV_Weapon_AmmoInClip: idEventDef? = idEventDef("ammoInClip", null, 'f')
-    val EV_Weapon_AutoReload: idEventDef? = idEventDef("autoReload", null, 'f')
-
-    //
-    //
-    // event defs
-    //
-    val EV_Weapon_Clear: idEventDef? = idEventDef("<clear>")
-    val EV_Weapon_ClipSize: idEventDef? = idEventDef("clipSize", null, 'f')
-    val EV_Weapon_CreateProjectile: idEventDef? = idEventDef("createProjectile", null, 'e')
-    val EV_Weapon_EjectBrass: idEventDef? = idEventDef("ejectBrass")
-    val EV_Weapon_Flashlight: idEventDef? = idEventDef("flashlight", "d")
-    val EV_Weapon_GetOwner: idEventDef? = idEventDef("getOwner", null, 'e')
-    val EV_Weapon_GetWorldModel: idEventDef? = idEventDef("getWorldModel", null, 'e')
-    val EV_Weapon_IsInvisible: idEventDef? = idEventDef("isInvisible", null, 'f')
-    val EV_Weapon_LaunchProjectiles: idEventDef? = idEventDef("launchProjectiles", "dffff")
-    val EV_Weapon_Melee: idEventDef? = idEventDef("melee", null, 'd')
-    val EV_Weapon_NetEndReload: idEventDef? = idEventDef("netEndReload")
-    val EV_Weapon_NetReload: idEventDef? = idEventDef("netReload")
-    val EV_Weapon_Next: idEventDef? = idEventDef("nextWeapon")
-    val EV_Weapon_State: idEventDef? = idEventDef("weaponState", "sd")
-    val EV_Weapon_TotalAmmoCount: idEventDef? = idEventDef("totalAmmoCount", null, 'f')
-    val EV_Weapon_UseAmmo: idEventDef? = idEventDef("useAmmo", "d")
-    val EV_Weapon_WeaponHolstered: idEventDef? = idEventDef("weaponHolstered")
-    val EV_Weapon_WeaponLowering: idEventDef? = idEventDef("weaponLowering")
-    val EV_Weapon_WeaponOutOfAmmo: idEventDef? = idEventDef("weaponOutOfAmmo")
-    val EV_Weapon_WeaponReady: idEventDef? = idEventDef("weaponReady")
-    val EV_Weapon_WeaponReloading: idEventDef? = idEventDef("weaponReloading")
-    val EV_Weapon_WeaponRising: idEventDef? = idEventDef("weaponRising")
+    val EV_Weapon_AddToClip: idEventDef = idEventDef("addToClip", "d")
+    val EV_Weapon_AllowDrop: idEventDef = idEventDef("allowDrop", "d")
+    val EV_Weapon_AmmoAvailable: idEventDef = idEventDef("ammoAvailable", null, 'f')
+    val EV_Weapon_AmmoInClip: idEventDef = idEventDef("ammoInClip", null, 'f')
+    val EV_Weapon_AutoReload: idEventDef = idEventDef("autoReload", null, 'f')
+    val EV_Weapon_Clear: idEventDef = idEventDef("<clear>")
+    val EV_Weapon_ClipSize: idEventDef = idEventDef("clipSize", null, 'f')
+    val EV_Weapon_CreateProjectile: idEventDef = idEventDef("createProjectile", null, 'e')
+    val EV_Weapon_EjectBrass: idEventDef = idEventDef("ejectBrass")
+    val EV_Weapon_Flashlight: idEventDef = idEventDef("flashlight", "d")
+    val EV_Weapon_GetOwner: idEventDef = idEventDef("getOwner", null, 'e')
+    val EV_Weapon_GetWorldModel: idEventDef = idEventDef("getWorldModel", null, 'e')
+    val EV_Weapon_IsInvisible: idEventDef = idEventDef("isInvisible", null, 'f')
+    val EV_Weapon_LaunchProjectiles: idEventDef = idEventDef("launchProjectiles", "dffff")
+    val EV_Weapon_Melee: idEventDef = idEventDef("melee", null, 'd')
+    val EV_Weapon_NetEndReload: idEventDef = idEventDef("netEndReload")
+    val EV_Weapon_NetReload: idEventDef = idEventDef("netReload")
+    val EV_Weapon_Next: idEventDef = idEventDef("nextWeapon")
+    val EV_Weapon_State: idEventDef = idEventDef("weaponState", "sd")
+    val EV_Weapon_TotalAmmoCount: idEventDef = idEventDef("totalAmmoCount", null, 'f')
+    val EV_Weapon_UseAmmo: idEventDef = idEventDef("useAmmo", "d")
+    val EV_Weapon_WeaponHolstered: idEventDef = idEventDef("weaponHolstered")
+    val EV_Weapon_WeaponLowering: idEventDef = idEventDef("weaponLowering")
+    val EV_Weapon_WeaponOutOfAmmo: idEventDef = idEventDef("weaponOutOfAmmo")
+    val EV_Weapon_WeaponReady: idEventDef = idEventDef("weaponReady")
+    val EV_Weapon_WeaponReloading: idEventDef = idEventDef("weaponReloading")
+    val EV_Weapon_WeaponRising: idEventDef = idEventDef("weaponRising")
     const val LIGHTID_VIEW_MUZZLE_FLASH = 100
-
-    //
     const val LIGHTID_WORLD_MUZZLE_FLASH = 1
 
     /*
@@ -136,7 +123,7 @@ object Weapon {
             val EVENT_MAXEVENTS = EVENT_RELOAD + 3
 
             // CLASS_PROTOTYPE( idWeapon );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             fun CacheWeapon(weaponName: String?) {
                 val weaponDef: idDeclEntityDef?
                 val brassDefName: String?
@@ -186,14 +173,14 @@ object Weapon {
                 if (!ammoDict.GetInt(ammoname, "-1", num)) {
                     idGameLocal.Companion.Error("Unknown ammo type '%s'", ammoname)
                 }
-                if (num.getVal() < 0 || num.getVal() >= Weapon.AMMO_NUMTYPES) {
+                if (num._val < 0 || num._val >= Weapon.AMMO_NUMTYPES) {
                     idGameLocal.Companion.Error(
                         "Ammo type '%s' value out of range.  Maximum ammo types is %d.\n",
                         ammoname,
                         Weapon.AMMO_NUMTYPES
                     )
                 }
-                return num.getVal()
+                return num._val
             }
 
             fun GetAmmoNameForNum(   /*ammo_t*/ammonum: Int): String? {
@@ -244,7 +231,7 @@ object Weapon {
                 return ""
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -348,38 +335,38 @@ object Weapon {
         private val brassDict: idDict?
 
         //
-        private val flashColor: idVec3?
+        private val flashColor: idVec3
         private val icon: idStr?
         private val idealState: idStr?
         private val meleeDefName: idStr?
-        private val muzzleAxis: idMat3?
+        private val muzzleAxis: idMat3
 
         //
         // the muzzle bone's position, used for launching projectiles and trailing smoke
-        private val muzzleOrigin: idVec3?
+        private val muzzleOrigin: idVec3
         private val muzzle_kick_angles: idAngles?
-        private val muzzle_kick_offset: idVec3?
+        private val muzzle_kick_offset: idVec3
 
         //
         private val nozzleGlowColor // color of the nozzle glow
-                : idVec3?
-        private val playerViewAxis: idMat3?
+                : idVec3
+        private val playerViewAxis: idMat3
 
         //
         // these are the player render view parms, which include bobbing
-        private val playerViewOrigin: idVec3?
+        private val playerViewOrigin: idVec3
         private val projectileDict: idDict?
 
         //
-        private val pushVelocity: idVec3?
+        private val pushVelocity: idVec3
         private val state: idStr?
         private val strikePos // position of last melee strike
-                : idVec3?
-        private val viewWeaponAxis: idMat3?
+                : idVec3
+        private val viewWeaponAxis: idMat3
 
         //
         // the view weapon render entity parms
-        private val viewWeaponOrigin: idVec3?
+        private val viewWeaponOrigin: idVec3
 
         //
         //
@@ -496,7 +483,7 @@ object Weapon {
         private var sndHum: idSoundShader? = null
         private var status: weaponStatus_t? = null
         private var strikeAxis // axis of last melee strike
-                : idMat3? = null
+                : idMat3 = null
         private var strikeSmoke // striking something in melee
                 : idDeclParticle? = null
         private var strikeSmokeStartTime // timing
@@ -587,7 +574,7 @@ object Weapon {
         }
 
         // save games
-        override fun Save(savefile: idSaveGame?) {                    // archives object for save game file
+        override fun Save(savefile: idSaveGame) {                    // archives object for save game file
             savefile.WriteInt(TempDump.etoi(status))
             savefile.WriteObject(thread)
             savefile.WriteString(state)
@@ -679,7 +666,7 @@ object Weapon {
             savefile.WriteObject(projectileEnt)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {                    // unarchives object from save game file
+        override fun Restore(savefile: idRestoreGame) {                    // unarchives object from save game file
             status = Weapon.weaponStatus_t.values()[savefile.ReadInt()]
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/thread)
             savefile.ReadString(state)
@@ -1267,8 +1254,8 @@ object Weapon {
         fun GetGlobalJointTransform(
             viewModel: Boolean,    /*jointHandle_t*/
             jointHandle: Int,
-            offset: idVec3?,
-            axis: idMat3?
+            offset: idVec3,
+            axis: idMat3
         ): Boolean {
             if (viewModel) {
                 // view model
@@ -1295,7 +1282,7 @@ object Weapon {
             return false
         }
 
-        fun SetPushVelocity(pushVelocity: idVec3?) {
+        fun SetPushVelocity(pushVelocity: idVec3) {
             this.pushVelocity.set(pushVelocity)
         }
 
@@ -1465,7 +1452,7 @@ object Weapon {
             return !(state == weaponStatus_t.WP_RISING || state == weaponStatus_t.WP_LOWERING || state == weaponStatus_t.WP_HOLSTERED)
         }
 
-        fun DropItem(velocity: idVec3?, activateDelay: Int, removeDelay: Int, died: Boolean): idEntity? {
+        fun DropItem(velocity: idVec3, activateDelay: Int, removeDelay: Int, died: Boolean): idEntity? {
             if (null == weaponDef || null == worldModel.GetEntity()) {
                 return null
             }
@@ -1808,13 +1795,13 @@ object Weapon {
             return zoomFov
         }
 
-        fun GetWeaponAngleOffsets(average: CInt?, scale: CFloat?, max: CFloat?) {
+        fun GetWeaponAngleOffsets(average: CInt, scale: CFloat, max: CFloat) {
             average.setVal(weaponAngleOffsetAverages)
             scale.setVal(weaponAngleOffsetScale)
             max.setVal(weaponAngleOffsetMax)
         }
 
-        fun GetWeaponTimeOffsets(time: CFloat?, scale: CFloat?) {
+        fun GetWeaponTimeOffsets(time: CFloat, scale: CFloat) {
             time.setVal(weaponOffsetTime)
             scale.setVal(weaponOffsetScale)
         }
@@ -1850,11 +1837,11 @@ object Weapon {
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
             localAxis.set(2, normal.oNegative())
             localAxis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
-            localAxis.set(0, axistemp.get(0).times(c.getVal()).oPlus(axistemp.get(1).times(-s.getVal())))
-            localAxis.set(1, axistemp.get(0).times(-s.getVal()).oPlus(axistemp.get(1).times(-c.getVal())))
+            localAxis.set(0, axistemp.get(0).times(c._val).oPlus(axistemp.get(1).times(-s._val)))
+            localAxis.set(1, axistemp.get(0).times(-s._val).oPlus(axistemp.get(1).times(-c._val)))
             localAxis.get(0).timesAssign(1.0f / size)
             localAxis.get(1).timesAssign(1.0f / size)
-            val localPlane: Array<idPlane?> = idPlane.Companion.generateArray(2)
+            val localPlane: Array<idPlane> = idPlane.Companion.generateArray(2)
             localPlane[0].set(localAxis.get(0))
             localPlane[0].set(3, -localOrigin.times(localAxis.get(0)) + 0.5f)
             localPlane[1].set(localAxis.get(1))
@@ -1896,7 +1883,7 @@ object Weapon {
             return ammoRequired
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteBits(ammoClip, Player.ASYNC_PLAYER_INV_CLIP_BITS)
             msg.WriteBits(worldModel.GetSpawnId(), 32)
             msg.WriteBits(TempDump.btoi(lightOn), 1)
@@ -1904,7 +1891,7 @@ object Weapon {
         }
 
         // };
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             ammoClip = msg.ReadBits(Player.ASYNC_PLAYER_INV_CLIP_BITS)
             worldModel.SetSpawnId(msg.ReadBits(32))
             val snapLight = msg.ReadBits(1) != 0
@@ -2095,7 +2082,7 @@ object Weapon {
          The machinegun and chaingun will incrementally back up as they are being fired
          ================
          */
-        private fun MuzzleRise(origin: idVec3?, axis: idMat3?) {
+        private fun MuzzleRise(origin: idVec3, axis: idMat3) {
             var time: Int
             val amount: Float
             val ang: idAngles?
@@ -2471,8 +2458,8 @@ object Weapon {
             val tr = trace_s()
             val start = idVec3()
             val muzzle_pos = idVec3()
-            val ownerBounds: idBounds?
-            var projBounds: idBounds?
+            val ownerBounds: idBounds
+            var projBounds: idBounds
             if (IsHidden()) {
                 return
             }
@@ -2626,7 +2613,7 @@ object Weapon {
                         if (ownerBounds.minus(projBounds)
                                 .RayIntersection(muzzle_pos, playerViewAxis.get(0), distance)
                         ) {
-                            start.set(muzzle_pos.oPlus(playerViewAxis.get(0).times(distance.getVal())))
+                            start.set(muzzle_pos.oPlus(playerViewAxis.get(0).times(distance._val)))
                         } else {
                             start.set(ownerBounds.GetCenter())
                         }
@@ -2887,7 +2874,7 @@ object Weapon {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

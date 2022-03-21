@@ -1,9 +1,7 @@
 package neo.Renderer
 
 import neo.Renderer.*
-import neo.Renderer.Image.GeneratorFunction
-import neo.Renderer.Image.idImage
-import neo.Renderer.Image.textureDepth_t
+import neo.Renderer.Image.*
 import neo.Renderer.Material.textureFilter_t
 import neo.Renderer.Material.textureRepeat_t
 import neo.Renderer.Model.srfTriangles_s
@@ -493,7 +491,7 @@ object MegaTexture {
         private var currentTriMapping: srfTriangles_s? = null
 
         //
-        private val currentViewOrigin: idVec3? = idVec3()
+        private val currentViewOrigin: idVec3 = idVec3()
         private var fileHandle: idFile? = null
 
         //
@@ -612,7 +610,7 @@ object MegaTexture {
             }
         }
 
-        fun BindForViewOrigin(viewOrigin: idVec3?) {    // binds images and sets program parameters
+        fun BindForViewOrigin(viewOrigin: idVec3) {    // binds images and sets program parameters
             SetViewOrigin(viewOrigin)
 
             // borderClamp image goes in texture 0
@@ -669,7 +667,7 @@ object MegaTexture {
             }
         }
 
-        private fun SetViewOrigin(viewOrigin: idVec3?) {
+        private fun SetViewOrigin(viewOrigin: idVec3) {
             if (r_showMegaTextureLabels.IsModified()) {
                 r_showMegaTextureLabels.ClearModified()
                 currentViewOrigin.set(0, viewOrigin.get(0) + 0.1f) // force a change

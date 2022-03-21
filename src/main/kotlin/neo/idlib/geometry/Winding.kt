@@ -13,7 +13,6 @@ import neo.idlib.math.Pluecker.idPluecker
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec5
 import kotlin.math.abs
-import kotlin.math.pow
 
 /**
  *
@@ -639,7 +638,7 @@ object Winding {
             i = 0
             while (i < numPoints) {
                 println((p[i].ToVec3() - p[(i + numPoints - 1) % numPoints].ToVec3()).LengthSqr())
-                if ((p[i].ToVec3() - p[(i+numPoints-1)%numPoints].ToVec3()).LengthSqr() >= Square( epsilon )
+                if ((p[i].ToVec3() - p[(i + numPoints - 1) % numPoints].ToVec3()).LengthSqr() >= Square(epsilon)
                 ) {
                     i++
                     continue
@@ -667,7 +666,7 @@ object Winding {
             i = 0
             while (i < numPoints) {
                 // create plane through edge orthogonal to winding plane
-                edgeNormal.set((p[i].ToVec3() - p[(i+numPoints-1)%numPoints].ToVec3()).Cross( normal ))
+                edgeNormal.set((p[i].ToVec3() - p[(i + numPoints - 1) % numPoints].ToVec3()).Cross(normal))
                 edgeNormal.Normalize()
                 dist = edgeNormal * p[i].ToVec3()
                 if (abs(edgeNormal * p[(i + 1) % numPoints].ToVec3() - dist) > epsilon) {
@@ -726,7 +725,7 @@ object Winding {
             }
             for (i in 0..numPoints) {
                 // create plane through edge orthogonal to winding plane
-                normal.set((p[(i+1)%numPoints].ToVec3() - p[i].ToVec3()).Cross( plane.Normal() ))
+                normal.set((p[(i + 1) % numPoints].ToVec3() - p[i].ToVec3()).Cross(plane.Normal()))
                 normal.Normalize()
                 dist = normal * p[i].ToVec3()
                 if (abs(normal * point - dist) > epsilon) {
@@ -798,7 +797,7 @@ object Winding {
                 // calculate hull edge vectors
                 j = 0
                 while (j < numPoints) {
-                    dir.set(p[ (j + 1) % numPoints ].ToVec3() - p[ j ].ToVec3())
+                    dir.set(p[(j + 1) % numPoints].ToVec3() - p[j].ToVec3())
                     dir.Normalize()
                     hullDirs[j].set(normal.Cross(dir))
                     j++
@@ -909,7 +908,7 @@ object Winding {
                     }
                     // if only two points make sure we have the right ordering according to the normal
                     dir.set(point - p[0].ToVec3())
-                    dir.set(dir.Cross( p[1].ToVec3() - p[0].ToVec3() ))
+                    dir.set(dir.Cross(p[1].ToVec3() - p[0].ToVec3()))
                     if (dir[0] == 0.0f && dir[1] == 0.0f && dir[2] == 0.0f) {
                         // points don't make a plane
                         return
@@ -1211,7 +1210,7 @@ object Winding {
             total = 0.0f
             i = 2
             while (i < numPoints) {
-                d1.set(p[i-1].ToVec3() - p[0].ToVec3())
+                d1.set(p[i - 1].ToVec3() - p[0].ToVec3())
                 d2.set(p[i].ToVec3() - p[0].ToVec3())
                 cross.set(d1.Cross(d2))
                 total += cross.Length()
@@ -1320,7 +1319,7 @@ object Winding {
             edges = 0
             i = 0
             while (i < numPoints) {
-                delta.set(p[(i+1)%numPoints].ToVec3() - p[i].ToVec3())
+                delta.set(p[(i + 1) % numPoints].ToVec3() - p[i].ToVec3())
                 len = delta.Length()
                 if (len > EDGE_LENGTH) {
                     if (++edges == 3) {
@@ -1456,7 +1455,7 @@ object Winding {
             val pointvec = idVec3()
             i = 0
             while (i < numPoints) {
-                dir.set(p[(i+1) % numPoints].ToVec3() - p[i].ToVec3())
+                dir.set(p[(i + 1) % numPoints].ToVec3() - p[i].ToVec3())
                 pointvec.set(point - p[i].ToVec3())
                 n.set(dir.Cross(normal))
                 if (pointvec * n < -epsilon) {

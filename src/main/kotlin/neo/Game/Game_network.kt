@@ -10,32 +10,19 @@ import neo.idlib.Lib.idLib
  *
  */
 class Game_network {
-    /*
-     ===============================================================================
-
-     Client running game code:
-     - entity events don't work and should not be issued
-     - entities should never be spawned outside idGameLocal::ClientReadSnapshot
-
-     ===============================================================================
-     */
-    // adds tags to the network protocol to detect when things go bad ( internal consistency )
-    // NOTE: this changes the network protocol
-    //#ifndef ASYNC_WRITE_TAGS
-    const val ASYNC_WRITE_TAGS = false
-    val net_clientLagOMeter: idCVar? = idCVar(
+    val net_clientLagOMeter: idCVar = idCVar(
         "net_clientLagOMeter",
         "1",
         CVarSystem.CVAR_GAME or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
         "draw prediction graph"
     )
-    val net_clientMaxPrediction: idCVar? = idCVar(
+    val net_clientMaxPrediction: idCVar = idCVar(
         "net_clientMaxPrediction",
         "1000",
         CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
         "maximum number of milliseconds a client can predict ahead of server."
     )
-    val net_clientSelfSmoothing: idCVar? = idCVar(
+    val net_clientSelfSmoothing: idCVar = idCVar(
         "net_clientSelfSmoothing",
         "0.6",
         CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
@@ -46,18 +33,18 @@ class Game_network {
 
     //#endif
     //
-    val net_clientShowSnapshot: idCVar? = idCVar(
+    val net_clientShowSnapshot: idCVar = idCVar(
         "net_clientShowSnapshot",
         "0",
         CVarSystem.CVAR_GAME or CVarSystem.CVAR_INTEGER,
         "",
-        0,
-        3,
+        0f,
+        3f,
         ArgCompletion_Integer(0, 3)
     )
-    val net_clientShowSnapshotRadius: idCVar? =
+    val net_clientShowSnapshotRadius: idCVar =
         idCVar("net_clientShowSnapshotRadius", "128", CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT, "")
-    val net_clientSmoothing: idCVar? = idCVar(
+    val net_clientSmoothing: idCVar = idCVar(
         "net_clientSmoothing",
         "0.8",
         CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
@@ -66,21 +53,18 @@ class Game_network {
         0.95f
     )
 
-    //    
     class idEventQueue  //        private idBlockAlloc<entityNetEvent_s> eventAllocator = new idBlockAlloc<>(32);
-    //
-    //
     {
         private var end: entityNetEvent_s? = null
         private var start: entityNetEvent_s? = null
-        fun Alloc(): entityNetEvent_s? {
+        fun Alloc(): entityNetEvent_s {
             val event = entityNetEvent_s() // eventAllocator.Alloc();
             event.prev = null
             event.next = null
             return event
         }
 
-        fun Free(event: entityNetEvent_s?) {
+        fun Free(event: entityNetEvent_s) {
             // should only be called on an unlinked event!
             assert(null == event.next && null == event.prev)
             //            eventAllocator.Free(event);
@@ -96,12 +80,12 @@ class Game_network {
             end = null
         }
 
-        fun Enqueue(event: entityNetEvent_s?, oooBehaviour: outOfOrderBehaviour_t?) {
+        fun Enqueue(event: entityNetEvent_s, oooBehaviour: outOfOrderBehaviour_t) {
             if (oooBehaviour == outOfOrderBehaviour_t.OUTOFORDER_DROP) {
                 // go backwards through the queue and determine if there are
                 // any out-of-order events
-                while (end != null && end.time > event.time) {
-                    val outOfOrder = RemoveLast()
+                while (end != null && end!!.time > event.time) {
+                    val outOfOrder = RemoveLast()!!
                     idLib.common.DPrintf(
                         "WARNING: new event with id %d ( time %d ) caused removal of event with id %d ( time %d ), game time = %d.\n",
                         event.event,
@@ -139,7 +123,7 @@ class Game_network {
             event.next = null
             event.prev = null
             if (end != null) {
-                end.next = event
+                end!!.next = event
                 event.prev = end
             } else {
                 start = event
@@ -149,11 +133,11 @@ class Game_network {
 
         fun Dequeue(): entityNetEvent_s? {
             val event = start ?: return null
-            start = start.next
+            start = start!!.next
             if (null == start) {
                 end = null
             } else {
-                start.prev = null
+                start!!.prev = null
             }
             event.next = null
             event.prev = null
@@ -166,7 +150,7 @@ class Game_network {
             if (null == end) {
                 start = null
             } else {
-                end.next = null
+                end!!.next = null
             }
             event.next = null
             event.prev = null
@@ -181,4 +165,21 @@ class Game_network {
             OUTOFORDER_IGNORE, OUTOFORDER_DROP, OUTOFORDER_SORT
         }
     } //============================================================================
+
+    /*
+             ===============================================================================
+
+             Client running game code:
+             - entity events don't work and should not be issued
+             - entities should never be spawned outside idGameLocal::ClientReadSnapshot
+
+             ===============================================================================
+             */
+    // adds tags to the network protocol to detect when things go bad ( internal consistency )
+    // NOTE: this changes the network protocol
+    //#ifndef ASYNC_WRITE_TAGS
+    companion object {
+
+        const val ASYNC_WRITE_TAGS = false
+    }
 }

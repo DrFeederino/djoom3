@@ -72,10 +72,10 @@ object output {
         }
 
         // free all the nodes below this point
-        facebsp.FreeTreePortals_r(node.children[0]!!)
-        facebsp.FreeTreePortals_r(node.children[1]!!)
-        facebsp.FreeTree_r(node.children[0]!!)
-        facebsp.FreeTree_r(node.children[1]!!)
+        facebsp.FreeTreePortals_r(node.children[0])
+        facebsp.FreeTreePortals_r(node.children[1])
+        facebsp.FreeTree_r(node.children[0])
+        facebsp.FreeTree_r(node.children[1])
 
         // change this node to a leaf
         node.planenum = dmap.PLANENUM_LEAF
@@ -128,7 +128,7 @@ object output {
                     continue
                 }
                 break
-                b = b!!.nextGroup // why tf is there break above?
+                b = b.nextGroup // why tf is there break above?
             }
             if (a === b) {
                 count++
@@ -202,17 +202,17 @@ object output {
                 // search for a match
                 j = 0
                 while (j < numVerts) {
-                    if (MatchVert(uTri.verts[j]!!, dv)) {
+                    if (MatchVert(uTri.verts[j], dv)) {
                         break
                     }
                     j++
                 }
                 if (j == numVerts) {
                     numVerts++
-                    uTri.verts[j]!!.xyz.set(dv.xyz)
-                    uTri.verts[j]!!.normal.set(dv.normal)
-                    uTri.verts[j]!!.st[0] = dv.st[0]
-                    uTri.verts[j]!!.st[1] = dv.st[1]
+                    uTri.verts[j].xyz.set(dv.xyz)
+                    uTri.verts[j].normal.set(dv.normal)
+                    uTri.verts[j].st[0] = dv.st[0]
+                    uTri.verts[j].st[1] = dv.st[1]
                 }
                 uTri.indexes[numIndexes++] = j
                 i++
@@ -262,7 +262,7 @@ object output {
         while (i < uTris.numVerts) {
             val vec = FloatArray(8)
             val dv: idDrawVert
-            dv = uTris.verts[i]!!
+            dv = uTris.verts[i]
             vec[0] = dv.xyz[0]
             vec[1] = dv.xyz[1]
             vec[2] = dv.xyz[2]

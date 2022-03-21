@@ -212,8 +212,8 @@ object tr_trisurf {
 
     //
     var numSilEdges = 0
-    var silEdgeHash: idHashIndex? = idHashIndex(SILEDGE_HASH_SIZE, MAX_SIL_EDGES)
-    var silEdges: Array<silEdge_t?>?
+    var silEdgeHash: idHashIndex = idHashIndex(SILEDGE_HASH_SIZE, MAX_SIL_EDGES)
+    var silEdges: Array<silEdge_t>
 
     /*
      ==============
@@ -754,13 +754,13 @@ object tr_trisurf {
         c_unique = 0
         i = 0
         while (i < tri.numVerts) {
-            v1 = tri.verts[i]!!
+            v1 = tri.verts[i]
 
             // see if there is an earlier vert that it can map to
             hashKey = hash.GenerateKey(v1.xyz)
             j = hash.First(hashKey)
             while (j >= 0) {
-                v2 = tri.verts[j]!!
+                v2 = tri.verts[j]
                 if (v2.xyz[0] == v1.xyz[0] && v2.xyz[1] == v1.xyz[1] && v2.xyz[2] == v1.xyz[2]
                 ) {
                     c_removed++
@@ -878,7 +878,7 @@ object tr_trisurf {
         var i: Int
         var j: Int
         var p: Int
-        var plane: idPlane?
+        var plane: idPlane
         i = 0
         while (i < tri.numVerts) {
             tri.verts[i].normal.Zero()
@@ -1365,7 +1365,7 @@ object tr_trisurf {
         tri.tangentsCalculated = true
     }
 
-    fun  /*ID_INLINE*/VectorNormalizeFast2(v: idVec3?, out: idVec3?) {
+    fun  /*ID_INLINE*/VectorNormalizeFast2(v: idVec3, out: idVec3) {
         val length: Float
         length = idMath.RSqrt(v.get(0) * v.get(0) + v.get(1) * v.get(1) + v.get(2) * v.get(2))
         out.set(0, v.get(0) * length)
@@ -1507,7 +1507,7 @@ object tr_trisurf {
     @JvmOverloads
     fun R_DeriveTangents(tri: srfTriangles_s?, allocFacePlanes: Boolean = true) {
         var i: Int
-        var planes: Array<idPlane?>?
+        var planes: Array<idPlane>?
         if (tri.dominantTris != null) {
             R_DeriveUnsmoothedTangents(tri)
             return

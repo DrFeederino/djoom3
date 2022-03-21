@@ -288,7 +288,7 @@ object CVarSystem {
         override fun equals(o: Any?): Boolean {
             if (this === o) return true
             if (o !is idCVar) return false
-            val idCVar = o as idCVar
+            val idCVar = o
             if (flags != idCVar.flags) return false
             if (java.lang.Float.compare(idCVar.floatValue, floatValue) != 0) return false
             if (integerValue != idCVar.integerValue) return false

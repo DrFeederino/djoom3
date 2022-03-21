@@ -14,7 +14,7 @@ import neo.idlib.math.Vector.idVec3
  *
  */
 object PlayerIcon {
-    val iconKeys /*[ ICON_NONE ]*/: Array<String?>? = arrayOf(
+    val iconKeys /*[ ICON_NONE ]*/: Array<String> = arrayOf(
         "mtr_icon_lag",
         "mtr_icon_chat"
     )
@@ -24,12 +24,12 @@ object PlayerIcon {
     }
 
     class idPlayerIcon {
-        var   /*qhandle_t*/iconHandle: Int
-        var iconType: playerIconType_t?
-        var renderEnt: renderEntity_s? = null
+        var   /*qhandle_t*/iconHandle: Int = -1
+        var iconType: playerIconType_t = playerIconType_t.ICON_NONE
+        var renderEnt: renderEntity_s = renderEntity_s()
 
         // ~idPlayerIcon();
-        fun Draw(player: idPlayer?,    /*jointHandle_t*/joint: Int) {
+        fun Draw(player: idPlayer,    /*jointHandle_t*/joint: Int) {
             val origin = idVec3()
             val axis = idMat3()
             if (joint == Model.INVALID_JOINT) {
@@ -41,13 +41,13 @@ object PlayerIcon {
             Draw(player, origin)
         }
 
-        fun Draw(player: idPlayer?, origin: idVec3?) {
+        fun Draw(player: idPlayer, origin: idVec3) {
             val localPlayer = Game_local.gameLocal.GetLocalPlayer()
             if (null == localPlayer || null == localPlayer.GetRenderView()) {
                 FreeIcon()
                 return
             }
-            val axis = localPlayer.GetRenderView().viewaxis
+            val axis = localPlayer.GetRenderView()!!.viewaxis
             if (player.isLagged) {
                 // create the icon if necessary, or update if already created
                 if (!CreateIcon(player, playerIconType_t.ICON_LAG, origin, axis)) {
@@ -72,10 +72,10 @@ object PlayerIcon {
 
         fun CreateIcon(
             player: idPlayer?,
-            type: playerIconType_t?,
-            mtr: String?,
-            origin: idVec3?,
-            axis: idMat3?
+            type: playerIconType_t,
+            mtr: String,
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             assert(type != playerIconType_t.ICON_NONE)
             if (type == iconType) {
@@ -102,30 +102,23 @@ object PlayerIcon {
             renderEnt.noSelfShadow = true
             renderEnt.customShader = DeclManager.declManager.FindMaterial(mtr)
             renderEnt.referenceShader = null
-            renderEnt.bounds.set(renderEnt.hModel.Bounds(renderEnt))
+            renderEnt.bounds.set(renderEnt.hModel!!.Bounds(renderEnt))
             iconHandle = Game_local.gameRenderWorld.AddEntityDef(renderEnt)
             iconType = type
             return true
         }
 
-        fun CreateIcon(player: idPlayer?, type: playerIconType_t?, origin: idVec3?, axis: idMat3?): Boolean {
+        fun CreateIcon(player: idPlayer, type: playerIconType_t, origin: idVec3, axis: idMat3): Boolean {
             assert(type != playerIconType_t.ICON_NONE)
             val mtr = player.spawnArgs.GetString(PlayerIcon.iconKeys[TempDump.etoi(type)], "_default")
             return CreateIcon(player, type, mtr, origin, axis)
         }
 
-        fun UpdateIcon(player: idPlayer?, origin: idVec3?, axis: idMat3?) {
+        fun UpdateIcon(player: idPlayer, origin: idVec3, axis: idMat3) {
             assert(iconHandle >= 0)
             renderEnt.origin.set(origin)
             renderEnt.axis.set(axis)
             Game_local.gameRenderWorld.UpdateEntityDef(iconHandle, renderEnt)
-        }
-
-        //
-        //
-        init {
-            iconHandle = -1
-            iconType = playerIconType_t.ICON_NONE
         }
     }
 }

@@ -3,10 +3,7 @@ package neo.Renderer
 import neo.Renderer.*
 import neo.Renderer.Cinematic.idCinematic
 import neo.Renderer.Cinematic.idSndWindow
-import neo.Renderer.Image.cubeFiles_t
-import neo.Renderer.Image.idImage
-import neo.Renderer.Image.idImageManager
-import neo.Renderer.Image.textureDepth_t
+import neo.Renderer.Image.*
 import neo.Renderer.MegaTexture.idMegaTexture
 import neo.Renderer.tr_local.viewDef_s
 import neo.Sound.sound.idSoundEmitter
@@ -460,10 +457,10 @@ object Material {
 
         //
         //
-        private val deformRegisters: IntArray? = IntArray(4) // numeric parameter for deforms
+        private val deformRegisters: IntArray = IntArray(4) // numeric parameter for deforms
 
         //
-        private val texGenRegisters: IntArray? = IntArray(Material.MAX_TEXGEN_REGISTERS) // for wobbleSky
+        private val texGenRegisters: IntArray = IntArray(Material.MAX_TEXGEN_REGISTERS) // for wobbleSky
         var DBG_BALLS = 0
 
         //
@@ -548,8 +545,8 @@ object Material {
         private var refCount = 0
 
         //	virtual				~idMaterial();
-        private var renderBump // renderbump command options, without the "renderbump" at the start
-                : idStr? = null
+        private val renderBump // renderbump command options, without the "renderbump" at the start
+                : idStr = idStr()
         private var shouldCreateBackSides = false
 
         //
@@ -1138,7 +1135,7 @@ object Material {
 
         //------------------------------------------------------------------
         // returns the renderbump command line for this shader, or an empty string if not present
-        fun GetRenderBump(): String? {
+        fun GetRenderBump(): String {
             return renderBump.toString()
         }
 
@@ -1337,12 +1334,12 @@ object Material {
 
         fun GetImageWidth(): Int {
             assert(GetStage(0) != null && GetStage(0).texture.image.get(0) != null)
-            return GetStage(0).texture.image.get(0).uploadWidth.getVal()
+            return GetStage(0).texture.image.get(0).uploadWidth._val
         }
 
         fun GetImageHeight(): Int {
             assert(GetStage(0) != null && GetStage(0).texture.image.get(0) != null)
-            return GetStage(0).texture.image.get(0).uploadHeight.getVal()
+            return GetStage(0).texture.image.get(0).uploadHeight._val
         }
 
         fun SetGui(_gui: String?) {
@@ -2896,7 +2893,7 @@ object Material {
             if (token == "-") {
                 src.ReadToken(token)
                 if (token.type == Token.TT_NUMBER || token == ".") {
-                    return GetExpressionConstant(-token.GetFloatValue() as Float)
+                    return GetExpressionConstant(-token.GetFloatValue())
                 }
                 src.Warning("Bad negative number '%s'", token)
                 SetMaterialFlag(Material.MF_DEFAULTED)
@@ -3370,7 +3367,7 @@ object Material {
             result = 31 * result + polygonOffset.hashCode()
             result = 31 * result + portalSky.hashCode()
             result = 31 * result + refCount
-            result = 31 * result + (renderBump?.hashCode() ?: 0)
+            result = 31 * result + renderBump.hashCode()
             result = 31 * result + shouldCreateBackSides.hashCode()
             result = 31 * result + sort.hashCode()
             result = 31 * result + spectrum

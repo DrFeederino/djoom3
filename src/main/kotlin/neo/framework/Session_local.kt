@@ -2776,7 +2776,7 @@ object Session_local {
                     // angle will definitely be wrong
                 } else {
                     cmd[0] = logCmd.cmd!!
-                    cmd[0]!!.ByteSwap()
+                    cmd[0].ByteSwap()
                     logCmd.consistencyHash = Lib.LittleLong(logCmd.consistencyHash)
                 }
             }
@@ -2900,11 +2900,6 @@ object Session_local {
             val mapDecl = DeclManager.declManager.FindType(declType_t.DECL_MAPDEF, mapName, false)
             val mapDef = mapDecl as idDeclEntityDef
             return mapDef.dict.GetInt(Str.va("size%d", Lib.Max(0, Common.com_machineSpec.GetInteger())))
-                ?: if (Common.com_machineSpec.GetInteger() < 2) {
-                    200 * 1024 * 1024
-                } else {
-                    400 * 1024 * 1024
-                }
         }
 
         //

@@ -321,7 +321,7 @@ object shadowopt3 {
                 // the entire triangle is visible
                 numComplete++
                 outputTris[oldOutput] = tris[i]
-                val out: shadowTri_t? = outputTris[oldOutput]
+                val out: shadowTri_t = outputTris[oldOutput]
                 numOutputTris = oldOutput + 1
             } else {
                 numFragmented++
@@ -331,7 +331,7 @@ object shadowopt3 {
                 // triangle if it produced any fragments
                 if (dmap.dmapGlobals.shadowOptLevel == shadowOptLevel_t.SO_CULL_OCCLUDED) {
                     outputTris[oldOutput] = tris[i]
-                    val out: shadowTri_t? = outputTris[oldOutput] //TODO:useless
+                    val out: shadowTri_t = outputTris[oldOutput] //TODO:useless
                     numOutputTris = oldOutput + 1
                 }
             }
@@ -584,7 +584,7 @@ object shadowopt3 {
         if (quad.nearV[0] == quad.nearV[1]) {
             return
         }
-        var check = startEdge as shadowOptEdge_s?
+        var check = startEdge
         while (check != null) {
             if (check == skipEdge) {
                 // don't clip against self

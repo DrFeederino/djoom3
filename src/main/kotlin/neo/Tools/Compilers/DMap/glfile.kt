@@ -20,8 +20,8 @@ object glfile {
         if (p.onnode == null) {
             return 0 // outside
         }
-        fcon = p.nodes!![0]!!.opaque
-        bcon = p.nodes!![1]!!.opaque
+        fcon = p.nodes[0]!!.opaque
+        bcon = p.nodes[1]!!.opaque
 
         // same contents never create a face
         if (fcon == bcon) {
@@ -90,19 +90,19 @@ object glfile {
         var p: uPortal_s?
         var nextp: uPortal_s?
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            WriteGLView_r(node.children[0]!!, glview)
-            WriteGLView_r(node.children[1]!!, glview)
+            WriteGLView_r(node.children[0], glview)
+            WriteGLView_r(node.children[1], glview)
             return
         }
 
         // write all the portals
         p = node.portals
         while (p != null) {
-            nextp = if (p.nodes!![0] === node) {
+            nextp = if (p.nodes[0] === node) {
                 OutputPortal(p, glview)
-                p.next!![0]!!
+                p.next[0]!!
             } else {
-                p.next!![1]!!
+                p.next[1]!!
             }
             p = nextp
         }
@@ -121,7 +121,7 @@ object glfile {
         if (glview == null) {
             Common.common.Error("Couldn't open %s", source)
         }
-        WriteGLView_r(tree.headnode!!, glview!!)
+        WriteGLView_r(tree.headnode, glview!!)
         FileSystem_h.fileSystem.CloseFile(glview)
         Common.common.Printf("%5d c_glfaces\n", c_glfaces)
     }

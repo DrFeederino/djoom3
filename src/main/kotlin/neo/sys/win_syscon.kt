@@ -583,7 +583,7 @@ object win_syscon {
         // if the message is REALLY long, use just the last portion of it
         //
         msg = if (TempDump.isNotNullOrEmpty(pMsg)
-            && pMsg!!.length > CONSOLE_BUFFER_SIZE - 1
+            && pMsg.length > CONSOLE_BUFFER_SIZE - 1
         ) {
             pMsg.substring(pMsg.length - CONSOLE_BUFFER_SIZE + 1)
         } else {

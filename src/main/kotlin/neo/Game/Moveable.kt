@@ -66,9 +66,9 @@ object Moveable {
 
      ===============================================================================
      */
-    val EV_BecomeNonSolid: idEventDef? = idEventDef("becomeNonSolid")
-    val EV_EnableDamage: idEventDef? = idEventDef("enableDamage", "f")
-    val EV_IsAtRest: idEventDef? = idEventDef("isAtRest", null, 'd')
+    val EV_BecomeNonSolid: idEventDef = idEventDef("becomeNonSolid")
+    val EV_EnableDamage: idEventDef = idEventDef("enableDamage", "f")
+    val EV_IsAtRest: idEventDef = idEventDef("isAtRest", null, 'd')
 
     /*
      ===============================================================================
@@ -79,19 +79,19 @@ object Moveable {
 
      ===============================================================================
      */
-    val EV_Respawn: idEventDef? = idEventDef("<respawn>")
+    val EV_Respawn: idEventDef = idEventDef("<respawn>")
 
     //
-    val EV_SetOwnerFromSpawnArgs: idEventDef? = idEventDef("<setOwnerFromSpawnArgs>")
-    val EV_TriggerTargets: idEventDef? = idEventDef("<triggertargets>")
+    val EV_SetOwnerFromSpawnArgs: idEventDef = idEventDef("<setOwnerFromSpawnArgs>")
+    val EV_TriggerTargets: idEventDef = idEventDef("<triggertargets>")
 
     open class idMoveable : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idMoveable );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // ~idMoveable( void );
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -115,7 +115,7 @@ object Moveable {
         }
 
         protected val initialSplineDir // initial relative direction along the spline path
-                : idVec3?
+                : idVec3
         protected var allowStep // allow monsters to step on the object
                 : Boolean
         protected var brokenModel // model set when health drops down to or below zero
@@ -129,7 +129,7 @@ object Moveable {
         protected var fxCollide // fx system to start when collides with something
                 : idStr? = null
         protected var initialSpline // initial spline path the moveable follows
-                : idCurve_Spline<idVec3?>?
+                : idCurve_Spline<idVec3>?
         protected var maxDamageVelocity // velocity at which the maximum damage is applied
                 : Float
         protected var minDamageVelocity // minimum velocity before moveable applies damage
@@ -141,7 +141,7 @@ object Moveable {
         protected var nextSoundTime // next time the moveable can make a sound
                 : Int
         protected var physicsObj // physics object
-                : idPhysics_RigidBody?
+                : idPhysics_RigidBody
         protected var unbindOnDeath // unbind from master when health drops down to or below zero
                 : Boolean
 
@@ -173,11 +173,11 @@ object Moveable {
 
             // get rigid body properties
             spawnArgs.GetFloat("density", "0.5", density)
-            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density.getVal()))
+            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density._val))
             spawnArgs.GetFloat("friction", "0.05", friction)
-            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction.getVal()))
+            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction._val))
             spawnArgs.GetFloat("bouncyness", "0.6", bouncyness)
-            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness.getVal()))
+            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness._val))
             explode = spawnArgs.GetBool("explode")
             unbindOnDeath = spawnArgs.GetBool("unbindondeath")
             fxCollide = idStr(spawnArgs.GetString("fx_collide"))
@@ -204,18 +204,18 @@ object Moveable {
 
             // setup the physics
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(trm), density.getVal())
+            physicsObj.SetClipModel(idClipModel(trm), density._val)
             physicsObj.GetClipModel().SetMaterial(GetRenderModelMaterial())
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
-            physicsObj.SetBouncyness(bouncyness.getVal())
-            physicsObj.SetFriction(0.6f, 0.6f, friction.getVal())
+            physicsObj.SetBouncyness(bouncyness._val)
+            physicsObj.SetFriction(0.6f, 0.6f, friction._val)
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
             physicsObj.SetContents(Material.CONTENTS_SOLID)
             physicsObj.SetClipMask(Game_local.MASK_SOLID or Material.CONTENTS_BODY or Material.CONTENTS_CORPSE or Material.CONTENTS_MOVEABLECLIP)
             SetPhysics(physicsObj)
             if (spawnArgs.GetFloat("mass", "10", mass)) {
-                physicsObj.SetMass(mass.getVal())
+                physicsObj.SetMass(mass._val)
             }
             if (spawnArgs.GetBool("nodrop")) {
                 physicsObj.PutToRest()
@@ -232,7 +232,7 @@ object Moveable {
             PostEventMS(Moveable.EV_SetOwnerFromSpawnArgs, 0)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteString(brokenModel)
             savefile.WriteString(damage)
             savefile.WriteString(fxCollide)
@@ -250,7 +250,7 @@ object Moveable {
             savefile.WriteStaticObject(physicsObj)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val initialSplineTime = CInt()
             savefile.ReadString(brokenModel)
             savefile.ReadString(damage)
@@ -266,8 +266,8 @@ object Moveable {
             nextSoundTime = savefile.ReadInt()
             savefile.ReadInt(initialSplineTime)
             savefile.ReadVec3(initialSplineDir)
-            if (initialSplineTime.getVal() != -1) {
-                InitInitialSpline(initialSplineTime.getVal())
+            if (initialSplineTime._val != -1) {
+                InitInitialSpline(initialSplineTime._val)
             } else {
                 initialSpline = null
             }
@@ -307,7 +307,7 @@ object Moveable {
             }
         }
 
-        override fun Collide(collision: trace_s?, velocity: idVec3?): Boolean {
+        override fun Collide(collision: trace_s?, velocity: idVec3): Boolean {
             val v: Float
             var f: Float
             val dir = idVec3()
@@ -351,7 +351,7 @@ object Moveable {
             return false
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             if (unbindOnDeath) {
                 Unbind()
             }
@@ -370,11 +370,11 @@ object Moveable {
             fl.takedamage = false
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             physicsObj.WriteToSnapshot(msg)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             physicsObj.ReadFromSnapshot(msg)
             if (msg.HasChanged()) {
                 UpdateVisuals()
@@ -489,7 +489,7 @@ object Moveable {
         fun idEntity_Damage(
             inflictor: idEntity?,
             attacker: idEntity?,
-            dir: idVec3?,
+            dir: idVec3,
             damageDefName: String?,
             damageScale: Float,
             location: Int
@@ -497,7 +497,7 @@ object Moveable {
             super.Damage(inflictor, attacker, dir, damageDefName, damageScale, location)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -538,15 +538,15 @@ object Moveable {
     open class idBarrel : idMoveable() {
         // CLASS_PROTOTYPE( idBarrel );
         private val lastOrigin // origin of the barrel the last think frame
-                : idVec3?
+                : idVec3
         private var additionalAxis // additional rotation axis
-                : idMat3?
+                : idMat3
         private var additionalRotation // additional rotation of the barrel about it's axis
                 : Float
         private var barrelAxis // one of the coordinate axes the barrel cylinder is parallel to
                 = 0
         private var lastAxis // axis of the barrel the last think frame
-                : idMat3?
+                : idMat3
         private var radius // radius of barrel
                 = 1.0f
 
@@ -565,7 +565,7 @@ object Moveable {
             additionalAxis.Identity()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(radius)
             savefile.WriteInt(barrelAxis)
             savefile.WriteVec3(lastOrigin)
@@ -574,7 +574,7 @@ object Moveable {
             savefile.WriteMat3(additionalAxis)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             radius = savefile.ReadFloat()
             barrelAxis = savefile.ReadInt()
             savefile.ReadVec3(lastOrigin)
@@ -592,7 +592,7 @@ object Moveable {
             val curOrigin = idVec3()
             val gravityNormal = idVec3()
             val dir = idVec3()
-            val curAxis: idMat3?
+            val curAxis: idMat3
             wasAtRest = IsAtRest()
 
             // run physics
@@ -661,7 +661,7 @@ object Moveable {
             BarrelThink()
         }
 
-        override fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3): Boolean {
             origin.set(Vector.getVec3_origin())
             axis.set(additionalAxis)
             return true
@@ -696,11 +696,11 @@ object Moveable {
             val EVENT_MAXEVENTS = EVENT_EXPLODE + 1
 
             // CLASS_PROTOTYPE( idExplodingBarrel );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -722,14 +722,14 @@ object Moveable {
         // };
         //
         //
-        private val spawnOrigin: idVec3?
+        private val spawnOrigin: idVec3
         private var light: renderLight_s?
         private var   /*qhandle_t*/lightDefHandle: Int
         private var lightTime: Int
         private var   /*qhandle_t*/particleModelDefHandle: Int
         private var particleRenderEntity: renderEntity_s?
         private var particleTime: Int
-        private var spawnAxis: idMat3?
+        private var spawnAxis: idMat3
         private var state: explode_state_t?
         private var time: Float
 
@@ -761,7 +761,7 @@ object Moveable {
             light = renderLight_s() //	memset( &light, 0, sizeof( light ) );
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(spawnOrigin)
             savefile.WriteMat3(spawnAxis)
             savefile.WriteInt(TempDump.etoi(state))
@@ -774,7 +774,7 @@ object Moveable {
             savefile.WriteFloat(time)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(spawnOrigin)
             savefile.ReadMat3(spawnAxis)
             state = Moveable.idExplodingBarrel.explode_state_t.values()[savefile.ReadInt()]
@@ -823,7 +823,7 @@ object Moveable {
         }
 
         override fun Damage(
-            inflictor: idEntity?, attacker: idEntity?, dir: idVec3?,
+            inflictor: idEntity?, attacker: idEntity?, dir: idVec3,
             damageDefName: String?, damageScale: Float, location: Int
         ) {
             val damageDef = Game_local.gameLocal.FindEntityDefDict(damageDefName)
@@ -837,7 +837,7 @@ object Moveable {
             }
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             if (IsHidden() || state == explode_state_t.EXPLODING || state == explode_state_t.BURNING) {
                 return
             }
@@ -913,12 +913,12 @@ object Moveable {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             super.WriteToSnapshot(msg)
             msg.WriteBits(TempDump.btoi(IsHidden()), 1)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             super.ReadFromSnapshot(msg)
             if (msg.ReadBits(1) != 0) {
                 Hide()
@@ -1087,7 +1087,7 @@ object Moveable {
             ActivateTargets(this)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

@@ -42,6 +42,7 @@ class AI_Vagary {
 
             init {
                 eventCallbacks.putAll(idAI.getEventCallBacks())
+                eventCallbacks[AI_Vagary_ChooseObjectToThrow] = object : eventCallback_t5<idAI_Vagary> { println(it) }
                 eventCallbacks[AI_Vagary_ChooseObjectToThrow] =
                     eventCallback_t5<idAI_Vagary> { obj: Any?, mins: idEventArg<*>? ->
                         idAI_Vagary::Event_ChooseObjectToThrow

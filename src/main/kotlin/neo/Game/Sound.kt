@@ -26,21 +26,21 @@ import neo.idlib.math.Vector.idVec3
  *
  */
 object Sound {
-    val EV_Speaker_Off: idEventDef? = idEventDef("Off", null)
-    val EV_Speaker_On: idEventDef? = idEventDef("On", null)
-    val EV_Speaker_Timer: idEventDef? = idEventDef("<timer>", null)
-    val SSF_ANTI_PRIVATE_SOUND: Int = Lib.Companion.BIT(1) // plays for everyone but the current listenerId
-    val SSF_GLOBAL: Int = Lib.Companion.BIT(3) // play full volume to all speakers and all listeners
-    val SSF_LOOPING: Int = Lib.Companion.BIT(5) // repeat the sound continuously
-    val SSF_NO_DUPS: Int = Lib.Companion.BIT(9) // try not to play the same sound twice in a row
-    val SSF_NO_FLICKER: Int = Lib.Companion.BIT(8) // always return 1.0 for volume queries
-    val SSF_NO_OCCLUSION: Int = Lib.Companion.BIT(2) // don't flow through portals, only use straight line
-    val SSF_OMNIDIRECTIONAL: Int = Lib.Companion.BIT(4) // fall off with distance, but play same volume in all speakers
-    val SSF_PLAY_ONCE: Int = Lib.Companion.BIT(6) // never restart if already playing on any channel of a given emitter
+    val EV_Speaker_Off: idEventDef = idEventDef("Off", null)
+    val EV_Speaker_On: idEventDef = idEventDef("On", null)
+    val EV_Speaker_Timer: idEventDef = idEventDef("<timer>", null)
+    val SSF_ANTI_PRIVATE_SOUND: Int = Lib.BIT(1) // plays for everyone but the current listenerId
+    val SSF_GLOBAL: Int = Lib.BIT(3) // play full volume to all speakers and all listeners
+    val SSF_LOOPING: Int = Lib.BIT(5) // repeat the sound continuously
+    val SSF_NO_DUPS: Int = Lib.BIT(9) // try not to play the same sound twice in a row
+    val SSF_NO_FLICKER: Int = Lib.BIT(8) // always return 1.0 for volume queries
+    val SSF_NO_OCCLUSION: Int = Lib.BIT(2) // don't flow through portals, only use straight line
+    val SSF_OMNIDIRECTIONAL: Int = Lib.BIT(4) // fall off with distance, but play same volume in all speakers
+    val SSF_PLAY_ONCE: Int = Lib.BIT(6) // never restart if already playing on any channel of a given emitter
 
     // sound shader flags
-    val SSF_PRIVATE_SOUND: Int = Lib.Companion.BIT(0) // only plays for the current listenerId
-    val SSF_UNCLAMPED: Int = Lib.Companion.BIT(7) // don't clamp calculated volumes at 1.0
+    val SSF_PRIVATE_SOUND: Int = Lib.BIT(0) // only plays for the current listenerId
+    val SSF_UNCLAMPED: Int = Lib.BIT(7) // don't clamp calculated volumes at 1.0
 
     /*
      ===============================================================================
@@ -81,15 +81,15 @@ object Sound {
      */
     class idSound : idEntity() {
         companion object {
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idSound?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Trigger(neo.Game.activator) } as eventCallback_t1<idSound?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[Entity.EV_Activate] = this::Event_On
+                eventCallback_t1<idSound?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Trigger(neo.Game.activator) } as eventCallback_t1<idSound?>
                 eventCallbacks[Sound.EV_Speaker_On] =
                     eventCallback_t0<idSound?> { obj: T? -> neo.Game.obj.Event_On() } as eventCallback_t0<idSound?>
                 eventCallbacks[Sound.EV_Speaker_Off] =
@@ -102,12 +102,12 @@ object Sound {
         private var lastSoundVol = 0.0f
         private var playingUntilTime: Int
         private var random: Float
-        private val shakeRotate: idAngles?
-        private val shakeTranslate: idVec3?
+        private val shakeRotate: idAngles = idAngles()
+        private val shakeTranslate: idVec3 = idVec3()
         private var soundVol = 0.0f
         private var timerOn: Boolean
         private var wait: Float
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(lastSoundVol)
             savefile.WriteFloat(soundVol)
             savefile.WriteFloat(random)
@@ -118,7 +118,7 @@ object Sound {
             savefile.WriteInt(playingUntilTime)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             lastSoundVol = savefile.ReadFloat()
             soundVol = savefile.ReadFloat()
             random = savefile.ReadFloat()
@@ -140,7 +140,7 @@ object Sound {
                 val origin = idVec3()
                 val axis = idMat3()
                 if (GetPhysicsToSoundTransform(origin, axis)) {
-                    refSound.origin.set(GetPhysics().GetOrigin().oPlus(origin.times(axis)))
+                    refSound.origin.set(GetPhysics().GetOrigin() + origin * axis)
                 } else {
                     refSound.origin.set(GetPhysics().GetOrigin())
                 }
@@ -159,7 +159,7 @@ object Sound {
                     DoSound(false)
                     CancelEvents(Sound.EV_Speaker_Timer)
                     PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
-                } else if (!refSound.waitfortrigger && !(refSound.referenceSound != null && refSound.referenceSound.CurrentlyPlaying())) {
+                } else if (!refSound.waitfortrigger && !(refSound.referenceSound != null && refSound.referenceSound!!.CurrentlyPlaying())) {
                     // start it if it isn't already playing, and we aren't waitForTrigger
                     DoSound(true)
                     timerOn = false
@@ -206,7 +206,7 @@ object Sound {
         }
 
         @JvmOverloads
-        fun SetSound(sound: String?, channel: Int = gameSoundChannel_t.SND_CHANNEL_ANY.ordinal /*= SND_CHANNEL_ANY*/) {
+        fun SetSound(sound: String, channel: Int = gameSoundChannel_t.SND_CHANNEL_ANY.ordinal /*= SND_CHANNEL_ANY*/) {
             val shader = DeclManager.declManager.FindSound(sound)
             if (shader != refSound.shader) {
                 FreeSoundEmitter(true)
@@ -214,7 +214,7 @@ object Sound {
             GameEdit.gameEdit.ParseSpawnArgsToRefSound(spawnArgs, refSound)
             refSound.shader = shader
             // start it if it isn't already playing, and we aren't waitForTrigger
-            if (!refSound.waitfortrigger && !(refSound.referenceSound != null && refSound.referenceSound.CurrentlyPlaying())) {
+            if (!refSound.waitfortrigger && !(refSound.referenceSound != null && refSound.referenceSound!!.CurrentlyPlaying())) {
                 DoSound(true)
             }
         }
@@ -244,7 +244,7 @@ object Sound {
                 if (Game_local.gameLocal.isMultiplayer) {
                     DoSound(refSound.referenceSound == null || Game_local.gameLocal.time >= playingUntilTime)
                 } else {
-                    DoSound(refSound.referenceSound == null || !refSound.referenceSound.CurrentlyPlaying())
+                    DoSound(refSound.referenceSound == null || !refSound.referenceSound!!.CurrentlyPlaying())
                 }
             }
         }
@@ -280,27 +280,23 @@ object Sound {
                     true,
                     playingUntilTime
                 )
-                this.playingUntilTime = playingUntilTime.getVal() + Game_local.gameLocal.time
+                this.playingUntilTime = playingUntilTime._val + Game_local.gameLocal.time
             } else {
                 StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), true)
                 playingUntilTime = 0
             }
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
-        //
-        //
         //	CLASS_PROTOTYPE( idSound );
         init {
-            shakeTranslate = idVec3()
-            shakeRotate = idAngles()
             random = 0.0f
             wait = 0.0f
             timerOn = false

@@ -15,35 +15,26 @@ import neo.framework.UsercmdGen.usercmd_t
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.BitMsg.idBitMsgDelta
 import neo.idlib.geometry.TraceModel.idTraceModel
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Rotation.idRotation
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 
-/**
- *
- */
 object Physics_Player {
-    //
     const val MAXTOUCH = 32
-
-    //
     const val MIN_WALK_NORMAL = 0.7f // can't walk on very steep slopes
     const val OVERCLIP = 1.001f
-
-    //
     const val PLAYER_MOVEMENT_FLAGS_BITS = 8
     const val PLAYER_MOVEMENT_TYPE_BITS = 3
     const val PLAYER_VELOCITY_MAX = 4000f
     val PLAYER_VELOCITY_EXPONENT_BITS =
-        idMath.BitsForInteger(idMath.BitsForFloat(Physics_Player.PLAYER_VELOCITY_MAX)) + 1
+        idMath.BitsForInteger(idMath.BitsForFloat(PLAYER_VELOCITY_MAX)) + 1
     const val PLAYER_VELOCITY_TOTAL_BITS = 16
     val PLAYER_VELOCITY_MANTISSA_BITS =
-        Physics_Player.PLAYER_VELOCITY_TOTAL_BITS - 1 - Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS
+        PLAYER_VELOCITY_TOTAL_BITS - 1 - PLAYER_VELOCITY_EXPONENT_BITS
 
-    //
     // movementFlags
     const val PMF_DUCKED = 1 // set when ducking
     const val PMF_JUMPED = 2 // set when the player jumped this frame
@@ -54,16 +45,12 @@ object Physics_Player {
     const val PMF_TIME_LAND = 32 // movementTime is time before rejump
     const val PMF_TIME_WATERJUMP = 128 // movementTime is waterjump
     const val PMF_ALL_TIMES =
-        Physics_Player.PMF_TIME_WATERJUMP or Physics_Player.PMF_TIME_LAND or Physics_Player.PMF_TIME_KNOCKBACK
-
-    //
+        PMF_TIME_WATERJUMP or PMF_TIME_LAND or PMF_TIME_KNOCKBACK
     const val PM_ACCELERATE = 10.0f
     const val PM_AIRACCELERATE = 1.0f
     const val PM_AIRFRICTION = 0.0f
     const val PM_FLYACCELERATE = 8.0f
     const val PM_FLYFRICTION = 3.0f
-
-    //
     const val PM_FRICTION = 6.0f
     const val PM_LADDERSPEED = 100.0f
     const val PM_NOCLIPFRICTION = 12.0f
@@ -72,12 +59,8 @@ object Physics_Player {
     // movement parameters
     const val PM_STOPSPEED = 100.0f
     const val PM_SWIMSCALE = 0.5f
-
-    //
     const val PM_WATERACCELERATE = 4.0f
     const val PM_WATERFRICTION = 1.0f
-
-    //
     var c_pmove = 0
 
     /*
@@ -85,7 +68,7 @@ object Physics_Player {
      idPhysics_Player_SavePState
      ================
      */
-    fun idPhysics_Player_SavePState(savefile: idSaveGame?, state: playerPState_s?) {
+    fun idPhysics_Player_SavePState(savefile: idSaveGame, state: playerPState_s) {
         savefile.WriteVec3(state.origin)
         savefile.WriteVec3(state.velocity)
         savefile.WriteVec3(state.localOrigin)
@@ -101,7 +84,7 @@ object Physics_Player {
      idPhysics_Player_RestorePState
      ================
      */
-    fun idPhysics_Player_RestorePState(savefile: idRestoreGame?, state: playerPState_s?) {
+    fun idPhysics_Player_RestorePState(savefile: idRestoreGame, state: playerPState_s) {
         savefile.ReadVec3(state.origin)
         savefile.ReadVec3(state.velocity)
         savefile.ReadVec3(state.localOrigin)
@@ -137,71 +120,56 @@ object Physics_Player {
     }
 
     class playerPState_s {
-        val localOrigin: idVec3?
+        val localOrigin: idVec3 = idVec3()
         var movementFlags = 0
         var movementTime = 0
         var movementType = 0
-        val origin: idVec3?
-        val pushVelocity: idVec3?
+        val origin: idVec3 = idVec3()
+        val pushVelocity: idVec3 = idVec3()
         var stepUp = 0f
-        val velocity: idVec3?
-
-        init {
-            origin = idVec3()
-            velocity = idVec3()
-            localOrigin = idVec3()
-            pushVelocity = idVec3()
-        }
+        val velocity: idVec3 = idVec3()
     }
 
     class idPhysics_Player : idPhysics_Actor() {
-        //
         // results of last evaluate
-        var waterLevel: waterLevel_t?
+        var waterLevel: waterLevel_t
         var waterType: Int
 
-        //
         // player input
-        private var command: usercmd_t?
+        private var command: usercmd_t
         private var crouchSpeed: Float
 
         // player physics state
-        private var current: playerPState_s?
+        private var current: playerPState_s
         private var debugLevel // if set, diagnostic output will be printed
                 = 0
 
-        //
         // run-time variables
         private var framemsec: Int
         private var frametime: Float
-        private var groundMaterial: idMaterial?
+        private var groundMaterial: Material.idMaterial?
         private var groundPlane: Boolean
-        private val groundTrace: trace_s?
+        private val groundTrace: trace_s
 
-        //
         // ladder movement
         private var ladder: Boolean
-        private val ladderNormal: idVec3?
+        private val ladderNormal: idVec3
         private var maxJumpHeight: Float
         private var maxStepHeight: Float
         private var playerSpeed: Float
-        private var saved: playerPState_s?
-        private val viewAngles: idAngles?
-        private val viewForward: idVec3?
-        private val viewRight: idVec3?
+        private var saved: playerPState_s
+        private val viewAngles: idAngles
+        private val viewForward: idVec3
+        private val viewRight: idVec3
 
-        //
         // properties
         private var walkSpeed: Float
 
-        //
-        //
-        //
         // walk movement
         private var walking: Boolean
-        override fun Save(savefile: idSaveGame?) {
-            Physics_Player.idPhysics_Player_SavePState(savefile, current)
-            Physics_Player.idPhysics_Player_SavePState(savefile, saved)
+        override fun Save(savefile: idSaveGame) {
+            idPhysics_Player_SavePState(savefile, current)
+            idPhysics_Player_SavePState(savefile, saved)
             savefile.WriteFloat(walkSpeed)
             savefile.WriteFloat(crouchSpeed)
             savefile.WriteFloat(maxStepHeight)
@@ -224,9 +192,9 @@ object Physics_Player {
             savefile.WriteInt(waterType)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
-            Physics_Player.idPhysics_Player_RestorePState(savefile, current)
-            Physics_Player.idPhysics_Player_RestorePState(savefile, saved)
+        override fun Restore(savefile: idRestoreGame) {
+            idPhysics_Player_RestorePState(savefile, current)
+            idPhysics_Player_RestorePState(savefile, saved)
             walkSpeed = savefile.ReadFloat()
             crouchSpeed = savefile.ReadFloat()
             maxStepHeight = savefile.ReadFloat()
@@ -245,7 +213,7 @@ object Physics_Player {
             savefile.ReadMaterial(groundMaterial)
             ladder = savefile.ReadBool()
             savefile.ReadVec3(ladderNormal)
-            waterLevel = Physics_Player.waterLevel_t.values()[savefile.ReadInt()]
+            waterLevel = waterLevel_t.values()[savefile.ReadInt()]
             waterType = savefile.ReadInt()
         }
 
@@ -267,11 +235,11 @@ object Physics_Player {
             maxJumpHeight = newMaxJumpHeight
         }
 
-        fun SetMovementType(type: pmtype_t?) {
+        fun SetMovementType(type: pmtype_t) {
             current.movementType = TempDump.etoi(type)
         }
 
-        fun SetPlayerInput(cmd: usercmd_t?, newViewAngles: idAngles?) {
+        fun SetPlayerInput(cmd: usercmd_t, newViewAngles: idAngles) {
             command = cmd
             viewAngles.set(newViewAngles) // can't use cmd.angles cause of the delta_angles
         }
@@ -280,7 +248,7 @@ object Physics_Player {
             if (current.movementTime != 0) {
                 return
             }
-            current.movementFlags = current.movementFlags or Physics_Player.PMF_TIME_KNOCKBACK
+            current.movementFlags = current.movementFlags or PMF_TIME_KNOCKBACK
             current.movementTime = knockBackTime
         }
 
@@ -289,7 +257,7 @@ object Physics_Player {
         }
 
         // feed back from last physics frame
-        fun GetWaterLevel(): waterLevel_t? {
+        fun GetWaterLevel(): waterLevel_t {
             return waterLevel
         }
 
@@ -298,11 +266,11 @@ object Physics_Player {
         }
 
         fun HasJumped(): Boolean {
-            return current.movementFlags and Physics_Player.PMF_JUMPED != 0
+            return current.movementFlags and PMF_JUMPED != 0
         }
 
         fun HasSteppedUp(): Boolean {
-            return current.movementFlags and (Physics_Player.PMF_STEPPED_UP or Physics_Player.PMF_STEPPED_DOWN) != 0
+            return current.movementFlags and (PMF_STEPPED_UP or PMF_STEPPED_DOWN) != 0
         }
 
         fun GetStepUp(): Float {
@@ -310,7 +278,7 @@ object Physics_Player {
         }
 
         fun IsCrouching(): Boolean {
-            return current.movementFlags and Physics_Player.PMF_DUCKED != 0
+            return current.movementFlags and PMF_DUCKED != 0
         }
 
         fun OnLadder(): Boolean {
@@ -318,7 +286,7 @@ object Physics_Player {
         }
 
         // != GetOrigin
-        fun PlayerGetOrigin(): idVec3? {
+        fun PlayerGetOrigin(): idVec3 {
             return current.origin
         }
 
@@ -329,26 +297,26 @@ object Physics_Player {
             val masterAxis = idMat3()
             waterLevel = waterLevel_t.WATERLEVEL_NONE
             waterType = 0
-            clipModel.Unlink()
+            clipModel!!.Unlink()
 
             // if bound to a master
             if (masterEntity != null) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
-                current.velocity.set(current.origin.minus(oldOrigin).oDivide(timeStepMSec * 0.001f))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.origin.set(masterOrigin + current.localOrigin * masterAxis)
+                clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
+                current.velocity.set(current.origin.minus(oldOrigin).div(timeStepMSec * 0.001f))
                 masterDeltaYaw = masterYaw
-                masterYaw = masterAxis.get(0).ToYaw()
+                masterYaw = masterAxis[0].ToYaw()
                 masterDeltaYaw = masterYaw - masterDeltaYaw
                 return true
             }
             ActivateContactEntities()
             MovePlayer(timeStepMSec)
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
             if (IsOutsideWorld()) {
                 Game_local.gameLocal.Warning(
                     "clip model outside world bounds for entity '%s' at (%s)",
-                    self.name,
+                    self!!.name,
                     current.origin.ToString(0)
                 )
             }
@@ -361,7 +329,7 @@ object Physics_Player {
             return Game_local.gameLocal.time
         }
 
-        override fun GetImpactInfo(id: Int, point: idVec3?): impactInfo_s? {
+        override fun GetImpactInfo(id: Int, point: idVec3): impactInfo_s {
             val info = impactInfo_s()
             info.invMass = invMass
             info.invInertiaTensor.Zero()
@@ -370,7 +338,7 @@ object Physics_Player {
             return info
         }
 
-        override fun ApplyImpulse(id: Int, point: idVec3?, impulse: idVec3?) {
+        override fun ApplyImpulse(id: Int, point: idVec3, impulse: idVec3) {
             if (current.movementType != TempDump.etoi(pmtype_t.PM_NOCLIP)) {
                 current.velocity.plusAssign(impulse.times(invMass))
             }
@@ -390,57 +358,57 @@ object Physics_Player {
 
         override fun RestoreState() {
             current = saved
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
             EvaluateContacts()
         }
 
-        override fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/) {
+        override fun SetOrigin(newOrigin: idVec3, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.localOrigin.set(newOrigin)
             if (masterEntity != null) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.oPlus(newOrigin.times(masterAxis)))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.origin.set(masterOrigin.plus(newOrigin.times(masterAxis)))
             } else {
                 current.origin.set(newOrigin)
             }
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, newOrigin, clipModel.GetAxis())
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, newOrigin, clipModel!!.GetAxis())
         }
 
-        override fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/) {
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, clipModel.GetOrigin(), newAxis)
+        override fun SetAxis(newAxis: idMat3, id: Int /*= -1*/) {
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, clipModel!!.GetOrigin(), newAxis)
         }
 
-        override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
+        override fun Translate(translation: idVec3, id: Int /*= -1*/) {
             current.localOrigin.plusAssign(translation)
             current.origin.plusAssign(translation)
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
         }
 
-        override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
+        override fun Rotate(rotation: idRotation, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.origin.timesAssign(rotation)
             if (masterEntity != null) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.localOrigin.set(current.origin.minus(masterOrigin).times(masterAxis.Transpose()))
             } else {
                 current.localOrigin.set(current.origin)
             }
-            clipModel.Link(
+            clipModel!!.Link(
                 Game_local.gameLocal.clip,
                 self,
                 0,
                 current.origin,
-                clipModel.GetAxis().times(rotation.ToMat3())
+                clipModel!!.GetAxis().times(rotation.ToMat3())
             )
         }
 
-        override fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/) {
+        override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {
             current.velocity.set(newLinearVelocity)
         }
 
-        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
             return current.velocity
         }
 
@@ -449,7 +417,7 @@ object Physics_Player {
             val d: Float
 
             // velocity with which the player is pushed
-            velocity.set(current.origin.minus(saved.origin).oDivide(deltaTime * idMath.M_MS2SEC))
+            velocity.set(current.origin.minus(saved.origin).div(deltaTime * idMath.M_MS2SEC))
 
             // remove any downward push velocity
             d = velocity.times(gravityNormal)
@@ -459,11 +427,11 @@ object Physics_Player {
             current.pushVelocity.plusAssign(velocity)
         }
 
-        override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3 {
             return current.pushVelocity
         }
 
-        fun GetPushedLinearVelocity(): idVec3? {
+        fun GetPushedLinearVelocity(): idVec3 {
             return GetPushedLinearVelocity(0)
         }
 
@@ -484,10 +452,10 @@ object Physics_Player {
             if (master != null) {
                 if (null == masterEntity) {
                     // transform from world space to master space
-                    self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                    self!!.GetMasterPosition(masterOrigin, masterAxis)
+                    current.localOrigin.set(current.origin.minus(masterOrigin).times(masterAxis.Transpose()))
                     masterEntity = master
-                    masterYaw = masterAxis.get(0).ToYaw()
+                    masterYaw = masterAxis[0].ToYaw()
                 }
                 ClearContacts()
             } else {
@@ -497,110 +465,92 @@ object Physics_Player {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
-            msg.WriteFloat(current.origin.get(0))
-            msg.WriteFloat(current.origin.get(1))
-            msg.WriteFloat(current.origin.get(2))
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
+            msg.WriteFloat(current.origin[0])
+            msg.WriteFloat(current.origin[1])
+            msg.WriteFloat(current.origin[2])
             msg.WriteFloat(
-                current.velocity.get(0),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
+                current.velocity[0],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
             msg.WriteFloat(
-                current.velocity.get(1),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
+                current.velocity[1],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
             msg.WriteFloat(
-                current.velocity.get(2),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
+                current.velocity[2],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            msg.WriteDeltaFloat(current.origin.get(0), current.localOrigin.get(0))
-            msg.WriteDeltaFloat(current.origin.get(1), current.localOrigin.get(1))
-            msg.WriteDeltaFloat(current.origin.get(2), current.localOrigin.get(2))
+            msg.WriteDeltaFloat(current.origin[0], current.localOrigin[0])
+            msg.WriteDeltaFloat(current.origin[1], current.localOrigin[1])
+            msg.WriteDeltaFloat(current.origin[2], current.localOrigin[2])
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.get(0),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-            )
-            msg.WriteDeltaFloat(
-                0.0f,
-                current.pushVelocity.get(1),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
+                current.pushVelocity[0],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(
                 0.0f,
-                current.pushVelocity.get(2),
-                Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
+                current.pushVelocity[1],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
+            )
+            msg.WriteDeltaFloat(
+                0.0f,
+                current.pushVelocity[2],
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
             msg.WriteDeltaFloat(0.0f, current.stepUp)
-            msg.WriteBits(current.movementType, Physics_Player.PLAYER_MOVEMENT_TYPE_BITS)
-            msg.WriteBits(current.movementFlags, Physics_Player.PLAYER_MOVEMENT_FLAGS_BITS)
+            msg.WriteBits(current.movementType, PLAYER_MOVEMENT_TYPE_BITS)
+            msg.WriteBits(current.movementFlags, PLAYER_MOVEMENT_FLAGS_BITS)
             msg.WriteDeltaLong(0, current.movementTime)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
-            current.origin.set(0, msg.ReadFloat())
-            current.origin.set(1, msg.ReadFloat())
-            current.origin.set(2, msg.ReadFloat())
-            current.velocity.set(
-                0,
-                msg.ReadFloat(
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
+            current.origin[0] = msg.ReadFloat()
+            current.origin[1] = msg.ReadFloat()
+            current.origin[2] = msg.ReadFloat()
+            current.velocity[0] = msg.ReadFloat(
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            current.velocity.set(
-                1,
-                msg.ReadFloat(
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+            current.velocity[1] = msg.ReadFloat(
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            current.velocity.set(
-                2,
-                msg.ReadFloat(
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+            current.velocity[2] = msg.ReadFloat(
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            current.localOrigin.set(0, msg.ReadDeltaFloat(current.origin.get(0)))
-            current.localOrigin.set(1, msg.ReadDeltaFloat(current.origin.get(1)))
-            current.localOrigin.set(2, msg.ReadDeltaFloat(current.origin.get(2)))
-            current.pushVelocity.set(
-                0,
-                msg.ReadDeltaFloat(
-                    0.0f,
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+            current.localOrigin[0] = msg.ReadDeltaFloat(current.origin[0])
+            current.localOrigin[1] = msg.ReadDeltaFloat(current.origin[1])
+            current.localOrigin[2] = msg.ReadDeltaFloat(current.origin[2])
+            current.pushVelocity[0] = msg.ReadDeltaFloat(
+                0.0f,
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            current.pushVelocity.set(
-                1,
-                msg.ReadDeltaFloat(
-                    0.0f,
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+            current.pushVelocity[1] = msg.ReadDeltaFloat(
+                0.0f,
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
-            current.pushVelocity.set(
-                2,
-                msg.ReadDeltaFloat(
-                    0.0f,
-                    Physics_Player.PLAYER_VELOCITY_EXPONENT_BITS,
-                    Physics_Player.PLAYER_VELOCITY_MANTISSA_BITS
-                )
+            current.pushVelocity[2] = msg.ReadDeltaFloat(
+                0.0f,
+                PLAYER_VELOCITY_EXPONENT_BITS,
+                PLAYER_VELOCITY_MANTISSA_BITS
             )
             current.stepUp = msg.ReadDeltaFloat(0.0f)
-            current.movementType = msg.ReadBits(Physics_Player.PLAYER_MOVEMENT_TYPE_BITS)
-            current.movementFlags = msg.ReadBits(Physics_Player.PLAYER_MOVEMENT_FLAGS_BITS)
+            current.movementType = msg.ReadBits(PLAYER_MOVEMENT_TYPE_BITS)
+            current.movementFlags = msg.ReadBits(PLAYER_MOVEMENT_FLAGS_BITS)
             current.movementTime = msg.ReadDeltaLong(0)
             if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel.GetAxis())
+                clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
             }
         }
 
@@ -613,7 +563,7 @@ object Physics_Player {
          without getting a sqrt(2) distortion in speed.
          ============
          */
-        private fun CmdScale(cmd: usercmd_t?): Float {
+        private fun CmdScale(cmd: usercmd_t): Float {
             var max: Int
             val total: Float
             val scale: Float
@@ -652,7 +602,7 @@ object Physics_Player {
          Handles user intended acceleration
          ==============
          */
-        private fun Accelerate(wishdir: idVec3?, wishspeed: Float, accel: Float) {
+        private fun Accelerate(wishdir: idVec3, wishspeed: Float, accel: Float) {
             if (true) {
                 // q2 style
                 val addspeed: Float
@@ -684,14 +634,14 @@ object Physics_Player {
             var into: Float
             var totalMass: Float
             val dir = idVec3()
-            val planes: Array<idVec3?> = idVec3.Companion.generateArray(MAX_CLIP_PLANES)
+            val planes: Array<idVec3> = idVec3.Companion.generateArray(MAX_CLIP_PLANES)
             val end = idVec3()
             val stepEnd = idVec3()
             val primal_velocity = idVec3()
             val endVelocity = idVec3()
             val endClipVelocity = idVec3()
             val clipVelocity = idVec3()
-            var trace: trace_s? = trace_s()
+            var trace: trace_s = trace_s()
             val stepTrace = trace_s()
             val downTrace = trace_s()
             var nearGround: Boolean
@@ -700,12 +650,12 @@ object Physics_Player {
             numbumps = 4
             primal_velocity.set(current.velocity)
             if (gravity) {
-                endVelocity.set(current.velocity.oPlus(gravityVector.times(frametime)))
-                current.velocity.set(current.velocity.oPlus(endVelocity).oMultiply(0.5f))
+                endVelocity.set(current.velocity.plus(gravityVector.times(frametime)))
+                current.velocity.set(current.velocity.plus(endVelocity).times(0.5f))
                 primal_velocity.set(endVelocity)
                 if (groundPlane) {
                     // slide along the ground plane
-                    current.velocity.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
+                    current.velocity.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
                 }
             } else {
                 endVelocity.set(current.velocity)
@@ -729,7 +679,7 @@ object Physics_Player {
 
 
                 // calculate position we are trying to move to
-                end.set(current.origin.oPlus(current.velocity.times(time_left)))
+                end.set(current.origin.plus(current.velocity.times(time_left)))
 
                 // see if we can make it there
                 Game_local.gameLocal.clip.Translation(
@@ -737,7 +687,7 @@ object Physics_Player {
                     current.origin,
                     end,
                     clipModel,
-                    clipModel.GetAxis(),
+                    clipModel!!.GetAxis(),
                     clipMask,
                     self
                 )
@@ -757,18 +707,18 @@ object Physics_Player {
                     if (!nearGround) {
                         // trace down to see if the player is near the ground
                         // step checking when near the ground allows the player to move up stairs smoothly while jumping
-                        stepEnd.set(current.origin.oPlus(gravityNormal.times(maxStepHeight)))
+                        stepEnd.set(current.origin.plus(gravityNormal.times(maxStepHeight)))
                         Game_local.gameLocal.clip.Translation(
                             downTrace,
                             current.origin,
                             stepEnd,
                             clipModel,
-                            clipModel.GetAxis(),
+                            clipModel!!.GetAxis(),
                             clipMask,
                             self
                         )
                         nearGround =
-                            downTrace.fraction < 1.0f && downTrace.c.normal.times(gravityNormal.oNegative()) > Physics_Player.MIN_WALK_NORMAL
+                            downTrace.fraction < 1.0f && downTrace.c.normal.times(gravityNormal.unaryMinus()) > MIN_WALK_NORMAL
                     }
 
                     // may only step up if near the ground or on a ladder
@@ -781,53 +731,53 @@ object Physics_Player {
                             current.origin,
                             stepEnd,
                             clipModel,
-                            clipModel.GetAxis(),
+                            clipModel!!.GetAxis(),
                             clipMask,
                             self
                         )
 
                         // trace along velocity
-                        stepEnd.set(downTrace.endpos.oPlus(current.velocity.times(time_left)))
+                        stepEnd.set(downTrace.endpos.plus(current.velocity.times(time_left)))
                         Game_local.gameLocal.clip.Translation(
                             stepTrace,
                             downTrace.endpos,
                             stepEnd,
                             clipModel,
-                            clipModel.GetAxis(),
+                            clipModel!!.GetAxis(),
                             clipMask,
                             self
                         )
 
                         // step down
-                        stepEnd.set(stepTrace.endpos.oPlus(gravityNormal.times(maxStepHeight)))
+                        stepEnd.set(stepTrace.endpos.plus(gravityNormal.times(maxStepHeight)))
                         Game_local.gameLocal.clip.Translation(
                             downTrace,
                             stepTrace.endpos,
                             stepEnd,
                             clipModel,
-                            clipModel.GetAxis(),
+                            clipModel!!.GetAxis(),
                             clipMask,
                             self
                         )
-                        if (downTrace.fraction >= 1.0f || downTrace.c.normal.times(gravityNormal.oNegative()) > Physics_Player.MIN_WALK_NORMAL) {
+                        if (downTrace.fraction >= 1.0f || downTrace.c.normal.times(gravityNormal.unaryMinus()) > MIN_WALK_NORMAL) {
 
                             // if moved the entire distance
                             if (stepTrace.fraction >= 1.0f) {
 //                                time_left = 0;
-                                current.stepUp -= downTrace.endpos.minus(current.origin).oMultiply(gravityNormal)
+                                current.stepUp -= downTrace.endpos.minus(current.origin).times(gravityNormal)
                                 current.origin.set(downTrace.endpos)
-                                current.movementFlags = current.movementFlags or Physics_Player.PMF_STEPPED_UP
-                                current.velocity.timesAssign(Physics_Player.PM_STEPSCALE)
+                                current.movementFlags = current.movementFlags or PMF_STEPPED_UP
+                                current.velocity.timesAssign(PM_STEPSCALE)
                                 break
                             }
 
                             // if the move is further when stepping up
                             if (stepTrace.fraction > trace.fraction) {
                                 time_left -= time_left * stepTrace.fraction
-                                current.stepUp -= downTrace.endpos.minus(current.origin).oMultiply(gravityNormal)
+                                current.stepUp -= downTrace.endpos.minus(current.origin).times(gravityNormal)
                                 current.origin.set(downTrace.endpos)
-                                current.movementFlags = current.movementFlags or Physics_Player.PMF_STEPPED_UP
-                                current.velocity.timesAssign(Physics_Player.PM_STEPSCALE)
+                                current.movementFlags = current.movementFlags or PMF_STEPPED_UP
+                                current.velocity.timesAssign(PM_STEPSCALE)
                                 trace = stepTrace
                                 stepped = true
                             }
@@ -837,7 +787,7 @@ object Physics_Player {
 
                 // if we can push other entities and not blocked by the world
                 if (push && trace.c.entityNum != Game_local.ENTITYNUM_WORLD) {
-                    clipModel.SetPosition(current.origin, clipModel.GetAxis())
+                    clipModel!!.SetPosition(current.origin, clipModel!!.GetAxis())
 
                     // clip movement, only push idMoveables, don't push entities the player is standing on
                     // apply impact to pushed objects
@@ -847,7 +797,7 @@ object Physics_Player {
                     // clip & push
                     totalMass = Game_local.gameLocal.push.ClipTranslationalPush(
                         trace,
-                        self,
+                        self!!,
                         pushFlags,
                         end,
                         end.minus(current.origin)
@@ -870,7 +820,7 @@ object Physics_Player {
                 }
                 if (!stepped) {
                     // let the entity know about the collision
-                    self.Collide(trace, current.velocity)
+                    self!!.Collide(trace, current.velocity)
                 }
                 if (numplanes >= MAX_CLIP_PLANES) {
                     // MrElusive: I think we have some relatively high poly LWO models with a lot of slanted tris
@@ -913,11 +863,11 @@ object Physics_Player {
 
                     // slide along the plane
                     clipVelocity.set(current.velocity)
-                    clipVelocity.ProjectOntoPlane(planes[i], Physics_Player.OVERCLIP)
+                    clipVelocity.ProjectOntoPlane(planes[i], OVERCLIP)
 
                     // slide along the plane
                     endClipVelocity.set(endVelocity)
-                    endClipVelocity.ProjectOntoPlane(planes[i], Physics_Player.OVERCLIP)
+                    endClipVelocity.ProjectOntoPlane(planes[i], OVERCLIP)
 
                     // see if there is a second plane that the new move enters
                     j = 0
@@ -932,8 +882,8 @@ object Physics_Player {
                         }
 
                         // try clipping the move to the plane
-                        clipVelocity.ProjectOntoPlane(planes[j], Physics_Player.OVERCLIP)
-                        endClipVelocity.ProjectOntoPlane(planes[j], Physics_Player.OVERCLIP)
+                        clipVelocity.ProjectOntoPlane(planes[j], OVERCLIP)
+                        endClipVelocity.ProjectOntoPlane(planes[j], OVERCLIP)
 
                         // see if it goes back into the first clip plane
                         if (clipVelocity.times(planes[i]) >= 0) {
@@ -982,21 +932,21 @@ object Physics_Player {
 
             // step down
             if (stepDown && groundPlane) {
-                stepEnd.set(current.origin.oPlus(gravityNormal.times(maxStepHeight)))
+                stepEnd.set(current.origin.plus(gravityNormal.times(maxStepHeight)))
                 Game_local.gameLocal.clip.Translation(
                     downTrace,
                     current.origin,
                     stepEnd,
                     clipModel,
-                    clipModel.GetAxis(),
+                    clipModel!!.GetAxis(),
                     clipMask,
                     self
                 )
                 if (downTrace.fraction > 1e-4f && downTrace.fraction < 1.0f) {
-                    current.stepUp -= downTrace.endpos.minus(current.origin).oMultiply(gravityNormal)
+                    current.stepUp -= downTrace.endpos.minus(current.origin).times(gravityNormal)
                     current.origin.set(downTrace.endpos)
-                    current.movementFlags = current.movementFlags or Physics_Player.PMF_STEPPED_DOWN
-                    current.velocity.timesAssign(Physics_Player.PM_STEPSCALE)
+                    current.movementFlags = current.movementFlags or PMF_STEPPED_DOWN
+                    current.velocity.timesAssign(PM_STEPSCALE)
                 }
             }
             if (gravity) {
@@ -1044,23 +994,23 @@ object Physics_Player {
 
             // spectator friction
             if (current.movementType == TempDump.etoi(pmtype_t.PM_SPECTATOR)) {
-                drop += speed * Physics_Player.PM_FLYFRICTION * frametime
+                drop += speed * PM_FLYFRICTION * frametime
             } // apply ground friction
             else if (walking && TempDump.etoi(waterLevel) <= TempDump.etoi(waterLevel_t.WATERLEVEL_FEET)) {
                 // no friction on slick surfaces
-                if (!(groundMaterial != null && groundMaterial.GetSurfaceFlags() and Material.SURF_SLICK != 0)) {
+                if (!(groundMaterial != null && groundMaterial!!.GetSurfaceFlags() and Material.SURF_SLICK != 0)) {
                     // if getting knocked back, no friction
-                    if (0 == current.movementFlags and Physics_Player.PMF_TIME_KNOCKBACK) {
-                        control = Math.max(speed, Physics_Player.PM_STOPSPEED)
-                        drop += control * Physics_Player.PM_FRICTION * frametime
+                    if (0 == current.movementFlags and PMF_TIME_KNOCKBACK) {
+                        control = Math.max(speed, PM_STOPSPEED)
+                        drop += control * PM_FRICTION * frametime
                     }
                 }
             } // apply water friction even if just wading
             else if (waterLevel.ordinal != 0) {
-                drop += speed * Physics_Player.PM_WATERFRICTION * waterLevel.ordinal * frametime
+                drop += speed * PM_WATERFRICTION * waterLevel.ordinal * frametime
             } // apply air friction
             else {
-                drop += speed * Physics_Player.PM_AIRFRICTION * frametime
+                drop += speed * PM_AIRFRICTION * frametime
             }
 
             // scale the velocity
@@ -1088,7 +1038,7 @@ object Physics_Player {
             // if falling down
             if (current.velocity.times(gravityNormal) > 0.0f) {
                 // cancel as soon as we are falling down again
-                current.movementFlags = current.movementFlags and Physics_Player.PMF_ALL_TIMES.inv()
+                current.movementFlags = current.movementFlags and PMF_ALL_TIMES.inv()
                 current.movementTime = 0
             }
         }
@@ -1112,22 +1062,22 @@ object Physics_Player {
             } else {
                 wishvel.set(
                     viewForward.times(command.forwardmove.toFloat())
-                        .oPlus(viewRight.times(command.rightmove.toFloat())).oMultiply(scale)
+                        .plus(viewRight.times(command.rightmove.toFloat())).times(scale)
                 )
-                wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).oMultiply(scale))
+                wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).times(scale))
             }
             wishdir.set(wishvel)
             wishspeed = wishdir.Normalize()
-            if (wishspeed > playerSpeed * Physics_Player.PM_SWIMSCALE) {
-                wishspeed = playerSpeed * Physics_Player.PM_SWIMSCALE
+            if (wishspeed > playerSpeed * PM_SWIMSCALE) {
+                wishspeed = playerSpeed * PM_SWIMSCALE
             }
-            Accelerate(wishdir, wishspeed, Physics_Player.PM_WATERACCELERATE)
+            Accelerate(wishdir, wishspeed, PM_WATERACCELERATE)
 
             // make sure we can go up slopes easily under water
             if (groundPlane && current.velocity.times(groundTrace.c.normal) < 0.0f) {
                 vel = current.velocity.Length()
                 // slide along the ground plane
-                current.velocity.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
+                current.velocity.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
                 current.velocity.Normalize()
                 current.velocity.timesAssign(vel)
             }
@@ -1148,13 +1098,13 @@ object Physics_Player {
             } else {
                 wishvel.set(
                     viewForward.times(command.forwardmove.toFloat())
-                        .oPlus(viewRight.times(command.rightmove.toFloat())).oMultiply(scale)
+                        .plus(viewRight.times(command.rightmove.toFloat())).times(scale)
                 )
-                wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).oMultiply(scale))
+                wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).times(scale))
             }
             wishdir.set(wishvel)
             wishspeed = wishdir.Normalize()
-            Accelerate(wishdir, wishspeed, Physics_Player.PM_FLYACCELERATE)
+            Accelerate(wishdir, wishspeed, PM_FLYACCELERATE)
             SlideMove(false, false, false, false)
         }
 
@@ -1173,21 +1123,21 @@ object Physics_Player {
             viewRight.Normalize()
             wishvel.set(
                 viewForward.times(command.forwardmove.toFloat())
-                    .oPlus(viewRight.times(command.rightmove.toFloat())).oMultiply(scale)
+                    .plus(viewRight.times(command.rightmove.toFloat())).times(scale)
             )
-            wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).oMultiply(scale))
+            wishvel.minusAssign(gravityNormal.times(command.upmove.toFloat()).times(scale))
             wishdir.set(wishvel)
             wishspeed = wishdir.Normalize()
             wishspeed *= scale
 
             // not on ground, so little effect on velocity
-            Accelerate(wishdir, wishspeed, Physics_Player.PM_AIRACCELERATE)
+            Accelerate(wishdir, wishspeed, PM_AIRACCELERATE)
 
             // we may have a ground plane that is very steep, even
             // though we don't have a groundentity
             // slide along the steep plane
             if (groundPlane) {
-                current.velocity.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
+                current.velocity.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
             }
             SlideMove(true, false, false, false)
         }
@@ -1227,14 +1177,14 @@ object Physics_Player {
             viewRight.minusAssign(gravityNormal.times(viewRight.times(gravityNormal)))
 
             // project the forward and right directions onto the ground plane
-            viewForward.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
-            viewRight.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
+            viewForward.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
+            viewRight.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
             //
             viewForward.Normalize()
             viewRight.Normalize()
             wishvel.set(
                 viewForward.times(command.forwardmove.toFloat())
-                    .oPlus(viewRight.times(command.rightmove.toFloat()))
+                    .plus(viewRight.times(command.rightmove.toFloat()))
             )
             wishdir.set(wishvel)
             wishspeed = wishdir.Normalize()
@@ -1244,7 +1194,7 @@ object Physics_Player {
             if (waterLevel != null) {
                 var waterScale: Float
                 waterScale = waterLevel.ordinal / 3.0f
-                waterScale = 1.0f - (1.0f - Physics_Player.PM_SWIMSCALE) * waterScale
+                waterScale = 1.0f - (1.0f - PM_SWIMSCALE) * waterScale
                 if (wishspeed > playerSpeed * waterScale) {
                     wishspeed = playerSpeed * waterScale
                 }
@@ -1252,19 +1202,19 @@ object Physics_Player {
 
             // when a player gets hit, they temporarily lose full control, which allows them to be moved a bit
             accelerate =
-                if (groundMaterial != null && groundMaterial.GetSurfaceFlags() and Material.SURF_SLICK != 0 || current.movementFlags and Physics_Player.PMF_TIME_KNOCKBACK != 0) {
-                    Physics_Player.PM_AIRACCELERATE
+                if (groundMaterial != null && groundMaterial!!.GetSurfaceFlags() and Material.SURF_SLICK != 0 || current.movementFlags and PMF_TIME_KNOCKBACK != 0) {
+                    PM_AIRACCELERATE
                 } else {
-                    Physics_Player.PM_ACCELERATE
+                    PM_ACCELERATE
                 }
             Accelerate(wishdir, wishspeed, accelerate)
-            if (groundMaterial != null && groundMaterial.GetSurfaceFlags() and Material.SURF_SLICK != 0 || current.movementFlags and Physics_Player.PMF_TIME_KNOCKBACK != 0) {
+            if (groundMaterial != null && groundMaterial!!.GetSurfaceFlags() and Material.SURF_SLICK != 0 || current.movementFlags and PMF_TIME_KNOCKBACK != 0) {
                 current.velocity.plusAssign(gravityVector.times(frametime))
             }
             oldVelocity.set(current.velocity)
 
             // slide along the ground plane
-            current.velocity.ProjectOntoPlane(groundTrace.c.normal, Physics_Player.OVERCLIP)
+            current.velocity.ProjectOntoPlane(groundTrace.c.normal, OVERCLIP)
 
             // if not clipped into the opposite direction
             if (oldVelocity.times(current.velocity) > 0.0f) {
@@ -1323,7 +1273,7 @@ object Physics_Player {
                 if (speed < stopspeed) {
                     speed = stopspeed
                 }
-                friction = Physics_Player.PM_NOCLIPFRICTION
+                friction = PM_NOCLIPFRICTION
                 drop = speed * friction * frametime
 
                 // scale the velocity
@@ -1338,12 +1288,12 @@ object Physics_Player {
             scale = CmdScale(command)
             wishdir.set(
                 viewForward.times(command.forwardmove.toFloat())
-                    .oPlus(viewRight.times(command.rightmove.toFloat())).oMultiply(scale)
+                    .plus(viewRight.times(command.rightmove.toFloat())).times(scale)
             )
-            wishdir.minusAssign(gravityNormal.times(command.upmove.toFloat()).oMultiply(scale))
+            wishdir.minusAssign(gravityNormal.times(command.upmove.toFloat()).times(scale))
             wishspeed = wishdir.Normalize()
             wishspeed *= scale
-            Accelerate(wishdir, wishspeed, Physics_Player.PM_ACCELERATE)
+            Accelerate(wishdir, wishspeed, PM_ACCELERATE)
 
             // move
             current.origin.plusAssign(current.velocity.times(frametime))
@@ -1365,12 +1315,12 @@ object Physics_Player {
             } else {
                 wishvel.set(
                     viewForward.times(command.forwardmove.toFloat())
-                        .oPlus(viewRight.times(command.rightmove.toFloat())).oMultiply(scale)
+                        .plus(viewRight.times(command.rightmove.toFloat())).times(scale)
                 )
             }
             wishdir.set(wishvel)
             wishspeed = wishdir.Normalize()
-            Accelerate(wishdir, wishspeed, Physics_Player.PM_FLYACCELERATE)
+            Accelerate(wishdir, wishspeed, PM_FLYACCELERATE)
             SlideMove(false, false, false, false)
         }
 
@@ -1384,8 +1334,8 @@ object Physics_Player {
 
             // stick to the ladder
             wishvel.set(ladderNormal.times(-100.0f))
-            current.velocity.set(gravityNormal.times(current.velocity.times(gravityNormal)).oPlus(wishvel))
-            upscale = (gravityNormal.oNegative().oMultiply(viewForward) + 0.5f) * 2.5f
+            current.velocity.set(gravityNormal.times(current.velocity.times(gravityNormal)).plus(wishvel))
+            upscale = (gravityNormal.unaryMinus().times(viewForward) + 0.5f) * 2.5f
             if (upscale > 1.0f) {
                 upscale = 1.0f
             } else if (upscale < -1.0f) {
@@ -1404,7 +1354,7 @@ object Physics_Player {
 
                 // if we are looking away from the ladder, reverse the right vector
                 if (ladderNormal.times(viewForward) > 0.0f) {
-                    right.set(right.oNegative())
+                    right.set(right.unaryMinus())
                 }
                 wishvel.plusAssign(right.times(scale * command.rightmove.toFloat() * 2.0f))
             }
@@ -1419,14 +1369,14 @@ object Physics_Player {
 
             // accelerate
             wishspeed = wishvel.Normalize()
-            Accelerate(wishvel, wishspeed, Physics_Player.PM_ACCELERATE)
+            Accelerate(wishvel, wishspeed, PM_ACCELERATE)
 
             // cap the vertical velocity
-            upscale = current.velocity.times(gravityNormal.oNegative())
-            if (upscale < -Physics_Player.PM_LADDERSPEED) {
-                current.velocity.plusAssign(gravityNormal.times(upscale + Physics_Player.PM_LADDERSPEED))
-            } else if (upscale > Physics_Player.PM_LADDERSPEED) {
-                current.velocity.plusAssign(gravityNormal.times(upscale - Physics_Player.PM_LADDERSPEED))
+            upscale = current.velocity.times(gravityNormal.unaryMinus())
+            if (upscale < -PM_LADDERSPEED) {
+                current.velocity.plusAssign(gravityNormal.times(upscale + PM_LADDERSPEED))
+            } else if (upscale > PM_LADDERSPEED) {
+                current.velocity.plusAssign(gravityNormal.times(upscale - PM_LADDERSPEED))
             }
             if (wishvel.times(gravityNormal) == 0.0f) {
                 if (current.velocity.times(gravityNormal) < 0.0f) {
@@ -1444,9 +1394,9 @@ object Physics_Player {
             SlideMove(false, command.forwardmove > 0, false, false)
         }
 
-        private fun CorrectAllSolid(trace: trace_s?, contents: Int) {
+        private fun CorrectAllSolid(trace: trace_s, contents: Int) {
             if (debugLevel != 0) {
-                Game_local.gameLocal.Printf("%d:allsolid\n", Physics_Player.c_pmove)
+                Game_local.gameLocal.Printf("%d:allsolid\n", c_pmove)
             }
 
             // FIXME: jitter around to find a free spot ?
@@ -1474,25 +1424,25 @@ object Physics_Player {
             hadGroundContacts = HasGroundContacts()
 
             // set the clip model origin before getting the contacts
-            clipModel.SetPosition(current.origin, clipModel.GetAxis())
+            clipModel!!.SetPosition(current.origin, clipModel!!.GetAxis())
             EvaluateContacts()
 
             // setup a ground trace from the contacts
             groundTrace.endpos.set(current.origin)
-            groundTrace.endAxis.set(clipModel.GetAxis())
+            groundTrace.endAxis.set(clipModel!!.GetAxis())
             if (contacts.Num() != 0) {
                 groundTrace.fraction = 0.0f
-                groundTrace.c = contacts.get(0)
+                groundTrace.c = contacts[0]
                 i = 1
                 while (i < contacts.Num()) {
-                    groundTrace.c.normal.plusAssign(contacts.get(i).normal)
+                    groundTrace.c.normal.plusAssign(contacts[i].normal)
                     i++
                 }
                 groundTrace.c.normal.Normalize()
             } else {
                 groundTrace.fraction = 1.0f
             }
-            contents = Game_local.gameLocal.clip.Contents(current.origin, clipModel, clipModel.GetAxis(), -1, self)
+            contents = Game_local.gameLocal.clip.Contents(current.origin, clipModel, clipModel!!.GetAxis(), -1, self)
             if (contents and Game_local.MASK_SOLID != 0) {
                 // do something corrective if stuck in solid
                 CorrectAllSolid(groundTrace, contents)
@@ -1509,9 +1459,9 @@ object Physics_Player {
             groundEntityPtr.oSet(Game_local.gameLocal.entities[groundTrace.c.entityNum])
 
             // check if getting thrown off the ground
-            if (current.velocity.times(gravityNormal.oNegative()) > 0.0f && current.velocity.times(groundTrace.c.normal) > 10.0f) {
+            if (current.velocity.times(gravityNormal.unaryMinus()) > 0.0f && current.velocity.times(groundTrace.c.normal) > 10.0f) {
                 if (debugLevel != 0) {
-                    Game_local.gameLocal.Printf("%d:kickoff\n", Physics_Player.c_pmove)
+                    Game_local.gameLocal.Printf("%d:kickoff\n", c_pmove)
                 }
                 groundPlane = false
                 walking = false
@@ -1519,9 +1469,9 @@ object Physics_Player {
             }
 
             // slopes that are too steep will not be considered onground
-            if (groundTrace.c.normal.times(gravityNormal.oNegative()) < Physics_Player.MIN_WALK_NORMAL) {
+            if (groundTrace.c.normal.times(gravityNormal.unaryMinus()) < MIN_WALK_NORMAL) {
                 if (debugLevel != 0) {
-                    Game_local.gameLocal.Printf("%d:steep\n", Physics_Player.c_pmove)
+                    Game_local.gameLocal.Printf("%d:steep\n", c_pmove)
                 }
 
                 // FIXME: if they can't slide down the slope, let them walk (sharp crevices)
@@ -1537,9 +1487,9 @@ object Physics_Player {
             walking = true
 
             // hitting solid ground will end a waterjump
-            if (current.movementFlags and Physics_Player.PMF_TIME_WATERJUMP != 0) {
+            if (current.movementFlags and PMF_TIME_WATERJUMP != 0) {
                 current.movementFlags =
-                    current.movementFlags and (Physics_Player.PMF_TIME_WATERJUMP or Physics_Player.PMF_TIME_LAND).inv()
+                    current.movementFlags and (PMF_TIME_WATERJUMP or PMF_TIME_LAND).inv()
                 current.movementTime = 0
             }
 
@@ -1547,19 +1497,19 @@ object Physics_Player {
             if (!hadGroundContacts) {
 
                 // don't do landing time if we were just going down a slope
-                if (current.velocity.times(gravityNormal.oNegative()) < -200.0f) {
+                if (current.velocity.times(gravityNormal.unaryMinus()) < -200.0f) {
                     // don't allow another jump for a little while
-                    current.movementFlags = current.movementFlags or Physics_Player.PMF_TIME_LAND
+                    current.movementFlags = current.movementFlags or PMF_TIME_LAND
                     current.movementTime = 250
                 }
             }
 
             // let the entity know about the collision
-            self.Collide(groundTrace, current.velocity)
+            self!!.Collide(groundTrace, current.velocity)
             if (groundEntityPtr.GetEntity() != null) {
-                val info = groundEntityPtr.GetEntity().GetImpactInfo(self, groundTrace.c.id, groundTrace.c.point)
+                val info = groundEntityPtr.GetEntity()!!.GetImpactInfo(self, groundTrace.c.id, groundTrace.c.point)
                 if (info.invMass != 0.0f) {
-                    groundEntityPtr.GetEntity().ApplyImpulse(
+                    groundEntityPtr.GetEntity()!!.ApplyImpulse(
                         self,
                         groundTrace.c.id,
                         groundTrace.c.point,
@@ -1579,7 +1529,7 @@ object Physics_Player {
         private fun CheckDuck() {
             val trace = trace_s()
             val end = idVec3()
-            val bounds: idBounds?
+            val bounds: idBounds
             val maxZ: Float
             if (current.movementType == TempDump.etoi(pmtype_t.PM_DEAD)) {
                 maxZ = SysCvar.pm_deadheight.GetFloat()
@@ -1587,10 +1537,10 @@ object Physics_Player {
                 // stand up when up against a ladder
                 if (command.upmove < 0 && !ladder) {
                     // duck
-                    current.movementFlags = current.movementFlags or Physics_Player.PMF_DUCKED
+                    current.movementFlags = current.movementFlags or PMF_DUCKED
                 } else {
                     // stand up if possible
-                    if (current.movementFlags and Physics_Player.PMF_DUCKED != 0) {
+                    if (current.movementFlags and PMF_DUCKED != 0) {
                         // try to stand up
                         end.set(current.origin.minus(gravityNormal.times(SysCvar.pm_normalheight.GetFloat() - SysCvar.pm_crouchheight.GetFloat())))
                         Game_local.gameLocal.clip.Translation(
@@ -1598,16 +1548,16 @@ object Physics_Player {
                             current.origin,
                             end,
                             clipModel,
-                            clipModel.GetAxis(),
+                            clipModel!!.GetAxis(),
                             clipMask,
                             self
                         )
                         if (trace.fraction >= 1.0f) {
-                            current.movementFlags = current.movementFlags and Physics_Player.PMF_DUCKED.inv()
+                            current.movementFlags = current.movementFlags and PMF_DUCKED.inv()
                         }
                     }
                 }
-                if (current.movementFlags and Physics_Player.PMF_DUCKED != 0) {
+                if (current.movementFlags and PMF_DUCKED != 0) {
                     playerSpeed = crouchSpeed
                     maxZ = SysCvar.pm_crouchheight.GetFloat()
                 } else {
@@ -1615,13 +1565,13 @@ object Physics_Player {
                 }
             }
             // if the clipModel height should change
-            if (clipModel.GetBounds().get(1, 2) != maxZ) {
-                bounds = clipModel.GetBounds()
-                bounds.set(1, 2, maxZ)
+            if (clipModel!!.GetBounds()[1, 2] != maxZ) {
+                bounds = clipModel!!.GetBounds()
+                bounds[1, 2] = maxZ
                 if (SysCvar.pm_usecylinder.GetBool()) {
-                    clipModel.LoadModel(idTraceModel(bounds, 8))
+                    clipModel!!.LoadModel(idTraceModel(bounds, 8))
                 } else {
-                    clipModel.LoadModel(idTraceModel(bounds))
+                    clipModel!!.LoadModel(idTraceModel(bounds))
                 }
             }
         }
@@ -1650,13 +1600,13 @@ object Physics_Player {
             } else {
                 48.0f
             }
-            end.set(current.origin.oPlus(forward.times(tracedist)))
+            end.set(current.origin.plus(forward.times(tracedist)))
             Game_local.gameLocal.clip.Translation(
                 trace,
                 current.origin,
                 end,
                 clipModel,
-                clipModel.GetAxis(),
+                clipModel!!.GetAxis(),
                 clipMask,
                 self
             )
@@ -1666,7 +1616,7 @@ object Physics_Player {
 
                 // if a ladder surface
                 if (trace.c.material != null
-                    && trace.c.material.GetSurfaceFlags() and Material.SURF_LADDER != 0
+                    && trace.c.material!!.GetSurfaceFlags() and Material.SURF_LADDER != 0
                 ) {
 
                     // check a step height higher
@@ -1676,18 +1626,18 @@ object Physics_Player {
                         current.origin,
                         end,
                         clipModel,
-                        clipModel.GetAxis(),
+                        clipModel!!.GetAxis(),
                         clipMask,
                         self
                     )
                     start.set(trace.endpos)
-                    end.set(start.oPlus(forward.times(tracedist)))
+                    end.set(start.plus(forward.times(tracedist)))
                     Game_local.gameLocal.clip.Translation(
                         trace,
                         start,
                         end,
                         clipModel,
-                        clipModel.GetAxis(),
+                        clipModel!!.GetAxis(),
                         clipMask,
                         self
                     )
@@ -1697,7 +1647,7 @@ object Physics_Player {
 
                         // if it also is a ladder surface
                         if (trace.c.material != null
-                            && trace.c.material.GetSurfaceFlags() and Material.SURF_LADDER != 0
+                            && trace.c.material!!.GetSurfaceFlags() and Material.SURF_LADDER != 0
                         ) {
                             ladder = true
                             ladderNormal.set(trace.c.normal)
@@ -1715,18 +1665,18 @@ object Physics_Player {
             }
 
             // must wait for jump to be released
-            if (current.movementFlags and Physics_Player.PMF_JUMP_HELD != 0) {
+            if (current.movementFlags and PMF_JUMP_HELD != 0) {
                 return false
             }
 
             // don't jump if we can't stand up
-            if (current.movementFlags and Physics_Player.PMF_DUCKED != 0) {
+            if (current.movementFlags and PMF_DUCKED != 0) {
                 return false
             }
             groundPlane = false // jumping away
             walking = false
-            current.movementFlags = current.movementFlags or (Physics_Player.PMF_JUMP_HELD or Physics_Player.PMF_JUMPED)
-            addVelocity.set(gravityVector.oNegative().oMultiply(2.0f * maxJumpHeight))
+            current.movementFlags = current.movementFlags or (PMF_JUMP_HELD or PMF_JUMPED)
+            addVelocity.set(gravityVector.unaryMinus().times(2.0f * maxJumpHeight))
             addVelocity.timesAssign(idMath.Sqrt(addVelocity.Normalize()))
             current.velocity.plusAssign(addVelocity)
             return true
@@ -1746,7 +1696,7 @@ object Physics_Player {
             }
             flatforward.set(viewForward.minus(gravityNormal.times(viewForward.times(gravityNormal))))
             flatforward.Normalize()
-            spot.set(current.origin.oPlus(flatforward.times(30.0f)))
+            spot.set(current.origin.plus(flatforward.times(30.0f)))
             spot.minusAssign(gravityNormal.times(4.0f))
             cont = Game_local.gameLocal.clip.Contents(spot, null, idMat3.Companion.getMat3_identity(), -1, self)
             if (0 == cont and Material.CONTENTS_SOLID) {
@@ -1760,14 +1710,14 @@ object Physics_Player {
 
             // jump out of water
             current.velocity.set(viewForward.times(200.0f).minus(gravityNormal.times(350.0f)))
-            current.movementFlags = current.movementFlags or Physics_Player.PMF_TIME_WATERJUMP
+            current.movementFlags = current.movementFlags or PMF_TIME_WATERJUMP
             current.movementTime = 2000
             return true
         }
 
         private fun SetWaterLevel() {
             val point = idVec3()
-            val bounds: idBounds?
+            val bounds: idBounds
             var contents: Int
 
             //
@@ -1775,10 +1725,10 @@ object Physics_Player {
             //
             waterLevel = waterLevel_t.WATERLEVEL_NONE
             waterType = 0
-            bounds = clipModel.GetBounds()
+            bounds = clipModel!!.GetBounds()
 
             // check at feet level
-            point.set(current.origin.minus(gravityNormal.times(bounds.get(0, 2) + 1.0f)))
+            point.set(current.origin.minus(gravityNormal.times(bounds[0, 2] + 1.0f)))
             contents = Game_local.gameLocal.clip.Contents(point, null, idMat3.Companion.getMat3_identity(), -1, self)
             if (contents and Game_local.MASK_WATER != 0) {
                 waterType = contents
@@ -1788,10 +1738,7 @@ object Physics_Player {
                 point.set(
                     current.origin.minus(
                         gravityNormal.times(
-                            (bounds.get(1, 2) - bounds.get(
-                                0,
-                                2
-                            )) * 0.5f
+                            (bounds[1, 2] - bounds[0, 2]) * 0.5f
                         )
                     )
                 )
@@ -1801,7 +1748,7 @@ object Physics_Player {
                     waterLevel = waterLevel_t.WATERLEVEL_WAIST
 
                     // check at head level
-                    point.set(current.origin.minus(gravityNormal.times(bounds.get(1, 2) - 1.0f)))
+                    point.set(current.origin.minus(gravityNormal.times(bounds[1, 2] - 1.0f)))
                     contents =
                         Game_local.gameLocal.clip.Contents(point, null, idMat3.Companion.getMat3_identity(), -1, self)
                     if (contents and Game_local.MASK_WATER != 0) {
@@ -1815,7 +1762,7 @@ object Physics_Player {
             // drop misc timing counter
             if (current.movementTime != 0) {
                 if (framemsec >= current.movementTime) {
-                    current.movementFlags = current.movementFlags and Physics_Player.PMF_ALL_TIMES.inv()
+                    current.movementFlags = current.movementFlags and PMF_ALL_TIMES.inv()
                     current.movementTime = 0
                 } else {
                     current.movementTime -= framemsec
@@ -1827,7 +1774,7 @@ object Physics_Player {
 
             // this counter lets us debug movement problems with a journal
             // by setting a conditional breakpoint for the previous frame
-            Physics_Player.c_pmove++
+            c_pmove++
             walking = false
             groundPlane = false
             ladder = false
@@ -1841,11 +1788,11 @@ object Physics_Player {
 
             // remove jumped and stepped up flag
             current.movementFlags =
-                current.movementFlags and (Physics_Player.PMF_JUMPED or Physics_Player.PMF_STEPPED_UP or Physics_Player.PMF_STEPPED_DOWN).inv()
+                current.movementFlags and (PMF_JUMPED or PMF_STEPPED_UP or PMF_STEPPED_DOWN).inv()
             current.stepUp = 0.0f
             if (command.upmove < 10) {
                 // not holding jump
-                current.movementFlags = current.movementFlags and Physics_Player.PMF_JUMP_HELD.inv()
+                current.movementFlags = current.movementFlags and PMF_JUMP_HELD.inv()
             }
 
             // if no movement at all
@@ -1905,7 +1852,7 @@ object Physics_Player {
             } else if (ladder) {
                 // going up or down a ladder
                 LadderMove()
-            } else if (current.movementFlags and Physics_Player.PMF_TIME_WATERJUMP != 0) {
+            } else if (current.movementFlags and PMF_TIME_WATERJUMP != 0) {
                 // jumping out of water
                 WaterJumpMove()
             } else if (TempDump.etoi(waterLevel) > 1) {

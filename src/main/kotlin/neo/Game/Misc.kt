@@ -22,9 +22,7 @@ import neo.Game.GameSys.SaveGame
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Moveable.idMoveable
 import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Physics.Force_Field.forceFieldApplyType
@@ -67,7 +65,7 @@ import java.nio.*
  *
  */
 object Misc {
-    val EV_AnimDone: idEventDef? = idEventDef("<AnimDone>", "d")
+    val EV_AnimDone: idEventDef = idEventDef("<AnimDone>", "d")
 
     /*
      ===============================================================================
@@ -76,9 +74,9 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_Animated_Start: idEventDef? = idEventDef("<start>")
-    val EV_LaunchMissiles: idEventDef? = idEventDef("launchMissiles", "ssssdf")
-    val EV_LaunchMissilesUpdate: idEventDef? = idEventDef("<launchMissiles>", "dddd")
+    val EV_Animated_Start: idEventDef = idEventDef("<start>")
+    val EV_LaunchMissiles: idEventDef = idEventDef("launchMissiles", "ssssdf")
+    val EV_LaunchMissilesUpdate: idEventDef = idEventDef("<launchMissiles>", "dddd")
 
     /*
      ===============================================================================
@@ -87,7 +85,7 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_ResetRadioHud: idEventDef? = idEventDef("<resetradiohud>", "e")
+    val EV_ResetRadioHud: idEventDef = idEventDef("<resetradiohud>", "e")
 
     /*
      ===============================================================================
@@ -96,7 +94,7 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_RestoreDamagable: idEventDef? = idEventDef("<RestoreDamagable>")
+    val EV_RestoreDamagable: idEventDef = idEventDef("<RestoreDamagable>")
 
     /*
      ===============================================================================
@@ -112,8 +110,8 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_Splat: idEventDef? = idEventDef("<Splat>")
-    val EV_StartRagdoll: idEventDef? = idEventDef("startRagdoll")
+    val EV_Splat: idEventDef = idEventDef("<Splat>")
+    val EV_StartRagdoll: idEventDef = idEventDef("startRagdoll")
 
     /*
      ===============================================================================
@@ -126,7 +124,7 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_TeleportStage: idEventDef? = idEventDef("<TeleportStage>", "e")
+    val EV_TeleportStage: idEventDef = idEventDef("<TeleportStage>", "e")
 
     /*
      ===============================================================================
@@ -135,7 +133,7 @@ object Misc {
 
      ===============================================================================
      */
-    val EV_Toggle: idEventDef? = idEventDef("Toggle", null)
+    val EV_Toggle: idEventDef = idEventDef("Toggle", null)
 
     /*
      ===============================================================================
@@ -171,7 +169,7 @@ object Misc {
             val EVENT_MAXEVENTS = EVENT_TELEPORTPLAYER + 1
 
             // public 	CLASS_PROTOTYPE( idPlayerStart );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             private fun Event_TeleportPlayer(p: idPlayerStart?, activator: idEventArg<idEntity?>?) {
                 val player: idPlayer?
                 player = if (activator.value is idPlayer) {
@@ -238,7 +236,7 @@ object Misc {
                 }
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -268,14 +266,14 @@ object Misc {
             teleportStage = 0
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(teleportStage)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val teleportStage = CInt()
             savefile.ReadInt(teleportStage)
-            this.teleportStage = teleportStage.getVal()
+            this.teleportStage = teleportStage._val
         }
 
         override fun ClientReceiveEvent(event: Int, time: Int, msg: idBitMsg?): Boolean {
@@ -335,7 +333,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -353,7 +351,7 @@ object Misc {
     class idActivator : idEntity() {
         companion object {
             // public 	CLASS_PROTOTYPE( idActivator );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
@@ -365,7 +363,7 @@ object Misc {
                 }
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -381,7 +379,7 @@ object Misc {
             }
         }
 
-        private val stay_on: CBool? = CBool(false)
+        private val stay_on: CBool = CBool(false)
         override fun Spawn() {
             super.Spawn()
             val start_off = CBool(false)
@@ -394,11 +392,11 @@ object Misc {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(stay_on.isVal())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadBool(stay_on)
             if (stay_on.isVal()) {
                 BecomeActive(Entity.TH_THINK)
@@ -421,7 +419,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -443,7 +441,7 @@ object Misc {
     class idPathCorner : idEntity() {
         companion object {
             // public 	CLASS_PROTOTYPE( idPathCorner );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             fun DrawDebugInfo() {
                 var ent: idEntity?
                 val bnds = idBounds(idVec3(-4.0f, -4.0f, -8.0f), idVec3(4.0f, 4.0f, 64.0f))
@@ -484,7 +482,7 @@ object Misc {
                 return path[which]
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -505,7 +503,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -513,12 +511,12 @@ object Misc {
     class idDamagable : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idDamagable );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             private fun Event_BecomeBroken(d: idDamagable?, activator: idEventArg<idEntity?>?) {
                 d.BecomeBroken(activator.value)
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -536,14 +534,14 @@ object Misc {
             }
         }
 
-        private val count: CInt? = CInt()
-        private val nextTriggerTime: CInt? = CInt()
-        override fun Save(savefile: idSaveGame?) {
-            savefile.WriteInt(count.getVal())
-            savefile.WriteInt(nextTriggerTime.getVal())
+        private val count: CInt = CInt()
+        private val nextTriggerTime: CInt = CInt()
+        override fun Save(savefile: idSaveGame) {
+            savefile.WriteInt(count._val)
+            savefile.WriteInt(nextTriggerTime._val)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadInt(count)
             savefile.ReadInt(nextTriggerTime)
         }
@@ -569,8 +567,8 @@ object Misc {
             GetPhysics().SetContents(Material.CONTENTS_SOLID)
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
-            if (Game_local.gameLocal.time < nextTriggerTime.getVal()) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
+            if (Game_local.gameLocal.time < nextTriggerTime._val) {
                 health += damage
                 return
             }
@@ -582,14 +580,14 @@ object Misc {
             val numStates = CInt()
             val cycle = CInt()
             val wait = CFloat()
-            if (Game_local.gameLocal.time < nextTriggerTime.getVal()) {
+            if (Game_local.gameLocal.time < nextTriggerTime._val) {
                 return
             }
             spawnArgs.GetFloat("wait", "0.1", wait)
-            nextTriggerTime.setVal((Game_local.gameLocal.time + Math_h.SEC2MS(wait.getVal())).toInt())
-            if (count.getVal() > 0) {
+            nextTriggerTime.setVal((Game_local.gameLocal.time + Math_h.SEC2MS(wait._val)).toInt())
+            if (count._val > 0) {
                 count.decrement()
-                if (0 == count.getVal()) {
+                if (0 == count._val) {
                     fl.takedamage = false
                 } else {
                     health = spawnArgs.GetInt("health", "5")
@@ -609,23 +607,23 @@ object Misc {
             spawnArgs.GetFloat("forcestate", "0", forceState)
 
             // set the state parm
-            if (cycle.getVal() != 0) {
+            if (cycle._val != 0) {
                 renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE]++
-                if (renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] > numStates.getVal()) {
+                if (renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] > numStates._val) {
                     renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 0
                 }
-            } else if (forceState.getVal() != 0f) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = forceState.getVal()
+            } else if (forceState._val != 0f) {
+                renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = forceState._val
             } else {
                 renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] =
-                    Game_local.gameLocal.random.RandomInt(numStates.getVal().toDouble()) + 1
+                    Game_local.gameLocal.random.RandomInt(numStates._val.toDouble()) + 1
             }
             renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             ActivateTargets(activator)
             if (spawnArgs.GetBool("hideWhenBroken")) {
                 Hide()
-                PostEventMS(Misc.EV_RestoreDamagable, nextTriggerTime.getVal() - Game_local.gameLocal.time)
+                PostEventMS(Misc.EV_RestoreDamagable, nextTriggerTime._val - Game_local.gameLocal.time)
                 BecomeActive(Entity.TH_THINK)
             }
         }
@@ -639,7 +637,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -668,7 +666,7 @@ object Misc {
     class idExplodable : idEntity() {
         companion object {
             //	CLASS_PROTOTYPE( idExplodable );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             private fun Event_Explode(e: idExplodable?, activator: idEventArg<idEntity?>?) {
                 val temp = arrayOf<String?>(null)
                 if (e.spawnArgs.GetString("def_damage", "damage_explosion", temp)) {
@@ -696,7 +694,7 @@ object Misc {
                 e.ActivateTargets(activator.value)
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -721,7 +719,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -736,11 +734,11 @@ object Misc {
     class idSpring : idEntity() {
         companion object {
             //	CLASS_PROTOTYPE( idSpring );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -751,12 +749,12 @@ object Misc {
             }
         }
 
-        private val id1: CInt? = CInt()
-        private val id2: CInt? = CInt()
+        private val id1: CInt = CInt()
+        private val id2: CInt = CInt()
         private var ent1: idEntity? = null
         private var ent2: idEntity? = null
-        private val p1: idVec3? = idVec3()
-        private val p2: idVec3? = idVec3()
+        private val p1: idVec3 = idVec3()
+        private val p2: idVec3 = idVec3()
         private val spring: idForce_Spring? = null
         override fun Spawn() {
             super.Spawn()
@@ -770,7 +768,7 @@ object Misc {
             spawnArgs.GetFloat("constant", "100.0f", Kstretch)
             spawnArgs.GetFloat("damping", "10.0f", damping)
             spawnArgs.GetFloat("restlength", "0.0f", restLength)
-            spring.InitSpring(Kstretch.getVal(), 0.0f, damping.getVal(), restLength.getVal())
+            spring.InitSpring(Kstretch._val, 0.0f, damping._val, restLength._val)
             ent2 = null
             ent1 = ent2
             PostEventMS(Entity.EV_PostSpawn, 0)
@@ -780,7 +778,7 @@ object Misc {
             val start = idVec3()
             val end = idVec3()
             val origin = idVec3()
-            var axis: idMat3?
+            var axis: idMat3
 
             // run physics
             RunPhysics()
@@ -835,7 +833,7 @@ object Misc {
             } else {
                 ent2 = Game_local.gameLocal.entities[Game_local.ENTITYNUM_WORLD]
             }
-            spring.SetPosition(ent1.GetPhysics(), id1.getVal(), p1, ent2.GetPhysics(), id2.getVal(), p2)
+            spring.SetPosition(ent1.GetPhysics(), id1._val, p1, ent2.GetPhysics(), id2._val, p2)
             BecomeActive(Entity.TH_THINK)
         }
 
@@ -843,7 +841,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -851,11 +849,11 @@ object Misc {
     class idForceField : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idForceField );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -873,11 +871,11 @@ object Misc {
         }
 
         private val forceField: idForce_Field? = idForce_Field()
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteStaticObject(forceField)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadStaticObject(forceField)
         }
 
@@ -890,12 +888,12 @@ object Misc {
             if (spawnArgs.GetVector("uniform", "0 0 0", uniform)) {
                 forceField.Uniform(uniform)
             } else if (spawnArgs.GetFloat("explosion", "0", explosion)) {
-                forceField.Explosion(explosion.getVal())
+                forceField.Explosion(explosion._val)
             } else if (spawnArgs.GetFloat("implosion", "0", implosion)) {
-                forceField.Implosion(implosion.getVal())
+                forceField.Implosion(implosion._val)
             }
             if (spawnArgs.GetFloat("randomTorque", "0", randomTorque)) {
-                forceField.RandomTorque(randomTorque.getVal())
+                forceField.RandomTorque(randomTorque._val)
             }
             if (spawnArgs.GetBool("applyForce", "0")) {
                 forceField.SetApplyType(forceFieldApplyType.FORCEFIELD_APPLY_FORCE)
@@ -937,7 +935,7 @@ object Misc {
             val wait = CFloat()
             Toggle()
             if (spawnArgs.GetFloat("wait", "0.01", wait)) {
-                PostEventSec(Misc.EV_Toggle, wait.getVal())
+                PostEventSec(Misc.EV_Toggle, wait._val)
             }
         }
 
@@ -959,7 +957,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -967,10 +965,10 @@ object Misc {
     class idAnimated : idAFEntity_Gibbable() {
         companion object {
             // CLASS_PROTOTYPE( idAnimated );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // ~idAnimated();
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1011,7 +1009,7 @@ object Misc {
         private var current_anim_index: Int
         private var num_anims: Int
         private var   /*jointHandle_t*/soundJoint: Int
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(current_anim_index)
             savefile.WriteInt(num_anims)
             savefile.WriteInt(anim)
@@ -1021,7 +1019,7 @@ object Misc {
             savefile.WriteBool(activated)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val current_anim_index = CInt()
             val num_anims = CInt()
             val anim = CInt()
@@ -1035,11 +1033,11 @@ object Misc {
             savefile.ReadJoint(soundJoint)
             activator.Restore(savefile)
             savefile.ReadBool(activated)
-            this.current_anim_index = current_anim_index.getVal()
-            this.num_anims = num_anims.getVal()
-            this.anim = anim.getVal()
-            this.blendFrames = blendFrames.getVal()
-            this.soundJoint = soundJoint.getVal()
+            this.current_anim_index = current_anim_index._val
+            this.num_anims = num_anims._val
+            this.anim = anim._val
+            this.blendFrames = blendFrames._val
+            this.soundJoint = soundJoint._val
             this.activated = activated.isVal
         }
 
@@ -1074,7 +1072,7 @@ object Misc {
             blendFrames = 0
             current_anim_index = 0
             spawnArgs.GetInt("num_anims", "0", num_anims2)
-            num_anims = num_anims2.getVal()
+            num_anims = num_anims2._val
             blendFrames = spawnArgs.GetInt("blend_in")
             animname[0] = spawnArgs.GetString(if (num_anims != 0) "anim1" else "anim")
             if (0 == animname[0].length) {
@@ -1114,8 +1112,8 @@ object Misc {
                 }
             }
             spawnArgs.GetFloat("wait", "-1", wait)
-            if (wait.getVal() >= 0) {
-                PostEventSec(Entity.EV_Activate, wait.getVal(), this)
+            if (wait._val >= 0) {
+                PostEventSec(Entity.EV_Activate, wait._val, this)
             }
         }
 
@@ -1147,7 +1145,7 @@ object Misc {
             return true
         }
 
-        override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
             animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
             axis.set(renderEntity.axis)
             return true
@@ -1192,7 +1190,7 @@ object Misc {
                 cycle.setVal(-1)
             }
             animator.CycleAnim(Anim.ANIMCHANNEL_ALL, anim, Game_local.gameLocal.time, Anim.FRAME2MS(blendFrames))
-            animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).SetCycleCount(cycle.getVal())
+            animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).SetCycleCount(cycle._val)
             len = animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).PlayLength()
             if (len >= 0) {
                 PostEventMS(Misc.EV_AnimDone, len.toFloat(), current_anim_index)
@@ -1242,7 +1240,7 @@ object Misc {
                 }
                 spawnArgs.GetInt("cycle", "1", cycle)
                 animator.CycleAnim(Anim.ANIMCHANNEL_ALL, anim, Game_local.gameLocal.time, Anim.FRAME2MS(blendFrames))
-                animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).SetCycleCount(cycle.getVal())
+                animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).SetCycleCount(cycle._val)
                 len = animator.CurrentAnim(Anim.ANIMCHANNEL_ALL).PlayLength()
                 if (len >= 0) {
                     PostEventMS(Misc.EV_AnimDone, len.toFloat(), 1)
@@ -1385,7 +1383,7 @@ object Misc {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1413,8 +1411,8 @@ object Misc {
     open class idStaticEntity : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idStaticEntity );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1427,14 +1425,14 @@ object Misc {
             }
         }
 
-        private val fadeFrom: idVec4?
-        private val fadeTo: idVec4?
+        private val fadeFrom: idVec4
+        private val fadeTo: idVec4
         private var active = false
         private var fadeEnd: Int
         private var fadeStart: Int
         private var runGui: Boolean
         private var spawnTime = 0
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(spawnTime)
             savefile.WriteBool(active)
             savefile.WriteVec4(fadeFrom)
@@ -1444,7 +1442,7 @@ object Misc {
             savefile.WriteBool(runGui)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val spawnTime = CInt()
             val fadeStart = CInt()
             val fadeEnd = CInt() //TODO:make sure the dumbass compiler doesn't decide that all {0}'s are the same (lol)
@@ -1457,9 +1455,9 @@ object Misc {
             savefile.ReadInt(fadeStart)
             savefile.ReadInt(fadeEnd)
             savefile.ReadBool(runGui)
-            this.spawnTime = spawnTime.getVal()
-            this.fadeStart = fadeStart.getVal()
-            this.fadeEnd = fadeEnd.getVal()
+            this.spawnTime = spawnTime._val
+            this.fadeStart = fadeStart._val
+            this.fadeEnd = fadeEnd._val
             this.active = active.isVal
             this.runGui = runGui.isVal
         }
@@ -1517,7 +1515,7 @@ object Misc {
             }
         }
 
-        fun Fade(to: idVec4?, fadeTime: Float) {
+        fun Fade(to: idVec4, fadeTime: Float) {
             GetColor(fadeFrom)
             fadeTo.set(to)
             fadeStart = Game_local.gameLocal.time
@@ -1543,7 +1541,7 @@ object Misc {
                     }
                 }
                 if (fadeEnd > 0) {
-                    var color: idVec4? = idVec4()
+                    var color: idVec4 = idVec4()
                     if (Game_local.gameLocal.time < fadeEnd) {
                         color.Lerp(
                             fadeFrom,
@@ -1560,7 +1558,7 @@ object Misc {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             GetPhysics().WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             WriteColorToSnapshot(msg)
@@ -1568,7 +1566,7 @@ object Misc {
             msg.WriteBits(if (IsHidden()) 1 else 0, 1)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val hidden: Boolean
             GetPhysics().ReadFromSnapshot(msg)
             ReadBindFromSnapshot(msg)
@@ -1613,7 +1611,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1638,8 +1636,8 @@ object Misc {
     open class idFuncEmitter : idStaticEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncEmitter );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1652,12 +1650,12 @@ object Misc {
             }
         }
 
-        private val hidden: CBool? = CBool(false)
-        override fun Save(savefile: idSaveGame?) {
+        private val hidden: CBool = CBool(false)
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(hidden.isVal())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadBool(hidden)
         }
 
@@ -1686,13 +1684,13 @@ object Misc {
             UpdateVisuals()
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteBits(if (hidden.isVal()) 1 else 0, 1)
             msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME])
             msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET])
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             hidden.setVal(msg.ReadBits(1) != 0)
             renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = msg.ReadFloat()
             renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadFloat()
@@ -1701,7 +1699,7 @@ object Misc {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1724,8 +1722,8 @@ object Misc {
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncSmoke );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1760,19 +1758,19 @@ object Misc {
             GetPhysics().SetContents(0)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(smokeTime)
             savefile.WriteParticle(smoke)
             savefile.WriteBool(restart)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val smokeTime = CInt()
             val restart = CBool()
             savefile.ReadInt(smokeTime)
             savefile.ReadParticle(smoke)
             savefile.ReadBool(restart)
-            this.smokeTime = smokeTime.getVal()
+            this.smokeTime = smokeTime._val
             this.restart = restart.isVal
         }
 
@@ -1816,7 +1814,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1824,8 +1822,8 @@ object Misc {
     class idFuncSplat : idFuncEmitter() {
         companion object {
             // CLASS_PROTOTYPE( idFuncSplat );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1869,7 +1867,7 @@ object Misc {
             StartSound("snd_splat", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1899,12 +1897,12 @@ object Misc {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteString(text)
             savefile.WriteBool(playerOriented)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val playerOriented = CBool(false)
             savefile.ReadString(text)
             savefile.ReadBool(playerOriented)
@@ -1982,7 +1980,7 @@ object Misc {
         // CLASS_PROTOTYPE( idLocationSeparatorEntity );
         override fun Spawn() {
             super.Spawn()
-            val b: idBounds?
+            val b: idBounds
             b = idBounds(spawnArgs.GetVector("origin")).Expand(16f)
             val   /*qhandle_t*/portal = Game_local.gameRenderWorld.FindPortal(b)
             if (0 == portal) {
@@ -2011,8 +2009,8 @@ object Misc {
     class idVacuumSeparatorEntity : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idVacuumSeparatorEntity );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2030,7 +2028,7 @@ object Misc {
         private var   /*qhandle_t*/portal = 0
         override fun Spawn() {
             super.Spawn()
-            val b: idBounds?
+            val b: idBounds
             b = idBounds(spawnArgs.GetVector("origin")).Expand(16f)
             portal = Game_local.gameRenderWorld.FindPortal(b)
             if (0 == portal) {
@@ -2046,18 +2044,18 @@ object Misc {
             )
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(portal)
             savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(portal))
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val state = CInt()
             val portal = CInt()
             savefile.ReadInt(portal)
             savefile.ReadInt(state)
-            this.portal = portal.getVal()
-            Game_local.gameLocal.SetPortalState(portal.getVal(), state.getVal())
+            this.portal = portal._val
+            Game_local.gameLocal.SetPortalState(portal._val, state._val)
         }
 
         fun Event_Activate(activator: idEventArg<idEntity?>?) {
@@ -2071,7 +2069,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2113,7 +2111,7 @@ object Misc {
     class idBeam : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idBeam );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
@@ -2130,19 +2128,19 @@ object Misc {
             super.Spawn()
             val width = CFloat()
             if (spawnArgs.GetFloat("width", "0", width)) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = width.getVal()
+                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = width._val
             }
             SetModel("_BEAM")
             Hide()
             PostEventMS(Entity.EV_PostSpawn, 0)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             target.Save(savefile)
             master.Save(savefile)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             target.Restore(savefile)
             master.Restore(savefile)
         }
@@ -2166,7 +2164,7 @@ object Misc {
             master.oSet(masterbeam)
         }
 
-        fun SetBeamTarget(origin: idVec3?) {
+        fun SetBeamTarget(origin: idVec3) {
             if (renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] != origin.x || renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] != origin.y || renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] != origin.z) {
                 renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = origin.x
                 renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = origin.y
@@ -2185,7 +2183,7 @@ object Misc {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             GetPhysics().WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             WriteColorToSnapshot(msg)
@@ -2194,7 +2192,7 @@ object Misc {
             msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z])
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             GetPhysics().ReadFromSnapshot(msg)
             ReadBindFromSnapshot(msg)
             ReadColorFromSnapshot(msg)
@@ -2264,11 +2262,11 @@ object Misc {
     class idLiquid : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idLiquid );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2281,11 +2279,11 @@ object Misc {
 
         private val model: idRenderModelLiquid? = null
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             // Nothing to save
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             //FIXME: NO!
             Spawn()
         }
@@ -2304,7 +2302,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2319,8 +2317,8 @@ object Misc {
     class idShaking : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idShaking );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2347,12 +2345,12 @@ object Misc {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(active)
             savefile.WriteStaticObject(physicsObj)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val active = CBool()
             savefile.ReadBool(active)
             savefile.ReadStaticObject(physicsObj)
@@ -2398,7 +2396,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -2422,8 +2420,8 @@ object Misc {
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idEarthQuake );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2460,7 +2458,7 @@ object Misc {
             BecomeInactive(Entity.TH_THINK)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(nextTriggerTime)
             savefile.WriteInt(shakeStopTime)
             savefile.WriteFloat(wait)
@@ -2471,7 +2469,7 @@ object Misc {
             savefile.WriteFloat(shakeTime)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val nextTriggerTime = CInt()
             val shakeStopTime = CInt()
             val wait = CFloat()
@@ -2488,15 +2486,15 @@ object Misc {
             savefile.ReadBool(playerOriented)
             savefile.ReadBool(disabled)
             savefile.ReadFloat(shakeTime)
-            this.nextTriggerTime = nextTriggerTime.getVal()
-            this.shakeStopTime = shakeStopTime.getVal()
-            this.wait = wait.getVal()
-            this.random = random.getVal()
+            this.nextTriggerTime = nextTriggerTime._val
+            this.shakeStopTime = shakeStopTime._val
+            this.wait = wait._val
+            this.random = random._val
             this.triggered = triggered.isVal
             this.playerOriented = playerOriented.isVal
             this.disabled = disabled.isVal
-            this.shakeTime = shakeTime.getVal()
-            if (shakeStopTime.getVal() > Game_local.gameLocal.time) {
+            this.shakeTime = shakeTime._val
+            if (shakeStopTime._val > Game_local.gameLocal.time) {
                 BecomeActive(Entity.TH_THINK)
             }
         }
@@ -2548,7 +2546,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2563,8 +2561,8 @@ object Misc {
     class idFuncPortal : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncPortal );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2577,39 +2575,39 @@ object Misc {
             }
         }
 
-        private val   /*qhandle_t*/portal: CInt? = CInt()
-        private val state: CBool? = CBool()
+        private val   /*qhandle_t*/portal: CInt = CInt()
+        private val state: CBool = CBool()
         override fun Spawn() {
             super.Spawn()
             portal.setVal(Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds().Expand(32.0f)))
-            if (portal.getVal() > 0) {
+            if (portal._val > 0) {
                 state.setVal(spawnArgs.GetBool("start_on"))
                 Game_local.gameLocal.SetPortalState(
-                    portal.getVal(),
+                    portal._val,
                     (if (state.isVal()) portalConnection_t.PS_BLOCK_ALL else portalConnection_t.PS_BLOCK_NONE).ordinal
                 )
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
-            savefile.WriteInt(portal.getVal())
+        override fun Save(savefile: idSaveGame) {
+            savefile.WriteInt(portal._val)
             savefile.WriteBool(state.isVal())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadInt(portal)
             savefile.ReadBool(state)
             Game_local.gameLocal.SetPortalState(
-                portal.getVal(),
+                portal._val,
                 (if (state.isVal()) portalConnection_t.PS_BLOCK_ALL else portalConnection_t.PS_BLOCK_NONE).ordinal
             )
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity?>?) {
-            if (portal.getVal() > 0) {
+            if (portal._val > 0) {
                 state.setVal(!state.isVal())
                 Game_local.gameLocal.SetPortalState(
-                    portal.getVal(),
+                    portal._val,
                     (if (state.isVal()) portalConnection_t.PS_BLOCK_ALL else portalConnection_t.PS_BLOCK_NONE).ordinal
                 )
             }
@@ -2619,7 +2617,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -2643,8 +2641,8 @@ object Misc {
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncAASPortal );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2664,11 +2662,11 @@ object Misc {
             Game_local.gameLocal.SetAASAreaState(GetPhysics().GetAbsBounds(), AASFile.AREACONTENTS_CLUSTERPORTAL, state)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(state)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val state = CBool()
             savefile.ReadBool(state)
             Game_local.gameLocal.SetAASAreaState(
@@ -2686,7 +2684,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2701,8 +2699,8 @@ object Misc {
     class idFuncAASObstacle : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncAASObstacle );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2715,7 +2713,7 @@ object Misc {
             }
         }
 
-        private val state: CBool? = CBool(false)
+        private val state: CBool = CBool(false)
         override fun Spawn() {
             super.Spawn()
             state.setVal(spawnArgs.GetBool("start_on"))
@@ -2726,11 +2724,11 @@ object Misc {
             )
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(state.isVal())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadBool(state)
             Game_local.gameLocal.SetAASAreaState(
                 GetPhysics().GetAbsBounds(),
@@ -2752,7 +2750,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -2768,8 +2766,8 @@ object Misc {
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idFuncRadioChatter );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2792,14 +2790,14 @@ object Misc {
             time = spawnArgs.GetFloat("time", "5.0")
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(time)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val time = CFloat()
             savefile.ReadFloat(time)
-            this.time = time.getVal()
+            this.time = time._val
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity?>?) {
@@ -2817,7 +2815,7 @@ object Misc {
             if (sound != null && !sound.isEmpty()) {
                 shader = DeclManager.declManager.FindSound(sound)
                 player.StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_RADIO, Sound.SSF_GLOBAL, false, length)
-                time = Math_h.MS2SEC((length.getVal() + 150).toFloat())
+                time = Math_h.MS2SEC((length._val + 150).toFloat())
             }
             // we still put the hud up because this is used with no sound on
             // certain frame commands when the chatter is triggered
@@ -2826,7 +2824,7 @@ object Misc {
 
         private fun Event_ResetRadioHud(_activator: idEventArg<idEntity?>?) {
             val activator = _activator.value
-            val player = if (activator is idPlayer) activator as idPlayer? else Game_local.gameLocal.GetLocalPlayer()
+            val player = if (activator is idPlayer) activator else Game_local.gameLocal.GetLocalPlayer()
             player.hud.HandleNamedEvent("radioChatterDown")
             ActivateTargets(activator)
         }
@@ -2835,7 +2833,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2850,8 +2848,8 @@ object Misc {
     class idPhantomObjects : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idPhantomObjects );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2864,13 +2862,13 @@ object Misc {
             }
         }
 
-        private val lastTargetPos: idList<idVec3?>?
+        private val lastTargetPos: idList<idVec3>?
         private val target: idEntityPtr<idActor?>? = null
         private val targetTime: idList<Int?>?
         private var end_time = 0
         private var max_wait: Int
         private var min_wait: Int
-        private val shake_ang: idVec3?
+        private val shake_ang: idVec3
         private var shake_time = 0.0f
         private var speed: Float
         private var throw_time = 0.0f
@@ -2890,7 +2888,7 @@ object Misc {
             GetPhysics().SetContents(0)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(end_time)
             savefile.WriteFloat(throw_time)
@@ -2913,7 +2911,7 @@ object Misc {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val num: Int
             var i: Int
             end_time = savefile.ReadInt()
@@ -3102,7 +3100,7 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

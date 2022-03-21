@@ -961,7 +961,7 @@ object Surface {
         @JvmOverloads
         fun LineIntersection(start: idVec3, end: idVec3, backFaceCull: Boolean = false): Boolean {
             val scale = CFloat()
-            RayIntersection( start, end - start, scale, false )
+            RayIntersection(start, end - start, scale, false)
             return (scale._val in 0.0f..1.0f)
         }
 

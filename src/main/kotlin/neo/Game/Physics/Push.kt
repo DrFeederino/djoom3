@@ -51,11 +51,11 @@ object Push {
     //};
     //#define NEW_PUSH
     class idPush {
-        private val pushed: Array<pushed_s?>? = arrayOfNulls<pushed_s?>(Game_local.MAX_GENTITIES) // pushed entities
+        private val pushed: Array<pushed_s> = Array(Game_local.MAX_GENTITIES) { pushed_s() } // pushed entities
         var pushedGroupSize = 0
         private var numPushed // number of pushed entities
                 = 0
-        private val pushedGroup: Array<pushedGroup_s?>? = arrayOfNulls<pushedGroup_s?>(Game_local.MAX_GENTITIES)
+        private val pushedGroup: Array<pushedGroup_s?> = arrayOfNulls<pushedGroup_s?>(Game_local.MAX_GENTITIES)
 
         /*
          ============
@@ -67,18 +67,18 @@ object Push {
         // If results.fraction < 1.0 the move was blocked by results.c.entityNum
         // Returns total mass of all pushed entities.
         fun ClipTranslationalPush(
-            results: trace_s?,
-            pusher: idEntity?,
+            results: trace_s,
+            pusher: idEntity,
             flags: Int,
-            newOrigin: idVec3?,
-            translation: idVec3?
+            newOrigin: idVec3,
+            translation: idVec3
         ): Float {
             var results = results
             var i: Int
             var listedEntities: Int
             var res: Int
             var check: idEntity
-            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
+            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
             val bounds: idBounds
             val pushBounds = idBounds()
             val clipMove = idVec3()
@@ -89,8 +89,7 @@ object Push {
             val pushResults = trace_s()
             val wasEnabled: Boolean
             var totalMass: Float
-            val clipModel: idClipModel?
-            clipModel = pusher.GetPhysics().GetClipModel()
+            val clipModel: idClipModel = pusher.GetPhysics().GetClipModel()!!
             totalMass = 0.0f
             results.fraction = 1.0f
             results.endpos.set(newOrigin)
@@ -106,7 +105,7 @@ object Push {
 
             // get bounds for the whole movement
             bounds = clipModel.GetBounds()
-            if (bounds.get(0).x >= bounds.get(1).x) {
+            if (bounds[0].x >= bounds[1].x) {
                 return totalMass
             }
             pushBounds.FromBoundsTranslation(bounds, clipModel.GetOrigin(), clipModel.GetAxis(), translation)
@@ -119,7 +118,7 @@ object Push {
 
             // discard entities we cannot or should not push
             listedEntities = DiscardEntities(entityList, listedEntities, flags, pusher)
-            if (flags and Push.PUSHFL_CLIP != 0) {
+            if (flags and PUSHFL_CLIP != 0) {
 
                 // can only clip movement of a trace model
                 assert(clipModel.IsTraceModel())
@@ -133,7 +132,7 @@ object Push {
                 Game_local.gameLocal.clip.Translation(
                     results,
                     clipModel.GetOrigin(),
-                    clipModel.GetOrigin().oPlus(translation),
+                    clipModel.GetOrigin() + translation,
                     clipModel,
                     clipModel.GetAxis(),
                     pusher.GetPhysics().GetClipMask(),
@@ -179,7 +178,7 @@ object Push {
                 physics.EnableClip()
 
                 // if the entity is pushed
-                if (res == Push.PUSH_OK) {
+                if (res == PUSH_OK) {
                     // set the pusher in the translated position
                     clipModel.Link(
                         Game_local.gameLocal.clip,
@@ -200,7 +199,7 @@ object Push {
                     )
 
                     // wake up this object
-                    if (flags and Push.PUSHFL_APPLYIMPULSE != 0) {
+                    if (flags and PUSHFL_APPLYIMPULSE != 0) {
                         impulse.set(dir.times(physics.GetMass()))
                     } else {
                         impulse.Zero()
@@ -212,7 +211,7 @@ object Push {
                 }
 
                 // if the entity is not blocking
-                if (res != Push.PUSH_BLOCKED) {
+                if (res != PUSH_BLOCKED) {
                     i++
                     continue
                 }
@@ -225,7 +224,7 @@ object Push {
                 }
 
                 // if blocking entities should be crushed
-                if (flags and Push.PUSHFL_CRUSH != 0) {
+                if (flags and PUSHFL_CRUSH != 0) {
                     check.Damage(
                         clipModel.GetEntity(),
                         clipModel.GetEntity(),
@@ -240,7 +239,7 @@ object Push {
 
                 // if the entity is an active articulated figure and gibs
                 if (check is idAFEntity_Base && check.spawnArgs.GetBool("gib")) {
-                    if ((check as idAFEntity_Base).IsActiveAF()) {
+                    if (check.IsActiveAF()) {
                         check.ProcessEvent(AFEntity.EV_Gib, "damage_Gib")
                     }
                 }
@@ -277,28 +276,27 @@ object Push {
          ============
          */
         fun ClipRotationalPush(
-            results: trace_s?,
-            pusher: idEntity?,
+            results: trace_s,
+            pusher: idEntity,
             flags: Int,
-            newAxis: idMat3?,
-            rotation: idRotation?
+            newAxis: idMat3,
+            rotation: idRotation
         ): Float {
-            var results = results
             var i: Int
             var listedEntities: Int
             var res: Int
             var check: idEntity
-            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
+            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
             val bounds: idBounds
             val pushBounds = idBounds()
-            val clipRotation: idRotation?
-            val clipAxis: idMat3?
+            val clipRotation: idRotation
+            val clipAxis: idMat3
             val oldAxis: idMat3
             val pushResults = trace_s()
             val wasEnabled: Boolean
             var totalMass: Float
             val clipModel: idClipModel?
-            clipModel = pusher.GetPhysics().GetClipModel()
+            clipModel = pusher.GetPhysics().GetClipModel()!!
             totalMass = 0.0f
             results.fraction = 1.0f
             results.endpos.set(clipModel.GetOrigin())
@@ -310,7 +308,7 @@ object Push {
 
             // get bounds for the whole movement
             bounds = clipModel.GetBounds()
-            if (bounds.get(0).x >= bounds.get(1).x) {
+            if (bounds[0].x >= bounds[1].x) {
                 return totalMass
             }
             pushBounds.FromBoundsRotation(bounds, clipModel.GetOrigin(), clipModel.GetAxis(), rotation)
@@ -323,7 +321,7 @@ object Push {
 
             // discard entities we cannot or should not push
             listedEntities = DiscardEntities(entityList, listedEntities, flags, pusher)
-            if (flags and Push.PUSHFL_CLIP != 0) {
+            if (flags and PUSHFL_CLIP != 0) {
 
                 // can only clip movement of a trace model
                 assert(clipModel.IsTraceModel())
@@ -383,7 +381,7 @@ object Push {
                 physics.EnableClip()
 
                 // if the entity is pushed
-                if (res == Push.PUSH_OK) {
+                if (res == PUSH_OK) {
                     // set the pusher in the rotated position
                     clipModel.Link(
                         Game_local.gameLocal.clip,
@@ -416,7 +414,7 @@ object Push {
                 }
 
                 // if the entity is not blocking
-                if (res != Push.PUSH_BLOCKED) {
+                if (res != PUSH_BLOCKED) {
                     i++
                     continue
                 }
@@ -429,7 +427,7 @@ object Push {
                 }
 
                 // if blocking entities should be crushed
-                if (flags and Push.PUSHFL_CRUSH != 0) {
+                if (flags and PUSHFL_CRUSH != 0) {
                     check.Damage(
                         clipModel.GetEntity(),
                         clipModel.GetEntity(),
@@ -444,13 +442,13 @@ object Push {
 
                 // if the entity is an active articulated figure and gibs
                 if (check is idAFEntity_Base && check.spawnArgs.GetBool("gib")) {
-                    if ((check as idAFEntity_Base).IsActiveAF()) {
+                    if (check.IsActiveAF()) {
                         check.ProcessEvent(AFEntity.EV_Gib, "damage_Gib")
                     }
                 }
 
                 // blocked
-                results = pushResults
+                results.set(pushResults)
                 results.fraction = 0.0f
                 results.endAxis.set(clipModel.GetAxis())
                 results.endpos.set(clipModel.GetOrigin())
@@ -476,16 +474,16 @@ object Push {
          ============
          */
         fun ClipPush(
-            results: trace_s?,
-            pusher: idEntity?,
+            results: trace_s,
+            pusher: idEntity,
             flags: Int,
-            oldOrigin: idVec3?,
-            oldAxis: idMat3?,
-            newOrigin: idVec3?,
-            newAxis: idMat3?
+            oldOrigin: idVec3,
+            oldAxis: idMat3,
+            newOrigin: idVec3,
+            newAxis: idMat3
         ): Float {
             val translation = idVec3()
-            val rotation: idRotation?
+            val rotation: idRotation
             var mass: Float
             mass = 0.0f
             results.fraction = 1.0f
@@ -522,7 +520,7 @@ object Push {
                 newAxis.OrthoNormalizeSelf()
                 newAxis.FixDenormals()
                 newAxis.FixDegeneracies()
-                pusher.GetPhysics().GetClipModel().SetPosition(newOrigin, oldAxis)
+                pusher.GetPhysics().GetClipModel()!!.SetPosition(newOrigin, oldAxis)
                 mass += ClipRotationalPush(results, pusher, flags, newAxis, rotation)
                 if (results.fraction < 1.0f) {
                     newOrigin.set(oldOrigin)
@@ -548,13 +546,13 @@ object Push {
 
 
                 // if the entity is an actor
-                if (pushed.get(i).ent is idActor) {
+                if (pushed[i].ent is idActor) {
                     // set back the delta view angles
-                    (pushed.get(i).ent as idActor?).SetDeltaViewAngles(pushed.get(i).deltaViewAngles)
+                    (pushed[i].ent as idActor).SetDeltaViewAngles(pushed[i].deltaViewAngles)
                 }
 
                 // restore the physics state
-                pushed.get(i).ent.GetPhysics().RestoreState()
+                pushed[i].ent.GetPhysics().RestoreState()
                 i++
             }
         }
@@ -566,18 +564,18 @@ object Push {
 
         //
         // get the ith pushed entity
-        fun GetPushedEntity(i: Int): idEntity? {
+        fun GetPushedEntity(i: Int): idEntity {
             assert(i >= 0 && i < numPushed)
-            return pushed.get(i).ent
+            return pushed[i].ent
         }
 
-        private fun SaveEntityPosition(ent: idEntity?) {
+        private fun SaveEntityPosition(ent: idEntity) {
             var i: Int
 
             // if already saved the physics state for this entity
             i = 0
             while (i < numPushed) {
-                if (pushed.get(i).ent === ent) {
+                if (pushed[i].ent === ent) {
                     return
                 }
                 i++
@@ -585,16 +583,16 @@ object Push {
 
             // don't overflow
             if (numPushed >= Game_local.MAX_GENTITIES) {
-                idGameLocal.Companion.Error("more than MAX_GENTITIES pushed entities")
+                idGameLocal.Error("more than MAX_GENTITIES pushed entities")
                 return
             }
-            pushed.get(numPushed) = pushed_s()
-            pushed.get(numPushed).ent = ent
+            pushed[numPushed] = pushed_s()
+            pushed[numPushed].ent = ent
 
             // if the entity is an actor
             if (ent is idActor) {
                 // save the delta view angles
-                pushed.get(numPushed).deltaViewAngles = (ent as idActor?).GetDeltaViewAngles()
+                pushed[numPushed].deltaViewAngles = ent.GetDeltaViewAngles()
             }
 
             // save the physics state
@@ -602,12 +600,12 @@ object Push {
             numPushed++
         }
 
-        private fun RotateEntityToAxial(ent: idEntity?, rotationPoint: idVec3?): Boolean {
+        private fun RotateEntityToAxial(ent: idEntity, rotationPoint: idVec3): Boolean {
             var i: Int
             val trace = trace_s()
             var rotation: idRotation
             var axis: idMat3
-            val physics: idPhysics?
+            val physics: idPhysics
             physics = ent.GetPhysics()
             axis = physics.GetAxis()
             if (!axis.IsRotated()) {
@@ -622,7 +620,7 @@ object Push {
                 rotation.SetOrigin(rotationPoint)
                 // tiny float numbers in the clip axis, this can get the entity stuck
                 if (rotation.GetAngle() == 0.0f) {
-                    physics.SetAxis(idMat3.Companion.getMat3_identity())
+                    physics.SetAxis(idMat3.getMat3_identity())
                     return true
                 }
                 //
@@ -631,7 +629,7 @@ object Push {
                 if (trace.fraction >= 1.0f) {
                     // set bbox in final axial position
                     physics.SetOrigin(trace.endpos)
-                    physics.SetAxis(idMat3.Companion.getMat3_identity())
+                    physics.SetAxis(idMat3.getMat3_identity())
                     return true
                 } // if partial rotation was possible
                 else if (trace.fraction > 0.0f) {
@@ -649,11 +647,11 @@ object Push {
         //
         //
         private fun ClipEntityRotation(
-            trace: trace_s?,
-            ent: idEntity?,
+            trace: trace_s,
+            ent: idEntity,
             clipModel: idClipModel?,
             skip: idClipModel?,
-            rotation: idRotation?
+            rotation: idRotation
         ) {
             if (skip != null) {
                 skip.Disable()
@@ -666,11 +664,11 @@ object Push {
         }
 
         private fun ClipEntityTranslation(
-            trace: trace_s?,
-            ent: idEntity?,
+            trace: trace_s,
+            ent: idEntity,
             clipModel: idClipModel?,
             skip: idClipModel?,
-            translation: idVec3?
+            translation: idVec3
         ) {
             if (skip != null) {
                 skip.Disable()
@@ -694,12 +692,12 @@ object Push {
         // final idRotation &rotation, idEntity *entityList[], int maxEntities );
         // #else
         private fun TryTranslatePushEntity(
-            results: trace_s?,
-            check: idEntity?,
-            clipModel: idClipModel?,
+            results: trace_s,
+            check: idEntity,
+            clipModel: idClipModel,
             flags: Int,
-            newOrigin: idVec3?,
-            move: idVec3?
+            newOrigin: idVec3,
+            move: idVec3
         ): Int {
             val trace = trace_s()
             val checkMove = idVec3()
@@ -718,7 +716,7 @@ object Push {
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
-            if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
+            if (physics.IsGroundClipModel(clipModel.GetEntity()!!.entityNumber, clipModel.GetId())) {
                 // move the entity colliding with all other entities except the pusher itself
                 ClipEntityTranslation(trace, check, null, clipModel, move)
                 // if there is a collision
@@ -726,16 +724,16 @@ object Push {
                     // vector along which the entity is pushed
                     checkMove.set(move.times(trace.fraction))
                     // test if the entity can stay at it's partly pushed position by moving the entity in reverse only colliding with pusher
-                    ClipEntityTranslation(results, check, clipModel, null, move.minus(checkMove).oNegative())
+                    ClipEntityTranslation(results, check, clipModel, null, move.minus(checkMove).unaryMinus())
                     // if there is a collision
                     if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results.c.normal.set(results.c.normal.oNegative())
+                        results.c.normal.set(results.c.normal.unaryMinus())
                         results.c.dist = -results.c.dist
 
                         // the entity will be crushed between the pusher and some other entity
-                        return Push.PUSH_BLOCKED
+                        return PUSH_BLOCKED
                     }
                 } else {
                     // vector along which the entity is pushed
@@ -743,10 +741,10 @@ object Push {
                 }
             } else {
                 // move entity in reverse only colliding with pusher
-                ClipEntityTranslation(results, check, clipModel, null, move.oNegative())
+                ClipEntityTranslation(results, check, clipModel, null, move.unaryMinus())
                 // if no collision with the pusher then the entity is not pushed by the pusher
                 if (results.fraction >= 1.0f) {
-                    return Push.PUSH_NO
+                    return PUSH_NO
                 }
                 // vector along which the entity is pushed
                 checkMove.set(move.times(1.0f - results.fraction))
@@ -754,7 +752,7 @@ object Push {
                 ClipEntityTranslation(trace, check, null, clipModel, checkMove)
                 // if there is a collisions
                 if (trace.fraction < 1.0f) {
-                    results.c.normal.set(results.c.normal.oNegative())
+                    results.c.normal.set(results.c.normal.unaryMinus())
                     results.c.dist = -results.c.dist
 
                     // FIXME: try to push the blocking entity as well ?
@@ -790,7 +788,7 @@ object Push {
 
                      physics.SetOrigin( oldOrigin );
                      */if (trace.fraction < 1.0f) {
-                        return Push.PUSH_BLOCKED
+                        return PUSH_BLOCKED
                     }
                 }
             }
@@ -808,22 +806,22 @@ object Push {
             // }
             // }
 // #endif
-            return Push.PUSH_OK
+            return PUSH_OK
         }
 
         private fun TryRotatePushEntity(
-            results: trace_s?,
-            check: idEntity?,
-            clipModel: idClipModel?,
+            results: trace_s,
+            check: idEntity,
+            clipModel: idClipModel,
             flags: Int,
-            newAxis: idMat3?,
-            rotation: idRotation?
+            newAxis: idMat3,
+            rotation: idRotation
         ): Int {
             val trace = trace_s()
             val rotationPoint = idVec3()
-            var newRotation: idRotation? = idRotation()
+            var newRotation: idRotation = idRotation()
             val checkAngle: Float
-            val physics: idPhysics?
+            val physics: idPhysics
             physics = check.GetPhysics()
 
 // #ifdef ROTATIONAL_PUSH_DEBUG
@@ -838,7 +836,7 @@ object Push {
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODOS:
 
             // always pushed when standing on the pusher
-            if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
+            if (physics.IsGroundClipModel(clipModel.GetEntity()!!.entityNumber, clipModel.GetId())) {
                 // rotate the entity colliding with all other entities except the pusher itself
                 ClipEntityRotation(trace, check, null, clipModel, rotation)
                 // if there is a collision
@@ -853,11 +851,11 @@ object Push {
                     if (results.fraction < 1.0f) {
 
                         // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                        results.c.normal.set(results.c.normal.oNegative())
+                        results.c.normal.set(results.c.normal.unaryMinus())
                         results.c.dist = -results.c.dist
 
                         // the entity will be crushed between the pusher and some other entity
-                        return Push.PUSH_BLOCKED
+                        return PUSH_BLOCKED
                     }
                 } else {
                     // angle along which the entity is pushed
@@ -882,7 +880,7 @@ object Push {
                     // }
                     // }
 // #endif
-                    return Push.PUSH_NO
+                    return PUSH_NO
                 }
                 // get point to rotate bbox around back to axial
                 rotationPoint.set(results.c.point)
@@ -895,11 +893,11 @@ object Push {
                 if (trace.fraction < 1.0f) {
 
                     // FIXME: try to push the blocking entity as well or try to slide along collision plane(s)?
-                    results.c.normal.set(results.c.normal.oNegative())
+                    results.c.normal.set(results.c.normal.unaryMinus())
                     results.c.dist = -results.c.dist
 
                     // the entity will be crushed between the pusher and some other entity
-                    return Push.PUSH_BLOCKED
+                    return PUSH_BLOCKED
                 }
             }
             SaveEntityPosition(check)
@@ -934,7 +932,7 @@ object Push {
                 // rotate the collision model back to axial
                 if (!RotateEntityToAxial(check, rotationPoint)) {
                     // don't allow rotation if the bbox is no longer axial
-                    return Push.PUSH_BLOCKED
+                    return PUSH_BLOCKED
                 }
             }
 
@@ -949,31 +947,31 @@ object Push {
             if (check is idActor && physics is idPhysics_Actor) {
 
                 // if the entity is standing ontop of the pusher
-                if (physics.IsGroundClipModel(clipModel.GetEntity().entityNumber, clipModel.GetId())) {
+                if (physics.IsGroundClipModel(clipModel.GetEntity()!!.entityNumber, clipModel.GetId())) {
                     // rotate actor view
-                    val actor = check as idActor?
+                    val actor = check
                     val delta = actor.GetDeltaViewAngles()
-                    delta.yaw += newRotation.ToMat3().get(0).ToYaw()
+                    delta.yaw += newRotation.ToMat3()[0].ToYaw()
                     actor.SetDeltaViewAngles(delta)
                 }
             }
-            return Push.PUSH_OK
+            return PUSH_OK
         }
 
         private fun DiscardEntities(
-            entityList: Array<idEntity?>?,
+            entityList: Array<idEntity>,
             numEntities: Int,
             flags: Int,
-            pusher: idEntity?
+            pusher: idEntity
         ): Int {
             var i: Int
-            val num: Int
-            var check: idEntity?
+            var num: Int
+            var check: idEntity
 
             // remove all entities we cannot or should not push from the list
             num = 0.also { i = it }
             while (i < numEntities) {
-                check = entityList.get(i)
+                check = entityList[i]
 
                 // if the physics object is not pushable
                 if (!check.GetPhysics().IsPushable()) {
@@ -988,19 +986,19 @@ object Push {
                 }
 
                 // don't push players in noclip mode
-                if (check is idPlayer && (check as idPlayer?).noclip) {
+                if (check is idPlayer && check.noclip) {
                     i++
                     continue
                 }
 
                 // if we should only push idMoveable entities
-                if (flags and Push.PUSHFL_ONLYMOVEABLE != 0 && check !is idMoveable) {
+                if (flags and PUSHFL_ONLYMOVEABLE != 0 && check !is idMoveable) {
                     i++
                     continue
                 }
 
                 // if we shouldn't push entities the clip model rests upon
-                if (flags and Push.PUSHFL_NOGROUNDENTITIES != 0) {
+                if (flags and PUSHFL_NOGROUNDENTITIES != 0) {
                     if (pusher.GetPhysics().IsGroundEntity(check.entityNumber)) {
                         i++
                         continue
@@ -1008,7 +1006,7 @@ object Push {
                 }
 
                 // keep entity in list
-                entityList.get(num++) = entityList.get(i)
+                entityList[num++] = entityList[i]
                 i++
             }
             return num
@@ -1018,9 +1016,9 @@ object Push {
         //
         private class pushed_s {
             var deltaViewAngles // actor delta view angles
-                    : idAngles? = null
-            var ent // pushed entity
-                    : idEntity? = null
+                    : idAngles = idAngles()
+            lateinit var ent // pushed entity
+                    : idEntity
         }
 
         private class pushedGroup_s {

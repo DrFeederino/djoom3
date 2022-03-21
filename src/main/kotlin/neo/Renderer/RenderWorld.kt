@@ -115,7 +115,7 @@ class RenderWorld {
      R_RemapShaderBySkin
      ===============
      */
-    fun R_RemapShaderBySkin(shader: idMaterial, skin: idDeclSkin?, customShader: idMaterial): idMaterial? {
+    fun R_RemapShaderBySkin(shader: idMaterial?, skin: idDeclSkin?, customShader: idMaterial?): idMaterial? {
         if (null == shader) {
             return null
         }
@@ -160,7 +160,7 @@ class RenderWorld {
     }
 
     abstract class deferredEntityCallback_t : SERiAL {
-        abstract fun run(e: renderEntity_s?, v: renderView_s?): Boolean
+        abstract fun run(e: renderEntity_s, v: renderView_s?): Boolean
     }
 
     class renderEntity_s {
@@ -237,7 +237,7 @@ class RenderWorld {
         // axis rotation vectors must be unit length for many
         // R_LocalToGlobal functions to work, so don't scale models!
         // axis vectors are [0] = forward, [1] = left, [2] = up
-        val origin: idVec3?
+        val origin: idVec3
         var referenceShader // used so flares can reference the proper light shader
                 : idMaterial? = null
         var referenceSound // for shader sound tables, allowing effects to vary with sounds
@@ -311,15 +311,15 @@ class RenderWorld {
 
         fun atomicSet(shadow: renderEntityShadow?) {
             hModel = shadow.hModel
-            entityNum = shadow.entityNum.getVal()
-            bodyId = shadow.bodyId.getVal()
+            entityNum = shadow.entityNum._val
+            bodyId = shadow.bodyId._val
             bounds = shadow.bounds
             callback = shadow.callback
             callbackData = shadow.callbackData
-            suppressSurfaceInViewID = shadow.suppressSurfaceInViewID.getVal()
-            suppressShadowInViewID = shadow.suppressShadowInViewID.getVal()
-            suppressShadowInLightID = shadow.suppressShadowInLightID.getVal()
-            allowSurfaceInViewID = shadow.allowSurfaceInViewID.getVal()
+            suppressSurfaceInViewID = shadow.suppressSurfaceInViewID._val
+            suppressShadowInViewID = shadow.suppressShadowInViewID._val
+            suppressShadowInLightID = shadow.suppressShadowInLightID._val
+            allowSurfaceInViewID = shadow.allowSurfaceInViewID._val
             origin.set(shadow.origin)
             axis = shadow.axis
             customShader = shadow.customShader
@@ -327,16 +327,16 @@ class RenderWorld {
             customSkin = shadow.customSkin
             referenceSound = shadow.referenceSound
             remoteRenderView = shadow.remoteRenderView
-            numJoints = shadow.numJoints.getVal()
+            numJoints = shadow.numJoints._val
             joints = shadow.joints
-            modelDepthHack = shadow.modelDepthHack.getVal()
+            modelDepthHack = shadow.modelDepthHack._val
             noSelfShadow = shadow.noSelfShadow.isVal
             noShadow = shadow.noShadow.isVal
             noDynamicInteractions = shadow.noDynamicInteractions.isVal
             weaponDepthHack = shadow.weaponDepthHack.isVal
-            forceUpdate = shadow.forceUpdate.getVal()
-            timeGroup = shadow.timeGroup.getVal()
-            xrayIndex = shadow.xrayIndex.getVal()
+            forceUpdate = shadow.forceUpdate._val
+            timeGroup = shadow.timeGroup._val
+            xrayIndex = shadow.xrayIndex._val
         }
 
         fun clear() {
@@ -616,8 +616,8 @@ class RenderWorld {
         fun atomicSet(shadow: renderLightShadow) {
             axis = shadow.axis
             origin.set(shadow.origin)
-            suppressLightInViewID = shadow.suppressLightInViewID.getVal()
-            allowLightInViewID = shadow.allowLightInViewID.getVal()
+            suppressLightInViewID = shadow.suppressLightInViewID._val
+            allowLightInViewID = shadow.allowLightInViewID._val
             noShadows = shadow.noShadows.isVal
             noSpecular = shadow.noSpecular.isVal
             pointLight = shadow.pointLight.isVal
@@ -630,7 +630,7 @@ class RenderWorld {
             start.set(shadow.start)
             end.set(shadow.end)
             prelightModel = shadow.prelightModel
-            lightId = shadow.lightId.getVal()
+            lightId = shadow.lightId._val
             shader = shadow.shader
             referenceSound = shadow.referenceSound
         }
@@ -685,20 +685,20 @@ class RenderWorld {
         }
 
         fun atomicSet(shadow: renderViewShadow?) {
-            viewID = shadow.viewID.getVal()
-            x = shadow.x.getVal()
-            y = shadow.y.getVal()
-            width = shadow.width.getVal()
-            height = shadow.height.getVal()
-            fov_x = shadow.fov_x.getVal()
-            fov_y = shadow.fov_y.getVal()
+            viewID = shadow.viewID._val
+            x = shadow.x._val
+            y = shadow.y._val
+            width = shadow.width._val
+            height = shadow.height._val
+            fov_x = shadow.fov_x._val
+            fov_y = shadow.fov_y._val
             vieworg.set(shadow.vieworg)
             viewaxis = idMat3(shadow.viewaxis)
             cramZNear = shadow.cramZNear.isVal
             forceUpdate = shadow.forceUpdate.isVal
-            time = shadow.time.getVal()
+            time = shadow.time._val
             for (a in 0 until RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                shaderParms.get(a) = shadow.shaderParms[a].getVal()
+                shaderParms.get(a) = shadow.shaderParms[a]._val
             }
             globalMaterial = shadow.globalMaterial
         }
@@ -751,8 +751,8 @@ class RenderWorld {
                 = 0
         var material // material of hit surface
                 : idMaterial? = null
-        val normal: idVec3? = idVec3() // hit triangle normal vector in global space
-        val point: idVec3? = idVec3() // end point of trace in global space
+        val normal: idVec3 = idVec3() // hit triangle normal vector in global space
+        val point: idVec3 = idVec3() // end point of trace in global space
         fun clear() {
             point.Zero()
             normal.Zero()
@@ -798,7 +798,7 @@ class RenderWorld {
         // winding plane and the same distance from the projection origin towards the winding.
         abstract fun ProjectDecalOntoWorld(
             winding: idFixedWinding?,
-            projectionOrigin: idVec3?,
+            projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
             material: idMaterial?,
@@ -809,7 +809,7 @@ class RenderWorld {
         abstract fun ProjectDecal(
             entityHandle: Int,
             winding: idFixedWinding?,
-            projectionOrigin: idVec3?,
+            projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
             material: idMaterial?,
@@ -819,7 +819,7 @@ class RenderWorld {
         // Creates overlays on dynamic models.
         abstract fun ProjectOverlay(
             entityHandle: Int,
-            localTextureAxis: Array<idPlane?>? /*[2]*/,
+            localTextureAxis: Array<idPlane>? /*[2]*/,
             material: idMaterial?
         )
 
@@ -844,7 +844,7 @@ class RenderWorld {
         // This is used by the game to identify portals that are contained
         // inside doors, so the connection between areas can be topologically
         // terminated when the door shuts.
-        abstract fun FindPortal(b: idBounds?): Int
+        abstract fun FindPortal(b: idBounds): Int
 
         // doors explicitly close off portals when shut
         // multiple bits can be set to block multiple things, ie: ( PS_VIEW | PS_LOCATION | PS_AIR )
@@ -861,11 +861,11 @@ class RenderWorld {
 
         // Will return -1 if the point is not in an area, otherwise
         // it will return 0 <= value < NumAreas()
-        abstract fun PointInArea(point: idVec3?): Int
+        abstract fun PointInArea(point: idVec3): Int
 
         // fills the *areas array with the numbers of the areas the bounds cover
         // returns the total number of areas the bounds cover
-        abstract fun BoundsInAreas(bounds: idBounds?, areas: IntArray?, maxAreas: Int): Int
+        abstract fun BoundsInAreas(bounds: idBounds, areas: IntArray?, maxAreas: Int): Int
 
         // Used by the sound system to do area flowing
         abstract fun NumPortalsInArea(areaNum: Int): Int
@@ -878,22 +878,22 @@ class RenderWorld {
         // fraction location of the trace on the gui surface, or -1,-1 if no hit.
         // This doesn't do any occlusion testing, simply ignoring non-gui surfaces.
         // start / end are in global world coordinates.
-        abstract fun GuiTrace(entityHandle: Int, start: idVec3?, end: idVec3?): guiPoint_t?
+        abstract fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t?
 
         // Traces vs the render model, possibly instantiating a dynamic version, and returns true if something was hit
         abstract fun ModelTrace(
             trace: modelTrace_s?,
             entityHandle: Int,
-            start: idVec3?,
-            end: idVec3?,
+            start: idVec3,
+            end: idVec3,
             radius: Float
         ): Boolean
 
         // Traces vs the whole rendered world. FIXME: we need some kind of material flags.
         abstract fun Trace(
             trace: modelTrace_s?,
-            start: idVec3?,
-            end: idVec3?,
+            start: idVec3,
+            end: idVec3,
             radius: Float,
             skipDynamic: Boolean /*= true*/,
             skipPlayer: Boolean /* = false*/
@@ -902,8 +902,8 @@ class RenderWorld {
         @JvmOverloads
         fun Trace(
             trace: modelTrace_s?,
-            start: idVec3?,
-            end: idVec3?,
+            start: idVec3,
+            end: idVec3,
             radius: Float,
             skipDynamic: Boolean = true
         ): Boolean {
@@ -911,7 +911,7 @@ class RenderWorld {
         }
 
         // Traces vs the world model bsp tree.
-        abstract fun FastWorldTrace(trace: modelTrace_s?, start: idVec3?, end: idVec3?): Boolean
+        abstract fun FastWorldTrace(trace: modelTrace_s?, start: idVec3, end: idVec3): Boolean
 
         //-------------- Demo Control  -----------------
         // Writes a loadmap command to the demo, and clears archive counters.
@@ -928,7 +928,7 @@ class RenderWorld {
         abstract fun ProcessDemoCommand(
             readDemo: idDemoFile?,
             demoRenderView: renderView_s?,
-            demoTimeOffset: CInt?
+            demoTimeOffset: CInt
         ): Boolean
 
         // this is used to regenerate all interactions ( which is currently only done during influences ), there may be a less
@@ -939,41 +939,41 @@ class RenderWorld {
         // Line drawing for debug visualization
         abstract fun DebugClearLines(time: Int) // a time of 0 will clear all lines and text
         abstract fun DebugLine(
-            color: idVec4?,
-            start: idVec3?,
-            end: idVec3?,
+            color: idVec4,
+            start: idVec3,
+            end: idVec3,
             lifetime: Int /*= 0*/,
             depthTest: Boolean /* = false*/
         )
 
         @JvmOverloads
-        fun DebugLine(color: idVec4?, start: idVec3?, end: idVec3?, lifetime: Int = 0 /*= 0*/) {
+        fun DebugLine(color: idVec4, start: idVec3, end: idVec3, lifetime: Int = 0 /*= 0*/) {
             DebugLine(color, start, end, lifetime, false)
         }
 
-        abstract fun DebugArrow(color: idVec4?, start: idVec3?, end: idVec3?, size: Int, lifetime: Int /*= 0*/)
-        fun DebugArrow(color: idVec4?, start: idVec3?, end: idVec3?, size: Int) {
+        abstract fun DebugArrow(color: idVec4, start: idVec3, end: idVec3, size: Int, lifetime: Int /*= 0*/)
+        fun DebugArrow(color: idVec4, start: idVec3, end: idVec3, size: Int) {
             DebugArrow(color, start, end, size, 0)
         }
 
         abstract fun DebugWinding(
-            color: idVec4?,
+            color: idVec4,
             w: idWinding?,
-            origin: idVec3?,
-            axis: idMat3?,
+            origin: idVec3,
+            axis: idMat3,
             lifetime: Int /*= 0*/,
             depthTest: Boolean /*= false*/
         )
 
         @JvmOverloads
-        fun DebugWinding(color: idVec4?, w: idWinding?, origin: idVec3?, axis: idMat3?, lifetime: Int = 0 /*= 0*/) {
+        fun DebugWinding(color: idVec4, w: idWinding?, origin: idVec3, axis: idMat3, lifetime: Int = 0 /*= 0*/) {
             DebugWinding(color, w, origin, axis, lifetime, false)
         }
 
         abstract fun DebugCircle(
-            color: idVec4?,
-            origin: idVec3?,
-            dir: idVec3?,
+            color: idVec4,
+            origin: idVec3,
+            dir: idVec3,
             radius: Float,
             numSteps: Int,
             lifetime: Int /* = 0*/,
@@ -982,9 +982,9 @@ class RenderWorld {
 
         @JvmOverloads
         fun DebugCircle(
-            color: idVec4?,
-            origin: idVec3?,
-            dir: idVec3?,
+            color: idVec4,
+            origin: idVec3,
+            dir: idVec3,
             radius: Float,
             numSteps: Int,
             lifetime: Int = 0 /* = 0*/
@@ -993,82 +993,82 @@ class RenderWorld {
         }
 
         abstract fun DebugSphere(
-            color: idVec4?,
+            color: idVec4,
             sphere: idSphere?,
             lifetime: Int /* = 0*/,
             depthTest: Boolean /* = false */
         )
 
         @JvmOverloads
-        fun DebugSphere(color: idVec4?, sphere: idSphere?, lifetime: Int = 0 /* = 0*/) {
+        fun DebugSphere(color: idVec4, sphere: idSphere?, lifetime: Int = 0 /* = 0*/) {
             DebugSphere(color, sphere, lifetime, false)
         }
 
         abstract fun DebugBounds(
-            color: idVec4?,
-            bounds: idBounds?,
-            org: idVec3? /* = vec3_origin*/,
+            color: idVec4,
+            bounds: idBounds,
+            org: idVec3 /* = vec3_origin*/,
             lifetime: Int /* = 0*/
         )
 
         @JvmOverloads
-        fun DebugBounds(color: idVec4?, bounds: idBounds?, org: idVec3? = Vector.getVec3_origin() /* = vec3_origin*/) {
+        fun DebugBounds(color: idVec4, bounds: idBounds, org: idVec3 = Vector.getVec3_origin() /* = vec3_origin*/) {
             DebugBounds(color, bounds, org, 0)
         }
 
-        abstract fun DebugBox(color: idVec4?, box: idBox?, lifetime: Int /* = 0*/)
-        fun DebugBox(color: idVec4?, box: idBox?) {
+        abstract fun DebugBox(color: idVec4, box: idBox?, lifetime: Int /* = 0*/)
+        fun DebugBox(color: idVec4, box: idBox?) {
             DebugBox(color, box, 0)
         }
 
         abstract fun DebugFrustum(
-            color: idVec4?,
+            color: idVec4,
             frustum: idFrustum?,
             showFromOrigin: Boolean /* = false*/,
             lifetime: Int /*= 0*/
         )
 
         @JvmOverloads
-        fun DebugFrustum(color: idVec4?, frustum: idFrustum?, showFromOrigin: Boolean = false /* = false*/) {
+        fun DebugFrustum(color: idVec4, frustum: idFrustum?, showFromOrigin: Boolean = false /* = false*/) {
             DebugFrustum(color, frustum, showFromOrigin, 0)
         }
 
         abstract fun DebugCone(
-            color: idVec4?,
-            apex: idVec3?,
-            dir: idVec3?,
+            color: idVec4,
+            apex: idVec3,
+            dir: idVec3,
             radius1: Float,
             radius2: Float,
             lifetime: Int /*= 0*/
         )
 
-        fun DebugCone(color: idVec4?, apex: idVec3?, dir: idVec3?, radius1: Float, radius2: Float) {
+        fun DebugCone(color: idVec4, apex: idVec3, dir: idVec3, radius1: Float, radius2: Float) {
             DebugCone(color, apex, dir, radius1, radius2, 0)
         }
 
-        abstract fun DebugAxis(origin: idVec3?, axis: idMat3?)
+        abstract fun DebugAxis(origin: idVec3, axis: idMat3)
 
         // Polygon drawing for debug visualization.
         abstract fun DebugClearPolygons(time: Int) // a time of 0 will clear all polygons
         abstract fun DebugPolygon(
-            color: idVec4?,
+            color: idVec4,
             winding: idWinding?,
             lifeTime: Int /* = 0*/,
             depthTest: Boolean /*= false*/
         )
 
         @JvmOverloads
-        fun DebugPolygon(color: idVec4?, winding: idWinding?, lifeTime: Int = 0 /* = 0*/) {
+        fun DebugPolygon(color: idVec4, winding: idWinding?, lifeTime: Int = 0 /* = 0*/) {
             DebugPolygon(color, winding, lifeTime, false)
         }
 
         // Text drawing for debug visualization.
         abstract fun DrawText(
             text: String?,
-            origin: idVec3?,
+            origin: idVec3,
             scale: Float,
-            color: idVec4?,
-            viewAxis: idMat3?,
+            color: idVec4,
+            viewAxis: idMat3,
             align: Int /*= 1*/,
             lifetime: Int /*= 0*/,
             depthTest: Boolean /* = false*/
@@ -1077,10 +1077,10 @@ class RenderWorld {
         @JvmOverloads
         fun DrawText(
             text: String?,
-            origin: idVec3?,
+            origin: idVec3,
             scale: Float,
-            color: idVec4?,
-            viewAxis: idMat3?,
+            color: idVec4,
+            viewAxis: idMat3,
             align: Int = 1 /*= 1*/,
             lifetime: Int = 0 /*= 0*/
         ) {

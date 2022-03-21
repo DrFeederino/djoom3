@@ -18,9 +18,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Item.idMoveableItem
 import neo.Game.Physics.*
 import neo.Game.Physics.Clip.idClipModel
@@ -79,13 +77,13 @@ object AFEntity {
     const val BOUNCE_SOUND_MIN_VELOCITY = 80f
 
     //
-    val EV_Gib: idEventDef? = idEventDef("gib", "s")
-    val EV_Gibbed: idEventDef? = idEventDef("<gibbed>")
-    val EV_SetConstraintPosition: idEventDef? = idEventDef("SetConstraintPosition", "sv")
+    val EV_Gib: idEventDef = idEventDef("gib", "s")
+    val EV_Gibbed: idEventDef = idEventDef("<gibbed>")
+    val EV_SetConstraintPosition: idEventDef = idEventDef("SetConstraintPosition", "sv")
 
     //
-    val EV_SetFingerAngle: idEventDef? = idEventDef("setFingerAngle", "f")
-    val EV_StopFingers: idEventDef? = idEventDef("stopFingers")
+    val EV_SetFingerAngle: idEventDef = idEventDef("setFingerAngle", "f")
+    val EV_StopFingers: idEventDef = idEventDef("stopFingers")
 
     /*
      ===============================================================================
@@ -204,10 +202,10 @@ object AFEntity {
             val origin = idVec3()
             spawnArgs.GetBool("drop", "0", drop)
             spawnArgs.GetInt("links", "3", numLinks)
-            spawnArgs.GetFloat("length", "" + numLinks.getVal() * 32.0f, length)
+            spawnArgs.GetFloat("length", "" + numLinks._val * 32.0f, length)
             spawnArgs.GetFloat("width", "8", linkWidth)
             spawnArgs.GetFloat("density", "0.2", density)
-            linkLength = length.getVal() / numLinks.getVal()
+            linkLength = length._val / numLinks._val
             origin.set(GetPhysics().GetOrigin())
 
             // initialize physics
@@ -215,7 +213,7 @@ object AFEntity {
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
             physicsObj.SetClipMask(Game_local.MASK_SOLID or Material.CONTENTS_BODY)
             SetPhysics(physicsObj)
-            BuildChain("link", origin, linkLength, linkWidth.getVal(), density.getVal(), numLinks.getVal(), !drop.isVal)
+            BuildChain("link", origin, linkLength, linkWidth._val, density._val, numLinks._val, !drop.isVal)
         }
 
         /*
@@ -229,7 +227,7 @@ object AFEntity {
          */
         protected fun BuildChain(
             name: String?,
-            origin: idVec3?,
+            origin: idVec3,
             linkLength: Float,
             linkWidth: Float,
             density: Float,
@@ -330,7 +328,7 @@ object AFEntity {
          archive object for savegame file
          ================
          */
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteObject(body)
             savefile.WriteInt(idleAnim)
             savefile.WriteJoint(attachJoint)
@@ -343,7 +341,7 @@ object AFEntity {
          unarchives object from save game file
          ================
          */
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadObject( /*reinterpret_cast<idClass*&>*/body)
             idleAnim = savefile.ReadInt()
             attachJoint = savefile.ReadJoint()
@@ -394,7 +392,7 @@ object AFEntity {
             }
         }
 
-        override fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3?): impactInfo_s? {
+        override fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3): impactInfo_s {
             return if (body != null) {
                 body.GetImpactInfo(ent, Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint), point)
             } else {
@@ -402,7 +400,7 @@ object AFEntity {
             }
         }
 
-        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3?, impulse: idVec3?) {
+        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3, impulse: idVec3) {
             if (body != null) {
                 body.ApplyImpulse(ent, Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint), point, impulse)
             } else {
@@ -410,7 +408,7 @@ object AFEntity {
             }
         }
 
-        override fun AddForce(ent: idEntity?, id: Int, point: idVec3?, force: idVec3?) {
+        override fun AddForce(ent: idEntity?, id: Int, point: idVec3, force: idVec3) {
             if (body != null) {
                 body.AddForce(ent, Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint), point, force)
             } else {
@@ -428,7 +426,7 @@ object AFEntity {
         override fun Damage(
             inflictor: idEntity?,
             attacker: idEntity?,
-            dir: idVec3?,
+            dir: idVec3,
             damageDefName: String?,
             damageScale: Float,
             location: Int
@@ -438,7 +436,7 @@ object AFEntity {
             }
         }
 
-        override fun AddDamageEffect(collision: trace_s?, velocity: idVec3?, damageDefName: String?) {
+        override fun AddDamageEffect(collision: trace_s?, velocity: idVec3, damageDefName: String?) {
             if (body != null) {
                 val c = trace_s(collision)
                 c.c.id = Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint)
@@ -492,7 +490,7 @@ object AFEntity {
     open class idAFEntity_Base : idAnimatedEntity() {
         companion object {
             // public	CLASS_PROTOTYPE( idAFEntity_Base );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // virtual					~idAFEntity_Base( void );
             fun DropAFs(ent: idEntity?, type: String?, list: idList<idEntity?>?) {
@@ -526,7 +524,7 @@ object AFEntity {
                 }
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -540,7 +538,7 @@ object AFEntity {
         }
 
         protected val spawnOrigin // spawn origin
-                : idVec3?
+                : idVec3
         protected var af // articulated figure
                 : idAF?
         protected var combatModel // render model for hit detection
@@ -549,7 +547,7 @@ object AFEntity {
         protected var nextSoundTime // next time this can make a sound
                 : Int
         protected var spawnAxis // rotation axis used when spawned
-                : idMat3?
+                : idMat3
 
         override fun Spawn() {
             super.Spawn()
@@ -558,7 +556,7 @@ object AFEntity {
             nextSoundTime = 0
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(combatModelContents)
             savefile.WriteClipModel(combatModel)
             savefile.WriteVec3(spawnOrigin)
@@ -567,7 +565,7 @@ object AFEntity {
             af.Save(savefile)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             combatModelContents = savefile.ReadInt()
             savefile.ReadClipModel(combatModel)
             savefile.ReadVec3(spawnOrigin)
@@ -586,7 +584,7 @@ object AFEntity {
             }
         }
 
-        override fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3?): impactInfo_s? {
+        override fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3): impactInfo_s {
             return if (af.IsActive()) {
                 af.GetImpactInfo(ent, id, point)
             } else {
@@ -594,7 +592,7 @@ object AFEntity {
             }
         }
 
-        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3?, impulse: idVec3?) {
+        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3, impulse: idVec3) {
             if (af.IsLoaded()) {
                 af.ApplyImpulse(ent, id, point, impulse)
             }
@@ -603,7 +601,7 @@ object AFEntity {
             }
         }
 
-        override fun AddForce(ent: idEntity?, id: Int, point: idVec3?, force: idVec3?) {
+        override fun AddForce(ent: idEntity?, id: Int, point: idVec3, force: idVec3) {
             if (af.IsLoaded()) {
                 af.AddForce(ent, id, point, force)
             }
@@ -612,7 +610,7 @@ object AFEntity {
             }
         }
 
-        override fun Collide(collision: trace_s?, velocity: idVec3?): Boolean {
+        override fun Collide(collision: trace_s?, velocity: idVec3): Boolean {
             val v: Float
             val f: Float
             if (af.IsActive()) {
@@ -633,7 +631,7 @@ object AFEntity {
             return false
         }
 
-        override fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3): Boolean {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis)
                 return true
@@ -784,11 +782,11 @@ object AFEntity {
             idLib.common.InitTool(Common.EDITOR_AF, spawnArgs)
         }
 
-        protected fun Event_SetConstraintPosition(name: idEventArg<String?>?, pos: idEventArg<idVec3?>?) {
+        protected fun Event_SetConstraintPosition(name: idEventArg<String?>?, pos: idEventArg<idVec3>?) {
             af.SetConstraintPosition(name.value, pos.value)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -807,10 +805,10 @@ object AFEntity {
     open class idAFEntity_Gibbable : idAFEntity_Base() {
         companion object {
             // CLASS_PROTOTYPE( idAFEntity_Gibbable );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // ~idAFEntity_Gibbable( void );
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -834,12 +832,12 @@ object AFEntity {
             gibbed = false
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(gibbed)
             savefile.WriteBool(combatModel != null)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val hasCombatModel = CBool(false)
             val gibbed = CBool(false)
             savefile.ReadBool(gibbed)
@@ -880,7 +878,7 @@ object AFEntity {
         override fun Damage(
             inflictor: idEntity?,
             attacker: idEntity?,
-            dir: idVec3?,
+            dir: idVec3,
             damageDefName: String?,
             damageScale: Float,
             location: Int
@@ -894,7 +892,7 @@ object AFEntity {
             }
         }
 
-        open fun SpawnGibs(dir: idVec3?, damageDefName: String?) {
+        open fun SpawnGibs(dir: idVec3, damageDefName: String?) {
             var i: Int
             val gibNonSolid: Boolean
             val entityCenter = idVec3()
@@ -938,7 +936,7 @@ object AFEntity {
             }
         }
 
-        protected open fun Gib(dir: idVec3?, damageDefName: String?) {
+        protected open fun Gib(dir: idVec3, damageDefName: String?) {
             // only gib once
             if (gibbed) {
                 return
@@ -1020,7 +1018,7 @@ object AFEntity {
             return super.UpdateAnimationControllers()
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1050,10 +1048,10 @@ object AFEntity {
     class idAFEntity_Generic : idAFEntity_Gibbable() {
         companion object {
             // CLASS_PROTOTYPE( idAFEntity_Generic );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // ~idAFEntity_Generic( void );
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1066,7 +1064,7 @@ object AFEntity {
             }
         }
 
-        private val keepRunningPhysics: CBool? = CBool(false)
+        private val keepRunningPhysics: CBool = CBool(false)
         override fun Spawn() {
             super.Spawn()
             if (!LoadAF()) {
@@ -1081,11 +1079,11 @@ object AFEntity {
             fl.takedamage = true
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(keepRunningPhysics.isVal())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadBool(keepRunningPhysics)
         }
 
@@ -1123,7 +1121,7 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1144,8 +1142,8 @@ object AFEntity {
     class idAFEntity_WithAttachedHead : idAFEntity_Gibbable() {
         companion object {
             // CLASS_PROTOTYPE( idAFEntity_WithAttachedHead );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1192,11 +1190,11 @@ object AFEntity {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             head.Save(savefile)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             head.Restore(savefile)
         }
 
@@ -1251,7 +1249,7 @@ object AFEntity {
             LinkCombat()
         }
 
-        override fun ProjectOverlay(origin: idVec3?, dir: idVec3?, size: Float, material: String?) {
+        override fun ProjectOverlay(origin: idVec3, dir: idVec3, size: Float, material: String?) {
             idEntity_ProjectOverlay(origin, dir, size, material)
             if (head.GetEntity() != null) {
                 head.GetEntity().ProjectOverlay(origin, dir, size, material)
@@ -1286,7 +1284,7 @@ object AFEntity {
             headEnt.UnlinkCombat()
         }
 
-        override fun Gib(dir: idVec3?, damageDefName: String?) {
+        override fun Gib(dir: idVec3, damageDefName: String?) {
             // only gib once
             if (gibbed) {
                 return
@@ -1324,7 +1322,7 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1374,8 +1372,8 @@ object AFEntity {
             steeringWheelJoint = animator.GetJointHandle(steeringWheelJointName)
             spawnArgs.GetFloat("wheelRadius", "20", wheel)
             spawnArgs.GetFloat("steerSpeed", "5", steer)
-            wheelRadius = wheel.getVal()
-            steerSpeed = steer.getVal()
+            wheelRadius = wheel._val
+            steerSpeed = steer._val
             player = null
             steerAngle = 0f
             val smokeName = spawnArgs.GetString("smoke_vehicle_dust", "muzzlesmoke")
@@ -1620,7 +1618,7 @@ object AFEntity {
                 "wheelJointRearLeft",
                 "wheelJointRearRight"
             )
-            private val wheelPoly /*[4]*/: Array<idVec3?>? = arrayOf(
+            private val wheelPoly /*[4]*/: Array<idVec3>? = arrayOf(
                 idVec3(2, 2, 0),
                 idVec3(2, -2, 0),
                 idVec3(-2, -2, 0),
@@ -1730,7 +1728,7 @@ object AFEntity {
             var velocity = 0f
             var steerAngle = 0f
             val origin = idVec3()
-            var axis: idMat3? = idMat3()
+            var axis: idMat3 = idMat3()
             val rotation = idRotation()
             if (thinkFlags and Entity.TH_THINK != 0) {
                 if (player != null) {
@@ -1944,7 +1942,7 @@ object AFEntity {
             var velocity = 0f
             var steerAngle = 0f
             val origin = idVec3()
-            var axis: idMat3? = idMat3()
+            var axis: idMat3 = idMat3()
             val rotation = idRotation()
             if (thinkFlags and Entity.TH_THINK != 0) {
                 if (player != null) {
@@ -2120,8 +2118,8 @@ object AFEntity {
             BecomeActive(Entity.TH_THINK)
         }
 
-        override fun Save(savefile: idSaveGame?) {}
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Save(savefile: idSaveGame) {}
+        override fun Restore(savefile: idRestoreGame) {
             Spawn()
         }
 
@@ -2194,8 +2192,8 @@ object AFEntity {
         companion object {
             // public:
             // CLASS_PROTOTYPE( idAFEntity_ClawFourFingers );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2236,7 +2234,7 @@ object AFEntity {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             i = 0
             while (i < 4) {
@@ -2247,7 +2245,7 @@ object AFEntity {
 
         //
         //
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             i = 0
             while (i < 4) {
@@ -2279,7 +2277,7 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

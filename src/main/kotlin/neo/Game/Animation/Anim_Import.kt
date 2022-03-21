@@ -30,7 +30,7 @@ object Anim_Import {
      *
      * *********************************************************************
      */
-    var Maya_Error: idStr? = null
+    val Maya_Error: idStr = idStr()
 
     //
     //    public static exporterInterface_t Maya_ConvertModel = null;
@@ -48,10 +48,10 @@ object Anim_Import {
      */
     class idModelExport {
         //
-        var commandLine: idStr? = null
-        var dest: idStr? = null
+        val commandLine: idStr = idStr()
+        val dest: idStr = idStr()
         var force = false
-        var src: idStr? = null
+        val src: idStr = idStr()
         private fun Reset() {
             force = false
             commandLine.set("")
@@ -60,7 +60,7 @@ object Anim_Import {
         }
 
         @Throws(idException::class)
-        private fun ParseOptions(lex: idLexer?): Boolean {
+        private fun ParseOptions(lex: idLexer): Boolean {
             val token = idToken()
             var destdir = idStr()
             var sourcedir = idStr()
@@ -68,32 +68,32 @@ object Anim_Import {
                 lex.Error("Expected filename")
                 return false
             }
-            src = token
-            dest = token
+            src.set(token)
+            dest.set(token)
             while (lex.ReadToken(token)) {
-                if (token == "-") {
+                if (token.toString() == "-") {
                     if (!lex.ReadToken(token)) {
                         lex.Error("Expecting option")
                         return false
                     }
-                    if (token == "sourcedir") {
+                    if (token.toString() == "sourcedir") {
                         if (!lex.ReadToken(token)) {
                             lex.Error("Missing pathname after -sourcedir")
                             return false
                         }
                         sourcedir = token
-                    } else if (token == "destdir") {
+                    } else if (token.toString() == "destdir") {
                         if (!lex.ReadToken(token)) {
                             lex.Error("Missing pathname after -destdir")
                             return false
                         }
                         destdir = token
-                    } else if (token == "dest") {
+                    } else if (token.toString() == "dest") {
                         if (!lex.ReadToken(token)) {
                             lex.Error("Missing filename after -dest")
                             return false
                         }
-                        dest = token
+                        dest.set(token)
                     } else {
                         commandLine.plusAssign(Str.va(" -%s", token.toString()))
                     }
@@ -114,7 +114,7 @@ object Anim_Import {
             return true
         }
 
-        private fun ParseExportSection(parser: idParser?): Int {
+        private fun ParseExportSection(parser: idParser): Int {
             val command = idToken()
             val token = idToken()
             val defaultCommands = idStr()
@@ -130,7 +130,7 @@ object Anim_Import {
                     return 0
                 }
                 parser.ReadToken(token)
-                if (token.Icmp(SysCvar.g_exportMask.GetString()) != 0) {
+                if (token.Icmp(SysCvar.g_exportMask.GetString()!!) != 0) {
                     parser.SkipBracedSection()
                     return 0
                 }
@@ -147,16 +147,16 @@ object Anim_Import {
                     parser.Error("Unexpoected end-of-file")
                     break
                 }
-                if (command == "}") {
+                if (command.toString() == "}") {
                     break
                 }
-                if (command == "options") {
+                if (command.toString() == "options") {
                     parser.ParseRestOfLine(defaultCommands)
-                } else if (command == "addoptions") {
+                } else if (command.toString() == "addoptions") {
                     parser.ParseRestOfLine(temp)
                     defaultCommands.plusAssign(" ")
                     defaultCommands.plusAssign(temp)
-                } else if (command == "mesh" || command == "anim" || command == "camera") {
+                } else if (command.toString() == "mesh" || command.toString() == "anim" || command.toString() == "camera") {
                     if (!parser.ReadToken(token)) {
                         parser.Error("Expected filename")
                     }
@@ -168,18 +168,18 @@ object Anim_Import {
                     if (parms.Length() != 0) {
                         temp.set(String.format("%s %s", temp, parms))
                     }
-                    lex.LoadMemory(temp, temp.Length(), parser.GetFileName())
+                    lex.LoadMemory(temp, temp.Length(), parser.GetFileName()!!)
                     Reset()
                     if (ParseOptions(lex)) {
                         var game = CVarSystem.cvarSystem.GetCVarString("fs_game")
                         if (game.length == 0) {
                             game = Licensee.BASE_GAMEDIR
                         }
-                        if (command == "mesh") {
+                        if (command.toString() == "mesh") {
                             dest.SetFileExtension(Model.MD5_MESH_EXT)
-                        } else if (command == "anim") {
+                        } else if (command.toString() == "anim") {
                             dest.SetFileExtension(Model.MD5_ANIM_EXT)
-                        } else if (command == "camera") {
+                        } else if (command.toString() == "camera") {
                             dest.SetFileExtension(Model.MD5_CAMERA_EXT)
                         } else {
                             dest.SetFileExtension(command.toString())
@@ -308,7 +308,7 @@ object Anim_Import {
             throw TODO_Exception()
         }
 
-        fun ExportDefFile(filename: String?): Int {
+        fun ExportDefFile(filename: String): Int {
             val parser =
                 idParser(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
             val token = idToken()
@@ -319,7 +319,7 @@ object Anim_Import {
                 return 0
             }
             while (parser.ReadToken(token)) {
-                if (token == "export") {
+                if (token.toString() == "export") {
                     count += ParseExportSection(parser)
                 } else {
                     parser.ReadToken(token)
@@ -329,7 +329,7 @@ object Anim_Import {
             return count
         }
 
-        fun ExportModel(model: String?): Boolean {
+        fun ExportModel(model: String): Boolean {
             var game = CVarSystem.cvarSystem.GetCVarString("fs_game")
             if (TempDump.isNotNullOrEmpty(game)) {
                 game = Licensee.BASE_GAMEDIR
@@ -346,7 +346,7 @@ object Anim_Import {
             return true
         }
 
-        fun ExportAnim(anim: String?): Boolean {
+        fun ExportAnim(anim: String): Boolean {
             var game = CVarSystem.cvarSystem.GetCVarString("fs_game")
             if (TempDump.isNotNullOrEmpty(game)) {
                 game = Licensee.BASE_GAMEDIR
@@ -363,11 +363,11 @@ object Anim_Import {
             return true
         }
 
-        fun ExportModels(pathname: String?, extension: String?): Int {
+        fun ExportModels(pathname: String, extension: String): Int {
             var count: Int
 
 //	count = 0;
-            val files: idFileList?
+            val files: idFileList
             var i: Int
             if (!CheckMayaInstall()) {
                 // if Maya isn't installed, don't bother checking if we have anims to export

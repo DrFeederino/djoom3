@@ -54,7 +54,7 @@ import java.util.stream.Stream
  */
 object AF {
     //
-    val ARTICULATED_FIGURE_ANIM: String? = "af_pose"
+    val ARTICULATED_FIGURE_ANIM: String = "af_pose"
     const val POSE_BOUNDS_EXPANSION = 5.0f
 
     /*
@@ -65,15 +65,15 @@ object AF {
      ===============================================================================
      */
     class jointConversion_s {
-        val jointBodyOrigin: idVec3? = idVec3() // origin of body relative to joint
+        val jointBodyOrigin: idVec3 = idVec3() // origin of body relative to joint
         var bodyId // id of the body
                 = 0
-        var jointBodyAxis // axis of body relative to joint
-                : idMat3? = null
+        val jointBodyAxis // axis of body relative to joint
+                : idMat3 = idMat3()
         var   /*jointHandle_t*/jointHandle // handle of joint this body modifies
                 = 0
         var jointMod // modify joint axis, origin or both
-                : AFJointModType_t? = null
+                : AFJointModType_t = AFJointModType_t.AF_JOINTMOD_AXIS
     }
 
     class afTouch_s {
@@ -85,11 +85,11 @@ object AF {
     //
     class idAF {
         protected val baseOrigin // offset of base body relative to skeletal model origin
-                : idVec3?
+                : idVec3
         protected var animator // animator on entity
                 : idAnimator?
         protected var baseAxis // axis of base body relative to skeletal model origin
-                : idMat3?
+                : idMat3
         protected var hasBindConstraints // true if the bind constraints have been added
                 : Boolean
         protected var isActive // true if the articulated figure physics is active
@@ -116,7 +116,7 @@ object AF {
         protected var self // entity using the animated model
                 : idEntity?
 
-        fun Save(savefile: idSaveGame?) {
+        fun Save(savefile: idSaveGame) {
             savefile.WriteObject(self)
             savefile.WriteString(GetName())
             savefile.WriteBool(hasBindConstraints)
@@ -129,7 +129,7 @@ object AF {
             savefile.WriteStaticObject(physicsObj)
         }
 
-        fun Restore(savefile: idRestoreGame?) {
+        fun Restore(savefile: idRestoreGame) {
             savefile.ReadObject(self)
             savefile.ReadString(name)
             hasBindConstraints = savefile.ReadBool()
@@ -257,7 +257,7 @@ object AF {
 
             // initialize articulated figure physics
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
-            physicsObj.SetClipMask(file.clipMask.getVal())
+            physicsObj.SetClipMask(file.clipMask._val)
             physicsObj.SetDefaultFriction(
                 file.defaultLinearFriction,
                 file.defaultAngularFriction,
@@ -610,7 +610,7 @@ object AF {
          Only moves constraints that bind the entity to another entity.
          ================
          */
-        fun SetConstraintPosition(name: String?, pos: idVec3?) {
+        fun SetConstraintPosition(name: String?, pos: idVec3) {
             val constraint: idAFConstraint?
             constraint = GetPhysics().GetConstraint(name)
             if (null == constraint) {
@@ -651,13 +651,13 @@ object AF {
          returns bounds for the current pose
          ================
          */
-        fun GetBounds(): idBounds? {
+        fun GetBounds(): idBounds {
             var i: Int
             var body: idAFBody?
             val origin = idVec3()
             val entityOrigin = idVec3()
-            var axis: idMat3?
-            val entityAxis: idMat3?
+            var axis: idMat3
+            val entityAxis: idMat3
             val bounds = idBounds()
             val b = idBounds()
             bounds.Clear()
@@ -686,9 +686,9 @@ object AF {
             val origin = idVec3()
             val renderOrigin = idVec3()
             val bodyOrigin = idVec3()
-            var axis: idMat3?
-            val renderAxis: idMat3?
-            var bodyAxis: idMat3?
+            var axis: idMat3
+            val renderAxis: idMat3
+            var bodyAxis: idMat3
             val renderEntity: renderEntity_s?
             if (!IsLoaded()) {
                 return false
@@ -738,22 +738,22 @@ object AF {
             return true
         }
 
-        fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?) {
+        fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3) {
             origin.set(baseOrigin.oNegative())
             axis.set(baseAxis.Transpose())
         }
 
-        fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3?): impactInfo_s? {
+        fun GetImpactInfo(ent: idEntity?, id: Int, point: idVec3): impactInfo_s {
             SetupPose(self, Game_local.gameLocal.time)
             return physicsObj.GetImpactInfo(BodyForClipModelId(id), point)
         }
 
-        fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3?, impulse: idVec3?) {
+        fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3, impulse: idVec3) {
             SetupPose(self, Game_local.gameLocal.time)
             physicsObj.ApplyImpulse(BodyForClipModelId(id), point, impulse)
         }
 
-        fun AddForce(ent: idEntity?, id: Int, point: idVec3?, force: idVec3?) {
+        fun AddForce(ent: idEntity?, id: Int, point: idVec3, force: idVec3) {
             SetupPose(self, Game_local.gameLocal.time)
             physicsObj.AddForce(BodyForClipModelId(id), point, force)
         }
@@ -831,8 +831,8 @@ object AF {
             val jointName = idToken()
             val origin = idVec3()
             val renderOrigin = idVec3()
-            val axis: idMat3?
-            val renderAxis: idMat3?
+            val axis: idMat3
+            val renderAxis: idMat3
             if (!IsLoaded()) {
                 return
             }
@@ -957,7 +957,7 @@ object AF {
             val index: Int
             val   /*jointHandle_t*/handle: Int
             val origin = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             handle = animator.GetJointHandle(jointName)
             if (handle == Model.INVALID_JOINT) {
                 idGameLocal.Companion.Error(
@@ -989,7 +989,7 @@ object AF {
             val trm = idTraceModel()
             var clip: idClipModel
             var body: idAFBody?
-            val axis: idMat3?
+            val axis: idMat3
             val inertiaTensor = idMat3()
             val centerOfMass = idVec3()
             val origin = idVec3()
@@ -1040,18 +1040,18 @@ object AF {
                 clip = body.GetClipModel()
                 if (!clip.IsEqual(trm)) {
                     clip = idClipModel(trm)
-                    clip.SetContents(fb.contents.getVal())
+                    clip.SetContents(fb.contents._val)
                     clip.Link(Game_local.gameLocal.clip, self, 0, origin, axis)
                     body.SetClipModel(clip)
                 }
-                clip.SetContents(fb.contents.getVal())
+                clip.SetContents(fb.contents._val)
                 body.SetDensity(fb.density, fb.inertiaScale)
                 body.SetWorldOrigin(origin)
                 body.SetWorldAxis(axis)
                 id = physicsObj.GetBodyId(body)
             } else {
                 clip = idClipModel(trm)
-                clip.SetContents(fb.contents.getVal())
+                clip.SetContents(fb.contents._val)
                 clip.Link(Game_local.gameLocal.clip, self, 0, origin, axis)
                 body = idAFBody(fb.name, clip, fb.density)
                 if (fb.inertiaScale != idMat3.Companion.getMat3_identity()) {
@@ -1062,7 +1062,7 @@ object AF {
             if (fb.linearFriction != -1.0f) {
                 body.SetFriction(fb.linearFriction, fb.angularFriction, fb.contactFriction)
             }
-            body.SetClipMask(fb.clipMask.getVal())
+            body.SetClipMask(fb.clipMask._val)
             body.SetSelfCollision(fb.selfCollision)
             if (fb.jointName.toString() == "origin") {
                 SetBase(body, joints)
@@ -1331,15 +1331,15 @@ object AF {
             model: Any?,
             frame: Array<idJointMat?>?,
             jointName: String?,
-            origin: idVec3?,
-            axis: idMat3?
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             val   /*jointHandle_t*/joint: Int
 
 //	joint = reinterpret_cast<idAnimator *>(model).GetJointHandle( jointName );
             joint = (model as idAnimator?).GetJointHandle(jointName)
             //	if ( ( joint >= 0 ) && ( joint < reinterpret_cast<idAnimator *>(model).NumJoints() ) ) {
-            return if (joint >= 0 && joint < (model as idAnimator?).NumJoints()) {
+            return if (joint >= 0 && joint < model.NumJoints()) {
                 origin.set(frame.get(joint).ToVec3())
                 axis.set(frame.get(joint).ToMat3())
                 true
@@ -1352,8 +1352,8 @@ object AF {
             model: Any?,
             frame: Array<idJointMat?>?,
             jointName: idStr?,
-            origin: idVec3?,
-            axis: idMat3?
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             return run(model, frame, jointName.toString(), origin, axis)
         }

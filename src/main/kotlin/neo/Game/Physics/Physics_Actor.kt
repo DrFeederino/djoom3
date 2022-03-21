@@ -34,11 +34,11 @@ class Physics_Actor {
         protected var clipModel // clip model used for collision detection
                 : idClipModel? = null
         protected var clipModelAxis // axis of clip model aligned with gravity direction
-                : idMat3
+                : idMat3 = idMat3()
 
         //
         // results of last evaluate
-        protected val groundEntityPtr: idEntityPtr<idEntity?>?
+        protected val groundEntityPtr: idEntityPtr<idEntity?>
         protected var invMass: Float
 
         //
@@ -53,12 +53,12 @@ class Physics_Actor {
 
         // ~idPhysics_Actor();
         override fun _deconstructor() {
-            idClipModel.Companion.delete(clipModel)
+            idClipModel.delete(clipModel!!)
             clipModel = null
             super._deconstructor()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteClipModel(clipModel)
             savefile.WriteMat3(clipModelAxis)
             savefile.WriteFloat(mass)
@@ -69,7 +69,7 @@ class Physics_Actor {
             groundEntityPtr.Save(savefile)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadClipModel(clipModel)
             savefile.ReadMat3(clipModelAxis)
             mass = savefile.ReadFloat()
@@ -93,20 +93,20 @@ class Physics_Actor {
         // align the clip model with the gravity direction
         fun SetClipModelAxis() {
             // align clip model to gravity direction
-            if (gravityNormal.get(2) == -1.0f || gravityNormal == Vector.getVec3_zero()) {
+            if (gravityNormal[2] == -1.0f || gravityNormal == Vector.getVec3_zero()) {
                 clipModelAxis.Identity()
             } else {
-                clipModelAxis.set(2, gravityNormal.oNegative())
-                clipModelAxis.get(2).NormalVectors(clipModelAxis.get(0), clipModelAxis.get(1))
-                clipModelAxis.set(1, clipModelAxis.get(1).oNegative())
+                clipModelAxis[2] = gravityNormal.unaryMinus()
+                clipModelAxis[2].NormalVectors(clipModelAxis[0], clipModelAxis[1])
+                clipModelAxis[1] = clipModelAxis[1].unaryMinus()
             }
             if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, clipModel.GetOrigin(), clipModelAxis)
+                clipModel!!.Link(Game_local.gameLocal.clip, self, 0, clipModel!!.GetOrigin(), clipModelAxis)
             }
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             assert(
                 model != null // a clip model is required
@@ -118,10 +118,10 @@ class Physics_Actor {
                 density > 0.0f // density should be valid
             )
             if (clipModel != null && clipModel !== model && freeOld) {
-                idClipModel.Companion.delete(clipModel)
+                idClipModel.delete(clipModel!!)
             }
             clipModel = model
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, clipModel.GetOrigin(), clipModelAxis)
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, clipModel!!.GetOrigin(), clipModelAxis)
         }
 
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
@@ -143,34 +143,34 @@ class Physics_Actor {
         }
 
         override fun SetContents(contents: Int, id: Int /*= -1*/) {
-            clipModel.SetContents(contents)
+            clipModel!!.SetContents(contents)
         }
 
         override fun GetContents(id: Int /*= -1*/): Int {
-            return clipModel.GetContents()
+            return clipModel!!.GetContents()
         }
 
-        override fun GetBounds(id: Int /*= -1*/): idBounds? {
-            return clipModel.GetBounds()
+        override fun GetBounds(id: Int /*= -1*/): idBounds {
+            return clipModel!!.GetBounds()
         }
 
-        override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
-            return clipModel.GetAbsBounds()
+        override fun GetAbsBounds(id: Int /*= -1*/): idBounds {
+            return clipModel!!.GetAbsBounds()
         }
 
         override fun IsPushable(): Boolean {
             return masterEntity == null
         }
 
-        override fun GetOrigin(id: Int /*= 0*/): idVec3? {
-            return clipModel.GetOrigin()
+        override fun GetOrigin(id: Int /*= 0*/): idVec3 {
+            return clipModel!!.GetOrigin()
         }
 
-        override fun GetAxis(id: Int /*= 0*/): idMat3? {
-            return clipModel.GetAxis()
+        override fun GetAxis(id: Int /*= 0*/): idMat3 {
+            return clipModel!!.GetAxis()
         }
 
-        override fun SetGravity(newGravity: idVec3?) {
+        override fun SetGravity(newGravity: idVec3) {
             if (newGravity != gravityVector) {
                 super.SetGravity(newGravity)
                 SetClipModelAxis()
@@ -181,30 +181,30 @@ class Physics_Actor {
             return clipModelAxis
         }
 
-        override fun ClipTranslation(results: trace_s?, translation: idVec3?, model: idClipModel?) {
+        override fun ClipTranslation(results: trace_s, translation: idVec3, model: idClipModel?) {
             if (model != null) {
                 Game_local.gameLocal.clip.TranslationModel(
-                    results, clipModel.GetOrigin(), clipModel.GetOrigin().oPlus(translation),
-                    clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis()
+                    results, clipModel!!.GetOrigin(), clipModel!!.GetOrigin() + translation,
+                    clipModel, clipModel!!.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis()
                 )
             } else {
                 Game_local.gameLocal.clip.Translation(
-                    results, clipModel.GetOrigin(), clipModel.GetOrigin().oPlus(translation),
-                    clipModel, clipModel.GetAxis(), clipMask, self
+                    results, clipModel!!.GetOrigin(), clipModel!!.GetOrigin() + translation,
+                    clipModel, clipModel!!.GetAxis(), clipMask, self
                 )
             }
         }
 
-        override fun ClipRotation(results: trace_s?, rotation: idRotation?, model: idClipModel?) {
+        override fun ClipRotation(results: trace_s, rotation: idRotation, model: idClipModel?) {
             if (model != null) {
                 Game_local.gameLocal.clip.RotationModel(
-                    results, clipModel.GetOrigin(), rotation,
-                    clipModel, clipModel.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis()
+                    results, clipModel!!.GetOrigin(), rotation,
+                    clipModel, clipModel!!.GetAxis(), clipMask, model.Handle(), model.GetOrigin(), model.GetAxis()
                 )
             } else {
                 Game_local.gameLocal.clip.Rotation(
-                    results, clipModel.GetOrigin(), rotation,
-                    clipModel, clipModel.GetAxis(), clipMask, self
+                    results, clipModel!!.GetOrigin(), rotation,
+                    clipModel, clipModel!!.GetAxis(), clipMask, self
                 )
             }
         }
@@ -212,40 +212,40 @@ class Physics_Actor {
         override fun ClipContents(model: idClipModel?): Int {
             return if (model != null) {
                 Game_local.gameLocal.clip.ContentsModel(
-                    clipModel.GetOrigin(),
+                    clipModel!!.GetOrigin(),
                     clipModel,
-                    clipModel.GetAxis(),
+                    clipModel!!.GetAxis(),
                     -1,
                     model.Handle(),
                     model.GetOrigin(),
                     model.GetAxis()
                 )
             } else {
-                Game_local.gameLocal.clip.Contents(clipModel.GetOrigin(), clipModel, clipModel.GetAxis(), -1, null)
+                Game_local.gameLocal.clip.Contents(clipModel!!.GetOrigin(), clipModel, clipModel!!.GetAxis(), -1, null)
             }
         }
 
         override fun DisableClip() {
-            clipModel.Disable()
+            clipModel!!.Disable()
         }
 
         override fun EnableClip() {
-            clipModel.Enable()
+            clipModel!!.Enable()
         }
 
         override fun UnlinkClip() {
-            clipModel.Unlink()
+            clipModel!!.Unlink()
         }
 
         override fun LinkClip() {
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, clipModel.GetOrigin(), clipModel.GetAxis())
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, clipModel!!.GetOrigin(), clipModel!!.GetAxis())
         }
 
         override fun EvaluateContacts(): Boolean {
 
             // get all the ground contacts
             ClearContacts()
-            AddGroundContacts(clipModel)
+            AddGroundContacts(clipModel!!)
             AddContactEntitiesForContacts()
             return contacts.Num() != 0
         }
@@ -253,7 +253,6 @@ class Physics_Actor {
         //
         //
         init {
-            clipModelAxis = idMat3()
             SetClipModelAxis()
             mass = 100.0f
             invMass = 1.0f / mass

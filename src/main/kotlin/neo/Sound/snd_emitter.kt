@@ -48,7 +48,7 @@ object snd_emitter {
      ===============================================================================
      */
     // sound channels
-    public const val SCHANNEL_ANY = 0 // used in queries and commands to effect every channel at once, in
+    const val SCHANNEL_ANY = 0 // used in queries and commands to effect every channel at once, in
 
     // startSound to have it not override any other channel
     const val SCHANNEL_ONE = 1 // any following integer can be used as a channel number
@@ -275,7 +275,7 @@ object snd_emitter {
 
 //            src = in + 2;
 //            spline = out + 2;
-            slowmoSpeed = sw?.slowmoSpeed ?: 1f
+            slowmoSpeed = sw.slowmoSpeed
             neededSamples = (sampleCount44k * slowmoSpeed + 4).toInt()
             orgTime = playPos.time
 
@@ -807,7 +807,7 @@ object snd_emitter {
                     val chan = channels[i]
                     if (chan.triggerState && chan.soundShader != null && chan.triggerChannel == channel) {
                         if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
-                            Common.common.Printf("(override %s)", chan.soundShader!!.base!!.GetName())
+                            Common.common.Printf("(override %s)", chan.soundShader!!.base.GetName())
                         }
                         chan.Stop()
 

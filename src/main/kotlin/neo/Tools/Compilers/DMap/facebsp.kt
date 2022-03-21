@@ -39,9 +39,9 @@ object facebsp {
             val plane = dmap.dmapGlobals.mapPlanes[node.planenum]
             d = plane.Distance(origin)
             node = if (d >= 0) {
-                node.children[0]!!
+                node.children[0]
             } else {
-                node.children[1]!!
+                node.children[1]
             }
         }
         return node
@@ -59,8 +59,8 @@ object facebsp {
 
         // free children
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            FreeTreePortals_r(node.children[0]!!)
-            FreeTreePortals_r(node.children[1]!!)
+            FreeTreePortals_r(node.children[0])
+            FreeTreePortals_r(node.children[1])
         }
 
         // free portals
@@ -83,8 +83,8 @@ object facebsp {
     fun FreeTree_r(node: node_s) {
         // free children
         if (node.planenum != dmap.PLANENUM_LEAF) {
-            FreeTree_r(node.children[0]!!)
-            FreeTree_r(node.children[1]!!)
+            FreeTree_r(node.children[0])
+            FreeTree_r(node.children[1])
         }
 
         // free brushes
@@ -136,8 +136,8 @@ object facebsp {
             "#%d (%5.2f %5.2f %5.2f %5.2f)\n", node.planenum,
             plane[0], plane[1], plane[2], plane[3]
         )
-        PrintTree_r(node.children[0]!!, depth + 1)
-        PrintTree_r(node.children[1]!!, depth + 1)
+        PrintTree_r(node.children[0], depth + 1)
+        PrintTree_r(node.children[1], depth + 1)
     }
 
     /*
@@ -341,8 +341,8 @@ object facebsp {
         i = 0
         while (i < 2) {
             node.children[i] = ubrush.AllocNode()
-            node.children[i]!!.parent = node
-            node.children[i]!!.bounds.set(node.bounds)
+            node.children[i].parent = node
+            node.children[i].bounds.set(node.bounds)
             i++
         }
 
@@ -350,15 +350,15 @@ object facebsp {
         i = 0
         while (i < 3) {
             if (abs(plane[i] - 1.0f) < 0.001) {
-                node.children[0]!!.bounds[0, i] = plane.Dist()
-                node.children[1]!!.bounds[1, i] = plane.Dist()
+                node.children[0].bounds[0, i] = plane.Dist()
+                node.children[1].bounds[1, i] = plane.Dist()
                 break
             }
             i++
         }
         i = 0
         while (i < 2) {
-            BuildFaceTree_r(node.children[i]!!, childLists[i]!!)
+            BuildFaceTree_r(node.children[i], childLists[i]!!)
             i++
         }
     }

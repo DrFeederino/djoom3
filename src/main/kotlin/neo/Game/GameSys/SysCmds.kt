@@ -63,17 +63,15 @@ import java.util.stream.Stream
  */
 object SysCmds {
     const val MAX_DEBUGLINES = 128
-    var debugLines = Stream.generate { gameDebugLine_t() }.limit(SysCmds.MAX_DEBUGLINES.toLong())
-        .toArray<gameDebugLine_t?> { _Dummy_.__Array__() }
+    var debugLines = Array(MAX_DEBUGLINES) { gameDebugLine_t() }
 
     /*
      ==================
      Cmd_GetFloatArg
      ==================
      */
-    fun Cmd_GetFloatArg(args: CmdArgs.idCmdArgs?, argNum: IntArray?): Float {
-        val value: String?
-        value = args.Argv(argNum.get(0)++)
+    fun Cmd_GetFloatArg(args: CmdArgs.idCmdArgs, argNum: IntArray): Float {
+        val value: String = args.Argv(argNum[0]++)
         return value.toFloat()
     }
 
@@ -285,8 +283,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_EntityList_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_EntityList_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -322,8 +320,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ActiveEntityList_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ActiveEntityList_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -355,8 +353,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ListSpawnArgs_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ListSpawnArgs_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -380,8 +378,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ReloadScript_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ReloadScript_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -422,9 +420,9 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Script_f()
+            private val instance: cmdFunction_t = Cmd_Script_f()
             private var funcCount = 0
-            fun getInstance(): cmdFunction_t? {
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -446,8 +444,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_KillMonsters_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_KillMonsters_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -469,8 +467,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_KillMovables_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_KillMovables_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -493,8 +491,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_KillRagdolls_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_KillRagdolls_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -596,8 +594,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Give_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Give_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -624,8 +622,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_CenterView_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_CenterView_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -659,8 +657,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_God_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_God_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -694,8 +692,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Notarget_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Notarget_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -726,8 +724,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Noclip_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Noclip_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -774,8 +772,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Kill_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Kill_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -808,8 +806,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_PlayerModel_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_PlayerModel_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -826,8 +824,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Say_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Say_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -844,8 +842,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SayTeam_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SayTeam_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -862,8 +860,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_AddChatLine_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_AddChatLine_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -933,8 +931,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_GetViewpos_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_GetViewpos_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -973,8 +971,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SetViewpos_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SetViewpos_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1011,8 +1009,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Teleport_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Teleport_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1048,8 +1046,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Trigger_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Trigger_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1097,8 +1095,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Spawn_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Spawn_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1136,8 +1134,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Damage_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Damage_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1169,8 +1167,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_Remove_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_Remove_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1231,8 +1229,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestLight_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestLight_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1284,8 +1282,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestPointLight_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestPointLight_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1317,7 +1315,7 @@ object SysCmds {
                 }
                 if (Game_local.gameLocal.spawnIds[ent.entityNumber] > last) {
                     last = Game_local.gameLocal.spawnIds[ent.entityNumber]
-                    lastLight = ent as idLight?
+                    lastLight = ent
                 }
                 ent = ent.spawnNode.Next()
             }
@@ -1335,8 +1333,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_PopLight_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_PopLight_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1363,7 +1361,7 @@ object SysCmds {
                     ent = next
                     continue
                 }
-                light = ent as idLight?
+                light = ent
                 mapEnt = mapFile.FindEntity(light.name.toString())
                 if (removeFromMap && mapEnt != null) {
                     mapFile.RemoveEntity(mapEnt)
@@ -1373,8 +1371,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ClearLights_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ClearLights_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1414,8 +1412,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestFx_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestFx_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1425,8 +1423,8 @@ object SysCmds {
         var arrow = false
         var blink = false
         var color = 0
-        val start: idVec3? = idVec3()
-        val end: idVec3? = idVec3()
+        val start: idVec3 = idVec3()
+        val end: idVec3 = idVec3()
         var used = false
     }
 
@@ -1473,8 +1471,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_AddDebugLine_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_AddDebugLine_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1516,8 +1514,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_RemoveDebugLine_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_RemoveDebugLine_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1559,8 +1557,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_BlinkDebugLine_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_BlinkDebugLine_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1606,8 +1604,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ListDebugLines_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ListDebugLines_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1627,8 +1625,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ListCollisionModels_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ListCollisionModels_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1664,8 +1662,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_CollisionModelInfo_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_CollisionModelInfo_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1697,8 +1695,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ExportModels_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ExportModels_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1732,8 +1730,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ReexportModels_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ReexportModels_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1755,8 +1753,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ReloadAnims_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ReloadAnims_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1813,8 +1811,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_ListAnims_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ListAnims_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1841,8 +1839,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_AASStats_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_AASStats_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1872,7 +1870,7 @@ object SysCmds {
                 val d1 = CFloat()
                 val d0 = CFloat()
                 idMath.SinCos(Math_h.DEG2RAD(angle), d1, d0)
-                dir.set(idVec3(d0.getVal(), d1.getVal(), 0))
+                dir.set(idVec3(d0._val, d1._val, 0))
             } else {
                 dir.set(idVec3())
                 //            dir.Zero();
@@ -1886,8 +1884,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestDamage_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestDamage_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1917,8 +1915,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestBoneFx_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestBoneFx_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1940,7 +1938,7 @@ object SysCmds {
             val d1 = CFloat()
             val d0 = CFloat()
             idMath.SinCos(Math_h.DEG2RAD(45.0f), d1, d0)
-            dir.set(idVec3(d0.getVal(), d1.getVal(), 0))
+            dir.set(idVec3(d0._val, d1._val, 0))
             SysCvar.g_testDeath.SetBool(true)
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, Model.INVALID_JOINT)
             if (args.Argc() >= 2) {
@@ -1949,8 +1947,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestDeath_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestDeath_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1972,8 +1970,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_WeaponSplat_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_WeaponSplat_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2044,8 +2042,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SaveSelected_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SaveSelected_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2069,8 +2067,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_DeleteSelected_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_DeleteSelected_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2163,8 +2161,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SaveMoveables_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SaveMoveables_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2246,8 +2244,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SaveRagdolls_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SaveRagdolls_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2271,8 +2269,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_BindRagdoll_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_BindRagdoll_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2296,8 +2294,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_UnbindRagdoll_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_UnbindRagdoll_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2314,8 +2312,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_GameError_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_GameError_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2383,8 +2381,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SaveLights_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SaveLights_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2444,8 +2442,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_SaveParticles_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_SaveParticles_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2462,8 +2460,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_DisasmScript_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_DisasmScript_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2483,8 +2481,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestSave_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestSave_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2531,8 +2529,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_RecordViewNotes_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_RecordViewNotes_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2551,8 +2549,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_CloseViewNotes_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_CloseViewNotes_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2605,8 +2603,8 @@ object SysCmds {
         companion object {
             val parser: idLexer? =
                 idLexer(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOFATALERRORS)
-            private val instance: cmdFunction_t? = Cmd_ShowViewNotes_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_ShowViewNotes_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -2652,7 +2650,7 @@ object SysCmds {
             if (ent == null) {
                 newEnt = true
             } else if (FindEntityGUIs(ent, surfaces, RenderWorld.MAX_RENDERENTITY_GUI, guiSurfaces) == true) {
-                if (Game_local.gameLocal.lastGUI >= guiSurfaces.getVal()) {
+                if (Game_local.gameLocal.lastGUI >= guiSurfaces._val) {
                     newEnt = true
                 }
             } else {
@@ -2691,7 +2689,7 @@ object SysCmds {
             if (FindEntityGUIs(ent, surfaces, RenderWorld.MAX_RENDERENTITY_GUI, guiSurfaces) == false) {
                 Game_local.gameLocal.Printf("Entity \"%s\" has gui properties but no gui surfaces.\n", ent.name)
             }
-            if (guiSurfaces.getVal() == 0) {
+            if (guiSurfaces._val == 0) {
                 Game_local.gameLocal.Printf("Entity \"%s\" has gui properties but no gui surfaces!\n", ent.name)
                 return
             }
@@ -2733,7 +2731,7 @@ object SysCmds {
             ent: idEntity?,
             surfaces: Array<modelSurface_s?>?,
             maxSurfs: Int,
-            guiSurfaces: CInt?
+            guiSurfaces: CInt
         ): Boolean {
             val renderEnt: renderEntity_s?
             val renderModel: idRenderModel?
@@ -2765,25 +2763,25 @@ object SysCmds {
                 }
                 i++
             }
-            return guiSurfaces.getVal() != 0
+            return guiSurfaces._val != 0
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_NextGUI_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_NextGUI_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
     }
 
     class ArgCompletion_DefFile private constructor() : CmdSystem.argCompletion_t() {
-        override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+        override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
             CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "def/", true, ".def", null)
         }
 
         companion object {
-            private val instance: CmdSystem.argCompletion_t? = ArgCompletion_DefFile()
-            fun getInstance(): CmdSystem.argCompletion_t? {
+            private val instance: CmdSystem.argCompletion_t = ArgCompletion_DefFile()
+            fun getInstance(): CmdSystem.argCompletion_t {
                 return instance
             }
         }
@@ -2796,8 +2794,8 @@ object SysCmds {
      ===============
      */
     class Cmd_TestId_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            var id: String? = ""
+        override fun run(args: CmdArgs.idCmdArgs) {
+            var id: String = ""
             var i: Int
             if (args.Argc() == 1) {
                 Common.common.Printf("usage: testid <string id>\n")
@@ -2820,8 +2818,8 @@ object SysCmds {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = Cmd_TestId_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = Cmd_TestId_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

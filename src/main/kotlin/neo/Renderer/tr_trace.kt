@@ -26,11 +26,11 @@ object tr_trace {
      If we resort the vertexes so all silverts come first, we can save some work here.
      =================
      */
-    fun R_LocalTrace(start: idVec3?, end: idVec3?, radius: Float, tri: srfTriangles_s?): localTrace_t? {
+    fun R_LocalTrace(start: idVec3, end: idVec3, radius: Float, tri: srfTriangles_s?): localTrace_t? {
         var i: Int
         var j: Int
         val cullBits: ByteArray
-        val planes: Array<idPlane?> = idPlane.Companion.generateArray(4)
+        val planes: Array<idPlane> = idPlane.Companion.generateArray(4)
         val hit = localTrace_t()
         var c_testEdges: Int
         var c_testPlanes: Int
@@ -91,9 +91,9 @@ object tr_trace {
             var f: Float
             var d: Float
             var edgeLengthSqr: Float
-            var plane: idPlane?
+            var plane: idPlane
             val point = idVec3()
-            val dir: Array<idVec3?> = idVec3.Companion.generateArray(3)
+            val dir: Array<idVec3> = idVec3.Companion.generateArray(3)
             val cross = idVec3()
             val edge = idVec3()
             var triOr: Byte
@@ -297,11 +297,11 @@ object tr_trace {
      RB_DrawExpandedTriangles
      =================
      */
-    fun RB_DrawExpandedTriangles(tri: srfTriangles_s?, radius: Float, vieworg: idVec3?) {
+    fun RB_DrawExpandedTriangles(tri: srfTriangles_s?, radius: Float, vieworg: idVec3) {
         var i: Int
         var j: Int
         var k: Int
-        val dir: Array<idVec3?> = idVec3.Companion.generateArray(6)
+        val dir: Array<idVec3> = idVec3.Companion.generateArray(6)
         val normal = idVec3()
         val point = idVec3()
         i = 0

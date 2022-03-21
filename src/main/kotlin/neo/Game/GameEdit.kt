@@ -53,7 +53,7 @@ object GameEdit {
     const val MAX_DRAG_TRACE_DISTANCE = 2048.0f
     private val gameEditLocal: idGameEdit = idGameEdit()
     val gameEdit = GameEdit.gameEditLocal
-    private fun sscanf(key: idStr?, pattern: String?): Int {
+    private fun sscanf(key: idStr, pattern: String): Int {
         var pattern = pattern
         var a = -1
         val result: String
@@ -79,10 +79,10 @@ object GameEdit {
     class idCursor3D : idEntity() {
         //
         //
-        var drag: idForce_Drag? = null
+        var drag: idForce_Drag = idForce_Drag()
 
         //~idCursor3D( void );
-        val draggedPosition: idVec3? = idVec3()
+        val draggedPosition: idVec3 = idVec3()
 
         override fun Present() {
             // don't present to the renderer if the entity hasn't changed
@@ -93,12 +93,12 @@ object GameEdit {
             val origin = GetPhysics().GetOrigin()
             val axis = GetPhysics().GetAxis()
             Game_local.gameRenderWorld.DebugArrow(
-                Lib.Companion.colorYellow,
-                origin.oPlus(axis.get(1).times(-5.0f).oPlus(axis.get(2).times(5.0f))),
+                Lib.colorYellow,
+                origin + (axis[1] * -5.0f + axis[2] * 5.0f),
                 origin,
                 2
             )
-            Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorRed, origin, draggedPosition, 2)
+            Game_local.gameRenderWorld.DebugArrow(Lib.colorRed, origin, draggedPosition, 2)
         }
 
         override fun Think() {
@@ -115,22 +115,22 @@ object GameEdit {
     }
 
     class idDragEntity {
-        private var bodyName // name of the body being dragged
-                : idStr?
+        private val bodyName // name of the body being dragged
+                : idStr
         private var cursor // cursor entity
                 : idCursor3D? = null
         private val dragEnt // entity being dragged
-                : idEntityPtr<idEntity?>?
+                : idEntityPtr<idEntity?>
         private var id // id of body being dragged
                 = 0
         private var   /*jointHandle_t*/joint // joint being dragged
                 = 0
         private val localEntityPoint // dragged point in entity space
-                : idVec3?
+                : idVec3
         private val localPlayerPoint // dragged point in player space
-                : idVec3?
+                : idVec3
         private val selected // last dragged entity
-                : idEntityPtr<idEntity?>?
+                : idEntityPtr<idEntity?>
 
         // ~idDragEntity( void );
         fun Clear() {
@@ -143,7 +143,7 @@ object GameEdit {
             selected.oSet(null)
         }
 
-        fun Update(player: idPlayer?) {
+        fun Update(player: idPlayer) {
             val viewPoint = idVec3()
             val origin = idVec3()
             val viewAxis = idMat3()
@@ -157,11 +157,11 @@ object GameEdit {
 
             // if no entity selected for dragging
             if (TempDump.NOT(dragEnt.GetEntity())) {
-                if (player.usercmd.buttons and UsercmdGen.BUTTON_ATTACK != 0) {
+                if (player.usercmd.buttons.toInt() and UsercmdGen.BUTTON_ATTACK != 0) {
                     Game_local.gameLocal.clip.TracePoint(
                         trace,
                         viewPoint,
-                        viewPoint.oPlus(viewAxis.get(0).times(GameEdit.MAX_DRAG_TRACE_DISTANCE)),
+                        viewPoint + viewAxis[0] * GameEdit.MAX_DRAG_TRACE_DISTANCE,
                         Material.CONTENTS_SOLID or Material.CONTENTS_RENDERMODEL or Material.CONTENTS_BODY,
                         player
                     )
@@ -247,7 +247,7 @@ object GameEdit {
                             drag.GetType().name,
                             dragAnimator.GetJointName(joint),
                             bodyName
-                        ), cursor.GetPhysics().GetOrigin(), 0.1f, Lib.Companion.colorWhite, viewAxis, 1
+                        ), cursor.GetPhysics().GetOrigin(), 0.1f, Lib.colorWhite, viewAxis, 1
                     )
                 } else {
                     cursor.draggedPosition.set(cursor.GetPhysics().GetOrigin())
@@ -257,7 +257,7 @@ object GameEdit {
                             drag.GetName(),
                             drag.GetType().name,
                             bodyName
-                        ), cursor.GetPhysics().GetOrigin(), 0.1f, Lib.Companion.colorWhite, viewAxis, 1
+                        ), cursor.GetPhysics().GetOrigin(), 0.1f, Lib.colorWhite, viewAxis, 1
                     )
                 }
             }
@@ -268,7 +268,7 @@ object GameEdit {
                 val renderEntity = selected.GetEntity().GetRenderEntity()
                 if (renderEntity != null) {
                     Game_local.gameRenderWorld.DebugBox(
-                        Lib.Companion.colorYellow,
+                        Lib.colorYellow,
                         idBox(renderEntity.bounds, renderEntity.origin, renderEntity.axis)
                     )
                 }
@@ -397,7 +397,7 @@ object GameEdit {
         private var nextSelectTime: Int
         private val selectableEntityClasses: idList<selectedTypeInfo_s?>?
         private val selectedEntities: idList<idEntity?>?
-        fun SelectEntity(origin: idVec3?, dir: idVec3?, skip: idEntity?): Boolean {
+        fun SelectEntity(origin: idVec3, dir: idVec3, skip: idEntity?): Boolean {
             val end = idVec3()
             var ent: idEntity?
             if (0 == SysCvar.g_editEntityMode.GetInteger() || selectableEntityClasses.Num() == 0) {
@@ -539,57 +539,57 @@ object GameEdit {
                 if (drawArrows) {
                     val start = idVec3(ent.GetPhysics().GetOrigin())
                     val end = idVec3(start.oPlus(idVec3(1, 0, 0).times(20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorWhite, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorWhite, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "x+",
                         end.oPlus(idVec3(4, 0, 0)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                     end.oSet(start.oPlus(idVec3(1, 0, 0).times(-20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorWhite, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorWhite, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "x-",
                         end.oPlus(idVec3(-4, 0, 0)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                     end.oSet(start.oPlus(idVec3(0, 1, 0).times(20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "y+",
                         end.oPlus(idVec3(0, 4, 0)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                     end.oSet(start.oPlus(idVec3(0, 1, 0).times(-20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorGreen, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "y-",
                         end.oPlus(idVec3(0, -4, 0)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                     end.oSet(start.oPlus(idVec3(0, 0, 1).times(20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "z+",
                         end.oPlus(idVec3(0, 0, 4)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                     end.oSet(start.oPlus(idVec3(0, 0, 1).times(-20.0f)))
-                    Game_local.gameRenderWorld.DebugArrow(Lib.Companion.colorBlue, start, end, 2)
+                    Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, start, end, 2)
                     Game_local.gameRenderWorld.DrawText(
                         "z-",
                         end.oPlus(idVec3(0, 0, -4)),
                         0.15f,
-                        Lib.Companion.colorWhite,
+                        Lib.colorWhite,
                         axis
                     )
                 }
@@ -600,7 +600,7 @@ object GameEdit {
                             text,
                             ent.GetPhysics().GetOrigin().oPlus(idVec3(0, 0, 12)),
                             0.25f,
-                            Lib.Companion.colorWhite,
+                            Lib.colorWhite,
                             axis,
                             1
                         )
@@ -613,7 +613,7 @@ object GameEdit {
         @JvmOverloads
         fun EntityIsSelectable(
             ent: idEntity?,
-            color: idVec4? = null /* = NULL*/,
+            color: idVec4 = null /* = NULL*/,
             text: idStr? = null /*= NULL*/
         ): Boolean {
             for (i in 0 until selectableEntityClasses.Num()) {
@@ -621,12 +621,12 @@ object GameEdit {
                     text?.set(selectableEntityClasses.get(i).textKey)
                     if (color != null) {
                         if (ent.fl.selected) {
-                            color.set(Lib.Companion.colorRed)
+                            color.set(Lib.colorRed)
                         } else {
                             when (i) {
-                                1 -> color.set(Lib.Companion.colorYellow)
-                                2 -> color.set(Lib.Companion.colorBlue)
-                                else -> color.set(Lib.Companion.colorGreen)
+                                1 -> color.set(Lib.colorYellow)
+                                2 -> color.set(Lib.colorBlue)
+                                else -> color.set(Lib.colorGreen)
                             }
                         }
                     }

@@ -154,8 +154,7 @@ class VectorSet {
 
         //
         //
-        private constructor() {
-        }
+        private constructor()
 
         constructor(dimension: Int) {
             this.dimension = dimension

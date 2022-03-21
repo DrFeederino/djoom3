@@ -360,7 +360,7 @@ object ListWindow {
         }
 
         override fun Draw(time: Int, x: Float, y: Float) {
-            var color: idVec4?
+            var color: idVec4
             val work = idStr()
             val count = listItems.size()
             val rect = idRectangle(textRect)

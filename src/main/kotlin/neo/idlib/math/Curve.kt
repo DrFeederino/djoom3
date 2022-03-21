@@ -631,7 +631,7 @@ class Curve {
             assert(values.Num() == 3)
             BasisFirstDerivative(time, bvals)
             d = times[2] - times[0]
-            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2]) / d;
+            return (values[0] * bvals[0] + values[1] * bvals[1] + values[2] * bvals[2]) / d
         }
 
         /*

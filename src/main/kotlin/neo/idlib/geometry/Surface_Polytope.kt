@@ -94,10 +94,10 @@ object Surface_Polytope {
             center.set(bounds.GetCenter())
             scale.set(bounds[1] - center)
             verts.SetNum(4)
-            verts[0].xyz.set(center + idVec3( 0.0f, 0.0f, scale.z ))
-            verts[1].xyz.set(center + idVec3( 2.0f * c1 * scale.x, 0.0f, c3 * scale.z ))
-            verts[2].xyz.set(center + idVec3( -c1 * scale.x, c2 * scale.y, c3 * scale.z ))
-            verts[3].xyz.set(center + idVec3( -c1 * scale.x, -c2 * scale.y, c3 * scale.z ))
+            verts[0].xyz.set(center + idVec3(0.0f, 0.0f, scale.z))
+            verts[1].xyz.set(center + idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z))
+            verts[2].xyz.set(center + idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z))
+            verts[3].xyz.set(center + idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z))
             indexes.SetNum(4 * 3)
             indexes[0 * 3 + 0] = 0
             indexes[0 * 3 + 1] = 1
@@ -121,14 +121,14 @@ object Surface_Polytope {
             scale.set(bounds[1] - center)
 
             verts.SetNum(8)
-            verts[0].xyz.set(center + idVec3( -scale.x, -scale.y, -scale.z ))
-            verts[1].xyz.set(center + idVec3(  scale.x, -scale.y, -scale.z ))
-            verts[2].xyz.set(center + idVec3(  scale.x,  scale.y, -scale.z ))
-            verts[3].xyz.set(center + idVec3( -scale.x,  scale.y, -scale.z ))
-            verts[4].xyz.set(center + idVec3( -scale.x, -scale.y,  scale.z ))
-            verts[5].xyz.set(center + idVec3(  scale.x, -scale.y,  scale.z ))
-            verts[6].xyz.set(center + idVec3(  scale.x,  scale.y,  scale.z ))
-            verts[7].xyz.set(center + idVec3( -scale.x,  scale.y,  scale.z ))
+            verts[0].xyz.set(center + idVec3(-scale.x, -scale.y, -scale.z))
+            verts[1].xyz.set(center + idVec3(scale.x, -scale.y, -scale.z))
+            verts[2].xyz.set(center + idVec3(scale.x, scale.y, -scale.z))
+            verts[3].xyz.set(center + idVec3(-scale.x, scale.y, -scale.z))
+            verts[4].xyz.set(center + idVec3(-scale.x, -scale.y, scale.z))
+            verts[5].xyz.set(center + idVec3(scale.x, -scale.y, scale.z))
+            verts[6].xyz.set(center + idVec3(scale.x, scale.y, scale.z))
+            verts[7].xyz.set(center + idVec3(-scale.x, scale.y, scale.z))
 
             indexes.SetNum(12 * 3)
             indexes[0 * 3 + 0] = 0
@@ -177,12 +177,12 @@ object Surface_Polytope {
             scale.set(bounds[1] - center)
 
             verts.SetNum(6)
-            verts[0].xyz.set(center + idVec3(  scale.x, 0.0f, 0.0f ))
-            verts[1].xyz.set(center + idVec3( -scale.x, 0.0f, 0.0f ))
-            verts[2].xyz.set(center + idVec3( 0.0f,  scale.y, 0.0f ))
-            verts[3].xyz.set(center + idVec3( 0.0f, -scale.y, 0.0f ))
-            verts[4].xyz.set(center + idVec3( 0.0f, 0.0f,  scale.z ))
-            verts[5].xyz.set(center + idVec3( 0.0f, 0.0f, -scale.z ))
+            verts[0].xyz.set(center + idVec3(scale.x, 0.0f, 0.0f))
+            verts[1].xyz.set(center + idVec3(-scale.x, 0.0f, 0.0f))
+            verts[2].xyz.set(center + idVec3(0.0f, scale.y, 0.0f))
+            verts[3].xyz.set(center + idVec3(0.0f, -scale.y, 0.0f))
+            verts[4].xyz.set(center + idVec3(0.0f, 0.0f, scale.z))
+            verts[5].xyz.set(center + idVec3(0.0f, 0.0f, -scale.z))
 
             indexes.SetNum(8 * 3)
             indexes[0 * 3 + 0] = 4

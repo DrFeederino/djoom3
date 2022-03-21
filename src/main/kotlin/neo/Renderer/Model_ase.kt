@@ -278,19 +278,19 @@ object Model_ase {
     class aseFace_t {
         var tVertexNum: IntArray? = IntArray(3)
         var vertexColors: Array<ByteArray?>? = Array(3) { ByteArray(4) }
-        val faceNormal: idVec3? = idVec3()
+        val faceNormal: idVec3 = idVec3()
         var vertexNum: IntArray? = IntArray(3)
-        val vertexNormals: Array<idVec3?>? = idVec3.Companion.generateArray(3)
+        val vertexNormals: Array<idVec3>? = idVec3.Companion.generateArray(3)
     }
 
     class aseMesh_t {
         //
-        val transform: Array<idVec3?>? = idVec3.Companion.generateArray(4) // applied to normals
+        val transform: Array<idVec3>? = idVec3.Companion.generateArray(4) // applied to normals
         private val DBG_count = DBG_counter++
 
         //
         var colorsParsed = false
-        var cvertexes: Array<idVec3?>?
+        var cvertexes: Array<idVec3>?
         var faces: Array<aseFace_t?>?
         var normalsParsed = false
         var numCVFaces = 0
@@ -300,8 +300,8 @@ object Model_ase {
         var numTVertexes = 0
         var numVertexes = 0
         var timeValue = 0
-        var tvertexes: Array<idVec2?>?
-        var vertexes: Array<idVec3?>?
+        var tvertexes: Array<idVec2>?
+        var vertexes: Array<idVec3>?
 
         companion object {
             private var DBG_counter = 1
@@ -625,11 +625,11 @@ object Model_ase {
 
                     // we flip the vertex order to change the face direction to our style
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(0) =
-                        (pMesh.cvertexes.get(a).get(0) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(0) * 255).toInt().toByte()
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(1) =
-                        (pMesh.cvertexes.get(a).get(1) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(1) * 255).toInt().toByte()
                     pMesh.faces.get(Model_ase.ase.currentFace).vertexColors.get(remap.get(i)).get(2) =
-                        (pMesh.cvertexes.get(a).get(2) * 255).toByte()
+                        (pMesh.cvertexes.get(a).get(2) * 255).toInt().toByte()
                 }
                 Model_ase.ase.currentFace++
             } else {
@@ -866,7 +866,7 @@ object Model_ase {
                     }
                     "*MESH_TVERTLIST" -> {
                         Model_ase.ase.currentVertex = 0
-                        pMesh.tvertexes = arrayOfNulls<idVec2?>(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
+                        pMesh.tvertexes = arrayOfNulls<idVec2>(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
                         Model_ase.VERBOSE(".....parsing MESH_TVERTLIST\n")
                         Model_ase.ASE_ParseBracedBlock(ASE_KeyMESH_TVERTLIST.getInstance())
                     }
@@ -959,7 +959,7 @@ object Model_ase {
                 "*NODE_PARENT" -> Model_ase.ASE_SkipRestOfLine()
                 "*NODE_TM", "*TM_ANIMATION" -> Model_ase.ASE_ParseBracedBlock(ASE_KeyNODE_TM.getInstance())
                 "*MESH" -> {
-                    val transform: Array<idVec3?> =
+                    val transform: Array<idVec3> =
                         idVec3.Companion.copyVec(Model_ase.ase.currentObject.mesh.transform) //copied from the bfg sources
                     run {
                         Model_ase.ase.currentObject.mesh = aseMesh_t()

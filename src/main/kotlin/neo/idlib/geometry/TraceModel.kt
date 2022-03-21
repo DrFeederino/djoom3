@@ -189,8 +189,8 @@ object TraceModel {
                 e0 = polys[i].edges[0]
                 e1 = polys[i].edges[1]
                 v0 = edges[abs(e0)].v[INTSIGNBITSET(e0)]
-                v1 = edges[abs(e0)].v[Math_h.INTSIGNBITNOTSET(e0)]
-                v2 = edges[abs(e1)].v[Math_h.INTSIGNBITNOTSET(e1)]
+                v1 = edges[abs(e0)].v[INTSIGNBITNOTSET(e0)]
+                v2 = edges[abs(e1)].v[INTSIGNBITNOTSET(e1)]
                 // polygon plane
                 polys[i].normal.set((verts[v1] - verts[v0]).Cross(verts[v2] - verts[v0]))
                 polys[i].normal.Normalize()
@@ -297,10 +297,10 @@ object TraceModel {
                 e2 = polys[i].edges[2]
                 e3 = polys[i].edges[3]
                 v0 = edges[abs(e0)].v[INTSIGNBITSET(e0)]
-                v1 = edges[abs(e0)].v[Math_h.INTSIGNBITNOTSET(e0)]
-                v2 = edges[abs(e1)].v[Math_h.INTSIGNBITNOTSET(e1)]
-                v3 = edges[abs(e2)].v[Math_h.INTSIGNBITNOTSET(e2)]
-                v4 = edges[abs(e3)].v[Math_h.INTSIGNBITNOTSET(e3)]
+                v1 = edges[abs(e0)].v[INTSIGNBITNOTSET(e0)]
+                v2 = edges[abs(e1)].v[INTSIGNBITNOTSET(e1)]
+                v3 = edges[abs(e2)].v[INTSIGNBITNOTSET(e2)]
+                v4 = edges[abs(e3)].v[INTSIGNBITNOTSET(e3)]
                 // polygon plane
                 polys[i].normal.set((verts[v1] - verts[v0]).Cross(verts[v2] - verts[v0]))
                 polys[i].normal.Normalize()

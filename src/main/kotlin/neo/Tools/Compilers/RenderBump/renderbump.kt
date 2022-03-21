@@ -9,21 +9,21 @@ import neo.TempDump.TODO_Exception
 import neo.Tools.Compilers.DMap.dmap.Dmap_f
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
-import neo.idlib.*
 import neo.idlib.BV.Bounds.idBounds
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.sys.win_glimp
 import neo.sys.win_shared
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
-import java.nio.*
+import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
@@ -1282,10 +1282,10 @@ object renderbump {
                 opt.traceFrac = 0.05f
 
                 // parse the renderbump parameters for this surface
-                cmdLine = ms.shader.GetRenderBump()
+                cmdLine = ms.shader!!.GetRenderBump()
                 Common.common.Printf(
                     "surface %d, shader %s\nrenderBump = %s ", i,
-                    ms.shader.GetName(), cmdLine
+                    ms.shader!!.GetName(), cmdLine
                 )
                 if (TempDump.NOT(ms.geometry)) {
                     Common.common.Printf("(no geometry)\n")
@@ -1590,7 +1590,7 @@ object renderbump {
 
                                     // NULLNORMAL is used by the artists to force an area to reflect no
                                     // light at all
-                                    if (surf2.shader.GetSurfaceFlags() and Material.SURF_NULLNORMAL != 0) {
+                                    if (surf2.shader!!.GetSurfaceFlags() and Material.SURF_NULLNORMAL != 0) {
                                         qgl.qglColor3f(0.5f, 0.5f, 0.5f)
                                     } else {
                                         qgl.qglColor3f(
@@ -1617,7 +1617,7 @@ object renderbump {
 
                                         // NULLNORMAL is used by the artists to force an area to reflect no
                                         // light at all
-                                        if (surf2.shader.GetSurfaceFlags() and Material.SURF_NULLNORMAL != 0) {
+                                        if (surf2.shader!!.GetSurfaceFlags() and Material.SURF_NULLNORMAL != 0) {
                                             qgl.qglColor3f(0.5f, 0.5f, 0.5f)
                                         } else {
                                             // we are going to flip the normal Z direction

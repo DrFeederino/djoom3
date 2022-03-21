@@ -498,7 +498,7 @@ object File_h {
         }
 
         fun WriteString(value: CharArray): Int {
-            return WriteString(TempDump.ctos(value)!!)
+            return WriteString(TempDump.ctos(value))
         }
 
         fun WriteString(value: idStr?): Int {

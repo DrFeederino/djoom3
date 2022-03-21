@@ -406,7 +406,7 @@ object Parser {
                 // if the token is a name
                 if (token.type == Token.TT_NAME && 0 == token.flags and TOKEN_FL_RECURSIVE_DEFINE) {
                     // check if the name is a define macro
-                    define = FindHashedDefine(definehash!!, token.toString())
+                    define = FindHashedDefine(definehash, token.toString())
                     // if it is a define macro
                     if (define != null) {
                         // expand the defined macro
@@ -495,9 +495,9 @@ object Parser {
                 }
                 if (token.subtype != subtype) {
                     this.Error(
-                            "expected '%s' but found '%s'",
-                            scriptstack!!.GetPunctuationFromId(subtype),
-                            token.toString()
+                        "expected '%s' but found '%s'",
+                        scriptstack!!.GetPunctuationFromId(subtype),
+                        token.toString()
                     )
                     return false
                 }
@@ -918,7 +918,7 @@ object Parser {
             if (null == define) {
                 return false
             }
-            AddDefineToHash(define, definehash!!)
+            AddDefineToHash(define, definehash)
             return true
         }
 
@@ -930,11 +930,11 @@ object Parser {
             class builtin(val string: String?, val id: Int)
 
             val builtins = arrayOf(
-                    builtin("__LINE__", BUILTIN_LINE),
-                    builtin("__FILE__", BUILTIN_DATE),
-                    builtin("__TIME__", BUILTIN_TIME),
-                    builtin("__STDC__", BUILTIN_STDC),
-                    builtin(null, 0)
+                builtin("__LINE__", BUILTIN_LINE),
+                builtin("__FILE__", BUILTIN_DATE),
+                builtin("__TIME__", BUILTIN_TIME),
+                builtin("__STDC__", BUILTIN_STDC),
+                builtin(null, 0)
             )
             i = 0
             while (builtins[i].string != null) {
@@ -1076,9 +1076,9 @@ object Parser {
         @Throws(idException::class)
         fun Error(str: String, chr: CharArray, vararg chrs: CharArray) {
             this.Error(str)
-            this.Error(TempDump.ctos(chr)!!)
+            this.Error(TempDump.ctos(chr))
             for (charoal in chrs) {
-                this.Error(TempDump.ctos(charoal)!!)
+                this.Error(TempDump.ctos(charoal))
             }
         }
 
@@ -1101,9 +1101,9 @@ object Parser {
         @Throws(idException::class)
         fun Warning(str: String, chr: CharArray, vararg chrs: CharArray) {
             this.Warning(str)
-            this.Warning(TempDump.ctos(chr)!!)
+            this.Warning(TempDump.ctos(chr))
             for (charoal in chrs) {
-                this.Warning(TempDump.ctos(charoal)!!)
+                this.Warning(TempDump.ctos(charoal))
             }
         }
 
@@ -1363,7 +1363,7 @@ object Parser {
             }
             // merging of two numbers
             if (t1.type == Token.TT_NUMBER && t2.type == Token.TT_NUMBER && t1.subtype and (Token.TT_HEX or Token.TT_BINARY) == 0 && t2.subtype and (Token.TT_HEX or Token.TT_BINARY) == 0 && (t1.subtype and Token.TT_FLOAT == 0
-                            || t2.subtype and Token.TT_FLOAT == 0)
+                        || t2.subtype and Token.TT_FLOAT == 0)
             ) {
                 t1.Append(t2.c_str())
                 return true
@@ -1373,10 +1373,10 @@ object Parser {
 
         @Throws(idException::class)
         private fun ExpandBuiltinDefine(
-                defToken: idToken,
-                define: define_s,
-                firstToken: Array<idToken?>,
-                lastToken: Array<idToken?>
+            defToken: idToken,
+            define: define_s,
+            firstToken: Array<idToken?>,
+            lastToken: Array<idToken?>
         ): Boolean {
             val token: idToken
             /*ID_TIME_T*/
@@ -1463,10 +1463,10 @@ object Parser {
 
         @Throws(idException::class)
         private fun ExpandDefine(
-                deftoken: idToken,
-                define: define_s,
-                firstToken: Array<idToken?>,
-                lastToken: Array<idToken?>
+            deftoken: idToken,
+            define: define_s,
+            firstToken: Array<idToken?>,
+            lastToken: Array<idToken?>
         ): Boolean {
             val parms = arrayOfNulls<idToken?>(MAX_DEFINEPARMS)
             var dt: idToken?
@@ -1974,10 +1974,10 @@ object Parser {
 
         @Throws(idException::class)
         private fun EvaluateTokens(
-                tokens: idToken?,
-                intValue: CInt,
-                floatValue: CFloat,
-                integer: Int
+            tokens: idToken?,
+            intValue: CInt,
+            floatValue: CFloat,
+            integer: Int
         ): Boolean {
             var o: operator_s? = operator_s()
             var firstOperator: operator_s?
@@ -2034,7 +2034,7 @@ object Parser {
                         }
                         //v = (value_t *) GetClearedMemory(sizeof(value_t));
                         error = AllocValue(v, value_heap, numvalues)
-                        if (FindHashedDefine(definehash!!, t.toString()) != null) {
+                        if (FindHashedDefine(definehash, t.toString()) != null) {
                             v!!.intValue = 1
                             v.floatValue = 1.0f
                         } else {
@@ -2444,7 +2444,7 @@ object Parser {
                         lastToken = t
                     } else {
                         //then it must be a define
-                        define = FindHashedDefine(definehash!!, token.toString())
+                        define = FindHashedDefine(definehash, token.toString())
                         if (null == define) {
                             this.Error("can't Evaluate '%s', not defined", token)
                             return false
@@ -2537,7 +2537,7 @@ object Parser {
                         lasttoken = t
                     } else {
                         //then it must be a define
-                        define = FindHashedDefine(definehash!!, token.toString())
+                        define = FindHashedDefine(definehash, token.toString())
                         if (null == define) {
                             this.Warning("can't Evaluate '%s', not defined", token)
                             return false
@@ -2605,7 +2605,7 @@ object Parser {
                 return false
             }
             // check if the define already exists
-            define = FindHashedDefine(definehash!!, token.toString())
+            define = FindHashedDefine(definehash, token.toString())
             if (define != null) {
                 if (define.flags and DEFINE_FIXED != 0) {
                     this.Error("can't redefine '%s'", token)
@@ -2618,7 +2618,7 @@ object Parser {
                     return false
                 }
                 // if the define was not removed (define.flags & DEFINE_FIXED)
-                define = FindHashedDefine(definehash!!, token.toString())
+                define = FindHashedDefine(definehash, token.toString())
             }
             // allocate define
 //	define = (define_t *) Mem_ClearedAlloc(sizeof(define_t) + token.Length() + 1);
@@ -2626,7 +2626,7 @@ object Parser {
             //	define.name = (char *) define + sizeof(define_t);
             define.name = String(token.c_str())
             // add the define to the source
-            AddDefineToHash(define, definehash!!)
+            AddDefineToHash(define, definehash)
             // if nothing is defined, just return
             if (!ReadLine(token)) {
                 return true

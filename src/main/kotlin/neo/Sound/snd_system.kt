@@ -974,7 +974,7 @@ class snd_system {
             }
             i = firstEmitter
             while (i < sw!!.emitters.Num()) {
-                val sound = sw!!.emitters[i]
+                val sound = sw.emitters[i]
                 if (null == sound) {
                     i++
                     continue
@@ -1388,7 +1388,7 @@ class snd_system {
                 Common.common.Printf(
                     "%s %dkHz %6dms %5dkB %4s %s%s\n", stereo, sample.objectInfo.nSamplesPerSec / 1000,
                     soundSystemLocal.SamplesToMilliseconds(sample.LengthIn44kHzSamples()),
-                    sample!!.objectMemSize shr 10, format, sample.name, defaulted
+                    sample.objectMemSize shr 10, format, sample.name, defaulted
                 )
                 if (!sample.purged) {
                     totalSamples += sample.objectSize

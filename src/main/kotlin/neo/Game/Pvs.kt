@@ -70,7 +70,7 @@ object Pvs {
         var areaNum // area this portal leads to
                 = 0
         var bounds // winding bounds
-                : idBounds?
+                : idBounds
         var done // true if pvs is calculated for this portal
                 = false
         var mightSee // used during construction
@@ -78,7 +78,7 @@ object Pvs {
         var passages // passages to portals in the area this portal leads to
                 : Array<pvsPassage_t?>?
         val plane // winding plane, normal points towards the area this portal leads to
-                : idPlane?
+                : idPlane
         var vis // PVS for this portal
                 : ByteArray?
         var w // winding goes counter clockwise seen from the area this portal is part of
@@ -92,7 +92,7 @@ object Pvs {
 
     class pvsArea_t {
         var bounds // bounds of the whole area
-                : idBounds?
+                : idBounds
         var numPortals // number of portals in this area
                 = 0
         var portals // array with pointers to the portals of this area
@@ -118,7 +118,7 @@ object Pvs {
         private var connectedAreas: BooleanArray?
 
         // current PVS for a specific source possibly taking portal states (open/closed) into account
-        private val currentPVS: Array<pvsCurrent_t?>? = arrayOfNulls<pvsCurrent_t?>(Pvs.MAX_CURRENT_PVS)
+        private val currentPVS: Array<pvsCurrent_t> = arrayOfNulls<pvsCurrent_t?>(Pvs.MAX_CURRENT_PVS)
         private var numAreas: Int
         private var numPortals: Int
 
@@ -195,22 +195,22 @@ object Pvs {
         }
 
         // get the area(s) the source is in
-        fun GetPVSArea(point: idVec3?): Int {        // returns the area number
+        fun GetPVSArea(point: idVec3): Int {        // returns the area number
             return Game_local.gameRenderWorld.PointInArea(point)
         }
 
-        fun GetPVSAreas(bounds: idBounds?, areas: IntArray?, maxAreas: Int): Int {    // returns number of areas
+        fun GetPVSAreas(bounds: idBounds, areas: IntArray?, maxAreas: Int): Int {    // returns number of areas
             return Game_local.gameRenderWorld.BoundsInAreas(bounds, areas, maxAreas)
         }
 
         // setup current PVS for the source
-        fun SetupCurrentPVS(source: idVec3?, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t? {
+        fun SetupCurrentPVS(source: idVec3, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t? {
             val sourceArea: Int
             sourceArea = Game_local.gameRenderWorld.PointInArea(source)
             return SetupCurrentPVS(sourceArea, type)
         }
 
-        fun SetupCurrentPVS(source: idBounds?, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t? {
+        fun SetupCurrentPVS(source: idBounds, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t? {
             val numSourceAreas: Int
             val sourceAreas = IntArray(Pvs.MAX_BOUNDS_AREAS)
             numSourceAreas = Game_local.gameRenderWorld.BoundsInAreas(source, sourceAreas, Pvs.MAX_BOUNDS_AREAS)
@@ -254,17 +254,17 @@ object Pvs {
 
         @JvmOverloads
         fun SetupCurrentPVS(
-            sourceAreas: IntArray?,
+            sourceAreas: IntArray,
             numSourceAreas: Int,
             type: pvsType_t? = pvsType_t.PVS_NORMAL /*= PVS_NORMAL*/
-        ): pvsHandle_t? {
+        ): pvsHandle_t {
             var i: Int
             var j: Int
             /*unsigned*/
             var h: Int
             var vis: LongArray?
             var pvs: LongArray?
-            val handle: pvsHandle_t?
+            val handle: pvsHandle_t
             h = 0
             i = 0
             while (i < numSourceAreas) {
@@ -378,7 +378,7 @@ object Pvs {
         }
 
         // returns true if the target is within the current PVS
-        fun InCurrentPVS(handle: pvsHandle_t?, target: idVec3?): Boolean {
+        fun InCurrentPVS(handle: pvsHandle_t?, target: idVec3): Boolean {
             val targetArea: Int
             if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS.get(handle.i).handle.h) {
                 idGameLocal.Companion.Error("idPVS::InCurrentPVS: invalid handle")
@@ -389,7 +389,7 @@ object Pvs {
             } else currentPVS.get(handle.i).pvs.get(targetArea shr 3) and (1 shl (targetArea and 7)) != 0
         }
 
-        fun InCurrentPVS(handle: pvsHandle_t?, target: idBounds?): Boolean {
+        fun InCurrentPVS(handle: pvsHandle_t?, target: idBounds): Boolean {
             var i: Int
             val numTargetAreas: Int
             val targetAreas = IntArray(Pvs.MAX_BOUNDS_AREAS)
@@ -436,7 +436,7 @@ object Pvs {
         }
 
         // draw all portals that are within the PVS of the source
-        fun DrawPVS(source: idVec3?, type: pvsType_t? /*= PVS_NORMAL*/) {
+        fun DrawPVS(source: idVec3, type: pvsType_t? /*= PVS_NORMAL*/) {
             var i: Int
             var j: Int
             var k: Int
@@ -489,7 +489,7 @@ object Pvs {
             FreeCurrentPVS(handle)
         }
 
-        fun DrawPVS(source: idBounds?, type: pvsType_t? /*= PVS_NORMAL*/) {
+        fun DrawPVS(source: idBounds, type: pvsType_t? /*= PVS_NORMAL*/) {
             var i: Int
             var j: Int
             var k: Int
@@ -551,7 +551,7 @@ object Pvs {
         }
 
         // visualize the PVS the handle points to
-        fun DrawCurrentPVS(handle: pvsHandle_t?, source: idVec3?) {
+        fun DrawCurrentPVS(handle: pvsHandle_t?, source: idVec3) {
             var i: Int
             var j: Int
             var k: Int
@@ -1000,8 +1000,8 @@ object Pvs {
             source: idWinding?,
             pass: idWinding?,
             flipClip: Boolean,
-            bounds: Array<idPlane?>?,
-            numBounds: CInt?,
+            bounds: Array<idPlane>?,
+            numBounds: CInt,
             maxBounds: Int
         ) {
             var i: Int
@@ -1109,20 +1109,20 @@ object Pvs {
 
                     // check if the plane is already a passage boundary
                     k = 0
-                    while (k < numBounds.getVal()) {
+                    while (k < numBounds._val) {
                         if (plane.Compare(bounds.get(k), 0.001f, 0.01f)) {
                             break
                         }
                         k++
                     }
-                    if (k < numBounds.getVal()) {
+                    if (k < numBounds._val) {
                         break
                     }
-                    if (numBounds.getVal() >= maxBounds) {
+                    if (numBounds._val >= maxBounds) {
                         Game_local.gameLocal.Warning("max passage boundaries.")
                         break
                     }
-                    bounds.get(numBounds.getVal()).set(plane)
+                    bounds.get(numBounds._val).set(plane)
                     numBounds.increment()
                     break
                     j++
@@ -1142,7 +1142,7 @@ object Pvs {
             var bitNum: Int
             val numBounds = CInt()
             val sides = IntArray(MAX_PASSAGE_BOUNDS)
-            val passageBounds: Array<idPlane?> = idPlane.Companion.generateArray(MAX_PASSAGE_BOUNDS)
+            val passageBounds: Array<idPlane> = idPlane.Companion.generateArray(MAX_PASSAGE_BOUNDS)
             var source: pvsPortal_t?
             var target: pvsPortal_t
             var p: pvsPortal_t?
@@ -1202,7 +1202,7 @@ object Pvs {
                             }
                             front = 0
                             l = 0
-                            while (l < numBounds.getVal()) {
+                            while (l < numBounds._val) {
                                 sides[l] = p.bounds.PlaneSide(passageBounds[l])
                                 // if completely at the back of the passage bounding plane
                                 if (sides[l] == Plane.PLANESIDE_BACK) {
@@ -1215,16 +1215,16 @@ object Pvs {
                                 l++
                             }
                             // if completely outside the passage
-                            if (l < numBounds.getVal()) {
+                            if (l < numBounds._val) {
                                 bitNum++
                                 continue
                             }
 
                             // if not at the front of all bounding planes and thus not completely inside the passage
-                            if (front != numBounds.getVal()) {
+                            if (front != numBounds._val) {
                                 winding.set(p.w)
                                 l = 0
-                                while (l < numBounds.getVal()) {
+                                while (l < numBounds._val) {
 
                                     // only clip if the winding possibly crosses this plane
                                     if (sides[l] != Plane.PLANESIDE_CROSS) {
@@ -1240,7 +1240,7 @@ object Pvs {
                                     l++
                                 }
                                 // if completely outside the passage
-                                if (l < numBounds.getVal()) {
+                                if (l < numBounds._val) {
                                     bitNum++
                                     continue
                                 }
@@ -1416,7 +1416,7 @@ object Pvs {
 
         private fun AllocCurrentPVS( /*unsigned*/
             h: Int
-        ): pvsHandle_t? {
+        ): pvsHandle_t {
             var i: Int
             val handle = pvsHandle_t()
             i = 0

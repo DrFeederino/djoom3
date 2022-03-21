@@ -291,8 +291,8 @@ class SysCvar {
             "600",
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
             "# of seconds to allow game to run when skipping cinematic.  prevents lock-up when cinematic doesn't end.",
-            0,
-            3600
+            0f,
+            3600f
         )
 
         //
@@ -500,7 +500,7 @@ class SysCvar {
         //
         //
         //
-        val g_showPVS: idCVar = idCVar("g_showPVS", "0", CVarSystem.CVAR_GAME or CVarSystem.CVAR_INTEGER, "", 0, 2)
+        val g_showPVS: idCVar = idCVar("g_showPVS", "0", CVarSystem.CVAR_GAME or CVarSystem.CVAR_INTEGER, "", 0f, 2f)
 
         //
         val g_showPlayerShadow: idCVar = idCVar(
@@ -563,7 +563,7 @@ class SysCvar {
      2 = cycle anim with continuous origin
      3 = frame by frame with continuous origin
      4 = play anim once
-     """.trimIndent(), 0, 4, ArgCompletion_Integer(0, 4)
+     """.trimIndent(), 0f, 4f, ArgCompletion_Integer(0, 4)
         )
         val g_testModelBlend: idCVar =
             idCVar(
@@ -797,8 +797,8 @@ class SysCvar {
             "0",
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_NETWORKSYNC or CVarSystem.CVAR_INTEGER,
             "draws camera from POV of player model (1 = always, 2 = when dead)",
-            0,
-            2,
+            0f,
+            2f,
             ArgCompletion_Integer(0, 2)
         )
         val pm_noclipspeed: idCVar = idCVar(
@@ -942,8 +942,8 @@ class SysCvar {
             "0",
             CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE,
             "aspect ratio of view:\n0 = 4:3\n1 = 16:9\n2 = 16:10",
-            0,
-            2
+            0f,
+            2f
         )
         val rb_showActive: idCVar = idCVar(
             "rb_showActive",

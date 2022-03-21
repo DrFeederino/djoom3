@@ -45,11 +45,11 @@ object SmokeParticles {
      ===============================================================================
      */
     class singleSmoke_t {
-        var axis: idMat3? = null
+        var axis: idMat3 = null
         var index // particle index in system, 0 <= index < stage->totalParticles
                 = 0
         var next: singleSmoke_t? = null
-        val origin: idVec3? = idVec3()
+        val origin: idVec3 = idVec3()
         var privateStartTime // start time for this particular particle
                 = 0
         var random: idRandom? = null
@@ -138,8 +138,8 @@ object SmokeParticles {
             smoke: idDeclParticle?,
             systemStartTime: Int,
             diversity: Float,
-            origin: idVec3?,
-            axis: idMat3?
+            origin: idVec3,
+            axis: idMat3
         ): Boolean {
             var continues = false
             if (null == smoke) {

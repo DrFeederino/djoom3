@@ -186,7 +186,7 @@ object Str {
                 l = text.size
                 EnsureAlloced(l + 1)
                 //		strcpy( data, text );
-                data = TempDump.ctos(text)!!
+                data = TempDump.ctos(text)
                 len = l
             }
         }
@@ -331,7 +331,7 @@ object Str {
         }
 
         fun set(text: CharArray): idStr {
-            return this.set(TempDump.ctos(text)!!)
+            return this.set(TempDump.ctos(text))
         }
 
         //public	friend idStr		operator+( const idStr &a, const idStr &b );
@@ -442,7 +442,7 @@ object Str {
             }
             if (obj.javaClass == String::class.java) { //when comparing pointers it's usually only about what they point to.
                 if (!(obj as String).isEmpty()) {
-                    return data.startsWith(obj as String) //TODO:should we check first character against first character only
+                    return data.startsWith(obj) //TODO:should we check first character against first character only
                 }
             }
             if (obj.javaClass == idStr::class.java) {
@@ -575,7 +575,7 @@ object Str {
         }
 
         fun Append(text: CharArray) {
-            Append(TempDump.ctos(text)!!)
+            Append(TempDump.ctos(text))
         }
 
         fun Append(text: String, l: Int) {
@@ -1074,7 +1074,7 @@ object Str {
                 }
                 len = pos
                 //		data[ pos ] = '\0';
-                data = TempDump.ctos(dataArray)!!
+                data = TempDump.ctos(dataArray)
             }
         }
 
@@ -1418,9 +1418,9 @@ object Str {
         }
 
         override fun Read(buffer: ByteBuffer) {
-            len = buffer.getInt()
-            buffer.getInt() //skip
-            alloced = buffer.getInt()
+            len = buffer.int
+            buffer.int //skip
+            alloced = buffer.int
             buffer.asCharBuffer()[baseBuffer]
         }
 
@@ -1654,7 +1654,7 @@ object Str {
             }
 
             fun Cmp(s1: CharArray, s2: CharArray): Int {
-                return Cmp(TempDump.ctos(s1)!!, TempDump.ctos(s2)!!)
+                return Cmp(TempDump.ctos(s1), TempDump.ctos(s2))
             }
 
             fun Cmp(s1: idStr, s2: idStr): Int {
@@ -1699,7 +1699,7 @@ object Str {
             }
 
             fun Icmp(t1: CharArray, s2: CharArray): Int {
-                return Icmp(TempDump.ctos(t1)!!, TempDump.ctos(s2)!!)
+                return Icmp(TempDump.ctos(t1), TempDump.ctos(s2))
             }
 
             fun Icmp(s1: String, s2: String): Int {
@@ -1950,7 +1950,7 @@ object Str {
             }
 
             fun Copynz(dest: CharArray, src: CharArray, destsize: Int) {
-                Copynz(dest, TempDump.ctos(src)!!, destsize)
+                Copynz(dest, TempDump.ctos(src), destsize)
             }
 
             //        @Deprecated

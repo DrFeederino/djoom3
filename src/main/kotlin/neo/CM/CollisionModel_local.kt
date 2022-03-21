@@ -12,8 +12,11 @@ import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
 import neo.TempDump
-import neo.framework.*
+import neo.framework.Common
+import neo.framework.DeclManager
+import neo.framework.FileSystem_h
 import neo.framework.File_h.idFile
+import neo.framework.Session
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
 import neo.idlib.MapFile
@@ -90,7 +93,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
         // for multi-check avoidance
         private var checkCount = 0
-        private var contacts: Array<contactInfo_t?>? = null
+        private var contacts: Array<contactInfo_t> = emptyArray()
 
         // for retrieving contact points
         private var getContacts = false
@@ -550,7 +553,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // trace through the model
                 TraceThroughModel(tw)
                 // store results
-                results.oSet(tw.trace)
+                results.set(tw.trace)
                 results.endpos.set(start + (end - start) * results.fraction)
                 results.endAxis.set(idMat3.getMat3_identity())
                 if (results.fraction < 1.0f) {
@@ -575,7 +578,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 results.c.material = null
                 results.c.point.set(start)
                 //if (Session.session.rw != null) {
-                Session.session.rw?.DebugArrow(Lib.colorRed, start, end, 1)
+                Session.session.rw.DebugArrow(Lib.colorRed, start, end, 1)
                 //}
                 Common.common.Printf("idCollisionModelManagerLocal::Translation: huge translation\n")
                 return
@@ -775,23 +778,23 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (model_rotated) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts!![i]!!.normal.timesAssign(modelAxis)
-                        tw.contacts!![i]!!.point.timesAssign(modelAxis)
+                        tw.contacts[i].normal.timesAssign(modelAxis)
+                        tw.contacts[i].point.timesAssign(modelAxis)
                         i++
                     }
                 }
                 if (modelOrigin != getVec3_origin()) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts!![i]!!.point.plusAssign(modelOrigin)
-                        tw.contacts!![i]!!.dist += modelOrigin.times(tw.contacts!![i]!!.normal)
+                        tw.contacts[i].point.plusAssign(modelOrigin)
+                        tw.contacts[i].dist += modelOrigin.times(tw.contacts[i].normal)
                         i++
                     }
                 }
                 numContacts = tw.numContacts
             } else {
                 // store results
-                results.oSet(tw.trace)
+                results.set(tw.trace)
                 results.endpos.set(start + (end - start) * results.fraction)
                 results.endAxis.set(trmAxis)
                 if (results.fraction < 1.0f) {
@@ -979,7 +982,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
          */
         // stores all contact points of the trm with the model, returns the number of contacts
         override fun Contacts(
-            contacts: Array<contactInfo_t?>?, maxContacts: Int, start: idVec3, dir: idVec6, depth: Float,
+            contacts: Array<contactInfo_t>, maxContacts: Int, start: idVec3, dir: idVec6, depth: Float,
             trm: idTraceModel, trmAxis: idMat3, contentMask: Int, model: Int, modelOrigin: idVec3, modelAxis: idMat3
         ): Int {
             val results = trace_s()
@@ -3193,7 +3196,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val vr = idVec3()
             val vup = idVec3()
             var invModelAxis = idMat3()
-            val tmpAxis: idMat3?
+            val tmpAxis: idMat3
             val startRotation = idRotation()
             val endRotation = idRotation()
             val plaxis = idPluecker()
@@ -3323,7 +3326,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 TraceThroughModel(tw)
 
                 // store results
-                results.oSet(tw.trace)
+                results.set(tw.trace)
                 results.endpos.set(start)
                 if (tw.maxTan == initialTan) {
                     results.fraction = 1.0f
@@ -3576,7 +3579,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             TraceThroughModel(tw)
 
             // store results
-            results.oSet(tw.trace)
+            results.set(tw.trace)
             results.endpos.set(start)
             if (tw.maxTan == initialTan) {
                 results.fraction = 1.0f
@@ -4125,7 +4128,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // trace through the model
             TraceThroughModel(tw)
-            results.oSet(tw.trace)
+            results.set(tw.trace)
             results.fraction = (if (results.c.contents == 0) 1 else 0).toFloat()
             results.endpos.set(start)
             results.endAxis.set(trmAxis)
@@ -4359,7 +4362,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             numProcNodes = 0
             procNodes = null
             getContacts = false
-            contacts = null
+            contacts = emptyArray()
             maxContacts = 0
             numContacts = 0
         }
@@ -5812,7 +5815,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             model.maxEdges = TraceModel.MAX_TRACEMODEL_EDGES + 1
             model.edges = cm_edge_s.generateArray(model.maxEdges)
             // create a material for the trace model polygons
-            trmMaterial = DeclManager.declManager!!.FindMaterial("_tracemodel", false)
+            trmMaterial = DeclManager.declManager.FindMaterial("_tracemodel", false)
             if (null == trmMaterial) {
                 Common.common.FatalError("_tracemodel material not found")
             }
@@ -6888,9 +6891,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // get a name for the collision model
-            mapEnt.epairs!!.GetString("model", "", name)
+            mapEnt.epairs.GetString("model", "", name)
             if (name[0].isEmpty()) {
-                mapEnt.epairs!!.GetString("name", "", name)
+                mapEnt.epairs.GetString("name", "", name)
                 if (name[0].isEmpty()) {
                     if (0 == numModels) {
                         // first model is always the world
@@ -6978,7 +6981,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val node: cm_node_s?
             val model: cm_model_s
             val plane = idPlane()
-            val bounds: idBounds?
+            val bounds: idBounds
             var collisionSurface: Boolean
             val extension: idStr = idPoolStr()
 
@@ -7005,7 +7008,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
-                if (surf!!.shader.GetSurfaceFlags() and Material.SURF_COLLISION != 0) {
+                if (surf.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION != 0) {
                     collisionSurface = true
                 }
                 i++
@@ -7014,12 +7017,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
                 // if this surface has no contents
-                if (0 == surf!!.shader.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
+                if (0 == surf.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
                 }
                 // if the model has a collision surface and this surface is not a collision surface
-                if (collisionSurface && 0 == surf.shader.GetSurfaceFlags() and Material.SURF_COLLISION) {
+                if (collisionSurface && 0 == surf.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION) {
                     i++
                     continue
                 }
@@ -7035,29 +7038,29 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             SetupHash()
             cm_vertexHash!!.ResizeIndex(model.maxVertices)
             cm_edgeHash!!.ResizeIndex(model.maxEdges)
-            ClearHash(bounds!!)
+            ClearHash(bounds)
             i = 0
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
                 // if this surface has no contents
-                if (0 == surf!!.shader.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
+                if (0 == surf.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
                 }
                 // if the model has a collision surface and this surface is not a collision surface
-                if (collisionSurface && 0 == surf.shader.GetSurfaceFlags() and Material.SURF_COLLISION) {
+                if (collisionSurface && 0 == surf.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION) {
                     i++
                     continue
                 }
                 j = 0
                 while (j < surf.geometry!!.numIndexes) {
                     w.Clear()
-                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j + 2]]!!.xyz)
-                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j + 1]]!!.xyz)
-                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j]]!!.xyz)
+                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j + 2]].xyz)
+                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j + 1]].xyz)
+                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j]].xyz)
                     w.GetPlane(plane)
                     plane.set(plane.unaryMinus())
-                    PolygonFromWinding(model, w, plane, surf.shader, 1)
+                    PolygonFromWinding(model, w, plane, surf.shader!!, 1)
                     j += 3
                 }
                 i++
@@ -7575,7 +7578,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 src.Parse1DMatrix(3, p.bounds[1])
                 src.ExpectTokenType(Token.TT_STRING, 0, token)
                 // get material
-                p.material = DeclManager.declManager!!.FindMaterial(token)
+                p.material = DeclManager.declManager.FindMaterial(token)
                 p.contents = p.material!!.GetContentFlags()
                 p.checkcount = 0
                 // filter polygon into tree
@@ -7782,7 +7785,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
                 i++
             }
-            return TempDump.ctos(contentsString)!!
+            return TempDump.ctos(contentsString)
         }
 
         private fun DrawEdge(model: cm_model_s, edgeNum: Int, origin: idVec3, axis: idMat3) {
@@ -7805,13 +7808,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             end.plusAssign(origin)
             if (edge.internal) {
                 if (CollisionModel_debug.cm_drawInternal.GetBool()) {
-                    Session.session.rw!!.DebugArrow(Lib.colorGreen, start, end, 1)
+                    Session.session.rw.DebugArrow(Lib.colorGreen, start, end, 1)
                 }
             } else {
                 if (edge.numUsers > 2) {
-                    Session.session.rw!!.DebugArrow(Lib.colorBlue, start, end, 1)
+                    Session.session.rw.DebugArrow(Lib.colorBlue, start, end, 1)
                 } else {
-                    Session.session.rw!!.DebugArrow(CollisionModel_debug.cm_color, start, end, 1)
+                    Session.session.rw.DebugArrow(CollisionModel_debug.cm_color, start, end, 1)
                 }
             }
             if (CollisionModel_debug.cm_drawNormals.GetBool()) {
@@ -7821,7 +7824,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 } else {
                     end.set(mid + (edge.normal.times(5f)))
                 }
-                Session.session.rw!!.DebugArrow(Lib.colorCyan, mid, end, 1)
+                Session.session.rw.DebugArrow(Lib.colorCyan, mid, end, 1)
             }
         }
 
@@ -7867,7 +7870,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     center.plusAssign(origin)
                     end.set(center + (p.plane.Normal().times(5f)))
                 }
-                Session.session.rw!!.DebugArrow(Lib.colorMagenta, center, end, 1)
+                Session.session.rw.DebugArrow(Lib.colorMagenta, center, end, 1)
             }
             if (CollisionModel_debug.cm_drawFilled.GetBool()) {
                 val winding = idFixedWinding()
@@ -7884,7 +7887,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     )
                     i--
                 }
-                Session.session.rw!!.DebugPolygon(CollisionModel_debug.cm_color, winding)
+                Session.session.rw.DebugPolygon(CollisionModel_debug.cm_color, winding)
             } else {
                 i = 0
                 while (i < p.numEdges) {

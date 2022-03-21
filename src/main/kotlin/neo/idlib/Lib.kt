@@ -162,7 +162,7 @@ class Lib {
 
         constructor(text: CharArray) : super(TempDump.ctos(text)) {
 //            strcpy(error, text);
-            error = TempDump.ctos(text)!!
+            error = TempDump.ctos(text)
         }
 
         constructor(cause: Throwable) : super(cause)

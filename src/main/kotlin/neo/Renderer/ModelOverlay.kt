@@ -74,7 +74,7 @@ object ModelOverlay {
         // light interaction shaders. Materials for overlays should always
         // be clamped, because the projected texcoords can run well off the
         // texture since no new clip vertexes are generated.
-        fun CreateOverlay(model: idRenderModel?, localTextureAxis: Array<idPlane?>? /*[2]*/, mtr: idMaterial?) {
+        fun CreateOverlay(model: idRenderModel?, localTextureAxis: Array<idPlane>? /*[2]*/, mtr: idMaterial?) {
             var i: Int
             var maxVerts: Int
             var maxIndexes: Int
@@ -131,7 +131,7 @@ object ModelOverlay {
                     continue
                 }
                 val cullBits = ByteArray(stri.numVerts)
-                val texCoords = arrayOfNulls<idVec2?>(stri.numVerts)
+                val texCoords = arrayOfNulls<idVec2>(stri.numVerts)
                 Simd.SIMDProcessor.OverlayPointCull(cullBits, texCoords, localTextureAxis, stri.verts, stri.numVerts)
                 val   /*glIndex_t */vertexRemap = IntArray(stri.numVerts)
                 Simd.SIMDProcessor.Memset(vertexRemap, -1, stri.numVerts)

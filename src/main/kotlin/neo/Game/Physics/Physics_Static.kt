@@ -33,17 +33,10 @@ class Physics_Static {
      ===============================================================================
      */
     class staticPState_s {
-        var axis: idMat3?
-        var localAxis: idMat3?
-        val localOrigin: idVec3?
-        val origin: idVec3?
-
-        init {
-            origin = idVec3()
-            axis = idMat3()
-            localOrigin = idVec3()
-            localAxis = idMat3()
-        }
+        var axis: idMat3 = idMat3()
+        var localAxis: idMat3 = idMat3()
+        val localOrigin: idVec3 = idVec3()
+        val origin: idVec3 = idVec3()
     }
 
     class idPhysics_Static : idPhysics() {
@@ -51,9 +44,8 @@ class Physics_Static {
                 : idClipModel? = null
 
         //
-        //
         protected var current // physics state
-                : staticPState_s?
+                : staticPState_s
 
         //
         // master
@@ -64,17 +56,17 @@ class Physics_Static {
 
         // ~idPhysics_Static();
         override fun _deconstructor() {
-            if (self != null && self.GetPhysics() === this) {
-                self.SetPhysics(null)
+            if (self != null && self!!.GetPhysics() === this) {
+                self!!.SetPhysics(null)
             }
-            idForce.Companion.DeletePhysics(this)
+            idForce.DeletePhysics(this)
             if (clipModel != null) {
-                idClipModel.Companion.delete(clipModel)
+                idClipModel.delete(clipModel!!)
             }
             super._deconstructor()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteObject(self)
             savefile.WriteVec3(current.origin)
             savefile.WriteMat3(current.axis)
@@ -85,7 +77,7 @@ class Physics_Static {
             savefile.WriteBool(isOrientated)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadObject( /*reinterpret_cast<idClass*&>*/self)
             savefile.ReadVec3(current.origin)
             savefile.ReadMat3(current.axis)
@@ -97,25 +89,23 @@ class Physics_Static {
         }
 
         // common physics interface
-        override fun SetSelf(e: idEntity?) {
+        override fun SetSelf(e: idEntity) {
             assert(e != null)
             self = e
         }
 
-        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             if (clipModel != null && clipModel !== model && freeOld) {
-                idClipModel.Companion.delete(clipModel)
+                idClipModel.delete(clipModel!!)
             }
             clipModel = model
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
+        override fun GetClipModel(id: Int /*= 0*/): idClipModel {
             return if (clipModel != null) {
-                clipModel
+                clipModel!!
             } else Game_local.gameLocal.clip.DefaultClipModel()
         }
 
@@ -130,13 +120,13 @@ class Physics_Static {
 
         override fun SetContents(contents: Int, id: Int /*= -1*/) {
             if (clipModel != null) {
-                clipModel.SetContents(contents)
+                clipModel!!.SetContents(contents)
             }
         }
 
         override fun GetContents(id: Int /*= -1*/): Int {
             return if (clipModel != null) {
-                clipModel.GetContents()
+                clipModel!!.GetContents()
             } else 0
         }
 
@@ -145,17 +135,17 @@ class Physics_Static {
             return 0
         }
 
-        override fun GetBounds(id: Int /*= -1*/): idBounds? {
+        override fun GetBounds(id: Int /*= -1*/): idBounds {
             return if (clipModel != null) {
-                clipModel.GetBounds()
+                clipModel!!.GetBounds()
             } else Bounds.bounds_zero
         }
 
-        override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
+        override fun GetAbsBounds(id: Int /*= -1*/): idBounds {
             if (clipModel != null) {
-                return clipModel.GetAbsBounds()
+                return clipModel!!.GetAbsBounds()
             }
-            absBounds = idBounds(current.origin, current.origin)
+            absBounds.set(idBounds(current.origin, current.origin))
             return absBounds
         }
 
@@ -167,16 +157,14 @@ class Physics_Static {
             if (hasMaster) {
                 oldOrigin.set(current.origin)
                 oldAxis.set(current.axis)
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.origin.set(masterOrigin + current.localOrigin * masterAxis)
                 if (isOrientated) {
                     current.axis.set(current.localAxis.times(masterAxis))
                 } else {
                     current.axis.set(current.localAxis)
                 }
-                if (clipModel != null) {
-                    clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-                }
+                clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
                 return current.origin != oldOrigin || current.axis != oldAxis
             }
             return false
@@ -187,12 +175,12 @@ class Physics_Static {
             return 0
         }
 
-        override fun GetImpactInfo(id: Int, point: idVec3?): impactInfo_s? {
+        override fun GetImpactInfo(id: Int, point: idVec3): impactInfo_s {
             return impactInfo_s()
         }
 
-        override fun ApplyImpulse(id: Int, point: idVec3?, impulse: idVec3?) {}
-        override fun AddForce(id: Int, point: idVec3?, force: idVec3?) {}
+        override fun ApplyImpulse(id: Int, point: idVec3, impulse: idVec3) {}
+        override fun AddForce(id: Int, point: idVec3, force: idVec3) {}
         override fun Activate() {}
         override fun PutToRest() {}
         override fun IsAtRest(): Boolean {
@@ -209,104 +197,96 @@ class Physics_Static {
 
         override fun SaveState() {}
         override fun RestoreState() {}
-        override fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/) {
+        override fun SetOrigin(newOrigin: idVec3, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.localOrigin.set(newOrigin)
             if (hasMaster) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.oPlus(newOrigin.times(masterAxis)))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.origin.set(masterOrigin + newOrigin * masterAxis)
             } else {
                 current.origin.set(newOrigin)
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/) {
+        override fun SetAxis(newAxis: idMat3, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.localAxis.set(newAxis)
             if (hasMaster && isOrientated) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
                 current.axis.set(newAxis.times(masterAxis))
             } else {
                 current.axis.set(newAxis)
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun Translate(translation: idVec3?, id: Int /*= -1*/) {
+        override fun Translate(translation: idVec3, id: Int /*= -1*/) {
             current.localOrigin.plusAssign(translation)
             current.origin.plusAssign(translation)
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {
+        override fun Rotate(rotation: idRotation, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.origin.timesAssign(rotation)
             current.axis.timesAssign(rotation.ToMat3())
             if (hasMaster) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
                 current.localAxis.timesAssign(rotation.ToMat3())
-                current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                current.localOrigin.set(current.origin - masterOrigin * masterAxis.Transpose())
             } else {
                 current.localAxis.set(current.axis)
                 current.localOrigin.set(current.origin)
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun GetOrigin(id: Int /*= 0*/): idVec3? {
+        override fun GetOrigin(id: Int /*= 0*/): idVec3 {
             return current.origin
         }
 
-        override fun GetAxis(id: Int /*= 0*/): idMat3? {
+        override fun GetAxis(id: Int /*= 0*/): idMat3 {
             return current.axis
         }
 
-        override fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/) {}
-        override fun SetAngularVelocity(newAngularVelocity: idVec3?, id: Int /*= 0*/) {}
-        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
+        override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {}
+        override fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/) {}
+        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
             return Vector.getVec3_origin()
         }
 
-        override fun GetAngularVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
             return Vector.getVec3_origin()
         }
 
-        override fun SetGravity(newGravity: idVec3?) {}
-        override fun GetGravity(): idVec3? {
+        override fun SetGravity(newGravity: idVec3) {}
+        override fun GetGravity(): idVec3 {
             return gravity
         }
 
-        override fun GetGravityNormal(): idVec3? {
+        override fun GetGravityNormal(): idVec3 {
             return gravityNormal
         }
 
-        override fun ClipTranslation(results: trace_s?, translation: idVec3?, model: idClipModel?) {
+        override fun ClipTranslation(results: trace_s, translation: idVec3, model: idClipModel?) {
             if (model != null) {
                 Game_local.gameLocal.clip.TranslationModel(
-                    results, current.origin, current.origin.oPlus(translation),
+                    results, current.origin, current.origin + translation,
                     clipModel, current.axis, Game_local.MASK_SOLID, model.Handle(), model.GetOrigin(), model.GetAxis()
                 )
             } else {
                 Game_local.gameLocal.clip.Translation(
-                    results, current.origin, current.origin.oPlus(translation),
+                    results, current.origin, current.origin + translation,
                     clipModel, current.axis, Game_local.MASK_SOLID, self
                 )
             }
         }
 
-        override fun ClipRotation(results: trace_s?, rotation: idRotation?, model: idClipModel?) {
+        override fun ClipRotation(results: trace_s, rotation: idRotation, model: idClipModel?) {
             if (model != null) {
                 Game_local.gameLocal.clip.RotationModel(
                     results, current.origin, rotation,
@@ -329,37 +309,35 @@ class Physics_Static {
             return if (clipModel != null) {
                 if (model != null) {
                     Game_local.gameLocal.clip.ContentsModel(
-                        clipModel.GetOrigin(), clipModel, clipModel.GetAxis(), -1,
+                        clipModel!!.GetOrigin(), clipModel, clipModel!!.GetAxis(), -1,
                         model.Handle(), model.GetOrigin(), model.GetAxis()
                     )
                 } else {
-                    Game_local.gameLocal.clip.Contents(clipModel.GetOrigin(), clipModel, clipModel.GetAxis(), -1, null)
+                    Game_local.gameLocal.clip.Contents(
+                        clipModel!!.GetOrigin(),
+                        clipModel,
+                        clipModel!!.GetAxis(),
+                        -1,
+                        null
+                    )
                 }
             } else 0
         }
 
         override fun DisableClip() {
-            if (clipModel != null) {
-                clipModel.Disable()
-            }
+            clipModel?.Disable()
         }
 
         override fun EnableClip() {
-            if (clipModel != null) {
-                clipModel.Enable()
-            }
+            clipModel?.Enable()
         }
 
         override fun UnlinkClip() {
-            if (clipModel != null) {
-                clipModel.Unlink()
-            }
+            clipModel?.Unlink()
         }
 
         override fun LinkClip() {
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
         override fun EvaluateContacts(): Boolean {
@@ -376,8 +354,8 @@ class Physics_Static {
         }
 
         override fun ClearContacts() {}
-        override fun AddContactEntity(e: idEntity?) {}
-        override fun RemoveContactEntity(e: idEntity?) {}
+        override fun AddContactEntity(e: idEntity) {}
+        override fun RemoveContactEntity(e: idEntity) {}
         override fun HasGroundContacts(): Boolean {
             return false
         }
@@ -391,11 +369,11 @@ class Physics_Static {
         }
 
         override fun SetPushed(deltaTime: Int) {}
-        override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3 {
             return Vector.getVec3_origin()
         }
 
-        override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3 {
             return Vector.getVec3_origin()
         }
 
@@ -405,10 +383,10 @@ class Physics_Static {
             if (master != null) {
                 if (!hasMaster) {
                     // transform from world space to master space
-                    self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                    self!!.GetMasterPosition(masterOrigin, masterAxis)
+                    current.localOrigin.set(current.origin - masterOrigin * masterAxis.Transpose())
                     if (orientated) {
-                        current.localAxis.set(current.axis.times(masterAxis.Transpose()))
+                        current.localAxis.set(current.axis * masterAxis.Transpose())
                     } else {
                         current.localAxis.set(current.axis)
                     }
@@ -438,37 +416,37 @@ class Physics_Static {
             return 0
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
-            val quat: idCQuat?
-            val localQuat: idCQuat?
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
+            val quat: idCQuat
+            val localQuat: idCQuat
             quat = current.axis.ToCQuat()
             localQuat = current.localAxis.ToCQuat()
-            msg.WriteFloat(current.origin.get(0))
-            msg.WriteFloat(current.origin.get(1))
-            msg.WriteFloat(current.origin.get(2))
+            msg.WriteFloat(current.origin[0])
+            msg.WriteFloat(current.origin[1])
+            msg.WriteFloat(current.origin[2])
             msg.WriteFloat(quat.x)
             msg.WriteFloat(quat.y)
             msg.WriteFloat(quat.z)
-            msg.WriteDeltaFloat(current.origin.get(0), current.localOrigin.get(0))
-            msg.WriteDeltaFloat(current.origin.get(1), current.localOrigin.get(1))
-            msg.WriteDeltaFloat(current.origin.get(2), current.localOrigin.get(2))
+            msg.WriteDeltaFloat(current.origin[0], current.localOrigin[0])
+            msg.WriteDeltaFloat(current.origin[1], current.localOrigin[1])
+            msg.WriteDeltaFloat(current.origin[2], current.localOrigin[2])
             msg.WriteDeltaFloat(quat.x, localQuat.x)
             msg.WriteDeltaFloat(quat.y, localQuat.y)
             msg.WriteDeltaFloat(quat.z, localQuat.z)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val quat = idCQuat()
             val localQuat = idCQuat()
-            current.origin.set(0, msg.ReadFloat())
-            current.origin.set(1, msg.ReadFloat())
-            current.origin.set(2, msg.ReadFloat())
+            current.origin[0] = msg.ReadFloat()
+            current.origin[1] = msg.ReadFloat()
+            current.origin[2] = msg.ReadFloat()
             quat.x = msg.ReadFloat()
             quat.y = msg.ReadFloat()
             quat.z = msg.ReadFloat()
-            current.localOrigin.set(0, msg.ReadDeltaFloat(current.origin.get(0)))
-            current.localOrigin.set(1, msg.ReadDeltaFloat(current.origin.get(1)))
-            current.localOrigin.set(2, msg.ReadDeltaFloat(current.origin.get(2)))
+            current.localOrigin[0] = msg.ReadDeltaFloat(current.origin[0])
+            current.localOrigin[1] = msg.ReadDeltaFloat(current.origin[1])
+            current.localOrigin[2] = msg.ReadDeltaFloat(current.origin[2])
             localQuat.x = msg.ReadDeltaFloat(quat.x)
             localQuat.y = msg.ReadDeltaFloat(quat.y)
             localQuat.z = msg.ReadDeltaFloat(quat.z)
@@ -476,11 +454,11 @@ class Physics_Static {
             current.localAxis.set(localQuat.ToMat3())
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun  /*idTypeInfo*/GetType(): Class<*>? {
+        override fun  /*idTypeInfo*/GetType(): Class<out idClass> {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -490,9 +468,9 @@ class Physics_Static {
 
         companion object {
             // CLASS_PROTOTYPE( idPhysics_Static );
-            private val gravity: idVec3? = idVec3(0, 0, -SysCvar.g_gravity.GetFloat())
-            private val gravityNormal: idVec3? = idVec3(0, 0, -1)
-            private var absBounds: idBounds? = null
+            private val gravity: idVec3 = idVec3(0f, 0f, -SysCvar.g_gravity.GetFloat())
+            private val gravityNormal: idVec3 = idVec3(0, 0, -1)
+            private val absBounds: idBounds = idBounds()
         }
 
         init {

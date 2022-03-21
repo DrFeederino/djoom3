@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
 import kotlin.math.abs
 
 object Bounds {
-    var bounds_zero: idBounds? = null
+    var bounds_zero: idBounds = idBounds()
 
     /*
      ================
@@ -37,7 +37,7 @@ object Bounds {
         end.set(rotation * start)
         axis.set(rotation.GetVec())
         origin.set(rotation.GetOrigin() + axis * (axis * (start - rotation.origin)))
-        radiusSqr = (start - origin).LengthSqr();
+        radiusSqr = (start - origin).LengthSqr()
         v1.set((start - origin).Cross(axis))
         v2.set((end - origin).Cross(axis))
         i = 0
@@ -744,7 +744,7 @@ object Bounds {
             center.set((b[0] + b[1]) * 0.5f)
             extents.set(b[1] - center)
 
-            d1 = dir * center;
+            d1 = dir * center
             d2 = (abs(extents[0] * dir[0])
                     + abs(extents[1] * dir[1])
                     + abs(extents[2] * dir[2]))
@@ -762,7 +762,7 @@ object Bounds {
             extents.set(b[1] - center)
             center.set(origin + center * axis)
 
-            d1 = dir * center;
+            d1 = dir * center
             d2 = abs(extents[0] * (dir * axis[0])) +
                     abs(extents[1] * (dir * axis[1])) +
                     abs(extents[2] * (dir * axis[2]))

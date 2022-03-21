@@ -35,7 +35,7 @@ object tr_stencilshadow {
     val clipSilEdges: Array<IntArray?>? = Array(tr_stencilshadow.MAX_CLIP_SIL_EDGES) { IntArray(2) }
 
     //
-    val pointLightFrustums /*[6][6]*/: Array<Array<idPlane?>?>? = arrayOf(
+    val pointLightFrustums /*[6][6]*/: Array<Array<idPlane>?>? = arrayOf(
         arrayOf(
             idPlane(1, 0, 0, 0),
             idPlane(1, 1, 0, 0),
@@ -81,7 +81,7 @@ object tr_stencilshadow {
         )
     )
     val shadowVerts = Stream.generate { idVec4() }.limit(tr_stencilshadow.MAX_SHADOW_VERTS.toLong())
-        .toArray<idVec4?> { _Dummy_.__Array__() }
+        .toArray<idVec4> { _Dummy_.__Array__() }
 
     /*
      ===================
@@ -253,7 +253,7 @@ object tr_stencilshadow {
         return pointCull.get(p1) and 0xfc0 != 0xfc0
     }
 
-    fun PointsOrdered(a: idVec3?, b: idVec3?): Boolean {
+    fun PointsOrdered(a: idVec3, b: idVec3): Boolean {
         val i: Float
         val j: Float
 
@@ -315,11 +315,11 @@ object tr_stencilshadow {
      */
     fun R_ProjectPointsToFarPlane(
         ent: idRenderEntityLocal?, light: idRenderLightLocal?,
-        lightPlaneLocal: idPlane?,
+        lightPlaneLocal: idPlane,
         firstShadowVert: Int, numShadowVerts: Int
     ) {
         val lv = idVec3()
-        val mat = Stream.generate { idVec4() }.limit(4).toArray<idVec4?> { _Dummy_.__Array__() }
+        val mat = Stream.generate { idVec4() }.limit(4).toArray<idVec4> { _Dummy_.__Array__() }
         var i: Int
         var `in`: Int
         tr_main.R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, lv)
@@ -378,7 +378,7 @@ object tr_stencilshadow {
      multiple times near the epsilon.
      =============
      */
-    fun R_ChopWinding(clipTris: Array<tr_stencilshadow.clipTri_t?>? /*[2]*/, inNum: Int, plane: idPlane?): Int {
+    fun R_ChopWinding(clipTris: Array<tr_stencilshadow.clipTri_t?>? /*[2]*/, inNum: Int, plane: idPlane): Int {
         val `in`: tr_stencilshadow.clipTri_t?
         val out: tr_stencilshadow.clipTri_t?
         val dists = FloatArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
@@ -473,11 +473,11 @@ object tr_stencilshadow {
      ===================
      */
     fun R_ClipTriangleToLight(
-        a: idVec3?,
-        b: idVec3?,
-        c: idVec3?,
+        a: idVec3,
+        b: idVec3,
+        c: idVec3,
         planeBits: Int,
-        frustum: Array<idPlane?>? /*[6] */
+        frustum: Array<idPlane>? /*[6] */
     ): Boolean {
         var i: Int
         val base: Int
@@ -563,11 +563,11 @@ object tr_stencilshadow {
      ===================
      */
     fun R_ClipLineToLight(
-        a: idVec3?,
-        b: idVec3?,
-        frustum: Array<idPlane?>? /*[4]*/,
-        p1: idVec3?,
-        p2: idVec3?
+        a: idVec3,
+        b: idVec3,
+        frustum: Array<idPlane>? /*[4]*/,
+        p1: idVec3,
+        p2: idVec3
     ): Boolean {
         var clip: FloatArray?
         var j: Int
@@ -677,7 +677,7 @@ object tr_stencilshadow {
      for each silhouette edge in the light
      =================
      */
-    fun R_AddSilEdges(tri: srfTriangles_s?, pointCull: IntArray?, frustum: Array<idPlane?>? /*[6]*/) {
+    fun R_AddSilEdges(tri: srfTriangles_s?, pointCull: IntArray?, frustum: Array<idPlane>? /*[6]*/) {
         var v1: Int
         var v2: Int
         var i: Int
@@ -801,7 +801,7 @@ object tr_stencilshadow {
      Also inits the remap[] array to all -1
      ================
      */
-    fun R_CalcPointCull(tri: srfTriangles_s?, frustum: Array<idPlane?>? /*[6]*/, pointCull: IntArray?) {
+    fun R_CalcPointCull(tri: srfTriangles_s?, frustum: Array<idPlane>? /*[6]*/, pointCull: IntArray?) {
         var i: Int
         var frontBits: Int
         val planeSide: FloatArray
@@ -873,9 +873,9 @@ object tr_stencilshadow {
         ent: idRenderEntityLocal?,
         tri: srfTriangles_s?,
         light: idRenderLightLocal?,
-        lightOrigin: idVec3?,
-        frustum: Array<idPlane?>? /*[6]*/,
-        farPlane: idPlane?,
+        lightOrigin: idVec3,
+        frustum: Array<idPlane>? /*[6]*/,
+        farPlane: idPlane,
         makeClippedPlanes: Boolean
     ) {
         var i: Int
@@ -1123,7 +1123,7 @@ object tr_stencilshadow {
             // we will need to build the planes a little differently
 
             // make the corners
-            val corners: Array<idVec3?> = idVec3.Companion.generateArray(8)
+            val corners: Array<idVec3> = idVec3.Companion.generateArray(8)
             i = 0
             while (i < 8) {
                 val temp = idVec3()
@@ -1304,7 +1304,7 @@ object tr_stencilshadow {
         for (frustumNum in 0 until light.numShadowFrustums) {
             val frust = light.shadowFrustums[frustumNum]
             //		ALIGN16( idPlane[] frustum=new idPlane[6] );
-            val frustum = arrayOfNulls<idPlane?>(6)
+            val frustum = arrayOfNulls<idPlane>(6)
 
             // transform the planes into entity space
             // we could share and reverse some of the planes between frustums for a minor
@@ -1462,6 +1462,6 @@ object tr_stencilshadow {
     internal class clipTri_t {
         var edgeFlags: IntArray? = IntArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
         var numVerts = 0
-        val verts: Array<idVec3?>? = idVec3.Companion.generateArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
+        val verts: Array<idVec3>? = idVec3.Companion.generateArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
     }
 }

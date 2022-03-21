@@ -51,14 +51,14 @@ class idProgram {
     //
     var returnDef: idVarDef? = null
     var returnStringDef: idVarDef? = null
-    private val fileList: idStrList? = idStrList()
-    private val filename: idStr? = idStr()
+    private val fileList: idStrList = idStrList()
+    private val filename: idStr = idStr()
     private var filenum = 0
-    private val functions: idStaticList<function_t?>? = idStaticList(Script_Program.MAX_FUNCS, function_t::class.java)
+    private val functions: idStaticList<function_t> = idStaticList(Script_Program.MAX_FUNCS, function_t::class.java)
 
     //
     private var numVariables = 0
-    private val statements: idStaticList<statement_s?>? =
+    private val statements: idStaticList<statement_s> =
         idStaticList(Script_Program.MAX_STATEMENTS, statement_s::class.java)
 
     //
@@ -70,12 +70,12 @@ class idProgram {
     private var top_functions = 0
     private var top_statements = 0
     private var top_types = 0
-    private val types: idList<idTypeDef?>? = idList()
-    private val varDefNameHash: idHashIndex? = idHashIndex()
-    private val varDefNames: idList<idVarDefName?>? = idList()
-    private val varDefs: idList<idVarDef?>? = idList()
-    private val variableDefaults: idStaticList<Byte?>? = idStaticList(Script_Program.MAX_GLOBALS)
-    private var variables: ByteArray? = ByteArray(Script_Program.MAX_GLOBALS)
+    private val types: idList<idTypeDef> = idList()
+    private val varDefNameHash: idHashIndex = idHashIndex()
+    private val varDefNames: idList<idVarDefName> = idList()
+    private val varDefs: idList<idVarDef> = idList()
+    private val variableDefaults: idStaticList<Byte> = idStaticList(Script_Program.MAX_GLOBALS)
+    private var variables: ByteArray = ByteArray(Script_Program.MAX_GLOBALS)
 
     /*
      ==============
@@ -133,7 +133,7 @@ class idProgram {
 
     // ~idProgram();
     // save games
-    fun Save(savefile: idSaveGame?) {
+    fun Save(savefile: idSaveGame) {
         var i: Int
         var currentFileNum = top_files
         savefile.WriteInt(fileList.size() - currentFileNum)
@@ -161,7 +161,7 @@ class idProgram {
         savefile.WriteInt(checksum)
     }
 
-    fun Restore(savefile: idRestoreGame?): Boolean {
+    fun Restore(savefile: idRestoreGame): Boolean {
         var i: Int
         val num = CInt()
         val index = CInt()
@@ -169,19 +169,19 @@ class idProgram {
         val scriptname = idStr()
         savefile.ReadInt(num)
         i = 0
-        while (i < num.getVal()) {
+        while (i < num._val) {
             savefile.ReadString(scriptname)
             CompileFile(scriptname.toString())
             i++
         }
         savefile.ReadInt(index)
-        while (index.getVal() >= 0) {
-            variables.get(index.getVal()) = savefile.ReadByte()
+        while (index._val >= 0) {
+            variables.get(index._val) = savefile.ReadByte()
             savefile.ReadInt(index)
         }
         savefile.ReadInt(num)
         i = variableDefaults.Num()
-        while (i < num.getVal()) {
+        while (i < num._val) {
             variables.get(i) = savefile.ReadByte()
             i++
         }
@@ -189,7 +189,7 @@ class idProgram {
         val checksum: Int
         savefile.ReadInt(saved_checksum)
         checksum = CalculateChecksum()
-        if (saved_checksum.getVal() != checksum) {
+        if (saved_checksum._val != checksum) {
             result = false
         }
         return result
@@ -998,7 +998,7 @@ class idProgram {
         returnDef.value.setIntPtr(value)
     }
 
-    fun ReturnVector(vec: idVec3?) {
+    fun ReturnVector(vec: idVec3) {
         returnDef.value.setVectorPtr(vec)
     }
 

@@ -92,8 +92,8 @@ object BrittleFracture {
             val EVENT_SHATTER = 1 + EVENT_PROJECT_DECAL
 
             // public CLASS_PROTOTYPE( idBrittleFracture );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -114,7 +114,7 @@ object BrittleFracture {
         //        
         private var angularVelocityScale: Float
         private var bouncyness: Float
-        private val bounds: idBounds?
+        private val bounds: idBounds
         private var changed: Boolean
         private var decalMaterial: idMaterial?
         private var decalSize: Float
@@ -140,7 +140,7 @@ object BrittleFracture {
         private val physicsObj: idPhysics_StaticMulti?
         private var shardMass: Float
         private val shards: idList<shard_s?>?
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             var j: Int
             savefile.WriteInt(health)
@@ -201,7 +201,7 @@ object BrittleFracture {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             var j: Int
             val num = CInt()
@@ -238,14 +238,14 @@ object BrittleFracture {
             savefile.ReadStaticObject(physicsObj)
             RestorePhysics(physicsObj)
             savefile.ReadInt(num)
-            shards.SetNum(num.getVal())
+            shards.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 shards.set(i, shard_s())
                 i++
             }
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadWinding(shards.get(i).winding)
                 j = savefile.ReadInt()
                 shards.get(i).decals.SetNum(j)
@@ -261,8 +261,8 @@ object BrittleFracture {
                 while (j < shards.get(i).neighbours.Num()) {
                     val index = CInt()
                     savefile.ReadInt(index)
-                    assert(index.getVal() != -1)
-                    shards.get(i).neighbours.set(j, shards.get(index.getVal()))
+                    assert(index._val != -1)
+                    shards.get(i).neighbours.set(j, shards.get(index._val))
                     j++
                 }
                 j = savefile.ReadInt()
@@ -306,11 +306,11 @@ object BrittleFracture {
             shardMass = spawnArgs.GetFloat("shardMass", "20")
             shardMass = idMath.ClampFloat(0.001f, 1000.0f, shardMass)
             spawnArgs.GetFloat("density", "0.1", d)
-            density = idMath.ClampFloat(0.001f, 1000.0f, d.getVal())
+            density = idMath.ClampFloat(0.001f, 1000.0f, d._val)
             spawnArgs.GetFloat("friction", "0.4", f)
-            friction = idMath.ClampFloat(0.0f, 1.0f, f.getVal())
+            friction = idMath.ClampFloat(0.0f, 1.0f, f._val)
             spawnArgs.GetFloat("bouncyness", "0.01", b)
-            bouncyness = idMath.ClampFloat(0.0f, 1.0f, b.getVal())
+            bouncyness = idMath.ClampFloat(0.0f, 1.0f, b._val)
             disableFracture = spawnArgs.GetBool("disableFracture", "0")
             health = spawnArgs.GetInt("health", "40")
             fl.takedamage = true
@@ -419,7 +419,7 @@ object BrittleFracture {
             Present()
         }
 
-        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3?, impulse: idVec3?) {
+        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3, impulse: idVec3) {
             if (id < 0 || id >= shards.Num()) {
                 return
             }
@@ -430,7 +430,7 @@ object BrittleFracture {
             }
         }
 
-        override fun AddForce(ent: idEntity?, id: Int, point: idVec3?, force: idVec3?) {
+        override fun AddForce(ent: idEntity?, id: Int, point: idVec3, force: idVec3) {
             if (id < 0 || id >= shards.Num()) {
                 return
             }
@@ -441,20 +441,20 @@ object BrittleFracture {
             }
         }
 
-        override fun AddDamageEffect(collision: trace_s?, velocity: idVec3?, damageDefName: String?) {
+        override fun AddDamageEffect(collision: trace_s?, velocity: idVec3, damageDefName: String?) {
             if (!disableFracture) {
                 ProjectDecal(collision.c.point, collision.c.normal, Game_local.gameLocal.time, damageDefName)
             }
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             if (!disableFracture) {
                 ActivateTargets(this)
                 Break()
             }
         }
 
-        fun ProjectDecal(point: idVec3?, dir: idVec3?, time: Int, damageDefName: String?) {
+        fun ProjectDecal(point: idVec3, dir: idVec3, time: Int, damageDefName: String?) {
             var i: Int
             var j: Int
             var bits: Int
@@ -462,11 +462,11 @@ object BrittleFracture {
             val a: Float
             val c: Float
             val s: Float
-            val st: Array<idVec2?> = idVec2.Companion.generateArray(Winding.MAX_POINTS_ON_WINDING)
+            val st: Array<idVec2> = idVec2.Companion.generateArray(Winding.MAX_POINTS_ON_WINDING)
             val origin = idVec3()
-            var axis: idMat3? = idMat3()
+            var axis: idMat3 = idMat3()
             val axisTemp = idMat3()
-            val textureAxis: Array<idPlane?> = idPlane.Companion.generateArray(2)
+            val textureAxis: Array<idPlane> = idPlane.Companion.generateArray(2)
             if (Game_local.gameLocal.isServer) {
                 val msg = idBitMsg()
                 val msgBuf = ByteBuffer.allocate(Game_local.MAX_EVENT_PARAM_SIZE)
@@ -594,7 +594,7 @@ object BrittleFracture {
             //            return false;
         }
 
-        override fun UpdateRenderEntity(renderEntity: renderEntity_s?, renderView: renderView_s?): Boolean {
+        override fun UpdateRenderEntity(renderEntity: renderEntity_s, renderView: renderView_s?): Boolean {
             var i: Int
             var j: Int
             var k: Int
@@ -814,7 +814,7 @@ object BrittleFracture {
             }
         }
 
-        private fun DropShard(shard: shard_s?, point: idVec3?, dir: idVec3?, impulse: Float, time: Int) {
+        private fun DropShard(shard: shard_s?, point: idVec3, dir: idVec3, impulse: Float, time: Int) {
             var i: Int
             var j: Int
             val clipModelId: Int
@@ -822,7 +822,7 @@ object BrittleFracture {
             val f: Float
             val dir2 = idVec3()
             val origin = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             var neighbour: shard_s?
 
             // don't display decals on dropped shards
@@ -877,7 +877,7 @@ object BrittleFracture {
             BecomeActive(Entity.TH_PHYSICS)
         }
 
-        private fun Shatter(point: idVec3?, impulse: idVec3?, time: Int) {
+        private fun Shatter(point: idVec3, impulse: idVec3, time: Int) {
             var i: Int
             val dir = idVec3()
             var shard: shard_s?
@@ -923,7 +923,7 @@ object BrittleFracture {
             DropFloatingIslands(point, impulse, time)
         }
 
-        private fun DropFloatingIslands(point: idVec3?, impulse: idVec3?, time: Int) {
+        private fun DropFloatingIslands(point: idVec3, impulse: idVec3, time: Int) {
             var i: Int
             var j: Int
             var numIslands: Int
@@ -1010,7 +1010,7 @@ object BrittleFracture {
             var bestDist: Float
             val origin = idVec3()
             val windingPlane = idPlane()
-            val splitPlanes: Array<idPlane?> = idPlane.Companion.generateArray(2)
+            val splitPlanes: Array<idPlane> = idPlane.Companion.generateArray(2)
             val axis = idMat3()
             val axistemp = idMat3()
             val back = idFixedWinding()
@@ -1122,8 +1122,8 @@ object BrittleFracture {
             val p1 = idVec3()
             val p2 = idVec3()
             val dir = idVec3()
-            var axis: idMat3?
-            val plane: Array<idPlane?> = idPlane.Companion.generateArray(4)
+            var axis: idMat3
+            val plane: Array<idPlane> = idPlane.Companion.generateArray(4)
             i = 0
             while (i < shards.Num()) {
                 val shard1 = shards.get(i)
@@ -1241,7 +1241,7 @@ object BrittleFracture {
             Shatter(point, impulse, Game_local.gameLocal.time)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1261,7 +1261,7 @@ object BrittleFracture {
         }
 
         class ModelCallback private constructor() : deferredEntityCallback_t() {
-            override fun run(e: renderEntity_s?, v: renderView_s?): Boolean {
+            override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
                 val ent: idBrittleFracture
                 ent = Game_local.gameLocal.entities[e.entityNum]
                 if (null == ent) {

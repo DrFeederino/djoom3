@@ -20,11 +20,11 @@ class Force_Field {
         FORCEFIELD_APPLY_FORCE, FORCEFIELD_APPLY_VELOCITY, FORCEFIELD_APPLY_IMPULSE;
 
         companion object {
-            fun oGet(index: Int): forceFieldApplyType? {
-                return if (index > Force_Field.forceFieldApplyType.values().size) {
-                    Force_Field.forceFieldApplyType.values()[0]
+            fun oGet(index: Int): forceFieldApplyType {
+                return if (index > values().size) {
+                    values()[0]
                 } else {
-                    Force_Field.forceFieldApplyType.values()[index]
+                    values()[index]
                 }
             }
         }
@@ -41,11 +41,11 @@ class Force_Field {
         FORCEFIELD_UNIFORM, FORCEFIELD_EXPLOSION, FORCEFIELD_IMPLOSION;
 
         companion object {
-            fun oGet(index: Int): forceFieldType? {
-                return if (index > Force_Field.forceFieldType.values().size) {
-                    Force_Field.forceFieldType.values()[0]
+            fun oGet(index: Int): forceFieldType {
+                return if (index > values().size) {
+                    values()[0]
                 } else {
-                    Force_Field.forceFieldType.values()[index]
+                    values()[index]
                 }
             }
         }
@@ -53,17 +53,17 @@ class Force_Field {
 
     class idForce_Field : idForce() {
         //	CLASS_PROTOTYPE( idForce_Field );
-        private var applyType: forceFieldApplyType?
+        private var applyType: forceFieldApplyType
         private var clipModel: idClipModel?
-        private val dir: idVec3?
+        private val dir: idVec3
         private var magnitude: Float
         private var monsterOnly: Boolean
         private var playerOnly: Boolean
         private var randomTorque: Float
 
         // force properties
-        private var type: forceFieldType?
-        override fun Save(savefile: idSaveGame?) {
+        private var type: forceFieldType
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(TempDump.etoi(type))
             savefile.WriteInt(applyType.ordinal)
             savefile.WriteFloat(magnitude)
@@ -74,9 +74,9 @@ class Force_Field {
             savefile.WriteClipModel(clipModel)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
-            type = Force_Field.forceFieldType.values()[savefile.ReadInt()]
-            applyType = Force_Field.forceFieldApplyType.values()[savefile.ReadInt()]
+        override fun Restore(savefile: idRestoreGame) {
+            type = forceFieldType.values()[savefile.ReadInt()]
+            applyType = forceFieldApplyType.values()[savefile.ReadInt()]
             magnitude = savefile.ReadFloat()
             savefile.ReadVec3(dir)
             randomTorque = savefile.ReadFloat()
@@ -87,7 +87,7 @@ class Force_Field {
 
         //	virtual				~idForce_Field( void );
         // uniform constant force
-        fun Uniform(force: idVec3?) {
+        fun Uniform(force: idVec3) {
             dir.set(force)
             magnitude = dir.Normalize()
             type = forceFieldType.FORCEFIELD_UNIFORM
@@ -111,7 +111,7 @@ class Force_Field {
         }
 
         // should the force field apply a force, velocity or impulse	
-        fun SetApplyType(type: forceFieldApplyType?) {
+        fun SetApplyType(type: forceFieldApplyType) {
             applyType = type
         }
 
@@ -126,9 +126,9 @@ class Force_Field {
         }
 
         // clip model describing the extents of the force field	
-        fun SetClipModel(clipModel: idClipModel?) {
+        fun SetClipModel(clipModel: idClipModel) {
             if (this.clipModel != null && clipModel !== this.clipModel) {
-                idClipModel.Companion.delete(this.clipModel)
+                idClipModel.delete(this.clipModel!!)
             }
             this.clipModel = clipModel
         }
@@ -142,14 +142,14 @@ class Force_Field {
             val torque = idVec3()
             val angularVelocity = idVec3()
             var cm: idClipModel
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             assert(clipModel != null)
-            bounds.FromTransformedBounds(clipModel.GetBounds(), clipModel.GetOrigin(), clipModel.GetAxis())
+            bounds.FromTransformedBounds(clipModel!!.GetBounds(), clipModel!!.GetOrigin(), clipModel!!.GetAxis())
             numClipModels =
                 Game_local.gameLocal.clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, Game_local.MAX_GENTITIES)
             i = 0
             while (i < numClipModels) {
-                cm = clipModelList[i]
+                cm = clipModelList[i]!!
                 if (!cm.IsTraceModel()) {
                     i++
                     continue
@@ -177,9 +177,9 @@ class Force_Field {
                             cm,
                             cm.GetAxis(),
                             -1,
-                            clipModel.Handle(),
-                            clipModel.GetOrigin(),
-                            clipModel.GetAxis()
+                            clipModel!!.Handle(),
+                            clipModel!!.GetOrigin(),
+                            clipModel!!.GetAxis()
                         ).toDouble()
                     )
                 ) {
@@ -191,23 +191,23 @@ class Force_Field {
                         force.set(dir)
                     }
                     forceFieldType.FORCEFIELD_EXPLOSION -> {
-                        force.set(cm.GetOrigin().minus(clipModel.GetOrigin()))
+                        force.set(cm.GetOrigin().minus(clipModel!!.GetOrigin()))
                         force.Normalize()
                     }
                     forceFieldType.FORCEFIELD_IMPLOSION -> {
-                        force.set(clipModel.GetOrigin().minus(cm.GetOrigin()))
+                        force.set(clipModel!!.GetOrigin().minus(cm.GetOrigin()))
                         force.Normalize()
                     }
                     else -> {
-                        idGameLocal.Companion.Error("idForce_Field: invalid type")
+                        idGameLocal.Error("idForce_Field: invalid type")
                     }
                 }
                 if (randomTorque != 0.0f) {
-                    torque.set(0, Game_local.gameLocal.random.CRandomFloat())
-                    torque.set(1, Game_local.gameLocal.random.CRandomFloat())
-                    torque.set(2, Game_local.gameLocal.random.CRandomFloat())
+                    torque[0] = Game_local.gameLocal.random.CRandomFloat()
+                    torque[1] = Game_local.gameLocal.random.CRandomFloat()
+                    torque[2] = Game_local.gameLocal.random.CRandomFloat()
                     if (torque.Normalize() == 0.0f) {
-                        torque.set(2, 1.0f)
+                        torque[2] = 1.0f
                     }
                 }
                 when (applyType) {
@@ -216,15 +216,15 @@ class Force_Field {
                             entity.AddForce(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
-                                cm.GetOrigin().oPlus(torque.Cross(dir).times(randomTorque)),
-                                dir.times(magnitude)
+                                cm.GetOrigin() + torque.Cross(dir) * randomTorque,
+                                dir * magnitude
                             )
                         } else {
                             entity.AddForce(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
                                 cm.GetOrigin(),
-                                force.times(magnitude)
+                                force * magnitude
                             )
                         }
                     }
@@ -233,7 +233,7 @@ class Force_Field {
                         if (randomTorque != 0.0f) {
                             angularVelocity.set(physics.GetAngularVelocity(cm.GetId()))
                             physics.SetAngularVelocity(
-                                angularVelocity.oPlus(torque.times(randomTorque)).oMultiply(0.5f), cm.GetId()
+                                (angularVelocity + torque * randomTorque) * 0.5f, cm.GetId()
                             )
                         }
                     }
@@ -242,33 +242,31 @@ class Force_Field {
                             entity.ApplyImpulse(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
-                                cm.GetOrigin().oPlus(torque.Cross(dir).times(randomTorque)),
-                                dir.times(magnitude)
+                                cm.GetOrigin() + torque.Cross(dir) * randomTorque,
+                                dir * magnitude
                             )
                         } else {
                             entity.ApplyImpulse(
                                 Game_local.gameLocal.world,
                                 cm.GetId(),
                                 cm.GetOrigin(),
-                                force.times(magnitude)
+                                force * magnitude
                             )
                         }
                     }
                     else -> {
-                        idGameLocal.Companion.Error("idForce_Field: invalid apply type")
+                        idGameLocal.Error("idForce_Field: invalid apply type")
                     }
                 }
                 i++
             }
         }
 
-        //
-        //
         init {
             type = forceFieldType.FORCEFIELD_UNIFORM
             applyType = forceFieldApplyType.FORCEFIELD_APPLY_FORCE
             magnitude = 0.0f
-            dir = idVec3(0, 0, 1)
+            dir = idVec3(0f, 0f, 1f)
             randomTorque = 0.0f
             playerOnly = false
             monsterOnly = false

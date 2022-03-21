@@ -511,7 +511,7 @@ object RenderSystem {
         abstract fun RegisterFont(fontName: String?, font: fontInfoEx_t?): Boolean
 
         // GUI drawing just involves shader parameter setting and axial image subsections
-        abstract fun SetColor(rgba: idVec4?)
+        abstract fun SetColor(rgba: idVec4)
         abstract fun SetColor4(r: Float, g: Float, b: Float, a: Float)
         abstract fun DrawStretchPic(
             verts: Array<idDrawVert?>?,
@@ -554,16 +554,16 @@ object RenderSystem {
         )
 
         abstract fun DrawStretchTri(
-            p1: idVec2?,
-            p2: idVec2?,
-            p3: idVec2?,
-            t1: idVec2?,
-            t2: idVec2?,
-            t3: idVec2?,
+            p1: idVec2,
+            p2: idVec2,
+            p3: idVec2,
+            t1: idVec2,
+            t2: idVec2,
+            t3: idVec2,
             material: idMaterial?
         )
 
-        abstract fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?)
+        abstract fun GlobalToNormalizedDeviceCoordinates(global: idVec3, ndc: idVec3)
         abstract fun GetGLSettings(width: IntArray?, height: IntArray?)
         abstract fun PrintMemInfo(mi: MemInfo_t?)
         abstract fun DrawSmallChar(x: Int, y: Int, ch: Int, material: idMaterial?)
@@ -571,7 +571,7 @@ object RenderSystem {
             x: Int,
             y: Int,
             string: CharArray?,
-            setColor: idVec4?,
+            setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
         )
@@ -581,7 +581,7 @@ object RenderSystem {
             x: Int,
             y: Int,
             string: String?,
-            setColor: idVec4?,
+            setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
         )

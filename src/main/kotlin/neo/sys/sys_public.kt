@@ -147,11 +147,11 @@ object sys_public {
 
         override fun Read(buffer: ByteBuffer) {
             buffer.order(ByteOrder.LITTLE_ENDIAN).rewind()
-            evType = sysEventType_t.values()[buffer.getInt()]
-            evValue = buffer.getInt()
-            evValue2 = buffer.getInt()
-            evPtrLength = buffer.getInt()
-            buffer.getInt() //death to the pointer
+            evType = sysEventType_t.values()[buffer.int]
+            evValue = buffer.int
+            evValue2 = buffer.int
+            evPtrLength = buffer.int
+            buffer.int //death to the pointer
         }
 
         override fun Write(): ByteBuffer {

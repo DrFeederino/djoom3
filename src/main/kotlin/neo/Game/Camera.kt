@@ -35,9 +35,9 @@ import neo.idlib.math.Vector.idVec3
  */
 object Camera {
     //
-    val EV_Camera_Start: idEventDef? = idEventDef("start", null)
-    val EV_Camera_Stop: idEventDef? = idEventDef("stop", null)
-    val EV_Camera_SetAttachments: idEventDef? = idEventDef("<getattachments>", null)
+    val EV_Camera_Start: idEventDef = idEventDef("start", null)
+    val EV_Camera_Stop: idEventDef = idEventDef("stop", null)
+    val EV_Camera_SetAttachments: idEventDef = idEventDef("<getattachments>", null)
 
     /*
      ===============================================================================
@@ -70,8 +70,8 @@ object Camera {
         : idCamera() {
         companion object {
             //    public	CLASS_PROTOTYPE( idCameraView );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -91,18 +91,18 @@ object Camera {
         protected var fov = 90.0f
 
         // save games
-        override fun Save(savefile: idSaveGame?) {                // archives object for save game file
+        override fun Save(savefile: idSaveGame) {                // archives object for save game file
             savefile.WriteFloat(fov)
             savefile.WriteObject(attachedTo)
             savefile.WriteObject(attachedView)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {                // unarchives object from save game file
+        override fun Restore(savefile: idRestoreGame) {                // unarchives object from save game file
             val fov = CFloat(fov)
             savefile.ReadFloat(fov)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>(*/attachedTo)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>(*/attachedView)
-            this.fov = fov.getVal()
+            this.fov = fov._val
         }
 
         override fun Spawn() {
@@ -142,8 +142,8 @@ object Camera {
                 val fov_x = CFloat(view.fov_x)
                 val fov_y = CFloat(view.fov_y)
                 Game_local.gameLocal.CalcFov(fov, fov_x, fov_y)
-                view.fov_x = fov_x.getVal()
-                view.fov_y = fov_y.getVal()
+                view.fov_x = fov_x._val
+                view.fov_y = fov_y._val
             }
         }
 
@@ -191,7 +191,7 @@ object Camera {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -206,7 +206,7 @@ object Camera {
     class cameraFrame_t {
         var fov = 0f
         var q: idCQuat?
-        val t: idVec3?
+        val t: idVec3
 
         init {
             q = idCQuat()
@@ -217,10 +217,10 @@ object Camera {
     class idCameraAnim : idCamera() {
         companion object {
             //        public 	CLASS_PROTOTYPE( idCameraAnim );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //~idCameraAnim();
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -244,12 +244,12 @@ object Camera {
         private val cameraCuts: idList<Int?>?
         private var cycle: Int
         private var frameRate: Int
-        private val offset: idVec3?
+        private val offset: idVec3
         private var starttime: Int
         private var threadNum = 0
 
         // save games
-        override fun Save(savefile: idSaveGame?) {                // archives object for save game file
+        override fun Save(savefile: idSaveGame) {                // archives object for save game file
             savefile.WriteInt(threadNum)
             savefile.WriteVec3(offset)
             savefile.WriteInt(frameRate)
@@ -258,7 +258,7 @@ object Camera {
             activator.Save(savefile)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {                // unarchives object from save game file
+        override fun Restore(savefile: idRestoreGame) {                // unarchives object from save game file
             threadNum = savefile.ReadInt()
             savefile.ReadVec3(offset)
             frameRate = savefile.ReadInt()
@@ -394,8 +394,8 @@ object Camera {
                 val fov_x = CFloat(view.fov_x)
                 val fov_y = CFloat(view.fov_y)
                 Game_local.gameLocal.CalcFov(view.fov_x, fov_x, fov_y)
-                view.fov_x = fov_x.getVal()
-                view.fov_y = fov_y.getVal()
+                view.fov_x = fov_x._val
+                view.fov_y = fov_y._val
             }
 
             // setup the pvs for this frame
@@ -646,7 +646,7 @@ object Camera {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

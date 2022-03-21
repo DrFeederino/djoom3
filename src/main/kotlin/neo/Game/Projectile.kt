@@ -17,9 +17,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Mover.idDoor
 import neo.Game.Physics.*
 import neo.Game.Physics.Clip.idClipModel
@@ -73,27 +71,27 @@ object Projectile {
     const val BOUNCE_SOUND_MIN_VELOCITY = 200.0f
 
     //
-    val EV_Explode: idEventDef? = idEventDef("<explode>", null)
-    val EV_Fizzle: idEventDef? = idEventDef("<fizzle>", null)
-    val EV_GetProjectileState: idEventDef? = idEventDef("getProjectileState", null, 'd')
-    val EV_RadiusDamage: idEventDef? = idEventDef("<radiusdmg>", "e")
+    val EV_Explode: idEventDef = idEventDef("<explode>", null)
+    val EV_Fizzle: idEventDef = idEventDef("<fizzle>", null)
+    val EV_GetProjectileState: idEventDef = idEventDef("getProjectileState", null, 'd')
+    val EV_RadiusDamage: idEventDef = idEventDef("<radiusdmg>", "e")
 
     //
-    val EV_RemoveBeams: idEventDef? = idEventDef("<removeBeams>", null)
+    val EV_RemoveBeams: idEventDef = idEventDef("<removeBeams>", null)
 
     open class idProjectile : idEntity() {
         companion object {
             // enum {
             val EVENT_DAMAGE_EFFECT: Int = idEntity.Companion.EVENT_MAXEVENTS
             val EVENT_MAXEVENTS = EVENT_DAMAGE_EFFECT
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun GetVelocity(projectile: idDict?): idVec3? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun GetVelocity(projectile: idDict?): idVec3 {
                 val velocity = idVec3()
                 projectile.GetVector("velocity", "0 0 0", velocity)
                 return velocity
             }
 
-            fun GetGravity(projectile: idDict?): idVec3? {
+            fun GetGravity(projectile: idDict?): idVec3 {
                 val gravity: Float
                 gravity = projectile.GetFloat("gravity")
                 return idVec3(0, 0, -gravity)
@@ -103,7 +101,7 @@ object Projectile {
                 soundEnt: idEntity?,
                 projectileDef: idDict?,
                 collision: trace_s?,
-                velocity: idVec3?
+                velocity: idVec3
             ) {
                 var decal: String?
                 var sound: String?
@@ -157,7 +155,7 @@ object Projectile {
                 soundEnt: idEntity?,
                 projectileDef: idDict?,
                 collision: trace_s?,
-                velocity: idVec3?,
+                velocity: idVec3,
                 addDamageEffect: Boolean
             ): Boolean {
                 val ent: idEntity?
@@ -198,7 +196,7 @@ object Projectile {
                 return true
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -221,11 +219,11 @@ object Projectile {
         }
 
         protected var damagePower: Float
-        protected val lightColor: idVec3?
+        protected val lightColor: idVec3
         protected var   /*qhandle_t*/lightDefHandle // handle to renderer light def
                 : Int
         protected var lightEndTime: Int
-        protected val lightOffset: idVec3?
+        protected val lightOffset: idVec3
         protected var lightStartTime: Int
         protected val owner: idEntityPtr<idEntity?>?
         protected var physicsObj: idPhysics_RigidBody?
@@ -270,7 +268,7 @@ object Projectile {
             SetPhysics(physicsObj)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             owner.Save(savefile)
             val flags = projectileFlags
             Lib.Companion.LittleBitField(flags)
@@ -291,7 +289,7 @@ object Projectile {
             savefile.WriteStaticObject(thruster)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             owner.Restore(savefile)
             savefile.Read(projectileFlags)
             Lib.Companion.LittleBitField(projectileFlags)
@@ -324,11 +322,11 @@ object Projectile {
             }
         }
 
-        fun Create(owner: idEntity?, start: idVec3?, dir: idVec3?) {
+        fun Create(owner: idEntity?, start: idVec3, dir: idVec3) {
             val shaderName: String?
             val light_color = idVec3()
             val tmp = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             Unbind()
 
             // align z-axis of model with the direction
@@ -373,9 +371,9 @@ object Projectile {
         }
 
         open fun Launch(
-            start: idVec3?,
-            dir: idVec3?,
-            pushVelocity: idVec3?,
+            start: idVec3,
+            dir: idVec3,
+            pushVelocity: idVec3,
             timeSinceFire: Float /*= 0.0f*/,
             launchPower: Float /*= 1.0f*/,
             dmgPower: Float /*= 1.0f*/
@@ -394,7 +392,7 @@ object Projectile {
             val gravity: Float
             val gravVec = idVec3()
             val tmp = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             val thrust_start: Int
             var contents: Int
             var clipMask: Int
@@ -514,9 +512,9 @@ object Projectile {
 
         @JvmOverloads
         fun Launch(
-            start: idVec3?,
-            dir: idVec3?,
-            pushVelocity: idVec3?,
+            start: idVec3,
+            dir: idVec3,
+            pushVelocity: idVec3,
             timeSinceFire: Float = 0.0f /*= 0.0f*/,
             launchPower: Float = 0.0f /*= 1.0f*/
         ) {
@@ -586,7 +584,7 @@ object Projectile {
             }
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             if (spawnArgs.GetBool("detonate_on_death")) {
                 val collision: trace_s
 
@@ -604,7 +602,7 @@ object Projectile {
             }
         }
 
-        override fun Collide(collision: trace_s?, velocity: idVec3?): Boolean {
+        override fun Collide(collision: trace_s?, velocity: idVec3): Boolean {
             val ent: idEntity?
             var ignore: idEntity?
             val damageDefName: String?
@@ -656,8 +654,8 @@ object Projectile {
             dir.Normalize()
 
             // projectiles can apply an additional impulse next to the rigid body physics impulse
-            if (spawnArgs.GetFloat("push", "0", push) && push.getVal() > 0) {
-                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.times(push.getVal()))
+            if (spawnArgs.GetFloat("push", "0", push) && push._val > 0) {
+                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.times(push._val))
             }
 
             // MP: projectiles open doors
@@ -949,7 +947,7 @@ object Projectile {
             Think()
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteBits(owner.GetSpawnId(), 32)
             msg.WriteBits(TempDump.etoi(state), 3)
             msg.WriteBits(TempDump.btoi(fl.hidden), 1)
@@ -984,7 +982,7 @@ object Projectile {
             }
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val newState: projectileState_t
             owner.SetSpawnId(msg.ReadBits(32))
             newState = Projectile.idProjectile.projectileState_t.values()[msg.ReadBits(3)]
@@ -1030,7 +1028,7 @@ object Projectile {
                 val origin = idVec3()
                 val velocity = idVec3()
                 val tmp = idVec3()
-                val axis: idMat3?
+                val axis: idMat3
                 origin.x = msg.ReadFloat()
                 origin.y = msg.ReadFloat()
                 origin.z = msg.ReadFloat()
@@ -1095,7 +1093,7 @@ object Projectile {
             //            return false;
         }
 
-        private fun AddDefaultDamageEffect(collision: trace_s?, velocity: idVec3?) {
+        private fun AddDefaultDamageEffect(collision: trace_s?, velocity: idVec3) {
             DefaultDamageEffect(this, spawnArgs, collision, velocity)
             if (Game_local.gameLocal.isServer && fl.networkSync) {
                 val msg = idBitMsg()
@@ -1178,7 +1176,7 @@ object Projectile {
             idThread.Companion.ReturnInt(TempDump.etoi(state))
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1271,7 +1269,7 @@ object Projectile {
         private var unGuided: Boolean
 
         // ~idGuidedProjectile( void );
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             enemy.Save(savefile)
             savefile.WriteFloat(speed)
             savefile.WriteAngles(rndScale)
@@ -1286,7 +1284,7 @@ object Projectile {
             savefile.WriteFloat(burstVelocity)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             enemy.Restore(savefile)
             speed = savefile.ReadFloat()
             savefile.ReadAngles(rndScale)
@@ -1307,7 +1305,7 @@ object Projectile {
             val velocity = idVec3()
             val nose = idVec3()
             val tmp = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             val dirAng: idAngles?
             val diff: idAngles?
             val dist: Float
@@ -1366,9 +1364,9 @@ object Projectile {
         }
 
         override fun Launch(
-            start: idVec3?,
-            dir: idVec3?,
-            pushVelocity: idVec3?,
+            start: idVec3,
+            dir: idVec3,
+            pushVelocity: idVec3,
             timeSinceFire: Float /*= 0.0f*/,
             launchPower: Float /*= 1.0f*/,
             dmgPower: Float /*= 1.0f*/
@@ -1411,7 +1409,7 @@ object Projectile {
             UpdateVisuals()
         }
 
-        protected open fun GetSeekPos(out: idVec3?) {
+        protected open fun GetSeekPos(out: idVec3) {
             val enemyEnt = enemy.GetEntity()
             if (enemyEnt != null) {
                 if (enemyEnt is idActor) {
@@ -1453,21 +1451,21 @@ object Projectile {
     class idSoulCubeMissile : idGuidedProjectile() {
         // CLASS_PROTOTYPE ( idSoulCubeMissile );
         private var accelTime = 0f
-        private val destOrg: idVec3? = idVec3()
-        private val endingVelocity: idVec3? = idVec3()
+        private val destOrg: idVec3 = idVec3()
+        private val endingVelocity: idVec3 = idVec3()
         private var killPhase = false
         private var launchTime = 0
-        private val orbitOrg: idVec3? = idVec3()
+        private val orbitOrg: idVec3 = idVec3()
         private var orbitTime = 0
         private var returnPhase = false
         private var smokeKill: idDeclParticle? = null
         private var smokeKillTime = 0
-        private val startingVelocity: idVec3? = idVec3()
+        private val startingVelocity: idVec3 = idVec3()
 
         //
         //
         // ~idSoulCubeMissile();
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(startingVelocity)
             savefile.WriteVec3(endingVelocity)
             savefile.WriteFloat(accelTime)
@@ -1481,7 +1479,7 @@ object Projectile {
             savefile.WriteParticle(smokeKill)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(startingVelocity)
             savefile.ReadVec3(endingVelocity)
             accelTime = savefile.ReadFloat()
@@ -1553,9 +1551,9 @@ object Projectile {
         }
 
         override fun Launch(
-            start: idVec3?,
-            dir: idVec3?,
-            pushVelocity: idVec3?,
+            start: idVec3,
+            dir: idVec3,
+            pushVelocity: idVec3,
             timeSinceFire: Float /*= 0.0f*/,
             launchPower: Float /*= 1.0f*/,
             dmgPower: Float /*= 1.0f*/
@@ -1588,7 +1586,7 @@ object Projectile {
             }
         }
 
-        override fun GetSeekPos(out: idVec3?) {
+        override fun GetSeekPos(out: idVec3) {
             if (returnPhase && owner.GetEntity() != null && owner.GetEntity() is idActor) {
                 val act = owner.GetEntity() as idActor?
                 out.set(act.GetEyePosition())
@@ -1608,7 +1606,7 @@ object Projectile {
             smokeFlyTime = 0
         }
 
-        protected fun KillTarget(dir: idVec3?) {
+        protected fun KillTarget(dir: idVec3) {
             val ownerEnt: idEntity?
             val smokeName: String?
             val act: idActor?
@@ -1654,8 +1652,8 @@ object Projectile {
     class idBFGProjectile : idProjectile() {
         companion object {
             // CLASS_PROTOTYPE( idBFGProjectile );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1680,7 +1678,7 @@ object Projectile {
             super._deconstructor()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(beamTargets.Num())
             i = 0
@@ -1696,13 +1694,13 @@ object Projectile {
             savefile.WriteString(damageFreq)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             val num = CInt()
             savefile.ReadInt(num)
-            beamTargets.SetNum(num.getVal())
+            beamTargets.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 beamTargets.get(i).target.Restore(savefile)
                 savefile.ReadRenderEntity(beamTargets.get(i).renderEntity)
                 beamTargets.get(i).modelDefHandle = savefile.ReadInt()
@@ -1822,9 +1820,9 @@ object Projectile {
         }
 
         override fun Launch(
-            start: idVec3?,
-            dir: idVec3?,
-            pushVelocity: idVec3?,
+            start: idVec3,
+            dir: idVec3,
+            pushVelocity: idVec3,
             timeSinceFire: Float /*= 0.0f*/,
             power: Float /*= 1.0f*/,
             dmgPower: Float /*= 1.0f*/
@@ -1839,11 +1837,11 @@ object Projectile {
             var ent: idEntity
             val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val numListedEntities: Int
-            val bounds: idBounds?
+            val bounds: idBounds
             val damagePoint = idVec3()
             val radius = CFloat()
             spawnArgs.GetFloat("damageRadius", "512", radius)
-            bounds = idBounds(GetPhysics().GetOrigin()).Expand(radius.getVal())
+            bounds = idBounds(GetPhysics().GetOrigin()).Expand(radius._val)
             val beamWidth = spawnArgs.GetFloat("beam_WidthFly")
             val skin = spawnArgs.GetString("skin_beam")
 
@@ -1887,7 +1885,7 @@ object Projectile {
                     continue
                 }
                 if (ent is idPlayer) {
-                    val player = ent as idPlayer
+                    val player = ent
                     player.playerView.EnableBFGVision(true)
                 }
                 val bt = beamTarget_t() //memset( &bt.renderEntity, 0, sizeof( renderEntity_t ) );
@@ -1930,7 +1928,7 @@ object Projectile {
             val ownerEnt: idEntity?
             ownerEnt = owner.GetEntity()
             player = if (ownerEnt != null && ownerEnt is idPlayer) {
-                ownerEnt as idPlayer?
+                ownerEnt
             } else {
                 null
             }
@@ -2013,7 +2011,7 @@ object Projectile {
             UpdateVisuals()
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         } //        private void ApplyDamage();
 
@@ -2038,8 +2036,8 @@ object Projectile {
     class idDebris : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idDebris );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2060,7 +2058,7 @@ object Projectile {
 
         // ~idDebris();
         // save games
-        override fun Save(savefile: idSaveGame?) {                    // archives object for save game file
+        override fun Save(savefile: idSaveGame) {                    // archives object for save game file
             owner.Save(savefile)
             savefile.WriteStaticObject(physicsObj)
             savefile.WriteParticle(smokeFly)
@@ -2068,7 +2066,7 @@ object Projectile {
             savefile.WriteSoundShader(sndBounce)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {                    // unarchives object from save game file
+        override fun Restore(savefile: idRestoreGame) {                    // unarchives object from save game file
             owner.Restore(savefile)
             savefile.ReadStaticObject(physicsObj)
             RestorePhysics(physicsObj)
@@ -2084,7 +2082,7 @@ object Projectile {
             smokeFlyTime = 0
         }
 
-        fun Create(owner: idEntity?, start: idVec3?, axis: idMat3?) {
+        fun Create(owner: idEntity?, start: idVec3, axis: idMat3) {
             Unbind()
             GetPhysics().SetOrigin(start)
             GetPhysics().SetAxis(axis)
@@ -2108,7 +2106,7 @@ object Projectile {
             val gravity: Float
             val gravVec = idVec3()
             val randomVelocity: Boolean
-            val axis: idMat3?
+            val axis: idMat3
             renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             spawnArgs.GetVector("velocity", "0 0 0", velocity)
@@ -2230,7 +2228,7 @@ object Projectile {
             }
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             if (spawnArgs.GetBool("detonate_on_death")) {
                 Explode()
             } else {
@@ -2301,7 +2299,7 @@ object Projectile {
             PostEventMS(Class.EV_Remove, 0)
         }
 
-        override fun Collide(collision: trace_s?, velocity: idVec3?): Boolean {
+        override fun Collide(collision: trace_s?, velocity: idVec3): Boolean {
             if (sndBounce != null) {
                 StartSoundShader(sndBounce, gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
             }
@@ -2321,7 +2319,7 @@ object Projectile {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

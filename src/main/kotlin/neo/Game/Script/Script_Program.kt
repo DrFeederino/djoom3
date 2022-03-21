@@ -100,7 +100,7 @@ object Script_Program {
         var def: idVarDef? = null
 
         //
-        var eventdef: idEventDef? = null
+        var eventdef: idEventDef = null
         var filenum // source file defined in
                 = 0
         var firstStatement = 0
@@ -620,7 +620,7 @@ object Script_Program {
         private var type: idTypeDef?
 
         // ~idScriptObject();
-        fun Save(savefile: idSaveGame?) {            // archives object for save game file
+        fun Save(savefile: idSaveGame) {            // archives object for save game file
             val   /*size_t*/size: Int
             if (type == Script_Program.type_object && data == null) {
                 // Write empty string for uninitialized object
@@ -633,7 +633,7 @@ object Script_Program {
             }
         }
 
-        fun Restore(savefile: idRestoreGame?) {            // unarchives object from save game file
+        fun Restore(savefile: idRestoreGame) {            // unarchives object from save game file
             val typeName = idStr()
             val size = CInt()
             savefile.ReadString(typeName)
@@ -646,13 +646,13 @@ object Script_Program {
                 savefile.Error("idScriptObject::Restore: failed to restore object of type '%s'.", typeName.toString())
             }
             savefile.ReadInt(size)
-            if (size.getVal() != type.Size()) {
+            if (size._val != type.Size()) {
                 savefile.Error(
                     "idScriptObject::Restore: size of object '%s' doesn't match size in save game.",
                     typeName
                 )
             }
-            savefile.Read(data, size.getVal())
+            savefile.Read(data, size._val)
         }
 
         fun Free() {
@@ -894,7 +894,7 @@ object Script_Program {
     class idScriptBool : idScriptVariable<Boolean?, Boolean?>(Script_Program.ev_boolean)
     class idScriptFloat : idScriptVariable<Float?, Float?>(Script_Program.ev_float)
     private class idScriptInt : idScriptVariable<Float?, Int?>(Script_Program.ev_float)
-    private class idScriptVector : idScriptVariable<idVec3?, idVec3?>(Script_Program.ev_vector)
+    private class idScriptVector : idScriptVariable<idVec3, idVec3>(Script_Program.ev_vector)
     private class idScriptString : idScriptVariable<idStr?, String?>(Script_Program.ev_string)
 
     /* **********************************************************************
@@ -928,7 +928,7 @@ object Script_Program {
         var stringPtr: String? = null
 
         //        final         float[]        floatPtr;
-        val vectorPtr: idVec3? = idVec3()
+        val vectorPtr: idVec3 = idVec3()
         private var offset = 0
 
         //        private int ptrOffset;
@@ -985,14 +985,14 @@ object Script_Program {
             setBytePtr(ByteBuffer.wrap(`val`), offset)
         }
 
-        fun getVectorPtr(): idVec3? {
+        fun getVectorPtr(): idVec3 {
             vectorPtr.set(0, primitive.getFloat(0))
             vectorPtr.set(1, primitive.getFloat(4))
             vectorPtr.set(2, primitive.getFloat(8))
             return vectorPtr
         }
 
-        fun setVectorPtr(vector: idVec3?) {
+        fun setVectorPtr(vector: idVec3) {
             setVectorPtr(vector.ToFloatPtr())
         }
 
@@ -1057,11 +1057,11 @@ object Script_Program {
         }
     }
 
-    internal class idVarDef @JvmOverloads constructor(  //
+    class idVarDef @JvmOverloads constructor(  //
         private var typeDef: idTypeDef? = null /*= NULL*/
     ) {
         //
-        var initialized: initialized_t?
+        var initialized: initialized_t
         var num = 0
         var numUsers // number of users if this is a constant
                 = 0

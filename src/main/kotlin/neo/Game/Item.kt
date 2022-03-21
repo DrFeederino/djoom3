@@ -53,12 +53,12 @@ import java.util.*
  *
  */
 object Item {
-    val EV_CamShot: idEventDef? = idEventDef("<camshot>")
-    val EV_DropToFloor: idEventDef? = idEventDef("<dropToFloor>")
-    val EV_GetPlayerPos: idEventDef? = idEventDef("<getplayerpos>")
-    val EV_HideObjective: idEventDef? = idEventDef("<hideobjective>", "e")
-    val EV_RespawnFx: idEventDef? = idEventDef("<respawnFx>")
-    val EV_RespawnItem: idEventDef? = idEventDef("respawn")
+    val EV_CamShot: idEventDef = idEventDef("<camshot>")
+    val EV_DropToFloor: idEventDef = idEventDef("<dropToFloor>")
+    val EV_GetPlayerPos: idEventDef = idEventDef("<getplayerpos>")
+    val EV_HideObjective: idEventDef = idEventDef("<hideobjective>", "e")
+    val EV_RespawnFx: idEventDef = idEventDef("<respawnFx>")
+    val EV_RespawnItem: idEventDef = idEventDef("respawn")
 
     /*
      ===============================================================================
@@ -76,10 +76,10 @@ object Item {
             val EVENT_RESPAWNFX = EVENT_PICKUP + 2
 
             // public	CLASS_PROTOTYPE( idItem );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // virtual					~idItem();
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -99,7 +99,7 @@ object Item {
         }
 
         // };
-        private val orgOrigin: idVec3?
+        private val orgOrigin: idVec3
         private var canPickUp: Boolean
 
         //
@@ -115,7 +115,7 @@ object Item {
         private var pulse = false
         private var shellMaterial: idMaterial?
         private var spin = false
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(orgOrigin)
             savefile.WriteBool(spin)
             savefile.WriteBool(pulse)
@@ -127,7 +127,7 @@ object Item {
             savefile.WriteInt(lastRenderViewTime)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(orgOrigin)
             spin = savefile.ReadBool()
             spin = savefile.ReadBool()
@@ -150,7 +150,7 @@ object Item {
             }
             if (spawnArgs.GetFloat("triggersize", "0", tsize)) {
                 GetPhysics().GetClipModel()
-                    .LoadModel(idTraceModel(idBounds(Vector.getVec3_origin()).Expand(tsize.getVal())))
+                    .LoadModel(idTraceModel(idBounds(Vector.getVec3_origin()).Expand(tsize._val)))
                 GetPhysics().GetClipModel().Link(Game_local.gameLocal.clip)
             }
             if (spawnArgs.GetBool("start_off")) {
@@ -332,11 +332,11 @@ object Item {
         }
 
         // networking
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteBits(TempDump.btoi(IsHidden()), 1)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             if (msg.ReadBits(1) != 0) {
                 Hide()
             } else {
@@ -422,7 +422,7 @@ object Item {
             if (!canPickUp) {
                 return
             }
-            Pickup(other as idPlayer)
+            Pickup(other)
         }
 
         private fun Event_Trigger(_activator: idEventArg<idEntity?>?) {
@@ -460,7 +460,7 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -520,14 +520,14 @@ object Item {
      */
     class idItemPowerup : idItem() {
         // public 	CLASS_PROTOTYPE( idItemPowerup );
-        private val time: CInt? = CInt()
-        private val type: CInt? = CInt()
-        override fun Save(savefile: idSaveGame?) {
-            savefile.WriteInt(time.getVal())
-            savefile.WriteInt(type.getVal())
+        private val time: CInt = CInt()
+        private val type: CInt = CInt()
+        override fun Save(savefile: idSaveGame) {
+            savefile.WriteInt(time._val)
+            savefile.WriteInt(type._val)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadInt(time)
             savefile.ReadInt(type)
         }
@@ -542,7 +542,7 @@ object Item {
             if (player.spectating) {
                 return false
             }
-            player.GivePowerUp(type.getVal(), time.getVal() * 1000)
+            player.GivePowerUp(type._val, time._val * 1000)
             return true
         }
 
@@ -564,8 +564,8 @@ object Item {
     class idObjective : idItem() {
         companion object {
             //public 	CLASS_PROTOTYPE( idObjective );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -584,12 +584,12 @@ object Item {
             }
         }
 
-        private val playerPos: idVec3?
-        override fun Save(savefile: idSaveGame?) {
+        private val playerPos: idVec3
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(playerPos)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(playerPos)
             PostEventMS(Item.EV_CamShot, 250)
         }
@@ -684,7 +684,7 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -739,7 +739,7 @@ object Item {
     open class idMoveableItem : idItem() {
         companion object {
             // public 	CLASS_PROTOTYPE( idMoveableItem );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             /*
          ================
@@ -767,7 +767,7 @@ object Item {
                 var key: String
                 var key2: String
                 val origin = idVec3()
-                var axis: idMat3? = idMat3()
+                var axis: idMat3 = idMat3()
                 val angles = idAngles()
                 val skin: idDeclSkin?
                 var   /*jointHandle_t*/joint: Int
@@ -832,9 +832,9 @@ object Item {
 
             fun DropItem(
                 classname: String?,
-                origin: idVec3?,
-                axis: idMat3?,
-                velocity: idVec3?,
+                origin: idVec3,
+                axis: idMat3,
+                velocity: idVec3,
                 activateDelay: Int,
                 removeDelay: Int
             ): idEntity? {
@@ -868,7 +868,7 @@ object Item {
                 return item[0]
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -896,14 +896,14 @@ object Item {
             super._deconstructor()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteStaticObject(physicsObj)
             savefile.WriteClipModel(trigger)
             savefile.WriteParticle(smoke)
             savefile.WriteInt(smokeTime)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadStaticObject(physicsObj)
             RestorePhysics(physicsObj)
             savefile.ReadClipModel(trigger)
@@ -922,7 +922,7 @@ object Item {
 
             // create a trigger for item pickup
             spawnArgs.GetFloat("triggersize", "16.0", tsize)
-            trigger = idClipModel(idTraceModel(idBounds(Vector.getVec3_origin()).Expand(tsize.getVal())))
+            trigger = idClipModel(idTraceModel(idBounds(Vector.getVec3_origin()).Expand(tsize._val)))
             trigger.Link(Game_local.gameLocal.clip, this, 0, GetPhysics().GetOrigin(), GetPhysics().GetAxis())
             trigger.SetContents(Material.CONTENTS_TRIGGER)
 
@@ -945,19 +945,19 @@ object Item {
 
             // get rigid body properties
             spawnArgs.GetFloat("density", "0.5", density)
-            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density.getVal()))
+            density.setVal(idMath.ClampFloat(0.001f, 1000.0f, density._val))
             spawnArgs.GetFloat("friction", "0.05", friction)
-            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction.getVal()))
+            friction.setVal(idMath.ClampFloat(0.0f, 1.0f, friction._val))
             spawnArgs.GetFloat("bouncyness", "0.6", bouncyness)
-            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness.getVal()))
+            bouncyness.setVal(idMath.ClampFloat(0.0f, 1.0f, bouncyness._val))
 
             // setup the physics
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(trm), density.getVal())
+            physicsObj.SetClipModel(idClipModel(trm), density._val)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
-            physicsObj.SetBouncyness(bouncyness.getVal())
-            physicsObj.SetFriction(0.6f, 0.6f, friction.getVal())
+            physicsObj.SetBouncyness(bouncyness._val)
+            physicsObj.SetFriction(0.6f, 0.6f, friction._val)
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
             physicsObj.SetContents(Material.CONTENTS_RENDERMODEL)
             physicsObj.SetClipMask(Game_local.MASK_SOLID or Material.CONTENTS_MOVEABLECLIP)
@@ -1008,18 +1008,18 @@ object Item {
             return ret
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             physicsObj.WriteToSnapshot(msg)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             physicsObj.ReadFromSnapshot(msg)
             if (msg.HasChanged()) {
                 UpdateVisuals()
             }
         }
 
-        private fun Gib(dir: idVec3?, damageDefName: String?) {
+        private fun Gib(dir: idVec3, damageDefName: String?) {
             // spawn smoke puff
             val smokeName = spawnArgs.GetString("smoke_gib")
             if (!smokeName.isEmpty()) { // != '\0' ) {
@@ -1044,7 +1044,7 @@ object Item {
             Gib(idVec3(0, 0, 1), damageDefName.value)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1091,8 +1091,8 @@ object Item {
     open class idItemRemover : idEntity() {
         companion object {
             //public 	CLASS_PROTOTYPE( idItemRemover );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1122,7 +1122,7 @@ object Item {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1137,8 +1137,8 @@ object Item {
     class idObjectiveComplete : idItemRemover() {
         companion object {
             // public 	CLASS_PROTOTYPE( idObjectiveComplete );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1157,12 +1157,12 @@ object Item {
             }
         }
 
-        private val playerPos: idVec3?
-        override fun Save(savefile: idSaveGame?) {
+        private val playerPos: idVec3
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(playerPos)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(playerPos)
         }
 
@@ -1213,7 +1213,7 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

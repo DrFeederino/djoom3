@@ -58,8 +58,8 @@ object Model_md3 {
     }
 
     internal class md3Frame_s {
-        val bounds: Array<idVec3?>? = idVec3.Companion.generateArray(2)
-        val localOrigin: idVec3? = idVec3()
+        val bounds: Array<idVec3>? = idVec3.Companion.generateArray(2)
+        val localOrigin: idVec3 = idVec3()
 
         //	char		name[16];
         var name: String? = null
@@ -68,10 +68,10 @@ object Model_md3 {
 
     internal class md3Tag_s {
         //	char		name[MAX_MD3PATH];	// tag name
-        val axis: Array<idVec3?>? = idVec3.Companion.generateArray(3)
+        val axis: Array<idVec3>? = idVec3.Companion.generateArray(3)
         var name // tag name
                 : String? = null
-        val origin: idVec3? = idVec3()
+        val origin: idVec3 = idVec3()
     }
 
     /*
@@ -493,7 +493,7 @@ object Model_md3 {
             return staticModel
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds? {
+        override fun Bounds(ent: renderEntity_s?): idBounds {
             val ret = idBounds()
             ret.Clear()
             if (null == ent || null == md3) {

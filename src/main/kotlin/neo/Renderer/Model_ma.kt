@@ -108,7 +108,7 @@ object Model_ma {
     }
 
     @Throws(idException::class)
-    fun MA_ReadVec3(parser: idParser?, vec: idVec3?): Boolean {
+    fun MA_ReadVec3(parser: idParser?, vec: idVec3): Boolean {
         // idToken token;
         if (!parser.SkipUntilString("double3")) {
             throw idException(Str.va("Maya Loader '%s': Invalid Vec3", parser.GetFileName()))
@@ -221,7 +221,7 @@ object Model_ma {
                 header.size = 1
             }
             pMesh.numVertTransforms = header.size
-            pMesh.vertTransforms = arrayOfNulls<idVec4?>(pMesh.numVertTransforms) // Mem_Alloc(pMesh.numVertTransforms);
+            pMesh.vertTransforms = arrayOfNulls<idVec4>(pMesh.numVertTransforms) // Mem_Alloc(pMesh.numVertTransforms);
             pMesh.nextVertTransformIndex = 0
         }
 
@@ -432,10 +432,10 @@ object Model_ma {
 
         //Read each vert
         for (i in minIndex[0]..maxIndex[0]) {
-            pMesh.colors.get(i * 4 + 0) = (parser.ParseFloat() * 255).toByte()
-            pMesh.colors.get(i * 4 + 1) = (parser.ParseFloat() * 255).toByte()
-            pMesh.colors.get(i * 4 + 2) = (parser.ParseFloat() * 255).toByte()
-            pMesh.colors.get(i * 4 + 3) = (parser.ParseFloat() * 255).toByte()
+            pMesh.colors.get(i * 4 + 0) = (parser.ParseFloat() * 255).toInt().toByte()
+            pMesh.colors.get(i * 4 + 1) = (parser.ParseFloat() * 255).toInt().toByte()
+            pMesh.colors.get(i * 4 + 2) = (parser.ParseFloat() * 255).toInt().toByte()
+            pMesh.colors.get(i * 4 + 3) = (parser.ParseFloat() * 255).toInt().toByte()
         }
         return true
     }
@@ -453,7 +453,7 @@ object Model_ma {
         //Allocate enough space for all the data
         if (null == pMesh.tvertexes) {
             pMesh.numTVertexes = header.size
-            pMesh.tvertexes = arrayOfNulls<idVec2?>(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
+            pMesh.tvertexes = arrayOfNulls<idVec2>(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
         }
 
         //Get the start and end index for this attribute
@@ -802,14 +802,14 @@ object Model_ma {
         return true
     }
 
-    fun MA_BuildScale(mat: idMat4?, x: Float, y: Float, z: Float) {
+    fun MA_BuildScale(mat: idMat4, x: Float, y: Float, z: Float) {
         mat.Identity()
         mat.get(0).set(0, x)
         mat.get(1).set(1, y)
         mat.get(2).set(2, z)
     }
 
-    fun MA_BuildAxisRotation(mat: idMat4?, ang: Float, axis: Int) {
+    fun MA_BuildAxisRotation(mat: idMat4, ang: Float, axis: Int) {
         val sinAng = idMath.Sin(ang)
         val cosAng = idMath.Cos(ang)
         mat.Identity()
@@ -1033,26 +1033,26 @@ object Model_ma {
 
     internal class maTransform_s {
         var parent: maTransform_s? = null
-        val rotate: idVec3? = idVec3()
-        val scale: idVec3? = idVec3()
-        val translate: idVec3? = idVec3()
+        val rotate: idVec3 = idVec3()
+        val scale: idVec3 = idVec3()
+        val translate: idVec3 = idVec3()
     }
 
     internal class maFace_t {
         var edge: IntArray? = IntArray(3)
         var tVertexNum: IntArray? = IntArray(3)
         var vertexColors: IntArray? = IntArray(3)
-        val vertexNormals: Array<idVec3?>? = idVec3.Companion.generateArray(3)
+        val vertexNormals: Array<idVec3>? = idVec3.Companion.generateArray(3)
         var vertexNum: IntArray? = IntArray(3)
     }
 
     internal class maMesh_t {
         var colors: ByteArray?
-        var edges: Array<idVec3?>?
+        var edges: Array<idVec3>?
         var faces: Array<maFace_t?>?
         var nextNormal = 0
         var nextVertTransformIndex = 0
-        var normals: Array<idVec3?>?
+        var normals: Array<idVec3>?
         var normalsParsed = false
 
         //
@@ -1082,9 +1082,9 @@ object Model_ma {
 
         //Transform to be applied
         var transform: maTransform_s? = null
-        var tvertexes: Array<idVec2?>?
-        var vertTransforms: Array<idVec4?>?
-        var vertexes: Array<idVec3?>?
+        var tvertexes: Array<idVec2>?
+        var vertTransforms: Array<idVec4>?
+        var vertexes: Array<idVec3>?
     }
 
     internal class maMaterial_t {

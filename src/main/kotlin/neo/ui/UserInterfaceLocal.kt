@@ -78,7 +78,7 @@ class UserInterfaceLocal {
         }
 
         override fun Comment(): String {
-            return desktop?.GetComment() ?: ""
+            return desktop.GetComment()
         }
 
         override fun IsInteractive(): Boolean {
@@ -110,7 +110,7 @@ class UserInterfaceLocal {
                 val token = idToken()
                 while (src.ReadToken(token)) {
                     if (idStr.Companion.Icmp(token, "windowDef") == 0) {
-                        desktop.SetDC(UserInterface.uiManagerLocal.dc!!)
+                        desktop.SetDC(UserInterface.uiManagerLocal.dc)
                         if (desktop.Parse(src, rebuild)) {
                             desktop.SetFlag(Window.WIN_DESKTOP)
                             desktop.FixupParms()
@@ -167,7 +167,7 @@ class UserInterfaceLocal {
         }
 
         override fun Redraw(_time: Int) {
-            if (RenderSystem_init.r_skipGuiShaders!!.GetInteger() > 5) {
+            if (RenderSystem_init.r_skipGuiShaders.GetInteger() > 5) {
                 return
             }
             if (!loading && desktop != null) {

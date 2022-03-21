@@ -32,7 +32,7 @@ import neo.idlib.math.Vector.idVec4
  *
  */
 object Trigger {
-    val EV_Disable: idEventDef? = idEventDef("disable", null)
+    val EV_Disable: idEventDef = idEventDef("disable", null)
 
     /*
      ===============================================================================
@@ -41,20 +41,20 @@ object Trigger {
 
      ===============================================================================
      */
-    val EV_Enable: idEventDef? = idEventDef("enable", null)
+    val EV_Enable: idEventDef = idEventDef("enable", null)
 
     //
-    val EV_Timer: idEventDef? = idEventDef("<timer>", null)
+    val EV_Timer: idEventDef = idEventDef("<timer>", null)
 
     //
-    val EV_TriggerAction: idEventDef? = idEventDef("<triggerAction>", "e")
+    val EV_TriggerAction: idEventDef = idEventDef("<triggerAction>", "e")
 
     open class idTrigger     //
     //
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             fun DrawDebugInfo() {
                 val axis = Game_local.gameLocal.GetLocalPlayer().viewAngles.ToMat3()
                 val up = idVec3(axis.get(2).times(5.0f))
@@ -160,7 +160,7 @@ object Trigger {
                 }
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -197,7 +197,7 @@ object Trigger {
             return scriptFunction
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             if (scriptFunction != null) {
                 savefile.WriteString(scriptFunction.Name())
             } else {
@@ -205,7 +205,7 @@ object Trigger {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val funcname = idStr()
             savefile.ReadString(funcname)
             if (!funcname.IsEmpty()) {
@@ -262,7 +262,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -279,8 +279,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Multi );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -370,7 +370,7 @@ object Trigger {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(wait)
             savefile.WriteFloat(random)
             savefile.WriteFloat(delay)
@@ -384,7 +384,7 @@ object Trigger {
             savefile.WriteBool(triggerWithSelf)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             wait = savefile.ReadFloat()
             random = savefile.ReadFloat()
             delay = savefile.ReadFloat()
@@ -516,7 +516,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -533,8 +533,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             //CLASS_PROTOTYPE(idTrigger_EntityName );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -562,7 +562,7 @@ object Trigger {
         private var random_delay = 0.0f
         private var triggerFirst = false
         private var wait = 0.0f
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(wait)
             savefile.WriteFloat(random)
             savefile.WriteFloat(delay)
@@ -572,7 +572,7 @@ object Trigger {
             savefile.WriteString(entityName)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             wait = savefile.ReadFloat()
             random = savefile.ReadFloat()
             delay = savefile.ReadFloat()
@@ -700,7 +700,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -717,8 +717,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Timer );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -739,7 +739,7 @@ object Trigger {
         private val onName: idStr? = idStr()
         private var random = 0.0f
         private var wait = 0.0f
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(random)
             savefile.WriteFloat(wait)
             savefile.WriteBool(on)
@@ -748,7 +748,7 @@ object Trigger {
             savefile.WriteString(offName)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             random = savefile.ReadFloat()
             wait = savefile.ReadFloat()
             on = savefile.ReadBool()
@@ -834,7 +834,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -851,8 +851,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Count );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -872,13 +872,13 @@ object Trigger {
         private var count = 0
         private var delay = 0.0f
         private var goal = 0
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(goal)
             savefile.WriteInt(count)
             savefile.WriteFloat(delay)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             goal = savefile.ReadInt()
             count = savefile.ReadInt()
             delay = savefile.ReadFloat()
@@ -918,7 +918,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -935,8 +935,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Hurt );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -954,13 +954,13 @@ object Trigger {
         private var delay = 0.0f
         private var nextTime = 0
         private var on = false
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteBool(on)
             savefile.WriteFloat(delay)
             savefile.WriteInt(nextTime)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             on = savefile.ReadBool()
             delay = savefile.ReadFloat()
             nextTime = savefile.ReadInt()
@@ -1002,7 +1002,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1017,8 +1017,8 @@ object Trigger {
     class idTrigger_Fade : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Fade );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1032,7 +1032,7 @@ object Trigger {
         }
 
         private fun Event_Trigger(activator: idEventArg<idEntity?>?) {
-            val fadeColor: idVec4?
+            val fadeColor: idVec4
             val fadeTime: Int
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -1048,7 +1048,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1065,8 +1065,8 @@ object Trigger {
         : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Touch );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1098,11 +1098,11 @@ object Trigger {
             idEntity_Think()
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteClipModel(clipModel)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadClipModel(clipModel)
         }
 
@@ -1168,7 +1168,7 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }

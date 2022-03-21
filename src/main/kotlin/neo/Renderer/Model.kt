@@ -16,9 +16,8 @@ import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
-import java.util.stream.Stream
 
 /**
  *
@@ -26,9 +25,9 @@ import java.util.stream.Stream
 object Model {
     //typedef enum {
     const val INVALID_JOINT = -1
-    val MD5_ANIM_EXT: String? = "md5anim"
-    val MD5_CAMERA_EXT: String? = "md5camera"
-    val MD5_MESH_EXT: String? = "md5mesh"
+    val MD5_ANIM_EXT: String = "md5anim"
+    val MD5_CAMERA_EXT: String = "md5camera"
+    val MD5_MESH_EXT: String = "md5mesh"
     const val MD5_VERSION = 10
 
     /*
@@ -39,12 +38,12 @@ object Model {
      ===============================================================================
      */
     // shared between the renderer, game, and Maya export DLL
-    val MD5_VERSION_STRING: String? = "MD5Version"
+    val MD5_VERSION_STRING: String = "MD5Version"
 
     //
     // using shorts for triangle indexes can save a significant amount of traffic, but
     // to support the large models that renderBump loads, they need to be 32 bits
-    const val GL_INDEX_TYPE = 0
+    var GL_INDEX_TYPE = 0
     const val SHADOW_CAP_INFINITE = 64
 
     enum class dynamicModel_t {
@@ -63,23 +62,16 @@ object Model {
                 = 0
 
         constructor()
-        constructor(`val`: silEdge_t?) {
-            if (`val` == null) {
-                v2 = 0
-                v1 = v2
-                p2 = v1
-                p1 = p2
-            } else {
-                p1 = `val`.p1
-                p2 = `val`.p2
-                v1 = `val`.v1
-                v2 = `val`.v2
-            }
+        constructor(fromVal: silEdge_t) {
+            p1 = fromVal.p1
+            p2 = fromVal.p2
+            v1 = fromVal.v1
+            v2 = fromVal.v2
         }
 
         companion object {
-            fun generateArray(length: Int): Array<silEdge_t?>? {
-                return Stream.generate { silEdge_t() }.limit(length.toLong()).toArray { _Dummy_.__Array__() }
+            fun generateArray(length: Int): Array<silEdge_t> {
+                return Array(length) { silEdge_t() }
             }
         }
     }
@@ -91,12 +83,12 @@ object Model {
         var v3 = 0
     }
 
-    internal class lightingCache_s(Position: ByteBuffer?) {
-        val localLightVector: idVec3? = idVec3() // this is the statically computed vector to the light
+    internal class lightingCache_s(Position: ByteBuffer) {
+        val localLightVector: idVec3 = idVec3() // this is the statically computed vector to the light
 
         companion object {
             val BYTES: Int = idVec3.Companion.BYTES
-            fun toByteBuffer(cache: Array<lightingCache_s?>?): ByteBuffer? {
+            fun toByteBuffer(cache: Array<lightingCache_s>): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * cache.size)
                 for (c in cache) {
                     data.put(c.localLightVector.Write())
@@ -121,7 +113,7 @@ object Model {
 
         companion object {
             val BYTES: Int = idVec4.Companion.BYTES
-            fun toByteBuffer(cache: Array<shadowCache_s?>?): ByteBuffer? {
+            fun toByteBuffer(cache: Array<shadowCache_s>): ByteBuffer {
                 val data = BufferUtils.createByteBuffer(BYTES * cache.size)
                 for (c in cache) {
                     data.put(c.xyz.Write())
@@ -208,7 +200,7 @@ object Model {
         var shadowCache // shadowCache_t
                 : vertCache_s? = null
         var silEdges // silhouette edges
-                : Array<silEdge_t?>
+                : Array<silEdge_t>
 
         override fun toString(): String {
             return "srfTriangles_s{" +
@@ -255,7 +247,7 @@ object Model {
     class modelSurface_s {
         var geometry: srfTriangles_s? = null
         var id = 0
-        var shader: idMaterial? = null
+        var shader: Material.idMaterial? = null
 
         constructor()
         constructor(other: modelSurface_s?) {
@@ -382,8 +374,8 @@ object Model {
 
         // dynamic models should return a fast, conservative approximation
         // static models should usually return the exact value
-        abstract fun Bounds(ent: renderEntity_s? /*= NULL*/): idBounds?
-        abstract fun Bounds(): idBounds?
+        abstract fun Bounds(ent: renderEntity_s? /*= NULL*/): idBounds
+        abstract fun Bounds(): idBounds
 
         // returns value != 0.0f if the model requires the depth hack
         abstract fun DepthHack(): Float
@@ -420,9 +412,9 @@ object Model {
         abstract fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int
 
         // Writing to and reading from a demo file.
-        abstract fun ReadFromDemoFile(f: idDemoFile?)
-        abstract fun WriteToDemoFile(f: idDemoFile?)
-        abstract fun oSet(FindModel: idRenderModel?)
+        abstract fun ReadFromDemoFile(f: idDemoFile)
+        abstract fun WriteToDemoFile(f: idDemoFile)
+        abstract fun oSet(FindModel: idRenderModel)
 
         companion object {
             private var DBG_counter = 0
@@ -431,7 +423,7 @@ object Model {
 
     init {
         if (true) {
-            Model.GL_INDEX_TYPE = GL11.GL_UNSIGNED_INT
+            GL_INDEX_TYPE = GL11.GL_UNSIGNED_INT
             //        } else {
             //            GL_INDEX_TYPE = GL_UNSIGNED_SHORT;
         }

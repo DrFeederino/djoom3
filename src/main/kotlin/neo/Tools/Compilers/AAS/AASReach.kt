@@ -435,7 +435,7 @@ object AASReach {
             val water_bestEnd = idVec3()
             val water_bestNormal = idVec3()
             val testPoint = idVec3()
-            var plane: idPlane?
+            var plane: idPlane
             val area1: aasArea_s?
             val area2: aasArea_s?
             var floorFace1: aasFace_s?
@@ -930,7 +930,7 @@ object AASReach {
             val area: aasArea_s?
             var face: aasFace_s?
             var edge: aasEdge_s?
-            var plane: idPlane?
+            var plane: idPlane
             val v1 = idVec3()
             val v2 = idVec3()
             val mid = idVec3()

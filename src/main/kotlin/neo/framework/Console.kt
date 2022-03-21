@@ -482,7 +482,7 @@ class Console {
                 line = l % TOTAL_LINES * LINE_WIDTH
                 i = 0
                 while (i < LINE_WIDTH) {
-                    buffer[i] = (text[line + i] and 0xff).toChar()
+                    buffer[i] = (text[line + i] and 0xff).toInt().toChar()
                     i++
                 }
                 x = LINE_WIDTH - 1
@@ -539,7 +539,7 @@ class Console {
 
             // enter finishes the line
             if (key == KeyInput.K_ENTER || key == KeyInput.K_KP_ENTER) {
-                val buffer = TempDump.ctos(consoleField.GetBuffer())!!
+                val buffer = TempDump.ctos(consoleField.GetBuffer())
                 Common.common.Printf("]%s\n", buffer)
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, buffer) // valid command
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "\n")

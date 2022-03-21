@@ -38,7 +38,7 @@ object draw_common {
      =====================
      */
     //========================================================================
-    private val fogPlanes: Array<idPlane?>? = idPlane.Companion.generateArray(4)
+    private val fogPlanes: Array<idPlane>? = idPlane.Companion.generateArray(4)
 
     /*
      ================
@@ -56,7 +56,7 @@ object draw_common {
      */
     private const val DBG_RB_STD_T_RenderShaderPasses = 0
     private const val DBG_hasMatrix = 0
-    fun RB_BakeTextureMatrixIntoTexgen(   /*idPlane[]*/lightProject: Array<idVec4?>? /*[3]*/,
+    fun RB_BakeTextureMatrixIntoTexgen(   /*idPlane[]*/lightProject: Array<idVec4>? /*[3]*/,
                                                        textureMatrix: FloatArray?
     ) {
         val genMatrix = FloatArray(16)
@@ -427,10 +427,10 @@ object draw_common {
         // screen power of two correction factor, assuming the copy to _currentRender
         // also copied an extra row and column for the bilerp
         val w = tr_local.backEnd.viewDef.viewport.x2 - tr_local.backEnd.viewDef.viewport.x1 + 1
-        pot = Image.globalImages.currentRenderImage.uploadWidth.getVal()
+        pot = Image.globalImages.currentRenderImage.uploadWidth._val
         parm.put(0, w.toFloat() / pot)
         val h = tr_local.backEnd.viewDef.viewport.y2 - tr_local.backEnd.viewDef.viewport.y1 + 1
-        pot = Image.globalImages.currentRenderImage.uploadHeight.getVal()
+        pot = Image.globalImages.currentRenderImage.uploadHeight._val
         parm.put(1, h.toFloat() / pot)
         parm.put(2, 0f)
         parm.put(3, 1f)
@@ -1654,7 +1654,7 @@ object draw_common {
             val tri: srfTriangles_s?
             tri = surf.geo
             if (tr_local.backEnd.currentSpace !== surf.space) {
-                val lightProject: Array<idPlane?> = idPlane.Companion.generateArray(4)
+                val lightProject: Array<idPlane> = idPlane.Companion.generateArray(4)
                 var i: Int
                 i = 0
                 while (i < 4) {

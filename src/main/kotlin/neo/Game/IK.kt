@@ -35,7 +35,7 @@ object IK /*ea*/ {
 
      ===============================================================================
      */
-    val IK_ANIM: String? = "ik_pose"
+    val IK_ANIM: String = "ik_pose"
 
     /*
      ===============================================================================
@@ -45,7 +45,7 @@ object IK /*ea*/ {
      ===============================================================================
      */
     open class idIK {
-        protected val modelOffset: idVec3?
+        protected val modelOffset: idVec3
         protected var animator // animator on entity
                 : idAnimator? = null
         protected var ik_activate = false
@@ -56,7 +56,7 @@ object IK /*ea*/ {
                 : idEntity? = null
 
         // virtual					~idIK( void );
-        open fun Save(savefile: idSaveGame?) {
+        open fun Save(savefile: idSaveGame) {
             savefile.WriteBool(initialized)
             savefile.WriteBool(ik_activate)
             savefile.WriteObject(self)
@@ -68,7 +68,7 @@ object IK /*ea*/ {
             savefile.WriteVec3(modelOffset)
         }
 
-        open fun Restore(savefile: idRestoreGame?) {
+        open fun Restore(savefile: idRestoreGame) {
             val anim = idStr()
             initialized = savefile.ReadBool()
             ik_activate = savefile.ReadBool()
@@ -100,7 +100,7 @@ object IK /*ea*/ {
             return initialized && SysCvar.ik_enable.GetBool()
         }
 
-        open fun Init(self: idEntity?, anim: String?, modelOffset: idVec3?): Boolean {
+        open fun Init(self: idEntity?, anim: String?, modelOffset: idVec3): Boolean {
             val model: idRenderModel? //TODO:finalize objects that can be finalized. hint <- <- <-
             if (self == null) {
                 return false
@@ -147,12 +147,12 @@ object IK /*ea*/ {
         }
 
         fun SolveTwoBones(
-            startPos: idVec3?,
-            endPos: idVec3?,
-            dir: idVec3?,
+            startPos: idVec3,
+            endPos: idVec3,
+            dir: idVec3,
             len0: Float,
             len1: Float,
-            jointPos: idVec3?
+            jointPos: idVec3
         ): Boolean {
             val length: Float
             val lengthSqr: Float
@@ -180,7 +180,7 @@ object IK /*ea*/ {
             return true
         }
 
-        fun GetBoneAxis(startPos: idVec3?, endPos: idVec3?, dir: idVec3?, axis: idMat3?): Float {
+        fun GetBoneAxis(startPos: idVec3, endPos: idVec3, dir: idVec3, axis: idMat3): Float {
             val length: Float
             axis.set(0, endPos.minus(startPos))
             length = axis.get(0).Normalize()
@@ -217,21 +217,21 @@ object IK /*ea*/ {
         private val footJoints: IntArray? = IntArray(MAX_LEGS)
 
         //
-        private val hipForward: Array<idVec3?>? = idVec3.Companion.generateArray(MAX_LEGS)
+        private val hipForward: Array<idVec3>? = idVec3.Companion.generateArray(MAX_LEGS)
         private val hipJoints: IntArray? = IntArray(MAX_LEGS)
-        private val kneeForward: Array<idVec3?>? = idVec3.Companion.generateArray(MAX_LEGS)
+        private val kneeForward: Array<idVec3>? = idVec3.Companion.generateArray(MAX_LEGS)
         private val kneeJoints: IntArray? = IntArray(MAX_LEGS)
         private val lowerLegLength: FloatArray? = FloatArray(MAX_LEGS)
-        private val lowerLegToKneeJoint: Array<idMat3?>? = arrayOfNulls<idMat3?>(MAX_LEGS)
+        private val lowerLegToKneeJoint: Array<idMat3>? = arrayOfNulls<idMat3>(MAX_LEGS)
         private val oldAnkleHeights: FloatArray? = FloatArray(MAX_LEGS)
-        private val pivotPos: idVec3?
+        private val pivotPos: idVec3
 
         //
         private val upperLegLength: FloatArray? = FloatArray(MAX_LEGS)
 
         //
-        private val upperLegToHipJoint: Array<idMat3?>? = arrayOfNulls<idMat3?>(MAX_LEGS)
-        private val waistOffset: idVec3?
+        private val upperLegToHipJoint: Array<idMat3>? = arrayOfNulls<idMat3>(MAX_LEGS)
+        private val waistOffset: idVec3
         private var enabledLegs: Int
         private var footDownTrace: Float
 
@@ -262,7 +262,7 @@ object IK /*ea*/ {
         //
         //
         private var waistSmoothing: Float
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             super.Save(savefile)
             savefile.WriteClipModel(footModel)
@@ -347,7 +347,7 @@ object IK /*ea*/ {
             savefile.WriteVec3(waistOffset)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             super.Restore(savefile)
             savefile.ReadClipModel(footModel)
@@ -432,10 +432,10 @@ object IK /*ea*/ {
             savefile.ReadVec3(waistOffset)
         }
 
-        override fun Init(self: idEntity?, anim: String?, modelOffset: idVec3?): Boolean {
+        override fun Init(self: idEntity?, anim: String?, modelOffset: idVec3): Boolean {
             var i: Int
             val footSize: Float
-            val verts: Array<idVec3?> = idVec3.Companion.generateArray(4)
+            val verts: Array<idVec3> = idVec3.Companion.generateArray(4)
             val trm = idTraceModel()
             var jointName: String?
             val dir = idVec3()
@@ -583,18 +583,18 @@ object IK /*ea*/ {
             val kneeDir = idVec3()
             val start = idVec3()
             val end = idVec3()
-            val jointOrigins: Array<idVec3?> = idVec3.Companion.generateArray(MAX_LEGS)
+            val jointOrigins: Array<idVec3> = idVec3.Companion.generateArray(MAX_LEGS)
             val footOrigin = idVec3()
             val ankleOrigin = idVec3()
             val kneeOrigin = idVec3()
             val hipOrigin = idVec3()
             val waistOrigin = idVec3()
-            val modelAxis: idMat3?
+            val modelAxis: idMat3
             val waistAxis = idMat3()
             val axis = idMat3()
-            val hipAxis = arrayOfNulls<idMat3?>(MAX_LEGS)
-            val kneeAxis = arrayOfNulls<idMat3?>(MAX_LEGS)
-            val ankleAxis = arrayOfNulls<idMat3?>(MAX_LEGS)
+            val hipAxis = arrayOfNulls<idMat3>(MAX_LEGS)
+            val kneeAxis = arrayOfNulls<idMat3>(MAX_LEGS)
+            val ankleAxis = arrayOfNulls<idMat3>(MAX_LEGS)
             val results = trace_s()
             if (null == self || !Game_local.gameLocal.isNewFrame) {
                 return
@@ -875,7 +875,7 @@ object IK /*ea*/ {
 
         companion object {
             private const val MAX_LEGS = 8
-            private val footWinding /*[4]*/: Array<idVec3?>? = arrayOf(
+            private val footWinding /*[4]*/: Array<idVec3>? = arrayOf(
                 idVec3(1.0f, 1.0f, 0),
                 idVec3(-1.0f, 1.0f, 0),
                 idVec3(-1.0f, -1.0f, 0),
@@ -940,28 +940,28 @@ object IK /*ea*/ {
      */
     class idIK_Reach : idIK() {
         private val dirJoints: IntArray? = IntArray(MAX_ARMS)
-        private val elbowForward: Array<idVec3?>? = idVec3.Companion.generateArray(MAX_ARMS)
+        private val elbowForward: Array<idVec3>? = idVec3.Companion.generateArray(MAX_ARMS)
         private val elbowJoints: IntArray? = IntArray(MAX_ARMS)
         private val handJoints: IntArray? = IntArray(MAX_ARMS)
         private val lowerArmLength: FloatArray? = FloatArray(MAX_ARMS)
-        private val lowerArmToElbowJoint: Array<idMat3?>? = arrayOfNulls<idMat3?>(MAX_ARMS)
+        private val lowerArmToElbowJoint: Array<idMat3>? = arrayOfNulls<idMat3>(MAX_ARMS)
 
         //
-        private val shoulderForward: Array<idVec3?>? = idVec3.Companion.generateArray(MAX_ARMS)
+        private val shoulderForward: Array<idVec3>? = idVec3.Companion.generateArray(MAX_ARMS)
         private val shoulderJoints: IntArray? = IntArray(MAX_ARMS)
 
         //
         private val upperArmLength: FloatArray? = FloatArray(MAX_ARMS)
 
         //
-        private val upperArmToShoulderJoint: Array<idMat3?>? = arrayOfNulls<idMat3?>(MAX_ARMS)
+        private val upperArmToShoulderJoint: Array<idMat3>? = arrayOfNulls<idMat3>(MAX_ARMS)
         private var enabledArms: Int
 
         //
         private var numArms: Int
 
         // virtual					~idIK_Reach( void );
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             super.Save(savefile)
             savefile.WriteInt(numArms)
@@ -1018,7 +1018,7 @@ object IK /*ea*/ {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             super.Restore(savefile)
             numArms = savefile.ReadInt()
@@ -1075,7 +1075,7 @@ object IK /*ea*/ {
             }
         }
 
-        override fun Init(self: idEntity?, anim: String?, modelOffset: idVec3?): Boolean {
+        override fun Init(self: idEntity?, anim: String?, modelOffset: idVec3): Boolean {
             var i: Int
             var jointName: String?
             val trm = idTraceModel()
@@ -1178,10 +1178,10 @@ object IK /*ea*/ {
             val handOrigin = idVec3()
             val shoulderDir = idVec3()
             val elbowDir = idVec3()
-            val modelAxis: idMat3?
+            val modelAxis: idMat3
             val axis = idMat3()
-            val shoulderAxis = arrayOfNulls<idMat3?>(MAX_ARMS)
-            val elbowAxis = arrayOfNulls<idMat3?>(MAX_ARMS)
+            val shoulderAxis = arrayOfNulls<idMat3>(MAX_ARMS)
+            val elbowAxis = arrayOfNulls<idMat3>(MAX_ARMS)
             val trace = trace_s()
             modelOrigin.set(self.GetRenderEntity().origin)
             modelAxis = self.GetRenderEntity().axis

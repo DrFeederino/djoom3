@@ -442,8 +442,8 @@ object ubrush {
         SplitBrush(b, node.planenum, front, back)
         FreeBrush(b)
         c = 0
-        c += FilterBrushIntoTree_r(front, node.children[0]!!)
-        c += FilterBrushIntoTree_r(back, node.children[1]!!)
+        c += FilterBrushIntoTree_r(front, node.children[0])
+        c += FilterBrushIntoTree_r(back, node.children[1])
         return c
     }
 

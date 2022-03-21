@@ -117,7 +117,7 @@ object tr_lightrun {
      */
     fun R_CreateEntityRefs(def: idRenderEntityLocal?) {
         var i: Int
-        val transformed: Array<idVec3?> = idVec3.Companion.generateArray(8)
+        val transformed: Array<idVec3> = idVec3.Companion.generateArray(8)
         val v = idVec3()
         if (null == def.parms.hModel) {
             def.parms.hModel = ModelManager.renderModelManager.DefaultModel()
@@ -179,8 +179,8 @@ object tr_lightrun {
      =====================
      */
     fun R_SetLightProject(
-        lightProject: Array<idPlane?>? /*[4]*/, origin: idVec3?, target: idVec3?,
-        rightVector: idVec3?, upVector: idVec3?, start: idVec3?, stop: idVec3?
+        lightProject: Array<idPlane>? /*[4]*/, origin: idVec3, target: idVec3,
+        rightVector: idVec3, upVector: idVec3, start: idVec3, stop: idVec3
     ) {
         var dist: Float
         var scale: Float
@@ -246,7 +246,7 @@ object tr_lightrun {
      face out of the light
      ===================
      */
-    fun R_SetLightFrustum(lightProject: Array<idPlane?>? /*[4]*/, frustum: Array<idPlane?>? /*[6]*/) {
+    fun R_SetLightFrustum(lightProject: Array<idPlane>? /*[4]*/, frustum: Array<idPlane>? /*[6]*/) {
         var i: Int
 
         // we want the planes of s=0, s=q, t=0, and t=q
@@ -396,7 +396,7 @@ object tr_lightrun {
     }
 
     fun R_CreateLightRefs(light: idRenderLightLocal?) {
-        val points: Array<idVec3?> = idVec3.Companion.generateArray(tr_lightrun.MAX_LIGHT_VERTS)
+        val points: Array<idVec3> = idVec3.Companion.generateArray(tr_lightrun.MAX_LIGHT_VERTS)
         var i: Int
         val tri: srfTriangles_s?
         tri = light.frustumTris
@@ -454,7 +454,7 @@ object tr_lightrun {
      Called by the editor and dmap to operate on light volumes
      ===============
      */
-    fun R_RenderLightFrustum(renderLight: renderLight_s?, lightFrustum: Array<idPlane?>? /*[6]*/) {
+    fun R_RenderLightFrustum(renderLight: renderLight_s?, lightFrustum: Array<idPlane>? /*[6]*/) {
         val fakeLight = idRenderLightLocal()
 
 //	memset( &fakeLight, 0, sizeof( fakeLight ) );

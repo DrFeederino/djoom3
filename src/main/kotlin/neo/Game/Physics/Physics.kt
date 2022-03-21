@@ -56,46 +56,40 @@ object Physics {
 
     class impactInfo_s {
         var invInertiaTensor // inverse inertia tensor
-                : idMat3?
+                : idMat3 = idMat3()
         var invMass // inverse mass
                 = 0f
         val position // impact position relative to center of mass
-                : idVec3?
+                : idVec3 = idVec3()
         val velocity // velocity at the impact position
-                : idVec3?
-
-        init {
-            invInertiaTensor = idMat3()
-            position = idVec3()
-            velocity = idVec3()
-        }
+                : idVec3 = idVec3()
     }
 
     abstract class idPhysics : idClass() {
         protected val DBG_count = DBG_counter++
 
         // Must not be virtual
-        override fun Save(savefile: idSaveGame?) {}
-        override fun Restore(savefile: idRestoreGame?) {}
+        override fun Save(savefile: idSaveGame) {}
+        override fun Restore(savefile: idRestoreGame) {}
 
         // common physics interface
         // set pointer to entity using physics
-        abstract fun SetSelf(e: idEntity?)
+        abstract fun SetSelf(e: idEntity)
 
         // clip models
-        abstract fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/)
+        abstract fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/)
 
         @JvmOverloads
-        fun SetClipModel(model: idClipModel?, density: Float, id: Int = 0 /*= 0*/) {
+        fun SetClipModel(model: idClipModel, density: Float, id: Int = 0 /*= 0*/) {
             SetClipModel(model, density, id, true)
         }
 
-        fun SetClipBox(bounds: idBounds?, density: Float) {
+        fun SetClipBox(bounds: idBounds, density: Float) {
             SetClipModel(idClipModel(idTraceModel(bounds)), density)
         }
 
-        abstract fun GetClipModel(id: Int /*= 0*/): idClipModel
-        fun GetClipModel(): idClipModel {
+        abstract fun GetClipModel(id: Int /*= 0*/): idClipModel?
+        fun GetClipModel(): idClipModel? {
             return GetClipModel(0)
         }
 
@@ -156,9 +150,9 @@ object Physics {
         abstract fun GetTime(): Int
 
         // collision interaction between different physics objects
-        abstract fun GetImpactInfo(id: Int, point: idVec3?): impactInfo_s?
-        abstract fun ApplyImpulse(id: Int, point: idVec3?, impulse: idVec3?)
-        abstract fun AddForce(id: Int, point: idVec3?, force: idVec3?)
+        abstract fun GetImpactInfo(id: Int, point: idVec3): impactInfo_s
+        abstract fun ApplyImpulse(id: Int, point: idVec3, impulse: idVec3)
+        abstract fun AddForce(id: Int, point: idVec3, force: idVec3)
         abstract fun Activate()
         abstract fun PutToRest()
         abstract fun IsAtRest(): Boolean
@@ -170,24 +164,24 @@ object Physics {
         abstract fun RestoreState()
 
         // set the position and orientation in master space or world space if no master set
-        abstract fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/)
-        fun SetOrigin(newOrigin: idVec3?) {
+        abstract fun SetOrigin(newOrigin: idVec3, id: Int /*= -1*/)
+        fun SetOrigin(newOrigin: idVec3) {
             SetOrigin(newOrigin, -1)
         }
 
-        abstract fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/)
-        fun SetAxis(newAxis: idMat3?) {
+        abstract fun SetAxis(newAxis: idMat3, id: Int /*= -1*/)
+        fun SetAxis(newAxis: idMat3) {
             SetAxis(newAxis, -1)
         }
 
         // translate or rotate the physics object in world space
-        abstract fun Translate(translation: idVec3?, id: Int /*= -1*/)
-        open fun Translate(translation: idVec3?) {
+        abstract fun Translate(translation: idVec3, id: Int /*= -1*/)
+        open fun Translate(translation: idVec3) {
             Translate(translation, -1)
         }
 
-        abstract fun Rotate(rotation: idRotation?, id: Int /*= -1*/)
-        open fun Rotate(rotation: idRotation?) {
+        abstract fun Rotate(rotation: idRotation, id: Int /*= -1*/)
+        open fun Rotate(rotation: idRotation) {
             Rotate(rotation, -1)
         }
 
@@ -204,13 +198,13 @@ object Physics {
         abstract fun GetAxis(id: Int /*= 0*/): idMat3
 
         // set linear and angular velocity
-        abstract fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/)
-        fun SetLinearVelocity(newLinearVelocity: idVec3?) {
+        abstract fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/)
+        fun SetLinearVelocity(newLinearVelocity: idVec3) {
             SetLinearVelocity(newLinearVelocity, 0)
         }
 
-        abstract fun SetAngularVelocity(newAngularVelocity: idVec3?, id: Int /*= 0*/)
-        fun SetAngularVelocity(newAngularVelocity: idVec3?) {
+        abstract fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/)
+        fun SetAngularVelocity(newAngularVelocity: idVec3) {
             SetAngularVelocity(newAngularVelocity, 0)
         }
 
@@ -231,8 +225,8 @@ object Physics {
         abstract fun GetGravityNormal(): idVec3
 
         // get first collision when translating or rotating this physics object
-        abstract fun ClipTranslation(results: trace_s?, translation: idVec3?, model: idClipModel?)
-        abstract fun ClipRotation(results: trace_s?, rotation: idRotation?, model: idClipModel?)
+        abstract fun ClipTranslation(results: trace_s, translation: idVec3, model: idClipModel?)
+        abstract fun ClipRotation(results: trace_s, rotation: idRotation, model: idClipModel?)
         abstract fun ClipContents(model: idClipModel?): Int
 
         // disable/enable the clip models contained by this physics object
@@ -248,8 +242,8 @@ object Physics {
         abstract fun GetNumContacts(): Int
         abstract fun GetContact(num: Int): contactInfo_t?
         abstract fun ClearContacts()
-        abstract fun AddContactEntity(e: idEntity?)
-        abstract fun RemoveContactEntity(e: idEntity?)
+        abstract fun AddContactEntity(e: idEntity)
+        abstract fun RemoveContactEntity(e: idEntity)
 
         // ground contacts
         abstract fun HasGroundContacts(): Boolean
@@ -261,8 +255,8 @@ object Physics {
 
         // set pushed state
         abstract fun SetPushed(deltaTime: Int)
-        abstract fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3?
-        abstract fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3?
+        abstract fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3
+        abstract fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3
 
         // get blocking info, returns NULL if the object is not blocked
         abstract fun GetBlockingInfo(): trace_s?
@@ -273,9 +267,9 @@ object Physics {
         abstract fun GetAngularEndTime(): Int
 
         // networking
-        abstract fun WriteToSnapshot(msg: idBitMsgDelta?)
-        abstract fun ReadFromSnapshot(msg: idBitMsgDelta?)
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        abstract fun WriteToSnapshot(msg: idBitMsgDelta)
+        abstract fun ReadFromSnapshot(msg: idBitMsgDelta)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return null
         }
 

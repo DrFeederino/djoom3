@@ -33,10 +33,10 @@ object CollisionModel_contents {
      CM_SetTrmPolygonSidedness
      ================
      */
-    fun CM_SetTrmPolygonSidedness(v: cm_vertex_s, plane: idPlane?, bitNum: Int) {
+    fun CM_SetTrmPolygonSidedness(v: cm_vertex_s, plane: idPlane, bitNum: Int) {
         if (0 == v.sideSet and (1 shl bitNum)) {
             val fl: Float
-            fl = plane!!.Distance(v.p)
+            fl = plane.Distance(v.p)
             /* cannot use float sign bit because it is undetermined when fl == 0.0f */if (fl < 0.0f) {
                 v.side = v.side or (1 shl bitNum)
             } else {

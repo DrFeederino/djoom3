@@ -54,7 +54,7 @@ object Model_local {
      AddCubeFace
      ================
      */
-    fun AddCubeFace(tri: srfTriangles_s?, v1: idVec3?, v2: idVec3?, v3: idVec3?, v4: idVec3?) {
+    fun AddCubeFace(tri: srfTriangles_s?, v1: idVec3, v2: idVec3, v3: idVec3, v4: idVec3) {
         tri.verts[tri.numVerts + 0].Clear()
         tri.verts[tri.numVerts + 0].xyz.set(v1.times(8f))
         tri.verts[tri.numVerts + 0].st.set(0, 0f)
@@ -91,7 +91,7 @@ object Model_local {
     open class idRenderModelStatic : idRenderModel() {
         val surfaces: idList<modelSurface_s?>?
         protected val   /*ID_TIME_T*/timeStamp: LongArray? = LongArray(1)
-        var bounds: idBounds? = null
+        var bounds: idBounds = idBounds()
         var overlaysAdded: Int
         protected var defaulted: Boolean
         protected var fastLoad // don't generate tangents and shadow data
@@ -576,11 +576,11 @@ object Model_local {
             return Model.INVALID_JOINT
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds? {
+        override fun Bounds(ent: renderEntity_s?): idBounds {
             return idBounds(bounds.get(0), bounds.get(1))
         }
 
-        override fun Bounds(): idBounds? {
+        override fun Bounds(): idBounds {
             return Bounds(null)
         }
 
@@ -594,21 +594,21 @@ object Model_local {
             val vert = CInt()
             f.ReadInt(numSurfaces)
             i = 0
-            while (i < numSurfaces.getVal()) {
+            while (i < numSurfaces._val) {
                 val surf = modelSurface_s()
                 surf.shader = DeclManager.declManager.FindMaterial(f.ReadHashString())
                 val tri = tr_trisurf.R_AllocStaticTriSurf()
                 f.ReadInt(index)
-                tri.numIndexes = index.getVal()
+                tri.numIndexes = index._val
                 tr_trisurf.R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
                 j = 0
                 while (j < tri.numIndexes) {
                     f.ReadInt(index)
-                    tri.indexes[j] = index.getVal()
+                    tri.indexes[j] = index._val
                     ++j
                 }
                 f.ReadInt(vert)
-                tri.numVerts = vert.getVal()
+                tri.numVerts = vert._val
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
                 j = 0
                 while (j < tri.numVerts) {
@@ -1012,8 +1012,8 @@ object Model_local {
                     i++
                 }
             }
-            val vertexSubset = idVectorSubset<idVec3?>(3)
-            val texCoordSubset = idVectorSubset<idVec2?>(2)
+            val vertexSubset = idVectorSubset<idVec3>(3)
+            val texCoordSubset = idVectorSubset<idVec2>(2)
 
             // build the surfaces
             objectNum = 0
@@ -1269,7 +1269,7 @@ object Model_local {
             var v: Int
             var tv: Int
             val vRemap: IntArray
-            val tvList: Array<idVec2?>
+            val tvList: Array<idVec2>
             val tvRemap: IntArray
             var mvTable: Array<matchVert_s?> // all of the match verts
             var mvHash: Array<matchVert_s?> // points inside mvTable for each xyz index
@@ -1347,8 +1347,8 @@ object Model_local {
                     i++
                 }
             }
-            val vertexSubset = idVectorSubset<idVec3?>(3)
-            val texCoordSubset = idVectorSubset<idVec2?>(2)
+            val vertexSubset = idVectorSubset<idVec3>(3)
+            val texCoordSubset = idVectorSubset<idVec2>(2)
 
             // we only ever use the first layer
             val layer = lwo.layer
@@ -1358,7 +1358,7 @@ object Model_local {
                 Common.common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing vertex data", name)
                 return false
             }
-            val vList: Array<idVec3?> =
+            val vList: Array<idVec3> =
                 idVec3.Companion.generateArray(layer.point.count) // R_StaticAlloc(layer.point.count /* sizeof( vList[0] ) */);
             j = 0
             while (j < layer.point.count) {
@@ -1403,7 +1403,7 @@ object Model_local {
             } else {
                 Common.common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing uv data", name)
                 numTVertexes = 1
-                tvList = arrayOfNulls<idVec2?>(numTVertexes) // Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
+                tvList = arrayOfNulls<idVec2>(numTVertexes) // Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
                 tvList[0] = idVec2()
             }
 
@@ -1520,9 +1520,9 @@ object Model_local {
                         // LWO models aren't all that pretty when it comes down to the floating point values they store
                         normal.FixDegenerateNormal()
                         tv = 0
-                        color[0] = (lwoSurf.color.rgb[0] * 255).toByte()
-                        color[1] = (lwoSurf.color.rgb[1] * 255).toByte()
-                        color[2] = (lwoSurf.color.rgb[2] * 255).toByte()
+                        color[0] = (lwoSurf.color.rgb[0] * 255).toInt().toByte()
+                        color[1] = (lwoSurf.color.rgb[1] * 255).toInt().toByte()
+                        color[2] = (lwoSurf.color.rgb[2] * 255).toInt().toByte()
                         color[3] = 255.toByte()
 
                         // first set attributes from the vertex
@@ -1536,7 +1536,7 @@ object Model_local {
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
-                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toByte()
+                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -1551,7 +1551,7 @@ object Model_local {
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
-                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toByte()
+                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -1756,8 +1756,8 @@ object Model_local {
                     i++
                 }
             }
-            val vertexSubset = idVectorSubset<idVec3?>(3)
-            val texCoordSubset = idVectorSubset<idVec2?>(3)
+            val vertexSubset = idVectorSubset<idVec3>(3)
+            val texCoordSubset = idVectorSubset<idVec2>(3)
 
             // build the surfaces
             objectNum = 0
@@ -2118,9 +2118,9 @@ object Model_local {
 
                         // complete fallbacks
                         mesh.faces[faceIndex].tVertexNum[k] = 0
-                        mesh.faces[faceIndex].vertexColors[k][0] = (surf.color.rgb[0] * 255).toByte()
-                        mesh.faces[faceIndex].vertexColors[k][1] = (surf.color.rgb[1] * 255).toByte()
-                        mesh.faces[faceIndex].vertexColors[k][2] = (surf.color.rgb[2] * 255).toByte()
+                        mesh.faces[faceIndex].vertexColors[k][0] = (surf.color.rgb[0] * 255).toInt().toByte()
+                        mesh.faces[faceIndex].vertexColors[k][1] = (surf.color.rgb[1] * 255).toInt().toByte()
+                        mesh.faces[faceIndex].vertexColors[k][2] = (surf.color.rgb[2] * 255).toInt().toByte()
                         mesh.faces[faceIndex].vertexColors[k][3] = 255.toByte()
 
                         // first set attributes from the vertex
@@ -2135,7 +2135,7 @@ object Model_local {
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.`val`[vm.index][chan]).toByte()
+                                        (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -2151,7 +2151,7 @@ object Model_local {
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.`val`[vm.index][chan]).toByte()
+                                        (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -2203,7 +2203,7 @@ object Model_local {
             }
         }
 
-        fun FindSurfaceWithId(id: Int, surfaceNum: CInt?): Boolean {
+        fun FindSurfaceWithId(id: Int, surfaceNum: CInt): Boolean {
             var i: Int
             i = 0
             while (i < surfaces.Num()) {
@@ -2236,7 +2236,7 @@ object Model_local {
             (val index: Int) {
             var color: ByteArray? = ByteArray(4)
             var next: matchVert_s? = null
-            val normal: idVec3? = idVec3()
+            val normal: idVec3 = idVec3()
             var v = 0
             var tv = 0
 

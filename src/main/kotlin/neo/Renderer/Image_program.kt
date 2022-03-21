@@ -351,9 +351,9 @@ object Image_program {
                 dir.plusAssign(dir2)
                 dir.NormalizeFast()
                 a1 = (i * width + j) * 4
-                data.put(a1 + 0, (dir.get(0) * 127 + 128).toByte())
-                data.put(a1 + 1, (dir.get(1) * 127 + 128).toByte())
-                data.put(a1 + 2, (dir.get(2) * 127 + 128).toByte())
+                data.put(a1 + 0, (dir.get(0) * 127 + 128).toInt().toByte())
+                data.put(a1 + 1, (dir.get(1) * 127 + 128).toInt().toByte())
+                data.put(a1 + 2, (dir.get(2) * 127 + 128).toInt().toByte())
                 data.put(a1 + 3, 255.toByte())
                 j++
             }
@@ -409,9 +409,9 @@ object Image_program {
                 }
                 normal.Normalize()
                 out =  /*data +*/(j * width + i) * 4
-                data.put(out + 0, (128 + 127 * normal.get(0)).toByte())
-                data.put(out + 1, (128 + 127 * normal.get(1)).toByte())
-                data.put(out + 2, (128 + 127 * normal.get(2)).toByte())
+                data.put(out + 0, (128 + 127 * normal.get(0)).toInt().toByte())
+                data.put(out + 1, (128 + 127 * normal.get(1)).toInt().toByte())
+                data.put(out + 2, (128 + 127 * normal.get(2)).toInt().toByte())
                 j++
             }
             i++
@@ -556,9 +556,9 @@ object Image_program {
                 n.plusAssign(0, (data2.get(d2 + 0) - 128) / 127.0f)
                 n.plusAssign(1, (data2.get(d2 + 1) - 128) / 127.0f)
                 n.Normalize()
-                data1.put(d1 + 0, (n.get(0) * 127 + 128).toByte())
-                data1.put(d1 + 1, (n.get(1) * 127 + 128).toByte())
-                data1.put(d1 + 2, (n.get(2) * 127 + 128).toByte())
+                data1.put(d1 + 0, (n.get(0) * 127 + 128).toInt().toByte())
+                data1.put(d1 + 1, (n.get(1) * 127 + 128).toInt().toByte())
+                data1.put(d1 + 2, (n.get(2) * 127 + 128).toInt().toByte())
                 data1.put(d1 + 3, 255.toByte())
                 j++
             }

@@ -351,7 +351,7 @@ object win_glimp {
     // Destroys the rendering context, closes the window, resets the resolution,
     // and resets the gamma ramps.
     fun GLimp_SwapBuffers() {
-        if (RenderSystem_init.r_swapInterval!!.IsModified()) {
+        if (RenderSystem_init.r_swapInterval.IsModified()) {
             RenderSystem_init.r_swapInterval.ClearModified()
 
 //        if (wglSwapIntervalEXT) {
@@ -461,7 +461,7 @@ object win_glimp {
             // return if we're already active
             if (isEnabled && enable) {
                 // decrement log counter and stop if it has reached 0
-                RenderSystem_init.r_logFile!!.SetInteger(RenderSystem_init.r_logFile.GetInteger() - 1)
+                RenderSystem_init.r_logFile.SetInteger(RenderSystem_init.r_logFile.GetInteger() - 1)
                 if (RenderSystem_init.r_logFile.GetInteger() != 0) {
                     return
                 }
@@ -483,7 +483,7 @@ object win_glimp {
                     var qpath = ""
                     var i: Int
                     val path: String
-                    initialFrames = RenderSystem_init.r_logFile!!.GetInteger()
+                    initialFrames = RenderSystem_init.r_logFile.GetInteger()
 
                     // scan for an unused filename
                     i = 0

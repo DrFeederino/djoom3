@@ -214,15 +214,15 @@ object Class {
     }
 
     abstract class idClass_Save {
-        abstract fun run(savefile: idSaveGame?)
+        abstract fun run(savefile: idSaveGame)
     }
 
     abstract class idClass_Restore {
-        abstract fun run(savefile: idRestoreGame?)
+        abstract fun run(savefile: idRestoreGame)
     }
 
     class idEventFunc<type> {
-        var event: idEventDef? = null
+        var event: idEventDef = null
         var function: eventCallback_t<*>? = null
     }
 
@@ -259,7 +259,7 @@ object Class {
                 return idEventArg<Any?>(Event.D_EVENT_FLOAT, data)
             }
 
-            fun toArg(data: idVec3?): idEventArg<idVec3?>? {
+            fun toArg(data: idVec3): idEventArg<idVec3>? {
                 return idEventArg<Any?>(Event.D_EVENT_VECTOR, data)
             }
 
@@ -339,10 +339,10 @@ object Class {
             private var typeNumBits = 0
 
             // typenum order
-            private val typenums: idList<idTypeInfo?>? = idList()
+            private val typenums: idList<idTypeInfo?> = idList()
 
             // alphabetical order
-            private val types: idList<idTypeInfo?>? = idList()
+            private val types: idList<idTypeInfo?> = idList()
 
             //
             //
@@ -590,9 +590,9 @@ object Class {
             }
         }
 
-        abstract fun CreateInstance(): idClass?
-        abstract fun  /*idTypeInfo*/GetType(): Class<out idClass?>?
-        abstract fun getEventCallBack(event: idEventDef): eventCallback_t<*>
+        abstract fun CreateInstance(): idClass
+        abstract fun  /*idTypeInfo*/GetType(): Class<out idClass>
+        abstract fun getEventCallBack(event: idEventDef): eventCallback_t<*>?
 
         // virtual						~idClass();
         protected open fun _deconstructor() {
@@ -649,9 +649,9 @@ object Class {
 //#endif
         }
 
-        open fun Save(savefile: idSaveGame?) {}
-        open fun Restore(savefile: idRestoreGame?) {}
-        fun RespondsTo(ev: idEventDef?): Boolean {
+        open fun Save(savefile: idSaveGame) {}
+        open fun Restore(savefile: idRestoreGame) {}
+        fun RespondsTo(ev: idEventDef): Boolean {
             return getEventCallBack(ev) != null //HACKME::7
             //            throw new TODO_Exception();
 //            final idTypeInfo c;
@@ -661,19 +661,19 @@ object Class {
 //            return c.RespondsTo(ev);
         }
 
-        fun PostEventMS(ev: idEventDef?, time: Int): Boolean {
+        fun PostEventMS(ev: idEventDef, time: Int): Boolean {
             return PostEventArgs(ev, time, 0)
         }
 
-        fun PostEventMS(ev: idEventDef?, time: Float, arg1: Any?): Boolean {
+        fun PostEventMS(ev: idEventDef, time: Float, arg1: Any?): Boolean {
             return PostEventArgs(ev, time.toInt(), 1, idEventArg.toArg<Any?>(arg1))
         }
 
-        fun PostEventMS(ev: idEventDef?, time: Int, arg1: Any?, arg2: Any?): Boolean {
+        fun PostEventMS(ev: idEventDef, time: Int, arg1: Any?, arg2: Any?): Boolean {
             return PostEventArgs(ev, time, 2, idEventArg.toArg<Any?>(arg1), idEventArg.toArg<Any?>(arg2))
         }
 
-        fun PostEventMS(ev: idEventDef?, time: Int, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
+        fun PostEventMS(ev: idEventDef, time: Int, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
             return PostEventArgs(
                 ev,
                 time,
@@ -684,7 +684,7 @@ object Class {
             )
         }
 
-        fun PostEventMS(ev: idEventDef?, time: Int, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
+        fun PostEventMS(ev: idEventDef, time: Int, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
             return PostEventArgs(
                 ev,
                 time,
@@ -697,7 +697,7 @@ object Class {
         }
 
         fun PostEventMS(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Int,
             arg1: Any?,
             arg2: Any?,
@@ -718,7 +718,7 @@ object Class {
         }
 
         fun PostEventMS(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Int,
             arg1: Any?,
             arg2: Any?,
@@ -741,7 +741,7 @@ object Class {
         }
 
         fun PostEventMS(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Int,
             arg1: Any?,
             arg2: Any?,
@@ -766,7 +766,7 @@ object Class {
         }
 
         fun PostEventMS(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Int,
             arg1: Any?,
             arg2: Any?,
@@ -792,19 +792,19 @@ object Class {
             )
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float): Boolean {
             return PostEventArgs(ev, Math_h.SEC2MS(time).toInt(), 0)
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float, arg1: idEventArg<*>?): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float, arg1: idEventArg<*>?): Boolean {
             return PostEventArgs(ev, Math_h.SEC2MS(time).toInt(), 1, arg1)
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float, arg1: Any?): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float, arg1: Any?): Boolean {
             return PostEventArgs(ev, Math_h.SEC2MS(time).toInt(), 1, idEventArg.toArg<Any?>(arg1))
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float, arg1: Any?, arg2: Any?): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float, arg1: Any?, arg2: Any?): Boolean {
             return PostEventArgs(
                 ev,
                 Math_h.SEC2MS(time).toInt(),
@@ -814,7 +814,7 @@ object Class {
             )
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
             return PostEventArgs(
                 ev,
                 Math_h.SEC2MS(time).toInt(),
@@ -825,7 +825,7 @@ object Class {
             )
         }
 
-        fun PostEventSec(ev: idEventDef?, time: Float, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
+        fun PostEventSec(ev: idEventDef, time: Float, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
             return PostEventArgs(
                 ev,
                 Math_h.SEC2MS(time).toInt(),
@@ -838,7 +838,7 @@ object Class {
         }
 
         fun PostEventSec(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Float,
             arg1: Any?,
             arg2: Any?,
@@ -859,7 +859,7 @@ object Class {
         }
 
         fun PostEventSec(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Float,
             arg1: Any?,
             arg2: Any?,
@@ -882,7 +882,7 @@ object Class {
         }
 
         fun PostEventSec(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Float,
             arg1: Any?,
             arg2: Any?,
@@ -907,7 +907,7 @@ object Class {
         }
 
         fun PostEventSec(
-            ev: idEventDef?,
+            ev: idEventDef,
             time: Float,
             arg1: Any?,
             arg2: Any?,
@@ -933,23 +933,23 @@ object Class {
             )
         }
 
-        fun ProcessEvent(ev: idEventDef?): Boolean {
+        fun ProcessEvent(ev: idEventDef): Boolean {
             return ProcessEventArgs(ev, 0)
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: Any?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: Any?): Boolean {
             return ProcessEventArgs(ev, 1, idEventArg.toArg<Any?>(arg1))
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: idEntity?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: idEntity?): Boolean {
             return ProcessEventArgs(ev, 1, idEventArg.toArg(arg1))
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: Any?, arg2: Any?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: Any?, arg2: Any?): Boolean {
             return ProcessEventArgs(ev, 2, idEventArg.toArg<Any?>(arg1), idEventArg.toArg<Any?>(arg2))
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: Any?, arg2: Any?, arg3: Any?): Boolean {
             return ProcessEventArgs(
                 ev,
                 3,
@@ -959,7 +959,7 @@ object Class {
             )
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?): Boolean {
             return ProcessEventArgs(
                 ev,
                 4,
@@ -970,7 +970,7 @@ object Class {
             )
         }
 
-        fun ProcessEvent(ev: idEventDef?, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?): Boolean {
+        fun ProcessEvent(ev: idEventDef, arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?): Boolean {
             return ProcessEventArgs(
                 ev,
                 5,
@@ -983,7 +983,7 @@ object Class {
         }
 
         fun ProcessEvent(
-            ev: idEventDef?,
+            ev: idEventDef,
             arg1: Any?,
             arg2: Any?,
             arg3: Any?,
@@ -1004,7 +1004,7 @@ object Class {
         }
 
         fun ProcessEvent(
-            ev: idEventDef?,
+            ev: idEventDef,
             arg1: Any?,
             arg2: Any?,
             arg3: Any?,
@@ -1027,7 +1027,7 @@ object Class {
         }
 
         fun ProcessEvent(
-            ev: idEventDef?,
+            ev: idEventDef,
             arg1: Any?,
             arg2: Any?,
             arg3: Any?,
@@ -1051,7 +1051,7 @@ object Class {
             )
         }
 
-        fun ProcessEventArgPtr(ev: idEventDef?, data: Array<idEventArg<*>?>?): Boolean {
+        fun ProcessEventArgPtr(ev: idEventDef, data: Array<idEventArg<*>?>?): Boolean {
             val num: Int
             val callback: eventCallback_t<*>?
             assert(ev != null)
@@ -1063,7 +1063,7 @@ object Class {
                 Game_local.gameLocal.Printf(
                     "%d: '%s' activated by '%s'\n",
                     Game_local.gameLocal.framenum,
-                    (this as idEntity).GetName(),
+                    this.GetName(),
                     name
                 )
             }
@@ -1078,7 +1078,7 @@ object Class {
                 0, 1, 2, 3, 4, 5, 6, 7, 8 -> ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_8_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ], data[ 7 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                    callback.accept(this, *data)
+                    callback.accept(this, data)
                 else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev.GetName())
             }
 
@@ -1086,7 +1086,7 @@ object Class {
             return true
         }
 
-        fun CancelEvents(ev: idEventDef?) {
+        fun CancelEvents(ev: idEventDef) {
             idEvent.Companion.CancelEvents(this, ev)
         }
 
@@ -1096,7 +1096,7 @@ object Class {
                 this
             ) else if (this is idTarget_Remove) delete(this) else if (this is idAI) delete(this) else if (this is idEntity) delete(
                 this
-            ) else if (this is idThread) idThread.Companion.delete(this as idThread) else throw TODO_Exception()
+            ) else if (this is idThread) idThread.Companion.delete(this) else throw TODO_Exception()
         }
 
         // Static functions
@@ -1131,7 +1131,7 @@ object Class {
             return cls.Spawn
         }
 
-        private fun PostEventArgs(ev: idEventDef?, time: Int, numargs: Int, vararg args: idEventArg<*>?): Boolean {
+        private fun PostEventArgs(ev: idEventDef, time: Int, numargs: Int, vararg args: idEventArg<*>?): Boolean {
             val c: Class<*>
             val event: idEvent
             assert(ev != null)
@@ -1162,7 +1162,7 @@ object Class {
             return true
         }
 
-        private fun ProcessEventArgs(ev: idEventDef?, numargs: Int, vararg args: idEventArg<*>?): Boolean {
+        private fun ProcessEventArgs(ev: idEventDef, numargs: Int, vararg args: idEventArg<*>?): Boolean {
             var c: idTypeInfo
             var num: Int
             val data = arrayOfNulls<idEventArg<*>?>(Event.D_EVENT_MAXARGS)
@@ -1204,8 +1204,8 @@ object Class {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = DisplayInfo_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = DisplayInfo_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1238,8 +1238,8 @@ object Class {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = ListClasses_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = ListClasses_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1415,7 +1415,7 @@ object Class {
             throw TODO_Exception()
         }
 
-        fun RespondsTo(ev: idEventDef?): Boolean {
+        fun RespondsTo(ev: idEventDef): Boolean {
             assert(idEvent.Companion.initialized)
             // we don't respond to this event
             return null != eventMap.get(ev.GetEventNum())

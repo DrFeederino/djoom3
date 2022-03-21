@@ -25,9 +25,7 @@ import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
-import neo.Game.Game_local.gameSoundChannel_t
-import neo.Game.Game_local.idEntityPtr
-import neo.Game.Game_local.idGameLocal
+import neo.Game.Game_local.*
 import neo.Game.Item.idItem
 import neo.Game.MultiplayerGame.gameType_t
 import neo.Game.MultiplayerGame.idMultiplayerGame
@@ -2068,13 +2066,13 @@ object Player {
             weapon_fists = savefile.ReadInt()
             heartRate = savefile.ReadInt()
             savefile.ReadFloat(set)
-            heartInfo.SetStartTime(set.getVal())
+            heartInfo.SetStartTime(set._val)
             savefile.ReadFloat(set)
-            heartInfo.SetDuration(set.getVal())
+            heartInfo.SetDuration(set._val)
             savefile.ReadFloat(set)
-            heartInfo.SetStartValue(set.getVal())
+            heartInfo.SetStartValue(set._val)
             savefile.ReadFloat(set)
-            heartInfo.SetEndValue(set.getVal())
+            heartInfo.SetEndValue(set._val)
             lastHeartAdjust = savefile.ReadInt()
             lastHeartBeat = savefile.ReadInt()
             lastDmgTime = savefile.ReadInt()
@@ -2121,9 +2119,9 @@ object Player {
             RestorePhysics(physicsObj)
             savefile.ReadInt(num)
             aasLocation.SetGranularity(1)
-            aasLocation.SetNum(num.getVal())
+            aasLocation.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 aasLocation[i].areaNum = savefile.ReadInt()
                 savefile.ReadVec3(aasLocation[i].pos)
                 i++
@@ -2161,21 +2159,21 @@ object Player {
             gibsLaunched = savefile.ReadBool()
             savefile.ReadVec3(gibsDir)
             savefile.ReadFloat(set)
-            zoomFov.SetStartTime(set.getVal())
+            zoomFov.SetStartTime(set._val)
             savefile.ReadFloat(set)
-            zoomFov.SetDuration(set.getVal())
+            zoomFov.SetDuration(set._val)
             savefile.ReadFloat(set)
-            zoomFov.SetStartValue(set.getVal())
+            zoomFov.SetStartValue(set._val)
             savefile.ReadFloat(set)
-            zoomFov.SetEndValue(set.getVal())
+            zoomFov.SetEndValue(set._val)
             savefile.ReadFloat(set)
-            centerView.SetStartTime(set.getVal())
+            centerView.SetStartTime(set._val)
             savefile.ReadFloat(set)
-            centerView.SetDuration(set.getVal())
+            centerView.SetDuration(set._val)
             savefile.ReadFloat(set)
-            centerView.SetStartValue(set.getVal())
+            centerView.SetStartValue(set._val)
             savefile.ReadFloat(set)
-            centerView.SetEndValue(set.getVal())
+            centerView.SetEndValue(set._val)
             fxFov = savefile.ReadBool()
             influenceFov = savefile.ReadFloat()
             influenceActive = savefile.ReadInt()
@@ -2232,7 +2230,7 @@ object Player {
                 kv = spawnArgs.MatchPrefix("pm_", kv)
             }
             savefile.ReadFloat(set)
-            SysCvar.pm_stamina.SetFloat(set.getVal())
+            SysCvar.pm_stamina.SetFloat(set._val)
 
             // create combat collision hull for exact collision detection
             SetCombatModel()
@@ -2800,7 +2798,7 @@ object Player {
             while (i < Game_local.gameLocal.numClients) {
                 ent = Game_local.gameLocal.entities[i]
                 if (ent != null && ent is idPlayer) {
-                    teamCount[(ent as idPlayer).team]++
+                    teamCount[ent.team]++
                 }
                 i++
             }
@@ -3025,8 +3023,8 @@ object Player {
          */
         override fun DamageFeedback(victim: idEntity, inflictor: idEntity, damage: CInt) {
             assert(!Game_local.gameLocal.isClient)
-            damage.setVal((PowerUpModifier(Player.BERSERK) * damage.getVal()).toInt())
-            if (damage.getVal() != 0 && victim !== this && victim is idActor) {
+            damage.setVal((PowerUpModifier(Player.BERSERK) * damage._val).toInt())
+            if (damage._val != 0 && victim !== this && victim is idActor) {
                 SetLastHitTime(Game_local.gameLocal.time)
             }
         }
@@ -3047,32 +3045,32 @@ object Player {
             val damage = CInt()
             var armorSave: Int
             damageDef.GetInt("damage", "20", damage)
-            damage.setVal(GetDamageForLocation(damage.getVal(), location))
+            damage.setVal(GetDamageForLocation(damage._val, location))
             val player = if (attacker is idPlayer) attacker else null
             if (!Game_local.gameLocal.isMultiplayer) {
                 if (inflictor !== Game_local.gameLocal.world) {
                     when (SysCvar.g_skill.GetInteger()) {
                         0 -> {
-                            damage.setVal((damage.getVal() * 0.80f).toInt())
-                            if (damage.getVal() < 1) {
+                            damage.setVal((damage._val * 0.80f).toInt())
+                            if (damage._val < 1) {
                                 damage.setVal(1)
                             }
                         }
-                        2 -> damage.setVal((damage.getVal() * 1.70f).toInt())
-                        3 -> damage.setVal((damage.getVal() * 3.5f).toInt())
+                        2 -> damage.setVal((damage._val * 1.70f).toInt())
+                        3 -> damage.setVal((damage._val * 3.5f).toInt())
                         else -> {}
                     }
                 }
             }
-            damage.setVal((damage.getVal() * damageScale).toInt())
+            damage.setVal((damage._val * damageScale).toInt())
 
             // always give half damage if hurting self
             if (attacker == this) {
                 if (Game_local.gameLocal.isMultiplayer) {
                     // only do this in mp so single player plasma and rocket splash is very dangerous in close quarters
-                    damage.setVal((damage.getVal() * damageDef.GetFloat("selfDamageScale", "0.5")).toInt())
+                    damage.setVal((damage._val * damageDef.GetFloat("selfDamageScale", "0.5")).toInt())
                 } else {
-                    damage.setVal((damage.getVal() * damageDef.GetFloat("selfDamageScale", "1")).toInt())
+                    damage.setVal((damage._val * damageDef.GetFloat("selfDamageScale", "1")).toInt())
                 }
             }
 
@@ -3092,17 +3090,17 @@ object Player {
                 val armor_protection: Float
                 armor_protection =
                     if (Game_local.gameLocal.isMultiplayer) SysCvar.g_armorProtectionMP.GetFloat() else SysCvar.g_armorProtection.GetFloat()
-                armorSave = Math.ceil((damage.getVal() * armor_protection).toDouble()).toInt()
+                armorSave = Math.ceil((damage._val * armor_protection).toDouble()).toInt()
                 if (armorSave >= inventory.armor) {
                     armorSave = inventory.armor
                 }
-                if (0 == damage.getVal()) {
+                if (0 == damage._val) {
                     armorSave = 0
-                } else if (armorSave >= damage.getVal()) {
-                    armorSave = damage.getVal() - 1
+                } else if (armorSave >= damage._val) {
+                    armorSave = damage._val - 1
                     damage.setVal(1)
                 } else {
-                    damage.setVal(damage.getVal() - armorSave)
+                    damage.setVal(damage._val - armorSave)
                 }
             } else {
                 armorSave = 0
@@ -3116,7 +3114,7 @@ object Player {
             ) {
                 damage.setVal(0)
             }
-            health.setVal(damage.getVal())
+            health.setVal(damage._val)
             armor.setVal(armorSave)
         }
 
@@ -3188,7 +3186,7 @@ object Player {
 
             // determine knockback
             damageDef.dict.GetInt("knockback", "20", knockback)
-            if (knockback.getVal() != 0 && !fl.noknockback) {
+            if (knockback._val != 0 && !fl.noknockback) {
                 if (attacker === this) {
                     damageDef.dict.GetFloat("attackerPushScale", "0", attackerPushScale)
                 } else {
@@ -3196,16 +3194,16 @@ object Player {
                 }
                 kick.set(dir)
                 kick.Normalize()
-                kick.timesAssign(SysCvar.g_knockback.GetFloat() * knockback.getVal() * attackerPushScale.getVal() / 200)
+                kick.timesAssign(SysCvar.g_knockback.GetFloat() * knockback._val * attackerPushScale._val / 200)
                 physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity().oPlus(kick))
 
                 // set the timer so that the player can't cancel out the movement immediately
-                physicsObj.SetKnockBack(idMath.ClampInt(50, 200, knockback.getVal() * 2))
+                physicsObj.SetKnockBack(idMath.ClampInt(50, 200, knockback._val * 2))
             }
 
             // give feedback on the player view and audibly when armor is helping
-            if (armorSave.getVal() != 0) {
-                inventory.armor -= armorSave.getVal()
+            if (armorSave._val != 0) {
+                inventory.armor -= armorSave._val
                 if (Game_local.gameLocal.time > lastArmorPulse + 200) {
                     StartSound("snd_hitArmor", gameSoundChannel_t.SND_CHANNEL_ITEM, 0, false, null)
                 }
@@ -3214,14 +3212,14 @@ object Player {
             if (damageDef.dict.GetBool("burn")) {
                 StartSound("snd_burn", gameSoundChannel_t.SND_CHANNEL_BODY3, 0, false, null)
             } else if (damageDef.dict.GetBool("no_air")) {
-                if (0 == armorSave.getVal() && health > 0) {
+                if (0 == armorSave._val && health > 0) {
                     StartSound("snd_airGasp", gameSoundChannel_t.SND_CHANNEL_ITEM, 0, false, null)
                 }
             }
             if (SysCvar.g_debugDamage.GetInteger() != 0) {
                 Game_local.gameLocal.Printf(
                     "client:%d health:%d damage:%d armor:%d\n",
-                    entityNumber, health, damage.getVal(), armorSave.getVal()
+                    entityNumber, health, damage._val, armorSave._val
                 )
             }
 
@@ -3238,7 +3236,7 @@ object Player {
             }
 
             // do the damage
-            if (damage.getVal() > 0) {
+            if (damage._val > 0) {
                 if (!Game_local.gameLocal.isMultiplayer) {
                     var scale = SysCvar.g_damageScale.GetFloat()
                     if (SysCvar.g_useDynamicProtection.GetBool() && SysCvar.g_skill.GetInteger() < 2) {
@@ -3248,27 +3246,27 @@ object Player {
                         }
                     }
                     if (scale > 0) {
-                        damage.setVal((damage.getVal() * scale).toInt())
+                        damage.setVal((damage._val * scale).toInt())
                     }
                 }
-                if (damage.getVal() < 1) {
+                if (damage._val < 1) {
                     damage.setVal(1)
                 }
                 val oldHealth = health
-                health -= damage.getVal()
+                health -= damage._val
                 if (health <= 0) {
                     if (health < -999) {
                         health = -999
                     }
                     isTelefragged = damageDef.dict.GetBool("telefrag")
                     lastDmgTime = Game_local.gameLocal.time
-                    Killed(inflictor, attacker, damage.getVal(), dir, location)
+                    Killed(inflictor, attacker, damage._val, dir, location)
                 } else {
                     // force a blink
                     blink_time = 0
 
                     // let the anim script know we took damage
-                    AI_PAIN.underscore(Pain(inflictor, attacker, damage.getVal(), dir, location))
+                    AI_PAIN.underscore(Pain(inflictor, attacker, damage._val, dir, location))
                     if (!SysCvar.g_testDeath.GetBool()) {
                         lastDmgTime = Game_local.gameLocal.time
                     }
@@ -3431,7 +3429,7 @@ object Player {
          Returns the renderView that was calculated for this tic
          ==================
          */
-        override fun GetRenderView(): renderView_s {
+        override fun GetRenderView(): renderView_s? {
             return renderView
         }
 
@@ -3508,8 +3506,8 @@ object Player {
                     val fov_x = CFloat(renderView.fov_x)
                     val fov_y = CFloat(renderView.fov_y)
                     Game_local.gameLocal.CalcFov(CalcFov(true), fov_x, fov_y)
-                    renderView.fov_x = fov_x.getVal()
-                    renderView.fov_y = fov_y.getVal()
+                    renderView.fov_x = fov_x._val
+                    renderView.fov_y = fov_y._val
                 }
             }
             if (renderView.fov_y == 0f) {
@@ -3777,8 +3775,8 @@ object Player {
             angles.pitch *= 0.5f
             renderView.viewaxis = angles.ToMat3().times(physicsObj.GetGravityAxis())
             idMath.SinCos(Math_h.DEG2RAD(angle), sideScale, forwardScale)
-            view.minusAssign(renderView.viewaxis[0].times(range * forwardScale.getVal()))
-            view.plusAssign(renderView.viewaxis[1].times(range * sideScale.getVal()))
+            view.minusAssign(renderView.viewaxis[0].times(range * forwardScale._val))
+            view.plusAssign(renderView.viewaxis[1].times(range * sideScale._val))
             if (clip) {
                 // trace a ray from the origin to the viewpoint to make sure the view isn't
                 // in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
@@ -3851,7 +3849,7 @@ object Player {
             } else {
                 val idealWeapon = CInt(idealWeapon)
                 val result = inventory.Give(this, spawnArgs, statname, value, idealWeapon, true)
-                this.idealWeapon = idealWeapon.getVal()
+                this.idealWeapon = idealWeapon._val
                 return result
             }
             return true
@@ -4512,7 +4510,7 @@ object Player {
             if (0 == player.inventory.weapons and (1 shl newweap)) {
                 return
             }
-            val weapon_classname = spawnArgs.GetString(Str.va("def_weapon%d", newweap))!!
+            val weapon_classname = spawnArgs.GetString(Str.va("def_weapon%d", newweap))
             var ammoavailable = player.weapon.GetEntity().AmmoAvailable()
             var inclip = player.weapon.GetEntity().AmmoInClip()
             if (ammoavailable != -1 && ammoavailable - inclip < 0) {
@@ -4772,7 +4770,7 @@ object Player {
                     // otherwise a rotating player box may poke into an outside area
                     areaNum = if (num == 1) {
                         val pvsAreas = CInt(GetPVSAreas()[0])
-                        pvsAreas.getVal()
+                        pvsAreas._val
                     } else {
                         Game_local.gameRenderWorld.PointInArea(GetPhysics().GetOrigin())
                     }
@@ -4893,7 +4891,7 @@ object Player {
                     StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_PDA, 0, false, ms)
                     StartAudioLog()
                     CancelEvents(Player.EV_Player_StopAudioLog)
-                    PostEventMS(Player.EV_Player_StopAudioLog, ms.getVal() + 150)
+                    PostEventMS(Player.EV_Player_StopAudioLog, ms._val + 150)
                 }
                 return true
             }
@@ -6333,7 +6331,7 @@ object Player {
             av = current
 
             // calcualte this so the wrap arounds work properly
-            for (j in 1 until weaponAngleOffsetAverages.getVal()) {
+            for (j in 1 until weaponAngleOffsetAverages._val) {
                 val a2 = loggedViewAngles[Game_local.gameLocal.framenum - j and NUM_LOGGED_VIEW_ANGLES - 1]
                 val delta = a2.minus(current)
                 if (delta[1] > 180) {
@@ -6341,14 +6339,14 @@ object Player {
                 } else if (delta[1] < -180) {
                     delta.plusAssign(1, 360f)
                 }
-                av.plusAssign(delta.times(1.0f / weaponAngleOffsetAverages.getVal()))
+                av.plusAssign(delta.times(1.0f / weaponAngleOffsetAverages._val))
             }
-            a = av.minus(current).times(weaponAngleOffsetScale.getVal())
+            a = av.minus(current).times(weaponAngleOffsetScale._val)
             for (i in 0..2) {
-                if (a[i] < -weaponAngleOffsetMax.getVal()) {
-                    a[i] = -weaponAngleOffsetMax.getVal()
-                } else if (a[i] > weaponAngleOffsetMax.getVal()) {
-                    a[i] = weaponAngleOffsetMax.getVal()
+                if (a[i] < -weaponAngleOffsetMax._val) {
+                    a[i] = -weaponAngleOffsetMax._val
+                } else if (a[i] > weaponAngleOffsetMax._val) {
+                    a[i] = weaponAngleOffsetMax._val
                 }
             }
             return a
@@ -6380,12 +6378,12 @@ object Player {
                 val acc = loggedAccel[i and NUM_LOGGED_ACCELS - 1]
                 var f: Float
                 val t = (Game_local.gameLocal.time - acc.time).toFloat()
-                if (t >= weaponOffsetTime.getVal()) {
+                if (t >= weaponOffsetTime._val) {
                     break // remainder are too old to care about
                 }
-                f = t / weaponOffsetTime.getVal()
+                f = t / weaponOffsetTime._val
                 f = ((Math.cos((f * 2.0f * idMath.PI).toDouble()) - 1.0f) * 0.5f).toFloat()
-                ofs.plusAssign(acc.dir.times(f * weaponOffsetScale.getVal()))
+                ofs.plusAssign(acc.dir.times(f * weaponOffsetScale._val))
             }
             return ofs
         }
@@ -7267,9 +7265,9 @@ object Player {
                 }
                 if (allowFocus) {
                     if (ent is idAFAttachment) {
-                        val body = (ent as idAFAttachment).GetBody()
+                        val body = ent.GetBody()
                         if (body != null && body is idAI
-                            && TempDump.etoi((body as idAI).GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)
+                            && TempDump.etoi(body.GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)
                         ) {
                             Game_local.gameLocal.clip.TracePoint(
                                 trace,
@@ -7290,7 +7288,7 @@ object Player {
                         continue
                     }
                     if (ent is idAI) {
-                        if (TempDump.etoi((ent as idAI).GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)) {
+                        if (TempDump.etoi(ent.GetTalkState()) >= TempDump.etoi(talkState_t.TALK_OK)) {
                             Game_local.gameLocal.clip.TracePoint(
                                 trace,
                                 start,
@@ -7313,7 +7311,7 @@ object Player {
                         Game_local.gameLocal.clip.TracePoint(trace, start, end, Game_local.MASK_SHOT_RENDERMODEL, this)
                         if (trace.fraction < 1.0f && trace.c.entityNum == ent.entityNumber) {
                             ClearFocus()
-                            focusVehicle = ent as idAFEntity_Vehicle
+                            focusVehicle = ent
                             focusTime = Game_local.gameLocal.time + Player.FOCUS_TIME
                             break
                         }
@@ -7731,7 +7729,7 @@ object Player {
                     ent = Game_local.gameLocal.entities[trace.c.entityNum]
                     if (ent != null && ent is idAFEntity_Vehicle) {
                         Hide()
-                        (ent as idAFEntity_Vehicle).Use(this)
+                        ent.Use(this)
                     }
                 }
             }

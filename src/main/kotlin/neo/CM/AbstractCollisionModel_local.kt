@@ -309,7 +309,7 @@ abstract class AbstractCollisionModel_local {
         val axis: idVec3 = idVec3() // rotation axis in model space
         var axisIntersectsTrm = false // true if the rotation axis intersects the trace model
         val bounds: idBounds = idBounds() // bounds of full trace
-        var contacts: Array<contactInfo_t?>? = null // array with contacts
+        var contacts: Array<contactInfo_t> = emptyArray() // array with contacts
         var contents = 0// ignore polygons that do not have any of these contents flags
         val dir: idVec3 = idVec3()// trace direction
         var edges: Array<cm_trmEdge_s> = cm_trmEdge_s.generateArray(TraceModel.MAX_TRACEMODEL_EDGES + 1) // trm edges

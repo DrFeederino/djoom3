@@ -1014,7 +1014,7 @@ object MapFile {
                         if (null == mapEnt.epairs.FindKey("name")) {
                             mapEnt.epairs.Set(
                                 "name",
-                                Str.va("%s%d", mapEnt.epairs.GetString("classname", "forcedName")!!, i)
+                                Str.va("%s%d", mapEnt.epairs.GetString("classname", "forcedName"), i)
                             )
                         }
                         i++
@@ -1026,7 +1026,7 @@ object MapFile {
                     i = 1
                     while (i < entities.Num()) {
                         mapEnt = entities[i]
-                        if (idStr.Icmp(mapEnt.epairs.GetString("classname")!!, "func_group") == 0) {
+                        if (idStr.Icmp(mapEnt.epairs.GetString("classname"), "func_group") == 0) {
                             entities[0].primitives.Append(mapEnt.primitives)
                             mapEnt.primitives.Clear()
                         }
@@ -1122,7 +1122,7 @@ object MapFile {
         fun FindEntity(name: String): idMapEntity? {
             for (i in 0 until entities.Num()) {
                 val ent = entities[i]
-                if (idStr.Icmp(ent.epairs.GetString("name")!!, name) == 0) {
+                if (idStr.Icmp(ent.epairs.GetString("name"), name) == 0) {
                     return ent
                 }
             }
@@ -1144,7 +1144,7 @@ object MapFile {
             var i = 0
             while (i < entities.Num()) {
                 val ent = entities[i]
-                if (idStr.Icmp(ent.epairs.GetString("classname")!!, classname) == 0) {
+                if (idStr.Icmp(ent.epairs.GetString("classname"), classname) == 0) {
 //			delete entities[i];
                     entities.RemoveIndex(i)
                     i--

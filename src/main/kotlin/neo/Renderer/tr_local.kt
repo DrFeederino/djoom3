@@ -3,9 +3,7 @@ package neo.Renderer
 import neo.Renderer.*
 import neo.Renderer.Cinematic.idCinematic
 import neo.Renderer.GuiModel.idGuiModel
-import neo.Renderer.Image.idImage
-import neo.Renderer.Image.textureDepth_t
-import neo.Renderer.Image.textureType_t
+import neo.Renderer.Image.*
 import neo.Renderer.Interaction.idInteraction
 import neo.Renderer.Material.stageVertexColor_t
 import neo.Renderer.Material.textureFilter_t
@@ -478,7 +476,7 @@ object tr_local {
         abstract fun GetIndex(): Int
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane?>? /*[2]*/, material: Material.idMaterial?)
+        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane>? /*[2]*/, material: Material.idMaterial?)
         abstract fun RemoveDecals()
     }
 
@@ -687,7 +685,7 @@ object tr_local {
         }
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        override fun ProjectOverlay(localTextureAxis: Array<idPlane?>?, material: Material.idMaterial?) {
+        override fun ProjectOverlay(localTextureAxis: Array<idPlane>?, material: Material.idMaterial?) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
@@ -744,7 +742,7 @@ object tr_local {
         var falloffImage // falloff image used by backend
                 : idImage? = null
         var fogPlane // fog plane for backend fog volume rendering
-                : idPlane? = null
+                : idPlane = null
         var frustumTris // light frustum for backend fog volume rendering
                 : srfTriangles_s? = null
 
@@ -929,7 +927,7 @@ object tr_local {
         constructor() {
             renderView = renderView_s()
             worldSpace = viewEntity_s()
-            clipPlanes = arrayOfNulls<idPlane?>(MAX_CLIP_PLANES)
+            clipPlanes = arrayOfNulls<idPlane>(MAX_CLIP_PLANES)
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
@@ -961,7 +959,7 @@ object tr_local {
             maxDrawSurfs = v.maxDrawSurfs
             viewLights = v.viewLights
             viewEntitys = v.viewEntitys
-            frustum = Arrays.stream(v.frustum).map { plane: idPlane? -> idPlane(plane) }.toArray { _Dummy_.__Array__() }
+            frustum = Arrays.stream(v.frustum).map { plane: idPlane -> idPlane(plane) }.toArray { _Dummy_.__Array__() }
             viewFrustum = idFrustum(v.viewFrustum)
             areaNum = v.areaNum
             if (v.connectedAreas != null) {
@@ -1901,7 +1899,7 @@ object tr_local {
          just colors
          =============
          */
-        override fun SetColor(rgba: idVec4?) {
+        override fun SetColor(rgba: idVec4) {
             SetColor4(rgba.get(0), rgba.get(1), rgba.get(2), rgba.get(3))
         }
 
@@ -1953,18 +1951,18 @@ object tr_local {
          =============
          */
         override fun DrawStretchTri(
-            p1: idVec2?,
-            p2: idVec2?,
-            p3: idVec2?,
-            t1: idVec2?,
-            t2: idVec2?,
-            t3: idVec2?,
+            p1: idVec2,
+            p2: idVec2,
+            p3: idVec2,
+            t1: idVec2,
+            t2: idVec2,
+            t3: idVec2,
             material: idMaterial?
         ) {
             tr.guiModel.DrawStretchTri(p1, p2, p3, t1, t2, t3, material)
         }
 
-        override fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?) {
+        override fun GlobalToNormalizedDeviceCoordinates(global: idVec3, ndc: idVec3) {
             tr_main.R_GlobalToNormalizedDeviceCoordinates(global, ndc)
         }
 
@@ -2036,7 +2034,7 @@ object tr_local {
             x: Int,
             y: Int,
             string: CharArray?,
-            setColor: idVec4?,
+            setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
         ) {
@@ -2115,7 +2113,7 @@ object tr_local {
             x: Int,
             y: Int,
             string: String?,
-            setColor: idVec4?,
+            setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
         ) {
@@ -2654,10 +2652,10 @@ object tr_local {
      */
     class localTrace_t {
         val indexes: IntArray? = IntArray(3)
-        val normal: idVec3? = idVec3()
+        val normal: idVec3 = idVec3()
 
         // only valid if fraction < 1.0
-        val point: idVec3? = idVec3()
+        val point: idVec3 = idVec3()
         var fraction = 0f
     }
 }

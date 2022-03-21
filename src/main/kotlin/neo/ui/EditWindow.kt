@@ -521,7 +521,7 @@ object EditWindow {
                 } else {
                     var i = 0
                     while (i < text.Length() && i < cursorPos) {
-                        if (idStr.IsColor(TempDump.ctos(text.data[i].toString().toCharArray())!!)) {
+                        if (idStr.IsColor(TempDump.ctos(text.data[i].toString().toCharArray()))) {
                             i += 2
                         } else {
                             cursorX += dc!!.CharWidth(text.data[i], textScale.data)

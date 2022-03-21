@@ -72,15 +72,15 @@ object PlayerView {
 
         //
         private val fadeColor // fade color
-                : idVec4?
+                : idVec4
         private val fadeFromColor // color to fade from
-                : idVec4?
+                : idVec4
         private var fadeRate // fade rate
                 : Float
         private var fadeTime // fade time
                 : Int
         private val fadeToColor // color to fade to
-                : idVec4?
+                : idVec4
         private val irGogglesMaterial // ir effect
                 : idMaterial?
         private val kickAngles: idAngles?
@@ -104,7 +104,7 @@ object PlayerView {
         private val tunnelMaterial // health tunnel vision
                 : idMaterial?
         private val view: renderView_s?
-        fun Save(savefile: idSaveGame?) {
+        fun Save(savefile: idSaveGame) {
             var i: Int
             var blob: screenBlob_t?
             blob = screenBlobs.get(0)
@@ -146,7 +146,7 @@ object PlayerView {
             savefile.WriteRenderView(view)
         }
 
-        fun Restore(savefile: idRestoreGame?) {
+        fun Restore(savefile: idRestoreGame) {
             var i: Int
             var blob: screenBlob_t?
 
@@ -213,7 +213,7 @@ object PlayerView {
          which will determine the head kick direction
          ==============
          */
-        fun DamageImpulse(localKickDir: idVec3?, damageDef: idDict?) {
+        fun DamageImpulse(localKickDir: idVec3, damageDef: idDict?) {
             //
             // double vision effect
             //
@@ -330,7 +330,7 @@ object PlayerView {
             return ang
         }
 
-        fun ShakeAxis(): idMat3? {            // returns the current shake angle
+        fun ShakeAxis(): idMat3 {            // returns the current shake angle
             return shakeAng.ToMat3()
         }
 
@@ -393,7 +393,7 @@ object PlayerView {
          assumes: color.w is 0 or 1
          =================
          */
-        fun Fade(color: idVec4?, time: Int) {
+        fun Fade(color: idVec4, time: Int) {
             var time = time
             if (0 == fadeTime) {
                 fadeFromColor.set(0.0f, 0.0f, 0.0f, 1.0f - color.get(3))
@@ -422,7 +422,7 @@ object PlayerView {
          flashes the player view with the given color
          =================
          */
-        fun Flash(color: idVec4?, time: Int) {
+        fun Flash(color: idVec4, time: Int) {
             Fade(idVec4(0, 0, 0, 0), time)
             fadeFromColor.set(Lib.Companion.colorWhite)
         }

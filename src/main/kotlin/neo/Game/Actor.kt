@@ -60,46 +60,46 @@ import neo.idlib.math.Vector.idVec3
  *
  */
 object Actor {
-    val AI_AnimDistance: idEventDef? = idEventDef("animDistance", "ds", 'f')
-    val AI_AnimDone: idEventDef? = idEventDef("animDone", "dd", 'd')
-    val AI_AnimLength: idEventDef? = idEventDef("animLength", "ds", 'f')
-    val AI_AnimState: idEventDef? = idEventDef("animState", "dsd")
-    val AI_CheckAnim: idEventDef? = idEventDef("checkAnim", "ds")
-    val AI_ChooseAnim: idEventDef? = idEventDef("chooseAnim", "ds", 's')
-    val AI_ClosestEnemyToPoint: idEventDef? = idEventDef("closestEnemyToPoint", "v", 'e')
-    val AI_DisableEyeFocus: idEventDef? = idEventDef("disableEyeFocus")
-    val AI_DisablePain: idEventDef? = idEventDef("disablePain")
-    val AI_EnableAnim: idEventDef? = idEventDef("enableAnim", "dd")
-    val AI_EnableEyeFocus: idEventDef? = idEventDef("enableEyeFocus")
-    val AI_EnablePain: idEventDef? = idEventDef("enablePain")
-    val AI_FinishAction: idEventDef? = idEventDef("finishAction", "s")
-    val AI_GetAnimState: idEventDef? = idEventDef("getAnimState", "d", 's')
-    val AI_GetBlendFrames: idEventDef? = idEventDef("getBlendFrames", "d", 'd')
-    val AI_GetHead: idEventDef? = idEventDef("getHead", null, 'e')
-    val AI_GetPainAnim: idEventDef? = idEventDef("getPainAnim", null, 's')
-    val AI_GetState: idEventDef? = idEventDef("getState", null, 's')
-    val AI_HasAnim: idEventDef? = idEventDef("hasAnim", "ds", 'f')
-    val AI_HasEnemies: idEventDef? = idEventDef("hasEnemies", null, 'd')
-    val AI_IdleAnim: idEventDef? = idEventDef("idleAnim", "ds", 'd')
-    val AI_InAnimState: idEventDef? = idEventDef("inAnimState", "ds", 'd')
-    val AI_NextEnemy: idEventDef? = idEventDef("nextEnemy", "E", 'e')
-    val AI_OverrideAnim: idEventDef? = idEventDef("overrideAnim", "d")
-    val AI_PlayAnim: idEventDef? = idEventDef("playAnim", "ds", 'd')
-    val AI_PlayCycle: idEventDef? = idEventDef("playCycle", "ds", 'd')
-    val AI_PreventPain: idEventDef? = idEventDef("preventPain", "f")
-    val AI_SetAnimPrefix: idEventDef? = idEventDef("setAnimPrefix", "s")
-    val AI_SetBlendFrames: idEventDef? = idEventDef("setBlendFrames", "dd")
-    val AI_SetNextState: idEventDef? = idEventDef("setNextState", "s")
-    val AI_SetState: idEventDef? = idEventDef("setState", "s")
-    val AI_SetSyncedAnimWeight: idEventDef? = idEventDef("setSyncedAnimWeight", "ddf")
-    val AI_StopAnim: idEventDef? = idEventDef("stopAnim", "dd")
-    val EV_DisableLegIK: idEventDef? = idEventDef("DisableLegIK", "d")
-    val EV_DisableWalkIK: idEventDef? = idEventDef("DisableWalkIK")
-    val EV_EnableLegIK: idEventDef? = idEventDef("EnableLegIK", "d")
-    val EV_EnableWalkIK: idEventDef? = idEventDef("EnableWalkIK")
-    val EV_Footstep: idEventDef? = idEventDef("footstep")
-    val EV_FootstepLeft: idEventDef? = idEventDef("leftFoot")
-    val EV_FootstepRight: idEventDef? = idEventDef("rightFoot")
+    val AI_AnimDistance: idEventDef = idEventDef("animDistance", "ds", 'f')
+    val AI_AnimDone: idEventDef = idEventDef("animDone", "dd", 'd')
+    val AI_AnimLength: idEventDef = idEventDef("animLength", "ds", 'f')
+    val AI_AnimState: idEventDef = idEventDef("animState", "dsd")
+    val AI_CheckAnim: idEventDef = idEventDef("checkAnim", "ds")
+    val AI_ChooseAnim: idEventDef = idEventDef("chooseAnim", "ds", 's')
+    val AI_ClosestEnemyToPoint: idEventDef = idEventDef("closestEnemyToPoint", "v", 'e')
+    val AI_DisableEyeFocus: idEventDef = idEventDef("disableEyeFocus")
+    val AI_DisablePain: idEventDef = idEventDef("disablePain")
+    val AI_EnableAnim: idEventDef = idEventDef("enableAnim", "dd")
+    val AI_EnableEyeFocus: idEventDef = idEventDef("enableEyeFocus")
+    val AI_EnablePain: idEventDef = idEventDef("enablePain")
+    val AI_FinishAction: idEventDef = idEventDef("finishAction", "s")
+    val AI_GetAnimState: idEventDef = idEventDef("getAnimState", "d", 's')
+    val AI_GetBlendFrames: idEventDef = idEventDef("getBlendFrames", "d", 'd')
+    val AI_GetHead: idEventDef = idEventDef("getHead", null, 'e')
+    val AI_GetPainAnim: idEventDef = idEventDef("getPainAnim", null, 's')
+    val AI_GetState: idEventDef = idEventDef("getState", null, 's')
+    val AI_HasAnim: idEventDef = idEventDef("hasAnim", "ds", 'f')
+    val AI_HasEnemies: idEventDef = idEventDef("hasEnemies", null, 'd')
+    val AI_IdleAnim: idEventDef = idEventDef("idleAnim", "ds", 'd')
+    val AI_InAnimState: idEventDef = idEventDef("inAnimState", "ds", 'd')
+    val AI_NextEnemy: idEventDef = idEventDef("nextEnemy", "E", 'e')
+    val AI_OverrideAnim: idEventDef = idEventDef("overrideAnim", "d")
+    val AI_PlayAnim: idEventDef = idEventDef("playAnim", "ds", 'd')
+    val AI_PlayCycle: idEventDef = idEventDef("playCycle", "ds", 'd')
+    val AI_PreventPain: idEventDef = idEventDef("preventPain", "f")
+    val AI_SetAnimPrefix: idEventDef = idEventDef("setAnimPrefix", "s")
+    val AI_SetBlendFrames: idEventDef = idEventDef("setBlendFrames", "dd")
+    val AI_SetNextState: idEventDef = idEventDef("setNextState", "s")
+    val AI_SetState: idEventDef = idEventDef("setState", "s")
+    val AI_SetSyncedAnimWeight: idEventDef = idEventDef("setSyncedAnimWeight", "ddf")
+    val AI_StopAnim: idEventDef = idEventDef("stopAnim", "dd")
+    val EV_DisableLegIK: idEventDef = idEventDef("DisableLegIK", "d")
+    val EV_DisableWalkIK: idEventDef = idEventDef("DisableWalkIK")
+    val EV_EnableLegIK: idEventDef = idEventDef("EnableLegIK", "d")
+    val EV_EnableWalkIK: idEventDef = idEventDef("EnableWalkIK")
+    val EV_Footstep: idEventDef = idEventDef("footstep")
+    val EV_FootstepLeft: idEventDef = idEventDef("leftFoot")
+    val EV_FootstepRight: idEventDef = idEventDef("rightFoot")
 
     //    
     //    
@@ -113,7 +113,7 @@ object Actor {
         var idleAnim: Boolean
         var lastAnimBlendFrames // allows override anims to blend based on the last transition time
                 : Int
-        var state: idStr?
+        val state: idStr
         private var animator: idAnimator?
         private var channel: Int
         private var disabled: Boolean
@@ -121,7 +121,7 @@ object Actor {
         private var thread: idThread?
 
         // ~idAnimState();
-        fun Save(savefile: idSaveGame?) {
+        fun Save(savefile: idSaveGame) {
             savefile.WriteObject(self)
 
             // Save the entity owner of the animator
@@ -135,7 +135,7 @@ object Actor {
             savefile.WriteBool(disabled)
         }
 
-        fun Restore(savefile: idRestoreGame?) {
+        fun Restore(savefile: idRestoreGame) {
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/self)
             val animOwner = idEntity()
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/animOwner)
@@ -170,7 +170,7 @@ object Actor {
             thread = null
         }
 
-        fun SetState(statename: String?, blendFrames: Int) {
+        fun SetState(statename: String, blendFrames: Int) {
             val func: function_t?
             func = self.scriptObject.GetFunction(statename)
             if (null == func) {
@@ -299,9 +299,9 @@ object Actor {
     }
 
     class copyJoints_t {
-        var   /*jointHandle_t*/from: CInt? = CInt()
+        var   /*jointHandle_t*/from: CInt = CInt()
         var mod: jointModTransform_t? = null
-        var   /*jointHandle_t*/to: CInt? = CInt()
+        var   /*jointHandle_t*/to: CInt = CInt()
     }
 
     /* **********************************************************************
@@ -316,10 +316,10 @@ object Actor {
             //
             //        public static idClass CreateInstance();
             //        public idTypeInfo GetType();
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             // virtual					~idActor( void );
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -481,7 +481,7 @@ object Actor {
         protected var   /*jointHandle_t*/leftEyeJoint: Int
         protected var legsAnim: idAnimState?
         protected val modelOffset // offset of visual model relative to the physics origin
-                : idVec3?
+                : idVec3
         protected var painAnim: idStr?
 
         //
@@ -526,14 +526,14 @@ object Actor {
             idealState = null
             spawnArgs.GetInt("rank", "0", rank)
             spawnArgs.GetInt("team", "0", team)
-            this.rank = rank.getVal()
-            this.team = team.getVal()
+            this.rank = rank._val
+            this.team = team._val
             spawnArgs.GetVector("offsetModel", "0 0 0", modelOffset)
             spawnArgs.GetBool("use_combat_bbox", "0", use_combat_bbox)
             this.use_combat_bbox = use_combat_bbox.isVal
             viewAxis.set(GetPhysics().GetAxis())
             spawnArgs.GetFloat("fov", "90", fovDegrees)
-            SetFOV(fovDegrees.getVal())
+            SetFOV(fovDegrees._val)
             pain_debounce_time = 0
             pain_delay = Math_h.SEC2MS(spawnArgs.GetFloat("pain_delay")).toInt()
             pain_threshold = spawnArgs.GetInt("pain_threshold")
@@ -594,14 +594,14 @@ object Actor {
                         copyJoint.mod = jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE
                     }
                     copyJoint.from.setVal(animator.GetJointHandle(jointName))
-                    if (copyJoint.from.getVal() == Model.INVALID_JOINT) {
+                    if (copyJoint.from._val == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Unknown copy_joint '%s' on entity %s", jointName, name)
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
                     }
                     jointName.set(kv.GetValue())
                     copyJoint.to.setVal(headAnimator.GetJointHandle(jointName))
-                    if (copyJoint.to.getVal() == Model.INVALID_JOINT) {
+                    if (copyJoint.to._val == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Unknown copy_joint '%s' on head of entity %s", jointName, name)
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
@@ -654,7 +654,7 @@ object Actor {
          archive object for savegame file
          ================
          */
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var ent: idActor?
             var i: Int
             savefile.WriteInt(team)
@@ -691,8 +691,8 @@ object Actor {
             i = 0
             while (i < copyJoints.Num()) {
                 savefile.WriteInt(TempDump.etoi(copyJoints.get(i).mod))
-                savefile.WriteJoint(copyJoints.get(i).from.getVal())
-                savefile.WriteJoint(copyJoints.get(i).to.getVal())
+                savefile.WriteJoint(copyJoints.get(i).from._val)
+                savefile.WriteJoint(copyJoints.get(i).to._val)
                 i++
             }
             savefile.WriteJoint(leftEyeJoint)
@@ -753,7 +753,7 @@ object Actor {
          unarchives object from save game file
          ================
          */
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             val num = CInt()
             val ent = idActor()
@@ -762,7 +762,7 @@ object Actor {
             savefile.ReadMat3(viewAxis)
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadObject( /*reinterpret_cast<idClass *&>*/ent)
                 assert(ent != null)
                 if (ent != null) {
@@ -779,28 +779,28 @@ object Actor {
             pain_threshold = savefile.ReadInt()
             savefile.ReadInt(num)
             damageGroups.SetGranularity(1)
-            damageGroups.setSize(num.getVal())
+            damageGroups.setSize(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadString(damageGroups.get(i))
                 i++
             }
             savefile.ReadInt(num)
-            damageScale.SetNum(num.getVal())
+            damageScale.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 damageScale.set(i, savefile.ReadFloat())
                 i++
             }
             use_combat_bbox = savefile.ReadBool()
             head.Restore(savefile)
             savefile.ReadInt(num)
-            copyJoints.SetNum(num.getVal())
+            copyJoints.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 val `val` = CInt()
                 savefile.ReadInt(`val`)
-                copyJoints.get(i).mod = jointModTransform_t.values()[`val`.getVal()]
+                copyJoints.get(i).mod = jointModTransform_t.values()[`val`._val]
                 savefile.ReadJoint(copyJoints.get(i).from)
                 savefile.ReadJoint(copyJoints.get(i).to)
                 i++
@@ -825,7 +825,7 @@ object Actor {
             painTime = savefile.ReadInt()
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 val attach = attachments.Alloc()
                 attach.ent.Restore(savefile)
                 attach.channel = savefile.ReadInt()
@@ -889,7 +889,7 @@ object Actor {
             return TempDump.etoi(surfTypes_t.SURFTYPE_FLESH)
         }
 
-        override fun ProjectOverlay(origin: idVec3?, dir: idVec3?, size: Float, material: String?) {
+        override fun ProjectOverlay(origin: idVec3, dir: idVec3, size: Float, material: String?) {
             var ent: idEntity?
             var next: idEntity?
             idEntity_ProjectOverlay(origin, dir, size, material)
@@ -991,7 +991,7 @@ object Actor {
                 (Game_local.gameLocal.time + blink_min + Game_local.gameLocal.random.RandomFloat() * (blink_max - blink_min)).toInt()
         }
 
-        override fun GetPhysicsToVisualTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3): Boolean {
             if (af.IsActive()) {
                 af.GetPhysicsToVisualTransform(origin, axis)
                 return true
@@ -1001,7 +1001,7 @@ object Actor {
             return true
         }
 
-        override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
             if (soundJoint != Model.INVALID_JOINT) {
                 animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
                 origin.plusAssign(modelOffset)
@@ -1162,15 +1162,15 @@ object Actor {
             return eyeOffset.z
         }
 
-        fun EyeOffset(): idVec3? {
+        fun EyeOffset(): idVec3 {
             return GetPhysics().GetGravityNormal().times(-eyeOffset.z)
         }
 
-        open fun GetEyePosition(): idVec3? {
+        open fun GetEyePosition(): idVec3 {
             return GetPhysics().GetOrigin().oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
 
-        open fun GetViewPos(origin: idVec3?, axis: idMat3?) {
+        open fun GetViewPos(origin: idVec3, axis: idMat3) {
             origin.set(GetEyePosition())
             axis.set(viewAxis)
         }
@@ -1179,7 +1179,7 @@ object Actor {
             fovDot = Math.cos(Math_h.DEG2RAD(fov * 0.5f).toDouble()).toFloat()
         }
 
-        fun CheckFOV(pos: idVec3?): Boolean {
+        fun CheckFOV(pos: idVec3): Boolean {
             if (fovDot == 1.0f) {
                 return true
             }
@@ -1217,7 +1217,7 @@ object Actor {
             return tr.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(tr) === ent
         }
 
-        fun PointVisible(point: idVec3?): Boolean {
+        fun PointVisible(point: idVec3): Boolean {
             val results = trace_s()
             val start = idVec3()
             val end = idVec3()
@@ -1235,7 +1235,7 @@ object Actor {
          Returns positions for the AI to aim at.
          =====================
          */
-        open fun GetAIAimTargets(lastSightPos: idVec3?, headPos: idVec3?, chestPos: idVec3?) {
+        open fun GetAIAimTargets(lastSightPos: idVec3, headPos: idVec3, chestPos: idVec3) {
             headPos.set(lastSightPos.oPlus(EyeOffset()))
             chestPos.set(headPos.oPlus(lastSightPos).oPlus(GetPhysics().GetBounds().GetCenter()).oMultiply(0.5f))
         }
@@ -1325,7 +1325,7 @@ object Actor {
         override fun Damage(
             inflictor: idEntity?,
             attacker: idEntity?,
-            dir: idVec3?,
+            dir: idVec3,
             damageDefName: String?,
             damageScale: Float,
             location: Int
@@ -1349,22 +1349,22 @@ object Actor {
                 idGameLocal.Companion.Error("Unknown damageDef '%s'", damageDefName)
             }
             val damage = CInt((damageDef.GetInt("damage") * damageScale).toInt())
-            damage.setVal(GetDamageForLocation(damage.getVal(), location))
+            damage.setVal(GetDamageForLocation(damage._val, location))
 
             // inform the attacker that they hit someone
             attacker.DamageFeedback(this, inflictor, damage)
-            if (damage.getVal() > 0) {
-                health -= damage.getVal()
+            if (damage._val > 0) {
+                health -= damage._val
                 if (health <= 0) {
                     if (health < -999) {
                         health = -999
                     }
-                    Killed(inflictor, attacker, damage.getVal(), dir, location)
+                    Killed(inflictor, attacker, damage._val, dir, location)
                     if (health < -20 && spawnArgs.GetBool("gib") && damageDef.GetBool("gib")) {
                         Gib(dir, damageDefName)
                     }
                 } else {
-                    Pain(inflictor, attacker, damage.getVal(), dir, location)
+                    Pain(inflictor, attacker, damage._val, dir, location)
                 }
             } else {
                 // don't accumulate knockback
@@ -1398,7 +1398,7 @@ object Actor {
             inflictor: idEntity?,
             attacker: idEntity?,
             damage: Int,
-            dir: idVec3?,
+            dir: idVec3,
             location: Int
         ): Boolean {
             if (af.IsLoaded()) {
@@ -1631,7 +1631,7 @@ object Actor {
             return false
         }
 
-        fun ClosestEnemyToPoint(pos: idVec3?): idActor? {
+        fun ClosestEnemyToPoint(pos: idVec3): idActor? {
             var ent: idActor?
             var bestEnt: idActor?
             var bestDistSquared: Float
@@ -1676,7 +1676,7 @@ object Actor {
             return false
         }
 
-        open fun GetAASLocation(aas: idAAS?, pos: idVec3?, areaNum: CInt?) {
+        open fun GetAASLocation(aas: idAAS?, pos: idVec3, areaNum: CInt) {
             val size = idVec3()
             val bounds = idBounds()
             GetFloorPos(64.0f, pos)
@@ -1689,8 +1689,8 @@ object Actor {
             size.z = 32.0f
             bounds.set(1, size)
             areaNum.setVal(aas.PointReachableAreaNum(pos, bounds, AASFile.AREA_REACHABLE_WALK))
-            if (areaNum.getVal() != 0) {
-                aas.PushPointIntoAreaNum(areaNum.getVal(), pos)
+            if (areaNum._val != 0) {
+                aas.PushPointIntoAreaNum(areaNum._val, pos)
             }
         }
 
@@ -1725,7 +1725,7 @@ object Actor {
             ent.cinematic = cinematic
         }
 
-        override fun Teleport(origin: idVec3?, angles: idAngles?, destination: idEntity?) {
+        override fun Teleport(origin: idVec3, angles: idAngles?, destination: idEntity?) {
             GetPhysics().SetOrigin(origin.oPlus(idVec3(0, 0, CollisionModel.CM_CLIP_EPSILON)))
             GetPhysics().SetLinearVelocity(Vector.getVec3_origin())
             viewAxis = angles.ToMat3()
@@ -1859,12 +1859,12 @@ object Actor {
             } else animDoneTime - Anim.FRAME2MS(blendFrames) <= Game_local.gameLocal.time
         }
 
-        override fun SpawnGibs(dir: idVec3?, damageDefName: String?) {
+        override fun SpawnGibs(dir: idVec3, damageDefName: String?) {
             super.SpawnGibs(dir, damageDefName)
             RemoveAttachments()
         }
 
-        override fun Gib(dir: idVec3?, damageDefName: String?) {
+        override fun Gib(dir: idVec3, damageDefName: String?) {
             // no gibbing in multiplayer - by self damage or by moving objects
             if (Game_local.gameLocal.isMultiplayer) {
                 return
@@ -1901,7 +1901,7 @@ object Actor {
             val headEnt: idEntity? = head.GetEntity()
             val headAnimator: idAnimator?
             var i: Int
-            var mat: idMat3?
+            var mat: idMat3
             val axis = idMat3()
             val pos = idVec3()
             if (null == headEnt) {
@@ -1914,23 +1914,23 @@ object Actor {
             while (i < copyJoints.Num()) {
                 if (copyJoints.get(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose()
-                    GetJointWorldTransform(copyJoints.get(i).from.getVal(), Game_local.gameLocal.time, pos, axis)
+                    GetJointWorldTransform(copyJoints.get(i).from._val, Game_local.gameLocal.time, pos, axis)
                     pos.minusAssign(headEnt.GetPhysics().GetOrigin())
-                    headAnimator.SetJointPos(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, pos.times(mat))
+                    headAnimator.SetJointPos(copyJoints.get(i).to._val, copyJoints.get(i).mod, pos.times(mat))
                     headAnimator.SetJointAxis(
-                        copyJoints.get(i).to.getVal(),
+                        copyJoints.get(i).to._val,
                         copyJoints.get(i).mod,
                         axis.times(mat)
                     )
                 } else {
                     animator.GetJointLocalTransform(
-                        copyJoints.get(i).from.getVal(),
+                        copyJoints.get(i).from._val,
                         Game_local.gameLocal.time,
                         pos,
                         axis
                     )
-                    headAnimator.SetJointPos(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, pos)
-                    headAnimator.SetJointAxis(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, axis)
+                    headAnimator.SetJointPos(copyJoints.get(i).to._val, copyJoints.get(i).mod, pos)
+                    headAnimator.SetJointAxis(copyJoints.get(i).to._val, copyJoints.get(i).mod, axis)
                 }
                 i++
             }
@@ -2744,7 +2744,7 @@ object Actor {
             idThread.Companion.ReturnEntity(null)
         }
 
-        private fun Event_ClosestEnemyToPoint(pos: idEventArg<idVec3?>?) {
+        private fun Event_ClosestEnemyToPoint(pos: idEventArg<idVec3>?) {
             val bestEnt = ClosestEnemyToPoint(pos.value)
             idThread.Companion.ReturnEntity(bestEnt)
         }

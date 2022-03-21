@@ -60,7 +60,7 @@ object Model_beam {
 
 //		assert( dynamic_cast<idRenderModelStatic *>( cachedModel ) != null );
 //		assert( idStr.Icmp( cachedModel.Name(), beam_SnapshotName ) == 0 );
-                staticModel = cachedModel as idRenderModelStatic?
+                staticModel = cachedModel
                 surf = staticModel.Surface(0)
                 tri = surf.geometry
             } else {
@@ -142,7 +142,7 @@ object Model_beam {
             return staticModel
         }
 
-        override fun Bounds(renderEntity: renderEntity_s?): idBounds? {
+        override fun Bounds(renderEntity: renderEntity_s?): idBounds {
             val b = idBounds()
             b.Zero()
             if (null == renderEntity) {

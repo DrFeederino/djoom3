@@ -306,7 +306,7 @@ object TempDump {
     }
 
     fun atoi(ascii: CharArray): Int {
-        return atoi(ctos(ascii)!!)
+        return atoi(ctos(ascii))
     }
 
     fun atof(ascii: String): Float {
@@ -366,7 +366,7 @@ object TempDump {
     fun atobb(ascii: CharArray): ByteBuffer? {
         return if (NOT(ascii)) {
             null
-        } else atobb(ctos(ascii)!!)
+        } else atobb(ctos(ascii))
     }
 
     fun stobb(arr: ShortArray): ByteBuffer? {
@@ -872,10 +872,10 @@ object TempDump {
             var customSkin: idDeclSkin? = null
 
             //
-            var entityNum: CInt? = CInt()
+            var entityNum: CInt = CInt()
 
             //
-            var forceUpdate: CInt? = CInt()
+            var forceUpdate: CInt = CInt()
 
             //
             var gui: Array<idUserInterface?>? = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
@@ -883,20 +883,20 @@ object TempDump {
             var joints: Array<idJointMat?>? = null
 
             //
-            var modelDepthHack: CFloat? = CFloat()
+            var modelDepthHack: CFloat = CFloat()
 
             //
-            var noDynamicInteractions: CBool? = CBool()
+            var noDynamicInteractions: CBool = CBool()
 
             //
-            var noSelfShadow: CBool? = CBool()
-            var noShadow: CBool? = CBool()
+            var noSelfShadow: CBool = CBool()
+            var noShadow: CBool = CBool()
 
             //
-            var numJoints: CInt? = CInt()
+            var numJoints: CInt = CInt()
 
             //
-            var origin: idVec3? = null
+            var origin: idVec3 = idVec3()
             var referenceShader: idMaterial? = null
             var referenceSound: idSoundEmitter? = null
 
@@ -905,55 +905,55 @@ object TempDump {
             var shaderParms = Array(Material.MAX_ENTITY_SHADER_PARMS) { CFloat() }
 
             //
-            var suppressShadowInLightID: CInt? = CInt()
-            var suppressShadowInViewID: CInt? = CInt()
+            var suppressShadowInLightID: CInt = CInt()
+            var suppressShadowInViewID: CInt = CInt()
 
             //
-            var suppressSurfaceInViewID: CInt? = CInt()
-            var timeGroup: CInt? = CInt()
+            var suppressSurfaceInViewID: CInt = CInt()
+            var timeGroup: CInt = CInt()
 
             //
-            var weaponDepthHack: CBool? = CBool()
-            var xrayIndex: CInt? = CInt()
+            var weaponDepthHack: CBool = CBool()
+            var xrayIndex: CInt = CInt()
         }
 
         class renderLightShadow {
             //
-            var allowLightInViewID: CInt? = CInt()
-            var axis: idMat3? = null
-            val end: idVec3? = idVec3()
-            val lightCenter: idVec3? = idVec3()
+            var allowLightInViewID: CInt = CInt()
+            var axis: idMat3 = idMat3()
+            val end: idVec3 = idVec3()
+            val lightCenter: idVec3 = idVec3()
 
             //
-            var lightId: CInt? = CInt()
-            val lightRadius: idVec3? = idVec3()
+            var lightId: CInt = CInt()
+            val lightRadius: idVec3 = idVec3()
 
             //
-            var noShadows: CBool? = CBool()
-            var noSpecular: CBool? = CBool()
-            val origin: idVec3? = idVec3()
-            var parallel: CBool? = CBool()
+            var noShadows: CBool = CBool()
+            var noSpecular: CBool = CBool()
+            val origin: idVec3 = idVec3()
+            var parallel: CBool = CBool()
 
             //
-            var pointLight: CBool? = CBool()
+            var pointLight: CBool = CBool()
 
             //
             var prelightModel: idRenderModel? = null
             var referenceSound: idSoundEmitter? = null
-            val right: idVec3? = idVec3()
+            val right: idVec3 = idVec3()
 
             //
             //
             var shader: idMaterial? = null
             var shaderParms: FloatArray? = FloatArray(Material.MAX_ENTITY_SHADER_PARMS)
-            val start: idVec3? = idVec3()
+            val start: idVec3 = idVec3()
 
             //
-            var suppressLightInViewID: CInt? = CInt()
+            var suppressLightInViewID: CInt = CInt()
 
             //
-            val target: idVec3? = idVec3()
-            val up: idVec3? = idVec3()
+            val target: idVec3 = idVec3()
+            val up: idVec3 = idVec3()
         }
     }
 

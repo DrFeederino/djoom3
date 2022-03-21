@@ -646,7 +646,7 @@ object BitMsg {
         }
 
         @Throws(idException::class)
-        fun ReadDir(numBits: Int): idVec3? {
+        fun ReadDir(numBits: Int): idVec3 {
             return BitsToDir(ReadBits(numBits), numBits)
         }
 
@@ -699,7 +699,7 @@ object BitMsg {
             adr.type = netadrtype_t.NA_IP
             i = 0
             while (i < 4) {
-                adr.ip[i] = ReadByte().toChar()
+                adr.ip[i] = ReadByte().toInt().toChar()
                 i++
             }
             adr.port = ReadUShort().toInt()
@@ -788,11 +788,11 @@ object BitMsg {
             }
             while (ReadString(key, key.size) != 0) {
                 ReadString(value, value.size)
-                dict.Set(TempDump.ctos(key), TempDump.ctos(value)!!)
+                dict.Set(TempDump.ctos(key), TempDump.ctos(value))
                 changed = true
             }
             while (ReadString(key, key.size) != 0) {
-                dict.Delete(TempDump.ctos(key)!!)
+                dict.Delete(TempDump.ctos(key))
                 changed = true
             }
             return changed
@@ -1009,7 +1009,7 @@ object BitMsg {
             } else {
                 val baseString = CharArray(MAX_DATA_BUFFER)
                 base!!.ReadString(baseString, MAX_DATA_BUFFER)
-                if (idStr.Cmp(s!!, TempDump.ctos(baseString)!!) == 0) {
+                if (idStr.Cmp(s!!, TempDump.ctos(baseString)) == 0) {
                     writeDelta!!.WriteBits(0, 1)
                 } else {
                     writeDelta!!.WriteBits(1, 1)
@@ -1233,7 +1233,7 @@ object BitMsg {
                 val baseString = CharArray(MAX_DATA_BUFFER)
                 base!!.ReadString(baseString, MAX_DATA_BUFFER)
                 if (null == readDelta || readDelta!!.ReadBits(1) == 0) {
-                    idStr.Copynz(buffer, TempDump.ctos(baseString)!!, bufferSize)
+                    idStr.Copynz(buffer, TempDump.ctos(baseString), bufferSize)
                 } else {
                     readDelta!!.ReadString(buffer, bufferSize)
                     changed = true

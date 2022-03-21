@@ -1636,7 +1636,7 @@ class DeclManager {
         @Throws(idException::class)
         override fun ReloadFile(filename: String, force: Boolean) {
             for (i in 0 until loadedFiles.Num()) {
-                if (0 == loadedFiles[i].fileName!!.Icmp(filename)) {
+                if (0 == loadedFiles[i].fileName.Icmp(filename)) {
                     checksum = checksum.xor(loadedFiles[i].checksum)
                     loadedFiles[i].Reload(force)
                     checksum = checksum.xor(loadedFiles[i].checksum)
@@ -1809,7 +1809,7 @@ class DeclManager {
             // find existing source file or create a new one
             i = 0
             while (i < loadedFiles.Num()) {
-                if (loadedFiles[i].fileName!!.Icmp(fileName.toString()) == 0) {
+                if (loadedFiles[i].fileName.Icmp(fileName.toString()) == 0) {
                     break
                 }
                 i++

@@ -114,7 +114,7 @@ object AI {
      ===============================================================================
      */
     const val SQUARE_ROOT_OF_2 = 1.414213562f
-    val moveCommandString /*[ NUM_MOVE_COMMANDS ]*/: Array<String?>? = arrayOf(
+    val moveCommandString /*[ NUM_MOVE_COMMANDS ]*/: Array<String> = arrayOf(
         "MOVE_NONE",
         "MOVE_FACE_ENEMY",
         "MOVE_FACE_ENTITY",
@@ -135,7 +135,7 @@ object AI {
      ValidForBounds
      ============
      */
-    fun ValidForBounds(settings: idAASSettings?, bounds: idBounds?): Boolean {
+    fun ValidForBounds(settings: idAASSettings, bounds: idBounds): Boolean {
         var i: Int
         i = 0
         while (i < 3) {
@@ -155,31 +155,40 @@ object AI {
      Seek
      =====================
      */
-    fun Seek(vel: idVec3?, org: idVec3?, goal: idVec3?, prediction: Float): idVec3? {
+    fun Seek(vel: idVec3, org: idVec3, goal: idVec3, prediction: Float): idVec3 {
         val predictedPos = idVec3()
         val goalDelta = idVec3()
         val seekVel = idVec3()
 
         // predict our position
-        predictedPos.set(org.oPlus(vel.times(prediction)))
-        goalDelta.set(goal.minus(predictedPos))
-        seekVel.set(goalDelta.times(Math_h.MS2SEC(idGameLocal.msec.toFloat())))
+        predictedPos.set(org + vel * prediction)
+        goalDelta.set(goal - predictedPos)
+        seekVel.set(goalDelta * Math_h.MS2SEC(idGameLocal.msec.toFloat()))
         return seekVel
     }
 
     enum class moveCommand_t {
-        MOVE_NONE, MOVE_FACE_ENEMY, MOVE_FACE_ENTITY,  //
+        MOVE_NONE,
+        MOVE_FACE_ENEMY,
+        MOVE_FACE_ENTITY,
 
         // commands < NUM_NONMOVING_COMMANDS don't cause a change in position
         NUM_NONMOVING_COMMANDS,  //
         MOVE_TO_ENEMY,  // = NUM_NONMOVING_COMMANDS,
-        MOVE_TO_ENEMYHEIGHT, MOVE_TO_ENTITY, MOVE_OUT_OF_RANGE, MOVE_TO_ATTACK_POSITION, MOVE_TO_COVER, MOVE_TO_POSITION, MOVE_TO_POSITION_DIRECT, MOVE_SLIDE_TO_POSITION, MOVE_WANDER, NUM_MOVE_COMMANDS
+        MOVE_TO_ENEMYHEIGHT,
+        MOVE_TO_ENTITY,
+        MOVE_OUT_OF_RANGE,
+        MOVE_TO_ATTACK_POSITION,
+        MOVE_TO_COVER,
+        MOVE_TO_POSITION,
+        MOVE_TO_POSITION_DIRECT,
+        MOVE_SLIDE_TO_POSITION,
+        MOVE_WANDER,
+        NUM_MOVE_COMMANDS
     }
 
-    //
     // status results from move commands
     // make sure to change script/doom_defs.script if you add any, or change their order
-    //
     enum class moveStatus_t {
         MOVE_STATUS_DONE, MOVE_STATUS_MOVING, MOVE_STATUS_WAITING, MOVE_STATUS_DEST_NOT_FOUND, MOVE_STATUS_DEST_UNREACHABLE, MOVE_STATUS_BLOCKED_BY_WALL, MOVE_STATUS_BLOCKED_BY_OBJECT, MOVE_STATUS_BLOCKED_BY_ENEMY, MOVE_STATUS_BLOCKED_BY_MONSTER
     }
@@ -197,24 +206,15 @@ object AI {
 
     // obstacle avoidance
     class obstaclePath_s {
-        val seekPos // seek position avoiding obstacles
-                : idVec3?
-        val seekPosOutsideObstacles // seek position outside obstacles
-                : idVec3?
-        val startPosOutsideObstacles // start position outside obstacles
-                : idVec3?
+        val seekPos = idVec3() // seek position avoiding obstacles
+        val seekPosOutsideObstacles = idVec3() // seek position outside obstacles
+        val startPosOutsideObstacles = idVec3() // start position outside obstacles
         var firstObstacle // if != NULL the first obstacle along the path
                 : idEntity? = null
         var seekPosObstacle // if != NULL the obstacle containing the seek position
                 : idEntity? = null
         var startPosObstacle // if != NULL the obstacle containing the start position
                 : idEntity? = null
-
-        init {
-            seekPos = idVec3()
-            startPosOutsideObstacles = idVec3()
-            seekPosOutsideObstacles = idVec3()
-        }
     }
 
     class predictedPath_s {
@@ -230,13 +230,9 @@ object AI {
     }
 
     internal class particleEmitter_s {
-        var   /*jointHandle_t*/joint: Int
+        var   /*jointHandle_t*/joint: Int = Model.INVALID_JOINT
         var particle: idDeclParticle? = null
         var time = 0
-
-        init {
-            joint = Model.INVALID_JOINT
-        }
     }
 
     class idMoveState {
@@ -252,9 +248,9 @@ object AI {
         var blockTime: Int
         var duration: Int
         var lastMoveTime: Int
-        var moveCommand: moveCommand_t?
-        var moveStatus: moveStatus_t?
-        var moveType: moveType_t?
+        var moveCommand: moveCommand_t
+        var moveStatus: moveStatus_t
+        var moveType: moveType_t
         var nextWanderTime: Int
         var range: Float
         var speed // only used by flying creatures
@@ -284,7 +280,7 @@ object AI {
             savefile.WriteInt(anim)
         }
 
-        fun Restore(savefile: idRestoreGame?) {
+        fun Restore(savefile: idRestoreGame) {
             moveType = moveType_t.values()[savefile.ReadInt()]
             moveCommand = moveCommand_t.values()[savefile.ReadInt()]
             moveStatus = moveStatus_t.values()[savefile.ReadInt()]
@@ -306,8 +302,6 @@ object AI {
             anim = savefile.ReadInt()
         }
 
-        //
-        //
         init {
             moveType = moveType_t.MOVETYPE_ANIM
             moveCommand = moveCommand_t.MOVE_NONE
@@ -331,12 +325,12 @@ object AI {
         }
     }
 
-    class idAASFindCover(hideFromPos: idVec3?) : idAASCallback() {
-        private val PVSAreas: IntArray? = IntArray(idEntity.MAX_PVS_AREAS)
-        private val hidePVS: pvsHandle_t?
+    class idAASFindCover(hideFromPos: idVec3) : idAASCallback() {
+        private val PVSAreas: IntArray = IntArray(idEntity.MAX_PVS_AREAS)
+        private val hidePVS: pvsHandle_t
 
         // ~idAASFindCover();
-        override fun TestArea(aas: idAAS?, areaNum: Int): Boolean {
+        override fun TestArea(aas: idAAS, areaNum: Int): Boolean {
             val areaCenter = idVec3()
             val numPVSAreas: Int
             val PVSAreas = IntArray(idEntity.MAX_PVS_AREAS)
@@ -351,32 +345,30 @@ object AI {
         }
 
         //
-        //
         init {
             val numPVSAreas: Int
-            val bounds = idBounds(hideFromPos.minus(idVec3(16, 16, 0)), hideFromPos.oPlus(idVec3(16, 16, 64)))
-
+            val bounds = idBounds(hideFromPos.minus(idVec3(16f, 16f, 0f)), hideFromPos + idVec3(16f, 16f, 64f)))
             // setup PVS
             numPVSAreas = Game_local.gameLocal.pvs.GetPVSAreas(bounds, PVSAreas, idEntity.MAX_PVS_AREAS)
             hidePVS = Game_local.gameLocal.pvs.SetupCurrentPVS(PVSAreas, numPVSAreas)
         }
     }
 
-    class idAASFindAreaOutOfRange(targetPos: idVec3?, maxDist: Float) : idAASCallback() {
+    class idAASFindAreaOutOfRange(targetPos: idVec3, maxDist: Float) : idAASCallback() {
         private val maxDistSqr: Float
-        private val targetPos: idVec3? = idVec3()
-        override fun TestArea(aas: idAAS?, areaNum: Int): Boolean {
+        private val targetPos: idVec3 = idVec3()
+        override fun TestArea(aas: idAAS, areaNum: Int): Boolean {
             val areaCenter = aas.AreaCenter(areaNum)
             val trace = trace_s()
             val dist: Float
-            dist = targetPos.ToVec2().oMinus(areaCenter.ToVec2()).LengthSqr()
+            dist = (targetPos.ToVec2() - areaCenter.ToVec2()).LengthSqr()
             if (maxDistSqr > 0.0f && dist < maxDistSqr) {
                 return false
             }
             Game_local.gameLocal.clip.TracePoint(
                 trace,
                 targetPos,
-                areaCenter.oPlus(idVec3(0.0f, 0.0f, 1.0f)),
+                areaCenter + idVec3(0.0f, 0.0f, 1.0f),
                 Game_local.MASK_OPAQUE,
                 null
             )
@@ -392,27 +384,27 @@ object AI {
     }
 
     class idAASFindAttackPosition(
-        self: idAI?,
-        gravityAxis: idMat3?,
-        target: idEntity?,
-        targetPos: idVec3?,
-        fireOffset: idVec3?
+        self: idAI,
+        gravityAxis: idMat3,
+        target: idEntity,
+        targetPos: idVec3,
+        fireOffset: idVec3
     ) : idAASCallback() {
-        private val PVSAreas: IntArray? = IntArray(idEntity.MAX_PVS_AREAS)
-        private val excludeBounds: idBounds?
-        private val fireOffset: idVec3? = idVec3()
-        private val gravityAxis: idMat3?
-        private val self: idAI?
-        private val target: idEntity?
-        private val targetPVS: pvsHandle_t?
-        private val targetPos: idVec3? = idVec3()
+        private val PVSAreas: IntArray = IntArray(idEntity.MAX_PVS_AREAS)
+        private val excludeBounds: idBounds
+        private val fireOffset: idVec3 = idVec3()
+        private val gravityAxis: idMat3 = idMat3()
+        private val self: idAI = idAI()
+        private val target: idEntity
+        private val targetPVS: pvsHandle_t
+        private val targetPos: idVec3 = idVec3()
 
         // ~idAASFindAttackPosition();
-        override fun TestArea(aas: idAAS?, areaNum: Int): Boolean {
+        override fun TestArea(aas: idAAS, areaNum: Int): Boolean {
             val dir = idVec3()
             val local_dir = idVec3()
             val fromPos = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             val areaCenter = idVec3()
             val numPVSAreas: Int
             val PVSAreas = IntArray(idEntity.MAX_PVS_AREAS)
@@ -449,7 +441,7 @@ object AI {
             this.targetPos.set(targetPos)
             this.fireOffset.set(fireOffset)
             this.self = self
-            this.gravityAxis = gravityAxis
+            this.gravityAxis.set(gravityAxis)
             excludeBounds = idBounds(idVec3(-64.0f, -64.0f, -8.0f), idVec3(64.0f, 64.0f, 64.0f))
             excludeBounds.TranslateSelf(self.GetPhysics().GetOrigin())
 
@@ -477,15 +469,14 @@ object AI {
                 physics: idPhysics?,
                 aas: idAAS?,
                 ignore: idEntity?,
-                startPos: idVec3?,
-                seekPos: idVec3?,
-                path: obstaclePath_s?
+                startPos: idVec3,
+                seekPos: idVec3,
+                path: obstaclePath_s
             ): Boolean {
                 val numObstacles: Int
                 val areaNum: Int
                 val insideObstacle = CInt()
-                val obstacles = Stream.generate { obstacle_s() }.limit(AI_pathing.MAX_OBSTACLES.toLong())
-                    .toArray<obstacle_s?> { _Dummy_.__Array__() }
+                val obstacles = Array(AI_pathing.MAX_OBSTACLES.toLong()) { obstacle_s() }
                 val clipBounds = idBounds()
                 val bounds = idBounds()
                 val root: pathNode_s?
@@ -532,8 +523,8 @@ object AI {
                     insideObstacle,
                     null
                 )
-                if (insideObstacle.getVal() != -1) {
-                    path.startPosObstacle = obstacles[insideObstacle.getVal()].entity
+                if (insideObstacle._val != -1) {
+                    path.startPosObstacle = obstacles[insideObstacle._val].entity
                 }
 
                 // get a goal position outside the obstacles
@@ -544,8 +535,8 @@ object AI {
                     insideObstacle,
                     null
                 )
-                if (insideObstacle.getVal() != -1) {
-                    path.seekPosObstacle = obstacles[insideObstacle.getVal()].entity
+                if (insideObstacle._val != -1) {
+                    path.seekPosObstacle = obstacles[insideObstacle._val].entity
                 }
 
                 // if start and destination are pushed to the same point, we don't have a path around the obstacle
@@ -606,8 +597,8 @@ object AI {
             fun PredictPath(
                 ent: idEntity?,
                 aas: idAAS?,
-                start: idVec3?,
-                velocity: idVec3?,
+                start: idVec3,
+                velocity: idVec3,
                 totalTime: Int,
                 frameTime: Int,
                 stopEvent: Int,
@@ -635,8 +626,8 @@ object AI {
                     gravity.set(aas.GetSettings().gravity)
                     gravityDir.set(aas.GetSettings().gravityDir)
                     invGravityDir.set(aas.GetSettings().invGravityDir)
-                    maxStepHeight = aas.GetSettings().maxStepHeight.getVal()
-                    minFloorCos = aas.GetSettings().minFloorCos.getVal()
+                    maxStepHeight = aas.GetSettings().maxStepHeight._val
+                    minFloorCos = aas.GetSettings().minFloorCos._val
                 } else {
                     gravity.set(Game_local.DEFAULT_GRAVITY_VEC3)
                     gravityDir.set(idVec3(0, 0, -1))
@@ -788,8 +779,8 @@ object AI {
          */
             // Return true if the trajectory of the clip model is collision free.
             fun TestTrajectory(
-                start: idVec3?,
-                end: idVec3?,
+                start: idVec3,
+                end: idVec3,
                 zVel: Float,
                 gravity: Float,
                 time: Float,
@@ -805,7 +796,7 @@ object AI {
                 val maxHeight: Float
                 var t: Float
                 var t2: Float
-                val points: Array<idVec3?> = idVec3.generateArray(5)
+                val points: Array<idVec3> = idVec3.generateArray(5)
                 val trace = trace_s()
                 var result: Boolean
                 t = zVel / gravity
@@ -907,17 +898,17 @@ object AI {
          =====================
          */
             fun PredictTrajectory(
-                firePos: idVec3?,
-                target: idVec3?,
+                firePos: idVec3,
+                target: idVec3,
                 projectileSpeed: Float,
-                projGravity: idVec3?,
+                projGravity: idVec3,
                 clip: idClipModel?,
                 clipmask: Int,
                 max_height: Float,
                 ignore: idEntity?,
                 targetEntity: idEntity?,
                 drawtime: Int,
-                aimDir: idVec3?
+                aimDir: idVec3
             ): Boolean {
                 val n: Int
                 var i: Int
@@ -931,7 +922,7 @@ object AI {
                 val trace = trace_s()
                 val ballistics =
                     Stream.generate { ballistics_s() }.limit(2).toArray<ballistics_s?> { _Dummy_.__Array__() }
-                val dir: Array<idVec3?> = idVec3.generateArray(2)
+                val dir: Array<idVec3> = idVec3.generateArray(2)
                 val velocity = idVec3()
                 val lastPos = idVec3()
                 val pos = idVec3()
@@ -1000,8 +991,8 @@ object AI {
                     idMath.SinCos(pitch, s, c)
                     dir[i].set(target.minus(firePos))
                     dir[i].z = 0.0f
-                    dir[i].timesAssign(c.getVal() * idMath.InvSqrt(dir[i].LengthSqr()))
-                    dir[i].z = s.getVal()
+                    dir[i].timesAssign(c._val * idMath.InvSqrt(dir[i].LengthSqr()))
+                    dir[i].z = s._val
                     zVel = projectileSpeed * dir[i].z
                     if (SysCvar.ai_debugTrajectory.GetBool()) {
                         t = ballistics[i].time / 100.0f
@@ -1551,7 +1542,7 @@ object AI {
         protected var worldMuzzleFlash // positioned on world weapon bone
                 : renderLight_s?
         protected var worldMuzzleFlashHandle: Int
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(travelFlags)
             move.Save(savefile)
@@ -1664,7 +1655,7 @@ object AI {
             savefile.WriteBool(GetPhysics() == physicsObj)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val restorePhysics = CBool(false)
             var i: Int
             var num: Int
@@ -2026,7 +2017,7 @@ object AI {
             } else talk_state
         }
 
-        fun GetAimDir(firePos: idVec3?, aimAtEnt: idEntity?, ignore: idEntity?, aimDir: idVec3?): Boolean {
+        fun GetAimDir(firePos: idVec3, aimAtEnt: idEntity?, ignore: idEntity?, aimDir: idVec3): Boolean {
             val targetPos1 = idVec3()
             val targetPos2 = idVec3()
             val delta = idVec3()
@@ -2108,7 +2099,7 @@ object AI {
                     if (!ValidForBounds(settings, physicsObj.GetBounds())) {
                         idGameLocal.Error("%s cannot use use_aas %s\n", name, use_aas)
                     }
-                    val height = settings.maxStepHeight.getVal()
+                    val height = settings.maxStepHeight._val
                     physicsObj.SetMaxStepHeight(height)
                     return
                 } else {
@@ -2278,7 +2269,7 @@ object AI {
                 player = if (TempDump.NOT(activator) || activator !is idPlayer) {
                     Game_local.gameLocal.GetLocalPlayer()
                 } else {
-                    activator as idPlayer?
+                    activator
                 }
                 if (ReactionTo(player) and ATTACK_ON_ACTIVATE != 0) {
                     SetEnemy(player)
@@ -2433,7 +2424,7 @@ object AI {
             StartSound("snd_ambient", gameSoundChannel_t.SND_CHANNEL_AMBIENT, 0, false, null)
         }
 
-        protected fun FirstVisiblePointOnPath(origin: idVec3?, target: idVec3?, travelFlags: Int): idVec3? {
+        protected fun FirstVisiblePointOnPath(origin: idVec3, target: idVec3, travelFlags: Int): idVec3 {
             var i: Int
             val areaNum: Int
             val targetAreaNum: Int
@@ -2590,7 +2581,7 @@ object AI {
         }
 
         // movement
-        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3?, impulse: idVec3?) {
+        override fun ApplyImpulse(ent: idEntity?, id: Int, point: idVec3, impulse: idVec3) {
             // FIXME: Jim take a look at this and see if this is a reasonable thing to do
             // instead of a spawnArg flag.. Sabaoth is the only slide monster ( and should be the only one for D3 )
             // and we don't want him taking physics impulses as it can knock him off the path
@@ -2599,7 +2590,7 @@ object AI {
             }
         }
 
-        protected fun GetMoveDelta(oldaxis: idMat3?, axis: idMat3?, delta: idVec3?) {
+        protected fun GetMoveDelta(oldaxis: idMat3, axis: idMat3, delta: idVec3) {
             val oldModelOrigin = idVec3()
             val modelOrigin = idVec3()
             animator.GetDelta(Game_local.gameLocal.time - idGameLocal.msec, Game_local.gameLocal.time, delta)
@@ -2615,7 +2606,7 @@ object AI {
             delta.timesAssign(physicsObj.GetGravityAxis())
         }
 
-        protected fun CheckObstacleAvoidance(goalPos: idVec3?, newPos: idVec3?) {
+        protected fun CheckObstacleAvoidance(goalPos: idVec3, newPos: idVec3) {
             var obstacle: idEntity?
             val path = obstaclePath_s()
             val dir = idVec3()
@@ -2972,7 +2963,7 @@ object AI {
             }
         }
 
-        protected fun AddFlyBob(vel: idVec3?) {
+        protected fun AddFlyBob(vel: idVec3) {
             val fly_bob_add = idVec3()
             val t: Float
             if (fly_bob_strength != 0f) {
@@ -2994,7 +2985,7 @@ object AI {
             }
         }
 
-        protected fun AdjustFlyHeight(vel: idVec3?, goalPos: idVec3?) {
+        protected fun AdjustFlyHeight(vel: idVec3, goalPos: idVec3) {
             val origin = idVec3(physicsObj.GetOrigin())
             val path = predictedPath_s()
             val end = idVec3()
@@ -3046,7 +3037,7 @@ object AI {
             }
         }
 
-        protected fun FlySeekGoal(vel: idVec3?, goalPos: idVec3?) {
+        protected fun FlySeekGoal(vel: idVec3, goalPos: idVec3) {
             val seekVel = idVec3()
 
             // seek the goal position
@@ -3055,7 +3046,7 @@ object AI {
             vel.plusAssign(seekVel)
         }
 
-        protected fun AdjustFlySpeed(vel: idVec3?) {
+        protected fun AdjustFlySpeed(vel: idVec3) {
             var speed: Float
 
             // apply dampening
@@ -3246,7 +3237,7 @@ object AI {
             inflictor: idEntity?,
             attacker: idEntity?,
             damage: Int,
-            dir: idVec3?,
+            dir: idVec3,
             location: Int
         ): Boolean {
             val actor: idActor?
@@ -3264,7 +3255,7 @@ object AI {
                     AI_SPECIAL_DAMAGE.underscore(0f)
                 }
                 if (enemy.GetEntity() !== attacker && attacker is idActor) {
-                    actor = attacker as idActor?
+                    actor = attacker
                     if (ReactionTo(actor) and ATTACK_ON_DAMAGE != 0) {
                         Game_local.gameLocal.AlertAI(actor)
                         SetEnemy(actor)
@@ -3274,7 +3265,7 @@ object AI {
             return AI_PAIN.underscore() /*!= 0*/
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             var ang: idAngles
             val modelDeath = arrayOf<String?>(null)
 
@@ -3358,10 +3349,10 @@ object AI {
         }
 
         // navigation
-        protected fun KickObstacles(dir: idVec3?, force: Float, alwaysKick: idEntity?) {
+        protected fun KickObstacles(dir: idVec3, force: Float, alwaysKick: idEntity?) {
             var i: Int
             val numListedClipModels: Int
-            val clipBounds: idBounds?
+            val clipBounds: idBounds
             var obEnt: idEntity
             var clipModel: idClipModel
             val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
@@ -3421,7 +3412,7 @@ object AI {
             }
         }
 
-        protected fun ReachedPos(pos: idVec3?, moveCommand: moveCommand_t?): Boolean {
+        protected fun ReachedPos(pos: idVec3, moveCommand: moveCommand_t?): Boolean {
             return if (move.moveType == moveType_t.MOVETYPE_SLIDE) {
                 val bnds = idBounds(idVec3(-4, -4.0f, -8.0f), idVec3(4.0f, 4.0f, 64.0f))
                 bnds.TranslateSelf(physicsObj.GetOrigin())
@@ -3447,11 +3438,11 @@ object AI {
          are from the goal, so try to break the goals up into shorter distances.
          =====================
          */
-        protected fun TravelDistance(start: idVec3?, end: idVec3?): Float {
+        protected fun TravelDistance(start: idVec3, end: idVec3): Float {
             val fromArea: Int
             val toArea: Int
             val dist: Float
-            val delta: idVec2?
+            val delta: idVec2
             //            aasPath_s path;
             if (TempDump.NOT(aas)) {
                 // no aas, so just take the straight line distance
@@ -3515,10 +3506,10 @@ object AI {
                     aas.ShowWalkPath(start, toArea, end)
                 }
             }
-            return travelTime.getVal()
+            return travelTime._val
         }
 
-        protected fun PointReachableAreaNum(pos: idVec3?, boundsScale: Float = 2.0f /*= 2.0f*/): Int {
+        protected fun PointReachableAreaNum(pos: idVec3, boundsScale: Float = 2.0f /*= 2.0f*/): Int {
             val areaNum: Int
             val size = idVec3()
             val bounds = idBounds()
@@ -3540,9 +3531,9 @@ object AI {
         protected fun PathToGoal(
             path: aasPath_s?,
             areaNum: Int,
-            origin: idVec3?,
+            origin: idVec3,
             goalAreaNum: Int,
-            goalOrigin: idVec3?
+            goalOrigin: idVec3
         ): Boolean {
             val org = idVec3()
             val goal = idVec3()
@@ -3576,7 +3567,7 @@ object AI {
             }
         }
 
-        protected fun GetMovePos(seekPos: idVec3?): Boolean {
+        protected fun GetMovePos(seekPos: idVec3): Boolean {
             val areaNum: Int
             val path = aasPath_s()
             var result: Boolean
@@ -3670,7 +3661,7 @@ object AI {
             return move.moveCommand == moveCommand_t.MOVE_NONE
         }
 
-        protected fun EntityCanSeePos(actor: idActor?, actorOrigin: idVec3?, pos: idVec3?): Boolean {
+        protected fun EntityCanSeePos(actor: idActor?, actorOrigin: idVec3, pos: idVec3): Boolean {
             val eye = idVec3()
             val point = idVec3()
             val results = trace_s()
@@ -3789,7 +3780,7 @@ object AI {
             return true
         }
 
-        protected fun DirectMoveToPosition(pos: idVec3?): Boolean {
+        protected fun DirectMoveToPosition(pos: idVec3): Boolean {
             if (ReachedPos(pos, move.moveCommand)) {
                 StopMove(moveStatus_t.MOVE_STATUS_DONE)
                 return true
@@ -4034,7 +4025,7 @@ object AI {
             return true
         }
 
-        protected fun MoveToPosition(pos: idVec3?): Boolean {
+        protected fun MoveToPosition(pos: idVec3): Boolean {
             val org = idVec3()
             val areaNum: Int
             val path = aasPath_s()
@@ -4071,7 +4062,7 @@ object AI {
             return true
         }
 
-        protected fun MoveToCover(entity: idEntity?, hideFromPos: idVec3?): Boolean {
+        protected fun MoveToCover(entity: idEntity?, hideFromPos: idVec3): Boolean {
             val areaNum: Int
             val obstacle = arrayOf<aasObstacle_s?>(aasObstacle_s())
             val hideGoal = aasGoal_s()
@@ -4109,7 +4100,7 @@ object AI {
             return true
         }
 
-        protected fun SlideToPosition(pos: idVec3?, time: Float): Boolean {
+        protected fun SlideToPosition(pos: idVec3, time: Float): Boolean {
             StopMove(moveStatus_t.MOVE_STATUS_DONE)
             move.moveDest.set(pos)
             move.goalEntity.oSet(null)
@@ -4207,7 +4198,7 @@ object AI {
             return path.endEvent == 0
         }
 
-        protected fun NewWanderDir(dest: idVec3?): Boolean {
+        protected fun NewWanderDir(dest: idVec3): Boolean {
             val deltax: Float
             val deltay: Float
             val d = FloatArray(3)
@@ -4452,7 +4443,7 @@ object AI {
             return FacingIdeal()
         }
 
-        protected fun TurnToward(pos: idVec3?): Boolean {
+        protected fun TurnToward(pos: idVec3): Boolean {
             val dir = idVec3()
             val local_dir = idVec3()
             val lengthSqr: Float
@@ -4677,8 +4668,8 @@ object AI {
                 lastReachableEnemyPos.set(lastVisibleEnemyPos)
                 lastVisibleReachableEnemyPos.set(lastReachableEnemyPos)
                 enemyAreaNum.setVal(PointReachableAreaNum(lastReachableEnemyPos, 1.0f))
-                if (aas != null && enemyAreaNum.getVal() != 0) {
-                    aas.PushPointIntoAreaNum(enemyAreaNum.getVal(), lastReachableEnemyPos)
+                if (aas != null && enemyAreaNum._val != 0) {
+                    aas.PushPointIntoAreaNum(enemyAreaNum._val, lastReachableEnemyPos)
                     lastVisibleReachableEnemyPos.set(lastReachableEnemyPos)
                 }
             }
@@ -4693,7 +4684,7 @@ object AI {
             }
         }
 
-        protected fun CreateProjectile(pos: idVec3?, dir: idVec3?): idProjectile? {
+        protected fun CreateProjectile(pos: idVec3, dir: idVec3): idProjectile? {
             val ent = arrayOf<idEntity?>(null)
             var clsname: String?
             if (null == projectile.GetEntity()) {
@@ -4740,7 +4731,7 @@ object AI {
             val ang: idAngles?
             val num_projectiles: Int
             var i: Int
-            var axis: idMat3? = idMat3()
+            var axis: idMat3 = idMat3()
             val tmp = idVec3()
             var lastProjectile: idProjectile?
             if (null == projectileDef) {
@@ -4780,7 +4771,7 @@ object AI {
                 && ownerBounds[1, 2] - ownerBounds[0, 2] > projBounds[1, 2] - projBounds[0, 2]
             ) {
                 if (ownerBounds.minus(projBounds).RayIntersection(muzzle, viewAxis[0], distance)) {
-                    start.set(muzzle.oPlus(viewAxis[0].times(distance.getVal())))
+                    start.set(muzzle.oPlus(viewAxis[0].times(distance._val)))
                 } else {
                     start.set(ownerBounds.GetCenter())
                 }
@@ -4857,10 +4848,10 @@ object AI {
          possibly forcing a miss.  This is harmless behavior ATM, but is not intuitive.
          ================
          */
-        override fun DamageFeedback(victim: idEntity?, inflictor: idEntity?, damage: CInt?) {
+        override fun DamageFeedback(victim: idEntity?, inflictor: idEntity?, damage: CInt) {
             if (victim == this && inflictor is idProjectile) {
                 // monsters only get half damage from their own projectiles
-                damage.setVal((damage.getVal() + 1) / 2) // round up so we don't do 0 damage
+                damage.setVal((damage._val + 1) / 2) // round up so we don't do 0 damage
             } else if (victim == enemy.GetEntity()) {
                 AI_HIT_ENEMY.underscore(true)
             }
@@ -4990,7 +4981,7 @@ object AI {
                 val armor = CInt()
                 val player = enemyEnt as idPlayer?
                 player.CalcDamagePoints(this, this, meleeDef, 1.0f, Model.INVALID_JOINT, damage, armor)
-                if (enemyEnt.health <= damage.getVal()) {
+                if (enemyEnt.health <= damage._val) {
                     var t = Game_local.gameLocal.time - player.lastSavingThrowTime
                     if (t > Player.SAVING_THROW_TIME) {
                         player.lastSavingThrowTime = Game_local.gameLocal.time
@@ -5085,7 +5076,7 @@ object AI {
         }
 
         // special effects
-        protected fun GetMuzzle(jointname: String?, muzzle: idVec3?, axis: idMat3?) {
+        protected fun GetMuzzle(jointname: String?, muzzle: idVec3, axis: idMat3) {
             val   /*jointHandle_t*/joint: Int
             if (!TempDump.isNotNullOrEmpty(jointname)) {
                 muzzle.set(
@@ -5124,7 +5115,7 @@ object AI {
             worldMuzzleFlashHandle = -1
         }
 
-        protected fun TriggerWeaponEffects(muzzle: idVec3?) {
+        protected fun TriggerWeaponEffects(muzzle: idVec3) {
             val org = idVec3()
             val axis = idMat3()
             if (!SysCvar.g_muzzleFlash.GetBool()) {
@@ -5194,7 +5185,7 @@ object AI {
             var diff: idAngles?
             var mat: idMat3
             var axis = idMat3()
-            var orientationJointAxis: idMat3? = idMat3()
+            var orientationJointAxis: idMat3 = idMat3()
             val headEnt = head.GetEntity()
             val eyepos = idVec3()
             val pos = idVec3()
@@ -5490,7 +5481,7 @@ object AI {
                         i++
                         continue
                     }
-                    actor = ent as idActor?
+                    actor = ent
                     if (actor.health <= 0 || TempDump.NOT((ReactionTo(actor) and ATTACK_ON_SIGHT).toDouble())) {
                         i++
                         continue
@@ -5522,7 +5513,7 @@ object AI {
                     ent = ent.activeNode.Next()
                     continue
                 }
-                actor = ent as idActor?
+                actor = ent
                 if (actor.health <= 0 || 0 == ReactionTo(actor) and ATTACK_ON_SIGHT) {
                     ent = ent.activeNode.Next()
                     continue
@@ -5562,7 +5553,7 @@ object AI {
                     i++
                     continue
                 }
-                actor = ent as idActor?
+                actor = ent
                 if (actor.health <= 0 || TempDump.NOT((ReactionTo(actor) and ATTACK_ON_SIGHT).toDouble())) {
                     i++
                     continue
@@ -5703,14 +5694,14 @@ object AI {
             idThread.ReturnEntity(proj)
         }
 
-        protected fun Event_LaunchMissile(_muzzle: idEventArg<idVec3?>?, _ang: idEventArg<idAngles?>?) {
+        protected fun Event_LaunchMissile(_muzzle: idEventArg<idVec3>?, _ang: idEventArg<idAngles?>?) {
             val muzzle = idVec3(_muzzle.value)
             val ang = _ang.value
             val start = idVec3()
             val tr = trace_s()
             val projBounds: idBounds
             val projClip: idClipModel?
-            val axis: idMat3?
+            val axis: idMat3
             val distance = CFloat()
             if (null == projectileDef) {
                 Game_local.gameLocal.Warning("%s (%s) doesn't have a projectile specified", name, GetEntityDefName())
@@ -5733,7 +5724,7 @@ object AI {
                 && ownerBounds[1, 2] - ownerBounds[0, 2] > projBounds[1, 2] - projBounds[0, 2]
             ) {
                 if (ownerBounds.minus(projBounds).RayIntersection(muzzle, viewAxis[0], distance)) {
-                    start.set(muzzle.oPlus(viewAxis[0].times(distance.getVal())))
+                    start.set(muzzle.oPlus(viewAxis[0].times(distance._val)))
                 } else {
                     start.set(ownerBounds.GetCenter())
                 }
@@ -5938,7 +5929,7 @@ object AI {
             TurnToward(angle.value)
         }
 
-        protected fun Event_TurnToPos(pos: idEventArg<idVec3?>?) {
+        protected fun Event_TurnToPos(pos: idEventArg<idVec3>?) {
             TurnToward(pos.value)
         }
 
@@ -5998,12 +5989,12 @@ object AI {
             }
         }
 
-        protected fun Event_MoveToPosition(pos: idEventArg<idVec3?>?) {
+        protected fun Event_MoveToPosition(pos: idEventArg<idVec3>?) {
             StopMove(moveStatus_t.MOVE_STATUS_DONE)
             MoveToPosition(pos.value)
         }
 
-        protected fun Event_SlideTo(pos: idEventArg<idVec3?>?, time: idEventArg<Float?>?) {
+        protected fun Event_SlideTo(pos: idEventArg<idVec3>?, time: idEventArg<Float?>?) {
             SlideToPosition(pos.value, time.value)
         }
 
@@ -6119,7 +6110,7 @@ object AI {
         }
 
         protected fun Event_GetJumpVelocity(
-            _pos: idEventArg<idVec3?>?,
+            _pos: idEventArg<idVec3>?,
             _speed: idEventArg<Float?>?,
             _max_height: idEventArg<Float?>?
         ) {
@@ -6319,7 +6310,7 @@ object AI {
             val dir = idVec3()
             val fromPos = idVec3()
             val start = idVec3()
-            val axis: idMat3?
+            val axis: idMat3
             val tr = trace_s()
             val distance = CFloat()
             val enemyEnt = enemy.GetEntity()
@@ -6359,7 +6350,7 @@ object AI {
                 && ownerBounds[1, 2] - ownerBounds[0, 2] > projBounds[1, 2] - projBounds[0, 2]
             ) {
                 if (ownerBounds.minus(projBounds).RayIntersection(org, viewAxis[0], distance)) {
-                    start.set(org.oPlus(viewAxis[0].times(distance.getVal())))
+                    start.set(org.oPlus(viewAxis[0].times(distance._val)))
                 } else {
                     start.set(ownerBounds.GetCenter())
                 }
@@ -6418,7 +6409,7 @@ object AI {
                 && ownerBounds[1, 2] - ownerBounds[0, 2] > projBounds[1, 2] - projBounds[0, 2]
             ) {
                 if (ownerBounds.minus(projBounds).RayIntersection(org, viewAxis[0], distance)) {
-                    start.set(org.oPlus(viewAxis[0].times(distance.getVal())))
+                    start.set(org.oPlus(viewAxis[0].times(distance._val)))
                 } else {
                     start.set(ownerBounds.GetCenter())
                 }
@@ -6624,7 +6615,7 @@ object AI {
             idThread.ReturnInt(path.endEvent == 0)
         }
 
-        protected fun Event_TestMoveToPosition(_position: idEventArg<idVec3?>?) {
+        protected fun Event_TestMoveToPosition(_position: idEventArg<idVec3>?) {
             val position = idVec3(_position.value)
             val path = predictedPath_s()
             PredictPath(
@@ -6955,7 +6946,7 @@ object AI {
             idThread.ReturnEntity(ents[which])
         }
 
-        protected fun Event_TravelDistanceToPoint(pos: idEventArg<idVec3?>?) {
+        protected fun Event_TravelDistanceToPoint(pos: idEventArg<idVec3>?) {
             val time: Float
             time = TravelDistance(physicsObj.GetOrigin(), pos.value)
             idThread.ReturnFloat(time)
@@ -6967,7 +6958,7 @@ object AI {
             idThread.ReturnFloat(time)
         }
 
-        protected fun Event_TravelDistanceBetweenPoints(source: idEventArg<idVec3?>?, dest: idEventArg<idVec3?>?) {
+        protected fun Event_TravelDistanceBetweenPoints(source: idEventArg<idVec3>?, dest: idEventArg<idVec3>?) {
             val time: Float
             time = TravelDistance(source.value, dest.value)
             idThread.ReturnFloat(time)
@@ -7109,7 +7100,7 @@ object AI {
             idThread.ReturnEntity(move.obstacle.GetEntity())
         }
 
-        protected fun Event_PushPointIntoAAS(_pos: idEventArg<idVec3?>?) {
+        protected fun Event_PushPointIntoAAS(_pos: idEventArg<idVec3>?) {
             val pos = idVec3(_pos.value)
             val newPos = idVec3()
             val areaNum: Int
@@ -7157,7 +7148,7 @@ object AI {
             TriggerParticles(jointName.value)
         }
 
-        protected fun Event_FindActorsInBounds(mins: idEventArg<idVec3?>?, maxs: idEventArg<idVec3?>?) {
+        protected fun Event_FindActorsInBounds(mins: idEventArg<idVec3>?, maxs: idEventArg<idVec3>?) {
             var ent: idEntity
             val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val numListedEntities: Int
@@ -7180,7 +7171,7 @@ object AI {
             idThread.ReturnEntity(null)
         }
 
-        protected fun Event_CanReachPosition(pos: idEventArg<idVec3?>?) {
+        protected fun Event_CanReachPosition(pos: idEventArg<idVec3>?) {
             val path = aasPath_s()
             val toAreaNum: Int
             val areaNum: Int
@@ -7250,13 +7241,13 @@ object AI {
                 pos.set(enemyEnt.GetPhysics().GetOrigin())
                 toAreaNum.setVal(PointReachableAreaNum(pos))
             }
-            if (0 == toAreaNum.getVal()) {
+            if (0 == toAreaNum._val) {
                 idThread.ReturnInt(false)
                 return
             }
             val org = physicsObj.GetOrigin()
             areaNum = PointReachableAreaNum(org)
-            idThread.ReturnInt(PathToGoal(path, areaNum, org, toAreaNum.getVal(), pos))
+            idThread.ReturnInt(PathToGoal(path, areaNum, org, toAreaNum._val, pos))
         }
 
         protected fun Event_GetReachableEntityPosition(_ent: idEventArg<idEntity?>?) {
@@ -7289,7 +7280,7 @@ object AI {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
             return eventCallbacks[event]
         }
 
@@ -7306,7 +7297,7 @@ object AI {
 
         // Outputs a list of all monsters to the console.
         class List_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var e: Int
                 var check: idAI
                 var count: Int
@@ -7341,8 +7332,8 @@ object AI {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = List_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = List_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -7500,10 +7491,10 @@ object AI {
                     val cone_dot = node.cone_right.times(axis[1])
                     if (Math.abs(cone_dot) > 0.1) {
                         val cone_dist = node.max_dist / cone_dot
-                        val pos1 = idVec3(org.oPlus(leftDir.times(node.min_dist)))
-                        val pos2 = idVec3(org.oPlus(leftDir.times(cone_dist)))
-                        val pos3 = idVec3(org.oPlus(rightDir.times(node.min_dist)))
-                        val pos4 = idVec3(org.oPlus(rightDir.times(cone_dist)))
+                        val pos1 = org + leftDir * node.min_dis
+                        val pos2 = org + leftDir * cone_dist
+                        val pos3 = org + rightDir * node.min_dist
+                        val pos4 = org + rightDir * cone_dist
                         Game_local.gameRenderWorld.DebugLine(
                             color,
                             node.GetPhysics().GetOrigin(),

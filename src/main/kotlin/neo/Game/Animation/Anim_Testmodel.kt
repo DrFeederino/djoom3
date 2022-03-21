@@ -75,10 +75,10 @@ class Anim_Testmodel {
         : idAnimatedEntity() {
         companion object {
             // CLASS_PROTOTYPE( idTestModel );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             // ~idTestModel();
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
@@ -96,7 +96,7 @@ class Anim_Testmodel {
         private var animTime = 0
 
         //
-        private val copyJoints: ArrayList<copyJoints_t?>? = ArrayList<Any?>()
+        private val copyJoints: ArrayList<copyJoints_t?> = ArrayList()
         private val customAnim: idAnim? = null
         private var frame = 0
         private val head: idEntityPtr<idEntity?>? = null
@@ -105,8 +105,8 @@ class Anim_Testmodel {
         private var mode = 0
         private val physicsObj: idPhysics_Parametric? = null
         private var startTime = 0
-        override fun Save(savefile: idSaveGame?) {}
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Save(savefile: idSaveGame) {}
+        override fun Restore(savefile: idRestoreGame) {
             // FIXME: one day we may actually want to save/restore test models, but for now we'll just delete them
 //	delete this;
         }
@@ -185,13 +185,13 @@ class Anim_Testmodel {
                             copyJoint.mod = jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE
                         }
                         copyJoint.from.setVal(animator.GetJointHandle(jointName.toString()))
-                        if (copyJoint.from.getVal() == Model.INVALID_JOINT) {
+                        if (copyJoint.from._val == Model.INVALID_JOINT) {
                             Game_local.gameLocal.Warning("Unknown copy_joint '%s'", jointName)
                             kv = spawnArgs.MatchPrefix("copy_joint", kv)
                             continue
                         }
                         copyJoint.to.setVal(headAnimator.GetJointHandle(jointName.toString()))
-                        if (copyJoint.to.getVal() == Model.INVALID_JOINT) {
+                        if (copyJoint.to._val == Model.INVALID_JOINT) {
                             Game_local.gameLocal.Warning("Unknown copy_joint '%s' on head", jointName)
                             kv = spawnArgs.MatchPrefix("copy_joint", kv)
                             continue
@@ -664,31 +664,31 @@ class Anim_Testmodel {
                         if (copyJoints.get(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                             val mat = head.GetEntity().GetPhysics().GetAxis().Transpose()
                             GetJointWorldTransform(
-                                copyJoints.get(i).from.getVal(),
+                                copyJoints.get(i).from._val,
                                 Game_local.gameLocal.time,
                                 pos,
                                 axis
                             )
                             pos.minusAssign(head.GetEntity().GetPhysics().GetOrigin())
                             headAnimator.SetJointPos(
-                                copyJoints.get(i).to.getVal(),
+                                copyJoints.get(i).to._val,
                                 copyJoints.get(i).mod,
                                 pos.times(mat)
                             )
                             headAnimator.SetJointAxis(
-                                copyJoints.get(i).to.getVal(),
+                                copyJoints.get(i).to._val,
                                 copyJoints.get(i).mod,
                                 axis.times(mat)
                             )
                         } else {
                             animator.GetJointLocalTransform(
-                                copyJoints.get(i).from.getVal(),
+                                copyJoints.get(i).from._val,
                                 Game_local.gameLocal.time,
                                 pos,
                                 axis
                             )
-                            headAnimator.SetJointPos(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, pos)
-                            headAnimator.SetJointAxis(copyJoints.get(i).to.getVal(), copyJoints.get(i).mod, axis)
+                            headAnimator.SetJointPos(copyJoints.get(i).to._val, copyJoints.get(i).mod, pos)
+                            headAnimator.SetJointAxis(copyJoints.get(i).to._val, copyJoints.get(i).mod, axis)
                         }
                         i++
                     }
@@ -759,7 +759,7 @@ class Anim_Testmodel {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -782,8 +782,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = KeepTestModel_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = KeepTestModel_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -822,8 +822,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestSkin_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestSkin_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -871,8 +871,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestShaderParm_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestShaderParm_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -940,8 +940,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestModel_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestModel_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1019,8 +1019,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestParticleStopTime_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestParticleStopTime_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1041,8 +1041,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestAnim_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestAnim_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1086,8 +1086,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestBlend_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestBlend_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1099,7 +1099,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelNextAnim_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1108,8 +1108,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestModelNextAnim_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestModelNextAnim_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1130,8 +1130,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestModelPrevAnim_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestModelPrevAnim_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1152,8 +1152,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestModelNextFrame_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestModelNextFrame_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -1165,7 +1165,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelPrevFrame_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1174,8 +1174,8 @@ class Anim_Testmodel {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = TestModelPrevFrame_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = TestModelPrevFrame_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }

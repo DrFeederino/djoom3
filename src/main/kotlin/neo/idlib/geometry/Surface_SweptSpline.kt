@@ -86,8 +86,8 @@ class Surface_SweptSpline {
             var j1: Int
             var totalTime: Float
             var t: Float
-            var splinePos: idVec4?
-            var splineD1: idVec4?
+            var splinePos: idVec4
+            var splineD1: idVec4
             val splineMat = idMat3()
             if (null == spline || null == sweptSpline) {
                 super.Clear()
@@ -127,10 +127,10 @@ class Surface_SweptSpline {
                 j = 0
                 while (j < sweptSplineSubdivisions) {
                     val v = verts[offset + j]
-                    v.xyz.set(splinePos.ToVec3() + verts[baseOffset+j].xyz * splineMat)
+                    v.xyz.set(splinePos.ToVec3() + verts[baseOffset + j].xyz * splineMat)
                     v.st[0] = verts[baseOffset + j].st[0]
                     v.st[1] = splinePos.w
-                    v.tangents[0] = verts[baseOffset+j].tangents[0] * splineMat
+                    v.tangents[0] = verts[baseOffset + j].tangents[0] * splineMat
                     v.tangents[1] = splineD1.ToVec3()
                     v.normal.set(v.tangents[1].Cross(v.tangents[0]))
                     v.normal.Normalize()
@@ -204,7 +204,7 @@ class Surface_SweptSpline {
             d.Normalize()
             v.set(d.Cross(previousFrame[2]))
             v.Normalize()
-            a = idMath.ACos(previousFrame[2] * d ) * 0.5f
+            a = idMath.ACos(previousFrame[2] * d) * 0.5f
             c = idMath.Cos(a)
             s = idMath.Sqrt(1.0f - c * c)
             x = v[0] * s

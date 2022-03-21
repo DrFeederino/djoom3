@@ -137,7 +137,7 @@ object Model_sprite {
             return staticModel
         }
 
-        override fun Bounds(renderEntity: renderEntity_s?): idBounds? {
+        override fun Bounds(renderEntity: renderEntity_s?): idBounds {
             val b = idBounds()
             b.Zero()
             if (renderEntity == null) {

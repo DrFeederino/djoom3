@@ -112,7 +112,7 @@ class GuiModel {
             demo.ReadInt(i)
             verts.SetNum(i._val, false)
             j = 0
-            while (j < i.getVal()) {
+            while (j < i._val) {
                 demo.ReadVec3(verts[j].xyz)
                 demo.ReadVec2(verts[j].st)
                 demo.ReadVec3(verts[j].normal)
@@ -554,12 +554,12 @@ class GuiModel {
          =============
          */
         fun DrawStretchTri(
-            p1: idVec2?,
-            p2: idVec2?,
-            p3: idVec2?,
-            t1: idVec2?,
-            t2: idVec2?,
-            t3: idVec2?,
+            p1: idVec2,
+            p2: idVec2,
+            p3: idVec2,
+            t1: idVec2,
+            t2: idVec2,
+            t3: idVec2,
             material: idMaterial?
         ) {
             val tempVerts = arrayOfNulls<idDrawVert?>(3)

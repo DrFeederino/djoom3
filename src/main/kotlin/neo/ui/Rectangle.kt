@@ -19,10 +19,10 @@ object Rectangle {
         var x = v[0]
         var y = v[1]
         if (a != 0f) {
-            val x2 = (((x - origin[0]) * c) - ((y - origin[1]) * s)) + origin[0];
-            val y2 = (((x - origin[0]) * s) + ((y - origin[1]) * c)) + origin[1];
-            x = x2;
-            y = y2;
+            val x2 = (((x - origin[0]) * c) - ((y - origin[1]) * s)) + origin[0]
+            val y2 = (((x - origin[0]) * s) + ((y - origin[1]) * c)) + origin[1]
+            x = x2
+            y = y2
         }
         v[0] = x
         v[1] = y

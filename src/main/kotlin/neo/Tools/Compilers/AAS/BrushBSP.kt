@@ -326,7 +326,7 @@ object BrushBSP {
             var d: Float
             var p: idBrushBSPPortal?
             val center = idVec3()
-            var plane: idPlane?
+            var plane: idPlane
             n = 0
             center.set(Vector.getVec3_origin())
             p = portals
@@ -704,7 +704,7 @@ object BrushBSP {
             var p2: idBrushBSPPortal?
             var p: idBrushBSPPortal?
             var nextp: idBrushBSPPortal?
-            var plane: idPlane?
+            var plane: idPlane
             var w: idWinding
             val bounds = idBounds()
             val b = idBounds()
@@ -1510,7 +1510,7 @@ object BrushBSP {
 
         private fun MakeTreePortals_r(node: idBrushBSPNode) {
             var i: Int
-            val bounds: idBounds?
+            val bounds: idBounds
             numPortals++
             Brush.DisplayRealTimeString("\r%6d", numPortals)
             bounds = node.GetPortalBounds()

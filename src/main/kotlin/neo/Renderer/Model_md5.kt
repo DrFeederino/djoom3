@@ -52,7 +52,7 @@ object Model_md5 {
     internal class vertexWeight_s {
         var joint = 0
         var jointWeight = 0f
-        val offset: idVec3?
+        val offset: idVec3
         var vert = 0
 
         init {
@@ -76,13 +76,13 @@ object Model_md5 {
         private var numWeights // number of weights
                 = 0
         private var scaledWeights // joint weights
-                : Array<idVec4?>?
+                : Array<idVec4>?
         private var shader // material applied to mesh
                 : idMaterial?
         private val surfaceNum // number of the static surface created for this mesh
                 : Int
         private val texCoords // texture coordinates
-                : idList<idVec2?>?
+                : idList<idVec2>?
         private var weightIndex // pairs of: joint offset + bool true if next weight is for next vertex
                 : IntArray?
 
@@ -197,7 +197,7 @@ object Model_md5 {
             }
 
             // create pre-scaled weights and an index for the vertex/joint lookup
-            scaledWeights = arrayOfNulls<idVec4?>(numWeights)
+            scaledWeights = arrayOfNulls<idVec4>(numWeights)
             weightIndex = IntArray(numWeights * 2) // Mem_Alloc16(numWeights * 2 /* sizeof( weightIndex[0] ) */);
             //	memset( weightIndex, 0, numWeights * 2 * sizeof( weightIndex[0] ) );
             count = 0
@@ -321,7 +321,7 @@ object Model_md5 {
             }
         }
 
-        fun CalcBounds(entJoints: Array<idJointMat?>?): idBounds? {
+        fun CalcBounds(entJoints: Array<idJointMat?>?): idBounds {
             val bounds = idBounds()
             val verts = arrayOfNulls<idDrawVert?>(texCoords.Num())
             TransformVerts(verts, entJoints)
@@ -393,7 +393,7 @@ object Model_md5 {
          ====================
          */
         private fun TransformScaledVerts(verts: Array<idDrawVert?>?, entJoints: Array<idJointMat?>?, scale: Float) {
-            val scaledWeights = arrayOfNulls<idVec4?>(numWeights)
+            val scaledWeights = arrayOfNulls<idVec4>(numWeights)
             Simd.SIMDProcessor.Mul(scaledWeights[0].ToFloatPtr(), scale, scaledWeights[0].ToFloatPtr(), numWeights * 4)
             Simd.SIMDProcessor.TransformVerts(verts, texCoords.Num(), entJoints, scaledWeights, weightIndex, numWeights)
         }
@@ -412,10 +412,10 @@ object Model_md5 {
     }
 
     class idRenderModelMD5 : idRenderModelStatic() {
-        private val defaultPose: idList<idJointQuat?>?
-        private val joints: idList<idMD5Joint?>?
-        private val meshes: idList<idMD5Mesh?>?
-        override fun InitFromFile(fileName: String?) {
+        private val defaultPose: idList<idJointQuat>
+        private val joints: idList<idMD5Joint>
+        private val meshes: idList<idMD5Mesh>
+        override fun InitFromFile(fileName: String) {
             name = idStr(fileName)
             LoadModel()
         }
@@ -432,7 +432,7 @@ object Model_md5 {
          transforming all the points
          ====================
          */
-        override fun Bounds(ent: renderEntity_s?): idBounds? {
+        override fun Bounds(ent: renderEntity_s?): idBounds {
 //            if (false) {
 //                // we can't calculate a rational bounds without an entity,
 //                // because joints could be positioned to deform it into an
@@ -708,8 +708,8 @@ object Model_md5 {
                 }
                 var surf: modelSurface_s?
                 if (staticModel.FindSurfaceWithId(i, surfaceNum)) {
-                    mesh.surfaceNum = surfaceNum.getVal()
-                    surf = staticModel.surfaces.get(surfaceNum.getVal())
+                    mesh.surfaceNum = surfaceNum._val
+                    surf = staticModel.surfaces.get(surfaceNum._val)
                 } else {
 
                     // Remove Overlays before adding new surfaces
@@ -732,11 +732,11 @@ object Model_md5 {
             return joints.Num()
         }
 
-        override fun GetJoints(): Array<idMD5Joint?>? {
-            return joints.getList(Array<idMD5Joint>::class.java)
+        override fun GetJoints(): Array<idMD5Joint> {
+            return joints
         }
 
-        override fun GetJointHandle(name: String?): Int {
+        override fun GetJointHandle(name: String): Int {
             var i = 0
             for (joint in joints.getList(Array<idMD5Joint>::class.java)) {
                 if (idStr.Companion.Icmp(joint.name, name) == 0) {

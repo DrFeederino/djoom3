@@ -183,7 +183,7 @@ object AI_pathing {
             }
             i++
         }
-        newPoint = point - bestPlane.ToVec2() * (bestd + PUSH_OUTSIDE_OBSTACLES);
+        newPoint = point - bestPlane.ToVec2() * (bestd + PUSH_OUTSIDE_OBSTACLES)
         if (PointInsideObstacle(obstacles, numObstacles, newPoint) == -1) {
             point.set(newPoint)
             obstacle._val = bestObstacle
@@ -223,16 +223,16 @@ object AI_pathing {
                 w2.Expand(0.2f)
                 k = 0
                 while (k < w1.GetNumPoints()) {
-                    dir = w1[(k + 1) % w1.GetNumPoints()] - w1[k];
+                    dir = w1[(k + 1) % w1.GetNumPoints()] - w1[k]
                     if (!w2.RayIntersection(w1[k], dir, scale[0], scale[1], edgeNums)) {
                         k++
                         continue
                     }
                     n = 0
                     while (n < 2) {
-                        newPoint = w1[k] + dir * scale[n]._val;
+                        newPoint = w1[k] + dir * scale[n]._val
                         if (PointInsideObstacle(obstacles, numObstacles, newPoint) == -1) {
-                            d = (newPoint - point).LengthSqr();
+                            d = (newPoint - point).LengthSqr()
                             if (d < bestd) {
                                 bestd = d
                                 bestPoint = newPoint
@@ -281,10 +281,10 @@ object AI_pathing {
         val bounds: Array<idVec2> = idVec2.generateArray(2)
 
         // get bounds for the current movement delta
-        bounds[0] = startPos - idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON);
-        bounds[1] = startPos + idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON);
-        bounds[FLOATSIGNBITNOTSET(delta.x)].x += delta.x;
-        bounds[FLOATSIGNBITNOTSET(delta.y)].y += delta.y;
+        bounds[0] = startPos - idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON)
+        bounds[1] = startPos + idVec2(CM_BOX_EPSILON, CM_BOX_EPSILON)
+        bounds[FLOATSIGNBITNOTSET(delta.x)].x += delta.x
+        bounds[FLOATSIGNBITNOTSET(delta.y)].y += delta.y
 
         // test for obstacles blocking the path
         blockingScale._val = idMath.INFINITY
@@ -1202,14 +1202,14 @@ object AI_pathing {
         val inva: Float
         val p = FloatArray(2)
 
-        x = (end.ToVec2() - start.ToVec2()).Length();
-        y = end[2] - start[2];
+        x = (end.ToVec2() - start.ToVec2()).Length()
+        y = end[2] - start[2]
 
-        a = 4.0f * y * y + 4.0f * x * x;
-        b = -4.0f * speed * speed - 4.0f * y * gravity;
-        c = gravity * gravity;
+        a = 4.0f * y * y + 4.0f * x * x
+        b = -4.0f * speed * speed - 4.0f * y * gravity
+        c = gravity * gravity
 
-        d = b * b - 4.0f * a * c;
+        d = b * b - 4.0f * a * c
         if (d <= 0.0f || a == 0.0f) {
             return 0
         }
@@ -1308,7 +1308,7 @@ object AI_pathing {
             parent = children[0]
         }
 
-        public fun oSet(parent: pathNode_s) { //TODO:how do we reference the non objects?
+        fun oSet(parent: pathNode_s) { //TODO:how do we reference the non objects?
             dir = parent.dir
             pos.set(parent.pos)
             delta.set(parent.delta)

@@ -1728,7 +1728,7 @@ object AsyncServer {
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_PRINT -> {
                         val string = CharArray(Lib.MAX_STRING_CHARS)
                         msg.ReadString(string, string.size)
-                        Common.common.Printf("%s\n", TempDump.ctos(string)!!)
+                        Common.common.Printf("%s\n", TempDump.ctos(string))
                     }
                     CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_DISCONNECT -> {
                         DropClient(clientNum, "#str_07138")
@@ -1925,7 +1925,7 @@ object AsyncServer {
                     idStr.snPrintf(
                         challenges[ichallenge].guid,
                         challenges[ichallenge].guid.size,
-                        TempDump.ctos(guid)!!
+                        TempDump.ctos(guid)
                     )
 
                     // once auth replied denied, stop sending further requests
@@ -2086,7 +2086,7 @@ object AsyncServer {
             rconAddress = from
             noRconOutput = true
             Common.common.BeginRedirect(msgBuf, msgBuf.capacity(), RConRedirect.getInstance())
-            CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, TempDump.ctos(string)!!)
+            CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, TempDump.ctos(string))
             Common.common.EndRedirect()
             if (noRconOutput) {
                 PrintOOB(rconAddress, SERVER_PRINT.SERVER_PRINT_RCON.ordinal, "#str_04848")
@@ -2134,7 +2134,7 @@ object AsyncServer {
                 CharArray(Lib.MAX_STRING_CHARS * 2) // M. Quinn - Even Balance - PB Packets need more than 1024
             val string: String
             msg.ReadString(chrs, chrs.size)
-            string = TempDump.ctos(chrs)!!
+            string = TempDump.ctos(chrs)
 
             // info request
             if (idStr.Icmp(string, "getInfo") == 0) {
@@ -2332,7 +2332,7 @@ object AsyncServer {
                 )
                 return
             }
-            idStr.snPrintf(challenges[i].guid, 12, TempDump.ctos(client_guid)!!)
+            idStr.snPrintf(challenges[i].guid, 12, TempDump.ctos(client_guid))
             if (reply == authReply_t.AUTH_OK) {
                 challenges[i].authState = authState_t.CDK_OK
                 Common.common.Printf("client %s %s is authed\n", win_net.Sys_NetAdrToString(client_from), client_guid)
@@ -2721,7 +2721,7 @@ object AsyncServer {
             var token: String
             var type = 0
             var next: Int
-            token = TempDump.ctos(pakbuf)!!
+            token = TempDump.ctos(pakbuf)
             next = token.indexOf(';')
             while (TempDump.isNotNullOrEmpty(token)) {
                 if (next != -1) {

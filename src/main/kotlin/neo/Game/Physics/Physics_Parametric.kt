@@ -33,7 +33,7 @@ object Physics_Parametric {
      idPhysics_Parametric_SavePState
      ================
      */
-    fun idPhysics_Parametric_SavePState(savefile: idSaveGame?, state: parametricPState_s?) {
+    fun idPhysics_Parametric_SavePState(savefile: idSaveGame, state: parametricPState_s) {
         savefile.WriteInt(state.time)
         savefile.WriteInt(state.atRest)
         savefile.WriteBool(state.useSplineAngles)
@@ -81,7 +81,7 @@ object Physics_Parametric {
      idPhysics_Parametric_RestorePState
      ================
      */
-    fun idPhysics_Parametric_RestorePState(savefile: idRestoreGame?, state: parametricPState_s?) {
+    fun idPhysics_Parametric_RestorePState(savefile: idRestoreGame, state: parametricPState_s) {
         val startTime = CFloat()
         val duration = CFloat()
         val accelTime = CFloat()
@@ -105,9 +105,9 @@ object Physics_Parametric {
         savefile.ReadInt(time)
         savefile.ReadInt(atRest)
         savefile.ReadBool(useSplineAngles)
-        state.time = time.getVal()
-        state.atRest = atRest.getVal()
-        state.useSplineAngles = useSplineAngles.isVal
+        state.time = time._val
+        state.atRest = atRest._val
+        state.useSplineAngles = useSplineAngles._val
         savefile.ReadVec3(state.origin)
         savefile.ReadAngles(state.angles)
         savefile.ReadMat3(state.axis)
@@ -120,12 +120,12 @@ object Physics_Parametric {
         savefile.ReadVec3(linearBaseSpeed)
         savefile.ReadVec3(linearSpeed)
         state.linearExtrapolation.Init(
-            startTime.getVal(),
-            duration.getVal(),
+            startTime._val,
+            duration._val,
             linearStartValue,
             linearBaseSpeed,
             linearSpeed,
-            etype.getVal()
+            etype._val
         )
         savefile.ReadInt(etype)
         savefile.ReadFloat(startTime)
@@ -134,12 +134,12 @@ object Physics_Parametric {
         savefile.ReadAngles(angularBaseSpeed)
         savefile.ReadAngles(angularSpeed)
         state.angularExtrapolation.Init(
-            startTime.getVal(),
-            duration.getVal(),
+            startTime._val,
+            duration._val,
             angularStartValue,
             angularBaseSpeed,
             angularSpeed,
-            etype.getVal()
+            etype._val
         )
         savefile.ReadFloat(startTime)
         savefile.ReadFloat(accelTime)
@@ -148,10 +148,10 @@ object Physics_Parametric {
         savefile.ReadVec3(startPos)
         savefile.ReadVec3(endPos)
         state.linearInterpolation.Init(
-            startTime.getVal(),
-            accelTime.getVal(),
-            decelTime.getVal(),
-            duration.getVal(),
+            startTime._val,
+            accelTime._val,
+            decelTime._val,
+            duration._val,
             startPos,
             endPos
         )
@@ -162,10 +162,10 @@ object Physics_Parametric {
         savefile.ReadAngles(startAng)
         savefile.ReadAngles(endAng)
         state.angularInterpolation.Init(
-            startTime.getVal(),
-            accelTime.getVal(),
-            decelTime.getVal(),
-            duration.getVal(),
+            startTime._val,
+            accelTime._val,
+            decelTime._val,
+            duration._val,
             startAng,
             endAng
         )
@@ -178,12 +178,12 @@ object Physics_Parametric {
         savefile.ReadFloat(startValue)
         savefile.ReadFloat(endValue)
         state.splineInterpolate.Init(
-            startTime.getVal(),
-            accelTime.getVal(),
-            decelTime.getVal(),
-            duration.getVal(),
-            startValue.getVal(),
-            endValue.getVal()
+            startTime._val,
+            accelTime._val,
+            decelTime._val,
+            duration._val,
+            startValue._val,
+            endValue._val
         )
     }
 
@@ -200,28 +200,28 @@ object Physics_Parametric {
      ===================================================================================
      */
     class parametricPState_s {
-        var angles // world angles
-                : idAngles? = null
+        val angles // world angles
+                : idAngles = idAngles()
         var angularExtrapolation // extrapolation based description of the orientation over time
-                : idExtrapolate<idAngles?>? = null
+                : idExtrapolate<idAngles> = idExtrapolate()
         var angularInterpolation // interpolation based description of the orientation over time
-                : idInterpolateAccelDecelLinear<idAngles?>? = null
+                : idInterpolateAccelDecelLinear<idAngles> = idInterpolateAccelDecelLinear()
         var atRest // set when simulation is suspended
                 = 0
         var axis // world axis
-                : idMat3? = null
+                : idMat3 = idMat3()
         var linearExtrapolation // extrapolation based description of the position over time
-                : idExtrapolate<idVec3?>? = null
+                : idExtrapolate<idVec3> = idExtrapolate()
         var linearInterpolation // interpolation based description of the position over time
-                : idInterpolateAccelDecelLinear<idVec3?>? = null
-        var localAngles // local angles
-                : idAngles? = null
-        val localOrigin: idVec3? = idVec3() // local origin
-        val origin: idVec3? = idVec3() // world origin
+                : idInterpolateAccelDecelLinear<idVec3> = idInterpolateAccelDecelLinear()
+        val localAngles // local angles
+                : idAngles = idAngles()
+        val localOrigin: idVec3 = idVec3() // local origin
+        val origin: idVec3 = idVec3() // world origin
         var spline // spline based description of the position over time
-                : idCurve_Spline<idVec3?>? = null
+                : idCurve_Spline<idVec3>? = null
         var splineInterpolate // position along the spline over time
-                : idInterpolateAccelDecelLinear<Float?>? = null
+                : idInterpolateAccelDecelLinear<Float> = idInterpolateAccelDecelLinear()
         var time // physics time
                 = 0
         var useSplineAngles // set the orientation using the spline
@@ -232,30 +232,25 @@ object Physics_Parametric {
         private var clipModel: idClipModel?
 
         // parametric physics state
-        private var current: parametricPState_s?
+        private var current: parametricPState_s
 
-        //
         // master
         private var hasMaster: Boolean
         private var isBlocked: Boolean
         private var isOrientated: Boolean
 
-        //
         // pusher
         private var isPusher: Boolean
         private var pushFlags: Int
 
-        //
-        //
-        //
         // results of last evaluate
-        private var pushResults: trace_s?
-        private var saved: parametricPState_s?
+        private var pushResults: trace_s
+        private var saved: parametricPState_s
 
         // ~idPhysics_Parametric();
         override fun _deconstructor() {
             if (clipModel != null) {
-                idClipModel.Companion.delete(clipModel)
+                idClipModel.delete(clipModel!!)
             }
             if (current.spline != null) {
 //                delete current.spline;
@@ -264,9 +259,9 @@ object Physics_Parametric {
             super._deconstructor()
         }
 
-        override fun Save(savefile: idSaveGame?) {
-            Physics_Parametric.idPhysics_Parametric_SavePState(savefile, current)
-            Physics_Parametric.idPhysics_Parametric_SavePState(savefile, saved)
+        override fun Save(savefile: idSaveGame) {
+            idPhysics_Parametric_SavePState(savefile, current)
+            idPhysics_Parametric_SavePState(savefile, saved)
             savefile.WriteBool(isPusher)
             savefile.WriteClipModel(clipModel)
             savefile.WriteInt(pushFlags)
@@ -276,14 +271,14 @@ object Physics_Parametric {
             savefile.WriteBool(isOrientated)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val isPusher = CBool(false)
             val isBlocked = CBool(false)
             val hasMaster = CBool(false)
             val isOrientated = CBool(false)
             val pushFlags = CInt()
-            Physics_Parametric.idPhysics_Parametric_RestorePState(savefile, current)
-            Physics_Parametric.idPhysics_Parametric_RestorePState(savefile, saved)
+            idPhysics_Parametric_RestorePState(savefile, current)
+            idPhysics_Parametric_RestorePState(savefile, saved)
             savefile.ReadBool(isPusher)
             savefile.ReadClipModel(clipModel)
             savefile.ReadInt(pushFlags)
@@ -291,11 +286,11 @@ object Physics_Parametric {
             savefile.ReadBool(isBlocked)
             savefile.ReadBool(hasMaster)
             savefile.ReadBool(isOrientated)
-            this.isPusher = isPusher.isVal
-            this.isBlocked = isBlocked.isVal
-            this.hasMaster = hasMaster.isVal
-            this.isOrientated = isOrientated.isVal
-            this.pushFlags = pushFlags.getVal()
+            this.isPusher = isPusher._val
+            this.isBlocked = isBlocked._val
+            this.hasMaster = hasMaster._val
+            this.isOrientated = isOrientated._val
+            this.pushFlags = pushFlags._val
         }
 
         fun SetPusher(flags: Int) {
@@ -311,9 +306,9 @@ object Physics_Parametric {
         fun SetLinearExtrapolation(   /*extrapolation_t*/type: Int,
                                                          time: Int,
                                                          duration: Int,
-                                                         base: idVec3?,
-                                                         speed: idVec3?,
-                                                         baseSpeed: idVec3?
+                                                         base: idVec3,
+                                                         speed: idVec3,
+                                                         baseSpeed: idVec3
         ) {
             current.time = Game_local.gameLocal.time
             current.linearExtrapolation.Init(time.toFloat(), duration.toFloat(), base, baseSpeed, speed, type)
@@ -324,9 +319,9 @@ object Physics_Parametric {
         fun SetAngularExtrapolation(   /*extrapolation_t*/type: Int,
                                                           time: Int,
                                                           duration: Int,
-                                                          base: idAngles?,
-                                                          speed: idAngles?,
-                                                          baseSpeed: idAngles?
+                                                          base: idAngles,
+                                                          speed: idAngles,
+                                                          baseSpeed: idAngles
         ) {
             current.time = Game_local.gameLocal.time
             current.angularExtrapolation.Init(time.toFloat(), duration.toFloat(), base, baseSpeed, speed, type)
@@ -347,8 +342,8 @@ object Physics_Parametric {
             accelTime: Int,
             decelTime: Int,
             duration: Int,
-            startPos: idVec3?,
-            endPos: idVec3?
+            startPos: idVec3,
+            endPos: idVec3
         ) {
             current.time = Game_local.gameLocal.time
             current.linearInterpolation.Init(
@@ -368,8 +363,8 @@ object Physics_Parametric {
             accelTime: Int,
             decelTime: Int,
             duration: Int,
-            startAng: idAngles?,
-            endAng: idAngles?
+            startAng: idAngles,
+            endAng: idAngles
         ) {
             current.time = Game_local.gameLocal.time
             current.angularInterpolation.Init(
@@ -384,16 +379,16 @@ object Physics_Parametric {
             Activate()
         }
 
-        fun SetSpline(spline: idCurve_Spline<idVec3?>?, accelTime: Int, decelTime: Int, useSplineAngles: Boolean) {
+        fun SetSpline(spline: idCurve_Spline<idVec3>?, accelTime: Int, decelTime: Int, useSplineAngles: Boolean) {
             if (current.spline != null) {
 //		delete current.spline;
                 current.spline = null
             }
             current.spline = spline
             if (current.spline != null) {
-                val startTime = current.spline.GetTime(0)
-                val endTime = current.spline.GetTime(current.spline.GetNumValues() - 1)
-                val length = current.spline.GetLengthForTime(endTime)
+                val startTime = current.spline!!.GetTime(0)
+                val endTime = current.spline!!.GetTime(current.spline!!.GetNumValues() - 1)
+                val length = current.spline!!.GetLengthForTime(endTime)
                 current.splineInterpolate.Init(
                     startTime,
                     accelTime.toFloat(),
@@ -407,7 +402,7 @@ object Physics_Parametric {
             Activate()
         }
 
-        fun GetSpline(): idCurve_Spline<idVec3?>? {
+        fun GetSpline(): idCurve_Spline<idVec3>? {
             return current.spline
         }
 
@@ -423,27 +418,27 @@ object Physics_Parametric {
             return current.useSplineAngles
         }
 
-        fun GetLocalOrigin(curOrigin: idVec3?) {
+        fun GetLocalOrigin(curOrigin: idVec3) {
             curOrigin.set(current.localOrigin)
         }
 
-        fun GetLocalAngles(curAngles: idAngles?) {
+        fun GetLocalAngles(curAngles: idAngles) {
             curAngles.set(current.localAngles)
         }
 
-        fun GetAngles(curAngles: idAngles?) {
+        fun GetAngles(curAngles: idAngles) {
             curAngles.set(current.angles)
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             assert(model != null)
             if (clipModel != null && clipModel !== model && freeOld) {
-                idClipModel.Companion.delete(clipModel)
+                idClipModel.delete(clipModel!!)
             }
             clipModel = model
-            clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
+            clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
@@ -460,26 +455,24 @@ object Physics_Parametric {
         }
 
         override fun SetContents(contents: Int, id: Int /*= -1*/) {
-            if (clipModel != null) {
-                clipModel.SetContents(contents)
-            }
+            clipModel?.SetContents(contents)
         }
 
         override fun GetContents(id: Int /*= -1*/): Int {
             return if (clipModel != null) {
-                clipModel.GetContents()
+                clipModel!!.GetContents()
             } else 0
         }
 
-        override fun GetBounds(id: Int /*= -1*/): idBounds? {
+        override fun GetBounds(id: Int /*= -1*/): idBounds {
             return if (clipModel != null) {
-                clipModel.GetBounds()
+                clipModel!!.GetBounds()
             } else super.GetBounds()
         }
 
-        override fun GetAbsBounds(id: Int /*= -1*/): idBounds? {
+        override fun GetAbsBounds(id: Int /*= -1*/): idBounds {
             return if (clipModel != null) {
-                clipModel.GetAbsBounds()
+                clipModel!!.GetAbsBounds()
             } else super.GetAbsBounds()
         }
 
@@ -501,10 +494,10 @@ object Physics_Parametric {
             current.localAngles.Zero()
             if (current.spline != null) {
                 val length: Float = current.splineInterpolate.GetCurrentValue(endTimeMSec.toFloat())
-                val t = current.spline.GetTimeForLength(length, 0.01f)
-                current.localOrigin.set(current.spline.GetCurrentValue(t))
+                val t = current.spline!!.GetTimeForLength(length, 0.01f)
+                current.localOrigin.set(current.spline!!.GetCurrentValue(t))
                 if (current.useSplineAngles) {
-                    current.localAngles = current.spline.GetCurrentFirstDerivative(t).ToAngles()
+                    current.localAngles.set(current.spline!!.GetCurrentFirstDerivative(t).ToAngles())
                 }
             } else if (current.linearInterpolation.GetDuration() != 0f) {
                 current.localOrigin.plusAssign(current.linearInterpolation.GetCurrentValue(endTimeMSec.toFloat()))
@@ -521,12 +514,12 @@ object Physics_Parametric {
             current.angles.set(current.localAngles)
             current.axis.set(current.localAngles.ToMat3())
             if (hasMaster) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
                 if (masterAxis.IsRotated()) {
-                    current.origin.set(current.origin.times(masterAxis).oPlus(masterOrigin))
+                    current.origin.set(current.origin.times(masterAxis).plus(masterOrigin))
                     if (isOrientated) {
                         current.axis.timesAssign(masterAxis)
-                        current.angles = current.axis.ToAngles()
+                        current.angles.set(current.axis.ToAngles())
                     }
                 } else {
                     current.origin.plusAssign(masterOrigin)
@@ -537,7 +530,7 @@ object Physics_Parametric {
                     val pushResults = this.pushResults
                     Game_local.gameLocal.push.ClipPush(
                         pushResults,
-                        self,
+                        self!!,
                         pushFlags,
                         oldOrigin,
                         oldAxis,
@@ -547,20 +540,18 @@ object Physics_Parametric {
                     this.pushResults = pushResults
                 }
                 if (pushResults.fraction < 1.0f) {
-                    clipModel.Link(Game_local.gameLocal.clip, self, 0, oldOrigin, oldAxis)
+                    clipModel!!.Link(Game_local.gameLocal.clip, self, 0, oldOrigin, oldAxis)
                     current.localOrigin.set(oldLocalOrigin)
                     current.origin.set(oldOrigin)
-                    current.localAngles = oldLocalAngles
-                    current.angles = oldAngles
+                    current.localAngles.set(oldLocalAngles)
+                    current.angles.set(oldAngles)
                     current.axis = oldAxis
                     isBlocked = true
                     return false
                 }
-                current.angles = current.axis.ToAngles()
+                current.angles.set(current.axis.ToAngles())
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
             current.time = endTimeMSec
             if (TestIfAtRest()) {
                 Rest()
@@ -577,7 +568,7 @@ object Physics_Parametric {
             current.linearInterpolation.SetStartTime(current.linearInterpolation.GetStartTime() + timeLeap)
             current.angularInterpolation.SetStartTime(current.angularInterpolation.GetStartTime() + timeLeap)
             if (current.spline != null) {
-                current.spline.ShiftTime(timeLeap.toFloat())
+                current.spline!!.ShiftTime(timeLeap.toFloat())
                 current.splineInterpolate.SetStartTime(current.splineInterpolate.GetStartTime() + timeLeap)
             }
         }
@@ -588,7 +579,7 @@ object Physics_Parametric {
 
         override fun Activate() {
             current.atRest = -1
-            self.BecomeActive(Entity.TH_PHYSICS)
+            self!!.BecomeActive(Entity.TH_PHYSICS)
         }
 
         override fun IsAtRest(): Boolean {
@@ -609,61 +600,55 @@ object Physics_Parametric {
 
         override fun RestoreState() {
             current = saved
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
-        override fun SetOrigin(newOrigin: idVec3?, id: Int /*= -1*/) {
+        override fun SetOrigin(newOrigin: idVec3, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
             current.linearExtrapolation.SetStartValue(newOrigin)
             current.linearInterpolation.SetStartValue(newOrigin)
             current.localOrigin.set(current.linearExtrapolation.GetCurrentValue(current.time.toFloat()))
             if (hasMaster) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.oPlus(current.localOrigin.times(masterAxis)))
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
+                current.origin.set(masterOrigin.plus(current.localOrigin.times(masterAxis)))
             } else {
                 current.origin.set(current.localOrigin)
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
             Activate()
         }
 
-        override fun SetAxis(newAxis: idMat3?, id: Int /*= -1*/) {
+        override fun SetAxis(newAxis: idMat3, id: Int /*= -1*/) {
             val masterOrigin = idVec3()
             val masterAxis = idMat3()
-            current.localAngles = newAxis.ToAngles()
+            current.localAngles.set(newAxis.ToAngles())
             current.angularExtrapolation.SetStartValue(current.localAngles)
             current.angularInterpolation.SetStartValue(current.localAngles)
-            current.localAngles = current.angularExtrapolation.GetCurrentValue(current.time.toFloat())
+            current.localAngles.set(current.angularExtrapolation.GetCurrentValue(current.time.toFloat()))
             if (hasMaster && isOrientated) {
-                self.GetMasterPosition(masterOrigin, masterAxis)
+                self!!.GetMasterPosition(masterOrigin, masterAxis)
                 current.axis = current.localAngles.ToMat3().times(masterAxis)
-                current.angles = current.axis.ToAngles()
+                current.angles.set(current.axis.ToAngles())
             } else {
                 current.axis = current.localAngles.ToMat3()
                 current.angles.set(current.localAngles)
             }
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
             Activate()
         }
 
-        override fun Translate(translation: idVec3?, id: Int /*= -1*/) {}
-        override fun Rotate(rotation: idRotation?, id: Int /*= -1*/) {}
-        override fun GetOrigin(id: Int /*= 0*/): idVec3? {
+        override fun Translate(translation: idVec3, id: Int /*= -1*/) {}
+        override fun Rotate(rotation: idRotation, id: Int /*= -1*/) {}
+        override fun GetOrigin(id: Int /*= 0*/): idVec3 {
             return current.origin
         }
 
-        override fun GetAxis(id: Int /*= 0*/): idMat3? {
+        override fun GetAxis(id: Int /*= 0*/): idMat3 {
             return current.axis
         }
 
-        override fun SetLinearVelocity(newLinearVelocity: idVec3?, id: Int /*= 0*/) {
+        override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {
             SetLinearExtrapolation(
                 Extrapolate.EXTRAPOLATION_LINEAR or Extrapolate.EXTRAPOLATION_NOSTOP,
                 Game_local.gameLocal.time,
@@ -676,7 +661,7 @@ object Physics_Parametric {
             Activate()
         }
 
-        override fun SetAngularVelocity(newAngularVelocity: idVec3?, id: Int /*= 0*/) {
+        override fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/) {
             val rotation = idRotation()
             val vec = idVec3(newAngularVelocity)
             val angle: Float
@@ -694,12 +679,12 @@ object Physics_Parametric {
             Activate()
         }
 
-        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
             curLinearVelocity.set(current.linearExtrapolation.GetCurrentSpeed(Game_local.gameLocal.time.toFloat()))
             return curLinearVelocity
         }
 
-        override fun GetAngularVelocity(id: Int /*= 0*/): idVec3? {
+        override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
             val angles: idAngles?
             angles = current.angularExtrapolation.GetCurrentSpeed(Game_local.gameLocal.time.toFloat())
             curAngularVelocity.set(angles.ToAngularVelocity())
@@ -707,27 +692,19 @@ object Physics_Parametric {
         }
 
         override fun DisableClip() {
-            if (clipModel != null) {
-                clipModel.Disable()
-            }
+            clipModel?.Disable()
         }
 
         override fun EnableClip() {
-            if (clipModel != null) {
-                clipModel.Enable()
-            }
+            clipModel?.Enable()
         }
 
         override fun UnlinkClip() {
-            if (clipModel != null) {
-                clipModel.Unlink()
-            }
+            clipModel?.Unlink()
         }
 
         override fun LinkClip() {
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
         override fun SetMaster(master: idEntity?, orientated: Boolean /*= true*/) {
@@ -737,12 +714,12 @@ object Physics_Parametric {
                 if (!hasMaster) {
 
                     // transform from world space to master space
-                    self.GetMasterPosition(masterOrigin, masterAxis)
-                    current.localOrigin.set(current.origin.minus(masterOrigin).oMultiply(masterAxis.Transpose()))
+                    self!!.GetMasterPosition(masterOrigin, masterAxis)
+                    current.localOrigin.set(current.origin.minus(masterOrigin).times(masterAxis.Transpose()))
                     if (orientated) {
-                        current.localAngles = current.axis.times(masterAxis.Transpose()).ToAngles()
+                        current.localAngles.set(current.axis.times(masterAxis.Transpose()).ToAngles())
                     } else {
-                        current.localAngles = current.axis.ToAngles()
+                        current.localAngles.set(current.axis.ToAngles())
                     }
                     current.linearExtrapolation.SetStartValue(current.localOrigin)
                     current.angularExtrapolation.SetStartValue(current.localAngles)
@@ -787,8 +764,8 @@ object Physics_Parametric {
 
         override fun GetLinearEndTime(): Int {
             return if (current.spline != null) {
-                if (current.spline.GetBoundaryType() != idCurve_Spline.Companion.BT_CLOSED) {
-                    current.spline.GetTime(current.spline.GetNumValues() - 1).toInt()
+                if (current.spline!!.GetBoundaryType() != idCurve_Spline.BT_CLOSED) {
+                    current.spline!!.GetTime(current.spline!!.GetNumValues() - 1).toInt()
                 } else {
                     0
                 }
@@ -807,7 +784,7 @@ object Physics_Parametric {
             }
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteLong(current.time)
             msg.WriteLong(current.atRest)
             msg.WriteFloat(current.origin.get(0))
@@ -868,7 +845,7 @@ object Physics_Parametric {
             msg.WriteDeltaFloat(0.0f, current.angularInterpolation.GetEndValue().get(2))
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val   /*extrapolation_t*/linearType: Int
             val angularType: Int
             var startTime: Float
@@ -962,9 +939,7 @@ object Physics_Parametric {
             endAng.set(2, msg.ReadDeltaFloat(0.0f))
             current.angularInterpolation.Init(startTime, accelTime, decelTime, duration, startAng, endAng)
             current.axis = current.angles.ToMat3()
-            if (clipModel != null) {
-                clipModel.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
-            }
+            clipModel?.Link(Game_local.gameLocal.clip, self, 0, current.origin, current.axis)
         }
 
         private fun TestIfAtRest(): Boolean {
@@ -982,18 +957,18 @@ object Physics_Parametric {
             }
             return if (!current.angularInterpolation.IsDone(current.time.toFloat())) {
                 false
-            } else current.spline == null || current.spline.IsDone(current.time.toFloat())
+            } else current.spline == null || current.spline!!.IsDone(current.time.toFloat())
         }
 
         private fun Rest() {
             current.atRest = Game_local.gameLocal.time
-            self.BecomeInactive(Entity.TH_PHYSICS)
+            self!!.BecomeInactive(Entity.TH_PHYSICS)
         }
 
         companion object {
             // CLASS_PROTOTYPE( idPhysics_Parametric );
-            private val curAngularVelocity: idVec3? = idVec3()
-            private val curLinearVelocity: idVec3? = idVec3()
+            private val curAngularVelocity: idVec3 = idVec3()
+            private val curLinearVelocity: idVec3 = idVec3()
         }
 
         init {
@@ -1001,9 +976,9 @@ object Physics_Parametric {
             current.time = Game_local.gameLocal.time
             current.atRest = -1
             current.useSplineAngles = false
-            current.angles = idAngles()
-            current.axis = idMat3.Companion.getMat3_identity()
-            current.localAngles = idAngles()
+            current.angles.set(idAngles())
+            current.axis = idMat3.getMat3_identity()
+            current.localAngles.set(idAngles())
             current.linearExtrapolation = idExtrapolate()
             current.linearExtrapolation.Init(
                 0f,

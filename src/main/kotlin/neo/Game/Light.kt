@@ -44,15 +44,15 @@ import neo.idlib.math.Vector.idVec4
  *
  */
 object Light {
-    val EV_Light_FadeIn: idEventDef? = idEventDef("fadeInLight", "f")
-    val EV_Light_FadeOut: idEventDef? = idEventDef("fadeOutLight", "f")
-    val EV_Light_GetLightParm: idEventDef? = idEventDef("getLightParm", "d", 'f')
-    val EV_Light_Off: idEventDef? = idEventDef("Off", null)
-    val EV_Light_On: idEventDef? = idEventDef("On", null)
-    val EV_Light_SetLightParm: idEventDef? = idEventDef("setLightParm", "df")
-    val EV_Light_SetLightParms: idEventDef? = idEventDef("setLightParms", "ffff")
-    val EV_Light_SetRadius: idEventDef? = idEventDef("setRadius", "f")
-    val EV_Light_SetRadiusXYZ: idEventDef? = idEventDef("setRadiusXYZ", "fff")
+    val EV_Light_FadeIn: idEventDef = idEventDef("fadeInLight", "f")
+    val EV_Light_FadeOut: idEventDef = idEventDef("fadeOutLight", "f")
+    val EV_Light_GetLightParm: idEventDef = idEventDef("getLightParm", "d", 'f')
+    val EV_Light_Off: idEventDef = idEventDef("Off", null)
+    val EV_Light_On: idEventDef = idEventDef("On", null)
+    val EV_Light_SetLightParm: idEventDef = idEventDef("setLightParm", "df")
+    val EV_Light_SetLightParms: idEventDef = idEventDef("setLightParms", "ffff")
+    val EV_Light_SetRadius: idEventDef = idEventDef("setRadius", "f")
+    val EV_Light_SetRadiusXYZ: idEventDef = idEventDef("setRadiusXYZ", "fff")
 
     /*
      ===============================================================================
@@ -61,7 +61,7 @@ object Light {
 
      ===============================================================================
      */
-    val EV_Light_SetShader: idEventDef? = idEventDef("setShader", "s")
+    val EV_Light_SetShader: idEventDef = idEventDef("setShader", "s")
 
     class idLight : idEntity() {
         companion object {
@@ -70,8 +70,8 @@ object Light {
             val EVENT_MAXEVENTS = EVENT_BECOMEBROKEN + 1
 
             // public 	CLASS_PROTOTYPE( idLight );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -111,24 +111,24 @@ object Light {
             }
         }
 
-        private val baseColor: idVec3?
+        private val baseColor: idVec3
         private var breakOnTrigger //TODO:give all variables default init values like c++, opposite of lazy init?
                 : Boolean
         private val brokenModel: idStr?
         private var count: Int
         private var currentLevel: Int
         private var fadeEnd: Int
-        private val fadeFrom: idVec4?
+        private val fadeFrom: idVec4
         private var fadeStart: Int
-        private var fadeTo: idVec4?
-        private val levels: CInt? = CInt()
+        private var fadeTo: idVec4
+        private val levels: CInt = CInt()
         private var   /*qhandle_t*/lightDefHandle // handle to renderer light def
                 : Int
         private var lightParent: idEntity?
         private var localLightAxis // light axis relative to physics axis
-                : idMat3?
+                : idMat3
         private val localLightOrigin // light origin relative to the physics origin
-                : idVec3?
+                : idVec3
         private val renderLight // light presented to the renderer
                 : renderLight_s?
 
@@ -162,8 +162,8 @@ object Light {
 
             // set the number of light levels
             spawnArgs.GetInt("levels", "1", levels)
-            currentLevel = levels.getVal()
-            if (levels.getVal() <= 0) {
+            currentLevel = levels._val
+            if (levels._val <= 0) {
                 idGameLocal.Companion.Error("Invalid light level set on entity #%d(%s)", entityNumber, name)
             }
 
@@ -261,13 +261,13 @@ object Light {
          archives object for save game file
          ================
          */
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteRenderLight(renderLight)
             savefile.WriteBool(renderLight.prelightModel != null)
             savefile.WriteVec3(localLightOrigin)
             savefile.WriteMat3(localLightAxis)
             savefile.WriteString(brokenModel)
-            savefile.WriteInt(levels.getVal())
+            savefile.WriteInt(levels._val)
             savefile.WriteInt(currentLevel)
             savefile.WriteVec3(baseColor)
             savefile.WriteBool(breakOnTrigger)
@@ -288,7 +288,7 @@ object Light {
          unarchives object from save game file
          ================
          */
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val hadPrelightModel = CBool(false)
             savefile.ReadRenderLight(renderLight)
             savefile.ReadBool(hadPrelightModel)
@@ -335,7 +335,7 @@ object Light {
         }
 
         override fun Think() {
-            var color: idVec4? = idVec4()
+            var color: idVec4 = idVec4()
             if (thinkFlags and Entity.TH_THINK != 0) {
                 if (fadeEnd > 0) {
                     if (Game_local.gameLocal.time < fadeEnd) {
@@ -363,7 +363,7 @@ object Light {
             }
         }
 
-        override fun GetPhysicsToSoundTransform(origin: idVec3?, axis: idMat3?): Boolean {
+        override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
             origin.set(localLightOrigin.oPlus(renderLight.lightCenter))
             axis.set(localLightAxis.times(GetPhysics().GetAxis()))
             return true
@@ -416,27 +416,27 @@ object Light {
             SetLightLevel()
         }
 
-        override fun SetColor(color: idVec4?) {
+        override fun SetColor(color: idVec4) {
             baseColor.set(color.ToVec3())
             renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
             renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
             SetLightLevel()
         }
 
-        override fun GetColor(out: idVec3?) {
+        override fun GetColor(out: idVec3) {
             out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
             out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
             out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
         }
 
-        override fun GetColor(out: idVec4?) {
+        override fun GetColor(out: idVec4) {
             out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
             out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
             out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
             out.set(3, renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA])
         }
 
-        fun GetBaseColor(): idVec3? {
+        fun GetBaseColor(): idVec3 {
             return baseColor
         }
 
@@ -480,7 +480,7 @@ object Light {
         }
 
         fun On() {
-            currentLevel = levels.getVal()
+            currentLevel = levels._val
             // offset the start time of the shader to sync it to the game time
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
@@ -503,7 +503,7 @@ object Light {
             BecomeActive(Entity.TH_UPDATEVISUALS)
         }
 
-        fun Fade(to: idVec4?, fadeTime: Float) {
+        fun Fade(to: idVec4, fadeTime: Float) {
             GetColor(fadeFrom)
             fadeTo = to
             fadeStart = Game_local.gameLocal.time
@@ -518,13 +518,13 @@ object Light {
         fun FadeIn(time: Float) {
             val color = idVec3()
             val color4 = idVec4()
-            currentLevel = levels.getVal()
+            currentLevel = levels._val
             spawnArgs.GetVector("_color", "1 1 1", color)
             color4.set(color.x, color.y, color.z, 1.0f)
             Fade(color4, time)
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             BecomeBroken(attacker)
         }
 
@@ -597,7 +597,7 @@ object Light {
         fun SetLightLevel() {
             val color = idVec3()
             val intensity: Float
-            intensity = currentLevel.toFloat() / levels.getVal().toFloat()
+            intensity = currentLevel.toFloat() / levels._val.toFloat()
             color.set(baseColor.times(intensity))
             renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
             renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
@@ -622,7 +622,7 @@ object Light {
             Think()
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             GetPhysics().WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             msg.WriteByte(currentLevel)
@@ -656,7 +656,7 @@ object Light {
             WriteColorToSnapshot(msg)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val shaderColor = idVec4()
             val oldCurrentLevel = currentLevel
             val oldBaseColor = idVec3(baseColor)
@@ -863,7 +863,7 @@ object Light {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

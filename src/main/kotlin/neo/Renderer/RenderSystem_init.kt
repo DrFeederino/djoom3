@@ -59,7 +59,7 @@ class RenderSystem_init {
  thousands of shots
  ==================
  */
-        public fun R_ScreenshotFilename(lastNumber: CInt?, base: String?, fileName: idStr?) {
+        fun R_ScreenshotFilename(lastNumber: CInt, base: String, fileName: idStr) {
             var a: Int
             var b: Int
             var c: Int
@@ -68,11 +68,11 @@ class RenderSystem_init {
             val restrict = idLib.cvarSystem.GetCVarBool("fs_restrict")
             idLib.cvarSystem.SetCVarBool("fs_restrict", false)
             lastNumber.increment()
-            if (lastNumber.getVal() > 99999) {
+            if (lastNumber._val > 99999) {
                 lastNumber.setVal(99999)
             }
-            while (lastNumber.getVal() < 99999) {
-                var frac = lastNumber.getVal()
+            while (lastNumber._val < 99999) {
+                var frac = lastNumber._val
                 a = frac / 10000
                 frac -= a * 10000
                 b = frac / 1000
@@ -83,7 +83,7 @@ class RenderSystem_init {
                 frac -= d * 10
                 e = frac
                 fileName.set(String.format("%s%d%d%d%d%d.tga", base, a, b, c, d, e))
-                if (lastNumber.getVal() == 99999) {
+                if (lastNumber._val == 99999) {
                     break
                 }
                 val len = FileSystem_h.fileSystem.ReadFile(fileName.toString(), null, null)
@@ -461,7 +461,7 @@ class RenderSystem_init {
     const val MAX_BLENDS = 256 // to keep the accumulation in shorts
 
     //============================================================================
-    val cubeAxis: Array<idMat3?> = arrayOfNulls<idMat3?>(6)
+    val cubeAxis: Array<idMat3> = arrayOfNulls<idMat3>(6)
     val r_rendererArgs: Array<String?> = arrayOf("best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null)
     val r_vidModes: Array<vidmode_s> = arrayOf(
         vidmode_s("Mode  0: 320x240", 320, 240),
@@ -495,7 +495,7 @@ class RenderSystem_init {
      screenshot [width] [height] [samples]
      ==================
      */
-    private val lastNumber: CInt? = CInt()
+    private val lastNumber: CInt = CInt()
     var s_numVidModes = RenderSystem_init.r_vidModes.size
 
     /*
@@ -552,7 +552,6 @@ class RenderSystem_init {
             i++
         }
     }
-
 
 
     /*
@@ -894,7 +893,7 @@ class RenderSystem_init {
      ==================
      */
     private fun R_SampleCubeMap(
-        dir: idVec3?,
+        dir: idVec3,
         size: Int,
         buffers: Array<ByteBuffer?>? /*[6]*/,
         result: ByteArray? /*[4]*/
@@ -1457,7 +1456,7 @@ class RenderSystem_init {
 
         companion object {
             private val instance: cmdFunction_t? = R_ScreenShot_f()
-            private val lastNumber: CInt? = CInt()
+            private val lastNumber: CInt = CInt()
             fun getInstance(): cmdFunction_t? {
                 return instance
             }
@@ -1478,7 +1477,7 @@ class RenderSystem_init {
             var fullname: String
             val baseName: String?
             var i: Int
-            val axis = arrayOfNulls<idMat3?>(6)
+            val axis = arrayOfNulls<idMat3>(6)
             var ref: renderView_s
             val primary: viewDef_s
             var blends: Int
@@ -1699,7 +1698,7 @@ class RenderSystem_init {
         }
 
         companion object {
-            private val cubeAxis: Array<idMat3?>? = arrayOfNulls<idMat3?>(6)
+            private val cubeAxis: Array<idMat3>? = arrayOfNulls<idMat3>(6)
             private val instance: cmdFunction_t? = R_MakeAmbientMap_f()
             fun getInstance(): cmdFunction_t? {
                 return instance
@@ -2325,6 +2324,7 @@ class RenderSystem_init {
             } else idStr.Companion.Icmp(a.GetName(), b.GetName())
         }
     }
+
     init {
         RenderSystem_init.r_ext_vertex_array_range = null
         RenderSystem_init.r_inhibitFragmentProgram = idCVar(

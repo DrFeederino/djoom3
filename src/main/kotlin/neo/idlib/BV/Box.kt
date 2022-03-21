@@ -375,19 +375,19 @@ object Box {
             bounds1[0].minusAssign(extents)
             bounds1[1].plusAssign(extents)
 
-            if (!bounds1.AddPoint( idVec3( v * axis[0], v * axis[1], v * axis[2] ) )
+            if (!bounds1.AddPoint(idVec3(v * axis[0], v * axis[1], v * axis[2]))
             ) {
                 // point is contained in the box
                 return false
             }
             axis2[0] = v - center
             axis2[0].Normalize()
-            axis2[1] = axis[ Min3Index( axis2[0] * axis[0], axis2[0] * axis[1], axis2[0] * axis[2] ) ]
+            axis2[1] = axis[Min3Index(axis2[0] * axis[0], axis2[0] * axis[1], axis2[0] * axis[2])]
             axis2[1] = axis2[1] - axis2[0] * (axis2[1] * axis2[0])
             axis2[1].Normalize()
             axis2[2].Cross(axis2[0], axis2[1])
             AxisProjection(axis2, bounds2)
-            bounds2.AddPoint(idVec3( v * axis2[0], v * axis2[1], v * axis2[2] ) )
+            bounds2.AddPoint(idVec3(v * axis2[0], v * axis2[1], v * axis2[2]))
 
             // create new box based on the smallest bounds
             if (bounds1.GetVolume() < bounds2.GetVolume()) {
@@ -510,7 +510,7 @@ object Box {
         }
 
         fun Rotate(rotation: idMat3): idBox {            // return rotated box
-            return idBox( center * rotation, extents, axis * rotation )
+            return idBox(center * rotation, extents, axis * rotation)
         }
 
         fun RotateSelf(rotation: idMat3): idBox {            // rotate this box
@@ -627,7 +627,7 @@ object Box {
             }
 
             // axis C0 + t * B1
-            d = abs(a.axis[1] * dir )
+            d = abs(a.axis[1] * dir)
             e0 = extents[0] * ac[0][1] + extents[1] * ac[1][1] + extents[2] * ac[2][1]
             e1 = a.extents[1]
             if (d > e0 + e1) {
@@ -739,20 +739,20 @@ object Box {
                 return false
             }
 
-            val cross = lineDir.Cross(dir);
+            val cross = lineDir.Cross(dir)
 
             if (abs(cross * axis[0]) > extents[1] * ld[2] + extents[2] * ld[1]) {
                 return false
             }
             if (abs(cross * axis[1]) > extents[0] * ld[2] + extents[2] * ld[0]) {
-                return false;
+                return false
             }
 
             if (abs(cross * axis[2]) > extents[0] * ld[1] + extents[1] * ld[0]) {
-                return false;
+                return false
             }
 
-            return true;
+            return true
         }
 
         /*
@@ -926,7 +926,7 @@ object Box {
 
         fun AxisProjection(ax: idMat3, bounds: idBounds) {
             for (i in 0..2) {
-                val d1 =  ax[i] * center
+                val d1 = ax[i] * center
                 val d2 = abs(extents[0] * (ax[i] * axis[0])) +
                         abs(extents[1] * (ax[i] * axis[1])) +
                         abs(extents[2] * (ax[i] * axis[2]))

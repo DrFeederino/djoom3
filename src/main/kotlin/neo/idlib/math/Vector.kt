@@ -473,6 +473,12 @@ object Vector {
             this.z = z
         }
 
+        constructor(x: Int, y: Int, z: Int) {
+            this.x = x.toFloat()
+            this.y = y.toFloat()
+            this.z = z.toFloat()
+        }
+
         constructor(v: idVec3) {
             x = v.x
             y = v.y
@@ -644,6 +650,7 @@ object Vector {
             val invB = 1.0f / b
             return idVec3(a.x * b, a.y * b, a.z * b)
         }
+
 
         fun FixDegenerateNormal(): Boolean { // fix degenerate axial cases
             if (x == 0.0f) {
@@ -2111,12 +2118,12 @@ object Vector {
         //public	idVecX			operator-( const idVecX &a ) const;
         operator fun minus(a: idVecX): idVecX {
             val m = idVecX()
-            assert(size == a.size);
-            m.SetTempSize(size);
+            assert(size == a.size)
+            m.SetTempSize(size)
             for (i in 0..size) {
-                m.p[i] = p[i] - a.p[i];
+                m.p[i] = p[i] - a.p[i]
             }
-            return m;
+            return m
         }
 
         //public	idVecX			operator+( const idVecX &a ) const;

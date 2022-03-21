@@ -92,9 +92,7 @@ object CollisionModel {
         val endpos: idVec3 = idVec3() // final position of trace model
         var fraction = 0f // fraction of movement completed, 1.0 = didn't hit anything
 
-        constructor() {
-
-        }
+        constructor()
 
         constructor(other: trace_s) {
             endpos.set(other.endpos)
@@ -115,7 +113,7 @@ object CollisionModel {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        fun oSet(s: trace_s) {
+        fun set(s: trace_s) {
             fraction = s.fraction
             endpos.set(s.endpos)
             endAxis.set(s.endAxis)
@@ -183,7 +181,7 @@ object CollisionModel {
 
         // Stores all contact points of the trace model with the model, returns the number of contacts.
         abstract fun Contacts(
-            contacts: Array<contactInfo_t?>?, maxContacts: Int, start: idVec3, dir: idVec6, depth: Float,
+            contacts: Array<contactInfo_t>, maxContacts: Int, start: idVec3, dir: idVec6, depth: Float,
             trm: idTraceModel, trmAxis: idMat3, contentMask: Int,
             model: Int, modelOrigin: idVec3, modelAxis: idMat3
         ): Int

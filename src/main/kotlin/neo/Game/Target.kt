@@ -46,17 +46,13 @@ import neo.ui.UserInterface
  *
  */
 object Target {
-    val EV_ClearFlash: idEventDef? = idEventDef("<ClearFlash>", "f")
-    val EV_Flash: idEventDef? = idEventDef("<Flash>", "fd")
-    val EV_GatherEntities: idEventDef? = idEventDef("<GatherEntities>")
-    val EV_GetPlayerPos: idEventDef? = idEventDef("<getplayerpos>")
-    val EV_RestoreInfluence: idEventDef? = idEventDef("<RestoreInfluece>")
-
-    //
-    val EV_RestoreVolume: idEventDef? = idEventDef("<RestoreVolume>")
-
-    //
-    val EV_TipOff: idEventDef? = idEventDef("<TipOff>")
+    val EV_ClearFlash: idEventDef = idEventDef("<ClearFlash>", "f")
+    val EV_Flash: idEventDef = idEventDef("<Flash>", "fd")
+    val EV_GatherEntities: idEventDef = idEventDef("<GatherEntities>")
+    val EV_GetPlayerPos: idEventDef = idEventDef("<getplayerpos>")
+    val EV_RestoreInfluence: idEventDef = idEventDef("<RestoreInfluece>")
+    val EV_RestoreVolume: idEventDef = idEventDef("<RestoreVolume>")
+    val EV_TipOff: idEventDef = idEventDef("<TipOff>")
 
     /*
      ===============================================================================
@@ -67,7 +63,7 @@ object Target {
      */
     open class idTarget : idEntity() {
         //	CLASS_PROTOTYPE( idTarget );
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
@@ -82,8 +78,8 @@ object Target {
     class idTarget_Remove : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Remove );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
@@ -96,7 +92,7 @@ object Target {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity?>) {
             var i: Int
             var ent: idEntity?
             i = 0
@@ -110,7 +106,7 @@ object Target {
             PostEventMS(Class.EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -125,8 +121,8 @@ object Target {
     class idTarget_Show : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Show );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -153,7 +149,7 @@ object Target {
             PostEventMS(Class.EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -168,8 +164,8 @@ object Target {
     class idTarget_Damage : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Damage );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -195,7 +191,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -210,8 +206,8 @@ object Target {
     class idTarget_SessionCommand : idTarget() {
         companion object {
             //	CLASS_PROTOTYPE(idTarget_SessionCommand );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -228,7 +224,7 @@ object Target {
             Game_local.gameLocal.sessionCommand.set(spawnArgs.GetString("command"))
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -244,8 +240,8 @@ object Target {
     class idTarget_EndLevel : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EndLevel );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -285,7 +281,7 @@ object Target {
             Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0])
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -300,8 +296,8 @@ object Target {
     class idTarget_WaitForButton : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_WaitForButton );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -338,7 +334,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -353,8 +349,8 @@ object Target {
     class idTarget_SetGlobalShaderTime : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetGlobalShaderTime );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -375,7 +371,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -390,8 +386,8 @@ object Target {
     class idTarget_SetShaderParm : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetShaderParm );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -428,21 +424,21 @@ object Target {
                     i = 0
                     while (i < targets.Num()) {
                         ent = targets.get(i).GetEntity()
-                        ent?.SetShaderParm(parmnum, value.getVal())
+                        ent?.SetShaderParm(parmnum, value._val)
                         i++
                     }
-                    if (spawnArgs.GetBool("toggle") && (value.getVal() == 0f || value.getVal() == 1f)) {
-                        var `val` = value.getVal().toInt()
+                    if (spawnArgs.GetBool("toggle") && (value._val == 0f || value._val == 1f)) {
+                        var `val` = value._val.toInt()
                         `val` = `val` xor 1
                         value.setVal(`val`.toFloat())
-                        spawnArgs.SetFloat(Str.va("shaderParm%d", parmnum), value.getVal())
+                        spawnArgs.SetFloat(Str.va("shaderParm%d", parmnum), value._val)
                     }
                 }
                 parmnum++
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -457,8 +453,8 @@ object Target {
     class idTarget_SetShaderTime : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetShaderTime );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -489,7 +485,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -504,8 +500,8 @@ object Target {
     class idTarget_FadeEntity : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_FadeEntity );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -519,15 +515,15 @@ object Target {
         }
 
         private var fadeEnd: Int
-        private val fadeFrom: idVec4?
+        private val fadeFrom: idVec4
         private var fadeStart: Int
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec4(fadeFrom)
             savefile.WriteInt(fadeStart)
             savefile.WriteInt(fadeEnd)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec4(fadeFrom)
             fadeStart = savefile.ReadInt()
             fadeEnd = savefile.ReadInt()
@@ -536,7 +532,7 @@ object Target {
         override fun Think() {
             var i: Int
             var ent: idEntity?
-            var color: idVec4? = idVec4()
+            var color: idVec4 = idVec4()
             val fadeTo = idVec4()
             val frac: Float
             if (thinkFlags and Entity.TH_THINK != 0) {
@@ -586,7 +582,7 @@ object Target {
             fadeEnd = (Game_local.gameLocal.time + Math_h.SEC2MS(spawnArgs.GetFloat("fadetime"))).toInt()
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -609,8 +605,8 @@ object Target {
     class idTarget_LightFadeIn : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LightFadeIn );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -641,7 +637,7 @@ object Target {
                     continue
                 }
                 if (ent is idLight) {
-                    light = ent as idLight?
+                    light = ent
                     light.FadeIn(time)
                 } else {
                     Game_local.gameLocal.Printf("'%s' targets non-light '%s'", name, ent.GetName())
@@ -650,7 +646,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -665,8 +661,8 @@ object Target {
     class idTarget_LightFadeOut : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LightFadeOut );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -697,7 +693,7 @@ object Target {
                     continue
                 }
                 if (ent is idLight) {
-                    light = ent as idLight?
+                    light = ent
                     light.FadeOut(time)
                 } else {
                     Game_local.gameLocal.Printf("'%s' targets non-light '%s'", name, ent.GetName())
@@ -706,7 +702,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -721,9 +717,9 @@ object Target {
     class idTarget_Give : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Give );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
             private var giveNum = 0
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -767,7 +763,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -782,8 +778,8 @@ object Target {
     class idTarget_GiveEmail : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_GiveEmail );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -806,7 +802,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -821,8 +817,8 @@ object Target {
     class idTarget_SetModel : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetModel );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -854,7 +850,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -869,8 +865,8 @@ object Target {
     class idTarget_SetInfluence : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetInfluence );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -908,7 +904,7 @@ object Target {
         private var soundFaded: Boolean
         private val soundList: idList<Int?>?
         private var switchToCamera: idEntity?
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(lightList.Num())
             i = 0
@@ -948,37 +944,37 @@ object Target {
             savefile.WriteBool(restoreOnTrigger)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             val num = CInt()
             val itemNum = CInt()
             val set = CFloat()
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadInt(itemNum)
-                lightList.Append(itemNum.getVal())
+                lightList.Append(itemNum._val)
                 i++
             }
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadInt(itemNum)
-                guiList.Append(itemNum.getVal())
+                guiList.Append(itemNum._val)
                 i++
             }
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadInt(itemNum)
-                soundList.Append(itemNum.getVal())
+                soundList.Append(itemNum._val)
                 i++
             }
             savefile.ReadInt(num)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadInt(itemNum)
-                genericList.Append(itemNum.getVal())
+                genericList.Append(itemNum._val)
                 i++
             }
             flashIn = savefile.ReadFloat()
@@ -988,13 +984,13 @@ object Target {
             savefile.ReadString(flashOutSound)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/switchToCamera)
             savefile.ReadFloat(set)
-            fovSetting.SetStartTime(set.getVal())
+            fovSetting.SetStartTime(set._val)
             savefile.ReadFloat(set)
-            fovSetting.SetDuration(set.getVal())
+            fovSetting.SetDuration(set._val)
             savefile.ReadFloat(set)
-            fovSetting.SetStartValue(set.getVal())
+            fovSetting.SetStartValue(set._val)
             savefile.ReadFloat(set)
-            fovSetting.SetEndValue(set.getVal())
+            fovSetting.SetEndValue(set._val)
             soundFaded = savefile.ReadBool()
             restoreOnTrigger = savefile.ReadBool()
         }
@@ -1093,7 +1089,7 @@ object Target {
                     i++
                     continue
                 }
-                light = ent as idLight?
+                light = ent
                 parm = light.spawnArgs.GetString("mat_demonic")
                 if (TempDump.isNotNullOrEmpty(parm)) {
                     light.SetShader(parm)
@@ -1111,7 +1107,7 @@ object Target {
                     i++
                     continue
                 }
-                sound = ent as idSound?
+                sound = ent
                 parm = sound.spawnArgs.GetString("snd_demonic")
                 if (TempDump.isNotNullOrEmpty(parm)) {
                     if (sound.spawnArgs.GetBool("overlayDemonic")) {
@@ -1210,7 +1206,7 @@ object Target {
                     i++
                     continue
                 }
-                light = ent as idLight?
+                light = ent
                 if (!light.spawnArgs.GetBool("leave_demonic_mat")) {
                     val texture = light.spawnArgs.GetString("texture", "lights/squarelight1")
                     light.SetShader(texture)
@@ -1227,7 +1223,7 @@ object Target {
                     i++
                     continue
                 }
-                sound = ent as idSound?
+                sound = ent
                 sound.StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
                 sound.SetSound(sound.spawnArgs.GetString("s_shader"))
                 i++
@@ -1380,7 +1376,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1411,8 +1407,8 @@ object Target {
     class idTarget_SetKeyVal : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetKeyVal );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1462,7 +1458,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1477,11 +1473,11 @@ object Target {
     class idTarget_SetFov : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetFov );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1495,23 +1491,23 @@ object Target {
         }
 
         private val fovSetting: idInterpolate<Int?>? = null
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(fovSetting.GetStartTime())
             savefile.WriteFloat(fovSetting.GetDuration())
             savefile.WriteFloat(fovSetting.GetStartValue())
             savefile.WriteFloat(fovSetting.GetEndValue())
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             val setting = CFloat()
             savefile.ReadFloat(setting)
-            fovSetting.SetStartTime(setting.getVal())
+            fovSetting.SetStartTime(setting._val)
             savefile.ReadFloat(setting)
-            fovSetting.SetDuration(setting.getVal())
+            fovSetting.SetDuration(setting._val)
             savefile.ReadFloat(setting)
-            fovSetting.SetStartValue(setting.getVal().toInt())
+            fovSetting.SetStartValue(setting._val.toInt())
             savefile.ReadFloat(setting)
-            fovSetting.SetEndValue(setting.getVal().toInt())
+            fovSetting.SetEndValue(setting._val.toInt())
             fovSetting.GetCurrentValue(Game_local.gameLocal.time.toFloat())
         }
 
@@ -1539,7 +1535,7 @@ object Target {
             BecomeActive(Entity.TH_THINK)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1554,8 +1550,8 @@ object Target {
     class idTarget_SetPrimaryObjective : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetPrimaryObjective );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1578,7 +1574,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1593,8 +1589,8 @@ object Target {
     class idTarget_LockDoor : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LockDoor );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1626,7 +1622,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1641,8 +1637,8 @@ object Target {
     class idTarget_CallObjectFunction : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_CallObjectFunction );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1700,7 +1696,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1715,8 +1711,8 @@ object Target {
     class idTarget_EnableLevelWeapons : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EnableLevelWeapons );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1756,7 +1752,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1771,8 +1767,8 @@ object Target {
     class idTarget_Tip : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Tip );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1789,12 +1785,12 @@ object Target {
             }
         }
 
-        private val playerPos: idVec3?
-        override fun Save(savefile: idSaveGame?) {
+        private val playerPos: idVec3
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(playerPos)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             savefile.ReadVec3(playerPos)
         }
 
@@ -1830,7 +1826,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -1851,8 +1847,8 @@ object Target {
     class idTarget_GiveSecurity : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_GiveSecurity );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1870,7 +1866,7 @@ object Target {
             player?.GiveSecurity(spawnArgs.GetString("text_security"))
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1885,8 +1881,8 @@ object Target {
     class idTarget_RemoveWeapons : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_RemoveWeapons );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1913,7 +1909,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1928,8 +1924,8 @@ object Target {
     class idTarget_LevelTrigger : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LevelTrigger );//TODO:understand this fucking macro
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1951,7 +1947,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -1966,8 +1962,8 @@ object Target {
     class idTarget_EnableStamina : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EnableStamina );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -1993,7 +1989,7 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }
@@ -2008,8 +2004,8 @@ object Target {
     class idTarget_FadeSoundClass : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_FadeSoundClass );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -2050,7 +2046,7 @@ object Target {
             Game_local.gameSoundWorld.FadeSoundClasses(0, fadeDB, fadeTime)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }

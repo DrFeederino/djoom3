@@ -1181,7 +1181,7 @@ object AsyncClient {
                                 Session.session.Stop()
                                 Session.session.MessageBox(
                                     msgBoxType_t.MSG_OK,
-                                    TempDump.ctos(string)!!,
+                                    TempDump.ctos(string),
                                     Common.common.GetLanguageDict().GetString("#str_04319"),
                                     true
                                 )
@@ -1253,7 +1253,7 @@ object AsyncClient {
             serverId = msg.ReadShort().toInt()
             msg.ReadString(serverGameBase, Lib.MAX_STRING_CHARS)
             msg.ReadString(serverGame, Lib.MAX_STRING_CHARS)
-            serverGameStr = TempDump.ctos(serverGame)!!
+            serverGameStr = TempDump.ctos(serverGame)
             serverGameBaseStr = TempDump.ctos(serverGameBase)
 
             // the server is running a different game... we need to reload in the correct fs_game
@@ -1427,7 +1427,7 @@ object AsyncClient {
                 game_opcode = msg.ReadLong()
             }
             ReadLocalizedServerString(msg, str, Lib.MAX_STRING_CHARS)
-            string = TempDump.ctos(str)!!
+            string = TempDump.ctos(str)
             Common.common.Printf("%s\n", string)
             guiNetMenu.SetStateString("status", string)
             if (opcode == SERVER_PRINT.SERVER_PRINT_GAMEDENY.ordinal) {
@@ -1530,7 +1530,7 @@ object AsyncClient {
                         // a general message explaining why this key is denied
                         // no specific use for this atm. let's not clear the keys either
                         msg.ReadString(read_string, Lib.MAX_STRING_CHARS)
-                        auth_msg = TempDump.ctos(read_string)!!
+                        auth_msg = TempDump.ctos(read_string)
                     }
                 }
                 Common.common.DPrintf("auth deny: %s\n", auth_msg)
@@ -1604,7 +1604,7 @@ object AsyncClient {
                 CharArray(Lib.MAX_STRING_CHARS * 2) // M. Quinn - Even Balance - PB packets can go beyond 1024
             val string: String
             msg.ReadString(str, str.size)
-            string = TempDump.ctos(str)!!
+            string = TempDump.ctos(str)
 
             // info response from a server, are accepted from any source
             if (idStr.Icmp(string, "infoResponse") == 0) {
@@ -2339,7 +2339,7 @@ object AsyncClient {
                         )
                     )
                 ) {
-                    idLib.sys.OpenURL(TempDump.ctos(buf)!!, true)
+                    idLib.sys.OpenURL(TempDump.ctos(buf), true)
                 }
             } else if (infoType == SERVER_DL.SERVER_DL_LIST.ordinal.toByte()) {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "disconnect")

@@ -374,14 +374,14 @@ class Game_local {
         }
 
         // save games
-        fun Save(savefile: idSaveGame?) {                    // archives object for save game file
+        fun Save(savefile: idSaveGame) {                    // archives object for save game file
             savefile.WriteInt(spawnId)
         }
 
-        fun Restore(savefile: idRestoreGame?) {                    // unarchives object from save game file
+        fun Restore(savefile: idRestoreGame) {                    // unarchives object from save game file
             val spawnId = CInt()
             savefile.ReadInt(spawnId)
-            this.spawnId = spawnId.getVal()
+            this.spawnId = spawnId._val
         }
 
         fun oSet(ent: type?): idEntityPtr<type?>? {
@@ -432,34 +432,34 @@ class Game_local {
     //============================================================================
     class idGameLocal : idGame() {
         val lastGUIEnt // last entity with a GUI, used by Cmd_NextGUI_f
-                : idEntityPtr<idEntity?>?
+                : idEntityPtr<idEntity?>
 
         //
-        private val aasList: idList<idAAS?>? = idList() // area system
-        private val aasNames: idStrList? = idStrList()
+        private val aasList: idList<idAAS> = idList() // area system
+        private val aasNames: idStrList = idStrList()
 
         //
-        private val clientDeclRemap: Array<Array<idList<Int?>?>?>? =
+        private val clientDeclRemap: Array<Array<idList<Int>>> =
             Array<Array<idList<*>?>?>(MAX_CLIENTS) { arrayOfNulls<idList<*>?>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
 
         //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
         //        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
         //
-        private val eventQueue: idEventQueue? = idEventQueue()
+        private val eventQueue: idEventQueue = idEventQueue()
 
         //
-        private val gravity: idVec3? = idVec3() // global gravity vector
-        private val initialSpots: idStaticList<idEntity?>? = idStaticList(MAX_GENTITIES)
+        private val gravity: idVec3 = idVec3() // global gravity vector
+        private val initialSpots: idStaticList<idEntity> = idStaticList(MAX_GENTITIES)
 
         //
         private val lastAIAlertEntity: idEntityPtr<idActor?>?
 
         //
-        private val mapFileName: idStr? = idStr() // name of the map, empty string if no map loaded
-        private val savedEventQueue: idEventQueue? = idEventQueue()
+        private val mapFileName: idStr = idStr() // name of the map, empty string if no map loaded
+        private val savedEventQueue: idEventQueue = idEventQueue()
 
         //
-        private val spawnArgs: idDict? =
+        private val spawnArgs: idDict =
             idDict() // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
 
         //
@@ -497,7 +497,7 @@ class Game_local {
 
         //
         // can be used to automatically effect every material in the world that references globalParms
-        var globalShaderParms: FloatArray? = FloatArray(RenderWorld.MAX_GLOBAL_SHADER_PARMS)
+        var globalShaderParms: FloatArray = FloatArray(RenderWorld.MAX_GLOBAL_SHADER_PARMS)
         var inCinematic // game is playing cinematic (player controls frozen)
                 = false
         var isClient // set if the game is run for a client
@@ -517,7 +517,7 @@ class Game_local {
                 = 0
 
         //
-        var mpGame: idMultiplayerGame? = idMultiplayerGame() // handles rules for standard dm
+        var mpGame: idMultiplayerGame = idMultiplayerGame() // handles rules for standard dm
         var numClients // pulled from serverInfo and verified
                 = 0
         var numEntitiesToDeactivate // number of entities that became inactive in current frame
@@ -530,18 +530,18 @@ class Game_local {
                 = 0
 
         //
-        var program: idProgram? = idProgram() // currently loaded script and data space
-        var push: idPush? = idPush() // geometric pushing
-        var pvs: idPVS? = idPVS() // potential visible set
+        var program: idProgram = idProgram() // currently loaded script and data space
+        var push: idPush = idPush() // geometric pushing
+        var pvs: idPVS = idPVS() // potential visible set
 
         //
         var random: idRandom = idRandom() // random number generator used throughout the game
         var realClientTime // real client time
                 = 0
-        var serverInfo: idDict? = idDict() // all the tunable parameters, like numclients, etc
+        var serverInfo: idDict = idDict() // all the tunable parameters, like numclients, etc
 
         //
-        var sessionCommand: idStr? = idStr() // a target_sessionCommand can set this to return something to the session
+        var sessionCommand: idStr = idStr() // a target_sessionCommand can set this to return something to the session
         var skipCinematic = false
 
         //
@@ -567,7 +567,7 @@ class Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: Array<idDict?>? = arrayOfNulls<idDict?>(MAX_CLIENTS) // client specific settings
+        var userInfo: Array<idDict?> = arrayOfNulls<idDict?>(MAX_CLIENTS) // client specific settings
         var usercmds = Stream.generate { usercmd_t() }.limit(MAX_CLIENTS.toLong())
             .toArray<usercmd_t?> { _Dummy_.__Array__() } // client input commands
 
@@ -2004,7 +2004,7 @@ class Game_local {
                 // write the class specific data to the snapshot
                 ent.WriteToSnapshot(deltaMsg)
                 if (!deltaMsg.HasChanged()) {
-                    msg.RestoreWriteState(msgSize.getVal(), msgWriteBit.getVal())
+                    msg.RestoreWriteState(msgSize._val, msgWriteBit._val)
                     //                    entityStateAllocator.Free(newBase);
                 } else {
                     newBase.next = snapshot.firstEntityState
@@ -2139,8 +2139,8 @@ class Game_local {
             var baseBits: Int
             var ent: idEntity?
             val player: idPlayer?
-            val viewAxis: idMat3?
-            val viewBounds: idBounds?
+            val viewAxis: idMat3
+            val viewBounds: idBounds
             var base: entityState_s?
             if (0 == Game_network.net_clientShowSnapshot.GetInteger()) {
                 return
@@ -2818,7 +2818,7 @@ class Game_local {
             return mapFile
         }
 
-        fun GetMapName(): String? {
+        fun GetMapName(): String {
             return mapFileName.toString()
         }
 
@@ -2851,7 +2851,7 @@ class Game_local {
             return null
         }
 
-        fun SetAASAreaState(bounds: idBounds?, areaContents: Int, closed: Boolean) {
+        fun SetAASAreaState(bounds: idBounds, areaContents: Int, closed: Boolean) {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
@@ -2860,7 +2860,7 @@ class Game_local {
             }
         }
 
-        fun  /*aasHandle_t*/AddAASObstacle(bounds: idBounds?): Int {
+        fun  /*aasHandle_t*/AddAASObstacle(bounds: idBounds): Int {
             var i: Int
             val obstacle: Int
             var check: Int
@@ -3094,12 +3094,12 @@ class Game_local {
                 }
                 spawn_entnum.setVal(firstFreeIndex++)
             }
-            entities.get(spawn_entnum.getVal()) = ent
-            spawnIds.get(spawn_entnum.getVal()) = spawnCount++
-            ent.entityNumber = spawn_entnum.getVal()
+            entities.get(spawn_entnum._val) = ent
+            spawnIds.get(spawn_entnum._val) = spawnCount++
+            ent.entityNumber = spawn_entnum._val
             ent.spawnNode.AddToEnd(spawnedEntities)
             ent.spawnArgs.TransferKeyValues(spawnArgs)
-            if (spawn_entnum.getVal() >= num_entities) {
+            if (spawn_entnum._val >= num_entities) {
                 num_entities++
             }
         }
@@ -3299,7 +3299,7 @@ class Game_local {
          Calculates the horizontal and vertical field of view based on a horizontal field of view and custom aspect ratio
          ====================
          */
-        fun CalcFov(base_fov: Float, fov_x: CFloat?, fov_y: CFloat?) {
+        fun CalcFov(base_fov: Float, fov_x: CFloat, fov_y: CFloat) {
             var x: Float
             var y: Float
             val ratio_x: Float
@@ -3314,8 +3314,8 @@ class Game_local {
             x = (640.0f / Math.tan((base_fov / 360.0f * idMath.PI).toDouble())).toFloat()
             y = Math.atan2(480.0, x.toDouble()).toFloat()
             fov_y.setVal(y * 360.0f / idMath.PI)
-            assert(fov_y.getVal() > 0)
-            if (fov_y.getVal() <= 0) {
+            assert(fov_y._val > 0)
+            if (fov_y._val <= 0) {
                 Printf(sys_public.sys.FPU_GetState())
                 Error("idGameLocal::CalcFov: bad result")
             }
@@ -3340,15 +3340,15 @@ class Game_local {
                     return
                 }
             }
-            y = (ratio_y / Math.tan((fov_y.getVal() / 360.0f * idMath.PI).toDouble())).toFloat()
+            y = (ratio_y / Math.tan((fov_y._val / 360.0f * idMath.PI).toDouble())).toFloat()
             fov_x.setVal((Math.atan2(ratio_x.toDouble(), y.toDouble()) * 360.0f / idMath.PI).toFloat())
-            if (fov_x.getVal() < base_fov) {
+            if (fov_x._val < base_fov) {
                 fov_x.setVal(base_fov)
-                x = (ratio_x / Math.tan((fov_x.getVal() / 360.0f * idMath.PI).toDouble())).toFloat()
+                x = (ratio_x / Math.tan((fov_x._val / 360.0f * idMath.PI).toDouble())).toFloat()
                 fov_y.setVal((Math.atan2(ratio_y.toDouble(), x.toDouble()) * 360.0f / idMath.PI).toFloat())
             }
-            assert(fov_x.getVal() > 0 && fov_y.getVal() > 0)
-            if (fov_y.getVal() <= 0 || fov_x.getVal() <= 0) {
+            assert(fov_x._val > 0 && fov_y._val > 0)
+            if (fov_y._val <= 0 || fov_x._val <= 0) {
                 Printf(sys_public.sys.FPU_GetState())
                 Error("idGameLocal::CalcFov: bad result")
             }
@@ -3424,12 +3424,12 @@ class Game_local {
          the line start,end
          =============
          */
-        fun FindTraceEntity(start: idVec3?, end: idVec3?,    /*idTypeInfo*/c: Class<*>?, skip: idEntity?): idEntity? {
+        fun FindTraceEntity(start: idVec3, end: idVec3,    /*idTypeInfo*/c: Class<*>?, skip: idEntity?): idEntity? {
             var ent: idEntity?
             var bestEnt: idEntity?
             val scale = CFloat()
             var bestScale: Float
-            var b: idBounds?
+            var b: idBounds
             bestEnt = null
             bestScale = 1.0f
             ent = spawnedEntities.Next()
@@ -3437,9 +3437,9 @@ class Game_local {
                 if (c.isInstance(ent) && ent !== skip) {
                     b = ent.GetPhysics().GetAbsBounds().Expand(16f)
                     if (b.RayIntersection(start, end.minus(start), scale)) {
-                        if (scale.getVal() >= 0.0f && scale.getVal() < bestScale) {
+                        if (scale._val >= 0.0f && scale._val < bestScale) {
                             bestEnt = ent
-                            bestScale = scale.getVal()
+                            bestScale = scale._val
                         }
                     }
                 }
@@ -3500,7 +3500,7 @@ class Game_local {
             return null
         }
 
-        fun EntitiesWithinRadius(org: idVec3?, radius: Float, entityList: Array<idEntity?>?, maxCount: Int): Int {
+        fun EntitiesWithinRadius(org: idVec3, radius: Float, entityList: Array<idEntity?>?, maxCount: Int): Int {
             var ent: idEntity?
             val bo = idBounds(org)
             var entCount = 0
@@ -3562,8 +3562,8 @@ class Game_local {
                 }
 
                 // nail it
-                if (hit is idPlayer && (hit as idPlayer).IsInTeleport()) {
-                    (hit as idPlayer).TeleportDeath(ent.entityNumber)
+                if (hit is idPlayer && hit.IsInTeleport()) {
+                    hit.TeleportDeath(ent.entityNumber)
                 } else if (!catch_teleport) {
                     hit.Damage(ent, ent, Vector.getVec3_origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
                 }
@@ -3577,7 +3577,7 @@ class Game_local {
 
         @JvmOverloads
         fun RadiusDamage(
-            origin: idVec3?,
+            origin: idVec3,
             inflictor: idEntity?,
             attacker: idEntity?,
             ignoreDamage: idEntity?,
@@ -3595,7 +3595,7 @@ class Game_local {
             var ent: idEntity
             val entityList = arrayOfNulls<idEntity?>(MAX_GENTITIES)
             val numListedEntities: Int
-            val bounds: idBounds?
+            val bounds: idBounds
             val v = idVec3()
             val damagePoint = idVec3()
             val dir = idVec3()
@@ -3611,13 +3611,13 @@ class Game_local {
             }
             damageDef.GetInt("damage", "20", damage)
             damageDef.GetInt("radius", "50", radius)
-            damageDef.GetInt("push", Str.va("%d", damage.getVal() * 100), push)
+            damageDef.GetInt("push", Str.va("%d", damage._val * 100), push)
             damageDef.GetFloat("attackerDamageScale", "0.5", attackerDamageScale)
             damageDef.GetFloat("attackerPushScale", "0", attackerPushScale)
-            if (radius.getVal() < 1) {
+            if (radius._val < 1) {
                 radius.setVal(1)
             }
-            bounds = idBounds(origin).Expand(radius.getVal().toFloat())
+            bounds = idBounds(origin).Expand(radius._val.toFloat())
 
             // get all entities touching the bounds
             numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES)
@@ -3640,11 +3640,11 @@ class Game_local {
                     e++
                     continue
                 }
-                if (ent === inflictor || ent is idAFAttachment && (ent as idAFAttachment).GetBody() === inflictor) {
+                if (ent === inflictor || ent is idAFAttachment && ent.GetBody() === inflictor) {
                     e++
                     continue
                 }
-                if (ent === ignoreDamage || ent is idAFAttachment && (ent as idAFAttachment).GetBody() === ignoreDamage) {
+                if (ent === ignoreDamage || ent is idAFAttachment && ent.GetBody() === ignoreDamage) {
                     e++
                     continue
                 }
@@ -3668,7 +3668,7 @@ class Game_local {
                     i++
                 }
                 dist = v.Length()
-                if (dist >= radius.getVal()) {
+                if (dist >= radius._val) {
                     e++
                     continue
                 }
@@ -3679,9 +3679,9 @@ class Game_local {
                     dir.plusAssign(2, 24f)
 
                     // get the damage scale
-                    damageScale = dmgPower * (1.0f - dist / radius.getVal())
-                    if (ent === attacker || ent is idAFAttachment && (ent as idAFAttachment).GetBody() === attacker) {
-                        damageScale *= attackerDamageScale.getVal()
+                    damageScale = dmgPower * (1.0f - dist / radius._val)
+                    if (ent === attacker || ent is idAFAttachment && ent.GetBody() === attacker) {
+                        damageScale *= attackerDamageScale._val
                     }
                     ent.Damage(inflictor, attacker, dir, damageDefName, damageScale, Model.INVALID_JOINT)
                 }
@@ -3689,21 +3689,21 @@ class Game_local {
             }
 
             // push physics objects
-            if (push.getVal() != 0) {
+            if (push._val != 0) {
                 RadiusPush(
                     origin,
-                    radius.getVal().toFloat(),
-                    push.getVal() * dmgPower,
+                    radius._val.toFloat(),
+                    push._val * dmgPower,
                     attacker,
                     ignorePush,
-                    attackerPushScale.getVal(),
+                    attackerPushScale._val,
                     false
                 )
             }
         }
 
         fun RadiusPush(
-            origin: idVec3?,
+            origin: idVec3,
             radius: Float,
             push: Float,
             inflictor: idEntity?,
@@ -3716,7 +3716,7 @@ class Game_local {
             var clipModel: idClipModel
             val clipModelList = arrayOfNulls<idClipModel?>(MAX_GENTITIES)
             val dir = idVec3()
-            val bounds: idBounds?
+            val bounds: idBounds
             val result = modelTrace_s()
             var ent: idEntity?
             var scale: Float
@@ -3783,7 +3783,7 @@ class Game_local {
             }
         }
 
-        fun RadiusPushClipModel(origin: idVec3?, push: Float, clipModel: idClipModel?) {
+        fun RadiusPushClipModel(origin: idVec3, push: Float, clipModel: idClipModel?) {
             var i: Int
             var j: Int
             var dot: Float
@@ -3845,8 +3845,8 @@ class Game_local {
 
         @JvmOverloads
         fun ProjectDecal(
-            origin: idVec3?,
-            dir: idVec3?,
+            origin: idVec3,
+            dir: idVec3,
             depth: Float,
             parallel: Boolean,
             size: Float,
@@ -3872,8 +3872,8 @@ class Game_local {
             axis.set(2, dir)
             axis.get(2).Normalize()
             axis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
-            axis.set(0, axistemp.get(0).times(c.getVal()).oPlus(axistemp.get(1).times(-s.getVal())))
-            axis.set(1, axistemp.get(0).times(-s.getVal()).oPlus(axistemp.get(1).times(-c.getVal())))
+            axis.set(0, axistemp.get(0).times(c._val).oPlus(axistemp.get(1).times(-s._val)))
+            axis.set(1, axistemp.get(0).times(-s._val).oPlus(axistemp.get(1).times(-c._val)))
             windingOrigin.set(origin.oPlus(axis.get(2).times(depth)))
             if (parallel) {
                 projectionOrigin.set(origin.minus(axis.get(2).times(depth)))
@@ -3916,10 +3916,10 @@ class Game_local {
             )
         }
 
-        fun BloodSplat(origin: idVec3?, dir: idVec3?, size: Float, material: String?) {
+        fun BloodSplat(origin: idVec3, dir: idVec3, size: Float, material: String?) {
             var size = size
             val halfSize = size * 0.5f
-            val verts = arrayOf<idVec3?>(
+            val verts = arrayOf<idVec3>(
                 idVec3(0.0f, +halfSize, +halfSize),
                 idVec3(0.0f, +halfSize, -halfSize),
                 idVec3(0.0f, -halfSize, -halfSize),
@@ -3966,7 +3966,7 @@ class Game_local {
             }
         }
 
-        fun GetGravity(): idVec3? {
+        fun GetGravity(): idVec3 {
             return gravity
         }
 
@@ -4016,7 +4016,7 @@ class Game_local {
                 ent = entities.get(i)
                 if (ent != null && ent is idPlayer) {
                     if (idStr.Companion.IcmpNoColor(name, userInfo.get(i).GetString("ui_name")) == 0) {
-                        return ent as idPlayer?
+                        return ent
                     }
                 }
                 i++
@@ -4096,7 +4096,7 @@ class Game_local {
                     ent = ent.spawnNode.Next()
                     continue
                 }
-                locationEntities.get(areaNum) = ent as idLocationEntity?
+                locationEntities.get(areaNum) = ent
 
                 // spread to all other connected areas
                 for (i in 0 until numAreas) {
@@ -4109,7 +4109,7 @@ class Game_local {
                             portalConnection_t.PS_BLOCK_LOCATION
                         )
                     ) {
-                        locationEntities.get(i) = ent as idLocationEntity?
+                        locationEntities.get(i) = ent
                     }
                 }
                 ent = ent.spawnNode.Next()
@@ -4124,7 +4124,7 @@ class Game_local {
          May return NULL
          ===================
          */
-        fun LocationForPoint(point: idVec3?): idLocationEntity? {
+        fun LocationForPoint(point: idVec3): idLocationEntity? {
             if (null == locationEntities) {
                 // before SpreadLocations() has been called
                 return null
@@ -4633,7 +4633,7 @@ class Game_local {
                     i++
                     continue
                 }
-                player = ent as idPlayer?
+                player = ent
                 if (playerPVS.i == -1) {
                     playerPVS = GetClientPVS(player, pvsType_t.PVS_NORMAL)
                 } else {
@@ -4680,7 +4680,7 @@ class Game_local {
                 while (ent != null) {
                     if (ent is idAFEntity_Generic) {
                         val phys = ent.GetPhysics()
-                        phys?.SetGravity(gravity)
+                        phys.SetGravity(gravity)
                     }
                     ent = ent.spawnNode.Next()
                 }
@@ -4775,7 +4775,7 @@ class Game_local {
             var ent: idEntity?
             var target: idEntity?
             var i: Int
-            var totalBounds: idBounds?
+            var totalBounds: idBounds
             viewTextBounds.ExpandSelf(128.0f)
             viewBounds.ExpandSelf(512.0f)
             ent = spawnedEntities.Next()
@@ -4797,7 +4797,7 @@ class Game_local {
                 val dir = idVec3(totalBounds.GetCenter().minus(viewPos))
                 dir.NormalizeFast()
                 totalBounds.RayIntersection(viewPos, dir, dist)
-                val frac = (512.0f - dist.getVal()) / 512.0f
+                val frac = (512.0f - dist._val) / 512.0f
                 if (frac < 0.0f) {
                     ent = ent.spawnNode.Next()
                     continue
@@ -5805,7 +5805,7 @@ class Game_local {
             return false
         }
 
-        private fun WriteGameStateToSnapshot(msg: idBitMsgDelta?) {
+        private fun WriteGameStateToSnapshot(msg: idBitMsgDelta) {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
@@ -5815,7 +5815,7 @@ class Game_local {
             mpGame.WriteToSnapshot(msg)
         }
 
-        private fun ReadGameStateFromSnapshot(msg: idBitMsgDelta?) {
+        private fun ReadGameStateFromSnapshot(msg: idBitMsgDelta) {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
@@ -5910,8 +5910,8 @@ class Game_local {
             var baseBits: Int
             var ent: idEntity?
             val player: idPlayer?
-            val viewAxis: idMat3?
-            val viewBounds: idBounds?
+            val viewAxis: idMat3
+            val viewBounds: idBounds
             var base: entityState_s?
             if (0 == Game_network.net_clientShowSnapshot.GetInteger()) {
                 return
@@ -6262,8 +6262,8 @@ class Game_local {
             }
 
             companion object {
-                private val instance: cmdFunction_t? = MapRestart_f()
-                fun getInstance(): cmdFunction_t? {
+                private val instance: cmdFunction_t = MapRestart_f()
+                fun getInstance(): cmdFunction_t {
                     return instance
                 }
             }
@@ -6336,7 +6336,7 @@ class Game_local {
             //
             //
             private const val INITIAL_SPAWN_COUNT = 1
-            private val decalWinding: Array<idVec3?>? = arrayOf(
+            private val decalWinding: Array<idVec3>? = arrayOf(
                 idVec3(1.0f, 1.0f, 0.0f),
                 idVec3(-1.0f, 1.0f, 0.0f),
                 idVec3(-1.0f, -1.0f, 0.0f),

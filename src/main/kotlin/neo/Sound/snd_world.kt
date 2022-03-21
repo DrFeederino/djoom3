@@ -564,7 +564,7 @@ class snd_world {
                 wO!!.Write(info.Write(), 12)
                 info.ckid = snd_wavefile.mmioFOURCC('f'.code, 'm'.code, 't'.code, ' '.code)
                 info.cksize = 16
-                wO!!.Write(info.Write(), 8)
+                wO.Write(info.Write(), 8)
                 format.wBitsPerSample = 16
                 format.wf.nAvgBytesPerSec = 44100 * 4 // sample rate * block align
                 format.wf.nChannels = 2

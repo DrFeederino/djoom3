@@ -453,7 +453,7 @@ object KeyInput {
                         val l = cheatCodes[i]!!.length
                         assert(l <= 16)
                         if (idStr.Icmpn(
-                                TempDump.ctos(lastKeys)!!.substring(16 + (lastKeyIndex and 15) - l),
+                                TempDump.ctos(lastKeys).substring(16 + (lastKeyIndex and 15) - l),
                                 cheatCodes[i]!!,
                                 l
                             ) == 0
@@ -711,7 +711,7 @@ object KeyInput {
                 idStr.Copynz(keyName, Common.common.GetLanguageDict().GetString("#str_07133"), keyName.size)
             }
             idStr.ToLower(keyName)
-            return TempDump.ctos(keyName)!!
+            return TempDump.ctos(keyName)
         }
 
         /*

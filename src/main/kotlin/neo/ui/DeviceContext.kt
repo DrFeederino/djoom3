@@ -1205,7 +1205,7 @@ class DeviceContext {
                     // (Assets.textFont.glyphs[text[i]].imageHeight -
                     // Assets.textFont.glyphs[text[i]].height);
                     //
-                    if (idStr.IsColor(TempDump.ctos(s.toString().toCharArray())!!)) {
+                    if (idStr.IsColor(TempDump.ctos(s.toString().toCharArray()))) {
                         d1++
                         if (text[s_i + 1].code == Str.C_COLOR_DEFAULT) {
                             newColor = color

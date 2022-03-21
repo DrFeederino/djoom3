@@ -41,16 +41,16 @@ object ModelDecal {
     const val NUM_DECAL_BOUNDING_PLANES = 6
 
     internal class decalProjectionInfo_s {
-        val boundingPlanes: Array<idPlane?>? = idPlane.Companion.generateArray(6)
+        val boundingPlanes: Array<idPlane>? = idPlane.Companion.generateArray(6)
         var fadeDepth = 0f
-        val fadePlanes: Array<idPlane?>? = idPlane.Companion.generateArray(2)
+        val fadePlanes: Array<idPlane>? = idPlane.Companion.generateArray(2)
         var force = false
         var material: idMaterial? = idMaterial()
         var parallel = false
-        var projectionBounds: idBounds? = idBounds()
-        val projectionOrigin: idVec3? = idVec3()
+        var projectionBounds: idBounds = idBounds()
+        val projectionOrigin: idVec3 = idVec3()
         var startTime = 0
-        val textureAxis: Array<idPlane?>? = idPlane.Companion.generateArray(2)
+        val textureAxis: Array<idPlane>? = idPlane.Companion.generateArray(2)
     }
 
     class idRenderModelDecal {
@@ -136,7 +136,7 @@ object ModelDecal {
                             dir.set(fw.get(j).ToVec3().minus(localInfo.projectionOrigin))
                             localInfo.boundingPlanes.get(ModelDecal.NUM_DECAL_BOUNDING_PLANES - 1)
                                 .RayIntersection(fw.get(j).ToVec3(), dir, scale)
-                            dir.set(fw.get(j).ToVec3().oPlus(dir.times(scale.getVal())))
+                            dir.set(fw.get(j).ToVec3().oPlus(dir.times(scale._val)))
                             fw.get(j).s = localInfo.textureAxis.get(0).Distance(dir)
                             fw.get(j).t = localInfo.textureAxis.get(1).Distance(dir)
                         }
@@ -249,7 +249,7 @@ object ModelDecal {
         private fun AddWinding(
             w: idWinding?,
             decalMaterial: idMaterial?,
-            fadePlanes: Array<idPlane?>? /*[2]*/,
+            fadePlanes: Array<idPlane>? /*[2]*/,
             fadeDepth: Float,
             startTime: Int
         ) {
@@ -322,7 +322,7 @@ object ModelDecal {
         private fun AddDepthFadedWinding(
             w: idWinding?,
             decalMaterial: idMaterial?,
-            fadePlanes: Array<idPlane?>? /*[2]*/,
+            fadePlanes: Array<idPlane>? /*[2]*/,
             fadeDepth: Float,
             startTime: Int
         ) {
@@ -357,7 +357,7 @@ object ModelDecal {
             fun CreateProjectionInfo(
                 info: decalProjectionInfo_s?,
                 winding: idFixedWinding?,
-                projectionOrigin: idVec3?,
+                projectionOrigin: idVec3,
                 parallel: Boolean,
                 fadeDepth: Float,
                 material: idMaterial?,
@@ -458,8 +458,8 @@ object ModelDecal {
             fun GlobalProjectionInfoToLocal(
                 localInfo: decalProjectionInfo_s?,
                 info: decalProjectionInfo_s?,
-                origin: idVec3?,
-                axis: idMat3?
+                origin: idVec3,
+                axis: idMat3
             ) {
                 val modelMatrix = FloatArray(16)
                 tr_main.R_AxisToModelMatrix(axis, origin, modelMatrix)

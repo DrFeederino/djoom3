@@ -220,12 +220,12 @@ object tr_light {
      R_SkyboxTexGen
      ==================
      */
-    fun R_SkyboxTexGen(surf: drawSurf_s?, viewOrg: idVec3?) {
+    fun R_SkyboxTexGen(surf: drawSurf_s?, viewOrg: idVec3) {
         var i: Int
         val localViewOrigin = idVec3()
         tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, viewOrg, localViewOrigin)
         val numVerts = surf.geo.numVerts
-        val texCoords: Array<idVec3?> = idVec3.Companion.generateArray(numVerts)
+        val texCoords: Array<idVec3> = idVec3.Companion.generateArray(numVerts)
         val verts = surf.geo.verts
         i = 0
         while (i < numVerts) {
@@ -241,7 +241,7 @@ object tr_light {
      R_WobbleskyTexGen
      ==================
      */
-    fun R_WobbleskyTexGen(surf: drawSurf_s?, viewOrg: idVec3?) {
+    fun R_WobbleskyTexGen(surf: drawSurf_s?, viewOrg: idVec3) {
         var i: Int
         val localViewOrigin = idVec3()
         val parms = surf.material.GetTexGenRegisters()
@@ -258,7 +258,7 @@ object tr_light {
         var s = (Math.sin(a.toDouble()) * Math.sin(wobbleDegrees.toDouble())).toFloat()
         var c = (Math.cos(a.toDouble()) * Math.sin(wobbleDegrees.toDouble())).toFloat()
         val z = Math.cos(wobbleDegrees.toDouble()).toFloat()
-        val axis: Array<idVec3?> = idVec3.Companion.generateArray(3)
+        val axis: Array<idVec3> = idVec3.Companion.generateArray(3)
         axis[2].set(0, c)
         axis[2].set(1, s)
         axis[2].set(2, z)
@@ -297,7 +297,7 @@ object tr_light {
         transform[12] = transform[13]
         tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, viewOrg, localViewOrigin)
         val numVerts = surf.geo.numVerts
-        val texCoords: Array<idVec3?> = idVec3.Companion.generateArray(numVerts)
+        val texCoords: Array<idVec3> = idVec3.Companion.generateArray(numVerts)
         val verts = surf.geo.verts
         i = 0
         while (i < numVerts) {
@@ -318,7 +318,7 @@ object tr_light {
      Calculates the specular coordinates for cards without vertex programs.
      =================
      */
-    fun R_SpecularTexGen(surf: drawSurf_s?, globalLightOrigin: idVec3?, viewOrg: idVec3?) {
+    fun R_SpecularTexGen(surf: drawSurf_s?, globalLightOrigin: idVec3, viewOrg: idVec3) {
         val tri: srfTriangles_s?
         val localLightOrigin = idVec3()
         val localViewOrigin = idVec3()
@@ -328,7 +328,7 @@ object tr_light {
 
         // FIXME: change to 3 component?
         val size = tri.numVerts // * sizeof( idVec4 );
-        val texCoords = arrayOfNulls<idVec4?>(size)
+        val texCoords = arrayOfNulls<idVec4>(size)
         if (true) {
             Simd.SIMDProcessor.CreateSpecularTextureCoords(
                 texCoords, localLightOrigin, localViewOrigin,
@@ -413,7 +413,7 @@ object tr_light {
     }
 
     //=============================================================================================================================================================================================
-    fun R_TestPointInViewLight(org: idVec3?, light: idRenderLightLocal?): Boolean {
+    fun R_TestPointInViewLight(org: idVec3, light: idRenderLightLocal?): Boolean {
         var i: Int
         //	idVec3	local;
         i = 0
@@ -434,7 +434,7 @@ object tr_light {
      Assumes positive sides face outward
      ===================
      */
-    fun R_PointInFrustum(p: idVec3?, planes: Array<idPlane?>?, numPlanes: Int): Boolean {
+    fun R_PointInFrustum(p: idVec3, planes: Array<idPlane>?, numPlanes: Int): Boolean {
         for (i in 0 until numPlanes) {
             val d = planes.get(i).Distance(p)
             if (d > 0) {
@@ -961,7 +961,7 @@ object tr_light {
      */
     fun R_IssueEntityDefCallback(def: idRenderEntityLocal?): Boolean {
         val update: Boolean
-        var oldBounds: idBounds? = null
+        var oldBounds: idBounds = null
         if (RenderSystem_init.r_checkBounds.GetBool()) {
             oldBounds = def.referenceBounds
         }

@@ -528,7 +528,7 @@ object EditField {
         @Throws(idException::class)
         override fun run(vararg objects: String) {
             val s = objects[0]
-            val currentMatch = TempDump.ctos(globalAutoComplete.currentMatch)!!
+            val currentMatch = TempDump.ctos(globalAutoComplete.currentMatch)
             if (idStr.Icmpn(s, currentMatch, currentMatch.length) == 0) {
                 Common.common.Printf("    %s\n", s)
             }
@@ -551,7 +551,7 @@ object EditField {
         @Throws(idException::class)
         override fun run(vararg objects: String) {
             val s = objects[0]
-            val currentMatch = TempDump.ctos(globalAutoComplete.currentMatch)!!
+            val currentMatch = TempDump.ctos(globalAutoComplete.currentMatch)
             if (idStr.Icmpn(s, currentMatch, currentMatch.length) == 0) {
                 Common.common.Printf(
                     """    %s${Str.S_COLOR_WHITE} = "%s"

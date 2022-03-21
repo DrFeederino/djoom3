@@ -88,7 +88,7 @@ object SaveGame {
 
     class idSaveGame(private val file: idFile?) {
         //
-        private val objects: idList<idClass?>?
+        private val objects: idList<idClass>
 
         // ~idSaveGame();
         fun Close() {
@@ -176,19 +176,19 @@ object SaveGame {
             this.WriteString(string.toString())
         }
 
-        fun WriteVec2(vec: idVec2?) {
+        fun WriteVec2(vec: idVec2) {
             file.WriteVec2(vec)
         }
 
-        fun WriteVec3(vec: idVec3?) {
+        fun WriteVec3(vec: idVec3) {
             file.WriteVec3(vec)
         }
 
-        fun WriteVec4(vec: idVec4?) {
+        fun WriteVec4(vec: idVec4) {
             file.WriteVec4(vec)
         }
 
-        fun WriteVec6(vec: idVec6?) {
+        fun WriteVec6(vec: idVec6) {
             file.WriteVec6(vec)
         }
 
@@ -206,12 +206,12 @@ object SaveGame {
             }
         }
 
-        fun WriteBounds(bounds: idBounds?) {
+        fun WriteBounds(bounds: idBounds) {
             Lib.Companion.LittleRevBytes(bounds /*, sizeof(float), sizeof(b) / sizeof(float)*/)
             file.Write(bounds /*, sizeof(b)*/)
         }
 
-        fun WriteMat3(mat: idMat3?) {
+        fun WriteMat3(mat: idMat3) {
             file.WriteMat3(mat)
         }
 
@@ -585,7 +585,7 @@ object SaveGame {
             ReadInt(num)
 
             // create all the objects
-            objects.SetNum(num.getVal() + 1)
+            objects.SetNum(num._val + 1)
             //            memset(objects.Ptr(), 0, sizeof(objects[ 0]) * objects.Num());
             Arrays.fill(objects.getList(), 0, objects.Num(), 0)
             i = 1
@@ -663,24 +663,24 @@ object SaveGame {
             file.Read(buffer)
         }
 
-        fun ReadInt(value: CInt?) {
+        fun ReadInt(value: CInt) {
             file.ReadInt(value)
         }
 
         fun ReadInt(): Int {
             val value = CInt()
             this.ReadInt(value)
-            return value.getVal()
+            return value._val
         }
 
-        fun ReadJoint(jointHandle_t: CInt?) {
+        fun ReadJoint(jointHandle_t: CInt) {
             file.ReadInt(jointHandle_t)
         }
 
         fun ReadJoint(): Int {
             val jointHandle_t = CInt()
             this.ReadJoint(jointHandle_t)
-            return jointHandle_t.getVal()
+            return jointHandle_t._val
         }
 
         fun ReadShort(value: ShortArray?) {
@@ -713,17 +713,17 @@ object SaveGame {
             return c[0]
         }
 
-        fun ReadFloat(value: CFloat?) {
+        fun ReadFloat(value: CFloat) {
             file.ReadFloat(value)
         }
 
         fun ReadFloat(): Float {
             val value = CFloat()
             this.ReadFloat(value)
-            return value.getVal()
+            return value._val
         }
 
-        fun ReadBool(value: CBool?) {
+        fun ReadBool(value: CBool) {
             file.ReadBool(value)
         }
 
@@ -736,26 +736,26 @@ object SaveGame {
         fun ReadString(string: idStr?) {
             val len = CInt()
             ReadInt(len)
-            if (len.getVal() < 0) {
+            if (len._val < 0) {
                 Error("idRestoreGame::ReadString: invalid length")
             }
-            string.Fill(' ', len.getVal())
-            file.Read(TempDump.atobb(string), len.getVal())
+            string.Fill(' ', len._val)
+            file.Read(TempDump.atobb(string), len._val)
         }
 
-        fun ReadVec2(vec: idVec2?) {
+        fun ReadVec2(vec: idVec2) {
             file.ReadVec2(vec)
         }
 
-        fun ReadVec3(vec: idVec3?) {
+        fun ReadVec3(vec: idVec3) {
             file.ReadVec3(vec)
         }
 
-        fun ReadVec4(vec: idVec4?) {
+        fun ReadVec4(vec: idVec4) {
             file.ReadVec4(vec)
         }
 
-        fun ReadVec6(vec: idVec6?) {
+        fun ReadVec6(vec: idVec6) {
             file.ReadVec6(vec)
         }
 
@@ -763,22 +763,22 @@ object SaveGame {
             var i: Int
             val num = CInt()
             file.ReadInt(num)
-            w.SetNumPoints(num.getVal())
+            w.SetNumPoints(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 file.Read(w.get(i) /*, sizeof(idVec5)*/)
                 Lib.Companion.LittleRevBytes(w.get(i) /*, sizeof(float), sizeof(idVec5) / sizeof(float)*/)
                 i++
             }
         }
 
-        fun ReadBounds(bounds: idBounds?) {
+        fun ReadBounds(bounds: idBounds) {
             file.Read(bounds /*, sizeof(bounds)*/)
             //            LittleRevBytes(bounds, sizeof(float), sizeof(bounds) / sizeof(float));
             Lib.Companion.LittleRevBytes(bounds /*, sizeof(float), sizeof(bounds) / sizeof(float)*/)
         }
 
-        fun ReadMat3(mat: idMat3?) {
+        fun ReadMat3(mat: idMat3) {
             file.ReadMat3(mat)
         }
 
@@ -808,12 +808,12 @@ object SaveGame {
             val key = idStr()
             val value = idStr()
             ReadInt(num)
-            if (num.getVal() < 0) {
+            if (num._val < 0) {
                 dict.set(null)
             } else {
                 dict.Clear()
                 i = 0
-                while (i < num.getVal()) {
+                while (i < num._val) {
                     ReadString(key)
                     ReadString(value)
                     dict.Set(key, value)
@@ -932,7 +932,7 @@ object SaveGame {
             ReadMaterial(renderEntity.referenceShader)
             ReadSkin(renderEntity.customSkin)
             ReadInt(index)
-            renderEntity.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index.getVal())
+            renderEntity.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
             i = 0
             while (i < Material.MAX_ENTITY_SHADER_PARMS) {
                 renderEntity.shaderParms[i] = ReadFloat()
@@ -986,13 +986,13 @@ object SaveGame {
                 i++
             }
             ReadInt(index)
-            renderLight.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index.getVal())
+            renderLight.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
         }
 
         fun ReadRefSound(refSound: refSound_t?) {
             val index = CInt()
             ReadInt(index)
-            refSound.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index.getVal())
+            refSound.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
             ReadVec3(refSound.origin)
             refSound.listenerId = ReadInt()
             ReadSoundShader(refSound.shader)
@@ -1123,7 +1123,7 @@ object SaveGame {
         fun ReadBuildNumber() {
             val buildNumber = CInt()
             file.ReadInt(buildNumber)
-            this.buildNumber = buildNumber.getVal()
+            this.buildNumber = buildNumber._val
         }
 
         //						Used to retrieve the saved game buildNumber from within class Restore methods

@@ -2288,7 +2288,7 @@ class AAS_local {
             return file!!.GetSettings().boundingBoxes[0]
         }
 
-        private fun DrawCone(origin: idVec3, dir: idVec3, radius: Float, color: idVec4?) {
+        private fun DrawCone(origin: idVec3, dir: idVec3, radius: Float, color: idVec4) {
             var i: Int
             val axis = idMat3()
             val center = idVec3()

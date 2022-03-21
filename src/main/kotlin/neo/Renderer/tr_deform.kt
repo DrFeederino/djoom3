@@ -381,7 +381,7 @@ object tr_deform {
         while (i < tri.numVerts) {
             val lengths = FloatArray(2)
             val nums = IntArray(2)
-            val mid: Array<idVec3?> = idVec3.Companion.generateArray(2)
+            val mid: Array<idVec3> = idVec3.Companion.generateArray(2)
             val major = idVec3()
             val minor = idVec3()
             var v1: idDrawVert?
@@ -620,7 +620,7 @@ object tr_deform {
             j++
         }
         val spread = surf.shaderRegisters[surf.material.GetDeformRegister(0)] * RenderSystem_init.r_flareSize.GetFloat()
-        val edgeDir: Array<Array<idVec3?>?> = idVec3.Companion.generateArray(4, 3)
+        val edgeDir: Array<Array<idVec3>?> = idVec3.Companion.generateArray(4, 3)
         val   /*glIndex_t*/indexes = IntArray(tr_deform.MAX_TRI_WINDING_INDEXES)
         val numIndexes = tr_deform.R_WindingFromTriangles(tri, indexes)
 
@@ -970,7 +970,7 @@ object tr_deform {
             v2.Normalize()
 
             // texVec[0] will be the normal to the origin triangle
-            val texVec: Array<idVec3?> = idVec3.Companion.generateArray(2)
+            val texVec: Array<idVec3> = idVec3.Companion.generateArray(2)
             texVec[0].Cross(v1, v2)
             texVec[1].Cross(texVec[0], dir)
             j = 0
@@ -1243,8 +1243,8 @@ object tr_deform {
 
     //========================================================================================
     internal class eyeIsland_t {
-        var bounds: idBounds?
-        val mid: idVec3?
+        var bounds: idBounds
+        val mid: idVec3
         var numTris = 0
         var tris: IntArray? = IntArray(tr_deform.MAX_EYEBALL_TRIS)
 

@@ -520,7 +520,7 @@ object win_main {
             // passing a slash as extension will find directories
             if (extension == "/") {
 //                    _A_SUBDIR = false;
-                return@FilenameFilter pathname.isDirectory()
+                return@FilenameFilter pathname.isDirectory
             } else {
 //                    _A_SUBDIR = true;
                 return@FilenameFilter name.endsWith(extension)
@@ -614,7 +614,7 @@ object win_main {
     }
 
     fun Sys_SetClipboardData(string: CharArray) {
-        Sys_SetClipboardData(TempDump.ctos(string)!!)
+        Sys_SetClipboardData(TempDump.ctos(string))
     }
 
     /*
@@ -813,7 +813,7 @@ object win_main {
 //        }
 
 //        hTimer.scheduleAtFixedRate(threadInfo.threadHandle, 0, USERCMD_MSEC, TimeUnit.MILLISECONDS);
-        hTimer!!.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
+        hTimer.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
 //                if (!DEBUG) {//TODO:Session_local.java::742
             Common.common.Async()
         }, 0, 1000000000L / 60, TimeUnit.NANOSECONDS)
@@ -1062,7 +1062,7 @@ object win_main {
 
         // if "viewlog" has been modified, show or hide the log console
         if (Win32Vars_t.win_viewlog.IsModified()) {
-            if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated!!.GetInteger() != 1) {
+            if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated.GetInteger() != 1) {
                 win_syscon.Sys_ShowConsole(Win32Vars_t.win_viewlog.GetInteger(), false)
             }
             Win32Vars_t.win_viewlog.ClearModified()
@@ -1430,7 +1430,7 @@ object win_main {
      */
     fun Sys_SetFatalError(error: String) {}
     fun Sys_SetFatalError(error: CharArray) {
-        Sys_SetFatalError(TempDump.ctos(error)!!)
+        Sys_SetFatalError(TempDump.ctos(error))
     }
 
     /*
@@ -1514,7 +1514,7 @@ object win_main {
 
         // hide or show the early console as necessary
         if (Win32Vars_t.win_viewlog.GetInteger() != 0 || Common.com_skipRenderer.GetBool()
-            || idAsyncNetwork.serverDedicated!!.GetInteger() != 0
+            || idAsyncNetwork.serverDedicated.GetInteger() != 0
         ) {
             win_syscon.Sys_ShowConsole(1, true)
         } else {

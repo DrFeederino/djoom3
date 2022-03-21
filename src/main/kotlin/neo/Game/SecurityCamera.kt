@@ -35,10 +35,10 @@ import neo.idlib.math.Vector.idVec4
  *
  */
 object SecurityCamera {
-    val EV_SecurityCam_AddLight: idEventDef? = idEventDef("<addLight>")
-    val EV_SecurityCam_Alert: idEventDef? = idEventDef("<alert>")
-    val EV_SecurityCam_ContinueSweep: idEventDef? = idEventDef("<continueSweep>")
-    val EV_SecurityCam_Pause: idEventDef? = idEventDef("<pause>")
+    val EV_SecurityCam_AddLight: idEventDef = idEventDef("<addLight>")
+    val EV_SecurityCam_Alert: idEventDef = idEventDef("<alert>")
+    val EV_SecurityCam_ContinueSweep: idEventDef = idEventDef("<continueSweep>")
+    val EV_SecurityCam_Pause: idEventDef = idEventDef("<pause>")
 
     /*
      ===================================================================================
@@ -47,7 +47,7 @@ object SecurityCamera {
 
      ===================================================================================
      */
-    val EV_SecurityCam_ReverseSweep: idEventDef? = idEventDef("<reverseSweep>")
+    val EV_SecurityCam_ReverseSweep: idEventDef = idEventDef("<reverseSweep>")
 
     class idSecurityCamera : idEntity() {
         companion object {
@@ -55,8 +55,8 @@ object SecurityCamera {
             private const val ALERT = 2
             private const val LOSINGINTEREST = 1
             private const val SCANNING = 0
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -76,7 +76,7 @@ object SecurityCamera {
         }
 
         //
-        private val viewOffset: idVec3?
+        private val viewOffset: idVec3
         private var alertMode = 0
 
         // enum { SCANNING, LOSINGINTEREST, ALERT, ACTIVATED };
@@ -147,7 +147,7 @@ object SecurityCamera {
             UpdateChangeableSpawnArgs(null)
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(angle)
             savefile.WriteFloat(sweepAngle)
             savefile.WriteInt(modelAxis)
@@ -167,7 +167,7 @@ object SecurityCamera {
             savefile.WriteTraceModel(trm)
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             angle = savefile.ReadFloat()
             sweepAngle = savefile.ReadFloat()
             modelAxis = savefile.ReadInt()
@@ -252,7 +252,7 @@ object SecurityCamera {
             return rv
         }
 
-        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3?, location: Int) {
+        override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             sweeping = false
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
             val fx = spawnArgs.GetString("fx_destroyed")
@@ -276,7 +276,7 @@ object SecurityCamera {
             inflictor: idEntity?,
             attacker: idEntity?,
             damage: Int,
-            dir: idVec3?,
+            dir: idVec3,
             location: Int
         ): Boolean {
             val fx = spawnArgs.GetString("fx_damage")
@@ -418,7 +418,7 @@ object SecurityCamera {
             while (i < 12) {
                 a = idMath.TWO_PI * i / 12.0f
                 idMath.SinCos(a, s, c)
-                point.set(dir.oPlus(right.times(s.getVal() * radius).oPlus(up.times(c.getVal() * radius))))
+                point.set(dir.oPlus(right.times(s._val * radius).oPlus(up.times(c._val * radius))))
                 point.Normalize()
                 point.set(GetPhysics().GetOrigin().oPlus(point.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color, lastPoint, point)
@@ -426,7 +426,7 @@ object SecurityCamera {
                 lastPoint.set(point)
                 halfPoint.set(
                     dir.oPlus(
-                        right.times(s.getVal() * halfRadius).oPlus(up.times(c.getVal() * halfRadius))
+                        right.times(s._val * halfRadius).oPlus(up.times(c._val * halfRadius))
                     )
                 )
                 halfPoint.Normalize()
@@ -439,7 +439,7 @@ object SecurityCamera {
             }
         }
 
-        private fun GetAxis(): idVec3? {
+        private fun GetAxis(): idVec3 {
             return if (flipAxis) GetPhysics().GetAxis().get(modelAxis).oNegative() else GetPhysics().GetAxis()
                 .get(modelAxis)
         }
@@ -520,7 +520,7 @@ object SecurityCamera {
             spotLight.UpdateVisuals()
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 

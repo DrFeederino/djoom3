@@ -385,7 +385,7 @@ class ServerScan {
                 m_pGUI!!.SetStateString("server_name", get(i).serverInfo.GetString("si_name"))
                 for (j in 0..7) {
                     if (get(i).clients > j) {
-                        m_pGUI!!.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(get(i).nickname[j])!!)
+                        m_pGUI!!.SetStateString(Str.va("player%d", j + 1), TempDump.ctos(get(i).nickname[j]))
                     } else {
                         m_pGUI!!.SetStateString(Str.va("player%d", j + 1), "")
                     }

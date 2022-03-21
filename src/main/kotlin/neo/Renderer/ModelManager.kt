@@ -265,7 +265,7 @@ object ModelManager {
 
         override fun WritePrecacheCommands(f: idFile?) {
             for (i in 0 until models.Num()) {
-                val model = models.get(i) ?: continue
+                val model = models.get(i)
                 if (!model.IsReloadable()) {
                     continue
                 }

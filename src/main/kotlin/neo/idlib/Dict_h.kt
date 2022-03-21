@@ -339,7 +339,7 @@ class Dict_h {
         @Throws(idException::class)
         fun Set(key: Any?, value: Any) {
             Set(
-                    key.toString(), value.toString()
+                key.toString(), value.toString()
             ) //TODO:check if toString is sufficient instead of checking whether it's an idStr first?
         }
 
@@ -777,10 +777,10 @@ class Dict_h {
             i = 0
             while (i < n) {
                 CRC32.CRC32_UpdateChecksum(
-                        ret, sorted[i].GetKey().toString().toCharArray(), sorted[i].GetKey().Length()
+                    ret, sorted[i].GetKey().toString().toCharArray(), sorted[i].GetKey().Length()
                 )
                 CRC32.CRC32_UpdateChecksum(
-                        ret, sorted[i].GetValue().toString().toCharArray(), sorted[i].GetValue().Length()
+                    ret, sorted[i].GetValue().toString().toCharArray(), sorted[i].GetValue().Length()
                 )
                 i++
             }

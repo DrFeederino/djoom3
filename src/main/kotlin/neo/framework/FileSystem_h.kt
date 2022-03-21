@@ -564,7 +564,7 @@ object FileSystem_h {
 
         // fills a 0-terminated list of pak checksums for a client
         // if OS is -1, give the current game pak checksum. if >= 0, lookup the game pak table (server only)
-        abstract fun GetPureServerChecksums(checksums: IntArray, OS: Int, gamePakChecksum: CInt?)
+        abstract fun GetPureServerChecksums(checksums: IntArray, OS: Int, gamePakChecksum: CInt)
 
         // before doing a restart, force the pure list and the search order
         // if the given checksum list can't be completely processed and set, will error out
@@ -1756,7 +1756,7 @@ object FileSystem_h {
             return if (success) fsPureReply_t.PURE_OK else fsPureReply_t.PURE_RESTART
         }
 
-        override fun GetPureServerChecksums(checksums: IntArray, OS: Int, _gamePakChecksum: CInt?) {
+        override fun GetPureServerChecksums(checksums: IntArray, OS: Int, _gamePakChecksum: CInt) {
             var i: Int
             i = 0
             while (i < serverPaks.Num()) {
@@ -3645,7 +3645,7 @@ object FileSystem_h {
                             while (search_end!!.next != null) {
                                 search_end = search_end.next
                             }
-                            search_end!!.next = search
+                            search_end.next = search
                             search = search.next
                             search_end.next!!.next = null
                             continue
@@ -3968,7 +3968,7 @@ object FileSystem_h {
                             pack.addon_info = ParseAddonDef(String(buf.array()), file.Length())
                             //				delete[] buf;
                         }
-                        file?.let { CloseFile(it) }
+                        file.let { CloseFile(it) }
                         break
                     }
                     pakFile = pakFile.next
@@ -3998,7 +3998,7 @@ object FileSystem_h {
             file.name.set(relativePath)
             file.fullPath.set(pak.pakFilename)
             file.zipFilePos = pakFile.pos
-            file.fileSize = pakFile.entry!!.getSize().toInt()
+            file.fileSize = pakFile.entry!!.size.toInt()
             return file
         }
 

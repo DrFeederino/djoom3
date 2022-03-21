@@ -47,6 +47,7 @@ object AI_Events {
     val AI_FaceEntity: idEventDef = idEventDef("faceEntity", "E")
     val AI_FacingIdeal: idEventDef = idEventDef("facingIdeal", null, 'd')
     val AI_FindActorsInBounds: idEventDef = idEventDef("findActorsInBounds", "vv", 'e')
+
     /* **********************************************************************
 
      AI Events

@@ -17,54 +17,6 @@ import kotlin.math.abs
  *
  */
 class Lcp {
-    const val LCP_ACCEL_EPSILON = 1e-5f
-    const val LCP_BOUND_EPSILON = 1e-5f
-    const val LCP_DELTA_ACCEL_EPSILON = 1e-9f
-    const val LCP_DELTA_FORCE_EPSILON = 1e-9f
-    val lcp_showFailures: idCVar =
-        idCVar("lcp_showFailures", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "show LCP solver failures")
-
-    /**
-     *
-     */
-    fun clam(src: idMatX, numClamped: Int): FloatArray {
-        return clam(src.ToFloatPtr(), numClamped * src.GetNumColumns())
-    }
-
-    fun clam(src: idVecX, numClamped: Int): FloatArray {
-        return clam(src.ToFloatPtr(), numClamped)
-    }
-
-    fun clam(src: FloatArray, numClamped: Int): FloatArray {
-        val clamped = FloatArray(src.size - numClamped)
-        System.arraycopy(src, numClamped, clamped, 0, clamped.size)
-        return clamped
-    }
-
-    fun unClam(dst: idMatX, clamArray: FloatArray): FloatArray {
-        return unClam(dst.ToFloatPtr(), clamArray)
-    }
-
-    fun unClam(dst: idVecX, clamArray: FloatArray): FloatArray {
-        return unClam(dst.ToFloatPtr(), clamArray)
-    }
-
-    fun unClam(dst: FloatArray, clamArray: FloatArray): FloatArray {
-        System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
-        return dst
-    }
-
-    fun clam(src: CharArray, numClamped: Int): CharArray {
-        val clamped = CharArray(src.size - numClamped)
-        System.arraycopy(src, numClamped, clamped, 0, clamped.size)
-        return clamped
-    }
-
-    fun unClam(dst: CharArray, clamArray: CharArray): CharArray {
-        System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
-        return dst
-    }
-
     /*
      ===============================================================================
 
@@ -1830,6 +1782,57 @@ class Lcp {
             diagonal = idVecX()
             solveCache1 = idVecX()
             solveCache2 = idVecX()
+        }
+    }
+
+    companion object {
+        const val LCP_ACCEL_EPSILON = 1e-5f
+        const val LCP_BOUND_EPSILON = 1e-5f
+        const val LCP_DELTA_ACCEL_EPSILON = 1e-9f
+        const val LCP_DELTA_FORCE_EPSILON = 1e-9f
+
+        val lcp_showFailures: idCVar =
+            idCVar("lcp_showFailures", "0", CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_BOOL, "show LCP solver failures")
+
+        /**
+         *
+         */
+        fun clam(src: idMatX, numClamped: Int): FloatArray {
+            return clam(src.ToFloatPtr(), numClamped * src.GetNumColumns())
+        }
+
+        fun clam(src: idVecX, numClamped: Int): FloatArray {
+            return clam(src.ToFloatPtr(), numClamped)
+        }
+
+        fun clam(src: FloatArray, numClamped: Int): FloatArray {
+            val clamped = FloatArray(src.size - numClamped)
+            System.arraycopy(src, numClamped, clamped, 0, clamped.size)
+            return clamped
+        }
+
+        fun unClam(dst: idMatX, clamArray: FloatArray): FloatArray {
+            return unClam(dst.ToFloatPtr(), clamArray)
+        }
+
+        fun unClam(dst: idVecX, clamArray: FloatArray): FloatArray {
+            return unClam(dst.ToFloatPtr(), clamArray)
+        }
+
+        fun unClam(dst: FloatArray, clamArray: FloatArray): FloatArray {
+            System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
+            return dst
+        }
+
+        fun clam(src: CharArray, numClamped: Int): CharArray {
+            val clamped = CharArray(src.size - numClamped)
+            System.arraycopy(src, numClamped, clamped, 0, clamped.size)
+            return clamped
+        }
+
+        fun unClam(dst: CharArray, clamArray: CharArray): CharArray {
+            System.arraycopy(clamArray, 0, dst, dst.size - clamArray.size, clamArray.size)
+            return dst
         }
     }
 }

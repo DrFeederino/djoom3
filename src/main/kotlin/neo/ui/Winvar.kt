@@ -816,8 +816,7 @@ object Winvar {
 
         //
         //
-        constructor() : super() {
-        }
+        constructor() : super()
 
         constructor(
             x: Float,

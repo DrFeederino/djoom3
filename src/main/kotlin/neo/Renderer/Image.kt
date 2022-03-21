@@ -105,6 +105,7 @@ class Image {
         // pointer to global list for the rest of the system
         var globalImages: idImageManager = Image.imageManager
     }
+
     fun DDS_MAKEFOURCC(a: Int, b: Int, c: Int, d: Int): Int {
         return a shl 0 or (b shl 8) or (c shl 16) or (d shl 24)
     }
@@ -329,10 +330,10 @@ class Image {
 
         //
         // data for listImages
-        var uploadWidth: CInt?
-        var uploadHeight: CInt?
+        var uploadWidth: CInt
+        var uploadHeight: CInt
         var uploadDepth // after power of two, downsample, and MAX_TEXTURE_SIZE
-                : CInt?
+                : CInt
         private var _COUNTER = 0
 
         //
@@ -659,7 +660,7 @@ class Image {
             // make sure it is a power of 2
             scaled_width.setVal(Image_load.MakePowerOfTwo(width))
             scaled_height.setVal(Image_load.MakePowerOfTwo(height))
-            if (scaled_width.getVal() != width || scaled_height.getVal() != height) {
+            if (scaled_width._val != width || scaled_height._val != height) {
                 Common.common.Error("R_CreateImage: not a power of 2 image")
             }
 
@@ -675,7 +676,7 @@ class Image {
             internalFormat = SelectInternalFormat(pic, 1, width, height, depth, isMonochrome)
 
             // copy or resample data as appropriate for first MIP level
-            if (scaled_width.getVal() == width && scaled_height.getVal() == height) {
+            if (scaled_width._val == width && scaled_height._val == height) {
                 // we must copy even if unchanged, because the border zeroing
                 // would otherwise modify const data
                 scaledBuffer =
@@ -697,7 +698,7 @@ class Image {
                 if (height < 1) {
                     height = 1
                 }
-                while (width > scaled_width.getVal() || height > scaled_height.getVal()) {
+                while (width > scaled_width._val || height > scaled_height._val) {
                     shrunk = Image_process.R_MipMap(scaledBuffer, width, height, preserveBorder)
                     scaledBuffer.clear() //R_StaticFree(scaledBuffer);
                     scaledBuffer.put(shrunk)
@@ -715,8 +716,8 @@ class Image {
                 scaled_width.setVal(width)
                 scaled_height.setVal(height)
             }
-            uploadHeight.setVal(scaled_height.getVal())
-            uploadWidth.setVal(scaled_width.getVal())
+            uploadHeight.setVal(scaled_height._val)
+            uploadWidth.setVal(scaled_width._val)
             type = textureType_t.TT_2D
 
             // zero the border if desired, allowing clamped projection textures
@@ -757,8 +758,8 @@ class Image {
                     */Image_files.R_WriteTGA(
                         filename[0],
                         scaledBuffer,
-                        scaled_width.getVal(),
-                        scaled_height.getVal(),
+                        scaled_width._val,
+                        scaled_height._val,
                         false
                     )
 
@@ -781,7 +782,7 @@ class Image {
             // then it is loaded above and the swap never happens here
             if (depth == textureDepth_t.TD_BUMP && idImageManager.image_useNormalCompression.GetInteger() != 1) {
                 var i = 0
-                while (i < scaled_width.getVal() * scaled_height.getVal() * 4) {
+                while (i < scaled_width._val * scaled_height._val * 4) {
                     scaledBuffer.put(i + 3, scaledBuffer[i])
                     scaledBuffer.put(i, 0.toByte())
                     i += 4
@@ -798,15 +799,15 @@ class Image {
                  }
                  }
                  */
-                UploadCompressedNormalMap(scaled_width.getVal(), scaled_height.getVal(), scaledBuffer.array(), 0)
+                UploadCompressedNormalMap(scaled_width._val, scaled_height._val, scaledBuffer.array(), 0)
             } else {
                 scaledBuffer.rewind()
                 qgl.qglTexImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,
                     internalFormat,
-                    scaled_width.getVal(),
-                    scaled_height.getVal(),
+                    scaled_width._val,
+                    scaled_height._val,
                     0,
                     GL11.GL_RGBA,
                     GL11.GL_UNSIGNED_BYTE,
@@ -817,18 +818,18 @@ class Image {
             // create and upload the mip map levels, which we do in all cases, even if we don't think they are needed
             var miplevel: Int
             miplevel = 0
-            while (scaled_width.getVal() > 1 || scaled_height.getVal() > 1) {
+            while (scaled_width._val > 1 || scaled_height._val > 1) {
                 // preserve the border after mip map unless repeating
                 shrunk =
-                    Image_process.R_MipMap(scaledBuffer, scaled_width.getVal(), scaled_height.getVal(), preserveBorder)
+                    Image_process.R_MipMap(scaledBuffer, scaled_width._val, scaled_height._val, preserveBorder)
                 scaledBuffer.clear() //R_StaticFree(scaledBuffer);
                 scaledBuffer.put(shrunk).flip()
                 scaled_width.rightShift(1)
                 scaled_height.rightShift(1)
-                if (scaled_width.getVal() < 1) {
+                if (scaled_width._val < 1) {
                     scaled_width.setVal(1)
                 }
-                if (scaled_height.getVal() < 1) {
+                if (scaled_height._val < 1) {
                     scaled_height.setVal(1)
                 }
                 miplevel++
@@ -840,7 +841,7 @@ class Image {
                 if (depth == textureDepth_t.TD_DIFFUSE && idImageManager.image_colorMipLevels.GetBool()) {
                     Image_process.R_BlendOverTexture(
                         scaledBuffer,
-                        scaled_width.getVal() * scaled_height.getVal(),
+                        scaled_width._val * scaled_height._val,
                         mipBlendColors.get(miplevel)
                     )
                 }
@@ -848,14 +849,14 @@ class Image {
                 // upload the mip map
                 if (internalFormat == 0x80E5) {
                     UploadCompressedNormalMap(
-                        scaled_width.getVal(),
-                        scaled_height.getVal(),
+                        scaled_width._val,
+                        scaled_height._val,
                         scaledBuffer.array(),
                         miplevel
                     )
                 } else {
                     qgl.qglTexImage2D(
-                        GL11.GL_TEXTURE_2D, miplevel, internalFormat, scaled_width.getVal(), scaled_height.getVal(),
+                        GL11.GL_TEXTURE_2D, miplevel, internalFormat, scaled_width._val, scaled_height._val,
                         0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, scaledBuffer
                     )
                 }
@@ -1148,7 +1149,7 @@ class Image {
         }
 
         //
-        fun CopyFramebuffer(x: Int, y: Int, imageWidth: CInt?, imageHeight: CInt?, useOversizedBuffer: Boolean) {
+        fun CopyFramebuffer(x: Int, y: Int, imageWidth: CInt, imageHeight: CInt, useOversizedBuffer: Boolean) {
             Bind()
             if (CVarSystem.cvarSystem.GetCVarBool("g_lowresFullscreenFX")) {
                 imageWidth.setVal(512)
@@ -1158,28 +1159,28 @@ class Image {
             // if the size isn't a power of 2, the image must be increased in size
             val potWidth = CInt()
             val potHeight = CInt()
-            potWidth.setVal(Image_load.MakePowerOfTwo(imageWidth.getVal()))
-            potHeight.setVal(Image_load.MakePowerOfTwo(imageHeight.getVal()))
+            potWidth.setVal(Image_load.MakePowerOfTwo(imageWidth._val))
+            potHeight.setVal(Image_load.MakePowerOfTwo(imageHeight._val))
             GetDownsize(imageWidth, imageHeight)
             GetDownsize(potWidth, potHeight)
             qgl.qglReadBuffer(GL11.GL_BACK)
 
             // only resize if the current dimensions can't hold it at all,
             // otherwise subview renderings could thrash this
-            if (useOversizedBuffer && (uploadWidth.getVal() < potWidth.getVal() || uploadHeight.getVal() < potHeight.getVal())
-                || !useOversizedBuffer && (uploadWidth.getVal() != potWidth.getVal() || uploadHeight.getVal() != potHeight.getVal())
+            if (useOversizedBuffer && (uploadWidth._val < potWidth._val || uploadHeight._val < potHeight._val)
+                || !useOversizedBuffer && (uploadWidth._val != potWidth._val || uploadHeight._val != potHeight._val)
             ) {
-                uploadWidth.setVal(potWidth.getVal())
-                uploadHeight.setVal(potHeight.getVal())
-                if (potWidth.getVal() == imageWidth.getVal() && potHeight.getVal() == imageHeight.getVal()) {
+                uploadWidth.setVal(potWidth._val)
+                uploadHeight.setVal(potHeight._val)
+                if (potWidth._val == imageWidth._val && potHeight._val == imageHeight._val) {
                     qgl.qglCopyTexImage2D(
                         GL11.GL_TEXTURE_2D,
                         0,
                         GL11.GL_RGB8,
                         x,
                         y,
-                        imageWidth.getVal(),
-                        imageHeight.getVal(),
+                        imageWidth._val,
+                        imageHeight._val,
                         0
                     )
                 } else {
@@ -1188,7 +1189,7 @@ class Image {
                     // then do a qglCopyTexSubImage2D of the data we want
                     // this might be a 16+ meg allocation, which could fail on _alloca
                     junk =
-                        BufferUtils.createByteBuffer(potWidth.getVal() * potHeight.getVal() * 4) // Mem_Alloc(potWidth[0] * potHeight[0] * 4);
+                        BufferUtils.createByteBuffer(potWidth._val * potHeight._val * 4) // Mem_Alloc(potWidth[0] * potHeight[0] * 4);
                     //			memset( junk, 0, potWidth * potHeight * 4 );		//!@#
 //                    if (false) { // Disabling because it's unnecessary and introduces a green strip on edge of _currentRender
 //			for ( int i = 0 ; i < potWidth * potHeight * 4 ; i+=4 ) {
@@ -1199,8 +1200,8 @@ class Image {
                         GL11.GL_TEXTURE_2D,
                         0,
                         GL11.GL_RGB,
-                        potWidth.getVal(),
-                        potHeight.getVal(),
+                        potWidth._val,
+                        potHeight._val,
                         0,
                         GL11.GL_RGBA,
                         GL11.GL_UNSIGNED_BYTE,
@@ -1215,38 +1216,38 @@ class Image {
                         0,
                         x,
                         y,
-                        imageWidth.getVal(),
-                        imageHeight.getVal()
+                        imageWidth._val,
+                        imageHeight._val
                     )
                 }
             } else {
                 // otherwise, just subimage upload it so that drivers can tell we are going to be changing
                 // it and don't try and do a texture compression or some other silliness
-                qgl.qglCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth.getVal(), imageHeight.getVal())
+                qgl.qglCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth._val, imageHeight._val)
             }
 
             // if the image isn't a full power of two, duplicate an extra row and/or column to fix bilerps
-            if (imageWidth.getVal() != potWidth.getVal()) {
+            if (imageWidth._val != potWidth._val) {
                 qgl.qglCopyTexSubImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,
-                    imageWidth.getVal(),
+                    imageWidth._val,
                     0,
-                    x + imageWidth.getVal() - 1,
+                    x + imageWidth._val - 1,
                     y,
                     1,
-                    imageHeight.getVal()
+                    imageHeight._val
                 )
             }
-            if (imageHeight.getVal() != potHeight.getVal()) {
+            if (imageHeight._val != potHeight._val) {
                 qgl.qglCopyTexSubImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,
                     0,
-                    imageHeight.getVal(),
+                    imageHeight._val,
                     x,
-                    y + imageHeight.getVal() - 1,
-                    imageWidth.getVal(),
+                    y + imageHeight._val - 1,
+                    imageWidth._val,
                     1
                 )
             }
@@ -1273,7 +1274,7 @@ class Image {
             val potHeight: Int
             potWidth = Image_load.MakePowerOfTwo(imageWidth)
             potHeight = Image_load.MakePowerOfTwo(imageHeight)
-            if (uploadWidth.getVal() != potWidth || uploadHeight.getVal() != potHeight) {
+            if (uploadWidth._val != potWidth || uploadHeight._val != potHeight) {
                 uploadWidth.setVal(potWidth)
                 uploadHeight.setVal(potHeight)
                 if (potWidth == imageWidth && potHeight == imageHeight) {
@@ -1336,7 +1337,7 @@ class Image {
                 Bind()
                 rows /= 6
                 // if the scratchImage isn't in the format we want, specify it as a new texture
-                if (cols != uploadWidth.getVal() || rows != uploadHeight.getVal()) {
+                if (cols != uploadWidth._val || rows != uploadHeight._val) {
                     uploadWidth.setVal(cols)
                     uploadHeight.setVal(rows)
 
@@ -1378,7 +1379,7 @@ class Image {
                 Bind()
 
                 // if the scratchImage isn't in the format we want, specify it as a new texture
-                if (cols != uploadWidth.getVal() || rows != uploadHeight.getVal()) {
+                if (cols != uploadWidth._val || rows != uploadHeight._val) {
                     uploadWidth.setVal(cols)
                     uploadHeight.setVal(rows)
                     qgl.qglTexImage2D(
@@ -1437,10 +1438,10 @@ class Image {
                 return 0
             }
             baseSize = when (type) {
-                textureType_t.TT_2D -> uploadWidth.getVal() * uploadHeight.getVal()
-                textureType_t.TT_3D -> uploadWidth.getVal() * uploadHeight.getVal() * uploadDepth.getVal()
-                textureType_t.TT_CUBIC -> 6 * uploadWidth.getVal() * uploadHeight.getVal()
-                else -> uploadWidth.getVal() * uploadHeight.getVal()
+                textureType_t.TT_2D -> uploadWidth._val * uploadHeight._val
+                textureType_t.TT_3D -> uploadWidth._val * uploadHeight._val * uploadDepth._val
+                textureType_t.TT_CUBIC -> 6 * uploadWidth._val * uploadHeight._val
+                else -> uploadWidth._val * uploadHeight._val
             }
             baseSize *= BitsForInternalFormat(internalFormat)
             baseSize /= 8
@@ -1548,7 +1549,7 @@ class Image {
          helper function that takes the current width/height and might make them smaller
          ================
          */
-        fun GetDownsize(scaled_width: CInt?, scaled_height: CInt?) {
+        fun GetDownsize(scaled_width: CInt, scaled_height: CInt) {
             var size = 0
 
             // perform optional picmip operation to save texture memory
@@ -1569,21 +1570,21 @@ class Image {
                 }
             }
             if (size > 0) {
-                while (scaled_width.getVal() > size || scaled_height.getVal() > size) {
-                    if (scaled_width.getVal() > 1) {
+                while (scaled_width._val > size || scaled_height._val > size) {
+                    if (scaled_width._val > 1) {
                         scaled_width.rightShift(1)
                     }
-                    if (scaled_height.getVal() > 1) {
+                    if (scaled_height._val > 1) {
                         scaled_height.rightShift(1)
                     }
                 }
             }
 
             // clamp to minimum size
-            if (scaled_width.getVal() < 1) {
+            if (scaled_width._val < 1) {
                 scaled_width.setVal(1)
             }
-            if (scaled_height.getVal() < 1) {
+            if (scaled_height._val < 1) {
                 scaled_height.setVal(1)
             }
 
@@ -1592,8 +1593,8 @@ class Image {
             // deal with a half mip resampling
             // This causes a 512*256 texture to sample down to
             // 256*128 on a voodoo3, even though it could be 256*256
-            while (scaled_width.getVal() > tr_local.glConfig.maxTextureSize
-                || scaled_height.getVal() > tr_local.glConfig.maxTextureSize
+            while (scaled_width._val > tr_local.glConfig.maxTextureSize
+                || scaled_height._val > tr_local.glConfig.maxTextureSize
             ) {
                 scaled_width.rightShift(1)
                 scaled_height.rightShift(1)
@@ -1801,7 +1802,7 @@ class Image {
             val filename0 = arrayOf<String?>(null)
             ImageProgramStringToCompressedFileName(imgName.toString(), filename0)
             val filename = filename0[0]
-            val numLevels = NumLevelsForImageSize(uploadWidth.getVal(), uploadHeight.getVal())
+            val numLevels = NumLevelsForImageSize(uploadWidth._val, uploadHeight._val)
             if (numLevels > Image.MAX_TEXTURE_LEVELS) {
                 Common.common.Warning("R_WritePrecompressedImage: level > MAX_TEXTURE_LEVELS for image %s", filename)
                 return
@@ -1868,8 +1869,8 @@ class Image {
             header = ddsFileHeader_t()
             //            header.dwSize = sizeof(header);
             header.dwFlags = Image.DDSF_CAPS or Image.DDSF_PIXELFORMAT or Image.DDSF_WIDTH or Image.DDSF_HEIGHT
-            header.dwHeight = uploadHeight.getVal()
-            header.dwWidth = uploadWidth.getVal()
+            header.dwHeight = uploadHeight._val
+            header.dwWidth = uploadWidth._val
 
             // hack in our monochrome flag for the NV20 optimization
             if (isMonochrome.get(0)) {
@@ -1878,12 +1879,12 @@ class Image {
             if (Image_load.FormatIsDXT(altInternalFormat)) {
                 // size (in bytes) of the compressed base image
                 header.dwFlags = header.dwFlags or Image.DDSF_LINEARSIZE
-                header.dwPitchOrLinearSize = ((uploadWidth.getVal() + 3) / 4 * ((uploadHeight.getVal() + 3) / 4)
+                header.dwPitchOrLinearSize = ((uploadWidth._val + 3) / 4 * ((uploadHeight._val + 3) / 4)
                         * if (altInternalFormat <= EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) 8 else 16)
             } else {
                 // 4 Byte aligned line width (from nv_dds)
                 header.dwFlags = header.dwFlags or Image.DDSF_PITCH
-                header.dwPitchOrLinearSize = uploadWidth.getVal() * bitSize + 31 and -32 shr 3
+                header.dwPitchOrLinearSize = uploadWidth._val * bitSize + 31 and -32 shr 3
             }
             header.dwCaps1 = Image.DDSF_TEXTURE
             if (numLevels > 1) {
@@ -1946,8 +1947,8 @@ class Image {
             // bind to the image so we can read back the contents
             Bind()
             qgl.qglPixelStorei(GL11.GL_PACK_ALIGNMENT, 1) // otherwise small rows get padded to 32 bits
-            var uw = uploadWidth.getVal()
-            var uh = uploadHeight.getVal()
+            var uw = uploadWidth._val
+            var uh = uploadHeight._val
 
             // Will be allocated first time through the loop
             var data: ByteBuffer? = null
@@ -2169,8 +2170,8 @@ class Image {
             if (header.dwFlags and Image.DDSF_MIPMAPCOUNT != 0) {
                 numMipmaps = header.dwMipMapCount
             }
-            var uw = uploadWidth.getVal()
-            var uh = uploadHeight.getVal()
+            var uw = uploadWidth._val
+            var uh = uploadHeight._val
 
             // We may skip some mip maps if we are downsizing
             var skipMip = 0
@@ -2184,7 +2185,7 @@ class Image {
                 } else {
                     uw * uh * (header.ddspf.dwRGBBitCount / 8)
                 }
-                if (uw > uploadWidth.getVal() || uh > uploadHeight.getVal()) {
+                if (uw > uploadWidth._val || uh > uploadHeight._val) {
                     skipMip++
                 } else {
                     val imageData = BufferUtils.createByteBuffer(size)
@@ -3126,8 +3127,8 @@ class Image {
                 image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
                 DeclManager.declManager.MediaPrint(
                     "%dx%d %s\n",
-                    image.uploadWidth.getVal(),
-                    image.uploadHeight.getVal(),
+                    image.uploadWidth._val,
+                    image.uploadHeight._val,
                     image.imgName.toString()
                 )
             } else {

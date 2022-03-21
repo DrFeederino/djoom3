@@ -28,10 +28,7 @@ import java.util.function.IntFunction
  *
  */
 object Anim {
-    //
-    //
     // animation channels.  make sure to change script/doom_defs.script if you add any channels, or change their order
-    //
     const val ANIMCHANNEL_ALL = 0
     const val ANIMCHANNEL_EYELIDS = 4
     const val ANIMCHANNEL_HEAD = 3
@@ -40,12 +37,9 @@ object Anim {
     const val ANIM_MaxAnimsPerChannel = 3
     const val ANIM_MaxSyncedAnims = 3
 
-    //
     // animation channels
     // these can be changed by modmakers and licensees to be whatever they need.
     const val ANIM_NumAnimChannels = 5
-
-    //
     const val ANIM_QX = 1 shl 3 // BIT(3);
     const val ANIM_QY = 1 shl 4 // BIT(4);
     const val ANIM_QZ = 1 shl 5 // BIT(5);
@@ -110,8 +104,8 @@ object Anim {
         val mat: idMat3 = idMat3()
         var   /*jointHandle_t*/jointnum = 0
         val pos: idVec3 = idVec3()
-        var transform_axis: jointModTransform_t? = null
-        var transform_pos: jointModTransform_t? = null
+        var transform_axis: jointModTransform_t = jointModTransform_t.JOINTMOD_NONE
+        var transform_pos: jointModTransform_t = jointModTransform_t.JOINTMOD_NONE
     }
 
     class frameLookup_t {
@@ -126,8 +120,8 @@ object Anim {
 
         // union {
         var soundShader: idSoundShader? = null
-        var string: idStr? = null
-        var type: frameCommandType_t? = null // };
+        val string: idStr = idStr()
+        var type: frameCommandType_t = frameCommandType_t.FC_SCRIPTFUNCTION // };
     }
 
     class animFlags_t {
@@ -299,8 +293,8 @@ object Anim {
                 } else {
                     bounds[i] = bound
                 }
-                parser.Parse1DMatrix(3, bound.get(0))
-                parser.Parse1DMatrix(3, bound.get(1))
+                parser.Parse1DMatrix(3, bound[0])
+                parser.Parse1DMatrix(3, bound[1])
                 i++
             }
             parser.ExpectTokenString("}")
@@ -699,7 +693,7 @@ object Anim {
             return numJoints
         }
 
-        fun TotalMovementDelta(): idVec3? {
+        fun TotalMovementDelta(): idVec3 {
             return totaldelta
         }
 
@@ -761,7 +755,7 @@ object Anim {
             frame.frontlerp = 1.0f - frame.backlerp
         }
 
-        fun GetOrigin(offset: idVec3?, time: Int, cyclecount: Int) {
+        fun GetOrigin(offset: idVec3, time: Int, cyclecount: Int) {
             val frame = frameBlend_t()
             offset.set(baseFrame[0].t)
             if (0 == jointInfo[0].animBits and (Anim.ANIM_TX or Anim.ANIM_TY or Anim.ANIM_TZ)) {
@@ -791,7 +785,7 @@ object Anim {
             }
         }
 
-        fun GetOriginRotation(rotation: idQuat?, time: Int, cyclecount: Int) {
+        fun GetOriginRotation(rotation: idQuat, time: Int, cyclecount: Int) {
             val frame = frameBlend_t()
             val animBits: Int = jointInfo[0].animBits
             if (TempDump.NOT((animBits and (Anim.ANIM_QX or Anim.ANIM_QY or Anim.ANIM_QZ)).toDouble())) {
@@ -893,7 +887,7 @@ object Anim {
             rotation.Slerp(q1, q2, frame.backlerp)
         }
 
-        fun GetBounds(bnds: idBounds?, time: Int, cyclecount: Int) {
+        fun GetBounds(bnds: idBounds, time: Int, cyclecount: Int) {
             val frame = frameBlend_t()
             val offset = idVec3()
             var c1_ptr: Int
@@ -937,8 +931,8 @@ object Anim {
     }
 
     class idAFPoseJointMod {
-        val origin: idVec3?
-        val axis: idMat3?
+        val origin: idVec3
+        val axis: idMat3
         var mod: AFJointModType_t? = AFJointModType_t.AF_JOINTMOD_AXIS
 
         //
@@ -957,24 +951,22 @@ object Anim {
      ==============================================================================================
      */
     class idAnimManager {
-        private val animations: HashMap<String?, idMD5Anim?>?
-        private val jointnames: idStrList?
+        private val animations: HashMap<String, idMD5Anim>
+        private val jointnames: idStrList
+        private val jointnamesHash: idHashIndex
 
-        //
-        //
-        private val jointnamesHash: idHashIndex?
         fun Shutdown() {
             animations.clear()
             jointnames.clear()
             jointnamesHash.Free()
         }
 
-        fun GetAnim(name: String?): idMD5Anim? {
+        fun GetAnim(name: String): idMD5Anim? {
             val animPtr = arrayOf<idMD5Anim?>(null)
             var anim: idMD5Anim?
 
             // see if it has been asked for before
-            anim = animations.get(name)
+            anim = animations[name]
             if (anim == null) {
                 val extension = idStr()
                 val filename = idStr(name)
@@ -987,7 +979,7 @@ object Anim {
                     Game_local.gameLocal.Warning("Couldn't load anim: '%s'", filename)
                     anim = null
                 }
-                animations[filename.toString()] = anim
+                animations[filename.toString()] = anim!!
             }
             return anim
         }
@@ -995,10 +987,10 @@ object Anim {
         fun ReloadAnims() {
             var animptr: idMD5Anim
             var i: Int = 0
-            val animValues: Array<idMD5Anim?>? = animations.values.toArray { _Dummy_.__Array__() }
+            val animValues: Array<idMD5Anim> = arrayListOf<idMD5Anim>(animations.values)
             while (i < animations.values.size) {
                 animptr = animValues[i]
-                animptr?.Reload()
+                animptr.Reload()
                 i++
             }
         }
@@ -1025,19 +1017,19 @@ object Anim {
             var   /*size_t*/namesize: Int = jointnames.sizeStrings() + jointnamesHash.Size()
             i = 0
             while (i < jointnames.size()) {
-                namesize += jointnames.get(i).Size()
+                namesize += jointnames[i].Size()
                 i++
             }
             Game_local.gameLocal.Printf("\n%d memory used in %d anims\n", size, num)
             Game_local.gameLocal.Printf("%d memory used in %d joint names\n", namesize, jointnames.size())
         }
 
-        fun JointIndex(name: String?): Int {
+        fun JointIndex(name: String): Int {
             var i: Int
             val hash: Int = jointnamesHash.GenerateKey(name)
             i = jointnamesHash.First(hash)
             while (i != -1) {
-                if (jointnames.get(i).Cmp(name) == 0) {
+                if (jointnames[i].Cmp(name) == 0) {
                     return i
                 }
                 i = jointnamesHash.Next(i)
@@ -1048,7 +1040,7 @@ object Anim {
         }
 
         fun JointName(index: Int): String? {
-            return jointnames.get(index).toString()
+            return jointnames[index].toString()
         }
 
         //
@@ -1056,17 +1048,14 @@ object Anim {
         //
         fun FlushUnusedAnims() {
             var animptr: idMD5Anim
-            val removeAnims = ArrayList<idMD5Anim?>()
+            val removeAnims = ArrayList<idMD5Anim>()
             var i: Int = 0
-            val animValues: Array<idMD5Anim?>? = animations.values.toArray { _Dummy_.__Array__() }
-            while (i < animations.values.size) {
-                animptr = animValues[i]
-                if (animptr != null) { //&& *animptr ) {
-                    if (animptr.NumRefs() <= 0) {
-                        removeAnims.add(animptr)
+            animations.values.forEach { anim ->
+                run {
+                    if (anim.NumRefs() <= 0) {
+                        removeAnims.add(anim)
                     }
                 }
-                i++
             }
             i = 0
             while (i < removeAnims.size) {

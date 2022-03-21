@@ -118,7 +118,7 @@ object Simd_Generic {
          */
         override fun Add(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            var _IX: Int = 0
+            var _IX = 0
             while (_IX < _NM) {
                 dst[_IX + 0] = src0[_IX + 0] + src1[_IX + 0]
                 dst[_IX + 1] = src0[_IX + 1] + src1[_IX + 1]
@@ -4059,14 +4059,14 @@ object Simd_Generic {
             }
         }
 
-        override fun MixedSoundToSamples(samples: ShortArray, offset: Int, mixBuffer: FloatArray, numSamples: Int) {
+        override fun MixedSoundToSamples(samples: IntArray, offset: Int, mixBuffer: FloatArray, numSamples: Int) {
             for (i in 0 until numSamples) {
                 if (mixBuffer[i] <= -32768.0f) {
                     samples[offset + i] = -32768
                 } else if (mixBuffer[i] >= 32767.0f) {
                     samples[offset + i] = 32767
                 } else {
-                    samples[offset + i] = mixBuffer[i] as Short
+                    samples[offset + i] = mixBuffer[i].toInt()
                 }
             }
         }

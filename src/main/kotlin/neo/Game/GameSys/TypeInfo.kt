@@ -33,56 +33,56 @@ object TypeInfo {
      ================
      */
     fun IsAllowedToChangedFromSaveGames(
-        varName: String?,
+        varName: String,
         varType: String?,
-        scope: String?,
-        prefix: String?,
+        scope: String,
+        prefix: String,
         postfix: String?,
         value: String?
     ): Boolean {
-        if (idStr.Companion.Icmp(scope, "idAnimator") == 0) {
-            if (idStr.Companion.Icmp(varName, "forceUpdate") == 0) {
+        if (idStr.Icmp(scope, "idAnimator") == 0) {
+            if (idStr.Icmp(varName, "forceUpdate") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "lastTransformTime") == 0) {
+            if (idStr.Icmp(varName, "lastTransformTime") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "AFPoseTime") == 0) {
+            if (idStr.Icmp(varName, "AFPoseTime") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "frameBounds") == 0) {
+            if (idStr.Icmp(varName, "frameBounds") == 0) {
                 return true
             }
-        } else if (idStr.Companion.Icmp(scope, "idClipModel") == 0) {
-            if (idStr.Companion.Icmp(varName, "touchCount") == 0) {
+        } else if (idStr.Icmp(scope, "idClipModel") == 0) {
+            if (idStr.Icmp(varName, "touchCount") == 0) {
                 return true
             }
-        } else if (idStr.Companion.Icmp(scope, "idEntity") == 0) {
-            if (idStr.Companion.Icmp(varName, "numPVSAreas") == 0) {
+        } else if (idStr.Icmp(scope, "idEntity") == 0) {
+            if (idStr.Icmp(varName, "numPVSAreas") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "renderView") == 0) {
+            if (idStr.Icmp(varName, "renderView") == 0) {
                 return true
             }
-        } else if (idStr.Companion.Icmp(scope, "idBrittleFracture") == 0) {
-            if (idStr.Companion.Icmp(varName, "changed") == 0) {
+        } else if (idStr.Icmp(scope, "idBrittleFracture") == 0) {
+            if (idStr.Icmp(varName, "changed") == 0) {
                 return true
             }
-        } else if (idStr.Companion.Icmp(scope, "idPhysics_AF") == 0) {
+        } else if (idStr.Icmp(scope, "idPhysics_AF") == 0) {
             return true
-        } else if (idStr.Companion.Icmp(scope, "renderEntity_t") == 0) {
+        } else if (idStr.Icmp(scope, "renderEntity_t") == 0) {
             // These get fixed up when UpdateVisuals is called
-            if (idStr.Companion.Icmp(varName, "origin") == 0) {
+            if (idStr.Icmp(varName, "origin") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "axis") == 0) {
+            if (idStr.Icmp(varName, "axis") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "bounds") == 0) {
+            if (idStr.Icmp(varName, "bounds") == 0) {
                 return true
             }
         }
-        return idStr.Companion.Icmpn(prefix, "idAFEntity_Base::af.idAF::physicsObj.idPhysics_AF", 49) == 0
+        return idStr.Icmpn(prefix, "idAFEntity_Base::af.idAF::physicsObj.idPhysics_AF", 49) == 0
     }
 
     /*
@@ -91,49 +91,49 @@ object TypeInfo {
      ================
      */
     fun IsRenderHandleVariable(
-        varName: String?,
+        varName: String,
         varType: String?,
-        scope: String?,
+        scope: String,
         prefix: String?,
         postfix: String?,
         value: String?
     ): Boolean {
-        if (idStr.Companion.Icmp(scope, "idClipModel") == 0) {
-            return idStr.Companion.Icmp(varName, "renderModelHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idFXLocalAction") == 0) {
-            return if (idStr.Companion.Icmp(varName, "lightDefHandle") == 0) {
+        if (idStr.Icmp(scope, "idClipModel") == 0) {
+            return idStr.Icmp(varName, "renderModelHandle") == 0
+        } else if (idStr.Icmp(scope, "idFXLocalAction") == 0) {
+            return if (idStr.Icmp(varName, "lightDefHandle") == 0) {
                 true
-            } else idStr.Companion.Icmp(varName, "modelDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idEntity") == 0) {
-            return idStr.Companion.Icmp(varName, "modelDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idLight") == 0) {
-            return idStr.Companion.Icmp(varName, "lightDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idAFEntity_Gibbable") == 0) {
-            return idStr.Companion.Icmp(varName, "skeletonModelDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idAFEntity_SteamPipe") == 0) {
-            return idStr.Companion.Icmp(varName, "steamModelHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idItem") == 0) {
-            return idStr.Companion.Icmp(varName, "itemShellHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idExplodingBarrel") == 0) {
-            return if (idStr.Companion.Icmp(varName, "particleModelDefHandle") == 0) {
+            } else idStr.Icmp(varName, "modelDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idEntity") == 0) {
+            return idStr.Icmp(varName, "modelDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idLight") == 0) {
+            return idStr.Icmp(varName, "lightDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idAFEntity_Gibbable") == 0) {
+            return idStr.Icmp(varName, "skeletonModelDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idAFEntity_SteamPipe") == 0) {
+            return idStr.Icmp(varName, "steamModelHandle") == 0
+        } else if (idStr.Icmp(scope, "idItem") == 0) {
+            return idStr.Icmp(varName, "itemShellHandle") == 0
+        } else if (idStr.Icmp(scope, "idExplodingBarrel") == 0) {
+            return if (idStr.Icmp(varName, "particleModelDefHandle") == 0) {
                 true
-            } else idStr.Companion.Icmp(varName, "lightDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idProjectile") == 0) {
-            return idStr.Companion.Icmp(varName, "lightDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idBFGProjectile") == 0) {
-            return idStr.Companion.Icmp(varName, "secondModelDefHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idSmokeParticles") == 0) {
-            return idStr.Companion.Icmp(varName, "renderEntityHandle") == 0
-        } else if (idStr.Companion.Icmp(scope, "idWeapon") == 0) {
-            if (idStr.Companion.Icmp(varName, "muzzleFlashHandle") == 0) {
+            } else idStr.Icmp(varName, "lightDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idProjectile") == 0) {
+            return idStr.Icmp(varName, "lightDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idBFGProjectile") == 0) {
+            return idStr.Icmp(varName, "secondModelDefHandle") == 0
+        } else if (idStr.Icmp(scope, "idSmokeParticles") == 0) {
+            return idStr.Icmp(varName, "renderEntityHandle") == 0
+        } else if (idStr.Icmp(scope, "idWeapon") == 0) {
+            if (idStr.Icmp(varName, "muzzleFlashHandle") == 0) {
                 return true
             }
-            if (idStr.Companion.Icmp(varName, "worldMuzzleFlashHandle") == 0) {
+            if (idStr.Icmp(varName, "worldMuzzleFlashHandle") == 0) {
                 return true
             }
-            return if (idStr.Companion.Icmp(varName, "guiLightHandle") == 0) {
+            return if (idStr.Icmp(varName, "guiLightHandle") == 0) {
                 true
-            } else idStr.Companion.Icmp(varName, "nozzleGlowHandle") == 0
+            } else idStr.Icmp(varName, "nozzleGlowHandle") == 0
         }
         return false
     }
@@ -152,7 +152,7 @@ object TypeInfo {
     }
 
     object idTypeInfoTools {
-        var buffers: Array<CharArray?>? = Array(4) { CharArray(16384) }
+        var buffers: Array<CharArray> = Array(4) { CharArray(16384) }
         var index = 0
         private var Write: WriteVariableType_t? = null
         private var fp: idFile? = null
@@ -162,11 +162,11 @@ object TypeInfo {
         //
         private val src: idLexer? = null
         private var typeError = false
-        fun FindClassInfo(typeName: String?): classTypeInfo_t? {
+        fun FindClassInfo(typeName: String): classTypeInfo_t? {
             var i: Int
             i = 0
             while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
-                if (idStr.Companion.Cmp(typeName, NoGameTypeInfo.classTypeInfo[i].typeName) == 0) {
+                if (idStr.Cmp(typeName, NoGameTypeInfo.classTypeInfo[i].typeName!!) == 0) {
                     return NoGameTypeInfo.classTypeInfo[i]
                 }
                 i++
@@ -174,11 +174,11 @@ object TypeInfo {
             return null
         }
 
-        fun FindEnumInfo(typeName: String?): enumTypeInfo_t? {
+        fun FindEnumInfo(typeName: String): enumTypeInfo_t? {
             var i: Int
             i = 0
             while (NoGameTypeInfo.enumTypeInfo[i].typeName != null) {
-                if (idStr.Companion.Cmp(typeName, NoGameTypeInfo.enumTypeInfo[i].typeName) == 0) {
+                if (idStr.Cmp(typeName, NoGameTypeInfo.enumTypeInfo[i].typeName!!) == 0) {
                     return NoGameTypeInfo.enumTypeInfo[i]
                 }
                 i++
@@ -186,15 +186,15 @@ object TypeInfo {
             return null
         }
 
-        fun IsSubclassOf(typeName: idStr?, superType: String?): Boolean {
+        fun IsSubclassOf(typeName: idStr, superType: String): Boolean {
             var i: Int
             while (TempDump.isNotNullOrEmpty(typeName)) {
-                if (idStr.Companion.Cmp(typeName.toString(), superType) == 0) {
+                if (idStr.Cmp(typeName.toString(), superType) == 0) {
                     return true
                 }
                 i = 0
                 while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
-                    if (idStr.Companion.Cmp(typeName.toString(), NoGameTypeInfo.classTypeInfo[i].typeName) == 0) {
+                    if (idStr.Cmp(typeName.toString(), NoGameTypeInfo.classTypeInfo[i].typeName!!) == 0) {
                         typeName.set(NoGameTypeInfo.classTypeInfo[i].superType)
                         break
                     }
@@ -1158,19 +1158,19 @@ object TypeInfo {
             ) {
                 var i: Int = FindChar(value, '#', 0)
                 while (i >= 0) {
-                    if (idStr.Companion.Icmpn(value + i + 1, "INF", 3) == 0 || idStr.Companion.Icmpn(
+                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "IND",
                             3
-                        ) == 0 || idStr.Companion.Icmpn(
+                        ) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "NAN",
                             3
-                        ) == 0 || idStr.Companion.Icmpn(
+                        ) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "QNAN",
                             4
-                        ) == 0 || idStr.Companion.Icmpn(value + i + 1, "SNAN", 4) == 0
+                        ) == 0 || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0
                     ) {
                         Common.common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value)
                         break
@@ -1198,19 +1198,19 @@ object TypeInfo {
             ) {
                 var i: Int = FindChar(value, '#', 0)
                 while (i >= 0) {
-                    if (idStr.Companion.Icmpn(value + i + 1, "INF", 3) == 0 || idStr.Companion.Icmpn(
+                    if (idStr.Icmpn(value + i + 1, "INF", 3) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "IND",
                             3
-                        ) == 0 || idStr.Companion.Icmpn(
+                        ) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "NAN",
                             3
-                        ) == 0 || idStr.Companion.Icmpn(
+                        ) == 0 || idStr.Icmpn(
                             value + i + 1,
                             "QNAN",
                             4
-                        ) == 0 || idStr.Companion.Icmpn(value + i + 1, "SNAN", 4) == 0
+                        ) == 0 || idStr.Icmpn(value + i + 1, "SNAN", 4) == 0
                     ) {
                         Common.common.Warning("%s%s::%s%s = \"%s\"", prefix, scope, varName, postfix, value)
                         break
@@ -1312,8 +1312,8 @@ object TypeInfo {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = WriteGameState_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = WriteGameState_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1337,8 +1337,8 @@ object TypeInfo {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = CompareGameState_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = CompareGameState_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1370,8 +1370,8 @@ object TypeInfo {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = TestSaveGame_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = TestSaveGame_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1393,7 +1393,7 @@ object TypeInfo {
                 index.Append(i)
                 i++
             }
-            if (args.Argc() > 1 && idStr.Companion.Icmp(args.Argv(1), "size") == 0) {
+            if (args.Argc() > 1 && idStr.Icmp(args.Argv(1), "size") == 0) {
                 index.Sort(SortTypeInfoBySize())
             } else {
                 index.Sort(SortTypeInfoByName())
@@ -1413,7 +1413,7 @@ object TypeInfo {
 
         private class SortTypeInfoByName : cmp_t<Int?> {
             override fun compare(a: Int?, b: Int?): Int {
-                return idStr.Companion.Icmp(
+                return idStr.Icmp(
                     NoGameTypeInfo.classTypeInfo.get(a).typeName,
                     NoGameTypeInfo.classTypeInfo.get(b).typeName
                 )
@@ -1432,8 +1432,8 @@ object TypeInfo {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = ListTypeInfo_f()
-            fun getInstance(): cmdFunction_t? { //TODO:remove function and expose "instance" variable?
+            private val instance: cmdFunction_t = ListTypeInfo_f()
+            fun getInstance(): cmdFunction_t { //TODO:remove function and expose "instance" variable?
                 return instance
             }
         }

@@ -36,7 +36,7 @@ import neo.idlib.math.Vector.idVec3
  *
  */
 object FX {
-    val EV_Fx_Action: idEventDef? = idEventDef("_fxAction", "e") // implemented by subclasses
+    val EV_Fx_Action: idEventDef = idEventDef("_fxAction", "e") // implemented by subclasses
 
     /*
      ===============================================================================
@@ -45,7 +45,7 @@ object FX {
 
      ===============================================================================
      */
-    val EV_Fx_KillFx: idEventDef? = idEventDef("_killfx")
+    val EV_Fx_KillFx: idEventDef = idEventDef("_killfx")
 
     /*
      ===============================================================================
@@ -74,10 +74,10 @@ object FX {
 
     open class idEntityFx : idEntity() {
         companion object {
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
 
             //	virtual					~idEntityFx();
-            fun StartFx(fx: String?, useOrigin: idVec3?, useAxis: idMat3?, ent: idEntity?, bind: Boolean): idEntityFx? {
+            fun StartFx(fx: String?, useOrigin: idVec3, useAxis: idMat3, ent: idEntity?, bind: Boolean): idEntityFx? {
                 if (SysCvar.g_skipFX.GetBool() || null == fx || fx.isEmpty()) {
                     return null
                 }
@@ -89,8 +89,8 @@ object FX {
                     nfx.BindToJoint(ent, nfx.Joint(), true)
                     nfx.SetOrigin(Vector.getVec3_origin())
                 } else {
-                    nfx.SetOrigin(useOrigin ?: ent.GetPhysics().GetOrigin())
-                    nfx.SetAxis(useAxis ?: ent.GetPhysics().GetAxis())
+                    nfx.SetOrigin(useOrigin)
+                    nfx.SetAxis(useAxis)
                 }
                 if (bind) {
                     // never bind to world spawn
@@ -102,11 +102,11 @@ object FX {
                 return nfx
             }
 
-            fun StartFx(fx: idStr?, useOrigin: idVec3?, useAxis: idMat3?, ent: idEntity?, bind: Boolean): idEntityFx? {
+            fun StartFx(fx: idStr?, useOrigin: idVec3, useAxis: idMat3, ent: idEntity?, bind: Boolean): idEntityFx? {
                 return StartFx(fx.toString(), useOrigin, useAxis, ent, bind)
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -144,7 +144,7 @@ object FX {
             }
         }
 
-        override fun Save(savefile: idSaveGame?) {
+        override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(started)
             savefile.WriteInt(nextTriggerTime)
@@ -175,7 +175,7 @@ object FX {
             }
         }
 
-        override fun Restore(savefile: idRestoreGame?) {
+        override fun Restore(savefile: idRestoreGame) {
             var i: Int
             val num = CInt()
             val hasObject = CBool(false)
@@ -184,9 +184,9 @@ object FX {
             savefile.ReadFX(fxEffect)
             savefile.ReadString(systemName)
             savefile.ReadInt(num)
-            actions.SetNum(num.getVal())
+            actions.SetNum(num._val)
             i = 0
-            while (i < num.getVal()) {
+            while (i < num._val) {
                 savefile.ReadBool(hasObject)
                 if (hasObject.isVal) {
                     savefile.ReadRenderLight(actions.get(i).renderLight)
@@ -559,7 +559,7 @@ object FX {
             return started > 0 && Game_local.gameLocal.time > started + Duration()
         }
 
-        override fun WriteToSnapshot(msg: idBitMsgDelta?) {
+        override fun WriteToSnapshot(msg: idBitMsgDelta) {
             GetPhysics().WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             msg.WriteLong(
@@ -572,7 +572,7 @@ object FX {
             msg.WriteLong(started)
         }
 
-        override fun ReadFromSnapshot(msg: idBitMsgDelta?) {
+        override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             val fx_index: Int
             val start_time: Int
             val max_lapse = CInt()
@@ -582,7 +582,7 @@ object FX {
             start_time = msg.ReadLong()
             if (fx_index != -1 && start_time > 0 && TempDump.NOT(fxEffect) && started < 0) {
                 spawnArgs.GetInt("effect_lapse", "1000", max_lapse)
-                if (Game_local.gameLocal.time - start_time > max_lapse.getVal()) {
+                if (Game_local.gameLocal.time - start_time > max_lapse._val) {
                     // too late, skip the effect completely
                     started = 0
                     return
@@ -710,7 +710,7 @@ object FX {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
 
@@ -736,8 +736,8 @@ object FX {
     class idTeleporter : idEntityFx() {
         companion object {
             //        public 	CLASS_PROTOTYPE( idTeleporter );
-            private val eventCallbacks: MutableMap<idEventDef?, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef?, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
                 return eventCallbacks
             }
 
@@ -758,7 +758,7 @@ object FX {
             activator.value.Teleport(GetPhysics().GetOrigin(), a, null)
         }
 
-        override fun getEventCallBack(event: idEventDef?): eventCallback_t<*>? {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)
         }
     }

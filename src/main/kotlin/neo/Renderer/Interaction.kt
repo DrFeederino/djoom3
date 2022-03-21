@@ -183,7 +183,7 @@ object Interaction {
      multiple times near the epsilon.
      =============
      */
-    fun R_ChopWinding(clipTris: Array<Interaction.clipTri_t?>? /*[2]*/, inNum: Int, plane: idPlane?): Int {
+    fun R_ChopWinding(clipTris: Array<Interaction.clipTri_t?>? /*[2]*/, inNum: Int, plane: idPlane): Int {
         val `in`: Interaction.clipTri_t?
         val out: Interaction.clipTri_t?
         val dists = FloatArray(Interaction.MAX_CLIPPED_POINTS)
@@ -267,11 +267,11 @@ object Interaction {
      ===================
      */
     fun R_ClipTriangleToLight(
-        a: idVec3?,
-        b: idVec3?,
-        c: idVec3?,
+        a: idVec3,
+        b: idVec3,
+        c: idVec3,
         planeBits: Int,
-        frustum: Array<idPlane?>? /*[6]*/
+        frustum: Array<idPlane>? /*[6]*/
     ): Boolean {
         var i: Int
         val pingPong = arrayOfNulls<Interaction.clipTri_t?>(2)
@@ -476,7 +476,7 @@ object Interaction {
      we can draw it without caps in zpass mode
      ======================
      */
-    fun R_PotentiallyInsideInfiniteShadow(occluder: srfTriangles_s?, localView: idVec3?, localLight: idVec3?): Boolean {
+    fun R_PotentiallyInsideInfiniteShadow(occluder: srfTriangles_s?, localView: idVec3, localLight: idVec3): Boolean {
         val exp = idBounds()
 
         // expand the bounds to account for the near clip plane, because the
@@ -1092,7 +1092,7 @@ object Interaction {
             val lightShader: idMaterial? = lightDef.lightShader
             var shader: idMaterial?
             var interactionGenerated: Boolean
-            val bounds: idBounds?
+            val bounds: idBounds
             tr_local.tr.pc.c_createInteractions++
             bounds = model.Bounds(entityDef.parms)
 
@@ -1365,7 +1365,7 @@ object Interaction {
         }
 
         companion object {
-            private val colors: Array<idVec4?>? = arrayOf(
+            private val colors: Array<idVec4>? = arrayOf(
                 Lib.Companion.colorRed,
                 Lib.Companion.colorGreen,
                 Lib.Companion.colorBlue,
@@ -1440,7 +1440,7 @@ object Interaction {
 
     internal class clipTri_t {
         var numVerts = 0
-        val verts: Array<idVec3?>? = idVec3.Companion.generateArray(Interaction.MAX_CLIPPED_POINTS)
+        val verts: Array<idVec3>? = idVec3.Companion.generateArray(Interaction.MAX_CLIPPED_POINTS)
     }
 
     /*

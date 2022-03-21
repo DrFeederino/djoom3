@@ -1083,8 +1083,8 @@ object Compressor {
                 node.head = temp[0]
             }
             node.weight++
-            if (node.next != null && node!!.next!!.weight == node.weight) {
-                node.head = node!!.next!!.head
+            if (node.next != null && node.next!!.weight == node.weight) {
+                node.head = node.next!!.head
             } else {
                 node.head = Get_ppnode()
                 node.head = node

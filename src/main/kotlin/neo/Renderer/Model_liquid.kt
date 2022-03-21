@@ -248,7 +248,7 @@ object Model_liquid {
             return staticModel
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds? {
+        override fun Bounds(ent: renderEntity_s?): idBounds {
             // FIXME: need to do this better
             return bounds
         }
@@ -280,7 +280,7 @@ object Model_liquid {
             }
         }
 
-        fun IntersectBounds(bounds: idBounds?, displacement: Float) {
+        fun IntersectBounds(bounds: idBounds, displacement: Float) {
             var cx: Int
             var cy: Int
             var left: Int

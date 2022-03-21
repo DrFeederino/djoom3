@@ -618,8 +618,8 @@ object tr_render {
         surfaceStage: shaderStage_t?,
         surfaceRegs: FloatArray?,
         image: Array<idImage?>?,
-        matrix: Array<idVec4?>? /*[2]*/,
-        color: idVec4? /*[4]*/
+        matrix: Array<idVec4>? /*[2]*/,
+        color: idVec4 /*[4]*/
     ) {
         image.get(0) = surfaceStage.texture.image[0]
         if (surfaceStage.texture.hasMatrix) {
@@ -751,7 +751,7 @@ object tr_render {
         inter.ambientLight = TempDump.btoi(lightShader.IsAmbientLight())
 
         // the base projections may be modified by texture matrix on light stages
-        val lightProject: Array<idPlane?> = idPlane.Companion.generateArray(4)
+        val lightProject: Array<idPlane> = idPlane.Companion.generateArray(4)
         for (i in 0..3) {
             tr_main.R_GlobalPlaneToLocal(
                 surf.space.modelMatrix,
