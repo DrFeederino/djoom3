@@ -2024,7 +2024,7 @@ object Vector {
     //	NOTE: due to the temporary memory pool idVecX cannot be used by multiple threads
     //
     //===============================================================
-    class idVecX {
+    public class idVecX {
         private var size // size of the vector
                 : Int = 0
         var p // memory the vector is stored

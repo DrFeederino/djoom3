@@ -1581,7 +1581,7 @@ object Clip {
         fun ClipModelsTouchingBounds(
             bounds: idBounds,
             contentMask: Int,
-            clipModelList: Array<idClipModel?>,
+            clipModelList: Array<idClipModel>,
             maxCount: Int
         ): Int {
             val parms = listParms_s()

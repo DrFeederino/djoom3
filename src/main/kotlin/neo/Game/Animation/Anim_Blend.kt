@@ -2809,9 +2809,9 @@ object Anim_Blend {
         private val AFPoseJoints: ArrayList<Int?>?
 
         //
-        private val channels: Array<Array<idAnimBlend?>?>? =
+        private val channels: Array<Array<idAnimBlend?>> =
             Array(Anim.ANIM_NumAnimChannels) { arrayOfNulls<idAnimBlend?>(Anim.ANIM_MaxAnimsPerChannel) }
-        private val jointMods: ArrayList<jointMod_t?>?
+        private val jointMods: ArrayList<jointMod_t>
 
         //
         private var AFPoseBlendWeight = 0f
@@ -3645,7 +3645,7 @@ object Anim_Blend {
             return true
         }
 
-        fun CurrentAnim(channelNum: Int): idAnimBlend? {
+        fun CurrentAnim(channelNum: Int): idAnimBlend {
             if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
                 idGameLocal.Companion.Error("idAnimator::CurrentAnim : channel out of range")
             }
@@ -3654,7 +3654,7 @@ object Anim_Blend {
 
         fun Clear(channelNum: Int, currentTime: Int, cleartime: Int) {
             var i: Int
-            val blend: Array<idAnimBlend?>?
+            val blend: Array<idAnimBlend>
             if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
                 idGameLocal.Companion.Error("idAnimator::Clear : channel out of range")
             }
@@ -4127,7 +4127,7 @@ object Anim_Blend {
             return true
         }
 
-        fun GetAnimFlags(animNum: Int): animFlags_t? {
+        fun GetAnimFlags(animNum: Int): animFlags_t {
             val result: animFlags_t
             val anim = GetAnim(animNum)
             if (anim != null) {

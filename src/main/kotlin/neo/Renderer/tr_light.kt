@@ -18,6 +18,7 @@ import neo.Renderer.tr_local.idRenderLightLocal
 import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.viewEntity_s
 import neo.Renderer.tr_local.viewLight_s
+import neo.Renderer.tr_trisurf.R_DeriveTangents
 import neo.TempDump
 import neo.framework.Common
 import neo.idlib.*
@@ -94,7 +95,7 @@ object tr_light {
      Create it if needed
      ==================
      */
-    fun R_CreateAmbientCache(tri: srfTriangles_s?, needsLighting: Boolean): Boolean {
+    fun R_CreateAmbientCache(tri: srfTriangles_s, needsLighting: Boolean): Boolean {
         if (tri.ambientCache != null) {
             return true
         }
@@ -113,7 +114,7 @@ object tr_light {
      Returns false if the cache couldn't be allocated, in which case the surface should be skipped.
      ==================
      */
-    fun R_CreateLightingCache(ent: idRenderEntityLocal?, light: idRenderLightLocal?, tri: srfTriangles_s?): Boolean {
+    fun R_CreateLightingCache(ent: idRenderEntityLocal?, light: idRenderLightLocal, tri: srfTriangles_s?): Boolean {
         val localLightOrigin = idVec3()
 
         // fogs and blends don't need light vectors

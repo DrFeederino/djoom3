@@ -464,7 +464,7 @@ class Game_local {
 
         //
         private val spawnSpots: idStaticList<spawnSpot_t?>? = idStaticList(MAX_GENTITIES)
-        var activeEntities: idLinkList<idEntity?>? = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
+        var activeEntities: idLinkList<idEntity?> = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
         var cinematicMaxSkipTime // time to end cinematic when skipping.  there's a possibility of an infinite loop if the map isn't set up right.
                 = 0
 

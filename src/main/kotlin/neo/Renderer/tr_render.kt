@@ -923,12 +923,12 @@ object tr_render {
         }
     }
 
-    internal abstract class DrawInteraction {
-        abstract fun run(din: drawInteraction_t?)
+    abstract class DrawInteraction {
+        abstract fun run(din: drawInteraction_t)
     }
 
-    internal abstract class triFunc {
-        abstract fun run(surf: drawSurf_s?)
+    abstract class triFunc {
+        abstract fun run(surf: drawSurf_s)
     }
 
     /*
@@ -938,12 +938,12 @@ object tr_render {
      ===============
      */
     class RB_T_RenderTriangleSurface private constructor() : triFunc() {
-        override fun run(surf: drawSurf_s?) {
+        override fun run(surf: drawSurf_s) {
             tr_render.RB_RenderTriangleSurface(surf.geo)
         }
 
         companion object {
-            val INSTANCE: triFunc? = RB_T_RenderTriangleSurface()
+            val INSTANCE: triFunc = RB_T_RenderTriangleSurface()
         }
     }
 }

@@ -160,7 +160,7 @@ class Image {
         TD_HIGH_QUALITY // either 32 bit or a component format, no loss at all
     }
 
-    internal enum class textureType_t {
+    enum class textureType_t {
         TT_DISABLED, TT_2D, TT_3D, TT_CUBIC, TT_RECT
     }
 

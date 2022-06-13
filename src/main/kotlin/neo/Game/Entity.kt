@@ -213,7 +213,7 @@ object Entity {
      AddRenderGui
      ================
      */
-    fun AddRenderGui(name: String?, args: idDict?): idUserInterface? {
+    fun AddRenderGui(name: String?, args: idDict): idUserInterface? {
         val gui: idUserInterface?
         val kv = args.MatchPrefix("gui_parm", null)
         gui = UserInterface.uiManager.FindGui(name, true, kv != null)
@@ -249,7 +249,7 @@ object Entity {
     }
 
     class signalList_t {
-        val signal: Array<idList<signal_t?>?>? = arrayOfNulls<idList<*>?>(TempDump.etoi(signalNum_t.NUM_SIGNALS))
+        val signal: Array<idList<signal_t>> = Array(TempDump.etoi(signalNum_t.NUM_SIGNALS)) { idList() }
     }
 
     open class idEntity : idClass(), NiLLABLE<idEntity?>, SERiAL {
@@ -306,7 +306,7 @@ object Entity {
                 if (i < 0 || i >= e.targets.Num()) {
                     idThread.Companion.ReturnEntity(null)
                 } else {
-                    idThread.Companion.ReturnEntity(e.targets.get(i).GetEntity())
+                    idThread.Companion.ReturnEntity(e.targets[i].GetEntity())
                 }
             }
 
@@ -326,7 +326,7 @@ object Entity {
                 if (ignore != null && !ignore.isEmpty() && e.targets.Num() > 1) {
                     i = 0
                     while (i < e.targets.Num()) {
-                        ent = e.targets.get(i).GetEntity()
+                        ent = e.targets[i].GetEntity()
                         if (ent != null && ent.name == ignore) {
                             ignoreNum = i
                             break
@@ -342,7 +342,7 @@ object Entity {
                 } else {
                     num = Game_local.gameLocal.random.RandomInt(e.targets.Num().toDouble())
                 }
-                ent = e.targets.get(num).GetEntity()
+                ent = e.targets[num].GetEntity()
                 idThread.Companion.ReturnEntity(ent)
             }
 
@@ -900,11 +900,11 @@ object Entity {
 
         //
         val targets // when this entity is activated these entities entity are activated
-                : idList<idEntityPtr<idEntity?>?>
+                : idList<idEntityPtr<idEntity>>
         private val DBG_count = DBG_counter++
         private val PVSAreas: IntArray = IntArray(MAX_PVS_AREAS) // numbers of the renderer areas the entity covers
         var activeNode // for being linked into activeEntities list
-                : idLinkList<idEntity?>?
+                : idLinkList<idEntity>
         var cameraTarget // any remoteRenderMap shaders will use this
                 : idEntity?
         var cinematic // during cinematics, entity will only think if cinematic is set
@@ -932,7 +932,7 @@ object Entity {
         var renderView // for camera views from this entity
                 : renderView_s?
         var scriptObject // contains all script defined data for this entity
-                : idScriptObject?
+                : idScriptObject
         var snapshotBits // number of bits this entity occupied in the last snapshot
                 : Int
 
@@ -997,7 +997,7 @@ object Entity {
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+            return eventCallbacks[event]
         }
 
         override fun oSet(node: idEntity?): idEntity? {
@@ -1008,15 +1008,15 @@ object Entity {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
@@ -1203,7 +1203,7 @@ object Entity {
             savefile.WriteInt(targets.Num())
             i = 0
             while (i < targets.Num()) {
-                targets.get(i).Save(savefile)
+                targets[i].Save(savefile)
                 i++
             }
             val flags = fl
@@ -1221,7 +1221,7 @@ object Entity {
             savefile.WriteInt(numPVSAreas)
             i = 0
             while (i < MAX_PVS_AREAS) {
-                savefile.WriteInt(PVSAreas.get(i))
+                savefile.WriteInt(PVSAreas[i])
                 i++
             }
             if (null == signals) {
@@ -1230,11 +1230,11 @@ object Entity {
                 savefile.WriteBool(true)
                 i = 0
                 while (i < signalNum_t.NUM_SIGNALS.ordinal) {
-                    savefile.WriteInt(signals.signal.get(i).Num())
+                    savefile.WriteInt(signals.signal[i].Num())
                     j = 0
-                    while (j < signals.signal.get(i).Num()) {
-                        savefile.WriteInt(signals.signal.get(i).get(j).threadnum)
-                        savefile.WriteString(signals.signal.get(i).get(j).function.Name())
+                    while (j < signals.signal[i].Num()) {
+                        savefile.WriteInt(signals.signal[i][j].threadnum)
+                        savefile.WriteString(signals.signal[i][j].function.Name())
                         j++
                     }
                     i++
@@ -1268,7 +1268,7 @@ object Entity {
             targets.SetNum(num._val)
             i = 0
             while (i < num._val) {
-                targets.get(i).Restore(savefile)
+                targets[i].Restore(savefile)
                 i++
             }
             savefile.Read(fl)
@@ -1286,7 +1286,7 @@ object Entity {
             numPVSAreas = savefile.ReadInt()
             i = 0
             while (i < MAX_PVS_AREAS) {
-                PVSAreas.get(i) = savefile.ReadInt()
+                PVSAreas[i] = savefile.ReadInt()
                 i++
             }
             val readsignals = CBool(false)
@@ -1296,13 +1296,13 @@ object Entity {
                 i = 0
                 while (i < signalNum_t.NUM_SIGNALS.ordinal) {
                     savefile.ReadInt(num)
-                    signals.signal.get(i).SetNum(num._val)
+                    signals.signal[i].SetNum(num._val)
                     j = 0
                     while (j < num._val) {
-                        signals.signal.get(i).get(j).threadnum = savefile.ReadInt()
+                        signals.signal[i][j].threadnum = savefile.ReadInt()
                         savefile.ReadString(funcname)
-                        signals.signal.get(i).get(j).function = Game_local.gameLocal.program.FindFunction(funcname)
-                        if (null == signals.signal.get(i).get(j).function) {
+                        signals.signal[i][j].function = Game_local.gameLocal.program.FindFunction(funcname)
+                        if (null == signals.signal[i][j].function) {
                             savefile.Error("Function '%s' not found", funcname.toString())
                         }
                         j++
@@ -1318,7 +1318,7 @@ object Entity {
             }
         }
 
-        fun GetEntityDefName(): String? {
+        fun GetEntityDefName(): String {
             return if (entityDefNumber < 0) {
                 "*unknown*"
             } else DeclManager.declManager.DeclByIndex(declType_t.DECL_ENTITYDEF, entityDefNumber, false).GetName()
@@ -1524,7 +1524,7 @@ object Entity {
             numPVSAreas = Game_local.gameLocal.pvs.GetPVSAreas(idBounds(pos), PVSAreas, MAX_PVS_AREAS)
             i = numPVSAreas
             while (i < MAX_PVS_AREAS) {
-                PVSAreas.get(i++) = 0
+                PVSAreas[i++] = 0
             }
         }
 
@@ -1623,29 +1623,29 @@ object Entity {
         }
 
         fun SetColor(color: idVec3) {
-            SetColor(color.get(0), color.get(1), color.get(2))
+            SetColor(color[0], color[1], color[2])
             //	UpdateVisuals();
         }
 
         open fun GetColor(out: idVec3) {
-            out.set(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.set(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.set(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out[0] = renderEntity.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
         }
 
         open fun SetColor(color: idVec4) {
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
             UpdateVisuals()
         }
 
         open fun GetColor(out: idVec4) {
-            out.set(0, renderEntity.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.set(1, renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.set(2, renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE])
-            out.set(3, renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA])
+            out[0] = renderEntity.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
+            out[3] = renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
         }
 
         open fun FreeModelDef() {
@@ -1729,20 +1729,20 @@ object Entity {
                 return
             }
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
-            axis.set(2, dir.oNegative())
-            axis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
-            axis.set(0, axistemp.get(0).times(c._val).oPlus(axistemp.get(1).times(-s._val)))
-            axis.set(1, axistemp.get(0).times(-s._val).oPlus(axistemp.get(1).times(-c._val)))
+            axis[2] = dir.oNegative()
+            axis[2].NormalVectors(axistemp[0], axistemp[1])
+            axis[0] = axistemp[0].times(c._val).oPlus(axistemp[1].times(-s._val))
+            axis[1] = axistemp[0].times(-s._val).oPlus(axistemp[1].times(-c._val))
             renderEntity.axis.ProjectVector(origin.minus(renderEntity.origin), localOrigin)
-            renderEntity.axis.ProjectVector(axis.get(0), localAxis[0])
-            renderEntity.axis.ProjectVector(axis.get(1), localAxis[1])
+            renderEntity.axis.ProjectVector(axis[0], localAxis[0])
+            renderEntity.axis.ProjectVector(axis[1], localAxis[1])
             size = 1.0f / size
             localAxis[0].timesAssign(size)
             localAxis[1].timesAssign(size)
             localPlane[0].set(localAxis[0])
-            localPlane[0].set(3, -localOrigin.times(localAxis[0]) + 0.5f)
+            localPlane[0][3] = -localOrigin.times(localAxis[0]) + 0.5f
             localPlane[1].set(localAxis[1])
-            localPlane[1].set(3, -localOrigin.times(localAxis[1]) + 0.5f)
+            localPlane[1][3] = -localOrigin.times(localAxis[1]) + 0.5f
             val mtr: idMaterial? = DeclManager.declManager.FindMaterial(material)
 
             // project an overlay onto the model
@@ -1759,7 +1759,7 @@ object Entity {
             return numPVSAreas
         }
 
-        fun GetPVSAreas(): IntArray? {
+        fun GetPVSAreas(): IntArray {
             if (numPVSAreas < 0) {
                 UpdatePVSAreas()
             }
@@ -2753,7 +2753,7 @@ object Entity {
             // use the midpoint of the bounds instead of the origin, because
             // bmodels may have their origin at 0,0,0
             midpoint.set(
-                GetPhysics().GetAbsBounds().get(0).oPlus(GetPhysics().GetAbsBounds().get(1)).oMultiply(0.5f)
+                GetPhysics().GetAbsBounds()[0].oPlus(GetPhysics().GetAbsBounds()[1]).oMultiply(0.5f)
             )
             dest.set(midpoint)
             Game_local.gameLocal.clip.TracePoint(tr, origin, dest, Game_local.MASK_SOLID, null)
@@ -3040,11 +3040,11 @@ object Entity {
             }
             assert(thread != null)
             threadnum = thread.GetThreadNum()
-            num = signals.signal.get(_signalnum).Num()
+            num = signals.signal[_signalnum].Num()
             i = 0
             while (i < num) {
-                if (signals.signal.get(_signalnum).get(i).threadnum == threadnum) {
-                    signals.signal.get(_signalnum).get(i).function = function
+                if (signals.signal[_signalnum][i].threadnum == threadnum) {
+                    signals.signal[_signalnum][i].function = function
                     return
                 }
                 i++
@@ -3054,7 +3054,7 @@ object Entity {
             }
             sig.threadnum = threadnum
             sig.function = function
-            signals.signal.get(_signalnum).Append(sig)
+            signals.signal[_signalnum].Append(sig)
         }
 
         fun ClearSignal(thread: idThread?, _signalnum: signalNum_t?) {
@@ -3066,7 +3066,7 @@ object Entity {
             if (null == signals) {
                 return
             }
-            signals.signal.get(signalnum).Clear()
+            signals.signal[signalnum].Clear()
         }
 
         fun ClearSignalThread(_signalnum: signalNum_t?, thread: idThread?) {
@@ -3085,11 +3085,11 @@ object Entity {
                 return
             }
             threadnum = thread.GetThreadNum()
-            num = signals.signal.get(_signalnum).Num()
+            num = signals.signal[_signalnum].Num()
             i = 0
             while (i < num) {
-                if (signals.signal.get(_signalnum).get(i).threadnum == threadnum) {
-                    signals.signal.get(_signalnum).RemoveIndex(i)
+                if (signals.signal[_signalnum][i].threadnum == threadnum) {
+                    signals.signal[_signalnum].RemoveIndex(i)
                     return
                 }
                 i++
@@ -3102,7 +3102,7 @@ object Entity {
                 return false
             }
             assert(signalnum >= 0 && signalnum < signalNum_t.NUM_SIGNALS.ordinal)
-            return signals.signal.get(signalnum).Num() > 0
+            return signals.signal[signalnum].Num() > 0
         }
 
         fun Signal(_signalnum: signalNum_t?) {
@@ -3120,15 +3120,15 @@ object Entity {
             // to end any of the threads in the list.  By copying the list
             // we don't have to worry about the list changing as we're
             // processing it.
-            num = signals.signal.get(signalnum).Num()
+            num = signals.signal[signalnum].Num()
             i = 0
             while (i < num) {
-                sigs[i] = signals.signal.get(signalnum).get(i)
+                sigs[i] = signals.signal[signalnum][i]
                 i++
             }
 
             // clear out the signal list so that we don't get into an infinite loop
-            signals.signal.get(signalnum).Clear()
+            signals.signal[signalnum].Clear()
             i = 0
             while (i < num) {
                 thread = idThread.Companion.GetThread(sigs[i].threadnum)
@@ -3301,7 +3301,7 @@ object Entity {
                         var i: Int
                         i = 0
                         while (i < c) {
-                            targetEnt = entityGui.targets.get(i).GetEntity()
+                            targetEnt = entityGui.targets[i].GetEntity()
                             if (targetEnt != null && targetEnt.HandleSingleGuiCommand(entityGui, src)) {
                                 break
                             }
@@ -3346,7 +3346,7 @@ object Entity {
             // ensure that we don't target ourselves since that could cause an infinite loop when activating entities
             i = 0
             while (i < targets.Num()) {
-                if (targets.get(i).GetEntity() === this) {
+                if (targets[i].GetEntity() === this) {
                     idGameLocal.Companion.Error("Entity '%s' is targeting itself", name)
                 }
                 i++
@@ -3357,7 +3357,7 @@ object Entity {
             var i: Int
             i = targets.Num() - 1
             while (i >= 0) {
-                if (TempDump.NOT(targets.get(i).GetEntity())) {
+                if (TempDump.NOT(targets[i].GetEntity())) {
                     targets.RemoveIndex(i)
                 }
                 i--
@@ -3377,7 +3377,7 @@ object Entity {
             var j: Int
             i = 0
             while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+                ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -3623,10 +3623,10 @@ object Entity {
         fun ReadColorFromSnapshot(msg: idBitMsgDelta) {
             val color = idVec4()
             Lib.Companion.UnpackColor(msg.ReadLong().toLong(), color)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
         }
 
         fun WriteGUIToSnapshot(msg: idBitMsgDelta) {
@@ -3786,17 +3786,17 @@ object Entity {
                     val size = idVec3()
                     val bounds = idBounds()
                     var setClipModel = false
-                    if (spawnArgs.GetVector("mins", null, bounds.get(0))
-                        && spawnArgs.GetVector("maxs", null, bounds.get(1))
+                    if (spawnArgs.GetVector("mins", null, bounds[0])
+                        && spawnArgs.GetVector("maxs", null, bounds[1])
                     ) {
                         setClipModel = true
-                        if (bounds.get(0).oGet(0) > bounds.get(1).oGet(0) || bounds.get(0).oGet(1) > bounds.get(1)
-                                .oGet(1) || bounds.get(0).oGet(2) > bounds.get(1).oGet(2)
+                        if (bounds[0].oGet(0) > bounds[1].oGet(0) || bounds[0].oGet(1) > bounds[1]
+                                .oGet(1) || bounds[0].oGet(2) > bounds[1].oGet(2)
                         ) {
                             idGameLocal.Companion.Error(
                                 "Invalid bounds '%s'-'%s' on entity '%s'",
-                                bounds.get(0).ToString(),
-                                bounds.get(1).ToString(),
+                                bounds[0].ToString(),
+                                bounds[1].ToString(),
                                 name
                             )
                         }
@@ -3804,8 +3804,8 @@ object Entity {
                         if (size.x < 0.0f || size.y < 0.0f || size.z < 0.0f) {
                             idGameLocal.Companion.Error("Invalid size '%s' on entity '%s'", size.ToString(), name)
                         }
-                        bounds.get(0).Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
-                        bounds.get(1).Set(size.x * 0.5f, size.y * 0.5f, size.z)
+                        bounds[0].Set(size.x * -0.5f, size.y * -0.5f, 0.0f)
+                        bounds[1].Set(size.x * 0.5f, size.y * 0.5f, size.z)
                         setClipModel = true
                     }
                     if (setClipModel) {
@@ -3981,12 +3981,12 @@ object Entity {
             }
             numPVSAreas = 0
             while (numPVSAreas < MAX_PVS_AREAS && numPVSAreas < localNumPVSAreas) {
-                PVSAreas.get(numPVSAreas) = localPVSAreas[numPVSAreas]
+                PVSAreas[numPVSAreas] = localPVSAreas[numPVSAreas]
                 numPVSAreas++
             }
             i = numPVSAreas
             while (i < MAX_PVS_AREAS) {
-                PVSAreas.get(i) = 0
+                PVSAreas[i] = 0
                 i++
             }
         }
@@ -4132,7 +4132,7 @@ object Entity {
 
         private fun Event_GetAngles() {
             val ang = GetPhysics().GetAxis().ToAngles()
-            idThread.Companion.ReturnVector(idVec3(ang.get(0), ang.get(1), ang.get(2)))
+            idThread.Companion.ReturnVector(idVec3(ang[0], ang[1], ang[2]))
         }
 
         private fun Event_GetLinearVelocity() {
@@ -4146,15 +4146,15 @@ object Entity {
         private fun Event_GetSize() {
             val bounds: idBounds
             bounds = GetPhysics().GetBounds()
-            idThread.Companion.ReturnVector(bounds.get(1).minus(bounds.get(0)))
+            idThread.Companion.ReturnVector(bounds[1].minus(bounds[0]))
         }
 
         private fun Event_GetMins() {
-            idThread.Companion.ReturnVector(GetPhysics().GetBounds().get(0))
+            idThread.Companion.ReturnVector(GetPhysics().GetBounds()[0])
         }
 
         private fun Event_GetMaxs() {
-            idThread.Companion.ReturnVector(GetPhysics().GetBounds().get(1))
+            idThread.Companion.ReturnVector(GetPhysics().GetBounds()[1])
         }
 
         private fun Event_RestorePosition() {
@@ -4168,9 +4168,9 @@ object Entity {
             if (spawnArgs.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", axis)) {
                 angles = axis.ToAngles()
             } else {
-                angles.set(0, 0f)
-                angles.set(1, spawnArgs.GetFloat("angle"))
-                angles.set(2, 0f)
+                angles[0] = 0f
+                angles[1] = spawnArgs.GetFloat("angle")
+                angles[2] = 0f
             }
             Teleport(org, angles, null)
             part = teamChain
@@ -4515,7 +4515,7 @@ object Entity {
                     Game_local.gameLocal.Warning("Joint # %d out of range on entity '%s'", jointnum, e.name)
                 }
                 val ang = axis.ToAngles()
-                val vec = idVec3(ang.get(0), ang.get(1), ang.get(2))
+                val vec = idVec3(ang[0], ang[1], ang[2])
                 idThread.Companion.ReturnVector(vec)
             }
 
@@ -4574,7 +4574,7 @@ object Entity {
 
         // };
         //
-        protected var animator: idAnimator?
+        protected var animator: idAnimator
         protected var damageEffects: damageEffect_s?
 
         /*
@@ -4665,7 +4665,7 @@ object Entity {
             animator.ClearForceUpdate()
         }
 
-        override fun GetAnimator(): idAnimator? {
+        override fun GetAnimator(): idAnimator {
             return animator
         }
 
@@ -4911,9 +4911,9 @@ object Entity {
             return when (event) {
                 EVENT_ADD_DAMAGE_EFFECT -> {
                     jointNum =  /*(jointHandle_s)*/msg.ReadShort()
-                    localOrigin.set(0, msg.ReadFloat())
-                    localOrigin.set(1, msg.ReadFloat())
-                    localOrigin.set(2, msg.ReadFloat())
+                    localOrigin[0] = msg.ReadFloat()
+                    localOrigin[1] = msg.ReadFloat()
+                    localOrigin[2] = msg.ReadFloat()
                     localNormal.set(msg.ReadDir(24))
                     localDir.set(msg.ReadDir(24))
                     damageDefIndex = Game_local.gameLocal.ClientRemapDecl(declType_t.DECL_ENTITYDEF, msg.ReadLong())

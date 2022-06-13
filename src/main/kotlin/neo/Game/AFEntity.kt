@@ -540,7 +540,7 @@ object AFEntity {
         protected val spawnOrigin // spawn origin
                 : idVec3
         protected var af // articulated figure
-                : idAF?
+                : idAF
         protected var combatModel // render model for hit detection
                 : idClipModel?
         protected var combatModelContents: Int

@@ -264,8 +264,8 @@ object Actor {
             return disabled || idleAnim
         }
 
-        fun GetAnimFlags(): animFlags_t? {
-            var flags: animFlags_t? = animFlags_t()
+        fun GetAnimFlags(): animFlags_t {
+            var flags: animFlags_t = animFlags_t()
 
 //            memset(flags, 0, sizeof(flags));
             if (!disabled && !AnimDone(0)) {
@@ -316,10 +316,10 @@ object Actor {
             //
             //        public static idClass CreateInstance();
             //        public idTypeInfo GetType();
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             // virtual					~idActor( void );
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
@@ -421,11 +421,11 @@ object Actor {
         }
 
         var enemyList // list of characters that have targeted the player as their enemy
-                : idLinkList<idActor?>?
+                : idLinkList<idActor>
 
         //
         var enemyNode // node linked into an entity's enemy list for quick lookups of who is attacking him
-                : idLinkList<idActor?>?
+                : idLinkList<idActor>
         var rank // monsters don't fight back if the attacker's rank is higher
                 : Int
 
@@ -439,10 +439,10 @@ object Actor {
         protected var allowPain: Boolean
 
         //
-        protected var animPrefix: idStr?
+        protected val animPrefix: idStr
 
         //
-        protected val attachments: idList<idAttachInfo?>? = idList(idAttachInfo::class.java)
+        protected val attachments: idList<idAttachInfo> = idList(idAttachInfo::class.java)
 
         //
         // blinking
@@ -472,17 +472,17 @@ object Actor {
         //
         protected var fovDot // cos( fovDegrees )
                 : Float
-        protected val head: idEntityPtr<idAFAttachment?>?
-        protected var headAnim: idAnimState?
+        protected val head: idEntityPtr<idAFAttachment>
+        protected var headAnim: idAnimState
         protected var idealState: function_t?
 
         //
         // joint handles
         protected var   /*jointHandle_t*/leftEyeJoint: Int
-        protected var legsAnim: idAnimState?
+        protected var legsAnim: idAnimState
         protected val modelOffset // offset of visual model relative to the physics origin
                 : idVec3
-        protected var painAnim: idStr?
+        protected val painAnim: idStr
 
         //
         protected var painTime: Int
@@ -504,15 +504,15 @@ object Actor {
         //
         // state variables
         protected var state: function_t?
-        protected var torsoAnim: idAnimState?
+        protected var torsoAnim: idAnimState
 
         //
         protected var use_combat_bbox // whether to use the bounding box for combat collision
                 : Boolean
-        protected var waitState: idStr?
+        protected val waitState: idStr
 
         //
-        protected var walkIK: idIK_Walk?
+        protected var walkIK: idIK_Walk
         override fun Spawn() {
             super.Spawn()
             val ent = arrayOf<idEntity?>(null)

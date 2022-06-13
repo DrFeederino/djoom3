@@ -1110,7 +1110,7 @@ object AI_pathing {
         if (null == aas || aas.GetSettings() == null) {
             Game_local.gameLocal.clip.Translation(
                 clipTrace, start, end, ent.GetPhysics().GetClipModel(),
-                ent.GetPhysics().GetClipModel().GetAxis(), Game_local.MASK_MONSTERSOLID, ent
+                ent.GetPhysics().GetClipModel()!!.GetAxis(), Game_local.MASK_MONSTERSOLID, ent
             )
 
             // NOTE: could do (expensive) ledge detection here for when there is no AAS file
@@ -1129,7 +1129,7 @@ object AI_pathing {
             aas.Trace(aasTrace, start, end)
             Game_local.gameLocal.clip.TranslationEntities(
                 clipTrace, start, aasTrace.endpos, ent.GetPhysics().GetClipModel(),
-                ent.GetPhysics().GetClipModel().GetAxis(), Game_local.MASK_MONSTERSOLID, ent
+                ent.GetPhysics().GetClipModel()!!.GetAxis(), Game_local.MASK_MONSTERSOLID, ent
             )
             if (clipTrace.fraction >= 1.0f) {
                 trace.fraction = aasTrace.fraction

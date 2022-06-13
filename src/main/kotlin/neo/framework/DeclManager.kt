@@ -1654,7 +1654,7 @@ class DeclManager {
         }
 
         @Throws(idException::class)
-        override fun DeclByIndex(type: declType_t, index: Int, forceParse: Boolean): idDecl? {
+        override fun DeclByIndex(type: declType_t, index: Int, forceParse: Boolean): idDecl {
             val typeIndex = type.ordinal
             if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::DeclByIndex: bad type: %d", typeIndex)
@@ -1667,7 +1667,7 @@ class DeclManager {
             if (forceParse && decl.declState == declState_t.DS_UNPARSED) {
                 decl.ParseLocal()
             }
-            return decl.self
+            return decl.self!!
         }
 
         @Throws(idException::class)

@@ -34,11 +34,11 @@ object tr_subview {
         transformed.set(Vector.getVec3_origin())
         i = 0
         while (i < 3) {
-            d = local.times(surface.axis.get(i))
-            transformed.plusAssign(camera.axis.get(i).times(d))
+            d = local.times(surface.axis[i])
+            transformed.plusAssign(camera.axis[i].times(d))
             i++
         }
-        out.set(transformed.oPlus(camera.origin))
+        out.set(transformed + camera.origin)
     }
 
     /*
@@ -46,14 +46,14 @@ object tr_subview {
      R_MirrorVector
      =================
      */
-    fun R_MirrorVector(`in`: idVec3, surface: orientation_t?, camera: orientation_t?, out: idVec3) {
+    fun R_MirrorVector(`in`: idVec3, surface: orientation_t, camera: orientation_t, out: idVec3) {
         var i: Int
         var d: Float
         out.set(Vector.getVec3_origin())
         i = 0
         while (i < 3) {
-            d = `in`.times(surface.axis.get(i))
-            out.plusAssign(camera.axis.get(i).times(d))
+            d = `in`.times(surface.axis[i])
+            out.plusAssign(camera.axis[i].times(d))
             i++
         }
     }
@@ -66,7 +66,7 @@ object tr_subview {
      FIXME: check for degenerate triangle?
      =============
      */
-    fun R_PlaneForSurface(tri: srfTriangles_s?, plane: idPlane) {
+    fun R_PlaneForSurface(tri: srfTriangles_s, plane: idPlane) {
         val v1: idDrawVert?
         val v2: idDrawVert?
         val v3: idDrawVert?
@@ -89,7 +89,7 @@ object tr_subview {
      OPTIMIZE: we could also take exact portal passing into consideration
      =========================
      */
-    fun R_PreciseCullSurface(drawSurf: drawSurf_s?, ndcBounds: idBounds): Boolean {
+    fun R_PreciseCullSurface(drawSurf: drawSurf_s, ndcBounds: idBounds): Boolean {
         val tri: srfTriangles_s?
         val numTriangles: Int
         val clip = idPlane()
@@ -118,9 +118,9 @@ object tr_subview {
             pointFlags = 0
             j = 0
             while (j < 3) {
-                if (clip.get(j) >= clip.get(3)) {
+                if (clip[j] >= clip[3]) {
                     pointFlags = pointFlags or (1 shl j * 2)
-                } else if (clip.get(j) <= -clip.get(3)) {
+                } else if (clip[j] <= -clip[3]) {
                     pointFlags = pointFlags or (1 shl j * 2 + 1)
                 }
                 j++
@@ -167,15 +167,15 @@ object tr_subview {
 
             // now find the exact screen bounds of the clipped triangle
             w.SetNumPoints(3)
-            w.set(0, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v1))
-            w.set(1, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v2))
-            w.set(2, tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v3))
-            w.get(2).t = 0.0f
-            w.get(2).s = w.get(2).t
-            w.get(1).t = w.get(2).s
-            w.get(1).s = w.get(1).t
-            w.get(0).t = w.get(1).s
-            w.get(0).s = w.get(0).t
+            w[0] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v1)
+            w[1] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v2)
+            w[2] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v3)
+            w[2].t = 0.0f
+            w[2].s = w[2].t
+            w[1].t = w[2].s
+            w[1].s = w[1].t
+            w[0].t = w[1].s
+            w[0].s = w[0].t
             j = 0
             while (j < 4) {
                 if (!w.ClipInPlace(tr_local.tr.viewDef.frustum[j].unaryMinus(), 0.1f)) {
@@ -186,7 +186,7 @@ object tr_subview {
             j = 0
             while (j < w.GetNumPoints()) {
                 val screen = idVec3()
-                tr_main.R_GlobalToNormalizedDeviceCoordinates(w.get(j).ToVec3(), screen)
+                tr_main.R_GlobalToNormalizedDeviceCoordinates(w[j].ToVec3(), screen)
                 ndcBounds.AddPoint(screen)
                 j++
             }
@@ -218,46 +218,46 @@ object tr_subview {
         // create plane axis for the portal we are seeing
         tr_subview.R_PlaneForSurface(drawSurf.geo, originalPlane)
         tr_main.R_LocalPlaneToGlobal(drawSurf.space.modelMatrix, originalPlane, plane)
-        surface.origin.set(plane.Normal().times(-plane.get(3)))
-        surface.axis.set(0, plane.Normal())
-        surface.axis.get(0).NormalVectors(surface.axis.get(1), surface.axis.get(2))
-        surface.axis.set(2, surface.axis.get(2).oNegative())
+        surface.origin.set(plane.Normal().times(-plane[3]))
+        surface.axis[0] = plane.Normal()
+        surface.axis[0].NormalVectors(surface.axis[1], surface.axis[2])
+        surface.axis[2] = surface.axis[2].oNegative()
         camera.origin.set(surface.origin)
-        camera.axis.set(0, surface.axis.get(0).oNegative())
-        camera.axis.set(1, surface.axis.get(1))
-        camera.axis.set(2, surface.axis.get(2))
+        camera.axis[0] = surface.axis[0].oNegative()
+        camera.axis[1] = surface.axis[1]
+        camera.axis[2] = surface.axis[2]
 
         // set the mirrored origin and axis
         tr_subview.R_MirrorPoint(tr_local.tr.viewDef.renderView.vieworg, surface, camera, parms.renderView.vieworg)
         tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis.get(0),
+            tr_local.tr.viewDef.renderView.viewaxis[0],
             surface,
             camera,
-            parms.renderView.viewaxis.get(0)
+            parms.renderView.viewaxis[0]
         )
         tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis.get(1),
+            tr_local.tr.viewDef.renderView.viewaxis[1],
             surface,
             camera,
-            parms.renderView.viewaxis.get(1)
+            parms.renderView.viewaxis[1]
         )
         tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis.get(2),
+            tr_local.tr.viewDef.renderView.viewaxis[2],
             surface,
             camera,
-            parms.renderView.viewaxis.get(2)
+            parms.renderView.viewaxis[2]
         )
 
         // make the view origin 16 units away from the center of the surface
-        val viewOrigin = idVec3(drawSurf.geo.bounds.get(0).oPlus(drawSurf.geo.bounds.get(1)).oMultiply(0.5f))
+        val viewOrigin = idVec3(drawSurf.geo.bounds[0].oPlus(drawSurf.geo.bounds[1]).oMultiply(0.5f))
         viewOrigin.oPluSet(originalPlane.Normal().times(16f))
         parms.initialViewAreaOrigin.set(tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin))
 
         // set the mirror clip plane
         parms.numClipPlanes = 1
         parms.clipPlanes[0] = idPlane()
-        parms.clipPlanes[0].set(camera.axis.get(0).oNegative())
-        parms.clipPlanes[0].set(3, -camera.origin.times(parms.clipPlanes[0].Normal()))
+        parms.clipPlanes[0].set(camera.axis[0].oNegative())
+        parms.clipPlanes[0][3] = -camera.origin.times(parms.clipPlanes[0].Normal())
         return parms
     }
 
@@ -454,10 +454,10 @@ object tr_subview {
         // crop the scissor bounds based on the precise cull
         val scissor = idScreenRect()
         val v = tr_local.tr.viewDef.viewport
-        scissor.x1 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds.get(0, 0) + 1.0f)).toInt()
-        scissor.y1 = v.y1 + ((v.y2 - v.y1 + 1) * 0.5f * (ndcBounds.get(0, 1) + 1.0f)).toInt()
-        scissor.x2 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds.get(1, 0) + 1.0f)).toInt()
-        scissor.y2 = v.y1 + ((v.y2 - v.y1 + 1) * 0.5f * (ndcBounds.get(1, 1) + 1.0f)).toInt()
+        scissor.x1 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds[0, 0] + 1.0f)).toInt()
+        scissor.y1 = v.y1 + ((v.y2 - v.y1 + 1) * 0.5f * (ndcBounds[0, 1] + 1.0f)).toInt()
+        scissor.x2 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds[1, 0] + 1.0f)).toInt()
+        scissor.y2 = v.y1 + ((v.y2 - v.y1 + 1) * 0.5f * (ndcBounds[1, 1] + 1.0f)).toInt()
 
         // nudge a bit for safety
         scissor.Expand()

@@ -52,6 +52,7 @@ import java.nio.channels.FileChannel
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.math.floor
 
 /**
  *
@@ -245,7 +246,7 @@ object tr_local {
 
      =============================================================
      */
-    internal enum class renderCommand_t {
+    enum class renderCommand_t {
         RC_NOP, RC_DRAW_VIEW, RC_SET_BUFFER, RC_COPY_RENDER, RC_SWAP_BUFFERS // can't just assume swap at end of list because  of forced list submission before syncs
     }
 
@@ -740,24 +741,24 @@ object tr_local {
         val localShadows: Array<drawSurf_s?> = arrayOf(null) // don't shadow local Surfaces
         val translucentInteractions: Array<drawSurf_s?> = arrayOf(null) // get shadows from everything
         var falloffImage // falloff image used by backend
-                : idImage? = null
+                : idImage = idImage()
         var fogPlane // fog plane for backend fog volume rendering
-                : idPlane = null
+                : idPlane = idPlane()
         var frustumTris // light frustum for backend fog volume rendering
                 : srfTriangles_s? = null
 
         //
         // back end should NOT reference the lightDef, because it can change when running SMP
-        var lightDef: idRenderLightLocal? = null
+        var lightDef: idRenderLightLocal = idRenderLightLocal()
         var lightShader // light shader used by backend
-                : Material.idMaterial? = null
+                : Material.idMaterial = Material.idMaterial()
         var next: viewLight_s? = null
 
         //
         // for scissor clipping, local inside renderView viewport
         // scissorRect.Empty() is true if the viewEntity_t was never actually
         // seen through any portals
-        var scissorRect: idScreenRect? = null
+        var scissorRect: idScreenRect = idScreenRect()
         var shaderRegisters // shader registers used by backend
                 : FloatArray
 
@@ -1009,7 +1010,7 @@ object tr_local {
     }
 
     open class emptyCommand_t {
-        var commandId: renderCommand_t? = null
+        var commandId: renderCommand_t = renderCommand_t.RC_NOP
         var next: emptyCommand_t? = null
         fun oSet(c: emptyCommand_t) {
             commandId = c.commandId
@@ -1032,7 +1033,7 @@ object tr_local {
         var viewDef: viewDef_s? = null
     }
 
-    internal class copyRenderCommand_t : emptyCommand_t() {
+    class copyRenderCommand_t : emptyCommand_t() {
         var cubeFace // when copying to a cubeMap
                 = 0
         var image: idImage? = null
@@ -1048,7 +1049,7 @@ object tr_local {
     // (until malloc fails), but it may force the
     // allocation of a new memory block that will
     // be discontinuous with the existing memory
-    internal class frameMemoryBlock_s {
+    class frameMemoryBlock_s {
         var base: ByteArray = ByteArray(4) // dynamically allocated as [size]
         var next: frameMemoryBlock_s? = null
         var poop // so that base is 16 byte aligned
@@ -1126,15 +1127,15 @@ object tr_local {
                 = 0
     }
 
-    internal class tmu_t {
+    class tmu_t {
         var current2DMap = 0
         var current3DMap = 0
         var currentCubeMap = 0
         var texEnv = 0
-        var textureType: textureType_t? = null
+        val textureType: textureType_t = textureType_t.TT_DISABLED
     }
 
-    internal class glstate_t {
+    class glstate_t {
         var currenttmu = 0
 
         //
@@ -1142,17 +1143,11 @@ object tr_local {
         var forceGlState // the next GL_State will ignore glStateBits and set everything
                 = false
         var glStateBits = 0
-        var tmu: Array<tmu_t?>?
+        var tmu: Array<tmu_t> = Array(MAX_MULTITEXTURE_UNITS) { tmu_t() }
 
-        init {
-            tmu = arrayOfNulls<tmu_t?>(MAX_MULTITEXTURE_UNITS)
-            for (a in tmu.indices) {
-                tmu.get(a) = tmu_t()
-            }
-        }
     }
 
-    internal class backEndCounters_t {
+    class backEndCounters_t {
         //
         var c_drawElements = 0
         var c_drawIndexes = 0
@@ -1195,7 +1190,7 @@ object tr_local {
         //
         var currentRenderCopied // true if any material has already referenced _currentRender
                 = false
-        var currentScissor: idScreenRect? = null
+        var currentScissor: idScreenRect = idScreenRect()
 
         //
         var currentSpace // for detecting when a matrix must change
@@ -1406,21 +1401,22 @@ object tr_local {
             }
             val oldVPstate = backEndRendererHasVertexPrograms
             backEndRenderer = backEndName_t.BE_BAD
-            if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "arb") == 0) {
+            val r_rendererString = RenderSystem_init.r_renderer.GetString()!!
+            if (idStr.Icmp(r_rendererString, "arb") == 0) {
                 backEndRenderer = backEndName_t.BE_ARB
-            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "arb2") == 0) {
+            } else if (idStr.Icmp(r_rendererString, "arb2") == 0) {
                 if (glConfig.allowARB2Path) {
                     backEndRenderer = backEndName_t.BE_ARB2
                 }
-            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "nv10") == 0) {
+            } else if (idStr.Icmp(r_rendererString, "nv10") == 0) {
                 if (glConfig.allowNV10Path) {
                     backEndRenderer = backEndName_t.BE_NV10
                 }
-            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "nv20") == 0) {
+            } else if (idStr.Icmp(r_rendererString, "nv20") == 0) {
                 if (glConfig.allowNV20Path) {
                     backEndRenderer = backEndName_t.BE_NV20
                 }
-            } else if (idStr.Icmp(RenderSystem_init.r_renderer.GetString(), "r200") == 0) {
+            } else if (idStr.Icmp(r_rendererString, "r200") == 0) {
                 if (glConfig.allowR200Path) {
                     backEndRenderer = backEndName_t.BE_R200
                 }
@@ -1468,9 +1464,7 @@ object tr_local {
             // shadows will be different data
             if (oldVPstate != backEndRendererHasVertexPrograms) {
                 VertexCache.vertexCache.PurgeAll()
-                if (primaryWorld != null) {
-                    primaryWorld.FreeInteractions()
-                }
+                primaryWorld?.FreeInteractions()
             }
             RenderSystem_init.r_renderer.ClearModified()
         }
@@ -1488,13 +1482,13 @@ object tr_local {
             val hRatio = rc.height.toFloat() / RenderSystem.SCREEN_HEIGHT
             viewport.x1 = idMath.Ftoi(rc.x + renderView.x * wRatio)
             viewport.x2 = idMath.Ftoi(
-                rc.x + Math.floor(((renderView.x + renderView.width) * wRatio + 0.5f).toDouble()).toFloat() - 1
+                rc.x + floor(((renderView.x + renderView.width) * wRatio + 0.5f).toDouble()).toFloat() - 1
             )
             viewport.y1 = idMath.Ftoi(
-                rc.y + rc.height - Math.floor(((renderView.y + renderView.height) * hRatio + 0.5f).toDouble()).toFloat()
+                rc.y + rc.height - floor(((renderView.y + renderView.height) * hRatio + 0.5f).toDouble()).toFloat()
             )
             viewport.y2 =
-                idMath.Ftoi(rc.y + rc.height - Math.floor((renderView.y * hRatio + 0.5f).toDouble()).toFloat() - 1)
+                idMath.Ftoi(rc.y + rc.height - floor((renderView.y * hRatio + 0.5f).toDouble()).toFloat() - 1)
         }
 
         override fun Init() {
@@ -1733,7 +1727,7 @@ object tr_local {
                     //FIXME: the +6, -6 skips the embedded fonts/
 //                    memcpy(outFont.glyphs[i].shaderName, fdFile[fdOffset + 6], 32 - 6);
                     outFont.glyphs[i].shaderName =
-                        String(Arrays.copyOfRange(tr_font.fdFile, tr_font.fdOffset + 6, tr_font.fdOffset + 32))
+                        String(tr_font.fdFile.copyOfRange(tr_font.fdOffset + 6, tr_font.fdOffset + 32))
                     tr_font.fdOffset += 32
                     i++
                 }
@@ -2498,8 +2492,8 @@ object tr_local {
             guiModel.Clear()
             currentRenderCrop--
             if (Session.session.writeDemo != null) {
-                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.session.writeDemo.WriteInt(demoCommand_t.DC_UNCROP_RENDER)
+                Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_UNCROP_RENDER)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_UNCROP\n")
                 }
@@ -2507,9 +2501,9 @@ object tr_local {
         }
 
         override fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray) {
-            nv10or20.get(0) =
+            nv10or20[0] =
                 tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
-            oldCard.get(0) =
+            oldCard[0] =
                 tr.backEndRenderer == backEndName_t.BE_ARB || tr.backEndRenderer == backEndName_t.BE_R200 || tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
         }
 
@@ -2651,7 +2645,7 @@ object tr_local {
      =============================================================
      */
     class localTrace_t {
-        val indexes: IntArray? = IntArray(3)
+        val indexes: IntArray = IntArray(3)
         val normal: idVec3 = idVec3()
 
         // only valid if fraction < 1.0

@@ -77,9 +77,9 @@ object AF {
     }
 
     class afTouch_s {
-        var touchedByBody: idAFBody? = null
-        var touchedClipModel: idClipModel? = null
-        var touchedEnt: idEntity? = null
+        lateinit var touchedByBody: idAFBody
+        lateinit var touchedClipModel: idClipModel
+        lateinit var touchedEnt: idEntity
     }
 
     //
@@ -87,7 +87,7 @@ object AF {
         protected val baseOrigin // offset of base body relative to skeletal model origin
                 : idVec3
         protected var animator // animator on entity
-                : idAnimator?
+                : idAnimator
         protected var baseAxis // axis of base body relative to skeletal model origin
                 : idMat3
         protected var hasBindConstraints // true if the bind constraints have been added
@@ -97,15 +97,15 @@ object AF {
         protected var isLoaded // true when the articulated figure is properly loaded
                 : Boolean
         protected val jointBody // table to find the nearest articulated figure body for a joint of the skeletal model
-                : idList<Int?>?
+                : idList<Int>
         protected val jointMods // list with transforms from skeletal model joints to articulated figure bodies
-                : idList<jointConversion_s?>?
+                : idList<jointConversion_s>
         protected var modifiedAnim // anim to modify
                 : Int
-        protected var name // name of the loaded .af file
-                : idStr?
+        protected val name // name of the loaded .af file
+                : idStr
         protected var physicsObj // articulated figure physics
-                : idPhysics_AF?
+                : idPhysics_AF
         protected var poseTime // last time the articulated figure was transformed to reflect the current animation pose
                 : Int
         protected var restStartTime // time the articulated figure came to rest
@@ -483,7 +483,7 @@ object AF {
             physicsObj.UpdateClipModels()
         }
 
-        fun EntitiesTouchingAF(touchList: Array<afTouch_s?>? /*[ MAX_GENTITIES ]*/): Int {
+        fun EntitiesTouchingAF(touchList: Array<afTouch_s> /*[ MAX_GENTITIES ]*/): Int {
             var i: Int
             var j: Int
             val numClipModels: Int
@@ -640,7 +640,7 @@ object AF {
             }
         }
 
-        fun GetPhysics(): idPhysics_AF? {
+        fun GetPhysics(): idPhysics_AF {
             return physicsObj
         }
 

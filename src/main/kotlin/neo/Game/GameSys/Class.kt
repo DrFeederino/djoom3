@@ -16,6 +16,7 @@ import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.FX.idTeleporter
 import neo.Game.GameSys.*
+import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Event.idEvent
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
@@ -131,8 +132,7 @@ object Class {
         open fun accept(t: T?, vararg args: idEventArg<*>?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t0<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t0<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t)
         }
@@ -140,8 +140,7 @@ object Class {
         open fun accept(e: T?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t1<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t1<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0])
         }
@@ -149,8 +148,7 @@ object Class {
         open fun accept(t: T?, a: idEventArg<*>?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t2<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t2<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0], args[1])
         }
@@ -158,8 +156,7 @@ object Class {
         open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t3<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t3<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0], args[1], args[2])
         }
@@ -167,8 +164,7 @@ object Class {
         open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?, c: idEventArg<*>?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t4<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t4<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0], args[1], args[2], args[3])
         }
@@ -176,8 +172,7 @@ object Class {
         open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?, c: idEventArg<*>?, d: idEventArg<*>?)
     }
 
-    @FunctionalInterface
-    interface eventCallback_t5<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t5<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0], args[1], args[2], args[3], args[4])
         }
@@ -192,8 +187,7 @@ object Class {
         )
     }
 
-    @FunctionalInterface
-    interface eventCallback_t6<T : idClass?> : eventCallback_t<T?> {
+    fun interface eventCallback_t6<T : idClass?> : eventCallback_t<T?> {
         override fun accept(t: T?, vararg args: idEventArg<*>?) {
             accept(t, args[0], args[1], args[2], args[3], args[4], args[5])
         }

@@ -96,8 +96,8 @@ class idProgram {
         stringspace = 0
         i = 0
         while (i < fileList.size()) {
-            Game_local.gameLocal.DPrintf("   %s\n", fileList.get(i))
-            stringspace += fileList.get(i).Allocated()
+            Game_local.gameLocal.DPrintf("   %s\n", fileList[i])
+            stringspace += fileList[i].Allocated()
             i++
         }
         stringspace += fileList.sizeStrings()
@@ -107,13 +107,13 @@ class idProgram {
         memused += stringspace
         i = 0
         while (i < types.Num()) {
-            memused += types.get(i).Allocated()
+            memused += types[i].Allocated()
             i++
         }
         funcMem = functions.MemoryUsed()
         i = 0
         while (i < functions.Num()) {
-            funcMem += functions.get(i).Allocated()
+            funcMem += functions[i].Allocated()
             i++
         }
         memallocated = funcMem + memused + idProgram.Companion.BYTES
@@ -138,14 +138,14 @@ class idProgram {
         var currentFileNum = top_files
         savefile.WriteInt(fileList.size() - currentFileNum)
         while (currentFileNum < fileList.size()) {
-            savefile.WriteString(fileList.get(currentFileNum))
+            savefile.WriteString(fileList[currentFileNum])
             currentFileNum++
         }
         i = 0
         while (i < variableDefaults.Num()) {
-            if (variables.get(i) != variableDefaults.get(i)) {
+            if (variables[i] != variableDefaults[i]) {
                 savefile.WriteInt(i)
-                savefile.WriteByte(variables.get(i))
+                savefile.WriteByte(variables[i])
             }
             i++
         }
@@ -154,7 +154,7 @@ class idProgram {
         savefile.WriteInt(numVariables)
         i = variableDefaults.Num()
         while (i < numVariables) {
-            savefile.WriteByte(variables.get(i))
+            savefile.WriteByte(variables[i])
             i++
         }
         val checksum = CalculateChecksum()
@@ -176,13 +176,13 @@ class idProgram {
         }
         savefile.ReadInt(index)
         while (index._val >= 0) {
-            variables.get(index._val) = savefile.ReadByte()
+            variables[index._val] = savefile.ReadByte()
             savefile.ReadInt(index)
         }
         savefile.ReadInt(num)
         i = variableDefaults.Num()
         while (i < num._val) {
-            variables.get(i) = savefile.ReadByte()
+            variables[i] = savefile.ReadByte()
             i++
         }
         val saved_checksum = CInt()
@@ -200,44 +200,44 @@ class idProgram {
         var i: Int
         val result: Int
 
-        internal class statementBlock_t {
+        class statementBlock_t {
             var a = 0
             var b = 0
             var c = 0
             var file = 0
             var lineNumber = 0
             var   /*unsigned short*/op = 0
-            fun toArray(): IntArray? {
+            fun toArray(): IntArray {
                 return intArrayOf(op, a, b, c, lineNumber, file)
             }
         }
 
-        val statementList = arrayOfNulls<statementBlock_t?>(statements.Num())
+        val statementList = Array(statements.Num()) { statementBlock_t() }
         val statementIntArray = IntArray(statements.Num() * 6)
 
 //	memset( statementList, 0, ( sizeof(statementBlock_t) * statements.Num() ) );
         // Copy info into new list, using the variable numbers instead of a pointer to the variable
         i = 0
         while (i < statements.Num()) {
-            statementList[i] = statementBlock_t()
-            statementList[i].op = statements.get(i).op
-            if (statements.get(i).a != null) {
-                statementList[i].a = statements.get(i).a.num
+            //statementList[i] = statementBlock_t()
+            statementList[i].op = statements[i].op
+            if (statements[i].a != null) {
+                statementList[i].a = statements[i].a.num
             } else {
                 statementList[i].a = -1
             }
-            if (statements.get(i).b != null) {
-                statementList[i].b = statements.get(i).b.num
+            if (statements[i].b != null) {
+                statementList[i].b = statements[i].b.num
             } else {
                 statementList[i].b = -1
             }
-            if (statements.get(i).c != null) {
-                statementList[i].c = statements.get(i).c.num
+            if (statements[i].c != null) {
+                statementList[i].c = statements[i].c.num
             } else {
                 statementList[i].c = -1
             }
-            statementList[i].lineNumber = statements.get(i).linenumber
-            statementList[i].file = statements.get(i).file
+            statementList[i].lineNumber = statements[i].linenumber
+            statementList[i].file = statements[i].file
             System.arraycopy(statementList[i].toArray(), 0, statementIntArray, i * 6, 6)
             i++
         }
@@ -292,7 +292,7 @@ class idProgram {
         varDefs.SetNum(top_defs, false)
         i = top_functions
         while (i < functions.Num()) {
-            functions.get(i).Clear()
+            functions[i].Clear()
             i++
         }
         functions.SetNum(top_functions)
@@ -304,7 +304,7 @@ class idProgram {
         numVariables = variableDefaults.Num()
         i = 0
         while (i < numVariables) {
-            variables.get(i) = variableDefaults.get(i)
+            variables[i] = variableDefaults[i]
             i++
         }
     }
@@ -324,7 +324,7 @@ class idProgram {
             // check to make sure all functions prototyped have code
             i = 0
             while (i < varDefs.Num()) {
-                def = varDefs.get(i)
+                def = varDefs[i]
                 if (def.Type() == Script_Program.ev_function && (def.scope.Type() == Script_Program.ev_namespace || def.scope.TypeDef()
                         .Inherits(Script_Program.type_object))
                 ) {
@@ -429,7 +429,7 @@ class idProgram {
         variableDefaults.SetNum(numVariables)
         i = 0
         while (i < numVariables) {
-            variableDefaults.set(i, variables.get(i))
+            variableDefaults[i] = variables[i]
             i++
         }
     }
@@ -437,11 +437,11 @@ class idProgram {
     fun DisassembleStatement(file: idFile?, instructionPointer: Int) {
         val op: opcode_s
         val statement: statement_s?
-        statement = statements.get(instructionPointer)
+        statement = statements[instructionPointer]
         op = idCompiler.Companion.opcodes.get(statement.op)
         file.Printf(
             "%20s(%d):\t%6d: %15s\t",
-            fileList.get(statement.file),
+            fileList[statement.file],
             statement.linenumber,
             instructionPointer,
             op.opname
@@ -469,7 +469,7 @@ class idProgram {
         file = idLib.fileSystem.OpenFileByMode("script/disasm.txt", fsMode_t.FS_WRITE)
         i = 0
         while (i < functions.Num()) {
-            func = functions.get(i)
+            func = functions[i]
             if (func.eventdef != null) {
                 // skip eventdefs
                 i++
@@ -514,7 +514,7 @@ class idProgram {
         // clear all the strings in the functions so that it doesn't look like we're leaking memory.
         i = 0
         while (i < functions.Num()) {
-            functions.get(i).Clear()
+            functions[i].Clear()
             i++
         }
         filename.Clear()
@@ -530,7 +530,7 @@ class idProgram {
     }
 
     fun GetFilename(num: Int): String? {
-        return fileList.get(num).toString()
+        return fileList[num].toString()
     }
 
     fun GetFilenum(name: String?): Int {
@@ -552,11 +552,11 @@ class idProgram {
     }
 
     fun GetLineNumberForStatement(index: Int): Int {
-        return statements.get(index).linenumber
+        return statements[index].linenumber
     }
 
     fun GetFilenameForStatement(index: Int): String? {
-        return GetFilename(statements.get(index).file)
+        return GetFilename(statements[index].file)
     }
 
     fun AllocType(type: idTypeDef?): idTypeDef? {
@@ -587,8 +587,8 @@ class idProgram {
         //FIXME: linear search == slow
         i = types.Num() - 1
         while (i >= 0) {
-            if (types.get(i).MatchesType(type) && types.get(i).Name() == type.Name()) {
-                return types.get(i)
+            if (types[i].MatchesType(type) && types[i].Name() == type.Name()) {
+                return types[i]
             }
             i--
         }
@@ -611,7 +611,7 @@ class idProgram {
         var i: Int
         i = types.Num() - 1
         while (i >= 0) {
-            check = types.get(i)
+            check = types[i]
             if (check.Name() == name) {
                 return check
             }
@@ -777,7 +777,7 @@ class idProgram {
         varDefs.RemoveIndex(def.num)
         i = def.num
         while (i < varDefs.Num()) {
-            varDefs.get(i).num = i
+            varDefs[i].num = i
             i++
         }
         def.close()
@@ -815,8 +815,8 @@ class idProgram {
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames.get(i).Name(), name) == 0) {
-                return varDefNames.get(i).GetDefs()
+            if (idStr.Companion.Cmp(varDefNames[i].Name(), name) == 0) {
+                return varDefNames[i].GetDefs()
             }
             i = varDefNameHash.Next(i)
         }
@@ -829,7 +829,7 @@ class idProgram {
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames.get(i).Name(), name) == 0) {
+            if (idStr.Companion.Cmp(varDefNames[i].Name(), name) == 0) {
                 break
             }
             i = varDefNameHash.Next(i)
@@ -838,7 +838,7 @@ class idProgram {
             i = varDefNames.Append(idVarDefName(name))
             varDefNameHash.Add(hash, i)
         }
-        varDefNames.get(i).AddDef(def)
+        varDefNames[i].AddDef(def)
     }
 
     /*
@@ -943,7 +943,7 @@ class idProgram {
     }
 
     fun GetFunction(index: Int): function_t? {
-        return functions.get(index)
+        return functions[index]
     }
 
     fun GetFunctionIndex(func: function_t?): Int {
@@ -979,7 +979,7 @@ class idProgram {
         if (index == 61961) {
             val a = 0
         }
-        return statements.get(index)
+        return statements[index]
     }
 
     fun NumStatements(): Int {

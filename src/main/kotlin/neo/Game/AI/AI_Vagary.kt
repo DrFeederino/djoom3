@@ -40,17 +40,22 @@ class AI_Vagary {
                 return eventCallbacks
             }
 
+
             init {
                 eventCallbacks.putAll(idAI.getEventCallBacks())
-                eventCallbacks[AI_Vagary_ChooseObjectToThrow] = object : eventCallback_t5<idAI_Vagary> { println(it) }
-                eventCallbacks[AI_Vagary_ChooseObjectToThrow] =
-                    eventCallback_t5<idAI_Vagary> { obj: Any?, mins: idEventArg<*>? ->
-                        idAI_Vagary::Event_ChooseObjectToThrow
-                    } as eventCallback_t5<idAI_Vagary>
-                eventCallbacks[AI_Vagary_ThrowObjectAtEnemy] =
-                    eventCallback_t2<idAI_Vagary> { obj: Any?, _ent: idEventArg<*>? ->
-                        idAI_Vagary::Event_ThrowObjectAtEnemy
-                    } as eventCallback_t2<idAI_Vagary>
+                eventCallbacks[AI_Vagary_ChooseObjectToThrow] = eventCallback_t5<idAI_Vagary> { obj: Any?,
+                                                                                                mins: idEventArg<*>?,
+                                                                                                maxs: idEventArg<*>?,
+                                                                                                speed: idEventArg<*>?,
+                                                                                                minDist: idEventArg<*>?,
+                                                                                                offset: idEventArg<*>? ->
+                    idAI_Vagary::Event_ChooseObjectToThrow
+                }
+                eventCallbacks[AI_Vagary_ThrowObjectAtEnemy] = eventCallback_t2<idAI_Vagary> { obj: Any?,
+                                                                                               _ent: idEventArg<*>?,
+                                                                                               _speed: idEventArg<*>? ->
+                    idAI_Vagary::Event_ThrowObjectAtEnemy
+                }
             }
         }
 
@@ -114,11 +119,11 @@ class AI_Vagary {
                         enemyEyePos,
                         speed.value!!,
                         entPhys.GetGravity(),
-                        entPhys.GetClipModel(),
+                        entPhys.GetClipModel()!!,
                         entPhys.GetClipMask(),
                         Lib.MAX_WORLD_SIZE.toFloat(),
                         null,
-                        enemyEnt,
+                        enemyEnt!!,
                         if (SysCvar.ai_debugTrajectory.GetBool()) 4000 else 0,
                         vel
                     )
@@ -148,7 +153,7 @@ class AI_Vagary {
                     lastVisibleEnemyPos + lastVisibleEnemyEyeOffset,
                     speed,
                     entPhys.GetGravity(),
-                    entPhys.GetClipModel(),
+                    entPhys.GetClipModel()!!,
                     entPhys.GetClipMask(),
                     Lib.MAX_WORLD_SIZE.toFloat(),
                     null,

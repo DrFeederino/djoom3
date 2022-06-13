@@ -50,10 +50,10 @@ object Cinematic {
     val ROQ_YY_tab: LongArray = LongArray(256)
     const val ZA_SOUND_MONO = 0x1020
     const val ZA_SOUND_STEREO = 0x1021
-    var file: IntArray? = null
-    var vq2: ByteBuffer? = null
-    var vq4: ByteBuffer? = null
-    var vq8: ByteBuffer? = null
+    var file: IntArray = IntArray(0)
+    var vq2: ByteBuffer = ByteBuffer.allocate(1)
+    var vq4: ByteBuffer = ByteBuffer.allocate(1)
+    var vq8: ByteBuffer = ByteBuffer.allocate(1)
     private fun VQ2TO4(a: ByteBuffer, b: ByteBuffer, c: ByteBuffer, d: ByteBuffer) {
         val aPos = a.position()
         val bPos = b.position()
@@ -285,10 +285,10 @@ object Cinematic {
 
             // shutdown cinematic play back data
             fun ShutdownCinematic() {
-                file = null
-                vq2 = null
-                vq4 = null
-                vq8 = null
+                file = IntArray(0)
+                vq2 = ByteBuffer.allocate(1)
+                vq4 = ByteBuffer.allocate(1)
+                vq8 = ByteBuffer.allocate(1)
             }
 
             // allocates and returns a private subclass that implements the methods

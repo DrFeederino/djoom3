@@ -162,7 +162,7 @@ object draw_arb {
      ==================
      */
     class RB_ARB_DrawInteraction private constructor() : DrawInteraction() {
-        override fun run(din: drawInteraction_t?) {
+        override fun run(din: drawInteraction_t) {
             val surf = din.surf
             val tri = din.surf.geo
 

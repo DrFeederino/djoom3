@@ -12,6 +12,8 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
 import org.lwjgl.opengl.GL11
+import kotlin.experimental.and
+import kotlin.experimental.xor
 
 /**
  *
@@ -55,7 +57,7 @@ object tr_trace {
         // create front and end planes so the trace is on the positive sides of both
         planes[2].set(startDir)
         planes[2].set(3, -start.times(planes[2].Normal()))
-        planes[3].set(startDir.oNegative())
+        planes[3].set(startDir.unaryMinus())
         planes[3].set(3, -end.times(planes[3].Normal()))
 
         // catagorize each point against the four planes
