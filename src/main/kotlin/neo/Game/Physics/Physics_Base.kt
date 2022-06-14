@@ -65,7 +65,7 @@ class Physics_Base {
 
         override fun Save(savefile: idSaveGame) {
             var i: Int
-            savefile.WriteObject(self)
+            savefile.WriteObject(self as idClass)
             savefile.WriteInt(clipMask)
             savefile.WriteVec3(gravityVector)
             savefile.WriteVec3(gravityNormal)

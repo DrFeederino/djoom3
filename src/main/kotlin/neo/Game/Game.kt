@@ -670,7 +670,7 @@ object Game {
             model: idRenderModel?,
             anim: idMD5Anim?,
             numJoints: Int,
-            joints: Array<idJointMat?>?,
+            joints: ArrayList<idJointMat>,
             time: Int,
             offset: idVec3,
             remove_origin_offset: Boolean

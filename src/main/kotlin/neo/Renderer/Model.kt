@@ -261,7 +261,7 @@ object Model {
 
     //} jointHandle_t;
     class idMD5Joint {
-        var name: idStr? = null
+        val name: idStr = idStr()
         var parent: idMD5Joint? = null
     }
 
@@ -321,7 +321,7 @@ object Model {
         abstract fun FreeVertexCache()
 
         // returns the name of the model
-        abstract fun Name(): String?
+        abstract fun Name(): String
 
         // prints a detailed report on the model for printModel
         abstract fun Print()
@@ -397,16 +397,16 @@ object Model {
         abstract fun NumJoints(): Int
 
         // Returns the MD5 joints or NULL if the model is not an MD5
-        abstract fun GetJoints(): Array<idMD5Joint?>?
+        abstract fun GetJoints(): Array<idMD5Joint>
 
         // Returns the handle for the joint with the given name.
         abstract /*jointHandle_t*/  fun GetJointHandle(name: String?): Int
 
         // Returns the name for the joint with the given handle.
-        abstract fun GetJointName(jointHandle_t: Int): String?
+        abstract fun GetJointName(jointHandle_t: Int): String
 
         // Returns the default animation pose or NULL if the model is not an MD5.
-        abstract fun GetDefaultPose(): Array<idJointQuat?>?
+        abstract fun GetDefaultPose(): ArrayList<idJointQuat>
 
         // Returns number of the joint nearest to the given triangle.
         abstract fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int

@@ -67,7 +67,7 @@ class Physics_Static {
         }
 
         override fun Save(savefile: idSaveGame) {
-            savefile.WriteObject(self)
+            savefile.WriteObject(self as idClass)
             savefile.WriteVec3(current.origin)
             savefile.WriteMat3(current.axis)
             savefile.WriteVec3(current.localOrigin)
@@ -83,7 +83,7 @@ class Physics_Static {
             savefile.ReadMat3(current.axis)
             savefile.ReadVec3(current.localOrigin)
             savefile.ReadMat3(current.localAxis)
-            savefile.ReadClipModel(clipModel)
+            savefile.ReadClipModel(clipModel!!)
             hasMaster = savefile.ReadBool()
             isOrientated = savefile.ReadBool()
         }

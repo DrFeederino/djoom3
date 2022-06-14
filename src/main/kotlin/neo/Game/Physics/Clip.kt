@@ -6,6 +6,7 @@ import neo.CM.CollisionModel.contactType_t
 import neo.CM.CollisionModel.trace_s
 import neo.CM.CollisionModel_local
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.Game_local
@@ -105,7 +106,7 @@ object Clip {
     class clipSector_s {
         var axis // -1 = leaf node
                 = 0
-        var children: Array<clipSector_s?> = arrayOfNulls<clipSector_s?>(2)
+        var children: ArrayList<clipSector_s> = ArrayList<clipSector_s>(2)
         var clipLinks: clipLink_s? = null
         var dist = 0f //        private void oSet(clipSector_s clip) {
         //            this.axis = clip.axis;
@@ -249,9 +250,9 @@ object Clip {
 
         fun Save(savefile: idSaveGame) {
             savefile.WriteBool(enabled)
-            savefile.WriteObject(entity)
+            savefile.WriteObject(entity as Class.idClass)
             savefile.WriteInt(id)
-            savefile.WriteObject(owner)
+            savefile.WriteObject(owner as Class.idClass)
             savefile.WriteVec3(origin)
             savefile.WriteMat3(axis)
             savefile.WriteBounds(bounds)
@@ -539,12 +540,12 @@ object Clip {
             val link: clipLink_s
             while (node.axis != -1) {
                 node = if (absBounds[0, node.axis] > node.dist) {
-                    node.children[0]!!
+                    node.children[0]
                 } else if (absBounds[1, node.axis] < node.dist) {
-                    node.children[1]!!
+                    node.children[1]
                 } else {
-                    Link_r(node.children[0]!!)
-                    node.children[1]!!
+                    Link_r(node.children[0])
+                    node.children[1]
                 }
             }
             link = clipLink_s() //clipLinkAllocator.Alloc();
@@ -761,7 +762,7 @@ object Clip {
             var i: Int
             val num: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val traceBounds = idBounds()
             val radius: Float
             val trace = trace_s()
@@ -846,11 +847,11 @@ object Clip {
             var i: Int
             val num: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val traceBounds = idBounds()
             val trace = trace_s()
-            val trm: idTraceModel
-            trm = TraceModelForClipModel(mdl)!!
+            val trm: idTraceModel?
+            trm = TraceModelForClipModel(mdl)
             if (null == passEntity || passEntity.entityNumber != Game_local.ENTITYNUM_WORLD) {
                 // test world
                 numRotations++
@@ -858,7 +859,7 @@ object Clip {
                     results,
                     start,
                     rotation,
-                    trm,
+                    trm!!,
                     trmAxis,
                     contentMask,
                     0,
@@ -900,7 +901,7 @@ object Clip {
                     trace,
                     start,
                     rotation,
-                    trm,
+                    trm!!,
                     trmAxis,
                     contentMask,
                     touch.Handle(),
@@ -927,7 +928,7 @@ object Clip {
             var i: Int
             var num: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val dir = idVec3()
             val endPosition = idVec3()
             val traceBounds = idBounds()
@@ -1119,7 +1120,7 @@ object Clip {
             var n: Int
             var numContacts: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             var traceBounds: idBounds = idBounds()
             val trm: idTraceModel
             trm = TraceModelForClipModel(mdl)!!
@@ -1205,7 +1206,7 @@ object Clip {
             val num: Int
             var contents: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val traceBounds = idBounds()
             val trm: idTraceModel?
             trm = TraceModelForClipModel(mdl)!!
@@ -1418,7 +1419,7 @@ object Clip {
             var i: Int
             val num: Int
             var touch: idClipModel?
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val traceBounds = idBounds()
             val radius: Float
             val trace = trace_s()
@@ -1547,7 +1548,7 @@ object Clip {
             entityList: Array<idEntity>,
             maxCount: Int
         ): Int {
-            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             var i: Int
             var j: Int
             val count: Int
@@ -1560,7 +1561,7 @@ object Clip {
                 // entity could already be in the list because an entity can use multiple clip models
                 j = 0
                 while (j < entCount) {
-                    if (entityList[j] === clipModelList[i]!!.entity) {
+                    if (entityList[j] === clipModelList[i].entity) {
                         break
                     }
                     j++
@@ -1570,7 +1571,7 @@ object Clip {
                         Game_local.gameLocal.Warning("idClip::EntitiesTouchingBounds: max count")
                         return entCount
                     }
-                    entityList[entCount] = clipModelList[i]!!.entity!!
+                    entityList[entCount] = clipModelList[i].entity!!
                     entCount++
                 }
                 i++
@@ -1581,7 +1582,7 @@ object Clip {
         fun ClipModelsTouchingBounds(
             bounds: idBounds,
             contentMask: Int,
-            clipModelList: Array<idClipModel>,
+            clipModelList: kotlin.collections.ArrayList<idClipModel>,
             maxCount: Int
         ): Int {
             val parms = listParms_s()
@@ -1628,13 +1629,13 @@ object Clip {
             var i: Int
             val num: Int
             val bounds: idBounds
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             var clipModel: idClipModel
             bounds = idBounds(eye).Expand(radius)
             num = ClipModelsTouchingBounds(bounds, -1, clipModelList, Game_local.MAX_GENTITIES)
             i = 0
             while (i < num) {
-                clipModel = clipModelList[i]!!
+                clipModel = clipModelList[i]
                 if (clipModel.GetEntity() === passEntity) {
                     i++
                     continue
@@ -1724,7 +1725,7 @@ object Clip {
             anode = clipSectors[numClipSectors++]
             if (depth == MAX_SECTOR_DEPTH) {
                 anode.axis = -1
-                anode.children[1] = null
+                anode.children.removeAt(1)
                 anode.children[0] = anode.children[1]
                 i = 0
                 while (i < 3) {
@@ -1756,12 +1757,12 @@ object Clip {
             var node = node
             while (node.axis != -1) {
                 node = if (parms.bounds[0, node.axis] > node.dist) {
-                    node.children[0]!!
+                    node.children[0]
                 } else if (parms.bounds[1, node.axis] < node.dist) {
-                    node.children[1]!!
+                    node.children[1]
                 } else {
-                    ClipModelsTouchingBounds_r(node.children[0]!!, parms)
-                    node.children[1]!!
+                    ClipModelsTouchingBounds_r(node.children[0], parms)
+                    node.children[1]
                 }
             }
             var link = node.clipLinks
@@ -1840,7 +1841,7 @@ object Clip {
             bounds: idBounds,
             contentMask: Int,
             passEntity: idEntity?,
-            clipModelList: Array<idClipModel?>
+            clipModelList: ArrayList<idClipModel>
         ): Int {
             var i: Int
             val num: Int
@@ -1857,18 +1858,18 @@ object Clip {
             }
             i = 0
             while (i < num) {
-                cm = clipModelList[i]!!
+                cm = clipModelList[i]
 
                 // check if we should ignore this entity
                 if (cm.entity === passEntity) {
-                    clipModelList[i] = null // don't clip against the pass entity
+                    clipModelList.removeAt(i) // don't clip against the pass entity
                 } else if (cm.entity === passOwner) {
-                    clipModelList[i] = null // missiles don't clip with their owner
+                    clipModelList.removeAt(i) // missiles don't clip with their owner
                 } else if (cm.owner != null) {
                     if (cm.owner === passEntity) {
-                        clipModelList[i] = null // don't clip against own missiles
+                        clipModelList.removeAt(i) // don't clip against own missiles
                     } else if (cm.owner === passOwner) {
-                        clipModelList[i] = null // don't clip against other missiles from same owner
+                        clipModelList.removeAt(i) // don't clip against other missiles from same owner
                     }
                 }
                 i++
@@ -1918,7 +1919,7 @@ object Clip {
             var bounds: idBounds = idBounds()
             var contentMask = 0
             var count = 0
-            var list: Array<idClipModel?> = arrayOfNulls(1)
+            var list: ArrayList<idClipModel> = ArrayList(1)
             var maxCount = 0
         }
 

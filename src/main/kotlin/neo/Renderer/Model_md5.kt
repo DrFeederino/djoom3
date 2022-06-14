@@ -420,7 +420,7 @@ object Model_md5 {
             LoadModel()
         }
 
-        override fun IsDynamicModel(): dynamicModel_t? {
+        override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CACHED
         }
 
@@ -747,14 +747,14 @@ object Model_md5 {
             return Model.INVALID_JOINT
         }
 
-        override fun GetJointName(handle: Int): String? {
+        override fun GetJointName(handle: Int): String {
             return if (handle < 0 || handle >= joints.Num()) {
                 "<invalid joint>"
             } else joints.get(handle).name.toString()
         }
 
-        override fun GetDefaultPose(): Array<idJointQuat?>? {
-            return defaultPose.getList(Array<idJointQuat>::class.java)
+        override fun GetDefaultPose(): ArrayList<idJointQuat> {
+            return ArrayList(defaultPose.getList())
         }
 
         override fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int {

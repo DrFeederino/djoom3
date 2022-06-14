@@ -64,7 +64,7 @@ object Physics_StaticMulti {
 
         override fun Save(savefile: idSaveGame) {
             var i: Int
-            savefile.WriteObject(self)
+            savefile.WriteObject(self as idClass)
             savefile.WriteInt(current.Num())
             i = 0
             while (i < current.Num()) {

@@ -309,10 +309,10 @@ class idProgram {
         }
     }
 
-    fun CompileText(source: String?, text: String?, console: Boolean): Boolean {
+    fun CompileText(source: String, text: String?, console: Boolean): Boolean {
         val compiler = idCompiler()
         var i: Int
-        var def: idVarDef?
+        var def: idVarDef
         val ospath: String?
 
         // use a full os path for GetFilenum since it calls OSPathToRelativePath to convert filenames from the parser

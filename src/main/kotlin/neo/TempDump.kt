@@ -189,7 +189,7 @@ object TempDump {
     /**
      * @return -1 if **v1** not in **vList**.
      */
-    fun indexOf(v1: Any?, vList: Array<Any?>?): Int {
+    fun indexOf(v1: Any?, vList: Array<Any>?): Int {
         var i: Int
         if (v1 != null && vList != null) {
             i = 0

@@ -207,11 +207,11 @@ class RenderWorld {
                 = 0
 
         // networking: see WriteGUIToSnapshot / ReadGUIFromSnapshot
-        var gui: Array<idUserInterface?>? = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
+        var gui: Array<idUserInterface?> = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
         var hModel // this can only be null if callback is set
                 : idRenderModel? = null
         var joints // array of joints that will modify vertices.
-                : Array<idJointMat?>?
+                : ArrayList<idJointMat>
 
         // NULL if non-deformable model.  NOT freed by renderer
         //

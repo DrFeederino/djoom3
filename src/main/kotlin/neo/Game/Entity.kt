@@ -925,8 +925,8 @@ object Entity {
                 : Int
 
         //
-        var name // name of entity
-                : idStr?
+        val name // name of entity
+                : idStr = idStr()
 
         //
         var renderView // for camera views from this entity
@@ -1865,7 +1865,7 @@ object Entity {
             channel: Enum<*>?,
             soundShaderFlags: Int,
             broadcast: Boolean,
-            length: CInt
+            length: CInt = CInt()
         ): Boolean {
             return StartSound(soundName, channel.ordinal, soundShaderFlags, broadcast, length)
         }
@@ -1875,7 +1875,7 @@ object Entity {
             channel: Int,
             soundShaderFlags: Int,
             broadcast: Boolean,
-            length: CInt
+            length: CInt = CInt()
         ): Boolean {
             val diversity: Float
             val len: Int
@@ -4423,7 +4423,7 @@ object Entity {
             // enum {
             const val EVENT_ADD_DAMAGE_EFFECT = idEntity.EVENT_MAXEVENTS
             const val EVENT_MAXEVENTS = EVENT_ADD_DAMAGE_EFFECT + 1
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //							// ~idAnimatedEntity();
             /*
@@ -4519,7 +4519,7 @@ object Entity {
                 idThread.Companion.ReturnVector(vec)
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 

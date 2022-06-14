@@ -363,7 +363,7 @@ object AI_pathing {
         var box: idBox
         var obEnt: idEntity
         var clipModel: idClipModel
-        val clipModelList = Array(Game_local.MAX_GENTITIES) { idClipModel() }
+        val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
 
         numObstacles = 0
 

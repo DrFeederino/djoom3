@@ -1301,15 +1301,15 @@ object snd_emitter {
         }
 
         fun GetSlowChannel(chan: idSoundChannel): idSlowChannel {
-            return slowChannels[TempDump.indexOf(chan, channels as Array<Any?>?)] //TODO: pointer subtraction
+            return slowChannels[channels.indexOf(chan)] //TODO: pointer subtraction
         }
 
         fun SetSlowChannel(chan: idSoundChannel?, slow: idSlowChannel) {
-            slowChannels[TempDump.indexOf(chan, channels as Array<Any?>?)] = slow
+            slowChannels[channels.indexOf(chan)] = slow
         }
 
         fun ResetSlowChannel(chan: idSoundChannel?) {
-            val index = TempDump.indexOf(chan, channels as Array<Any?>?)
+            val index = channels.indexOf(chan)
             slowChannels[index].Reset()
         }
 

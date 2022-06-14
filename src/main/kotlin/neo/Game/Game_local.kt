@@ -480,7 +480,7 @@ class Game_local {
         var clip: idClip = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: Array<idEntity?> = arrayOfNulls<idEntity>(MAX_GENTITIES) // index to entities
+        var entities: Array<idEntity> = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
         var entityHash: idHashIndex? = idHashIndex() // hash table to quickly find entities by name
@@ -567,9 +567,8 @@ class Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: Array<idDict?> = arrayOfNulls<idDict?>(MAX_CLIENTS) // client specific settings
-        var usercmds = Stream.generate { usercmd_t() }.limit(MAX_CLIENTS.toLong())
-            .toArray<usercmd_t?> { _Dummy_.__Array__() } // client input commands
+        var userInfo: Array<idDict> = ArrayList<idDict>(MAX_CLIENTS) // client specific settings
+        var usercmds = Array(MAX_CLIENTS) { usercmd_t() } // client input commands
 
         //
         var vacuumAreaNum // -1 if level doesn't have any outside areas
@@ -3714,7 +3713,7 @@ class Game_local {
             var i: Int
             val numListedClipModels: Int
             var clipModel: idClipModel
-            val clipModelList = arrayOfNulls<idClipModel?>(MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(MAX_GENTITIES)
             val dir = idVec3()
             val bounds: idBounds
             val result = modelTrace_s()

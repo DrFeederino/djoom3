@@ -317,7 +317,7 @@ object Physics_RigidBody {
             angularFriction = savefile.ReadFloat()
             contactFriction = savefile.ReadFloat()
             bouncyness = savefile.ReadFloat()
-            savefile.ReadClipModel(clipModel)
+            savefile.ReadClipModel(clipModel!!)
             mass = savefile.ReadFloat()
             inverseMass = savefile.ReadFloat()
             savefile.ReadVec3(centerOfMass)

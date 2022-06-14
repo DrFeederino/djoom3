@@ -1,7 +1,6 @@
 package neo.Game.GameSys
 
 import neo.CM.CollisionModel.trace_s
-import neo.Game.*
 import neo.Game.AFEntity.idAFEntity_ClawFourFingers
 import neo.Game.AFEntity.idAFEntity_Generic
 import neo.Game.AFEntity.idAFEntity_WithAttachedHead
@@ -11,16 +10,17 @@ import neo.Game.AI.AI_Vagary.idAI_Vagary
 import neo.Game.BrittleFracture.idBrittleFracture
 import neo.Game.Camera.idCameraAnim
 import neo.Game.Camera.idCameraView
+import neo.Game.Entity
 import neo.Game.Entity.idAnimatedEntity
 import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.FX.idTeleporter
-import neo.Game.GameSys.*
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Event.idEvent
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
+import neo.Game.Game_local
 import neo.Game.Item.idItem
 import neo.Game.Item.idItemPowerup
 import neo.Game.Item.idItemRemover
@@ -106,7 +106,7 @@ import neo.Game.WorldSpawn.idWorldspawn
 import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.framework.CmdSystem.cmdFunction_t
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.Hierarchy.idHierarchy
@@ -122,7 +122,7 @@ import java.lang.Class
 object Class {
     val EV_Remove: idEventDef = idEventDef("<immediateremove>", null)
     val EV_SafeRemove: idEventDef = idEventDef("remove", null)
-    var classHierarchy: idHierarchy<idTypeInfo?> = idHierarchy()
+    var classHierarchy: idHierarchy<idTypeInfo> = idHierarchy()
     var eventCallbackMemory = 0
 
     // this is the head of a singly linked list of all the idTypes
@@ -216,7 +216,7 @@ object Class {
     }
 
     class idEventFunc<type> {
-        var event: idEventDef = null
+        var event: idEventDef? = null
         var function: eventCallback_t<*>? = null
     }
 
@@ -241,41 +241,41 @@ object Class {
         }
 
         companion object {
-            fun <T> toArg(data: T?): idEventArg<T?>? {
-                return idEventArg<Any?>(data)
+            fun <T> toArg(data: T?): idEventArg<T> {
+                return idEventArg(data)
             }
 
-            fun toArg(data: Int): idEventArg<Int?>? {
-                return idEventArg<Any?>(Event.D_EVENT_INTEGER, data)
+            fun toArg(data: Int): idEventArg<Int> {
+                return idEventArg(Event.D_EVENT_INTEGER.code, data)
             }
 
-            fun toArg(data: Float): idEventArg<Float?>? {
-                return idEventArg<Any?>(Event.D_EVENT_FLOAT, data)
+            fun toArg(data: Float): idEventArg<Float> {
+                return idEventArg(Event.D_EVENT_FLOAT.code, data)
             }
 
-            fun toArg(data: idVec3): idEventArg<idVec3>? {
-                return idEventArg<Any?>(Event.D_EVENT_VECTOR, data)
+            fun toArg(data: idVec3): idEventArg<idVec3> {
+                return idEventArg(Event.D_EVENT_VECTOR.code, data)
             }
 
-            fun toArg(data: idStr?): idEventArg<idStr?>? {
-                return idEventArg<Any?>(Event.D_EVENT_STRING, data)
+            fun toArg(data: idStr?): idEventArg<idStr> {
+                return idEventArg(Event.D_EVENT_STRING.code, data)
             }
 
-            fun toArg(data: String?): idEventArg<String?>? {
-                return idEventArg<Any?>(Event.D_EVENT_STRING, data)
+            fun toArg(data: String?): idEventArg<String?> {
+                return idEventArg(Event.D_EVENT_STRING.code, data)
             }
 
-            fun toArg(data: idEntity?): idEventArg<idEntity?>? {
-                return idEventArg<Any?>(Event.D_EVENT_ENTITY, data)
+            fun toArg(data: idEntity?): idEventArg<idEntity?> {
+                return idEventArg(Event.D_EVENT_ENTITY.code, data)
             }
 
-            fun toArg(data: trace_s?): idEventArg<trace_s?>? {
-                return idEventArg<Any?>(Event.D_EVENT_TRACE, data)
+            fun toArg(data: trace_s?): idEventArg<trace_s?> {
+                return idEventArg(Event.D_EVENT_TRACE.code, data)
             }
         }
     }
 
-    class idAllocError(text: String? /*= ""*/) : idException(text)
+    class idAllocError(text: String /*= ""*/) : idException(text)
 
     //    /*
     //================
@@ -333,10 +333,10 @@ object Class {
             private var typeNumBits = 0
 
             // typenum order
-            private val typenums: idList<idTypeInfo?> = idList()
+            private val typenums: idList<idTypeInfo> = idList()
 
             // alphabetical order
-            private val types: idList<idTypeInfo?> = idList()
+            private val types: idList<idTypeInfo> = idList()
 
             //
             //
@@ -354,7 +354,7 @@ object Class {
                 }
 
                 // init the event callback tables for all the classes
-                c = neo.Game.GameSys.Class.typelist
+                c = typelist
                 while (c != null) {
                     c.Init()
                     c = c.next
@@ -363,7 +363,7 @@ object Class {
                 // number the types according to the class hierarchy so we can quickly determine if a class
                 // is a subclass of another
                 num = 0
-                c = neo.Game.GameSys.Class.classHierarchy.GetNext()
+                c = classHierarchy.GetNext()
                 while (c != null) {
                     c.typeNum = num
                     c.lastChild += num
@@ -381,10 +381,10 @@ object Class {
                 typenums.SetGranularity(1)
                 typenums.SetNum(num)
                 num = 0
-                c = neo.Game.GameSys.Class.typelist
+                c = typelist
                 while (c != null) {
-                    types.set(num, c)
-                    typenums.set(c.typeNum, c)
+                    types[num] = c
+                    typenums[c.typeNum] = c
                     c = c.next
                     num++
                 }
@@ -392,13 +392,13 @@ object Class {
                 Game_local.gameLocal.Printf(
                     "...%d classes, %d bytes for event callbacks\n",
                     types.Num(),
-                    neo.Game.GameSys.Class.eventCallbackMemory
+                    eventCallbackMemory
                 )
             }
 
             fun Shutdown() {
                 var c: idTypeInfo?
-                c = neo.Game.GameSys.Class.typelist
+                c = typelist
                 while (c != null) {
                     c.Shutdown()
                     c = c.next
@@ -559,7 +559,7 @@ object Class {
             fun GetType(typeNum: Int): idTypeInfo? {
                 var c: idTypeInfo?
                 if (!initialized) {
-                    c = neo.Game.GameSys.Class.typelist
+                    c = typelist
                     while (c != null) {
                         if (c.typeNum == typeNum) {
                             return c
@@ -567,7 +567,7 @@ object Class {
                         c = c.next
                     }
                 } else if (typeNum >= 0 && typeNum < types.Num()) {
-                    return typenums.get(typeNum)
+                    return typenums[typeNum]
                 }
                 return null
             }
@@ -577,10 +577,10 @@ object Class {
             }
 
             init {
-                eventCallbacks[neo.Game.GameSys.Class.EV_Remove] =
-                    eventCallback_t0<idClass?> { obj: T? -> neo.Game.GameSys.obj.Event_Remove() } as eventCallback_t0<idClass?>
-                eventCallbacks[neo.Game.GameSys.Class.EV_SafeRemove] =
-                    eventCallback_t0<idClass?> { obj: T? -> neo.Game.GameSys.obj.Event_SafeRemove() } as eventCallback_t0<idClass?>
+                eventCallbacks[EV_Remove] =
+                    eventCallback_t0 { obj: Any? -> idClass::Event_Remove } as eventCallback_t0<idClass?>
+                eventCallbacks[EV_SafeRemove] =
+                    eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove } as eventCallback_t0<idClass?>
             }
         }
 
@@ -590,7 +590,7 @@ object Class {
 
         // virtual						~idClass();
         protected open fun _deconstructor() {
-            CancelEvents(this)
+            CancelEvents(this as idEventDef)
         }
 
         open fun Spawn() {}
@@ -609,7 +609,7 @@ object Class {
          Returns the text classname of the object.
          ================
          */
-        fun GetClassname(): String? {
+        fun GetClassname(): String {
             return this.javaClass.simpleName
         }
 
@@ -1045,15 +1045,15 @@ object Class {
             )
         }
 
-        fun ProcessEventArgPtr(ev: idEventDef, data: Array<idEventArg<*>?>?): Boolean {
+        fun ProcessEventArgPtr(ev: idEventDef, data: ArrayList<idEventArg<*>>): Boolean {
             val num: Int
             val callback: eventCallback_t<*>?
             assert(ev != null)
-            assert(idEvent.Companion.initialized)
+            assert(idEvent.initialized)
             if (SysCvar.g_debugTriggers.GetBool() && ev === Entity.EV_Activate && this is idEntity) {
                 val name: String?
                 name =
-                    if (data.get(0) != null && data.get(0).value as idClass? is idEntity) (data.get(0).value as idEntity?).GetName() else "NULL"
+                    if (data[0] != null && data[0]!!.value as idClass? is idEntity) (data[0]!!.value as idEntity).GetName() else "NULL"
                 Game_local.gameLocal.Printf(
                     "%d: '%s' activated by '%s'\n",
                     Game_local.gameLocal.framenum,
@@ -1072,7 +1072,7 @@ object Class {
                 0, 1, 2, 3, 4, 5, 6, 7, 8 -> ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_8_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ], data[ 7 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                    callback.accept(this, data)
+                    callback.accept(this as Nothing?, *data.toTypedArray())
                 else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev.GetName())
             }
 
@@ -1081,7 +1081,7 @@ object Class {
         }
 
         fun CancelEvents(ev: idEventDef) {
-            idEvent.Companion.CancelEvents(this, ev)
+            idEvent.CancelEvents(this, ev)
         }
 
         open fun Event_Remove() {
@@ -1090,7 +1090,7 @@ object Class {
                 this
             ) else if (this is idTarget_Remove) delete(this) else if (this is idAI) delete(this) else if (this is idEntity) delete(
                 this
-            ) else if (this is idThread) idThread.Companion.delete(this) else throw TODO_Exception()
+            ) else if (this is idThread) idThread.delete(this) else throw TODO_Exception()
         }
 
         // Static functions
@@ -1109,10 +1109,10 @@ object Class {
         }
 
         abstract fun oSet(oGet: idClass?)
-        private fun CallSpawnFunc(cls: idTypeInfo?): classSpawnFunc_t<*>? {
+        private fun CallSpawnFunc(cls: idTypeInfo): classSpawnFunc_t<*> {
             val func: classSpawnFunc_t<*>?
             if (cls.zuper != null) { //TODO:rename super
-                func = CallSpawnFunc(cls.zuper)
+                func = CallSpawnFunc(cls.zuper!!)
                 if (func === cls.Spawn) {
                     // don't call the same function twice in a row.
                     // this can happen when subclasses don't have their own spawn function.
@@ -1126,10 +1126,10 @@ object Class {
         }
 
         private fun PostEventArgs(ev: idEventDef, time: Int, numargs: Int, vararg args: idEventArg<*>?): Boolean {
-            val c: Class<*>
+            val c: java.lang.Class<*>
             val event: idEvent
             assert(ev != null)
-            if (!idEvent.Companion.initialized) {
+            if (!idEvent.initialized) {
                 return false
             }
 
@@ -1148,7 +1148,7 @@ object Class {
             }
 
 //            va_start(args, numargs);
-            event = idEvent.Companion.Alloc(ev, numargs, *args)
+            event = idEvent.Alloc(ev, numargs, *args)
             //            va_end(args);
 
             //TODO:same as line #755
@@ -1156,12 +1156,12 @@ object Class {
             return true
         }
 
-        private fun ProcessEventArgs(ev: idEventDef, numargs: Int, vararg args: idEventArg<*>?): Boolean {
+        private fun ProcessEventArgs(ev: idEventDef, numargs: Int, vararg args: idEventArg<*>): Boolean {
             var c: idTypeInfo
             var num: Int
-            val data = arrayOfNulls<idEventArg<*>?>(Event.D_EVENT_MAXARGS)
+            //val data = Array<idEventArg<*>>(Event.D_EVENT_MAXARGS) { idEventArg() }
             assert(ev != null)
-            assert(idEvent.Companion.initialized)
+            assert(idEvent.initialized)
 
             //TODO:same as PostEventArgs
 //            c = GetType();
@@ -1172,15 +1172,15 @@ object Class {
 //            }
 
 //            va_start(args, numargs);
-            idEvent.Companion.CopyArgs(ev, numargs, args, data)
+            val data = idEvent.CopyArgs(ev, numargs, args)
             //            va_end(args);
-            ProcessEventArgPtr(ev, data)
+            ProcessEventArgPtr(ev, arrayListOf(*data))
             return true
         }
 
         private fun Event_SafeRemove() {
             // Forces the remove to be done at a safe time
-            PostEventMS(neo.Game.GameSys.Class.EV_Remove, 0)
+            PostEventMS(EV_Remove, 0)
         }
 
         /*
@@ -1189,7 +1189,7 @@ object Class {
          ================
          */
         class DisplayInfo_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 Game_local.gameLocal.Printf(
                     "Class memory status: %d bytes allocated in %d objects\n",
                     memused,
@@ -1211,14 +1211,14 @@ object Class {
          ================
          */
         class ListClasses_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
-                var type: idTypeInfo?
+                var type: idTypeInfo
                 Game_local.gameLocal.Printf("%-24s %-24s %-6s %-6s\n", "Classname", "Superclass", "Type", "Subclasses")
                 Game_local.gameLocal.Printf("----------------------------------------------------------------------\n")
                 i = 0
                 while (i < types.Num()) {
-                    type = types.get(i)
+                    type = types[i]
                     Game_local.gameLocal.Printf(
                         "%-24s %-24s %6d %6d\n",
                         type.classname,
@@ -1252,31 +1252,31 @@ object Class {
       *********************************************************************"""
     )
     class idTypeInfo(
-        classname: String?,
-        superclass: String?,
-        eventCallbacks: Array<idEventFunc<idClass?>?>?,
-        CreateInstance: classSpawnFunc_t<*>?,
-        Spawn: classSpawnFunc_t<*>?,
-        Save: idClass_Save?,
-        Restore: idClass_Restore?
+        classname: String,
+        superclass: String,
+        eventCallbacks: Array<idEventFunc<idClass>>,
+        CreateInstance: classSpawnFunc_t<*>,
+        Spawn: classSpawnFunc_t<*>,
+        Save: idClass_Save,
+        Restore: idClass_Restore
     ) {
         //
-        var CreateInstance: classSpawnFunc_t<*>?
-        var Restore: idClass_Restore?
-        var Save: idClass_Save?
-        var Spawn: classSpawnFunc_t<*>?
-        var classname: String?
+        var CreateInstance: classSpawnFunc_t<*>
+        var Restore: idClass_Restore
+        var Save: idClass_Save
+        var Spawn: classSpawnFunc_t<*>
+        var classname: String
 
         //
-        var eventCallbacks: Array<idEventFunc<idClass?>?>?
+        var eventCallbacks: Array<idEventFunc<idClass>>
         var eventMap: Array<eventCallback_t<*>?>?
         var freeEventMap: Boolean
         var lastChild: Int
         var next: idTypeInfo? = null
 
         //
-        var node: idHierarchy<idTypeInfo?>? = null
-        var superclass: String?
+        var node: idHierarchy<idTypeInfo> = idHierarchy()
+        var superclass: String
         var typeNum: Int
         var zuper: idTypeInfo?
 
@@ -1291,7 +1291,7 @@ object Class {
          */
         fun Init() {
             var c: idTypeInfo?
-            var def: Array<idEventFunc<idClass?>?>?
+            var def: Array<idEventFunc<idClass>>
             var ev: Int
             var i: Int
             val set: BooleanArray
@@ -1302,15 +1302,15 @@ object Class {
             }
 
             // make sure our superclass is initialized first
-            if (zuper != null && null == zuper.eventMap) {
-                zuper.Init()
+            if (zuper != null && null == zuper!!.eventMap) {
+                zuper!!.Init()
             }
 
             // add to our node hierarchy
             if (zuper != null) {
-                node.ParentTo(zuper.node)
+                node.ParentTo(zuper!!.node)
             } else {
-                node.ParentTo(neo.Game.GameSys.Class.classHierarchy)
+                node.ParentTo(classHierarchy)
             }
             node.SetOwner(this)
 
@@ -1322,8 +1322,8 @@ object Class {
             }
 
             // if we're not adding any new event callbacks, we can just use our superclass's table
-            if ((null == eventCallbacks || TempDump.NOT(eventCallbacks.get(0).event)) && zuper != null) {
-                eventMap = zuper.eventMap
+            if ((null == eventCallbacks || TempDump.NOT(eventCallbacks[0].event)) && zuper != null) {
+                eventMap = zuper!!.eventMap
                 return
             }
 
@@ -1333,10 +1333,10 @@ object Class {
             // Allocate our new table.  It has to have as many entries as there
             // are events.  NOTE: could save some space by keeping track of the maximum
             // event that the class responds to and doing range checking.
-            num = idEventDef.Companion.NumEventCommands()
+            num = idEventDef.NumEventCommands()
             eventMap = arrayOfNulls<eventCallback_t<*>?>(num)
             //	memset( eventMap, 0, sizeof( eventCallback_t ) * num );
-            neo.Game.GameSys.Class.eventCallbackMemory += num * 4
+            eventCallbackMemory += num * 4
 
             // allocate temporary memory for flags so that the subclass's event callbacks
             // override the superclass's event callback
@@ -1349,7 +1349,7 @@ object Class {
             c = this
             while (c != null) {
                 def = c.eventCallbacks
-                if (null == def) {
+                if (def.isNullOrEmpty()) {
                     c = c.zuper
                     continue
                 }
@@ -1357,13 +1357,13 @@ object Class {
                 // go through each entry until we hit the NULL terminator
                 i = 0
                 while (def[i].event != null) {
-                    ev = def[i].event.GetEventNum()
+                    ev = def[i].event!!.GetEventNum()
                     if (set[ev]) {
                         i++
                         continue
                     }
                     set[ev] = true
-                    eventMap.get(ev) = def[i].function
+                    eventMap!![ev] = def[i].function
                     i++
                 }
                 c = c.zuper
@@ -1401,7 +1401,7 @@ object Class {
          passed in idTypeInfo.
          ================
          */
-        fun IsType(type: idTypeInfo?): Boolean {
+        fun IsType(type: idTypeInfo): Boolean {
             return typeNum >= type.typeNum && typeNum <= type.lastChild
         }
 
@@ -1410,9 +1410,9 @@ object Class {
         }
 
         fun RespondsTo(ev: idEventDef): Boolean {
-            assert(idEvent.Companion.initialized)
+            assert(idEvent.initialized)
             // we don't respond to this event
-            return null != eventMap.get(ev.GetEventNum())
+            return null != eventMap!![ev.GetEventNum()]
         }
 
         //
@@ -1434,10 +1434,10 @@ object Class {
             lastChild = 0
 
             // Check if any subclasses were initialized before their superclass
-            type = neo.Game.GameSys.Class.typelist
+            type = typelist
             while (type != null) {
-                if (type.zuper == null && TempDump.NOT(idStr.Companion.Cmp(type.superclass, this.classname).toDouble())
-                    && idStr.Companion.Cmp(type.classname, "idClass") != 0
+                if (type.zuper == null && TempDump.NOT(idStr.Cmp(type.superclass, this.classname).toDouble())
+                    && idStr.Cmp(type.classname, "idClass") != 0
                 ) {
                     type.zuper = this
                 }
@@ -1445,10 +1445,10 @@ object Class {
             }
 
             // Insert sorted
-            insert = neo.Game.GameSys.Class.typelist
+            insert = typelist
             while (insert != null) {
-                assert(idStr.Companion.Cmp(classname, insert.classname) != 0)
-                if (idStr.Companion.Cmp(classname, insert.classname) < 0) {
+                assert(idStr.Cmp(classname, insert.classname) != 0)
+                if (idStr.Cmp(classname, insert.classname) < 0) {
                     next = insert
                     insert = this
                     break

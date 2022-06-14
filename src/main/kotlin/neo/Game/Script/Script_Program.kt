@@ -915,7 +915,7 @@ object Script_Program {
      defined in script.
 
      ***********************************************************************/
-    internal class  /*union*/ varEval_s {
+    class  /*union*/ varEval_s {
         //        final         int[]          intPtr;
         //        final         ByteBuffer     bytePtr;
         //        private int virtualFunction;

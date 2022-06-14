@@ -210,7 +210,7 @@ object Physics_Player {
             walking = savefile.ReadBool()
             groundPlane = savefile.ReadBool()
             savefile.ReadTrace(groundTrace)
-            savefile.ReadMaterial(groundMaterial)
+            savefile.ReadMaterial(groundMaterial as Material.idMaterial)
             ladder = savefile.ReadBool()
             savefile.ReadVec3(ladderNormal)
             waterLevel = waterLevel_t.values()[savefile.ReadInt()]

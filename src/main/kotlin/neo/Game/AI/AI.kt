@@ -1721,7 +1721,7 @@ object AI {
             savefile.ReadVec3(projectileGravity)
             projectile.Restore(savefile)
             savefile.ReadString(attack)
-            savefile.ReadSoundShader(chat_snd)
+            savefile.ReadSoundShader(chat_snd!!)
             chat_min = savefile.ReadInt()
             chat_max = savefile.ReadInt()
             chat_time = savefile.ReadInt()
@@ -1758,7 +1758,7 @@ object AI {
             particles.SetNum(num)
             i = 0
             while (i < particles.Num()) {
-                savefile.ReadParticle(particles[i].particle)
+                savefile.ReadParticle(particles[i].particle!!)
                 particles[i].time = savefile.ReadInt()
                 particles[i].joint = savefile.ReadJoint()
                 i++
@@ -3358,7 +3358,7 @@ object AI {
             val clipBounds: idBounds
             var obEnt: idEntity
             var clipModel: idClipModel
-            val clipModelList = Array<idClipModel>(Game_local.MAX_GENTITIES) { idClipModel() }
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             val clipmask: Int
             val org = idVec3()
             val forceVec = idVec3()
@@ -4714,7 +4714,7 @@ object AI {
         }
 
         protected fun LaunchProjectile(
-            jointname: String?,
+            jointname: String,
             target: idEntity?,
             clampToAttackCone: Boolean
         ): idProjectile? {
@@ -5081,7 +5081,7 @@ object AI {
         }
 
         // special effects
-        protected fun GetMuzzle(jointname: String?, muzzle: idVec3, axis: idMat3) {
+        protected fun GetMuzzle(jointname: String, muzzle: idVec3, axis: idMat3) {
             val   /*jointHandle_t*/joint: Int
             if (!TempDump.isNotNullOrEmpty(jointname)) {
                 muzzle.set(
@@ -5415,7 +5415,7 @@ object AI {
             }
         }
 
-        protected fun TriggerParticles(jointName: String?) {
+        protected fun TriggerParticles(jointName: String) {
             val   /*jointHandle_t*/jointNum: Int
             jointNum = animator.GetJointHandle(jointName)
             for (i in 0 until particles.Num()) {
@@ -5842,7 +5842,7 @@ object AI {
             val num: Int
             var hit: idEntity
             var cm: idClipModel
-            val clipModels = Array<idClipModel>(Game_local.MAX_GENTITIES) { idClipModel() }
+            val clipModels = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             num = Game_local.gameLocal.clip.ClipModelsTouchingBounds(
                 physicsObj.GetAbsBounds(),
                 Game_local.MASK_MONSTERSOLID,

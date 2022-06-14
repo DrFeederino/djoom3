@@ -1119,7 +1119,7 @@ object Trigger {
             var i: Int
             val bounds = idBounds()
             var cm: idClipModel
-            val clipModelList = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             if (clipModel == null || scriptFunction == null) {
                 return
             }

@@ -2,6 +2,7 @@ package neo.Game.Physics
 
 import neo.CM.CollisionModel.trace_s
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.Game_local
@@ -63,14 +64,14 @@ class Physics_Actor {
             savefile.WriteMat3(clipModelAxis)
             savefile.WriteFloat(mass)
             savefile.WriteFloat(invMass)
-            savefile.WriteObject(masterEntity)
+            savefile.WriteObject(masterEntity as Class.idClass)
             savefile.WriteFloat(masterYaw)
             savefile.WriteFloat(masterDeltaYaw)
             groundEntityPtr.Save(savefile)
         }
 
         override fun Restore(savefile: idRestoreGame) {
-            savefile.ReadClipModel(clipModel)
+            savefile.ReadClipModel(clipModel as idClipModel)
             savefile.ReadMat3(clipModelAxis)
             mass = savefile.ReadFloat()
             invMass = savefile.ReadFloat()

@@ -151,13 +151,13 @@ object Actor {
             disabled = savefile.ReadBool()
         }
 
-        fun Init(owner: idActor?, _animator: idAnimator?, animchannel: Int) {
+        fun Init(owner: idActor, _animator: idAnimator, animchannel: Int) {
             assert(owner != null)
             assert(_animator != null)
             self = owner
             animator = _animator
             channel = animchannel
-            if (TempDump.NOT(thread)) {
+            if (null == thread) {
                 thread = idThread()
                 thread.ManualDelete()
             }
@@ -300,7 +300,7 @@ object Actor {
 
     class copyJoints_t {
         var   /*jointHandle_t*/from: CInt = CInt()
-        var mod: jointModTransform_t? = null
+        var mod: jointModTransform_t = jointModTransform_t.JOINTMOD_NONE
         var   /*jointHandle_t*/to: CInt = CInt()
     }
 

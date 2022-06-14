@@ -3987,7 +3987,7 @@ object Player {
             return FindInventoryItem(name.toString())
         }
 
-        fun GivePDA(pdaName: idStr, item: idDict) {
+        fun GivePDA(pdaName: idStr, item: idDict?) {
             if (Game_local.gameLocal.isMultiplayer && spectating) {
                 return
             }
@@ -4037,7 +4037,7 @@ object Player {
             }
         }
 
-        fun GiveVideo(videoName: String, item: idDict) {
+        fun GiveVideo(videoName: String?, item: idDict?) {
             if (videoName == null || videoName.isEmpty()) {
                 return
             }
@@ -7190,7 +7190,7 @@ object Player {
          ================
          */
         private fun UpdateFocus() {
-            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             var clip: idClipModel
             val listedClipModels: Int
             val oldFocus: idEntity

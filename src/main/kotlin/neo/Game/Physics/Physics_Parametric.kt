@@ -280,7 +280,7 @@ object Physics_Parametric {
             idPhysics_Parametric_RestorePState(savefile, current)
             idPhysics_Parametric_RestorePState(savefile, saved)
             savefile.ReadBool(isPusher)
-            savefile.ReadClipModel(clipModel)
+            savefile.ReadClipModel(clipModel as idClipModel)
             savefile.ReadInt(pushFlags)
             savefile.ReadTrace(pushResults)
             savefile.ReadBool(isBlocked)

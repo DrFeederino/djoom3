@@ -216,7 +216,7 @@ class RenderWindow {
             }
             if (animName.Length() != 0 && animClass.Length() != 0) {
                 worldEntity.numJoints = worldEntity.hModel!!.NumJoints()
-                worldEntity.joints = arrayOfNulls(worldEntity.numJoints)
+                worldEntity.joints = ArrayList(worldEntity.numJoints)
                 modelAnim = GameEdit.gameEdit.ANIM_GetAnimFromEntityDef(animClass.toString(), animName.toString())
                 if (modelAnim != null) {
                     animLength = GameEdit.gameEdit.ANIM_GetLength(modelAnim)

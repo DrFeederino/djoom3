@@ -381,7 +381,7 @@ object Model_local {
             }
         }
 
-        override fun Name(): String? {
+        override fun Name(): String {
             return name.toString()
         }
 
@@ -564,12 +564,12 @@ object Model_local {
             return Model.INVALID_JOINT
         }
 
-        override fun GetJointName(jointHandle_t: Int): String? {
+        override fun GetJointName(jointHandle_t: Int): String {
             return ""
         }
 
-        override fun GetDefaultPose(): Array<idJointQuat?>? {
-            return null
+        override fun GetDefaultPose(): ArrayList<idJointQuat> {
+            return emptyList<idJointQuat>()
         }
 
         override fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int {

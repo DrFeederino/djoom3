@@ -142,7 +142,7 @@ object Simd_Generic {
         override fun Sub(dst: FloatArray, constant: Float, src: FloatArray, count: Int) {
             val c = constant
             val _NM = count and -0x4
-            var _IX: Int = 0
+            var _IX = 0
             while (_IX < _NM) {
                 dst[_IX + 0] = (c - src[_IX + 0])
                 dst[_IX + 1] = (c - src[_IX + 1])
@@ -212,7 +212,7 @@ object Simd_Generic {
          */
         override fun Mul(dst: FloatArray, src0: FloatArray, src1: FloatArray, count: Int) {
             val _NM = count and -0x4
-            var _IX: Int = 0
+            var _IX = 0
             while (_IX < _NM) {
                 dst[_IX + 0] = src0[_IX + 0] * src1[_IX + 0]
                 dst[_IX + 1] = src0[_IX + 1] * src1[_IX + 1]
@@ -3160,7 +3160,7 @@ object Simd_Generic {
         }
 
         override fun BlendJoints(
-            joints: Array<idJointQuat>,
+            joints: ArrayList<idJointQuat>,
             blendJoints: ArrayList<idJointQuat>,
             lerp: Float,
             index: IntArray,
@@ -3176,8 +3176,8 @@ object Simd_Generic {
         }
 
         override fun ConvertJointQuatsToJointMats(
-            jointMats: Array<idJointMat>,
-            jointQuats: Array<idJointQuat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
+            jointQuats: ArrayList<idJointQuat>,
             numJoints: Int
         ) {
             var i: Int = 0
@@ -3190,7 +3190,7 @@ object Simd_Generic {
 
         override fun ConvertJointMatsToJointQuats(
             jointQuats: ArrayList<idJointQuat>,
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             numJoints: Int
         ) {
             var i: Int = 0
@@ -3205,7 +3205,7 @@ object Simd_Generic {
         }
 
         override fun TransformJoints(
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
@@ -3219,7 +3219,7 @@ object Simd_Generic {
         }
 
         override fun UntransformJoints(
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
@@ -3233,7 +3233,7 @@ object Simd_Generic {
         }
 
         override fun TransformVerts(
-            verts: Array<idDrawVert?>,
+            verts: Array<idDrawVert>,
             numVerts: Int,
             joints: Array<idJointMat>,
             weights: Array<idVec4>,
@@ -3252,7 +3252,7 @@ object Simd_Generic {
                 }
                 j++
                 verts[i] = if (verts[i] == null) idDrawVert() else verts[i]
-                verts[i]!!.xyz.set(v)
+                verts[i].xyz.set(v)
                 i++
             }
         }
@@ -4074,6 +4074,16 @@ object Simd_Generic {
         companion object {
             //TODO: move to TempDump
             private fun jmtobb(joints: Array<idJointMat>): ByteBuffer {
+                val byteBuffer =
+                    ByteBuffer.allocate(idJointMat.SIZE * joints.size).order(ByteOrder.LITTLE_ENDIAN)
+                for (i in joints.indices) {
+                    byteBuffer.position(i * idJointMat.SIZE)
+                    byteBuffer.asFloatBuffer().put(joints[i].ToFloatPtr())
+                }
+                return byteBuffer
+            }
+
+            private fun jmtobb(joints: kotlin.collections.ArrayList<idJointMat>): ByteBuffer {
                 val byteBuffer =
                     ByteBuffer.allocate(idJointMat.SIZE * joints.size).order(ByteOrder.LITTLE_ENDIAN)
                 for (i in joints.indices) {

@@ -9,16 +9,17 @@ import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.framework.File_h.idFile
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.FindChar
 import neo.idlib.Text.Token
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.containers.List.idList
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -140,12 +141,12 @@ object TypeInfo {
 
     abstract class WriteVariableType_t {
         abstract fun run(
-            varName: String?,
-            varType: String?,
-            scope: String?,
-            prefix: String?,
-            postfix: String?,
-            value: String?,
+            varName: String,
+            varType: String,
+            scope: String,
+            prefix: String,
+            postfix: String,
+            value: String,
             varPtr: ByteBuffer?,
             varSize: Int
         )
@@ -160,7 +161,7 @@ object TypeInfo {
 
         //
         //
-        private val src: idLexer? = null
+        private val src: idLexer = idLexer()
         private var typeError = false
         fun FindClassInfo(typeName: String): classTypeInfo_t? {
             var i: Int
@@ -208,14 +209,14 @@ object TypeInfo {
             return false
         }
 
-        fun PrintType(typePtr: ByteBuffer?, typeName: String?) {
+        fun PrintType(typePtr: ByteBuffer, typeName: String) {
             fp = null
             initValue = 0
             Write = PrintVariable.INSTANCE
             WriteClass_r(typePtr, "", typeName, "", "", 0)
         }
 
-        fun WriteTypeToFile(fp: idFile?, typePtr: ByteBuffer?, typeName: String?) {
+        fun WriteTypeToFile(fp: idFile?, typePtr: ByteBuffer, typeName: String) {
             idTypeInfoTools.fp = fp
             initValue = 0
             Write = WriteVariable.INSTANCE
@@ -351,52 +352,52 @@ object TypeInfo {
 //            src = null;
         }
 
-        private fun OutputString(string: String?): String? {
-            val out: CharArray?
+        private fun OutputString(string: String): String {
+            val out: CharArray
             var i: Int
             var c: Int
-            out = buffers.get(index)
+            out = buffers[index]
             index = index + 1 and 3
-            if (string == null) {
-                return null
+            if (string.isNullOrEmpty()) {
+                return ""
             }
             i = 0.also { c = it }
-            while (i < buffers.get(0).length - 2) {
+            while (i < buffers[0].size - 2) {
                 c++
                 when (string[c]) {
                     '\u0000' -> {
-                        out.get(i) = '\u0000'
+                        out[i] = '\u0000'
                         return TempDump.ctos(out)
                     }
                     '\\' -> {
-                        out.get(i++) = '\\'
-                        out.get(i) = '\\'
+                        out[i++] = '\\'
+                        out[i] = '\\'
                     }
                     '\n' -> {
-                        out.get(i++) = '\\'
-                        out.get(i) = 'n'
+                        out[i++] = '\\'
+                        out[i] = 'n'
                     }
                     '\r' -> {
-                        out.get(i++) = '\\'
-                        out.get(i) = 'r'
+                        out[i++] = '\\'
+                        out[i] = 'r'
                     }
                     '\t' -> {
-                        out.get(i++) = '\\'
-                        out.get(i) = 't'
+                        out[i++] = '\\'
+                        out[i] = 't'
                     }
                     '\u000B' -> {
-                        out.get(i++) = '\\'
-                        out.get(i) = 'v'
+                        out[i++] = '\\'
+                        out[i] = 'v'
                     }
-                    else -> out.get(i) = string[c]
+                    else -> out[i] = string[c]
                 }
                 i++
             }
-            out.get(i) = '\u0000'
+            out[i] = '\u0000'
             return TempDump.ctos(out)
         }
 
-        private fun ParseTemplateArguments(src: idLexer?, arguments: idStr?): Boolean {
+        private fun ParseTemplateArguments(src: idLexer, arguments: idStr): Boolean {
             var indent: Int
             val token = idToken()
             arguments.set("")
@@ -408,9 +409,9 @@ object TypeInfo {
                 if (!src.ReadToken(token)) {
                     break
                 }
-                if (token == "<") {
+                if (token.toString() == "<") {
                     indent++
-                } else if (token == ">") {
+                } else if (token.toString() == ">") {
                     indent--
                 } else {
                     if (arguments.Length() != 0) {
@@ -1105,9 +1106,9 @@ object TypeInfo {
         }
 
         private fun WriteClass_r(
-            classPtr: ByteBuffer?,
+            classPtr: ByteBuffer,
             className: String?,
-            classType: String?,
+            classType: String,
             scope: String?,
             prefix: String?,
             pointerDepth: Int
@@ -1115,11 +1116,11 @@ object TypeInfo {
             var i: Int
             val classInfo = FindClassInfo(classType) ?: return
             if (TempDump.isNotNullOrEmpty(classInfo.superType)) {
-                WriteClass_r(classPtr, className, classInfo.superType, scope, prefix, pointerDepth)
+                WriteClass_r(classPtr, className, classInfo.superType!!, scope, prefix, pointerDepth)
             }
             i = 0
-            while (classInfo.variables[i].name != null) {
-                val classVar = classInfo.variables[i]
+            while (classInfo.variables!![i].name != null) {
+                val classVar = classInfo.variables!![i]
                 classPtr.position(classVar.offset)
                 WriteVariable_r(classPtr, classVar.name, classVar.type, classType, prefix, pointerDepth)
                 i++
@@ -1128,12 +1129,12 @@ object TypeInfo {
 
         private class PrintVariable private constructor() : WriteVariableType_t() {
             override fun run(
-                varName: String?,
-                varType: String?,
-                scope: String?,
-                prefix: String?,
-                postfix: String?,
-                value: String?,
+                varName: String,
+                varType: String,
+                scope: String,
+                prefix: String,
+                postfix: String,
+                value: String,
                 varPtr: ByteBuffer?,
                 varSize: Int
             ) {
@@ -1141,18 +1142,18 @@ object TypeInfo {
             }
 
             companion object {
-                val INSTANCE: WriteVariableType_t? = PrintVariable()
+                val INSTANCE: WriteVariableType_t = PrintVariable()
             }
         }
 
         private class WriteVariable private constructor() : WriteVariableType_t() {
             override fun run(
-                varName: String?,
-                varType: String?,
-                scope: String?,
-                prefix: String?,
-                postfix: String?,
-                value: String?,
+                varName: String,
+                varType: String,
+                scope: String,
+                prefix: String,
+                postfix: String,
+                value: String,
                 varPtr: ByteBuffer?,
                 varSize: Int
             ) {
@@ -1177,22 +1178,22 @@ object TypeInfo {
                     }
                     i = FindChar(value, '#', i + 1)
                 }
-                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value)
+                fp!!.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value)
             }
 
             companion object {
-                val INSTANCE: WriteVariableType_t? = WriteVariable()
+                val INSTANCE: WriteVariableType_t = WriteVariable()
             }
         }
 
         private class WriteGameStateVariable private constructor() : WriteVariableType_t() {
             override fun run(
-                varName: String?,
-                varType: String?,
-                scope: String?,
-                prefix: String?,
-                postfix: String?,
-                value: String?,
+                varName: String,
+                varType: String,
+                scope: String,
+                prefix: String,
+                postfix: String,
+                value: String,
                 varPtr: ByteBuffer?,
                 varSize: Int
             ) {
@@ -1223,22 +1224,22 @@ object TypeInfo {
                 if (TypeInfo.IsAllowedToChangedFromSaveGames(varName, varType, scope, prefix, postfix, value)) {
                     return
                 }
-                fp.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value)
+                fp!!.WriteFloatString("%s%s::%s%s = \"%s\"\n", prefix, scope, varName, postfix, value)
             }
 
             companion object {
-                val INSTANCE: WriteVariableType_t? = WriteGameStateVariable()
+                val INSTANCE: WriteVariableType_t = WriteGameStateVariable()
             }
         }
 
         private class InitVariable private constructor() : WriteVariableType_t() {
             override fun run(
-                varName: String?,
-                varType: String?,
-                scope: String?,
-                prefix: String?,
-                postfix: String?,
-                value: String?,
+                varName: String,
+                varType: String,
+                scope: String,
+                prefix: String,
+                postfix: String,
+                value: String,
                 varPtr: ByteBuffer?,
                 varSize: Int
             ) {
@@ -1253,18 +1254,18 @@ object TypeInfo {
             }
 
             companion object {
-                val INSTANCE: WriteVariableType_t? = InitVariable()
+                val INSTANCE: WriteVariableType_t = InitVariable()
             }
         }
 
         private class VerifyVariable private constructor() : WriteVariableType_t() {
             override fun run(
-                varName: String?,
-                varType: String?,
-                scope: String?,
-                prefix: String?,
-                postfix: String?,
-                value: String?,
+                varName: String,
+                varType: String,
+                scope: String,
+                prefix: String,
+                postfix: String,
+                value: String,
                 varPtr: ByteBuffer?,
                 varSize: Int
             ) {
@@ -1289,7 +1290,7 @@ object TypeInfo {
             }
 
             companion object {
-                val INSTANCE: WriteVariableType_t? = VerifyVariable()
+                val INSTANCE: WriteVariableType_t = VerifyVariable()
             }
         }
     }
@@ -1300,7 +1301,7 @@ object TypeInfo {
      ================
      */
     class WriteGameState_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val fileName: idStr
             fileName = if (args.Argc() > 1) {
                 idStr(args.Argv(1))
@@ -1325,7 +1326,7 @@ object TypeInfo {
      ================
      */
     class CompareGameState_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val fileName: idStr
             fileName = if (args.Argc() > 1) {
                 idStr(args.Argv(1))
@@ -1350,7 +1351,7 @@ object TypeInfo {
      ================
      */
     class TestSaveGame_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val name: idStr
             if (args.Argc() <= 1) {
                 Game_local.gameLocal.Printf("testSaveGame <mapName>\n")
@@ -1383,10 +1384,10 @@ object TypeInfo {
      ================
      */
     class ListTypeInfo_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var j: Int
-            val index = idList<Int?>()
+            val index = idList<Int>()
             Common.common.Printf("%-32s : %-32s size (B)\n", "type name", "super type name")
             i = 0
             while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
@@ -1400,32 +1401,32 @@ object TypeInfo {
             }
             i = 0
             while (NoGameTypeInfo.classTypeInfo[i].typeName != null) {
-                j = index.get(i)
+                j = index[i]
                 Common.common.Printf(
                     "%-32s : %-32s %d\n",
-                    NoGameTypeInfo.classTypeInfo[j].typeName,
-                    NoGameTypeInfo.classTypeInfo[j].superType,
+                    NoGameTypeInfo.classTypeInfo[j].typeName!!,
+                    NoGameTypeInfo.classTypeInfo[j].superType!!,
                     NoGameTypeInfo.classTypeInfo[j].size
                 )
                 i++
             }
         }
 
-        private class SortTypeInfoByName : cmp_t<Int?> {
-            override fun compare(a: Int?, b: Int?): Int {
+        private class SortTypeInfoByName : cmp_t<Int> {
+            override fun compare(a: Int, b: Int): Int {
                 return idStr.Icmp(
-                    NoGameTypeInfo.classTypeInfo.get(a).typeName,
-                    NoGameTypeInfo.classTypeInfo.get(b).typeName
+                    NoGameTypeInfo.classTypeInfo.get(a).typeName!!,
+                    NoGameTypeInfo.classTypeInfo.get(b).typeName!!
                 )
             }
         }
 
-        private class SortTypeInfoBySize : cmp_t<Int?> {
-            override fun compare(a: Int?, b: Int?): Int {
-                if (NoGameTypeInfo.classTypeInfo.get(a).size < NoGameTypeInfo.classTypeInfo.get(b).size) {
+        private class SortTypeInfoBySize : cmp_t<Int> {
+            override fun compare(a: Int, b: Int): Int {
+                if (NoGameTypeInfo.classTypeInfo[a].size < NoGameTypeInfo.classTypeInfo[b].size) {
                     return -1
                 }
-                return if (NoGameTypeInfo.classTypeInfo.get(a).size > NoGameTypeInfo.classTypeInfo.get(b).size) {
+                return if (NoGameTypeInfo.classTypeInfo[a].size > NoGameTypeInfo.classTypeInfo[b].size) {
                     1
                 } else 0
             }

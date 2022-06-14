@@ -416,7 +416,7 @@ object Simd {
         )
 
         abstract fun  /*VPCALL*/BlendJoints(
-            joints: Array<idJointQuat>,
+            joints: ArrayList<idJointQuat>,
             blendJoints: ArrayList<idJointQuat>,
             lerp: Float,
             index: IntArray,
@@ -424,33 +424,33 @@ object Simd {
         )
 
         abstract fun  /*VPCALL*/ConvertJointQuatsToJointMats(
-            jointMats: Array<idJointMat>,
-            jointQuats: Array<idJointQuat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
+            jointQuats: ArrayList<idJointQuat>,
             numJoints: Int
         )
 
         abstract fun  /*VPCALL*/ConvertJointMatsToJointQuats(
             jointQuats: ArrayList<idJointQuat>,
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             numJoints: Int
         )
 
         abstract fun  /*VPCALL*/TransformJoints(
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
         )
 
         abstract fun  /*VPCALL*/UntransformJoints(
-            jointMats: Array<idJointMat>,
+            jointMats: kotlin.collections.ArrayList<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
         )
 
         abstract fun  /*VPCALL*/TransformVerts(
-            verts: Array<idDrawVert?>,
+            verts: Array<idDrawVert>,
             numVerts: Int,
             joints: Array<idJointMat>,
             weights: Array<idVec4>,

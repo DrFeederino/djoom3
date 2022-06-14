@@ -20,13 +20,14 @@ import neo.Game.Projectile.idProjectile
 import neo.Game.Script.Script_Program.function_t
 import neo.Game.Script.Script_Thread.idThread
 import neo.Game.Weapon.idWeapon
-import neo.Renderer.*
+import neo.Renderer.Material
+import neo.Renderer.Model
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.Model.srfTriangles_s
+import neo.Renderer.RenderWorld.Companion.MAX_RENDERENTITY_GUI
 import neo.Renderer.RenderWorld.renderEntity_s
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.void_callback
 import neo.framework.Async.NetworkSystem
 import neo.framework.CmdSystem
@@ -35,9 +36,10 @@ import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.framework.FileSystem_h
 import neo.framework.File_h.idFile
-import neo.idlib.*
 import neo.idlib.BitMsg.idBitMsg
+import neo.idlib.CmdArgs
 import neo.idlib.Dict_h.idDict
+import neo.idlib.Lib
 import neo.idlib.Lib.idLib
 import neo.idlib.MapFile.idMapEntity
 import neo.idlib.Text.Lexer
@@ -55,8 +57,7 @@ import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMat4
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
-import java.nio.*
-import java.util.stream.Stream
+import java.nio.ByteBuffer
 
 /**
  *
@@ -82,7 +83,7 @@ object SysCmds {
      Kills all the entities of the given class in a level.
      ==================
      */
-    fun KillEntities(args: CmdArgs.idCmdArgs?,    /*idTypeInfo*/superClass: Class<*>?) {
+    fun KillEntities(args: CmdArgs.idCmdArgs,    /*idTypeInfo*/superClass: java.lang.Class<*>) {
         var ent: idEntity?
         val ignore = idStrList()
         var name: String?
@@ -93,7 +94,7 @@ object SysCmds {
         i = 1
         while (i < args.Argc()) {
             name = args.Argv(i)
-            ignore.add(idStr.Companion.parseStr(name))
+            ignore.add(idStr.parseStr(name))
             i++
         }
         ent = Game_local.gameLocal.spawnedEntities.Next()
@@ -107,7 +108,7 @@ object SysCmds {
                     i++
                 }
                 if (i >= ignore.size()) {
-                    ent.PostEventMS(neo.Game.GameSys.Class.EV_Remove, 0)
+                    ent.PostEventMS(Class.EV_Remove, 0)
                 }
             }
             ent = ent.spawnNode.Next()
@@ -119,7 +120,7 @@ object SysCmds {
      Cmd_Say
      ==================
      */
-    fun Cmd_Say(team: Boolean, args: CmdArgs.idCmdArgs?) {
+    fun Cmd_Say(team: Boolean, args: CmdArgs.idCmdArgs) {
         var name: String
         val text: idStr
         val cmd = if (team) "sayTeam" else "say"
@@ -135,8 +136,8 @@ object SysCmds {
         if (text.Length() == 0) {
             return
         }
-        if (text.get(text.Length() - 1) == '\n') {
-            text.set(text.Length() - 1, '\u0000')
+        if (text[text.Length() - 1] == '\n') {
+            text[text.Length() - 1] = '\u0000'
         }
         name = "player"
         val player: idPlayer?
@@ -156,7 +157,7 @@ object SysCmds {
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(256)
             outMsg.Init(msgBuf, msgBuf.capacity())
-            outMsg.WriteByte(if (team) Game_local.GAME_RELIABLE_MESSAGE_TCHAT else Game_local.GAME_RELIABLE_MESSAGE_CHAT)
+            outMsg.WriteByte(if (team) Game_local.GAME_RELIABLE_MESSAGE_TCHAT.toByte() else Game_local.GAME_RELIABLE_MESSAGE_CHAT.toByte())
             outMsg.WriteString(name)
             outMsg.WriteString(text.toString(), -1, false)
             NetworkSystem.networkSystem.ClientSendReliableMessage(outMsg)
@@ -203,33 +204,33 @@ object SysCmds {
         var color: idVec4
         var l: Float
         i = 0
-        while (i < SysCmds.MAX_DEBUGLINES) {
-            if (SysCmds.debugLines[i].used) {
-                if (!SysCmds.debugLines[i].blink || Game_local.gameLocal.time and (1 shl 9) != 0) {
+        while (i < MAX_DEBUGLINES) {
+            if (debugLines[i].used) {
+                if (!debugLines[i].blink || Game_local.gameLocal.time and (1 shl 9) != 0) {
                     color = idVec4(
-                        SysCmds.debugLines[i].color and 1,
-                        SysCmds.debugLines[i].color shr 1 and 1,
-                        SysCmds.debugLines[i].color shr 2 and 1,
-                        1
+                        (debugLines[i].color and 1).toFloat(),
+                        (debugLines[i].color shr 1 and 1).toFloat(),
+                        (debugLines[i].color shr 2 and 1).toFloat(),
+                        1f
                     )
-                    Game_local.gameRenderWorld.DebugLine(color, SysCmds.debugLines[i].start, SysCmds.debugLines[i].end)
+                    Game_local.gameRenderWorld.DebugLine(color, debugLines[i].start, debugLines[i].end)
                     //
-                    if (SysCmds.debugLines[i].arrow) {
+                    if (debugLines[i].arrow) {
                         // draw a nice arrow
-                        forward.set(SysCmds.debugLines[i].end.minus(SysCmds.debugLines[i].start))
+                        forward.set(debugLines[i].end.minus(debugLines[i].start))
                         l = forward.Normalize() * 0.2f
                         forward.NormalVectors(right, up)
                         if (l > 3.0f) {
                             l = 3.0f
                         }
-                        p1.set(SysCmds.debugLines[i].end.minus(forward.times(l).oPlus(right.times(l * 0.4f))))
+                        p1.set(debugLines[i].end.minus(forward.times(l).plus(right.times(l * 0.4f))))
                         p2.set(
-                            SysCmds.debugLines[i].end.minus(
+                            debugLines[i].end.minus(
                                 forward.times(l).minus(right.times(l * 0.4f))
                             )
                         )
-                        Game_local.gameRenderWorld.DebugLine(color, SysCmds.debugLines[i].end, p1)
-                        Game_local.gameRenderWorld.DebugLine(color, SysCmds.debugLines[i].end, p2)
+                        Game_local.gameRenderWorld.DebugLine(color, debugLines[i].end, p1)
+                        Game_local.gameRenderWorld.DebugLine(color, debugLines[i].end, p2)
                         Game_local.gameRenderWorld.DebugLine(color, p1, p2)
                     }
                 }
@@ -244,7 +245,7 @@ object SysCmds {
      ===================
      */
     class Cmd_EntityList_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var check: idEntity?
             var count: Int
@@ -296,7 +297,7 @@ object SysCmds {
      ===================
      */
     class Cmd_ActiveEntityList_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var check: idEntity?
             var count: Int
             count = 0
@@ -333,7 +334,7 @@ object SysCmds {
      ===================
      */
     class Cmd_ListSpawnArgs_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val ent: idEntity?
             ent = Game_local.gameLocal.FindEntity(args.Argv(1))
@@ -343,10 +344,12 @@ object SysCmds {
             }
             i = 0
             while (i < ent.spawnArgs.GetNumKeyVals()) {
-                val kv = ent.spawnArgs.GetKeyVal(i)
+                val kv = ent.spawnArgs.GetKeyVal(i)!!
                 Game_local.gameLocal.Printf(
                     """"%s"  ${Str.S_COLOR_WHITE}"%s"
-""", kv.GetKey(), kv.GetValue()
+                        """,
+                    kv.GetKey(),
+                    kv.GetValue()
                 )
                 i++
             }
@@ -366,7 +369,7 @@ object SysCmds {
      ===================
      */
     class Cmd_ReloadScript_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             // shutdown the map because entities may point to script objects
             Game_local.gameLocal.MapShutdown()
 
@@ -374,7 +377,7 @@ object SysCmds {
             Game_local.gameLocal.program.Startup(Game.SCRIPT_DEFAULT)
 
             // error out so that the user can rerun the scripts
-            idGameLocal.Companion.Error("Exiting map to reload scripts")
+            idGameLocal.Error("Exiting map to reload scripts")
         }
 
         companion object {
@@ -391,7 +394,7 @@ object SysCmds {
      ===================
      */
     class Cmd_Script_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val script: String?
             val text: String
             val funcname: String
@@ -436,11 +439,11 @@ object SysCmds {
      ==================
      */
     class Cmd_KillMonsters_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            SysCmds.KillEntities(args, idAI::class.java)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            KillEntities(args, idAI::class.java)
 
             // kill any projectiles as well since they have pointers to the monster that created them
-            SysCmds.KillEntities(args, idProjectile::class.java)
+            KillEntities(args, idProjectile::class.java)
         }
 
         companion object {
@@ -459,11 +462,11 @@ object SysCmds {
      ==================
      */
     class Cmd_KillMovables_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            SysCmds.KillEntities(args, idMoveable::class.java)
+            KillEntities(args, idMoveable::class.java)
         }
 
         companion object {
@@ -482,12 +485,12 @@ object SysCmds {
      ==================
      */
     class Cmd_KillRagdolls_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            SysCmds.KillEntities(args, idAFEntity_Generic::class.java)
-            SysCmds.KillEntities(args, idAFEntity_WithAttachedHead::class.java)
+            KillEntities(args, idAFEntity_Generic::class.java)
+            KillEntities(args, idAFEntity_WithAttachedHead::class.java)
         }
 
         companion object {
@@ -506,7 +509,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Give_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val name: String?
             var i: Int
             val give_all: Boolean
@@ -516,75 +519,75 @@ object SysCmds {
                 return
             }
             name = args.Argv(1)
-            give_all = idStr.Companion.Icmp(name, "all") == 0
-            if (give_all || idStr.Companion.Cmpn(name, "weapon", 6) == 0) {
-                if (Game_local.gameLocal.world.spawnArgs.GetBool("no_Weapons")) {
-                    Game_local.gameLocal.world.spawnArgs.SetBool("no_Weapons", false)
+            give_all = idStr.Icmp(name, "all") == 0
+            if (give_all || idStr.Cmpn(name, "weapon", 6) == 0) {
+                if (Game_local.gameLocal.world!!.spawnArgs.GetBool("no_Weapons")) {
+                    Game_local.gameLocal.world!!.spawnArgs.SetBool("no_Weapons", false)
                     i = 0
                     while (i < Game_local.gameLocal.numClients) {
                         if (Game_local.gameLocal.entities[i] != null) {
-                            Game_local.gameLocal.entities[i].PostEventSec(
+                            Game_local.gameLocal.entities[i]!!.PostEventSec(
                                 Player.EV_Player_SelectWeapon,
                                 0.5f,
-                                Game_local.gameLocal.entities[i].spawnArgs.GetString("def_weapon1")
+                                Game_local.gameLocal.entities[i]!!.spawnArgs.GetString("def_weapon1")
                             )
                         }
                         i++
                     }
                 }
             }
-            if (idStr.Companion.Cmpn(name, "weapon_", 7) == 0 || idStr.Companion.Cmpn(
+            if (idStr.Cmpn(name, "weapon_", 7) == 0 || idStr.Cmpn(
                     name,
                     "item_",
                     5
-                ) == 0 || idStr.Companion.Cmpn(name, "ammo_", 5) == 0
+                ) == 0 || idStr.Cmpn(name, "ammo_", 5) == 0
             ) {
                 player.GiveItem(name)
                 return
             }
-            if (give_all || idStr.Companion.Icmp(name, "health") == 0) {
+            if (give_all || idStr.Icmp(name, "health") == 0) {
                 player.health = player.inventory.maxHealth
                 if (!give_all) {
                     return
                 }
             }
-            if (give_all || idStr.Companion.Icmp(name, "weapons") == 0) {
-                player.inventory.weapons = Lib.Companion.BIT(Player.MAX_WEAPONS) - 1
+            if (give_all || idStr.Icmp(name, "weapons") == 0) {
+                player.inventory.weapons = Lib.BIT(Player.MAX_WEAPONS) - 1
                 player.CacheWeapons()
                 if (!give_all) {
                     return
                 }
             }
-            if (give_all || idStr.Companion.Icmp(name, "ammo") == 0) {
+            if (give_all || idStr.Icmp(name, "ammo") == 0) {
                 i = 0
                 while (i < Weapon.AMMO_NUMTYPES) {
                     player.inventory.ammo[i] =
-                        player.inventory.MaxAmmoForAmmoClass(player, idWeapon.Companion.GetAmmoNameForNum(i))
+                        player.inventory.MaxAmmoForAmmoClass(player, idWeapon.GetAmmoNameForNum(i)!!)
                     i++
                 }
                 if (!give_all) {
                     return
                 }
             }
-            if (give_all || idStr.Companion.Icmp(name, "armor") == 0) {
+            if (give_all || idStr.Icmp(name, "armor") == 0) {
                 player.inventory.armor = player.inventory.maxarmor
                 if (!give_all) {
                     return
                 }
             }
-            if (idStr.Companion.Icmp(name, "berserk") == 0) {
+            if (idStr.Icmp(name, "berserk") == 0) {
                 player.GivePowerUp(Player.BERSERK, Math_h.SEC2MS(30.0f).toInt())
                 return
             }
-            if (idStr.Companion.Icmp(name, "invis") == 0) {
+            if (idStr.Icmp(name, "invis") == 0) {
                 player.GivePowerUp(Player.INVISIBILITY, Math_h.SEC2MS(30.0f).toInt())
                 return
             }
-            if (idStr.Companion.Icmp(name, "pda") == 0) {
-                player.GivePDA(idStr.Companion.parseStr(args.Argv(2)), null)
+            if (idStr.Icmp(name, "pda") == 0) {
+                player.GivePDA(idStr.parseStr(args.Argv(2)), null)
                 return
             }
-            if (idStr.Companion.Icmp(name, "video") == 0) {
+            if (idStr.Icmp(name, "video") == 0) {
                 player.GiveVideo(args.Argv(2), null)
                 return
             }
@@ -609,7 +612,7 @@ object SysCmds {
      ==================
      */
     class Cmd_CenterView_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val ang: idAngles
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -639,7 +642,7 @@ object SysCmds {
      ==================
      */
     class Cmd_God_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -674,7 +677,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Notarget_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -707,7 +710,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Noclip_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -737,14 +740,14 @@ object SysCmds {
      =================
      */
     class Cmd_Kill_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             if (Game_local.gameLocal.isMultiplayer) {
                 if (Game_local.gameLocal.isClient) {
                     val outMsg = idBitMsg()
                     val msgBuf = ByteBuffer.allocate(Game_local.MAX_GAME_MESSAGE_SIZE)
                     outMsg.Init(msgBuf, msgBuf.capacity())
-                    outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_KILL)
+                    outMsg.WriteByte(Game_local.GAME_RELIABLE_MESSAGE_KILL.toByte())
                     NetworkSystem.networkSystem.ClientSendReliableMessage(outMsg)
                 } else {
                     player = Game_local.gameLocal.GetClientByCmdArgs(args)
@@ -785,7 +788,7 @@ object SysCmds {
      =================
      */
     class Cmd_PlayerModel_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val name: String?
             val pos = idVec3()
@@ -819,8 +822,8 @@ object SysCmds {
      ==================
      */
     class Cmd_Say_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            SysCmds.Cmd_Say(false, args)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            Cmd_Say(false, args)
         }
 
         companion object {
@@ -837,8 +840,8 @@ object SysCmds {
      ==================
      */
     class Cmd_SayTeam_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            SysCmds.Cmd_Say(true, args)
+        override fun run(args: CmdArgs.idCmdArgs) {
+            Cmd_Say(true, args)
         }
 
         companion object {
@@ -855,7 +858,7 @@ object SysCmds {
      ==================
      */
     class Cmd_AddChatLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             Game_local.gameLocal.mpGame.AddChatLine(args.Argv(1))
         }
 
@@ -873,7 +876,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Kick_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             if (!Game_local.gameLocal.isMultiplayer) {
                 Game_local.gameLocal.Printf("kick can only be used in a multiplayer game\n")
@@ -913,7 +916,7 @@ object SysCmds {
      ==================
      */
     class Cmd_GetViewpos_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val origin = idVec3()
             val axis = idMat3()
@@ -923,10 +926,10 @@ object SysCmds {
             }
             val view = player.GetRenderView()
             if (view != null) {
-                Game_local.gameLocal.Printf("(%s) %.1f\n", view.vieworg.ToString(), view.viewaxis.get(0).ToYaw())
+                Game_local.gameLocal.Printf("(%s) %.1f\n", view.vieworg.ToString(), view.viewaxis[0].ToYaw())
             } else {
                 player.GetViewPos(origin, axis)
-                Game_local.gameLocal.Printf("(%s) %.1f\n", origin.ToString(), axis.get(0).ToYaw())
+                Game_local.gameLocal.Printf("(%s) %.1f\n", origin.ToString(), axis[0].ToYaw())
             }
         }
 
@@ -944,7 +947,7 @@ object SysCmds {
      =================
      */
     class Cmd_SetViewpos_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val origin = idVec3()
             val angels = idAngles()
             var i: Int
@@ -963,7 +966,7 @@ object SysCmds {
             }
             i = 0
             while (i < 3) {
-                origin.set(i, args.Argv(i + 1).toFloat())
+                origin[i] = args.Argv(i + 1).toFloat()
                 i++
             }
             origin.z -= SysCvar.pm_normalviewheight.GetFloat() - 0.25f
@@ -984,7 +987,7 @@ object SysCmds {
      =================
      */
     class Cmd_Teleport_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val origin = idVec3()
             val angles = idAngles()
             val player: idPlayer?
@@ -998,12 +1001,12 @@ object SysCmds {
                 return
             }
             ent = Game_local.gameLocal.FindEntity(args.Argv(1))
-            if (TempDump.NOT(ent)) {
+            if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
             }
             angles.Zero()
-            angles.yaw = ent.GetPhysics().GetAxis().get(0).ToYaw()
+            angles.yaw = ent.GetPhysics().GetAxis()[0].ToYaw()
             origin.set(ent.GetPhysics().GetOrigin())
             player.Teleport(origin, angles, ent)
         }
@@ -1022,7 +1025,7 @@ object SysCmds {
      =================
      */
     class Cmd_Trigger_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val origin = idVec3()
             var angles: idAngles
             val player: idPlayer?
@@ -1036,7 +1039,7 @@ object SysCmds {
                 return
             }
             ent = Game_local.gameLocal.FindEntity(args.Argv(1))
-            if (TempDump.NOT(ent)) {
+            if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
             }
@@ -1059,7 +1062,7 @@ object SysCmds {
      ===================
      */
     class Cmd_Spawn_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var key: String?
             var value: String?
             var i: Int
@@ -1081,7 +1084,7 @@ object SysCmds {
             dict.Set("angle", Str.va("%f", yaw + 180))
             org.set(
                 player.GetPhysics().GetOrigin()
-                    .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
+                    .plus(idAngles(0f, yaw, 0f).ToForward().times(80f).plus(idVec3(0, 0, 1)))
             )
             dict.Set("origin", org.ToString())
             i = 2
@@ -1110,7 +1113,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Damage_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
@@ -1119,7 +1122,7 @@ object SysCmds {
                 return
             }
             val ent = Game_local.gameLocal.FindEntity(args.Argv(1))
-            if (TempDump.NOT(ent)) {
+            if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
             }
@@ -1149,7 +1152,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Remove_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
@@ -1180,27 +1183,27 @@ object SysCmds {
      ===================
      */
     class Cmd_TestLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val filename = idStr()
             var key: String?
             var value: String?
-            var name: String? = null
+            var name: String = ""
             val player: idPlayer?
             val dict = idDict()
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            val rv = player.GetRenderView()
+            val rv = player.GetRenderView()!!
             val fov = Math.tan((idMath.M_DEG2RAD * rv.fov_x / 2).toDouble()).toFloat()
-            dict.SetMatrix("rotation", idMat3.Companion.getMat3_default())
+            dict.SetMatrix("rotation", idMat3.getMat3_default())
             dict.SetVector("origin", rv.vieworg)
-            dict.SetVector("light_target", rv.viewaxis.get(0))
-            dict.SetVector("light_right", rv.viewaxis.get(1).times(-fov))
-            dict.SetVector("light_up", rv.viewaxis.get(2).times(fov))
-            dict.SetVector("light_start", rv.viewaxis.get(0).times(16f))
-            dict.SetVector("light_end", rv.viewaxis.get(0).times(1000f))
+            dict.SetVector("light_target", rv.viewaxis[0])
+            dict.SetVector("light_right", rv.viewaxis[1].times(-fov))
+            dict.SetVector("light_up", rv.viewaxis[2].times(fov))
+            dict.SetVector("light_start", rv.viewaxis[0].times(16f))
+            dict.SetVector("light_end", rv.viewaxis[0].times(1000f))
             if (args.Argc() >= 2) {
                 value = args.Argv(1)
                 filename.set(args.Argv(1))
@@ -1242,10 +1245,10 @@ object SysCmds {
      ===================
      */
     class Cmd_TestPointLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var key: String?
             var value: String?
-            var name: String? = null
+            var name: String = ""
             var i: Int
             val player: idPlayer?
             val dict = idDict()
@@ -1253,7 +1256,7 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            dict.SetVector("origin", player.GetRenderView().vieworg)
+            dict.SetVector("origin", player.GetRenderView()!!.vieworg)
             if (args.Argc() >= 2) {
                 value = args.Argv(1)
                 dict.Set("light", value)
@@ -1295,10 +1298,10 @@ object SysCmds {
      ==================
      */
     class Cmd_PopLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var ent: idEntity?
-            val mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            val mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             var lastLight: idLight?
             var last: Int
             if (!Game_local.gameLocal.CheatsOk()) {
@@ -1346,12 +1349,12 @@ object SysCmds {
      ====================
      */
     class Cmd_ClearLights_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var ent: idEntity?
             var next: idEntity?
             var light: idLight?
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val removeFromMap = args.Argc() > 1
             Game_local.gameLocal.Printf("Clearing all lights.\n")
             ent = Game_local.gameLocal.spawnedEntities.Next()
@@ -1384,7 +1387,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestFx_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val offset = idVec3()
             val name: String?
             val player: idPlayer?
@@ -1403,7 +1406,7 @@ object SysCmds {
                 return
             }
             name = args.Argv(1)
-            offset.set(player.GetPhysics().GetOrigin().oPlus(player.viewAngles.ToForward().times(100.0f)))
+            offset.set(player.GetPhysics().GetOrigin().plus(player.viewAngles.ToForward().times(100.0f)))
             dict.Set("origin", offset.ToString())
             dict.Set("test", "1")
             dict.Set("fx", name)
@@ -1434,7 +1437,7 @@ object SysCmds {
      ==================
      */
     class Cmd_AddDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val argNum = intArrayOf(0)
             val value: String?
@@ -1446,28 +1449,28 @@ object SysCmds {
                 return
             }
             i = 0
-            while (i < SysCmds.MAX_DEBUGLINES) {
-                if (!SysCmds.debugLines[i].used) {
+            while (i < MAX_DEBUGLINES) {
+                if (!debugLines[i].used) {
                     break
                 }
                 i++
             }
-            if (i >= SysCmds.MAX_DEBUGLINES) {
+            if (i >= MAX_DEBUGLINES) {
                 Game_local.gameLocal.Printf("no free debug lines\n")
                 return
             }
             value = args.Argv(0)
-            SysCmds.debugLines[i].arrow = TempDump.NOT(idStr.Companion.Icmp(value, "addarrow").toDouble())
-            SysCmds.debugLines[i].used = true
-            SysCmds.debugLines[i].blink = false
+            debugLines[i].arrow = TempDump.NOT(idStr.Icmp(value, "addarrow").toDouble())
+            debugLines[i].used = true
+            debugLines[i].blink = false
             argNum[0] = 1
-            SysCmds.debugLines[i].start.x = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].start.y = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].start.z = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].end.x = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].end.y = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].end.z = SysCmds.Cmd_GetFloatArg(args, argNum)
-            SysCmds.debugLines[i].color = SysCmds.Cmd_GetFloatArg(args, argNum).toInt()
+            debugLines[i].start.x = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].start.y = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].start.z = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].end.x = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].end.y = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].end.z = Cmd_GetFloatArg(args, argNum)
+            debugLines[i].color = Cmd_GetFloatArg(args, argNum).toInt()
         }
 
         companion object {
@@ -1484,7 +1487,7 @@ object SysCmds {
      ==================
      */
     class Cmd_RemoveDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var num: Int
             val value: String?
@@ -1498,19 +1501,19 @@ object SysCmds {
             value = args.Argv(1)
             num = value.toInt()
             i = 0
-            while (i < SysCmds.MAX_DEBUGLINES) {
-                if (SysCmds.debugLines[i].used) {
+            while (i < MAX_DEBUGLINES) {
+                if (debugLines[i].used) {
                     if (--num < 0) {
                         break
                     }
                 }
                 i++
             }
-            if (i >= SysCmds.MAX_DEBUGLINES) {
+            if (i >= MAX_DEBUGLINES) {
                 Game_local.gameLocal.Printf("line not found\n")
                 return
             }
-            SysCmds.debugLines[i].used = false
+            debugLines[i].used = false
         }
 
         companion object {
@@ -1527,7 +1530,7 @@ object SysCmds {
      ==================
      */
     class Cmd_BlinkDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var num: Int
             val value: String?
@@ -1541,19 +1544,19 @@ object SysCmds {
             value = args.Argv(1)
             num = value.toInt()
             i = 0
-            while (i < SysCmds.MAX_DEBUGLINES) {
-                if (SysCmds.debugLines[i].used) {
+            while (i < MAX_DEBUGLINES) {
+                if (debugLines[i].used) {
                     if (--num < 0) {
                         break
                     }
                 }
                 i++
             }
-            if (i >= SysCmds.MAX_DEBUGLINES) {
+            if (i >= MAX_DEBUGLINES) {
                 Game_local.gameLocal.Printf("line not found\n")
                 return
             }
-            SysCmds.debugLines[i].blink = !SysCmds.debugLines[i].blink
+            debugLines[i].blink = !debugLines[i].blink
         }
 
         companion object {
@@ -1570,7 +1573,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListDebugLines_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var num: Int
             if (!Game_local.gameLocal.CheatsOk()) {
@@ -1579,20 +1582,20 @@ object SysCmds {
             num = 0
             Game_local.gameLocal.Printf("line num: x1     y1     z1     x2     y2     z2     c  b  a\n")
             i = 0
-            while (i < SysCmds.MAX_DEBUGLINES) {
-                if (SysCmds.debugLines[i].used) {
+            while (i < MAX_DEBUGLINES) {
+                if (debugLines[i].used) {
                     Game_local.gameLocal.Printf("line %3d: ", num)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].start.x)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].start.y)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].start.z)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].end.x)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].end.y)
-                    SysCmds.PrintFloat(SysCmds.debugLines[i].end.z)
+                    PrintFloat(debugLines[i].start.x)
+                    PrintFloat(debugLines[i].start.y)
+                    PrintFloat(debugLines[i].start.z)
+                    PrintFloat(debugLines[i].end.x)
+                    PrintFloat(debugLines[i].end.y)
+                    PrintFloat(debugLines[i].end.z)
                     Game_local.gameLocal.Printf(
                         "%d  %d  %d\n",
-                        SysCmds.debugLines[i].color,
-                        SysCmds.debugLines[i].blink,
-                        SysCmds.debugLines[i].arrow
+                        debugLines[i].color,
+                        debugLines[i].blink,
+                        debugLines[i].arrow
                     )
                     num++
                 }
@@ -1617,7 +1620,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListCollisionModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
@@ -1638,7 +1641,7 @@ object SysCmds {
      ==================
      */
     class Cmd_CollisionModelInfo_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val value: String?
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
@@ -1654,7 +1657,7 @@ object SysCmds {
                 return
             }
             value = args.Argv(1)
-            if (TempDump.NOT(idStr.Companion.Icmp(value, "all").toDouble())) {
+            if (TempDump.NOT(idStr.Icmp(value, "all").toDouble())) {
                 CollisionModel_local.collisionModelManager.ModelInfo(-1)
             } else {
                 CollisionModel_local.collisionModelManager.ModelInfo(value.toInt())
@@ -1675,7 +1678,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ExportModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val exporter = idModelExport()
             val name = idStr()
 
@@ -1708,7 +1711,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ReexportModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val exporter = idModelExport()
             val name = idStr()
 
@@ -1717,7 +1720,7 @@ object SysCmds {
             if (Game_local.gameLocal.GetLocalPlayer() != null && !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            idAnimManager.Companion.forceExport = true
+            idAnimManager.forceExport = true
             if (args.Argc() < 2) {
                 exporter.ExportModels("def", ".def")
             } else {
@@ -1726,7 +1729,7 @@ object SysCmds {
                 name.DefaultFileExtension(".def")
                 exporter.ExportDefFile(name.toString())
             }
-            idAnimManager.Companion.forceExport = false
+            idAnimManager.forceExport = false
         }
 
         companion object {
@@ -1743,7 +1746,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ReloadAnims_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             // don't allow reloading anims when cheats are disabled,
             // but if we're not in the game, it's ok
             if (Game_local.gameLocal.GetLocalPlayer() != null && !Game_local.gameLocal.CheatsOk(false)) {
@@ -1766,7 +1769,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListAnims_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var ent: idEntity?
             var num: Int
             var   /*size_t*/size: Int
@@ -1779,7 +1782,7 @@ object SysCmds {
                 animator = idAnimator()
                 classname = args.Argv(1)
                 dict = Game_local.gameLocal.FindEntityDefDict(classname, false)
-                if (TempDump.NOT(dict)) {
+                if (null == dict) {
                     Game_local.gameLocal.Printf("Entitydef '%s' not found\n", classname)
                     return
                 }
@@ -1824,7 +1827,7 @@ object SysCmds {
      ==================
      */
     class Cmd_AASStats_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val aasNum: Int
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
@@ -1834,7 +1837,7 @@ object SysCmds {
             if (TempDump.NOT(aas)) {
                 Game_local.gameLocal.Printf("No aas #%d loaded\n", aasNum)
             } else {
-                aas.Stats()
+                aas!!.Stats()
             }
         }
 
@@ -1852,7 +1855,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestDamage_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val damageDefName: String?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -1870,7 +1873,7 @@ object SysCmds {
                 val d1 = CFloat()
                 val d0 = CFloat()
                 idMath.SinCos(Math_h.DEG2RAD(angle), d1, d0)
-                dir.set(idVec3(d0._val, d1._val, 0))
+                dir.set(idVec3(d0._val, d1._val, 0f))
             } else {
                 dir.set(idVec3())
                 //            dir.Zero();
@@ -1897,7 +1900,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestBoneFx_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val bone: String?
             val fx: String?
@@ -1928,7 +1931,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestDeath_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -1938,7 +1941,7 @@ object SysCmds {
             val d1 = CFloat()
             val d0 = CFloat()
             idMath.SinCos(Math_h.DEG2RAD(45.0f), d1, d0)
-            dir.set(idVec3(d0._val, d1._val, 0))
+            dir.set(idVec3(d0._val, d1._val, 0f))
             SysCvar.g_testDeath.SetBool(true)
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, Model.INVALID_JOINT)
             if (args.Argc() >= 2) {
@@ -1960,13 +1963,13 @@ object SysCmds {
      ==================
      */
     class Cmd_WeaponSplat_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            player.weapon.GetEntity().BloodSplat(2.0f)
+            player.weapon.GetEntity()!!.BloodSplat(2.0f)
         }
 
         companion object {
@@ -1983,12 +1986,12 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveSelected_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             val player: idPlayer?
             val s: idEntity?
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val dict = idDict()
             val mapName: idStr
             var name: String? = null
@@ -1997,7 +2000,7 @@ object SysCmds {
                 return
             }
             s = player.dragEntity.GetSelected()
-            if (TempDump.NOT(s)) {
+            if (null == s) {
                 Game_local.gameLocal.Printf("no entity selected, set g_dragShowSelection 1 to show the current selection\n")
                 return
             }
@@ -2011,7 +2014,7 @@ object SysCmds {
             // find map file entity
             mapEnt = mapFile.FindEntity(s.name.toString())
             // create new map file entity if there isn't one for this articulated figure
-            if (TempDump.NOT(mapEnt)) {
+            if (null == mapEnt) {
                 mapEnt = idMapEntity()
                 mapFile.AddEntity(mapEnt)
                 i = 0
@@ -2033,7 +2036,7 @@ object SysCmds {
             } else if (s is idAFEntity_Generic || s is idAFEntity_WithAttachedHead) {
                 // save the articulated figure state
                 dict.Clear()
-                (s as idAFEntity_Base?).SaveState(dict)
+                (s as idAFEntity_Base).SaveState(dict)
                 mapEnt.epairs.Copy(dict)
             }
 
@@ -2055,7 +2058,7 @@ object SysCmds {
      ==================
      */
     class Cmd_DeleteSelected_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2080,12 +2083,12 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveMoveables_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var i: Int
             var m: idMoveable
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val mapName = idStr()
             var name: String? = null
             if (!Game_local.gameLocal.CheatsOk()) {
@@ -2135,7 +2138,7 @@ object SysCmds {
                 // find map file entity
                 mapEnt = mapFile.FindEntity(m.name)
                 // create new map file entity if there isn't one for this articulated figure
-                if (TempDump.NOT(mapEnt)) {
+                if (null == mapEnt) {
                     mapEnt = idMapEntity()
                     mapFile.AddEntity(mapEnt)
                     i = 0
@@ -2174,12 +2177,12 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveRagdolls_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var i: Int
             var af: idAFEntity_Base
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val dict = idDict()
             val mapName = idStr()
             var name: String? = null
@@ -2219,7 +2222,7 @@ object SysCmds {
                 // find map file entity
                 mapEnt = mapFile.FindEntity(af.name.toString())
                 // create new map file entity if there isn't one for this articulated figure
-                if (TempDump.NOT(mapEnt)) {
+                if (null == mapEnt) {
                     mapEnt = idMapEntity()
                     mapFile.AddEntity(mapEnt)
                     i = 0
@@ -2257,7 +2260,7 @@ object SysCmds {
      ==================
      */
     class Cmd_BindRagdoll_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2282,7 +2285,7 @@ object SysCmds {
      ==================
      */
     class Cmd_UnbindRagdoll_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2307,8 +2310,8 @@ object SysCmds {
      ==================
      */
     class Cmd_GameError_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
-            idGameLocal.Companion.Error("game error")
+        override fun run(args: CmdArgs.idCmdArgs) {
+            idGameLocal.Error("game error")
         }
 
         companion object {
@@ -2325,12 +2328,12 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveLights_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var i: Int
             var light: idLight
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val dict = idDict()
             val mapName = idStr()
             var name: String? = null
@@ -2356,7 +2359,7 @@ object SysCmds {
                 // find map file entity
                 mapEnt = mapFile.FindEntity(light.name.toString())
                 // create new map file entity if there isn't one for this light
-                if (TempDump.NOT(mapEnt)) {
+                if (null == mapEnt) {
                     mapEnt = idMapEntity()
                     mapFile.AddEntity(mapEnt)
                     i = 0
@@ -2394,11 +2397,11 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveParticles_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var ent: idEntity?
-            var mapEnt: idMapEntity
-            val mapFile = Game_local.gameLocal.GetLevelMap()
+            var mapEnt: idMapEntity?
+            val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val dict = idDict()
             val mapName = idStr()
             var strModel: idStr
@@ -2418,7 +2421,7 @@ object SysCmds {
                     e++
                     continue
                 }
-                strModel = idStr(ent.spawnArgs.GetString("model"))
+                strModel = idStr(ent!!.spawnArgs.GetString("model"))
                 if (strModel.Length() != 0 && strModel.Find(".prt") > 0) {
                     dict.Clear()
                     dict.Set("model", ent.spawnArgs.GetString("model"))
@@ -2427,7 +2430,7 @@ object SysCmds {
                     // find map file entity
                     mapEnt = mapFile.FindEntity(ent.name.toString())
                     // create new map file entity if there isn't one for this entity
-                    if (TempDump.NOT(mapEnt)) {
+                    if (null == mapEnt) {
                         e++
                         continue
                     }
@@ -2455,7 +2458,7 @@ object SysCmds {
      ==================
      */
     class Cmd_DisasmScript_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             Game_local.gameLocal.program.Disassemble()
         }
 
@@ -2473,11 +2476,11 @@ object SysCmds {
      ==================
      */
     class Cmd_TestSave_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val f: idFile?
             f = FileSystem_h.fileSystem.OpenFileWrite("test.sav")
             Game_local.gameLocal.SaveGame(f)
-            FileSystem_h.fileSystem.CloseFile(f)
+            FileSystem_h.fileSystem.CloseFile(f!!)
         }
 
         companion object {
@@ -2494,7 +2497,7 @@ object SysCmds {
      ==================
      */
     class Cmd_RecordViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player: idPlayer?
             val origin = idVec3()
             val axis = idMat3()
@@ -2542,7 +2545,7 @@ object SysCmds {
      ==================
      */
     class Cmd_CloseViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val player = Game_local.gameLocal.GetLocalPlayer() ?: return
             player.hud.SetStateString("viewcomments", "")
             player.hud.HandleNamedEvent("hideViewComments")
@@ -2562,7 +2565,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ShowViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val token = idToken()
             val player: idPlayer?
             val origin = idVec3()
@@ -2601,7 +2604,7 @@ object SysCmds {
         }
 
         companion object {
-            val parser: idLexer? =
+            val parser: idLexer =
                 idLexer(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOFATALERRORS)
             private val instance: cmdFunction_t = Cmd_ShowViewNotes_f()
             fun getInstance(): cmdFunction_t {
@@ -2616,7 +2619,7 @@ object SysCmds {
      =================
      */
     class Cmd_NextGUI_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val origin = idVec3()
             val angles: idAngles
             val player: idPlayer?
@@ -2625,13 +2628,11 @@ object SysCmds {
             var newEnt: Boolean
             val renderEnt: renderEntity_s?
             val surfIndex: Int
-            val geom: srfTriangles_s
+            val geom: srfTriangles_s?
             val modelMatrix: idMat4
             val normal = idVec3()
             val center = idVec3()
-            val surfaces = Stream.generate { modelSurface_s() }
-                .limit(RenderWorld.MAX_RENDERENTITY_GUI.toLong())
-                .toArray<modelSurface_s?> { _Dummy_.__Array__() }
+            val surfaces = Array(MAX_RENDERENTITY_GUI) { modelSurface_s() }
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
@@ -2649,7 +2650,7 @@ object SysCmds {
             newEnt = false
             if (ent == null) {
                 newEnt = true
-            } else if (FindEntityGUIs(ent, surfaces, RenderWorld.MAX_RENDERENTITY_GUI, guiSurfaces) == true) {
+            } else if (FindEntityGUIs(ent, surfaces, MAX_RENDERENTITY_GUI, guiSurfaces) == true) {
                 if (Game_local.gameLocal.lastGUI >= guiSurfaces._val) {
                     newEnt = true
                 }
@@ -2665,13 +2666,13 @@ object SysCmds {
                     ent.spawnNode.Next()
                 }
                 while (ent != null) {
-                    if (ent.spawnArgs.GetString("gui", null) != null) {
+                    if (!ent.spawnArgs.GetString("gui", "").isNullOrEmpty()) {
                         break
                     }
-                    if (ent.spawnArgs.GetString("gui2", null) != null) {
+                    if (!ent.spawnArgs.GetString("gui2", "").isNullOrEmpty()) {
                         break
                     }
-                    if (ent.spawnArgs.GetString("gui3", null) != null) {
+                    if (!ent.spawnArgs.GetString("gui3", "").isNullOrEmpty()) {
                         break
                     }
 
@@ -2681,12 +2682,12 @@ object SysCmds {
                 }
                 Game_local.gameLocal.lastGUIEnt.oSet(ent)
                 Game_local.gameLocal.lastGUI = 0
-                if (TempDump.NOT(ent)) {
+                if (null == ent) {
                     Game_local.gameLocal.Printf("No more gui entities. Starting over...\n")
                     return
                 }
             }
-            if (FindEntityGUIs(ent, surfaces, RenderWorld.MAX_RENDERENTITY_GUI, guiSurfaces) == false) {
+            if (FindEntityGUIs(ent!!, surfaces, MAX_RENDERENTITY_GUI, guiSurfaces) == false) {
                 Game_local.gameLocal.Printf("Entity \"%s\" has gui properties but no gui surfaces.\n", ent.name)
             }
             if (guiSurfaces._val == 0) {
@@ -2698,7 +2699,7 @@ object SysCmds {
                 ent.name,
                 Game_local.gameLocal.lastGUI
             )
-            renderEnt = ent.GetRenderEntity()
+            renderEnt = ent.GetRenderEntity()!!
             surfIndex = Game_local.gameLocal.lastGUI++
             geom = surfaces[surfIndex].geometry
             if (geom == null) {
@@ -2709,7 +2710,7 @@ object SysCmds {
             modelMatrix = idMat4(renderEnt.axis, renderEnt.origin)
             normal.set(geom.facePlanes[0].Normal().times(renderEnt.axis))
             center.set(geom.bounds.GetCenter().times(modelMatrix))
-            origin.set(center.oPlus(normal.times(32.0f)))
+            origin.set(center.plus(normal.times(32.0f)))
             origin.z -= player.EyeHeight()
             normal.timesAssign(-1.0f)
             angles = normal.ToAngles()
@@ -2728,20 +2729,20 @@ object SysCmds {
          =================
          */
         fun FindEntityGUIs(
-            ent: idEntity?,
-            surfaces: Array<modelSurface_s?>?,
+            ent: idEntity,
+            surfaces: Array<modelSurface_s>,
             maxSurfs: Int,
             guiSurfaces: CInt
         ): Boolean {
-            val renderEnt: renderEntity_s?
+            val renderEnt: renderEntity_s
             val renderModel: idRenderModel?
             var surf: modelSurface_s?
-            var shader: idMaterial?
+            var shader: Material.idMaterial?
             var i: Int
             assert(surfaces != null)
             assert(ent != null)
-            guiSurfaces.setVal(0)
-            renderEnt = ent.GetRenderEntity()
+            guiSurfaces._val = 0
+            renderEnt = ent.GetRenderEntity()!!
             renderModel = renderEnt.hModel
             if (renderModel == null) {
                 return false
@@ -2759,7 +2760,7 @@ object SysCmds {
                     continue
                 }
                 if (shader.GetEntityGui() > 0) {
-                    surfaces.get(guiSurfaces.increment()) = surf
+                    surfaces[guiSurfaces.increment()] = surf
                 }
                 i++
             }
@@ -2806,7 +2807,7 @@ object SysCmds {
                 id += args.Argv(i)
                 i++
             }
-            if (idStr.Companion.Cmpn(id, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) != 0) {
+            if (idStr.Cmpn(id, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) != 0) {
                 id = Common.STRTABLE_ID + id
             }
             Game_local.gameLocal.mpGame.AddChatLine(

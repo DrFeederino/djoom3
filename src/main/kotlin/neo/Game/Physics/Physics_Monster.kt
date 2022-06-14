@@ -4,6 +4,7 @@ import neo.CM.CollisionModel.trace_s
 import neo.Game.Actor.idActor
 import neo.Game.Entity
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.Game_local
@@ -137,7 +138,7 @@ object Physics_Monster {
             savefile.WriteBool(useVelocityMove)
             savefile.WriteBool(noImpact)
             savefile.WriteInt(TempDump.etoi(moveResult))
-            savefile.WriteObject(blockingEntity)
+            savefile.WriteObject(blockingEntity as Class.idClass)
         }
 
         override fun Restore(savefile: idRestoreGame) {

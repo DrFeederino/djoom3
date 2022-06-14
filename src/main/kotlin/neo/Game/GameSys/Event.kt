@@ -2,37 +2,25 @@ package neo.Game.GameSys
 
 import neo.CM.CollisionModel.contactType_t
 import neo.CM.CollisionModel.trace_s
-import neo.Game.AFEntity
+import neo.Game.*
 import neo.Game.AI.AI
 import neo.Game.AI.AI_Events
 import neo.Game.AI.AI_Vagary
-import neo.Game.Actor
-import neo.Game.Camera
-import neo.Game.FX
 import neo.Game.GameSys.Class.idClass
 import neo.Game.GameSys.Class.idEventArg
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
-import neo.Game.Game_local
 import neo.Game.Game_local.idGameLocal
-import neo.Game.Light
-import neo.Game.Misc
-import neo.Game.Moveable
-import neo.Game.Mover
-import neo.Game.Player
-import neo.Game.Projectile
 import neo.Game.Script.Script_Program
 import neo.Game.Script.Script_Thread
-import neo.Game.SecurityCamera
-import neo.Game.Sound
-import neo.Game.Weapon
+import neo.Game.Target
 import neo.TempDump
 import neo.TempDump.SERiAL
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.LinkList.idLinkList
 import neo.idlib.math.Vector.idVec3
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -73,9 +61,9 @@ object Event {
 
      ***********************************************************************/
     class idEventDef(command: String, formatSpec: String? = null /*= NULL*/, returnType: Char /*= 0*/) {
-        private val argOffset: IntArray = IntArray(D_EVENT_MAXARGS)
-        private val   /*size_t*/argsize: Int
-        private val eventnum: Int
+        private var argOffset: IntArray = IntArray(D_EVENT_MAXARGS)
+        private var   /*size_t*/argsize: Int
+        private var eventnum: Int
         private val formatspec: String?
         private val   /*unsigned int*/formatspecIndex: Long
         private val name: String
@@ -93,7 +81,7 @@ object Event {
             return name
         }
 
-        fun GetArgFormat(): String {
+        fun GetArgFormat(): String? {
             return formatspec
         }
 
@@ -119,7 +107,7 @@ object Event {
 
         fun GetArgOffset(arg: Int): Int {
             assert(arg >= 0 && arg < D_EVENT_MAXARGS)
-            return argOffset.get(arg)
+            return argOffset[arg]
         }
 
         override fun hashCode(): Int {
@@ -135,17 +123,17 @@ object Event {
 
         companion object {
             //
-            private val eventDefList: Array<idEventDef>? = arrayOfNulls<idEventDef>(MAX_EVENTS)
+            private val eventDefList: ArrayList<idEventDef> = ArrayList(MAX_EVENTS)
             private var numEventDefs = 0
             fun NumEventCommands(): Int {
                 return numEventDefs
             }
 
             fun GetEventCommand(eventnum: Int): idEventDef {
-                return eventDefList.get(eventnum)
+                return eventDefList[eventnum]
             }
 
-            fun FindEvent(name: String?): idEventDef {
+            fun FindEvent(name: String?): idEventDef? {
                 var ev: idEventDef
                 val num: Int
                 var i: Int
@@ -153,7 +141,7 @@ object Event {
                 num = numEventDefs
                 i = 0
                 while (i < num) {
-                    ev = eventDefList.get(i)
+                    ev = eventDefList[i]
                     if (name == ev.name) {
                         return ev
                     }
@@ -184,7 +172,6 @@ object Event {
             if (numargs > D_EVENT_MAXARGS) {
                 eventError = true
                 eventErrorMsg = String.format("idEventDef::idEventDef : Too many args for '%s' event.", name)
-                return
             }
 
             // make sure the format for the args is valid, calculate the formatspecindex, and the offsets for each arg
@@ -196,7 +183,7 @@ object Event {
                 argOffset[i] = argsize
                 when (formatSpec[i]) {
                     D_EVENT_FLOAT -> {
-                        bits = bits or (1 shl i)
+                        bits = bits or ((1 shl i).toLong())
                         argsize += java.lang.Float.SIZE / java.lang.Byte.SIZE
                     }
                     D_EVENT_INTEGER -> argsize += Integer.SIZE / java.lang.Byte.SIZE
@@ -211,21 +198,20 @@ object Event {
                             formatSpec,
                             name
                         )
-                        return
                     }
                 }
                 i++
             }
 
             // calculate the formatspecindex
-            formatspecIndex = 1 shl numargs + D_EVENT_MAXARGS or bits
+            formatspecIndex = (1 shl numargs + D_EVENT_MAXARGS or bits.toInt()).toLong()
 
             // go through the list of defined events and check for duplicates
             // and mismatched format strings
             eventnum = numEventDefs
             i = 0
             while (i < eventnum) {
-                ev = eventDefList.get(i)
+                ev = eventDefList[i]
                 if (command == ev.name) {
                     if (formatSpec != ev.formatspec) {
                         eventError = true
@@ -233,7 +219,6 @@ object Event {
                             "idEvent '%s' defined twice with same name but differing format strings ('%s'!='%s').",
                             command, formatSpec, ev.formatspec
                         )
-                        return
                     }
                     if (ev.returnType != returnType.code) {
                         eventError = true
@@ -241,11 +226,9 @@ object Event {
                             "idEvent '%s' defined twice with same name but differing return types ('%c'!='%c').",
                             command, returnType, ev.returnType
                         )
-                        return
                     }
                     // Don't bother putting the duplicate event in list.
                     eventnum = ev.eventnum
-                    return
                 }
                 i++
             }
@@ -253,9 +236,8 @@ object Event {
             if (numEventDefs >= MAX_EVENTS) {
                 eventError = true
                 eventErrorMsg = String.format("numEventDefs >= MAX_EVENTS")
-                return
             }
-            eventDefList.get(numEventDefs) = ev
+            eventDefList[numEventDefs] = ev
             numEventDefs++
         }
     }
@@ -266,28 +248,28 @@ object Event {
 
      ***********************************************************************/
     class idEvent {
-        private var data: Array<idEventArg<Any>>? = null
+        private var data: ArrayList<idEventArg<*>> = ArrayList()
 
         //
         private val eventNode: idLinkList<idEvent> = idLinkList()
-        private var eventdef: idEventDef? = null
-        private var `object`: idClass? = null
+        private lateinit var eventdef: idEventDef
+        private lateinit var `object`: idClass
         private var time = 0
-        private var typeinfo: Class<Any>? = null
+        private lateinit var typeinfo: java.lang.Class<*>
         fun Free() {
 //            if (data != null) {
 //                eventDataAllocator.Free(data);
-            data = null
+            data.clear()
             //            }
-            eventdef = null
+            //eventdef
             time = 0
-            `object` = null
-            typeinfo = null
+            //`object` = null
+            //typeinfo = null
             eventNode.SetOwner(this)
             eventNode.AddToEnd(FreeEvents)
         }
 
-        fun Schedule(obj: idClass?, type: Class<Any>?, time: Int) {
+        fun Schedule(obj: idClass, type: java.lang.Class<*>, time: Int) {
             var event: idEvent?
             assert(initialized)
             if (!initialized) {
@@ -310,7 +292,7 @@ object Event {
             }
         }
 
-        fun GetData(): Array<Any>? {
+        fun GetData(): ArrayList<*> {
             return data
         }
 
@@ -323,8 +305,8 @@ object Event {
             //
             //
             // ~idEvent();
-            fun Alloc(evdef: idEventDef, numargs: Int, vararg args: idEventArg<*>?): idEvent? {
-                val ev: idEvent?
+            fun Alloc(evdef: idEventDef, numargs: Int, vararg args: idEventArg<*>?): idEvent {
+                val ev: idEvent
                 val   /*size_t*/size: Int
                 val format: String?
                 //            idEventArg arg;
@@ -333,7 +315,7 @@ object Event {
                 if (FreeEvents.IsListEmpty()) {
                     idGameLocal.Error("idEvent::Alloc : No more free events")
                 }
-                ev = FreeEvents.Next()
+                ev = FreeEvents.Next()!!
                 ev.eventNode.Remove()
                 ev.eventdef = evdef
                 if (numargs != evdef.GetNumArgs()) {
@@ -346,9 +328,10 @@ object Event {
                 if (size != 0) {
 //		ev.data = eventDataAllocator.Alloc( size );
 //		memset( ev.data, 0, size );
-                    ev.data = args.clone()
+                    ev.data.clear()
+                    args.forEach { arg -> ev.data.add(arg!!) }
                 } else {
-                    ev.data = null
+                    ev.data.clear()
                 }
                 format = evdef.GetArgFormat()
                 //            for (i = 0; i < numargs; i++) {
@@ -409,12 +392,13 @@ object Event {
             fun CopyArgs(
                 evdef: idEventDef,
                 numargs: Int,
-                args: Array<idEventArg<*>?>?,
-                data: Array<idEventArg<*>?>? /*[ D_EVENT_MAXARGS ]*/
-            ) {
+                args: Array<out idEventArg<*>>,
+                //data: Array<idEventArg<*>> /*[ D_EVENT_MAXARGS ]*/
+            ): Array<idEventArg<*>> {
                 var i: Int
                 val format: CharArray
-                format = evdef.GetArgFormat().toCharArray()
+                format = evdef.GetArgFormat()!!.toCharArray()
+                val data: ArrayList<idEventArg<*>> = ArrayList()
                 if (numargs != evdef.GetNumArgs()) {
                     idGameLocal.Error(
                         "idEvent::CopyArgs : Wrong number of args for '%s' event.",
@@ -423,17 +407,19 @@ object Event {
                 }
                 i = 0
                 while (i < numargs) {
-                    val arg = args.get(i)
-                    if (format[i] != arg.type) {
+                    val arg = args[i]
+                    if (format[i].code != arg.type) {
                         arg.type = D_EVENT_STRING.code // try to force the string type
                         // when NULL is passed in for an entity, it gets cast as an integer 0, so don't give an error when it happens
 //                    if (!(((format[i] == D_EVENT_TRACE) || (format[i] == D_EVENT_ENTITY)) && (arg.type == 'd') && (arg.value == Integer.valueOf(0)))) {
 //                        Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
 //                    }
                     }
-                    data.get(i) = arg
+                    data.add(i, arg)
                     i++
                 }
+
+                return data.toTypedArray()
             }
 
             @JvmOverloads
@@ -477,7 +463,7 @@ object Event {
             fun ServiceEvents() {
                 var event: idEvent?
                 var num: Int
-                val args = arrayOfNulls<idEventArg<*>?>(D_EVENT_MAXARGS)
+                val args = ArrayList<idEventArg<*>>(D_EVENT_MAXARGS)
                 var offset: Int
                 var i: Int
                 var numargs: Int
@@ -488,7 +474,7 @@ object Event {
                 var materialName: String
                 num = 0
                 while (!EventQueue.IsListEmpty()) {
-                    event = EventQueue.Next()
+                    event = EventQueue.Next()!!
                     assert(event != null)
                     if (event.time > Game_local.gameLocal.time) {
                         break
@@ -496,13 +482,13 @@ object Event {
 
                     // copy the data into the local args array and set up pointers
                     ev = event.eventdef
-                    formatspec = ev.GetArgFormat()
+                    formatspec = ev.GetArgFormat()!!
                     numargs = ev.GetNumArgs()
                     i = 0
                     while (i < numargs) {
                         when (formatspec[i]) {
                             D_EVENT_INTEGER, D_EVENT_FLOAT, D_EVENT_VECTOR, D_EVENT_STRING, D_EVENT_ENTITY, D_EVENT_ENTITY_NULL, D_EVENT_TRACE -> args[i] =
-                                event.data.get(i)
+                                event.data[i]
                             else -> idGameLocal.Error(
                                 "idEvent::ServiceEvents : Invalid arg format '%s' string for '%s' event.",
                                 formatspec,
@@ -583,7 +569,7 @@ object Event {
                 var event: idEvent?
                 var dataPtr: ByteArray
                 var validTrace: Boolean
-                var forma   t: String?
+                var format: String?
                 savefile.WriteInt(EventQueue.Num())
                 event = EventQueue.Next()
                 while (event != null) {
@@ -619,14 +605,14 @@ object Event {
                     if (FreeEvents.IsListEmpty()) {
                         idGameLocal.Error("idEvent::Restore : No more free events")
                     }
-                    event = FreeEvents.Next()
+                    event = FreeEvents.Next()!!
                     event.eventNode.Remove()
                     event.eventNode.AddToEnd(EventQueue)
                     event.time = savefile.ReadInt()
 
                     // read the event name
                     savefile.ReadString(name)
-                    event.eventdef = idEventDef.FindEvent(name.toString())
+                    event.eventdef = idEventDef.FindEvent(name.toString())!!
                     if (null == event.eventdef) {
                         savefile.Error("idEvent::Restore: unknown event '%s'", name.toString())
                     }
@@ -634,7 +620,7 @@ object Event {
                     // read the classtype
                     savefile.ReadString(name)
                     try {
-                        event.typeinfo = Class.forName(name.toString())
+                        event.typeinfo = java.lang.Class.forName(name.toString())
                     } catch (e: ClassNotFoundException) {
                         savefile.Error(
                             "idEvent::Restore: unknown class '%s' on event '%s'",
@@ -655,43 +641,42 @@ object Event {
                         )
                     }
                     if (argsize._val != 0) {
-                        event.data =
-                            arrayOfNulls<idEventArg<*>?>(argsize._val) //eventDataAllocator.Alloc(argsize[0]);
-                        format = event.eventdef.GetArgFormat()
+                        event.data = ArrayList(argsize._val) //eventDataAllocator.Alloc(argsize[0]);
+                        format = event.eventdef.GetArgFormat()!!
                         assert(format != null)
                         j = 0
                         size = 0
                         while (j < event.eventdef.GetNumArgs()) {
-                            when (format.get(j)) {
+                            when (format[j]) {
                                 D_EVENT_FLOAT -> {
-                                    event.data.get(j) = idEventArg<Any?>(D_EVENT_FLOAT, savefile.ReadFloat())
+                                    event.data[j] = idEventArg<Any?>(D_EVENT_FLOAT.code, savefile.ReadFloat())
                                     size += java.lang.Float.BYTES
                                 }
-                                D_EVENT_INTEGER -> event.data.get(j) =
-                                    idEventArg<Any?>(D_EVENT_INTEGER, savefile.ReadInt())
-                                D_EVENT_ENTITY -> event.data.get(j) =
-                                    idEventArg<Any?>(D_EVENT_ENTITY, savefile.ReadInt())
+                                D_EVENT_INTEGER -> event.data[j] =
+                                    idEventArg<Any?>(D_EVENT_INTEGER.code, savefile.ReadInt())
+                                D_EVENT_ENTITY -> event.data[j] =
+                                    idEventArg<Any?>(D_EVENT_ENTITY.code, savefile.ReadInt())
                                 D_EVENT_ENTITY_NULL -> {
-                                    event.data.get(j) = idEventArg<Any?>(D_EVENT_ENTITY_NULL, savefile.ReadInt())
+                                    event.data[j] = idEventArg<Any?>(D_EVENT_ENTITY_NULL.code, savefile.ReadInt())
                                     size += Integer.BYTES
                                 }
                                 D_EVENT_VECTOR -> {
                                     val buffer = idVec3()
                                     savefile.ReadVec3(buffer)
                                     buffer.Write()
-                                    event.data.get(j) = idEventArg<Any?>(D_EVENT_VECTOR, buffer)
+                                    event.data[j] = idEventArg<Any?>(D_EVENT_VECTOR.code, buffer)
                                     size += idVec3.BYTES
                                 }
                                 D_EVENT_TRACE -> {
                                     val readBool = savefile.ReadBool()
-                                    event.data.get(j) = idEventArg<Any?>(D_EVENT_TRACE, if (readBool) 1 else 0)
+                                    event.data[j] = idEventArg<Any?>(D_EVENT_TRACE.code, if (readBool) 1 else 0)
                                     size++
                                     //						if ( *reinterpret_cast<bool *>( dataPtr ) ) {
                                     if (readBool) {
                                         size += SERiAL.BYTES
                                         val t = trace_s()
                                         RestoreTrace(savefile, t)
-                                        event.data.get(j) = idEventArg<Any?>(D_EVENT_TRACE, t)
+                                        event.data[j] = idEventArg<Any?>(D_EVENT_TRACE.code, t)
                                         if (t.c.material != null) {
                                             size += Script_Program.MAX_STRING_LEN
                                             savefile.Read(str, Script_Program.MAX_STRING_LEN)
@@ -704,7 +689,7 @@ object Event {
                         }
                         assert(size == event.eventdef.GetArgSize())
                     } else {
-                        event.data = null
+                        event.data.clear()
                     }
                     i++
                 }
@@ -728,7 +713,7 @@ object Event {
                 savefile.WriteFloat(trace.c.dist)
                 savefile.WriteInt(trace.c.contents)
                 //            savefile.WriteInt( /*(int&)*/trace.c.material);
-                savefile.Write( /*(int&)*/trace.c.material)
+                savefile.Write( /*(int&)*/trace.c.material!!)
                 savefile.WriteInt(trace.c.contents)
                 savefile.WriteInt(trace.c.modelFeature)
                 savefile.WriteInt(trace.c.trmFeature)
@@ -753,7 +738,7 @@ object Event {
                 trace.c.dist = savefile.ReadFloat()
                 trace.c.contents = savefile.ReadInt()
                 //            savefile.ReadInt( /*(int&)*/trace.c.material);
-                savefile.Read( /*(int&)*/trace.c.material)
+                savefile.Read( /*(int&)*/trace.c.material!!)
                 trace.c.contents = savefile.ReadInt()
                 trace.c.modelFeature = savefile.ReadInt()
                 trace.c.trmFeature = savefile.ReadInt()
@@ -765,26 +750,26 @@ object Event {
     //
     init {
 //preload AI_Events' idEventDefs(473).
-        val actor = Actor()
-        val entity = AFEntity()
-        val ai = AI()
-        val events = AI_Events()
-        val vagary = AI_Vagary()
-        val camera = Camera()
-        val entity1 = Entity()
-        val fx = FX()
-        val item = Item()
-        val light = Light()
-        val misc = Misc()
-        val moveable = Moveable()
-        val mover = Mover()
-        val player = Player()
-        val projectile = Projectile()
-        val thread = Script_Thread()
-        val securityCamera = SecurityCamera()
-        val sound = Sound()
-        val target = Target()
-        val trigger = Trigger()
-        val weapon = Weapon()
+        val actor = Actor
+        val entity = AFEntity
+        val ai = AI
+        val events = AI_Events
+        val vagary = AI_Vagary
+        val camera = Camera
+        val entity1 = Entity
+        val fx = FX
+        val item = Item
+        val light = Light
+        val misc = Misc
+        val moveable = Moveable
+        val mover = Mover
+        val player = Player
+        val projectile = Projectile
+        val thread = Script_Thread
+        val securityCamera = SecurityCamera
+        val sound = Sound
+        val target = Target
+        val trigger = Trigger
+        val weapon = Weapon
     }
 }
