@@ -213,7 +213,7 @@ object Model_local {
             bounds.Zero()
         }
 
-        override fun AddSurface(surface: modelSurface_s?) {
+        override fun AddSurface(surface: modelSurface_s) {
             surfaces.Append(modelSurface_s(surface))
             //surfaces.AppendClone(surface);
             if (surface.geometry != null) {
@@ -507,7 +507,7 @@ object Model_local {
             return surfaces.get(surfaceNum)
         }
 
-        override fun AllocSurfaceTriangles(numVerts: Int, numIndexes: Int): srfTriangles_s? {
+        override fun AllocSurfaceTriangles(numVerts: Int, numIndexes: Int): srfTriangles_s {
             val tri = tr_trisurf.R_AllocStaticTriSurf()
             tr_trisurf.R_AllocStaticTriSurfVerts(tri, numVerts)
             tr_trisurf.R_AllocStaticTriSurfIndexes(tri, numIndexes)

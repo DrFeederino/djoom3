@@ -431,7 +431,7 @@ object Physics_Parametric {
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             assert(model != null)
             if (clipModel != null && clipModel !== model && freeOld) {

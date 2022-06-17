@@ -77,10 +77,10 @@ object Physics {
         abstract fun SetSelf(e: idEntity)
 
         // clip models
-        abstract fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/)
+        abstract fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/)
 
         @JvmOverloads
-        fun SetClipModel(model: idClipModel, density: Float, id: Int = 0 /*= 0*/) {
+        fun SetClipModel(model: idClipModel?, density: Float, id: Int = 0 /*= 0*/) {
             SetClipModel(model, density, id, true)
         }
 

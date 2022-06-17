@@ -3055,7 +3055,7 @@ object Session_local {
 
             // load and spawn all other entities ( from a savegame possibly )
             if (loadingSaveGame && savegameFile != null) {
-                if (Game_local.game.InitFromSaveGame("$fullMapName.map", rw, sw, savegameFile) == false) {
+                if (Game_local.game.InitFromSaveGame("$fullMapName.map", rw, sw, savegameFile!!) == false) {
                     // If the loadgame failed, restart the map with the player persistent data
                     loadingSaveGame = false
                     FileSystem_h.fileSystem.CloseFile(savegameFile!!)

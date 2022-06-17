@@ -637,12 +637,12 @@ object BitMsg {
 
         @Throws(idException::class)
         fun ReadAngle8(): Float {
-            return Math_h.BYTE2ANGLE(ReadByte().toFloat())
+            return Math_h.BYTE2ANGLE(ReadByte().toByte())
         }
 
         @Throws(idException::class)
         fun ReadAngle16(): Float {
-            return Math_h.SHORT2ANGLE(ReadShort().toFloat())
+            return Math_h.SHORT2ANGLE(ReadShort())
         }
 
         @Throws(idException::class)
@@ -1211,12 +1211,12 @@ object BitMsg {
 
         @Throws(idException::class)
         fun ReadAngle8(): Float {
-            return Math_h.BYTE2ANGLE(ReadByte().toFloat())
+            return Math_h.BYTE2ANGLE(ReadByte().toByte())
         }
 
         @Throws(idException::class)
         fun ReadAngle16(): Float {
-            return Math_h.SHORT2ANGLE(ReadShort().toFloat())
+            return Math_h.SHORT2ANGLE(ReadShort().toShort())
         }
 
         @Throws(idException::class)

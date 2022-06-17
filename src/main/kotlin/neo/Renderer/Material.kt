@@ -197,7 +197,7 @@ object Material {
     }
 
     // the order BUMP / DIFFUSE / SPECULAR is necessary for interactions to draw correctly on low end cards
-    internal enum class stageLighting_t {
+    enum class stageLighting_t {
         SL_AMBIENT,  // execute after lighting
         SL_BUMP, SL_DIFFUSE, SL_SPECULAR
     }
@@ -293,10 +293,10 @@ object Material {
         val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
 
         // dynamic image variables
-        var dynamic: dynamicidImage_t? = Material.dynamicidImage_t.values()[0]
+        var dynamic: dynamicidImage_t = Material.dynamicidImage_t.values()[0]
         var dynamicFrameCount = 0
         var hasMatrix = false
-        var texgen: texgen_t? = Material.texgen_t.values()[0]
+        var texgen: texgen_t = Material.texgen_t.values()[0]
         var width = 0
         var height = 0
 
@@ -355,10 +355,10 @@ object Material {
     }
 
     class shaderStage_t {
-        val texture: textureStage_t?
+        val texture: textureStage_t
         private val DBG_count = DBG_counter++
         var alphaTestRegister = 0
-        var color: colorStage_t?
+        var color: colorStage_t
         var conditionRegister // if registers[conditionRegister] == 0, skip stage
                 = 0
         var drawStateBits = 0
@@ -366,7 +366,7 @@ object Material {
         var ignoreAlphaTest // this stage should act as translucent, even if the surface is alpha tested
                 = false
         var lighting // determines which passes interact with lights
-                : stageLighting_t?
+                : stageLighting_t = stageLighting_t.SL_AMBIENT
 
         //
         var newStage // vertex / fragment program based stage
@@ -464,7 +464,7 @@ object Material {
         var DBG_BALLS = 0
 
         //
-        var stages: Array<shaderStage_t?>?
+        var stages: ArrayList<shaderStage_t>
         private var allowOverlays = false
         private var ambientLight = false
         private var blendLight = false
@@ -969,7 +969,7 @@ object Material {
         // get a specific stage
         fun GetStage(index: Int): shaderStage_t {
             assert(index >= 0 && index < numStages)
-            return stages.get(index)
+            return stages.get(index)!!
         }
 
         // get the first bump map stage, or NULL if not present.
@@ -1165,7 +1165,7 @@ object Material {
         }
 
         // gets name for surface type (stone, metal, flesh, etc.)
-        fun GetSurfaceType(): surfTypes_t? {
+        fun GetSurfaceType(): surfTypes_t {
             return Material.surfTypes_t.values()[surfaceFlags and Material.SURF_TYPE_MASK]
         }
 

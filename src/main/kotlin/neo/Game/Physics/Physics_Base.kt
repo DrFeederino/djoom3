@@ -116,7 +116,7 @@ class Physics_Base {
             self = e
         }
 
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {}
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {}
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
             return null
         }
@@ -265,7 +265,7 @@ class Physics_Base {
             i = 0
             while (i < contacts.Num()) {
                 ent = Game_local.gameLocal.entities[contacts[i].entityNum]
-                ent?.RemoveContactEntity(self)
+                ent?.RemoveContactEntity(self!!)
                 i++
             }
             contacts.SetNum(0, false)
@@ -413,7 +413,7 @@ class Physics_Base {
             while (i < contacts.Num()) {
                 ent = Game_local.gameLocal.entities[contacts[i].entityNum]
                 if (ent != null && ent != self) {
-                    ent.AddContactEntity(self)
+                    ent.AddContactEntity(self!!)
                 }
                 i++
             }

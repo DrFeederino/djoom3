@@ -250,12 +250,10 @@ object Model {
         var shader: Material.idMaterial? = null
 
         constructor()
-        constructor(other: modelSurface_s?) {
-            if (other != null) {
-                geometry = other.geometry
-                id = other.id
-                shader = other.shader
-            }
+        constructor(other: modelSurface_s) {
+            geometry = other.geometry
+            id = other.id
+            shader = other.shader
         }
     }
 
@@ -348,7 +346,7 @@ object Model {
         // Allocates memory for srfTriangles_t::verts and srfTriangles_t::indexes
         // The allocated memory is not initialized.
         // srfTriangles_t::numVerts and srfTriangles_t::numIndexes are set to zero.
-        abstract fun AllocSurfaceTriangles(numVerts: Int, numIndexes: Int): srfTriangles_s?
+        abstract fun AllocSurfaceTriangles(numVerts: Int, numIndexes: Int): srfTriangles_s
 
         // Frees surfaces triangles.
         abstract fun FreeSurfaceTriangles(tris: srfTriangles_s?)
@@ -397,7 +395,7 @@ object Model {
         abstract fun NumJoints(): Int
 
         // Returns the MD5 joints or NULL if the model is not an MD5
-        abstract fun GetJoints(): Array<idMD5Joint>
+        abstract fun GetJoints(): ArrayList<idMD5Joint>
 
         // Returns the handle for the joint with the given name.
         abstract /*jointHandle_t*/  fun GetJointHandle(name: String?): Int

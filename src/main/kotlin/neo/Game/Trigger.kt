@@ -1,8 +1,8 @@
 package neo.Game
 
 import neo.CM.CollisionModel.trace_s
-import neo.Game.*
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class.EV_Remove
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Class.eventCallback_t1
@@ -17,14 +17,16 @@ import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Player.idPlayer
 import neo.Game.Script.Script_Program.function_t
 import neo.Game.Script.Script_Thread.idThread
-import neo.Renderer.*
+import neo.Renderer.Material
+import neo.Renderer.Model
 import neo.TempDump
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
-import neo.idlib.math.*
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 
@@ -54,12 +56,12 @@ object Trigger {
         : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
             fun DrawDebugInfo() {
-                val axis = Game_local.gameLocal.GetLocalPlayer().viewAngles.ToMat3()
-                val up = idVec3(axis.get(2).times(5.0f))
-                val viewTextBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
-                val viewBounds = idBounds(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
+                val axis = Game_local.gameLocal.GetLocalPlayer()!!.viewAngles.ToMat3()
+                val up = idVec3(axis[2].times(5.0f))
+                val viewTextBounds = idBounds(Game_local.gameLocal.GetLocalPlayer()!!.GetPhysics().GetOrigin())
+                val viewBounds = idBounds(Game_local.gameLocal.GetLocalPlayer()!!.GetPhysics().GetOrigin())
                 val box = idBounds(idVec3(-4.0f, -4.0f, -4.0f), idVec3(4.0f, 4.0f, 4.0f))
                 var ent: idEntity?
                 var target: idEntity?
@@ -76,8 +78,8 @@ object Trigger {
                         show = viewBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())
                         if (!show) {
                             i = 0
-                            while (i < ent.targets.Num()) {
-                                target = ent.targets.get(i).GetEntity()
+                            while (i < ent.targets.size) {
+                                target = ent.targets[i].GetEntity()
                                 if (target != null && viewBounds.IntersectsBounds(target.GetPhysics().GetAbsBounds())) {
                                     show = true
                                     break
@@ -90,7 +92,7 @@ object Trigger {
                             continue
                         }
                         Game_local.gameRenderWorld.DebugBounds(
-                            Lib.Companion.colorOrange,
+                            Lib.colorOrange,
                             ent.GetPhysics().GetAbsBounds()
                         )
                         if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
@@ -98,20 +100,20 @@ object Trigger {
                                 ent.name.toString(),
                                 ent.GetPhysics().GetAbsBounds().GetCenter(),
                                 0.1f,
-                                Lib.Companion.colorWhite,
+                                Lib.colorWhite,
                                 axis,
                                 1
                             )
                             Game_local.gameRenderWorld.DrawText(
                                 ent.GetEntityDefName(),
-                                ent.GetPhysics().GetAbsBounds().GetCenter().oPlus(up),
+                                ent.GetPhysics().GetAbsBounds().GetCenter().plus(up),
                                 0.1f,
-                                Lib.Companion.colorWhite,
+                                Lib.colorWhite,
                                 axis,
                                 1
                             )
                             func = if (ent is idTrigger) {
-                                (ent as idTrigger?).GetScriptFunction()
+                                ent.GetScriptFunction()
                             } else {
                                 null
                             }
@@ -120,25 +122,25 @@ object Trigger {
                                     Str.va("call script '%s'", func.Name()),
                                     ent.GetPhysics().GetAbsBounds().GetCenter().minus(up),
                                     0.1f,
-                                    Lib.Companion.colorWhite,
+                                    Lib.colorWhite,
                                     axis,
                                     1
                                 )
                             }
                         }
                         i = 0
-                        while (i < ent.targets.Num()) {
-                            target = ent.targets.get(i).GetEntity()
+                        while (i < ent.targets.size) {
+                            target = ent.targets[i].GetEntity()
                             if (target != null) {
                                 Game_local.gameRenderWorld.DebugArrow(
-                                    Lib.Companion.colorYellow,
+                                    Lib.colorYellow,
                                     ent.GetPhysics().GetAbsBounds().GetCenter(),
                                     target.GetPhysics().GetOrigin(),
                                     10,
                                     0
                                 )
                                 Game_local.gameRenderWorld.DebugBounds(
-                                    Lib.Companion.colorGreen,
+                                    Lib.colorGreen,
                                     box,
                                     target.GetPhysics().GetOrigin()
                                 )
@@ -147,7 +149,7 @@ object Trigger {
                                         target.name.toString(),
                                         target.GetPhysics().GetAbsBounds().GetCenter(),
                                         0.1f,
-                                        Lib.Companion.colorWhite,
+                                        Lib.colorWhite,
                                         axis,
                                         1
                                     )
@@ -160,16 +162,16 @@ object Trigger {
                 }
             }
 
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Trigger.EV_Enable] =
-                    eventCallback_t0<idTrigger?> { obj: T? -> neo.Game.obj.Event_Enable() } as eventCallback_t0<idTrigger?>
-                eventCallbacks[Trigger.EV_Disable] =
-                    eventCallback_t0<idTrigger?> { obj: T? -> neo.Game.obj.Event_Disable() } as eventCallback_t0<idTrigger?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[EV_Enable] =
+                    eventCallback_t0<idTrigger> { obj: Any? -> idTrigger::Event_Enable }
+                eventCallbacks[EV_Disable] =
+                    eventCallback_t0<idTrigger> { obj: Any? -> idTrigger::Event_Disable }
             }
         }
 
@@ -199,7 +201,7 @@ object Trigger {
 
         override fun Save(savefile: idSaveGame) {
             if (scriptFunction != null) {
-                savefile.WriteString(scriptFunction.Name())
+                savefile.WriteString(scriptFunction!!.Name())
             } else {
                 savefile.WriteString("")
             }
@@ -237,7 +239,7 @@ object Trigger {
         protected fun CallScript() {
             val thread: idThread
             if (scriptFunction != null) {
-                thread = idThread(scriptFunction)
+                thread = idThread(scriptFunction!!)
                 thread.DelayedStart(0)
             }
         }
@@ -254,7 +256,7 @@ object Trigger {
             super.Think()
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -262,8 +264,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -279,23 +281,23 @@ object Trigger {
         : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Multi );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_Multi?> { obj: T?, _other: idEventArg<*>? -> neo.Game.obj.Event_Touch(neo.Game._other) } as eventCallback_t2<idTrigger_Multi?>
+                    eventCallback_t2<idTrigger_Multi> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idTrigger_Multi::Event_Touch }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Multi?> { obj: T?, _activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Trigger(neo.Game._activator)
-                    } as eventCallback_t1<idTrigger_Multi?>
-                eventCallbacks[Trigger.EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_Multi?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_TriggerAction(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Multi?>
+                    eventCallback_t1<idTrigger_Multi> { obj: Any?, _activator: idEventArg<*>? ->
+                        idTrigger_Multi::Event_Trigger
+                    }
+                eventCallbacks[EV_TriggerAction] =
+                    eventCallback_t1<idTrigger_Multi> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Multi::Event_TriggerAction
+                    }
             }
         }
 
@@ -304,7 +306,7 @@ object Trigger {
         private var random = 0.0f
         private var random_delay = 0.0f
         private var removeItem = 0
-        private val requires: idStr? = idStr()
+        private val requires: idStr = idStr()
         private var touchClient = false
         private var touchOther = false
         private var triggerFirst = false
@@ -398,20 +400,20 @@ object Trigger {
             triggerWithSelf = savefile.ReadBool()
         }
 
-        private fun CheckFacing(activator: idEntity?): Boolean {
+        private fun CheckFacing(activator: idEntity): Boolean {
             if (spawnArgs.GetBool("facing")) {
                 if (activator !is idPlayer) {
                     return true
                 }
-                val player = activator as idPlayer?
-                val dot = player.viewAngles.ToForward().times(GetPhysics().GetAxis().get(0))
+                val player = activator
+                val dot = player.viewAngles.ToForward().times(GetPhysics().GetAxis()[0])
                 val angle = Vector.RAD2DEG(idMath.ACos(dot))
                 return angle <= spawnArgs.GetFloat("angleLimit", "30")
             }
             return true
         }
 
-        private fun TriggerAction(activator: idEntity?) {
+        private fun TriggerAction(activator: idEntity) {
             ActivateTargets(if (triggerWithSelf) this else activator)
             CallScript()
             if (wait >= 0) {
@@ -421,11 +423,11 @@ object Trigger {
                 // we can't just remove (this) here, because this is a touch function
                 // called while looping through area links...
                 nextTriggerTime = Game_local.gameLocal.time + 1
-                PostEventMS(Class.EV_Remove, 0)
+                PostEventMS(EV_Remove, 0)
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity?>?) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
             TriggerAction(activator.value)
         }
 
@@ -439,7 +441,7 @@ object Trigger {
          so wait for the delay time before firing
          ================
          */
-        private fun Event_Trigger(_activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(_activator: idEventArg<idEntity>) {
             val activator = _activator.value
             if (nextTriggerTime > Game_local.gameLocal.time) {
                 // can't retrigger until the wait is over
@@ -464,13 +466,13 @@ object Trigger {
                 // don't allow it to trigger again until our delay has passed
                 nextTriggerTime += Math_h.SEC2MS(delay + random_delay * Game_local.gameLocal.random.CRandomFloat())
                     .toInt()
-                PostEventSec(Trigger.EV_TriggerAction, delay, _activator)
+                PostEventSec(EV_TriggerAction, delay, _activator)
             } else {
                 TriggerAction(activator)
             }
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        private fun Event_Touch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             val other = _other.value
             if (triggerFirst) {
                 return
@@ -480,7 +482,7 @@ object Trigger {
                 if (!touchClient) {
                     return
                 }
-                if ((other as idPlayer?).spectating) {
+                if ((other as idPlayer).spectating) {
                     return
                 }
             } else if (!touchOther) {
@@ -506,7 +508,7 @@ object Trigger {
                 // don't allow it to trigger again until our delay has passed
                 nextTriggerTime += Math_h.SEC2MS(delay + random_delay * Game_local.gameLocal.random.CRandomFloat())
                     .toInt()
-                PostEventSec(Trigger.EV_TriggerAction, delay, other)
+                PostEventSec(EV_TriggerAction, delay, other)
             } else {
                 TriggerAction(other)
             }
@@ -516,8 +518,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -533,30 +535,30 @@ object Trigger {
         : idTrigger() {
         companion object {
             //CLASS_PROTOTYPE(idTrigger_EntityName );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_EntityName?> { obj: T?, _other: idEventArg<*>? ->
-                        neo.Game.obj.Event_Touch(neo.Game._other)
-                    } as eventCallback_t2<idTrigger_EntityName?>
+                    eventCallback_t2<idTrigger_EntityName> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        idTrigger_EntityName::Event_Touch
+                    }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_EntityName?> { obj: T?, _activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Trigger(neo.Game._activator)
-                    } as eventCallback_t1<idTrigger_EntityName?>
-                eventCallbacks[Trigger.EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_EntityName?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_TriggerAction(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_EntityName?>
+                    eventCallback_t1<idTrigger_EntityName> { obj: Any?, _activator: idEventArg<*>? ->
+                        idTrigger_EntityName::Event_Trigger
+                    }
+                eventCallbacks[EV_TriggerAction] =
+                    eventCallback_t1<idTrigger_EntityName> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_EntityName::Event_TriggerAction
+                    }
             }
         }
 
         private var delay = 0.0f
-        private val entityName: idStr? = idStr()
+        private val entityName: idStr = idStr()
         private var nextTriggerTime = 0
         private var random = 0.0f
         private var random_delay = 0.0f
@@ -607,7 +609,7 @@ object Trigger {
             triggerFirst = spawnArgs.GetBool("triggerFirst", "0")
             entityName.set(spawnArgs.GetString("entityname"))
             if (TempDump.NOT(entityName.Length().toDouble())) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "idTrigger_EntityName '%s' at (%s) doesn't have 'entityname' key specified",
                     name,
                     GetPhysics().GetOrigin().ToString(0)
@@ -619,7 +621,7 @@ object Trigger {
             }
         }
 
-        private fun TriggerAction(activator: idEntity?) {
+        private fun TriggerAction(activator: idEntity) {
             ActivateTargets(activator)
             CallScript()
             if (wait >= 0) {
@@ -629,11 +631,11 @@ object Trigger {
                 // we can't just remove (this) here, because this is a touch function
                 // called while looping through area links...
                 nextTriggerTime = Game_local.gameLocal.time + 1
-                PostEventMS(Class.EV_Remove, 0)
+                PostEventMS(EV_Remove, 0)
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity?>?) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
             TriggerAction(activator.value)
         }
 
@@ -647,13 +649,13 @@ object Trigger {
          so wait for the delay time before firing
          ================
          */
-        private fun Event_Trigger(_activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(_activator: idEventArg<idEntity>) {
             val activator = _activator.value
             if (nextTriggerTime > Game_local.gameLocal.time) {
                 // can't retrigger until the wait is over
                 return
             }
-            if (null == activator || activator.name != entityName) {
+            if (activator.name != entityName) {
                 return
             }
             if (triggerFirst) {
@@ -667,13 +669,13 @@ object Trigger {
                 // don't allow it to trigger again until our delay has passed
                 nextTriggerTime += Math_h.SEC2MS(delay + random_delay * Game_local.gameLocal.random.CRandomFloat())
                     .toInt()
-                PostEventSec(Trigger.EV_TriggerAction, delay, activator)
+                PostEventSec(EV_TriggerAction, delay, activator)
             } else {
                 TriggerAction(activator)
             }
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        private fun Event_Touch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             val other = _other.value
             if (triggerFirst) {
                 return
@@ -682,7 +684,7 @@ object Trigger {
                 // can't retrigger until the wait is over
                 return
             }
-            if (null == other || other.name !== entityName) {
+            if (other.name !== entityName) {
                 return
             }
             nextTriggerTime = Game_local.gameLocal.time + 1
@@ -690,7 +692,7 @@ object Trigger {
                 // don't allow it to trigger again until our delay has passed
                 nextTriggerTime += Math_h.SEC2MS(delay + random_delay * Game_local.gameLocal.random.CRandomFloat())
                     .toInt()
-                PostEventSec(Trigger.EV_TriggerAction, delay, other)
+                PostEventSec(EV_TriggerAction, delay, other)
             } else {
                 TriggerAction(other)
             }
@@ -700,8 +702,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -717,26 +719,26 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Timer );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
-                eventCallbacks[Trigger.EV_Timer] =
-                    eventCallback_t0<idTrigger_Timer?> { obj: T? -> neo.Game.obj.Event_Timer() } as eventCallback_t0<idTrigger_Timer?>
+                eventCallbacks[EV_Timer] =
+                    eventCallback_t0<idTrigger_Timer> { obj: Any? -> idTrigger_Timer::Event_Timer }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Timer?> { obj: T?, _activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Use(neo.Game._activator)
-                    } as eventCallback_t1<idTrigger_Timer?>
+                    eventCallback_t1<idTrigger_Timer> { obj: Any?, _activator: idEventArg<*>? ->
+                        idTrigger_Timer::Event_Use
+                    }
             }
         }
 
         private var delay = 0.0f
-        private val offName: idStr? = idStr()
+        private val offName: idStr = idStr()
         private var on = false
-        private val onName: idStr? = idStr()
+        private val onName: idStr = idStr()
         private var random = 0.0f
         private var wait = 0.0f
         override fun Save(savefile: idSaveGame) {
@@ -782,7 +784,7 @@ object Trigger {
                 )
             }
             if (on) {
-                PostEventSec(Trigger.EV_Timer, delay)
+                PostEventSec(EV_Timer, delay)
             }
         }
 
@@ -790,7 +792,7 @@ object Trigger {
             // if off, turn it on
             if (!on) {
                 on = true
-                PostEventSec(Trigger.EV_Timer, delay)
+                PostEventSec(EV_Timer, delay)
             }
         }
 
@@ -798,7 +800,7 @@ object Trigger {
             // if on, turn it off
             if (on) {
                 on = false
-                CancelEvents(Trigger.EV_Timer)
+                CancelEvents(EV_Timer)
             }
         }
 
@@ -807,11 +809,11 @@ object Trigger {
 
             // set time before next firing
             if (wait >= 0.0f) {
-                PostEventSec(Trigger.EV_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+                PostEventSec(EV_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
             }
         }
 
-        private fun Event_Use(_activator: idEventArg<idEntity?>?) {
+        private fun Event_Use(_activator: idEventArg<idEntity>) {
             val activator = _activator.value
             // if on, turn it off
             if (on) {
@@ -819,14 +821,14 @@ object Trigger {
                     return
                 }
                 on = false
-                CancelEvents(Trigger.EV_Timer)
+                CancelEvents(EV_Timer)
             } else {
                 // turn it on
                 if (onName.Length() != 0 && onName.Icmp(activator.GetName()) != 0) {
                     return
                 }
                 on = true
-                PostEventSec(Trigger.EV_Timer, delay)
+                PostEventSec(EV_Timer, delay)
             }
         }
 
@@ -834,8 +836,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -851,21 +853,21 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Count );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Count?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Trigger(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Count?>
-                eventCallbacks[Trigger.EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_Count?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_TriggerAction(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Count?>
+                    eventCallback_t1<idTrigger_Count> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Count::Event_Trigger
+                    }
+                eventCallbacks[EV_TriggerAction] =
+                    eventCallback_t1<idTrigger_Count> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Count::Event_TriggerAction
+                    }
             }
         }
 
@@ -891,7 +893,7 @@ object Trigger {
             count = 0
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(activator: idEventArg<idEntity>) {
             // goal of -1 means trigger has been exhausted
             if (goal >= 0) {
                 count++
@@ -901,16 +903,16 @@ object Trigger {
                     } else {
                         goal = -1
                     }
-                    PostEventSec(Trigger.EV_TriggerAction, delay, activator.value)
+                    PostEventSec(EV_TriggerAction, delay, activator.value)
                 }
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity?>?) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
             ActivateTargets(activator.value)
             CallScript()
             if (goal == -1) {
-                PostEventMS(Class.EV_Remove, 0)
+                PostEventMS(EV_Remove, 0)
             }
         }
 
@@ -918,8 +920,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -935,19 +937,19 @@ object Trigger {
         : idTrigger() {
         companion object {
             //	CLASS_PROTOTYPE(idTrigger_Hurt );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_Hurt?> { obj: T?, _other: idEventArg<*>? -> neo.Game.obj.Event_Touch(neo.Game._other) } as eventCallback_t2<idTrigger_Hurt?>
+                    eventCallback_t2<idTrigger_Hurt> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idTrigger_Hurt::Event_Touch }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Hurt?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Toggle(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Hurt?>
+                    eventCallback_t1<idTrigger_Hurt> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Hurt::Event_Toggle
+                    }
             }
         }
 
@@ -982,10 +984,10 @@ object Trigger {
             Enable()
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        private fun Event_Touch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             val other = _other.value
-            val damage: String?
-            if (on && other != null && Game_local.gameLocal.time >= nextTime) {
+            val damage: String
+            if (on && Game_local.gameLocal.time >= nextTime) {
                 damage = spawnArgs.GetString("def_damage", "damage_painTrigger")
                 other.Damage(null, null, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
                 ActivateTargets(other)
@@ -994,7 +996,7 @@ object Trigger {
             }
         }
 
-        private fun Event_Toggle(activator: idEventArg<idEntity?>?) {
+        private fun Event_Toggle(activator: idEventArg<idEntity>) {
             on = !on
         }
 
@@ -1002,8 +1004,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1017,21 +1019,21 @@ object Trigger {
     class idTrigger_Fade : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Fade );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Fade?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Trigger(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Fade?>
+                    eventCallback_t1<idTrigger_Fade> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Fade::Event_Trigger
+                    }
             }
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(activator: idEventArg<idEntity>) {
             val fadeColor: idVec4
             val fadeTime: Int
             val player: idPlayer?
@@ -1048,8 +1050,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1065,24 +1067,24 @@ object Trigger {
         : idTrigger() {
         companion object {
             // CLASS_PROTOTYPE( idTrigger_Touch );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Touch?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Trigger(neo.Game.activator)
-                    } as eventCallback_t1<idTrigger_Touch?>
+                    eventCallback_t1<idTrigger_Touch> { obj: Any?, activator: idEventArg<*>? ->
+                        idTrigger_Touch::Event_Trigger
+                    }
             }
         }
 
         private var clipModel: idClipModel? = null
         override fun Spawn() {
             // get the clip model
-            clipModel = idClipModel(GetPhysics().GetClipModel())
+            clipModel = idClipModel(GetPhysics().GetClipModel()!!)
 
             // remove the collision model from the physics object
             GetPhysics().SetClipModel(null, 1.0f)
@@ -1103,7 +1105,7 @@ object Trigger {
         }
 
         override fun Restore(savefile: idRestoreGame) {
-            savefile.ReadClipModel(clipModel)
+            savefile.ReadClipModel(clipModel!!)
         }
 
         override fun Enable() {
@@ -1123,7 +1125,7 @@ object Trigger {
             if (clipModel == null || scriptFunction == null) {
                 return
             }
-            bounds.FromTransformedBounds(clipModel.GetBounds(), clipModel.GetOrigin(), clipModel.GetAxis())
+            bounds.FromTransformedBounds(clipModel!!.GetBounds(), clipModel!!.GetOrigin(), clipModel!!.GetAxis())
             numClipModels =
                 Game_local.gameLocal.clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, Game_local.MAX_GENTITIES)
             i = 0
@@ -1141,7 +1143,7 @@ object Trigger {
                 if (TempDump.NOT(
                         Game_local.gameLocal.clip.ContentsModel(
                             cm.GetOrigin(), cm, cm.GetAxis(), -1,
-                            clipModel.Handle(), clipModel.GetOrigin(), clipModel.GetAxis()
+                            clipModel!!.Handle(), clipModel!!.GetOrigin(), clipModel!!.GetAxis()
                         ).toDouble()
                     )
                 ) {
@@ -1150,13 +1152,13 @@ object Trigger {
                 }
                 ActivateTargets(entity)
                 val thread = idThread()
-                thread.CallFunction(entity, scriptFunction, false)
+                thread.CallFunction(entity, scriptFunction!!, false)
                 thread.DelayedStart(0)
                 i++
             }
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(activator: idEventArg<idEntity>) {
             if (thinkFlags and Entity.TH_THINK != 0) {
                 BecomeInactive(Entity.TH_THINK)
             } else {
@@ -1168,8 +1170,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 }

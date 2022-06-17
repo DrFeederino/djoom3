@@ -320,7 +320,7 @@ object AI_pathing {
     fun GetObstacles(
         physics: idPhysics,
         aas: idAAS,
-        ignore: idEntity,
+        ignore: idEntity?,
         areaNum: Int,
         startPos: idVec3,
         seekPos: idVec3,

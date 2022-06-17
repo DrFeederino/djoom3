@@ -1,6 +1,5 @@
 package neo.Game
 
-import neo.Game.*
 import neo.Game.Entity.idEntity
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
@@ -21,6 +20,7 @@ import neo.Game.Script.Script_Thread.idThread
 import neo.Renderer.Material
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
+import neo.Renderer.RenderWorld.Companion.SHADERPARM_DIVERSITY
 import neo.Renderer.RenderWorld.renderLight_s
 import neo.TempDump
 import neo.framework.Common
@@ -35,8 +35,9 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CInt
-import neo.idlib.math.*
+import neo.idlib.math.Math_h
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 
@@ -70,51 +71,56 @@ object Light {
             val EVENT_MAXEVENTS = EVENT_BECOMEBROKEN + 1
 
             // public 	CLASS_PROTOTYPE( idLight );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Light.EV_Light_SetShader] =
-                    eventCallback_t1<idLight?> { obj: T?, shadername: idEventArg<*>? -> neo.Game.obj.Event_SetShader(neo.Game.shadername) } as eventCallback_t1<idLight?>
-                eventCallbacks[Light.EV_Light_GetLightParm] =
-                    eventCallback_t1<idLight?> { obj: T?, _parmnum: idEventArg<*>? ->
-                        neo.Game.obj.Event_GetLightParm(neo.Game._parmnum)
-                    } as eventCallback_t1<idLight?>
-                eventCallbacks[Light.EV_Light_SetLightParm] =
-                    eventCallback_t2<idLight?> { obj: T?, parmnum: idEventArg<*>? -> neo.Game.obj.Event_SetLightParm(neo.Game.parmnum) } as eventCallback_t2<idLight?>
-                eventCallbacks[Light.EV_Light_SetLightParms] =
-                    eventCallback_t4<idLight?> { obj: T?, parm0: idEventArg<*>? -> neo.Game.obj.Event_SetLightParms(neo.Game.parm0) } as eventCallback_t4<idLight?>
-                eventCallbacks[Light.EV_Light_SetRadiusXYZ] =
-                    eventCallback_t3<idLight?> { obj: T?, x: idEventArg<*>? -> neo.Game.obj.Event_SetRadiusXYZ(neo.Game.x) } as eventCallback_t3<idLight?>
-                eventCallbacks[Light.EV_Light_SetRadius] =
-                    eventCallback_t1<idLight?> { obj: T?, radius: idEventArg<*>? -> neo.Game.obj.Event_SetRadius(neo.Game.radius) } as eventCallback_t1<idLight?>
+                eventCallbacks[EV_Light_SetShader] =
+                    eventCallback_t1<idLight> { obj: Any?, shadername: idEventArg<*>? -> idLight::Event_SetShader }
+                eventCallbacks[EV_Light_GetLightParm] =
+                    eventCallback_t1<idLight> { obj: Any?, _parmnum: idEventArg<*>? ->
+                        idLight::Event_GetLightParm
+                    }
+                eventCallbacks[EV_Light_SetLightParm] =
+                    eventCallback_t2<idLight> { obj: Any?, parmnum: idEventArg<*>?, value: idEventArg<*>? -> idLight::Event_SetLightParm }
+                eventCallbacks[EV_Light_SetLightParms] =
+                    eventCallback_t4<idLight> { obj: Any?, parm0: idEventArg<*>?,
+                                                parm1: idEventArg<*>?,
+                                                parm2: idEventArg<*>?,
+                                                parm3: idEventArg<*>? ->
+                        idLight::Event_SetLightParms
+                    }
+                eventCallbacks[EV_Light_SetRadiusXYZ] =
+                    eventCallback_t3<idLight> { obj: Any?, x: idEventArg<*>?, y: idEventArg<*>?, z: idEventArg<*>? -> idLight::Event_SetRadiusXYZ }
+                eventCallbacks[EV_Light_SetRadius] =
+                    eventCallback_t1<idLight> { obj: Any?, radius: idEventArg<*>? -> idLight::Event_SetRadius }
                 eventCallbacks[Entity.EV_Hide] =
-                    eventCallback_t0<idLight?> { obj: T? -> neo.Game.obj.Event_Hide() } as eventCallback_t0<idLight?>
+                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Hide }
                 eventCallbacks[Entity.EV_Show] =
-                    eventCallback_t0<idLight?> { obj: T? -> neo.Game.obj.Event_Show() } as eventCallback_t0<idLight?>
-                eventCallbacks[Light.EV_Light_On] =
-                    eventCallback_t0<idLight?> { obj: T? -> neo.Game.obj.Event_On() } as eventCallback_t0<idLight?>
-                eventCallbacks[Light.EV_Light_Off] =
-                    eventCallback_t0<idLight?> { obj: T? -> neo.Game.obj.Event_Off() } as eventCallback_t0<idLight?>
-                eventCallbacks[Entity.EV_Activate] = eventCallback_t1<idLight?> { obj: T?, activator: idEventArg<*>? ->
-                    neo.Game.obj.Event_ToggleOnOff(neo.Game.activator)
-                } as eventCallback_t1<idLight?>
+                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Show }
+                eventCallbacks[EV_Light_On] =
+                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_On }
+                eventCallbacks[EV_Light_Off] =
+                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Off }
+                eventCallbacks[Entity.EV_Activate] = eventCallback_t1<idLight> { obj: Any?, activator: idEventArg<*>? ->
+                    idLight::Event_ToggleOnOff
+                }
                 eventCallbacks[Entity.EV_PostSpawn] =
-                    eventCallback_t0<idLight?> { obj: T? -> neo.Game.obj.Event_SetSoundHandles() } as eventCallback_t0<idLight?>
-                eventCallbacks[Light.EV_Light_FadeOut] =
-                    eventCallback_t1<idLight?> { obj: T?, time: idEventArg<*>? -> neo.Game.obj.Event_FadeOut(neo.Game.time) } as eventCallback_t1<idLight?>
-                eventCallbacks[Light.EV_Light_FadeIn] =
-                    eventCallback_t1<idLight?> { obj: T?, time: idEventArg<*>? -> neo.Game.obj.Event_FadeIn(neo.Game.time) } as eventCallback_t1<idLight?>
+                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_SetSoundHandles }
+                eventCallbacks[EV_Light_FadeOut] =
+                    eventCallback_t1<idLight> { obj: Any?, time: idEventArg<*>? -> idLight::Event_FadeOut }
+                eventCallbacks[EV_Light_FadeIn] =
+                    eventCallback_t1<idLight> { obj: Any?, time: idEventArg<*>? -> idLight::Event_FadeIn }
             }
         }
 
         private val baseColor: idVec3
         private var breakOnTrigger //TODO:give all variables default init values like c++, opposite of lazy init?
                 : Boolean
-        private val brokenModel: idStr?
+        private val brokenModel: idStr
         private var count: Int
         private var currentLevel: Int
         private var fadeEnd: Int
@@ -130,7 +136,7 @@ object Light {
         private val localLightOrigin // light origin relative to the physics origin
                 : idVec3
         private val renderLight // light presented to the renderer
-                : renderLight_s?
+                : renderLight_s
 
         //
         //
@@ -142,14 +148,14 @@ object Light {
             super.Spawn()
             val start_off = CBool(false)
             var needBroken: Boolean
-            val demonic_shader = arrayOf<String?>(null)
+            val demonic_shader = arrayOf("")
 
             // do the parsing the same way dmap and the editor do
             GameEdit.gameEdit.ParseSpawnArgsToRenderLight(spawnArgs, renderLight)
 
             // we need the origin and axis relative to the physics origin/axis
             localLightOrigin.set(
-                renderLight.origin.minus(GetPhysics().GetOrigin()).oMultiply(GetPhysics().GetAxis().Transpose())
+                renderLight.origin.minus(GetPhysics().GetOrigin()).times(GetPhysics().GetAxis().Transpose())
             )
             localLightAxis = renderLight.axis.times(GetPhysics().GetAxis().Transpose())
 
@@ -168,7 +174,7 @@ object Light {
             }
 
             // make sure the demonic shader is cached
-            if (spawnArgs.GetString("mat_demonic", null, demonic_shader)) {
+            if (spawnArgs.GetString("mat_demonic", "", demonic_shader)) {
                 DeclManager.declManager.FindType(declType_t.DECL_MATERIAL, demonic_shader[0])
             }
 
@@ -184,12 +190,12 @@ object Light {
             // but there may still be a chance to get it wrong if the game moves
             // a light before the first present, and doesn't clear the prelight
             renderLight.prelightModel = null
-            if (name.get(0).code != 0) {
+            if (name[0].code != 0) {
                 // this will return 0 if not found
                 renderLight.prelightModel = ModelManager.renderModelManager.CheckModel(Str.va("_prelight_%s", name))
             }
             spawnArgs.GetBool("start_off", "0", start_off)
-            if (start_off.isVal) {
+            if (start_off._val) {
                 Off()
             }
             health = spawnArgs.GetInt("health", "0")
@@ -273,7 +279,7 @@ object Light {
             savefile.WriteBool(breakOnTrigger)
             savefile.WriteInt(count)
             savefile.WriteInt(triggercount)
-            savefile.WriteObject(lightParent)
+            savefile.WriteObject(lightParent!!)
             savefile.WriteVec4(fadeFrom)
             savefile.WriteVec4(fadeTo)
             savefile.WriteInt(fadeStart)
@@ -293,7 +299,7 @@ object Light {
             savefile.ReadRenderLight(renderLight)
             savefile.ReadBool(hadPrelightModel)
             renderLight.prelightModel = ModelManager.renderModelManager.CheckModel(Str.va("_prelight_%s", name))
-            if (renderLight.prelightModel == null && hadPrelightModel.isVal) {
+            if (renderLight.prelightModel == null && hadPrelightModel._val) {
                 assert(false)
                 if (Common.com_developer.GetBool()) {
                     // we really want to know if this happens
@@ -328,7 +334,7 @@ object Light {
             FreeSoundEmitter(true)
             GameEdit.gameEdit.ParseSpawnArgsToRefSound(source ?: spawnArgs, refSound)
             if (refSound.shader != null && !refSound.waitfortrigger) {
-                StartSoundShader(refSound.shader, gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
+                StartSoundShader(refSound.shader, gameSoundChannel_t.SND_CHANNEL_ANY.ordinal, 0, false)
             }
             GameEdit.gameEdit.ParseSpawnArgsToRenderLight(source ?: spawnArgs, renderLight)
             UpdateVisuals()
@@ -364,7 +370,7 @@ object Light {
         }
 
         override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
-            origin.set(localLightOrigin.oPlus(renderLight.lightCenter))
+            origin.set(localLightOrigin.plus(renderLight.lightCenter))
             axis.set(localLightAxis.times(GetPhysics().GetAxis()))
             return true
         }
@@ -380,12 +386,12 @@ object Light {
 
             // current transformation
             renderLight.axis.set(localLightAxis.times(GetPhysics().GetAxis()))
-            renderLight.origin.set(GetPhysics().GetOrigin().oPlus(GetPhysics().GetAxis().times(localLightOrigin)))
+            renderLight.origin.set(GetPhysics().GetOrigin().plus(GetPhysics().GetAxis().times(localLightOrigin)))
 
             // reference the sound for shader synced effects
             if (lightParent != null) {
-                renderLight.referenceSound = lightParent.GetSoundEmitter()
-                renderEntity.referenceSound = lightParent.GetSoundEmitter()
+                renderLight.referenceSound = lightParent!!.GetSoundEmitter()
+                renderEntity.referenceSound = lightParent!!.GetSoundEmitter()
             } else {
                 renderLight.referenceSound = refSound.referenceSound
                 renderEntity.referenceSound = refSound.referenceSound
@@ -396,12 +402,12 @@ object Light {
             PresentModelDefChange()
         }
 
-        fun SaveState(args: idDict?) {
+        fun SaveState(args: idDict) {
             var i: Int
             val c = spawnArgs.GetNumKeyVals()
             i = 0
             while (i < c) {
-                val pv = spawnArgs.GetKeyVal(i)
+                val pv = spawnArgs.GetKeyVal(i)!!
                 if (pv.GetKey().Find("editor_", false) >= 0 || pv.GetKey().Find("parse_", false) >= 0) {
                     i++
                     continue
@@ -418,29 +424,29 @@ object Light {
 
         override fun SetColor(color: idVec4) {
             baseColor.set(color.ToVec3())
-            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color.get(3)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
             SetLightLevel()
         }
 
         override fun GetColor(out: idVec3) {
-            out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
+            out[0] = renderLight.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE]
         }
 
         override fun GetColor(out: idVec4) {
-            out.set(0, renderLight.shaderParms[RenderWorld.SHADERPARM_RED])
-            out.set(1, renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN])
-            out.set(2, renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE])
-            out.set(3, renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA])
+            out[0] = renderLight.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE]
+            out[3] = renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA]
         }
 
         fun GetBaseColor(): idVec3 {
             return baseColor
         }
 
-        fun SetShader(shadername: String?) {
+        fun SetShader(shadername: String) {
             // allow this to be NULL
             renderLight.shader = DeclManager.declManager.FindMaterial(shadername, false)
             PresentLightDefChange()
@@ -468,14 +474,14 @@ object Light {
         }
 
         fun SetRadiusXYZ(x: Float, y: Float, z: Float) {
-            renderLight.lightRadius.set(0, x)
-            renderLight.lightRadius.set(1, y)
-            renderLight.lightRadius.set(2, z)
+            renderLight.lightRadius[0] = x
+            renderLight.lightRadius[1] = y
+            renderLight.lightRadius[2] = z
             PresentLightDefChange()
         }
 
         fun SetRadius(radius: Float) {
-            renderLight.lightRadius.set(0, renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius)))
+            renderLight.lightRadius[0] = renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius))
             PresentLightDefChange()
         }
 
@@ -485,7 +491,7 @@ object Light {
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             if ((soundWasPlaying || refSound.waitfortrigger) && refSound.shader != null) {
-                StartSoundShader(refSound.shader, gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
+                StartSoundShader(refSound.shader, gameSoundChannel_t.SND_CHANNEL_ANY.ordinal, 0, false)
                 soundWasPlaying = false
             }
             SetLightLevel()
@@ -495,7 +501,7 @@ object Light {
         fun Off() {
             currentLevel = 0
             // kill any sound it was making
-            if (refSound.referenceSound != null && refSound.referenceSound.CurrentlyPlaying()) {
+            if (refSound.referenceSound != null && refSound.referenceSound!!.CurrentlyPlaying()) {
                 StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
                 soundWasPlaying = true
             }
@@ -529,7 +535,7 @@ object Light {
         }
 
         fun BecomeBroken(activator: idEntity?) {
-            val damageDefName = arrayOf<String?>(null)
+            val damageDefName = arrayOf("")
             fl.takedamage = false
             if (brokenModel.Length() != 0) {
                 SetModel(brokenModel.toString())
@@ -545,7 +551,7 @@ object Light {
                 ServerSendEvent(EVENT_BECOMEBROKEN, null, true, -1)
                 if (spawnArgs.GetString("def_damage", "", damageDefName)) {
                     val origin =
-                        idVec3(renderEntity.origin.oPlus(renderEntity.bounds.GetCenter().times(renderEntity.axis)))
+                        idVec3(renderEntity.origin.plus(renderEntity.bounds.GetCenter().times(renderEntity.axis)))
                     Game_local.gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0])
                 }
             }
@@ -558,20 +564,20 @@ object Light {
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
 
             // set the state parm
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1
-            renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] = 1
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
+            renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
 
             // if the light has a sound, either start the alternate (broken) sound, or stop the sound
             var parm = spawnArgs.GetString("snd_broken")
             if (refSound.shader != null || parm != null && !parm.isEmpty()) {
                 StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
                 val alternate =
-                    if (refSound.shader != null) refSound.shader.GetAltSound() else DeclManager.declManager.FindSound(
+                    if (refSound.shader != null) refSound.shader!!.GetAltSound() else DeclManager.declManager.FindSound(
                         parm
                     )
                 if (alternate != null) {
                     // start it with no diversity, so the leadin break sound plays
-                    refSound.referenceSound.StartSound(
+                    refSound.referenceSound!!.StartSound(
                         alternate,
                         TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY),
                         0f,
@@ -599,12 +605,12 @@ object Light {
             val intensity: Float
             intensity = currentLevel.toFloat() / levels._val.toFloat()
             color.set(baseColor.times(intensity))
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
             PresentLightDefChange()
             PresentModelDefChange()
         }
@@ -636,9 +642,9 @@ object Light {
              msg.WriteLong( fadeEnd );
              */
             // FIXME: send renderLight.shader
-            msg.WriteFloat(renderLight.lightRadius.get(0), 5, 10)
-            msg.WriteFloat(renderLight.lightRadius.get(1), 5, 10)
-            msg.WriteFloat(renderLight.lightRadius.get(2), 5, 10)
+            msg.WriteFloat(renderLight.lightRadius[0], 5, 10)
+            msg.WriteFloat(renderLight.lightRadius[1], 5, 10)
+            msg.WriteFloat(renderLight.lightRadius[2], 5, 10)
             msg.WriteLong(
                 Lib.Companion.PackColor(
                     idVec4(
@@ -683,18 +689,18 @@ object Light {
              fadeEnd = msg.ReadLong();
              */
             // FIXME: read renderLight.shader
-            renderLight.lightRadius.set(0, msg.ReadFloat(5, 10))
-            renderLight.lightRadius.set(1, msg.ReadFloat(5, 10))
-            renderLight.lightRadius.set(2, msg.ReadFloat(5, 10))
+            renderLight.lightRadius[0] = msg.ReadFloat(5, 10)
+            renderLight.lightRadius[1] = msg.ReadFloat(5, 10)
+            renderLight.lightRadius[2] = msg.ReadFloat(5, 10)
             Lib.Companion.UnpackColor(msg.ReadLong().toLong(), shaderColor)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = shaderColor.get(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = shaderColor.get(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = shaderColor.get(2)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = shaderColor.get(3)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = shaderColor[0]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = shaderColor[1]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = shaderColor[2]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = shaderColor[3]
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMESCALE] = msg.ReadFloat(5, 10)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadLong()
-            //renderLight.shaderParms[SHADERPARM_DIVERSITY] = msg.ReadFloat();
-            renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] = msg.ReadShort()
+            renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadLong().toFloat()
+            renderLight.shaderParms[SHADERPARM_DIVERSITY] = msg.ReadFloat();
+            renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] = msg.ReadShort().toFloat()
             ReadColorFromSnapshot(msg)
             if (msg.HasChanged()) {
                 if (currentLevel != oldCurrentLevel || baseColor !== oldBaseColor) {
@@ -706,7 +712,7 @@ object Light {
             }
         }
 
-        override fun ClientReceiveEvent(event: Int, time: Int, msg: idBitMsg?): Boolean {
+        override fun ClientReceiveEvent(event: Int, time: Int, msg: idBitMsg): Boolean {
             return when (event) {
                 EVENT_BECOMEBROKEN -> {
                     BecomeBroken(null)
@@ -740,11 +746,11 @@ object Light {
             }
         }
 
-        private fun Event_SetShader(shadername: idEventArg<String?>?) {
+        private fun Event_SetShader(shadername: idEventArg<String>) {
             SetShader(shadername.value)
         }
 
-        private fun Event_GetLightParm(_parmnum: idEventArg<Int?>?) {
+        private fun Event_GetLightParm(_parmnum: idEventArg<Int>) {
             val parmnum: Int = _parmnum.value
             if (parmnum < 0 || parmnum >= Material.MAX_ENTITY_SHADER_PARMS) {
                 idGameLocal.Companion.Error("shader parm index (%d) out of range", parmnum)
@@ -752,24 +758,24 @@ object Light {
             idThread.Companion.ReturnFloat(renderLight.shaderParms[parmnum])
         }
 
-        private fun Event_SetLightParm(parmnum: idEventArg<Int?>?, value: idEventArg<Float?>?) {
+        private fun Event_SetLightParm(parmnum: idEventArg<Int>, value: idEventArg<Float>) {
             SetLightParm(parmnum.value, value.value)
         }
 
         private fun Event_SetLightParms(
-            parm0: idEventArg<Float?>?,
-            parm1: idEventArg<Float?>?,
-            parm2: idEventArg<Float?>?,
-            parm3: idEventArg<Float?>?
+            parm0: idEventArg<Float>,
+            parm1: idEventArg<Float>,
+            parm2: idEventArg<Float>,
+            parm3: idEventArg<Float>
         ) {
             SetLightParms(parm0.value, parm1.value, parm2.value, parm3.value)
         }
 
-        private fun Event_SetRadiusXYZ(x: idEventArg<Float?>?, y: idEventArg<Float?>?, z: idEventArg<Float?>?) {
+        private fun Event_SetRadiusXYZ(x: idEventArg<Float>, y: idEventArg<Float>, z: idEventArg<Float>) {
             SetRadiusXYZ(x.value, y.value, z.value)
         }
 
-        private fun Event_SetRadius(radius: idEventArg<Float?>?) {
+        private fun Event_SetRadius(radius: idEventArg<Float>) {
             SetRadius(radius.value)
         }
 
@@ -793,7 +799,7 @@ object Light {
             Off()
         }
 
-        private fun Event_ToggleOnOff(activator: idEventArg<idEntity?>?) {
+        private fun Event_ToggleOnOff(activator: idEventArg<idEntity>) {
             triggercount++
             if (triggercount < count) {
                 return
@@ -832,10 +838,10 @@ object Light {
                 return
             }
             i = 0
-            while (i < targets.Num()) {
-                targetEnt = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                targetEnt = targets[i].GetEntity()
                 if (targetEnt != null && targetEnt is idLight) {
-                    val light = targetEnt as idLight?
+                    val light = targetEnt
                     light.lightParent = this
 
                     // explicitly delete any sounds on the entity
@@ -851,20 +857,20 @@ object Light {
             }
         }
 
-        private fun Event_FadeOut(time: idEventArg<Float?>?) {
+        private fun Event_FadeOut(time: idEventArg<Float>) {
             FadeOut(time.value)
         }
 
-        private fun Event_FadeIn(time: idEventArg<Float?>?) {
+        private fun Event_FadeIn(time: idEventArg<Float>) {
             FadeIn(time.value)
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         override fun _deconstructor() {
@@ -881,15 +887,15 @@ object Light {
             localLightAxis = idMat3.Companion.getMat3_identity()
             lightDefHandle = -1
             brokenModel = idStr()
-            levels.setVal(0)
+            levels._val = 0
             currentLevel = 0
             baseColor = Vector.getVec3_zero()
             breakOnTrigger = false
             count = 0
             triggercount = 0
             lightParent = null
-            fadeFrom = idVec4(1, 1, 1, 1)
-            fadeTo = idVec4(1, 1, 1, 1)
+            fadeFrom = idVec4(1f, 1f, 1f, 1f)
+            fadeTo = idVec4(1f, 1f, 1f, 1f)
             fadeStart = 0
             fadeEnd = 0
             soundWasPlaying = false

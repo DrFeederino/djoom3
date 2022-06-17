@@ -10,49 +10,6 @@ import neo.idlib.Lib.idLib
  *
  */
 class Game_network {
-    val net_clientLagOMeter: idCVar = idCVar(
-        "net_clientLagOMeter",
-        "1",
-        CVarSystem.CVAR_GAME or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
-        "draw prediction graph"
-    )
-    val net_clientMaxPrediction: idCVar = idCVar(
-        "net_clientMaxPrediction",
-        "1000",
-        CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
-        "maximum number of milliseconds a client can predict ahead of server."
-    )
-    val net_clientSelfSmoothing: idCVar = idCVar(
-        "net_clientSelfSmoothing",
-        "0.6",
-        CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
-        "smooth self position if network causes prediction error.",
-        0.0f,
-        0.95f
-    )
-
-    //#endif
-    //
-    val net_clientShowSnapshot: idCVar = idCVar(
-        "net_clientShowSnapshot",
-        "0",
-        CVarSystem.CVAR_GAME or CVarSystem.CVAR_INTEGER,
-        "",
-        0f,
-        3f,
-        ArgCompletion_Integer(0, 3)
-    )
-    val net_clientShowSnapshotRadius: idCVar =
-        idCVar("net_clientShowSnapshotRadius", "128", CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT, "")
-    val net_clientSmoothing: idCVar = idCVar(
-        "net_clientSmoothing",
-        "0.8",
-        CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
-        "smooth other clients angles and position.",
-        0.0f,
-        0.95f
-    )
-
     class idEventQueue  //        private idBlockAlloc<entityNetEvent_s> eventAllocator = new idBlockAlloc<>(32);
     {
         private var end: entityNetEvent_s? = null
@@ -179,7 +136,48 @@ class Game_network {
     // NOTE: this changes the network protocol
     //#ifndef ASYNC_WRITE_TAGS
     companion object {
+        val net_clientLagOMeter: idCVar = idCVar(
+            "net_clientLagOMeter",
+            "1",
+            CVarSystem.CVAR_GAME or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT or CVarSystem.CVAR_ARCHIVE,
+            "draw prediction graph"
+        )
+        val net_clientMaxPrediction: idCVar = idCVar(
+            "net_clientMaxPrediction",
+            "1000",
+            CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
+            "maximum number of milliseconds a client can predict ahead of server."
+        )
+        val net_clientSelfSmoothing: idCVar = idCVar(
+            "net_clientSelfSmoothing",
+            "0.6",
+            CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
+            "smooth self position if network causes prediction error.",
+            0.0f,
+            0.95f
+        )
 
+        //#endif
+        //
+        val net_clientShowSnapshot: idCVar = idCVar(
+            "net_clientShowSnapshot",
+            "0",
+            CVarSystem.CVAR_GAME or CVarSystem.CVAR_INTEGER,
+            "",
+            0f,
+            3f,
+            ArgCompletion_Integer(0, 3)
+        )
+        val net_clientShowSnapshotRadius: idCVar =
+            idCVar("net_clientShowSnapshotRadius", "128", CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT, "")
+        val net_clientSmoothing: idCVar = idCVar(
+            "net_clientSmoothing",
+            "0.8",
+            CVarSystem.CVAR_GAME or CVarSystem.CVAR_FLOAT,
+            "smooth other clients angles and position.",
+            0.0f,
+            0.95f
+        )
         const val ASYNC_WRITE_TAGS = false
     }
 }

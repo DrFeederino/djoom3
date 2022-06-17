@@ -13,7 +13,6 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.List.idList
-import neo.idlib.containers.idStrList
 import neo.idlib.math.Vector.idVec3
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
@@ -46,36 +45,36 @@ object Script_Program {
     const val ev_vector = 5
     const val ev_virtualfunction = 9
     const val ev_void = 0
-    val type_argsize: idTypeDef? =
-        idTypeDef(Script_Program.ev_argsize, "<argsize>", 4, null) // only used for function call and thread opcodes
-    val def_argsize: idVarDef? = idVarDef(Script_Program.type_argsize)
-    val type_boolean: idTypeDef? = idTypeDef(Script_Program.ev_boolean, "boolean", 4, null)
-    val def_boolean: idVarDef? = idVarDef(Script_Program.type_boolean)
-    val type_entity: idTypeDef? =
-        idTypeDef(Script_Program.ev_entity, "entity", 4, null) // stored as entity number pointer
-    val def_entity: idVarDef? = idVarDef(Script_Program.type_entity)
-    val type_field: idTypeDef? = idTypeDef(Script_Program.ev_field, "field", 4, null)
-    val def_field: idVarDef? = idVarDef(Script_Program.type_field)
-    val type_float: idTypeDef? = idTypeDef(Script_Program.ev_float, "float", 4, null)
-    val def_float: idVarDef? = idVarDef(Script_Program.type_float)
-    val type_jumpoffset: idTypeDef? =
-        idTypeDef(Script_Program.ev_jumpoffset, "<jump>", 4, null) // only used for jump opcodes
-    val def_jumpoffset: idVarDef? = idVarDef(Script_Program.type_jumpoffset) // only used for jump opcodes
-    val type_namespace: idTypeDef? = idTypeDef(Script_Program.ev_namespace, "namespace", 4, null)
-    val def_namespace: idVarDef? = idVarDef(Script_Program.type_namespace)
-    val type_object: idTypeDef? =
-        idTypeDef(Script_Program.ev_object, "object", 4, null) // stored as entity number pointer
-    val def_object: idVarDef? = idVarDef(Script_Program.type_object)
-    val type_pointer: idTypeDef? = idTypeDef(Script_Program.ev_pointer, "pointer", 4, null)
-    val def_pointer: idVarDef? = idVarDef(Script_Program.type_pointer)
-    val type_scriptevent: idTypeDef? = idTypeDef(Script_Program.ev_scriptevent, "scriptevent", 4, null)
-    val def_scriptevent: idVarDef? = idVarDef(Script_Program.type_scriptevent)
-    val type_string: idTypeDef? = idTypeDef(Script_Program.ev_string, "string", Script_Program.MAX_STRING_LEN, null)
-    val def_string: idVarDef? = idVarDef(Script_Program.type_string)
-    val type_vector: idTypeDef? = idTypeDef(Script_Program.ev_vector, "vector", 12, null)
-    val def_vector: idVarDef? = idVarDef(Script_Program.type_vector)
-    val type_virtualfunction: idTypeDef? = idTypeDef(Script_Program.ev_virtualfunction, "virtual function", 4, null)
-    val def_virtualfunction: idVarDef? = idVarDef(Script_Program.type_virtualfunction)
+    val type_argsize: idTypeDef =
+        idTypeDef(ev_argsize, "<argsize>", 4, null) // only used for function call and thread opcodes
+    val def_argsize: idVarDef = idVarDef(type_argsize)
+    val type_boolean: idTypeDef = idTypeDef(ev_boolean, "boolean", 4, null)
+    val def_boolean: idVarDef = idVarDef(type_boolean)
+    val type_entity: idTypeDef =
+        idTypeDef(ev_entity, "entity", 4, null) // stored as entity number pointer
+    val def_entity: idVarDef = idVarDef(type_entity)
+    val type_field: idTypeDef = idTypeDef(ev_field, "field", 4, null)
+    val def_field: idVarDef = idVarDef(type_field)
+    val type_float: idTypeDef = idTypeDef(ev_float, "float", 4, null)
+    val def_float: idVarDef = idVarDef(type_float)
+    val type_jumpoffset: idTypeDef =
+        idTypeDef(ev_jumpoffset, "<jump>", 4, null) // only used for jump opcodes
+    val def_jumpoffset: idVarDef = idVarDef(type_jumpoffset) // only used for jump opcodes
+    val type_namespace: idTypeDef = idTypeDef(ev_namespace, "namespace", 4, null)
+    val def_namespace: idVarDef = idVarDef(type_namespace)
+    val type_object: idTypeDef =
+        idTypeDef(ev_object, "object", 4, null) // stored as entity number pointer
+    val def_object: idVarDef = idVarDef(type_object)
+    val type_pointer: idTypeDef = idTypeDef(ev_pointer, "pointer", 4, null)
+    val def_pointer: idVarDef = idVarDef(type_pointer)
+    val type_scriptevent: idTypeDef = idTypeDef(ev_scriptevent, "scriptevent", 4, null)
+    val def_scriptevent: idVarDef = idVarDef(type_scriptevent)
+    val type_string: idTypeDef = idTypeDef(ev_string, "string", MAX_STRING_LEN, null)
+    val def_string: idVarDef = idVarDef(type_string)
+    val type_vector: idTypeDef = idTypeDef(ev_vector, "vector", 12, null)
+    val def_vector: idVarDef = idVarDef(type_vector)
+    val type_virtualfunction: idTypeDef = idTypeDef(ev_virtualfunction, "virtual function", 4, null)
+    val def_virtualfunction: idVarDef = idVarDef(type_virtualfunction)
 
     //    };
     /* **********************************************************************
@@ -84,12 +83,12 @@ object Script_Program {
 
      ***********************************************************************/
     // simple types.  function types are dynamically allocated
-    val type_void: idTypeDef? = idTypeDef(Script_Program.ev_void, "void", 0, null)
-    val type_function: idTypeDef? = idTypeDef(Script_Program.ev_function, "function", 4, Script_Program.type_void)
-    val def_function: idVarDef? = idVarDef(Script_Program.type_function)
+    val type_void: idTypeDef = idTypeDef(ev_void, "void", 0, null)
+    val type_function: idTypeDef = idTypeDef(ev_function, "function", 4, type_void)
+    val def_function: idVarDef = idVarDef(type_function)
 
     //
-    val def_void: idVarDef? = idVarDef(Script_Program.type_void)
+    val def_void: idVarDef = idVarDef(type_void)
 
     /* **********************************************************************
 
@@ -100,7 +99,7 @@ object Script_Program {
         var def: idVarDef? = null
 
         //
-        var eventdef: idEventDef = null
+        var eventdef: idEventDef? = null
         var filenum // source file defined in
                 = 0
         var firstStatement = 0
@@ -108,19 +107,19 @@ object Script_Program {
                 = 0
         var numStatements //TODO:booleans?
                 = 0
-        val parmSize: idList<Int?>? = idList()
+        val parmSize: ArrayList<Int> = ArrayList()
         var parmTotal = 0
         var type: idTypeDef? = null
-        private val name: idStr? = idStr()
+        private val name: idStr = idStr()
         fun  /*size_t*/Allocated(): Int {
-            return name.Allocated() + parmSize.Allocated()
+            return name.Allocated() + (parmSize.size * Integer.BYTES)
         }
 
-        fun SetName(name: String?) {
+        fun SetName(name: String) {
             this.name.set(name)
         }
 
-        fun Name(): String? {
+        fun Name(): String {
             return name.toString()
         }
 
@@ -134,14 +133,14 @@ object Script_Program {
             locals = 0
             filenum = 0
             name.Clear()
-            parmSize.Clear()
+            parmSize.clear()
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             try {
                 name.Read(buffer)
                 buffer.getInt() //skip
@@ -156,7 +155,7 @@ object Script_Program {
             }
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -181,19 +180,18 @@ object Script_Program {
         }
     }
 
-    internal class  /*union*/ eval_s {
+    class  /*union*/ eval_s {
         //TODO:unionize?
         val _float: Float
         val _int: Int
         val entity: Int
-        val function: Array<function_t?>?
-        val stringPtr: Array<String?>?
-        val vector: FloatArray?
+        val function: Array<function_t>?
+        val stringPtr: Array<String>?
+        var vector: FloatArray = FloatArray(3)
 
-        constructor(string: String?) {
+        constructor(string: String) {
             stringPtr = arrayOf(string)
             _float = Float.NaN
-            vector = null
             function = null
             entity = Int.MIN_VALUE
             _int = entity
@@ -202,13 +200,12 @@ object Script_Program {
         constructor(_float: Float) {
             stringPtr = null
             this._float = _float
-            vector = null
             function = null
             entity = Int.MIN_VALUE
             _int = entity
         }
 
-        constructor(vector: FloatArray?) {
+        constructor(vector: FloatArray) {
             stringPtr = null
             _float = Float.NaN
             this.vector = vector
@@ -217,10 +214,9 @@ object Script_Program {
             _int = entity
         }
 
-        constructor(func: function_t?) {
+        constructor(func: function_t) {
             stringPtr = null
             _float = Float.NaN
-            vector = null
             function = arrayOf(func)
             entity = Int.MIN_VALUE
             _int = entity
@@ -229,7 +225,6 @@ object Script_Program {
         constructor(`val`: Int) {
             stringPtr = null
             _float = Float.NaN
-            vector = null
             function = null
             entity = `val`
             _int = entity
@@ -252,59 +247,60 @@ object Script_Program {
         // function types are more complex
         private var auxType // return type
                 : idTypeDef? = null
-        private val functions: idList<function_t?>? = idList()
-        private var name: idStr? = null
-        private var parmNames: idStrList? = idStrList()
-        private val parmTypes: idList<idTypeDef?>? = idList()
-        private var size = 0
+        private val functions: ArrayList<function_t> = ArrayList()
+        private var name: idStr = idStr()
+        private var parmNames: ArrayList<idStr> = ArrayList()
+        private val parmTypes: ArrayList<idTypeDef> = ArrayList()
+        var size = 0
         private var   /*etype_t*/type = 0
 
         //
         //
-        constructor(other: idTypeDef?) {
+        constructor(other: idTypeDef) {
             oSet(other)
         }
 
-        constructor(   /*etype_t*/etype: Int, edef: idVarDef?, ename: String?, esize: Int, aux: idTypeDef?) {
+        constructor(   /*etype_t*/etype: Int, edef: idVarDef?, ename: String, esize: Int, aux: idTypeDef?) {
             name = idStr(ename)
             type = etype
             def = edef
             size = esize
             auxType = aux
-            parmTypes.SetGranularity(1)
-            parmNames.SetGranularity(1)
-            functions.SetGranularity(1)
+            parmTypes.ensureCapacity(1)
+            parmNames.ensureCapacity(1)
+            functions.ensureCapacity(1)
         }
 
-        constructor(   /*etype_t*/etype: Int, ename: String?, esize: Int, aux: idTypeDef?) {
+        constructor(   /*etype_t*/etype: Int, ename: String, esize: Int, aux: idTypeDef?) {
             name = idStr(ename)
             type = etype
             def = idVarDef(this)
             size = esize
             auxType = aux
-            parmTypes.SetGranularity(1)
-            parmNames.SetGranularity(1)
-            functions.SetGranularity(1)
+            parmTypes.ensureCapacity(1)
+            parmNames.ensureCapacity(1)
+            functions.ensureCapacity(1)
         }
 
-        fun oSet(other: idTypeDef?) {
+        fun oSet(other: idTypeDef) {
             type = other.type
             def = other.def
             name = other.name
             size = other.size
             auxType = other.auxType
-            parmTypes.set(other.parmTypes)
+            parmTypes.addAll(other.parmTypes)
             parmNames = other.parmNames
-            functions.set(other.functions)
+            functions.addAll(other.functions)
         }
 
         fun  /*size_t*/Allocated(): Int {
             var   /*size_t*/memsize: Int
             var i: Int
-            memsize = name.Allocated() + parmTypes.Allocated() + parmNames.size() + functions.Allocated()
+            memsize =
+                name.Allocated() + parmTypes.size * Integer.BYTES + parmNames.size + functions.size * Integer.BYTES
             i = 0
-            while (i < parmTypes.Num()) {
-                memsize += parmNames.get(i).Allocated()
+            while (i < parmTypes.size) {
+                memsize += parmNames[i].Allocated()
                 i++
             }
             return memsize
@@ -317,9 +313,9 @@ object Script_Program {
          Returns true if basetype is an ancestor of this type.
          ================
          */
-        fun Inherits(basetype: idTypeDef?): Boolean {
+        fun Inherits(basetype: idTypeDef): Boolean {
             var superType: idTypeDef?
-            if (type != Script_Program.ev_object) {
+            if (type != ev_object) {
                 return false
             }
             if (this == basetype) {
@@ -342,7 +338,7 @@ object Script_Program {
          Returns true if both types' base types and parameters match
          ================
          */
-        fun MatchesType(matchtype: idTypeDef?): Boolean {
+        fun MatchesType(matchtype: idTypeDef): Boolean {
             var i: Int
             if (this == matchtype) {
                 return true
@@ -350,12 +346,12 @@ object Script_Program {
             if (type != matchtype.type || auxType != matchtype.auxType) {
                 return false
             }
-            if (parmTypes.Num() != matchtype.parmTypes.Num()) {
+            if (parmTypes.size != matchtype.parmTypes.size) {
                 return false
             }
             i = 0
-            while (i < matchtype.parmTypes.Num()) {
-                if (parmTypes.get(i) != matchtype.parmTypes.get(i)) {
+            while (i < matchtype.parmTypes.size) {
+                if (parmTypes[i] != matchtype.parmTypes[i]) {
                     return false
                 }
                 i++
@@ -370,7 +366,7 @@ object Script_Program {
          Returns true if both functions' base types and parameters match
          ================
          */
-        fun MatchesVirtualFunction(matchfunc: idTypeDef?): Boolean {
+        fun MatchesVirtualFunction(matchfunc: idTypeDef): Boolean {
             var i: Int
             if (this == matchfunc) {
                 return true
@@ -378,17 +374,17 @@ object Script_Program {
             if (type != matchfunc.type || auxType != matchfunc.auxType) {
                 return false
             }
-            if (parmTypes.Num() != matchfunc.parmTypes.Num()) {
+            if (parmTypes.size != matchfunc.parmTypes.size) {
                 return false
             }
-            if (parmTypes.Num() > 0) {
-                if (!parmTypes.get(0).Inherits(matchfunc.parmTypes.get(0))) {
+            if (parmTypes.size > 0) {
+                if (!parmTypes[0].Inherits(matchfunc.parmTypes[0])) {
                     return false
                 }
             }
             i = 1
-            while (i < matchfunc.parmTypes.Num()) {
-                if (parmTypes.get(i) != matchfunc.parmTypes.get(i)) {
+            while (i < matchfunc.parmTypes.size) {
+                if (parmTypes[i] != matchfunc.parmTypes[i]) {
                     return false
                 }
                 i++
@@ -403,11 +399,11 @@ object Script_Program {
          Adds a new parameter for a function type.
          ================
          */
-        fun AddFunctionParm(parmtype: idTypeDef?, name: String?) {
-            if (type != Script_Program.ev_function) {
+        fun AddFunctionParm(parmtype: idTypeDef, name: String) {
+            if (type != ev_function) {
                 throw idCompileError("idTypeDef::AddFunctionParm : tried to add parameter on non-function type")
             }
-            parmTypes.Append(parmtype)
+            parmTypes.add(parmtype)
             val parmName = parmNames.addEmptyStr()
             parmName.set(name)
         }
@@ -419,25 +415,31 @@ object Script_Program {
          Adds a new field to an object type.
          ================
          */
-        fun AddField(fieldtype: idTypeDef?, name: String?) {
-            if (type != Script_Program.ev_object) {
+        fun AddField(fieldtype: idTypeDef, name: String) {
+            if (type != ev_object) {
                 throw idCompileError("idTypeDef::AddField : tried to add field to non-object type")
             }
-            parmTypes.Append(fieldtype)
+            parmTypes.add(fieldtype)
             val parmName = parmNames.addEmptyStr()
             parmName.set(name)
-            size += if (fieldtype.FieldType().Inherits(Script_Program.type_object)) {
-                Script_Program.type_object.Size()
+            size += if (fieldtype.FieldType()!!.Inherits(type_object)) {
+                type_object.Size()
             } else {
-                fieldtype.FieldType().Size()
+                fieldtype.FieldType()!!.Size()
             }
         }
 
-        fun SetName(newname: String?) {
+        fun ArrayList<idStr>.addEmptyStr(): idStr {
+            val idStr = idStr()
+            add(idStr)
+            return idStr
+        }
+
+        fun SetName(newname: String) {
             name.set(newname)
         }
 
-        fun Name(): String? {
+        fun Name(): String {
             return name.toString()
         }
 
@@ -457,7 +459,7 @@ object Script_Program {
          ================
          */
         fun SuperClass(): idTypeDef? {
-            if (type != Script_Program.ev_object) {
+            if (type != ev_object) {
                 throw idCompileError("idTypeDef::SuperClass : tried to get superclass of a non-object type")
             }
             return auxType
@@ -471,7 +473,7 @@ object Script_Program {
          ================
          */
         fun ReturnType(): idTypeDef? {
-            if (type != Script_Program.ev_function) {
+            if (type != ev_function) {
                 throw idCompileError("idTypeDef::ReturnType: tried to get return type on non-function type")
             }
             return auxType
@@ -485,7 +487,7 @@ object Script_Program {
          ================
          */
         fun SetReturnType(returntype: idTypeDef?) {
-            if (type != Script_Program.ev_function) {
+            if (type != ev_function) {
                 throw idCompileError("idTypeDef::SetReturnType: tried to set return type on non-function type")
             }
             auxType = returntype
@@ -499,7 +501,7 @@ object Script_Program {
          ================
          */
         fun FieldType(): idTypeDef? {
-            if (type != Script_Program.ev_field) {
+            if (type != ev_field) {
                 throw idCompileError("idTypeDef::FieldType: tried to get field type on non-field type")
             }
             return auxType
@@ -513,7 +515,7 @@ object Script_Program {
          ================
          */
         fun SetFieldType(fieldtype: idTypeDef?) {
-            if (type != Script_Program.ev_field) {
+            if (type != ev_field) {
                 throw idCompileError("idTypeDef::SetFieldType: tried to set return type on non-function type")
             }
             auxType = fieldtype
@@ -527,7 +529,7 @@ object Script_Program {
          ================
          */
         fun PointerType(): idTypeDef? {
-            if (type != Script_Program.ev_pointer) {
+            if (type != ev_pointer) {
                 throw idCompileError("idTypeDef::PointerType: tried to get pointer type on non-pointer")
             }
             return auxType
@@ -541,37 +543,37 @@ object Script_Program {
          ================
          */
         fun SetPointerType(pointertype: idTypeDef?) {
-            if (type != Script_Program.ev_pointer) {
+            if (type != ev_pointer) {
                 throw idCompileError("idTypeDef::SetPointerType: tried to set type on non-pointer")
             }
             auxType = pointertype
         }
 
         fun NumParameters(): Int {
-            return parmTypes.Num()
+            return parmTypes.size
         }
 
-        fun GetParmType(parmNumber: Int): idTypeDef? {
+        fun GetParmType(parmNumber: Int): idTypeDef {
             assert(parmNumber >= 0)
-            assert(parmNumber < parmTypes.Num())
-            return parmTypes.get(parmNumber)
+            assert(parmNumber < parmTypes.size)
+            return parmTypes[parmNumber]
         }
 
-        fun GetParmName(parmNumber: Int): String? {
+        fun GetParmName(parmNumber: Int): String {
             assert(parmNumber >= 0)
-            assert(parmNumber < parmTypes.Num())
-            return parmNames.get(parmNumber).toString()
+            assert(parmNumber < parmTypes.size)
+            return parmNames[parmNumber].toString()
         }
 
         fun NumFunctions(): Int {
-            return functions.Num()
+            return functions.size
         }
 
         fun GetFunctionNumber(func: function_t?): Int {
             var i: Int
             i = 0
-            while (i < functions.Num()) {
-                if (functions.get(i) == func) {
+            while (i < functions.size) {
+                if (functions[i] == func) {
                     return i
                 }
                 i++
@@ -581,23 +583,23 @@ object Script_Program {
 
         fun GetFunction(funcNumber: Int): function_t? {
             assert(funcNumber >= 0)
-            assert(funcNumber < functions.Num())
-            return functions.get(funcNumber)
+            assert(funcNumber < functions.size)
+            return functions[funcNumber]
         }
 
-        fun AddFunction(func: function_t?) {
+        fun AddFunction(func: function_t) {
             var i: Int
             i = 0
-            while (i < functions.Num()) {
-                if (functions.get(i).def.Name() == func.def.Name()) {
-                    if (func.def.TypeDef().MatchesVirtualFunction(functions.get(i).def.TypeDef())) {
-                        functions.set(i, func)
+            while (i < functions.size) {
+                if (functions[i].def!!.Name() == func.def!!.Name()) {
+                    if (func.def!!.TypeDef()!!.MatchesVirtualFunction(functions[i].def!!.TypeDef()!!)) {
+                        functions[i] = func
                         return
                     }
                 }
                 i++
             }
-            functions.Append(func)
+            functions.add(func)
         }
 
         companion object {
@@ -615,14 +617,14 @@ object Script_Program {
      ***********************************************************************/
     class idScriptObject : SERiAL {
         //
-        var data: ByteBuffer? = null
+        var data: ByteBuffer = ByteBuffer.allocate(1)
         var offset = 0
-        private var type: idTypeDef?
+        private var type: idTypeDef
 
         // ~idScriptObject();
         fun Save(savefile: idSaveGame) {            // archives object for save game file
             val   /*size_t*/size: Int
-            if (type == Script_Program.type_object && data == null) {
+            if (type == type_object && data.capacity() > 1) {
                 // Write empty string for uninitialized object
                 savefile.WriteString("")
             } else {
@@ -659,8 +661,8 @@ object Script_Program {
 //            if (data != null) {
 //                Mem_Free(data);
 //            }
-            data = null
-            type = Script_Program.type_object
+            data = ByteBuffer.allocate(1)
+            type = type_object
         }
 
         /*
@@ -670,7 +672,7 @@ object Script_Program {
          Allocates an object and initializes memory.
          ============
          */
-        fun SetType(typeName: String?): Boolean {
+        fun SetType(typeName: String): Boolean {
             val   /*size_t*/size: Int
             val newType: idTypeDef?
 
@@ -684,7 +686,7 @@ object Script_Program {
                     Game_local.gameLocal.Warning("idScriptObject::SetType: Unknown type '%s'", typeName)
                     return false
                 }
-                if (!newType.Inherits(Script_Program.type_object)) {
+                if (!newType.Inherits(type_object)) {
                     Game_local.gameLocal.Warning(
                         "idScriptObject::SetType: Can't create object of type '%s'.  Must be an object type.",
                         newType.Name()
@@ -714,7 +716,7 @@ object Script_Program {
          */
         fun ClearObject() {
             val   /*size_t*/size: Int
-            if (type != Script_Program.type_object) {
+            if (type != type_object) {
                 // init object memory
                 size = type.Size()
                 //		memset( data, 0, size );
@@ -723,14 +725,14 @@ object Script_Program {
         }
 
         fun HasObject(): Boolean {
-            return type != Script_Program.type_object
+            return type != type_object
         }
 
         fun GetTypeDef(): idTypeDef? {
             return type
         }
 
-        fun GetTypeName(): String? {
+        fun GetTypeName(): String {
             return type.Name()
         }
 
@@ -746,27 +748,27 @@ object Script_Program {
             return func
         }
 
-        fun GetFunction(name: String?): function_t? {
+        fun GetFunction(name: String): function_t? {
             val func: function_t?
-            if (type == Script_Program.type_object) {
+            if (type == type_object) {
                 return null
             }
             func = Game_local.gameLocal.program.FindFunction(name, type)
             return func
         }
 
-        fun GetVariable(name: String?,    /*etype_t*/etype: Int): ByteBuffer? {
+        fun GetVariable(name: String,    /*etype_t*/etype: Int): ByteBuffer? {
             var i: Int
             var pos: Int
             var t: idTypeDef?
             var parm: idTypeDef?
-            if (type == Script_Program.type_object) {
+            if (type == type_object) {
                 return null
             }
             t = type
             do {
-                pos = if (t.SuperClass() != Script_Program.type_object) {
-                    t.SuperClass().Size()
+                pos = if (t!!.SuperClass() != type_object) {
+                    t.SuperClass()!!.Size()
                 } else {
                     0
                 }
@@ -774,38 +776,38 @@ object Script_Program {
                 while (i < t.NumParameters()) {
                     parm = t.GetParmType(i)
                     if (t.GetParmName(i) == name) {
-                        return if (etype != parm.FieldType().Type()) {
+                        return if (etype != parm.FieldType()!!.Type()) {
                             null
                         } else data.position(pos).slice()
                     }
-                    pos += if (parm.FieldType().Inherits(Script_Program.type_object)) {
-                        Script_Program.type_object.Size()
+                    pos += if (parm.FieldType()!!.Inherits(type_object)) {
+                        type_object.Size()
                     } else {
-                        parm.FieldType().Size()
+                        parm.FieldType()!!.Size()
                     }
                     i++
                 }
                 t = t.SuperClass()
-            } while (t != null && t != Script_Program.type_object)
+            } while (t != null && t != type_object)
             return null
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
         //
         //
         init {
-            type = Script_Program.type_object
+            type = type_object
         }
     }
 
@@ -818,7 +820,7 @@ object Script_Program {
      will cause an error.
 
      ***********************************************************************/
-    internal open class idScriptVariable<type, returnType>     //
+    open class idScriptVariable<type, returnType>     //
     //
     //        public idScriptVariable() {
     //            etype = null;
@@ -835,25 +837,25 @@ object Script_Program {
             data = null
         }
 
-        fun LinkTo(obj: idScriptObject?, name: String?) {
+        fun LinkTo(obj: idScriptObject, name: String) {
             data = obj.GetVariable(name, etype) //TODO:convert bytes to type
             if (null == data) {
                 idGameLocal.Companion.gameError("Missing '%s' field in script object '%s'", name, obj.GetTypeName())
             }
         }
 
-        fun oSet(value: returnType?): idScriptVariable<*, *>? {
+        fun oSet(value: returnType): idScriptVariable<*, *> {
             // check if we attempt to access the object before it's been linked
             assert(data != null)
 
             // make sure we don't crash if we don't have a pointer
             if (data != null) {
-                val pos = data.position()
+                val pos = data!!.position()
                 when (etype) {
-                    Script_Program.ev_boolean -> data.put(TempDump.btoi(value as Boolean?).toByte())
-                    Script_Program.ev_float -> data.putFloat(value as Float?)
+                    ev_boolean -> data!!.put(TempDump.btoi(value as Boolean).toByte())
+                    ev_float -> data!!.putFloat(value as Float)
                 }
-                data.position(pos)
+                data!!.position(pos)
             }
             return this
         }
@@ -864,10 +866,10 @@ object Script_Program {
 
             // make sure we don't crash if we don't have a pointer
             return if (data != null) {
-                val pos = data.position()
+                val pos = data!!.position()
                 when (etype) {
-                    Script_Program.ev_boolean -> TempDump.itob(data.get(pos).toInt()) as returnType
-                    Script_Program.ev_float -> data.getFloat(pos) as returnType
+                    ev_boolean -> TempDump.itob(data!!.get(pos).toInt()) as returnType
+                    ev_float -> data!!.getFloat(pos) as returnType
                     else -> null
                 }
             } else {
@@ -876,7 +878,7 @@ object Script_Program {
             }
         }
 
-        fun underscore(bla: returnType?) {
+        fun underscore(bla: returnType) {
             oSet(bla)
         }
     }
@@ -891,11 +893,11 @@ object Script_Program {
      sample the data for non-dynamic values.
 
      ***********************************************************************/
-    class idScriptBool : idScriptVariable<Boolean?, Boolean?>(Script_Program.ev_boolean)
-    class idScriptFloat : idScriptVariable<Float?, Float?>(Script_Program.ev_float)
-    private class idScriptInt : idScriptVariable<Float?, Int?>(Script_Program.ev_float)
-    private class idScriptVector : idScriptVariable<idVec3, idVec3>(Script_Program.ev_vector)
-    private class idScriptString : idScriptVariable<idStr?, String?>(Script_Program.ev_string)
+    class idScriptBool : idScriptVariable<Boolean, Boolean>(ev_boolean)
+    class idScriptFloat : idScriptVariable<Float, Float>(ev_float)
+    private class idScriptInt : idScriptVariable<Float, Int>(ev_float)
+    private class idScriptVector : idScriptVariable<idVec3, idVec3>(ev_vector)
+    private class idScriptString : idScriptVariable<idStr, String>(ev_string)
 
     /* **********************************************************************
 
@@ -905,7 +907,7 @@ object Script_Program {
      display an error message with line and file info.
 
      ***********************************************************************/
-    class idCompileError(text: String?) : idException(text)
+    class idCompileError(text: String) : idException(text)
 
     /* **********************************************************************
 
@@ -981,14 +983,14 @@ object Script_Program {
             primitive.putInt(0, `val`)
         }
 
-        fun setIntPtr(`val`: ByteArray?, offset: Int) {
+        fun setIntPtr(`val`: ByteArray, offset: Int) {
             setBytePtr(ByteBuffer.wrap(`val`), offset)
         }
 
-        fun getVectorPtr(): idVec3 {
-            vectorPtr.set(0, primitive.getFloat(0))
-            vectorPtr.set(1, primitive.getFloat(4))
-            vectorPtr.set(2, primitive.getFloat(8))
+        fun getidVec3Ptr(): idVec3 {
+            vectorPtr[0] = primitive.getFloat(0)
+            vectorPtr[1] = primitive.getFloat(4)
+            vectorPtr[2] = primitive.getFloat(8)
             return vectorPtr
         }
 
@@ -996,11 +998,11 @@ object Script_Program {
             setVectorPtr(vector.ToFloatPtr())
         }
 
-        fun setVectorPtr(vector: FloatArray?) {
+        fun setVectorPtr(vector: FloatArray) {
             vectorPtr.set(idVec3(vector))
-            primitive.putFloat(0, vector.get(0))
-            primitive.putFloat(4, vector.get(1))
-            primitive.putFloat(8, vector.get(2))
+            primitive.putFloat(0, vector[0])
+            primitive.putFloat(4, vector[1])
+            primitive.putFloat(8, vector[2])
         }
 
         //        void bytePtr(ByteBuffer data, int ptrOffset) {
@@ -1030,21 +1032,21 @@ object Script_Program {
             setPrimitive(`val`)
         }
 
-        fun setBytePtr(bytes: ByteBuffer?, offset: Int) {
+        fun setBytePtr(bytes: ByteBuffer, offset: Int) {
             this.offset = offset
             primitive =
                 bytes.duplicate().order(ByteOrder.LITTLE_ENDIAN).position(offset).slice().order(ByteOrder.LITTLE_ENDIAN)
         }
 
-        fun setBytePtr(bytes: ByteArray?, offset: Int) {
+        fun setBytePtr(bytes: ByteArray, offset: Int) {
             setBytePtr(ByteBuffer.wrap(bytes), offset)
         }
 
-        fun setStringPtr(data: ByteBuffer?, offset: Int) {
+        fun setStringPtr(data: ByteBuffer, offset: Int) {
             stringPtr = TempDump.btos(data.array(), offset)
         }
 
-        fun setString(string: String?) { //TODO:clean up all these weird string pointers
+        fun setString(string: String) { //TODO:clean up all these weird string pointers
             primitive.put(string.toByteArray()).rewind()
         }
 
@@ -1069,10 +1071,10 @@ object Script_Program {
                 : idVarDef? = null
 
         //
-        var value: varEval_s? = null
-        private val name // name of this var
-                : idVarDefName?
-        private val next // next var with the same name
+        lateinit var value: varEval_s
+        var name // name of this var
+                : idVarDefName = idVarDefName()
+        var next // next var with the same name
                 : idVarDef?
 
         // ~idVarDef();
@@ -1080,13 +1082,13 @@ object Script_Program {
             name?.RemoveDef(this)
         }
 
-        fun Name(): String? {
+        fun Name(): String {
             return name.Name()
         }
 
-        fun GlobalName(): String? {
-            return if (scope != Script_Program.def_namespace) {
-                Str.va("%s::%s", scope.GlobalName(), name.Name())
+        fun GlobalName(): String {
+            return if (scope != def_namespace) {
+                Str.va("%s::%s", scope!!.GlobalName(), name.Name())
             } else {
                 name.Name()
             }
@@ -1101,7 +1103,7 @@ object Script_Program {
         }
 
         fun  /*etype_t*/Type(): Int {
-            return if (typeDef != null) typeDef.Type() else Script_Program.ev_void
+            return if (typeDef != null) typeDef!!.Type() else ev_void
         }
 
         fun DepthOfScope(otherScope: idVarDef?): Int {
@@ -1119,10 +1121,10 @@ object Script_Program {
             return 0
         }
 
-        fun SetFunction(func: function_t?) {
+        fun SetFunction(func: function_t) {
             assert(typeDef != null)
             initialized = initialized_t.initializedConstant
-            assert(typeDef.Type() == Script_Program.ev_function)
+            assert(typeDef!!.Type() == ev_function)
             value = varEval_s()
             value.functionPtr = func
         }
@@ -1130,41 +1132,41 @@ object Script_Program {
         fun SetObject(`object`: idScriptObject?) {
             assert(typeDef != null)
             initialized = initialized
-            assert(typeDef.Inherits(Script_Program.type_object))
+            assert(typeDef!!.Inherits(type_object))
             value = varEval_s()
             value.objectPtrPtr = `object`
         }
 
-        fun SetValue(_value: eval_s?, constant: Boolean) {
+        fun SetValue(_value: eval_s, constant: Boolean) {
             assert(typeDef != null)
             initialized = if (constant) {
                 initialized_t.initializedConstant
             } else {
                 initialized_t.initializedVariable
             }
-            when (typeDef.Type()) {
-                Script_Program.ev_pointer, Script_Program.ev_boolean, Script_Program.ev_field -> value.setIntPtr(_value._int)
-                Script_Program.ev_jumpoffset -> value.setJumpOffset(_value._int)
-                Script_Program.ev_argsize -> value.setArgSize(_value._int)
-                Script_Program.ev_entity -> value.setEntityNumberPtr(_value.entity)
-                Script_Program.ev_string -> value.stringPtr =
-                    _value.stringPtr.get(0) //idStr.Copynz(value.stringPtr, _value.stringPtr, MAX_STRING_LEN);
-                Script_Program.ev_float -> value.setFloatPtr(_value._float)
-                Script_Program.ev_vector -> value.setVectorPtr(_value.vector)
-                Script_Program.ev_function -> value.functionPtr = _value.function.get(0)
-                Script_Program.ev_virtualfunction -> value.setVirtualFunction(_value._int)
-                Script_Program.ev_object -> value.setEntityNumberPtr(_value.entity)
+            when (typeDef!!.Type()) {
+                ev_pointer, ev_boolean, ev_field -> value.setIntPtr(_value._int)
+                ev_jumpoffset -> value.setJumpOffset(_value._int)
+                ev_argsize -> value.setArgSize(_value._int)
+                ev_entity -> value.setEntityNumberPtr(_value.entity)
+                ev_string -> value.stringPtr =
+                    _value.stringPtr!![0] //idStr.Copynz(value.stringPtr, _value.stringPtr, MAX_STRING_LEN);
+                ev_float -> value.setFloatPtr(_value._float)
+                ev_vector -> value.setVectorPtr(_value.vector)
+                ev_function -> value.functionPtr = _value.function!![0]
+                ev_virtualfunction -> value.setVirtualFunction(_value._int)
+                ev_object -> value.setEntityNumberPtr(_value.entity)
                 else -> throw idCompileError(Str.va("weird type on '%s'", Name()))
             }
         }
 
-        fun SetString(string: String?, constant: Boolean) {
+        fun SetString(string: String, constant: Boolean) {
             initialized = if (constant) {
                 initialized_t.initializedConstant
             } else {
                 initialized_t.initializedVariable
             }
-            assert(typeDef != null && typeDef.Type() == Script_Program.ev_string)
+            assert(typeDef != null && typeDef!!.Type() == ev_string)
             value.stringPtr = string
         }
 
@@ -1172,16 +1174,16 @@ object Script_Program {
             return next
         } // next var def with same name
 
-        fun PrintInfo(file: idFile?, instructionPointer: Int) {
-            val jumpst: statement_s?
+        fun PrintInfo(file: idFile, instructionPointer: Int) {
+            val jumpst: statement_s
             val jumpto: Int
             val   /*etype_t*/etype: Int
             if (initialized == initialized_t.initializedConstant) {
                 file.Printf("const ")
             }
-            etype = typeDef.Type()
+            etype = typeDef!!.Type()
             when (etype) {
-                Script_Program.ev_jumpoffset -> {
+                ev_jumpoffset -> {
                     jumpto = instructionPointer + value.getJumpOffset()
                     jumpst = Game_local.gameLocal.program.GetStatement(jumpto)
                     file.Printf(
@@ -1191,20 +1193,20 @@ object Script_Program {
                         jumpst.linenumber
                     )
                 }
-                Script_Program.ev_function -> if (value.functionPtr.eventdef != null) {
+                ev_function -> if (value.functionPtr!!.eventdef != null) {
                     file.Printf("event %s", GlobalName())
                 } else {
                     file.Printf("function %s", GlobalName())
                 }
-                Script_Program.ev_field -> file.Printf("field %d", value.getPtrOffset())
-                Script_Program.ev_argsize -> file.Printf("args %d", value.getArgSize())
+                ev_field -> file.Printf("field %d", value.getPtrOffset())
+                ev_argsize -> file.Printf("args %d", value.getArgSize())
                 else -> {
-                    file.Printf("%s ", typeDef.Name())
+                    file.Printf("%s ", typeDef!!.Name())
                     if (initialized == initialized_t.initializedConstant) {
                         when (etype) {
-                            Script_Program.ev_string -> {
+                            ev_string -> {
                                 file.Printf("\"")
-                                for (ch in value.stringPtr.toCharArray()) {
+                                for (ch in value.stringPtr!!.toCharArray()) {
                                     if (idStr.Companion.CharIsPrintable(ch.code)) {
                                         file.Printf("%c", ch)
                                     } else if (ch == '\n') {
@@ -1215,9 +1217,9 @@ object Script_Program {
                                 }
                                 file.Printf("\"")
                             }
-                            Script_Program.ev_vector -> file.Printf("'%s'", value.getVectorPtr().ToString())
-                            Script_Program.ev_float -> file.Printf("%f", value.getFloatPtr())
-                            Script_Program.ev_virtualfunction -> file.Printf("vtable[ %d ]", value.getVirtualFunction())
+                            ev_vector -> file.Printf("'%s'", value.getidVec3Ptr().ToString())
+                            ev_float -> file.Printf("%f", value.getFloatPtr())
+                            ev_virtualfunction -> file.Printf("vtable[ %d ]", value.getVirtualFunction())
                             else -> file.Printf("%d", value.getIntPtr())
                         }
                     } else if (initialized == initialized_t.stackVariable) {
@@ -1246,7 +1248,7 @@ object Script_Program {
         init {
             initialized = initialized_t.uninitialized
             //	memset( &value, 0, sizeof( value ) );
-            name = null
+            name = idVarDefName()
             next = null
         }
     }
@@ -1256,9 +1258,9 @@ object Script_Program {
      idVarDefName
 
      ***********************************************************************/
-    internal class idVarDefName {
+    class idVarDefName {
         private var defs: idVarDef?
-        private val name: idStr? = idStr()
+        private val name: idStr = idStr()
 
         //
         //
@@ -1266,12 +1268,12 @@ object Script_Program {
             defs = null
         }
 
-        constructor(n: String?) {
+        constructor(n: String) {
             name.set(n)
             defs = null
         }
 
-        fun Name(): String? {
+        fun Name(): String {
             return name.toString()
         }
 
@@ -1279,28 +1281,28 @@ object Script_Program {
             return defs
         }
 
-        fun AddDef(def: idVarDef?) {
+        fun AddDef(def: idVarDef) {
             assert(def.next == null)
             def.name = this
             def.next = defs
             defs = def
         }
 
-        fun RemoveDef(def: idVarDef?) {
+        fun RemoveDef(def: idVarDef) {
             if (defs == def) {
                 defs = def.next
             } else {
-                var d = defs
+                var d = defs!!
                 while (d.next != null) {
                     if (d.next == def) {
                         d.next = def.next
                         break
                     }
-                    d = d.next
+                    d = d.next!!
                 }
             }
             def.next = null
-            def.name = null
+            def.name = idVarDefName()
         }
     }
 
@@ -1314,20 +1316,20 @@ object Script_Program {
     }
 
     init {
-        Script_Program.type_void.def = Script_Program.def_void
-        Script_Program.type_scriptevent.def = Script_Program.def_scriptevent
-        Script_Program.type_namespace.def = Script_Program.def_namespace
-        Script_Program.type_string.def = Script_Program.def_string
-        Script_Program.type_float.def = Script_Program.def_float
-        Script_Program.type_vector.def = Script_Program.def_vector
-        Script_Program.type_entity.def = Script_Program.def_entity
-        Script_Program.type_field.def = Script_Program.def_field
-        Script_Program.type_function.def = Script_Program.def_function
-        Script_Program.type_virtualfunction.def = Script_Program.def_virtualfunction
-        Script_Program.type_pointer.def = Script_Program.def_pointer
-        Script_Program.type_object.def = Script_Program.def_object
-        Script_Program.type_jumpoffset.def = Script_Program.def_jumpoffset
-        Script_Program.type_argsize.def = Script_Program.def_argsize
-        Script_Program.type_boolean.def = Script_Program.def_boolean
+        type_void.def = def_void
+        type_scriptevent.def = def_scriptevent
+        type_namespace.def = def_namespace
+        type_string.def = def_string
+        type_float.def = def_float
+        type_vector.def = def_vector
+        type_entity.def = def_entity
+        type_field.def = def_field
+        type_function.def = def_function
+        type_virtualfunction.def = def_virtualfunction
+        type_pointer.def = def_pointer
+        type_object.def = def_object
+        type_jumpoffset.def = def_jumpoffset
+        type_argsize.def = def_argsize
+        type_boolean.def = def_boolean
     }
 }

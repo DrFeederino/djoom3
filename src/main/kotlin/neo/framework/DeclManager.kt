@@ -38,10 +38,7 @@ import java.util.logging.Logger
  *
  */
 class DeclManager {
-    fun setDeclManagers(declManager: idDeclManager) {
-        declManagerLocal = declManager as idDeclManagerLocal
-        DeclManager.declManager = declManagerLocal
-    }
+
 
     enum class declState_t {
         DS_UNPARSED, DS_DEFAULTED,  // set if a parse failed due to an error, or the lack of any source
@@ -2610,6 +2607,11 @@ class DeclManager {
                 Logger.getLogger(DeclManager::class.java.name).log(Level.SEVERE, null, ex)
             }
             return null
+        }
+
+        fun setDeclManagers(declManager: idDeclManager) {
+            declManagerLocal = declManager as idDeclManagerLocal
+            DeclManager.declManager = declManagerLocal
         }
     }
 }

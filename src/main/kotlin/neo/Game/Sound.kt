@@ -1,6 +1,5 @@
 package neo.Game
 
-import neo.Game.*
 import neo.Game.Entity.idEntity
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
@@ -17,9 +16,10 @@ import neo.framework.DeclManager
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Lib
 import neo.idlib.containers.CInt
-import neo.idlib.math.*
+import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 
 /**
@@ -52,7 +52,7 @@ object Sound {
     // unfortunately, our minDistance / maxDistance is specified in meters, and
     // we have far too many of them to change at this time.
     const val DOOM_TO_METERS = 0.0254f // doom to meters
-    const val METERS_TO_DOOM = 1.0f / Sound.DOOM_TO_METERS // meters to doom
+    const val METERS_TO_DOOM = 1.0f / DOOM_TO_METERS // meters to doom
 
     // sound classes are used to fade most sounds down inside cinematics, leaving dialog
     // flagged with a non-zero class full volume
@@ -88,14 +88,15 @@ object Sound {
 
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
-                eventCallbacks[Entity.EV_Activate] = this::Event_On
-                eventCallback_t1<idSound?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Trigger(neo.Game.activator) } as eventCallback_t1<idSound?>
-                eventCallbacks[Sound.EV_Speaker_On] =
-                    eventCallback_t0<idSound?> { obj: T? -> neo.Game.obj.Event_On() } as eventCallback_t0<idSound?>
-                eventCallbacks[Sound.EV_Speaker_Off] =
-                    eventCallback_t0<idSound?> { obj: T? -> neo.Game.obj.Event_Off() } as eventCallback_t0<idSound?>
-                eventCallbacks[Sound.EV_Speaker_Timer] =
-                    eventCallback_t0<idSound?> { obj: T? -> neo.Game.obj.Event_Timer() } as eventCallback_t0<idSound?>
+                eventCallbacks[Entity.EV_Activate] =
+                    eventCallback_t1<idSound> { obj: Any?, activator: idEventArg<*>? -> idSound::Event_Trigger }
+                eventCallback_t1<idSound> { obj: Any?, activator: idEventArg<*>? -> idSound::Event_Trigger }
+                eventCallbacks[EV_Speaker_On] =
+                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_On }
+                eventCallbacks[EV_Speaker_Off] =
+                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_Off }
+                eventCallbacks[EV_Speaker_Timer] =
+                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_Timer }
             }
         }
 
@@ -157,8 +158,8 @@ object Sound {
                 if (!refSound.waitfortrigger && wait > 0.0f) {
                     timerOn = true
                     DoSound(false)
-                    CancelEvents(Sound.EV_Speaker_Timer)
-                    PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+                    CancelEvents(EV_Speaker_Timer)
+                    PostEventSec(EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
                 } else if (!refSound.waitfortrigger && !(refSound.referenceSound != null && refSound.referenceSound!!.CurrentlyPlaying())) {
                     // start it if it isn't already playing, and we aren't waitForTrigger
                     DoSound(true)
@@ -188,7 +189,7 @@ object Sound {
             }
             if (!refSound.waitfortrigger && wait > 0.0f) {
                 timerOn = true
-                PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+                PostEventSec(EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
             } else {
                 timerOn = false
             }
@@ -230,15 +231,15 @@ object Sound {
          this will toggle the idle idSound on and off
          ================
          */
-        private fun Event_Trigger(activator: idEventArg<idEntity?>?) {
+        private fun Event_Trigger(activator: idEventArg<idEntity>) {
             if (wait > 0.0f) {
                 if (timerOn) {
                     timerOn = false
-                    CancelEvents(Sound.EV_Speaker_Timer)
+                    CancelEvents(EV_Speaker_Timer)
                 } else {
                     timerOn = true
                     DoSound(true)
-                    PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+                    PostEventSec(EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
                 }
             } else {
                 if (Game_local.gameLocal.isMultiplayer) {
@@ -251,13 +252,13 @@ object Sound {
 
         private fun Event_Timer() {
             DoSound(true)
-            PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+            PostEventSec(EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
         }
 
         private fun Event_On() {
             if (wait > 0.0f) {
                 timerOn = true
-                PostEventSec(Sound.EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
+                PostEventSec(EV_Speaker_Timer, wait + Game_local.gameLocal.random.CRandomFloat() * random)
             }
             DoSound(true)
         }
@@ -265,7 +266,7 @@ object Sound {
         private fun Event_Off() {
             if (timerOn) {
                 timerOn = false
-                CancelEvents(Sound.EV_Speaker_Timer)
+                CancelEvents(EV_Speaker_Timer)
             }
             DoSound(false)
         }
@@ -291,8 +292,8 @@ object Sound {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks[event]
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //	CLASS_PROTOTYPE( idSound );

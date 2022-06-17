@@ -652,7 +652,7 @@ object Anim_Blend {
             return null
         }
 
-        fun CallFrameCommands(ent: idEntity?, from: Int, to: Int) {
+        fun CallFrameCommands(ent: idEntity, from: Int, to: Int) {
             var index: Int
             var end: Int
             var frame: Int
@@ -670,7 +670,7 @@ object Anim_Blend {
                     val command = frameCommands[index++]
                     when (command.type) {
                         frameCommandType_t.FC_SCRIPTFUNCTION -> {
-                            Game_local.gameLocal.CallFrameCommand(ent, command.function)
+                            Game_local.gameLocal.CallFrameCommand(ent, command.function!!)
                         }
                         frameCommandType_t.FC_SCRIPTFUNCTIONOBJECT -> {
                             Game_local.gameLocal.CallObjectFrameCommand(ent, command.string.toString())
@@ -1130,7 +1130,7 @@ object Anim_Blend {
             val filename = idStr()
             val extension = idStr()
             var md5joint: Int
-            var md5joints: Array<idMD5Joint>
+            var md5joints: ArrayList<idMD5Joint>
             val src = idLexer()
             val token = idToken()
             val token2 = idToken()
@@ -1538,7 +1538,7 @@ object Anim_Blend {
 
         fun FindJoint(name: String): jointInfo_t? {
             var i: Int
-            val joint: Array<idMD5Joint>
+            val joint: ArrayList<idMD5Joint>
             if (null == modelHandle) {
                 return null
             }
@@ -1667,7 +1667,7 @@ object Anim_Blend {
         }
 
         fun GetJointName(jointHandle: Int): String? {
-            val joint: Array<idMD5Joint>
+            val joint: kotlin.collections.ArrayList<idMD5Joint>
             if (null == modelHandle) {
                 return null
             }
@@ -2521,12 +2521,12 @@ object Anim_Blend {
             allowFrameCommands = savefile.ReadBool()
         }
 
-        fun AnimName(): String? {
+        fun AnimName(): String {
             val anim = Anim() ?: return ""
             return anim.Name()
         }
 
-        fun AnimFullName(): String? {
+        fun AnimFullName(): String {
             val anim = Anim() ?: return ""
             return anim.FullName()
         }

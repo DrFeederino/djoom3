@@ -63,11 +63,6 @@ import java.util.logging.Logger
 class Common {
 
 
-    fun setCommons(common: idCommon) {
-        commonLocal = common as idCommonLocal
-        Common.common = commonLocal
-    }
-
     internal enum class errorParm_t {
         ERP_NONE, ERP_FATAL,  // exit the entire game with a popup window
         ERP_DROP,  // print to console and disconnect from game
@@ -3576,6 +3571,11 @@ class Common {
 //
 //	common.Printf("Count: %d\n", strCount);
 //	return strCount;
+        }
+
+        fun setCommons(common: idCommon) {
+            commonLocal = common as idCommonLocal
+            Common.common = commonLocal
         }
     }
 }

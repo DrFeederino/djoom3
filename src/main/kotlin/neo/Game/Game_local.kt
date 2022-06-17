@@ -2,7 +2,6 @@ package neo.Game
 
 import neo.CM.CollisionModel.trace_s
 import neo.CM.CollisionModel_local
-import neo.Game.*
 import neo.Game.AFEntity.idAFAttachment
 import neo.Game.AFEntity.idAFEntity_Generic
 import neo.Game.AI.AAS.idAAS
@@ -148,12 +147,13 @@ import neo.framework.DeclEntityDef.idDeclEntityDef
 import neo.framework.DeclManager.*
 import neo.framework.File_h.idFile
 import neo.framework.UsercmdGen.usercmd_t
-import neo.idlib.*
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.BitMsg.idBitMsg
 import neo.idlib.BitMsg.idBitMsgDelta
+import neo.idlib.CmdArgs
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Dict_h.idKeyValue
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.MapFile.idMapEntity
@@ -168,25 +168,24 @@ import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.LinkList.idLinkList
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.containers.List.idList
-import neo.idlib.containers.StaticList.idStaticList
 import neo.idlib.containers.idStrList
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.geometry.TraceModel.traceModelPoly_t
 import neo.idlib.geometry.Winding.idFixedWinding
-import neo.idlib.math.*
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Random.idRandom
 import neo.idlib.math.Simd.idSIMD
+import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec5
 import neo.sys.sys_public
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
-import java.util.stream.Stream
 
 /**
  *
@@ -195,7 +194,6 @@ class Game_local {
 
 
     //
-    private val gameExport: gameExport_t = gameExport_t()
 
     //#endif
     //    #ifdef ID_DEBUG_UNINITIALIZED_MEMORY
@@ -205,106 +203,8 @@ class Game_local {
     //#endif
     //
 
-    /*
-     ===========
-     GetGameAPI
-     ============
-     */
-    fun GetGameAPI(gameImport: gameImport_t): gameExport_t {
-        if (gameImport.version == Game.GAME_API_VERSION) {
-            // set interface pointers used by the game
-            sys_public.setSysLocal(gameImport.sys)
-            Common.setCommons(gameImport.common)
-            CmdSystem.setCmdSystems(gameImport.cmdSystem)
-            CVarSystem.setCvarSystems(gameImport.cvarSystem)
-            FileSystem_h.setFileSystems(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
-            NetworkSystem.setNetworkSystems(gameImport.networkSystem)
-            RenderSystem.setRenderSystem(gameImport.renderSystem)
-            snd_system.setSoundSystems(gameImport.soundSystem)
-            ModelManager.setRenderModelManagers(gameImport.renderModelManager)
-            UserInterface.setUiManagers(gameImport.uiManager)
-            DeclManager.setDeclManagers(gameImport.declManager)
-            AASFileManager.setAASFileManagers(gameImport.AASFileManager)
-            CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)
-        }
 
-        // set interface pointers used by idLib
-        idLib.sys = sys_public.sys
-        idLib.common = Common.common
-        idLib.cvarSystem = CVarSystem.cvarSystem
-        idLib.fileSystem = FileSystem_h.fileSystem
 
-        // setup export interface
-        gameExport.version = Game.GAME_API_VERSION
-        gameExport.game = Companion.game
-        gameExport.gameEdit = GameEdit.gameEdit
-        return gameExport
-    }
-
-    /*
-     ===========
-     TestGameAPI
-     ============
-     */
-    fun TestGameAPI() {
-        val testImport = gameImport_t()
-        var testExport: gameExport_t = gameExport_t()
-        testImport.sys = sys_public.sys
-        testImport.common = Common.common
-        testImport.cmdSystem = CmdSystem.cmdSystem
-        testImport.cvarSystem = CVarSystem.cvarSystem
-        testImport.fileSystem = FileSystem_h.fileSystem
-        testImport.networkSystem = NetworkSystem.networkSystem
-        testImport.renderSystem = RenderSystem.renderSystem
-        testImport.soundSystem = snd_system.soundSystem
-        testImport.renderModelManager = ModelManager.renderModelManager
-        testImport.uiManager = UserInterface.uiManager
-        testImport.declManager = DeclManager.declManager
-        testImport.AASFileManager = AASFileManager.AASFileManager
-        testImport.collisionModelManager = CollisionModel_local.collisionModelManager
-        testExport = GetGameAPI(testImport)
-    }
-
-    private fun memmove(
-        dst: Array<Array<ByteArray?>?>?,
-        dstOffset: Int,
-        src: Array<Array<ByteArray?>?>?,
-        srcOffset: Int,
-        length: Int
-    ) {
-        var sa: Int
-        var sb: Int
-        var sc: Int
-        var da: Int
-        var db: Int
-        var dc: Int
-        sc = srcOffset % src.size
-        sb = (srcOffset - sc) / src.size
-        sa = (srcOffset - sc - sb * src.size) / src.get(0).length
-        dc = dstOffset % dst.size
-        db = (dstOffset - dc) / dst.size
-        da = (dstOffset - dc - db * dst.size) / dst.get(0).length
-        var count = 0
-        while (sa < src.size) {
-            sb = 0
-            while (sb < src.get(0).length) {
-                while (sc < src.get(0).get(0).length && count < length) {
-                    dst.get(da).get(db).get(dc++) = src.get(sa).get(sb).get(sc)
-                    if (dc == dst.get(0).get(0).length) {
-                        dc = 0
-                        if (++db == dst.get(0).length) {
-                            db = 0
-                            da++ //if this overflows, then we're fucked!
-                        }
-                    }
-                    sc++
-                    count++
-                }
-                sb++
-            }
-            sa++
-        }
-    }
 
     //
     // these defines work for all startsounds from all entity types
@@ -340,7 +240,7 @@ class Game_local {
     class snapshot_s {
         var firstEntityState: entityState_s? = null
         var next: snapshot_s? = null
-        var pvs: IntArray? = IntArray(ENTITY_PVS_SIZE)
+        var pvs: IntArray = IntArray(ENTITY_PVS_SIZE)
         var sequence = 0
     }
 
@@ -360,7 +260,7 @@ class Game_local {
     }
 
     //============================================================================
-    open class idEntityPtr<type : idEntity?> {
+    open class idEntityPtr<out entity : idEntity?> {
         private var spawnId = 0
 
         //
@@ -369,7 +269,7 @@ class Game_local {
             spawnId = 0
         }
 
-        constructor(ent: type?) {
+        constructor(ent: entity?) {
             oSet(ent)
         }
 
@@ -384,14 +284,14 @@ class Game_local {
             this.spawnId = spawnId._val
         }
 
-        fun oSet(ent: type?): idEntityPtr<type?>? {
+        fun oSet(ent: idEntity?): idEntityPtr<idEntity> {
             spawnId = if (ent == null) {
                 0
             } else {
                 val entityNumber = ent.entityNumber
                 gameLocal.spawnIds[entityNumber] shl GENTITYNUM_BITS or entityNumber
             }
-            return this
+            return this as idEntityPtr<idEntity>
         }
 
         // synchronize entity pointers over the network
@@ -417,10 +317,10 @@ class Game_local {
             return gameLocal.spawnIds[spawnId and (1 shl GENTITYNUM_BITS) - 1] == spawnId shr GENTITYNUM_BITS
         }
 
-        fun GetEntity(): type? {
+        fun GetEntity(): entity? {
             val entityNum = spawnId and (1 shl GENTITYNUM_BITS) - 1
             return if (gameLocal.spawnIds[entityNum] == spawnId shr GENTITYNUM_BITS) {
-                gameLocal.entities[entityNum]
+                gameLocal.entities[entityNum] as entity?
             } else null
         }
 
@@ -432,15 +332,15 @@ class Game_local {
     //============================================================================
     class idGameLocal : idGame() {
         val lastGUIEnt // last entity with a GUI, used by Cmd_NextGUI_f
-                : idEntityPtr<idEntity?>
+                : idEntityPtr<idEntity>
 
         //
         private val aasList: idList<idAAS> = idList() // area system
         private val aasNames: idStrList = idStrList()
 
         //
-        private val clientDeclRemap: Array<Array<idList<Int>>> =
-            Array<Array<idList<*>?>?>(MAX_CLIENTS) { arrayOfNulls<idList<*>?>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
+        private val clientDeclRemap: Array<ArrayList<ArrayList<Int>>> =
+            Array<ArrayList<ArrayList<Int>>>(MAX_CLIENTS) { ArrayList<ArrayList<Int>>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
 
         //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
         //        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
@@ -449,10 +349,10 @@ class Game_local {
 
         //
         private val gravity: idVec3 = idVec3() // global gravity vector
-        private val initialSpots: idStaticList<idEntity> = idStaticList(MAX_GENTITIES)
+        private val initialSpots: ArrayList<idEntity> = ArrayList(MAX_GENTITIES)
 
         //
-        private val lastAIAlertEntity: idEntityPtr<idActor?>?
+        private val lastAIAlertEntity: idEntityPtr<idActor?>
 
         //
         private val mapFileName: idStr = idStr() // name of the map, empty string if no map loaded
@@ -463,8 +363,8 @@ class Game_local {
             idDict() // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
 
         //
-        private val spawnSpots: idStaticList<spawnSpot_t?>? = idStaticList(MAX_GENTITIES)
-        var activeEntities: idLinkList<idEntity?> = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
+        private val spawnSpots: ArrayList<spawnSpot_t> = ArrayList(MAX_GENTITIES)
+        var activeEntities: idLinkList<idEntity> = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
         var cinematicMaxSkipTime // time to end cinematic when skipping.  there's a possibility of an infinite loop if the map isn't set up right.
                 = 0
 
@@ -480,10 +380,10 @@ class Game_local {
         var clip: idClip = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: Array<idEntity> = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES) // index to entities
+        var entities: ArrayList<idEntity> = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
-        var entityHash: idHashIndex? = idHashIndex() // hash table to quickly find entities by name
+        var entityHash: idHashIndex = idHashIndex() // hash table to quickly find entities by name
         var firstFreeIndex // first free index in the entities array
                 = 0
         var frameCommandThread: idThread? = null
@@ -493,7 +393,7 @@ class Game_local {
         var framenum = 0
 
         //
-        var gameType: gameType_t? = null
+        var gameType: gameType_t = gameType_t.GAME_SP
 
         //
         // can be used to automatically effect every material in the world that references globalParms
@@ -524,8 +424,8 @@ class Game_local {
                 = 0
         var num_entities // current number <= MAX_GENTITIES
                 = 0
-        var persistentLevelInfo: idDict? = idDict() // contains args that are kept around between levels
-        var persistentPlayerInfo: Array<idDict?> = arrayOfNulls<idDict?>(MAX_CLIENTS)
+        var persistentLevelInfo: idDict = idDict() // contains args that are kept around between levels
+        var persistentPlayerInfo: kotlin.collections.ArrayList<idDict> = ArrayList<idDict>(MAX_CLIENTS)
         var previousTime // time in msec of last frame
                 = 0
 
@@ -548,7 +448,7 @@ class Game_local {
         var smokeParticles // global smoke trails
                 : idSmokeParticles? = null
         var snapshotEntities // entities from the last snapshot
-                : idLinkList<idEntity?>? = null
+                : idLinkList<idEntity> = idLinkList()
         var sortPushers // true if active lists needs to be reordered to place pushers at the front
                 = false
         var sortTeamMasters // true if active lists needs to be reordered to place physics team masters before their slaves
@@ -557,8 +457,8 @@ class Game_local {
         var spawnedEntities: idLinkList<idEntity> = idLinkList() // all spawned entities
 
         //
-        var sufaceTypeNames: Array<String?>? =
-            arrayOfNulls<String?>(Material.MAX_SURFACE_TYPES) // text names for surface types
+        var sufaceTypeNames: ArrayList<String> =
+            ArrayList(Material.MAX_SURFACE_TYPES) // text names for surface types
         var testFx // for development testing of fx
                 : idEntityFx? = null
 
@@ -567,7 +467,7 @@ class Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: Array<idDict> = ArrayList<idDict>(MAX_CLIENTS) // client specific settings
+        var userInfo: ArrayList<idDict> = ArrayList<idDict>(MAX_CLIENTS) // client specific settings
         var usercmds = Array(MAX_CLIENTS) { usercmd_t() } // client input commands
 
         //
@@ -580,27 +480,27 @@ class Game_local {
         private var camera: idCamera? = null
 
         //
-        private var clientEntityStates: Array<Array<entityState_s?>?>? =
-            Array(MAX_CLIENTS) { arrayOfNulls<entityState_s?>(MAX_GENTITIES) }
-        private var clientPVS: Array<IntArray?>? =
+        private var clientEntityStates: Array<ArrayList<entityState_s>> =
+            Array(MAX_CLIENTS) { ArrayList<entityState_s>(MAX_GENTITIES) }
+        private var clientPVS: Array<IntArray> =
             Array(MAX_CLIENTS) { IntArray(ENTITY_PVS_SIZE) }
-        private var clientSnapshots: Array<snapshot_s?>? = arrayOfNulls<snapshot_s?>(MAX_CLIENTS)
+        private var clientSnapshots: kotlin.collections.ArrayList<snapshot_s> = ArrayList<snapshot_s>(MAX_CLIENTS)
         private var currentInitialSpot = 0
         private var gamestate // keeps track of whether we're spawning, shutting down, or normal gameplay
-                : gameState_t? = null
+                : gameState_t = gameState_t.GAMESTATE_UNINITIALIZED
         private var globalMaterial // for overriding everything
-                : idMaterial? = null
+                : Material.idMaterial? = null
         private var influenceActive // true when a phantasm is happening
                 = false
 
         //
-        private var lagometer: Array<Array<ByteArray?>?>? =
+        private var lagometer: Array<Array<ByteArray>> =
             Array(LAGO_IMG_HEIGHT) { Array(LAGO_IMG_WIDTH) { ByteArray(4) } }
         private var lastAIAlertTime = 0
 
         //
         private var locationEntities // for location names, etc
-                : Array<idLocationEntity?>?
+                : kotlin.collections.ArrayList<idLocationEntity> = ArrayList()
         private var mapCycleLoaded = false
         private var mapFile // will be NULL during the game unless in-game editing is used
                 : idMapFile? = null
@@ -608,19 +508,19 @@ class Game_local {
                 = 0
 
         //
-        private var newInfo: idDict? = idDict()
+        private var newInfo: idDict = idDict()
         private var nextGibTime = 0
-        private var playerConnectedAreas: pvsHandle_t? = pvsHandle_t() // all areas connected to any player area
+        private var playerConnectedAreas: pvsHandle_t = pvsHandle_t() // all areas connected to any player area
 
         //
         //
         //
         // ---------------------- Public idGame Interface -------------------
         //
-        private var playerPVS: pvsHandle_t? = pvsHandle_t() // merged pvs of all players
+        private var playerPVS: pvsHandle_t = pvsHandle_t() // merged pvs of all players
 
         //
-        private val shakeSounds: idStrList? = null
+        private val shakeSounds: kotlin.collections.ArrayList<idStr> = kotlin.collections.ArrayList()
 
         //
         private var spawnCount = 0
@@ -643,7 +543,7 @@ class Game_local {
                 idLib.Init()
 
                 // register static cvars declared in the game
-                idCVar.Companion.RegisterStaticVars()
+                idCVar.RegisterStaticVars()
 
                 // initialize processor specific SIMD
                 idSIMD.InitProcessor("game", com_forceGenericSIMD.GetBool())
@@ -656,12 +556,12 @@ class Game_local {
             DeclManager.declManager.RegisterDeclType(
                 "model",
                 declType_t.DECL_MODELDEF,
-                DeclManager.idDeclAllocator(idDeclModelDef::class.java)
+                DeclManager.idDeclAllocator(idDeclModelDef::class.java)!!
             )
             DeclManager.declManager.RegisterDeclType(
                 "export",
                 declType_t.DECL_MODELEXPORT,
-                DeclManager.idDeclAllocator(idDecl::class.java)
+                DeclManager.idDeclAllocator(idDecl::class.java)!!
             )
 
             // register game specific decl folders
@@ -684,8 +584,8 @@ class Game_local {
                 ArgCompletion_Decl(declType_t.DECL_MODELDEF)
             )
             Clear()
-            idEvent.Companion.Init()
-            idClass.Companion.INIT()
+            idEvent.Init()
+            idClass.INIT()
             InitConsoleCommands()
 
             // load default scripts
@@ -696,12 +596,13 @@ class Game_local {
             dict = FindEntityDefDict("aas_types")
             if (null == dict) {
                 Error("Unable to find entityDef for 'aas_types'")
+                return
             }
 
             // allocate space for the aas
             var kv = dict.MatchPrefix("type")
             while (kv != null) {
-                aas = idAAS.Companion.Alloc()
+                aas = idAAS.Alloc()
                 aasList.Append(aas)
                 aasNames.add(kv.GetValue())
                 kv = dict.MatchPrefix("type", kv)
@@ -728,21 +629,21 @@ class Game_local {
             MapShutdown()
             aasList.DeleteContents(true)
             aasNames.clear()
-            idAI.Companion.FreeObstacleAvoidanceNodes()
+            idAI.FreeObstacleAvoidanceNodes()
 
             // shutdown the model exporter
             //idModelExport.Shutdown();
-            idEvent.Companion.Shutdown()
+            idEvent.Shutdown()
 
 //	delete[] locationEntities;
-            locationEntities = null
+            locationEntities.clear()
 
 //	delete smokeParticles;
             smokeParticles = null
-            idClass.Companion.Shutdown()
+            idClass.Shutdown()
 
             // clear list with forces
-            idForce.Companion.ClearForceList()
+            idForce.ClearForceList()
 
             // free the program data
             program.FreeData()
@@ -778,20 +679,20 @@ class Game_local {
             mpGame.ThrottleUserInfo()
         }
 
-        override fun SetUserInfo(clientNum: Int, userInfo: idDict?, isClient: Boolean, canModify: Boolean): idDict? {
+        override fun SetUserInfo(clientNum: Int, userInfo: idDict, isClient: Boolean, canModify: Boolean): idDict? {
             var i: Int
             var modifiedInfo = false
             this.isClient = isClient
             if (clientNum >= 0 && clientNum < MAX_CLIENTS) {
-                this.userInfo.get(clientNum) = userInfo
+                this.userInfo[clientNum] = userInfo
 
                 // server sanity
                 if (canModify) {
 
                     // don't let numeric nicknames, it can be exploited to go around kick and ban commands from the server
-                    if (idStr.Companion.IsNumeric(this.userInfo.get(clientNum).GetString("ui_name"))) {
-                        this.userInfo.get(clientNum)
-                            .Set("ui_name", Str.va("%s_", this.userInfo.get(clientNum).GetString("ui_name")))
+                    if (idStr.IsNumeric(this.userInfo[clientNum].GetString("ui_name"))) {
+                        this.userInfo[clientNum]
+                            .Set("ui_name", Str.va("%s_", this.userInfo[clientNum].GetString("ui_name")))
                         modifiedInfo = true
                     }
 
@@ -802,14 +703,14 @@ class Game_local {
                             i++
                             continue
                         }
-                        if (entities.get(i) != null && entities.get(i) is idPlayer) {
-                            if (0 == idStr.Companion.Icmp(
-                                    this.userInfo.get(clientNum).GetString("ui_name"),
-                                    this.userInfo.get(i).GetString("ui_name")
+                        if (entities[i] != null && entities[i] is idPlayer) {
+                            if (0 == idStr.Icmp(
+                                    this.userInfo[clientNum].GetString("ui_name"),
+                                    this.userInfo[i].GetString("ui_name")
                                 )
                             ) {
-                                this.userInfo.get(clientNum)
-                                    .Set("ui_name", Str.va("%s_", this.userInfo.get(clientNum).GetString("ui_name")))
+                                this.userInfo[clientNum]
+                                    .Set("ui_name", Str.va("%s_", this.userInfo[clientNum].GetString("ui_name")))
                                 modifiedInfo = true
                                 i = -1 // rescan
                                 i++
@@ -819,8 +720,8 @@ class Game_local {
                         i++
                     }
                 }
-                if (entities.get(clientNum) != null && entities.get(clientNum) is idPlayer) {
-                    modifiedInfo = modifiedInfo or (entities.get(clientNum) as idPlayer?).UserInfoChanged(canModify)
+                if (entities[clientNum] != null && entities[clientNum] is idPlayer) {
+                    modifiedInfo = modifiedInfo or (entities[clientNum] as idPlayer).UserInfoChanged(canModify)
                 }
                 if (!isClient) {
                     // now mark this client in game
@@ -829,19 +730,19 @@ class Game_local {
             }
             if (modifiedInfo) {
                 assert(canModify)
-                newInfo = this.userInfo.get(clientNum)
+                newInfo = this.userInfo[clientNum]
                 return newInfo
             }
             return null
         }
 
         override fun GetUserInfo(clientNum: Int): idDict? {
-            return if (entities.get(clientNum) != null && entities.get(clientNum) is idPlayer) {
-                userInfo.get(clientNum)
+            return if (entities[clientNum] != null && entities[clientNum] is idPlayer) {
+                userInfo[clientNum]
             } else null
         }
 
-        override fun SetServerInfo(_serverInfo: idDict?) {
+        override fun SetServerInfo(_serverInfo: idDict) {
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             serverInfo = _serverInfo
@@ -849,7 +750,7 @@ class Game_local {
             if (!isClient) {
                 // Let our clients know the server info changed
                 outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
-                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SERVERINFO)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SERVERINFO.toByte())
                 outMsg.WriteDeltaDict(gameLocal.serverInfo, null)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
             }
@@ -857,22 +758,22 @@ class Game_local {
 
         override fun GetPersistentPlayerInfo(clientNum: Int): idDict {
             val ent: idEntity
-            persistentPlayerInfo.get(clientNum).Clear()
-            ent = entities.get(clientNum)
+            persistentPlayerInfo[clientNum].Clear()
+            ent = entities[clientNum]
             if (ent != null && ent is idPlayer) {
-                (ent as idPlayer?).SavePersistantInfo()
+                (ent as idPlayer).SavePersistantInfo()
             }
-            return persistentPlayerInfo.get(clientNum)
+            return persistentPlayerInfo[clientNum]
         }
 
-        override fun SetPersistentPlayerInfo(clientNum: Int, playerInfo: idDict?) {
-            persistentPlayerInfo.get(clientNum) = playerInfo
+        override fun SetPersistentPlayerInfo(clientNum: Int, playerInfo: idDict) {
+            persistentPlayerInfo[clientNum] = playerInfo
         }
 
         override fun InitFromNewMap(
-            mapName: String?,
-            renderWorld: idRenderWorld?,
-            soundWorld: idSoundWorld?,
+            mapName: String,
+            renderWorld: idRenderWorld,
+            soundWorld: idSoundWorld,
             isServer: Boolean,
             isClient: Boolean,
             randSeed: Int
@@ -900,10 +801,10 @@ class Game_local {
         }
 
         override fun InitFromSaveGame(
-            mapName: String?,
-            renderWorld: idRenderWorld?,
-            soundWorld: idSoundWorld?,
-            saveGameFile: idFile?
+            mapName: String,
+            renderWorld: idRenderWorld,
+            soundWorld: idSoundWorld,
+            saveGameFile: idFile
         ): Boolean {
             var i: Int
             var num: Int
@@ -942,8 +843,8 @@ class Game_local {
 
             // precache any media specified in the map
             i = 0
-            while (i < mapFile.GetNumEntities()) {
-                val mapEnt = mapFile.GetEntity(i)
+            while (i < mapFile!!.GetNumEntities()) {
+                val mapEnt = mapFile!!.GetEntity(i)
                 if (!InhibitEntitySpawn(mapEnt.epairs)) {
                     CacheDictionaryMedia(mapEnt.epairs)
                     val classname = mapEnt.epairs.GetString("classname")
@@ -958,19 +859,19 @@ class Game_local {
             numClients = savegame.ReadInt()
             i = 0
             while (i < numClients) {
-                savegame.ReadDict(userInfo.get(i))
+                savegame.ReadDict(userInfo[i])
                 savegame.ReadUsercmd(usercmds[i])
-                savegame.ReadDict(persistentPlayerInfo.get(i))
+                savegame.ReadDict(persistentPlayerInfo[i])
                 i++
             }
             i = 0
             while (i < MAX_GENTITIES) {
-                savegame.ReadObject( /*reinterpret_cast<idClass *&>*/entities.get(i))
-                spawnIds.get(i) = savegame.ReadInt()
+                savegame.ReadObject( /*reinterpret_cast<idClass *&>*/entities[i])
+                spawnIds[i] = savegame.ReadInt()
 
                 // restore the entityNumber
-                if (entities.get(i) != null) {
-                    entities.get(i).entityNumber = i
+                if (entities[i] != null) {
+                    entities[i].entityNumber = i
                 }
                 i++
             }
@@ -983,8 +884,8 @@ class Game_local {
             i = 0
             while (i < num) {
                 savegame.ReadObject( /*reinterpret_cast<idClass *&>*/ent)
-                assert(!ent.isNULL)
-                if (!ent.isNULL) {
+                assert(!ent.isNULL())
+                if (!ent.isNULL()) {
                     ent.spawnNode.AddToEnd(spawnedEntities)
                 }
                 i++
@@ -993,8 +894,8 @@ class Game_local {
             i = 0
             while (i < num) {
                 savegame.ReadObject( /*reinterpret_cast<idClass *&>*/ent)
-                assert(!ent.isNULL)
-                if (!ent.isNULL) {
+                assert(!ent.isNULL())
+                if (!ent.isNULL()) {
                     ent.activeNode.AddToEnd(activeEntities)
                 }
                 i++
@@ -1005,7 +906,7 @@ class Game_local {
             savegame.ReadDict(persistentLevelInfo)
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                globalShaderParms.get(i) = savegame.ReadFloat()
+                globalShaderParms[i] = savegame.ReadFloat()
                 i++
             }
             i = savegame.ReadInt()
@@ -1047,15 +948,17 @@ class Game_local {
                 if (num != gameRenderWorld.NumAreas()) {
                     savegame.Error("idGameLocal.InitFromSaveGame: number of areas in map differs from save game.")
                 }
-                locationEntities = arrayOfNulls<idLocationEntity?>(num)
+                locationEntities.clear()
+                locationEntities.addAll(Array<idLocationEntity>(num) { idLocationEntity() })
+
                 i = 0
                 while (i < num) {
-                    savegame.ReadObject( /*reinterpret_cast<idClass *&>*/locationEntities.get(i))
+                    savegame.ReadObject( /*reinterpret_cast<idClass *&>*/locationEntities!![i])
                     i++
                 }
             }
             savegame.ReadObject( /*reinterpret_cast<idClass *&>*/camera)
-            savegame.ReadMaterial(globalMaterial)
+            savegame.ReadMaterial(globalMaterial!!)
             lastAIAlertEntity.Restore(savegame)
             lastAIAlertTime = savegame.ReadInt()
             savegame.ReadDict(spawnArgs)
@@ -1076,7 +979,7 @@ class Game_local {
             // makingBuild
             // shakeSounds
             // Read out pending events
-            idEvent.Companion.Restore(savegame)
+            idEvent.Restore(savegame)
             savegame.RestoreObjects()
             mpGame.Reset()
             mpGame.Precache()
@@ -1096,7 +999,7 @@ class Game_local {
          the session may have written some data to the file already
          ============
          */
-        override fun SaveGame(saveGameFile: idFile?) {
+        override fun SaveGame(saveGameFile: idFile) {
             var i: Int
             var ent: idEntity?
             var link: idEntity?
@@ -1111,7 +1014,7 @@ class Game_local {
             // go through all entities and threads and add them to the object list
             i = 0
             while (i < MAX_GENTITIES) {
-                ent = entities.get(i)
+                ent = entities[i]
                 if (ent != null) {
                     if (ent.GetTeamMaster() != null && ent.GetTeamMaster() != ent) {
                         i++
@@ -1125,11 +1028,9 @@ class Game_local {
                 }
                 i++
             }
-            val threads: idList<idThread?> = idThread.Companion.GetThreads()
-            i = 0
-            while (i < threads.Num()) {
-                savegame.AddObject(threads.get(i))
-                i++
+            val threads: kotlin.collections.ArrayList<idThread> = idThread.GetThreads()
+            for (thread in threads) {
+                savegame.AddObject(thread)
             }
 
             // write out complete object list
@@ -1140,22 +1041,22 @@ class Game_local {
             savegame.WriteInt(numClients)
             i = 0
             while (i < numClients) {
-                savegame.WriteDict(userInfo.get(i))
+                savegame.WriteDict(userInfo[i])
                 savegame.WriteUsercmd(usercmds[i])
-                savegame.WriteDict(persistentPlayerInfo.get(i))
+                savegame.WriteDict(persistentPlayerInfo[i])
                 i++
             }
             i = 0
             while (i < MAX_GENTITIES) {
-                savegame.WriteObject(entities.get(i))
-                savegame.WriteInt(spawnIds.get(i))
+                savegame.WriteObject(entities[i])
+                savegame.WriteInt(spawnIds[i])
                 i++
             }
             savegame.WriteInt(firstFreeIndex)
             savegame.WriteInt(num_entities)
 
             // enityHash is restored by idEntity::Restore setting the entity name.
-            savegame.WriteObject(world)
+            savegame.WriteObject(world!!)
             savegame.WriteInt(spawnedEntities.Num())
             ent = spawnedEntities.Next()
             while (ent != null) {
@@ -1174,11 +1075,11 @@ class Game_local {
             savegame.WriteDict(persistentLevelInfo)
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                savegame.WriteFloat(globalShaderParms.get(i))
+                savegame.WriteFloat(globalShaderParms[i])
                 i++
             }
             savegame.WriteInt(random.GetSeed())
-            savegame.WriteObject(frameCommandThread)
+            savegame.WriteObject(frameCommandThread!!)
 
             // clip
             // push
@@ -1210,17 +1111,17 @@ class Game_local {
             savegame.WriteFloat(clientSmoothing)
             savegame.WriteBool(mapCycleLoaded)
             savegame.WriteInt(spawnCount)
-            if (TempDump.NOT(*locationEntities)) {
+            if (TempDump.NOT(locationEntities)) {
                 savegame.WriteInt(0)
             } else {
                 savegame.WriteInt(gameRenderWorld.NumAreas())
                 i = 0
                 while (i < gameRenderWorld.NumAreas()) {
-                    savegame.WriteObject(locationEntities.get(i))
+                    savegame.WriteObject(locationEntities!![i])
                     i++
                 }
             }
-            savegame.WriteObject(camera)
+            savegame.WriteObject(camera!!)
             savegame.WriteMaterial(globalMaterial)
             lastAIAlertEntity.Save(savegame)
             savegame.WriteInt(lastAIAlertTime)
@@ -1242,7 +1143,7 @@ class Game_local {
             // makingBuild
             // shakeSounds
             // write out pending events
-            idEvent.Companion.Save(savegame)
+            idEvent.Save(savegame)
             savegame.Close()
         }
 
@@ -1265,15 +1166,13 @@ class Game_local {
             // reset the script to the state it was before the map was started
             program.Restart()
             if (smokeParticles != null) {
-                smokeParticles.Shutdown()
+                smokeParticles!!.Shutdown()
             }
             pvs.Shutdown()
             clip.Shutdown()
-            idClipModel.Companion.ClearTraceModelCache()
+            idClipModel.ClearTraceModelCache()
             ShutdownAsyncNetwork()
             mapFileName.Clear()
-            gameRenderWorld = null
-            gameSoundWorld = null
             gamestate = gameState_t.GAMESTATE_NOMAP
             Printf("--------------------------------------\n")
         }
@@ -1326,14 +1225,14 @@ class Game_local {
             kv = dict.MatchPrefix("gui", null)
             while (kv != null) {
                 if (kv.GetValue().Length() != 0) {
-                    if (0 == idStr.Companion.Icmp(
+                    if (0 == idStr.Icmp(
                             kv.GetKey(),
                             "gui_noninteractive"
-                        ) || 0 == idStr.Companion.Icmpn(
+                        ) || 0 == idStr.Icmpn(
                             kv.GetKey(),
                             "gui_parm",
                             8
-                        ) || 0 == idStr.Companion.Icmp(kv.GetKey(), "gui_inventory")
+                        ) || 0 == idStr.Icmp(kv.GetKey(), "gui_inventory")
                     ) {
                         // unfortunate flag names, they aren't actually a gui
                     } else {
@@ -1435,7 +1334,7 @@ class Game_local {
         }
 
         override fun SpawnPlayer(clientNum: Int) {
-            val ent = arrayOf<idEntity?>(null)
+            val ent = arrayListOf<idEntity>()
             val args = idDict()
 
             // they can connect
@@ -1443,7 +1342,7 @@ class Game_local {
             args.SetInt("spawn_entnum", clientNum)
             args.Set("name", Str.va("player%d", clientNum + 1))
             args.Set("classname", if (isMultiplayer) "player_doommarine_mp" else "player_doommarine")
-            if (!SpawnEntityDef(args, ent) || null == entities.get(clientNum)) {
+            if (!SpawnEntityDef(args, ent) || null == entities[clientNum]) {
                 Error("Failed to spawn player as '%s'", args.GetString("classname"))
             }
 
@@ -1518,7 +1417,7 @@ class Game_local {
                     System.arraycopy(clientCmds, 0, usercmds, 0, numClients)
 
                     // free old smoke particles
-                    smokeParticles.FreeSmokes()
+                    smokeParticles!!.FreeSmokes()
 
                     // process events on the server
                     ServerProcessEntityNetworkEventQueue()
@@ -1605,7 +1504,7 @@ class Game_local {
                     timer_events.Start()
 
                     // service any pending events
-                    idEvent.Companion.ServiceEvents()
+                    idEvent.ServiceEvents()
                     timer_events.Stop()
 
                     // free the player pvs
@@ -1627,7 +1526,7 @@ class Game_local {
 
                     // build the return value
                     ret.consistencyHash = 0
-                    ret.sessionCommand[0] = 0
+                    ret.sessionCommand[0] = Char(0)
                     if (!isMultiplayer && player != null) {
                         ret.health = player.health
                         ret.heartRate = player.heartRate
@@ -1681,14 +1580,14 @@ class Game_local {
             if (isMultiplayer) {
                 return mpGame.Draw(clientNum)
             }
-            val player = entities.get(clientNum) as idPlayer? ?: return false
+            val player = entities[clientNum] as idPlayer? ?: return false
 
             // render the scene
-            player.playerView.RenderPlayerView(player.hud)
+            player.playerView.RenderPlayerView(player.hud!!)
             return true
         }
 
-        override fun HandleESC(gui: idUserInterface?): escReply_t? {
+        override fun HandleESC(gui: idUserInterface?): escReply_t {
             var gui = gui
             if (isMultiplayer) {
                 gui = StartMenu()
@@ -1705,13 +1604,13 @@ class Game_local {
             } else escReply_t.ESC_MAIN
         }
 
-        override fun StartMenu(): idUserInterface {
+        override fun StartMenu(): idUserInterface? {
             return if (!isMultiplayer) {
                 null
             } else mpGame.StartMenu()
         }
 
-        override fun HandleGuiCommands(menuCommand: String?): String? {
+        override fun HandleGuiCommands(menuCommand: String): String? {
             return if (!isMultiplayer) {
                 null
             } else mpGame.HandleGuiCommands(menuCommand)
@@ -1720,22 +1619,22 @@ class Game_local {
         override fun HandleMainMenuCommands(menuCommand: String?, gui: idUserInterface?) {}
         override fun ServerAllowClient(
             numClients: Int,
-            IP: String?,
-            guid: String?,
-            password: String?,
-            reason: CharArray? /*[MAX_STRING_CHARS]*/
+            IP: String,
+            guid: String,
+            password: String,
+            reason: CharArray /*[MAX_STRING_CHARS]*/
         ): allowReply_t {
-            reason.get(0) = '\u0000'
+            reason[0] = '\u0000'
             if (serverInfo.GetInt("si_pure") != 0 && !mpGame.IsPureReady()) {
-                idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07139")
+                idStr.snPrintf(reason, Lib.MAX_STRING_CHARS, "#str_07139")
                 return allowReply_t.ALLOW_NOTYET
             }
             if (0 == serverInfo.GetInt("si_maxPlayers")) {
-                idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07140")
+                idStr.snPrintf(reason, Lib.MAX_STRING_CHARS, "#str_07140")
                 return allowReply_t.ALLOW_NOTYET
             }
             if (numClients >= serverInfo.GetInt("si_maxPlayers")) {
-                idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07141")
+                idStr.snPrintf(reason, Lib.MAX_STRING_CHARS, "#str_07141")
                 return allowReply_t.ALLOW_NOTYET
             }
             if (!CVarSystem.cvarSystem.GetCVarBool("si_usepass")) {
@@ -1750,25 +1649,25 @@ class Game_local {
                     "say si_usepass is set but g_password is empty"
                 )
                 // avoids silent misconfigured state
-                idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07142")
+                idStr.snPrintf(reason, Lib.MAX_STRING_CHARS, "#str_07142")
                 return allowReply_t.ALLOW_NOTYET
             }
-            if (0 == idStr.Companion.Cmp(pass, password)) {
+            if (0 == idStr.Cmp(pass, password)) {
                 return allowReply_t.ALLOW_YES
             }
-            idStr.Companion.snPrintf(reason, Lib.Companion.MAX_STRING_CHARS, "#str_07143")
+            idStr.snPrintf(reason, Lib.MAX_STRING_CHARS, "#str_07143")
             Printf("Rejecting client %s from IP %s: invalid password\n", guid, IP)
             return allowReply_t.ALLOW_BADPASS
         }
 
         override fun ServerClientConnect(clientNum: Int, guid: String?) {
             // make sure no parasite entity is left
-            if (entities.get(clientNum) != null) {
+            if (entities.size > clientNum) {
                 Common.common.DPrintf("ServerClientConnect: remove old player entity\n")
                 //		delete entities[ clientNum ];
-                entities.get(clientNum) = null
+                entities.removeAt(clientNum)
             }
-            userInfo.get(clientNum).Clear()
+            userInfo[clientNum].Clear()
             mpGame.ServerClientConnect(clientNum)
             Printf("client %d connected.\n", clientNum)
         }
@@ -1783,7 +1682,7 @@ class Game_local {
             // send message to initialize decl remap at the client (this is always the very first reliable game message)
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP.toByte())
             NetworkSystem.networkSystem.ServerSendReliableMessage(clientNum, outMsg)
 
             // spawn the player
@@ -1795,9 +1694,9 @@ class Game_local {
             // send message to spawn the player at the clients
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
-            outMsg.WriteByte(clientNum)
-            outMsg.WriteLong(spawnIds.get(clientNum))
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER.toByte())
+            outMsg.WriteByte(clientNum.toByte())
+            outMsg.WriteLong(spawnIds[clientNum])
             NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
         }
 
@@ -1807,8 +1706,8 @@ class Game_local {
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_DELETE_ENT)
-            outMsg.WriteBits(spawnIds.get(clientNum) shl GENTITYNUM_BITS or clientNum, 32) // see GetSpawnId
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_DELETE_ENT.toByte())
+            outMsg.WriteBits(spawnIds[clientNum] shl GENTITYNUM_BITS or clientNum, 32) // see GetSpawnId
             NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
 
             // free snapshots stored for this client
@@ -1817,20 +1716,20 @@ class Game_local {
             // free entity states stored for this client
             i = 0
             while (i < MAX_GENTITIES) {
-                if (clientEntityStates.get(clientNum).get(i) != null) {
+                if (clientEntityStates[clientNum].size > i) {
 //                    entityStateAllocator.Free(clientEntityStates[ clientNum][ i]);
-                    clientEntityStates.get(clientNum).get(i) = null
+                    clientEntityStates[clientNum].removeAt(i)
                 }
                 i++
             }
 
             // clear the client PVS
 //	memset( clientPVS[ clientNum ], 0, sizeof( clientPVS[ clientNum ] ) );
-            Arrays.fill(clientPVS.get(clientNum), 0)
+            Arrays.fill(clientPVS[clientNum], 0)
 
             // delete the player entity
 //	delete entities[ clientNum ];
-            entities.get(clientNum) = null
+            entities.removeAt(clientNum)
             mpGame.DisconnectClient(clientNum)
         }
 
@@ -1850,15 +1749,15 @@ class Game_local {
             // spawn players
             i = 0
             while (i < MAX_CLIENTS) {
-                if (entities.get(i) == null || i == clientNum) {
+                if (entities[i] == null || i == clientNum) {
                     i++
                     continue
                 }
                 outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
                 outMsg.BeginWriting()
-                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER)
-                outMsg.WriteByte(i)
-                outMsg.WriteLong(spawnIds.get(i))
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_SPAWN_PLAYER.toByte())
+                outMsg.WriteByte(i.toByte())
+                outMsg.WriteLong(spawnIds[i])
                 NetworkSystem.networkSystem.ServerSendReliableMessage(clientNum, outMsg)
                 i++
             }
@@ -1868,9 +1767,9 @@ class Game_local {
             while (event != null) {
                 outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
                 outMsg.BeginWriting()
-                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_EVENT)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_EVENT.toByte())
                 outMsg.WriteBits(event.spawnId, 32)
-                outMsg.WriteByte(event.event)
+                outMsg.WriteByte(event.event.toByte())
                 outMsg.WriteLong(event.time)
                 outMsg.WriteBits(event.paramsSize, idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                 if (event.paramsSize != 0) {
@@ -1884,7 +1783,7 @@ class Game_local {
             val numPortals = gameRenderWorld.NumPortals()
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTALSTATES)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTALSTATES.toByte())
             outMsg.WriteLong(numPortals)
             i = 0
             while (i < numPortals) {
@@ -1908,8 +1807,8 @@ class Game_local {
         override fun ServerWriteSnapshot(
             clientNum: Int,
             sequence: Int,
-            msg: idBitMsg?,
-            clientInPVS: ByteArray?,
+            msg: idBitMsg,
+            clientInPVS: ByteArray,
             numPVSClients: Int
         ) {
             var i: Int
@@ -1924,15 +1823,15 @@ class Game_local {
             var base: entityState_s?
             var newBase: entityState_s
             val numSourceAreas: Int
-            val sourceAreas = IntArray(idEntity.Companion.MAX_PVS_AREAS)
-            val tagRandom: idRandom
-            player = entities.get(clientNum) as idPlayer?
+            val sourceAreas = IntArray(idEntity.MAX_PVS_AREAS)
+            var tagRandom: idRandom = idRandom()
+            player = entities[clientNum] as idPlayer?
             if (null == player) {
                 return
             }
             spectated =
-                if (player.spectating && player.spectator != clientNum && entities.get(player.spectator) != null) {
-                    entities.get(player.spectator) as idPlayer?
+                if (player.spectating && player.spectator != clientNum && entities[player.spectator] != null) {
+                    entities[player.spectator] as idPlayer
                 } else {
                     player
                 }
@@ -1944,8 +1843,8 @@ class Game_local {
             snapshot = snapshot_s() //snapshotAllocator.Alloc();
             snapshot.sequence = sequence
             snapshot.firstEntityState = null
-            snapshot.next = clientSnapshots.get(clientNum)
-            clientSnapshots.get(clientNum) = snapshot
+            snapshot.next = clientSnapshots[clientNum]
+            clientSnapshots[clientNum] = snapshot
             //            memset(snapshot.pvs, 0, sizeof(snapshot.pvs));
             Arrays.fill(snapshot.pvs, 0)
 
@@ -1954,7 +1853,7 @@ class Game_local {
             numSourceAreas = gameRenderWorld.BoundsInAreas(
                 spectated.GetPlayerPhysics().GetAbsBounds(),
                 sourceAreas,
-                idEntity.Companion.MAX_PVS_AREAS
+                idEntity.MAX_PVS_AREAS
             )
             pvsHandle = gameLocal.pvs.SetupCurrentPVS(sourceAreas, numSourceAreas, pvsType_t.PVS_NORMAL)
             if (Game_network.ASYNC_WRITE_TAGS) {
@@ -1975,8 +1874,8 @@ class Game_local {
                 }
 
                 // add the entity to the snapshot pvs
-                snapshot.pvs.get(ent.entityNumber shr 5) =
-                    snapshot.pvs.get(ent.entityNumber shr 5) or (1 shl (ent.entityNumber and 31))
+                snapshot.pvs[ent.entityNumber shr 5] =
+                    snapshot.pvs[ent.entityNumber shr 5] or (1 shl (ent.entityNumber and 31))
 
                 // if that entity is not marked for network synchronization
                 if (!ent.fl.networkSync) {
@@ -1989,14 +1888,14 @@ class Game_local {
 
                 // write the entity to the snapshot
                 msg.WriteBits(ent.entityNumber, GENTITYNUM_BITS)
-                base = clientEntityStates.get(clientNum).get(ent.entityNumber)
+                base = clientEntityStates[clientNum][ent.entityNumber]
                 base?.state?.BeginReading()
                 newBase = entityState_s() //entityStateAllocator.Alloc();
                 newBase.entityNumber = ent.entityNumber
-                newBase.state.Init(newBase.stateBuf)
-                newBase.state.BeginWriting()
-                deltaMsg.Init(base?.state, newBase.state, msg)
-                deltaMsg.WriteBits(spawnIds.get(ent.entityNumber), 32 - GENTITYNUM_BITS)
+                newBase.state!!.Init(newBase.stateBuf)
+                newBase.state!!.BeginWriting()
+                deltaMsg.Init(base?.state!!, newBase.state!!, msg)
+                deltaMsg.WriteBits(spawnIds[ent.entityNumber], 32 - GENTITYNUM_BITS)
                 //                deltaMsg.WriteBits(ent.GetType().typeNum, idClass.GetTypeNumBits());//TODO:fix this.
                 deltaMsg.WriteBits(ServerRemapDecl(-1, declType_t.DECL_ENTITYDEF, ent.entityDefNumber), entityDefBits)
 
@@ -2019,7 +1918,7 @@ class Game_local {
             // write the PVS to the snapshot
             if (ASYNC_WRITE_PVS) {
                 i = 0
-                while (i < idEntity.Companion.MAX_PVS_AREAS) {
+                while (i < idEntity.MAX_PVS_AREAS) {
                     if (i < numSourceAreas) {
                         msg.WriteLong(sourceAreas[i])
                     } else {
@@ -2031,7 +1930,7 @@ class Game_local {
             }
             i = 0
             while (i < ENTITY_PVS_SIZE) {
-                msg.WriteDeltaLong(clientPVS.get(clientNum).get(i), snapshot.pvs.get(i))
+                msg.WriteDeltaLong(clientPVS[clientNum][i], snapshot.pvs[i])
                 i++
             }
 
@@ -2039,16 +1938,15 @@ class Game_local {
             pvs.FreeCurrentPVS(pvsHandle)
 
             // write the game and player state to the snapshot
-            base = clientEntityStates.get(clientNum)
-                .get(ENTITYNUM_NONE) // ENTITYNUM_NONE is used for the game and player state
+            base = clientEntityStates[clientNum][ENTITYNUM_NONE] // ENTITYNUM_NONE is used for the game and player state
             base?.state?.BeginReading()
             newBase = entityState_s() //entityStateAllocator.Alloc();
             newBase.entityNumber = ENTITYNUM_NONE
             newBase.next = snapshot.firstEntityState
             snapshot.firstEntityState = newBase
-            newBase.state.Init(newBase.stateBuf)
-            newBase.state.BeginWriting()
-            deltaMsg.Init(base?.state, newBase.state, msg)
+            newBase.state!!.Init(newBase.stateBuf)
+            newBase.state!!.BeginWriting()
+            deltaMsg.Init(base?.state!!, newBase.state!!, msg)
             if (player.spectating && player.spectator != player.entityNumber && gameLocal.entities[player.spectator] != null && gameLocal.entities[player.spectator] is idPlayer) {
                 (gameLocal.entities[player.spectator] as idPlayer).WritePlayerStateToSnapshot(deltaMsg)
             } else {
@@ -2059,7 +1957,7 @@ class Game_local {
             // copy the client PVS string
 //	memcpy( clientInPVS, snapshot.pvs, ( numPVSClients + 7 ) >> 3 );
             System.arraycopy(snapshot.pvs, 0, clientInPVS, 0, numPVSClients + 7 shr 3)
-            Lib.Companion.LittleRevBytes(clientInPVS, clientInPVS.size)
+            Lib.LittleRevBytes(clientInPVS, clientInPVS.size)
         }
 
         override fun ServerApplySnapshot(clientNum: Int, sequence: Int): Boolean {
@@ -2068,7 +1966,7 @@ class Game_local {
 
         override fun ServerProcessReliableMessage(clientNum: Int, msg: idBitMsg) {
             val id: Int
-            id = msg.ReadByte()
+            id = msg.ReadByte().toInt()
             when (id) {
                 GAME_RELIABLE_MESSAGE_CHAT, GAME_RELIABLE_MESSAGE_TCHAT -> {
                     val name = CharArray(128)
@@ -2098,7 +1996,7 @@ class Game_local {
                     mpGame.ServerCallVote(clientNum, msg)
                 }
                 GAME_RELIABLE_MESSAGE_CASTVOTE -> {
-                    val vote = msg.ReadByte() != 0
+                    val vote = msg.ReadByte().toInt() != 0
                     mpGame.CastVote(clientNum, vote)
                 }
                 GAME_RELIABLE_MESSAGE_EVENT -> {
@@ -2108,7 +2006,7 @@ class Game_local {
                     event = eventQueue.Alloc()
                     eventQueue.Enqueue(event, outOfOrderBehaviour_t.OUTOFORDER_DROP)
                     event.spawnId = msg.ReadBits(32)
-                    event.event = msg.ReadByte()
+                    event.event = msg.ReadByte().toInt()
                     event.time = msg.ReadLong()
                     event.paramsSize = msg.ReadBits(idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                     if (event.paramsSize != 0) {
@@ -2144,7 +2042,7 @@ class Game_local {
             if (0 == Game_network.net_clientShowSnapshot.GetInteger()) {
                 return
             }
-            player = entities.get(clientNum) as idPlayer?
+            player = entities[clientNum] as idPlayer?
             if (null == player) {
                 return
             }
@@ -2161,19 +2059,19 @@ class Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                base = clientEntityStates.get(clientNum).get(ent.entityNumber)
+                base = clientEntityStates[clientNum][ent.entityNumber]
                 baseBits = base?.state?.GetNumBitsWritten() ?: 0
                 if (Game_network.net_clientShowSnapshot.GetInteger() == 2 && baseBits == 0) {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
                 gameRenderWorld.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
                     ),
-                    entBounds.GetCenter(), 0.1f, Lib.Companion.colorWhite, viewAxis, 1
+                    entBounds.GetCenter(), 0.1f, Lib.colorWhite, viewAxis, 1
                 )
                 ent = ent.snapshotNode.Next()
             }
@@ -2189,13 +2087,13 @@ class Game_local {
             return ApplySnapshot(clientNum, sequence)
         }
 
-        override fun ClientProcessReliableMessage(clientNum: Int, msg: idBitMsg?) {
+        override fun ClientProcessReliableMessage(clientNum: Int, msg: idBitMsg) {
             val id: Int
             val line: Int
             val p: idPlayer?
             var backupSI: idDict
             InitLocalClient(clientNum)
-            id = msg.ReadByte()
+            id = msg.ReadByte().toInt()
             when (id) {
                 GAME_RELIABLE_MESSAGE_INIT_DECL_REMAP -> {
                     InitClientDeclRemap(clientNum)
@@ -2203,34 +2101,34 @@ class Game_local {
                 GAME_RELIABLE_MESSAGE_REMAP_DECL -> {
                     val type: Int
                     val index: Int
-                    val name = CharArray(Lib.Companion.MAX_STRING_CHARS)
-                    type = msg.ReadByte()
+                    val name = CharArray(Lib.MAX_STRING_CHARS)
+                    type = msg.ReadByte().toInt()
                     index = msg.ReadLong()
-                    msg.ReadString(name, Lib.Companion.MAX_STRING_CHARS)
+                    msg.ReadString(name, Lib.MAX_STRING_CHARS)
                     val decl = DeclManager.declManager.FindType(declType_t.values()[type], TempDump.ctos(name), false)
                     if (decl != null) {
-                        if (index >= clientDeclRemap.get(clientNum).get(type).Num()) {
-                            clientDeclRemap.get(clientNum).get(type).AssureSize(index + 1, -1)
+                        if (index >= clientDeclRemap[clientNum][type].size) {
+                            clientDeclRemap[clientNum][type].ensureCapacity(index + 1)
                         }
-                        clientDeclRemap.get(clientNum).get(type).set(index, decl.Index())
+                        clientDeclRemap[clientNum][type][index] = decl.Index()
                     }
                 }
                 GAME_RELIABLE_MESSAGE_SPAWN_PLAYER -> {
-                    val client = msg.ReadByte()
+                    val client = msg.ReadByte().toInt()
                     val spawnId = msg.ReadLong()
-                    if (null == entities.get(client)) {
+                    if (null == entities[client]) {
                         SpawnPlayer(client)
-                        entities.get(client).FreeModelDef()
+                        entities[client].FreeModelDef()
                     }
                     // fix up the spawnId to match what the server says
                     // otherwise there is going to be a bogus delete/new of the client entity in the first ClientReadFromSnapshot
-                    spawnIds.get(client) = spawnId
+                    spawnIds[client] = spawnId
                 }
                 GAME_RELIABLE_MESSAGE_DELETE_ENT -> {
                     val spawnId = msg.ReadBits(32)
                     val entPtr = idEntityPtr<idEntity?>()
                     if (!entPtr.SetSpawnId(spawnId)) {
-                        break
+                        return
                     }
                 }
                 GAME_RELIABLE_MESSAGE_CHAT, GAME_RELIABLE_MESSAGE_TCHAT -> {
@@ -2242,22 +2140,22 @@ class Game_local {
                     mpGame.AddChatLine("%s^0: %s\n", TempDump.ctos(name), TempDump.ctos(text))
                 }
                 GAME_RELIABLE_MESSAGE_SOUND_EVENT -> {
-                    val snd_evt = snd_evt_t.values()[msg.ReadByte()]
+                    val snd_evt = snd_evt_t.values()[msg.ReadByte().toInt()]
                     mpGame.PlayGlobalSound(-1, snd_evt)
                 }
                 GAME_RELIABLE_MESSAGE_SOUND_INDEX -> {
                     val index = gameLocal.ClientRemapDecl(declType_t.DECL_SOUND, msg.ReadLong())
                     if (index >= 0 && index < DeclManager.declManager.GetNumDecls(declType_t.DECL_SOUND)) {
-                        val shader = DeclManager.declManager.SoundByIndex(index)
+                        val shader = DeclManager.declManager.SoundByIndex(index)!!
                         mpGame.PlayGlobalSound(-1, snd_evt_t.SND_COUNT, shader.GetName())
                     }
                 }
                 GAME_RELIABLE_MESSAGE_DB -> {
-                    val msg_evt = msg_evt_t.values()[msg.ReadByte()]
+                    val msg_evt = msg_evt_t.values()[msg.ReadByte().toInt()]
                     val parm1: Int
                     val parm2: Int
-                    parm1 = msg.ReadByte()
-                    parm2 = msg.ReadByte()
+                    parm1 = msg.ReadByte().toInt()
+                    parm2 = msg.ReadByte().toInt()
                     mpGame.PrintMessageEvent(-1, msg_evt, parm1, parm2)
                 }
                 GAME_RELIABLE_MESSAGE_EVENT -> {
@@ -2267,7 +2165,7 @@ class Game_local {
                     event = eventQueue.Alloc()
                     eventQueue.Enqueue(event, outOfOrderBehaviour_t.OUTOFORDER_IGNORE)
                     event.spawnId = msg.ReadBits(32)
-                    event.event = msg.ReadByte()
+                    event.event = msg.ReadByte().toInt()
                     event.time = msg.ReadLong()
                     event.paramsSize = msg.ReadBits(idMath.BitsForInteger(MAX_EVENT_PARAM_SIZE))
                     if (event.paramsSize != 0) {
@@ -2288,23 +2186,23 @@ class Game_local {
                     MapRestart()
                 }
                 GAME_RELIABLE_MESSAGE_TOURNEYLINE -> {
-                    line = msg.ReadByte()
-                    p = entities.get(clientNum) as idPlayer?
+                    line = msg.ReadByte().toInt()
+                    p = entities[clientNum] as idPlayer?
                     if (null == p) {
-                        break
+                        return
                     }
                     p.tourneyLine = line
                 }
                 GAME_RELIABLE_MESSAGE_STARTVOTE -> {
-                    val voteString = CharArray(Lib.Companion.MAX_STRING_CHARS)
-                    val clientNum2 = msg.ReadByte()
-                    msg.ReadString(voteString, Lib.Companion.MAX_STRING_CHARS)
+                    val voteString = CharArray(Lib.MAX_STRING_CHARS)
+                    val clientNum2 = msg.ReadByte().toInt()
+                    msg.ReadString(voteString, Lib.MAX_STRING_CHARS)
                     mpGame.ClientStartVote(clientNum2, TempDump.ctos(voteString))
                 }
                 GAME_RELIABLE_MESSAGE_UPDATEVOTE -> {
-                    val result = msg.ReadByte()
-                    val yesCount = msg.ReadByte()
-                    val noCount = msg.ReadByte()
+                    val result = msg.ReadByte().toInt()
+                    val yesCount = msg.ReadByte().toInt()
+                    val noCount = msg.ReadByte().toInt()
                     mpGame.ClientUpdateVote(vote_result_t.values()[result], yesCount, noCount)
                 }
                 GAME_RELIABLE_MESSAGE_PORTALSTATES -> {
@@ -2345,7 +2243,7 @@ class Game_local {
             val player: idPlayer?
             val ret = gameReturn_t()
             ret.sessionCommand[0] = '\u0000'
-            player = entities.get(clientNum) as idPlayer?
+            player = entities[clientNum] as idPlayer?
             if (null == player) {
                 return ret
             }
@@ -2371,7 +2269,7 @@ class Game_local {
             // set the user commands for this frame
 //            memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
             for (i in 0 until numClients) {
-                usercmds[i] = usercmd_t(clientCmds.get(i))
+                usercmds[i] = usercmd_t(clientCmds[i])
             }
 
             // run prediction on all entities from the last snapshot
@@ -2383,7 +2281,7 @@ class Game_local {
             }
 
             // service any pending events
-            idEvent.Companion.ServiceEvents()
+            idEvent.ServiceEvents()
 
             // show any debug info for this frame
             if (isNewFrame) {
@@ -2397,7 +2295,7 @@ class Game_local {
             return ret
         }
 
-        override fun GetClientStats(clientNum: Int, data: Array<String?>?, len: Int) {
+        override fun GetClientStats(clientNum: Int, data: Array<String>, len: Int) {
             mpGame.PlayerStats(clientNum, data, len)
         }
 
@@ -2411,7 +2309,7 @@ class Game_local {
 
             // Put in spectator mode
             if (team == -1) {
-                (entities.get(clientNum) as idPlayer?).Spectate(true)
+                (entities[clientNum] as idPlayer).Spectate(true)
             } // Switch to a team
             else {
                 mpGame.SwitchToTeam(clientNum, oldTeam, team)
@@ -2419,10 +2317,10 @@ class Game_local {
         }
 
         override fun DownloadRequest(
-            IP: String?,
-            guid: String?,
-            paks: String?,
-            urls: CharArray? /*[MAX_STRING_CHARS ]*/
+            IP: String,
+            guid: String,
+            paks: String,
+            urls: CharArray /*[MAX_STRING_CHARS ]*/
         ): Boolean {
             if (0 == CVarSystem.cvarSystem.GetCVarInteger("net_serverDownload")) {
                 return false
@@ -2433,9 +2331,9 @@ class Game_local {
                     Common.common.Warning("si_serverURL not set")
                     return false
                 }
-                idStr.Companion.snPrintf(
+                idStr.snPrintf(
                     urls,
-                    Lib.Companion.MAX_STRING_CHARS,
+                    Lib.MAX_STRING_CHARS,
                     "1;%s",
                     CVarSystem.cvarSystem.GetCVarString("si_serverURL")
                 )
@@ -2444,7 +2342,7 @@ class Game_local {
                 // 2: table of pak URLs
                 // first token is the game pak if request, empty if not requested by the client
                 // there may be empty tokens for paks the server couldn't pinpoint - the order matters
-                var reply: String? = "2;"
+                var reply: String = "2;"
                 val dlTable = idStrList()
                 val pakList = idStrList()
                 var i: Int
@@ -2483,7 +2381,7 @@ class Game_local {
                     }
                     i++
                 }
-                idStr.Companion.Copynz(urls, reply, Lib.Companion.MAX_STRING_CHARS)
+                idStr.Copynz(urls, reply, Lib.MAX_STRING_CHARS)
                 true
             }
             //	return false;
@@ -2496,34 +2394,33 @@ class Game_local {
          Initializes all map variables common to both save games and spawned games.
          ===================
          */
-        fun LoadMap(mapName: String?, randseed: Int) {
+        fun LoadMap(mapName: String, randseed: Int) {
             var i: Int
-            val sameMap = mapFile != null && idStr.Companion.Icmp(mapFileName, mapName) == 0
+            val sameMap = mapFile != null && idStr.Icmp(mapFileName, mapName) == 0
 
             // clear the sound system
             gameSoundWorld.ClearAllSoundEmitters()
             InitAsyncNetwork()
-            if (!sameMap || mapFile != null && mapFile.NeedsReload()) {
+            if (!sameMap || mapFile != null && mapFile!!.NeedsReload()) {
                 // load the .map file
                 if (mapFile != null) {
                     mapFile = null
                 }
                 mapFile = idMapFile()
-                if (!mapFile.Parse("$mapName.map")) {
+                if (!mapFile!!.Parse("$mapName.map")) {
                     mapFile = null
                     Error("Couldn't load %s", mapName)
                 }
             }
-            mapFileName.set(mapFile.GetName())
+            mapFileName.set(mapFile!!.GetName())
 
             // load the collision map
             CollisionModel_local.collisionModelManager.LoadMap(mapFile)
             numClients = 0
 
             // initialize all entities for this game
-            entities = arrayOfNulls<idEntity?>(entities.size) //	memset( entities, 0, sizeof( entities ) );
-            usercmds = Stream.generate { usercmd_t() }.limit(usercmds.size.toLong())
-                .toArray { _Dummy_.__Array__() } //memset( usercmds, 0, sizeof( usercmds ) );
+            entities = ArrayList(entities.size) //	memset( entities, 0, sizeof( entities ) );
+            usercmds = Array(usercmds.size) { usercmd_t() } //memset( usercmds, 0, sizeof( usercmds ) );
             spawnIds = IntArray(spawnIds.size) //memset( spawnIds, -1, sizeof( spawnIds ) );
             spawnCount = INITIAL_SPAWN_COUNT
             spawnedEntities.Clear()
@@ -2574,18 +2471,18 @@ class Game_local {
             // load navigation system for all the different monster sizes
             i = 0
             while (i < aasNames.size()) {
-                aasList.get(i)
-                    .Init(idStr(mapFileName).SetFileExtension(aasNames.get(i)), mapFile.GetGeometryCRC().toLong())
+                aasList[i]
+                    .Init(idStr(mapFileName).SetFileExtension(aasNames[i]), mapFile!!.GetGeometryCRC().toLong())
                 i++
             }
 
             // clear the smoke particle free list
-            smokeParticles.Init()
+            smokeParticles!!.Init()
 
             // cache miscellanious media references
             FindEntityDef("preCacheExtras", false)
             if (!sameMap) {
-                mapFile.RemovePrimitiveData()
+                mapFile!!.RemovePrimitiveData()
             }
         }
 
@@ -2596,8 +2493,8 @@ class Game_local {
             gamestate = gameState_t.GAMESTATE_SHUTDOWN
             i = 0
             while (i < MAX_CLIENTS) {
-                if (entities.get(i) != null && entities.get(i) is idPlayer) {
-                    (entities.get(i) as idPlayer?).PrepareForRestart()
+                if (entities[i] != null && entities[i] is idPlayer) {
+                    (entities[i] as idPlayer).PrepareForRestart()
                 }
                 i++
             }
@@ -2606,7 +2503,7 @@ class Game_local {
             MapClear(false)
 
             // clear the smoke particle free list
-            smokeParticles.Init()
+            smokeParticles!!.Init()
 
             // clear the sound system
             if (gameSoundWorld != null) {
@@ -2629,8 +2526,8 @@ class Game_local {
             // setup the client entities again
             i = 0
             while (i < MAX_CLIENTS) {
-                if (entities.get(i) != null && entities.get(i) is idPlayer) {
-                    (entities.get(i) as idPlayer?).Restart()
+                if (entities[i] != null && entities[i] is idPlayer) {
+                    (entities[i] as idPlayer).Restart()
                 }
                 i++
             }
@@ -2651,7 +2548,7 @@ class Game_local {
                 newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
                 i = 0
                 while (i < newInfo.GetNumKeyVals()) {
-                    keyval = newInfo.GetKeyVal(i)
+                    keyval = newInfo.GetKeyVal(i)!!
                     keyval2 = serverInfo.FindKey(keyval.GetKey())
                     if (null == keyval2) {
                         break
@@ -2671,7 +2568,7 @@ class Game_local {
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "nextMap")
                 } else {
                     outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
-                    outMsg.WriteByte(GAME_RELIABLE_MESSAGE_RESTART)
+                    outMsg.WriteByte(GAME_RELIABLE_MESSAGE_RESTART.toByte())
                     outMsg.WriteBits(1, 1)
                     outMsg.WriteDeltaDict(serverInfo, null)
                     NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
@@ -2681,7 +2578,7 @@ class Game_local {
             }
         }
 
-        fun Printf(fmt: String?, vararg args: Any?) {
+        fun Printf(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
 //	char		text[MAX_STRING_CHARS];
 //
@@ -2691,16 +2588,16 @@ class Game_local {
             Common.common.Printf("%s", String.format(fmt, *args))
         }
 
-        fun Warning(fmt: String?, vararg args: Any?) {
+        fun Warning(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
-            val text = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
-            val thread: idThread
+            val text = StringBuilder(Lib.MAX_STRING_CHARS)
+            val thread: idThread?
             //
 //	va_start( argptr, fmt );
 //	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 //	va_end( argptr );
             text.append(String.format(fmt, *args))
-            thread = idThread.Companion.CurrentThread()
+            thread = idThread.CurrentThread()
             if (thread != null) {
                 thread.Warning("%s", text)
             } else {
@@ -2708,10 +2605,10 @@ class Game_local {
             }
         }
 
-        fun DWarning(fmt: String?, vararg args: Any?) {
+        fun DWarning(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
-            val text = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
-            val thread: idThread
+            val text = StringBuilder(Lib.MAX_STRING_CHARS)
+            val thread: idThread?
             if (!Common.com_developer.GetBool()) {
                 return
             }
@@ -2719,7 +2616,7 @@ class Game_local {
             //	va_start( argptr, fmt );
 //	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 //	va_end( argptr );
-            thread = idThread.Companion.CurrentThread()
+            thread = idThread.CurrentThread()
             if (thread != null) {
                 thread.Warning("%s", text)
             } else {
@@ -2727,7 +2624,7 @@ class Game_local {
             }
         }
 
-        fun DPrintf(fmt: String?, vararg args: Any?) {
+        fun DPrintf(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
 //	char		text[MAX_STRING_CHARS];
             if (!Common.com_developer.GetBool()) {
@@ -2752,9 +2649,9 @@ class Game_local {
                 Printf(Common.common.GetLanguageDict().GetString("#str_04294"))
                 return false
             }
-            if (FileSystem_h.fileSystem.ReadFile(SysCvar.g_mapCycle.GetString(), null, null) < 0) {
+            if (FileSystem_h.fileSystem.ReadFile(SysCvar.g_mapCycle.GetString()!!, null, null) < 0) {
                 if (FileSystem_h.fileSystem.ReadFile(
-                        Str.va("%s.scriptcfg", SysCvar.g_mapCycle.GetString()),
+                        Str.va("%s.scriptcfg", SysCvar.g_mapCycle.GetString()!!),
                         null,
                         null
                     ) < 0
@@ -2762,16 +2659,16 @@ class Game_local {
                     Printf("map cycle script '%s': not found\n", SysCvar.g_mapCycle.GetString())
                     return false
                 } else {
-                    SysCvar.g_mapCycle.SetString(Str.va("%s.scriptcfg", SysCvar.g_mapCycle.GetString()))
+                    SysCvar.g_mapCycle.SetString(Str.va("%s.scriptcfg", SysCvar.g_mapCycle.GetString()!!))
                 }
             }
             Printf("map cycle script: '%s'\n", SysCvar.g_mapCycle.GetString())
             func = program.FindFunction("mapcycle::cycle")
             if (TempDump.NOT(func)) {
-                program.CompileFile(SysCvar.g_mapCycle.GetString())
+                program.CompileFile(SysCvar.g_mapCycle.GetString()!!)
                 func = program.FindFunction("mapcycle::cycle")
             }
-            if (TempDump.NOT(func)) {
+            if (null == func) {
                 Printf("Couldn't find mapcycle::cycle\n")
                 return false
             }
@@ -2781,7 +2678,7 @@ class Game_local {
             newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
             i = 0
             while (i < newInfo.GetNumKeyVals()) {
-                keyval = newInfo.GetKeyVal(i)
+                keyval = newInfo.GetKeyVal(i)!!
                 keyval2 = serverInfo.FindKey(keyval.GetKey())
                 if (null == keyval2 || keyval.GetValue().Cmp(keyval2.GetValue()) != 0) {
                     break
@@ -2799,7 +2696,7 @@ class Game_local {
          ================
          */
         fun GetLevelMap(): idMapFile? {
-            if (mapFile != null && mapFile.HasPrimitiveData()) {
+            if (mapFile != null && mapFile!!.HasPrimitiveData()) {
                 return mapFile
             }
             if (0 == mapFileName.Length()) {
@@ -2810,7 +2707,7 @@ class Game_local {
 //		delete mapFile;
 //	}
             mapFile = idMapFile()
-            if (!mapFile.Parse(mapFileName)) {
+            if (!mapFile!!.Parse(mapFileName)) {
 //		delete mapFile;
                 mapFile = null
             }
@@ -2827,22 +2724,22 @@ class Game_local {
 
         fun GetAAS(num: Int): idAAS? {
             if (num >= 0 && num < aasList.Num()) {
-                if (aasList.get(num) != null && aasList.get(num).GetSettings() != null) {
-                    return aasList.get(num)
+                if (aasList[num] != null && aasList[num].GetSettings() != null) {
+                    return aasList[num]
                 }
             }
             return null
         }
 
-        fun GetAAS(name: String?): idAAS? {
+        fun GetAAS(name: String): idAAS? {
             var i: Int
             i = 0
             while (i < aasNames.size()) {
-                if (aasNames.get(i) == name) {
-                    return if (TempDump.NOT(aasList.get(i).GetSettings())) {
+                if (aasNames[i].toString() == name) {
+                    return if (TempDump.NOT(aasList[i].GetSettings())) {
                         null
                     } else {
-                        aasList.get(i)
+                        aasList[i]
                     }
                 }
                 i++
@@ -2854,7 +2751,7 @@ class Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.get(i).SetAreaState(bounds, areaContents, closed)
+                aasList[i].SetAreaState(bounds, areaContents, closed)
                 i++
             }
         }
@@ -2866,10 +2763,10 @@ class Game_local {
             if (0 == aasList.Num()) {
                 return -1
             }
-            obstacle = aasList.get(0).AddObstacle(bounds)
+            obstacle = aasList[0].AddObstacle(bounds)
             i = 1
             while (i < aasList.Num()) {
-                check = aasList.get(i).AddObstacle(bounds)
+                check = aasList[i].AddObstacle(bounds)
                 assert(check == obstacle)
                 i++
             }
@@ -2880,7 +2777,7 @@ class Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.get(i).RemoveObstacle(handle)
+                aasList[i].RemoveObstacle(handle)
                 i++
             }
         }
@@ -2889,7 +2786,7 @@ class Game_local {
             var i: Int
             i = 0
             while (i < aasList.Num()) {
-                aasList.get(i).RemoveAllObstacles()
+                aasList[i].RemoveAllObstacles()
                 i++
             }
         }
@@ -2936,7 +2833,7 @@ class Game_local {
         }
 
         fun SpawnEntityType(
-            classdef: idTypeInfo?,
+            classdef: idTypeInfo,
             args: idDict? /*= NULL*/,
             bIsClientReadSnapshot: Boolean /*= false*/
         ): idEntity? {
@@ -2963,12 +2860,12 @@ class Game_local {
         }
 
         @Deprecated("")
-        fun SpawnEntityType(classdef: idTypeInfo?, args: idDict? /*= NULL*/): idEntity? {
+        fun SpawnEntityType(classdef: idTypeInfo, args: idDict? /*= NULL*/): idEntity? {
             return SpawnEntityType(classdef, args, false)
         }
 
         @JvmOverloads
-        fun SpawnEntityType(classdef: Class<*>?, args: idDict? = null /*= NULL*/): idEntity? {
+        fun SpawnEntityType(classdef: Class<*>, args: idDict? = null /*= NULL*/): idEntity? {
             var obj: idEntity? = null
             if (!idEntity::class.java.isAssignableFrom(classdef)) {
                 Error("Attempted to spawn non-entity class '%s'", classdef)
@@ -2988,21 +2885,21 @@ class Game_local {
         }
 
         @Deprecated("")
-        fun SpawnEntityType(classdef: idTypeInfo?): idEntity? {
+        fun SpawnEntityType(classdef: idTypeInfo): idEntity? {
             return SpawnEntityType(classdef, null)
         }
 
         @JvmOverloads
         fun SpawnEntityDef(
-            args: idDict?,
-            ent: Array<idEntity?>? = null /*= NULL*/,
+            args: idDict,
+            ent: ArrayList<idEntity> = arrayListOf() /*= NULL*/,
             setDefaults: Boolean = true /*= true*/
         ): Boolean {
-            val classname = arrayOf<String?>(null)
+            val classname = arrayOf("")
             DBG_SpawnEntityDef++
-            val spawn = arrayOf<String?>(null)
+            val spawn = arrayOf("")
             var error = ""
-            val name = arrayOfNulls<String?>(1)
+            val name = arrayOf("")
 
 //            if (ent != null) {
 //                ent[0] = null;
@@ -3011,7 +2908,7 @@ class Game_local {
             if (spawnArgs.GetString("name", "", name)) {
                 error = String.format(" on '%s'", name[0])
             }
-            spawnArgs.GetString("classname", null, classname)
+            spawnArgs.GetString("classname", "", classname)
             val def = FindEntityDef(classname[0], false)
             if (null == def) {
                 Warning("Unknown classname '%s'%s.", classname[0], error)
@@ -3020,9 +2917,9 @@ class Game_local {
             spawnArgs.SetDefaults(def.dict)
 
             // check if we should spawn a class object
-            spawnArgs.GetString("spawnclass", null, spawn)
-            if (spawn[0] != null) {
-                val obj: idEntity = idClass.Companion.GetEntity(spawn[0])
+            spawnArgs.GetString("spawnclass", "", spawn)
+            if (spawn.isNotEmpty() && spawn[0].isNotEmpty()) {
+                val obj: idEntity? = idClass.GetEntity(spawn[0])
                 if (obj == null) {
                     Error("Could not spawn '%s'. Instance could not be created%s.", spawn[0], classname[0])
                     return false
@@ -3031,15 +2928,15 @@ class Game_local {
                 // many objects rely on spawn args and default state may break spawns for many classes.
                 obj.spawnArgs.set(args)
                 obj.Spawn()
-                if (ent != null && obj is idEntity) {
+                if (ent.isNotEmpty() && obj is idEntity) {
                     ent[0] = obj
                 }
                 return true
             }
 
             // check if we should call a script function to spawn
-            spawnArgs.GetString("spawnfunc", null, spawn)
-            if (spawn[0] != null) {
+            spawnArgs.GetString("spawnfunc", "", spawn)
+            if (spawn.isNotEmpty() && spawn[0].isNotEmpty()) {
                 val func = program.FindFunction(spawn[0])
                 if (null == func) {
                     Warning("Could not spawn '%s'.  Script function '%s' not found%s.", classname[0], spawn[0], error)
@@ -3053,12 +2950,12 @@ class Game_local {
             return false
         }
 
-        fun GetSpawnId(ent: idEntity?): Int {
+        fun GetSpawnId(ent: idEntity): Int {
             return gameLocal.spawnIds[ent.entityNumber] shl GENTITYNUM_BITS or ent.entityNumber
         }
 
         @JvmOverloads
-        fun FindEntityDef(name: String?, makeDefault: Boolean = true /*= true*/): idDeclEntityDef? {
+        fun FindEntityDef(name: String, makeDefault: Boolean = true /*= true*/): idDeclEntityDef? {
             var decl: idDecl? = null
             if (isMultiplayer) {
                 decl = DeclManager.declManager.FindType(declType_t.DECL_ENTITYDEF, Str.va("%s_mp", name), false)
@@ -3070,7 +2967,7 @@ class Game_local {
         }
 
         @JvmOverloads
-        fun FindEntityDefDict(name: String?, makeDefault: Boolean = true /*= true*/): idDict? {
+        fun FindEntityDefDict(name: String, makeDefault: Boolean = true /*= true*/): idDict? {
             val decl = FindEntityDef(name, makeDefault)
             return decl?.dict
         }
@@ -3079,22 +2976,22 @@ class Game_local {
             return FindEntityDefDict(name.toString())
         }
 
-        fun RegisterEntity(ent: idEntity?) {
+        fun RegisterEntity(ent: idEntity) {
             val spawn_entnum = CInt()
             if (spawnCount >= 1 shl 32 - GENTITYNUM_BITS) {
                 Error("idGameLocal::RegisterEntity: spawn count overflow")
             }
             if (!spawnArgs.GetInt("spawn_entnum", "0", spawn_entnum)) {
-                while (entities.get(firstFreeIndex) != null && firstFreeIndex < ENTITYNUM_MAX_NORMAL) {
+                while (entities[firstFreeIndex] != null && firstFreeIndex < ENTITYNUM_MAX_NORMAL) {
                     firstFreeIndex++
                 }
                 if (firstFreeIndex >= ENTITYNUM_MAX_NORMAL) {
                     Error("no free entities")
                 }
-                spawn_entnum.setVal(firstFreeIndex++)
+                spawn_entnum._val = (firstFreeIndex++)
             }
-            entities.get(spawn_entnum._val) = ent
-            spawnIds.get(spawn_entnum._val) = spawnCount++
+            entities[spawn_entnum._val] = ent
+            spawnIds[spawn_entnum._val] = spawnCount++
             ent.entityNumber = spawn_entnum._val
             ent.spawnNode.AddToEnd(spawnedEntities)
             ent.spawnArgs.TransferKeyValues(spawnArgs)
@@ -3103,15 +3000,15 @@ class Game_local {
             }
         }
 
-        fun UnregisterEntity(ent: idEntity?) {
+        fun UnregisterEntity(ent: idEntity) {
             assert(ent != null)
             if (editEntities != null) {
-                editEntities.RemoveSelectedEntity(ent)
+                editEntities!!.RemoveSelectedEntity(ent)
             }
-            if (ent.entityNumber != ENTITYNUM_NONE && entities.get(ent.entityNumber) === ent) {
+            if (ent.entityNumber != ENTITYNUM_NONE && entities[ent.entityNumber] === ent) {
                 ent.spawnNode.Remove()
-                entities.get(ent.entityNumber) = null
-                spawnIds.get(ent.entityNumber) = -1
+                entities.removeAt(ent.entityNumber)
+                spawnIds[ent.entityNumber] = -1
                 if (ent.entityNumber >= MAX_CLIENTS && ent.entityNumber < firstFreeIndex) {
                     firstFreeIndex = ent.entityNumber
                 }
@@ -3119,10 +3016,10 @@ class Game_local {
             }
         }
 
-        fun RequirementMet(activator: idEntity?, requires: idStr?, removeItem: Int): Boolean {
+        fun RequirementMet(activator: idEntity, requires: idStr, removeItem: Int): Boolean {
             if (requires.Length() != 0) {
                 if (activator is idPlayer) {
-                    val player = activator as idPlayer?
+                    val player = activator
                     val item = player.FindInventoryItem(requires)
                     return if (item != null) {
                         if (removeItem != 0) {
@@ -3141,7 +3038,7 @@ class Game_local {
             if (ent != null && ent is idActor) {
                 // alert them for the next frame
                 lastAIAlertTime = time + msec
-                lastAIAlertEntity.oSet(ent as idActor?)
+                lastAIAlertEntity.oSet(ent)
             }
         }
 
@@ -3158,7 +3055,7 @@ class Game_local {
          should only be called during entity thinking and event handling
          ================
          */
-        fun InPlayerPVS(ent: idEntity?): Boolean {
+        fun InPlayerPVS(ent: idEntity): Boolean {
             return if (playerPVS.i == -1) {
                 false
             } else pvs.InCurrentPVS(playerPVS, ent.GetPVSAreas(), ent.GetNumPVSAreas())
@@ -3171,7 +3068,7 @@ class Game_local {
          should only be called during entity thinking and event handling
          ================
          */
-        fun InPlayerConnectedArea(ent: idEntity?): Boolean {
+        fun InPlayerConnectedArea(ent: idEntity): Boolean {
             return if (playerConnectedAreas.i == -1) {
                 false
             } else pvs.InCurrentPVS(playerConnectedAreas, ent.GetPVSAreas(), ent.GetNumPVSAreas())
@@ -3183,15 +3080,15 @@ class Game_local {
             var ai: idAI?
 
             // this should fix going into a cinematic when dead.. rare but happens
-            var client = GetLocalPlayer()
-            if (client.health <= 0 || client.AI_DEAD.underscore()) {
+            var client = GetLocalPlayer()!!
+            if (client.health <= 0 || client.AI_DEAD.underscore()!!) {
                 return
             }
             camera = cam
             if (camera != null) {
                 inCinematic = true
-                if (skipCinematic && camera.spawnArgs.GetBool("disconnect")) {
-                    camera.spawnArgs.SetBool("disconnect", false)
+                if (skipCinematic && camera!!.spawnArgs.GetBool("disconnect")) {
+                    camera!!.spawnArgs.SetBool("disconnect", false)
                     CVarSystem.cvarSystem.SetCVarFloat("r_znear", 3.0f)
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "disconnect\n")
                     skipCinematic = false
@@ -3207,13 +3104,13 @@ class Game_local {
                 // hide all the player models
                 i = 0
                 while (i < numClients) {
-                    if (entities.get(i) != null) {
-                        client = entities.get(i) as idPlayer?
+                    if (entities.size > i) {
+                        client = entities[i] as idPlayer
                         client.EnterCinematic()
                     }
                     i++
                 }
-                if (!cam.spawnArgs.GetBool("ignore_enemies")) {
+                if (!cam!!.spawnArgs.GetBool("ignore_enemies")) {
                     // kill any active monsters that are enemies of the player
                     ent = spawnedEntities.Next()
                     while (ent != null) {
@@ -3255,8 +3152,8 @@ class Game_local {
                 // show all the player models
                 i = 0
                 while (i < numClients) {
-                    if (entities.get(i) != null) {
-                        val client2 = entities.get(i) as idPlayer?
+                    if (entities[i] != null) {
+                        val client2 = entities[i] as idPlayer
                         client2.ExitCinematic()
                     }
                     i++
@@ -3270,6 +3167,7 @@ class Game_local {
 
         fun SkipCinematic(): Boolean {
             if (camera != null) {
+                val camera = camera!!
                 if (camera.spawnArgs.GetBool("disconnect")) {
                     camera.spawnArgs.SetBool("disconnect", false)
                     CVarSystem.cvarSystem.SetCVarFloat("r_znear", 3.0f)
@@ -3312,7 +3210,7 @@ class Game_local {
             // first, calculate the vertical fov based on a 640x480 view
             x = (640.0f / Math.tan((base_fov / 360.0f * idMath.PI).toDouble())).toFloat()
             y = Math.atan2(480.0, x.toDouble()).toFloat()
-            fov_y.setVal(y * 360.0f / idMath.PI)
+            fov_y._val = (y * 360.0f / idMath.PI)
             assert(fov_y._val > 0)
             if (fov_y._val <= 0) {
                 Printf(sys_public.sys.FPU_GetState())
@@ -3321,7 +3219,7 @@ class Game_local {
             when (SysCvar.r_aspectRatio.GetInteger()) {
                 0 -> {
                     // 4:3
-                    fov_x.setVal(base_fov)
+                    fov_x._val = (base_fov)
                     return
                 }
                 1 -> {
@@ -3335,16 +3233,16 @@ class Game_local {
                     ratio_y = 10.0f
                 }
                 else -> {
-                    fov_x.setVal(base_fov)
+                    fov_x._val = (base_fov)
                     return
                 }
             }
             y = (ratio_y / Math.tan((fov_y._val / 360.0f * idMath.PI).toDouble())).toFloat()
-            fov_x.setVal((Math.atan2(ratio_x.toDouble(), y.toDouble()) * 360.0f / idMath.PI).toFloat())
+            fov_x._val = ((Math.atan2(ratio_x.toDouble(), y.toDouble()) * 360.0f / idMath.PI).toFloat())
             if (fov_x._val < base_fov) {
-                fov_x.setVal(base_fov)
+                fov_x._val = (base_fov)
                 x = (ratio_x / Math.tan((fov_x._val / 360.0f * idMath.PI).toDouble())).toFloat()
-                fov_y.setVal((Math.atan2(ratio_y.toDouble(), x.toDouble()) * 360.0f / idMath.PI).toFloat())
+                fov_y._val = ((Math.atan2(ratio_y.toDouble(), x.toDouble()) * 360.0f / idMath.PI).toFloat())
             }
             assert(fov_x._val > 0 && fov_y._val > 0)
             if (fov_y._val <= 0 || fov_x._val <= 0) {
@@ -3353,20 +3251,20 @@ class Game_local {
             }
         }
 
-        fun AddEntityToHash(name: String?, ent: idEntity?) {
+        fun AddEntityToHash(name: String, ent: idEntity) {
             if (FindEntity(name) != null) {
                 Error("Multiple entities named '%s'", name)
             }
             entityHash.Add(entityHash.GenerateKey(name, true), ent.entityNumber)
         }
 
-        fun RemoveEntityFromHash(name: String?, ent: idEntity?): Boolean {
+        fun RemoveEntityFromHash(name: String, ent: idEntity?): Boolean {
             val hash: Int
             var i: Int
             hash = entityHash.GenerateKey(name, true)
             i = entityHash.First(hash)
             while (i != -1) {
-                if (entities.get(i) != null && entities.get(i) == ent && entities.get(i).name.Icmp(name) == 0) {
+                if (entities[i] != null && entities[i] == ent && entities[i].name.Icmp(name) == 0) {
                     entityHash.Remove(hash, i)
                     return true
                 }
@@ -3375,18 +3273,24 @@ class Game_local {
             return false
         }
 
-        fun GetTargets(args: idDict?, list: idList<idEntityPtr<idEntity?>?>?, ref: String?): Int {
+        fun ArrayList<idEntityPtr<idEntity>>.Alloc(): idEntityPtr<idEntity> {
+            val idEntityPtr = idEntityPtr<idEntity>()
+            add(idEntityPtr)
+            return idEntityPtr
+        }
+
+        fun GetTargets(args: idDict, list: kotlin.collections.ArrayList<idEntityPtr<idEntity>>, ref: String): Int {
             var i: Int
             val num: Int
             val refLength: Int
             var arg: idKeyValue?
             var ent: idEntity?
-            list.Clear()
+            list.clear()
             refLength = ref.length
             num = args.GetNumKeyVals()
             i = 0
             while (i < num) {
-                arg = args.GetKeyVal(i)
+                arg = args.GetKeyVal(i)!!
                 if (arg.GetKey().Icmpn(ref, refLength) == 0) {
                     ent = FindEntity(arg.GetValue())
                     if (ent != null) {
@@ -3396,7 +3300,7 @@ class Game_local {
                 }
                 i++
             }
-            return list.Num()
+            return list.size
         }
 
         /*
@@ -3406,13 +3310,13 @@ class Game_local {
          returns the master entity of a trace.  for example, if the trace entity is the player's head, it will return the player.
          =============
          */
-        fun GetTraceEntity(trace: trace_s?): idEntity? {
+        fun GetTraceEntity(trace: trace_s): idEntity? {
             val master: idEntity?
-            if (null == entities.get(trace.c.entityNum)) {
+            if (null == entities[trace.c.entityNum]) {
                 return null
             }
-            master = entities.get(trace.c.entityNum).GetBindMaster()
-            return master ?: entities.get(trace.c.entityNum)
+            master = entities[trace.c.entityNum].GetBindMaster()
+            return master ?: entities[trace.c.entityNum]
         }
 
         /*
@@ -3423,7 +3327,7 @@ class Game_local {
          the line start,end
          =============
          */
-        fun FindTraceEntity(start: idVec3, end: idVec3,    /*idTypeInfo*/c: Class<*>?, skip: idEntity?): idEntity? {
+        fun FindTraceEntity(start: idVec3, end: idVec3,    /*idTypeInfo*/c: Class<*>, skip: idEntity?): idEntity? {
             var ent: idEntity?
             var bestEnt: idEntity?
             val scale = CFloat()
@@ -3454,14 +3358,14 @@ class Game_local {
          Returns the entity whose name matches the specified string.
          =============
          */
-        fun FindEntity(name: String?): idEntity? {
+        fun FindEntity(name: String): idEntity? {
             val hash: Int
             var i: Int
             hash = entityHash.GenerateKey(name, true)
             i = entityHash.First(hash)
             while (i != -1) {
-                if (entities.get(i) != null && entities.get(i).name.Icmp(name) == 0) {
-                    return entities.get(i)
+                if (entities[i] != null && entities[i].name.Icmp(name) == 0) {
+                    return entities[i]
                 }
                 i = entityHash.Next(i)
             }
@@ -3482,7 +3386,7 @@ class Game_local {
          NULL will be returned if the end of the list is reached.
          =============
          */
-        fun FindEntityUsingDef(from: idEntity?, match: String?): idEntity? {
+        fun FindEntityUsingDef(from: idEntity?, match: String): idEntity? {
             var ent: idEntity?
             ent = if (null == from) {
                 spawnedEntities.Next()
@@ -3491,7 +3395,7 @@ class Game_local {
             }
             while (ent != null) {
                 assert(ent != null)
-                if (idStr.Companion.Icmp(ent.GetEntityDefName(), match) == 0) {
+                if (idStr.Icmp(ent.GetEntityDefName(), match) == 0) {
                     return ent
                 }
                 ent = ent.spawnNode.Next()
@@ -3499,7 +3403,7 @@ class Game_local {
             return null
         }
 
-        fun EntitiesWithinRadius(org: idVec3, radius: Float, entityList: Array<idEntity?>?, maxCount: Int): Int {
+        fun EntitiesWithinRadius(org: idVec3, radius: Float, entityList: Array<idEntity>, maxCount: Int): Int {
             var ent: idEntity?
             val bo = idBounds(org)
             var entCount = 0
@@ -3507,7 +3411,7 @@ class Game_local {
             ent = spawnedEntities.Next()
             while (ent != null) {
                 if (ent.GetPhysics().GetAbsBounds().IntersectsBounds(bo)) {
-                    entityList.get(entCount++) = ent
+                    entityList[entCount++] = ent
                 }
                 ent = ent.spawnNode.Next()
             }
@@ -3524,12 +3428,12 @@ class Game_local {
          =================
          */
         @JvmOverloads
-        fun KillBox(ent: idEntity?, catch_teleport: Boolean = false /*= false*/) {
+        fun KillBox(ent: idEntity, catch_teleport: Boolean = false /*= false*/) {
             var i: Int
             val num: Int
             var hit: idEntity
             var cm: idClipModel
-            val clipModels = arrayOfNulls<idClipModel?>(MAX_GENTITIES)
+            val clipModels = kotlin.collections.ArrayList<idClipModel>(MAX_GENTITIES)
             val phys: idPhysics?
             phys = ent.GetPhysics()
             if (0 == phys.GetNumClipModels()) {
@@ -3550,7 +3454,7 @@ class Game_local {
                     i++
                     continue
                 }
-                hit = cm.GetEntity()
+                hit = cm.GetEntity()!!
                 if (hit === ent || !hit.fl.takedamage) {
                     i++
                     continue
@@ -3564,7 +3468,7 @@ class Game_local {
                 if (hit is idPlayer && hit.IsInTeleport()) {
                     hit.TeleportDeath(ent.entityNumber)
                 } else if (!catch_teleport) {
-                    hit.Damage(ent, ent, Vector.getVec3_origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
+                    hit.Damage(ent, ent, getVec3_origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
                 }
                 if (!gameLocal.isMultiplayer) {
                     // let the mapper know about it
@@ -3581,7 +3485,7 @@ class Game_local {
             attacker: idEntity?,
             ignoreDamage: idEntity?,
             ignorePush: idEntity?,
-            damageDefName: String?,
+            damageDefName: String,
             dmgPower: Float = 0.0f /*= 1.0f*/
         ) {
             var inflictor = inflictor
@@ -3592,7 +3496,7 @@ class Game_local {
             val attackerDamageScale = CFloat()
             val attackerPushScale = CFloat()
             var ent: idEntity
-            val entityList = arrayOfNulls<idEntity?>(MAX_GENTITIES)
+            val entityList = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES)
             val numListedEntities: Int
             val bounds: idBounds
             val v = idVec3()
@@ -3614,20 +3518,20 @@ class Game_local {
             damageDef.GetFloat("attackerDamageScale", "0.5", attackerDamageScale)
             damageDef.GetFloat("attackerPushScale", "0", attackerPushScale)
             if (radius._val < 1) {
-                radius.setVal(1)
+                radius._val = (1)
             }
             bounds = idBounds(origin).Expand(radius._val.toFloat())
 
             // get all entities touching the bounds
-            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES)
+            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList.toTypedArray(), MAX_GENTITIES)
             if (inflictor != null && inflictor is idAFAttachment) {
-                inflictor = (inflictor as idAFAttachment?).GetBody()
+                inflictor = (inflictor as idAFAttachment).GetBody()
             }
             if (attacker != null && attacker is idAFAttachment) {
-                attacker = (attacker as idAFAttachment?).GetBody()
+                attacker = (attacker as idAFAttachment).GetBody()
             }
             if (ignoreDamage != null && ignoreDamage is idAFAttachment) {
-                ignoreDamage = (ignoreDamage as idAFAttachment?).GetBody()
+                ignoreDamage = (ignoreDamage as idAFAttachment).GetBody()
             }
 
             // apply damage to the entities
@@ -3657,12 +3561,12 @@ class Game_local {
                 // find the distance from the edge of the bounding box
                 i = 0
                 while (i < 3) {
-                    if (origin.get(i) < ent.GetPhysics().GetAbsBounds().get(0, i)) {
-                        v.set(i, ent.GetPhysics().GetAbsBounds().get(0, i) - origin.get(i))
-                    } else if (origin.get(i) > ent.GetPhysics().GetAbsBounds().get(1, i)) {
-                        v.set(i, origin.get(i) - ent.GetPhysics().GetAbsBounds().get(1, i))
+                    if (origin[i] < ent.GetPhysics().GetAbsBounds()[0, i]) {
+                        v[i] = ent.GetPhysics().GetAbsBounds()[0, i] - origin[i]
+                    } else if (origin[i] > ent.GetPhysics().GetAbsBounds()[1, i]) {
+                        v[i] = origin[i] - ent.GetPhysics().GetAbsBounds()[1, i]
                     } else {
-                        v.set(i, 0f)
+                        v[i] = 0f
                     }
                     i++
                 }
@@ -3725,10 +3629,10 @@ class Game_local {
             // get all clip models touching the bounds
             numListedClipModels = clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, MAX_GENTITIES)
             if (inflictor != null && inflictor is idAFAttachment) {
-                inflictor.oSet((inflictor as idAFAttachment?).GetBody())
+                inflictor.oSet(inflictor.GetBody())
             }
             if (ignore != null && ignore is idAFAttachment) {
-                ignore.oSet((ignore as idAFAttachment?).GetBody())
+                ignore.oSet((ignore as idAFAttachment).GetBody())
             }
 
             // apply impact to all the clip models through their associated physics objects
@@ -3756,7 +3660,7 @@ class Game_local {
                 }
 
                 // don't push the ignore entity
-                if (ent === ignore || ent is idAFAttachment && (ent as idAFAttachment?).GetBody() === ignore) {
+                if (ent === ignore || ent is idAFAttachment && (ent as idAFAttachment).GetBody() === ignore) {
                     i++
                     continue
                 }
@@ -3767,13 +3671,13 @@ class Game_local {
 
                 // scale the push for the inflictor
                 scale =
-                    if (ent === inflictor || ent is idAFAttachment && (ent as idAFAttachment?).GetBody() === inflictor) {
+                    if (ent === inflictor || ent is idAFAttachment && (ent as idAFAttachment).GetBody() === inflictor) {
                         inflictorScale
                     } else {
                         1.0f
                     }
                 if (quake) {
-                    clipModel.GetEntity()
+                    clipModel.GetEntity()!!
                         .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), dir.times(scale * push))
                 } else {
                     RadiusPushClipModel(origin, scale * push, clipModel)
@@ -3782,7 +3686,7 @@ class Game_local {
             }
         }
 
-        fun RadiusPushClipModel(origin: idVec3, push: Float, clipModel: idClipModel?) {
+        fun RadiusPushClipModel(origin: idVec3, push: Float, clipModel: idClipModel) {
             var i: Int
             var j: Int
             var dot: Float
@@ -3800,11 +3704,11 @@ class Game_local {
                 impulse.set(clipModel.GetAbsBounds().GetCenter().minus(origin))
                 impulse.Normalize()
                 impulse.z += 1.0f
-                clipModel.GetEntity()
+                clipModel.GetEntity()!!
                     .ApplyImpulse(world, clipModel.GetId(), clipModel.GetOrigin(), impulse.times(push))
                 return
             }
-            localOrigin.set(origin.minus(clipModel.GetOrigin()).oMultiply(clipModel.GetAxis().Transpose()))
+            localOrigin.set(origin.minus(clipModel.GetOrigin()).times(clipModel.GetAxis().Transpose()))
             i = 0
             while (i < trm.numPolys) {
                 poly = trm.polys[i]
@@ -3836,8 +3740,8 @@ class Game_local {
                 // scale away distance for nicer effect
                 impulse.timesAssign(dist * 2.0f)
                 // impulse is applied to the center of the polygon
-                center.set(clipModel.GetOrigin().oPlus(center.times(clipModel.GetAxis())))
-                clipModel.GetEntity().ApplyImpulse(world, clipModel.GetId(), center, impulse)
+                center.set(clipModel.GetOrigin().plus(center.times(clipModel.GetAxis())))
+                clipModel.GetEntity()!!.ApplyImpulse(world, clipModel.GetId(), center, impulse)
                 i++
             }
         }
@@ -3849,7 +3753,7 @@ class Game_local {
             depth: Float,
             parallel: Boolean,
             size: Float,
-            material: String?,
+            material: String,
             angle: Float = 0f /*= 0*/
         ) {
             var size = size
@@ -3868,14 +3772,14 @@ class Game_local {
             idMath.SinCos16(if (angle != 0f) angle else random.RandomFloat() * idMath.TWO_PI, s, c)
 
             // winding orientation
-            axis.set(2, dir)
-            axis.get(2).Normalize()
-            axis.get(2).NormalVectors(axistemp.get(0), axistemp.get(1))
-            axis.set(0, axistemp.get(0).times(c._val).oPlus(axistemp.get(1).times(-s._val)))
-            axis.set(1, axistemp.get(0).times(-s._val).oPlus(axistemp.get(1).times(-c._val)))
-            windingOrigin.set(origin.oPlus(axis.get(2).times(depth)))
+            axis[2] = dir
+            axis[2].Normalize()
+            axis[2].NormalVectors(axistemp[0], axistemp[1])
+            axis[0] = axistemp[0].times(c._val).plus(axistemp[1].times(-s._val))
+            axis[1] = axistemp[0].times(-s._val).plus(axistemp[1].times(-c._val))
+            windingOrigin.set(origin.plus(axis[2].times(depth)))
             if (parallel) {
-                projectionOrigin.set(origin.minus(axis.get(2).times(depth)))
+                projectionOrigin.set(origin.minus(axis[2].times(depth)))
             } else {
                 projectionOrigin.set(origin)
             }
@@ -3883,26 +3787,26 @@ class Game_local {
             winding.Clear()
             winding.plusAssign(
                 idVec5(
-                    windingOrigin.oPlus(axis.times(decalWinding.get(0)).times(size)),
-                    idVec2(1, 1)
+                    windingOrigin.plus(axis.times(decalWinding[0]).times(size)),
+                    idVec2(1f, 1f)
                 )
             )
             winding.plusAssign(
                 idVec5(
-                    windingOrigin.oPlus(axis.times(decalWinding.get(1)).times(size)),
-                    idVec2(0, 1)
+                    windingOrigin.plus(axis.times(decalWinding[1]).times(size)),
+                    idVec2(0f, 1f)
                 )
             )
             winding.plusAssign(
                 idVec5(
-                    windingOrigin.oPlus(axis.times(decalWinding.get(2)).times(size)),
-                    idVec2(0, 0)
+                    windingOrigin.plus(axis.times(decalWinding[2]).times(size)),
+                    idVec2(0f, 0f)
                 )
             )
             winding.plusAssign(
                 idVec5(
-                    windingOrigin.oPlus(axis.times(decalWinding.get(3)).times(size)),
-                    idVec2(1, 0)
+                    windingOrigin.plus(axis.times(decalWinding[3]).times(size)),
+                    idVec2(1f, 0f)
                 )
             )
             gameRenderWorld.ProjectDecalOntoWorld(
@@ -3910,12 +3814,12 @@ class Game_local {
                 projectionOrigin,
                 parallel,
                 depth * 0.5f,
-                DeclManager.declManager.FindMaterial(material),
+                DeclManager.declManager.FindMaterial(material!!),
                 time
             )
         }
 
-        fun BloodSplat(origin: idVec3, dir: idVec3, size: Float, material: String?) {
+        fun BloodSplat(origin: idVec3, dir: idVec3, size: Float, material: String) {
             var size = size
             val halfSize = size * 0.5f
             val verts = arrayOf<idVec3>(
@@ -3938,21 +3842,21 @@ class Game_local {
             clip.Translation(
                 results,
                 origin,
-                origin.oPlus(dir.times(64.0f)),
+                origin.plus(dir.times(64.0f)),
                 mdl,
-                idMat3.Companion.getMat3_identity(),
+                idMat3.getMat3_identity(),
                 Material.CONTENTS_SOLID,
                 null
             )
             ProjectDecal(results.endpos, dir, 2.0f * size, true, size, material)
         }
 
-        fun CallFrameCommand(ent: idEntity?, frameCommand: function_t?) {
-            frameCommandThread.CallFunction(ent, frameCommand, true)
-            frameCommandThread.Execute()
+        fun CallFrameCommand(ent: idEntity, frameCommand: function_t) {
+            frameCommandThread!!.CallFunction(ent, frameCommand, true)
+            frameCommandThread!!.Execute()
         }
 
-        fun CallObjectFrameCommand(ent: idEntity?, frameCommand: String?) {
+        fun CallObjectFrameCommand(ent: idEntity, frameCommand: String) {
             val func: function_t?
             func = ent.scriptObject.GetFunction(frameCommand)
             if (null == func) {
@@ -3960,8 +3864,8 @@ class Game_local {
                     Error("Unknown function '%s' called for frame command on entity '%s'", frameCommand, ent.name)
                 }
             } else {
-                frameCommandThread.CallFunction(ent, func, true)
-                frameCommandThread.Execute()
+                frameCommandThread!!.CallFunction(ent, func, true)
+                frameCommandThread!!.Execute()
             }
         }
 
@@ -3989,7 +3893,7 @@ class Game_local {
             i = 0
             while (i < numClients) {
                 current = (_current + i + 1) % numClients
-                if (entities.get(current) != null && entities.get(current) is idPlayer) {
+                if (entities[current] != null && entities[current] is idPlayer) {
                     return current
                 }
                 i++
@@ -4002,19 +3906,19 @@ class Game_local {
             if (current < 0 || current >= numClients) {
                 current = 0
             }
-            return if (entities.get(current) != null) {
-                entities.get(current) as idPlayer?
+            return if (entities[current] != null) {
+                entities[current] as idPlayer?
             } else null
         }
 
-        fun GetClientByName(name: String?): idPlayer? {
+        fun GetClientByName(name: String): idPlayer? {
             var i: Int
             var ent: idEntity?
             i = 0
             while (i < numClients) {
-                ent = entities.get(i)
+                ent = entities[i]
                 if (ent != null && ent is idPlayer) {
-                    if (idStr.Companion.IcmpNoColor(name, userInfo.get(i).GetString("ui_name")) == 0) {
+                    if (idStr.IcmpNoColor(name, userInfo[i].GetString("ui_name")) == 0) {
                         return ent
                     }
                 }
@@ -4023,7 +3927,7 @@ class Game_local {
             return null
         }
 
-        fun GetClientByCmdArgs(args: CmdArgs.idCmdArgs?): idPlayer? {
+        fun GetClientByCmdArgs(args: CmdArgs.idCmdArgs): idPlayer? {
             val player: idPlayer?
             val client = idStr(args.Argv(1))
             if (0 == client.Length()) {
@@ -4055,10 +3959,10 @@ class Game_local {
             if (localClientNum < 0) {
                 return null
             }
-            return if (null == entities.get(localClientNum) || entities.get(localClientNum) !is idPlayer) {
+            return if (null == entities[localClientNum] || entities[localClientNum] !is idPlayer) {
                 // not fully in game yet
                 null
-            } else entities.get(localClientNum) as idPlayer?
+            } else entities[localClientNum] as idPlayer
         }
 
         fun SpreadLocations() {
@@ -4067,7 +3971,7 @@ class Game_local {
 
             // allocate the area table
             val numAreas = gameRenderWorld.NumAreas()
-            locationEntities = arrayOfNulls<idLocationEntity?>(numAreas)
+            locationEntities = kotlin.collections.ArrayList<idLocationEntity>(numAreas)
             //	memset( locationEntities, 0, numAreas * sizeof( *locationEntities ) );
 
             // for each location entity, make pointers from every area it touches
@@ -4087,15 +3991,15 @@ class Game_local {
                 if (areaNum >= numAreas) {
                     Error("idGameLocal::SpreadLocations: areaNum >= gameRenderWorld.NumAreas()")
                 }
-                if (locationEntities.get(areaNum) != null) {
+                if (locationEntities!![areaNum] != null) {
                     Warning(
                         "location entity '%s' overlaps '%s'", ent.spawnArgs.GetString("name"),
-                        locationEntities.get(areaNum).spawnArgs.GetString("name")
+                        locationEntities!![areaNum].spawnArgs.GetString("name")
                     )
                     ent = ent.spawnNode.Next()
                     continue
                 }
-                locationEntities.get(areaNum) = ent
+                locationEntities!![areaNum] = ent
 
                 // spread to all other connected areas
                 for (i in 0 until numAreas) {
@@ -4108,7 +4012,7 @@ class Game_local {
                             portalConnection_t.PS_BLOCK_LOCATION
                         )
                     ) {
-                        locationEntities.get(i) = ent
+                        locationEntities!![i] = ent
                     }
                 }
                 ent = ent.spawnNode.Next()
@@ -4135,7 +4039,7 @@ class Game_local {
             if (areaNum >= gameRenderWorld.NumAreas()) {
                 Error("idGameLocal::LocationForPoint: areaNum >= gameRenderWorld.NumAreas()")
             }
-            return locationEntities.get(areaNum)
+            return locationEntities!![areaNum]
         }
 
         /*
@@ -4147,32 +4051,33 @@ class Game_local {
          if there are more players than initial spots, overflow to regular spawning
          ============
          */
-        fun SelectInitialSpawnPoint(player: idPlayer?): idEntity? {
+        fun SelectInitialSpawnPoint(player: idPlayer): idEntity? {
             var i: Int
             var j: Int
-            val which: Int
-            var spot: spawnSpot_t? = spawnSpot_t()
+            var which: Int
+            var spot: spawnSpot_t = spawnSpot_t()
             val pos = idVec3()
             var dist: Float
             var alone: Boolean
-            if (!isMultiplayer || TempDump.NOT(spawnSpots.Num().toDouble())) {
+            if (!isMultiplayer || TempDump.NOT(spawnSpots.size.toDouble())) {
                 spot.ent = FindEntityUsingDef(null, "info_player_start")
                 if (null == spot.ent) {
                     Error("No info_player_start on map.\n")
+                    return null
                 }
                 return spot.ent
             }
             if (player.spectating) {
                 // plain random spot, don't bother
-                return spawnSpots.get(random.RandomInt(spawnSpots.Num().toDouble())).ent
-            } else if (player.useInitialSpawns && currentInitialSpot < initialSpots.Num()) {
-                return initialSpots.get(currentInitialSpot++)
+                return spawnSpots[random.RandomInt(spawnSpots.size.toDouble())].ent
+            } else if (player.useInitialSpawns && currentInitialSpot < initialSpots.size) {
+                return initialSpots[currentInitialSpot++]
             } else {
                 // check if we are alone in map
                 alone = true
                 j = 0
                 while (j < MAX_CLIENTS) {
-                    if (entities.get(j) != null && entities.get(j) != player) {
+                    if (entities[j] != null && entities[j] != player) {
                         alone = false
                         break
                     }
@@ -4180,25 +4085,25 @@ class Game_local {
                 }
                 if (alone) {
                     // don't do distance-based
-                    return spawnSpots.get(random.RandomInt(spawnSpots.Num().toDouble())).ent
+                    return spawnSpots[random.RandomInt(spawnSpots.size.toDouble())].ent
                 }
 
                 // find the distance to the closest active player for each spawn spot
                 i = 0
-                while (i < spawnSpots.Num()) {
-                    pos.set(spawnSpots.get(i).ent.GetPhysics().GetOrigin())
-                    spawnSpots.get(i).dist = 0x7fffffff
+                while (i < spawnSpots.size) {
+                    pos.set(spawnSpots[i].ent!!.GetPhysics().GetOrigin())
+                    spawnSpots[i].dist = 0x7fffffff
                     j = 0
                     while (j < MAX_CLIENTS) {
-                        if (null == entities.get(j) || entities.get(j) !is idPlayer
-                            || entities.get(j) == player || (entities.get(j) as idPlayer?).spectating
+                        if (null == entities[j] || entities[j] !is idPlayer
+                            || entities[j] == player || (entities[j] as idPlayer).spectating
                         ) {
                             j++
                             continue
                         }
-                        dist = pos.minus(entities.get(j).GetPhysics().GetOrigin()).LengthSqr()
-                        if (dist < spawnSpots.get(i).dist) {
-                            spawnSpots.get(i).dist = dist.toInt()
+                        dist = pos.minus(entities[j].GetPhysics().GetOrigin()).LengthSqr()
+                        if (dist < spawnSpots[i].dist) {
+                            spawnSpots[i].dist = dist.toInt()
                         }
                         j++
                     }
@@ -4207,11 +4112,12 @@ class Game_local {
 
                 // sort the list
 //                qsort( /*( void * )*/spawnSpots.Ptr(), spawnSpots.Num(), sizeof(spawnSpot_t), /*( int (*)(const void *, const void *) )*/ sortSpawnPoints);
-                Arrays.sort(spawnSpots.Ptr(), 0, spawnSpots.Num(), sortSpawnPoints())
+
+                spawnSpots.sortWith(sortSpawnPoints())
 
                 // choose a random one in the top half
-                which = random.RandomInt((spawnSpots.Num() / 2).toDouble())
-                spot = spawnSpots.get(which)
+                which = random.RandomInt((spawnSpots.size / 2).toDouble())
+                spot = spawnSpots[which]
             }
             return spot.ent
         }
@@ -4221,7 +4127,7 @@ class Game_local {
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             if (!gameLocal.isClient) {
                 outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
-                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTAL)
+                outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTAL.toByte())
                 outMsg.WriteLong(portal)
                 outMsg.WriteBits(blockingBits, NUM_RENDER_PORTAL_BITS)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
@@ -4229,7 +4135,7 @@ class Game_local {
             gameRenderWorld.SetPortalState(portal, blockingBits)
         }
 
-        fun SaveEntityNetworkEvent(ent: idEntity?, eventId: Int, msg: idBitMsg?) {
+        fun SaveEntityNetworkEvent(ent: idEntity, eventId: Int, msg: idBitMsg?) {
             val event: entityNetEvent_s?
             event = savedEventQueue.Alloc()
             event.spawnId = GetSpawnId(ent)
@@ -4250,7 +4156,7 @@ class Game_local {
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_CHAT)
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_CHAT.toByte())
             outMsg.WriteString(name)
             outMsg.WriteString(text, -1, false)
             NetworkSystem.networkSystem.ServerSendReliableMessage(to, outMsg)
@@ -4288,7 +4194,7 @@ class Game_local {
             }
 
             // make sure the index is valid
-            if (clientDeclRemap.get(localClientNum).get(type.ordinal).Num() == 0) {
+            if (clientDeclRemap[localClientNum][type.ordinal].size == 0) {
                 Error(
                     "client received decl index %d before %s decl remap was initialized",
                     index,
@@ -4296,7 +4202,7 @@ class Game_local {
                 )
                 return -1
             }
-            if (index >= clientDeclRemap.get(localClientNum).get(type.ordinal).Num()) {
+            if (index >= clientDeclRemap[localClientNum][type.ordinal].size) {
                 Error(
                     "client received unmapped %s decl index %d from server",
                     DeclManager.declManager.GetDeclNameFromType(type),
@@ -4304,7 +4210,7 @@ class Game_local {
                 )
                 return -1
             }
-            if (clientDeclRemap.get(localClientNum).get(type.ordinal).get(index) == -1) {
+            if (clientDeclRemap[localClientNum][type.ordinal][index] == -1) {
                 Error(
                     "client received unmapped %s decl index %d from server",
                     DeclManager.declManager.GetDeclNameFromType(type),
@@ -4312,14 +4218,14 @@ class Game_local {
                 )
                 return -1
             }
-            return clientDeclRemap.get(localClientNum).get(type.ordinal).get(index)
+            return clientDeclRemap[localClientNum][type.ordinal][index]
         }
 
-        fun SetGlobalMaterial(mat: idMaterial?) {
+        fun SetGlobalMaterial(mat: Material.idMaterial?) {
             globalMaterial = mat
         }
 
-        fun GetGlobalMaterial(): idMaterial? {
+        fun GetGlobalMaterial(): Material.idMaterial? {
             return globalMaterial
         }
 
@@ -4337,7 +4243,7 @@ class Game_local {
             var keyval2: idKeyValue?
             newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
             for (i in 0 until newInfo.GetNumKeyVals()) {
-                keyval = newInfo.GetKeyVal(i)
+                keyval = newInfo.GetKeyVal(i)!!
                 keyval2 = serverInfo.FindKey(keyval.GetKey())
                 if (null == keyval2) {
                     return true
@@ -4358,8 +4264,8 @@ class Game_local {
             numClients = 0
             i = 0
             while (i < MAX_CLIENTS) {
-                userInfo.get(i).Clear()
-                persistentPlayerInfo.get(i).Clear()
+                userInfo[i].Clear()
+                persistentPlayerInfo[i].Clear()
                 i++
             }
             //	memset( usercmds, 0, sizeof( usercmds ) );
@@ -4368,7 +4274,7 @@ class Game_local {
             }
             //	memset( entities, 0, sizeof( entities ) );
             for (e in entities.indices) {
-                entities.get(e) = idEntity()
+                entities[e] = idEntity()
             }
             spawnIds = IntArray(spawnIds.size)
             Arrays.fill(spawnIds, -1) //	memset( spawnIds, -1, sizeof( spawnIds ) );
@@ -4390,7 +4296,7 @@ class Game_local {
             clip.Shutdown()
             pvs.Shutdown()
             sessionCommand.Clear()
-            locationEntities = null
+            locationEntities.clear()
             smokeParticles = null
             editEntities = null
             entityHash.Clear(1024, MAX_GENTITIES)
@@ -4434,29 +4340,29 @@ class Game_local {
 
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             for (a in clientEntityStates.indices) {
-                for (b in 0 until clientEntityStates.get(0).length) {
-                    clientEntityStates.get(a).get(b) = entityState_s()
+                for (b in 0 until clientEntityStates[0].size) {
+                    clientEntityStates[a][b] = entityState_s()
                 }
             }
             clientPVS =
-                Array(clientPVS.size) { IntArray(clientPVS.get(0).length) } //memset( clientPVS, 0, sizeof( clientPVS ) );
+                Array(clientPVS.size) { IntArray(clientPVS[0].size) } //memset( clientPVS, 0, sizeof( clientPVS ) );
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
             for (c in clientSnapshots.indices) {
-                clientSnapshots.get(c) = snapshot_s()
+                clientSnapshots[c] = snapshot_s()
             }
             eventQueue.Init()
             savedEventQueue.Init()
             lagometer = Array(lagometer.size) {
-                Array(lagometer.get(0).length) {
+                Array(lagometer[0].size) {
                     ByteArray(
-                        lagometer.get(0).get(0).length
+                        lagometer[0][0].size
                     )
                 }
             } //memset(lagometer, 0, sizeof(lagometer));
         }
 
         // returns true if the entity shouldn't be spawned at all in this game type or difficulty level
-        private fun InhibitEntitySpawn(spawnArgs: idDict?): Boolean {
+        private fun InhibitEntitySpawn(spawnArgs: idDict): Boolean {
             val result = CBool(false)
             if (isMultiplayer) {
                 spawnArgs.GetBool("not_multiplayer", "0", result)
@@ -4471,26 +4377,26 @@ class Game_local {
             if (!BuildDefines.ID_DEMO_BUILD) { //#ifndef
                 if (SysCvar.g_skill.GetInteger() == 3) {
                     name = spawnArgs.GetString("classname")
-                    if (idStr.Companion.Icmp(name, "item_medkit") == 0 || idStr.Companion.Icmp(
+                    if (idStr.Icmp(name, "item_medkit") == 0 || idStr.Icmp(
                             name,
                             "item_medkit_small"
                         ) == 0
                     ) {
-                        result.isVal = true
+                        result._val = true
                     }
                 }
             }
             if (gameLocal.isMultiplayer) {
                 name = spawnArgs.GetString("classname")
-                if (idStr.Companion.Icmp(name, "weapon_bfg") == 0 || idStr.Companion.Icmp(
+                if (idStr.Icmp(name, "weapon_bfg") == 0 || idStr.Icmp(
                         name,
                         "weapon_soulcube"
                     ) == 0
                 ) {
-                    result.isVal = true
+                    result._val = true
                 }
             }
-            return result.isVal
+            return result._val
         }
 
         /*
@@ -4514,24 +4420,24 @@ class Game_local {
                 return
             }
             SetSkill(SysCvar.g_skill.GetInteger())
-            numEntities = mapFile.GetNumEntities()
+            numEntities = mapFile!!.GetNumEntities()
             if (numEntities == 0) {
                 Error("...no entities")
             }
 
             // the worldspawn is a special that performs any global setup
             // needed by a level
-            mapEnt = mapFile.GetEntity(0)
+            mapEnt = mapFile!!.GetEntity(0)
             args = mapEnt.epairs
             args.SetInt("spawn_entnum", ENTITYNUM_WORLD)
-            if (!SpawnEntityDef(args) || null == entities.get(ENTITYNUM_WORLD) || entities.get(ENTITYNUM_WORLD) !is idWorldspawn) {
+            if (!SpawnEntityDef(args) || null == entities[ENTITYNUM_WORLD] || entities[ENTITYNUM_WORLD] !is idWorldspawn) {
                 Error("Problem spawning world entity")
             }
             num = 1
             inhibit = 0
             i = 1
             while (i < numEntities) {
-                mapEnt = mapFile.GetEntity(i)
+                mapEnt = mapFile!!.GetEntity(i)
                 args = mapEnt.epairs
                 if (!InhibitEntitySpawn(args)) {
                     // precache any media specified in the map entity
@@ -4568,16 +4474,16 @@ class Game_local {
             // this makes sure the map script main() function is called
             // before the physics are run so entities can bind correctly
             Printf("==== Processing events ====\n")
-            idEvent.Companion.ServiceEvents()
+            idEvent.ServiceEvents()
         }
 
         private fun MapClear(clearClients: Boolean) {
             var i: Int
             i = if (clearClients) 0 else MAX_CLIENTS
             while (i < MAX_GENTITIES) {
-                entities.get(i) = null
-                assert(null == entities.get(i))
-                spawnIds.get(i) = -1
+                entities.removeAt(i)
+                assert(null == entities[i])
+                spawnIds[i] = -1
                 i++
             }
             entityHash.Clear(1024, MAX_GENTITIES)
@@ -4585,11 +4491,11 @@ class Game_local {
                 // add back the hashes of the clients
                 i = 0
                 while (i < MAX_CLIENTS) {
-                    if (null == entities.get(i)) {
+                    if (null == entities[i]) {
                         i++
                         continue
                     }
-                    entityHash.Add(entityHash.GenerateKey(entities.get(i).name.c_str(), true), i)
+                    entityHash.Add(entityHash.GenerateKey(entities[i].name.c_str(), true), i)
                     i++
                 }
             }
@@ -4602,17 +4508,17 @@ class Game_local {
             }
 
 //	delete[] locationEntities;
-            locationEntities = null
+            locationEntities.clear()
         }
 
-        private fun GetClientPVS(player: idPlayer?, type: pvsType_t?): pvsHandle_t? {
+        private fun GetClientPVS(player: idPlayer, type: pvsType_t): pvsHandle_t {
             return if (player.GetPrivateCameraView() != null) {
                 pvs.SetupCurrentPVS(
-                    player.GetPrivateCameraView().GetPVSAreas(),
-                    player.GetPrivateCameraView().GetNumPVSAreas()
+                    player.GetPrivateCameraView()!!.GetPVSAreas(),
+                    player.GetPrivateCameraView()!!.GetNumPVSAreas()
                 )
             } else if (camera != null) {
-                pvs.SetupCurrentPVS(camera.GetPVSAreas(), camera.GetNumPVSAreas())
+                pvs.SetupCurrentPVS(camera!!.GetPVSAreas(), camera!!.GetNumPVSAreas())
             } else {
                 pvs.SetupCurrentPVS(player.GetPVSAreas(), player.GetNumPVSAreas())
             }
@@ -4622,12 +4528,12 @@ class Game_local {
             var i: Int
             var ent: idEntity?
             var player: idPlayer?
-            var otherPVS: pvsHandle_t?
-            var newPVS: pvsHandle_t?
+            var otherPVS: pvsHandle_t
+            var newPVS: pvsHandle_t
             playerPVS.i = -1
             i = 0
             while (i < numClients) {
-                ent = entities.get(i)
+                ent = entities[i]
                 if (null == ent || ent !is idPlayer) {
                     i++
                     continue
@@ -4765,9 +4671,9 @@ class Game_local {
         }
 
         private fun ShowTargets() {
-            val axis = GetLocalPlayer().viewAngles.ToMat3()
-            val up = idVec3(axis.get(2).times(5.0f))
-            val viewPos = GetLocalPlayer().GetPhysics().GetOrigin()
+            val axis = GetLocalPlayer()!!.viewAngles.ToMat3()
+            val up = idVec3(axis[2].times(5.0f))
+            val viewPos = GetLocalPlayer()!!.GetPhysics().GetOrigin()
             val viewTextBounds = idBounds(viewPos)
             val viewBounds = idBounds(viewPos)
             val box = idBounds(idVec3(-4.0f, -4.0f, -4.0f), idVec3(4.0f, 4.0f, 4.0f))
@@ -4781,8 +4687,8 @@ class Game_local {
             while (ent != null) {
                 totalBounds = ent.GetPhysics().GetAbsBounds()
                 i = 0
-                while (i < ent.targets.Num()) {
-                    target = ent.targets.get(i).GetEntity()
+                while (i < ent.targets.size) {
+                    target = ent.targets[i].GetEntity()
                     if (target != null) {
                         totalBounds.AddBounds(target.GetPhysics().GetAbsBounds())
                     }
@@ -4802,7 +4708,7 @@ class Game_local {
                     continue
                 }
                 gameRenderWorld.DebugBounds(
-                    (if (ent.IsHidden()) Lib.Companion.colorLtGrey else Lib.Companion.colorOrange).times(
+                    (if (ent.IsHidden()) Lib.colorLtGrey else Lib.colorOrange).times(
                         frac
                     ), ent.GetPhysics().GetAbsBounds()
                 )
@@ -4812,7 +4718,7 @@ class Game_local {
                         ent.name.toString(),
                         center.minus(up),
                         0.1f,
-                        Lib.Companion.colorWhite.times(frac),
+                        Lib.colorWhite.times(frac),
                         axis,
                         1
                     )
@@ -4820,32 +4726,32 @@ class Game_local {
                         ent.GetEntityDefName(),
                         center,
                         0.1f,
-                        Lib.Companion.colorWhite.times(frac),
+                        Lib.colorWhite.times(frac),
                         axis,
                         1
                     )
                     gameRenderWorld.DrawText(
                         Str.va("#%d", ent.entityNumber),
-                        center.oPlus(up),
+                        center.plus(up),
                         0.1f,
-                        Lib.Companion.colorWhite.times(frac),
+                        Lib.colorWhite.times(frac),
                         axis,
                         1
                     )
                 }
                 i = 0
-                while (i < ent.targets.Num()) {
-                    target = ent.targets.get(i).GetEntity()
+                while (i < ent.targets.size) {
+                    target = ent.targets[i].GetEntity()
                     if (target != null) {
                         gameRenderWorld.DebugArrow(
-                            Lib.Companion.colorYellow.times(frac),
+                            Lib.colorYellow.times(frac),
                             ent.GetPhysics().GetAbsBounds().GetCenter(),
                             target.GetPhysics().GetOrigin(),
                             10,
                             0
                         )
                         gameRenderWorld.DebugBounds(
-                            Lib.Companion.colorGreen.times(frac),
+                            Lib.colorGreen.times(frac),
                             box,
                             target.GetPhysics().GetOrigin()
                         )
@@ -4866,7 +4772,7 @@ class Game_local {
             val origin = player.GetPhysics().GetOrigin()
             if (SysCvar.g_showEntityInfo.GetBool()) {
                 val axis = player.viewAngles.ToMat3()
-                val up = idVec3(axis.get(2).times(5.0f))
+                val up = idVec3(axis[2].times(5.0f))
                 val viewTextBounds = idBounds(origin)
                 val viewBounds = idBounds(origin)
                 viewTextBounds.ExpandSelf(128.0f)
@@ -4888,16 +4794,16 @@ class Game_local {
                     val entBounds = ent.GetPhysics().GetAbsBounds()
                     val contents = ent.GetPhysics().GetContents()
                     if (contents and Material.CONTENTS_BODY != 0) {
-                        gameRenderWorld.DebugBounds(Lib.Companion.colorCyan, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.colorCyan, entBounds)
                     } else if (contents and Material.CONTENTS_TRIGGER != 0) {
-                        gameRenderWorld.DebugBounds(Lib.Companion.colorOrange, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.colorOrange, entBounds)
                     } else if (contents and Material.CONTENTS_SOLID != 0) {
-                        gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                        gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
                     } else {
                         if (0f == entBounds.GetVolume()) {
-                            gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds.Expand(8.0f))
+                            gameRenderWorld.DebugBounds(Lib.colorMdGrey, entBounds.Expand(8.0f))
                         } else {
-                            gameRenderWorld.DebugBounds(Lib.Companion.colorMdGrey, entBounds)
+                            gameRenderWorld.DebugBounds(Lib.colorMdGrey, entBounds)
                         }
                     }
                     if (viewTextBounds.IntersectsBounds(entBounds)) {
@@ -4905,15 +4811,15 @@ class Game_local {
                             ent.name.toString(),
                             entBounds.GetCenter(),
                             0.1f,
-                            Lib.Companion.colorWhite,
+                            Lib.colorWhite,
                             axis,
                             1
                         )
                         gameRenderWorld.DrawText(
                             Str.va("#%d", ent.entityNumber),
-                            entBounds.GetCenter().oPlus(up),
+                            entBounds.GetCenter().plus(up),
                             0.1f,
-                            Lib.Companion.colorWhite,
+                            Lib.colorWhite,
                             axis,
                             1
                         )
@@ -4928,18 +4834,18 @@ class Game_local {
                 while (ent != null) {
                     val b = ent.GetPhysics().GetBounds()
                     if (b.GetVolume() <= 0) {
-                        b.set(0, 0, b.set(0, 1, b.set(0, 2, -8f)))
-                        b.set(1, 0, b.set(1, 1, b.set(1, 2, 8f)))
+                        b[0, 0] = b.set(0, 1, b.set(0, 2, -8f))
+                        b[1, 0] = b.set(1, 1, b.set(1, 2, 8f))
                     }
                     if (ent.fl.isDormant) {
                         gameRenderWorld.DebugBounds(
-                            Lib.Companion.colorYellow,
+                            Lib.colorYellow,
                             b,
                             ent.GetPhysics().GetOrigin()
                         )
                     } else {
                         gameRenderWorld.DebugBounds(
-                            Lib.Companion.colorGreen,
+                            Lib.colorGreen,
                             b,
                             ent.GetPhysics().GetOrigin()
                         )
@@ -4951,22 +4857,22 @@ class Game_local {
                 ShowTargets()
             }
             if (SysCvar.g_showTriggers.GetBool()) {
-                idTrigger.Companion.DrawDebugInfo() //TODO:
+                idTrigger.DrawDebugInfo() //TODO:
             }
             if (SysCvar.ai_showCombatNodes.GetBool()) {
-                idCombatNode.Companion.DrawDebugInfo()
+                idCombatNode.DrawDebugInfo()
             }
             if (SysCvar.ai_showPaths.GetBool()) {
-                idPathCorner.Companion.DrawDebugInfo()
+                idPathCorner.DrawDebugInfo()
             }
             if (SysCvar.g_editEntityMode.GetBool()) {
-                editEntities.DisplayEntities()
+                editEntities!!.DisplayEntities()
             }
             if (SysCvar.g_showCollisionWorld.GetBool()) {
                 CollisionModel_local.collisionModelManager.DrawModel(
                     0,
-                    Vector.getVec3_origin(),
-                    idMat3.Companion.getMat3_identity(),
+                    getVec3_origin(),
+                    idMat3.getMat3_identity(),
                     origin,
                     128.0f
                 )
@@ -4997,7 +4903,7 @@ class Game_local {
                         velocity.x = (Math.cos(Math_h.DEG2RAD(player.viewAngles.yaw).toDouble()) * 100.0f).toFloat()
                         velocity.y = (Math.sin(Math_h.DEG2RAD(player.viewAngles.yaw).toDouble()) * 100.0f).toFloat()
                         velocity.z = 0.0f
-                        idAI.Companion.PredictPath(
+                        idAI.PredictPath(
                             player,
                             aas,
                             origin,
@@ -5015,8 +4921,8 @@ class Game_local {
                 if (aas != null) {
                     val seekPos = idVec3()
                     val path = obstaclePath_s()
-                    seekPos.set(player.GetPhysics().GetOrigin().oPlus(player.viewAxis.get(0).times(200.0f)))
-                    idAI.Companion.FindPathAroundObstacles(
+                    seekPos.set(player.GetPhysics().GetOrigin().plus(player.viewAxis[0].times(200.0f)))
+                    idAI.FindPathAroundObstacles(
                         player.GetPhysics(),
                         aas,
                         null,
@@ -5034,8 +4940,8 @@ class Game_local {
         private fun InitScriptForMap() {
             // create a thread to run frame commands on
             frameCommandThread = idThread()
-            frameCommandThread.ManualDelete()
-            frameCommandThread.SetThreadName("frameCommands")
+            frameCommandThread!!.ManualDelete()
+            frameCommandThread!!.SetThreadName("frameCommands")
 
             // run the main game script function (not the level specific main)
             val func = program.FindFunction(Game.SCRIPT_DEFAULTFUNC)
@@ -5059,506 +4965,506 @@ class Game_local {
         private fun InitConsoleCommands() {
             CmdSystem.cmdSystem.AddCommand(
                 "listTypeInfo",
-                ListTypeInfo_f.Companion.getInstance(),
+                ListTypeInfo_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "list type info"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "writeGameState",
-                WriteGameState_f.Companion.getInstance(),
+                WriteGameState_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "write game state"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testSaveGame",
-                TestSaveGame_f.Companion.getInstance(),
+                TestSaveGame_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "test a save game for a level"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "game_memory",
-                DisplayInfo_f.Companion.getInstance(),
+                DisplayInfo_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "displays game class info"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listClasses",
-                ListClasses_f.Companion.getInstance(),
+                ListClasses_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "lists game classes"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listThreads",
-                ListThreads_f.Companion.getInstance(),
+                ListThreads_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists script threads"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listEntities",
-                Cmd_EntityList_f.Companion.getInstance(),
+                Cmd_EntityList_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists game entities"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listActiveEntities",
-                Cmd_ActiveEntityList_f.Companion.getInstance(),
+                Cmd_ActiveEntityList_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists active game entities"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listMonsters",
-                idAI.List_f.Companion.getInstance(),
+                idAI.List_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists monsters"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listSpawnArgs",
-                Cmd_ListSpawnArgs_f.Companion.getInstance(),
+                Cmd_ListSpawnArgs_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "list the spawn args of an entity",
                 ArgCompletion_EntityName.getInstance()
             )
-            CmdSystem.cmdSystem.AddCommand("say", Cmd_Say_f.Companion.getInstance(), CmdSystem.CMD_FL_GAME, "text chat")
+            CmdSystem.cmdSystem.AddCommand("say", Cmd_Say_f.getInstance(), CmdSystem.CMD_FL_GAME, "text chat")
             CmdSystem.cmdSystem.AddCommand(
                 "sayTeam",
-                Cmd_SayTeam_f.Companion.getInstance(),
+                Cmd_SayTeam_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "team text chat"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "addChatLine",
-                Cmd_AddChatLine_f.Companion.getInstance(),
+                Cmd_AddChatLine_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "internal use - core to game chat lines"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "gameKick",
-                Cmd_Kick_f.Companion.getInstance(),
+                Cmd_Kick_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "same as kick, but recognizes player names"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "give",
-                Cmd_Give_f.Companion.getInstance(),
+                Cmd_Give_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "gives one or more items"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "centerview",
-                Cmd_CenterView_f.Companion.getInstance(),
+                Cmd_CenterView_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "centers the view"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "god",
-                Cmd_God_f.Companion.getInstance(),
+                Cmd_God_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "enables god mode"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "notarget",
-                Cmd_Notarget_f.Companion.getInstance(),
+                Cmd_Notarget_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "disables the player as a target"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "noclip",
-                Cmd_Noclip_f.Companion.getInstance(),
+                Cmd_Noclip_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "disables collision detection for the player"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "kill",
-                Cmd_Kill_f.Companion.getInstance(),
+                Cmd_Kill_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "kills the player"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "where",
-                Cmd_GetViewpos_f.Companion.getInstance(),
+                Cmd_GetViewpos_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "prints the current view position"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "getviewpos",
-                Cmd_GetViewpos_f.Companion.getInstance(),
+                Cmd_GetViewpos_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "prints the current view position"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "setviewpos",
-                Cmd_SetViewpos_f.Companion.getInstance(),
+                Cmd_SetViewpos_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "sets the current view position"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "teleport",
-                Cmd_Teleport_f.Companion.getInstance(),
+                Cmd_Teleport_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "teleports the player to an entity location",
                 ArgCompletion_EntityName.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "trigger",
-                Cmd_Trigger_f.Companion.getInstance(),
+                Cmd_Trigger_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "triggers an entity",
                 ArgCompletion_EntityName.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "spawn",
-                Cmd_Spawn_f.Companion.getInstance(),
+                Cmd_Spawn_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "spawns a game entity",
                 ArgCompletion_Decl(declType_t.DECL_ENTITYDEF)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "damage",
-                Cmd_Damage_f.Companion.getInstance(),
+                Cmd_Damage_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "apply damage to an entity",
                 ArgCompletion_EntityName.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "remove",
-                Cmd_Remove_f.Companion.getInstance(),
+                Cmd_Remove_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes an entity",
                 ArgCompletion_EntityName.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "killMonsters",
-                Cmd_KillMonsters_f.Companion.getInstance(),
+                Cmd_KillMonsters_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes all monsters"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "killMoveables",
-                Cmd_KillMovables_f.Companion.getInstance(),
+                Cmd_KillMovables_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes all moveables"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "killRagdolls",
-                Cmd_KillRagdolls_f.Companion.getInstance(),
+                Cmd_KillRagdolls_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes all ragdolls"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "addline",
-                Cmd_AddDebugLine_f.Companion.getInstance(),
+                Cmd_AddDebugLine_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "adds a debug line"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "addarrow",
-                Cmd_AddDebugLine_f.Companion.getInstance(),
+                Cmd_AddDebugLine_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "adds a debug arrow"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "removeline",
-                Cmd_RemoveDebugLine_f.Companion.getInstance(),
+                Cmd_RemoveDebugLine_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes a debug line"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "blinkline",
-                Cmd_BlinkDebugLine_f.Companion.getInstance(),
+                Cmd_BlinkDebugLine_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "blinks a debug line"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listLines",
-                Cmd_ListDebugLines_f.Companion.getInstance(),
+                Cmd_ListDebugLines_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists all debug lines"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "playerModel",
-                Cmd_PlayerModel_f.Companion.getInstance(),
+                Cmd_PlayerModel_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "sets the given model on the player",
                 ArgCompletion_Decl(declType_t.DECL_MODELDEF)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testFx",
-                Cmd_TestFx_f.Companion.getInstance(),
+                Cmd_TestFx_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests an FX system",
                 ArgCompletion_Decl(declType_t.DECL_FX)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testBoneFx",
-                Cmd_TestBoneFx_f.Companion.getInstance(),
+                Cmd_TestBoneFx_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests an FX system bound to a joint",
                 ArgCompletion_Decl(declType_t.DECL_FX)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testLight",
-                Cmd_TestLight_f.Companion.getInstance(),
+                Cmd_TestLight_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests a light"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testPointLight",
-                Cmd_TestPointLight_f.Companion.getInstance(),
+                Cmd_TestPointLight_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests a point light"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "popLight",
-                Cmd_PopLight_f.Companion.getInstance(),
+                Cmd_PopLight_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "removes the last created light"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testDeath",
-                Cmd_TestDeath_f.Companion.getInstance(),
+                Cmd_TestDeath_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests death"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testSave",
-                Cmd_TestSave_f.Companion.getInstance(),
+                Cmd_TestSave_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "writes out a test savegame"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testModel",
-                TestModel_f.Companion.getInstance(),
+                TestModel_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests a model",
-                ArgCompletion_TestModel.Companion.getInstance()
+                ArgCompletion_TestModel.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testSkin",
-                TestSkin_f.Companion.getInstance(),
+                TestSkin_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests a skin on an existing testModel",
                 ArgCompletion_Decl(declType_t.DECL_SKIN)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testShaderParm",
-                TestShaderParm_f.Companion.getInstance(),
+                TestShaderParm_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "sets a shaderParm on an existing testModel"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "keepTestModel",
-                KeepTestModel_f.Companion.getInstance(),
+                KeepTestModel_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "keeps the last test model in the game"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testAnim",
-                TestAnim_f.Companion.getInstance(),
+                TestAnim_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests an animation",
-                ArgCompletion_TestAnim.Companion.getInstance()
+                ArgCompletion_TestAnim.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testParticleStopTime",
-                TestParticleStopTime_f.Companion.getInstance(),
+                TestParticleStopTime_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests particle stop time on a test model"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "nextAnim",
-                TestModelNextAnim_f.Companion.getInstance(),
+                TestModelNextAnim_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "shows next animation on test model"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "prevAnim",
-                TestModelPrevAnim_f.Companion.getInstance(),
+                TestModelPrevAnim_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "shows previous animation on test model"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "nextFrame",
-                TestModelNextFrame_f.Companion.getInstance(),
+                TestModelNextFrame_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "shows next animation frame on test model"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "prevFrame",
-                TestModelPrevFrame_f.Companion.getInstance(),
+                TestModelPrevFrame_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "shows previous animation frame on test model"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testBlend",
-                TestBlend_f.Companion.getInstance(),
+                TestBlend_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests animation blending"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "reloadScript",
-                Cmd_ReloadScript_f.Companion.getInstance(),
+                Cmd_ReloadScript_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "reloads scripts"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "script",
-                Cmd_Script_f.Companion.getInstance(),
+                Cmd_Script_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "executes a line of script"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listCollisionModels",
-                Cmd_ListCollisionModels_f.Companion.getInstance(),
+                Cmd_ListCollisionModels_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "lists collision models"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "collisionModelInfo",
-                Cmd_CollisionModelInfo_f.Companion.getInstance(),
+                Cmd_CollisionModelInfo_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "shows collision model info"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "reexportmodels",
-                Cmd_ReexportModels_f.Companion.getInstance(),
+                Cmd_ReexportModels_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "reexports models",
-                ArgCompletion_DefFile.Companion.getInstance()
+                ArgCompletion_DefFile.getInstance()
             )
             CmdSystem.cmdSystem.AddCommand(
                 "reloadanims",
-                Cmd_ReloadAnims_f.Companion.getInstance(),
+                Cmd_ReloadAnims_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "reloads animations"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listAnims",
-                Cmd_ListAnims_f.Companion.getInstance(),
+                Cmd_ListAnims_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "lists all animations"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "aasStats",
-                Cmd_AASStats_f.Companion.getInstance(),
+                Cmd_AASStats_f.getInstance(),
                 CmdSystem.CMD_FL_GAME,
                 "shows AAS stats"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testDamage",
-                Cmd_TestDamage_f.Companion.getInstance(),
+                Cmd_TestDamage_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "tests a damage def",
                 ArgCompletion_Decl(declType_t.DECL_ENTITYDEF)
             )
             CmdSystem.cmdSystem.AddCommand(
                 "weaponSplat",
-                Cmd_WeaponSplat_f.Companion.getInstance(),
+                Cmd_WeaponSplat_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "projects a blood splat on the player weapon"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "saveSelected",
-                Cmd_SaveSelected_f.Companion.getInstance(),
+                Cmd_SaveSelected_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "saves the selected entity to the .map file"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "deleteSelected",
-                Cmd_DeleteSelected_f.Companion.getInstance(),
+                Cmd_DeleteSelected_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "deletes selected entity"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "saveMoveables",
-                Cmd_SaveMoveables_f.Companion.getInstance(),
+                Cmd_SaveMoveables_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "save all moveables to the .map file"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "saveRagdolls",
-                Cmd_SaveRagdolls_f.Companion.getInstance(),
+                Cmd_SaveRagdolls_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "save all ragdoll poses to the .map file"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "bindRagdoll",
-                Cmd_BindRagdoll_f.Companion.getInstance(),
+                Cmd_BindRagdoll_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "binds ragdoll at the current drag position"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "unbindRagdoll",
-                Cmd_UnbindRagdoll_f.Companion.getInstance(),
+                Cmd_UnbindRagdoll_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "unbinds the selected ragdoll"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "saveLights",
-                Cmd_SaveLights_f.Companion.getInstance(),
+                Cmd_SaveLights_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "saves all lights to the .map file"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "saveParticles",
-                Cmd_SaveParticles_f.Companion.getInstance(),
+                Cmd_SaveParticles_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "saves all lights to the .map file"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "clearLights",
-                Cmd_ClearLights_f.Companion.getInstance(),
+                Cmd_ClearLights_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "clears all lights"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "gameError",
-                Cmd_GameError_f.Companion.getInstance(),
+                Cmd_GameError_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "causes a game error"
             )
             if (!BuildDefines.ID_DEMO_BUILD) { //#ifndef
                 CmdSystem.cmdSystem.AddCommand(
                     "disasmScript",
-                    Cmd_DisasmScript_f.Companion.getInstance(),
+                    Cmd_DisasmScript_f.getInstance(),
                     CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                     "disassembles script"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "recordViewNotes",
-                    Cmd_RecordViewNotes_f.Companion.getInstance(),
+                    Cmd_RecordViewNotes_f.getInstance(),
                     CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                     "record the current view position with notes"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "showViewNotes",
-                    Cmd_ShowViewNotes_f.Companion.getInstance(),
+                    Cmd_ShowViewNotes_f.getInstance(),
                     CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                     "show any view notes for the current map, successive calls will cycle to the next note"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "closeViewNotes",
-                    Cmd_CloseViewNotes_f.Companion.getInstance(),
+                    Cmd_CloseViewNotes_f.getInstance(),
                     CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                     "close the view showing any notes for this map"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "exportmodels",
-                    Cmd_ExportModels_f.Companion.getInstance(),
+                    Cmd_ExportModels_f.getInstance(),
                     CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                     "exports models",
-                    ArgCompletion_DefFile.Companion.getInstance()
+                    ArgCompletion_DefFile.getInstance()
                 )
 
                 // multiplayer client commands ( replaces old impulses stuff )
                 CmdSystem.cmdSystem.AddCommand(
                     "clientDropWeapon",
-                    DropWeapon_f.Companion.getInstance(),
+                    DropWeapon_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "drop current weapon"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "clientMessageMode",
-                    MessageMode_f.Companion.getInstance(),
+                    MessageMode_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "ingame gui message mode"
                 )
@@ -5567,13 +5473,13 @@ class Game_local {
 //	cmdSystem.AddCommand( "clientCallVote",		idMultiplayerGame.CallVote_f.getInstance(),	CMD_FL_GAME,			"call a vote: clientCallVote si_.. proposed_value" );
                 CmdSystem.cmdSystem.AddCommand(
                     "clientVoiceChat",
-                    VoiceChat_f.Companion.getInstance(),
+                    VoiceChat_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "voice chats: clientVoiceChat <sound shader>"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "clientVoiceChatTeam",
-                    VoiceChatTeam_f.Companion.getInstance(),
+                    VoiceChatTeam_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "team voice chats: clientVoiceChat <sound shader>"
                 )
@@ -5587,13 +5493,13 @@ class Game_local {
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "serverForceReady",
-                    ForceReady_f.Companion.getInstance(),
+                    ForceReady_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "force all players ready"
                 )
                 CmdSystem.cmdSystem.AddCommand(
                     "serverNextMap",
-                    NextMap_f.Companion.getInstance(),
+                    NextMap_f.getInstance(),
                     CmdSystem.CMD_FL_GAME,
                     "change to the next map"
                 )
@@ -5602,13 +5508,13 @@ class Game_local {
             // localization help commands
             CmdSystem.cmdSystem.AddCommand(
                 "nextGUI",
-                Cmd_NextGUI_f.Companion.getInstance(),
+                Cmd_NextGUI_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "teleport the player to the next func_static with a gui"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "testid",
-                Cmd_TestId_f.Companion.getInstance(),
+                Cmd_TestId_f.getInstance(),
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "output the string for the specified id."
             )
@@ -5625,7 +5531,7 @@ class Game_local {
             while (i < MAX_CLIENTS) {
                 type = 0
                 while (type < DeclManager.declManager.GetNumDeclTypes()) {
-                    clientDeclRemap.get(i).get(type) = idList()
+                    clientDeclRemap[i][type] = ArrayList()
                     type++
                 }
                 i++
@@ -5633,11 +5539,11 @@ class Game_local {
 
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             clientEntityStates =
-                Array(clientEntityStates.size) { arrayOfNulls<entityState_s?>(clientEntityStates.get(0).length) }
+                Array(clientEntityStates.size) { ArrayList(clientEntityStates[0].size) }
             //	memset( clientPVS, 0, sizeof( clientPVS ) );
-            clientPVS = Array(clientPVS.size) { IntArray(clientPVS.get(0).length) }
+            clientPVS = Array(clientPVS.size) { IntArray(clientPVS[0].size) }
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            clientSnapshots = arrayOfNulls<snapshot_s?>(clientSnapshots.size)
+            clientSnapshots = ArrayList(clientSnapshots.size)
             eventQueue.Init()
             savedEventQueue.Init()
             entityDefBits = -(idMath.BitsForInteger(DeclManager.declManager.GetNumDecls(declType_t.DECL_ENTITYDEF)) + 1)
@@ -5654,11 +5560,11 @@ class Game_local {
             savedEventQueue.Shutdown()
             //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             clientEntityStates =
-                Array(clientEntityStates.size) { arrayOfNulls<entityState_s?>(clientEntityStates.get(0).length) }
+                Array(clientEntityStates.size) { ArrayList<entityState_s>(clientEntityStates[0].size) }
             //	memset( clientPVS, 0, sizeof( clientPVS ) );
-            clientPVS = Array(clientPVS.size) { IntArray(clientPVS.get(0).length) }
+            clientPVS = Array(clientPVS.size) { IntArray(clientPVS[0].size) }
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            clientSnapshots = arrayOfNulls<snapshot_s?>(clientSnapshots.size)
+            clientSnapshots = ArrayList<snapshot_s>(clientSnapshots.size)
         }
 
         private fun InitLocalClient(clientNum: Int) {
@@ -5682,39 +5588,39 @@ class Game_local {
                     continue
                 }
                 num = DeclManager.declManager.GetNumDecls(type)
-                clientDeclRemap.get(clientNum).get(type).Clear()
-                clientDeclRemap.get(clientNum).get(type).AssureSize(num, -1)
+                clientDeclRemap[clientNum][type].clear()
+                clientDeclRemap[clientNum][type].ensureCapacity(num)
 
                 // pre-initialize the remap with non-implicit decls, all non-implicit decls are always going
                 // to be in order and in sync between server and client because of the decl manager checksum
                 i = 0
                 while (i < num) {
-                    val decl = DeclManager.declManager.DeclByIndex(declType_t.values()[type], i, false)
+                    val decl = DeclManager.declManager.DeclByIndex(declType_t.values()[type], i, false)!!
                     if (decl.IsImplicit()) {
                         // once the first implicit decl is found all remaining decls are considered implicit as well
                         break
                     }
-                    clientDeclRemap.get(clientNum).get(type).set(i, i)
+                    clientDeclRemap[clientNum][type][i] = i
                     i++
                 }
                 type++
             }
         }
 
-        private fun ServerSendDeclRemapToClient(clientNum: Int, type: declType_t?, index: Int) {
+        private fun ServerSendDeclRemapToClient(clientNum: Int, type: declType_t, index: Int) {
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
 
             // if no client connected for this spot
-            if (entities.get(clientNum) == null) {
+            if (entities[clientNum] == null) {
                 return
             }
             // increase size of list if required
-            if (index >= clientDeclRemap.get(clientNum).get(type.ordinal).Num()) {
-                clientDeclRemap.get(clientNum).get(type.ordinal).AssureSize(index + 1, -1)
+            if (index >= clientDeclRemap[clientNum][type.ordinal].size) {
+                clientDeclRemap[clientNum][type.ordinal].ensureCapacity(index + 1)
             }
             // if already remapped
-            if (clientDeclRemap.get(clientNum).get(type.ordinal).get(index) != -1) {
+            if (clientDeclRemap[clientNum][type.ordinal][index] != -1) {
                 return
             }
             val decl = DeclManager.declManager.DeclByIndex(type, index, false)
@@ -5728,13 +5634,13 @@ class Game_local {
             }
 
             // set the index at the server
-            clientDeclRemap.get(clientNum).get(type.ordinal).set(index, index)
+            clientDeclRemap[clientNum][type.ordinal][index] = index
 
             // write update to client
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
-            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_REMAP_DECL)
-            outMsg.WriteByte(TempDump.etoi(type))
+            outMsg.WriteByte(GAME_RELIABLE_MESSAGE_REMAP_DECL.toByte())
+            outMsg.WriteByte(TempDump.etoi(type).toByte())
             outMsg.WriteLong(index)
             outMsg.WriteString(decl.GetName())
             NetworkSystem.networkSystem.ServerSendReliableMessage(clientNum, outMsg)
@@ -5746,19 +5652,19 @@ class Game_local {
             var nextSnapshot: snapshot_s?
             var state: entityState_s?
             lastSnapshot = null
-            snapshot = clientSnapshots.get(clientNum)
+            snapshot = clientSnapshots[clientNum]
             while (snapshot != null) {
                 nextSnapshot = snapshot.next
                 if (snapshot.sequence < sequence) {
                     state = snapshot.firstEntityState
                     while (state != null) {
-                        snapshot.firstEntityState = snapshot.firstEntityState.next
+                        snapshot.firstEntityState = snapshot.firstEntityState!!.next
                         state = snapshot.firstEntityState
                     }
                     if (lastSnapshot != null) {
                         lastSnapshot.next = snapshot.next
                     } else {
-                        clientSnapshots.get(clientNum) = snapshot.next
+                        clientSnapshots[clientNum] = snapshot.next!!
                     }
                     //                    snapshotAllocator.Free(snapshot);
                 } else {
@@ -5775,24 +5681,24 @@ class Game_local {
             var state: entityState_s?
             FreeSnapshotsOlderThanSequence(clientNum, sequence)
             lastSnapshot = null
-            snapshot = clientSnapshots.get(clientNum)
+            snapshot = clientSnapshots[clientNum]
             while (snapshot != null) {
                 nextSnapshot = snapshot.next
                 if (snapshot.sequence == sequence) {
                     state = snapshot.firstEntityState
                     while (state != null) {
-                        if (clientEntityStates.get(clientNum).get(state.entityNumber) != null) {
+                        if (clientEntityStates[clientNum][state.entityNumber] != null) {
 //                            entityStateAllocator.Free(clientEntityStates[clientNum][state.entityNumber]);
                         }
-                        clientEntityStates.get(clientNum).get(state.entityNumber) = state
+                        clientEntityStates[clientNum][state.entityNumber] = state
                         state = state.next
                     }
                     //			memcpy( clientPVS[clientNum], snapshot.pvs, sizeof( snapshot.pvs ) );
-                    System.arraycopy(snapshot.pvs, 0, clientPVS.get(clientNum), 0, snapshot.pvs.size)
+                    System.arraycopy(snapshot.pvs, 0, clientPVS[clientNum], 0, snapshot.pvs.size)
                     if (lastSnapshot != null) {
                         lastSnapshot.next = nextSnapshot
                     } else {
-                        clientSnapshots.get(clientNum) = nextSnapshot
+                        clientSnapshots[clientNum] = nextSnapshot!!
                     }
                     //                    snapshotAllocator.Free(snapshot);
                     return true
@@ -5808,7 +5714,7 @@ class Game_local {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                msg.WriteFloat(globalShaderParms.get(i))
+                msg.WriteFloat(globalShaderParms[i])
                 i++
             }
             mpGame.WriteToSnapshot(msg)
@@ -5818,7 +5724,7 @@ class Game_local {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                globalShaderParms.get(i) = msg.ReadFloat()
+                globalShaderParms[i] = msg.ReadFloat()
                 i++
             }
             mpGame.ReadFromSnapshot(msg)
@@ -5849,7 +5755,7 @@ class Game_local {
             var event: entityNetEvent_s?
             val eventMsg = idBitMsg()
             while (eventQueue.Start() != null) {
-                event = eventQueue.Start()
+                event = eventQueue.Start()!!
                 if (event.time > time) {
                     break
                 }
@@ -5857,7 +5763,7 @@ class Game_local {
                 if (!entPtr.SetSpawnId(event.spawnId)) {
                     NetworkEventWarning(event, "Entity does not exist any longer, or has not been spawned yet.")
                 } else {
-                    ent = entPtr.GetEntity()
+                    ent = entPtr.GetEntity()!!
                     assert(ent != null)
                     eventMsg.Init(event.paramsBuf, event.paramsBuf.capacity())
                     eventMsg.SetSize(event.paramsSize)
@@ -5877,7 +5783,7 @@ class Game_local {
             var event: entityNetEvent_s?
             val eventMsg = idBitMsg()
             while (eventQueue.Start() != null) {
-                event = eventQueue.Start()
+                event = eventQueue.Start()!!
 
                 // only process forward, in order
                 if (event.time > time) {
@@ -5890,7 +5796,7 @@ class Game_local {
                         NetworkEventWarning(event, "Entity does not exist any longer, or has not been spawned yet.")
                     }
                 } else {
-                    ent = entPtr.GetEntity()
+                    ent = entPtr.GetEntity()!!
                     assert(ent != null)
                     eventMsg.Init(event.paramsBuf, event.paramsBuf.capacity())
                     eventMsg.SetSize(event.paramsSize)
@@ -5915,7 +5821,7 @@ class Game_local {
             if (0 == Game_network.net_clientShowSnapshot.GetInteger()) {
                 return
             }
-            player = entities.get(clientNum) as idPlayer?
+            player = entities[clientNum] as idPlayer?
             if (null == player) {
                 return
             }
@@ -5932,19 +5838,19 @@ class Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                base = clientEntityStates.get(clientNum).get(ent.entityNumber)
+                base = clientEntityStates[clientNum][ent.entityNumber]
                 baseBits = base?.state?.GetNumBitsWritten() ?: 0
                 if (Game_network.net_clientShowSnapshot.GetInteger() == 2 && baseBits == 0) {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                gameRenderWorld.DebugBounds(Lib.Companion.colorGreen, entBounds)
+                gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
                 gameRenderWorld.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
                     ),
-                    entBounds.GetCenter(), 0.1f, Lib.Companion.colorWhite, viewAxis, 1
+                    entBounds.GetCenter(), 0.1f, Lib.colorWhite, viewAxis, 1
                 )
                 ent = ent.snapshotNode.Next()
             }
@@ -5953,13 +5859,13 @@ class Game_local {
         // call after any change to serverInfo. Will update various quick-access flags
         private fun UpdateServerInfoFlags() {
             gameType = gameType_t.GAME_SP
-            if (idStr.Companion.Icmp(serverInfo.GetString("si_gameType"), "deathmatch") == 0) {
+            if (idStr.Icmp(serverInfo.GetString("si_gameType"), "deathmatch") == 0) {
                 gameType = gameType_t.GAME_DM
-            } else if (idStr.Companion.Icmp(serverInfo.GetString("si_gameType"), "Tourney") == 0) {
+            } else if (idStr.Icmp(serverInfo.GetString("si_gameType"), "Tourney") == 0) {
                 gameType = gameType_t.GAME_TOURNEY
-            } else if (idStr.Companion.Icmp(serverInfo.GetString("si_gameType"), "Team DM") == 0) {
+            } else if (idStr.Icmp(serverInfo.GetString("si_gameType"), "Team DM") == 0) {
                 gameType = gameType_t.GAME_TDM
-            } else if (idStr.Companion.Icmp(serverInfo.GetString("si_gameType"), "Last Man") == 0) {
+            } else if (idStr.Icmp(serverInfo.GetString("si_gameType"), "Last Man") == 0) {
                 gameType = gameType_t.GAME_LASTMAN
             }
             if (gameType == gameType_t.GAME_LASTMAN) {
@@ -5989,41 +5895,50 @@ class Game_local {
             if (!isMultiplayer || isClient) {
                 return
             }
-            spawnSpots.Clear()
-            initialSpots.Clear()
+            spawnSpots.clear()
+            initialSpots.clear()
             spot.dist = 0
             spot.ent = FindEntityUsingDef(null, "info_player_deathmatch")
             while (spot.ent != null) {
-                spawnSpots.Append(spot)
-                if (spot.ent.spawnArgs.GetBool("initial")) {
-                    initialSpots.Append(spot.ent)
+                spawnSpots.add(spot)
+                if (spot.ent!!.spawnArgs.GetBool("initial")) {
+                    initialSpots.add(spot.ent!!)
                 }
                 spot.ent = FindEntityUsingDef(spot.ent, "info_player_deathmatch")
             }
-            if (0 == spawnSpots.Num()) {
+            if (0 == spawnSpots.size) {
                 Common.common.Warning("no info_player_deathmatch in map")
                 return
             }
-            Common.common.Printf("%d spawns (%d initials)\n", spawnSpots.Num(), initialSpots.Num())
+            Common.common.Printf("%d spawns (%d initials)\n", spawnSpots.size, initialSpots.size)
             // if there are no initial spots in the map, consider they can all be used as initial
-            if (0 == initialSpots.Num()) {
+            if (0 == initialSpots.size) {
                 Common.common.Warning("no info_player_deathmatch entities marked initial in map")
                 i = 0
-                while (i < spawnSpots.Num()) {
-                    initialSpots.Append(spawnSpots.get(i).ent)
+                while (i < spawnSpots.size) {
+                    initialSpots.add(spawnSpots[i].ent!!)
                     i++
                 }
             }
             i = 0
-            while (i < initialSpots.Num()) {
-                j = random.RandomInt(initialSpots.Num().toDouble())
-                ent = initialSpots.get(i)
-                initialSpots.set(i, initialSpots.get(j))
-                initialSpots.set(j, ent)
+            while (i < initialSpots.size) {
+                j = random.RandomInt(initialSpots.size.toDouble())
+                ent = initialSpots[i]
+                initialSpots[i] = initialSpots[j]
+                initialSpots[j] = ent
                 i++
             }
             // reset the counter
             currentInitialSpot = 0
+        }
+
+        fun kotlin.collections.ArrayList<idStr>.addUnique(s: idStr): Int {
+            var index = indexOf(s)
+            if (index == -1) {
+                add(s)
+                index = indexOf(s)
+            }
+            return index
         }
 
         private fun DumpOggSounds() {
@@ -6081,13 +5996,13 @@ class Game_local {
                             }
                         }
                         k = 0
-                        while (k < shakeSounds.size()) {
-                            if (shakeSounds.get(k).IcmpPath(soundName.toString()) == 0) {
+                        while (k < shakeSounds.size) {
+                            if (shakeSounds[k].IcmpPath(soundName.toString()) == 0) {
                                 break
                             }
                             k++
                         }
-                        if (k < shakeSounds.size()) {
+                        if (k < shakeSounds.size) {
                             j++
                             continue
                         }
@@ -6106,11 +6021,11 @@ class Game_local {
             // list all the shake sounds
             totalSize = 0
             i = 0
-            while (i < shakeSounds.size()) {
-                size = FileSystem_h.fileSystem.ReadFile(shakeSounds.get(i), null, null)
+            while (i < shakeSounds.size) {
+                size = FileSystem_h.fileSystem.ReadFile(shakeSounds[i], null, null)
                 totalSize += size
-                shakeSounds.get(i).Replace("/", "\\")
-                file.Printf("echo \"%s\" (%d kB)\n", shakeSounds.get(i), size shr 10)
+                shakeSounds[i].Replace("/", "\\")
+                file.Printf("echo \"%s\" (%d kB)\n", shakeSounds[i], size shr 10)
                 i++
             }
             file.Printf("echo %d kB in shake sounds\n\n\n", totalSize shr 10)
@@ -6143,13 +6058,13 @@ class Game_local {
             shakeSounds.clear()
         }
 
-        private fun GetShakeSounds(dict: idDict?) {
+        private fun GetShakeSounds(dict: idDict) {
             val soundShader: idSoundShader?
             val soundShaderName: String?
             val soundName = idStr()
             soundShaderName = dict.GetString("s_shader")
             if (!soundShaderName.isEmpty() && dict.GetFloat("s_shakes") != 0.0f) {
-                soundShader = DeclManager.declManager.FindSound(soundShaderName)
+                soundShader = DeclManager.declManager.FindSound(soundShaderName)!!
                 for (i in 0 until soundShader.GetNumSounds()) {
                     soundName.set(soundShader.GetSound(i))
                     soundName.BackSlashesToSlashes()
@@ -6163,13 +6078,13 @@ class Game_local {
             return gameLocal.time
         }
 
-        override fun GetBestGameType(map: String?, gametype: String?, buf: CharArray? /*[MAX_STRING_CHARS ]*/) {
+        override fun GetBestGameType(map: String, gametype: String, buf: CharArray /*[MAX_STRING_CHARS ]*/) {
 //	strncpy( buf, gametype, MAX_STRING_CHARS );
-            System.arraycopy(gametype.toCharArray(), 0, buf, 0, Lib.Companion.MAX_STRING_CHARS)
-            buf.get(Lib.Companion.MAX_STRING_CHARS - 1) = '\u0000'
+            System.arraycopy(gametype.toCharArray(), 0, buf, 0, Lib.MAX_STRING_CHARS)
+            buf[Lib.MAX_STRING_CHARS - 1] = '\u0000'
         }
 
-        private fun Tokenize(out: idStrList?, `in`: String?) {
+        private fun Tokenize(out: idStrList, `in`: String) {
 //	char buf[ MAX_STRING_CHARS ];
 //	char *token, *next;
 //
@@ -6189,7 +6104,7 @@ class Game_local {
 //			token = NULL;
 //		}
 //	}
-            val tokens: Array<String?> = `in`.split(";").toTypedArray()
+            val tokens: Array<String> = `in`.split(";").toTypedArray()
             for (token in tokens) {
                 out.add(token)
             }
@@ -6215,43 +6130,43 @@ class Game_local {
             j = LAGO_WIDTH - 1
             i = 0
             while (i < LAGO_HEIGHT) {
-                lagometer.get(i).get(j).get(3) = 0
-                lagometer.get(i).get(j).get(2) = lagometer.get(i).get(j).get(3)
-                lagometer.get(i).get(j).get(1) = lagometer.get(i).get(j).get(2)
-                lagometer.get(i).get(j).get(0) = lagometer.get(i).get(j).get(1)
+                lagometer[i][j][3] = 0
+                lagometer[i][j][2] = lagometer[i][j][3]
+                lagometer[i][j][1] = lagometer[i][j][2]
+                lagometer[i][j][0] = lagometer[i][j][1]
                 i++
             }
             ahead = idMath.Rint(aheadOfServer.toFloat() / 16.0f).toInt()
             if (ahead >= 0) {
-                i = 2 * Lib.Companion.Max(0, 5 - ahead)
+                i = 2 * Lib.Max(0, 5 - ahead)
                 while (i < 2 * 5) {
-                    lagometer.get(i).get(j).get(1) = CCLV
-                    lagometer.get(i).get(j).get(3) = CCLV
+                    lagometer[i][j][1] = CCLV
+                    lagometer[i][j][3] = CCLV
                     i++
                 }
             } else {
                 i = 2 * 5
-                while (i < 2 * (5 + Lib.Companion.Min(10, -ahead))) {
-                    lagometer.get(i).get(j).get(0) = CCLV
-                    lagometer.get(i).get(j).get(1) = CCLV
-                    lagometer.get(i).get(j).get(3) = CCLV
+                while (i < 2 * (5 + Lib.Min(10, -ahead))) {
+                    lagometer[i][j][0] = CCLV
+                    lagometer[i][j][1] = CCLV
+                    lagometer[i][j][3] = CCLV
                     i++
                 }
             }
-            i = LAGO_HEIGHT - 2 * Lib.Companion.Min(6, dupeUsercmds)
+            i = LAGO_HEIGHT - 2 * Lib.Min(6, dupeUsercmds)
             while (i < LAGO_HEIGHT) {
-                lagometer.get(i).get(j).get(0) = CCLV
+                lagometer[i][j][0] = CCLV
                 if (dupeUsercmds <= 2) {
-                    lagometer.get(i).get(j).get(1) = CCLV
+                    lagometer[i][j][1] = CCLV
                 }
-                lagometer.get(i).get(j).get(3) = CCLV
+                lagometer[i][j][3] = CCLV
                 i++
             }
         }
 
         override fun GetMapLoadingGUI(gui: CharArray? /*[MAX_STRING_CHARS ]*/) {}
         class MapRestart_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs?) {
+            override fun run(args: CmdArgs.idCmdArgs) {
                 if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running - use spawnServer\n")
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "spawnServer\n")
@@ -6295,27 +6210,30 @@ class Game_local {
          =============
          */
         class ArgCompletion_EntityName private constructor() : CmdSystem.argCompletion_t() {
-            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?) {
+            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 var i: Int
                 i = 0
-                while (i < gameLocal.num_entities) {
-                    if (gameLocal.entities[i] != null) {
-                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
-                    }
-                    i++
+                for (entity in gameLocal.entities) {
+                    callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
                 }
+//                while (i < gameLocal.num_entities) {
+//                    if (gameLocal.entities[i] != null) {
+//                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
+//                    }
+//                    i++
+//                }
             }
 
             companion object {
-                private val instance: CmdSystem.argCompletion_t? = ArgCompletion_EntityName()
-                fun getInstance(): CmdSystem.argCompletion_t? {
+                private val instance: CmdSystem.argCompletion_t = ArgCompletion_EntityName()
+                fun getInstance(): CmdSystem.argCompletion_t {
                     return instance
                 }
             }
         }
 
-        private class sortSpawnPoints : cmp_t<spawnSpot_t?> {
-            override fun compare(s1: spawnSpot_t?, s2: spawnSpot_t?): Int {
+        private class sortSpawnPoints : cmp_t<spawnSpot_t> {
+            override fun compare(s1: spawnSpot_t, s2: spawnSpot_t): Int {
                 val diff: Float
                 diff = (s1.dist - s2.dist).toFloat()
                 return if (diff < 0.0f) {
@@ -6335,7 +6253,7 @@ class Game_local {
             //
             //
             private const val INITIAL_SPAWN_COUNT = 1
-            private val decalWinding: Array<idVec3>? = arrayOf(
+            private val decalWinding: Array<idVec3> = arrayOf(
                 idVec3(1.0f, 1.0f, 0.0f),
                 idVec3(-1.0f, 1.0f, 0.0f),
                 idVec3(-1.0f, -1.0f, 0.0f),
@@ -6361,16 +6279,16 @@ class Game_local {
          ======================
          */
             private var DBG_SpreadLocations = 0
-            fun Error(fmt: String?, vararg args: Any?) {
+            fun Error(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
-                val text = StringBuilder(Lib.Companion.MAX_STRING_CHARS)
-                val thread: idThread
+                val text = StringBuilder(Lib.MAX_STRING_CHARS)
+                val thread: idThread?
                 //
 //	va_start( argptr, fmt );
 //	idStr::vsnPrintf( text, sizeof( text ), fmt, argptr );
 //	va_end( argptr );
                 text.append(String.format(fmt, *args))
-                thread = idThread.Companion.CurrentThread()
+                thread = idThread.CurrentThread()
                 if (thread != null) {
                     thread.Error("%s", text)
                 } else {
@@ -6383,7 +6301,7 @@ class Game_local {
          gameError
          ===============
          */
-            fun gameError(fmt: String?, vararg args: Any?) {
+            fun gameError(fmt: String, vararg args: Any?) {
 //	va_list		argptr;
 //	char		text[MAX_STRING_CHARS];
 //
@@ -6396,8 +6314,8 @@ class Game_local {
 
         init {
             for (u in 0 until MAX_CLIENTS) {
-                userInfo.get(u) = idDict()
-                persistentPlayerInfo.get(u) = idDict()
+                userInfo[u] = idDict()
+                persistentPlayerInfo[u] = idDict()
             }
             lastGUIEnt = idEntityPtr()
             lastAIAlertEntity = idEntityPtr()
@@ -6423,9 +6341,9 @@ class Game_local {
         // if set to 1 the server sends the client PVS with snapshots and the client compares against what it sees
         //#ifndef ASYNC_WRITE_PVS
         const val ASYNC_WRITE_PVS = false
-        const val CINEMATIC_SKIP_DELAY = Math_h.SEC2MS(2.0f).toDouble()
+        const val CINEMATIC_SKIP_DELAY = 2000.0f
         const val DEFAULT_GRAVITY_STRING: String = "1066"
-        const val DEFAULT_GRAVITY_VEC3: idVec3 = idVec3(0f, 0f, -Companion.DEFAULT_GRAVITY)
+        val DEFAULT_GRAVITY_VEC3: idVec3 = idVec3(0f, 0f, -DEFAULT_GRAVITY)
         const val GAME_RELIABLE_MESSAGE_CALLVOTE = 14
         const val GAME_RELIABLE_MESSAGE_CASTVOTE = 15
         const val GAME_RELIABLE_MESSAGE_CHAT = 4
@@ -6518,5 +6436,107 @@ class Game_local {
             CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM,
             "force generic platform independent SIMD"
         )
+
+        /*
+     ===========
+     TestGameAPI
+     ============
+     */
+        fun TestGameAPI() {
+            val testImport = gameImport_t()
+            var testExport: gameExport_t = gameExport_t()
+            testImport.sys = sys_public.sys
+            testImport.common = Common.common
+            testImport.cmdSystem = CmdSystem.cmdSystem
+            testImport.cvarSystem = CVarSystem.cvarSystem
+            testImport.fileSystem = FileSystem_h.fileSystem
+            testImport.networkSystem = NetworkSystem.networkSystem
+            testImport.renderSystem = RenderSystem.renderSystem
+            testImport.soundSystem = snd_system.soundSystem
+            testImport.renderModelManager = ModelManager.renderModelManager
+            testImport.uiManager = UserInterface.uiManager
+            testImport.declManager = DeclManager.declManager
+            testImport.AASFileManager = AASFileManager.AASFileManager
+            testImport.collisionModelManager = CollisionModel_local.collisionModelManager
+            testExport = GetGameAPI(testImport)
+        }
+
+        /*
+     ===========
+     GetGameAPI
+     ============
+     */
+        fun GetGameAPI(gameImport: gameImport_t): gameExport_t {
+            if (gameImport.version == Game.GAME_API_VERSION) {
+                // set interface pointers used by the game
+                sys_public.setSysLocal(gameImport.sys)
+                Common.setCommons(gameImport.common)
+                CmdSystem.setCmdSystems(gameImport.cmdSystem)
+                CVarSystem.setCvarSystems(gameImport.cvarSystem)
+                FileSystem_h.setFileSystems(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
+                NetworkSystem.setNetworkSystems(gameImport.networkSystem)
+                RenderSystem.setRenderSystem(gameImport.renderSystem)
+                snd_system.setSoundSystems(gameImport.soundSystem)
+                ModelManager.setRenderModelManagers(gameImport.renderModelManager)
+                UserInterface.setUiManagers(gameImport.uiManager)
+                DeclManager.setDeclManagers(gameImport.declManager)
+                AASFileManager.setAASFileManagers(gameImport.AASFileManager)
+                CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)
+            }
+
+            // set interface pointers used by idLib
+            idLib.sys = sys_public.sys
+            idLib.common = Common.common
+            idLib.cvarSystem = CVarSystem.cvarSystem
+            idLib.fileSystem = FileSystem_h.fileSystem
+
+            // setup export interface
+            gameExport.version = Game.GAME_API_VERSION
+            gameExport.game = game
+            gameExport.gameEdit = GameEdit.gameEdit
+            return gameExport
+        }
+
+        private val gameExport: gameExport_t = gameExport_t()
+        private fun memmove(
+            dst: Array<Array<ByteArray>>,
+            dstOffset: Int,
+            src: Array<Array<ByteArray>>,
+            srcOffset: Int,
+            length: Int
+        ) {
+            var sa: Int
+            var sb: Int
+            var sc: Int
+            var da: Int
+            var db: Int
+            var dc: Int
+            sc = srcOffset % src.size
+            sb = (srcOffset - sc) / src.size
+            sa = (srcOffset - sc - sb * src.size) / src[0].size
+            dc = dstOffset % dst.size
+            db = (dstOffset - dc) / dst.size
+            da = (dstOffset - dc - db * dst.size) / dst[0].size
+            var count = 0
+            while (sa < src.size) {
+                sb = 0
+                while (sb < src[0].size) {
+                    while (sc < src[0][0].size && count < length) {
+                        dst[da][db][dc++] = src[sa][sb][sc]
+                        if (dc == dst[0][0].size) {
+                            dc = 0
+                            if (++db == dst[0].size) {
+                                db = 0
+                                da++ //if this overflows, then we're fucked!
+                            }
+                        }
+                        sc++
+                        count++
+                    }
+                    sb++
+                }
+                sa++
+            }
+        }
     }
 }

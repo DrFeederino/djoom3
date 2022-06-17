@@ -10,7 +10,7 @@
     
     <properties>
         <cloning.version>1.9.1</cloning.version>
-        <lwjgl.version>3.2.3</lwjgl.version>
+        <lwjgl.version>3.3.1</lwjgl.version>
         <lwjgl.natives>natives-windows</lwjgl.natives>
 
         <maven.compiler.source>11</maven.compiler.source>

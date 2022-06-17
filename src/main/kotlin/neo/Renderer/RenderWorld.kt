@@ -16,6 +16,7 @@ import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.BV.Box.idBox
 import neo.idlib.BV.Frustum.idFrustum
 import neo.idlib.BV.Sphere.idSphere
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Lib.idLib
 import neo.idlib.containers.CInt
@@ -207,11 +208,11 @@ class RenderWorld {
                 = 0
 
         // networking: see WriteGUIToSnapshot / ReadGUIFromSnapshot
-        var gui: Array<idUserInterface?> = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
+        var gui: ArrayList<idUserInterface> = ArrayList(RenderWorld.MAX_RENDERENTITY_GUI)
         var hModel // this can only be null if callback is set
                 : idRenderModel? = null
         var joints // array of joints that will modify vertices.
-                : ArrayList<idJointMat>
+                : ArrayList<idJointMat> = ArrayList()
 
         // NULL if non-deformable model.  NOT freed by renderer
         //
@@ -668,7 +669,7 @@ class RenderWorld {
         var height = 0
 
         constructor()
-        constructor(renderView: renderView_s?) {
+        constructor(renderView: renderView_s) {
             viewID = renderView.viewID
             x = renderView.x
             y = renderView.y
@@ -677,7 +678,7 @@ class RenderWorld {
             fov_x = renderView.fov_x
             fov_y = renderView.fov_y
             vieworg.set(renderView.vieworg)
-            viewaxis = idMat3(renderView.viewaxis)
+            viewaxis.set(idMat3(renderView.viewaxis))
             cramZNear = renderView.cramZNear
             forceUpdate = renderView.forceUpdate
             time = renderView.time
@@ -878,7 +879,7 @@ class RenderWorld {
         // fraction location of the trace on the gui surface, or -1,-1 if no hit.
         // This doesn't do any occlusion testing, simply ignoring non-gui surfaces.
         // start / end are in global world coordinates.
-        abstract fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t?
+        abstract fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t
 
         // Traces vs the render model, possibly instantiating a dynamic version, and returns true if something was hit
         abstract fun ModelTrace(
@@ -1137,8 +1138,8 @@ class RenderWorld {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ListRenderLightDefs_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ListRenderLightDefs_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -1150,7 +1151,7 @@ class RenderWorld {
      ===================
      */
     class R_ListRenderEntityDefs_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var mdef: idRenderEntityLocal?
             if (null == tr_local.tr.primaryWorld) {
@@ -1160,7 +1161,7 @@ class RenderWorld {
             var totalRef = 0
             var totalIntr = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld.entityDefs.Num()) {
+            while (i < tr_local.tr.primaryWorld!!.entityDefs.Num()) {
                 mdef = tr_local.tr.primaryWorld.entityDefs.get(i)
                 if (null == mdef) {
                     idLib.common.Printf("%4d: FREED\n", i)
@@ -1193,8 +1194,8 @@ class RenderWorld {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ListRenderEntityDefs_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ListRenderEntityDefs_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

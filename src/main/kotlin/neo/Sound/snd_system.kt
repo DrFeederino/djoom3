@@ -50,11 +50,6 @@ import kotlin.math.pow
  */
 class snd_system {
 
-    fun setSoundSystems(soundSystem: idSoundSystem) {
-        soundSystemLocal = soundSystem as idSoundSystemLocal
-        snd_system.soundSystem = soundSystemLocal
-    }
-
     /*
      ===================================================================================
 
@@ -1559,5 +1554,11 @@ class snd_system {
     companion object {
         var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
         var soundSystem: idSoundSystem = soundSystemLocal
+
+        fun setSoundSystems(soundSystem: idSoundSystem) {
+            soundSystemLocal = soundSystem as idSoundSystemLocal
+            snd_system.soundSystem = soundSystemLocal
+        }
+
     }
 }

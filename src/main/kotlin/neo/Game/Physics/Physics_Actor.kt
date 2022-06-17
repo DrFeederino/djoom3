@@ -107,13 +107,13 @@ class Physics_Actor {
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             assert(
                 model != null // a clip model is required
             )
             assert(
-                model.IsTraceModel() // and it should be a trace model
+                model!!.IsTraceModel() // and it should be a trace model
             )
             assert(
                 density > 0.0f // density should be valid

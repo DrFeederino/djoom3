@@ -13,6 +13,8 @@ import neo.Game.Game_local
 import neo.Game.Game_local.idGameLocal
 import neo.Game.Script.Script_Compiler.idCompiler
 import neo.Game.Script.Script_Compiler.opcode_s
+import neo.Game.Script.Script_Program.MAX_FUNCS
+import neo.Game.Script.Script_Program.MAX_STATEMENTS
 import neo.Game.Script.Script_Program.function_t
 import neo.Game.Script.Script_Program.idCompileError
 import neo.Game.Script.Script_Program.idTypeDef
@@ -30,9 +32,6 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.HashIndex.idHashIndex
-import neo.idlib.containers.List.idList
-import neo.idlib.containers.StaticList.idStaticList
-import neo.idlib.containers.idStrList
 import neo.idlib.math.Vector.idVec3
 import java.nio.ByteBuffer
 import java.util.*
@@ -51,15 +50,23 @@ class idProgram {
     //
     var returnDef: idVarDef? = null
     var returnStringDef: idVarDef? = null
-    private val fileList: idStrList = idStrList()
+    private val fileList = ArrayList<String>()
     private val filename: idStr = idStr()
     private var filenum = 0
-    private val functions: idStaticList<function_t> = idStaticList(Script_Program.MAX_FUNCS, function_t::class.java)
+    private val functions: ArrayList<function_t> = ArrayList(Script_Program.MAX_FUNCS)
+
+    fun ArrayList<*>.MemoryUsed(): Int {
+        return size * Integer.BYTES
+    }
+
+    fun ArrayList<String>.sizeStrings(): Int {
+        return idStr.SIZE * size
+    }
 
     //
     private var numVariables = 0
-    private val statements: idStaticList<statement_s> =
-        idStaticList(Script_Program.MAX_STATEMENTS, statement_s::class.java)
+    private val statements: ArrayList<statement_s> =
+        ArrayList(Script_Program.MAX_STATEMENTS)
 
     //
     private var sysDef: idVarDef? = null
@@ -70,11 +77,11 @@ class idProgram {
     private var top_functions = 0
     private var top_statements = 0
     private var top_types = 0
-    private val types: idList<idTypeDef> = idList()
+    private val types: ArrayList<idTypeDef> = ArrayList()
     private val varDefNameHash: idHashIndex = idHashIndex()
-    private val varDefNames: idList<idVarDefName> = idList()
-    private val varDefs: idList<idVarDef> = idList()
-    private val variableDefaults: idStaticList<Byte> = idStaticList(Script_Program.MAX_GLOBALS)
+    private val varDefNames: ArrayList<idVarDefName> = ArrayList()
+    private val varDefs: ArrayList<idVarDef> = ArrayList()
+    private val variableDefaults: ArrayList<Byte> = ArrayList(Script_Program.MAX_GLOBALS)
     private var variables: ByteArray = ByteArray(Script_Program.MAX_GLOBALS)
 
     /*
@@ -95,40 +102,40 @@ class idProgram {
         Game_local.gameLocal.DPrintf("Files loaded:\n")
         stringspace = 0
         i = 0
-        while (i < fileList.size()) {
+        while (i < fileList.size) {
             Game_local.gameLocal.DPrintf("   %s\n", fileList[i])
-            stringspace += fileList[i].Allocated()
+            stringspace += fileList[i].length
             i++
         }
         stringspace += fileList.sizeStrings()
-        numdefs = varDefs.Num()
-        memused = varDefs.Num() * idVarDef.Companion.BYTES
-        memused += types.Num() * idTypeDef.Companion.BYTES
+        numdefs = varDefs.size
+        memused = varDefs.size * idVarDef.BYTES
+        memused += types.size * idTypeDef.BYTES
         memused += stringspace
         i = 0
-        while (i < types.Num()) {
+        while (i < types.size) {
             memused += types[i].Allocated()
             i++
         }
         funcMem = functions.MemoryUsed()
         i = 0
-        while (i < functions.Num()) {
+        while (i < functions.size) {
             funcMem += functions[i].Allocated()
             i++
         }
-        memallocated = funcMem + memused + idProgram.Companion.BYTES
+        memallocated = funcMem + memused + idProgram.BYTES
         memused += statements.MemoryUsed()
         memused += functions.MemoryUsed() // name and filename of functions are shared, so no need to include them
         memused += variables.size
         Game_local.gameLocal.Printf("\nMemory usage:\n")
-        Game_local.gameLocal.Printf("     Strings: %d, %d bytes\n", fileList.size(), stringspace)
-        Game_local.gameLocal.Printf("  Statements: %d, %d bytes\n", statements.Num(), statements.MemoryUsed())
-        Game_local.gameLocal.Printf("   Functions: %d, %d bytes\n", functions.Num(), funcMem)
+        Game_local.gameLocal.Printf("     Strings: %d, %d bytes\n", fileList.size, stringspace)
+        Game_local.gameLocal.Printf("  Statements: %d, %d bytes\n", statements.size, statements.MemoryUsed())
+        Game_local.gameLocal.Printf("   Functions: %d, %d bytes\n", functions.size, funcMem)
         Game_local.gameLocal.Printf("   Variables: %d bytes\n", numVariables)
         Game_local.gameLocal.Printf("    Mem used: %d bytes\n", memused)
-        Game_local.gameLocal.Printf(" Static data: %d bytes\n", idProgram.Companion.BYTES)
+        Game_local.gameLocal.Printf(" Static data: %d bytes\n", idProgram.BYTES)
         Game_local.gameLocal.Printf("   Allocated: %d bytes\n", memallocated)
-        Game_local.gameLocal.Printf(" Thread size: %d bytes\n\n", idThread.Companion.BYTES)
+        Game_local.gameLocal.Printf(" Thread size: %d bytes\n\n", idThread.BYTES)
     }
 
     // ~idProgram();
@@ -136,13 +143,13 @@ class idProgram {
     fun Save(savefile: idSaveGame) {
         var i: Int
         var currentFileNum = top_files
-        savefile.WriteInt(fileList.size() - currentFileNum)
-        while (currentFileNum < fileList.size()) {
+        savefile.WriteInt(fileList.size - currentFileNum)
+        while (currentFileNum < fileList.size) {
             savefile.WriteString(fileList[currentFileNum])
             currentFileNum++
         }
         i = 0
-        while (i < variableDefaults.Num()) {
+        while (i < variableDefaults.size) {
             if (variables[i] != variableDefaults[i]) {
                 savefile.WriteInt(i)
                 savefile.WriteByte(variables[i])
@@ -152,7 +159,7 @@ class idProgram {
         // Mark the end of the diff with default variables with -1
         savefile.WriteInt(-1)
         savefile.WriteInt(numVariables)
-        i = variableDefaults.Num()
+        i = variableDefaults.size
         while (i < numVariables) {
             savefile.WriteByte(variables[i])
             i++
@@ -180,7 +187,7 @@ class idProgram {
             savefile.ReadInt(index)
         }
         savefile.ReadInt(num)
-        i = variableDefaults.Num()
+        i = variableDefaults.size
         while (i < num._val) {
             variables[i] = savefile.ReadByte()
             i++
@@ -212,27 +219,27 @@ class idProgram {
             }
         }
 
-        val statementList = Array(statements.Num()) { statementBlock_t() }
-        val statementIntArray = IntArray(statements.Num() * 6)
+        val statementList = Array(statements.size) { statementBlock_t() }
+        val statementIntArray = IntArray(statements.size * 6)
 
-//	memset( statementList, 0, ( sizeof(statementBlock_t) * statements.Num() ) );
+//	memset( statementList, 0, ( sizeof(statementBlock_t) * statements.size ) );
         // Copy info into new list, using the variable numbers instead of a pointer to the variable
         i = 0
-        while (i < statements.Num()) {
+        while (i < statements.size) {
             //statementList[i] = statementBlock_t()
             statementList[i].op = statements[i].op
             if (statements[i].a != null) {
-                statementList[i].a = statements[i].a.num
+                statementList[i].a = statements[i].a!!.num
             } else {
                 statementList[i].a = -1
             }
             if (statements[i].b != null) {
-                statementList[i].b = statements[i].b.num
+                statementList[i].b = statements[i].b!!.num
             } else {
                 statementList[i].b = -1
             }
             if (statements[i].c != null) {
-                statementList[i].c = statements[i].c.num
+                statementList[i].c = statements[i].c!!.num
             } else {
                 statementList[i].c = -1
             }
@@ -242,18 +249,18 @@ class idProgram {
             i++
         }
         result =
-            0 // new BigInteger(MD4_BlockChecksum(statementIntArray, /*sizeof(statementBlock_t)*/ statements.Num())).intValue();
+            0 // new BigInteger(MD4_BlockChecksum(statementIntArray, /*sizeof(statementBlock_t)*/ statements.size)).intValue();
 
 //	delete [] statementList;
         return result
     }
 
     //    changed between savegames
-    fun Startup(defaultScript: String?) {
+    fun Startup(defaultScript: String) {
         Game_local.gameLocal.Printf("Initializing scripts\n")
 
         // make sure all data is freed up
-        idThread.Companion.Restart()
+        idThread.Restart()
 
         // get ready for loading scripts
         BeginCompilation()
@@ -274,34 +281,34 @@ class idProgram {
      */
     fun Restart() {
         var i: Int
-        idThread.Companion.Restart()
+        idThread.Restart()
 
         //
         // since there may have been a script loaded by the map or the user may
         // have typed "script" from the console, free up any types and vardefs that
         // have been allocated after the initial startup
         //
-//	for( i = top_types; i < types.Num(); i++ ) {
+//	for( i = top_types; i < types.size; i++ ) {
 //		delete types[ i ];
 //	}
-        types.SetNum(top_types, false)
+        types.ensureCapacity(top_types)
 
-//	for( i = top_defs; i < varDefs.Num(); i++ ) {
+//	for( i = top_defs; i < varDefs.size; i++ ) {
 //		delete varDefs[ i ];
 //	}
-        varDefs.SetNum(top_defs, false)
+        varDefs.ensureCapacity(top_defs)
         i = top_functions
-        while (i < functions.Num()) {
+        while (i < functions.size) {
             functions[i].Clear()
             i++
         }
-        functions.SetNum(top_functions)
-        statements.SetNum(top_statements)
-        fileList.setSize(top_files, false)
+        functions.ensureCapacity(top_functions)
+        statements.ensureCapacity(top_statements)
+        fileList.ensureCapacity(top_files)
         filename.Clear()
 
         // reset the variables to their default values
-        numVariables = variableDefaults.Num()
+        numVariables = variableDefaults.size
         i = 0
         while (i < numVariables) {
             variables[i] = variableDefaults[i]
@@ -309,7 +316,7 @@ class idProgram {
         }
     }
 
-    fun CompileText(source: String, text: String?, console: Boolean): Boolean {
+    fun CompileText(source: String, text: String, console: Boolean): Boolean {
         val compiler = idCompiler()
         var i: Int
         var def: idVarDef
@@ -323,12 +330,12 @@ class idProgram {
 
             // check to make sure all functions prototyped have code
             i = 0
-            while (i < varDefs.Num()) {
+            while (i < varDefs.size) {
                 def = varDefs[i]
-                if (def.Type() == Script_Program.ev_function && (def.scope.Type() == Script_Program.ev_namespace || def.scope.TypeDef()
+                if (def.Type() == Script_Program.ev_function && (def.scope!!.Type() == Script_Program.ev_namespace || def.scope!!.TypeDef()!!
                         .Inherits(Script_Program.type_object))
                 ) {
-                    if (null == def.value.functionPtr.eventdef && 0 == def.value.functionPtr.firstStatement) {
+                    if (null == def.value.functionPtr!!.eventdef && 0 == def.value.functionPtr!!.firstStatement) {
                         throw idCompileError(Str.va("function %s was not defined\n", def.GlobalName()))
                     }
                 }
@@ -339,7 +346,7 @@ class idProgram {
                 Game_local.gameLocal.Printf("%s\n", err.error)
                 return false
             } else {
-                idGameLocal.Companion.Error("%s\n", err.error)
+                idGameLocal.Error("%s\n", err.error)
             }
         }
         if (!console) {
@@ -348,23 +355,23 @@ class idProgram {
         return true
     }
 
-    fun CompileFunction(functionName: String?, text: String?): function_t? {
+    fun CompileFunction(functionName: String, text: String): function_t? {
         val result: Boolean
         result = CompileText(functionName, text, false)
         if (SysCvar.g_disasm.GetBool()) {
             Disassemble()
         }
         if (!result) {
-            idGameLocal.Companion.Error("Compile failed.")
+            idGameLocal.Error("Compile failed.")
         }
         return FindFunction(functionName)
     }
 
-    fun CompileFile(filename: String?) {
-        val src = arrayOf<ByteBuffer?>(null)
+    fun CompileFile(filename: String) {
+        val src = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
         val result: Boolean
         if (idLib.fileSystem.ReadFile(filename, src, null) < 0) {
-            idGameLocal.Companion.Error("Couldn't load %s\n", filename)
+            idGameLocal.Error("Couldn't load %s\n", filename)
         }
         result = CompileText(filename, String(src[0].array()), false)
         idLib.fileSystem.FreeFile(src)
@@ -372,7 +379,7 @@ class idProgram {
             Disassemble()
         }
         if (!result) {
-            idGameLocal.Companion.Error("Compile failed in file %s.", filename)
+            idGameLocal.Error("Compile failed in file %s.", filename)
         }
     }
 
@@ -384,7 +391,7 @@ class idProgram {
      ==============
      */
     fun BeginCompilation() {
-        val statement: statement_s?
+        val statement: statement_s
         FreeData()
         try {
             // make the first statement a return for a "NULL" function
@@ -407,7 +414,7 @@ class idProgram {
             // define the sys object
             sysDef = AllocDef(Script_Program.type_void, "sys", Script_Program.def_namespace, true)
         } catch (err: idCompileError) {
-            idGameLocal.Companion.Error("%s", err.error)
+            idGameLocal.Error("%s", err.error)
         }
     }
 
@@ -420,13 +427,13 @@ class idProgram {
      */
     fun FinishCompilation() {
         var i: Int
-        top_functions = functions.Num()
-        top_statements = statements.Num()
-        top_types = types.Num()
-        top_defs = varDefs.Num()
-        top_files = fileList.size()
-        variableDefaults.Clear()
-        variableDefaults.SetNum(numVariables)
+        top_functions = functions.size
+        top_statements = statements.size
+        top_types = types.size
+        top_defs = varDefs.size
+        top_files = fileList.size
+        variableDefaults.clear()
+        variableDefaults.ensureCapacity(numVariables)
         i = 0
         while (i < numVariables) {
             variableDefaults[i] = variables[i]
@@ -434,11 +441,11 @@ class idProgram {
         }
     }
 
-    fun DisassembleStatement(file: idFile?, instructionPointer: Int) {
+    fun DisassembleStatement(file: idFile, instructionPointer: Int) {
         val op: opcode_s
         val statement: statement_s?
         statement = statements[instructionPointer]
-        op = idCompiler.Companion.opcodes.get(statement.op)
+        op = idCompiler.opcodes.get(statement.op)
         file.Printf(
             "%20s(%d):\t%6d: %15s\t",
             fileList[statement.file],
@@ -448,15 +455,15 @@ class idProgram {
         )
         if (statement.a != null) {
             file.Printf("\ta: ")
-            statement.a.PrintInfo(file, instructionPointer)
+            statement.a!!.PrintInfo(file, instructionPointer)
         }
         if (statement.b != null) {
             file.Printf("\tb: ")
-            statement.b.PrintInfo(file, instructionPointer)
+            statement.b!!.PrintInfo(file, instructionPointer)
         }
         if (statement.c != null) {
             file.Printf("\tc: ")
-            statement.c.PrintInfo(file, instructionPointer)
+            statement.c!!.PrintInfo(file, instructionPointer)
         }
         file.Printf("\n")
     }
@@ -465,10 +472,10 @@ class idProgram {
         var i: Int
         var instructionPointer: Int
         var func: function_t?
-        val file: idFile?
-        file = idLib.fileSystem.OpenFileByMode("script/disasm.txt", fsMode_t.FS_WRITE)
+        val file: idFile
+        file = idLib.fileSystem.OpenFileByMode("script/disasm.txt", fsMode_t.FS_WRITE)!!
         i = 0
-        while (i < functions.Num()) {
+        while (i < functions.size) {
             func = functions[i]
             if (func.eventdef != null) {
                 // skip eventdefs
@@ -497,15 +504,15 @@ class idProgram {
         var i: Int
 
         // free the defs
-        varDefs.DeleteContents(true)
-        varDefNames.DeleteContents(true)
+        varDefs.clear()
+        varDefNames.clear()
         varDefNameHash.Free()
         returnDef = null
         returnStringDef = null
         sysDef = null
 
         // free any special types we've created
-        types.DeleteContents(true)
+        types.clear()
         filenum = 0
         numVariables = 0
         //	memset( variables, 0, sizeof( variables ) );
@@ -513,14 +520,14 @@ class idProgram {
 
         // clear all the strings in the functions so that it doesn't look like we're leaking memory.
         i = 0
-        while (i < functions.Num()) {
+        while (i < functions.size) {
             functions[i].Clear()
             i++
         }
         filename.Clear()
         fileList.clear()
-        statements.Clear()
-        functions.Clear()
+        statements.clear()
+        functions.clear()
         top_functions = 0
         top_statements = 0
         top_types = 0
@@ -529,12 +536,21 @@ class idProgram {
         filename.set("")
     }
 
-    fun GetFilename(num: Int): String? {
+    fun GetFilename(num: Int): String {
         return fileList[num].toString()
     }
 
-    fun GetFilenum(name: String?): Int {
-        if (filename == name) {
+    fun kotlin.collections.ArrayList<String>.addUnique(s: String): Int {
+        var index = indexOf(s)
+        if (index == -1) {
+            add(s)
+            index = indexOf(s)
+        }
+        return index
+    }
+
+    fun GetFilenum(name: String): Int {
+        if (filename.toString() == name) {
             return filenum
         }
         val strippedName: String?
@@ -555,21 +571,21 @@ class idProgram {
         return statements[index].linenumber
     }
 
-    fun GetFilenameForStatement(index: Int): String? {
+    fun GetFilenameForStatement(index: Int): String {
         return GetFilename(statements[index].file)
     }
 
-    fun AllocType(type: idTypeDef?): idTypeDef? {
+    fun AllocType(type: idTypeDef): idTypeDef {
         val newtype: idTypeDef
         newtype = idTypeDef(type)
-        types.Append(newtype)
+        types.add(newtype)
         return newtype
     }
 
-    fun AllocType(   /*etype_t*/etype: Int, edef: idVarDef?, ename: String?, esize: Int, aux: idTypeDef?): idTypeDef? {
+    fun AllocType(   /*etype_t*/etype: Int, edef: idVarDef?, ename: String, esize: Int, aux: idTypeDef?): idTypeDef {
         val newtype: idTypeDef
         newtype = idTypeDef(etype, edef, ename, esize, aux)
-        types.Append(newtype)
+        types.add(newtype)
         return newtype
     }
 
@@ -581,11 +597,11 @@ class idProgram {
      a new one and copies it out.
      ============
      */
-    fun GetType(type: idTypeDef?, allocate: Boolean): idTypeDef? {
+    fun GetType(type: idTypeDef, allocate: Boolean): idTypeDef? {
         var i: Int
 
         //FIXME: linear search == slow
-        i = types.Num() - 1
+        i = types.size - 1
         while (i >= 0) {
             if (types[i].MatchesType(type) && types[i].Name() == type.Name()) {
                 return types[i]
@@ -606,10 +622,10 @@ class idProgram {
      Returns a preexisting complex type that matches the name, or returns NULL if not found
      ============
      */
-    fun FindType(name: String?): idTypeDef? {
+    fun FindType(name: String): idTypeDef? {
         var check: idTypeDef?
         var i: Int
-        i = types.Num() - 1
+        i = types.size - 1
         while (i >= 0) {
             check = types[i]
             if (check.Name() == name) {
@@ -620,7 +636,7 @@ class idProgram {
         return null
     }
 
-    fun AllocDef(type: idTypeDef?, name: String?, scope: idVarDef?, constant: Boolean): idVarDef? {
+    fun AllocDef(type: idTypeDef, name: String, scope: idVarDef?, constant: Boolean): idVarDef {
         val def: idVarDef
         var element: String
         val def_x: idVarDef?
@@ -629,14 +645,15 @@ class idProgram {
 
         // allocate a new def
         def = idVarDef(type)
-        def.scope = scope
+        def.scope = scope!!
         def.numUsers = 1
-        def.num = varDefs.Append(def)
+        varDefs.add(def)
+        def.num = varDefs.indexOf(def)
         def.value = varEval_s()
 
         // add the def to the list with defs with this name and set the name pointer
         AddDefToNameList(def, name)
-        if (type.Type() == Script_Program.ev_vector || type.Type() == Script_Program.ev_field && type.FieldType()
+        if (type.Type() == Script_Program.ev_vector || type.Type() == Script_Program.ev_field && type.FieldType()!!
                 .Type() == Script_Program.ev_vector
         ) {
             //
@@ -645,26 +662,26 @@ class idProgram {
             if (Script_Compiler.RESULT_STRING == name) {
                 // <RESULT> vector defs don't need the _x, _y and _z components
                 assert(scope.Type() == Script_Program.ev_function)
-                def.value.setStackOffset(scope.value.functionPtr.locals)
+                def.value.setStackOffset(scope.value.functionPtr!!.locals)
                 def.initialized = initialized_t.stackVariable
-                scope.value.functionPtr.locals += type.Size()
-            } else if (scope.TypeDef().Inherits(Script_Program.type_object)) {
+                scope.value.functionPtr!!.locals += type.size
+            } else if (scope.TypeDef()!!.Inherits(Script_Program.type_object)) {
                 val newtype = idTypeDef(Script_Program.ev_field, null, "float field", 0, Script_Program.type_float)
                 val type2 = GetType(newtype, true)
 
                 // set the value to the variable's position in the object
-                def.value.setPtrOffset(scope.TypeDef().Size())
+                def.value.setPtrOffset(scope.TypeDef()!!.size)
 
                 // make automatic defs for the vectors elements
                 // origin can be accessed as origin_x, origin_y, and origin_z
                 element = String.format("%s_x", def.Name())
-                def_x = AllocDef(type2, element, scope, constant)
+                def_x = AllocDef(type2!!, element, scope, constant)
                 element = String.format("%s_y", def.Name())
                 def_y = AllocDef(type2, element, scope, constant)
-                def_y.value.setPtrOffset(def_x.value.getPtrOffset() + Script_Program.type_float.Size())
+                def_y.value.setPtrOffset(def_x.value.getPtrOffset() + Script_Program.type_float.size)
                 element = String.format("%s_z", def.Name())
                 def_z = AllocDef(type2, element, scope, constant)
-                def_z.value.setPtrOffset(def_y.value.getPtrOffset() + Script_Program.type_float.Size())
+                def_z.value.setPtrOffset(def_y.value.getPtrOffset() + Script_Program.type_float.size)
             } else {
                 // make automatic defs for the vectors elements
                 // origin can be accessed as origin_x, origin_y, and origin_z
@@ -679,38 +696,38 @@ class idProgram {
                 def.value = def_x.value
                 def.initialized = def_x.initialized
             }
-        } else if (scope.TypeDef().Inherits(Script_Program.type_object)) {
+        } else if (scope.TypeDef()!!.Inherits(Script_Program.type_object)) {
             //
             // object variable
             //
             // set the value to the variable's position in the object
-            def.value.setPtrOffset(scope.TypeDef().Size())
+            def.value.setPtrOffset(scope.TypeDef()!!.size)
         } else if (scope.Type() == Script_Program.ev_function) {
             //
             // stack variable
             //
             // since we don't know how many local variables there are,
             // we have to have them go backwards on the stack
-            def.value.setStackOffset(scope.value.functionPtr.locals)
+            def.value.setStackOffset(scope.value.functionPtr!!.locals)
             def.initialized = initialized_t.stackVariable
             if (type.Inherits(Script_Program.type_object)) {
                 // objects only have their entity number on the stack, not the entire object
-                scope.value.functionPtr.locals += Script_Program.type_object.Size()
+                scope.value.functionPtr!!.locals += Script_Program.type_object.size
             } else {
-                scope.value.functionPtr.locals += type.Size()
+                scope.value.functionPtr!!.locals += type.size
             }
         } else {
             //
             // global variable
             //
             def.value.setBytePtr(variables, numVariables)
-            numVariables += def.TypeDef().Size()
+            numVariables += def.TypeDef()!!.size
             //            System.out.println(def.TypeDef().Name());
             if (numVariables > variables.size) {
                 throw idCompileError(Str.va("Exceeded global memory size (%d bytes)", variables.size))
             }
             Arrays.fill(variables, numVariables, variables.size, 0.toByte())
-            //                memset(def.value.bytePtr, 0, def.TypeDef().Size());
+            //                memset(def.value.bytePtr, 0, def.TypeDef().size);
         }
         return def
     }
@@ -722,7 +739,7 @@ class idProgram {
      If type is NULL, it will match any type
      ============
      */
-    fun GetDef(type: idTypeDef?, name: String?, scope: idVarDef?): idVarDef? {
+    fun GetDef(type: idTypeDef?, name: String, scope: idVarDef?): idVarDef? {
         var def: idVarDef?
         var bestDef: idVarDef?
         var bestDepth: Int
@@ -731,7 +748,7 @@ class idProgram {
         bestDef = null
         def = GetDefList(name)
         while (def != null) {
-            if (def.scope.Type() == Script_Program.ev_namespace) {
+            if (def.scope!!.Type() == Script_Program.ev_namespace) {
                 depth = def.DepthOfScope(scope)
                 if (0 == depth) {
                     // not in the same namespace
@@ -759,7 +776,7 @@ class idProgram {
         return bestDef
     }
 
-    fun FreeDef(def: idVarDef?, scope: idVarDef?) {
+    fun FreeDef(def: idVarDef, scope: idVarDef?) {
         var e: idVarDef?
         var i: Int
         if (def.Type() == Script_Program.ev_vector) {
@@ -774,16 +791,16 @@ class idProgram {
             e = GetDef(null, name, scope)
             e?.let { FreeDef(it, scope) }
         }
-        varDefs.RemoveIndex(def.num)
+        varDefs.removeAt(def.num)
         i = def.num
-        while (i < varDefs.Num()) {
+        while (i < varDefs.size) {
             varDefs[i].num = i
             i++
         }
         def.close()
     }
 
-    fun FindFreeResultDef(type: idTypeDef?, name: String?, scope: idVarDef?, a: idVarDef?, b: idVarDef?): idVarDef? {
+    fun FindFreeResultDef(type: idTypeDef, name: String, scope: idVarDef?, a: idVarDef?, b: idVarDef?): idVarDef? {
         var def: idVarDef?
         def = GetDefList(name)
         while (def != null) {
@@ -803,19 +820,19 @@ class idProgram {
                 def = def.Next()
                 continue
             }
-            return def
             def = def.Next()
+            return def
         }
         return AllocDef(type, name, scope, false)
     }
 
-    fun GetDefList(name: String?): idVarDef? {
+    fun GetDefList(name: String): idVarDef? {
         var i: Int
         val hash: Int
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames[i].Name(), name) == 0) {
+            if (idStr.Cmp(varDefNames[i].Name(), name) == 0) {
                 return varDefNames[i].GetDefs()
             }
             i = varDefNameHash.Next(i)
@@ -823,19 +840,21 @@ class idProgram {
         return null
     }
 
-    fun AddDefToNameList(def: idVarDef?, name: String?) {
+    fun AddDefToNameList(def: idVarDef, name: String) {
         var i: Int
         val hash: Int
         hash = varDefNameHash.GenerateKey(name, true)
         i = varDefNameHash.First(hash)
         while (i != -1) {
-            if (idStr.Companion.Cmp(varDefNames[i].Name(), name) == 0) {
+            if (idStr.Cmp(varDefNames[i].Name(), name) == 0) {
                 break
             }
             i = varDefNameHash.Next(i)
         }
         if (i == -1) {
-            i = varDefNames.Append(idVarDefName(name))
+            val newDefName = idVarDefName(name)
+            varDefNames.add(newDefName)
+            i = varDefNames.indexOf(newDefName)
             varDefNameHash.Add(hash, i)
         }
         varDefNames[i].AddDef(def)
@@ -852,10 +871,10 @@ class idProgram {
      Returns >0 if function found.
      ================
      */
-    fun FindFunction(name: String?): function_t? {                // returns NULL if function not found
+    fun FindFunction(name: String): function_t? {                // returns NULL if function not found
         var start: Int
         var pos: Int
-        var namespaceDef: idVarDef?
+        var namespaceDef: idVarDef
         var def: idVarDef?
         assert(name != null)
         val fullname = idStr(name)
@@ -876,21 +895,21 @@ class idProgram {
 
             // skip past the ::
             start = pos + 2
-        } while (def.Type() == Script_Program.ev_namespace)
+        } while (def!!.Type() == Script_Program.ev_namespace)
         val funcName = fullname.Right(fullname.Length() - start).toString()
         def = GetDef(null, funcName, namespaceDef)
         if (null == def) {
             // couldn't find function
             return null
         }
-        return if (def.Type() == Script_Program.ev_function && def.value.functionPtr.eventdef == null) {
+        return if (def.Type() == Script_Program.ev_function && def.value.functionPtr!!.eventdef == null) {
             def.value.functionPtr
         } else null
 
         // is not a function, or is an eventdef
     }
 
-    fun FindFunction(name: idStr?): function_t? {
+    fun FindFunction(name: idStr): function_t? {
         return FindFunction(name.toString())
     }
 
@@ -904,30 +923,30 @@ class idProgram {
      Returns >0 if function found.
      ================
      */
-    fun FindFunction(name: String?, type: idTypeDef?): function_t? {    // returns NULL if function not found
-        var tdef: idVarDef?
+    fun FindFunction(name: String, type: idTypeDef): function_t? {    // returns NULL if function not found
+        var tdef: idVarDef
         var def: idVarDef?
 
         // look for the function
 //            def = null;
-        tdef = type.def
+        tdef = type.def!!
         while (tdef !== Script_Program.def_object) {
             def = GetDef(null, name, tdef)
             if (def != null) {
                 return def.value.functionPtr
             }
-            tdef = tdef.TypeDef().SuperClass().def
+            tdef = tdef.TypeDef()!!.SuperClass()!!.def!!
         }
         return null
     }
 
-    fun AllocFunction(def: idVarDef?): function_t? {
-        if (functions.Num() >= functions.Max()) {
-            throw idCompileError(Str.va("Exceeded maximum allowed number of functions (%d)", functions.Max()))
+    fun AllocFunction(def: idVarDef): function_t {
+        if (functions.size >= MAX_FUNCS) {
+            throw idCompileError(Str.va("Exceeded maximum allowed number of functions (%d)", MAX_FUNCS))
         }
 
         // fill in the dfunction
-        val func = functions.Alloc()
+        val func = function_t()
         func.eventdef = null
         func.def = def
         func.type = def.TypeDef()
@@ -936,23 +955,24 @@ class idProgram {
         func.parmTotal = 0
         func.locals = 0
         func.filenum = filenum
-        func.parmSize.SetGranularity(1)
+        func.parmSize.ensureCapacity(1)
         func.SetName(def.GlobalName())
         def.SetFunction(func)
+        functions.add(func)
         return func
     }
 
-    fun GetFunction(index: Int): function_t? {
+    fun GetFunction(index: Int): function_t {
         return functions[index]
     }
 
-    fun GetFunctionIndex(func: function_t?): Int {
-        return TempDump.indexOf(func, functions.Ptr())
+    fun GetFunctionIndex(func: function_t): Int {
+        return functions.indexOf(func)
     }
 
-    fun SetEntity(name: String?, ent: idEntity?) {
+    fun SetEntity(name: String, ent: idEntity?) {
         val def: idVarDef?
-        var defName: String? = "$"
+        var defName: String = "$"
         defName += name
         def = GetDef(Script_Program.type_entity, defName, Script_Program.def_namespace)
         if (def != null && def.initialized != initialized_t.stackVariable) {
@@ -965,17 +985,19 @@ class idProgram {
         }
     }
 
-    fun AllocStatement(): statement_s? {
-        if (statements.Num() == 61960) {
+    fun AllocStatement(): statement_s {
+        if (statements.size == 61960) {
             val a = 0
         }
-        if (statements.Num() >= statements.Max()) {
-            throw idCompileError(Str.va("Exceeded maximum allowed number of statements (%d)", statements.Max()))
+        if (statements.size >= MAX_STATEMENTS) {
+            throw idCompileError(Str.va("Exceeded maximum allowed number of statements (%d)", MAX_STATEMENTS))
         }
-        return statements.Alloc()
+        var addedElement = statement_s()
+        statements.add(addedElement)
+        return addedElement
     }
 
-    fun GetStatement(index: Int): statement_s? {
+    fun GetStatement(index: Int): statement_s {
         if (index == 61961) {
             val a = 0
         }
@@ -983,40 +1005,40 @@ class idProgram {
     }
 
     fun NumStatements(): Int {
-        return statements.Num()
+        return statements.size
     }
 
     fun GetReturnedInteger(): Int {
-        return returnDef.value.getIntPtr()
+        return returnDef!!.value.getIntPtr()
     }
 
     fun ReturnFloat(value: Float) {
-        returnDef.value.setFloatPtr(value)
+        returnDef!!.value.setFloatPtr(value)
     }
 
     fun ReturnInteger(value: Int) {
-        returnDef.value.setIntPtr(value)
+        returnDef!!.value.setIntPtr(value)
     }
 
     fun ReturnVector(vec: idVec3) {
-        returnDef.value.setVectorPtr(vec)
+        returnDef!!.value.setVectorPtr(vec)
     }
 
-    fun ReturnString(string: String?) {
-        returnStringDef.value.stringPtr =
+    fun ReturnString(string: String) {
+        returnStringDef!!.value.stringPtr =
             string //idStr.Copynz(returnStringDef.value.stringPtr, string, MAX_STRING_LEN);
     }
 
     fun ReturnEntity(ent: idEntity?) {
         if (ent != null) {
-            returnDef.value.setEntityNumberPtr(ent.entityNumber + 1)
+            returnDef!!.value.setEntityNumberPtr(ent.entityNumber + 1)
         } else {
-            returnDef.value.setEntityNumberPtr(0)
+            returnDef!!.value.setEntityNumberPtr(0)
         }
     }
 
     fun NumFilenames(): Int {
-        return fileList.size()
+        return fileList.size
     }
 
     companion object {

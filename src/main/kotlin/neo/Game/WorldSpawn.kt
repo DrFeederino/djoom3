@@ -1,6 +1,8 @@
 package neo.Game
 
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class.EV_Remove
+import neo.Game.GameSys.Class.EV_SafeRemove
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Class.idClass
@@ -41,10 +43,10 @@ class WorldSpawn {
 
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
-                eventCallbacks[Class.EV_Remove] =
-                    eventCallback_t0<idWorldspawn?> { obj: T? -> neo.Game.obj.Event_Remove() } as eventCallback_t0<idWorldspawn?>
-                eventCallbacks[Class.EV_SafeRemove] =
-                    eventCallback_t0<idWorldspawn?> { obj: T? -> neo.Game.obj.Event_Remove() } as eventCallback_t0<idWorldspawn?>
+                eventCallbacks[EV_Remove] =
+                    eventCallback_t0<idWorldspawn> { obj: Any? -> idWorldspawn::Event_Remove }
+                eventCallbacks[EV_SafeRemove] =
+                    eventCallback_t0<idWorldspawn> { obj: Any? -> idWorldspawn::Event_Remove }
             }
         }
 
@@ -88,6 +90,7 @@ class WorldSpawn {
                         kv.GetValue(),
                         kv.GetKey()
                     )
+                    return
                 }
                 thread = idThread(func)
                 thread.DelayedStart(0)
@@ -110,7 +113,7 @@ class WorldSpawn {
             idGameLocal.Error("Tried to remove world")
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -118,8 +121,8 @@ class WorldSpawn {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks[event]
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 }

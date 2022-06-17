@@ -133,7 +133,7 @@ object Event {
                 return eventDefList[eventnum]
             }
 
-            fun FindEvent(name: String?): idEventDef? {
+            fun FindEvent(name: String): idEventDef? {
                 var ev: idEventDef
                 val num: Int
                 var i: Int

@@ -960,7 +960,7 @@ object RenderWorld_local {
          start / end are in global world coordinates.
          ================
          */
-        override fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t? {
+        override fun GuiTrace(entityHandle: Int, start: idVec3, end: idVec3): guiPoint_t {
             var local: localTrace_t?
             val localStart = idVec3()
             val localEnd = idVec3()

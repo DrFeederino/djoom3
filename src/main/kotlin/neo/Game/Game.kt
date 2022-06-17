@@ -1,7 +1,6 @@
 package neo.Game
 
 import neo.CM.CollisionModel.idCollisionModelManager
-import neo.Game.*
 import neo.Game.AFEntity.idAFEntity_Base
 import neo.Game.AFEntity.idAFEntity_Generic
 import neo.Game.AFEntity.jointTransformData_t
@@ -51,16 +50,17 @@ import neo.idlib.containers.CFloat
 import neo.idlib.geometry.JointTransform.idJointMat
 import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.geometry.TraceModel.traceModel_t
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Simd
+import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
 import neo.sys.sys_public.idSys
 import neo.ui.UserInterface.idUserInterface
 import neo.ui.UserInterface.idUserInterface.idUserInterfaceManager
 import java.util.*
-import java.util.stream.Stream
 
 /**
  *
@@ -74,7 +74,7 @@ object Game {
      ===============================================================================
      */
     const val GAME_API_VERSION = 8
-    val SCRIPT_DEFAULT: String? = "script/doom_main.script"
+    val SCRIPT_DEFAULT: String = "script/doom_main.script"
 
     /*
      ===============================================================================
@@ -84,10 +84,10 @@ object Game {
      ===============================================================================
      */
     // default scripts
-    val SCRIPT_DEFAULTDEFS: String? = "script/doom_defs.script"
+    val SCRIPT_DEFAULTDEFS: String = "script/doom_defs.script"
 
     //
-    val SCRIPT_DEFAULTFUNC: String? = "doom_main"
+    val SCRIPT_DEFAULTFUNC: String = "doom_main"
 
     //enum {
     const val TEST_PARTICLE_MODEL = 0
@@ -142,7 +142,7 @@ object Game {
         // Sets the user info for a client.
         // if canModify is true, the game can modify the user info in the returned dictionary pointer, server will forward the change back
         // canModify is never true on network client
-        abstract fun SetUserInfo(clientNum: Int, userInfo: idDict?, isClient: Boolean, canModify: Boolean): idDict?
+        abstract fun SetUserInfo(clientNum: Int, userInfo: idDict, isClient: Boolean, canModify: Boolean): idDict?
 
         // Retrieve the game's userInfo dict for a client.
         abstract fun GetUserInfo(clientNum: Int): idDict?
@@ -151,19 +151,19 @@ object Game {
         abstract fun ThrottleUserInfo()
 
         // Sets the serverinfo at map loads and when it changes.
-        abstract fun SetServerInfo(serverInfo: idDict?)
+        abstract fun SetServerInfo(serverInfo: idDict)
 
         // The session calls this before moving the single player game to a new level.
         abstract fun GetPersistentPlayerInfo(clientNum: Int): idDict
 
         // The session calls this right before a new level is loaded.
-        abstract fun SetPersistentPlayerInfo(clientNum: Int, playerInfo: idDict?)
+        abstract fun SetPersistentPlayerInfo(clientNum: Int, playerInfo: idDict)
 
         // Loads a map and spawns all the entities.
         abstract fun InitFromNewMap(
-            mapName: String?,
-            renderWorld: idRenderWorld?,
-            soundWorld: idSoundWorld?,
+            mapName: String,
+            renderWorld: idRenderWorld,
+            soundWorld: idSoundWorld,
             isServer: Boolean,
             isClient: Boolean,
             randseed: Int
@@ -171,14 +171,14 @@ object Game {
 
         // Loads a map from a savegame file.
         abstract fun InitFromSaveGame(
-            mapName: String?,
-            renderWorld: idRenderWorld?,
-            soundWorld: idSoundWorld?,
-            saveGameFile: idFile?
+            mapName: String,
+            renderWorld: idRenderWorld,
+            soundWorld: idSoundWorld,
+            saveGameFile: idFile
         ): Boolean
 
         // Saves the current game state, the session may have written some data to the file already.
-        abstract fun SaveGame(saveGameFile: idFile?)
+        abstract fun SaveGame(saveGameFile: idFile)
 
         // Shut down the current map.
         abstract fun MapShutdown()
@@ -199,11 +199,11 @@ object Game {
         abstract fun HandleESC(gui: idUserInterface?): escReply_t?
 
         // get the games menu if appropriate ( multiplayer )
-        abstract fun StartMenu(): idUserInterface
+        abstract fun StartMenu(): idUserInterface?
 
         // When the game is running it's own UI fullscreen, GUI commands are passed through here
         // return NULL once the fullscreen UI mode should stop, or "main" to go to main menu
-        abstract fun HandleGuiCommands(menuCommand: String?): String?
+        abstract fun HandleGuiCommands(menuCommand: String): String?
 
         // main menu commands not caught in the engine are passed here
         abstract fun HandleMainMenuCommands(menuCommand: String?, gui: idUserInterface?)
@@ -211,10 +211,10 @@ object Game {
         // Early check to deny connect.
         abstract fun ServerAllowClient(
             numClients: Int,
-            IP: String?,
-            guid: String?,
-            password: String?,
-            reason: CharArray? /*[MAX_STRING_CHARS]*/
+            IP: String,
+            guid: String,
+            password: String,
+            reason: CharArray /*[MAX_STRING_CHARS]*/
         ): allowReply_t
 
         // Connects a client.
@@ -233,8 +233,8 @@ object Game {
         abstract fun ServerWriteSnapshot(
             clientNum: Int,
             sequence: Int,
-            msg: idBitMsg?,
-            clientInPVS: ByteArray?,
+            msg: idBitMsg,
+            clientInPVS: ByteArray,
             numPVSClients: Int
         )
 
@@ -259,7 +259,7 @@ object Game {
         abstract fun ClientApplySnapshot(clientNum: Int, sequence: Int): Boolean
 
         // Processes a reliable message from the server.
-        abstract fun ClientProcessReliableMessage(clientNum: Int, msg: idBitMsg?)
+        abstract fun ClientProcessReliableMessage(clientNum: Int, msg: idBitMsg)
 
         // Runs prediction on entities at the client.
         abstract fun ClientPrediction(
@@ -271,18 +271,18 @@ object Game {
         // Used to manage divergent time-lines
         abstract fun SelectTimeGroup(timeGroup: Int)
         abstract fun GetTimeGroupTime(timeGroup: Int): Int
-        abstract fun GetBestGameType(map: String?, gametype: String?, buf: CharArray? /*[ MAX_STRING_CHARS ]*/)
+        abstract fun GetBestGameType(map: String, gametype: String, buf: CharArray /*[ MAX_STRING_CHARS ]*/)
 
         // Returns a summary of stats for a given client
-        abstract fun GetClientStats(clientNum: Int, data: Array<String?>?, len: Int)
+        abstract fun GetClientStats(clientNum: Int, data: Array<String>, len: Int)
 
         // Switch a player to a particular team
         abstract fun SwitchTeam(clientNum: Int, team: Int)
         abstract fun DownloadRequest(
-            IP: String?,
-            guid: String?,
-            paks: String?,
-            urls: CharArray? /*[ MAX_STRING_CHARS ]*/
+            IP: String,
+            guid: String,
+            paks: String,
+            urls: CharArray /*[ MAX_STRING_CHARS ]*/
         ): Boolean
 
         abstract fun GetMapLoadingGUI(gui: CharArray? /*[ MAX_STRING_CHARS ]*/)
@@ -328,7 +328,7 @@ object Game {
          which should be used by dmap and the editor
          ================
          */
-        fun ParseSpawnArgsToRenderLight(args: idDict?, renderLight: renderLight_s?) {
+        fun ParseSpawnArgsToRenderLight(args: idDict, renderLight: renderLight_s) {
             val gotTarget: Boolean
             val gotUp: Boolean
             val gotRight: Boolean
@@ -350,7 +350,7 @@ object Game {
             if ((gotTarget || gotUp || gotRight) != (gotTarget && gotUp && gotRight)) {
                 Game_local.gameLocal.Printf(
                     "Light at (%f,%f,%f) has bad target info\n",
-                    renderLight.origin.get(0), renderLight.origin.get(1), renderLight.origin.get(2)
+                    renderLight.origin[0], renderLight.origin[1], renderLight.origin[2]
                 )
                 return
             }
@@ -364,10 +364,8 @@ object Game {
                 if (!args.GetVector("light_radius", "300 300 300", renderLight.lightRadius)) {
                     val radius = CFloat()
                     args.GetFloat("light", "300", radius)
-                    renderLight.lightRadius.set(
-                        0,
+                    renderLight.lightRadius[0] =
                         renderLight.lightRadius.set(1, renderLight.lightRadius.set(2, radius._val))
-                    )
                 }
             }
 
@@ -376,25 +374,25 @@ object Game {
             var mat: idMat3 = idMat3()
             if (!args.GetMatrix("light_rotation", "1 0 0 0 1 0 0 0 1", mat)) {
                 if (!args.GetMatrix("rotation", "1 0 0 0 1 0 0 0 1", mat)) {
-                    angles.set(1, args.GetFloat("angle", "0"))
-                    angles.set(0, 0f)
-                    angles.set(1, idMath.AngleNormalize360(angles.get(1)))
-                    angles.set(2, 0f)
+                    angles[1] = args.GetFloat("angle", "0")
+                    angles[0] = 0f
+                    angles[1] = idMath.AngleNormalize360(angles[1])
+                    angles[2] = 0f
                     mat = angles.ToMat3()
                 }
             }
 
             // fix degenerate identity matrices
-            mat.get(0).FixDegenerateNormal()
-            mat.get(1).FixDegenerateNormal()
-            mat.get(2).FixDegenerateNormal()
-            renderLight.axis = mat
+            mat[0].FixDegenerateNormal()
+            mat[1].FixDegenerateNormal()
+            mat[2].FixDegenerateNormal()
+            renderLight.axis.set(mat)
 
             // check for other attributes
             args.GetVector("_color", "1 1 1", color)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMESCALE] = args.GetFloat("shaderParm3", "1")
             if (TempDump.NOT(
                     args.GetFloat("shaderParm4", "0")
@@ -424,7 +422,7 @@ object Game {
          which should be used by dmap and the editor
          ================
          */
-        fun ParseSpawnArgsToRenderEntity(args: idDict?, renderEntity: renderEntity_s?) {
+        fun ParseSpawnArgsToRenderEntity(args: idDict, renderEntity: renderEntity_s) {
             var i: Int
             var temp: String?
             val color = idVec3()
@@ -436,8 +434,8 @@ object Game {
             if (TempDump.isNotNullOrEmpty(temp)) {
                 modelDef = TempDump.dynamic_cast(
                     idDeclModelDef::class.java,
-                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false)
-                ) as idDeclModelDef
+                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false)!!
+                ) as idDeclModelDef?
                 if (modelDef != null) {
                     renderEntity.hModel = modelDef.ModelHandle()
                 }
@@ -446,7 +444,7 @@ object Game {
                 }
             }
             if (renderEntity.hModel != null) {
-                renderEntity.bounds.set(renderEntity.hModel.Bounds(renderEntity))
+                renderEntity.bounds.set(renderEntity.hModel!!.Bounds(renderEntity))
             } else {
                 renderEntity.bounds.Zero()
             }
@@ -475,9 +473,9 @@ object Game {
 
             // get shader parms
             args.GetVector("_color", "1 1 1", color)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color.get(0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.get(1)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.get(2)
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
             renderEntity.shaderParms[3] = args.GetFloat("shaderParm3", "1")
             renderEntity.shaderParms[4] = args.GetFloat("shaderParm4", "0")
             renderEntity.shaderParms[5] = args.GetFloat("shaderParm5", "0")
@@ -517,7 +515,7 @@ object Game {
          which should be used by dmap and the editor
          ================
          */
-        fun ParseSpawnArgsToRefSound(args: idDict?, refSound: refSound_t?) {
+        fun ParseSpawnArgsToRefSound(args: idDict, refSound: refSound_t) {
             val temp: String?
 
             //	memset( refSound, 0, sizeof( *refSound ) );//TODO:clear?
@@ -556,26 +554,26 @@ object Game {
         }
 
         // Animation system calls for non-game based skeletal rendering.
-        fun ANIM_GetModelFromEntityDef(classname: String?): idRenderModel? {
+        fun ANIM_GetModelFromEntityDef(classname: String): idRenderModel? {
             val args: idDict?
             args = Game_local.gameLocal.FindEntityDefDict(classname, false)
             return args?.let { ANIM_GetModelFromEntityDef(it) }
         }
 
-        fun ANIM_GetModelOffsetFromEntityDef(classname: String?): idVec3 {
+        fun ANIM_GetModelOffsetFromEntityDef(classname: String): idVec3 {
             val args: idDict?
             val modelDef: idDeclModelDef?
             args = Game_local.gameLocal.FindEntityDefDict(classname, false)
             if (null == args) {
-                return Vector.getVec3_origin()
+                return getVec3_origin()
             }
             modelDef = Anim_Blend.ANIM_GetModelDefFromEntityDef(args)
             return if (null == modelDef) {
-                Vector.getVec3_origin()
+                getVec3_origin()
             } else modelDef.GetVisualOffset()
         }
 
-        fun ANIM_GetModelFromEntityDef(args: idDict?): idRenderModel? {
+        fun ANIM_GetModelFromEntityDef(args: idDict): idRenderModel? {
             var model: idRenderModel?
             val modelDef: idDeclModelDef
             model = null
@@ -592,11 +590,11 @@ object Game {
             } else model
         }
 
-        fun ANIM_GetModelFromName(modelName: String?): idRenderModel? {
-            val modelDef: idDeclModelDef
+        fun ANIM_GetModelFromName(modelName: String): idRenderModel? {
+            val modelDef: idDeclModelDef?
             var model: idRenderModel?
             model = null
-            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false) as idDeclModelDef
+            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false) as idDeclModelDef?
             if (modelDef != null) {
                 model = modelDef.ModelHandle()
             }
@@ -606,7 +604,7 @@ object Game {
             return model
         }
 
-        fun ANIM_GetAnimFromEntityDef(classname: String?, animname: String?): idMD5Anim? {
+        fun ANIM_GetAnimFromEntityDef(classname: String, animname: String): idMD5Anim? {
             val args: idDict?
             var md5anim: idMD5Anim?
             val anim: idAnim?
@@ -640,11 +638,11 @@ object Game {
             return modelDef.NumAnims()
         }
 
-        fun ANIM_GetAnimNameFromEntityDef(args: idDict?, animNum: Int): String? {
+        fun ANIM_GetAnimNameFromEntityDef(args: idDict, animNum: Int): String {
             val modelname: String?
-            val modelDef: idDeclModelDef
+            val modelDef: idDeclModelDef?
             modelname = args.GetString("model")
-            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef
+            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef?
             if (modelDef != null) {
                 val anim = modelDef.GetAnim(animNum)
                 if (anim != null) {
@@ -654,7 +652,7 @@ object Game {
             return ""
         }
 
-        fun ANIM_GetAnim(fileName: String?): idMD5Anim? {
+        fun ANIM_GetAnim(fileName: String): idMD5Anim? {
             return Game_local.animationLib.GetAnim(fileName)
         }
 
@@ -670,14 +668,14 @@ object Game {
             model: idRenderModel?,
             anim: idMD5Anim?,
             numJoints: Int,
-            joints: ArrayList<idJointMat>,
+            joints: Array<idJointMat>,
             time: Int,
             offset: idVec3,
             remove_origin_offset: Boolean
         ) {
             var i: Int
             val frame = frameBlend_t()
-            val md5joints: Array<idMD5Joint?>?
+            val md5joints: kotlin.collections.ArrayList<idMD5Joint>
             val index: IntArray
             if (null == model || model.IsDefaultModel() || null == anim) {
                 return
@@ -692,7 +690,7 @@ object Game {
                 // FIXME: Print out a warning?
                 return
             }
-            if (null == joints) {
+            if (joints.isNullOrEmpty()) {
                 idGameLocal.Error(
                     "ANIM_CreateAnimFrame: NULL joint frame pointer on model (%s)",
                     model.Name()
@@ -706,8 +704,8 @@ object Game {
                 )
                 i = 0
                 while (i < numJoints) {
-                    joints.get(i).SetRotation(idMat3.getMat3_identity())
-                    joints.get(i).SetTranslation(offset)
+                    joints[i].SetRotation(idMat3.getMat3_identity())
+                    joints[i].SetTranslation(offset)
                     i++
                 }
                 return
@@ -723,32 +721,32 @@ object Game {
 
             // create the frame
             anim.ConvertTimeToFrame(time, 1, frame)
-            val jointFrame = arrayOfNulls<idJointQuat?>(numJoints)
+            val jointFrame = kotlin.collections.ArrayList<idJointQuat>(numJoints)
             anim.GetInterpolatedFrame(frame, jointFrame, index, numJoints)
 
             // convert joint quaternions to joint matrices
-            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints)
+            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(arrayListOf(*joints), jointFrame, numJoints)
 
             // first joint is always root of entire hierarchy
             if (remove_origin_offset) {
-                joints.get(0).SetTranslation(offset)
+                joints[0].SetTranslation(offset)
             } else {
-                joints.get(0).SetTranslation(joints.get(0).ToVec3().oPlus(offset))
+                joints[0].SetTranslation(joints[0].ToVec3().plus(offset))
             }
 
             // transform the children
             md5joints = model.GetJoints()
             i = 1
             while (i < numJoints) {
-                joints.get(i).timesAssign(joints.get(TempDump.indexOf(md5joints[i].parent, md5joints)))
+                joints[i].timesAssign(joints[md5joints.indexOf(md5joints[i].parent)])
                 i++
             }
         }
 
         fun ANIM_CreateMeshForAnim(
             model: idRenderModel?,
-            classname: String?,
-            animName: Array<String?>?,
+            classname: String,
+            animName: Array<String>,
             frame: Int,
             remove_origin_offset: Boolean
         ): idRenderModel? {
@@ -759,7 +757,7 @@ object Game {
             val md5anim: idMD5Anim?
             var filename = idStr()
             val extension = idStr()
-            val anim: idAnim
+            val anim: idAnim?
             val animNum: Int
             val offset = idVec3()
             val modelDef: idDeclModelDef?
@@ -776,7 +774,7 @@ object Game {
             ent.suppressSurfaceInViewID = 0
             modelDef = Anim_Blend.ANIM_GetModelDefFromEntityDef(args)
             if (modelDef != null) {
-                animNum = modelDef.GetAnim(animName.get(0))
+                animNum = modelDef.GetAnim(animName[0])
                 if (0 == animNum) {
                     return null
                 }
@@ -788,12 +786,12 @@ object Game {
                 ent.customSkin = modelDef.GetDefaultSkin()
                 offset.set(modelDef.GetVisualOffset())
             } else {
-                filename = idStr(animName.get(0))
+                filename = idStr(animName[0])
                 filename.ExtractFileExtension(extension)
                 if (0 == extension.Length()) {
-                    animName.get(0) = args.GetString(Str.va("anim %s", animName.get(0)))
+                    animName[0] = args.GetString(Str.va("anim %s", animName[0]))
                 }
-                md5anim = Game_local.animationLib.GetAnim(animName.get(0))
+                md5anim = Game_local.animationLib.GetAnim(animName[0])
                 offset.Zero()
             }
             if (null == md5anim) {
@@ -804,45 +802,46 @@ object Game {
                 ent.customSkin = DeclManager.declManager.FindSkin(temp)
             }
             ent.numJoints = model.NumJoints()
-            ent.joints = Stream.generate { idJointMat() }.limit(ent.numJoints.toLong()).toArray { _Dummy_.__Array__() }
+            ent.joints = ArrayList<idJointMat>(ent.numJoints)
+            ent.joints.addAll(Array(ent.numJoints) { idJointMat() })
             ANIM_CreateAnimFrame(
                 model,
                 md5anim,
                 ent.numJoints,
-                ent.joints,
+                ent.joints.toTypedArray(),
                 Anim.FRAME2MS(frame),
                 offset,
                 remove_origin_offset
             )
             newmodel = model.InstantiateDynamicModel(ent, null, null)
-            ent.joints = null //Mem_Free16(ent.joints);
+            ent.joints.clear() //Mem_Free16(ent.joints);
             return newmodel
         }
 
         // Articulated Figure calls for AF editor and Radiant.
-        fun AF_SpawnEntity(fileName: String?): Boolean {
+        fun AF_SpawnEntity(fileName: String): Boolean {
             val args = idDict()
             val player: idPlayer?
             val ent: idAFEntity_Generic
-            val af: idDeclAF
+            val af: idDeclAF?
             val org = idVec3()
             val yaw: Float
             player = Game_local.gameLocal.GetLocalPlayer()
-            if (TempDump.NOT(player) || !Game_local.gameLocal.CheatsOk(false)) {
+            if (null == player || !Game_local.gameLocal.CheatsOk(false)) {
                 return false
             }
             af = TempDump.dynamic_cast(
                 idDeclAF::class.java,
-                DeclManager.declManager.FindType(declType_t.DECL_AF, fileName)
-            ) as idDeclAF
-            if (TempDump.NOT(af)) {
+                DeclManager.declManager.FindType(declType_t.DECL_AF, fileName)!!
+            ) as idDeclAF?
+            if (null == af) {
                 return false
             }
             yaw = player.viewAngles.yaw
             args.Set("angle", Str.va("%f", yaw + 180))
             org.set(
                 player.GetPhysics().GetOrigin()
-                    .oPlus(idAngles(0, yaw, 0).ToForward().times(80f).oPlus(idVec3(0, 0, 1)))
+                    .plus(idAngles(0f, yaw, 0f).ToForward().times(80f).plus(idVec3(0, 0, 1)))
             )
             args.Set("origin", org.ToString())
             args.Set("spawnclass", "idAFEntity_Generic")
@@ -866,7 +865,7 @@ object Game {
             return true
         }
 
-        fun AF_UpdateEntities(fileName: String?) {
+        fun AF_UpdateEntities(fileName: String) {
             var ent: idEntity?
             var af: idAFEntity_Base?
             val name: idStr
@@ -891,7 +890,7 @@ object Game {
             var i: Int
             val c: Int
             var ent: idEntity?
-            var af: idAFEntity_Base?
+            var af: idAFEntity_Base
             var decl: idDeclAF
             c = DeclManager.declManager.GetNumDecls(declType_t.DECL_AF)
             i = 0
@@ -920,23 +919,23 @@ object Game {
         }
 
         fun AF_CreateMesh(
-            args: idDict?,
+            args: idDict,
             meshOrigin: idVec3,
             meshAxis: idMat3,
-            poseIsSet: BooleanArray?
+            poseIsSet: BooleanArray
         ): idRenderModel? {
             var meshAxis = meshAxis
             var i: Int
             var jointNum: Int
-            val af: idDeclAF
-            var fb: idDeclAF_Body? = idDeclAF_Body()
+            val af: idDeclAF?
+            var fb: idDeclAF_Body = idDeclAF_Body()
             val ent: renderEntity_s
             val origin = idVec3()
             var axis: idMat3 = idMat3()
-            val bodyAxis: Array<idMat3>
-            val newBodyAxis: Array<idMat3>
-            val modifiedAxis: Array<idMat3>
-            val jointMod: Array<declAFJointMod_t?>
+            val bodyAxis: ArrayList<idMat3>
+            val newBodyAxis: ArrayList<idMat3>
+            val modifiedAxis: ArrayList<idMat3>
+            val jointMod: ArrayList<declAFJointMod_t>
             val angles = idAngles()
             val defArgs: idDict?
             var arg: idKeyValue?
@@ -945,15 +944,15 @@ object Game {
             val classname: String?
             val afName: String?
             val modelName: String?
-            val md5: idRenderModel
-            val modelDef: idDeclModelDef
-            val MD5anim: idMD5Anim
+            val md5: idRenderModel?
+            val modelDef: idDeclModelDef?
+            val MD5anim: idMD5Anim?
             var MD5joint: idMD5Joint
-            val MD5joints: Array<idMD5Joint?>?
+            val MD5joints: ArrayList<idMD5Joint>
             val numMD5joints: Int
-            val originalJoints: Array<idJointMat?>
+            val originalJoints: kotlin.collections.ArrayList<idJointMat>
             var parentNum: Int
-            poseIsSet.get(0) = false
+            poseIsSet[0] = false
             meshOrigin.Zero()
             meshAxis.Identity()
             classname = args.GetString("classname")
@@ -963,9 +962,9 @@ object Game {
             afName = AFEntity.GetArgString(args, defArgs, "articulatedFigure")
             af = TempDump.dynamic_cast(
                 idDeclAF::class.java,
-                DeclManager.declManager.FindType(declType_t.DECL_AF, afName)
-            ) as idDeclAF
-            if (TempDump.NOT(af)) {
+                DeclManager.declManager.FindType(declType_t.DECL_AF, afName)!!
+            ) as idDeclAF?
+            if (null == af) {
                 return null
             }
 
@@ -973,20 +972,20 @@ object Game {
             modelName = AFEntity.GetArgString(args, defArgs, "model")
             modelDef = TempDump.dynamic_cast(
                 idDeclModelDef::class.java,
-                DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false)
-            ) as idDeclModelDef
-            if (TempDump.NOT(modelDef)) {
+                DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false)!!
+            ) as idDeclModelDef?
+            if (null == modelDef) {
                 return null
             }
 
             // make sure model hasn't been purged
-            if (modelDef.ModelHandle() != null && !modelDef.ModelHandle().IsLoaded()) {
-                modelDef.ModelHandle().LoadModel()
+            if (modelDef.ModelHandle() != null && !modelDef.ModelHandle()!!.IsLoaded()) {
+                modelDef.ModelHandle()!!.LoadModel()
             }
 
             // get the md5
             md5 = modelDef.ModelHandle()
-            if (TempDump.NOT(md5) || md5.IsDefaultModel()) {
+            if (null == md5 || md5.IsDefaultModel()) {
                 return null
             }
 
@@ -996,7 +995,7 @@ object Game {
                 return null
             }
             val anim = modelDef.GetAnim(animNum)
-            if (TempDump.NOT(anim)) {
+            if (null == anim) {
                 return null
             }
             MD5anim = anim.MD5Anim(0)
@@ -1008,32 +1007,40 @@ object Game {
             ent.customSkin = modelDef.GetSkin()
             ent.bounds.Clear()
             ent.numJoints = numMD5joints
-            ent.joints = arrayOfNulls(ent.numJoints)
+            ent.joints = ArrayList(ent.numJoints)
 
             // create animation from of the af_pose
-            ANIM_CreateAnimFrame(md5, MD5anim, ent.numJoints, ent.joints, 1, modelDef.GetVisualOffset(), false)
+            ANIM_CreateAnimFrame(
+                md5,
+                MD5anim,
+                ent.numJoints,
+                ent.joints.toTypedArray(),
+                1,
+                modelDef.GetVisualOffset(),
+                false
+            )
 
             // buffers to store the initial origin and axis for each body
             val bodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
-            bodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
+            bodyAxis = ArrayList<idMat3>(af.bodies.Num())
             val newBodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
-            newBodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
+            newBodyAxis = ArrayList<idMat3>(af.bodies.Num())
 
             // finish the AF positions
             data.ent = ent
             data.joints = MD5joints
-            af.Finish(AFEntity.GetJointTransform.INSTANCE, ent.joints, data)
+            af.Finish(AFEntity.GetJointTransform.INSTANCE, ent.joints.toTypedArray(), data)
 
             // get the initial origin and axis for each AF body
             i = 0
             while (i < af.bodies.Num()) {
-                fb = af.bodies.get(i)
+                fb = af.bodies[i]
                 if (fb.modelType == traceModel_t.TRM_BONE) {
                     // axis of bone trace model
-                    axis.set(2, fb.v2.ToVec3().minus(fb.v1.ToVec3()))
-                    axis.get(2).Normalize()
-                    axis.get(2).NormalVectors(axis.get(0), axis.get(1))
-                    axis.set(1, axis.get(1).oNegative())
+                    axis[2] = fb.v2.ToVec3().minus(fb.v1.ToVec3())
+                    axis[2].Normalize()
+                    axis[2].NormalVectors(axis[0], axis[1])
+                    axis[1] = axis[1].unaryMinus()
                 } else {
                     axis = fb.angles.ToMat3()
                 }
@@ -1051,7 +1058,7 @@ object Game {
                 name.Strip("body ")
                 i = 0
                 while (i < af.bodies.Num()) {
-                    fb = af.bodies.get(i)
+                    fb = af.bodies[i]
                     if (fb.name.Icmp(name) == 0) {
                         break
                     }
@@ -1072,7 +1079,7 @@ object Game {
                 if (fb.jointName.Icmp("origin") == 0) {
                     meshAxis = bodyAxis[i].Transpose().times(angles.ToMat3())
                     meshOrigin.set(origin.minus(bodyOrigin[i].times(meshAxis)))
-                    poseIsSet.get(0) = true
+                    poseIsSet[0] = true
                 } else {
                     newBodyOrigin[i].set(origin)
                     newBodyAxis[i] = angles.ToMat3()
@@ -1081,7 +1088,7 @@ object Game {
             }
 
             // save the original joints
-            originalJoints = arrayOfNulls<idJointMat?>(numMD5joints)
+            originalJoints = ArrayList<idJointMat>(numMD5joints)
             i = 0
             while (i < numMD5joints) {
                 originalJoints[i] = ent.joints[i]
@@ -1089,10 +1096,10 @@ object Game {
             }
             // buffer to store the joint mods
             jointMod =
-                arrayOfNulls<declAFJointMod_t?>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
+                ArrayList<declAFJointMod_t>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
             val modifiedOrigin: Array<idVec3> =
                 idVec3.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
-            modifiedAxis = arrayOfNulls<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
+            modifiedAxis = ArrayList<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
             for (m in modifiedAxis.indices) {
                 modifiedAxis[m] = idMat3()
             }
@@ -1100,7 +1107,7 @@ object Game {
             // get all the joint modifications
             i = 0
             while (i < af.bodies.Num()) {
-                fb = af.bodies.get(i)
+                fb = af.bodies[i]
                 if (fb.jointName.Icmp("origin") == 0) {
                     i++
                     continue
@@ -1127,12 +1134,12 @@ object Game {
             i = 1
             while (i < numMD5joints) {
                 MD5joint = MD5joints[i]
-                parentNum = TempDump.indexOf(MD5joint.parent, MD5joints)
+                parentNum = MD5joints.indexOf(MD5joint.parent)
                 val parentAxis = originalJoints[parentNum].ToMat3()
                 val localm = originalJoints[i].ToMat3().times(parentAxis.Transpose())
                 val localt = idVec3(
                     originalJoints[i].ToVec3().minus(originalJoints[parentNum].ToVec3())
-                        .oMultiply(parentAxis.Transpose())
+                        .times(parentAxis.Transpose())
                 )
                 when (jointMod[i]) {
                     declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN -> {
@@ -1142,7 +1149,7 @@ object Game {
                     declAFJointMod_t.DECLAF_JOINTMOD_AXIS -> {
                         ent.joints[i].SetRotation(modifiedAxis[i])
                         ent.joints[i].SetTranslation(
-                            ent.joints[parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[parentNum].ToMat3()))
+                            ent.joints[parentNum].ToVec3().plus(localt.times(ent.joints[parentNum].ToMat3()))
                         )
                     }
                     declAFJointMod_t.DECLAF_JOINTMOD_BOTH -> {
@@ -1152,7 +1159,7 @@ object Game {
                     else -> {
                         ent.joints[i].SetRotation(localm.times(ent.joints[parentNum].ToMat3()))
                         ent.joints[i].SetTranslation(
-                            ent.joints[parentNum].ToVec3().oPlus(localt.oMultiply(ent.joints[parentNum].ToMat3()))
+                            ent.joints[parentNum].ToVec3().plus(localt.times(ent.joints[parentNum].ToMat3()))
                         )
                     }
                 }
@@ -1171,16 +1178,16 @@ object Game {
                 ent.fl.selected = false
                 ent = ent.spawnNode.Next()
             }
-            Game_local.gameLocal.editEntities.ClearSelectedEntities()
+            Game_local.gameLocal.editEntities!!.ClearSelectedEntities()
         }
 
-        fun GetSelectedEntities(list: Array<idEntity?>?, max: Int): Int {
+        fun GetSelectedEntities(list: Array<idEntity>, max: Int): Int {
             var num = 0
             var ent: idEntity?
             ent = Game_local.gameLocal.spawnedEntities.Next()
             while (ent != null) {
                 if (ent.fl.selected) {
-                    list.get(num++) = ent
+                    list[num++] = ent
                     if (num >= max) {
                         break
                     }
@@ -1192,7 +1199,7 @@ object Game {
 
         fun AddSelectedEntity(ent: idEntity?) {
             if (ent != null) {
-                Game_local.gameLocal.editEntities.AddSelectedEntity(ent)
+                Game_local.gameLocal.editEntities!!.AddSelectedEntity(ent)
             }
         }
 
@@ -1209,19 +1216,19 @@ object Game {
         }
 
         // Entity defs and spawning.
-        fun FindEntityDefDict(name: String?, makeDefault: Boolean /*= true*/): idDict? {
+        fun FindEntityDefDict(name: String, makeDefault: Boolean /*= true*/): idDict? {
             return Game_local.gameLocal.FindEntityDefDict(name, makeDefault)
         }
 
-        fun SpawnEntityDef(args: idDict?, ent: Array<idEntity?>?) {
+        fun SpawnEntityDef(args: idDict, ent: ArrayList<idEntity>) {
             Game_local.gameLocal.SpawnEntityDef(args, ent)
         }
 
-        fun FindEntity(name: String?): idEntity? {
+        fun FindEntity(name: String): idEntity? {
             return Game_local.gameLocal.FindEntity(name)
         }
 
-        fun GetUniqueEntityName(classname: String?): String? {
+        fun GetUniqueEntityName(classname: String): String {
             var id: Int
 
             // can only have MAX_GENTITIES, so if we have a spot available, we're guaranteed to find one
@@ -1272,10 +1279,10 @@ object Game {
             ent?.UpdateChangeableSpawnArgs(dict)
         }
 
-        fun EntityChangeSpawnArgs(ent: idEntity?, newArgs: idDict?) {
+        fun EntityChangeSpawnArgs(ent: idEntity?, newArgs: idDict) {
             if (ent != null) {
                 for (i in 0 until newArgs.GetNumKeyVals()) {
-                    val kv = newArgs.GetKeyVal(i)
+                    val kv = newArgs.GetKeyVal(i)!!
                     if (kv.GetValue().Length() > 0) {
                         ent.spawnArgs.Set(kv.GetKey(), kv.GetValue())
                     } else {
@@ -1289,7 +1296,7 @@ object Game {
             ent?.UpdateVisuals()
         }
 
-        fun EntitySetModel(ent: idEntity?, `val`: String?) {
+        fun EntitySetModel(ent: idEntity?, `val`: String) {
             if (ent != null) {
                 ent.spawnArgs.Set("model", `val`)
                 ent.SetModel(`val`)
@@ -1311,25 +1318,25 @@ object Game {
         }
 
         fun PlayerGetOrigin(org: idVec3) {
-            org.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetOrigin())
+            org.set(Game_local.gameLocal.GetLocalPlayer()!!.GetPhysics().GetOrigin())
         }
 
         fun PlayerGetAxis(axis: idMat3) {
-            axis.set(Game_local.gameLocal.GetLocalPlayer().GetPhysics().GetAxis())
+            axis.set(Game_local.gameLocal.GetLocalPlayer()!!.GetPhysics().GetAxis())
         }
 
-        fun PlayerGetViewAngles(angles: idAngles?) {
-            angles.set(Game_local.gameLocal.GetLocalPlayer().viewAngles)
+        fun PlayerGetViewAngles(angles: idAngles) {
+            angles.set(Game_local.gameLocal.GetLocalPlayer()!!.viewAngles)
         }
 
         fun PlayerGetEyePosition(org: idVec3) {
-            org.set(Game_local.gameLocal.GetLocalPlayer().GetEyePosition())
+            org.set(Game_local.gameLocal.GetLocalPlayer()!!.GetEyePosition())
         }
 
         // In game map editing support.
         fun MapGetEntityDict(name: String?): idDict? {
             val mapFile = Game_local.gameLocal.GetLevelMap()
-            if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
+            if (mapFile != null && null != name && !name.isNullOrEmpty()) {
                 val mapent = mapFile.FindEntity(name)
                 if (mapent != null) {
                     return mapent.epairs
@@ -1343,21 +1350,21 @@ object Game {
             mapFile?.Write(path ?: mapFile.GetName(), ".map")
         }
 
-        fun MapSetEntityKeyVal(name: String?, key: String?, `val`: String?) {
+        fun MapSetEntityKeyVal(name: String?, key: String?, `val`: String) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
-            if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
+            if (mapFile != null && null != name && !name.isNullOrEmpty()) {
                 val mapent = mapFile.FindEntity(name)
                 mapent?.epairs?.Set(key, `val`)
             }
         }
 
-        fun MapCopyDictToEntity(name: String?, dict: idDict?) {
+        fun MapCopyDictToEntity(name: String, dict: idDict) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
                 val mapent = mapFile.FindEntity(name)
                 if (mapent != null) {
                     for (i in 0 until dict.GetNumKeyVals()) {
-                        val kv = dict.GetKeyVal(i)
+                        val kv = dict.GetKeyVal(i)!!
                         val key = kv.GetKey().toString()
                         val `val` = kv.GetValue().toString()
                         mapent.epairs.Set(key, `val`)
@@ -1366,7 +1373,7 @@ object Game {
             }
         }
 
-        fun MapGetUniqueMatchingKeyVals(key: String?, list: Array<String?>?, max: Int): Int {
+        fun MapGetUniqueMatchingKeyVals(key: String, list: Array<String>, max: Int): Int {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             var count = 0
             if (mapFile != null) {
@@ -1375,7 +1382,7 @@ object Game {
                     if (ent != null) {
                         val k = ent.epairs.GetString(key)
                         if (TempDump.isNotNullOrEmpty(k) && count < max) {
-                            list.get(count++) = k
+                            list[count++] = k
                         }
                     }
                 }
@@ -1383,7 +1390,7 @@ object Game {
             return count
         }
 
-        fun MapAddEntity(dict: idDict?) {
+        fun MapAddEntity(dict: idDict) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null) {
                 val ent = idMapEntity()
@@ -1393,9 +1400,9 @@ object Game {
         }
 
         fun MapGetEntitiesMatchingClassWithString(
-            classname: String?,
+            classname: String,
             match: String?,
-            list: Array<String?>?,
+            list: Array<String>,
             max: Int
         ): Int {
             val mapFile = Game_local.gameLocal.GetLevelMap()
@@ -1409,11 +1416,11 @@ object Game {
                         if (work.Icmp(classname) == 0) {
                             if (TempDump.isNotNullOrEmpty(match)) {
                                 work.set(ent.epairs.GetString("soundgroup"))
-                                if (count < max && work.Icmp(match) == 0) {
-                                    list.get(count++) = ent.epairs.GetString("name")
+                                if (count < max && work.Icmp(match!!) == 0) {
+                                    list[count++] = ent.epairs.GetString("name")
                                 }
                             } else if (count < max) {
-                                list.get(count++) = ent.epairs.GetString("name")
+                                list[count++] = ent.epairs.GetString("name")
                             }
                         }
                     }
@@ -1422,7 +1429,7 @@ object Game {
             return count
         }
 
-        fun MapRemoveEntity(name: String?) {
+        fun MapRemoveEntity(name: String) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null) {
                 val ent = mapFile.FindEntity(name)
@@ -1432,7 +1439,7 @@ object Game {
             }
         }
 
-        fun MapEntityTranslate(name: String?, v: idVec3) {
+        fun MapEntityTranslate(name: String, v: idVec3) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
             if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
                 val mapent = mapFile.FindEntity(name)
@@ -1453,46 +1460,46 @@ object Game {
          generates a unique name for a given classname
          =============
          */
-            var name: StringBuffer? = StringBuffer(1024)
+            var name: StringBuffer = StringBuffer(1024)
         }
     }
 
     class gameImport_t {
-        var AASFileManager // AAS file manager
-                : idAASFileManager? = null
-        var cmdSystem // console command system
-                : idCmdSystem? = null
-        var collisionModelManager // collision model manager
-                : idCollisionModelManager? = null
-        var common // common
-                : idCommon? = null
-        var cvarSystem // console variable system
-                : idCVarSystem? = null
-        var declManager // declaration manager
-                : idDeclManager? = null
-        var fileSystem // file system
-                : idFileSystem? = null
-        var networkSystem // network system
-                : idNetworkSystem? = null
-        var renderModelManager // render model manager
-                : idRenderModelManager? = null
-        var renderSystem // render system
-                : idRenderSystem? = null
-        var soundSystem // sound system
-                : idSoundSystem? = null
-        var sys // non-portable system services
-                : idSys? = null
-        var uiManager // user interface manager
-                : idUserInterfaceManager? = null
+        lateinit var AASFileManager // AAS file manager
+                : idAASFileManager
+        lateinit var cmdSystem // console command system
+                : idCmdSystem
+        lateinit var collisionModelManager // collision model manager
+                : idCollisionModelManager
+        lateinit var common // common
+                : idCommon
+        lateinit var cvarSystem // console variable system
+                : idCVarSystem
+        lateinit var declManager // declaration manager
+                : idDeclManager
+        lateinit var fileSystem // file system
+                : idFileSystem
+        lateinit var networkSystem // network system
+                : idNetworkSystem
+        lateinit var renderModelManager // render model manager
+                : idRenderModelManager
+        lateinit var renderSystem // render system
+                : idRenderSystem
+        lateinit var soundSystem // sound system
+                : idSoundSystem
+        lateinit var sys // non-portable system services
+                : idSys
+        lateinit var uiManager // user interface manager
+                : idUserInterfaceManager
         var version // API version
                 = 0
     }
 
     class gameExport_t {
-        var game // interface to run the game
-                : idGame? = null
-        var gameEdit // interface for in-game editing
-                : idGameEdit? = null
+        lateinit var game // interface to run the game
+                : idGame
+        lateinit var gameEdit // interface for in-game editing
+                : idGameEdit
         var version // API version
                 = 0
     } //extern "C" {

@@ -1,8 +1,8 @@
 package neo.Game
 
 import neo.CM.CollisionModel_local
-import neo.Game.*
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class.EV_Remove
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Class.eventCallback_t1
@@ -23,7 +23,10 @@ import neo.Game.Player.idPlayer
 import neo.Game.Script.Script_Program.function_t
 import neo.Game.Script.Script_Thread.idThread
 import neo.Game.Sound.idSound
-import neo.Renderer.*
+import neo.Renderer.Material
+import neo.Renderer.Model
+import neo.Renderer.ModelManager
+import neo.Renderer.RenderWorld
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
 import neo.framework.*
@@ -35,12 +38,14 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
 import neo.idlib.containers.List.idList
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Interpolate.idInterpolate
+import neo.idlib.math.Math_h
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.UserInterface
+import kotlin.experimental.and
 
 /**
  *
@@ -84,30 +89,30 @@ object Target {
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Remove?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_Remove?>
+                    eventCallback_t1<idTarget_Remove> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_Remove::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
-                ent?.PostEventMS(Class.EV_Remove, 0)
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
+                ent?.PostEventMS(EV_Remove, 0)
                 i++
             }
 
             // delete our self when done
-            PostEventMS(Class.EV_Remove, 0)
+            PostEventMS(EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -121,36 +126,36 @@ object Target {
     class idTarget_Show : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Show );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Show?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_Show?>
+                    eventCallback_t1<idTarget_Show> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_Show::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 ent?.Show()
                 i++
             }
 
             // delete our self when done
-            PostEventMS(Class.EV_Remove, 0)
+            PostEventMS(EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -164,35 +169,35 @@ object Target {
     class idTarget_Damage : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Damage );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Damage?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_Damage?>
+                    eventCallback_t1<idTarget_Damage> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_Damage::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             val damage: String?
             var ent: idEntity?
             damage = spawnArgs.GetString("def_damage", "damage_generic")
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 ent?.Damage(this, this, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
                 i++
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -206,26 +211,26 @@ object Target {
     class idTarget_SessionCommand : idTarget() {
         companion object {
             //	CLASS_PROTOTYPE(idTarget_SessionCommand );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SessionCommand?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SessionCommand?>
+                    eventCallback_t1<idTarget_SessionCommand> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SessionCommand::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             Game_local.gameLocal.sessionCommand.set(spawnArgs.GetString("command"))
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -240,22 +245,22 @@ object Target {
     class idTarget_EndLevel : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EndLevel );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EndLevel?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_EndLevel?>
+                    eventCallback_t1<idTarget_EndLevel> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_EndLevel::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
-            val nextMap = arrayOf<String?>(null)
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
+            val nextMap = arrayOf("")
             if (BuildDefines.ID_DEMO_BUILD) {
                 if (spawnArgs.GetBool("endOfGame")) {
                     CVarSystem.cvarSystem.SetCVarBool("g_nightmare", true)
@@ -281,8 +286,8 @@ object Target {
             Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0])
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -296,17 +301,17 @@ object Target {
     class idTarget_WaitForButton : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_WaitForButton );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_WaitForButton?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_WaitForButton?>
+                    eventCallback_t1<idTarget_WaitForButton> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_WaitForButton::Event_Activate
+                    }
             }
         }
 
@@ -314,8 +319,8 @@ object Target {
             val player: idPlayer?
             if (thinkFlags and Entity.TH_THINK != 0) {
                 player = Game_local.gameLocal.GetLocalPlayer()
-                if (player != null && TempDump.NOT(player.oldButtons.toDouble()) and UsercmdGen.BUTTON_ATTACK != 0 && player.usercmd.buttons and UsercmdGen.BUTTON_ATTACK != 0) {
-                    player.usercmd.buttons = player.usercmd.buttons and UsercmdGen.BUTTON_ATTACK.inv()
+                if (player != null && player.oldButtons.inv() and UsercmdGen.BUTTON_ATTACK != 0 && player.usercmd.buttons.toInt() and UsercmdGen.BUTTON_ATTACK != 0) {
+                    player.usercmd.buttons = player.usercmd.buttons and UsercmdGen.BUTTON_ATTACK.inv().toByte()
                     BecomeInactive(Entity.TH_THINK)
                     ActivateTargets(player)
                 }
@@ -324,7 +329,7 @@ object Target {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             if (thinkFlags and Entity.TH_THINK != 0) {
                 BecomeInactive(Entity.TH_THINK)
             } else {
@@ -334,8 +339,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -349,17 +354,17 @@ object Target {
     class idTarget_SetGlobalShaderTime : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetGlobalShaderTime );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetGlobalShaderTime?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetGlobalShaderTime?>
+                    eventCallback_t1<idTarget_SetGlobalShaderTime> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetGlobalShaderTime::Event_Activate
+                    }
             }
         }
 
@@ -371,8 +376,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -386,21 +391,21 @@ object Target {
     class idTarget_SetShaderParm : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetShaderParm );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetShaderParm?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetShaderParm?>
+                    eventCallback_t1<idTarget_SetShaderParm> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetShaderParm::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             val value = CFloat()
@@ -410,9 +415,9 @@ object Target {
             // set the color on the targets
             if (spawnArgs.GetVector("_color", "1 1 1", color)) {
                 i = 0
-                while (i < targets.Num()) {
-                    ent = targets.get(i).GetEntity()
-                    ent?.SetColor(color.get(0), color.get(1), color.get(2))
+                while (i < targets.size) {
+                    ent = targets[i].GetEntity()
+                    ent?.SetColor(color[0], color[1], color[2])
                     i++
                 }
             }
@@ -422,15 +427,15 @@ object Target {
             while (parmnum < Material.MAX_ENTITY_SHADER_PARMS) {
                 if (spawnArgs.GetFloat(Str.va("shaderParm%d", parmnum), "0", value)) {
                     i = 0
-                    while (i < targets.Num()) {
-                        ent = targets.get(i).GetEntity()
+                    while (i < targets.size) {
+                        ent = targets[i].GetEntity()
                         ent?.SetShaderParm(parmnum, value._val)
                         i++
                     }
                     if (spawnArgs.GetBool("toggle") && (value._val == 0f || value._val == 1f)) {
                         var `val` = value._val.toInt()
                         `val` = `val` xor 1
-                        value.setVal(`val`.toFloat())
+                        value._val = `val`.toFloat()
                         spawnArgs.SetFloat(Str.va("shaderParm%d", parmnum), value._val)
                     }
                 }
@@ -438,8 +443,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -453,40 +458,40 @@ object Target {
     class idTarget_SetShaderTime : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetShaderTime );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetShaderTime?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetShaderTime?>
+                    eventCallback_t1<idTarget_SetShaderTime> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetShaderTime::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             val time: Float
             time = -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (ent != null) {
                     ent.SetShaderParm(RenderWorld.SHADERPARM_TIMEOFFSET, time)
                     if (ent is idLight) {
-                        (ent as idLight?).SetLightParm(RenderWorld.SHADERPARM_TIMEOFFSET, time)
+                        ent.SetLightParm(RenderWorld.SHADERPARM_TIMEOFFSET, time)
                     }
                 }
                 i++
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -500,17 +505,17 @@ object Target {
     class idTarget_FadeEntity : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_FadeEntity );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_FadeEntity?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_FadeEntity?>
+                    eventCallback_t1<idTarget_FadeEntity> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_FadeEntity::Event_Activate
+                    }
             }
         }
 
@@ -547,8 +552,8 @@ object Target {
 
                 // set the color on the targets
                 i = 0
-                while (i < targets.Num()) {
-                    ent = targets.get(i).GetEntity()
+                while (i < targets.size) {
+                    ent = targets[i].GetEntity()
                     ent?.SetColor(color)
                     i++
                 }
@@ -557,10 +562,10 @@ object Target {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var ent: idEntity?
             var i: Int
-            if (0 == targets.Num()) {
+            if (0 == targets.size) {
                 return
             }
 
@@ -570,8 +575,8 @@ object Target {
 
 //	ent = this;
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (ent != null) {
                     ent.GetColor(fadeFrom)
                     break
@@ -582,8 +587,8 @@ object Target {
             fadeEnd = (Game_local.gameLocal.time + Math_h.SEC2MS(spawnArgs.GetFloat("fadetime"))).toInt()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -605,33 +610,33 @@ object Target {
     class idTarget_LightFadeIn : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LightFadeIn );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LightFadeIn?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_LightFadeIn?>
+                    eventCallback_t1<idTarget_LightFadeIn> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_LightFadeIn::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var ent: idEntity?
             var light: idLight?
             var i: Int
             val time: Float
-            if (0 == targets.Num()) {
+            if (0 == targets.size) {
                 return
             }
             time = spawnArgs.GetFloat("fadetime")
             //	ent = this;
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -646,8 +651,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -661,33 +666,33 @@ object Target {
     class idTarget_LightFadeOut : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LightFadeOut );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LightFadeOut?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_LightFadeOut?>
+                    eventCallback_t1<idTarget_LightFadeOut> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_LightFadeOut::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var ent: idEntity?
             var light: idLight?
             var i: Int
             val time: Float
-            if (0 == targets.Num()) {
+            if (0 == targets.size) {
                 return
             }
             time = spawnArgs.GetFloat("fadetime")
             //	ent = this;
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
                     continue
@@ -702,8 +707,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -717,18 +722,18 @@ object Target {
     class idTarget_Give : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Give );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
             private var giveNum = 0
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Give?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_Give?>
+                    eventCallback_t1<idTarget_Give> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_Give::Event_Activate
+                    }
             }
         }
 
@@ -752,9 +757,9 @@ object Target {
                         val d2 = idDict()
                         d2.Copy(dict)
                         d2.Set("name", Str.va("givenitem_%d", giveNum++))
-                        val ent = arrayOf<idEntity?>(null)
-                        if (Game_local.gameLocal.SpawnEntityDef(d2, ent) && ent[0] != null && ent[0] is idItem) {
-                            val item = ent[0] as idItem?
+                        val ent = arrayListOf<idEntity>()
+                        if (Game_local.gameLocal.SpawnEntityDef(d2, ent) && ent.isNotEmpty() && ent[0] is idItem) {
+                            val item = ent[0] as idItem
                             item.GiveToPlayer(Game_local.gameLocal.GetLocalPlayer())
                         }
                     }
@@ -763,8 +768,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -778,22 +783,22 @@ object Target {
     class idTarget_GiveEmail : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_GiveEmail );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_GiveEmail?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_GiveEmail?>
+                    eventCallback_t1<idTarget_GiveEmail> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_GiveEmail::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
-            val player = Game_local.gameLocal.GetLocalPlayer()
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
+            val player = Game_local.gameLocal.GetLocalPlayer()!!
             val pda = player.GetPDA()
             if (pda != null) {
                 player.GiveEmail(spawnArgs.GetString("email"))
@@ -802,8 +807,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -817,17 +822,17 @@ object Target {
     class idTarget_SetModel : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetModel );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetModel?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetModel?>
+                    eventCallback_t1<idTarget_SetModel> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetModel::Event_Activate
+                    }
             }
         }
 
@@ -843,15 +848,15 @@ object Target {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
-            for (i in 0 until targets.Num()) {
-                val ent = targets.get(i).GetEntity()
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
+            for (i in 0 until targets.size) {
+                val ent = targets[i].GetEntity()
                 ent?.SetModel(spawnArgs.GetString("newmodel"))
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -865,69 +870,69 @@ object Target {
     class idTarget_SetInfluence : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetInfluence );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetInfluence?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetInfluence?>
-                eventCallbacks[Target.EV_RestoreInfluence] =
-                    eventCallback_t0<idTarget_SetInfluence?> { obj: T? -> neo.Game.obj.Event_RestoreInfluence() } as eventCallback_t0<idTarget_SetInfluence?>
-                eventCallbacks[Target.EV_GatherEntities] =
-                    eventCallback_t0<idTarget_SetInfluence?> { obj: T? -> neo.Game.obj.Event_GatherEntities() } as eventCallback_t0<idTarget_SetInfluence?>
-                eventCallbacks[Target.EV_Flash] =
-                    eventCallback_t2<idTarget_SetInfluence?> { obj: T?, _flash: idEventArg<*>? ->
-                        neo.Game.obj.Event_Flash(neo.Game._flash)
-                    } as eventCallback_t2<idTarget_SetInfluence?>
-                eventCallbacks[Target.EV_ClearFlash] =
-                    eventCallback_t1<idTarget_SetInfluence?> { obj: T?, flash: idEventArg<*>? ->
-                        neo.Game.obj.Event_ClearFlash(neo.Game.flash)
-                    } as eventCallback_t1<idTarget_SetInfluence?>
+                    eventCallback_t1<idTarget_SetInfluence> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetInfluence::Event_Activate
+                    }
+                eventCallbacks[EV_RestoreInfluence] =
+                    eventCallback_t0<idTarget_SetInfluence> { obj: Any? -> idTarget_SetInfluence::Event_RestoreInfluence }
+                eventCallbacks[EV_GatherEntities] =
+                    eventCallback_t0<idTarget_SetInfluence> { obj: Any? -> idTarget_SetInfluence::Event_GatherEntities }
+                eventCallbacks[EV_Flash] =
+                    eventCallback_t2<idTarget_SetInfluence> { obj: Any?, _flash: idEventArg<*>?, _out: idEventArg<*>? ->
+                        idTarget_SetInfluence::Event_Flash
+                    }
+                eventCallbacks[EV_ClearFlash] =
+                    eventCallback_t1<idTarget_SetInfluence> { obj: Any?, flash: idEventArg<*>? ->
+                        idTarget_SetInfluence::Event_ClearFlash
+                    }
             }
         }
 
         private var delay: Float
         private var flashIn: Float
-        private var flashInSound: idStr? = null
+        private lateinit var flashInSound: idStr
         private var flashOut: Float
-        private var flashOutSound: idStr? = null
-        private val fovSetting: idInterpolate<Float?>?
-        private val genericList: idList<Int?>?
-        private val guiList: idList<Int?>?
-        private val lightList: idList<Int?>?
+        private lateinit var flashOutSound: idStr
+        private val fovSetting: idInterpolate<Float> = idInterpolate()
+        private val genericList: idList<Int>
+        private val guiList: idList<Int>
+        private val lightList: idList<Int>
         private var restoreOnTrigger: Boolean
         private var soundFaded: Boolean
-        private val soundList: idList<Int?>?
+        private val soundList: idList<Int>
         private var switchToCamera: idEntity?
         override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(lightList.Num())
             i = 0
             while (i < lightList.Num()) {
-                savefile.WriteInt(lightList.get(i))
+                savefile.WriteInt(lightList[i])
                 i++
             }
             savefile.WriteInt(guiList.Num())
             i = 0
             while (i < guiList.Num()) {
-                savefile.WriteInt(guiList.get(i))
+                savefile.WriteInt(guiList[i])
                 i++
             }
             savefile.WriteInt(soundList.Num())
             i = 0
             while (i < soundList.Num()) {
-                savefile.WriteInt(soundList.get(i))
+                savefile.WriteInt(soundList[i])
                 i++
             }
             savefile.WriteInt(genericList.Num())
             i = 0
             while (i < genericList.Num()) {
-                savefile.WriteInt(genericList.get(i))
+                savefile.WriteInt(genericList[i])
                 i++
             }
             savefile.WriteFloat(flashIn)
@@ -935,7 +940,7 @@ object Target {
             savefile.WriteFloat(delay)
             savefile.WriteString(flashInSound)
             savefile.WriteString(flashOutSound)
-            savefile.WriteObject(switchToCamera)
+            savefile.WriteObject(switchToCamera!!)
             savefile.WriteFloat(fovSetting.GetStartTime())
             savefile.WriteFloat(fovSetting.GetDuration())
             savefile.WriteFloat(fovSetting.GetStartValue())
@@ -997,7 +1002,7 @@ object Target {
 
         override fun Spawn() {
             super.Spawn()
-            PostEventMS(Target.EV_GatherEntities, 0)
+            PostEventMS(EV_GatherEntities, 0)
             flashIn = spawnArgs.GetFloat("flashIn", "0")
             flashOut = spawnArgs.GetFloat("flashOut", "0")
             flashInSound = idStr(spawnArgs.GetString("snd_flashin"))
@@ -1010,7 +1015,7 @@ object Target {
             cinematic = true
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var j: Int
             var ent: idEntity?
@@ -1022,11 +1027,11 @@ object Target {
             var update: Boolean
             val color = idVec3()
             val colorTo = idVec4()
-            val player: idPlayer?
-            player = Game_local.gameLocal.GetLocalPlayer()
+            val player: idPlayer
+            player = Game_local.gameLocal.GetLocalPlayer()!!
             if (spawnArgs.GetBool("triggerActivate")) {
                 if (restoreOnTrigger) {
-                    ProcessEvent(Target.EV_RestoreInfluence)
+                    ProcessEvent(EV_RestoreInfluence)
                     restoreOnTrigger = false
                     return
                 }
@@ -1050,14 +1055,14 @@ object Target {
                 ActivateTargets(activator.value)
             }
             if (flashIn != 0f) {
-                PostEventSec(Target.EV_Flash, 0.0f, flashIn, 0)
+                PostEventSec(EV_Flash, 0.0f, flashIn, 0)
             }
             parm = spawnArgs.GetString("snd_influence")
             if (TempDump.isNotNullOrEmpty(parm)) {
                 PostEventSec(Entity.EV_StartSoundShader, flashIn, parm, gameSoundChannel_t.SND_CHANNEL_ANY)
             }
             if (switchToCamera != null) {
-                switchToCamera.PostEventSec(Entity.EV_Activate, flashIn + 0.05f, this)
+                switchToCamera!!.PostEventSec(Entity.EV_Activate, flashIn + 0.05f, this)
             }
             val fov = spawnArgs.GetInt("fov").toFloat()
             if (fov != 0f) {
@@ -1071,12 +1076,12 @@ object Target {
             }
             i = 0
             while (i < genericList.Num()) {
-                ent = Game_local.gameLocal.entities.get(genericList.get(i))
+                ent = Game_local.gameLocal.entities[genericList[i]]
                 if (ent == null) {
                     i++
                     continue
                 }
-                generic = ent as idStaticEntity?
+                generic = ent as idStaticEntity
                 color.set(generic.spawnArgs.GetVector("color_demonic"))
                 colorTo.set(color.x, color.y, color.z, 1.0f)
                 generic.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
@@ -1084,7 +1089,7 @@ object Target {
             }
             i = 0
             while (i < lightList.Num()) {
-                ent = Game_local.gameLocal.entities.get(lightList.get(i))
+                ent = Game_local.gameLocal.entities[lightList[i]]
                 if (ent == null || ent !is idLight) {
                     i++
                     continue
@@ -1102,7 +1107,7 @@ object Target {
             }
             i = 0
             while (i < soundList.Num()) {
-                ent = Game_local.gameLocal.entities.get(soundList.get(i))
+                ent = Game_local.gameLocal.entities[soundList[i]]
                 if (ent == null || ent !is idSound) {
                     i++
                     continue
@@ -1111,7 +1116,7 @@ object Target {
                 parm = sound.spawnArgs.GetString("snd_demonic")
                 if (TempDump.isNotNullOrEmpty(parm)) {
                     if (sound.spawnArgs.GetBool("overlayDemonic")) {
-                        sound.StartSound("snd_demonic", gameSoundChannel_t.SND_CHANNEL_DEMONIC, 0, false, null)
+                        sound.StartSound("snd_demonic", gameSoundChannel_t.SND_CHANNEL_DEMONIC, 0, false)
                     } else {
                         sound.StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
                         sound.SetSound(parm)
@@ -1121,7 +1126,7 @@ object Target {
             }
             i = 0
             while (i < guiList.Num()) {
-                ent = Game_local.gameLocal.entities.get(guiList.get(i))
+                ent = Game_local.gameLocal.entities[guiList[i]]
                 if (ent == null || ent.GetRenderEntity() == null) {
                     i++
                     continue
@@ -1139,7 +1144,7 @@ object Target {
                                     j + 1
                                 )
                             ), true
-                        )
+                        )!!
                         update = true
                     }
                     j++
@@ -1153,7 +1158,7 @@ object Target {
             player.SetInfluenceLevel(spawnArgs.GetInt("influenceLevel"))
             val snapAngle = spawnArgs.GetInt("snapAngle")
             if (snapAngle != 0) {
-                val ang = idAngles(0, snapAngle, 0)
+                val ang = idAngles(0f, snapAngle.toFloat(), 0f)
                 player.SetViewAngles(ang)
                 player.SetAngles(ang)
             }
@@ -1167,7 +1172,7 @@ object Target {
                 Game_local.gameLocal.SetGlobalMaterial(DeclManager.declManager.FindMaterial(parm))
             }
             if (!restoreOnTrigger) {
-                PostEventMS(Target.EV_RestoreInfluence, Math_h.SEC2MS(spawnArgs.GetFloat("time")).toInt())
+                PostEventMS(EV_RestoreInfluence, Math_h.SEC2MS(spawnArgs.GetFloat("time")).toInt())
             }
         }
 
@@ -1182,26 +1187,26 @@ object Target {
             val color = idVec3()
             val colorTo = idVec4()
             if (flashOut != 0f) {
-                PostEventSec(Target.EV_Flash, 0.0f, flashOut, 1)
+                PostEventSec(EV_Flash, 0.0f, flashOut, 1)
             }
             if (switchToCamera != null) {
-                switchToCamera.PostEventMS(Entity.EV_Activate, 0.0f, this)
+                switchToCamera!!.PostEventMS(Entity.EV_Activate, 0.0f, this)
             }
             i = 0
             while (i < genericList.Num()) {
-                ent = Game_local.gameLocal.entities.get(genericList.get(i))
+                ent = Game_local.gameLocal.entities[genericList[i]]
                 if (ent == null) {
                     i++
                     continue
                 }
-                generic = ent as idStaticEntity?
+                generic = ent as idStaticEntity
                 colorTo.set(1.0f, 1.0f, 1.0f, 1.0f)
                 generic.Fade(colorTo, spawnArgs.GetFloat("fade_time", "0.25"))
                 i++
             }
             i = 0
             while (i < lightList.Num()) {
-                ent = Game_local.gameLocal.entities.get(lightList.get(i))
+                ent = Game_local.gameLocal.entities[lightList[i]]
                 if (ent == null || ent !is idLight) {
                     i++
                     continue
@@ -1218,7 +1223,7 @@ object Target {
             }
             i = 0
             while (i < soundList.Num()) {
-                ent = Game_local.gameLocal.entities.get(soundList.get(i))
+                ent = Game_local.gameLocal.entities[soundList[i]]
                 if (ent == null || ent !is idSound) {
                     i++
                     continue
@@ -1230,7 +1235,7 @@ object Target {
             }
             i = 0
             while (i < guiList.Num()) {
-                ent = Game_local.gameLocal.entities.get(guiList.get(i))
+                ent = Game_local.gameLocal.entities[guiList[i]]
                 if (ent == null || GetRenderEntity() == null) {
                     i++
                     continue
@@ -1246,7 +1251,7 @@ object Target {
                                     j + 1
                                 )
                             )
-                        )
+                        )!!
                         update = true
                     }
                     j++
@@ -1257,7 +1262,7 @@ object Target {
                 }
                 i++
             }
-            val player = Game_local.gameLocal.GetLocalPlayer()
+            val player = Game_local.gameLocal.GetLocalPlayer()!!
             player.SetInfluenceLevel(0)
             player.SetInfluenceView(null, null, 0.0f, null)
             player.SetInfluenceFov(0f)
@@ -1271,7 +1276,7 @@ object Target {
         private fun Event_GatherEntities() {
             var i: Int
             val listedEntities: Int
-            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
+            val entityList = ArrayList<idEntity>(Game_local.MAX_GENTITIES)
             val demonicOnly = spawnArgs.GetBool("effect_demonic")
             var lights = spawnArgs.GetBool("effect_lights")
             var sounds = spawnArgs.GetBool("effect_sounds")
@@ -1290,10 +1295,10 @@ object Target {
                 lights = sounds
             }
             if (targetsOnly) {
-                listedEntities = targets.Num()
+                listedEntities = targets.size
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i] = targets.get(i).GetEntity()
+                    entityList[i] = targets[i].GetEntity()!!
                     i++
                 }
             } else {
@@ -1301,7 +1306,7 @@ object Target {
                 listedEntities = Game_local.gameLocal.EntitiesWithinRadius(
                     GetPhysics().GetOrigin(),
                     radius,
-                    entityList,
+                    entityList.toTypedArray(),
                     Game_local.MAX_GENTITIES
                 )
             }
@@ -1339,31 +1344,31 @@ object Target {
             switchToCamera = if (temp.length != 0) Game_local.gameLocal.FindEntity(temp) else null
         }
 
-        private fun Event_Flash(_flash: idEventArg<Float?>?, _out: idEventArg<Int?>?) {
+        private fun Event_Flash(_flash: idEventArg<Float>, _out: idEventArg<Int>) {
             val flash: Float = _flash.value
             val out: Int = _out.value
-            val player = Game_local.gameLocal.GetLocalPlayer()
-            player.playerView.Fade(idVec4(1, 1, 1, 1), flash.toInt())
+            val player = Game_local.gameLocal.GetLocalPlayer()!!
+            player.playerView.Fade(idVec4(1f, 1f, 1f, 1f), flash.toInt())
             val shader: idSoundShader?
             if (0 == out && flashInSound.Length() != 0) {
                 shader = DeclManager.declManager.FindSound(flashInSound)
-                player.StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                player.StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_VOICE.ordinal, 0, false)
             } else if (out != 0 && (flashOutSound.Length() != 0 || flashInSound.Length() != 0)) {
                 shader =
                     DeclManager.declManager.FindSound(if (flashOutSound.Length() != 0) flashOutSound else flashInSound)
-                player.StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                player.StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_VOICE.ordinal, 0, false)
             }
-            PostEventSec(Target.EV_ClearFlash, flash, flash)
+            PostEventSec(EV_ClearFlash, flash, flash)
         }
 
-        private fun Event_ClearFlash(flash: idEventArg<Float?>?) {
-            val player = Game_local.gameLocal.GetLocalPlayer()
+        private fun Event_ClearFlash(flash: idEventArg<Float>) {
+            val player = Game_local.gameLocal.GetLocalPlayer()!!
             player.playerView.Fade(Vector.getVec4_zero(), flash.value.toInt())
         }
 
         override fun Think() {
             if (thinkFlags and Entity.TH_THINK != 0) {
-                val player = Game_local.gameLocal.GetLocalPlayer()
+                val player = Game_local.gameLocal.GetLocalPlayer()!!
                 player.SetInfluenceFov(fovSetting.GetCurrentValue(Game_local.gameLocal.time.toFloat()))
                 if (fovSetting.IsDone(Game_local.gameLocal.time.toFloat())) {
                     if (!spawnArgs.GetBool("leaveFOV")) {
@@ -1376,8 +1381,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -1391,7 +1396,6 @@ object Target {
             flashOut = 0.0f
             delay = 0.0f
             switchToCamera = null
-            fovSetting = idInterpolate()
             soundFaded = false
             restoreOnTrigger = false
         }
@@ -1407,21 +1411,21 @@ object Target {
     class idTarget_SetKeyVal : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetKeyVal );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetKeyVal?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetKeyVal?>
+                    eventCallback_t1<idTarget_SetKeyVal> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetKeyVal::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var key: String
             var `val`: String
@@ -1429,8 +1433,8 @@ object Target {
             var kv: idKeyValue?
             var n: Int
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (ent != null) {
                     kv = spawnArgs.MatchPrefix("keyval")
                     while (kv != null) {
@@ -1441,7 +1445,7 @@ object Target {
                             ent.spawnArgs.Set(key, `val`)
                             for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                                 if (ent.GetRenderEntity().gui[j] != null) {
-                                    if (idStr.Companion.Icmpn(key, "gui_", 4) == 0) {
+                                    if (idStr.Icmpn(key, "gui_", 4) == 0) {
                                         ent.GetRenderEntity().gui[j].SetStateString(key, `val`)
                                         ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time)
                                     }
@@ -1458,8 +1462,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1473,29 +1477,29 @@ object Target {
     class idTarget_SetFov : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetFov );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetFov?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetFov?>
+                    eventCallback_t1<idTarget_SetFov> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetFov::Event_Activate
+                    }
             }
         }
 
-        private val fovSetting: idInterpolate<Int?>? = null
+        private val fovSetting: idInterpolate<Int> = idInterpolate()
         override fun Save(savefile: idSaveGame) {
             savefile.WriteFloat(fovSetting.GetStartTime())
             savefile.WriteFloat(fovSetting.GetDuration())
-            savefile.WriteFloat(fovSetting.GetStartValue())
-            savefile.WriteFloat(fovSetting.GetEndValue())
+            savefile.WriteFloat(fovSetting.GetStartValue().toFloat())
+            savefile.WriteFloat(fovSetting.GetEndValue().toFloat())
         }
 
         override fun Restore(savefile: idRestoreGame) {
@@ -1513,8 +1517,8 @@ object Target {
 
         override fun Think() {
             if (thinkFlags and Entity.TH_THINK != 0) {
-                val player = Game_local.gameLocal.GetLocalPlayer()
-                player.SetInfluenceFov(fovSetting.GetCurrentValue(Game_local.gameLocal.time.toFloat()))
+                val player = Game_local.gameLocal.GetLocalPlayer()!!
+                player.SetInfluenceFov(fovSetting.GetCurrentValue(Game_local.gameLocal.time.toFloat()).toFloat())
                 if (fovSetting.IsDone(Game_local.gameLocal.time.toFloat())) {
                     player.SetInfluenceFov(0.0f)
                     BecomeInactive(Entity.TH_THINK)
@@ -1524,7 +1528,7 @@ object Target {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             // always allow during cinematics
             cinematic = true
             val player = Game_local.gameLocal.GetLocalPlayer()
@@ -1535,8 +1539,8 @@ object Target {
             BecomeActive(Entity.TH_THINK)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1550,32 +1554,32 @@ object Target {
     class idTarget_SetPrimaryObjective : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_SetPrimaryObjective );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetPrimaryObjective?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_SetPrimaryObjective?>
+                    eventCallback_t1<idTarget_SetPrimaryObjective> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_SetPrimaryObjective::Event_Activate
+                    }
             }
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity?>?) {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null && player.objectiveSystem != null) {
-                player.objectiveSystem.SetStateString(
+                player.objectiveSystem!!.SetStateString(
                     "missionobjective",
                     spawnArgs.GetString("text", Common.common.GetLanguageDict().GetString("#str_04253"))
                 )
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1589,41 +1593,41 @@ object Target {
     class idTarget_LockDoor : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LockDoor );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LockDoor?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_LockDoor?>
+                    eventCallback_t1<idTarget_LockDoor> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_LockDoor::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             val lock: Int
             lock = spawnArgs.GetInt("locked", "1")
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (ent != null && ent is idDoor) {
-                    if ((ent as idDoor?).IsLocked() != 0) {
-                        (ent as idDoor?).Lock(0)
+                    if (ent.IsLocked() != 0) {
+                        ent.Lock(0)
                     } else {
-                        (ent as idDoor?).Lock(lock)
+                        ent.Lock(lock)
                     }
                 }
                 i++
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1637,21 +1641,21 @@ object Target {
     class idTarget_CallObjectFunction : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_CallObjectFunction );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_CallObjectFunction?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_CallObjectFunction?>
+                    eventCallback_t1<idTarget_CallObjectFunction> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_CallObjectFunction::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             var ent: idEntity?
             var func: function_t?
@@ -1659,28 +1663,28 @@ object Target {
             var thread: idThread
             funcName = spawnArgs.GetString("call")
             i = 0
-            while (i < targets.Num()) {
-                ent = targets.get(i).GetEntity()
+            while (i < targets.size) {
+                ent = targets[i].GetEntity()
                 if (ent != null && ent.scriptObject.HasObject()) {
                     func = ent.scriptObject.GetFunction(funcName)
-                    if (TempDump.NOT(func)) {
-                        idGameLocal.Companion.Error(
+                    if (null == func) {
+                        idGameLocal.Error(
                             "Function '%s' not found on entity '%s' for function call from '%s'",
                             funcName,
                             ent.name,
                             name
                         )
                     }
-                    if (func.type.NumParameters() != 1) {
-                        idGameLocal.Companion.Error(
+                    if (func!!.type!!.NumParameters() != 1) {
+                        idGameLocal.Error(
                             "Function '%s' on entity '%s' has the wrong number of parameters for function call from '%s'",
                             funcName,
                             ent.name,
                             name
                         )
                     }
-                    if (!ent.scriptObject.GetTypeDef().Inherits(func.type.GetParmType(0))) {
-                        idGameLocal.Companion.Error(
+                    if (!ent.scriptObject.GetTypeDef()!!.Inherits(func.type!!.GetParmType(0))) {
+                        idGameLocal.Error(
                             "Function '%s' on entity '%s' is the wrong type for function call from '%s'",
                             funcName,
                             ent.name,
@@ -1696,8 +1700,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1711,24 +1715,24 @@ object Target {
     class idTarget_EnableLevelWeapons : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EnableLevelWeapons );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EnableLevelWeapons?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_EnableLevelWeapons?>
+                    eventCallback_t1<idTarget_EnableLevelWeapons> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_EnableLevelWeapons::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             var i: Int
             val weap: String?
-            Game_local.gameLocal.world.spawnArgs.SetBool("no_Weapons", spawnArgs.GetBool("disable"))
+            Game_local.gameLocal.world!!.spawnArgs.SetBool("no_Weapons", spawnArgs.GetBool("disable"))
             if (spawnArgs.GetBool("disable")) {
                 i = 0
                 while (i < Game_local.gameLocal.numClients) {
@@ -1752,8 +1756,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1767,25 +1771,25 @@ object Target {
     class idTarget_Tip : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_Tip );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Tip?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_Tip?>
-                eventCallbacks[Target.EV_TipOff] =
-                    eventCallback_t0<idTarget_Tip?> { obj: T? -> neo.Game.obj.Event_TipOff() } as eventCallback_t0<idTarget_Tip?>
-                eventCallbacks[Target.EV_GetPlayerPos] =
-                    eventCallback_t0<idTarget_Tip?> { obj: T? -> neo.Game.obj.Event_GetPlayerPos() } as eventCallback_t0<idTarget_Tip?>
+                    eventCallback_t1<idTarget_Tip> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_Tip::Event_Activate
+                    }
+                eventCallbacks[EV_TipOff] =
+                    eventCallback_t0<idTarget_Tip> { obj: Any? -> idTarget_Tip::Event_TipOff }
+                eventCallbacks[EV_GetPlayerPos] =
+                    eventCallback_t0<idTarget_Tip> { obj: Any? -> idTarget_Tip::Event_GetPlayerPos }
             }
         }
 
-        private val playerPos: idVec3
+        private val playerPos: idVec3 = idVec3()
         override fun Save(savefile: idSaveGame) {
             savefile.WriteVec3(playerPos)
         }
@@ -1794,7 +1798,7 @@ object Target {
             savefile.ReadVec3(playerPos)
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
                 if (player.IsTipVisible()) {
@@ -1802,7 +1806,7 @@ object Target {
                     return
                 }
                 player.ShowTip(spawnArgs.GetString("text_title"), spawnArgs.GetString("text_tip"), false)
-                PostEventMS(Target.EV_GetPlayerPos, 2000)
+                PostEventMS(EV_GetPlayerPos, 2000)
             }
         }
 
@@ -1813,7 +1817,7 @@ object Target {
                 if (v.Length() > 96.0f) {
                     player.HideTip()
                 } else {
-                    PostEventMS(Target.EV_TipOff, 100)
+                    PostEventMS(EV_TipOff, 100)
                 }
             }
         }
@@ -1822,18 +1826,12 @@ object Target {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
                 playerPos.set(player.GetPhysics().GetOrigin())
-                PostEventMS(Target.EV_TipOff, 100)
+                PostEventMS(EV_TipOff, 100)
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
-        }
-
-        //
-        //
-        init {
-            playerPos = idVec3()
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1847,17 +1845,17 @@ object Target {
     class idTarget_GiveSecurity : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_GiveSecurity );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_GiveSecurity?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_GiveSecurity?>
+                    eventCallback_t1<idTarget_GiveSecurity> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_GiveSecurity::Event_Activate
+                    }
             }
         }
 
@@ -1866,8 +1864,8 @@ object Target {
             player?.GiveSecurity(spawnArgs.GetString("text_security"))
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1881,17 +1879,17 @@ object Target {
     class idTarget_RemoveWeapons : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_RemoveWeapons );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_RemoveWeapons?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_RemoveWeapons?>
+                    eventCallback_t1<idTarget_RemoveWeapons> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_RemoveWeapons::Event_Activate
+                    }
             }
         }
 
@@ -1909,8 +1907,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1924,17 +1922,17 @@ object Target {
     class idTarget_LevelTrigger : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_LevelTrigger );//TODO:understand this fucking macro
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LevelTrigger?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_LevelTrigger?>
+                    eventCallback_t1<idTarget_LevelTrigger> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_LevelTrigger::Event_Activate
+                    }
             }
         }
 
@@ -1947,8 +1945,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -1962,21 +1960,21 @@ object Target {
     class idTarget_EnableStamina : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_EnableStamina );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EnableStamina?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_EnableStamina?>
+                    eventCallback_t1<idTarget_EnableStamina> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_EnableStamina::Event_Activate
+                    }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             for (i in 0 until Game_local.gameLocal.numClients) {
                 if (Game_local.gameLocal.entities[i] != null) {
                     val player = Game_local.gameLocal.entities[i] as idPlayer
@@ -1989,8 +1987,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 
@@ -2004,23 +2002,23 @@ object Target {
     class idTarget_FadeSoundClass : idTarget() {
         companion object {
             // CLASS_PROTOTYPE( idTarget_FadeSoundClass );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_FadeSoundClass?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idTarget_FadeSoundClass?>
-                eventCallbacks[Target.EV_RestoreVolume] =
-                    eventCallback_t0<idTarget_FadeSoundClass?> { obj: T? -> neo.Game.obj.Event_RestoreVolume() } as eventCallback_t0<idTarget_FadeSoundClass?>
+                    eventCallback_t1<idTarget_FadeSoundClass> { obj: Any?, activator: idEventArg<*>? ->
+                        idTarget_FadeSoundClass::Event_Activate
+                    }
+                eventCallbacks[EV_RestoreVolume] =
+                    eventCallback_t0<idTarget_FadeSoundClass> { obj: Any? -> idTarget_FadeSoundClass::Event_RestoreVolume }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             val fadeTime = spawnArgs.GetFloat("fadeTime")
             val fadeDB = spawnArgs.GetFloat("fadeDB")
             val fadeDuration = spawnArgs.GetFloat("fadeDuration")
@@ -2033,7 +2031,7 @@ object Target {
                     fadeTime
                 )
                 if (fadeDuration != 0f) {
-                    PostEventSec(Target.EV_RestoreVolume, fadeDuration)
+                    PostEventSec(EV_RestoreVolume, fadeDuration)
                 }
             }
         }
@@ -2046,8 +2044,8 @@ object Target {
             Game_local.gameSoundWorld.FadeSoundClasses(0, fadeDB, fadeTime)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 }

@@ -2,9 +2,7 @@ package neo.Game
 
 import neo.CM.CollisionModel
 import neo.CM.CollisionModel.trace_s
-import neo.Game.*
 import neo.Game.AFEntity.idAFAttachment
-import neo.Game.AFEntity.idAFEntity_Base
 import neo.Game.AFEntity.idAFEntity_Gibbable
 import neo.Game.AI.AAS.idAAS
 import neo.Game.Animation.Anim
@@ -13,6 +11,7 @@ import neo.Game.Animation.Anim.jointModTransform_t
 import neo.Game.Animation.Anim_Blend.idAnimBlend
 import neo.Game.Animation.Anim_Blend.idAnimator
 import neo.Game.Entity.idEntity
+import neo.Game.GameSys.Class.EV_Remove
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
 import neo.Game.GameSys.Class.eventCallback_t1
@@ -31,8 +30,9 @@ import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Projectile.idSoulCubeMissile
 import neo.Game.Script.Script_Program.function_t
 import neo.Game.Script.Script_Thread.idThread
-import neo.Renderer.*
+import neo.Renderer.Material
 import neo.Renderer.Material.surfTypes_t
+import neo.Renderer.Model
 import neo.Renderer.RenderWorld.renderView_s
 import neo.TempDump
 import neo.Tools.Compilers.AAS.AASFile
@@ -48,13 +48,14 @@ import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
 import neo.idlib.containers.LinkList.idLinkList
-import neo.idlib.containers.List.idList
-import neo.idlib.containers.idStrList
-import neo.idlib.math.*
 import neo.idlib.math.Angles.idAngles
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
+import kotlin.math.ceil
+import kotlin.math.cos
 
 /**
  *
@@ -122,11 +123,11 @@ object Actor {
 
         // ~idAnimState();
         fun Save(savefile: idSaveGame) {
-            savefile.WriteObject(self)
+            savefile.WriteObject(self!!)
 
             // Save the entity owner of the animator
-            savefile.WriteObject(animator.GetEntity())
-            savefile.WriteObject(thread)
+            savefile.WriteObject(animator!!.GetEntity()!!)
+            savefile.WriteObject(thread!!)
             savefile.WriteString(state)
             savefile.WriteInt(animBlendFrames)
             savefile.WriteInt(lastAnimBlendFrames)
@@ -159,10 +160,10 @@ object Actor {
             channel = animchannel
             if (null == thread) {
                 thread = idThread()
-                thread.ManualDelete()
+                thread!!.ManualDelete()
             }
-            thread.EndThread()
-            thread.ManualControl()
+            thread!!.EndThread()
+            thread!!.ManualControl()
         }
 
         fun Shutdown() {
@@ -172,44 +173,45 @@ object Actor {
 
         fun SetState(statename: String, blendFrames: Int) {
             val func: function_t?
-            func = self.scriptObject.GetFunction(statename)
+            func = self!!.scriptObject.GetFunction(statename)
             if (null == func) {
                 assert(false)
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "Can't find function '%s' in object '%s'",
                     statename,
-                    self.scriptObject.GetTypeName()
+                    self!!.scriptObject.GetTypeName()
                 )
+                return
             }
             state.set(statename)
             disabled = false
             animBlendFrames = blendFrames
             lastAnimBlendFrames = blendFrames
-            thread.CallFunction(self, func, true)
+            thread!!.CallFunction(self!!, func, true)
             animBlendFrames = blendFrames
             lastAnimBlendFrames = blendFrames
             disabled = false
             idleAnim = false
-            if (SysCvar.ai_debugScript.GetInteger() == self.entityNumber) {
-                Game_local.gameLocal.Printf("%d: %s: Animstate: %s\n", Game_local.gameLocal.time, self.name, state)
+            if (SysCvar.ai_debugScript.GetInteger() == self!!.entityNumber) {
+                Game_local.gameLocal.Printf("%d: %s: Animstate: %s\n", Game_local.gameLocal.time, self!!.name, state)
             }
         }
 
         fun StopAnim(frames: Int) {
             animBlendFrames = 0
-            animator.Clear(channel, Game_local.gameLocal.time, Anim.FRAME2MS(frames))
+            animator!!.Clear(channel, Game_local.gameLocal.time, Anim.FRAME2MS(frames))
         }
 
         fun PlayAnim(anim: Int) {
             if (anim != 0) {
-                animator.PlayAnim(channel, anim, Game_local.gameLocal.time, Anim.FRAME2MS(animBlendFrames))
+                animator!!.PlayAnim(channel, anim, Game_local.gameLocal.time, Anim.FRAME2MS(animBlendFrames))
             }
             animBlendFrames = 0
         }
 
         fun CycleAnim(anim: Int) {
             if (anim != 0) {
-                animator.CycleAnim(channel, anim, Game_local.gameLocal.time, Anim.FRAME2MS(animBlendFrames))
+                animator!!.CycleAnim(channel, anim, Game_local.gameLocal.time, Anim.FRAME2MS(animBlendFrames))
             }
             animBlendFrames = 0
         }
@@ -222,12 +224,12 @@ object Actor {
             if (disabled) {
                 return false
             }
-            if (SysCvar.ai_debugScript.GetInteger() == self.entityNumber) {
-                thread.EnableDebugInfo()
+            if (SysCvar.ai_debugScript.GetInteger() == self!!.entityNumber) {
+                thread!!.EnableDebugInfo()
             } else {
-                thread.DisableDebugInfo()
+                thread!!.DisableDebugInfo()
             }
-            thread.Execute()
+            thread!!.Execute()
             return true
         }
 
@@ -253,7 +255,7 @@ object Actor {
 
         fun AnimDone(blendFrames: Int): Boolean {
             val animDoneTime: Int
-            animDoneTime = animator.CurrentAnim(channel).GetEndTime()
+            animDoneTime = animator!!.CurrentAnim(channel).GetEndTime()
             return if (animDoneTime < 0) {
                 // playing a cycle
                 false
@@ -269,7 +271,7 @@ object Actor {
 
 //            memset(flags, 0, sizeof(flags));
             if (!disabled && !AnimDone(0)) {
-                flags = animator.GetAnimFlags(animator.CurrentAnim(channel).AnimNum())
+                flags = animator!!.GetAnimFlags(animator!!.CurrentAnim(channel).AnimNum())
             }
             return flags
         }
@@ -291,11 +293,7 @@ object Actor {
 
     class idAttachInfo {
         var channel = 0
-        val ent: idEntityPtr<idEntity?>?
-
-        init {
-            ent = idEntityPtr()
-        }
+        val ent: idEntityPtr<idEntity> = idEntityPtr()
     }
 
     class copyJoints_t {
@@ -324,99 +322,105 @@ object Actor {
             }
 
             init {
-                eventCallbacks.putAll(idAFEntity_Gibbable.Companion.getEventCallBacks())
-                eventCallbacks[Actor.AI_EnableEyeFocus] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_EnableEyeFocus() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_DisableEyeFocus] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_DisableEyeFocus() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_Footstep] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_Footstep() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_FootstepLeft] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_Footstep() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_FootstepRight] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_Footstep() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_EnableWalkIK] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_EnableWalkIK() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_DisableWalkIK] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_DisableWalkIK() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.EV_EnableLegIK] =
-                    eventCallback_t1<idActor?> { obj: T?, num: idEventArg<*>? -> neo.Game.obj.Event_EnableLegIK(neo.Game.num) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.EV_DisableLegIK] =
-                    eventCallback_t1<idActor?> { obj: T?, num: idEventArg<*>? -> neo.Game.obj.Event_DisableLegIK(neo.Game.num) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_PreventPain] =
-                    eventCallback_t1<idActor?> { obj: T?, duration: idEventArg<*>? -> neo.Game.obj.Event_PreventPain(neo.Game.duration) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_DisablePain] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_DisablePain() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_EnablePain] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_EnablePain() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_GetPainAnim] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_GetPainAnim() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_SetAnimPrefix] =
-                    eventCallback_t1<idActor?> { obj: T?, prefix: idEventArg<*>? -> neo.Game.obj.Event_SetAnimPrefix(neo.Game.prefix) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_StopAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_StopAnim(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_PlayAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, _channel: idEventArg<*>? -> neo.Game.obj.Event_PlayAnim(neo.Game._channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_PlayCycle] =
-                    eventCallback_t2<idActor?> { obj: T?, _channel: idEventArg<*>? -> neo.Game.obj.Event_PlayCycle(neo.Game._channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_IdleAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, _channel: idEventArg<*>? -> neo.Game.obj.Event_IdleAnim(neo.Game._channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_SetSyncedAnimWeight] =
-                    eventCallback_t3<idActor?> { obj: T?, _channel: idEventArg<*>? ->
-                        neo.Game.obj.Event_SetSyncedAnimWeight(neo.Game._channel)
-                    } as eventCallback_t3<idActor?>
-                eventCallbacks[Actor.AI_SetBlendFrames] =
-                    eventCallback_t2<idActor?> { obj: T?, _channel: idEventArg<*>? ->
-                        neo.Game.obj.Event_SetBlendFrames(neo.Game._channel)
-                    } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_GetBlendFrames] =
-                    eventCallback_t1<idActor?> { obj: T?, _channel: idEventArg<*>? ->
-                        neo.Game.obj.Event_GetBlendFrames(neo.Game._channel)
-                    } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_AnimState] =
-                    eventCallback_t3<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_AnimState(neo.Game.channel) } as eventCallback_t3<idActor?>
-                eventCallbacks[Actor.AI_GetAnimState] =
-                    eventCallback_t1<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_GetAnimState(neo.Game.channel) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_InAnimState] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_InAnimState(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_FinishAction] =
-                    eventCallback_t1<idActor?> { obj: T?, actionname: idEventArg<*>? ->
-                        neo.Game.obj.Event_FinishAction(neo.Game.actionname)
-                    } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_AnimDone] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_AnimDone(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_OverrideAnim] =
-                    eventCallback_t1<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_OverrideAnim(neo.Game.channel) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_EnableAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_EnableAnim(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_HasAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_HasAnim(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_CheckAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_CheckAnim(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_ChooseAnim] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_ChooseAnim(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_AnimLength] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_AnimLength(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_AnimDistance] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_AnimDistance(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_HasEnemies] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_HasEnemies() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_NextEnemy] =
-                    eventCallback_t1<idActor?> { obj: T?, _ent: idEventArg<*>? -> neo.Game.obj.Event_NextEnemy(neo.Game._ent) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_ClosestEnemyToPoint] =
-                    eventCallback_t1<idActor?> { obj: T?, pos: idEventArg<*>? ->
-                        neo.Game.obj.Event_ClosestEnemyToPoint(neo.Game.pos)
-                    } as eventCallback_t1<idActor?>
+                eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks())
+                eventCallbacks[AI_EnableEyeFocus] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnableEyeFocus }
+                eventCallbacks[AI_DisableEyeFocus] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisableEyeFocus }
+                eventCallbacks[EV_Footstep] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                eventCallbacks[EV_FootstepLeft] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                eventCallbacks[EV_FootstepRight] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                eventCallbacks[EV_EnableWalkIK] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnableWalkIK }
+                eventCallbacks[EV_DisableWalkIK] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisableWalkIK }
+                eventCallbacks[EV_EnableLegIK] =
+                    eventCallback_t1<idActor> { obj: Any?, num: idEventArg<*>? -> idActor::Event_EnableLegIK }
+                eventCallbacks[EV_DisableLegIK] =
+                    eventCallback_t1<idActor> { obj: Any?, num: idEventArg<*>? -> idActor::Event_DisableLegIK }
+                eventCallbacks[AI_PreventPain] =
+                    eventCallback_t1<idActor> { obj: Any?, duration: idEventArg<*>? -> idActor::Event_PreventPain }
+                eventCallbacks[AI_DisablePain] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisablePain }
+                eventCallbacks[AI_EnablePain] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnablePain }
+                eventCallbacks[AI_GetPainAnim] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetPainAnim }
+                eventCallbacks[AI_SetAnimPrefix] =
+                    eventCallback_t1<idActor> { obj: Any?, prefix: idEventArg<*>? -> idActor::Event_SetAnimPrefix }
+                eventCallbacks[AI_StopAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, frames: idEventArg<*> -> idActor::Event_StopAnim }
+                eventCallbacks[AI_PlayAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_PlayAnim }
+                eventCallbacks[AI_PlayCycle] =
+                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_PlayCycle }
+                eventCallbacks[AI_IdleAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_IdleAnim }
+                eventCallbacks[AI_SetSyncedAnimWeight] =
+                    eventCallback_t3<idActor> { obj: Any?, _channel: idEventArg<*>,
+                                                _anim: idEventArg<*>,
+                                                _weight: idEventArg<*> ->
+                        idActor::Event_SetSyncedAnimWeight
+                    }
+                eventCallbacks[AI_SetBlendFrames] =
+                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>, _blendFrames: idEventArg<*> ->
+                        idActor::Event_SetBlendFrames
+                    }
+                eventCallbacks[AI_GetBlendFrames] =
+                    eventCallback_t1<idActor> { obj: Any?, _channel: idEventArg<*> ->
+                        idActor::Event_GetBlendFrames
+                    }
+                eventCallbacks[AI_AnimState] =
+                    eventCallback_t3<idActor> { obj: Any?, channel: idEventArg<*>,
+                                                statename: idEventArg<*>,
+                                                blendFrames: idEventArg<*> ->
+                        idActor::Event_AnimState
+                    }
+                eventCallbacks[AI_GetAnimState] =
+                    eventCallback_t1<idActor> { obj: Any?, channel: idEventArg<*>? -> idActor::Event_GetAnimState }
+                eventCallbacks[AI_InAnimState] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, statename: idEventArg<*> -> idActor::Event_InAnimState }
+                eventCallbacks[AI_FinishAction] =
+                    eventCallback_t1<idActor> { obj: Any?, actionname: idEventArg<*>? ->
+                        idActor::Event_FinishAction
+                    }
+                eventCallbacks[AI_AnimDone] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, _blendFrames: idEventArg<*> -> idActor::Event_AnimDone }
+                eventCallbacks[AI_OverrideAnim] =
+                    eventCallback_t1<idActor> { obj: Any?, channel: idEventArg<*>? -> idActor::Event_OverrideAnim }
+                eventCallbacks[AI_EnableAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, _blendFrames: idEventArg<*> -> idActor::Event_EnableAnim }
+                eventCallbacks[AI_HasAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animName: idEventArg<*> -> idActor::Event_HasAnim }
+                eventCallbacks[AI_CheckAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animname: idEventArg<*> -> idActor::Event_CheckAnim }
+                eventCallbacks[AI_ChooseAnim] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animname: idEventArg<*> -> idActor::Event_ChooseAnim }
+                eventCallbacks[AI_AnimLength] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, animname: idEventArg<*> -> idActor::Event_AnimLength }
+                eventCallbacks[AI_AnimDistance] =
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, animname: idEventArg<*> -> idActor::Event_AnimDistance }
+                eventCallbacks[AI_HasEnemies] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_HasEnemies }
+                eventCallbacks[AI_NextEnemy] =
+                    eventCallback_t1<idActor> { obj: Any?, _ent: idEventArg<*>? -> idActor::Event_NextEnemy }
+                eventCallbacks[AI_ClosestEnemyToPoint] =
+                    eventCallback_t1<idActor> { obj: Any?, pos: idEventArg<*>? ->
+                        idActor::Event_ClosestEnemyToPoint
+                    }
                 eventCallbacks[Entity.EV_StopSound] =
-                    eventCallback_t2<idActor?> { obj: T?, channel: idEventArg<*>? -> neo.Game.obj.Event_StopSound(neo.Game.channel) } as eventCallback_t2<idActor?>
-                eventCallbacks[Actor.AI_SetNextState] =
-                    eventCallback_t1<idActor?> { obj: T?, name: idEventArg<*>? -> neo.Game.obj.Event_SetNextState(neo.Game.name) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_SetState] =
-                    eventCallback_t1<idActor?> { obj: T?, name: idEventArg<*>? -> neo.Game.obj.Event_SetState(neo.Game.name) } as eventCallback_t1<idActor?>
-                eventCallbacks[Actor.AI_GetState] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_GetState() } as eventCallback_t0<idActor?>
-                eventCallbacks[Actor.AI_GetHead] =
-                    eventCallback_t0<idActor?> { obj: T? -> neo.Game.obj.Event_GetHead() } as eventCallback_t0<idActor?>
+                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, netSync: idEventArg<*> -> idActor::Event_StopSound }
+                eventCallbacks[AI_SetNextState] =
+                    eventCallback_t1<idActor> { obj: Any?, name: idEventArg<*>? -> idActor::Event_SetNextState }
+                eventCallbacks[AI_SetState] =
+                    eventCallback_t1<idActor> { obj: Any?, name: idEventArg<*>? -> idActor::Event_SetState }
+                eventCallbacks[AI_GetState] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetState }
+                eventCallbacks[AI_GetHead] =
+                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetHead }
             }
         }
 
@@ -442,7 +446,12 @@ object Actor {
         protected val animPrefix: idStr
 
         //
-        protected val attachments: idList<idAttachInfo> = idList(idAttachInfo::class.java)
+        protected val attachments: ArrayList<idAttachInfo> = ArrayList()
+        fun ArrayList<idAttachInfo>.Alloc(): idAttachInfo {
+            val idAttachInfo = idAttachInfo()
+            add(idAttachInfo)
+            return idAttachInfo
+        }
 
         //
         // blinking
@@ -451,13 +460,13 @@ object Actor {
         protected var blink_min: Int
         protected var blink_time: Int
         protected val copyJoints // copied from the body animation to the head model
-                : idList<copyJoints_t?>?
+                : ArrayList<copyJoints_t>
 
         //
         protected var damageGroups // body damage groups
-                : idStrList?
+                : ArrayList<idStr>
         protected val damageScale // damage scale per damage gruop
-                : idList<Float?>?
+                : ArrayList<Float>
 
         //
         protected var deltaViewAngles // delta angles relative to view input angles
@@ -515,7 +524,7 @@ object Actor {
         protected var walkIK: idIK_Walk
         override fun Spawn() {
             super.Spawn()
-            val ent = arrayOf<idEntity?>(null)
+            val ent = arrayListOf<idEntity>()
             val jointName = idStr()
             val fovDegrees = CFloat()
             val rank = CInt()
@@ -530,7 +539,7 @@ object Actor {
             this.team = team._val
             spawnArgs.GetVector("offsetModel", "0 0 0", modelOffset)
             spawnArgs.GetBool("use_combat_bbox", "0", use_combat_bbox)
-            this.use_combat_bbox = use_combat_bbox.isVal
+            this.use_combat_bbox = use_combat_bbox._val
             viewAxis.set(GetPhysics().GetAxis())
             spawnArgs.GetFloat("fov", "90", fovDegrees)
             SetFOV(fovDegrees._val)
@@ -558,7 +567,7 @@ object Actor {
                 args.Set("dropToFloor", "0")
                 Game_local.gameLocal.SpawnEntityDef(args, ent)
                 if (TempDump.NOT(ent[0])) {
-                    idGameLocal.Companion.Error("Couldn't spawn '%s' to attach to entity '%s'", kv.GetValue(), name)
+                    idGameLocal.Error("Couldn't spawn '%s' to attach to entity '%s'", kv.GetValue(), name)
                 } else {
                     Attach(ent[0])
                 }
@@ -593,26 +602,26 @@ object Actor {
                         jointName.StripLeadingOnce("copy_joint ")
                         copyJoint.mod = jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE
                     }
-                    copyJoint.from.setVal(animator.GetJointHandle(jointName))
+                    copyJoint.from._val = (animator.GetJointHandle(jointName))
                     if (copyJoint.from._val == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Unknown copy_joint '%s' on entity %s", jointName, name)
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
                     }
                     jointName.set(kv.GetValue())
-                    copyJoint.to.setVal(headAnimator.GetJointHandle(jointName))
+                    copyJoint.to._val = (headAnimator!!.GetJointHandle(jointName))
                     if (copyJoint.to._val == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Unknown copy_joint '%s' on head of entity %s", jointName, name)
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
                     }
-                    copyJoints.Append(copyJoint)
+                    copyJoints.add(copyJoint)
                     kv = spawnArgs.MatchPrefix("copy_joint", kv)
                 }
             }
 
             // set up blinking
-            blink_anim = headAnimator.GetAnim("blink")
+            blink_anim = headAnimator!!.GetAnim("blink")
             blink_time = 0 // it's ok to blink right away
             blink_min = Math_h.SEC2MS(spawnArgs.GetFloat("blink_min", "0.5")).toInt()
             blink_max = Math_h.SEC2MS(spawnArgs.GetFloat("blink_max", "8")).toInt()
@@ -673,26 +682,26 @@ object Actor {
             savefile.WriteInt(pain_debounce_time)
             savefile.WriteInt(pain_delay)
             savefile.WriteInt(pain_threshold)
-            savefile.WriteInt(damageGroups.size())
+            savefile.WriteInt(damageGroups.size)
             i = 0
-            while (i < damageGroups.size()) {
-                savefile.WriteString(damageGroups.get(i))
+            while (i < damageGroups.size) {
+                savefile.WriteString(damageGroups[i])
                 i++
             }
-            savefile.WriteInt(damageScale.Num())
+            savefile.WriteInt(damageScale.size)
             i = 0
-            while (i < damageScale.Num()) {
-                savefile.WriteFloat(damageScale.get(i))
+            while (i < damageScale.size) {
+                savefile.WriteFloat(damageScale[i])
                 i++
             }
             savefile.WriteBool(use_combat_bbox)
             head.Save(savefile)
-            savefile.WriteInt(copyJoints.Num())
+            savefile.WriteInt(copyJoints.size)
             i = 0
-            while (i < copyJoints.Num()) {
-                savefile.WriteInt(TempDump.etoi(copyJoints.get(i).mod))
-                savefile.WriteJoint(copyJoints.get(i).from._val)
-                savefile.WriteJoint(copyJoints.get(i).to._val)
+            while (i < copyJoints.size) {
+                savefile.WriteInt(TempDump.etoi(copyJoints[i].mod))
+                savefile.WriteJoint(copyJoints[i].from._val)
+                savefile.WriteJoint(copyJoints[i].to._val)
                 i++
             }
             savefile.WriteJoint(leftEyeJoint)
@@ -707,7 +716,7 @@ object Actor {
             savefile.WriteInt(blink_max)
 
             // script variables
-            savefile.WriteObject(scriptThread)
+            savefile.WriteObject(scriptThread!!)
             savefile.WriteString(waitState)
             headAnim.Save(savefile)
             torsoAnim.Save(savefile)
@@ -715,11 +724,11 @@ object Actor {
             savefile.WriteBool(allowPain)
             savefile.WriteBool(allowEyeFocus)
             savefile.WriteInt(painTime)
-            savefile.WriteInt(attachments.Num())
+            savefile.WriteInt(attachments.size)
             i = 0
-            while (i < attachments.Num()) {
-                attachments.get(i).ent.Save(savefile)
-                savefile.WriteInt(attachments.get(i).channel)
+            while (i < attachments.size) {
+                attachments[i].ent.Save(savefile)
+                savefile.WriteInt(attachments[i].channel)
                 i++
             }
             savefile.WriteBool(finalBoss)
@@ -727,7 +736,7 @@ object Actor {
 
             //FIXME: this is unneccesary
             if (state != null) {
-                val src = idLexer(state.Name(), state.Name().length, "idAI::Save")
+                val src = idLexer(state!!.Name(), state!!.Name().length, "idAI::Save")
                 src.ReadTokenOnLine(token)
                 src.ExpectTokenString("::")
                 src.ReadTokenOnLine(token)
@@ -736,7 +745,7 @@ object Actor {
                 savefile.WriteString("")
             }
             if (idealState != null) {
-                val src = idLexer(idealState.Name(), idealState.Name().length, "idAI::Save")
+                val src = idLexer(idealState!!.Name(), idealState!!.Name().length, "idAI::Save")
                 src.ReadTokenOnLine(token)
                 src.ExpectTokenString("::")
                 src.ReadTokenOnLine(token)
@@ -778,31 +787,31 @@ object Actor {
             pain_delay = savefile.ReadInt()
             pain_threshold = savefile.ReadInt()
             savefile.ReadInt(num)
-            damageGroups.SetGranularity(1)
-            damageGroups.setSize(num._val)
+            damageGroups.ensureCapacity(1)
+            damageGroups.ensureCapacity(num._val)
             i = 0
             while (i < num._val) {
-                savefile.ReadString(damageGroups.get(i))
+                savefile.ReadString(damageGroups[i])
                 i++
             }
             savefile.ReadInt(num)
-            damageScale.SetNum(num._val)
+            damageScale.ensureCapacity(num._val)
             i = 0
             while (i < num._val) {
-                damageScale.set(i, savefile.ReadFloat())
+                damageScale[i] = savefile.ReadFloat()
                 i++
             }
             use_combat_bbox = savefile.ReadBool()
             head.Restore(savefile)
             savefile.ReadInt(num)
-            copyJoints.SetNum(num._val)
+            copyJoints.ensureCapacity(num._val)
             i = 0
             while (i < num._val) {
                 val `val` = CInt()
                 savefile.ReadInt(`val`)
-                copyJoints.get(i).mod = jointModTransform_t.values()[`val`._val]
-                savefile.ReadJoint(copyJoints.get(i).from)
-                savefile.ReadJoint(copyJoints.get(i).to)
+                copyJoints[i].mod = jointModTransform_t.values()[`val`._val]
+                savefile.ReadJoint(copyJoints[i].from)
+                savefile.ReadJoint(copyJoints[i].to)
                 i++
             }
             leftEyeJoint = savefile.ReadJoint()
@@ -848,7 +857,7 @@ object Actor {
             var next: idEntity?
             idAFEntity_Base_Hide() //TODO:super size me
             if (head.GetEntity() != null) {
-                head.GetEntity().Hide()
+                head.GetEntity()!!.Hide()
             }
             ent = GetNextTeamEntity()
             while (ent != null) {
@@ -856,7 +865,7 @@ object Actor {
                 if (ent.GetBindMaster() == this) {
                     ent.Hide()
                     if (ent is idLight) {
-                        (ent as idLight?).Off()
+                        ent.Off()
                     }
                 }
                 ent = next
@@ -869,7 +878,7 @@ object Actor {
             var next: idEntity?
             idAFEntity_Base_Show() //TODO:super size me
             if (head.GetEntity() != null) {
-                head.GetEntity().Show()
+                head.GetEntity()!!.Show()
             }
             ent = GetNextTeamEntity()
             while (ent != null) {
@@ -877,7 +886,7 @@ object Actor {
                 if (ent.GetBindMaster() === this) {
                     ent.Show()
                     if (ent is idLight) {
-                        (ent as idLight?).On()
+                        (ent as idLight).On()
                     }
                 }
                 ent = next
@@ -889,7 +898,7 @@ object Actor {
             return TempDump.etoi(surfTypes_t.SURFTYPE_FLESH)
         }
 
-        override fun ProjectOverlay(origin: idVec3, dir: idVec3, size: Float, material: String?) {
+        override fun ProjectOverlay(origin: idVec3, dir: idVec3, size: Float, material: String) {
             var ent: idEntity?
             var next: idEntity?
             idEntity_ProjectOverlay(origin, dir, size, material)
@@ -921,29 +930,29 @@ object Actor {
             val headEnt: idEntity? = head.GetEntity()
             if (headEnt != null) {
                 jointname = spawnArgs.GetString("bone_leftEye")
-                leftEyeJoint = headEnt.GetAnimator().GetJointHandle(jointname)
+                leftEyeJoint = headEnt.GetAnimator()!!.GetJointHandle(jointname)
                 jointname = spawnArgs.GetString("bone_rightEye")
-                rightEyeJoint = headEnt.GetAnimator().GetJointHandle(jointname)
+                rightEyeJoint = headEnt.GetAnimator()!!.GetJointHandle(jointname)
 
                 // set up the eye height.  check if it's specified in the def.
                 if (!spawnArgs.GetFloat("eye_height", "0", CFloat(eyeOffset.z))) {
                     // if not in the def, then try to base it off the idle animation
-                    val anim = headEnt.GetAnimator().GetAnim("idle")
+                    val anim = headEnt.GetAnimator()!!.GetAnim("idle")
                     if (anim != 0 && leftEyeJoint != Model.INVALID_JOINT) {
                         val pos = idVec3()
                         val axis = idMat3()
-                        headEnt.GetAnimator().PlayAnim(Anim.ANIMCHANNEL_ALL, anim, Game_local.gameLocal.time, 0)
-                        headEnt.GetAnimator().GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
-                        headEnt.GetAnimator().ClearAllAnims(Game_local.gameLocal.time, 0)
-                        headEnt.GetAnimator().ForceUpdate()
+                        headEnt.GetAnimator()!!.PlayAnim(Anim.ANIMCHANNEL_ALL, anim, Game_local.gameLocal.time, 0)
+                        headEnt.GetAnimator()!!.GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
+                        headEnt.GetAnimator()!!.ClearAllAnims(Game_local.gameLocal.time, 0)
+                        headEnt.GetAnimator()!!.ForceUpdate()
                         pos.plusAssign(headEnt.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin()))
-                        eyeOffset.set(pos.oPlus(modelOffset))
+                        eyeOffset.set(pos.plus(modelOffset))
                     } else {
                         // just base it off the bounding box size
-                        eyeOffset.z = GetPhysics().GetBounds().get(1).z - 6
+                        eyeOffset.z = GetPhysics().GetBounds()[1].z - 6
                     }
                 }
-                headAnim.Init(this, headEnt.GetAnimator(), Anim.ANIMCHANNEL_ALL)
+                headAnim.Init(this, headEnt.GetAnimator()!!, Anim.ANIMCHANNEL_ALL)
             } else {
                 jointname = spawnArgs.GetString("bone_leftEye")
                 leftEyeJoint = animator.GetJointHandle(jointname)
@@ -961,10 +970,10 @@ object Actor {
                         animator.GetJointTransform(leftEyeJoint, Game_local.gameLocal.time, pos, axis)
                         animator.ClearAllAnims(Game_local.gameLocal.time, 0)
                         animator.ForceUpdate()
-                        eyeOffset.set(pos.oPlus(modelOffset))
+                        eyeOffset.set(pos.plus(modelOffset))
                     } else {
                         // just base it off the bounding box size
-                        eyeOffset.z = GetPhysics().GetBounds().get(1).z - 6
+                        eyeOffset.z = GetPhysics().GetBounds()[1].z - 6
                     }
                 }
                 headAnim.Init(this, animator, Anim.ANIMCHANNEL_HEAD)
@@ -981,7 +990,7 @@ object Actor {
             }
             val headEnt: idEntity? = head.GetEntity()
             if (headEnt != null) {
-                headEnt.GetAnimator().PlayAnim(Anim.ANIMCHANNEL_EYELIDS, blink_anim, Game_local.gameLocal.time, 1)
+                headEnt.GetAnimator()!!.PlayAnim(Anim.ANIMCHANNEL_EYELIDS, blink_anim, Game_local.gameLocal.time, 1)
             } else {
                 animator.PlayAnim(Anim.ANIMCHANNEL_EYELIDS, blink_anim, Game_local.gameLocal.time, 1)
             }
@@ -1024,8 +1033,8 @@ object Actor {
             torsoAnim.Shutdown()
             legsAnim.Shutdown()
             if (scriptThread != null) {
-                scriptThread.EndThread()
-                scriptThread.PostEventMS(Class.EV_Remove, 0)
+                scriptThread!!.EndThread()
+                scriptThread!!.PostEventMS(EV_Remove, 0)
                 //		delete scriptThread;
                 scriptThread = null
             }
@@ -1056,7 +1065,7 @@ object Actor {
 
             // make sure we have a scriptObject
             if (!scriptObject.HasObject()) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "No scriptobject set on '%s'.  Check the '%s' entityDef.",
                     name,
                     GetEntityDefName()
@@ -1065,37 +1074,38 @@ object Actor {
             if (TempDump.NOT(scriptThread)) {
                 // create script thread
                 scriptThread = idThread()
-                scriptThread.ManualDelete()
-                scriptThread.ManualControl()
-                scriptThread.SetThreadName(name.toString())
+                scriptThread!!.ManualDelete()
+                scriptThread!!.ManualControl()
+                scriptThread!!.SetThreadName(name.toString())
             } else {
-                scriptThread.EndThread()
+                scriptThread!!.EndThread()
             }
 
             // call script object's constructor
             constructor = scriptObject.GetConstructor()
-            if (TempDump.NOT(constructor)) {
-                idGameLocal.Companion.Error(
+            if (null == constructor) {
+                idGameLocal.Error(
                     "Missing constructor on '%s' for entity '%s'",
                     scriptObject.GetTypeName(),
                     name
                 )
+                return null
             }
 
             // init the script object's data
             scriptObject.ClearObject()
 
             // just set the current function on the script.  we'll execute in the subclasses.
-            scriptThread.CallFunction(this, constructor, true)
+            scriptThread!!.CallFunction(this, constructor, true)
             return scriptThread
         }
 
         fun UpdateScript() {
             var i: Int
             if (SysCvar.ai_debugScript.GetInteger() == entityNumber) {
-                scriptThread.EnableDebugInfo()
+                scriptThread!!.EnableDebugInfo()
             } else {
-                scriptThread.DisableDebugInfo()
+                scriptThread!!.DisableDebugInfo()
             }
 
             // a series of state changes can happen in a single frame.
@@ -1107,43 +1117,44 @@ object Actor {
                 }
 
                 // don't call script until it's done waiting
-                if (scriptThread.IsWaiting()) {
+                if (scriptThread!!.IsWaiting()) {
                     break
                 }
-                scriptThread.Execute()
+                scriptThread!!.Execute()
                 if (idealState === state) {
                     break
                 }
                 i++
             }
             if (i == 20) {
-                scriptThread.Warning("idActor::UpdateScript: exited loop to prevent lockup")
+                scriptThread!!.Warning("idActor::UpdateScript: exited loop to prevent lockup")
             }
         }
 
-        fun GetScriptFunction(funcname: String?): function_t? {
+        fun GetScriptFunction(funcname: String): function_t {
             val func: function_t?
             func = scriptObject.GetFunction(funcname)
             if (null == func) {
-                scriptThread.Error("Unknown function '%s' in '%s'", funcname, scriptObject.GetTypeName())
+                scriptThread!!.Error("Unknown function '%s' in '%s'", funcname, scriptObject.GetTypeName())
             }
-            return func
+            return func!!
         }
 
         fun SetState(newState: function_t?) {
-            if (TempDump.NOT(newState)) {
-                idGameLocal.Companion.Error("idActor::SetState: Null state")
+            if (null == newState) {
+                idGameLocal.Error("idActor::SetState: Null state")
+                return
             }
             if (SysCvar.ai_debugScript.GetInteger() == entityNumber) {
                 Game_local.gameLocal.Printf("%d: %s: State: %s\n", Game_local.gameLocal.time, name, newState.Name())
             }
             state = newState
             idealState = state
-            scriptThread.CallFunction(this, state, true)
+            scriptThread!!.CallFunction(this, state!!, true)
         }
 
-        fun SetState(statename: String?) {
-            val newState: function_t?
+        fun SetState(statename: String) {
+            val newState: function_t
             newState = GetScriptFunction(statename)
             SetState(newState)
         }
@@ -1167,7 +1178,7 @@ object Actor {
         }
 
         open fun GetEyePosition(): idVec3 {
-            return GetPhysics().GetOrigin().oPlus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
+            return GetPhysics().GetOrigin().plus(GetPhysics().GetGravityNormal().times(-eyeOffset.z))
         }
 
         open fun GetViewPos(origin: idVec3, axis: idMat3) {
@@ -1176,7 +1187,7 @@ object Actor {
         }
 
         fun SetFOV(fov: Float) {
-            fovDot = Math.cos(Math_h.DEG2RAD(fov * 0.5f).toDouble()).toFloat()
+            fovDot = cos(Math_h.DEG2RAD(fov * 0.5f).toDouble()).toFloat()
         }
 
         fun CheckFOV(pos: idVec3): Boolean {
@@ -1193,11 +1204,11 @@ object Actor {
             // infinite vertical vision, so project it onto our orientation plane
             delta.minusAssign(gravityDir.times(gravityDir.times(delta)))
             delta.Normalize()
-            dot = viewAxis.get(0).times(delta)
+            dot = viewAxis[0].times(delta)
             return dot >= fovDot
         }
 
-        fun CanSee(ent: idEntity?, useFOV: Boolean): Boolean {
+        fun CanSee(ent: idEntity, useFOV: Boolean): Boolean {
             val tr = trace_s()
             val eye = idVec3()
             val toPos = idVec3()
@@ -1205,7 +1216,7 @@ object Actor {
                 return false
             }
             if (ent is idActor) {
-                toPos.set((ent as idActor?).GetEyePosition())
+                toPos.set(ent.GetEyePosition())
             } else {
                 toPos.set(ent.GetPhysics().GetOrigin())
             }
@@ -1236,8 +1247,8 @@ object Actor {
          =====================
          */
         open fun GetAIAimTargets(lastSightPos: idVec3, headPos: idVec3, chestPos: idVec3) {
-            headPos.set(lastSightPos.oPlus(EyeOffset()))
-            chestPos.set(headPos.oPlus(lastSightPos).oPlus(GetPhysics().GetBounds().GetCenter()).oMultiply(0.5f))
+            headPos.set(lastSightPos.plus(EyeOffset()))
+            chestPos.set(headPos.plus(lastSightPos).plus(GetPhysics().GetBounds().GetCenter()).times(0.5f))
         }
 
         /* **********************************************************************
@@ -1257,12 +1268,12 @@ object Actor {
             var i: Int
             var arg: idKeyValue?
             val groupname = idStr()
-            val jointList = ArrayList<Int?>()
+            val jointList = ArrayList<Int>()
             var jointnum: Int
             var scale: Float
 
             // create damage zones
-            damageGroups.setSize(animator.NumJoints())
+            damageGroups.ensureCapacity(animator.NumJoints())
             arg = spawnArgs.MatchPrefix("damage_zone ", null)
             while (arg != null) {
                 groupname.set(arg.GetKey())
@@ -1271,7 +1282,7 @@ object Actor {
                 i = 0
                 while (i < jointList.size) {
                     jointnum = jointList[i]
-                    damageGroups.set(jointnum, groupname)
+                    damageGroups[jointnum] = groupname
                     i++
                 }
                 jointList.clear()
@@ -1279,10 +1290,10 @@ object Actor {
             }
 
             // initilize the damage zones to normal damage
-            damageScale.SetNum(animator.NumJoints())
+            damageScale.ensureCapacity(animator.NumJoints())
             i = 0
-            while (i < damageScale.Num()) {
-                damageScale.set(i, 1.0f)
+            while (i < damageScale.size) {
+                damageScale[i] = 1.0f
                 i++
             }
 
@@ -1293,9 +1304,9 @@ object Actor {
                 groupname.set(arg.GetKey())
                 groupname.Strip("damage_scale ")
                 i = 0
-                while (i < damageScale.Num()) {
-                    if (groupname == damageGroups.get(i)) {
-                        damageScale.set(i, scale)
+                while (i < damageScale.size) {
+                    if (groupname == damageGroups[i]) {
+                        damageScale[i] = scale
                     }
                     i++
                 }
@@ -1326,7 +1337,7 @@ object Actor {
             inflictor: idEntity?,
             attacker: idEntity?,
             dir: idVec3,
-            damageDefName: String?,
+            damageDefName: String,
             damageScale: Float,
             location: Int
         ) {
@@ -1346,13 +1357,14 @@ object Actor {
             }
             val damageDef = Game_local.gameLocal.FindEntityDefDict(damageDefName)
             if (null == damageDef) {
-                idGameLocal.Companion.Error("Unknown damageDef '%s'", damageDefName)
+                idGameLocal.Error("Unknown damageDef '%s'", damageDefName)
+                return
             }
             val damage = CInt((damageDef.GetInt("damage") * damageScale).toInt())
-            damage.setVal(GetDamageForLocation(damage._val, location))
+            damage._val = (GetDamageForLocation(damage._val, location))
 
             // inform the attacker that they hit someone
-            attacker.DamageFeedback(this, inflictor, damage)
+            attacker!!.DamageFeedback(this, inflictor, damage)
             if (damage._val > 0) {
                 health -= damage._val
                 if (health <= 0) {
@@ -1379,15 +1391,15 @@ object Actor {
         }
 
         fun GetDamageForLocation(damage: Int, location: Int): Int {
-            return if (location < 0 || location >= damageScale.Num()) {
+            return if (location < 0 || location >= damageScale.size) {
                 damage
-            } else Math.ceil((damage * damageScale.get(location)).toDouble()).toInt()
+            } else ceil((damage * damageScale[location]).toDouble()).toInt()
         }
 
-        fun GetDamageGroup(location: Int): String? {
-            return if (location < 0 || location >= damageGroups.size()) {
+        fun GetDamageGroup(location: Int): String {
+            return if (location < 0 || location >= damageGroups.size) {
                 ""
-            } else damageGroups.get(location).toString()
+            } else damageGroups[location].toString()
         }
 
         fun ClearPain() {
@@ -1415,13 +1427,13 @@ object Actor {
             // don't play pain sounds more than necessary
             pain_debounce_time = Game_local.gameLocal.time + pain_delay
             if (health > 75) {
-                StartSound("snd_pain_small", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                StartSound("snd_pain_small", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
             } else if (health > 50) {
-                StartSound("snd_pain_medium", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                StartSound("snd_pain_medium", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
             } else if (health > 25) {
-                StartSound("snd_pain_large", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                StartSound("snd_pain_large", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
             } else {
-                StartSound("snd_pain_huge", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
+                StartSound("snd_pain_huge", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
             }
             if (!allowPain || Game_local.gameLocal.time < painTime) {
                 // don't play a pain anim
@@ -1482,8 +1494,8 @@ object Actor {
             val headEnt: idAFAttachment?
             if (!use_combat_bbox) {
                 if (combatModel != null) {
-                    combatModel.Unlink()
-                    combatModel.LoadModel(modelDefHandle)
+                    combatModel!!.Unlink()
+                    combatModel!!.LoadModel(modelDefHandle)
                 } else {
                     combatModel = idClipModel(modelDefHandle)
                 }
@@ -1502,7 +1514,7 @@ object Actor {
                 return
             }
             if (combatModel != null) {
-                combatModel.Link(
+                combatModel!!.Link(
                     Game_local.gameLocal.clip,
                     this,
                     0,
@@ -1518,7 +1530,7 @@ object Actor {
         override fun UnlinkCombat() {
             val headEnt: idAFAttachment?
             if (combatModel != null) {
-                combatModel.Unlink()
+                combatModel!!.Unlink()
             }
             headEnt = head.GetEntity()
             headEnt?.UnlinkCombat()
@@ -1583,10 +1595,10 @@ object Actor {
                 .SetContactFrictionDent(contactFrictionDent, contactFrictionDentStart, contactFrictionDentEnd)
 
             // drop any items the actor is holding
-            idMoveableItem.Companion.DropItems(this, "death", null)
+            idMoveableItem.DropItems(this, "death", null)
 
             // drop any articulated figures the actor is holding
-            idAFEntity_Base.Companion.DropAFs(this, "death", null)
+            DropAFs(this, "death", null)
             RemoveAttachments()
             return true
         }
@@ -1615,8 +1627,8 @@ object Actor {
             return deltaViewAngles
         }
 
-        fun SetDeltaViewAngles(delta: idAngles?) {
-            deltaViewAngles = delta
+        fun SetDeltaViewAngles(delta: idAngles) {
+            deltaViewAngles.set(delta)
         }
 
         fun HasEnemies(): Boolean {
@@ -1680,21 +1692,21 @@ object Actor {
             val size = idVec3()
             val bounds = idBounds()
             GetFloorPos(64.0f, pos)
-            if (TempDump.NOT(aas)) {
-                areaNum.setVal(0)
+            if (null == aas) {
+                areaNum._val = 0
                 return
             }
-            size.set(aas.GetSettings().boundingBoxes[0].get(1))
-            bounds.set(0, size.oNegative())
+            size.set(aas.GetSettings()!!.boundingBoxes[0][1])
+            bounds[0] = size.unaryMinus()
             size.z = 32.0f
-            bounds.set(1, size)
-            areaNum.setVal(aas.PointReachableAreaNum(pos, bounds, AASFile.AREA_REACHABLE_WALK))
+            bounds[1] = size
+            areaNum._val = aas.PointReachableAreaNum(pos, bounds, AASFile.AREA_REACHABLE_WALK)
             if (areaNum._val != 0) {
                 aas.PushPointIntoAreaNum(areaNum._val, pos)
             }
         }
 
-        fun Attach(ent: idEntity?) {
+        fun Attach(ent: idEntity) {
             val origin = idVec3()
             val axis = idMat3()
             val   /*jointHandle_t*/joint: Int
@@ -1705,7 +1717,7 @@ object Actor {
             jointName = ent.spawnArgs.GetString("joint")
             joint = animator.GetJointHandle(jointName)
             if (joint == Model.INVALID_JOINT) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "Joint '%s' not found for attaching '%s' on '%s'",
                     jointName,
                     ent.GetClassname(),
@@ -1717,7 +1729,7 @@ object Actor {
             attach.channel = animator.GetChannelForJoint(joint)
             GetJointWorldTransform(joint, Game_local.gameLocal.time, origin, axis)
             attach.ent.oSet(ent)
-            ent.SetOrigin(origin.oPlus(originOffset.times(renderEntity.axis)))
+            ent.SetOrigin(origin.plus(originOffset.times(renderEntity.axis)))
             val rotate = angleOffset.ToMat3()
             val newAxis = rotate.times(axis)
             ent.SetAxis(newAxis)
@@ -1725,8 +1737,8 @@ object Actor {
             ent.cinematic = cinematic
         }
 
-        override fun Teleport(origin: idVec3, angles: idAngles?, destination: idEntity?) {
-            GetPhysics().SetOrigin(origin.oPlus(idVec3(0, 0, CollisionModel.CM_CLIP_EPSILON)))
+        override fun Teleport(origin: idVec3, angles: idAngles, destination: idEntity?) {
+            GetPhysics().SetOrigin(origin.plus(idVec3(0f, 0f, CollisionModel.CM_CLIP_EPSILON)))
             GetPhysics().SetLinearVelocity(Vector.getVec3_origin())
             viewAxis = angles.ToMat3()
             UpdateVisuals()
@@ -1736,9 +1748,9 @@ object Actor {
             }
         }
 
-        override fun GetRenderView(): renderView_s? {
+        override fun GetRenderView(): renderView_s {
             val rv = super.GetRenderView() //TODO:super.super....
-            rv.viewaxis = idMat3(viewAxis)
+            rv.viewaxis.set(idMat3(viewAxis))
             rv.vieworg.set(GetEyePosition())
             return rv
         }
@@ -1749,7 +1761,7 @@ object Actor {
 
          ***********************************************************************/
         // animation state control
-        fun GetAnim(channel: Int, animName: String?): Int {
+        fun GetAnim(channel: Int, animName: String): Int {
             var anim: Int
             val temp: String?
             val animatorPtr: idAnimator?
@@ -1757,7 +1769,7 @@ object Actor {
                 if (TempDump.NOT(head.GetEntity())) {
                     return 0
                 }
-                head.GetEntity().GetAnimator()
+                head.GetEntity()!!.GetAnimator()
             } else {
                 animator
             }
@@ -1778,12 +1790,12 @@ object Actor {
             legsAnim.UpdateState()
         }
 
-        fun SetAnimState(channel: Int, statename: String?, blendFrames: Int) {
+        fun SetAnimState(channel: Int, statename: String, blendFrames: Int) {
             val func: function_t?
             func = scriptObject.GetFunction(statename)
             if (null == func) {
                 assert(false)
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "Can't find function '%s' in object '%s'",
                     statename,
                     scriptObject.GetTypeName()
@@ -1806,23 +1818,23 @@ object Actor {
                     allowPain = true
                     allowEyeFocus = true
                 }
-                else -> idGameLocal.Companion.Error("idActor::SetAnimState: Unknown anim group")
+                else -> idGameLocal.Error("idActor::SetAnimState: Unknown anim group")
             }
         }
 
-        fun GetAnimState(channel: Int): idStr? {
+        fun GetAnimState(channel: Int): idStr {
             return when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> headAnim.state
                 Anim.ANIMCHANNEL_TORSO -> torsoAnim.state
                 Anim.ANIMCHANNEL_LEGS -> legsAnim.state
                 else -> {
-                    idGameLocal.Companion.Error("idActor::GetAnimState: Unknown anim group")
-                    null
+                    idGameLocal.Error("idActor::GetAnimState: Unknown anim group")
+                    throw RuntimeException("idActor::GetAnimState: Unknown anim group")
                 }
             }
         }
 
-        fun InAnimState(channel: Int, stateName: String?): Boolean {
+        fun InAnimState(channel: Int, stateName: String): Boolean {
             when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> if (headAnim.state.toString() == stateName) {
                     return true
@@ -1833,7 +1845,7 @@ object Actor {
                 Anim.ANIMCHANNEL_LEGS -> if (legsAnim.state.toString() == stateName) {
                     return true
                 }
-                else -> idGameLocal.Companion.Error("idActor::InAnimState: Unknown anim group")
+                else -> idGameLocal.Error("idActor::InAnimState: Unknown anim group")
             }
             return false
         }
@@ -1846,7 +1858,7 @@ object Actor {
             }
         }
 
-        fun SetWaitState(_waitstate: String?) {
+        fun SetWaitState(_waitstate: String) {
             waitState.set(_waitstate)
         }
 
@@ -1859,12 +1871,12 @@ object Actor {
             } else animDoneTime - Anim.FRAME2MS(blendFrames) <= Game_local.gameLocal.time
         }
 
-        override fun SpawnGibs(dir: idVec3, damageDefName: String?) {
+        override fun SpawnGibs(dir: idVec3, damageDefName: String) {
             super.SpawnGibs(dir, damageDefName)
             RemoveAttachments()
         }
 
-        override fun Gib(dir: idVec3, damageDefName: String?) {
+        override fun Gib(dir: idVec3, damageDefName: String) {
             // no gibbing in multiplayer - by self damage or by moving objects
             if (Game_local.gameLocal.isMultiplayer) {
                 return
@@ -1875,7 +1887,7 @@ object Actor {
             }
             super.Gib(dir, damageDefName)
             if (head.GetEntity() != null) {
-                head.GetEntity().Hide()
+                head.GetEntity()!!.Hide()
             }
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_VOICE), false)
         }
@@ -1887,10 +1899,10 @@ object Actor {
 
             // remove any attached entities
             i = 0
-            while (i < attachments.Num()) {
-                ent = attachments.get(i).ent.GetEntity()
+            while (i < attachments.size) {
+                ent = attachments[i].ent.GetEntity()
                 if (ent != null && ent.spawnArgs.GetBool("remove")) {
-                    ent.PostEventMS(Class.EV_Remove, 0)
+                    ent.PostEventMS(EV_Remove, 0)
                 }
                 i++
             }
@@ -1911,26 +1923,26 @@ object Actor {
 
             // copy the animation from the body to the head
             i = 0
-            while (i < copyJoints.Num()) {
-                if (copyJoints.get(i).mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
+            while (i < copyJoints.size) {
+                if (copyJoints[i].mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose()
-                    GetJointWorldTransform(copyJoints.get(i).from._val, Game_local.gameLocal.time, pos, axis)
+                    GetJointWorldTransform(copyJoints[i].from._val, Game_local.gameLocal.time, pos, axis)
                     pos.minusAssign(headEnt.GetPhysics().GetOrigin())
-                    headAnimator.SetJointPos(copyJoints.get(i).to._val, copyJoints.get(i).mod, pos.times(mat))
-                    headAnimator.SetJointAxis(
-                        copyJoints.get(i).to._val,
-                        copyJoints.get(i).mod,
+                    headAnimator!!.SetJointPos(copyJoints[i].to._val, copyJoints[i].mod, pos.times(mat))
+                    headAnimator!!.SetJointAxis(
+                        copyJoints[i].to._val,
+                        copyJoints[i].mod,
                         axis.times(mat)
                     )
                 } else {
                     animator.GetJointLocalTransform(
-                        copyJoints.get(i).from._val,
+                        copyJoints[i].from._val,
                         Game_local.gameLocal.time,
                         pos,
                         axis
                     )
-                    headAnimator.SetJointPos(copyJoints.get(i).to._val, copyJoints.get(i).mod, pos)
-                    headAnimator.SetJointAxis(copyJoints.get(i).to._val, copyJoints.get(i).mod, axis)
+                    headAnimator!!.SetJointPos(copyJoints[i].to._val, copyJoints[i].mod, pos)
+                    headAnimator!!.SetJointAxis(copyJoints[i].to._val, copyJoints[i].mod, axis)
                 }
                 i++
             }
@@ -1991,12 +2003,12 @@ object Actor {
         }
 
         private fun FinishSetup() {
-            val scriptObjectName = arrayOf<String?>(null)
+            val scriptObjectName = arrayOf("")
 
             // setup script object
-            if (spawnArgs.GetString("scriptobject", null, scriptObjectName)) {
+            if (spawnArgs.GetString("scriptobject", "", scriptObjectName)) {
                 if (!scriptObject.SetType(scriptObjectName[0])) {
-                    idGameLocal.Companion.Error("Script object '%s' not found on entity '%s'.", scriptObjectName, name)
+                    idGameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName, name)
                 }
                 ConstructScriptObject()
             }
@@ -2019,14 +2031,14 @@ object Actor {
                 jointName = spawnArgs.GetString("head_joint")
                 joint = animator.GetJointHandle(jointName)
                 if (joint == Model.INVALID_JOINT) {
-                    idGameLocal.Companion.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name)
+                    idGameLocal.Error("Joint '%s' not found for 'head_joint' on '%s'", jointName, name)
                 }
 
                 // set the damage joint to be part of the head damage group
                 damageJoint = joint
                 i = 0
-                while (i < damageGroups.size()) {
-                    val d = damageGroups.get(i)
+                while (i < damageGroups.size) {
+                    val d = damageGroups[i]
                     if (d != null && d.toString() == "head") {
                         damageJoint =  /*(jointHandle_t)*/i
                         break
@@ -2050,7 +2062,7 @@ object Actor {
                 val attach = attachments.Alloc()
                 attach.channel = animator.GetChannelForJoint(joint)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity.origin.oPlus(origin.oPlus(modelOffset).oMultiply(renderEntity.axis)))
+                origin.set(renderEntity.origin.plus(origin.plus(modelOffset).times(renderEntity.axis)))
                 //attach.ent.oSet(new idEntityPtr<>());
                 attach.ent.oSet(headEnt)
                 headEnt.SetOrigin(origin)
@@ -2060,14 +2072,14 @@ object Actor {
         }
 
         private fun PlayFootStepSound() {
-            var sound: String? = ""
-            val material: idMaterial?
+            var sound: String = ""
+            val material: Material.idMaterial?
             if (!GetPhysics().HasGroundContacts()) {
                 return
             }
 
             // start footstep sound based on material type
-            material = GetPhysics().GetContact(0).material
+            material = GetPhysics().GetContact(0)!!.material
             if (material != null) {
                 sound = spawnArgs.GetString(
                     Str.va(
@@ -2084,21 +2096,20 @@ object Actor {
                     DeclManager.declManager.FindSound(sound),
                     TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY),
                     0,
-                    false,
-                    null
+                    false
                 )
             }
         }
 
         private fun Event_EnableEyeFocus() {
-            var sound: String? = ""
-            val material: idMaterial?
+            var sound: String = ""
+            val material: Material.idMaterial?
             if (!GetPhysics().HasGroundContacts()) {
                 return
             }
 
             // start footstep sound based on material type
-            material = GetPhysics().GetContact(0).material
+            material = GetPhysics().GetContact(0)!!.material
             if (material != null) {
                 sound = spawnArgs.GetString(
                     Str.va(
@@ -2115,8 +2126,7 @@ object Actor {
                     DeclManager.declManager.FindSound(sound),
                     TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY),
                     0,
-                    false,
-                    null
+                    false
                 )
             }
         }
@@ -2125,7 +2135,7 @@ object Actor {
             allowEyeFocus = false
             val headEnt: idEntity? = head.GetEntity()
             if (headEnt != null) {
-                headEnt.GetAnimator().Clear(Anim.ANIMCHANNEL_EYELIDS, Game_local.gameLocal.time, Anim.FRAME2MS(2))
+                headEnt.GetAnimator()!!.Clear(Anim.ANIMCHANNEL_EYELIDS, Game_local.gameLocal.time, Anim.FRAME2MS(2))
             } else {
                 animator.Clear(Anim.ANIMCHANNEL_EYELIDS, Game_local.gameLocal.time, Anim.FRAME2MS(2))
             }
@@ -2143,20 +2153,20 @@ object Actor {
             walkIK.DisableAll()
         }
 
-        private fun Event_EnableLegIK(num: idEventArg<Int?>?) {
+        private fun Event_EnableLegIK(num: idEventArg<Int>) {
             walkIK.EnableLeg(num.value)
         }
 
-        private fun Event_DisableLegIK(num: idEventArg<Int?>?) {
+        private fun Event_DisableLegIK(num: idEventArg<Int>) {
             walkIK.DisableLeg(num.value)
         }
 
-        private fun Event_SetAnimPrefix(prefix: idEventArg<String?>?) {
+        private fun Event_SetAnimPrefix(prefix: idEventArg<String>) {
             animPrefix.set(prefix.value)
         }
 
         //        private void Event_LookAtEntity(idEntity ent, float duration);
-        private fun Event_PreventPain(duration: idEventArg<Float?>?) {
+        private fun Event_PreventPain(duration: idEventArg<Float>) {
             painTime = (Game_local.gameLocal.time + Math_h.SEC2MS(duration.value)).toInt()
         }
 
@@ -2170,22 +2180,22 @@ object Actor {
 
         private fun Event_GetPainAnim() {
             if (0 == painAnim.Length()) {
-                idThread.Companion.ReturnString("pain")
+                idThread.ReturnString("pain")
             } else {
-                idThread.Companion.ReturnString(painAnim)
+                idThread.ReturnString(painAnim)
             }
         }
 
-        private fun Event_StopAnim(channel: idEventArg<Int?>?, frames: idEventArg<Int?>?) {
+        private fun Event_StopAnim(channel: idEventArg<Int>, frames: idEventArg<Int>) {
             when (channel.value) {
                 Anim.ANIMCHANNEL_HEAD -> headAnim.StopAnim(frames.value)
                 Anim.ANIMCHANNEL_TORSO -> torsoAnim.StopAnim(frames.value)
                 Anim.ANIMCHANNEL_LEGS -> legsAnim.StopAnim(frames.value)
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_PlayAnim(_channel: idEventArg<Int?>?, _animName: idEventArg<String?>?) {
+        private fun Event_PlayAnim(_channel: idEventArg<Int>, _animName: idEventArg<String>) {
             val channel: Int = _channel.value
             val animName = _animName.value
             val flags: animFlags_t?
@@ -2215,7 +2225,7 @@ object Actor {
                         GetEntityDefName()
                     )
                 }
-                idThread.Companion.ReturnInt(0)
+                idThread.ReturnInt(0)
                 return
             }
             when (channel) {
@@ -2291,12 +2301,12 @@ object Actor {
                         }
                     }
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
-            idThread.Companion.ReturnInt(1)
+            idThread.ReturnInt(1)
         }
 
-        private fun Event_PlayCycle(_channel: idEventArg<Int?>?, _animName: idEventArg<String?>?) {
+        private fun Event_PlayCycle(_channel: idEventArg<Int>, _animName: idEventArg<String>) {
             val channel: Int = _channel.value
             val animName = _animName.value
             val flags: animFlags_t?
@@ -2318,7 +2328,7 @@ object Actor {
                         GetEntityDefName()
                     )
                 }
-                idThread.Companion.ReturnInt(false)
+                idThread.ReturnInt(false)
                 return
             }
             when (channel) {
@@ -2385,12 +2395,12 @@ object Actor {
                         }
                     }
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
-            idThread.Companion.ReturnInt(true)
+            idThread.ReturnInt(true)
         }
 
-        private fun Event_IdleAnim(_channel: idEventArg<Int?>?, _animName: idEventArg<String?>?) {
+        private fun Event_IdleAnim(_channel: idEventArg<Int>, _animName: idEventArg<String>) {
             val channel: Int = _channel.value
             val animName = _animName.value
             val anim: Int
@@ -2415,9 +2425,9 @@ object Actor {
                     Anim.ANIMCHANNEL_HEAD -> headAnim.BecomeIdle()
                     Anim.ANIMCHANNEL_TORSO -> torsoAnim.BecomeIdle()
                     Anim.ANIMCHANNEL_LEGS -> legsAnim.BecomeIdle()
-                    else -> idGameLocal.Companion.Error("Unknown anim group")
+                    else -> idGameLocal.Error("Unknown anim group")
                 }
-                idThread.Companion.ReturnInt(false)
+                idThread.ReturnInt(false)
                 return
             }
             when (channel) {
@@ -2479,15 +2489,15 @@ object Actor {
                         SyncAnimChannels(Anim.ANIMCHANNEL_LEGS, Anim.ANIMCHANNEL_TORSO, legsAnim.animBlendFrames)
                     }
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
-            idThread.Companion.ReturnInt(true)
+            idThread.ReturnInt(true)
         }
 
         private fun Event_SetSyncedAnimWeight(
-            _channel: idEventArg<Int?>?,
-            _anim: idEventArg<Int?>?,
-            _weight: idEventArg<Float?>?
+            _channel: idEventArg<Int>,
+            _anim: idEventArg<Int>,
+            _weight: idEventArg<Float>
         ) {
             val channel: Int = _channel.value
             val anim: Int = _anim.value
@@ -2526,11 +2536,11 @@ object Actor {
                         }
                     }
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_OverrideAnim(channel: idEventArg<Int?>?) {
+        private fun Event_OverrideAnim(channel: idEventArg<Int>) {
             when (channel.value) {
                 Anim.ANIMCHANNEL_HEAD -> {
                     headAnim.Disable()
@@ -2551,21 +2561,21 @@ object Actor {
                     legsAnim.Disable()
                     SyncAnimChannels(Anim.ANIMCHANNEL_LEGS, Anim.ANIMCHANNEL_TORSO, torsoAnim.lastAnimBlendFrames)
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_EnableAnim(channel: idEventArg<Int?>?, _blendFrames: idEventArg<Int?>?) {
+        private fun Event_EnableAnim(channel: idEventArg<Int>, _blendFrames: idEventArg<Int>) {
             val blendFrames: Int = _blendFrames.value
             when (channel.value) {
                 Anim.ANIMCHANNEL_HEAD -> headAnim.Enable(blendFrames)
                 Anim.ANIMCHANNEL_TORSO -> torsoAnim.Enable(blendFrames)
                 Anim.ANIMCHANNEL_LEGS -> legsAnim.Enable(blendFrames)
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_SetBlendFrames(_channel: idEventArg<Int?>?, _blendFrames: idEventArg<Int?>?) {
+        private fun Event_SetBlendFrames(_channel: idEventArg<Int>, _blendFrames: idEventArg<Int>) {
             val channel: Int = _channel.value
             val blendFrames: Int = _blendFrames.value
             when (channel) {
@@ -2581,175 +2591,175 @@ object Actor {
                     legsAnim.animBlendFrames = blendFrames
                     legsAnim.lastAnimBlendFrames = blendFrames
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_GetBlendFrames(_channel: idEventArg<Int?>?) {
+        private fun Event_GetBlendFrames(_channel: idEventArg<Int>) {
             val channel: Int = _channel.value
             when (channel) {
-                Anim.ANIMCHANNEL_HEAD -> idThread.Companion.ReturnInt(headAnim.animBlendFrames)
-                Anim.ANIMCHANNEL_TORSO -> idThread.Companion.ReturnInt(torsoAnim.animBlendFrames)
-                Anim.ANIMCHANNEL_LEGS -> idThread.Companion.ReturnInt(legsAnim.animBlendFrames)
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                Anim.ANIMCHANNEL_HEAD -> idThread.ReturnInt(headAnim.animBlendFrames)
+                Anim.ANIMCHANNEL_TORSO -> idThread.ReturnInt(torsoAnim.animBlendFrames)
+                Anim.ANIMCHANNEL_LEGS -> idThread.ReturnInt(legsAnim.animBlendFrames)
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
         private fun Event_AnimState(
-            channel: idEventArg<Int?>?,
-            statename: idEventArg<String?>?,
-            blendFrames: idEventArg<Int?>?
+            channel: idEventArg<Int>,
+            statename: idEventArg<String>,
+            blendFrames: idEventArg<Int>
         ) {
             SetAnimState(channel.value, statename.value, blendFrames.value)
         }
 
-        private fun Event_GetAnimState(channel: idEventArg<Int?>?) {
+        private fun Event_GetAnimState(channel: idEventArg<Int>) {
             val state: idStr?
             state = GetAnimState(channel.value)
-            idThread.Companion.ReturnString(state)
+            idThread.ReturnString(state)
         }
 
-        private fun Event_InAnimState(channel: idEventArg<Int?>?, statename: idEventArg<String?>?) {
+        private fun Event_InAnimState(channel: idEventArg<Int>, statename: idEventArg<String>) {
             val instate: Boolean
             instate = InAnimState(channel.value, statename.value)
-            idThread.Companion.ReturnInt(instate)
+            idThread.ReturnInt(instate)
         }
 
-        private fun Event_FinishAction(actionname: idEventArg<String?>?) {
+        private fun Event_FinishAction(actionname: idEventArg<String>) {
             if (waitState.toString() == actionname.value) {
                 SetWaitState("")
             }
         }
 
-        private fun Event_AnimDone(channel: idEventArg<Int?>?, _blendFrames: idEventArg<Int?>?) {
+        private fun Event_AnimDone(channel: idEventArg<Int>, _blendFrames: idEventArg<Int>) {
             val blendFrames: Int = _blendFrames.value
             val result: Boolean
             when (channel.value) {
                 Anim.ANIMCHANNEL_HEAD -> {
                     result = headAnim.AnimDone(blendFrames)
-                    idThread.Companion.ReturnInt(result)
+                    idThread.ReturnInt(result)
                 }
                 Anim.ANIMCHANNEL_TORSO -> {
                     result = torsoAnim.AnimDone(blendFrames)
-                    idThread.Companion.ReturnInt(result)
+                    idThread.ReturnInt(result)
                 }
                 Anim.ANIMCHANNEL_LEGS -> {
                     result = legsAnim.AnimDone(blendFrames)
-                    idThread.Companion.ReturnInt(result)
+                    idThread.ReturnInt(result)
                 }
-                else -> idGameLocal.Companion.Error("Unknown anim group")
+                else -> idGameLocal.Error("Unknown anim group")
             }
         }
 
-        private fun Event_HasAnim(channel: idEventArg<Int?>?, animName: idEventArg<String?>?) {
+        private fun Event_HasAnim(channel: idEventArg<Int>, animName: idEventArg<String>) {
             if (GetAnim(channel.value, animName.value) != 0) {
-                idThread.Companion.ReturnFloat(1.0f)
+                idThread.ReturnFloat(1.0f)
             } else {
-                idThread.Companion.ReturnFloat(0f)
+                idThread.ReturnFloat(0f)
             }
         }
 
-        private fun Event_CheckAnim(channel: idEventArg<Int?>?, animname: idEventArg<String?>?) {
+        private fun Event_CheckAnim(channel: idEventArg<Int>, animname: idEventArg<String>) {
             if (0 == GetAnim(channel.value, animname.value)) {
                 if (animPrefix.Length() != 0) {
-                    idGameLocal.Companion.Error("Can't find anim '%s_%s' for '%s'", animPrefix, animname, name)
+                    idGameLocal.Error("Can't find anim '%s_%s' for '%s'", animPrefix, animname, name)
                 } else {
-                    idGameLocal.Companion.Error("Can't find anim '%s' for '%s'", animname, name)
+                    idGameLocal.Error("Can't find anim '%s' for '%s'", animname, name)
                 }
             }
         }
 
-        private fun Event_ChooseAnim(channel: idEventArg<Int?>?, animname: idEventArg<String?>?) {
+        private fun Event_ChooseAnim(channel: idEventArg<Int>, animname: idEventArg<String>) {
             val anim: Int
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
                     if (head.GetEntity() != null) {
-                        idThread.Companion.ReturnString(head.GetEntity().GetAnimator().AnimFullName(anim))
+                        idThread.ReturnString(head.GetEntity()!!.GetAnimator().AnimFullName(anim))
                         return
                     }
                 } else {
-                    idThread.Companion.ReturnString(animator.AnimFullName(anim))
+                    idThread.ReturnString(animator.AnimFullName(anim))
                     return
                 }
             }
-            idThread.Companion.ReturnString("")
+            idThread.ReturnString("")
         }
 
-        private fun Event_AnimLength(channel: idEventArg<Int?>?, animname: idEventArg<String?>?) {
+        private fun Event_AnimLength(channel: idEventArg<Int>, animname: idEventArg<String>) {
             val anim: Int
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
                     if (head.GetEntity() != null) {
-                        idThread.Companion.ReturnFloat(
+                        idThread.ReturnFloat(
                             Math_h.MS2SEC(
-                                head.GetEntity().GetAnimator().AnimLength(anim).toFloat()
+                                head.GetEntity()!!.GetAnimator().AnimLength(anim).toFloat()
                             )
                         )
                         return
                     }
                 } else {
-                    idThread.Companion.ReturnFloat(Math_h.MS2SEC(animator.AnimLength(anim).toFloat()))
+                    idThread.ReturnFloat(Math_h.MS2SEC(animator.AnimLength(anim).toFloat()))
                     return
                 }
             }
-            idThread.Companion.ReturnFloat(0f)
+            idThread.ReturnFloat(0f)
         }
 
-        private fun Event_AnimDistance(channel: idEventArg<Int?>?, animname: idEventArg<String?>?) {
+        private fun Event_AnimDistance(channel: idEventArg<Int>, animname: idEventArg<String>) {
             val anim: Int
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
                     if (head.GetEntity() != null) {
-                        idThread.Companion.ReturnFloat(head.GetEntity().GetAnimator().TotalMovementDelta(anim).Length())
+                        idThread.ReturnFloat(head.GetEntity()!!.GetAnimator().TotalMovementDelta(anim).Length())
                         return
                     }
                 } else {
-                    idThread.Companion.ReturnFloat(animator.TotalMovementDelta(anim).Length())
+                    idThread.ReturnFloat(animator.TotalMovementDelta(anim).Length())
                     return
                 }
             }
-            idThread.Companion.ReturnFloat(0f)
+            idThread.ReturnFloat(0f)
         }
 
         private fun Event_HasEnemies() {
             val hasEnemy: Boolean
             hasEnemy = HasEnemies()
-            idThread.Companion.ReturnInt(hasEnemy)
+            idThread.ReturnInt(hasEnemy)
         }
 
-        private fun Event_NextEnemy(_ent: idEventArg<idEntity?>?) {
+        private fun Event_NextEnemy(_ent: idEventArg<idEntity?>) {
             val ent = _ent.value
             var actor: idActor?
             if (null == ent || ent == this) {
                 actor = enemyList.Next()
             } else {
                 if (ent !is idActor) {
-                    idGameLocal.Companion.Error("'%s' cannot be an enemy", ent.name)
+                    idGameLocal.Error("'%s' cannot be an enemy", ent.name)
                 }
-                actor = ent
+                actor = ent as idActor
                 if (actor.enemyNode.ListHead() !== enemyList) {
-                    idGameLocal.Companion.Error("'%s' is not in '%s' enemy list", actor.name, name)
+                    idGameLocal.Error("'%s' is not in '%s' enemy list", actor.name, name)
                 }
             }
             while (actor != null) {
                 if (!actor.fl.hidden) {
-                    idThread.Companion.ReturnEntity(actor)
+                    idThread.ReturnEntity(actor)
                     return
                 }
                 actor = actor.enemyNode.Next()
             }
-            idThread.Companion.ReturnEntity(null)
+            idThread.ReturnEntity(null)
         }
 
-        private fun Event_ClosestEnemyToPoint(pos: idEventArg<idVec3>?) {
+        private fun Event_ClosestEnemyToPoint(pos: idEventArg<idVec3>) {
             val bestEnt = ClosestEnemyToPoint(pos.value)
-            idThread.Companion.ReturnEntity(bestEnt)
+            idThread.ReturnEntity(bestEnt)
         }
 
-        private fun Event_StopSound(channel: idEventArg<Int?>?, netSync: idEventArg<Int?>?) {
+        private fun Event_StopSound(channel: idEventArg<Int>, netSync: idEventArg<Int>) {
             if (channel.value == TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_VOICE)) {
                 val headEnt: idEntity? = head.GetEntity()
                 headEnt?.StopSound(channel.value, netSync.value != 0)
@@ -2757,35 +2767,35 @@ object Actor {
             StopSound(channel.value, netSync.value != 0)
         }
 
-        private fun Event_SetNextState(name: idEventArg<String?>?) {
+        private fun Event_SetNextState(name: idEventArg<String>) {
             idealState = GetScriptFunction(name.value)
             if (idealState === state) {
                 state = null
             }
         }
 
-        private fun Event_SetState(name: idEventArg<String?>?) {
+        private fun Event_SetState(name: idEventArg<String>) {
             idealState = GetScriptFunction(name.value)
             if (idealState === state) {
                 state = null
             }
-            scriptThread.DoneProcessing()
+            scriptThread!!.DoneProcessing()
         }
 
         private fun Event_GetState() {
             if (state != null) {
-                idThread.Companion.ReturnString(state.Name())
+                idThread.ReturnString(state!!.Name())
             } else {
-                idThread.Companion.ReturnString("")
+                idThread.ReturnString("")
             }
         }
 
         private fun Event_GetHead() {
-            idThread.Companion.ReturnEntity(head.GetEntity())
+            idThread.ReturnEntity(head.GetEntity())
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks.get(event)
+            return eventCallbacks[event]!!
         }
 
         override fun _deconstructor() {
@@ -2794,18 +2804,18 @@ object Actor {
             DeconstructScriptObject()
             scriptObject.Free()
             StopSound(gameSoundChannel_t.SND_CHANNEL_ANY.ordinal, false)
-            idClipModel.Companion.delete(combatModel)
+            idClipModel.delete(combatModel!!)
             combatModel = null
             if (head.GetEntity() != null) {
-                head.GetEntity().ClearBody()
-                head.GetEntity().PostEventMS(Class.EV_Remove, 0)
+                head.GetEntity()!!.ClearBody()
+                head.GetEntity()!!.PostEventMS(EV_Remove, 0)
             }
 
             // remove any attached entities
             i = 0
-            while (i < attachments.Num()) {
-                ent = attachments.get(i).ent.GetEntity()
-                ent?.PostEventMS(Class.EV_Remove, 0)
+            while (i < attachments.size) {
+                ent = attachments[i].ent.GetEntity()
+                ent?.PostEventMS(EV_Remove, 0)
                 i++
             }
             ShutdownThreads()
@@ -2815,7 +2825,7 @@ object Actor {
         //
         //
         init {
-            viewAxis = idMat3.Companion.getMat3_identity()
+            viewAxis = idMat3.getMat3_identity()
             scriptThread = null // initialized by ConstructScriptObject, which is called by idEntity::Spawn
             use_combat_bbox = false
             head = idEntityPtr()
@@ -2826,7 +2836,7 @@ object Actor {
             pain_debounce_time = 0
             pain_delay = 0
             pain_threshold = 0
-            copyJoints = idList()
+            copyJoints = ArrayList()
             state = null
             idealState = null
             leftEyeJoint = Model.INVALID_JOINT
@@ -2837,8 +2847,8 @@ object Actor {
             painTime = 0
             allowPain = false
             allowEyeFocus = false
-            damageGroups = idStrList()
-            damageScale = idList()
+            damageGroups = ArrayList()
+            damageScale = ArrayList()
             waitState = idStr()
             headAnim = idAnimState()
             torsoAnim = idAnimState()
@@ -2851,7 +2861,7 @@ object Actor {
             blink_min = 0
             blink_max = 0
             finalBoss = false
-            attachments.SetGranularity(1)
+            attachments.ensureCapacity(1)
             enemyNode = idLinkList(this)
             enemyList = idLinkList(this)
         }

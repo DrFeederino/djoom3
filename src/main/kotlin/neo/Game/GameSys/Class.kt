@@ -128,83 +128,83 @@ object Class {
     // this is the head of a singly linked list of all the idTypes
     var typelist: idTypeInfo? = null
 
-    fun interface eventCallback_t<T : idClass?> {
-        open fun accept(t: T?, vararg args: idEventArg<*>?)
+    fun interface eventCallback_t<T : idClass> {
+        open fun accept(t: T, vararg args: idEventArg<*>)
     }
 
-    fun interface eventCallback_t0<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t0<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t)
         }
 
-        open fun accept(e: T?)
+        open fun accept(e: T)
     }
 
-    fun interface eventCallback_t1<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t1<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0])
         }
 
-        open fun accept(t: T?, a: idEventArg<*>?)
+        open fun accept(t: T, a: idEventArg<*>)
     }
 
-    fun interface eventCallback_t2<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t2<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1])
         }
 
-        open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?)
+        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>)
     }
 
-    fun interface eventCallback_t3<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t3<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2])
         }
 
-        open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?, c: idEventArg<*>?)
+        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>)
     }
 
-    fun interface eventCallback_t4<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t4<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3])
         }
 
-        open fun accept(t: T?, a: idEventArg<*>?, b: idEventArg<*>?, c: idEventArg<*>?, d: idEventArg<*>?)
+        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>, d: idEventArg<*>)
     }
 
-    fun interface eventCallback_t5<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t5<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3], args[4])
         }
 
         open fun accept(
-            t: T?,
-            a: idEventArg<*>?,
-            b: idEventArg<*>?,
-            c: idEventArg<*>?,
-            d: idEventArg<*>?,
-            e: idEventArg<*>?
+            t: T,
+            a: idEventArg<*>,
+            b: idEventArg<*>,
+            c: idEventArg<*>,
+            d: idEventArg<*>,
+            e: idEventArg<*>
         )
     }
 
-    fun interface eventCallback_t6<T : idClass?> : eventCallback_t<T?> {
-        override fun accept(t: T?, vararg args: idEventArg<*>?) {
+    fun interface eventCallback_t6<T : idClass> : eventCallback_t<T> {
+        override fun accept(t: T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3], args[4], args[5])
         }
 
         open fun accept(
-            t: T?,
-            a: idEventArg<*>?,
-            b: idEventArg<*>?,
-            c: idEventArg<*>?,
-            d: idEventArg<*>?,
-            e: idEventArg<*>?,
-            f: idEventArg<*>?
+            t: T,
+            a: idEventArg<*>,
+            b: idEventArg<*>,
+            c: idEventArg<*>,
+            d: idEventArg<*>,
+            e: idEventArg<*>,
+            f: idEventArg<*>
         )
     }
 
     abstract class classSpawnFunc_t<type> {
-        abstract fun run(): type?
+        abstract fun run(): type
     }
 
     abstract class idClass_Save {
@@ -222,26 +222,34 @@ object Class {
 
     class idEventArg<T> {
         var type = 0
-        var value: T?
+        var value: T
 
         //
         //
-        private constructor(data: T?) {
+        private constructor(data: T) {
             type =
-                if (data is Int) Event.D_EVENT_INTEGER.code else if (data is Enum<*>) Event.D_EVENT_INTEGER.code else if (data is Float) Event.D_EVENT_FLOAT.code else if (data is idVec3) Event.D_EVENT_VECTOR.code else if (data is idStr) Event.D_EVENT_STRING.code else if (data is String) Event.D_EVENT_STRING.code else if (data is idEntity) Event.D_EVENT_ENTITY.code else if (data is trace_s) Event.D_EVENT_TRACE.code else {
+                if (data is Int) Event.D_EVENT_INTEGER.code
+                else if (data is Enum<*>) Event.D_EVENT_INTEGER.code
+                else if (data is Float) Event.D_EVENT_FLOAT.code
+                else if (data is idVec3) Event.D_EVENT_VECTOR.code
+                else if (data is idStr) Event.D_EVENT_STRING.code
+                else if (data is String) Event.D_EVENT_STRING.code
+                else if (data is idEntity) Event.D_EVENT_ENTITY.code
+                else if (data is trace_s) Event.D_EVENT_TRACE.code
+                else {
                     Event.D_EVENT_VOID.code
                     //throw new TempDump.TypeErasure_Expection();
                 }
             value = data
         }
 
-        constructor(type: Int, data: T?) {
+        constructor(type: Int, data: T) {
             this.type = type
             value = data
         }
 
         companion object {
-            fun <T> toArg(data: T?): idEventArg<T> {
+            fun <T> toArg(data: T): idEventArg<T> {
                 return idEventArg(data)
             }
 
@@ -257,7 +265,7 @@ object Class {
                 return idEventArg(Event.D_EVENT_VECTOR.code, data)
             }
 
-            fun toArg(data: idStr?): idEventArg<idStr> {
+            fun toArg(data: idStr): idEventArg<idStr> {
                 return idEventArg(Event.D_EVENT_STRING.code, data)
             }
 
@@ -578,9 +586,9 @@ object Class {
 
             init {
                 eventCallbacks[EV_Remove] =
-                    eventCallback_t0 { obj: Any? -> idClass::Event_Remove } as eventCallback_t0<idClass?>
+                    eventCallback_t0 { obj: Any? -> idClass::Event_Remove }
                 eventCallbacks[EV_SafeRemove] =
-                    eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove } as eventCallback_t0<idClass?>
+                    eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove }
             }
         }
 
@@ -1072,7 +1080,7 @@ object Class {
                 0, 1, 2, 3, 4, 5, 6, 7, 8 -> ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_8_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ], data[ 7 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                    callback.accept(this as Nothing?, *data.toTypedArray())
+                    callback.accept(this as Nothing, *data.toTypedArray())
                 else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev.GetName())
             }
 

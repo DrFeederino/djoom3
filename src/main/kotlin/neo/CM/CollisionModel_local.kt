@@ -88,6 +88,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         collisionModelManager = collisionModelManagerLocal
     }
 
+    fun setCollisionModelManagers(targetManager: idCollisionModelManager) {
+        collisionModelManagerLocal = targetManager as idCollisionModelManagerLocal
+        collisionModelManager = targetManager
+    }
+
     class idCollisionModelManagerLocal : idCollisionModelManager() {
         private val trmBrushes: Array<cm_brushRef_s?> = Array<cm_brushRef_s?>(1) { null }
 

@@ -2,7 +2,6 @@ package neo.Game
 
 import neo.CM.CollisionModel.trace_s
 import neo.CM.CollisionModel_local
-import neo.Game.*
 import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.GameSys.Class.eventCallback_t
@@ -28,8 +27,13 @@ import neo.idlib.containers.CFloat
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.tan
 
 /**
  *
@@ -55,23 +59,23 @@ object SecurityCamera {
             private const val ALERT = 2
             private const val LOSINGINTEREST = 1
             private const val SCANNING = 0
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[SecurityCamera.EV_SecurityCam_ReverseSweep] =
-                    eventCallback_t0<idSecurityCamera?> { obj: T? -> neo.Game.obj.Event_ReverseSweep() } as eventCallback_t0<idSecurityCamera?>
-                eventCallbacks[SecurityCamera.EV_SecurityCam_ContinueSweep] =
-                    eventCallback_t0<idSecurityCamera?> { obj: T? -> neo.Game.obj.Event_ContinueSweep() } as eventCallback_t0<idSecurityCamera?>
-                eventCallbacks[SecurityCamera.EV_SecurityCam_Pause] =
-                    eventCallback_t0<idSecurityCamera?> { obj: T? -> neo.Game.obj.Event_Pause() } as eventCallback_t0<idSecurityCamera?>
-                eventCallbacks[SecurityCamera.EV_SecurityCam_Alert] =
-                    eventCallback_t0<idSecurityCamera?> { obj: T? -> neo.Game.obj.Event_Alert() } as eventCallback_t0<idSecurityCamera?>
-                eventCallbacks[SecurityCamera.EV_SecurityCam_AddLight] =
-                    eventCallback_t0<idSecurityCamera?> { obj: T? -> neo.Game.obj.Event_AddLight() } as eventCallback_t0<idSecurityCamera?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[EV_SecurityCam_ReverseSweep] =
+                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_ReverseSweep }
+                eventCallbacks[EV_SecurityCam_ContinueSweep] =
+                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_ContinueSweep }
+                eventCallbacks[EV_SecurityCam_Pause] =
+                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_Pause }
+                eventCallbacks[EV_SecurityCam_Alert] =
+                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_Alert }
+                eventCallbacks[EV_SecurityCam_AddLight] =
+                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_AddLight }
             }
         }
 
@@ -84,7 +88,7 @@ object SecurityCamera {
         private var flipAxis = false
         private var modelAxis = 0
         private var negativeSweep = false
-        private val physicsObj: idPhysics_RigidBody?
+        private val physicsObj: idPhysics_RigidBody
 
         //
         private var pvsArea = 0
@@ -98,7 +102,7 @@ object SecurityCamera {
         //
         private var sweepStart = 0f
         private var sweeping = false
-        private val trm: idTraceModel?
+        private val trm: idTraceModel
         override fun Spawn() {
             super.Spawn()
             val str: idStr
@@ -113,11 +117,11 @@ object SecurityCamera {
             }
             spawnArgs.GetVector("viewOffset", "0 0 0", viewOffset)
             if (spawnArgs.GetBool("spotLight")) {
-                PostEventMS(SecurityCamera.EV_SecurityCam_AddLight, 0)
+                PostEventMS(EV_SecurityCam_AddLight, 0)
             }
             negativeSweep = sweepAngle < 0
-            sweepAngle = Math.abs(sweepAngle)
-            scanFovCos = Math.cos((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
+            sweepAngle = abs(sweepAngle)
+            scanFovCos = cos((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
             angle = GetPhysics().GetAxis().ToAngles().yaw
             StartSweep()
             SetAlertMode(SCANNING)
@@ -138,7 +142,7 @@ object SecurityCamera {
                 str.set(spawnArgs.GetString("model")) // use the visual model
             }
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(str, trm)) {
-                idGameLocal.Companion.Error("idSecurityCamera '%s': cannot load collision model %s", name, str)
+                idGameLocal.Error("idSecurityCamera '%s': cannot load collision model %s", name, str)
                 return
             }
             GetPhysics().SetContents(Material.CONTENTS_SOLID)
@@ -209,23 +213,23 @@ object SecurityCamera {
                         SetAlertMode(ALERT)
                         stopSweeping = Game_local.gameLocal.time.toFloat()
                         if (sweeping) {
-                            CancelEvents(SecurityCamera.EV_SecurityCam_Pause)
+                            CancelEvents(EV_SecurityCam_Pause)
                         } else {
-                            CancelEvents(SecurityCamera.EV_SecurityCam_ReverseSweep)
+                            CancelEvents(EV_SecurityCam_ReverseSweep)
                         }
                         sweeping = false
                         StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
-                        StartSound("snd_sight", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+                        StartSound("snd_sight", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
                         sightTime = spawnArgs.GetFloat("sightTime", "5")
-                        PostEventSec(SecurityCamera.EV_SecurityCam_Alert, sightTime)
+                        PostEventSec(EV_SecurityCam_Alert, sightTime)
                     }
                 } else {
                     if (alertMode == ALERT) {
                         val sightResume: Float
                         SetAlertMode(LOSINGINTEREST)
-                        CancelEvents(SecurityCamera.EV_SecurityCam_Alert)
+                        CancelEvents(EV_SecurityCam_Alert)
                         sightResume = spawnArgs.GetFloat("sightResume", "1.5")
-                        PostEventSec(SecurityCamera.EV_SecurityCam_ContinueSweep, sightResume)
+                        PostEventSec(EV_SecurityCam_ContinueSweep, sightResume)
                     }
                     if (sweeping) {
                         val a = GetPhysics().GetAxis().ToAngles()
@@ -243,12 +247,12 @@ object SecurityCamera {
             Present()
         }
 
-        override fun GetRenderView(): renderView_s? {
+        override fun GetRenderView(): renderView_s {
             val rv = super.GetRenderView()
             rv.fov_x = scanFov
             rv.fov_y = scanFov
-            rv.viewaxis = GetAxis().ToAngles().ToMat3()
-            rv.vieworg.set(GetPhysics().GetOrigin().oPlus(viewOffset))
+            rv.viewaxis.set(GetAxis().ToAngles().ToMat3())
+            rv.vieworg.set(GetPhysics().GetOrigin().plus(viewOffset))
             return rv
         }
 
@@ -257,7 +261,7 @@ object SecurityCamera {
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
             val fx = spawnArgs.GetString("fx_destroyed")
             if (TempDump.isNotNullOrEmpty(fx)) { //fx[0] != '\0' ) {
-                idEntityFx.Companion.StartFx(fx, null, null, this, true)
+                idEntityFx.StartFx(fx, getVec3_zero(), idMat3.getMat3_zero(), this, true)
             }
             physicsObj.SetSelf(this)
             physicsObj.SetClipModel(idClipModel(trm), 0.02f)
@@ -281,7 +285,7 @@ object SecurityCamera {
         ): Boolean {
             val fx = spawnArgs.GetString("fx_damage")
             if (TempDump.isNotNullOrEmpty(fx)) { //fx[0] != '\0' ) {
-                idEntityFx.Companion.StartFx(fx, null, null, this, true)
+                idEntityFx.StartFx(fx, getVec3_zero(), idMat3.getMat3_zero(), this, true)
             }
             return true
         }
@@ -302,7 +306,7 @@ object SecurityCamera {
 
             // camera target for remote render views
             if (cameraTarget != null) {
-                renderEntity.remoteRenderView = cameraTarget.GetRenderView()
+                renderEntity.remoteRenderView = cameraTarget!!.GetRenderView()
             }
 
             // if set to invisible, skip
@@ -325,8 +329,8 @@ object SecurityCamera {
             sweepStart = Game_local.gameLocal.time.toFloat()
             speed = Math_h.SEC2MS(SweepSpeed()).toInt()
             sweepEnd = sweepStart + speed
-            PostEventMS(SecurityCamera.EV_SecurityCam_Pause, speed)
-            StartSound("snd_moving", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+            PostEventMS(EV_SecurityCam_Pause, speed)
+            StartSound("snd_moving", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
         }
 
         private fun CanSeePlayer(): Boolean {
@@ -365,7 +369,7 @@ object SecurityCamera {
                 Game_local.gameLocal.clip.TracePoint(
                     tr,
                     GetPhysics().GetOrigin(),
-                    ent.GetPhysics().GetOrigin().oPlus(eye),
+                    ent.GetPhysics().GetOrigin().plus(eye),
                     Game_local.MASK_OPAQUE,
                     this
                 )
@@ -383,7 +387,7 @@ object SecurityCamera {
             if (alert >= SCANNING && alert <= ACTIVATED) {
                 alertMode = alert
             }
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = alertMode
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = alertMode.toFloat()
             UpdateVisuals()
         }
 
@@ -396,8 +400,8 @@ object SecurityCamera {
             val c = CFloat()
             val right = idVec3()
             val up = idVec3()
-            val color = idVec4(1, 0, 0, 1)
-            val color2 = idVec4(0, 0, 1, 1)
+            val color = idVec4(1f, 0f, 0f, 1f)
+            val color2 = idVec4(0f, 0f, 1f, 1f)
             val lastPoint = idVec3()
             val point = idVec3()
             val lastHalfPoint = idVec3()
@@ -405,32 +409,32 @@ object SecurityCamera {
             val center = idVec3()
             val dir = idVec3(GetAxis())
             dir.NormalVectors(right, up)
-            radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
+            radius = tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
             halfRadius = radius * 0.5f
-            lastPoint.set(dir.oPlus(up.times(radius)))
+            lastPoint.set(dir.plus(up.times(radius)))
             lastPoint.Normalize()
-            lastPoint.set(GetPhysics().GetOrigin().oPlus(lastPoint.times(scanDist)))
-            lastHalfPoint.set(dir.oPlus(up.times(halfRadius)))
+            lastPoint.set(GetPhysics().GetOrigin().plus(lastPoint.times(scanDist)))
+            lastHalfPoint.set(dir.plus(up.times(halfRadius)))
             lastHalfPoint.Normalize()
-            lastHalfPoint.set(GetPhysics().GetOrigin().oPlus(lastHalfPoint.times(scanDist)))
-            center.set(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
+            lastHalfPoint.set(GetPhysics().GetOrigin().plus(lastHalfPoint.times(scanDist)))
+            center.set(GetPhysics().GetOrigin().plus(dir.times(scanDist)))
             i = 1
             while (i < 12) {
                 a = idMath.TWO_PI * i / 12.0f
                 idMath.SinCos(a, s, c)
-                point.set(dir.oPlus(right.times(s._val * radius).oPlus(up.times(c._val * radius))))
+                point.set(dir.plus(right.times(s._val * radius).plus(up.times(c._val * radius))))
                 point.Normalize()
-                point.set(GetPhysics().GetOrigin().oPlus(point.times(scanDist)))
+                point.set(GetPhysics().GetOrigin().plus(point.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color, lastPoint, point)
                 Game_local.gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point)
                 lastPoint.set(point)
                 halfPoint.set(
-                    dir.oPlus(
-                        right.times(s._val * halfRadius).oPlus(up.times(c._val * halfRadius))
+                    dir.plus(
+                        right.times(s._val * halfRadius).plus(up.times(c._val * halfRadius))
                     )
                 )
                 halfPoint.Normalize()
-                halfPoint.set(GetPhysics().GetOrigin().oPlus(halfPoint.times(scanDist)))
+                halfPoint.set(GetPhysics().GetOrigin().plus(halfPoint.times(scanDist)))
                 Game_local.gameRenderWorld.DebugLine(color2, point, halfPoint)
                 Game_local.gameRenderWorld.DebugLine(color2, lastHalfPoint, halfPoint)
                 lastHalfPoint.set(halfPoint)
@@ -440,8 +444,7 @@ object SecurityCamera {
         }
 
         private fun GetAxis(): idVec3 {
-            return if (flipAxis) GetPhysics().GetAxis().get(modelAxis).oNegative() else GetPhysics().GetAxis()
-                .get(modelAxis)
+            return if (flipAxis) GetPhysics().GetAxis()[modelAxis].unaryMinus() else GetPhysics().GetAxis()[modelAxis]
         }
 
         private fun SweepSpeed(): Float {
@@ -461,8 +464,8 @@ object SecurityCamera {
             sweepStart = f
             speed = Math_h.MS2SEC(SweepSpeed()).toInt()
             sweepEnd = sweepStart + speed
-            PostEventMS(SecurityCamera.EV_SecurityCam_Pause, (speed * (1.0f - pct)).toInt())
-            StartSound("snd_moving", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+            PostEventMS(EV_SecurityCam_Pause, (speed * (1.0f - pct)).toInt())
+            StartSound("snd_moving", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
             SetAlertMode(SCANNING)
             sweeping = true
         }
@@ -472,19 +475,19 @@ object SecurityCamera {
             sweepWait = spawnArgs.GetFloat("sweepWait", "0.5")
             sweeping = false
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
-            StartSound("snd_stop", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
-            PostEventSec(SecurityCamera.EV_SecurityCam_ReverseSweep, sweepWait)
+            StartSound("snd_stop", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
+            PostEventSec(EV_SecurityCam_ReverseSweep, sweepWait)
         }
 
         private fun Event_Alert() {
             val wait: Float
             SetAlertMode(ACTIVATED)
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
-            StartSound("snd_activate", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+            StartSound("snd_activate", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
             ActivateTargets(this)
-            CancelEvents(SecurityCamera.EV_SecurityCam_ContinueSweep)
+            CancelEvents(EV_SecurityCam_ContinueSweep)
             wait = spawnArgs.GetFloat("wait", "20")
-            PostEventSec(SecurityCamera.EV_SecurityCam_ContinueSweep, wait)
+            PostEventSec(EV_SecurityCam_ContinueSweep, wait)
         }
 
         private fun Event_AddLight() {
@@ -499,29 +502,29 @@ object SecurityCamera {
             val spotLight: idLight
             dir.set(GetAxis())
             dir.NormalVectors(right, up)
-            target.set(GetPhysics().GetOrigin().oPlus(dir.times(scanDist)))
-            radius = Math.tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
-            up.set(dir.oPlus(up.times(radius)))
+            target.set(GetPhysics().GetOrigin().plus(dir.times(scanDist)))
+            radius = tan((scanFov * idMath.PI / 360.0f).toDouble()).toFloat()
+            up.set(dir.plus(up.times(radius)))
             up.Normalize()
-            up.set(GetPhysics().GetOrigin().oPlus(up.times(scanDist)))
+            up.set(GetPhysics().GetOrigin().plus(up.times(scanDist)))
             up.minusAssign(target)
-            right.set(dir.oPlus(right.times(radius)))
+            right.set(dir.plus(right.times(radius)))
             right.Normalize()
-            right.set(GetPhysics().GetOrigin().oPlus(right.times(scanDist)))
+            right.set(GetPhysics().GetOrigin().plus(right.times(scanDist)))
             right.minusAssign(target)
             spawnArgs.GetVector("lightOffset", "0 0 0", lightOffset)
-            args.Set("origin", GetPhysics().GetOrigin().oPlus(lightOffset).ToString())
+            args.Set("origin", GetPhysics().GetOrigin().plus(lightOffset).ToString())
             args.Set("light_target", target.ToString())
             args.Set("light_right", right.ToString())
             args.Set("light_up", up.ToString())
-            args.SetFloat("angle", GetPhysics().GetAxis().get(0).ToYaw())
+            args.SetFloat("angle", GetPhysics().GetAxis()[0].ToYaw())
             spotLight = Game_local.gameLocal.SpawnEntityType(idLight::class.java, args) as idLight
             spotLight.Bind(this, true)
             spotLight.UpdateVisuals()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         init {

@@ -9,7 +9,7 @@ import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local.idGameLocal
-import neo.Game.Physics.*
+import neo.Game.Physics.Clip
 import neo.Game.Physics.Clip.idClipModel
 import neo.Game.Physics.Physics.impactInfo_s
 import neo.Game.Physics.Physics_AF.constraintType_t
@@ -22,7 +22,7 @@ import neo.Game.Physics.Physics_AF.idAFConstraint_Slider
 import neo.Game.Physics.Physics_AF.idAFConstraint_Spring
 import neo.Game.Physics.Physics_AF.idAFConstraint_UniversalJoint
 import neo.Game.Physics.Physics_AF.idPhysics_AF
-import neo.Renderer.*
+import neo.Renderer.Model
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.RenderWorld.renderEntity_s
 import neo.TempDump
@@ -45,9 +45,10 @@ import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Rotation.idRotation
+import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
 import java.util.*
-import java.util.stream.Stream
+import kotlin.math.abs
 
 /**
  *
@@ -87,7 +88,7 @@ object AF {
         protected val baseOrigin // offset of base body relative to skeletal model origin
                 : idVec3
         protected var animator // animator on entity
-                : idAnimator
+                : idAnimator?
         protected var baseAxis // axis of base body relative to skeletal model origin
                 : idMat3
         protected var hasBindConstraints // true if the bind constraints have been added
@@ -117,7 +118,7 @@ object AF {
                 : idEntity?
 
         fun Save(savefile: idSaveGame) {
-            savefile.WriteObject(self)
+            savefile.WriteObject(self!!)
             savefile.WriteString(GetName())
             savefile.WriteBool(hasBindConstraints)
             savefile.WriteVec3(baseOrigin)
@@ -142,8 +143,8 @@ object AF {
             animator = null
             modifiedAnim = 0
             if (self != null) {
-                SetAnimator(self.GetAnimator())
-                Load(self, name.toString())
+                SetAnimator(self!!.GetAnimator())
+                Load(self!!, name.toString())
                 if (hasBindConstraints) {
                     AddBindConstraints()
                 }
@@ -152,11 +153,11 @@ object AF {
             if (self != null) {
                 if (isActive) {
                     // clear all animations
-                    animator.ClearAllAnims(Game_local.gameLocal.time, 0)
-                    animator.ClearAllJoints()
+                    animator!!.ClearAllAnims(Game_local.gameLocal.time, 0)
+                    animator!!.ClearAllJoints()
 
                     // switch to articulated figure physics
-                    self.RestorePhysics(physicsObj)
+                    self!!.RestorePhysics(physicsObj)
                     physicsObj.EnableClip()
                 }
                 UpdateAnimation()
@@ -167,17 +168,17 @@ object AF {
             animator = a
         }
 
-        fun Load(ent: idEntity?, fileName: String?): Boolean {
+        fun Load(ent: idEntity, fileName: String): Boolean {
             var i: Int
             var j: Int
-            val file: idDeclAF
+            val file: idDeclAF?
             val modelDef: idDeclModelDef?
             val model: idRenderModel?
             val numJoints: Int
-            val joints: Array<idJointMat?>?
+            val joints: kotlin.collections.ArrayList<idJointMat>
             assert(ent != null)
             self = ent
-            physicsObj.SetSelf(self)
+            physicsObj.SetSelf(self!!)
             if (animator == null) {
                 Game_local.gameLocal.Warning(
                     "Couldn't load af '%s' for entity '%s' at (%s): NULL animator\n",
@@ -189,7 +190,7 @@ object AF {
             }
             name.set(fileName)
             name.StripFileExtension()
-            file = DeclManager.declManager.FindType(declType_t.DECL_AF, name) as idDeclAF
+            file = DeclManager.declManager.FindType(declType_t.DECL_AF, name) as idDeclAF?
             if (null == file) {
                 Game_local.gameLocal.Warning(
                     "Couldn't load af '%s' for entity '%s' at (%s)\n",
@@ -199,14 +200,14 @@ object AF {
                 )
                 return false
             }
-            if (file.bodies.Num() == 0 || file.bodies.get(0).jointName.toString() != "origin") {
+            if (file.bodies.Num() == 0 || file.bodies[0].jointName.toString() != "origin") {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no body which modifies the origin joint.",
                     name.toString(), ent.name.toString(), ent.GetPhysics().GetOrigin().ToString(0)
                 )
                 return false
             }
-            modelDef = animator.ModelDef()
+            modelDef = animator!!.ModelDef()
             if (modelDef == null || modelDef.GetState() == declState_t.DS_DEFAULTED) {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no or defaulted modelDef '%s'",
@@ -217,7 +218,7 @@ object AF {
                 )
                 return false
             }
-            model = animator.ModelHandle()
+            model = animator!!.ModelHandle()
             if (model == null || model.IsDefaultModel()) {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no or defaulted model '%s'",
@@ -230,7 +231,7 @@ object AF {
             }
 
             // get the modified animation
-            modifiedAnim = animator.GetAnim(AF.ARTICULATED_FIGURE_ANIM)
+            modifiedAnim = animator!!.GetAnim(AF.ARTICULATED_FIGURE_ANIM)
             if (0 == modifiedAnim) {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no modified animation '%s'",
@@ -240,20 +241,20 @@ object AF {
             }
 
             // create the animation frame used to setup the articulated figure
-            numJoints = animator.NumJoints()
-            joints = Stream.generate { idJointMat() }.limit(numJoints.toLong()).toArray { _Dummy_.__Array__() }
+            numJoints = animator!!.NumJoints()
+            joints = ArrayList<idJointMat>(numJoints)
             GameEdit.gameEdit.ANIM_CreateAnimFrame(
                 model,
-                animator.GetAnim(modifiedAnim).MD5Anim(0),
+                animator!!.GetAnim(modifiedAnim)!!.MD5Anim(0),
                 numJoints,
-                joints,
+                joints.toTypedArray(),
                 1,
-                animator.ModelDef().GetVisualOffset(),
-                animator.RemoveOrigin()
+                animator!!.ModelDef()!!.GetVisualOffset(),
+                animator!!.RemoveOrigin()
             )
 
             // set all vector positions from model joints
-            file.Finish(GetJointTransform.Companion.INSTANCE, joints, animator)
+            file.Finish(GetJointTransform.INSTANCE, joints.toTypedArray(), animator!!)
 
             // initialize articulated figure physics
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
@@ -272,20 +273,20 @@ object AF {
             jointMods.SetNum(0, false)
 
             // clear the joint to body conversion list
-            jointBody.AssureSize(animator.NumJoints())
+            jointBody.AssureSize(animator!!.NumJoints())
             i = 0
             while (i < jointBody.Num()) {
-                jointBody.set(i, -1)
+                jointBody[i] = -1
                 i++
             }
 
             // delete any bodies in the physicsObj that are no longer in the idDeclAF
             i = 0
             while (i < physicsObj.GetNumBodies()) {
-                val body = physicsObj.GetBody(i)
+                val body = physicsObj.GetBody(i)!!
                 j = 0
                 while (j < file.bodies.Num()) {
-                    if (file.bodies.get(j).name.Icmp(body.GetName()) == 0) {
+                    if (file.bodies[j].name.Icmp(body.GetName()) == 0) {
                         break
                     }
                     j++
@@ -300,11 +301,11 @@ object AF {
             // delete any constraints in the physicsObj that are no longer in the idDeclAF
             i = 0
             while (i < physicsObj.GetNumConstraints()) {
-                val constraint = physicsObj.GetConstraint(i)
+                val constraint = physicsObj.GetConstraint(i)!!
                 j = 0
                 while (j < file.constraints.Num()) {
-                    if (file.constraints.get(j).name.Icmp(constraint.GetName()) == 0
-                        && file.constraints.get(j).type.ordinal == constraint.GetType().ordinal
+                    if (file.constraints[j].name.Icmp(constraint.GetName()) == 0
+                        && file.constraints[j].type.ordinal == constraint.GetType().ordinal
                     ) {
                         break
                     }
@@ -320,26 +321,26 @@ object AF {
             // load bodies from the file
             i = 0
             while (i < file.bodies.Num()) {
-                LoadBody(file.bodies.get(i), joints)
+                LoadBody(file.bodies[i], joints.toTypedArray())
                 i++
             }
 
             // load constraints from the file
             i = 0
             while (i < file.constraints.Num()) {
-                LoadConstraint(file.constraints.get(i))
+                LoadConstraint(file.constraints[i])
                 i++
             }
             physicsObj.UpdateClipModels()
 
             // check if each joint is contained by a body
             i = 0
-            while (i < animator.NumJoints()) {
-                if (jointBody.get(i) == -1) {
+            while (i < animator!!.NumJoints()) {
+                if (jointBody[i] == -1) {
                     /*jointHandle_t*/
                     Game_local.gameLocal.Warning(
                         "idAF::Load: articulated figure '%s' for entity '%s' at (%s) joint '%s' is not contained by a body",
-                        name, self.name, self.GetPhysics().GetOrigin().ToString(0), animator.GetJointName(i)
+                        name, self!!.name, self!!.GetPhysics().GetOrigin().ToString(0), animator!!.GetJointName(i)
                     )
                 }
                 i++
@@ -353,7 +354,7 @@ object AF {
             return true
         }
 
-        fun Load(ent: idEntity?, fileName: idStr?): Boolean {
+        fun Load(ent: idEntity, fileName: idStr): Boolean {
             return Load(ent, fileName.toString())
         }
 
@@ -361,7 +362,7 @@ object AF {
             return isLoaded && self != null
         }
 
-        fun GetName(): String? {
+        fun GetName(): String {
             return name.toString()
         }
 
@@ -392,7 +393,7 @@ object AF {
             }
 
             // if the animation is driven by the physics
-            if (self.GetPhysics() === physicsObj) {
+            if (self!!.GetPhysics() === physicsObj) {
                 return
             }
 
@@ -403,18 +404,18 @@ object AF {
             poseTime = time
             i = 0
             while (i < jointMods.Num()) {
-                body = physicsObj.GetBody(jointMods.get(i).bodyId)
-                animatorPtr.GetJointTransform(jointMods.get(i).jointHandle, time, origin, axis)
+                body = physicsObj.GetBody(jointMods[i].bodyId)!!
+                animatorPtr!!.GetJointTransform(jointMods[i].jointHandle, time, origin, axis)
                 body.SetWorldOrigin(
-                    renderEntity.origin.oPlus(
-                        origin.oPlus(
-                            jointMods.get(i).jointBodyOrigin.times(
+                    renderEntity.origin.plus(
+                        origin.plus(
+                            jointMods[i].jointBodyOrigin.times(
                                 axis
                             )
-                        ).oMultiply(renderEntity.axis)
+                        ).times(renderEntity.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods.get(i).jointBodyAxis.times(axis).times(renderEntity.axis))
+                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity.axis))
                 i++
             }
             if (isActive) {
@@ -433,17 +434,17 @@ object AF {
         fun ChangePose(ent: idEntity?, time: Int) {
             var i: Int
             val invDelta: Float
-            var body: idAFBody?
+            var body: idAFBody
             val origin = idVec3()
             val lastOrigin = idVec3()
             val axis = idMat3()
             val animatorPtr: idAnimator?
             val renderEntity: renderEntity_s?
-            if (!IsLoaded() || TempDump.NOT(ent)) {
+            if (!IsLoaded() || null == ent) {
                 return
             }
             animatorPtr = ent.GetAnimator()
-            if (TempDump.NOT(animatorPtr)) {
+            if (null == animatorPtr) {
                 return
             }
             renderEntity = ent.GetRenderEntity()
@@ -452,7 +453,7 @@ object AF {
             }
 
             // if the animation is driven by the physics
-            if (self.GetPhysics() === physicsObj) {
+            if (self!!.GetPhysics() === physicsObj) {
                 return
             }
 
@@ -464,20 +465,20 @@ object AF {
             poseTime = time
             i = 0
             while (i < jointMods.Num()) {
-                body = physicsObj.GetBody(jointMods.get(i).bodyId)
-                animatorPtr.GetJointTransform(jointMods.get(i).jointHandle, time, origin, axis)
+                body = physicsObj.GetBody(jointMods[i].bodyId)!!
+                animatorPtr.GetJointTransform(jointMods[i].jointHandle, time, origin, axis)
                 lastOrigin.set(body.GetWorldOrigin())
                 body.SetWorldOrigin(
-                    renderEntity.origin.oPlus(
-                        origin.oPlus(
-                            jointMods.get(i).jointBodyOrigin.times(
+                    renderEntity.origin.plus(
+                        origin.plus(
+                            jointMods[i].jointBodyOrigin.times(
                                 axis
                             )
-                        ).oMultiply(renderEntity.axis)
+                        ).times(renderEntity.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods.get(i).jointBodyAxis.times(axis).times(renderEntity.axis))
-                body.SetLinearVelocity(body.GetWorldOrigin().minus(lastOrigin).oMultiply(invDelta))
+                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity.axis))
+                body.SetLinearVelocity(body.GetWorldOrigin().minus(lastOrigin).times(invDelta))
                 i++
             }
             physicsObj.UpdateClipModels()
@@ -489,7 +490,7 @@ object AF {
             val numClipModels: Int
             var body: idAFBody?
             var cm: idClipModel
-            val clipModels = arrayOfNulls<idClipModel?>(Game_local.MAX_GENTITIES)
+            val clipModels = kotlin.collections.ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
             var numTouching: Int
             if (!IsLoaded()) {
                 return 0
@@ -503,7 +504,7 @@ object AF {
             )
             i = 0
             while (i < jointMods.Num()) {
-                body = physicsObj.GetBody(jointMods.get(i).bodyId)
+                body = physicsObj.GetBody(jointMods[i].bodyId)!!
                 j = 0
                 while (j < numClipModels) {
                     cm = clipModels[j]
@@ -515,7 +516,7 @@ object AF {
                         j++
                         continue
                     }
-                    if (!body.GetClipModel().GetAbsBounds().IntersectsBounds(cm.GetAbsBounds())) {
+                    if (!body.GetClipModel()!!.GetAbsBounds().IntersectsBounds(cm.GetAbsBounds())) {
                         j++
                         continue
                     }
@@ -529,11 +530,11 @@ object AF {
                             cm.GetAxis()
                         ) != 0
                     ) {
-                        touchList.get(numTouching).touchedByBody = body
-                        touchList.get(numTouching).touchedClipModel = cm
-                        touchList.get(numTouching).touchedEnt = cm.GetEntity()
+                        touchList[numTouching].touchedByBody = body
+                        touchList[numTouching].touchedClipModel = cm
+                        touchList[numTouching].touchedEnt = cm.GetEntity()!!
                         numTouching++
-                        clipModels[j] = null
+                        clipModels.removeAt(j)
                     }
                     j++
                 }
@@ -547,10 +548,10 @@ object AF {
                 return
             }
             // clear all animations
-            animator.ClearAllAnims(Game_local.gameLocal.time, 0)
-            animator.ClearAllJoints()
+            animator!!.ClearAllAnims(Game_local.gameLocal.time, 0)
+            animator!!.ClearAllJoints()
             // switch to articulated figure physics
-            self.SetPhysics(physicsObj)
+            self!!.SetPhysics(physicsObj)
             // start the articulated figure physics simulation
             physicsObj.EnableClip()
             physicsObj.Activate()
@@ -583,10 +584,10 @@ object AF {
             UpdateAnimation()
 
             // update the render entity origin and axis
-            self.UpdateModel()
+            self!!.UpdateModel()
 
             // make sure the renderer gets the updated origin and axis
-            self.Present()
+            self!!.Present()
         }
 
         fun Stop() {
@@ -610,7 +611,7 @@ object AF {
          Only moves constraints that bind the entity to another entity.
          ================
          */
-        fun SetConstraintPosition(name: String?, pos: idVec3) {
+        fun SetConstraintPosition(name: String, pos: idVec3) {
             val constraint: idAFConstraint?
             constraint = GetPhysics().GetConstraint(name)
             if (null == constraint) {
@@ -623,15 +624,15 @@ object AF {
             }
             when (constraint.GetType()) {
                 constraintType_t.CONSTRAINT_BALLANDSOCKETJOINT -> {
-                    val bs = constraint as idAFConstraint_BallAndSocketJoint?
+                    val bs = constraint as idAFConstraint_BallAndSocketJoint
                     bs.Translate(pos.minus(bs.GetAnchor()))
                 }
                 constraintType_t.CONSTRAINT_UNIVERSALJOINT -> {
-                    val uj = constraint as idAFConstraint_UniversalJoint?
+                    val uj = constraint as idAFConstraint_UniversalJoint
                     uj.Translate(pos.minus(uj.GetAnchor()))
                 }
                 constraintType_t.CONSTRAINT_HINGE -> {
-                    val hinge = constraint as idAFConstraint_Hinge?
+                    val hinge = constraint as idAFConstraint_Hinge
                     hinge.Translate(pos.minus(hinge.GetAnchor()))
                 }
                 else -> {
@@ -671,10 +672,10 @@ object AF {
             // get bounds relative to base
             i = 0
             while (i < jointMods.Num()) {
-                body = physicsObj.GetBody(jointMods.get(i).bodyId)
-                origin.set(body.GetWorldOrigin().minus(entityOrigin).oMultiply(entityAxis.Transpose()))
+                body = physicsObj.GetBody(jointMods[i].bodyId)!!
+                origin.set(body.GetWorldOrigin().minus(entityOrigin).times(entityAxis.Transpose()))
                 axis = body.GetWorldAxis().times(entityAxis.Transpose())
-                b.FromTransformedBounds(body.GetClipModel().GetBounds(), origin, axis)
+                b.FromTransformedBounds(body.GetClipModel()!!.GetBounds(), origin, axis)
                 bounds.timesAssign(b)
                 i++
             }
@@ -696,7 +697,7 @@ object AF {
             if (!IsActive()) {
                 return false
             }
-            renderEntity = self.GetRenderEntity()
+            renderEntity = self!!.GetRenderEntity()
             if (null == renderEntity) {
                 return false
             }
@@ -714,32 +715,36 @@ object AF {
             renderOrigin.set(origin.minus(baseOrigin.times(renderAxis)))
 
             // create an animation frame which reflects the current pose of the articulated figure
-            animator.InitAFPose()
+            animator!!.InitAFPose()
             i = 0
             while (i < jointMods.Num()) {
 
                 // check for the origin joint
-                if (jointMods.get(i).jointHandle == 0) {
+                if (jointMods[i].jointHandle == 0) {
                     i++
                     continue
                 }
-                bodyOrigin.set(physicsObj.GetOrigin(jointMods.get(i).bodyId))
-                bodyAxis = physicsObj.GetAxis(jointMods.get(i).bodyId)
-                axis = jointMods.get(i).jointBodyAxis.Transpose().times(bodyAxis.times(renderAxis.Transpose()))
+                bodyOrigin.set(physicsObj.GetOrigin(jointMods[i].bodyId))
+                bodyAxis = physicsObj.GetAxis(jointMods[i].bodyId)
+                axis = jointMods[i].jointBodyAxis.Transpose().times(bodyAxis.times(renderAxis.Transpose()))
                 origin.set(
-                    bodyOrigin.minus(jointMods.get(i).jointBodyOrigin.times(axis).minus(renderOrigin))
-                        .oMultiply(renderAxis.Transpose())
+                    bodyOrigin.minus(jointMods[i].jointBodyOrigin.times(axis).minus(renderOrigin))
+                        .times(renderAxis.Transpose())
                 )
-                animator.SetAFPoseJointMod(jointMods.get(i).jointHandle, jointMods.get(i).jointMod, axis, origin)
+                animator!!.SetAFPoseJointMod(jointMods[i].jointHandle, jointMods[i].jointMod, axis, origin)
                 i++
             }
-            animator.FinishAFPose(modifiedAnim, GetBounds().Expand(AF.POSE_BOUNDS_EXPANSION), Game_local.gameLocal.time)
-            animator.SetAFPoseBlendWeight(1.0f)
+            animator!!.FinishAFPose(
+                modifiedAnim,
+                GetBounds().Expand(AF.POSE_BOUNDS_EXPANSION),
+                Game_local.gameLocal.time
+            )
+            animator!!.SetAFPoseBlendWeight(1.0f)
             return true
         }
 
         fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3) {
-            origin.set(baseOrigin.oNegative())
+            origin.set(baseOrigin.unaryMinus())
             axis.set(baseAxis.Transpose())
         }
 
@@ -765,21 +770,21 @@ object AF {
             } else {
                 id = Clip.CLIPMODEL_ID_TO_JOINT_HANDLE(id)
                 if (id < jointBody.Num()) {
-                    jointBody.get(id)
+                    jointBody[id]
                 } else {
                     0
                 }
             }
         }
 
-        fun SaveState(args: idDict?) {
+        fun SaveState(args: idDict) {
             var i: Int
-            var body: idAFBody?
+            var body: idAFBody
             var key: String
             var value: String?
             i = 0
             while (i < jointMods.Num()) {
-                body = physicsObj.GetBody(jointMods.get(i).bodyId)
+                body = physicsObj.GetBody(jointMods[i].bodyId)!!
                 key = "body " + body.GetName()
                 value = body.GetWorldOrigin().ToString(8)
                 value += " "
@@ -789,7 +794,7 @@ object AF {
             }
         }
 
-        fun LoadState(args: idDict?) {
+        fun LoadState(args: idDict) {
             var kv: idKeyValue?
             val name = idStr()
             var body: idAFBody?
@@ -822,7 +827,7 @@ object AF {
         }
 
         fun AddBindConstraints() {
-            var kv: idKeyValue
+            var kv: idKeyValue?
             val name = idStr()
             var body: idAFBody?
             val lexer = idLexer()
@@ -836,7 +841,7 @@ object AF {
             if (!IsLoaded()) {
                 return
             }
-            val args = self.spawnArgs
+            val args = self!!.spawnArgs
 
             // get the render position
             origin.set(physicsObj.GetOrigin(0))
@@ -857,7 +862,7 @@ object AF {
                     Game_local.gameLocal.Warning(
                         "idAF::AddBindConstraints: body '%s' not found on entity '%s'",
                         bodyName,
-                        self.name
+                        self!!.name
                     )
                     lexer.FreeSource()
                     kv = args.MatchPrefix("bindConstraint ", kv)
@@ -872,29 +877,29 @@ object AF {
                     c = idAFConstraint_BallAndSocketJoint(name, body, null)
                     physicsObj.AddConstraint(c)
                     lexer.ReadToken(jointName)
-                    val   /*jointHandle_t*/joint = animator.GetJointHandle(jointName.toString())
+                    val   /*jointHandle_t*/joint = animator!!.GetJointHandle(jointName.toString())
                     if (joint == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("idAF::AddBindConstraints: joint '%s' not found", jointName)
                     }
-                    animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                    c.SetAnchor(renderOrigin.oPlus(origin.times(renderAxis)))
+                    animator!!.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
+                    c.SetAnchor(renderOrigin.plus(origin.times(renderAxis)))
                 } else if (type.Icmp("universal") == 0) {
                     var c: idAFConstraint_UniversalJoint
                     c = idAFConstraint_UniversalJoint(name, body, null)
                     physicsObj.AddConstraint(c)
                     lexer.ReadToken(jointName)
-                    val   /*jointHandle_t*/joint = animator.GetJointHandle(jointName)
+                    val   /*jointHandle_t*/joint = animator!!.GetJointHandle(jointName)
                     if (joint == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("idAF::AddBindConstraints: joint '%s' not found", jointName)
                     }
-                    animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                    c.SetAnchor(renderOrigin.oPlus(origin.times(renderAxis)))
+                    animator!!.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
+                    c.SetAnchor(renderOrigin.plus(origin.times(renderAxis)))
                     c.SetShafts(idVec3(0, 0, 1), idVec3(0, 0, -1))
                 } else {
                     Game_local.gameLocal.Warning(
                         "idAF::AddBindConstraints: unknown constraint type '%s' on entity '%s'",
                         type,
-                        self.name
+                        self!!.name
                     )
                 }
                 lexer.FreeSource()
@@ -904,11 +909,11 @@ object AF {
         }
 
         fun RemoveBindConstraints() {
-            var kv: idKeyValue
+            var kv: idKeyValue?
             if (!IsLoaded()) {
                 return
             }
-            val args = self.spawnArgs
+            val args = self!!.spawnArgs
             val name = idStr()
             kv = args.MatchPrefix("bindConstraint ", null)
             while (kv != null) {
@@ -929,14 +934,14 @@ object AF {
          Sets the base body.
          ================
          */
-        protected fun SetBase(body: idAFBody?, joints: Array<idJointMat?>?) {
+        protected fun SetBase(body: idAFBody, joints: Array<idJointMat>) {
             physicsObj.ForceBodyId(body, 0)
             baseOrigin.set(body.GetWorldOrigin())
             baseAxis.set(body.GetWorldAxis())
             AddBody(
                 body,
                 joints,
-                animator.GetJointName(animator.GetFirstChild("origin")),
+                animator!!.GetJointName(animator!!.GetFirstChild("origin")),
                 AFJointModType_t.AF_JOINTMOD_AXIS
             )
         }
@@ -949,38 +954,38 @@ object AF {
          ================
          */
         protected fun AddBody(
-            body: idAFBody?,
-            joints: Array<idJointMat?>?,
-            jointName: String?,
-            mod: AFJointModType_t?
+            body: idAFBody,
+            joints: Array<idJointMat>,
+            jointName: String,
+            mod: AFJointModType_t
         ) {
             val index: Int
             val   /*jointHandle_t*/handle: Int
             val origin = idVec3()
             val axis: idMat3
-            handle = animator.GetJointHandle(jointName)
+            handle = animator!!.GetJointHandle(jointName)
             if (handle == Model.INVALID_JOINT) {
-                idGameLocal.Companion.Error(
+                idGameLocal.Error(
                     "idAF for entity '%s' at (%s) modifies unknown joint '%s'",
-                    self.name,
-                    self.GetPhysics().GetOrigin().ToString(0),
+                    self!!.name,
+                    self!!.GetPhysics().GetOrigin().ToString(0),
                     jointName
                 )
             }
-            assert(handle < animator.NumJoints())
-            origin.set(joints.get(handle).ToVec3())
-            axis = joints.get(handle).ToMat3()
+            assert(handle < animator!!.NumJoints())
+            origin.set(joints[handle].ToVec3())
+            axis = joints[handle].ToMat3()
             index = jointMods.Num()
             jointMods.SetNum(index + 1, false)
-            jointMods.set(index, jointConversion_s())
-            jointMods.get(index).bodyId = physicsObj.GetBodyId(body)
-            jointMods.get(index).jointHandle = handle
-            jointMods.get(index).jointMod = mod
-            jointMods.get(index).jointBodyOrigin.set(body.GetWorldOrigin().minus(origin).oMultiply(axis.Transpose()))
-            jointMods.get(index).jointBodyAxis = body.GetWorldAxis().times(axis.Transpose())
+            jointMods[index] = jointConversion_s()
+            jointMods[index].bodyId = physicsObj.GetBodyId(body)
+            jointMods[index].jointHandle = handle
+            jointMods[index].jointMod = mod
+            jointMods[index].jointBodyOrigin.set(body.GetWorldOrigin().minus(origin).times(axis.Transpose()))
+            jointMods[index].jointBodyAxis.set(body.GetWorldAxis().times(axis.Transpose()))
         }
 
-        protected fun LoadBody(fb: idDeclAF_Body?, joints: Array<idJointMat?>?): Boolean {
+        protected fun LoadBody(fb: idDeclAF_Body, joints: Array<idJointMat>): Boolean {
             val id: Int
             var i: Int
             DBG_LoadBody++
@@ -994,11 +999,11 @@ object AF {
             val centerOfMass = idVec3()
             val origin = idVec3()
             val bounds = idBounds()
-            val jointList = ArrayList<Int?>()
+            val jointList = ArrayList<Int>()
             origin.set(fb.origin.ToVec3())
             axis = fb.angles.ToMat3()
-            bounds.set(0, fb.v1.ToVec3())
-            bounds.set(1, fb.v2.ToVec3())
+            bounds[0] = fb.v1.ToVec3()
+            bounds[1] = fb.v2.ToVec3()
             when (fb.modelType) {
                 traceModel_t.TRM_BOX -> {
                     trm.SetupBox(bounds)
@@ -1015,29 +1020,29 @@ object AF {
                 traceModel_t.TRM_CONE -> {
 
                     // place the apex at the origin
-                    bounds.get(0).z -= bounds.get(1).z
-                    bounds.get(1).z = 0.0f
+                    bounds[0].z -= bounds[1].z
+                    bounds[1].z = 0.0f
                     trm.SetupCone(bounds, fb.numSides)
                 }
                 traceModel_t.TRM_BONE -> {
 
                     // direction of bone
-                    axis.set(2, fb.v2.ToVec3().minus(fb.v1.ToVec3()))
-                    length = axis.get(2).Normalize()
+                    axis[2] = fb.v2.ToVec3().minus(fb.v1.ToVec3())
+                    length = axis[2].Normalize()
                     // axis of bone trace model
-                    axis.get(2).NormalVectors(axis.get(0), axis.get(1))
-                    axis.set(1, axis.get(1).oNegative())
+                    axis[2].NormalVectors(axis[0], axis[1])
+                    axis[1] = axis[1].unaryMinus()
                     // create bone trace model
                     trm.SetupBone(length, fb.width)
                 }
                 else -> assert(false)
             }
             trm.GetMassProperties(1.0f, candleMass, centerOfMass, inertiaTensor)
-            trm.Translate(centerOfMass.oNegative())
+            trm.Translate(centerOfMass.unaryMinus())
             origin.plusAssign(centerOfMass.times(axis))
             body = physicsObj.GetBody(fb.name.toString())
             if (body != null) {
-                clip = body.GetClipModel()
+                clip = body.GetClipModel()!!
                 if (!clip.IsEqual(trm)) {
                     clip = idClipModel(trm)
                     clip.SetContents(fb.contents._val)
@@ -1054,7 +1059,7 @@ object AF {
                 clip.SetContents(fb.contents._val)
                 clip.Link(Game_local.gameLocal.clip, self, 0, origin, axis)
                 body = idAFBody(fb.name, clip, fb.density)
-                if (fb.inertiaScale != idMat3.Companion.getMat3_identity()) {
+                if (fb.inertiaScale != idMat3.getMat3_identity()) {
                     body.SetDensity(fb.density, fb.inertiaScale)
                 }
                 id = physicsObj.AddBody(body)
@@ -1079,32 +1084,32 @@ object AF {
                 }
                 AddBody(body, joints, fb.jointName.toString(), mod)
             }
-            if (fb.frictionDirection.ToVec3() != Vector.getVec3_origin()) {
+            if (fb.frictionDirection.ToVec3() != getVec3_origin()) {
                 body.SetFrictionDirection(fb.frictionDirection.ToVec3())
             }
-            if (fb.contactMotorDirection.ToVec3() != Vector.getVec3_origin()) {
+            if (fb.contactMotorDirection.ToVec3() != getVec3_origin()) {
                 body.SetContactMotorDirection(fb.contactMotorDirection.ToVec3())
             }
 
             // update table to find the nearest articulated figure body for a joint of the skeletal model
-            animator.GetJointList(fb.containedJoints.toString(), jointList)
+            animator!!.GetJointList(fb.containedJoints.toString(), jointList)
             i = 0
             while (i < jointList.size) {
-                if (jointBody.get(jointList[i]) != -1) {
+                if (jointBody[jointList[i]] != -1) {
                     /*jointHandle_t*/
                     Game_local.gameLocal.Warning(
                         "%s: joint '%s' is already contained by body '%s'",
-                        name, animator.GetJointName(jointList[i]),
-                        physicsObj.GetBody(jointBody.get(jointList[i])).GetName()
+                        name, animator!!.GetJointName(jointList[i]),
+                        physicsObj.GetBody(jointBody[jointList[i]])!!.GetName()
                     )
                 }
-                jointBody.set(jointList[i], id)
+                jointBody[jointList[i]] = id
                 i++
             }
             return true
         }
 
-        protected fun LoadConstraint(fc: idDeclAF_Constraint?): Boolean {
+        protected fun LoadConstraint(fc: idDeclAF_Constraint): Boolean {
             val body1: idAFBody?
             val body2: idAFBody?
             val angles = idAngles()
@@ -1113,8 +1118,8 @@ object AF {
             body2 = physicsObj.GetBody(fc.body2.toString())
             when (fc.type) {
                 declAFConstraintType_t.DECLAF_CONSTRAINT_FIXED -> {
-                    var c: idAFConstraint_Fixed
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Fixed
+                    var c: idAFConstraint_Fixed?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Fixed?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1124,8 +1129,8 @@ object AF {
                     }
                 }
                 declAFConstraintType_t.DECLAF_CONSTRAINT_BALLANDSOCKETJOINT -> {
-                    var c: idAFConstraint_BallAndSocketJoint
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_BallAndSocketJoint
+                    var c: idAFConstraint_BallAndSocketJoint?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_BallAndSocketJoint?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1136,16 +1141,16 @@ object AF {
                     c.SetAnchor(fc.anchor.ToVec3())
                     c.SetFriction(fc.friction)
                     when (fc.limit) {
-                        idDeclAF_Constraint.Companion.LIMIT_CONE -> {
+                        idDeclAF_Constraint.LIMIT_CONE -> {
                             c.SetConeLimit(fc.limitAxis.ToVec3(), fc.limitAngles[0], fc.shaft[0].ToVec3())
                         }
-                        idDeclAF_Constraint.Companion.LIMIT_PYRAMID -> {
+                        idDeclAF_Constraint.LIMIT_PYRAMID -> {
                             angles.set(fc.limitAxis.ToVec3().ToAngles())
                             angles.roll = fc.limitAngles[2]
                             axis.set(angles.ToMat3())
                             c.SetPyramidLimit(
-                                axis.get(0),
-                                axis.get(1),
+                                axis[0],
+                                axis[1],
                                 fc.limitAngles[0],
                                 fc.limitAngles[1],
                                 fc.shaft[0].ToVec3()
@@ -1157,8 +1162,8 @@ object AF {
                     }
                 }
                 declAFConstraintType_t.DECLAF_CONSTRAINT_UNIVERSALJOINT -> {
-                    var c: idAFConstraint_UniversalJoint
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_UniversalJoint
+                    var c: idAFConstraint_UniversalJoint?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_UniversalJoint?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1170,14 +1175,14 @@ object AF {
                     c.SetShafts(fc.shaft[0].ToVec3(), fc.shaft[1].ToVec3())
                     c.SetFriction(fc.friction)
                     when (fc.limit) {
-                        idDeclAF_Constraint.Companion.LIMIT_CONE -> {
+                        idDeclAF_Constraint.LIMIT_CONE -> {
                             c.SetConeLimit(fc.limitAxis.ToVec3(), fc.limitAngles[0])
                         }
-                        idDeclAF_Constraint.Companion.LIMIT_PYRAMID -> {
+                        idDeclAF_Constraint.LIMIT_PYRAMID -> {
                             angles.set(fc.limitAxis.ToVec3().ToAngles())
                             angles.roll = fc.limitAngles[2]
                             axis.set(angles.ToMat3())
-                            c.SetPyramidLimit(axis.get(0), axis.get(1), fc.limitAngles[0], fc.limitAngles[1])
+                            c.SetPyramidLimit(axis[0], axis[1], fc.limitAngles[0], fc.limitAngles[1])
                         }
                         else -> {
                             c.SetNoLimit()
@@ -1185,8 +1190,8 @@ object AF {
                     }
                 }
                 declAFConstraintType_t.DECLAF_CONSTRAINT_HINGE -> {
-                    var c: idAFConstraint_Hinge
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Hinge
+                    var c: idAFConstraint_Hinge?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Hinge?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1198,7 +1203,7 @@ object AF {
                     c.SetAxis(fc.axis.ToVec3())
                     c.SetFriction(fc.friction)
                     when (fc.limit) {
-                        idDeclAF_Constraint.Companion.LIMIT_CONE -> {
+                        idDeclAF_Constraint.LIMIT_CONE -> {
                             val left = idVec3()
                             val up = idVec3()
                             val axis2 = idVec3()
@@ -1207,7 +1212,7 @@ object AF {
                             axis2.set(
                                 left.times(
                                     idRotation(
-                                        Vector.getVec3_origin(),
+                                        getVec3_origin(),
                                         fc.axis.ToVec3(),
                                         fc.limitAngles[0]
                                     )
@@ -1216,7 +1221,7 @@ object AF {
                             shaft.set(
                                 left.times(
                                     idRotation(
-                                        Vector.getVec3_origin(),
+                                        getVec3_origin(),
                                         fc.axis.ToVec3(),
                                         fc.limitAngles[2]
                                     )
@@ -1230,8 +1235,8 @@ object AF {
                     }
                 }
                 declAFConstraintType_t.DECLAF_CONSTRAINT_SLIDER -> {
-                    var c: idAFConstraint_Slider
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Slider
+                    var c: idAFConstraint_Slider?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Slider?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1242,8 +1247,8 @@ object AF {
                     c.SetAxis(fc.axis.ToVec3())
                 }
                 declAFConstraintType_t.DECLAF_CONSTRAINT_SPRING -> {
-                    var c: idAFConstraint_Spring
-                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Spring
+                    var c: idAFConstraint_Spring?
+                    c = physicsObj.GetConstraint(fc.name.toString()) as idAFConstraint_Spring?
                     if (c != null) {
                         c.SetBody1(body1)
                         c.SetBody2(body2)
@@ -1274,7 +1279,7 @@ object AF {
             solid = false
             i = 0
             while (i < physicsObj.GetNumBodies()) {
-                body = physicsObj.GetBody(i)
+                body = physicsObj.GetBody(i)!!
                 if (Game_local.gameLocal.clip.Translation(
                         trace,
                         body.GetWorldOrigin(),
@@ -1285,10 +1290,10 @@ object AF {
                         self
                     )
                 ) {
-                    val depth = Math.abs(trace.c.point.times(trace.c.normal) - trace.c.dist)
-                    body.SetWorldOrigin(body.GetWorldOrigin().oPlus(trace.c.normal.times(depth + 8.0f)))
+                    val depth = abs(trace.c.point.times(trace.c.normal) - trace.c.dist)
+                    body.SetWorldOrigin(body.GetWorldOrigin().plus(trace.c.normal.times(depth + 8.0f)))
                     Game_local.gameLocal.DWarning(
-                        "%s: body '%s' stuck in %d (normal = %.2f %.2f %.2f, depth = %.2f)", self.name,
+                        "%s: body '%s' stuck in %d (normal = %.2f %.2f %.2f, depth = %.2f)", self!!.name,
                         body.GetName(), trace.c.contents, trace.c.normal.x, trace.c.normal.y, trace.c.normal.z, depth
                     )
                     solid = true
@@ -1310,7 +1315,7 @@ object AF {
             animator = null
             modifiedAnim = 0
             baseOrigin = idVec3()
-            baseAxis = idMat3.Companion.getMat3_identity()
+            baseAxis = idMat3.getMat3_identity()
             jointMods = idList()
             jointBody = idList()
             poseTime = -1
@@ -1328,20 +1333,20 @@ object AF {
      */
     internal class GetJointTransform private constructor() : getJointTransform_t() {
         override fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: String?,
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: String,
             origin: idVec3,
             axis: idMat3
         ): Boolean {
             val   /*jointHandle_t*/joint: Int
 
 //	joint = reinterpret_cast<idAnimator *>(model).GetJointHandle( jointName );
-            joint = (model as idAnimator?).GetJointHandle(jointName)
+            joint = (model as idAnimator).GetJointHandle(jointName)
             //	if ( ( joint >= 0 ) && ( joint < reinterpret_cast<idAnimator *>(model).NumJoints() ) ) {
             return if (joint >= 0 && joint < model.NumJoints()) {
-                origin.set(frame.get(joint).ToVec3())
-                axis.set(frame.get(joint).ToMat3())
+                origin.set(frame[joint].ToVec3())
+                axis.set(frame[joint].ToMat3())
                 true
             } else {
                 false
@@ -1349,9 +1354,9 @@ object AF {
         }
 
         override fun run(
-            model: Any?,
-            frame: Array<idJointMat?>?,
-            jointName: idStr?,
+            model: Any,
+            frame: Array<idJointMat>,
+            jointName: idStr,
             origin: idVec3,
             axis: idMat3
         ): Boolean {

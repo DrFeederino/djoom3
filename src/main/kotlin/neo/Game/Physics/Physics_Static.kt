@@ -94,7 +94,7 @@ class Physics_Static {
             self = e
         }
 
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             assert(self != null)
             if (clipModel != null && clipModel !== model && freeOld) {
                 idClipModel.delete(clipModel!!)

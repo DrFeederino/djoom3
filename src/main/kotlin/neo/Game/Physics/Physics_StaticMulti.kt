@@ -128,7 +128,7 @@ object Physics_StaticMulti {
             self = e
         }
 
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             var i: Int
             assert(self != null)
             if (id >= clipModels.Num()) {
@@ -138,7 +138,7 @@ object Physics_StaticMulti {
             if (clipModels[id] !== model && freeOld) {
                 idClipModel.delete(clipModels[id])
             }
-            clipModels[id] = model
+            clipModels[id] = model!!
             clipModels[id].Link(Game_local.gameLocal.clip, self, id, current[id].origin, current[id].axis)
             i = clipModels.Num() - 1
             while (i >= 1) {

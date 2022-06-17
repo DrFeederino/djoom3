@@ -413,8 +413,8 @@ object Model_md5 {
 
     class idRenderModelMD5 : idRenderModelStatic() {
         private val defaultPose: idList<idJointQuat>
-        private val joints: idList<idMD5Joint>
-        private val meshes: idList<idMD5Mesh>
+        private val joints: ArrayList<idMD5Joint>
+        private val meshes: ArrayList<idMD5Mesh>
         override fun InitFromFile(fileName: String) {
             name = idStr(fileName)
             LoadModel()
@@ -732,7 +732,7 @@ object Model_md5 {
             return joints.Num()
         }
 
-        override fun GetJoints(): Array<idMD5Joint> {
+        override fun GetJoints(): ArrayList<idMD5Joint> {
             return joints
         }
 

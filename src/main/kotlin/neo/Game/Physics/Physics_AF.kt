@@ -5134,11 +5134,11 @@ object Physics_AF {
         }
 
         // get all the contact constraints acting on the body
-        fun GetBodyContactConstraints(id: Int, contacts: Array<idAFConstraint_Contact>, maxContacts: Int): Int {
+        fun GetBodyContactConstraints(id: Int, contacts: ArrayList<idAFConstraint_Contact>, maxContacts: Int): Int {
             var i: Int
             var numContacts: Int
             val body: idAFBody?
-            var contact: idAFConstraint_Contact?
+            var contact: idAFConstraint_Contact
             if (id < 0 || id >= bodies.Num() || maxContacts <= 0) {
                 return 0
             }
@@ -5303,7 +5303,7 @@ object Physics_AF {
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {}
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {}
         override fun GetClipModel(id: Int /*= 0*/): idClipModel? {
             return if (id >= 0 && id < bodies.Num()) {
                 bodies[id].GetClipModel()

@@ -1,6 +1,5 @@
 package neo.Game
 
-import neo.Game.*
 import neo.Game.Entity.idEntity
 import neo.Game.GameSys.Class.eventCallback_t
 import neo.Game.GameSys.Class.eventCallback_t0
@@ -15,7 +14,7 @@ import neo.Game.Game_local.idEntityPtr
 import neo.Game.Game_local.idGameLocal
 import neo.Game.Script.Script_Thread
 import neo.Game.Script.Script_Thread.idThread
-import neo.Renderer.*
+import neo.Renderer.Model
 import neo.Renderer.RenderWorld.renderView_s
 import neo.framework.UsercmdGen
 import neo.idlib.Text.Lexer
@@ -24,7 +23,6 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CFloat
-import neo.idlib.containers.List.idList
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Quat.idCQuat
 import neo.idlib.math.Quat.idQuat
@@ -48,8 +46,8 @@ object Camera {
      */
     abstract class idCamera : idEntity() {
         //public	ABSTRACT_PROTOTYPE( idCamera );
-        abstract fun GetViewParms(view: renderView_s?)
-        override fun GetRenderView(): renderView_s? {
+        abstract fun GetViewParms(view: renderView_s)
+        override fun GetRenderView(): renderView_s {
             val rv = super.GetRenderView()
             GetViewParms(rv)
             return rv
@@ -70,19 +68,19 @@ object Camera {
         : idCamera() {
         companion object {
             //    public	CLASS_PROTOTYPE( idCameraView );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idCameraView?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idCameraView?>
-                eventCallbacks[Camera.EV_Camera_SetAttachments] =
-                    eventCallback_t0<idCameraView?> { obj: T? -> neo.Game.obj.Event_SetAttachments() } as eventCallback_t0<idCameraView?>
+                    eventCallback_t1<idCameraView> { obj: Any?, activator: idEventArg<*>? ->
+                        idCameraView::Event_Activate
+                    }
+                eventCallbacks[EV_Camera_SetAttachments] =
+                    eventCallback_t0<idCameraView> { obj: Any? -> idCameraView::Event_SetAttachments }
             }
         }
 
@@ -93,8 +91,8 @@ object Camera {
         // save games
         override fun Save(savefile: idSaveGame) {                // archives object for save game file
             savefile.WriteFloat(fov)
-            savefile.WriteObject(attachedTo)
-            savefile.WriteObject(attachedView)
+            savefile.WriteObject(attachedTo!!)
+            savefile.WriteObject(attachedView!!)
         }
 
         override fun Restore(savefile: idRestoreGame) {                // unarchives object from save game file
@@ -114,15 +112,12 @@ object Camera {
                 spawnArgs.Set("cameraTarget", spawnArgs.GetString("name"))
             }
             fov = spawnArgs.GetFloat("fov", "90")
-            PostEventMS(Camera.EV_Camera_SetAttachments, 0)
+            PostEventMS(EV_Camera_SetAttachments, 0)
             UpdateChangeableSpawnArgs(null)
         }
 
-        override fun GetViewParms(view: renderView_s?) {
+        override fun GetViewParms(view: renderView_s) {
             assert(view != null)
-            if (view == null) {
-                return
-            }
             val dir = idVec3()
             val ent: idEntity?
             ent = if (attachedTo != null) {
@@ -130,13 +125,13 @@ object Camera {
             } else {
                 this
             }
-            view.vieworg.set(ent.GetPhysics().GetOrigin())
+            view.vieworg.set(ent!!.GetPhysics().GetOrigin())
             if (attachedView != null) {
-                dir.set(attachedView.GetPhysics().GetOrigin().minus(view.vieworg))
+                dir.set(attachedView!!.GetPhysics().GetOrigin().minus(view.vieworg))
                 dir.Normalize()
-                view.viewaxis = dir.ToMat3()
+                view.viewaxis.set(dir.ToMat3())
             } else {
-                view.viewaxis = idMat3(ent.GetPhysics().GetAxis())
+                view.viewaxis.set(idMat3(ent.GetPhysics().GetAxis()))
             }
             run {
                 val fov_x = CFloat(view.fov_x)
@@ -155,7 +150,7 @@ object Camera {
             ActivateTargets(Game_local.gameLocal.GetLocalPlayer())
         }
 
-        protected fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        protected fun Event_Activate(activator: idEventArg<idEntity>) {
             if (spawnArgs.GetBool("trigger")) {
                 if (Game_local.gameLocal.GetCamera() !== this) {
                     if (SysCvar.g_debugCinematic.GetBool()) {
@@ -172,27 +167,27 @@ object Camera {
         }
 
         protected fun Event_SetAttachments() {
-            val attachedTo = arrayOf(attachedTo)
-            val attachedView = arrayOf(attachedView)
+            val attachedTo = if (attachedTo == null) arrayOf() else arrayOf(attachedTo) as Array<idEntity>
+            val attachedView = if (attachedView == null) arrayOf() else arrayOf(attachedTo) as Array<idEntity>
             SetAttachment(attachedTo, "attachedTo")
             SetAttachment(attachedView, "attachedView")
             this.attachedTo = attachedTo[0]
             this.attachedView = attachedView[0]
         }
 
-        protected fun SetAttachment(e: Array<idEntity?>?, p: String?) {
+        protected fun SetAttachment(e: Array<idEntity>, p: String) {
             val cam = spawnArgs.GetString(p)
             if (!cam.isEmpty()) {
-                e.get(0) = Game_local.gameLocal.FindEntity(cam)
+                e[0] = Game_local.gameLocal.FindEntity(cam)!!
             }
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks.get(event)!!
         }
     }
 
@@ -205,7 +200,7 @@ object Camera {
      */
     class cameraFrame_t {
         var fov = 0f
-        var q: idCQuat?
+        var q: idCQuat
         val t: idVec3
 
         init {
@@ -217,31 +212,31 @@ object Camera {
     class idCameraAnim : idCamera() {
         companion object {
             //        public 	CLASS_PROTOTYPE( idCameraAnim );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //~idCameraAnim();
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idCameraAnim?> { obj: T? -> neo.Game.obj.Event_SetCallback() } as eventCallback_t0<idCameraAnim?>
-                eventCallbacks[Camera.EV_Camera_Stop] =
-                    eventCallback_t0<idCameraAnim?> { obj: T? -> neo.Game.obj.Event_Stop() } as eventCallback_t0<idCameraAnim?>
-                eventCallbacks[Camera.EV_Camera_Start] =
-                    eventCallback_t0<idCameraAnim?> { obj: T? -> neo.Game.obj.Event_Start() } as eventCallback_t0<idCameraAnim?>
+                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_SetCallback }
+                eventCallbacks[EV_Camera_Stop] =
+                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_Stop }
+                eventCallbacks[EV_Camera_Start] =
+                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_Start }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idCameraAnim?> { obj: T?, _activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game._activator)
-                    } as eventCallback_t1<idCameraAnim?>
+                    eventCallback_t1<idCameraAnim> { obj: Any?, _activator: idEventArg<*>? ->
+                        idCameraAnim::Event_Activate
+                    }
             }
         }
 
-        private val activator: idEntityPtr<idEntity?>?
-        private val camera: idList<cameraFrame_t?>?
-        private val cameraCuts: idList<Int?>?
+        private val activator: idEntityPtr<idEntity>
+        private val camera: ArrayList<cameraFrame_t>
+        private val cameraCuts: ArrayList<Int>
         private var cycle: Int
         private var frameRate: Int
         private val offset: idVec3
@@ -281,7 +276,7 @@ object Camera {
             LoadAnim()
         }
 
-        override fun GetViewParms(view: renderView_s?) {
+        override fun GetViewParms(view: renderView_s) {
             val realFrame: Int
             var frame: Int
             val frameTime: Int
@@ -297,14 +292,14 @@ object Camera {
             if (null == view) {
                 return
             }
-            if (camera.Num() == 0) {
+            if (camera.size == 0) {
                 // we most likely are in the middle of a restore
                 // FIXME: it would be better to fix it so this doesn't get called during a restore
                 return
             }
             if (frameRate == UsercmdGen.USERCMD_HZ) {
                 frameTime = Game_local.gameLocal.time - starttime
-                frame = frameTime / idGameLocal.Companion.msec
+                frame = frameTime / idGameLocal.msec
                 lerp = 0.0f
             } else {
                 frameTime = (Game_local.gameLocal.time - starttime) * frameRate
@@ -316,8 +311,8 @@ object Camera {
             realFrame = frame
             cut = 0
             i = 0
-            while (i < cameraCuts.Num()) {
-                if (frame < cameraCuts.get(i)) {
+            while (i < cameraCuts.size) {
+                if (frame < cameraCuts[i]) {
                     break
                 }
                 frame++
@@ -326,13 +321,13 @@ object Camera {
             }
             if (SysCvar.g_debugCinematic.GetBool()) {
                 val prevFrameTime: Int =
-                    (Game_local.gameLocal.time - starttime - idGameLocal.Companion.msec) * frameRate
+                    (Game_local.gameLocal.time - starttime - idGameLocal.msec) * frameRate
                 var prevFrame = prevFrameTime / 1000
                 var prevCut: Int
                 prevCut = 0
                 i = 0
-                while (i < cameraCuts.Num()) {
-                    if (prevFrame < cameraCuts.get(i)) {
+                while (i < cameraCuts.size) {
+                    if (prevFrame < cameraCuts[i]) {
                         break
                     }
                     prevFrame++
@@ -346,47 +341,47 @@ object Camera {
 
             // clamp to the first frame.  also check if this is a one frame anim.  one frame anims would end immediately,
             // but since they're mainly used for static cams anyway, just stay on it infinitely.
-            if (frame < 0 || camera.Num() < 2) {
-                view.viewaxis = camera.get(0).q.ToQuat().ToMat3()
-                view.vieworg.set(camera.get(0).t.oPlus(offset))
-                view.fov_x = camera.get(0).fov
-            } else if (frame > camera.Num() - 2) {
+            if (frame < 0 || camera.size < 2) {
+                view.viewaxis.set(camera[0].q.ToQuat().ToMat3())
+                view.vieworg.set(camera[0].t.plus(offset))
+                view.fov_x = camera[0].fov
+            } else if (frame > camera.size - 2) {
                 if (cycle > 0) {
                     cycle--
                 }
                 if (cycle != 0) {
                     // advance start time so that we loop
-                    starttime += (camera.Num() - cameraCuts.Num()) * 1000 / frameRate
+                    starttime += (camera.size - cameraCuts.size) * 1000 / frameRate
                     GetViewParms(view)
                     return
                 }
                 Stop()
                 if (Game_local.gameLocal.GetCamera() != null) {
                     // we activated another camera when we stopped, so get it's viewparms instead
-                    Game_local.gameLocal.GetCamera().GetViewParms(view)
+                    Game_local.gameLocal.GetCamera()!!.GetViewParms(view)
                     return
                 } else {
                     // just use our last frame
-                    camFrame = camera.get(camera.Num() - 1)
-                    view.viewaxis = camFrame.q.ToQuat().ToMat3()
-                    view.vieworg.set(camFrame.t.oPlus(offset))
+                    camFrame = camera[camera.size - 1]
+                    view.viewaxis.set(camFrame.q.ToQuat().ToMat3())
+                    view.vieworg.set(camFrame.t.plus(offset))
                     view.fov_x = camFrame.fov
                 }
             } else if (lerp == 0.0f) {
-                camFrame = camera.get(frame)
-                view.viewaxis = camFrame /*[ 0 ]*/.q.ToMat3()
-                view.vieworg.set(camFrame /*[ 0 ]*/.t.oPlus(offset))
+                camFrame = camera[frame]
+                view.viewaxis.set(camFrame /*[ 0 ]*/.q.ToMat3())
+                view.vieworg.set(camFrame /*[ 0 ]*/.t.plus(offset))
                 view.fov_x = camFrame /*[ 0 ]*/.fov
             } else {
-                camFrame = camera.get(frame)
-                val nextFrame = camera.get(frame + 1)
+                camFrame = camera[frame]
+                val nextFrame = camera[frame + 1]
                 invlerp = 1.0f - lerp
                 q1.set(camFrame /*[ 0 ]*/.q.ToQuat())
                 q2.set(nextFrame.q.ToQuat())
                 q3.Slerp(q1, q2, lerp)
-                view.viewaxis = q3.ToMat3()
+                view.viewaxis.set(q3.ToMat3())
                 view.vieworg.set(
-                    camFrame /*[ 0 ]*/.t.times(invlerp).oPlus(nextFrame.t.times(lerp).oPlus(offset))
+                    camFrame /*[ 0 ]*/.t.times(invlerp).plus(nextFrame.t.times(lerp).plus(offset))
                 )
                 view.fov_x = camFrame /*[ 0 ]*/.fov * invlerp + nextFrame.fov * lerp
             }
@@ -415,7 +410,7 @@ object Camera {
             // }
 // }
             if (SysCvar.g_showcamerainfo.GetBool()) {
-                Game_local.gameLocal.Printf("^5Frame: ^7%d/%d\n\n\n", realFrame + 1, camera.Num() - cameraCuts.Num())
+                Game_local.gameLocal.Printf("^5Frame: ^7%d/%d\n\n\n", realFrame + 1, camera.size - cameraCuts.size)
             }
         }
 
@@ -432,8 +427,8 @@ object Camera {
             BecomeActive(Entity.TH_THINK)
 
             // if the player has already created the renderview for this frame, have him update it again so that the camera starts this frame
-            if (Game_local.gameLocal.GetLocalPlayer().GetRenderView().time == Game_local.gameLocal.time) {
-                Game_local.gameLocal.GetLocalPlayer().CalculateRenderView()
+            if (Game_local.gameLocal.GetLocalPlayer()!!.GetRenderView()!!.time == Game_local.gameLocal.time) {
+                Game_local.gameLocal.GetLocalPlayer()!!.CalculateRenderView()
             }
         }
 
@@ -445,7 +440,7 @@ object Camera {
                 BecomeInactive(Entity.TH_THINK)
                 Game_local.gameLocal.SetCamera(null)
                 if (threadNum != 0) {
-                    idThread.Companion.ObjectMoveDone(threadNum, this)
+                    idThread.ObjectMoveDone(threadNum, this)
                     threadNum = 0
                 }
                 ActivateTargets(activator.GetEntity())
@@ -460,24 +455,24 @@ object Camera {
                 if (!Game_local.gameLocal.skipCinematic) {
                     return
                 }
-                if (camera.Num() < 2) {
+                if (camera.size < 2) {
                     // 1 frame anims never end
                     return
                 }
                 if (frameRate == UsercmdGen.USERCMD_HZ) {
                     frameTime = Game_local.gameLocal.time - starttime
-                    frame = frameTime / idGameLocal.Companion.msec
+                    frame = frameTime / idGameLocal.msec
                 } else {
                     frameTime = (Game_local.gameLocal.time - starttime) * frameRate
                     frame = frameTime / 1000
                 }
-                if (frame > camera.Num() + cameraCuts.Num() - 2) {
+                if (frame > camera.size + cameraCuts.size - 2) {
                     if (cycle > 0) {
                         cycle--
                     }
                     if (cycle != 0) {
                         // advance start time so that we loop
-                        starttime += (camera.Num() - cameraCuts.Num()) * 1000 / frameRate
+                        starttime += (camera.size - cameraCuts.size) * 1000 / frameRate
                     } else {
                         Stop()
                     }
@@ -497,20 +492,20 @@ object Camera {
             val key: String?
             key = spawnArgs.GetString("anim")
             if (null == key) {
-                idGameLocal.Companion.Error("Missing 'anim' key on '%s'", name)
+                idGameLocal.Error("Missing 'anim' key on '%s'", name)
             }
             filename = idStr(spawnArgs.GetString(Str.va("anim %s", key)))
             if (0 == filename.Length()) {
-                idGameLocal.Companion.Error("Missing 'anim %s' key on '%s'", key, name)
+                idGameLocal.Error("Missing 'anim %s' key on '%s'", key, name)
             }
             filename.SetFileExtension(Model.MD5_CAMERA_EXT)
             if (!parser.LoadFile(filename)) {
-                idGameLocal.Companion.Error("Unable to load '%s' on '%s'", filename, name)
+                idGameLocal.Error("Unable to load '%s' on '%s'", filename, name)
             }
-            cameraCuts.Clear()
-            cameraCuts.SetGranularity(1)
-            camera.Clear()
-            camera.SetGranularity(1)
+            cameraCuts.clear()
+            cameraCuts.ensureCapacity(1)
+            camera.clear()
+            camera.ensureCapacity(1)
             parser.ExpectTokenString(Model.MD5_VERSION_STRING)
             version = parser.ParseInt()
             if (version != Model.MD5_VERSION) {
@@ -545,11 +540,11 @@ object Camera {
             // parse the camera cuts
             parser.ExpectTokenString("cuts")
             parser.ExpectTokenString("{")
-            cameraCuts.SetNum(numCuts)
+            cameraCuts.ensureCapacity(numCuts)
             i = 0
             while (i < numCuts) {
-                cameraCuts.set(i, parser.ParseInt())
-                if (cameraCuts.get(i) < 1 || cameraCuts.get(i) >= numFrames) {
+                cameraCuts[i] = parser.ParseInt()
+                if (cameraCuts[i] < 1 || cameraCuts[i] >= numFrames) {
                     parser.Error("Invalid camera cut")
                 }
                 i++
@@ -559,14 +554,14 @@ object Camera {
             // parse the camera frames
             parser.ExpectTokenString("camera")
             parser.ExpectTokenString("{")
-            camera.SetNum(numFrames)
+            camera.ensureCapacity(numFrames)
             i = 0
             while (i < numFrames) {
                 val cam = cameraFrame_t()
                 parser.Parse1DMatrix(3, cam.t)
                 parser.Parse1DMatrix(3, cam.q)
                 cam.fov = parser.ParseFloat()
-                camera.set(i, cam)
+                camera[i] = cam
                 i++
             }
             parser.ExpectTokenString("}")
@@ -626,14 +621,14 @@ object Camera {
 
         private fun Event_SetCallback() {
             if (Game_local.gameLocal.GetCamera() === this && 0 == threadNum) {
-                threadNum = idThread.Companion.CurrentThreadNum()
-                idThread.Companion.ReturnInt(true)
+                threadNum = idThread.CurrentThreadNum()
+                idThread.ReturnInt(true)
             } else {
-                idThread.Companion.ReturnInt(false)
+                idThread.ReturnInt(false)
             }
         }
 
-        private fun Event_Activate(_activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(_activator: idEventArg<idEntity>) {
             activator.oSet(_activator.value)
             if (thinkFlags and Entity.TH_THINK != 0) {
                 Stop()
@@ -642,12 +637,12 @@ object Camera {
             }
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks.get(event)!!
         }
 
         //
@@ -657,8 +652,8 @@ object Camera {
             frameRate = 0
             starttime = 0
             cycle = 1
-            cameraCuts = idList()
-            camera = idList()
+            cameraCuts = ArrayList()
+            camera = ArrayList()
             activator = idEntityPtr(null)
         }
     }

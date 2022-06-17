@@ -45,7 +45,7 @@ object Math_h {
         return (idMath.FtoiFast(x * 65536.0f / 360.0f) and 65535).toFloat()
     }
 
-    fun SHORT2ANGLE(x: Float): Float {
+    fun SHORT2ANGLE(x: Short): Float {
         return x * (360.0f / 65536.0f)
     }
 
@@ -53,7 +53,7 @@ object Math_h {
         return (idMath.FtoiFast(x * 256.0f / 360.0f) and 255).toFloat()
     }
 
-    fun BYTE2ANGLE(x: Float): Float {
+    fun BYTE2ANGLE(x: Byte): Float {
         return x * (360.0f / 256.0f)
     }
 

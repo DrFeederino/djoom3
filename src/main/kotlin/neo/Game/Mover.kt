@@ -1,7 +1,6 @@
 package neo.Game
 
 import neo.CM.CollisionModel.trace_s
-import neo.Game.*
 import neo.Game.Entity.idEntity
 import neo.Game.Entity.signalNum_t
 import neo.Game.GameSys.Class.eventCallback_t
@@ -23,9 +22,10 @@ import neo.Game.Physics.Physics_Parametric.idPhysics_Parametric
 import neo.Game.Player.idPlayer
 import neo.Game.Script.Script_Thread
 import neo.Game.Script.Script_Thread.idThread
-import neo.Renderer.*
+import neo.Renderer.Material
+import neo.Renderer.Model
+import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.portalConnection_t
-import neo.Sound.sound
 import neo.TempDump
 import neo.Tools.Compilers.AAS.AASFile
 import neo.framework.UsercmdGen
@@ -39,15 +39,18 @@ import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
-import neo.idlib.containers.List.idList
-import neo.idlib.containers.idStrList
 import neo.idlib.geometry.TraceModel.idTraceModel
-import neo.idlib.math.*
+import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Curve.idCurve_Spline
+import neo.idlib.math.Extrapolate
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
+import neo.idlib.math.Vector
+import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
+import kotlin.math.abs
 
 /**
  *
@@ -122,7 +125,7 @@ object Mover {
     // a key/val pair of "mover" "state" from below.. guis can represent
     // realtime info like this
     // binary only
-    val guiBinaryMoverStates: Array<String?>? = arrayOf(
+    val guiBinaryMoverStates: Array<String> = arrayOf(
         "1",  // pos 1
         "2",  // pos 2
         "3",  // moving 1 to 2
@@ -168,124 +171,127 @@ object Mover {
             protected const val DIR_UP = -1
 
             // CLASS_PROTOTYPE( idMover );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Mover.EV_FindGuiTargets] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_FindGuiTargets() } as eventCallback_t0<idMover?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[EV_FindGuiTargets] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_FindGuiTargets }
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_SetCallback() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_TeamBlocked] =
-                    eventCallback_t2<idMover?> { obj: T?, blockedPart: idEventArg<*>? ->
-                        neo.Game.obj.Event_TeamBlocked(neo.Game.blockedPart)
-                    } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_PartBlocked] =
-                    eventCallback_t1<idMover?> { obj: T?, blockingEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_PartBlocked(neo.Game.blockingEntity)
-                    } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_ReachedPos] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_UpdateMove() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_ReachedAng] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_UpdateRotation() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_PostRestore] =
-                    eventCallback_t5<idMover?> { obj: T?, start: idEventArg<*>? -> neo.Game.obj.Event_PostRestore(neo.Game.start) } as eventCallback_t5<idMover?>
-                eventCallbacks[Mover.EV_StopMoving] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_StopMoving() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_StopRotating] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_StopRotating() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_Speed] =
-                    eventCallback_t1<idMover?> { obj: T?, speed: idEventArg<*>? -> neo.Game.obj.Event_SetMoveSpeed(neo.Game.speed) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_Time] =
-                    eventCallback_t1<idMover?> { obj: T?, time: idEventArg<*>? -> neo.Game.obj.Event_SetMoveTime(neo.Game.time) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_AccelTime] = eventCallback_t1<idMover?> { obj: T?, time: idEventArg<*>? ->
-                    neo.Game.obj.Event_SetAccellerationTime(neo.Game.time)
-                } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_DecelTime] = eventCallback_t1<idMover?> { obj: T?, time: idEventArg<*>? ->
-                    neo.Game.obj.Event_SetDecelerationTime(neo.Game.time)
-                } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_MoveTo] =
-                    eventCallback_t1<idMover?> { obj: T?, ent: idEventArg<*>? -> neo.Game.obj.Event_MoveTo(neo.Game.ent) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_MoveToPos] =
-                    eventCallback_t1<idMover?> { obj: T?, pos: idEventArg<*>? -> neo.Game.obj.Event_MoveToPos(neo.Game.pos) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_Move] =
-                    eventCallback_t2<idMover?> { obj: T?, angle: idEventArg<*>? -> neo.Game.obj.Event_MoveDir(neo.Game.angle) } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_MoveAccelerateTo] =
-                    eventCallback_t2<idMover?> { obj: T?, speed: idEventArg<*>? ->
-                        neo.Game.obj.Event_MoveAccelerateTo(neo.Game.speed)
-                    } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_MoveDecelerateTo] =
-                    eventCallback_t2<idMover?> { obj: T?, speed: idEventArg<*>? ->
-                        neo.Game.obj.Event_MoveDecelerateTo(neo.Game.speed)
-                    } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_RotateDownTo] =
-                    eventCallback_t2<idMover?> { obj: T?, _axis: idEventArg<*>? -> neo.Game.obj.Event_RotateDownTo(neo.Game._axis) } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_RotateUpTo] =
-                    eventCallback_t2<idMover?> { obj: T?, _axis: idEventArg<*>? -> neo.Game.obj.Event_RotateUpTo(neo.Game._axis) } as eventCallback_t2<idMover?>
-                eventCallbacks[Mover.EV_RotateTo] =
-                    eventCallback_t1<idMover?> { obj: T?, angles: idEventArg<*>? -> neo.Game.obj.Event_RotateTo(neo.Game.angles) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_Rotate] =
-                    eventCallback_t1<idMover?> { obj: T?, angles: idEventArg<*>? -> neo.Game.obj.Event_Rotate(neo.Game.angles) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_RotateOnce] =
-                    eventCallback_t1<idMover?> { obj: T?, angles: idEventArg<*>? -> neo.Game.obj.Event_RotateOnce(neo.Game.angles) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_Bob] =
-                    eventCallback_t3<idMover?> { obj: T?, speed: idEventArg<*>? -> neo.Game.obj.Event_Bob(neo.Game.speed) } as eventCallback_t3<idMover?>
-                eventCallbacks[Mover.EV_Sway] =
-                    eventCallback_t3<idMover?> { obj: T?, speed: idEventArg<*>? -> neo.Game.obj.Event_Sway(neo.Game.speed) } as eventCallback_t3<idMover?>
-                eventCallbacks[Mover.EV_Mover_OpenPortal] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_OpenPortal() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_Mover_ClosePortal] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_ClosePortal() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_AccelSound] =
-                    eventCallback_t1<idMover?> { obj: T?, sound: idEventArg<*>? -> neo.Game.obj.Event_SetAccelSound(neo.Game.sound) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_DecelSound] =
-                    eventCallback_t1<idMover?> { obj: T?, sound: idEventArg<*>? -> neo.Game.obj.Event_SetDecelSound(neo.Game.sound) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_MoveSound] =
-                    eventCallback_t1<idMover?> { obj: T?, sound: idEventArg<*>? -> neo.Game.obj.Event_SetMoveSound(neo.Game.sound) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_Mover_InitGuiTargets] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_InitGuiTargets() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_EnableSplineAngles] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_EnableSplineAngles() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_DisableSplineAngles] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_DisableSplineAngles() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_RemoveInitialSplineAngles] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_RemoveInitialSplineAngles() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_StartSpline] =
-                    eventCallback_t1<idMover?> { obj: T?, _splineEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_StartSpline(neo.Game._splineEntity)
-                    } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_StopSpline] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_StopSpline() } as eventCallback_t0<idMover?>
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_SetCallback }
+                eventCallbacks[EV_TeamBlocked] =
+                    eventCallback_t2<idMover> { obj: Any?, blockedPart: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        idMover::Event_TeamBlocked
+                    }
+                eventCallbacks[EV_PartBlocked] =
+                    eventCallback_t1<idMover> { obj: Any?, blockingEntity: idEventArg<*>? ->
+                        idMover::Event_PartBlocked
+                    }
+                eventCallbacks[EV_ReachedPos] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_UpdateMove }
+                eventCallbacks[EV_ReachedAng] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_UpdateRotation }
+                eventCallbacks[EV_PostRestore] =
+                    eventCallback_t5<idMover> { obj: Any?, start: idEventArg<*>?, total: idEventArg<*>?, accel: idEventArg<*>?,
+                                                decel: idEventArg<*>?, useSplineAng: idEventArg<*>? ->
+                        idMover::Event_PostRestore
+                    }
+                eventCallbacks[EV_StopMoving] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopMoving }
+                eventCallbacks[EV_StopRotating] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopRotating }
+                eventCallbacks[EV_Speed] =
+                    eventCallback_t1<idMover> { obj: Any?, speed: idEventArg<*>? -> idMover::Event_SetMoveSpeed }
+                eventCallbacks[EV_Time] =
+                    eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? -> idMover::Event_SetMoveTime }
+                eventCallbacks[EV_AccelTime] = eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? ->
+                    idMover::Event_SetAccellerationTime
+                }
+                eventCallbacks[EV_DecelTime] = eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? ->
+                    idMover::Event_SetDecelerationTime
+                }
+                eventCallbacks[EV_MoveTo] =
+                    eventCallback_t1<idMover> { obj: Any?, ent: idEventArg<*>? -> idMover::Event_MoveTo }
+                eventCallbacks[EV_MoveToPos] =
+                    eventCallback_t1<idMover> { obj: Any?, pos: idEventArg<*>? -> idMover::Event_MoveToPos }
+                eventCallbacks[EV_Move] =
+                    eventCallback_t2<idMover> { obj: Any?, angle: idEventArg<*>?, distance: idEventArg<*>? -> idMover::Event_MoveDir }
+                eventCallbacks[EV_MoveAccelerateTo] =
+                    eventCallback_t2<idMover> { obj: Any?, speed: idEventArg<*>?, time: idEventArg<*>? ->
+                        idMover::Event_MoveAccelerateTo
+                    }
+                eventCallbacks[EV_MoveDecelerateTo] =
+                    eventCallback_t2<idMover> { obj: Any?, speed: idEventArg<*>?, time: idEventArg<*>? ->
+                        idMover::Event_MoveDecelerateTo
+                    }
+                eventCallbacks[EV_RotateDownTo] =
+                    eventCallback_t2<idMover> { obj: Any?, _axis: idEventArg<*>?, angle: idEventArg<*>? -> idMover::Event_RotateDownTo }
+                eventCallbacks[EV_RotateUpTo] =
+                    eventCallback_t2<idMover> { obj: Any?, _axis: idEventArg<*>?, angle: idEventArg<*>? -> idMover::Event_RotateUpTo }
+                eventCallbacks[EV_RotateTo] =
+                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_RotateTo }
+                eventCallbacks[EV_Rotate] =
+                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_Rotate }
+                eventCallbacks[EV_RotateOnce] =
+                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_RotateOnce }
+                eventCallbacks[EV_Bob] =
+                    eventCallback_t3<idMover> { obj: Any?, speed: idEventArg<*>?, phase: idEventArg<*>?, depth: idEventArg<*>? -> idMover::Event_Bob }
+                eventCallbacks[EV_Sway] =
+                    eventCallback_t3<idMover> { obj: Any?, speed: idEventArg<*>?, phase: idEventArg<*>?, _depth: idEventArg<*>? -> idMover::Event_Sway }
+                eventCallbacks[EV_Mover_OpenPortal] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_OpenPortal }
+                eventCallbacks[EV_Mover_ClosePortal] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_ClosePortal }
+                eventCallbacks[EV_AccelSound] =
+                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetAccelSound }
+                eventCallbacks[EV_DecelSound] =
+                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetDecelSound }
+                eventCallbacks[EV_MoveSound] =
+                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetMoveSound }
+                eventCallbacks[EV_Mover_InitGuiTargets] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_InitGuiTargets }
+                eventCallbacks[EV_EnableSplineAngles] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_EnableSplineAngles }
+                eventCallbacks[EV_DisableSplineAngles] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_DisableSplineAngles }
+                eventCallbacks[EV_RemoveInitialSplineAngles] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_RemoveInitialSplineAngles }
+                eventCallbacks[EV_StartSpline] =
+                    eventCallback_t1<idMover> { obj: Any?, _splineEntity: idEventArg<*>? ->
+                        idMover::Event_StartSpline
+                    }
+                eventCallbacks[EV_StopSpline] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopSpline }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idMover?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Activate(neo.Game.activator) } as eventCallback_t1<idMover?>
-                eventCallbacks[Mover.EV_IsMoving] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_IsMoving() } as eventCallback_t0<idMover?>
-                eventCallbacks[Mover.EV_IsRotating] =
-                    eventCallback_t0<idMover?> { obj: T? -> neo.Game.obj.Event_IsRotating() } as eventCallback_t0<idMover?>
+                    eventCallback_t1<idMover> { obj: Any?, activator: idEventArg<*>? -> idMover::Event_Activate }
+                eventCallbacks[EV_IsMoving] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_IsMoving }
+                eventCallbacks[EV_IsRotating] =
+                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_IsRotating }
             }
         }
 
         //
-        private val guiTargets: idList<idEntityPtr<idEntity?>?>? =
-            idList<idEntityPtr<*>?>(idEntityPtr<idEntity?>().javaClass) as idList<idEntityPtr<idEntity?>?>
-        protected var move: moveState_t?
+        private val guiTargets: ArrayList<idEntityPtr<idEntity>> =
+            ArrayList<idEntityPtr<idEntity>>()
+        protected var move: moveState_t
 
         //
-        protected var physicsObj: idPhysics_Parametric?
+        protected var physicsObj: idPhysics_Parametric
         private var acceltime: Int
-        private var angle_delta: idAngles?
+        private var angle_delta: idAngles
 
         //
         private var   /*qhandle_t*/areaPortal // 0 = no portal
                 : Int
         private var damage: Float
         private var deceltime: Int
-        private var dest_angles: idAngles?
+        private var dest_angles: idAngles
         private val dest_position: idVec3
-        private var lastCommand: moverCommand_t?
+        private var lastCommand: moverCommand_t = moverCommand_t.MOVER_NONE
         private val move_delta: idVec3
         private var move_speed: Float
 
@@ -294,12 +300,12 @@ object Mover {
         private var move_time: Int
 
         //
-        private val rot: rotationState_t?
+        private val rot: rotationState_t
         private var rotate_thread: Int
-        private val splineEnt: idEntityPtr<idEntity?>?
+        private val splineEnt: idEntityPtr<idEntity>
         private var stopRotation: Boolean
         private var useSplineAngles: Boolean
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -320,7 +326,7 @@ object Mover {
             dest_position.set(GetPhysics().GetOrigin())
             dest_angles = GetPhysics().GetAxis().ToAngles()
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -351,8 +357,8 @@ object Mover {
             // see if we are on an areaportal
             areaPortal = Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds())
             if (spawnArgs.MatchPrefix("guiTarget") != null) {
-                if (Game_local.gameLocal.GameState() == Game_local.gameState_t.GAMESTATE_STARTUP) {
-                    PostEventMS(Mover.EV_FindGuiTargets, 0)
+                if (Game_local.gameLocal.GameState() == gameState_t.GAMESTATE_STARTUP) {
+                    PostEventMS(EV_FindGuiTargets, 0)
                 } else {
                     // not during spawn, so it's ok to get the targets
                     FindGuiTargets()
@@ -397,14 +403,14 @@ object Mover {
             if (areaPortal > 0) {
                 savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
             }
-            savefile.WriteInt(guiTargets.Num())
+            savefile.WriteInt(guiTargets.size)
             i = 0
-            while (i < guiTargets.Num()) {
-                guiTargets.get(i).Save(savefile)
+            while (i < guiTargets.size) {
+                guiTargets[i].Save(savefile)
                 i++
             }
-            if (splineEnt.GetEntity() != null && splineEnt.GetEntity().GetSpline() != null) {
-                val spline = physicsObj.GetSpline()
+            if (splineEnt.GetEntity() != null && splineEnt.GetEntity()!!.GetSpline() != null) {
+                val spline = physicsObj.GetSpline()!!
                 savefile.WriteBool(true)
                 splineEnt.Save(savefile)
                 savefile.WriteInt(spline.GetTime(0).toInt())
@@ -457,16 +463,16 @@ object Mover {
                 savefile.ReadInt(portalState)
                 Game_local.gameLocal.SetPortalState(areaPortal, portalState._val)
             }
-            guiTargets.Clear()
+            guiTargets.clear()
             savefile.ReadInt(num)
-            guiTargets.SetNum(num._val)
+            guiTargets.ensureCapacity(num._val)
             i = 0
             while (i < num._val) {
-                guiTargets.get(i).Restore(savefile)
+                guiTargets[i].Restore(savefile)
                 i++
             }
             savefile.ReadBool(hasSpline)
-            if (hasSpline.isVal) {
+            if (hasSpline._val) {
                 val starttime = CInt()
                 val totaltime = CInt()
                 val accel = CInt()
@@ -478,7 +484,7 @@ object Mover {
                 savefile.ReadInt(accel)
                 savefile.ReadInt(decel)
                 savefile.ReadInt(useAngles)
-                PostEventMS(Mover.EV_PostRestore, 0, starttime, totaltime, accel, decel, useAngles)
+                PostEventMS(EV_PostRestore, 0, starttime, totaltime, accel, decel, useAngles)
             }
         }
 
@@ -561,7 +567,7 @@ object Mover {
             }
         }
 
-        protected fun Event_PartBlocked(blockingEntity: idEventArg<idEntity?>?) {
+        protected fun Event_PartBlocked(blockingEntity: idEventArg<idEntity>) {
             if (damage > 0.0f) {
                 blockingEntity.value.Damage(
                     this,
@@ -590,15 +596,15 @@ object Mover {
         protected fun UpdateMoveSound(stage: moveStage_t?) {
             when (stage) {
                 moveStage_t.ACCELERATION_STAGE -> {
-                    StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
-                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+                    StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
+                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
                 }
                 moveStage_t.LINEAR_STAGE -> {
-                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
                 }
                 moveStage_t.DECELERATION_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
-                    StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
+                    StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
                 }
                 moveStage_t.FINISHED_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
@@ -609,15 +615,15 @@ object Mover {
         protected fun UpdateRotationSound(stage: moveStage_t?) {
             when (stage) {
                 moveStage_t.ACCELERATION_STAGE -> {
-                    StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
-                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+                    StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
+                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
                 }
                 moveStage_t.LINEAR_STAGE -> {
-                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+                    StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
                 }
                 moveStage_t.DECELERATION_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
-                    StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
+                    StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
                 }
                 moveStage_t.FINISHED_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
@@ -625,9 +631,9 @@ object Mover {
             }
         }
 
-        protected fun SetGuiStates(state: String?) {
+        protected fun SetGuiStates(state: String) {
             var i: Int
-            if (guiTargets.Num() != 0) {
+            if (guiTargets.size != 0) {
                 SetGuiState("movestate", state)
             }
             i = 0
@@ -651,10 +657,10 @@ object Mover {
          key/val will be set to any renderEntity->gui's on the list
          ==============================
          */
-        protected fun SetGuiState(key: String?, `val`: String?) {
+        protected fun SetGuiState(key: String, `val`: String) {
             Game_local.gameLocal.Printf("Setting %s to %s\n", key, `val`)
-            for (i in 0 until guiTargets.Num()) {
-                val ent = guiTargets.get(i).GetEntity()
+            for (i in 0 until guiTargets.size) {
+                val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
@@ -680,14 +686,14 @@ object Mover {
                 )
             }
             lastCommand = moverCommand_t.MOVER_NONE
-            idThread.Companion.ObjectMoveDone(move_thread, this)
+            idThread.ObjectMoveDone(move_thread, this)
             move_thread = 0
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
         }
 
         protected fun DoneRotating() {
             lastCommand = moverCommand_t.MOVER_NONE
-            idThread.Companion.ObjectMoveDone(rotate_thread, this)
+            idThread.ObjectMoveDone(rotate_thread, this)
             rotate_thread = 0
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
         }
@@ -710,10 +716,10 @@ object Mover {
             }
 
             // scale times up to whole physics frames
-            at = idPhysics.Companion.SnapTimeToPhysicsFrame(acceltime)
+            at = idPhysics.SnapTimeToPhysicsFrame(acceltime)
             move_time += at - acceltime
             acceltime = at
-            dt = idPhysics.Companion.SnapTimeToPhysicsFrame(deceltime)
+            dt = idPhysics.SnapTimeToPhysicsFrame(deceltime)
             move_time += dt - deceltime
             deceltime = dt
 
@@ -734,7 +740,7 @@ object Mover {
             }
 
             // scale time up to a whole physics frames
-            move_time = idPhysics.Companion.SnapTimeToPhysicsFrame(move_time)
+            move_time = idPhysics.SnapTimeToPhysicsFrame(move_time)
             stage = if (acceltime != 0) {
                 moveStage_t.ACCELERATION_STAGE
             } else if (move_time <= deceltime) {
@@ -747,7 +753,7 @@ object Mover {
             if (at + dt > move_time) {
                 // there's no real correct way to handle this, so we just scale
                 // the times to fit into the move time in the same proportions
-                at = idPhysics.Companion.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
+                at = idPhysics.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
                 dt = move_time - at
             }
             move_delta.set(move_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f)))
@@ -756,7 +762,7 @@ object Mover {
             move.movetime = move_time - at - dt
             move.deceleration = dt
             move.dir.set(move_delta)
-            ProcessEvent(Mover.EV_ReachedPos)
+            ProcessEvent(EV_ReachedPos)
         }
 
         protected fun BeginRotation(thread: idThread?, stopwhendone: Boolean) {
@@ -792,13 +798,13 @@ object Mover {
             }
 
             // scale times up to whole physics frames
-            at = idPhysics.Companion.SnapTimeToPhysicsFrame(acceltime)
+            at = idPhysics.SnapTimeToPhysicsFrame(acceltime)
             move_time += at - acceltime
             acceltime = at
-            dt = idPhysics.Companion.SnapTimeToPhysicsFrame(deceltime)
+            dt = idPhysics.SnapTimeToPhysicsFrame(deceltime)
             move_time += dt - deceltime
             deceltime = dt
-            move_time = idPhysics.Companion.SnapTimeToPhysicsFrame(move_time)
+            move_time = idPhysics.SnapTimeToPhysicsFrame(move_time)
             stage = if (acceltime != 0) {
                 moveStage_t.ACCELERATION_STAGE
             } else if (move_time <= deceltime) {
@@ -811,7 +817,7 @@ object Mover {
             if (at + dt > move_time) {
                 // there's no real correct way to handle this, so we just scale
                 // the times to fit into the move time in the same proportions
-                at = idPhysics.Companion.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
+                at = idPhysics.SnapTimeToPhysicsFrame(at * move_time / (at + dt))
                 dt = move_time - at
             }
             angle_delta = angle_delta.times(1000.0f / (move_time.toFloat() - (at + dt) * 0.5f))
@@ -821,7 +827,7 @@ object Mover {
             rot.movetime = move_time - at - dt
             rot.deceleration = dt
             rot.rot = angle_delta
-            ProcessEvent(Mover.EV_ReachedAng)
+            ProcessEvent(EV_ReachedAng)
         }
 
         private fun VectorForDir(dir: Float, vec: idVec3) {
@@ -860,12 +866,12 @@ object Mover {
                 DIR_REL_DOWN -> vec.set(0f, 0f, -1f)
                 DIR_REL_LEFT -> {
                     physicsObj.GetLocalAngles(ang)
-                    ang.ToVectors(null, vec)
+                    ang.ToVectors(getVec3_origin(), vec)
                     vec.timesAssign(-1f)
                 }
                 DIR_REL_RIGHT -> {
                     physicsObj.GetLocalAngles(ang)
-                    ang.ToVectors(null, vec)
+                    ang.ToVectors(getVec3_origin(), vec)
                 }
                 DIR_REL_FORWARD -> {
                     physicsObj.GetLocalAngles(ang)
@@ -886,18 +892,18 @@ object Mover {
         private fun Event_SetCallback() {
             if (lastCommand == moverCommand_t.MOVER_ROTATING && 0 == rotate_thread) {
                 lastCommand = moverCommand_t.MOVER_NONE
-                rotate_thread = idThread.Companion.CurrentThreadNum()
-                idThread.Companion.ReturnInt(true)
+                rotate_thread = idThread.CurrentThreadNum()
+                idThread.ReturnInt(true)
             } else if ((lastCommand == moverCommand_t.MOVER_MOVING || lastCommand == moverCommand_t.MOVER_SPLINE) && 0 == move_thread) {
                 lastCommand = moverCommand_t.MOVER_NONE
-                move_thread = idThread.Companion.CurrentThreadNum()
-                idThread.Companion.ReturnInt(true)
+                move_thread = idThread.CurrentThreadNum()
+                idThread.ReturnInt(true)
             } else {
-                idThread.Companion.ReturnInt(false)
+                idThread.ReturnInt(false)
             }
         }
 
-        private fun Event_TeamBlocked(blockedPart: idEventArg<idEntity?>?, blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_TeamBlocked(blockedPart: idEventArg<idEntity>, blockingEntity: idEventArg<idEntity>) {
             if (SysCvar.g_debugMover.GetBool()) {
                 Game_local.gameLocal.Printf(
                     "%d: '%s' stopped due to team member '%s' blocked by '%s'\n",
@@ -1076,87 +1082,87 @@ object Mover {
             }
         }
 
-        private fun Event_SetMoveSpeed(speed: idEventArg<Float?>?) {
+        private fun Event_SetMoveSpeed(speed: idEventArg<Float>) {
             if (speed.value <= 0) {
-                idGameLocal.Companion.Error("Cannot set speed less than or equal to 0.")
+                idGameLocal.Error("Cannot set speed less than or equal to 0.")
             }
             move_speed = speed.value
             move_time = 0 // move_time is calculated for each move when move_speed is non-0
         }
 
-        private fun Event_SetMoveTime(time: idEventArg<Float?>?) {
+        private fun Event_SetMoveTime(time: idEventArg<Float>) {
             if (time.value <= 0) {
-                idGameLocal.Companion.Error("Cannot set time less than or equal to 0.")
+                idGameLocal.Error("Cannot set time less than or equal to 0.")
             }
             move_speed = 0f
             move_time = Math_h.SEC2MS(time.value).toInt()
         }
 
-        private fun Event_SetDecelerationTime(time: idEventArg<Float?>?) {
+        private fun Event_SetDecelerationTime(time: idEventArg<Float>) {
             if (time.value < 0) {
-                idGameLocal.Companion.Error("Cannot set deceleration time less than 0.")
+                idGameLocal.Error("Cannot set deceleration time less than 0.")
             }
             deceltime = Math_h.SEC2MS(time.value).toInt()
         }
 
-        private fun Event_SetAccellerationTime(time: idEventArg<Float?>?) {
+        private fun Event_SetAccellerationTime(time: idEventArg<Float>) {
             if (time.value < 0) {
-                idGameLocal.Companion.Error("Cannot set acceleration time less than 0.")
+                idGameLocal.Error("Cannot set acceleration time less than 0.")
             }
             acceltime = Math_h.SEC2MS(time.value).toInt()
         }
 
-        private fun Event_MoveTo(ent: idEventArg<idEntity?>?) {
+        private fun Event_MoveTo(ent: idEventArg<idEntity>) {
             if (null == ent.value) {
                 Game_local.gameLocal.Warning("Entity not found")
             }
             dest_position.set(GetLocalCoordinates(ent.value.GetPhysics().GetOrigin()))
-            BeginMove(idThread.Companion.CurrentThread())
+            BeginMove(idThread.CurrentThread())
         }
 
-        private fun Event_MoveToPos(pos: idEventArg<idVec3>?) {
+        private fun Event_MoveToPos(pos: idEventArg<idVec3>) {
             dest_position.set(GetLocalCoordinates(pos.value))
             BeginMove(null)
         }
 
-        private fun Event_MoveDir(angle: idEventArg<Float?>?, distance: idEventArg<Float?>?) {
+        private fun Event_MoveDir(angle: idEventArg<Float>, distance: idEventArg<Float>) {
             val dir = idVec3()
             val org = idVec3()
             physicsObj.GetLocalOrigin(org)
             VectorForDir(angle.value, dir)
-            dest_position.set(org.oPlus(dir.times(distance.value)))
-            BeginMove(idThread.Companion.CurrentThread())
+            dest_position.set(org.plus(dir.times(distance.value)))
+            BeginMove(idThread.CurrentThread())
         }
 
-        private fun Event_MoveAccelerateTo(speed: idEventArg<Float?>?, time: idEventArg<Float?>?) {
+        private fun Event_MoveAccelerateTo(speed: idEventArg<Float>, time: idEventArg<Float>) {
             val v: Float
             val org = idVec3()
             val dir = idVec3()
             val at: Int
             if (time.value < 0) {
-                idGameLocal.Companion.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.")
+                idGameLocal.Error("idMover::Event_MoveAccelerateTo: cannot set acceleration time less than 0.")
             }
             dir.set(physicsObj.GetLinearVelocity())
             v = dir.Normalize()
 
             // if not moving already
             if (v == 0.0f) {
-                idGameLocal.Companion.Error("idMover::Event_MoveAccelerateTo: not moving.")
+                idGameLocal.Error("idMover::Event_MoveAccelerateTo: not moving.")
             }
 
             // if already moving faster than the desired speed
             if (v >= speed.value) {
                 return
             }
-            at = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(time.value).toInt())
+            at = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(time.value).toInt())
             lastCommand = moverCommand_t.MOVER_MOVING
             physicsObj.GetLocalOrigin(org)
             move.stage = moveStage_t.ACCELERATION_STAGE
             move.acceleration = at
             move.movetime = 0
             move.deceleration = 0
-            StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
-            StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+            StartSound("snd_accel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
+            StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
             physicsObj.SetLinearExtrapolation(
                 Extrapolate.EXTRAPOLATION_ACCELLINEAR,
                 Game_local.gameLocal.time,
@@ -1167,35 +1173,35 @@ object Mover {
             )
         }
 
-        private fun Event_MoveDecelerateTo(speed: idEventArg<Float?>?, time: idEventArg<Float?>?) {
+        private fun Event_MoveDecelerateTo(speed: idEventArg<Float>, time: idEventArg<Float>) {
             val v: Float
             val org = idVec3()
             val dir = idVec3()
             val dt: Int
             if (time.value < 0) {
-                idGameLocal.Companion.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.")
+                idGameLocal.Error("idMover::Event_MoveDecelerateTo: cannot set deceleration time less than 0.")
             }
             dir.set(physicsObj.GetLinearVelocity())
             v = dir.Normalize()
 
             // if not moving already
             if (v == 0.0f) {
-                idGameLocal.Companion.Error("idMover::Event_MoveDecelerateTo: not moving.")
+                idGameLocal.Error("idMover::Event_MoveDecelerateTo: not moving.")
             }
 
             // if already moving slower than the desired speed
             if (v <= speed.value) {
                 return
             }
-            dt = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(time.value).toInt())
+            dt = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(time.value).toInt())
             lastCommand = moverCommand_t.MOVER_MOVING
             physicsObj.GetLocalOrigin(org)
             move.stage = moveStage_t.DECELERATION_STAGE
             move.acceleration = 0
             move.movetime = 0
             move.deceleration = dt
-            StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false, null)
-            StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false, null)
+            StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
+            StartSound("snd_move", gameSoundChannel_t.SND_CHANNEL_BODY, 0, false)
             physicsObj.SetLinearExtrapolation(
                 Extrapolate.EXTRAPOLATION_DECELLINEAR,
                 Game_local.gameLocal.time,
@@ -1206,61 +1212,61 @@ object Mover {
             )
         }
 
-        private fun Event_RotateDownTo(_axis: idEventArg<Int?>?, angle: idEventArg<Float?>?) {
+        private fun Event_RotateDownTo(_axis: idEventArg<Int>, angle: idEventArg<Float>) {
             val axis: Int = _axis.value
             val ang = idAngles()
             if (axis < 0 || axis > 2) {
-                idGameLocal.Companion.Error("Invalid axis")
+                idGameLocal.Error("Invalid axis")
             }
             physicsObj.GetLocalAngles(ang)
             dest_angles.set(axis, angle.value)
-            if (dest_angles.get(axis) > ang.get(axis)) {
+            if (dest_angles[axis] > ang[axis]) {
                 dest_angles.minusAssign(axis, 360f)
             }
-            BeginRotation(idThread.Companion.CurrentThread(), true)
+            BeginRotation(idThread.CurrentThread(), true)
         }
 
-        private fun Event_RotateUpTo(_axis: idEventArg<Int?>?, angle: idEventArg<Float?>?) {
+        private fun Event_RotateUpTo(_axis: idEventArg<Int>, angle: idEventArg<Float>) {
             val axis: Int = _axis.value
             val ang = idAngles()
             if (axis < 0 || axis > 2) {
-                idGameLocal.Companion.Error("Invalid axis")
+                idGameLocal.Error("Invalid axis")
             }
             physicsObj.GetLocalAngles(ang)
             dest_angles.set(axis, angle.value)
-            if (dest_angles.get(axis) < ang.get(axis)) {
+            if (dest_angles[axis] < ang[axis]) {
                 dest_angles.plusAssign(axis, 360f)
             }
-            BeginRotation(idThread.Companion.CurrentThread(), true)
+            BeginRotation(idThread.CurrentThread(), true)
         }
 
-        private fun Event_RotateTo(angles: idEventArg<idAngles?>?) {
+        private fun Event_RotateTo(angles: idEventArg<idAngles>) {
             dest_angles.set(angles.value)
-            BeginRotation(idThread.Companion.CurrentThread(), true)
+            BeginRotation(idThread.CurrentThread(), true)
         }
 
-        private fun Event_Rotate(angles: idEventArg<idVec3>?) {
+        private fun Event_Rotate(angles: idEventArg<idVec3>) {
             val ang = idAngles()
             if (rotate_thread != 0) {
                 DoneRotating()
             }
             physicsObj.GetLocalAngles(ang)
             dest_angles =
-                ang.plus(angles.value.times((move_time - (acceltime + deceltime) / 2).toFloat()).oMultiply(0.001f))
-            BeginRotation(idThread.Companion.CurrentThread(), false)
+                ang.plus(angles.value.times((move_time - (acceltime + deceltime) / 2).toFloat()).times(0.001f))
+            BeginRotation(idThread.CurrentThread(), false)
         }
 
-        private fun Event_RotateOnce(angles: idEventArg<idVec3>?) {
+        private fun Event_RotateOnce(angles: idEventArg<idVec3>) {
             val ang = idAngles()
             if (rotate_thread != 0) {
                 DoneRotating()
             }
             physicsObj.GetLocalAngles(ang)
             dest_angles = ang.plus(angles.value)
-            BeginRotation(idThread.Companion.CurrentThread(), true)
+            BeginRotation(idThread.CurrentThread(), true)
         }
 
-        private fun Event_Bob(speed: idEventArg<Float?>?, phase: idEventArg<Float?>?, depth: idEventArg<idVec3>?) {
+        private fun Event_Bob(speed: idEventArg<Float>, phase: idEventArg<Float>, depth: idEventArg<idVec3>) {
             val org = idVec3()
             physicsObj.GetLocalOrigin(org)
             physicsObj.SetLinearExtrapolation(
@@ -1273,7 +1279,7 @@ object Mover {
             )
         }
 
-        private fun Event_Sway(speed: idEventArg<Float?>?, phase: idEventArg<Float?>?, _depth: idEventArg<idVec3>?) {
+        private fun Event_Sway(speed: idEventArg<Float>, phase: idEventArg<Float>, _depth: idEventArg<idVec3>) {
             val depth = idAngles(_depth.value)
             val ang = idAngles()
             val angSpeed: idAngles?
@@ -1281,7 +1287,7 @@ object Mover {
             physicsObj.GetLocalAngles(ang)
             assert(speed.value > 0.0f)
             duration =
-                idMath.Sqrt(depth.get(0) * depth.get(0) + depth.get(1) * depth.get(1) + depth.get(2) * depth.get(2)) / speed.value
+                idMath.Sqrt(depth[0] * depth[0] + depth[1] * depth[1] + depth[2] * depth[2]) / speed.value
             angSpeed = depth.div(duration * idMath.SQRT_1OVER2)
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_DECELSINE or Extrapolate.EXTRAPOLATION_NOSTOP,
@@ -1310,7 +1316,7 @@ object Mover {
         }
 
         private fun Event_InitGuiTargets() {
-            SetGuiStates(Mover.guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_POS1)])
+            SetGuiStates(guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_POS1)])
         }
 
         private fun Event_EnableSplineAngles() {
@@ -1339,7 +1345,7 @@ object Mover {
             )
         }
 
-        private fun Event_StartSpline(_splineEntity: idEventArg<idEntity?>?) {
+        private fun Event_StartSpline(_splineEntity: idEventArg<idEntity?>) {
             val splineEntity = _splineEntity.value
             val spline: idCurve_Spline<idVec3>?
             if (null == splineEntity) {
@@ -1380,14 +1386,14 @@ object Mover {
             splineEnt.oSet(null)
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             Show()
-            Event_StartSpline(idEventArg.Companion.toArg(this))
+            Event_StartSpline(idEventArg.toArg(this))
         }
 
         private fun Event_PostRestore(
-            start: idEventArg<Int?>?, total: idEventArg<Int?>?, accel: idEventArg<Int?>?,
-            decel: idEventArg<Int?>?, useSplineAng: idEventArg<Int?>?
+            start: idEventArg<Int>, total: idEventArg<Int>, accel: idEventArg<Int>,
+            decel: idEventArg<Int>, useSplineAng: idEventArg<Int>
         ) {
             val spline: idCurve_Spline<idVec3>
             val splineEntity = splineEnt.GetEntity()
@@ -1396,8 +1402,8 @@ object Mover {
                 idLib.common.Warning("Invalid spline entity during restore\n")
                 return
             }
-            spline = splineEntity.GetSpline()
-            spline.MakeUniform(total.value)
+            spline = splineEntity.GetSpline()!!
+            spline.MakeUniform(total.value.toFloat())
             spline.ShiftTime(start.value - spline.GetTime(0))
             physicsObj.SetSpline(spline, accel.value, decel.value, useSplineAng.value != 0)
             physicsObj.SetLinearExtrapolation(
@@ -1411,15 +1417,15 @@ object Mover {
         }
 
         private fun Event_IsMoving() {
-            idThread.Companion.ReturnInt(physicsObj.GetLinearExtrapolationType() != Extrapolate.EXTRAPOLATION_NONE)
+            idThread.ReturnInt(physicsObj.GetLinearExtrapolationType() != Extrapolate.EXTRAPOLATION_NONE)
         }
 
         private fun Event_IsRotating() {
-            idThread.Companion.ReturnInt(physicsObj.GetAngularExtrapolationType() != Extrapolate.EXTRAPOLATION_NONE)
+            idThread.ReturnInt(physicsObj.GetAngularExtrapolationType() != Extrapolate.EXTRAPOLATION_NONE)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -1437,15 +1443,15 @@ object Mover {
             var deceleration = 0
             val dir: idVec3 = idVec3()
             var movetime = 0
-            var stage: moveStage_t? = null
+            var stage: moveStage_t = moveStage_t.ACCELERATION_STAGE
         }
 
         protected class rotationState_t {
             var acceleration = 0
             var deceleration = 0
             var movetime = 0
-            var rot: idAngles? = null
-            var stage: moveStage_t? = null
+            var rot: idAngles = idAngles()
+            var stage: moveStage_t = moveStage_t.ACCELERATION_STAGE
         }
 
         init {
@@ -1483,13 +1489,13 @@ object Mover {
      */
     class idSplinePath  //	CLASS_PROTOTYPE( idSplinePath );
         : idEntity() {
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
     }
 
     class floorInfo_s {
-        var door: idStr? = null
+        var door: idStr = idStr()
         var floor = 0
         val pos: idVec3 = idVec3()
     }
@@ -1504,40 +1510,40 @@ object Mover {
     class idElevator : idMover() {
         companion object {
             // CLASS_PROTOTYPE( idElevator );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             //
             //
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idMover.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idElevator?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Activate(neo.Game.activator)
-                    } as eventCallback_t1<idElevator?>
-                eventCallbacks[Mover.EV_TeamBlocked] =
-                    eventCallback_t2<idElevator?> { obj: T?, blockedEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_TeamBlocked(neo.Game.blockedEntity)
-                    } as eventCallback_t2<idElevator?>
-                eventCallbacks[Mover.EV_PartBlocked] =
-                    eventCallback_t1<idElevator?> { obj: T?, blockingEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_PartBlocked(neo.Game.blockingEntity)
-                    } as eventCallback_t1<idElevator?>
-                eventCallbacks[Mover.EV_PostArrival] =
-                    eventCallback_t0<idElevator?> { obj: T? -> neo.Game.obj.Event_PostFloorArrival() } as eventCallback_t0<idElevator?>
-                eventCallbacks[Mover.EV_GotoFloor] =
-                    eventCallback_t1<idElevator?> { obj: T?, floor: idEventArg<*>? -> neo.Game.obj.Event_GotoFloor(neo.Game.floor) } as eventCallback_t1<idElevator?>
+                    eventCallback_t1<idElevator> { obj: Any?, activator: idEventArg<*>? ->
+                        idElevator::Event_Activate
+                    }
+                eventCallbacks[EV_TeamBlocked] =
+                    eventCallback_t2<idElevator> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        idElevator::Event_TeamBlocked
+                    }
+                eventCallbacks[EV_PartBlocked] =
+                    eventCallback_t1<idElevator> { obj: Any?, blockingEntity: idEventArg<*>? ->
+                        idElevator::Event_PartBlocked
+                    }
+                eventCallbacks[EV_PostArrival] =
+                    eventCallback_t0<idElevator> { obj: Any? -> idElevator::Event_PostFloorArrival }
+                eventCallbacks[EV_GotoFloor] =
+                    eventCallback_t1<idElevator> { obj: Any?, floor: idEventArg<*>? -> idElevator::Event_GotoFloor }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idElevator?> { obj: T?, other: idEventArg<*>? -> neo.Game.obj.Event_Touch(neo.Game.other) } as eventCallback_t2<idElevator?>
+                    eventCallback_t2<idElevator> { obj: Any?, other: idEventArg<*>?, trace: idEventArg<*>? -> idElevator::Event_Touch }
             }
         }
 
         private var controlsDisabled: Boolean
         private var currentFloor: Int
-        private val floorInfo: idList<floorInfo_s?>?
+        private val floorInfo: ArrayList<floorInfo_s>
         private var lastFloor: Int
         private var lastTouchTime: Int
         private var pendingFloor: Int
@@ -1545,7 +1551,7 @@ object Mover {
         private var returnTime: Float
 
         //
-        private var state: elevatorState_t?
+        private var state: elevatorState_t = elevatorState_t.INIT
         override fun Spawn() {
             super.Spawn()
             var str: idStr
@@ -1553,7 +1559,7 @@ object Mover {
             lastFloor = 0
             currentFloor = 0
             pendingFloor = spawnArgs.GetInt("floor", "1")
-            SetGuiStates(if (pendingFloor == 1) Mover.guiBinaryMoverStates[0] else Mover.guiBinaryMoverStates[1])
+            SetGuiStates(if (pendingFloor == 1) guiBinaryMoverStates[0] else guiBinaryMoverStates[1])
             returnTime = spawnArgs.GetFloat("returnTime")
             returnFloor = spawnArgs.GetInt("returnFloor")
             len1 = "floorPos_".length
@@ -1564,25 +1570,25 @@ object Mover {
                 fi.floor = str.toString().toInt()
                 fi.door = idStr(spawnArgs.GetString(Str.va("floorDoor_%d", fi.floor)))
                 fi.pos.set(spawnArgs.GetVector(kv.GetKey().toString()))
-                floorInfo.Append(fi)
+                floorInfo.add(fi)
                 kv = spawnArgs.MatchPrefix("floorPos_", kv)
             }
             lastTouchTime = 0
             state = elevatorState_t.INIT
             BecomeActive(Entity.TH_THINK or Entity.TH_PHYSICS)
-            PostEventMS(Mover.EV_Mover_InitGuiTargets, 0)
+            PostEventMS(EV_Mover_InitGuiTargets, 0)
             controlsDisabled = false
         }
 
         override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(TempDump.etoi(state))
-            savefile.WriteInt(floorInfo.Num())
+            savefile.WriteInt(floorInfo.size)
             i = 0
-            while (i < floorInfo.Num()) {
-                savefile.WriteVec3(floorInfo.get(i).pos)
-                savefile.WriteString(floorInfo.get(i).door.toString())
-                savefile.WriteInt(floorInfo.get(i).floor)
+            while (i < floorInfo.size) {
+                savefile.WriteVec3(floorInfo[i].pos)
+                savefile.WriteString(floorInfo[i].door.toString())
+                savefile.WriteInt(floorInfo[i].floor)
                 i++
             }
             savefile.WriteInt(currentFloor)
@@ -1605,7 +1611,7 @@ object Mover {
                 savefile.ReadVec3(floor.pos)
                 savefile.ReadString(floor.door)
                 floor.floor = savefile.ReadInt()
-                floorInfo.Append(floor)
+                floorInfo.add(floor)
                 i++
             }
             currentFloor = savefile.ReadInt()
@@ -1617,7 +1623,7 @@ object Mover {
             lastTouchTime = savefile.ReadInt()
         }
 
-        override fun HandleSingleGuiCommand(entityGui: idEntity?, src: idLexer?): Boolean {
+        override fun HandleSingleGuiCommand(entityGui: idEntity?, src: idLexer): Boolean {
             val token = idToken()
             if (controlsDisabled) {
                 return false
@@ -1625,7 +1631,7 @@ object Mover {
             if (!src.ReadToken(token)) {
                 return false
             }
-            if (token == ";") {
+            if (token.toString() == ";") {
                 return false
             }
             if (token.Icmp("changefloor") == 0) {
@@ -1638,9 +1644,9 @@ object Mover {
                     } else {
                         val door = GetDoor(spawnArgs.GetString("innerdoor"))
                         if (door != null && door.IsOpen()) {
-                            PostEventSec(Mover.EV_GotoFloor, 0.5f, newFloor)
+                            PostEventSec(EV_GotoFloor, 0.5f, newFloor)
                         } else {
-                            ProcessEvent(Mover.EV_GotoFloor, newFloor)
+                            ProcessEvent(EV_GotoFloor, newFloor)
                         }
                     }
                     return true
@@ -1650,13 +1656,13 @@ object Mover {
             return false
         }
 
-        fun Event_GotoFloor(floor: idEventArg<Int?>?) {
+        fun Event_GotoFloor(floor: idEventArg<Int>) {
             val fi = GetFloorInfo(floor.value)
             if (fi != null) {
                 val door = GetDoor(spawnArgs.GetString("innerdoor"))
                 if (door != null) {
                     if (door.IsBlocked() || door.IsOpen()) {
-                        PostEventSec(Mover.EV_GotoFloor, 0.5f, floor)
+                        PostEventSec(EV_GotoFloor, 0.5f, floor)
                         return
                     }
                 }
@@ -1668,9 +1674,9 @@ object Mover {
         }
 
         fun GetFloorInfo(floor: Int): floorInfo_s? {
-            for (i in 0 until floorInfo.Num()) {
-                if (floorInfo.get(i).floor == floor) {
-                    return floorInfo.get(i)
+            for (i in 0 until floorInfo.size) {
+                if (floorInfo[i].floor == floor) {
+                    return floorInfo[i]
                 }
             }
             return null
@@ -1694,7 +1700,7 @@ object Mover {
                 kv = spawnArgs.MatchPrefix("statusGui", kv)
             }
             if (spawnArgs.GetInt("pauseOnFloor", "-1") == currentFloor) {
-                PostEventSec(Mover.EV_PostArrival, spawnArgs.GetFloat("pauseTime"))
+                PostEventSec(EV_PostArrival, spawnArgs.GetFloat("pauseTime"))
             } else {
                 Event_PostFloorArrival()
             }
@@ -1718,7 +1724,7 @@ object Mover {
                 }
                 kv = spawnArgs.MatchPrefix("statusGui", kv)
             }
-            SetGuiStates(if (pendingFloor == 1) Mover.guiBinaryMoverStates[3] else Mover.guiBinaryMoverStates[2])
+            SetGuiStates(if (pendingFloor == 1) guiBinaryMoverStates[3] else guiBinaryMoverStates[2])
             super.BeginMove(thread)
         }
 
@@ -1727,7 +1733,7 @@ object Mover {
         //
         //        protected void GetLocalTriggerPosition();
         //
-        protected fun Event_Touch(other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        protected fun Event_Touch(other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             if (Game_local.gameLocal.time < lastTouchTime + 2000) {
                 return
             }
@@ -1740,16 +1746,16 @@ object Mover {
             }
             val triggerFloor = spawnArgs.GetInt("triggerFloor")
             if (spawnArgs.GetBool("trigger") && triggerFloor != currentFloor) {
-                PostEventSec(Mover.EV_GotoFloor, 0.25f, triggerFloor)
+                PostEventSec(EV_GotoFloor, 0.25f, triggerFloor)
             }
         }
 
-        private fun GetDoor(name: String?): idDoor? {
+        private fun GetDoor(name: String): idDoor? {
             val ent: idEntity?
-            val master: idEntity
+            val master: idMover_Binary?
             var doorEnt: idDoor?
             doorEnt = null
-            if (name != null && !name.isEmpty()) {
+            if (name != null && !name.isNullOrEmpty()) {
                 ent = Game_local.gameLocal.FindEntity(name)
                 if (ent != null && ent is idDoor) {
                     doorEnt = ent
@@ -1778,13 +1784,13 @@ object Mover {
                     doorEnt.spawnArgs.Set("snd_close", "")
                     doorEnt.spawnArgs.Set("snd_opened", "")
                 }
-                for (i in 0 until floorInfo.Num()) {
-                    val door = GetDoor(floorInfo.get(i).door.toString())
+                for (i in 0 until floorInfo.size) {
+                    val door = GetDoor(floorInfo[i].door.toString())
                     door?.SetCompanion(doorEnt)
                 }
-                Event_GotoFloor(idEventArg.Companion.toArg(pendingFloor))
+                Event_GotoFloor(idEventArg.toArg(pendingFloor))
                 DisableAllDoors()
-                SetGuiStates(if (pendingFloor == 1) Mover.guiBinaryMoverStates[0] else Mover.guiBinaryMoverStates[1])
+                SetGuiStates(if (pendingFloor == 1) guiBinaryMoverStates[0] else guiBinaryMoverStates[1])
             } else if (state == elevatorState_t.WAITING_ON_DOORS) {
                 state = if (doorEnt != null) {
                     if (doorEnt.IsOpen()) elevatorState_t.WAITING_ON_DOORS else elevatorState_t.IDLE
@@ -1820,8 +1826,8 @@ object Mover {
         private fun CloseAllDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Close()
-            for (i in 0 until floorInfo.Num()) {
-                door = GetDoor(floorInfo.get(i).door.toString())
+            for (i in 0 until floorInfo.size) {
+                door = GetDoor(floorInfo[i].door.toString())
                 door?.Close()
             }
         }
@@ -1829,8 +1835,8 @@ object Mover {
         private fun DisableAllDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(false)
-            for (i in 0 until floorInfo.Num()) {
-                door = GetDoor(floorInfo.get(i).door.toString())
+            for (i in 0 until floorInfo.size) {
+                door = GetDoor(floorInfo[i].door.toString())
                 door?.Enable(false)
             }
         }
@@ -1838,9 +1844,9 @@ object Mover {
         private fun EnableProperDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(true)
-            for (i in 0 until floorInfo.Num()) {
-                if (floorInfo.get(i).floor == currentFloor) {
-                    door = GetDoor(floorInfo.get(i).door.toString())
+            for (i in 0 until floorInfo.size) {
+                if (floorInfo[i].floor == currentFloor) {
+                    door = GetDoor(floorInfo[i].door.toString())
                     if (door != null) {
                         door.Enable(true)
                         break
@@ -1849,12 +1855,12 @@ object Mover {
             }
         }
 
-        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity?>?, blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity>, blockingEntity: idEventArg<idEntity>) {
             if (blockedEntity.value === this) {
-                Event_GotoFloor(idEventArg.Companion.toArg(lastFloor))
+                Event_GotoFloor(idEventArg.toArg(lastFloor))
             } else if (blockedEntity != null && blockedEntity.value is idDoor) {
                 // open the inner doors if one is blocked
-                val blocked = blockedEntity.value as idDoor?
+                val blocked = blockedEntity.value as idDoor
                 val door = GetDoor(spawnArgs.GetString("innerdoor"))
                 if (door != null && blocked.GetMoveMaster() === door.GetMoveMaster()) { //TODO:equalds
                     door.SetBlocked(true)
@@ -1864,25 +1870,25 @@ object Mover {
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             val triggerFloor = spawnArgs.GetInt("triggerFloor")
             if (spawnArgs.GetBool("trigger") && triggerFloor != currentFloor) {
-                Event_GotoFloor(idEventArg.Companion.toArg(triggerFloor))
+                Event_GotoFloor(idEventArg.toArg(triggerFloor))
             }
         }
 
         private fun Event_PostFloorArrival() {
             OpenFloorDoor(currentFloor)
             OpenInnerDoor()
-            SetGuiStates(if (currentFloor == 1) Mover.guiBinaryMoverStates[0] else Mover.guiBinaryMoverStates[1])
+            SetGuiStates(if (currentFloor == 1) guiBinaryMoverStates[0] else guiBinaryMoverStates[1])
             controlsDisabled = false
             if (returnTime > 0.0f && returnFloor != currentFloor) {
-                PostEventSec(Mover.EV_GotoFloor, returnTime, returnFloor)
+                PostEventSec(EV_GotoFloor, returnTime, returnFloor)
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         enum class elevatorState_t {
@@ -1891,7 +1897,7 @@ object Mover {
 
         init {
             state = elevatorState_t.INIT
-            floorInfo = idList()
+            floorInfo = ArrayList()
             currentFloor = 0
             pendingFloor = 0
             lastFloor = 0
@@ -1913,9 +1919,19 @@ object Mover {
      ===============================================================================
      */
     open class idMover_Binary : idEntity() {
+        protected fun GetMovedir(dir: Float, movedir: idVec3) {
+            if (dir == -1f) {
+                movedir.set(0f, 0f, 1f)
+            } else if (dir == -2f) {
+                movedir.set(0f, 0f, -1f)
+            } else {
+                movedir.set(idAngles(0f, dir, 0f).ToForward())
+            }
+        }
+
         companion object {
             // CLASS_PROTOTYPE( idMover_Binary );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             /*
          ===============
@@ -1927,67 +1943,59 @@ object Mover {
          instead of an orientation.
          ===============
          */
-            protected fun GetMovedir(dir: Float, movedir: idVec3) {
-                if (dir == -1f) {
-                    movedir.set(0f, 0f, 1f)
-                } else if (dir == -2f) {
-                    movedir.set(0f, 0f, -1f)
-                } else {
-                    movedir.set(idAngles(0, dir, 0).ToForward())
-                }
-            }
 
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Mover.EV_FindGuiTargets] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_FindGuiTargets() } as eventCallback_t0<idMover_Binary?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[EV_FindGuiTargets] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_FindGuiTargets }
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_SetCallback() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_ReturnToPos1] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_ReturnToPos1() } as eventCallback_t0<idMover_Binary?>
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_SetCallback }
+                eventCallbacks[EV_Mover_ReturnToPos1] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_ReturnToPos1 }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idMover_Binary?> { obj: T?, activator: idEventArg<*>? ->
-                        neo.Game.obj.Event_Use_BinaryMover(neo.Game.activator)
-                    } as eventCallback_t1<idMover_Binary?>
-                eventCallbacks[Mover.EV_ReachedPos] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_Reached_BinaryMover() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_MatchTeam] =
-                    eventCallback_t2<idMover_Binary?> { obj: T?, newstate: idEventArg<*>? ->
-                        neo.Game.obj.Event_MatchActivateTeam(neo.Game.newstate)
-                    } as eventCallback_t2<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_Enable] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_Enable() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_Disable] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_Disable() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_OpenPortal] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_OpenPortal() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_ClosePortal] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_ClosePortal() } as eventCallback_t0<idMover_Binary?>
-                eventCallbacks[Mover.EV_Mover_InitGuiTargets] =
-                    eventCallback_t0<idMover_Binary?> { obj: T? -> neo.Game.obj.Event_InitGuiTargets() } as eventCallback_t0<idMover_Binary?>
+                    eventCallback_t1<idMover_Binary> { obj: Any?, activator: idEventArg<*>? ->
+                        idMover_Binary::Event_Use_BinaryMover
+                    }
+                eventCallbacks[EV_ReachedPos] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Reached_BinaryMover }
+                eventCallbacks[EV_Mover_MatchTeam] =
+                    eventCallback_t2<idMover_Binary> { obj: Any?, newstate: idEventArg<*>?, time: idEventArg<*>? ->
+                        idMover_Binary::Event_MatchActivateTeam
+                    }
+                eventCallbacks[EV_Mover_Enable] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Enable }
+                eventCallbacks[EV_Mover_Disable] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Disable }
+                eventCallbacks[EV_Mover_OpenPortal] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_OpenPortal }
+                eventCallbacks[EV_Mover_ClosePortal] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_ClosePortal }
+                eventCallbacks[EV_Mover_InitGuiTargets] =
+                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_InitGuiTargets }
             }
         }
 
         protected var accelTime: Int
         protected var activateChain: idMover_Binary?
-        protected val activatedBy: idEntityPtr<idEntity?>?
+        protected val activatedBy: idEntityPtr<idEntity>
         protected var   /*qhandle_t*/areaPortal // 0 = no portal
                 : Int
         protected var blocked: Boolean
-        protected var buddies: idStrList?
+        protected var buddies: ArrayList<idStr> = ArrayList()
         protected var damage: Float
         protected var decelTime: Int
         protected var duration: Int
         protected var enabled: Boolean
-        protected val guiTargets: idList<idEntityPtr<idEntity?>?>?
+        protected val guiTargets: ArrayList<idEntityPtr<idEntity>>
         protected var moveMaster: idMover_Binary?
         protected var move_thread: Int
-        protected var moverState: moverState_t?
-        protected var physicsObj: idPhysics_Parametric?
+        protected var moverState: moverState_t = moverState_t.MOVER_1TO2
+        protected var physicsObj: idPhysics_Parametric
         protected val pos1: idVec3
         protected val pos2: idVec3
         protected var sound1to2: Int
@@ -1996,7 +2004,7 @@ object Mover {
         protected var soundPos1: Int
         protected var soundPos2: Int
         protected var stateStartTime: Int
-        protected var team: idStr?
+        protected var team: idStr = idStr()
         protected var updateStatus // 1 = lock behaviour, 2 = open close status
                 : Int
         protected var wait: Float
@@ -2015,7 +2023,7 @@ object Mover {
         override fun Spawn() {
             super.Spawn()
             var ent: idEntity?
-            val temp = arrayOf<String?>(null)
+            val temp = arrayOf("")
             move_thread = 0
             enabled = true
             areaPortal = 0
@@ -2036,8 +2044,8 @@ object Mover {
                 ent = Game_local.gameLocal.spawnedEntities.Next()
                 while (ent != null) {
                     if (ent is idMover_Binary && TempDump.NOT(
-                            idStr.Companion.Icmp(
-                                (ent as idMover_Binary?).team.toString(),
+                            idStr.Icmp(
+                                ent.team.toString(),
                                 temp[0]
                             ).toDouble()
                         )
@@ -2050,14 +2058,14 @@ object Mover {
                     ent = this
                 }
             }
-            moveMaster = ent
+            moveMaster = ent as idMover_Binary
 
             // create a physics team for the binary mover parts
             if (ent !== this) {
                 JoinTeam(ent)
             }
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -2085,7 +2093,7 @@ object Mover {
             )
             SetPhysics(physicsObj)
             if (moveMaster !== this) {
-                JoinActivateTeam(moveMaster)
+                JoinActivateTeam(moveMaster!!)
             }
             val soundOrigin = idBounds()
             var slave: idMover_Binary?
@@ -2095,10 +2103,10 @@ object Mover {
                 soundOrigin.timesAssign(slave.GetPhysics().GetAbsBounds())
                 slave = slave.activateChain
             }
-            moveMaster.refSound.origin.set(soundOrigin.GetCenter())
+            moveMaster!!.refSound.origin.set(soundOrigin.GetCenter())
             if (spawnArgs.MatchPrefix("guiTarget") != null) {
-                if (Game_local.gameLocal.GameState() == Game_local.gameState_t.GAMESTATE_STARTUP) {
-                    PostEventMS(Mover.EV_FindGuiTargets, 0)
+                if (Game_local.gameLocal.GameState() == gameState_t.GAMESTATE_STARTUP) {
+                    PostEventMS(EV_FindGuiTargets, 0)
                 } else {
                     // not during spawn, so it's ok to get the targets
                     FindGuiTargets()
@@ -2111,8 +2119,8 @@ object Mover {
             savefile.WriteVec3(pos1)
             savefile.WriteVec3(pos2)
             savefile.WriteInt(TempDump.etoi(moverState))
-            savefile.WriteObject(moveMaster)
-            savefile.WriteObject(activateChain)
+            savefile.WriteObject(moveMaster!!)
+            savefile.WriteObject(activateChain!!)
             savefile.WriteInt(soundPos1)
             savefile.WriteInt(sound1to2)
             savefile.WriteInt(sound2to1)
@@ -2129,10 +2137,10 @@ object Mover {
             savefile.WriteBool(enabled)
             savefile.WriteInt(move_thread)
             savefile.WriteInt(updateStatus)
-            savefile.WriteInt(buddies.size())
+            savefile.WriteInt(buddies.size)
             i = 0
-            while (i < buddies.size()) {
-                savefile.WriteString(buddies.get(i))
+            while (i < buddies.size) {
+                savefile.WriteString(buddies[i])
                 i++
             }
             savefile.WriteStaticObject(physicsObj)
@@ -2141,10 +2149,10 @@ object Mover {
                 savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
             }
             savefile.WriteBool(blocked)
-            savefile.WriteInt(guiTargets.Num())
+            savefile.WriteInt(guiTargets.size)
             i = 0
-            while (i < guiTargets.Num()) {
-                guiTargets.get(i).Save(savefile)
+            while (i < guiTargets.size) {
+                guiTargets[i].Save(savefile)
                 i++
             }
         }
@@ -2190,12 +2198,12 @@ object Mover {
                 Game_local.gameLocal.SetPortalState(areaPortal, portalState)
             }
             blocked = savefile.ReadBool()
-            guiTargets.Clear()
+            guiTargets.clear()
             num = savefile.ReadInt()
-            guiTargets.SetNum(num)
+            guiTargets.ensureCapacity(num)
             i = 0
             while (i < num) {
-                guiTargets.get(i).Restore(savefile)
+                guiTargets[i].Restore(savefile)
                 i++
             }
         }
@@ -2227,14 +2235,14 @@ object Mover {
             val speed: Float
             pos1.set(mpos1)
             pos2.set(mpos2)
-            accelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
-            decelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
-            speed = if (mspeed != 0f) mspeed else 100
+            accelTime = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
+            decelTime = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
+            speed = if (mspeed != 0f) mspeed else 100f
 
             // calculate time to reach second position from speed
             move.set(pos2.minus(pos1))
             distance = move.Length()
-            duration = idPhysics.Companion.SnapTimeToPhysicsFrame((distance * 1000 / speed).toInt())
+            duration = idPhysics.SnapTimeToPhysicsFrame((distance * 1000 / speed).toInt())
             if (duration <= 0) {
                 duration = 1
             }
@@ -2249,7 +2257,7 @@ object Mover {
             )
             physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3_origin(), Vector.getVec3_origin())
             SetOrigin(pos1)
-            PostEventMS(Mover.EV_Mover_InitGuiTargets, 0)
+            PostEventMS(EV_Mover_InitGuiTargets, 0)
         }
 
         /*
@@ -2262,9 +2270,9 @@ object Mover {
         fun InitTime(mpos1: idVec3, mpos2: idVec3, mtime: Float, maccelTime: Float, mdecelTime: Float) {
             pos1.set(mpos1)
             pos2.set(mpos2)
-            accelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
-            decelTime = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
-            duration = idPhysics.Companion.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mtime).toInt())
+            accelTime = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(maccelTime).toInt())
+            decelTime = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mdecelTime).toInt())
+            duration = idPhysics.SnapTimeToPhysicsFrame(Math_h.SEC2MS(mtime).toInt())
             if (duration <= 0) {
                 duration = 1
             }
@@ -2279,7 +2287,7 @@ object Mover {
             )
             physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3_origin(), Vector.getVec3_origin())
             SetOrigin(pos1)
-            PostEventMS(Mover.EV_Mover_InitGuiTargets, 0)
+            PostEventMS(EV_Mover_InitGuiTargets, 0)
         }
 
         fun GotoPosition1() {
@@ -2288,10 +2296,10 @@ object Mover {
 
             // only the master should control this
             if (moveMaster !== this) {
-                moveMaster.GotoPosition1()
+                moveMaster!!.GotoPosition1()
                 return
             }
-            SetGuiStates(Mover.guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_2TO1)])
+            SetGuiStates(guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_2TO1)])
             if (moverState == moverState_t.MOVER_POS1 || moverState == moverState_t.MOVER_2TO1) {
                 // already there, or on the way
                 return
@@ -2299,11 +2307,11 @@ object Mover {
             if (moverState == moverState_t.MOVER_POS2) {
                 slave = this
                 while (slave != null) {
-                    slave.CancelEvents(Mover.EV_Mover_ReturnToPos1)
+                    slave.CancelEvents(EV_Mover_ReturnToPos1)
                     slave = slave.activateChain
                 }
                 if (!spawnArgs.GetBool("toggle")) {
-                    ProcessEvent(Mover.EV_Mover_ReturnToPos1)
+                    ProcessEvent(EV_Mover_ReturnToPos1)
                 }
                 return
             }
@@ -2329,10 +2337,10 @@ object Mover {
 
             // only the master should control this
             if (moveMaster !== this) {
-                moveMaster.GotoPosition2()
+                moveMaster!!.GotoPosition2()
                 return
             }
-            SetGuiStates(Mover.guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_1TO2)])
+            SetGuiStates(guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_1TO2)])
             if (moverState == moverState_t.MOVER_POS2 || moverState == moverState_t.MOVER_1TO2) {
                 // already there, or on the way
                 return
@@ -2341,7 +2349,7 @@ object Mover {
                 MatchActivateTeam(moverState_t.MOVER_1TO2, Game_local.gameLocal.time)
 
                 // open areaportal
-                ProcessEvent(Mover.EV_Mover_OpenPortal)
+                ProcessEvent(EV_Mover_OpenPortal)
                 return
             }
 
@@ -2364,7 +2372,7 @@ object Mover {
         fun Use_BinaryMover(activator: idEntity?) {
             // only the master should be used
             if (moveMaster !== this) {
-                moveMaster.Use_BinaryMover(activator)
+                moveMaster!!.Use_BinaryMover(activator)
                 return
             }
             if (!enabled) {
@@ -2375,9 +2383,9 @@ object Mover {
                 // FIXME: start moving USERCMD_MSEC later, because if this was player
                 // triggered, gameLocal.time hasn't been advanced yet
                 MatchActivateTeam(moverState_t.MOVER_1TO2, Game_local.gameLocal.time + UsercmdGen.USERCMD_MSEC)
-                SetGuiStates(Mover.guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_1TO2)])
+                SetGuiStates(guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_1TO2)])
                 // open areaportal
-                ProcessEvent(Mover.EV_Mover_OpenPortal)
+                ProcessEvent(EV_Mover_OpenPortal)
                 return
             }
 
@@ -2387,11 +2395,11 @@ object Mover {
                 if (wait == -1f) {
                     return
                 }
-                SetGuiStates(Mover.guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_2TO1)])
+                SetGuiStates(guiBinaryMoverStates[TempDump.etoi(moverState_t.MOVER_2TO1)])
                 slave = this
                 while (slave != null) {
-                    slave.CancelEvents(Mover.EV_Mover_ReturnToPos1)
-                    slave.PostEventSec(Mover.EV_Mover_ReturnToPos1, if (spawnArgs.GetBool("toggle")) 0 else wait)
+                    slave.CancelEvents(EV_Mover_ReturnToPos1)
+                    slave.PostEventSec(EV_Mover_ReturnToPos1, if (spawnArgs.GetBool("toggle")) 0f else wait)
                     slave = slave.activateChain
                 }
                 return
@@ -2410,13 +2418,13 @@ object Mover {
             }
         }
 
-        fun SetGuiStates(state: String?) {
-            if (guiTargets.Num() != 0) {
+        fun SetGuiStates(state: String) {
+            if (guiTargets.size != 0) {
                 SetGuiState("movestate", state)
             }
             var mb = activateChain
             while (mb != null) {
-                if (mb.guiTargets.Num() != 0) {
+                if (mb.guiTargets.size != 0) {
                     mb.SetGuiState("movestate", state)
                 }
                 mb = mb.activateChain
@@ -2427,10 +2435,10 @@ object Mover {
             var i: Int
             val c: Int
             if (updateStatus == 2) {
-                c = buddies.size()
+                c = buddies.size
                 i = 0
                 while (i < c) {
-                    val buddy = Game_local.gameLocal.FindEntity(buddies.get(i))
+                    val buddy = Game_local.gameLocal.FindEntity(buddies[i])
                     if (buddy != null) {
                         buddy.SetShaderParm(RenderWorld.SHADERPARM_MODE, `val`.toFloat())
                         buddy.UpdateVisuals()
@@ -2472,7 +2480,7 @@ object Mover {
                     var kv = slave.spawnArgs.MatchPrefix("triggerBlocked")
                     while (kv != null) {
                         val ent = Game_local.gameLocal.FindEntity(kv.GetValue().toString())
-                        ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster.GetActivator())
+                        ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster!!.GetActivator())
                         kv = slave.spawnArgs.MatchPrefix("triggerBlocked", kv)
                     }
                 }
@@ -2523,7 +2531,7 @@ object Mover {
          in the same amount of time
          ================
          */
-        protected fun MatchActivateTeam(newstate: moverState_t?, time: Int) {
+        protected fun MatchActivateTeam(newstate: moverState_t, time: Int) {
             var slave: idMover_Binary?
             slave = this
             while (slave != null) {
@@ -2539,12 +2547,12 @@ object Mover {
          Set all entities in a mover team to be enabled
          ================
          */
-        protected fun JoinActivateTeam(master: idMover_Binary?) {
+        protected fun JoinActivateTeam(master: idMover_Binary) {
             activateChain = master.activateChain
             master.activateChain = this
         }
 
-        protected fun UpdateMoverSound(state: moverState_t?) {
+        protected fun UpdateMoverSound(state: moverState_t) {
             if (moveMaster === this) {
                 when (state) {
                     moverState_t.MOVER_POS1 -> {}
@@ -2553,21 +2561,19 @@ object Mover {
                         "snd_open",
                         gameSoundChannel_t.SND_CHANNEL_ANY,
                         0,
-                        false,
-                        null
+                        false
                     )
                     moverState_t.MOVER_2TO1 -> StartSound(
                         "snd_close",
                         gameSoundChannel_t.SND_CHANNEL_ANY,
                         0,
-                        false,
-                        null
+                        false
                     )
                 }
             }
         }
 
-        protected fun SetMoverState(newstate: moverState_t?, time: Int) {
+        protected fun SetMoverState(newstate: moverState_t, time: Int) {
             val delta = idVec3()
             moverState = newstate
             move_thread = 0
@@ -2603,7 +2609,7 @@ object Mover {
                         time,
                         duration,
                         pos1,
-                        pos2.minus(pos1).oMultiply(1000.0f).oDivide(duration.toFloat()),
+                        pos2.minus(pos1).times(1000.0f).div(duration.toFloat()),
                         Vector.getVec3_origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
@@ -2619,7 +2625,7 @@ object Mover {
                         time,
                         duration,
                         pos2,
-                        pos1.minus(pos2).oMultiply(1000.0f).oDivide(duration.toFloat()),
+                        pos1.minus(pos2).times(1000.0f).div(duration.toFloat()),
                         Vector.getVec3_origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
@@ -2631,7 +2637,7 @@ object Mover {
             }
         }
 
-        protected fun GetMoverState(): moverState_t? {
+        protected fun GetMoverState(): moverState_t {
             return moverState
         }
 
@@ -2646,11 +2652,11 @@ object Mover {
          key/val will be set to any renderEntity->gui's on the list
          ==============================
          */
-        protected fun SetGuiState(key: String?, `val`: String?) {
+        protected fun SetGuiState(key: String, `val`: String) {
             var i: Int
             i = 0
-            while (i < guiTargets.Num()) {
-                val ent = guiTargets.get(i).GetEntity()
+            while (i < guiTargets.size) {
+                val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
@@ -2666,10 +2672,10 @@ object Mover {
 
         protected fun Event_SetCallback() {
             if (moverState == moverState_t.MOVER_1TO2 || moverState == moverState_t.MOVER_2TO1) {
-                move_thread = idThread.Companion.CurrentThreadNum()
-                idThread.Companion.ReturnInt(true)
+                move_thread = idThread.CurrentThreadNum()
+                idThread.ReturnInt(true)
             } else {
-                idThread.Companion.ReturnInt(false)
+                idThread.ReturnInt(false)
             }
         }
 
@@ -2677,51 +2683,51 @@ object Mover {
             MatchActivateTeam(moverState_t.MOVER_2TO1, Game_local.gameLocal.time)
         }
 
-        protected fun Event_Use_BinaryMover(activator: idEventArg<idEntity?>?) {
+        protected fun Event_Use_BinaryMover(activator: idEventArg<idEntity>) {
             Use_BinaryMover(activator.value)
         }
 
         protected open fun Event_Reached_BinaryMover() {
             if (moverState == moverState_t.MOVER_1TO2) {
                 // reached pos2
-                idThread.Companion.ObjectMoveDone(move_thread, this)
+                idThread.ObjectMoveDone(move_thread, this)
                 move_thread = 0
                 if (moveMaster === this) {
-                    StartSound("snd_opened", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
+                    StartSound("snd_opened", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
                 }
                 SetMoverState(moverState_t.MOVER_POS2, Game_local.gameLocal.time)
-                SetGuiStates(Mover.guiBinaryMoverStates[moverState_t.MOVER_POS2.ordinal])
+                SetGuiStates(guiBinaryMoverStates[moverState_t.MOVER_POS2.ordinal])
                 UpdateBuddies(1)
                 if (enabled && wait >= 0 && !spawnArgs.GetBool("toggle")) {
                     // return to pos1 after a delay
-                    PostEventSec(Mover.EV_Mover_ReturnToPos1, wait)
+                    PostEventSec(EV_Mover_ReturnToPos1, wait)
                 }
 
                 // fire targets
-                ActivateTargets(moveMaster.GetActivator())
+                ActivateTargets(moveMaster!!.GetActivator())
                 SetBlocked(false)
             } else if (moverState == moverState_t.MOVER_2TO1) {
                 // reached pos1
-                idThread.Companion.ObjectMoveDone(move_thread, this)
+                idThread.ObjectMoveDone(move_thread, this)
                 move_thread = 0
                 SetMoverState(moverState_t.MOVER_POS1, Game_local.gameLocal.time)
-                SetGuiStates(Mover.guiBinaryMoverStates[moverState_t.MOVER_POS1.ordinal])
+                SetGuiStates(guiBinaryMoverStates[moverState_t.MOVER_POS1.ordinal])
                 UpdateBuddies(0)
 
                 // close areaportals
                 if (moveMaster === this) {
-                    ProcessEvent(Mover.EV_Mover_ClosePortal)
+                    ProcessEvent(EV_Mover_ClosePortal)
                 }
                 if (enabled && wait >= 0 && spawnArgs.GetBool("continuous")) {
                     PostEventSec(Entity.EV_Activate, wait, this)
                 }
                 SetBlocked(false)
             } else {
-                idGameLocal.Companion.Error("Event_Reached_BinaryMover: bad moverState")
+                idGameLocal.Error("Event_Reached_BinaryMover: bad moverState")
             }
         }
 
-        protected fun Event_MatchActivateTeam(newstate: idEventArg<moverState_t?>?, time: idEventArg<Int?>?) {
+        protected fun Event_MatchActivateTeam(newstate: idEventArg<moverState_t>, time: idEventArg<Int>) {
             MatchActivateTeam(newstate.value, time.value)
         }
 
@@ -2800,17 +2806,17 @@ object Mover {
         }
 
         protected fun Event_InitGuiTargets() {
-            if (guiTargets.Num() != 0) {
-                SetGuiState("movestate", Mover.guiBinaryMoverStates[moverState_t.MOVER_POS1.ordinal])
+            if (guiTargets.size != 0) {
+                SetGuiState("movestate", guiBinaryMoverStates[moverState_t.MOVER_POS1.ordinal])
             }
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -2837,12 +2843,12 @@ object Mover {
             enabled = false
             move_thread = 0
             updateStatus = 0
-            buddies = idStrList()
+            buddies = ArrayList()
             physicsObj = idPhysics_Parametric()
             areaPortal = 0
             blocked = false
             fl.networkSync = true
-            guiTargets = idList<Any?>(idEntityPtr::class.java)
+            guiTargets = ArrayList()
         }
     }
 
@@ -2858,56 +2864,58 @@ object Mover {
      */
     class idDoor : idMover_Binary() {
         companion object {
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             // ~idDoor( void );
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idMover_Binary.getEventCallBacks())
-                eventCallbacks[Mover.EV_TeamBlocked] =
-                    eventCallback_t2<idDoor?> { obj: T?, blockedEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_TeamBlocked(neo.Game.blockedEntity)
-                    } as eventCallback_t2<idDoor?>
-                eventCallbacks[Mover.EV_PartBlocked] =
-                    eventCallback_t1<idDoor?> { obj: T?, blockingEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_PartBlocked(neo.Game.blockingEntity)
-                    } as eventCallback_t1<idDoor?>
+                eventCallbacks[EV_TeamBlocked] =
+                    eventCallback_t2<idDoor> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        idDoor::Event_TeamBlocked
+                    }
+                eventCallbacks[EV_PartBlocked] =
+                    eventCallback_t1<idDoor> { obj: Any?, blockingEntity: idEventArg<*>? ->
+                        idDoor::Event_PartBlocked
+                    }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idDoor?> { obj: T?, _other: idEventArg<*>? -> neo.Game.obj.Event_Touch(neo.Game._other) } as eventCallback_t2<idDoor?>
+                    eventCallback_t2<idDoor> { obj: Any?, _other: idEventArg<*>?, _trace: idEventArg<*>? -> idDoor::Event_Touch }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idDoor?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Activate(neo.Game.activator) } as eventCallback_t1<idDoor?>
-                eventCallbacks[Mover.EV_Door_StartOpen] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_StartOpen() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_SpawnDoorTrigger] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_SpawnDoorTrigger() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_SpawnSoundTrigger] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_SpawnSoundTrigger() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_Open] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_Open() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_Close] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_Close() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_Lock] =
-                    eventCallback_t1<idDoor?> { obj: T?, f: idEventArg<*>? -> neo.Game.obj.Event_Lock(neo.Game.f) } as eventCallback_t1<idDoor?>
-                eventCallbacks[Mover.EV_Door_IsOpen] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_IsOpen() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Door_IsLocked] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_Locked() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_ReachedPos] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_Reached_BinaryMover() } as eventCallback_t0<idDoor?>
+                    eventCallback_t1<idDoor> { obj: Any?, activator: idEventArg<*>? -> idDoor::Event_Activate }
+                eventCallbacks[EV_Door_StartOpen] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_StartOpen }
+                eventCallbacks[EV_Door_SpawnDoorTrigger] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_SpawnDoorTrigger }
+                eventCallbacks[EV_Door_SpawnSoundTrigger] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_SpawnSoundTrigger }
+                eventCallbacks[EV_Door_Open] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Open }
+                eventCallbacks[EV_Door_Close] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Close }
+                eventCallbacks[EV_Door_Lock] =
+                    eventCallback_t1<idDoor> { obj: Any?, f: idEventArg<*>? -> idDoor::Event_Lock }
+                eventCallbacks[EV_Door_IsOpen] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_IsOpen }
+                eventCallbacks[EV_Door_IsLocked] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Locked }
+                eventCallbacks[EV_ReachedPos] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Reached_BinaryMover }
                 eventCallbacks[Player.EV_SpectatorTouch] =
-                    eventCallback_t2<idDoor?> { obj: T?, _other: idEventArg<*>? -> neo.Game.obj.Event_SpectatorTouch(neo.Game._other) } as eventCallback_t2<idDoor?>
-                eventCallbacks[Mover.EV_Mover_OpenPortal] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_OpenPortal() } as eventCallback_t0<idDoor?>
-                eventCallbacks[Mover.EV_Mover_ClosePortal] =
-                    eventCallback_t0<idDoor?> { obj: T? -> neo.Game.obj.Event_ClosePortal() } as eventCallback_t0<idDoor?>
+                    eventCallback_t2<idDoor> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        idDoor::Event_SpectatorTouch
+                    }
+                eventCallbacks[EV_Mover_OpenPortal] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_OpenPortal }
+                eventCallbacks[EV_Mover_ClosePortal] =
+                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_ClosePortal }
             }
         }
 
         private var aas_area_closed = false
-        private val buddyStr: idStr?
+        private val buddyStr: idStr
         private var companionDoor: idDoor?
         private var crusher = false
         private var localTriggerAxis: idMat3
@@ -2917,9 +2925,9 @@ object Mover {
         private var normalAxisIndex // door faces X or Y for spectator teleports
                 : Int
         private var removeItem: Int
-        private val requires: idStr?
+        private val requires: idStr
         private var sndTrigger: idClipModel?
-        private val syncLock: idStr?
+        private val syncLock: idStr
         private var trigger: idClipModel?
         private var triggersize = 1.0f
         override fun Spawn() {
@@ -2974,17 +2982,17 @@ object Mover {
             pos1.set(GetPhysics().GetOrigin())
 
             // calculate second position
-            abs_movedir.set(0, Math.abs(moveDir.get(0)))
-            abs_movedir.set(1, Math.abs(moveDir.get(1)))
-            abs_movedir.set(2, Math.abs(moveDir.get(2)))
-            size.set(GetPhysics().GetAbsBounds().get(1).minus(GetPhysics().GetAbsBounds().get(0)))
+            abs_movedir[0] = abs(moveDir[0])
+            abs_movedir[1] = abs(moveDir[1])
+            abs_movedir[2] = abs(moveDir[2])
+            size.set(GetPhysics().GetAbsBounds()[1].minus(GetPhysics().GetAbsBounds()[0]))
             distance = abs_movedir.times(size) - lip._val
-            pos2.set(pos1.oPlus(moveDir.times(distance)))
+            pos2.set(pos1.plus(moveDir.times(distance)))
 
             // if "start_open", reverse position 1 and 2
-            if (start_open.isVal) {
+            if (start_open._val) {
                 // post it after EV_SpawnBind
-                PostEventMS(Mover.EV_Door_StartOpen, 1)
+                PostEventMS(EV_Door_StartOpen, 1)
             }
             if (spawnArgs.GetFloat("time", "1", time)) {
                 InitTime(pos1, pos2, time._val, 0f, 0f)
@@ -2997,27 +3005,27 @@ object Mover {
                 }
                 if (noTouch || health != 0) {
                     // non touch/shoot doors
-                    PostEventMS(Mover.EV_Mover_MatchTeam, 0, moverState, Game_local.gameLocal.time)
+                    PostEventMS(EV_Mover_MatchTeam, 0, moverState, Game_local.gameLocal.time)
                     val sndtemp = spawnArgs.GetString("snd_locked")
                     if (spawnArgs.GetInt("locked") != 0 && sndtemp != null && !sndtemp.isEmpty()) {
-                        PostEventMS(Mover.EV_Door_SpawnSoundTrigger, 0)
+                        PostEventMS(EV_Door_SpawnSoundTrigger, 0)
                     }
                 } else {
                     // spawn trigger
-                    PostEventMS(Mover.EV_Door_SpawnDoorTrigger, 0)
+                    PostEventMS(EV_Door_SpawnDoorTrigger, 0)
                 }
             }
 
             // see if we are on an areaportal
             areaPortal = Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds())
-            if (!start_open.isVal) {
+            if (!start_open._val) {
                 // start closed
-                ProcessEvent(Mover.EV_Mover_ClosePortal)
+                ProcessEvent(EV_Mover_ClosePortal)
             }
             val locked = spawnArgs.GetInt("locked")
             if (locked != 0) {
                 // make sure all members of the team get locked
-                PostEventMS(Mover.EV_Door_Lock, 0f, locked)
+                PostEventMS(EV_Door_Lock, 0f, locked)
             }
             if (spawnArgs.GetBool("continuous")) {
                 PostEventSec(Entity.EV_Activate, spawnArgs.GetFloat("delay"), this)
@@ -3045,7 +3053,7 @@ object Mover {
             savefile.WriteInt(normalAxisIndex)
             savefile.WriteClipModel(trigger)
             savefile.WriteClipModel(sndTrigger)
-            savefile.WriteObject(companionDoor)
+            savefile.WriteObject(companionDoor!!)
         }
 
         override fun Restore(savefile: idRestoreGame) {
@@ -3062,8 +3070,8 @@ object Mover {
             removeItem = savefile.ReadInt()
             savefile.ReadString(syncLock)
             normalAxisIndex = savefile.ReadInt()
-            savefile.ReadClipModel(trigger)
-            savefile.ReadClipModel(sndTrigger)
+            savefile.ReadClipModel(trigger!!)
+            savefile.ReadClipModel(sndTrigger!!)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/companionDoor)
         }
 
@@ -3075,20 +3083,20 @@ object Mover {
                 // update trigger position
                 if (GetMasterPosition(masterOrigin, masterAxis)) {
                     if (trigger != null) {
-                        trigger.Link(
+                        trigger!!.Link(
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            masterOrigin.plus(localTriggerOrigin.times(masterAxis)),
                             localTriggerAxis.times(masterAxis)
                         )
                     }
                     if (sndTrigger != null) {
-                        sndTrigger.Link(
+                        sndTrigger!!.Link(
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            masterOrigin.plus(localTriggerOrigin.times(masterAxis)),
                             localTriggerAxis.times(masterAxis)
                         )
                     }
@@ -3108,7 +3116,7 @@ object Mover {
             var companion: idDoor?
             master = GetMoveMaster()
             if (this != master) {
-                master.Hide()
+                master!!.Hide()
             } else {
                 slave = this
                 while (slave != null) {
@@ -3119,17 +3127,17 @@ object Mover {
                             companion.Hide()
                         }
                         if (slaveDoor.trigger != null) {
-                            slaveDoor.trigger.Disable()
+                            slaveDoor.trigger!!.Disable()
                         }
                         if (slaveDoor.sndTrigger != null) {
-                            slaveDoor.sndTrigger.Disable()
+                            slaveDoor.sndTrigger!!.Disable()
                         }
                         if (slaveDoor.areaPortal != 0) {
                             slaveDoor.SetPortalState(true)
                         }
                         slaveDoor.SetAASAreaState(false)
                     }
-                    slave.GetPhysics().GetClipModel().Disable()
+                    slave.GetPhysics().GetClipModel()!!.Disable()
                     slave.Hide()
                     slave = slave.GetActivateChain()
                 }
@@ -3143,7 +3151,7 @@ object Mover {
             var companion: idDoor?
             master = GetMoveMaster()
             if (this != master) {
-                master.Show()
+                master!!.Show()
             } else {
                 slave = this
                 while (slave != null) {
@@ -3154,17 +3162,17 @@ object Mover {
                             companion.Show()
                         }
                         if (slaveDoor.trigger != null) {
-                            slaveDoor.trigger.Enable()
+                            slaveDoor.trigger!!.Enable()
                         }
                         if (slaveDoor.sndTrigger != null) {
-                            slaveDoor.sndTrigger.Enable()
+                            slaveDoor.sndTrigger!!.Enable()
                         }
                         if (slaveDoor.areaPortal != 0 && slaveDoor.moverState == moverState_t.MOVER_POS1) {
                             slaveDoor.SetPortalState(false)
                         }
                         slaveDoor.SetAASAreaState(IsLocked() != 0 || IsNoTouch())
                     }
-                    slave.GetPhysics().GetClipModel().Enable()
+                    slave.GetPhysics().GetClipModel()!!.Enable()
                     slave.Show()
                     slave = slave.GetActivateChain()
                 }
@@ -3190,17 +3198,17 @@ object Mover {
             other = moveMaster
             while (other != null) {
                 if (other is idDoor) {
-                    val door = other as idDoor?
+                    val door = other as idDoor
                     if (other == moveMaster) {
                         if (door.sndTrigger == null) {
                             // in this case the sound trigger never got spawned
                             val sndtemp = door.spawnArgs.GetString("snd_locked")
                             if (sndtemp != null && !sndtemp.isEmpty()) {
-                                door.PostEventMS(Mover.EV_Door_SpawnSoundTrigger, 0)
+                                door.PostEventMS(EV_Door_SpawnSoundTrigger, 0)
                             }
                         }
                         if (0 == f && door.spawnArgs.GetInt("locked") != 0) {
-                            door.StartSound("snd_unlocked", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
+                            door.StartSound("snd_unlocked", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
                         }
                     }
                     door.spawnArgs.SetInt("locked", f)
@@ -3215,7 +3223,7 @@ object Mover {
             }
         }
 
-        fun Use(other: idEntity?, activator: idEntity?) {
+        fun Use(other: idEntity?, activator: idEntity) {
             if (Game_local.gameLocal.RequirementMet(activator, requires, removeItem)) {
                 if (syncLock.Length() != 0) {
                     val sync = Game_local.gameLocal.FindEntity(syncLock)
@@ -3254,11 +3262,11 @@ object Mover {
         private fun GetLocalTriggerPosition(trigger: idClipModel?) {
             val origin = idVec3()
             val axis = idMat3()
-            if (TempDump.NOT(trigger)) {
+            if (null == trigger) {
                 return
             }
             GetMasterPosition(origin, axis)
-            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
+            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).times(axis.Transpose()))
             localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
@@ -3293,14 +3301,14 @@ object Mover {
             best = 0
             i = 1
             while (i < 3) {
-                if (bounds.get(1, i) - bounds.get(0, i) < bounds.get(1, best) - bounds.get(0, best)) {
+                if (bounds[1, i] - bounds[0, i] < bounds[1, best] - bounds[0, best]) {
                     best = i
                 }
                 i++
             }
             normalAxisIndex = best
-            bounds.get(0).minusAssign(best, size)
-            bounds.get(1).plusAssign(best, size)
+            bounds[0].minusAssign(best, size)
+            bounds[1].plusAssign(best, size)
             bounds.minusAssign(GetPhysics().GetOrigin())
         }
 
@@ -3310,34 +3318,34 @@ object Mover {
                 var kv = spawnArgs.MatchPrefix("triggerClosed")
                 while (kv != null) {
                     val ent = Game_local.gameLocal.FindEntity(kv.GetValue().toString())
-                    ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster.GetActivator())
+                    ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster!!.GetActivator())
                     kv = spawnArgs.MatchPrefix("triggerClosed", kv)
                 }
             } else if (moverState == moverState_t.MOVER_1TO2) {
                 var kv = spawnArgs.MatchPrefix("triggerOpened")
                 while (kv != null) {
                     val ent = Game_local.gameLocal.FindEntity(kv.GetValue().toString())
-                    ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster.GetActivator())
+                    ent?.PostEventMS(Entity.EV_Activate, 0f, moveMaster!!.GetActivator())
                     kv = spawnArgs.MatchPrefix("triggerOpened", kv)
                 }
             }
             super.Event_Reached_BinaryMover()
         }
 
-        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity?>?, blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity>, blockingEntity: idEventArg<idEntity>) {
             SetBlocked(true)
             if (crusher) {
                 return  // crushers don't reverse
             }
 
             // reverse direction
-            Use_BinaryMover(moveMaster.GetActivator())
+            Use_BinaryMover(moveMaster!!.GetActivator())
             if (companionDoor != null) {
-                companionDoor.ProcessEvent(Mover.EV_TeamBlocked, blockedEntity.value, blockingEntity.value)
+                companionDoor!!.ProcessEvent(EV_TeamBlocked, blockedEntity.value, blockingEntity.value)
             }
         }
 
-        private fun Event_PartBlocked(blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_PartBlocked(blockingEntity: idEventArg<idEntity>) {
             if (damage > 0.0f) {
                 blockingEntity.value.Damage(
                     this,
@@ -3350,7 +3358,7 @@ object Mover {
             }
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity?>?, _trace: idEventArg<trace_s?>?) {
+        private fun Event_Touch(_other: idEventArg<idEntity>, _trace: idEventArg<trace_s>) {
             val other = _other.value
             val trace = _trace.value
             //            idVec3 contact, translate;
@@ -3359,23 +3367,23 @@ object Mover {
             if (!enabled) {
                 return
             }
-            if (trigger != null && trace.c.id == trigger.GetId()) {
+            if (trigger != null && trace.c.id == trigger!!.GetId()) {
                 if (!IsNoTouch() && 0 == IsLocked() && GetMoverState() != moverState_t.MOVER_1TO2) {
                     Use(this, other)
                 }
-            } else if (sndTrigger != null && trace.c.id == sndTrigger.GetId()) {
+            } else if (sndTrigger != null && trace.c.id == sndTrigger!!.GetId()) {
                 if (other != null && other is idPlayer && IsLocked() != 0 && Game_local.gameLocal.time > nextSndTriggerTime) {
-                    StartSound("snd_locked", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false, null)
+                    StartSound("snd_locked", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
                     nextSndTriggerTime = Game_local.gameLocal.time + 10000
                 }
             }
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             val old_lock: Int
             if (spawnArgs.GetInt("locked") != 0) {
                 if (TempDump.NOT(trigger)) {
-                    PostEventMS(Mover.EV_Door_SpawnDoorTrigger, 0)
+                    PostEventMS(EV_Door_SpawnDoorTrigger, 0)
                 }
                 if (buddyStr.Length() != 0) {
                     val buddy = Game_local.gameLocal.FindEntity(buddyStr)
@@ -3399,7 +3407,7 @@ object Mover {
                 }
             }
             ActivateTargets(activator.value)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1
+            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
             UpdateVisuals()
             Use_BinaryMover(activator.value)
         }
@@ -3465,20 +3473,20 @@ object Mover {
             }
             val sndtemp = spawnArgs.GetString("snd_locked")
             if (spawnArgs.GetInt("locked") != 0 && sndtemp != null && !sndtemp.isEmpty()) {
-                PostEventMS(Mover.EV_Door_SpawnSoundTrigger, 0)
+                PostEventMS(EV_Door_SpawnSoundTrigger, 0)
             }
             CalcTriggerBounds(triggersize, bounds)
 
             // create a trigger clip model
             trigger = idClipModel(idTraceModel(bounds))
-            trigger.Link(
+            trigger!!.Link(
                 Game_local.gameLocal.clip,
                 this,
                 255,
                 GetPhysics().GetOrigin(),
-                idMat3.Companion.getMat3_identity()
+                idMat3.getMat3_identity()
             )
-            trigger.SetContents(Material.CONTENTS_TRIGGER)
+            trigger!!.SetContents(Material.CONTENTS_TRIGGER)
             GetLocalTriggerPosition(trigger)
             MatchActivateTeam(moverState, Game_local.gameLocal.time)
         }
@@ -3499,14 +3507,14 @@ object Mover {
 
             // create a trigger clip model
             sndTrigger = idClipModel(idTraceModel(bounds))
-            sndTrigger.Link(
+            sndTrigger!!.Link(
                 Game_local.gameLocal.clip,
                 this,
                 254,
                 GetPhysics().GetOrigin(),
-                idMat3.Companion.getMat3_identity()
+                idMat3.getMat3_identity()
             )
-            sndTrigger.SetContents(Material.CONTENTS_TRIGGER)
+            sndTrigger!!.SetContents(Material.CONTENTS_TRIGGER)
             GetLocalTriggerPosition(sndTrigger)
         }
 
@@ -3518,49 +3526,49 @@ object Mover {
             Open()
         }
 
-        private fun Event_Lock(f: idEventArg<Int?>?) {
+        private fun Event_Lock(f: idEventArg<Int>) {
             Lock(f.value)
         }
 
         private fun Event_IsOpen() {
             val state: Int
             state = if (IsOpen()) 1 else 0
-            idThread.Companion.ReturnFloat(state.toFloat())
+            idThread.ReturnFloat(state.toFloat())
         }
 
         private fun Event_Locked() {
-            idThread.Companion.ReturnFloat(spawnArgs.GetInt("locked").toFloat())
+            idThread.ReturnFloat(spawnArgs.GetInt("locked").toFloat())
         }
 
-        private fun Event_SpectatorTouch(_other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        private fun Event_SpectatorTouch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             val other = _other.value
             val contact = idVec3()
             val translate = idVec3()
             val normal = idVec3()
             val bounds: idBounds
             val p: idPlayer?
-            assert(other != null && other is idPlayer && (other as idPlayer?).spectating)
-            p = other as idPlayer?
+            assert(other != null && other is idPlayer && other.spectating)
+            p = other as idPlayer
             // avoid flicker when stopping right at clip box boundaries
             if (p.lastSpectateTeleport > Game_local.gameLocal.time - 1000) {
                 return
             }
             if (trigger != null && !IsOpen()) {
                 // teleport to the other side, center to the middle of the trigger brush
-                bounds = trigger.GetAbsBounds()
+                bounds = trigger!!.GetAbsBounds()
                 contact.set(trace.value.endpos.minus(bounds.GetCenter()))
                 translate.set(bounds.GetCenter())
                 normal.Zero()
-                normal.set(normalAxisIndex, 1.0f)
+                normal[normalAxisIndex] = 1.0f
                 if (normal.times(contact) > 0) {
                     translate.plusAssign(
                         normalAxisIndex,
-                        (bounds.get(0, normalAxisIndex) - translate.get(normalAxisIndex)) * 0.5f
+                        (bounds[0, normalAxisIndex] - translate[normalAxisIndex]) * 0.5f
                     )
                 } else {
                     translate.plusAssign(
                         normalAxisIndex,
-                        (bounds.get(1, normalAxisIndex) - translate.get(normalAxisIndex)) * 0.5f
+                        (bounds[1, normalAxisIndex] - translate[normalAxisIndex]) * 0.5f
                     )
                 }
                 p.SetOrigin(translate)
@@ -3616,8 +3624,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -3630,7 +3638,7 @@ object Mover {
             sndTrigger = null
             nextSndTriggerTime = 0
             localTriggerOrigin = idVec3()
-            localTriggerAxis = idMat3.Companion.getMat3_identity()
+            localTriggerAxis = idMat3.getMat3_identity()
             requires = idStr()
             removeItem = 0
             syncLock = idStr()
@@ -3649,25 +3657,25 @@ object Mover {
     class idPlat : idMover_Binary() {
         companion object {
             // CLASS_PROTOTYPE( idPlat );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             // ~idPlat( void );
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idMover_Binary.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idPlat?> { obj: T?, _other: idEventArg<*>? -> neo.Game.obj.Event_Touch(neo.Game._other) } as eventCallback_t2<idPlat?>
-                eventCallbacks[Mover.EV_TeamBlocked] =
-                    eventCallback_t2<idPlat?> { obj: T?, blockedEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_TeamBlocked(neo.Game.blockedEntity)
-                    } as eventCallback_t2<idPlat?>
-                eventCallbacks[Mover.EV_PartBlocked] =
-                    eventCallback_t1<idPlat?> { obj: T?, blockingEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_PartBlocked(neo.Game.blockingEntity)
-                    } as eventCallback_t1<idPlat?>
+                    eventCallback_t2<idPlat> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idPlat::Event_Touch }
+                eventCallbacks[EV_TeamBlocked] =
+                    eventCallback_t2<idPlat> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        idPlat::Event_TeamBlocked
+                    }
+                eventCallbacks[EV_PartBlocked] =
+                    eventCallback_t1<idPlat> { obj: Any?, blockingEntity: idEventArg<*>? ->
+                        idPlat::Event_PartBlocked
+                    }
             }
         }
 
@@ -3692,7 +3700,7 @@ object Mover {
 
             // create second position
             if (!spawnArgs.GetFloat("height", "0", height)) {
-                height.setVal(GetPhysics().GetBounds().get(1, 2) - GetPhysics().GetBounds().get(0, 2) - lip._val)
+                height._val = (GetPhysics().GetBounds()[1, 2] - GetPhysics().GetBounds()[0, 2] - lip._val)
             }
             spawnArgs.GetBool("no_touch", "0", noTouch)
 
@@ -3709,7 +3717,7 @@ object Mover {
             UpdateVisuals()
 
             // spawn the trigger if one hasn't been custom made
-            if (!noTouch.isVal) {
+            if (!noTouch._val) {
                 // spawn trigger
                 SpawnPlatTrigger(pos1)
             }
@@ -3722,7 +3730,7 @@ object Mover {
         }
 
         override fun Restore(savefile: idRestoreGame) {
-            savefile.ReadClipModel(trigger)
+            savefile.ReadClipModel(trigger!!)
             savefile.ReadVec3(localTriggerOrigin)
             savefile.ReadMat3(localTriggerAxis)
         }
@@ -3735,11 +3743,11 @@ object Mover {
                 // update trigger position
                 if (GetMasterPosition(masterOrigin, masterAxis)) {
                     if (trigger != null) {
-                        trigger.Link(
+                        trigger!!.Link(
                             Game_local.gameLocal.clip,
                             this,
                             0,
-                            masterOrigin.oPlus(localTriggerOrigin.times(masterAxis)),
+                            masterOrigin.plus(localTriggerOrigin.times(masterAxis)),
                             localTriggerAxis.times(masterAxis)
                         )
                     }
@@ -3755,11 +3763,11 @@ object Mover {
         private fun GetLocalTriggerPosition(trigger: idClipModel?) {
             val origin = idVec3()
             val axis = idMat3()
-            if (TempDump.NOT(trigger)) {
+            if (null == trigger) {
                 return
             }
             GetMasterPosition(origin, axis)
-            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).oMultiply(axis.Transpose()))
+            localTriggerOrigin.set(trigger.GetOrigin().minus(origin).times(axis.Transpose()))
             localTriggerAxis = trigger.GetAxis().times(axis.Transpose())
         }
 
@@ -3771,37 +3779,37 @@ object Mover {
             // the middle trigger will be a thin trigger just
             // above the starting position
             bounds = GetPhysics().GetBounds()
-            tmin.set(0, bounds.get(0, 0) + 33)
-            tmin.set(1, bounds.get(0, 1) + 33)
-            tmin.set(2, bounds.get(0, 2))
-            tmax.set(0, bounds.get(1, 0) - 33)
-            tmax.set(1, bounds.get(1, 1) - 33)
-            tmax.set(2, bounds.get(1, 2) + 8)
-            if (tmax.get(0) <= tmin.get(0)) {
-                tmin.set(0, (bounds.get(0, 0) + bounds.get(1, 0)) * 0.5f)
-                tmax.set(0, tmin.get(0) + 1)
+            tmin[0] = bounds[0, 0] + 33
+            tmin[1] = bounds[0, 1] + 33
+            tmin[2] = bounds[0, 2]
+            tmax[0] = bounds[1, 0] - 33
+            tmax[1] = bounds[1, 1] - 33
+            tmax[2] = bounds[1, 2] + 8
+            if (tmax[0] <= tmin[0]) {
+                tmin[0] = (bounds[0, 0] + bounds[1, 0]) * 0.5f
+                tmax[0] = tmin[0] + 1
             }
-            if (tmax.get(1) <= tmin.get(1)) {
-                tmin.set(0, (bounds.get(0, 1) + bounds.get(1, 1)) * 0.5f)
-                tmax.set(0, tmin.get(1) + 1)
+            if (tmax[1] <= tmin[1]) {
+                tmin[0] = (bounds[0, 1] + bounds[1, 1]) * 0.5f
+                tmax[0] = tmin[1] + 1
             }
             trigger = idClipModel(idTraceModel(idBounds(tmin, tmax)))
-            trigger.Link(
+            trigger!!.Link(
                 Game_local.gameLocal.clip,
                 this,
                 255,
                 GetPhysics().GetOrigin(),
-                idMat3.Companion.getMat3_identity()
+                idMat3.getMat3_identity()
             )
-            trigger.SetContents(Material.CONTENTS_TRIGGER)
+            trigger!!.SetContents(Material.CONTENTS_TRIGGER)
         }
 
-        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity?>?, blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_TeamBlocked(blockedEntity: idEventArg<idEntity>, blockingEntity: idEventArg<idEntity>) {
             // reverse direction
             Use_BinaryMover(activatedBy.GetEntity())
         }
 
-        private fun Event_PartBlocked(blockingEntity: idEventArg<idEntity?>?) {
+        private fun Event_PartBlocked(blockingEntity: idEventArg<idEntity>) {
             if (damage > 0) {
                 blockingEntity.value.Damage(
                     this,
@@ -3814,15 +3822,15 @@ object Mover {
             }
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity?>?, trace: idEventArg<trace_s?>?) {
+        private fun Event_Touch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
             val other = _other.value as? idPlayer ?: return
-            if (GetMoverState() == moverState_t.MOVER_POS1 && trigger != null && trace.value.c.id == trigger.GetId() && other.health > 0) {
+            if (GetMoverState() == moverState_t.MOVER_POS1 && trigger != null && trace.value.c.id == trigger!!.GetId() && other.health > 0) {
                 Use_BinaryMover(other)
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -3852,26 +3860,27 @@ object Mover {
     open class idMover_Periodic : idEntity() {
         companion object {
             // CLASS_PROTOTYPE( idMover_Periodic );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
-                eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
-                eventCallbacks[Mover.EV_TeamBlocked] =
-                    eventCallback_t2<idMover_Periodic?> { obj: T?, blockedEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_TeamBlocked(neo.Game.blockedEntity)
-                    } as eventCallback_t2<idMover_Periodic?>
-                eventCallbacks[Mover.EV_PartBlocked] =
-                    eventCallback_t1<idMover_Periodic?> { obj: T?, blockingEntity: idEventArg<*>? ->
-                        neo.Game.obj.Event_PartBlocked(neo.Game.blockingEntity)
-                    } as eventCallback_t1<idMover_Periodic?>
+                eventCallbacks.putAll(idEntity.getEventCallBacks())
+                eventCallbacks[EV_TeamBlocked] =
+                    eventCallback_t2<idMover_Periodic> { obj: Any?, blockedEntity: idEventArg<*>?,
+                                                         blockingEntity: idEventArg<*>? ->
+                        idMover_Periodic::Event_TeamBlocked
+                    }
+                eventCallbacks[EV_PartBlocked] =
+                    eventCallback_t1<idMover_Periodic> { obj: Any?, blockingEntity: idEventArg<*>? ->
+                        idMover_Periodic::Event_PartBlocked
+                    }
             }
         }
 
         protected var damage: CFloat = CFloat()
-        protected var physicsObj: idPhysics_Parametric?
+        protected var physicsObj: idPhysics_Parametric
         override fun Spawn() {
             super.Spawn()
             spawnArgs.GetFloat("damage", "0", damage)
@@ -3914,12 +3923,12 @@ object Mover {
         }
 
         protected fun Event_TeamBlocked(
-            blockedEntity: idEventArg<idEntity?>?,
-            blockingEntity: idEventArg<idEntity?>?
+            blockedEntity: idEventArg<idEntity>,
+            blockingEntity: idEventArg<idEntity>
         ) {
         }
 
-        protected fun Event_PartBlocked(blockingEntity: idEventArg<idEntity?>?) {
+        protected fun Event_PartBlocked(blockingEntity: idEventArg<idEntity>) {
             if (damage._val > 0) {
                 blockingEntity.value.Damage(
                     this,
@@ -3932,18 +3941,18 @@ object Mover {
             }
         }
 
-        override fun CreateInstance(): idClass? {
+        override fun CreateInstance(): idClass {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
         //
         init {
-            damage.setVal(0f)
+            damage._val = 0f
             physicsObj = idPhysics_Parametric()
             fl.neverDormant = false
         }
@@ -3959,23 +3968,23 @@ object Mover {
     class idRotater : idMover_Periodic() {
         companion object {
             // CLASS_PROTOTYPE( idRotater );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idMover_Periodic.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idRotater?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Activate(neo.Game.activator) } as eventCallback_t1<idRotater?>
+                    eventCallback_t1<idRotater> { obj: Any?, activator: idEventArg<*>? -> idRotater::Event_Activate }
             }
         }
 
-        private val activatedBy: idEntityPtr<idEntity?>?
+        private val activatedBy: idEntityPtr<idEntity>
         override fun Spawn() {
             super.Spawn()
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -4012,7 +4021,7 @@ object Mover {
             activatedBy.Restore(savefile)
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             val speed = CFloat()
             val x_axis = CBool(false)
             val y_axis = CBool(false)
@@ -4026,12 +4035,12 @@ object Mover {
                 spawnArgs.GetBool("y_axis", "0", y_axis)
 
                 // set the axis of rotation
-                if (x_axis.isVal) {
-                    delta.set(2, speed._val)
-                } else if (y_axis.isVal) {
-                    delta.set(0, speed._val)
+                if (x_axis._val) {
+                    delta[2] = speed._val
+                } else if (y_axis._val) {
+                    delta[0] = speed._val
                 } else {
-                    delta.set(1, speed._val)
+                    delta[1] = speed._val
                 }
             } else {
                 spawnArgs.Set("rotate", "0")
@@ -4046,8 +4055,8 @@ object Mover {
             )
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
 
         //
@@ -4082,15 +4091,15 @@ object Mover {
 
             // set the axis of bobbing
             delta.set(Vector.getVec3_origin())
-            if (x_axis.isVal) {
-                delta.set(0, height._val)
-            } else if (y_axis.isVal) {
-                delta.set(1, height._val)
+            if (x_axis._val) {
+                delta[0] = height._val
+            } else if (y_axis._val) {
+                delta[1] = height._val
             } else {
-                delta.set(2, height._val)
+                delta[2] = height._val
             }
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -4130,18 +4139,18 @@ object Mover {
             spawnArgs.GetFloat("phase", "0", phase)
             if (spawnArgs.GetFloat("freq", "", freq)) {
                 if (freq._val <= 0.0f) {
-                    idGameLocal.Companion.Error("Invalid frequency on entity '%s'", GetName())
+                    idGameLocal.Error("Invalid frequency on entity '%s'", GetName())
                 }
             } else {
                 // find pendulum length
-                length.setVal(Math.abs(GetPhysics().GetBounds().get(0, 2)))
+                length._val = (abs(GetPhysics().GetBounds()[0, 2]))
                 if (length._val < 8) {
-                    length.setVal(8f)
+                    length._val = (8f)
                 }
-                freq.setVal(1 / idMath.TWO_PI * idMath.Sqrt(SysCvar.g_gravity.GetFloat() / (3 * length._val)))
+                freq._val = (1 / idMath.TWO_PI * idMath.Sqrt(SysCvar.g_gravity.GetFloat() / (3 * length._val)))
             }
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -4161,7 +4170,7 @@ object Mover {
                 (phase._val * 1000).toInt(),
                 (500 / freq._val).toInt(),
                 GetPhysics().GetAxis().ToAngles(),
-                idAngles(0, 0, speed._val * 2.0f),
+                idAngles(0f, 0f, speed._val * 2.0f),
                 Angles.getAng_zero()
             )
             SetPhysics(physicsObj)
@@ -4178,15 +4187,15 @@ object Mover {
     class idRiser : idMover_Periodic() {
         companion object {
             // CLASS_PROTOTYPE( idRiser );
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>?>? = HashMap()
-            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>?>? {
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            fun getEventCallBacks(): MutableMap<idEventDef, eventCallback_t<*>> {
                 return eventCallbacks
             }
 
             init {
                 eventCallbacks.putAll(idMover_Periodic.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idRiser?> { obj: T?, activator: idEventArg<*>? -> neo.Game.obj.Event_Activate(neo.Game.activator) } as eventCallback_t1<idRiser?>
+                    eventCallback_t1<idRiser> { obj: Any?, activator: idEventArg<*>? -> idRiser::Event_Activate }
             }
         }
 
@@ -4194,7 +4203,7 @@ object Mover {
         override fun Spawn() {
             super.Spawn()
             physicsObj.SetSelf(this)
-            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()), 1.0f)
+            physicsObj.SetClipModel(idClipModel(GetPhysics().GetClipModel()!!), 1.0f)
             physicsObj.SetOrigin(GetPhysics().GetOrigin())
             physicsObj.SetAxis(GetPhysics().GetAxis())
             physicsObj.SetClipMask(Game_local.MASK_SOLID)
@@ -4215,7 +4224,7 @@ object Mover {
             SetPhysics(physicsObj)
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity?>?) {
+        private fun Event_Activate(activator: idEventArg<idEntity>) {
             if (!IsHidden() && spawnArgs.GetBool("hide")) {
                 Hide()
             } else {
@@ -4226,7 +4235,7 @@ object Mover {
                 spawnArgs.GetFloat("time", "4", time)
                 spawnArgs.GetFloat("height", "32", height)
                 delta.set(Vector.getVec3_origin())
-                delta.set(2, height._val)
+                delta[2] = height._val
                 physicsObj.SetLinearExtrapolation(
                     Extrapolate.EXTRAPOLATION_LINEAR,
                     Game_local.gameLocal.time,
@@ -4238,8 +4247,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks.get(event)
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+            return eventCallbacks[event]!!
         }
     }
 }

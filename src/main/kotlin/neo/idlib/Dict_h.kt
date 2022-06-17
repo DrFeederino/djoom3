@@ -722,10 +722,10 @@ class Dict_h {
         }
 
         // randomly chooses one of the key/value pairs with the given key prefix and returns it's value
-        fun RandomPrefix(prefix: String, random: idRandom): String? {
+        fun RandomPrefix(prefix: String, random: idRandom): String {
             var count: Int
             val MAX_RANDOM_KEYS = 2048
-            val list = arrayOfNulls<String?>(MAX_RANDOM_KEYS)
+            val list = ArrayList<String>(MAX_RANDOM_KEYS)
             var kv: idKeyValue?
 
 //            list[0] = "";

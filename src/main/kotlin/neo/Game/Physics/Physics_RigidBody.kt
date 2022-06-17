@@ -369,7 +369,7 @@ object Physics_RigidBody {
         }
 
         // common physics interface
-        override fun SetClipModel(model: idClipModel, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
+        override fun SetClipModel(model: idClipModel?, density: Float, id: Int /*= 0*/, freeOld: Boolean /*= true*/) {
             val minIndex: Int
             val inertiaScale = idMat3()
             assert(self != null)
@@ -377,7 +377,7 @@ object Physics_RigidBody {
                 model != null // we need a clip model
             )
             assert(
-                model.IsTraceModel() // and it should be a trace model
+                model!!.IsTraceModel() // and it should be a trace model
             )
             assert(
                 density > 0.0f // density should be valid
