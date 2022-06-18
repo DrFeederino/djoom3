@@ -1,5 +1,6 @@
 package neo.Renderer
 
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.ModelDecal.idRenderModelDecal
@@ -12,13 +13,15 @@ import neo.Renderer.RenderWorld_local.portal_s
 import neo.Renderer.tr_local.areaReference_s
 import neo.Renderer.tr_local.idRenderEntityLocal
 import neo.Renderer.tr_local.idRenderLightLocal
-import neo.framework.*
 import neo.framework.CmdSystem.cmdFunction_t
-import neo.idlib.*
+import neo.framework.Common
+import neo.framework.DeclManager
+import neo.framework.Session
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 
@@ -115,7 +118,7 @@ object tr_lightrun {
      Bumps tr.viewCount.
      ===============
      */
-    fun R_CreateEntityRefs(def: idRenderEntityLocal?) {
+    fun R_CreateEntityRefs(def: idRenderEntityLocal) {
         var i: Int
         val transformed: Array<idVec3> = idVec3.Companion.generateArray(8)
         val v = idVec3()
@@ -128,7 +131,7 @@ object tr_lightrun {
         if (def.parms.callback != null) {
             def.referenceBounds.set(def.parms.bounds)
         } else {
-            def.referenceBounds.set(def.parms.hModel.Bounds(def.parms))
+            def.referenceBounds.set(def.parms.hModel!!.Bounds(def.parms))
         }
 
         // some models, like empty particles, may not need to be added at all
@@ -136,19 +139,19 @@ object tr_lightrun {
             return
         }
         if (RenderSystem_init.r_showUpdates.GetBool()
-            && (def.referenceBounds.get(1, 0) - def.referenceBounds.get(0, 0) > 1024
-                    || def.referenceBounds.get(1, 1) - def.referenceBounds.get(0, 1) > 1024)
+            && (def.referenceBounds[1, 0] - def.referenceBounds[0, 0] > 1024
+                    || def.referenceBounds[1, 1] - def.referenceBounds[0, 1] > 1024)
         ) {
             Common.common.Printf(
-                "big entityRef: %f,%f\n", def.referenceBounds.get(1, 0) - def.referenceBounds.get(0, 0),
-                def.referenceBounds.get(1, 1) - def.referenceBounds.get(0, 1)
+                "big entityRef: %f,%f\n", def.referenceBounds[1, 0] - def.referenceBounds[0, 0],
+                def.referenceBounds[1, 1] - def.referenceBounds[0, 1]
             )
         }
         i = 0
         while (i < 8) {
-            v.set(0, def.referenceBounds.get(i shr 0 and 1, 0))
-            v.set(1, def.referenceBounds.get(i shr 1 and 1, 1))
-            v.set(2, def.referenceBounds.get(i shr 2 and 1, 2))
+            v[0] = def.referenceBounds[i shr 0 and 1, 0]
+            v[1] = def.referenceBounds[i shr 1 and 1, 1]
+            v[2] = def.referenceBounds[i shr 2 and 1, 2]
             transformed[i].set(tr_main.R_LocalPointToGlobal(def.modelMatrix, v))
             i++
         }
@@ -159,7 +162,7 @@ object tr_lightrun {
         //        System.out.println("tr.viewCount::R_CreateEntityRefs");
 
         // push these points down the BSP tree into areas
-        def.world.PushVolumeIntoTree(def, null, 8, transformed)
+        def.world!!.PushVolumeIntoTree(def, null, 8, transformed)
     }
 
     /*
@@ -179,7 +182,7 @@ object tr_lightrun {
      =====================
      */
     fun R_SetLightProject(
-        lightProject: Array<idPlane>? /*[4]*/, origin: idVec3, target: idVec3,
+        lightProject: Array<idPlane> /*[4]*/, origin: idVec3, target: idVec3,
         rightVector: idVec3, upVector: idVec3, start: idVec3, stop: idVec3
     ) {
         var dist: Float
@@ -202,30 +205,30 @@ object tr_lightrun {
         dist = target.times(normal) //  - ( origin * normal );
         if (dist < 0) {
             dist = -dist
-            normal.set(normal.oNegative())
+            normal.set(normal.unaryMinus())
         }
         scale = 0.5f * dist / rLen
         right.timesAssign(scale)
         scale = -(0.5f * dist) / uLen
         up.timesAssign(scale)
-        lightProject.get(2).set(normal)
-        lightProject.get(2).set(3, -origin.times(lightProject.get(2).Normal()))
-        lightProject.get(0).set(right)
-        lightProject.get(0).set(3, -origin.times(lightProject.get(0).Normal()))
-        lightProject.get(1).set(up)
-        lightProject.get(1).set(3, -origin.times(lightProject.get(1).Normal()))
+        lightProject[2].set(normal)
+        lightProject[2][3] = -origin.times(lightProject[2].Normal())
+        lightProject[0].set(right)
+        lightProject[0][3] = -origin.times(lightProject[0].Normal())
+        lightProject[1].set(up)
+        lightProject[1][3] = -origin.times(lightProject[1].Normal())
 
         // now offset to center
-        targetGlobal.set(target.oPlus(origin))
-        targetGlobal.set(3, 1f)
-        ofs = 0.5f - targetGlobal.times(lightProject.get(0).ToVec4()) / targetGlobal.times(
-            lightProject.get(2).ToVec4()
+        targetGlobal.set(target.plus(origin))
+        targetGlobal[3] = 1f
+        ofs = 0.5f - targetGlobal.times(lightProject[0].ToVec4()) / targetGlobal.times(
+            lightProject[2].ToVec4()
         )
-        lightProject.get(0).ToVec4_oPluSet(lightProject.get(2).ToVec4().times(ofs))
-        ofs = 0.5f - targetGlobal.times(lightProject.get(1).ToVec4()) / targetGlobal.times(
-            lightProject.get(2).ToVec4()
+        lightProject[0].ToVec4_oPluSet(lightProject[2].ToVec4().times(ofs))
+        ofs = 0.5f - targetGlobal.times(lightProject[1].ToVec4()) / targetGlobal.times(
+            lightProject[2].ToVec4()
         )
-        lightProject.get(1).ToVec4_oPluSet(lightProject.get(2).ToVec4().times(ofs))
+        lightProject[1].ToVec4_oPluSet(lightProject[2].ToVec4().times(ofs))
 
         // set the falloff vector
         normal.set(stop.minus(start))
@@ -233,9 +236,9 @@ object tr_lightrun {
         if (dist <= 0) {
             dist = 1f
         }
-        lightProject.get(3).set(normal.times(1.0f / dist))
-        startGlobal.set(start.oPlus(origin))
-        lightProject.get(3).set(3, -startGlobal.times(lightProject.get(3).Normal()))
+        lightProject[3].set(normal.times(1.0f / dist))
+        startGlobal.set(start.plus(origin))
+        lightProject[3][3] = -startGlobal.times(lightProject[3].Normal())
     }
 
     /*
@@ -246,26 +249,26 @@ object tr_lightrun {
      face out of the light
      ===================
      */
-    fun R_SetLightFrustum(lightProject: Array<idPlane>? /*[4]*/, frustum: Array<idPlane>? /*[6]*/) {
+    fun R_SetLightFrustum(lightProject: Array<idPlane> /*[4]*/, frustum: Array<idPlane> /*[6]*/) {
         var i: Int
 
         // we want the planes of s=0, s=q, t=0, and t=q
-        frustum.get(0) = idPlane(lightProject.get(0))
-        frustum.get(1) = idPlane(lightProject.get(1))
-        frustum.get(2) = lightProject.get(2).minus(lightProject.get(0))
-        frustum.get(3) = lightProject.get(2).minus(lightProject.get(1))
+        frustum[0] = idPlane(lightProject[0])
+        frustum[1] = idPlane(lightProject[1])
+        frustum[2] = lightProject[2].minus(lightProject[0])
+        frustum[3] = lightProject[2].minus(lightProject[1])
 
         // we want the planes of s=0 and s=1 for front and rear clipping planes
-        frustum.get(4) = idPlane(lightProject.get(3))
-        frustum.get(5) = idPlane(lightProject.get(3))
-        frustum.get(5).minusAssign(3, 1.0f)
-        frustum.get(5) = frustum.get(5).unaryMinus()
+        frustum[4] = idPlane(lightProject[3])
+        frustum[5] = idPlane(lightProject[3])
+        frustum[5].minusAssign(3, 1.0f)
+        frustum[5] = frustum[5].unaryMinus()
         i = 0
         while (i < 6) {
             var f: Float
-            frustum.get(i) = frustum.get(i).unaryMinus()
-            f = frustum.get(i).Normalize()
-            frustum.get(i).divAssign(3, f)
+            frustum[i] = frustum[i].unaryMinus()
+            f = frustum[i].Normalize()
+            frustum[i].divAssign(3, f)
             i++
         }
     }
@@ -275,7 +278,7 @@ object tr_lightrun {
      R_FreeLightDefFrustum
      ====================
      */
-    fun R_FreeLightDefFrustum(ldef: idRenderLightLocal?) {
+    fun R_FreeLightDefFrustum(ldef: idRenderLightLocal) {
         var i: Int
 
         // free the frustum tris
@@ -302,7 +305,7 @@ object tr_lightrun {
      =================
      */
     @Throws(idException::class)
-    fun R_DeriveLightData(light: idRenderLightLocal?) {
+    fun R_DeriveLightData(light: idRenderLightLocal) {
         var i: Int
 
         // decide which light shader we are going to use
@@ -318,17 +321,17 @@ object tr_lightrun {
         }
 
         // get the falloff image
-        light.falloffImage = light.lightShader.LightFalloffImage()
+        light.falloffImage = light.lightShader!!.LightFalloffImage()
         if (null == light.falloffImage) {
             // use the falloff from the default shader of the correct type
             val defaultShader: idMaterial?
             if (light.parms.pointLight) {
                 defaultShader = DeclManager.declManager.FindMaterial("lights/defaultPointLight")
-                light.falloffImage = defaultShader.LightFalloffImage()
+                light.falloffImage = defaultShader!!.LightFalloffImage()
             } else {
                 // projected lights by default don't diminish with distance
                 defaultShader = DeclManager.declManager.FindMaterial("lights/defaultProjectedLight")
-                light.falloffImage = defaultShader.LightFalloffImage()
+                light.falloffImage = defaultShader!!.LightFalloffImage()
             }
         }
 
@@ -345,13 +348,13 @@ object tr_lightrun {
             for (l in light.lightProject.indices) {
                 light.lightProject[l] = idPlane()
             }
-            light.lightProject[0].set(0, 0.5f / light.parms.lightRadius.get(0))
-            light.lightProject[1].set(1, 0.5f / light.parms.lightRadius.get(1))
-            light.lightProject[3].set(2, 0.5f / light.parms.lightRadius.get(2))
-            light.lightProject[0].set(3, 0.5f)
-            light.lightProject[1].set(3, 0.5f)
-            light.lightProject[2].set(3, 1.0f)
-            light.lightProject[3].set(3, 0.5f)
+            light.lightProject[0][0] = 0.5f / light.parms.lightRadius[0]
+            light.lightProject[1][1] = 0.5f / light.parms.lightRadius[1]
+            light.lightProject[3][2] = 0.5f / light.parms.lightRadius[2]
+            light.lightProject[0][3] = 0.5f
+            light.lightProject[1][3] = 0.5f
+            light.lightProject[2][3] = 1.0f
+            light.lightProject[3][3] = 0.5f
         }
 
         // set the frustum planes
@@ -381,25 +384,25 @@ object tr_lightrun {
             dir.set(light.parms.lightCenter)
             if (0f == dir.Normalize()) {
                 // make point straight up if not specified
-                dir.set(2, 1f)
+                dir[2] = 1f
             }
-            light.globalLightOrigin.set(light.parms.origin.oPlus(dir.times(100000f)))
+            light.globalLightOrigin.set(light.parms.origin.plus(dir.times(100000f)))
         } else {
-            light.globalLightOrigin.set(light.parms.origin.oPlus(light.parms.axis.times(light.parms.lightCenter)))
+            light.globalLightOrigin.set(light.parms.origin.plus(light.parms.axis.times(light.parms.lightCenter)))
         }
         tr_lightrun.R_FreeLightDefFrustum(light)
-        light.frustumTris = tr_polytope.R_PolytopeSurface(6, light.frustum, light.frustumWindings)
+        light.frustumTris = tr_polytope.R_PolytopeSurface(6, light.frustum, light.frustumWindings as Array<idWinding>)
 
         // a projected light will have one shadowFrustum, a point light will have
         // six unless the light center is outside the box
         tr_stencilshadow.R_MakeShadowFrustums(light)
     }
 
-    fun R_CreateLightRefs(light: idRenderLightLocal?) {
+    fun R_CreateLightRefs(light: idRenderLightLocal) {
         val points: Array<idVec3> = idVec3.Companion.generateArray(tr_lightrun.MAX_LIGHT_VERTS)
         var i: Int
         val tri: srfTriangles_s?
-        tri = light.frustumTris
+        tri = light.frustumTris!!
 
         // because a light frustum is made of only six intersecting planes,
         // we should never be able to get a stupid number of points...
@@ -411,13 +414,13 @@ object tr_lightrun {
             points[i].set(tri.verts[i].xyz)
             i++
         }
-        if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds.get(1, 0) - tri.bounds.get(0, 0) > 1024
-                    || tri.bounds.get(1, 1) - tri.bounds.get(0, 1) > 1024)
+        if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds[1, 0] - tri.bounds[0, 0] > 1024
+                    || tri.bounds[1, 1] - tri.bounds[0, 1] > 1024)
         ) {
             Common.common.Printf(
                 "big lightRef: %f,%f\n",
-                tri.bounds.get(1, 0) - tri.bounds.get(0, 0),
-                tri.bounds.get(1, 1) - tri.bounds.get(0, 1)
+                tri.bounds[1, 0] - tri.bounds[0, 0],
+                tri.bounds[1, 1] - tri.bounds[0, 1]
             )
         }
 
@@ -425,9 +428,9 @@ object tr_lightrun {
         // cull the light if it is behind a closed door
         // it is debatable if we want to use the entity origin or the center offset origin,
         // but we definitely don't want to use a parallel offset origin
-        light.areaNum = light.world.PointInArea(light.globalLightOrigin)
+        light.areaNum = light.world!!.PointInArea(light.globalLightOrigin)
         if (light.areaNum == -1) {
-            light.areaNum = light.world.PointInArea(light.parms.origin)
+            light.areaNum = light.world!!.PointInArea(light.parms.origin)
         }
 
         // bump the view count so we can tell if an
@@ -439,11 +442,11 @@ object tr_lightrun {
         // we can limit the area references to those visible through the portals from the light center.
         // We can't do this in the normal case, because shadows are cast from back facing triangles, which
         // may be in areas not directly visible to the light projection center.
-        if (light.parms.prelightModel != null && RenderSystem_init.r_useLightPortalFlow.GetBool() && light.lightShader.LightCastsShadows()) {
-            light.world.FlowLightThroughPortals(light)
+        if (light.parms.prelightModel != null && RenderSystem_init.r_useLightPortalFlow.GetBool() && light.lightShader!!.LightCastsShadows()) {
+            light.world!!.FlowLightThroughPortals(light)
         } else {
             // push these points down the BSP tree into areas
-            light.world.PushVolumeIntoTree(null, light, tri.numVerts, points)
+            light.world!!.PushVolumeIntoTree(null, light, tri.numVerts, points)
         }
     }
 
@@ -454,7 +457,7 @@ object tr_lightrun {
      Called by the editor and dmap to operate on light volumes
      ===============
      */
-    fun R_RenderLightFrustum(renderLight: renderLight_s?, lightFrustum: Array<idPlane>? /*[6]*/) {
+    fun R_RenderLightFrustum(renderLight: renderLight_s, lightFrustum: Array<idPlane> /*[6]*/) {
         val fakeLight = idRenderLightLocal()
 
 //	memset( &fakeLight, 0, sizeof( fakeLight ) );
@@ -462,7 +465,7 @@ object tr_lightrun {
         tr_lightrun.R_DeriveLightData(fakeLight)
         tr_trisurf.R_FreeStaticTriSurf(fakeLight.frustumTris)
         for (i in 0..5) {
-            lightFrustum.get(i) = fakeLight.frustum[i]
+            lightFrustum[i] = fakeLight.frustum[i]
         }
     }
 
@@ -471,7 +474,7 @@ object tr_lightrun {
      WindingCompletelyInsideLight
      ===============
      */
-    fun WindingCompletelyInsideLight(w: idWinding?, ldef: idRenderLightLocal?): Boolean {
+    fun WindingCompletelyInsideLight(w: idWinding, ldef: idRenderLightLocal): Boolean {
         var i: Int
         var j: Int
         i = 0
@@ -479,7 +482,7 @@ object tr_lightrun {
             j = 0
             while (j < 6) {
                 var d: Float
-                d = w.get(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j].get(3)
+                d = w.get(i).ToVec3().times(ldef.frustum[j].Normal()) + ldef.frustum[j][3]
                 if (d > 0) {
                     return false
                 }
@@ -499,16 +502,16 @@ object tr_lightrun {
      encloses any portals, which may allow them to be fogged closed.
      ======================
      */
-    fun R_CreateLightDefFogPortals(ldef: idRenderLightLocal?) {
+    fun R_CreateLightDefFogPortals(ldef: idRenderLightLocal) {
         var lref: areaReference_s?
         var area: portalArea_s?
         ldef.foggedPortals = null
-        if (!ldef.lightShader.IsFogLight()) {
+        if (!ldef.lightShader!!.IsFogLight()) {
             return
         }
 
         // some fog lights will explicitly disallow portal fogging
-        if (ldef.lightShader.TestMaterialFlag(Material.MF_NOPORTALFOG)) {
+        if (ldef.lightShader!!.TestMaterialFlag(Material.MF_NOPORTALFOG)) {
             return
         }
         lref = ldef.references
@@ -525,7 +528,7 @@ object tr_lightrun {
                 // we only handle a single fog volume covering a portal
                 // this will never cause incorrect drawing, but it may
                 // fail to cull a portal
-                if (dp.fogLight != null) {
+                if (dp!!.fogLight != null) {
                     prt = prt.next
                     continue
                 }
@@ -547,7 +550,7 @@ object tr_lightrun {
      Frees all references and lit surfaces from the light
      ====================
      */
-    fun R_FreeLightDefDerivedData(ldef: idRenderLightLocal?) {
+    fun R_FreeLightDefDerivedData(ldef: idRenderLightLocal) {
         var lref: areaReference_s?
         var nextRef: areaReference_s?
 
@@ -560,7 +563,7 @@ object tr_lightrun {
 
         // free all the interactions
         while (ldef.firstInteraction != null) {
-            ldef.firstInteraction.UnlinkAndFree()
+            ldef.firstInteraction!!.UnlinkAndFree()
         }
 
         // free all the references to the light
@@ -569,8 +572,8 @@ object tr_lightrun {
             nextRef = lref.ownerNext
 
             // unlink from the area
-            lref.areaNext.areaPrev = lref.areaPrev
-            lref.areaPrev.areaNext = lref.areaNext
+            lref.areaNext!!.areaPrev = lref.areaPrev
+            lref.areaPrev!!.areaNext = lref.areaNext
             lref = nextRef
         }
         ldef.references = null
@@ -585,7 +588,7 @@ object tr_lightrun {
      Does not actually free the entityDef.
      ===================
      */
-    fun R_FreeEntityDefDerivedData(def: idRenderEntityLocal?, keepDecals: Boolean, keepCachedDynamicModel: Boolean) {
+    fun R_FreeEntityDefDerivedData(def: idRenderEntityLocal, keepDecals: Boolean, keepCachedDynamicModel: Boolean) {
         var i: Int
         var ref: areaReference_s?
         var next: areaReference_s?
@@ -593,9 +596,9 @@ object tr_lightrun {
         // demo playback needs to free the joints, while normal play
         // leaves them in the control of the game
         if (Session.Companion.session.readDemo != null) {
-            if (def.parms.joints != null) {
+            if (def.parms.joints.isNotEmpty()) {
 //			Mem_Free16( def.parms.joints );
-                def.parms.joints = null
+                def.parms.joints.clear()
             }
             if (def.parms.callbackData != null) {
 //			Mem_Free( def.parms.callbackData );
@@ -605,7 +608,7 @@ object tr_lightrun {
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
                 if (def.parms.gui[i] != null) {
 //				delete def.parms.gui[ i ];
-                    def.parms.gui[i] = null
+                    def.parms.gui.removeAt(i)
                 }
                 i++
             }
@@ -613,7 +616,7 @@ object tr_lightrun {
 
         // free all the interactions
         while (def.firstInteraction != null) {
-            def.firstInteraction.UnlinkAndFree()
+            def.firstInteraction!!.UnlinkAndFree()
         }
 
         // clear the dynamic model if present
@@ -635,8 +638,8 @@ object tr_lightrun {
             next = ref.ownerNext
 
             // unlink from the area
-            ref.areaNext.areaPrev = ref.areaPrev
-            ref.areaPrev.areaNext = ref.areaNext
+            ref.areaNext!!.areaPrev = ref.areaPrev
+            ref.areaPrev!!.areaNext = ref.areaNext
             ref = next
         }
         def.entityRefs = null
@@ -651,7 +654,7 @@ object tr_lightrun {
      R_FreeEntityDefDerivedData
      ==================
      */
-    fun R_ClearEntityDefDynamicModel(def: idRenderEntityLocal?) {
+    fun R_ClearEntityDefDynamicModel(def: idRenderEntityLocal) {
         // free all the interaction surfaces
         var inter = def.firstInteraction
         while (inter != null && !inter.IsEmpty()) {
@@ -670,9 +673,9 @@ object tr_lightrun {
      R_FreeEntityDefDecals
      ===================
      */
-    fun R_FreeEntityDefDecals(def: idRenderEntityLocal?) {
+    fun R_FreeEntityDefDecals(def: idRenderEntityLocal) {
         while (def.decals != null) {
-            val next = def.decals.Next()
+            val next = def.decals!!.Next()
             idRenderModelDecal.Companion.Free(def.decals)
             def.decals = next
         }
@@ -683,7 +686,7 @@ object tr_lightrun {
      R_FreeEntityDefFadedDecals
      ===================
      */
-    fun R_FreeEntityDefFadedDecals(def: idRenderEntityLocal?, time: Int) {
+    fun R_FreeEntityDefFadedDecals(def: idRenderEntityLocal, time: Int) {
         def.decals = idRenderModelDecal.Companion.RemoveFadedDecals(def.decals, time)
     }
 
@@ -692,9 +695,9 @@ object tr_lightrun {
      R_FreeEntityDefOverlay
      ===================
      */
-    fun R_FreeEntityDefOverlay(def: idRenderEntityLocal?) {
+    fun R_FreeEntityDefOverlay(def: idRenderEntityLocal) {
         if (def.overlay != null) {
-            idRenderModelOverlay.Companion.Free(def.overlay)
+            idRenderModelOverlay.Companion.Free(def.overlay!!)
             def.overlay = null
         }
     }
@@ -714,11 +717,11 @@ object tr_lightrun {
         var def: idRenderEntityLocal?
         var light: idRenderLightLocal?
         j = 0
-        while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.get(j)
+        while (j < tr_local.tr.worlds.size) {
+            rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.get(i)
+            while (i < rw.entityDefs.size) {
+                def = rw.entityDefs[i]
                 if (null == def) {
                     i++
                     continue
@@ -727,8 +730,8 @@ object tr_lightrun {
                 i++
             }
             i = 0
-            while (i < rw.lightDefs.Num()) {
-                light = rw.lightDefs.get(i)
+            while (i < rw.lightDefs.size) {
+                light = rw.lightDefs[i]
                 if (null == light) {
                     i++
                     continue
@@ -751,11 +754,11 @@ object tr_lightrun {
         var rw: idRenderWorldLocal?
         var def: idRenderEntityLocal?
         j = 0
-        while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.get(j)
+        while (j < tr_local.tr.worlds.size) {
+            rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.get(i)
+            while (i < rw.entityDefs.size) {
+                def = rw.entityDefs[i]
                 if (null == def) {
                     i++
                     continue
@@ -790,11 +793,11 @@ object tr_lightrun {
         // a particular view
         tr_local.tr.viewDef = null
         j = 0
-        while (j < tr_local.tr.worlds.Num()) {
-            rw = tr_local.tr.worlds.get(j)
+        while (j < tr_local.tr.worlds.size) {
+            rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.Num()) {
-                def = rw.entityDefs.get(i)
+            while (i < rw.entityDefs.size) {
+                def = rw.entityDefs[i]
                 if (null == def) {
                     i++
                     continue
@@ -809,14 +812,14 @@ object tr_lightrun {
                 i++
             }
             i = 0
-            while (i < rw.lightDefs.Num()) {
-                light = rw.lightDefs.get(i)
+            while (i < rw.lightDefs.size) {
+                light = rw.lightDefs[i]
                 if (null == light) {
                     i++
                     continue
                 }
                 val parms = light.parms
-                light.world.FreeLightDef(i)
+                light.world!!.FreeLightDef(i)
                 rw.UpdateLightDef(i, parms)
                 i++
             }
@@ -840,7 +843,7 @@ object tr_lightrun {
      ====================
      */
     class R_ModulateLights_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             if (null == tr_local.tr.primaryWorld) {
                 return
             }
@@ -857,9 +860,9 @@ object tr_lightrun {
             }
             var count = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
+            while (i < tr_local.tr.primaryWorld!!.lightDefs.size) {
                 var light: idRenderLightLocal?
-                light = tr_local.tr.primaryWorld.lightDefs.get(i)
+                light = tr_local.tr.primaryWorld!!.lightDefs[i]
                 if (light != null) {
                     count++
                     for (j in 0..2) {
@@ -872,8 +875,8 @@ object tr_lightrun {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ModulateLights_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ModulateLights_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -888,7 +891,7 @@ object tr_lightrun {
      ===================
      */
     class R_RegenerateWorld_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             tr_lightrun.R_FreeDerivedData()
 
             // watch how much memory we allocate
@@ -898,8 +901,8 @@ object tr_lightrun {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_RegenerateWorld_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_RegenerateWorld_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

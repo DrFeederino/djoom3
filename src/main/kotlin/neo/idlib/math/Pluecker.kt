@@ -360,11 +360,7 @@ class Pluecker {
         //public	final char *	ToString( int precision = 2 ) final;
         companion object {
             fun generateArray(length: Int): Array<idPluecker> {
-                val arr = arrayOf<idPluecker>()
-                for (i in 0..length) {
-                    arr[i] = idPluecker()
-                }
-                return arr
+                return Array(length) { idPluecker() }
             }
         }
     }

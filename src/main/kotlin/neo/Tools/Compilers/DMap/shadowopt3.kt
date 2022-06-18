@@ -1020,7 +1020,7 @@ object shadowopt3 {
         ret.totalIndexes = 0
         maxRetIndexes =
             ret.numFrontCapIndexes + ret.numRearCapIndexes + ret.numSilPlaneIndexes
-        ret.indexes = IntArray(maxRetIndexes) // Mem_Alloc(maxRetIndexes);
+        ret.indexes = ArrayList(maxRetIndexes) // Mem_Alloc(maxRetIndexes);
         for (i in 0 until numOutputTris) {
             // flip the indexes so the surface triangle faces outside the shadow volume
             ret.indexes[i * 3 + 0] = outputTris[i].index[2]
@@ -1046,7 +1046,9 @@ object shadowopt3 {
         // we have all the verts now
         // create twice the uniqued verts
         ret.numVerts = numUniqued
-        ret.verts = idVec3.generateArray(ret.numVerts) // Mem_Alloc(ret.numVerts);
+        val newVerts = kotlin.collections.ArrayList<idVec3>()
+        newVerts.addAll(idVec3.generateArray(ret.numVerts))
+        ret.verts = newVerts // Mem_Alloc(ret.numVerts);
         for (i in 0 until numUniqued) {
             // put the vert back in global space, instead of light centered space
             ret.verts[i].set(uniqued[i].plus(projectionOrigin))

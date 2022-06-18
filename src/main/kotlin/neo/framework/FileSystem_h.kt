@@ -349,7 +349,7 @@ object FileSystem_h {
     }
 
     class fileDownload_s {
-        var buffer: ByteBuffer = ByteBuffer.allocate(0)
+        var buffer: ByteBuffer = ByteBuffer.allocate(1)
         var length = 0
         var position = 0
 

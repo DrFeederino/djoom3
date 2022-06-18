@@ -1,6 +1,6 @@
 package neo.Renderer
 
-import neo.Renderer.*
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.RenderWorld.idRenderWorld
 import neo.Renderer.RenderWorld.renderView_s
 import neo.Renderer.tr_local.backEndCounters_t
@@ -20,7 +20,7 @@ import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.sys.win_glimp
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -34,7 +34,7 @@ object RenderSystem {
 
     // font support
     const val GLYPH_START = 0
-    const val GLYPHS_PER_FONT = RenderSystem.GLYPH_END - RenderSystem.GLYPH_START + 1
+    const val GLYPHS_PER_FONT = GLYPH_END - GLYPH_START + 1
     const val SCREEN_HEIGHT = 480
 
     //
@@ -161,7 +161,7 @@ object RenderSystem {
         if (!RenderSystem_init.r_skipBackEnd.GetBool()) {
             tr_backend.RB_ExecuteBackEndCommands(tr_local.frameData.cmdHead)
         }
-        RenderSystem.R_ClearCommandChain()
+        R_ClearCommandChain()
     }
 
     /*
@@ -173,8 +173,8 @@ object RenderSystem {
      current command chain.
      ============
      */
-    fun R_GetCommandBuffer(command_t: emptyCommand_t?): emptyCommand_t? {
-        val cmd: emptyCommand_t?
+    fun R_GetCommandBuffer(command_t: emptyCommand_t): emptyCommand_t {
+        val cmd: emptyCommand_t
 
 //        cmd = R_FrameAlloc(bytes);
 //        cmd.next = null;
@@ -205,7 +205,7 @@ object RenderSystem {
      R_ViewStatistics
      =================
      */
-    fun R_ViewStatistics(parms: viewDef_s?) {
+    fun R_ViewStatistics(parms: viewDef_s) {
         // report statistics about this view
         if (!RenderSystem_init.r_showSurfaces.GetBool()) {
             return
@@ -221,9 +221,9 @@ object RenderSystem {
      have multiple views if a mirror, portal, or dynamic texture is present.
      =============
      */
-    fun R_AddDrawViewCmd(parms: viewDef_s?) {
-        var cmd: drawSurfsCommand_t?
-        RenderSystem.R_GetCommandBuffer(drawSurfsCommand_t().also { cmd = it /*sizeof(cmd)*/ })
+    fun R_AddDrawViewCmd(parms: viewDef_s) {
+        var cmd: drawSurfsCommand_t
+        R_GetCommandBuffer(drawSurfsCommand_t().also { cmd = it /*sizeof(cmd)*/ })
         cmd.commandId = renderCommand_t.RC_DRAW_VIEW
         cmd.viewDef = parms
         if (parms.viewEntitys != null) {
@@ -231,7 +231,7 @@ object RenderSystem {
             tr_local.tr.lockSurfacesCmd = cmd
         }
         tr_local.tr.pc.c_numViews++
-        RenderSystem.R_ViewStatistics(parms)
+        R_ViewStatistics(parms)
     }
 
     //=================================================================================
@@ -251,17 +251,17 @@ object RenderSystem {
      evaluated interactively.
      ======================
      */
-    fun R_LockSurfaceScene(parms: viewDef_s?) {
+    fun R_LockSurfaceScene(parms: viewDef_s) {
         var cmd: drawSurfsCommand_t
         var vModel: viewEntity_s?
 
         // set the matrix for world space to eye space
         tr_main.R_SetViewMatrix(parms)
-        tr_local.tr.lockSurfacesCmd.viewDef.worldSpace = parms.worldSpace
+        tr_local.tr.lockSurfacesCmd.viewDef!!.worldSpace = parms.worldSpace
 
         // update the view origin and axis, and all
         // the entity matricies
-        vModel = tr_local.tr.lockSurfacesCmd.viewDef.viewEntitys
+        vModel = tr_local.tr.lockSurfacesCmd.viewDef!!.viewEntitys
         while (vModel != null) {
             tr_main.myGlMultMatrix(
                 vModel.modelMatrix,
@@ -273,7 +273,7 @@ object RenderSystem {
 
         // add the stored off surface commands again
 //        cmd = (drawSurfsCommand_t) R_GetCommandBuffer(sizeof(cmd));
-        RenderSystem.R_GetCommandBuffer(tr_local.tr.lockSurfacesCmd) //TODO:double check to make sure the casting and casting back preserves our values.
+        R_GetCommandBuffer(tr_local.tr.lockSurfacesCmd) //TODO:double check to make sure the casting and casting back preserves our values.
     }
 
     /*
@@ -297,8 +297,8 @@ object RenderSystem {
         win_glimp.GLimp_EnableLogging(RenderSystem_init.r_logFile.GetInteger() != 0)
     }
 
-    fun setRenderSystem(renderSystem: idRenderSystem?) {
-        tr_local.tr = renderSystem as idRenderSystemLocal?
+    fun setRenderSystems(renderSystem: idRenderSystem) {
+        tr_local.tr = renderSystem as idRenderSystemLocal
         RenderSystem.renderSystem = tr_local.tr
     }
 
@@ -341,7 +341,7 @@ object RenderSystem {
         //
         var displayFrequency = 0
         var envDot3Available = false
-        var extensions_string: String? = null
+        var extensions_string: String = ""
 
         //
         var glVersion // atof( version_string )
@@ -365,7 +365,7 @@ object RenderSystem {
         //
         var multitextureAvailable = false
         var registerCombinersAvailable = false
-        var renderer_string: String? = null
+        var renderer_string: String = ""
         var sharedTexturePaletteAvailable = false
         var texture3DAvailable = false
         var textureCompressionAvailable = false
@@ -374,14 +374,14 @@ object RenderSystem {
         var textureLODBiasAvailable = false
         var textureNonPowerOfTwoAvailable = false
         var twoSidedStencilAvailable = false
-        var vendor_string: String? = null
-        var version_string: String? = null
+        var vendor_string: String = ""
+        var version_string: String = ""
 
         //
         var vidWidth = 0
         var vidHeight // passed to R_BeginFrame
                 = 0
-        var wgl_extensions_string: String? = null
+        var wgl_extensions_string: String = ""
     }
 
     class glyphInfo_t {
@@ -409,7 +409,7 @@ object RenderSystem {
                 = 0
 
         // char				shaderName[32];
-        var shaderName: String? = null
+        var shaderName: String = ""
 
         companion object {
             @Transient
@@ -436,7 +436,7 @@ object RenderSystem {
 
         companion object {
             @Transient
-            val SIZE = (glyphInfo_t.SIZE * RenderSystem.GLYPHS_PER_FONT
+            val SIZE = (glyphInfo_t.SIZE * GLYPHS_PER_FONT
                     + java.lang.Float.SIZE
                     + Char.SIZE * 64)
 
@@ -477,7 +477,7 @@ object RenderSystem {
             maxHeightSmall = maxWidthSmall
             maxWidth = maxHeightSmall
             maxHeight = maxWidth
-            name = null
+            name = ""
         }
     }
 
@@ -498,7 +498,7 @@ object RenderSystem {
 
         // allocate a renderWorld to be used for drawing
         abstract fun AllocRenderWorld(): idRenderWorld
-        abstract fun FreeRenderWorld(rw: idRenderWorld?)
+        abstract fun FreeRenderWorld(rw: idRenderWorld)
 
         // All data that will be used in a level should be
         // registered before rendering any frames to prevent disk hits,
@@ -508,13 +508,13 @@ object RenderSystem {
         abstract fun EndLevelLoad()
 
         // font support
-        abstract fun RegisterFont(fontName: String?, font: fontInfoEx_t?): Boolean
+        abstract fun RegisterFont(fontName: String, font: fontInfoEx_t): Boolean
 
         // GUI drawing just involves shader parameter setting and axial image subsections
         abstract fun SetColor(rgba: idVec4)
         abstract fun SetColor4(r: Float, g: Float, b: Float, a: Float)
         abstract fun DrawStretchPic(
-            verts: Array<idDrawVert?>?,
+            verts: Array<idDrawVert>,
             indexes: IntArray?,
             vertCount: Int,
             indexCount: Int,
@@ -564,13 +564,13 @@ object RenderSystem {
         )
 
         abstract fun GlobalToNormalizedDeviceCoordinates(global: idVec3, ndc: idVec3)
-        abstract fun GetGLSettings(width: IntArray?, height: IntArray?)
-        abstract fun PrintMemInfo(mi: MemInfo_t?)
+        abstract fun GetGLSettings(width: IntArray, height: IntArray)
+        abstract fun PrintMemInfo(mi: MemInfo_t)
         abstract fun DrawSmallChar(x: Int, y: Int, ch: Int, material: idMaterial?)
         abstract fun DrawSmallStringExt(
             x: Int,
             y: Int,
-            string: CharArray?,
+            string: CharArray,
             setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
@@ -580,7 +580,7 @@ object RenderSystem {
         abstract fun DrawBigStringExt(
             x: Int,
             y: Int,
-            string: String?,
+            string: String,
             setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
@@ -607,7 +607,7 @@ object RenderSystem {
         // This will perform swapbuffers, so it is NOT an approppriate way to
         // generate image files that happen during gameplay, as for savegame
         // markers.  Use WriteRender() instead.
-        abstract fun TakeScreenshot(width: Int, height: Int, fileName: String?, samples: Int, ref: renderView_s?)
+        abstract fun TakeScreenshot(width: Int, height: Int, fileName: String, samples: Int, ref: renderView_s?)
 
         // the render output can be cropped down to a subset of the real screen, as
         // for save-game reviews and split-screen multiplayer.  Users of the renderer
@@ -628,12 +628,12 @@ object RenderSystem {
             CropRenderSize(width, height, makePowerOfTwo, false)
         }
 
-        abstract fun CaptureRenderToImage(imageName: String?)
+        abstract fun CaptureRenderToImage(imageName: String)
 
         // fixAlpha will set all the alpha channel values to 0xff, which allows screen captures
         // to use the default tga loading code without having dimmed down areas in many places
-        abstract fun CaptureRenderToFile(fileName: String?, fixAlpha: Boolean /* = false */)
-        fun CaptureRenderToFile(fileName: String?) {
+        abstract fun CaptureRenderToFile(fileName: String, fixAlpha: Boolean /* = false */)
+        fun CaptureRenderToFile(fileName: String) {
             CaptureRenderToFile(fileName, false)
         }
 
@@ -643,6 +643,6 @@ object RenderSystem {
         // the image has to be already loaded ( most straightforward way would be through a FindMaterial )
         // texture filter / mipmapping / repeat won't be modified by the upload
         // returns false if the image wasn't found
-        abstract fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean
+        abstract fun UploadImage(imageName: String?, data: ByteBuffer, width: Int, height: Int): Boolean
     }
 }

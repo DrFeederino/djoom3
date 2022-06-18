@@ -374,7 +374,10 @@ object SmokeParticles {
                     g.axis.set(smoke.axis)
                     g.originalRandom = idRandom(g.random)
                     g.age = g.frac * stage.particleLife
-                    tri.numVerts += stage.CreateParticle(g, Arrays.copyOfRange(tri.verts, tri.numVerts, tri.verts.size))
+                    tri.numVerts += stage.CreateParticle(
+                        g,
+                        Arrays.copyOfRange(tri.verts.toTypedArray(), tri.numVerts, tri.verts.size)
+                    )
                     last = smoke
                     smoke = next
                 }

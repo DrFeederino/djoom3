@@ -6,21 +6,24 @@ import neo.Renderer.tr_local.frameMemoryBlock_s
 import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.viewDef_s
 import neo.Renderer.tr_local.viewEntity_s
-import neo.framework.*
+import neo.framework.Common
+import neo.framework.Session
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.List.cmp_t
-import neo.idlib.math.*
+import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Random.idRandom
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import java.nio.FloatBuffer
 import java.util.*
+import kotlin.math.tan
 
 /**
  *
@@ -53,7 +56,7 @@ object tr_main {
      Sets up the world to view matrix for a given viewParm
      =================
      */
-    private val s_flipMatrix /*[16]*/: FloatArray? =
+    private val s_flipMatrix /*[16]*/: FloatArray =
         floatArrayOf(-0f, 0f, -1f, 0f, -1f, 0f, -0f, 0f, -0f, 1f, -0f, 0f, -0f, 0f, -0f, 1f)
 
     /*
@@ -77,7 +80,7 @@ object tr_main {
      Returns true if the box is outside the given global frustum, (positive sides are out)
      =================
      */
-    private const val DBG_R_CornerCullLocalBox = 0
+    private var DBG_R_CornerCullLocalBox = 0
 
     /*
      ===============
@@ -86,37 +89,41 @@ object tr_main {
      This uses the "infinite far z" trick
      ===============
      */
-    private val random: idRandom? = null
+    private val random: idRandom = idRandom()
 
     /*
      ======================
      R_ScreenRectFromViewFrustumBounds
      ======================
      */
-    fun R_ScreenRectFromViewFrustumBounds(bounds: idBounds): idScreenRect? {
+    fun R_ScreenRectFromViewFrustumBounds(bounds: idBounds): idScreenRect {
         val screenRect = idScreenRect()
         screenRect.x1 =
-            idMath.FtoiFast(0.5f * (1.0f - bounds.get(1).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
+            idMath.FtoiFast(0.5f * (1.0f - bounds[1].y) * (tr_local.tr.viewDef!!.viewport.x2 - tr_local.tr.viewDef!!.viewport.x1))
         screenRect.x2 =
-            idMath.FtoiFast(0.5f * (1.0f - bounds.get(0).y) * (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1))
+            idMath.FtoiFast(0.5f * (1.0f - bounds[0].y) * (tr_local.tr.viewDef!!.viewport.x2 - tr_local.tr.viewDef!!.viewport.x1))
         screenRect.y1 =
-            idMath.FtoiFast(0.5f * (1.0f + bounds.get(0).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
+            idMath.FtoiFast(0.5f * (1.0f + bounds[0].z) * (tr_local.tr.viewDef!!.viewport.y2 - tr_local.tr.viewDef!!.viewport.y1))
         screenRect.y2 =
-            idMath.FtoiFast(0.5f * (1.0f + bounds.get(1).z) * (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1))
+            idMath.FtoiFast(0.5f * (1.0f + bounds[1].z) * (tr_local.tr.viewDef!!.viewport.y2 - tr_local.tr.viewDef!!.viewport.y1))
         if (RenderSystem_init.r_useDepthBoundsTest.GetInteger() != 0) {
             val zmin = CFloat(screenRect.zmin)
             val zmax = CFloat(screenRect.zmax)
-            tr_main.R_TransformEyeZToWin(-bounds.get(0).x, tr_local.tr.viewDef.projectionMatrix, zmin)
-            tr_main.R_TransformEyeZToWin(-bounds.get(1).x, tr_local.tr.viewDef.projectionMatrix, zmax)
+            tr_main.R_TransformEyeZToWin(-bounds[0].x, tr_local.tr.viewDef!!.projectionMatrix, zmin)
+            tr_main.R_TransformEyeZToWin(-bounds[1].x, tr_local.tr.viewDef!!.projectionMatrix, zmax)
             screenRect.zmin = zmin._val
             screenRect.zmax = zmax._val
         }
         return screenRect
     }
 
-    fun R_ShowColoredScreenRect(rect: idScreenRect?, colorIndex: Int) {
+    fun R_ShowColoredScreenRect(rect: idScreenRect, colorIndex: Int) {
         if (!rect.IsEmpty()) {
-            tr_local.tr.viewDef.renderWorld.DebugScreenRect(tr_main.colors[colorIndex and 7], rect, tr_local.tr.viewDef)
+            tr_local.tr.viewDef!!.renderWorld!!.DebugScreenRect(
+                tr_main.colors[colorIndex and 7],
+                rect,
+                tr_local.tr.viewDef!!
+            )
         }
     }
 
@@ -174,7 +181,7 @@ object tr_main {
             block = nextBlock
         }
         frame = null
-        tr_local.frameData = null
+        tr_local.frameData = frameData_t()
     }
 
     /*
@@ -369,27 +376,27 @@ object tr_main {
     fun R_FrameFree(data: Any?) {}
 
     //==========================================================================
-    fun R_AxisToModelMatrix(axis: idMat3, origin: idVec3, modelMatrix: FloatArray? /*[16]*/) {
-        modelMatrix.get(0) = axis.get(0, 0)
-        modelMatrix.get(4) = axis.get(1, 0)
-        modelMatrix.get(8) = axis.get(2, 0)
-        modelMatrix.get(12) = origin.get(0)
-        modelMatrix.get(1) = axis.get(0, 1)
-        modelMatrix.get(5) = axis.get(1, 1)
-        modelMatrix.get(9) = axis.get(2, 1)
-        modelMatrix.get(13) = origin.get(1)
-        modelMatrix.get(2) = axis.get(0, 2)
-        modelMatrix.get(6) = axis.get(1, 2)
-        modelMatrix.get(10) = axis.get(2, 2)
-        modelMatrix.get(14) = origin.get(2)
-        modelMatrix.get(3) = 0
-        modelMatrix.get(7) = 0
-        modelMatrix.get(11) = 0
-        modelMatrix.get(15) = 1
+    fun R_AxisToModelMatrix(axis: idMat3, origin: idVec3, modelMatrix: FloatArray/*[16]*/) {
+        modelMatrix[0] = axis[0, 0]
+        modelMatrix[4] = axis[1, 0]
+        modelMatrix[8] = axis[2, 0]
+        modelMatrix[12] = origin[0]
+        modelMatrix[1] = axis[0, 1]
+        modelMatrix[5] = axis[1, 1]
+        modelMatrix[9] = axis[2, 1]
+        modelMatrix[13] = origin[1]
+        modelMatrix[2] = axis[0, 2]
+        modelMatrix[6] = axis[1, 2]
+        modelMatrix[10] = axis[2, 2]
+        modelMatrix[14] = origin[2]
+        modelMatrix[3] = 0f
+        modelMatrix[7] = 0f
+        modelMatrix[11] = 0f
+        modelMatrix[15] = 1f
     }
 
     // FIXME: these assume no skewing or scaling transforms
-    fun R_LocalPointToGlobal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3): idVec3 {
+    fun R_LocalPointToGlobal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3): idVec3 {
         val out = idVec3()
 
 // if (MACOS_X && __i386__){
@@ -421,126 +428,86 @@ object tr_main {
         run {
             out.set(
                 idVec3(
-                    `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(
-                        8
-                    ) + modelMatrix.get(12),
-                    `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(
-                        9
-                    ) + modelMatrix.get(13),
-                    `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(
-                        10
-                    ) + modelMatrix.get(14)
+                    `in`[0] * modelMatrix[0] + `in`[1] * modelMatrix[4] + `in`[2] * modelMatrix[8] + modelMatrix[12],
+                    `in`[0] * modelMatrix[1] + `in`[1] * modelMatrix[5] + `in`[2] * modelMatrix[9] + modelMatrix[13],
+                    `in`[0] * modelMatrix[2] + `in`[1] * modelMatrix[6] + `in`[2] * modelMatrix[10] + modelMatrix[14]
                 )
             )
         }
         return out
     }
 
-    fun R_PointTimesMatrix(modelMatrix: FloatArray? /*[16]*/, `in`: idVec4, out: idVec4) {
-        out.set(
-            0,
-            `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(8) + modelMatrix.get(
-                12
-            )
-        )
-        out.set(
-            1,
-            `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(9) + modelMatrix.get(
-                13
-            )
-        )
-        out.set(
-            2,
-            `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(10) + modelMatrix.get(
-                14
-            )
-        )
-        out.set(
-            3,
-            `in`.get(0) * modelMatrix.get(3) + `in`.get(1) * modelMatrix.get(7) + `in`.get(2) * modelMatrix.get(11) + modelMatrix.get(
-                15
-            )
-        )
+    fun R_PointTimesMatrix(modelMatrix: FloatArray /*[16]*/, `in`: idVec4, out: idVec4) {
+        out[0] = `in`[0] * modelMatrix[0] + `in`[1] * modelMatrix[4] + `in`[2] * modelMatrix[8] + modelMatrix[12]
+        out[1] = `in`[0] * modelMatrix[1] + `in`[1] * modelMatrix[5] + `in`[2] * modelMatrix[9] + modelMatrix[13]
+        out[2] = `in`[0] * modelMatrix[2] + `in`[1] * modelMatrix[6] + `in`[2] * modelMatrix[10] + modelMatrix[14]
+        out[3] = `in`[0] * modelMatrix[3] + `in`[1] * modelMatrix[7] + `in`[2] * modelMatrix[11] + modelMatrix[15]
     }
 
-    fun R_GlobalPointToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3, out: idVec<*>?) {
+    fun R_GlobalPointToLocal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3, out: idVec<*>) {
         val temp = FloatArray(4)
-        Vector.VectorSubtract(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 12, 16), temp)
-        out.set(0, Vector.DotProduct(temp, modelMatrix))
-        out.set(1, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.set(2, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12)))
+        Vector.VectorSubtract(`in`.ToFloatPtr(), modelMatrix.copyOfRange(12, 16), temp)
+        out[0] = Vector.DotProduct(temp, modelMatrix)
+        out[1] = Vector.DotProduct(temp, modelMatrix.copyOfRange(4, 8))
+        out[2] = Vector.DotProduct(temp, modelMatrix.copyOfRange(8, 12))
     }
 
-    fun R_GlobalPointToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3, out: FloatArray?) {
+    fun R_GlobalPointToLocal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3, out: FloatArray) {
         val temp = FloatArray(4)
-        Vector.VectorSubtract(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 12, 16), temp)
-        out.get(0) = Vector.DotProduct(temp, modelMatrix)
-        out.get(1) = Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 4, 8))
-        out.get(2) = Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12))
+        Vector.VectorSubtract(`in`.ToFloatPtr(), modelMatrix.copyOfRange(12, 16), temp)
+        out[0] = Vector.DotProduct(temp, modelMatrix)
+        out[1] = Vector.DotProduct(temp, modelMatrix.copyOfRange(4, 8))
+        out[2] = Vector.DotProduct(temp, modelMatrix.copyOfRange(8, 12))
     }
 
-    fun R_GlobalPointToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3, out: FloatBuffer?) {
+    fun R_GlobalPointToLocal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3, out: FloatBuffer) {
         val temp = FloatArray(4)
-        Vector.VectorSubtract(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 12, 16), temp)
+        Vector.VectorSubtract(`in`.ToFloatPtr(), modelMatrix.copyOfRange(12, 16), temp)
         out.put(0, Vector.DotProduct(temp, modelMatrix))
-        out.put(1, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.put(2, Vector.DotProduct(temp, Arrays.copyOfRange(modelMatrix, 8, 12)))
+        out.put(1, Vector.DotProduct(temp, modelMatrix.copyOfRange(4, 8)))
+        out.put(2, Vector.DotProduct(temp, modelMatrix.copyOfRange(8, 12)))
     }
 
-    fun R_LocalVectorToGlobal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3, out: idVec3) {
-        out.set(
-            0,
-            `in`.get(0) * modelMatrix.get(0) + `in`.get(1) * modelMatrix.get(4) + `in`.get(2) * modelMatrix.get(8)
-        )
-        out.set(
-            1,
-            `in`.get(0) * modelMatrix.get(1) + `in`.get(1) * modelMatrix.get(5) + `in`.get(2) * modelMatrix.get(9)
-        )
-        out.set(
-            2,
-            `in`.get(0) * modelMatrix.get(2) + `in`.get(1) * modelMatrix.get(6) + `in`.get(2) * modelMatrix.get(10)
-        )
+    fun R_LocalVectorToGlobal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3, out: idVec3) {
+        out[0] = `in`[0] * modelMatrix[0] + `in`[1] * modelMatrix[4] + `in`[2] * modelMatrix[8]
+        out[1] = `in`[0] * modelMatrix[1] + `in`[1] * modelMatrix[5] + `in`[2] * modelMatrix[9]
+        out[2] = `in`[0] * modelMatrix[2] + `in`[1] * modelMatrix[6] + `in`[2] * modelMatrix[10]
     }
 
-    fun R_GlobalVectorToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idVec3, out: idVec3) {
-        out.set(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
-        out.set(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.set(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
+    fun R_GlobalVectorToLocal(modelMatrix: FloatArray /*[16]*/, `in`: idVec3, out: idVec3) {
+        out[0] = Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix)
+        out[1] = Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8))
+        out[2] = Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12))
     }
 
-    fun R_GlobalPlaneToLocal(modelMatrix: FloatArray? /*[16]*/, `in`: idPlane, out: idPlane) {
-        out.set(0, Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix))
-        out.set(1, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8)))
-        out.set(2, Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12)))
-        out.set(
-            3,
-            `in`.get(3) + modelMatrix.get(12) * `in`.get(0) + modelMatrix.get(13) * `in`.get(1) + modelMatrix.get(14) * `in`.get(
-                2
-            )
-        )
+    fun R_GlobalPlaneToLocal(modelMatrix: FloatArray /*[16]*/, `in`: idPlane, out: idPlane) {
+        out[0] = Vector.DotProduct(`in`.ToFloatPtr(), modelMatrix)
+        out[1] = Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 4, 8))
+        out[2] = Vector.DotProduct(`in`.ToFloatPtr(), Arrays.copyOfRange(modelMatrix, 8, 12))
+        out[3] = `in`[3] + modelMatrix[12] * `in`[0] + modelMatrix[13] * `in`[1] + modelMatrix[14] * `in`[2]
     }
 
-    fun R_LocalPlaneToGlobal(modelMatrix: FloatArray? /*[16]*/, `in`: idPlane, out: idPlane) {
+    fun R_LocalPlaneToGlobal(modelMatrix: FloatArray /*[16]*/, `in`: idPlane, out: idPlane) {
         val offset: Float
         tr_main.R_LocalVectorToGlobal(modelMatrix, `in`.Normal(), out.Normal())
         offset =
-            modelMatrix.get(12) * out.get(0) + modelMatrix.get(13) * out.get(1) + modelMatrix.get(14) * out.get(2)
-        out.set(3, `in`.get(3) - offset)
+            modelMatrix[12] * out[0] + modelMatrix[13] * out[1] + modelMatrix[14] * out[2]
+        out[3] = `in`[3] - offset
     }
 
     // transform Z in eye coordinates to window coordinates
-    fun R_TransformEyeZToWin(src_z: Float, projectionMatrix: FloatArray?, dst_z: CFloat) {
+    fun R_TransformEyeZToWin(src_z: Float, projectionMatrix: FloatArray, dst_z: CFloat) {
         val clip_z: Float
         val clip_w: Float
 
         // projection
-        clip_z = src_z * projectionMatrix.get(2 + 2 * 4) + projectionMatrix.get(2 + 3 * 4)
-        clip_w = src_z * projectionMatrix.get(3 + 2 * 4) + projectionMatrix.get(3 + 3 * 4)
+        clip_z = src_z * projectionMatrix[2 + 2 * 4] + projectionMatrix[2 + 3 * 4]
+        clip_w = src_z * projectionMatrix[3 + 2 * 4] + projectionMatrix[3 + 3 * 4]
         if (clip_w <= 0.0f) {
-            dst_z.setVal(0.0f) // clamp to near plane
+            dst_z._val = (0.0f) // clamp to near plane
         } else {
-            dst_z.setVal(clip_z / clip_w)
-            dst_z.setVal(dst_z._val * 0.5f + 0.5f) // convert to window coords
+            dst_z._val = (clip_z / clip_w)
+            dst_z._val = (dst_z._val * 0.5f + 0.5f) // convert to window coords
         }
     }
 
@@ -554,9 +521,9 @@ object tr_main {
      */
     fun R_RadiusCullLocalBox(
         bounds: idBounds,
-        modelMatrix: FloatArray? /*[16]*/,
+        modelMatrix: FloatArray /*[16]*/,
         numPlanes: Int,
-        planes: Array<idPlane>?
+        planes: Array<idPlane>
     ): Boolean {
         var i: Int
         var d: Float
@@ -568,12 +535,12 @@ object tr_main {
         }
 
         // transform the surface bounds into world space
-        val localOrigin = idVec3(bounds.get(0).oPlus(bounds.get(1)).oMultiply(0.5f))
+        val localOrigin = idVec3(bounds[0].plus(bounds[1]).times(0.5f))
         worldOrigin.set(tr_main.R_LocalPointToGlobal(modelMatrix, localOrigin))
-        worldRadius = bounds.get(0).minus(localOrigin).Length() // FIXME: won't be correct for scaled objects
+        worldRadius = bounds[0].minus(localOrigin).Length() // FIXME: won't be correct for scaled objects
         i = 0
         while (i < numPlanes) {
-            frust = planes.get(i)
+            frust = planes[i]
             d = frust.Distance(worldOrigin)
             if (d > worldRadius) {
                 return true // culled
@@ -585,9 +552,9 @@ object tr_main {
 
     fun R_CornerCullLocalBox(
         bounds: idBounds,
-        modelMatrix: FloatArray? /*[16]*/,
+        modelMatrix: FloatArray /*[16]*/,
         numPlanes: Int,
-        planes: Array<idPlane>?
+        planes: Array<idPlane>
     ): Boolean {
         var i: Int
         var j: Int
@@ -605,9 +572,9 @@ object tr_main {
         // transform into world space
         i = 0
         while (i < 8) {
-            v.set(0, bounds.get(i shr 0 and 1, 0))
-            v.set(1, bounds.get(i shr 1 and 1, 1))
-            v.set(2, bounds.get(i shr 2 and 1, 2))
+            v[0] = bounds[i shr 0 and 1, 0]
+            v[1] = bounds[i shr 1 and 1, 1]
+            v[2] = bounds[i shr 2 and 1, 2]
             transformed[i].set(tr_main.R_LocalPointToGlobal(modelMatrix, v))
             i++
         }
@@ -615,7 +582,7 @@ object tr_main {
         // check against frustum planes
         i = 0
         while (i < numPlanes) {
-            frust = planes.get(i)
+            frust = planes[i]
             j = 0
             while (j < 8) {
                 dists[j] = frust.Distance(transformed[j])
@@ -653,9 +620,9 @@ object tr_main {
      */
     fun R_CullLocalBox(
         bounds: idBounds,
-        modelMatrix: FloatArray? /*[16]*/,
+        modelMatrix: FloatArray /*[16]*/,
         numPlanes: Int,
-        planes: Array<idPlane>?
+        planes: Array<idPlane>
     ): Boolean {
         return if (tr_main.R_RadiusCullLocalBox(bounds, modelMatrix, numPlanes, planes)) {
             true
@@ -669,30 +636,22 @@ object tr_main {
      */
     fun R_TransformModelToClip(
         src: idVec3,
-        modelMatrix: FloatArray?,
-        projectionMatrix: FloatArray?,
+        modelMatrix: FloatArray,
+        projectionMatrix: FloatArray,
         eye: idPlane,
         dst: idPlane
     ) {
         var i: Int
         i = 0
         while (i < 4) {
-            eye.set(
-                i,
-                src.get(0) * modelMatrix.get(i + 0 * 4) + src.get(1) * modelMatrix.get(i + 1 * 4) + src.get(2) * modelMatrix.get(
-                    i + 2 * 4
-                ) + 1 * modelMatrix.get(i + 3 * 4)
-            )
+            eye[i] =
+                src[0] * modelMatrix[i + 0 * 4] + src[1] * modelMatrix[i + 1 * 4] + src[2] * modelMatrix[i + 2 * 4] + 1 * modelMatrix[i + 3 * 4]
             i++
         }
         i = 0
         while (i < 4) {
-            dst.set(
-                i,
-                eye.get(0) * projectionMatrix.get(i + 0 * 4) + eye.get(1) * projectionMatrix.get(i + 1 * 4) + eye.get(
-                    2
-                ) * projectionMatrix.get(i + 2 * 4) + eye.get(3) * projectionMatrix.get(i + 3 * 4)
-            )
+            dst[i] =
+                eye[0] * projectionMatrix[i + 0 * 4] + eye[1] * projectionMatrix[i + 1 * 4] + eye[2] * projectionMatrix[i + 2 * 4] + eye[3] * projectionMatrix[i + 3 * 4]
             i++
         }
     }
@@ -713,49 +672,33 @@ object tr_main {
         if (null == tr_local.tr.viewDef) {
             i = 0
             while (i < 4) {
-                view.set(
-                    i,
-                    global.get(0) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 0 * 4] + global.get(1) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 1 * 4] + global.get(
-                        2
-                    ) * tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.primaryView.worldSpace.modelViewMatrix[i + 3 * 4]
-                )
+                view[i] =
+                    global[0] * tr_local.tr.primaryView!!.worldSpace.modelViewMatrix[i + 0 * 4] + global[1] * tr_local.tr.primaryView!!.worldSpace.modelViewMatrix[i + 1 * 4] + global[2] * tr_local.tr.primaryView!!.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.primaryView!!.worldSpace.modelViewMatrix[i + 3 * 4]
                 i++
             }
             i = 0
             while (i < 4) {
-                clip.set(
-                    i,
-                    view.get(0) * tr_local.tr.primaryView.projectionMatrix[i + 0 * 4] + view.get(1) * tr_local.tr.primaryView.projectionMatrix[i + 1 * 4] + view.get(
-                        2
-                    ) * tr_local.tr.primaryView.projectionMatrix[i + 2 * 4] + view.get(3) * tr_local.tr.primaryView.projectionMatrix[i + 3 * 4]
-                )
+                clip[i] =
+                    view[0] * tr_local.tr.primaryView!!.projectionMatrix[i + 0 * 4] + view[1] * tr_local.tr.primaryView!!.projectionMatrix[i + 1 * 4] + view[2] * tr_local.tr.primaryView!!.projectionMatrix[i + 2 * 4] + view[3] * tr_local.tr.primaryView!!.projectionMatrix[i + 3 * 4]
                 i++
             }
         } else {
             i = 0
             while (i < 4) {
-                view.set(
-                    i,
-                    global.get(0) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 0 * 4] + global.get(1) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 1 * 4] + global.get(
-                        2
-                    ) * tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.viewDef.worldSpace.modelViewMatrix[i + 3 * 4]
-                )
+                view[i] =
+                    global[0] * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[i + 0 * 4] + global[1] * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[i + 1 * 4] + global[2] * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[i + 2 * 4] + tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[i + 3 * 4]
                 i++
             }
             i = 0
             while (i < 4) {
-                clip.set(
-                    i,
-                    view.get(0) * tr_local.tr.viewDef.projectionMatrix[i + 0 * 4] + view.get(1) * tr_local.tr.viewDef.projectionMatrix[i + 1 * 4] + view.get(
-                        2
-                    ) * tr_local.tr.viewDef.projectionMatrix[i + 2 * 4] + view.get(3) * tr_local.tr.viewDef.projectionMatrix[i + 3 * 4]
-                )
+                clip[i] =
+                    view[0] * tr_local.tr.viewDef!!.projectionMatrix[i + 0 * 4] + view[1] * tr_local.tr.viewDef!!.projectionMatrix[i + 1 * 4] + view[2] * tr_local.tr.viewDef!!.projectionMatrix[i + 2 * 4] + view[3] * tr_local.tr.viewDef!!.projectionMatrix[i + 3 * 4]
                 i++
             }
         }
-        ndc.set(0, clip.get(0) / clip.get(3))
-        ndc.set(1, clip.get(1) / clip.get(3))
-        ndc.set(2, (clip.get(2) + clip.get(3)) / (2 * clip.get(3)))
+        ndc[0] = clip[0] / clip[3]
+        ndc[1] = clip[1] / clip[3]
+        ndc[2] = (clip[2] + clip[3]) / (2 * clip[3])
     }
 
     /*
@@ -766,9 +709,9 @@ object tr_main {
      ==========================
      */
     fun R_TransformClipToDevice(clip: idPlane, view: viewDef_s?, normalized: idVec3) {
-        normalized.set(0, clip.get(0) / clip.get(3))
-        normalized.set(1, clip.get(1) / clip.get(3))
-        normalized.set(2, clip.get(2) / clip.get(3))
+        normalized[0] = clip[0] / clip[3]
+        normalized[1] = clip[1] / clip[3]
+        normalized[2] = clip[2] / clip[3]
     }
 
     /*
@@ -776,7 +719,7 @@ object tr_main {
      myGlMultMatrix
      ==========================
      */
-    fun myGlMultMatrix(a: FloatArray? /*[16]*/, b: FloatArray? /*[16]*/, out: FloatArray? /*[16]*/) {
+    fun myGlMultMatrix(a: FloatArray /*[16]*/, b: FloatArray /*[16]*/, out: FloatArray /*[16]*/) {
         if (false) {
 //            int i, j;
 //
@@ -790,70 +733,38 @@ object tr_main {
 //                }
 //            }
         } else {
-            out.get(0 * 4 + 0) =
-                a.get(0 * 4 + 0) * b.get(0 * 4 + 0) + a.get(0 * 4 + 1) * b.get(1 * 4 + 0) + a.get(0 * 4 + 2) * b.get(2 * 4 + 0) + a.get(
-                    0 * 4 + 3
-                ) * b.get(3 * 4 + 0)
-            out.get(0 * 4 + 1) =
-                a.get(0 * 4 + 0) * b.get(0 * 4 + 1) + a.get(0 * 4 + 1) * b.get(1 * 4 + 1) + a.get(0 * 4 + 2) * b.get(2 * 4 + 1) + a.get(
-                    0 * 4 + 3
-                ) * b.get(3 * 4 + 1)
-            out.get(0 * 4 + 2) =
-                a.get(0 * 4 + 0) * b.get(0 * 4 + 2) + a.get(0 * 4 + 1) * b.get(1 * 4 + 2) + a.get(0 * 4 + 2) * b.get(2 * 4 + 2) + a.get(
-                    0 * 4 + 3
-                ) * b.get(3 * 4 + 2)
-            out.get(0 * 4 + 3) =
-                a.get(0 * 4 + 0) * b.get(0 * 4 + 3) + a.get(0 * 4 + 1) * b.get(1 * 4 + 3) + a.get(0 * 4 + 2) * b.get(2 * 4 + 3) + a.get(
-                    0 * 4 + 3
-                ) * b.get(3 * 4 + 3)
-            out.get(1 * 4 + 0) =
-                a.get(1 * 4 + 0) * b.get(0 * 4 + 0) + a.get(1 * 4 + 1) * b.get(1 * 4 + 0) + a.get(1 * 4 + 2) * b.get(2 * 4 + 0) + a.get(
-                    1 * 4 + 3
-                ) * b.get(3 * 4 + 0)
-            out.get(1 * 4 + 1) =
-                a.get(1 * 4 + 0) * b.get(0 * 4 + 1) + a.get(1 * 4 + 1) * b.get(1 * 4 + 1) + a.get(1 * 4 + 2) * b.get(2 * 4 + 1) + a.get(
-                    1 * 4 + 3
-                ) * b.get(3 * 4 + 1)
-            out.get(1 * 4 + 2) =
-                a.get(1 * 4 + 0) * b.get(0 * 4 + 2) + a.get(1 * 4 + 1) * b.get(1 * 4 + 2) + a.get(1 * 4 + 2) * b.get(2 * 4 + 2) + a.get(
-                    1 * 4 + 3
-                ) * b.get(3 * 4 + 2)
-            out.get(1 * 4 + 3) =
-                a.get(1 * 4 + 0) * b.get(0 * 4 + 3) + a.get(1 * 4 + 1) * b.get(1 * 4 + 3) + a.get(1 * 4 + 2) * b.get(2 * 4 + 3) + a.get(
-                    1 * 4 + 3
-                ) * b.get(3 * 4 + 3)
-            out.get(2 * 4 + 0) =
-                a.get(2 * 4 + 0) * b.get(0 * 4 + 0) + a.get(2 * 4 + 1) * b.get(1 * 4 + 0) + a.get(2 * 4 + 2) * b.get(2 * 4 + 0) + a.get(
-                    2 * 4 + 3
-                ) * b.get(3 * 4 + 0)
-            out.get(2 * 4 + 1) =
-                a.get(2 * 4 + 0) * b.get(0 * 4 + 1) + a.get(2 * 4 + 1) * b.get(1 * 4 + 1) + a.get(2 * 4 + 2) * b.get(2 * 4 + 1) + a.get(
-                    2 * 4 + 3
-                ) * b.get(3 * 4 + 1)
-            out.get(2 * 4 + 2) =
-                a.get(2 * 4 + 0) * b.get(0 * 4 + 2) + a.get(2 * 4 + 1) * b.get(1 * 4 + 2) + a.get(2 * 4 + 2) * b.get(2 * 4 + 2) + a.get(
-                    2 * 4 + 3
-                ) * b.get(3 * 4 + 2)
-            out.get(2 * 4 + 3) =
-                a.get(2 * 4 + 0) * b.get(0 * 4 + 3) + a.get(2 * 4 + 1) * b.get(1 * 4 + 3) + a.get(2 * 4 + 2) * b.get(2 * 4 + 3) + a.get(
-                    2 * 4 + 3
-                ) * b.get(3 * 4 + 3)
-            out.get(3 * 4 + 0) =
-                a.get(3 * 4 + 0) * b.get(0 * 4 + 0) + a.get(3 * 4 + 1) * b.get(1 * 4 + 0) + a.get(3 * 4 + 2) * b.get(2 * 4 + 0) + a.get(
-                    3 * 4 + 3
-                ) * b.get(3 * 4 + 0)
-            out.get(3 * 4 + 1) =
-                a.get(3 * 4 + 0) * b.get(0 * 4 + 1) + a.get(3 * 4 + 1) * b.get(1 * 4 + 1) + a.get(3 * 4 + 2) * b.get(2 * 4 + 1) + a.get(
-                    3 * 4 + 3
-                ) * b.get(3 * 4 + 1)
-            out.get(3 * 4 + 2) =
-                a.get(3 * 4 + 0) * b.get(0 * 4 + 2) + a.get(3 * 4 + 1) * b.get(1 * 4 + 2) + a.get(3 * 4 + 2) * b.get(2 * 4 + 2) + a.get(
-                    3 * 4 + 3
-                ) * b.get(3 * 4 + 2)
-            out.get(3 * 4 + 3) =
-                a.get(3 * 4 + 0) * b.get(0 * 4 + 3) + a.get(3 * 4 + 1) * b.get(1 * 4 + 3) + a.get(3 * 4 + 2) * b.get(2 * 4 + 3) + a.get(
-                    3 * 4 + 3
-                ) * b.get(3 * 4 + 3)
+            out[0 * 4 + 0] =
+                a[0 * 4 + 0] * b[0 * 4 + 0] + a[0 * 4 + 1] * b[1 * 4 + 0] + a[0 * 4 + 2] * b[2 * 4 + 0] + a[0 * 4 + 3] * b[3 * 4 + 0]
+            out[0 * 4 + 1] =
+                a[0 * 4 + 0] * b[0 * 4 + 1] + a[0 * 4 + 1] * b[1 * 4 + 1] + a[0 * 4 + 2] * b[2 * 4 + 1] + a[0 * 4 + 3] * b[3 * 4 + 1]
+            out[0 * 4 + 2] =
+                a[0 * 4 + 0] * b[0 * 4 + 2] + a[0 * 4 + 1] * b[1 * 4 + 2] + a[0 * 4 + 2] * b[2 * 4 + 2] + a[0 * 4 + 3] * b[3 * 4 + 2]
+            out[0 * 4 + 3] =
+                a[0 * 4 + 0] * b[0 * 4 + 3] + a[0 * 4 + 1] * b[1 * 4 + 3] + a[0 * 4 + 2] * b[2 * 4 + 3] + a[0 * 4 + 3] * b[3 * 4 + 3]
+            out[1 * 4 + 0] =
+                a[1 * 4 + 0] * b[0 * 4 + 0] + a[1 * 4 + 1] * b[1 * 4 + 0] + a[1 * 4 + 2] * b[2 * 4 + 0] + a[1 * 4 + 3] * b[3 * 4 + 0]
+            out[1 * 4 + 1] =
+                a[1 * 4 + 0] * b[0 * 4 + 1] + a[1 * 4 + 1] * b[1 * 4 + 1] + a[1 * 4 + 2] * b[2 * 4 + 1] + a[1 * 4 + 3] * b[3 * 4 + 1]
+            out[1 * 4 + 2] =
+                a[1 * 4 + 0] * b[0 * 4 + 2] + a[1 * 4 + 1] * b[1 * 4 + 2] + a[1 * 4 + 2] * b[2 * 4 + 2] + a[1 * 4 + 3] * b[3 * 4 + 2]
+            out[1 * 4 + 3] =
+                a[1 * 4 + 0] * b[0 * 4 + 3] + a[1 * 4 + 1] * b[1 * 4 + 3] + a[1 * 4 + 2] * b[2 * 4 + 3] + a[1 * 4 + 3] * b[3 * 4 + 3]
+            out[2 * 4 + 0] =
+                a[2 * 4 + 0] * b[0 * 4 + 0] + a[2 * 4 + 1] * b[1 * 4 + 0] + a[2 * 4 + 2] * b[2 * 4 + 0] + a[2 * 4 + 3] * b[3 * 4 + 0]
+            out[2 * 4 + 1] =
+                a[2 * 4 + 0] * b[0 * 4 + 1] + a[2 * 4 + 1] * b[1 * 4 + 1] + a[2 * 4 + 2] * b[2 * 4 + 1] + a[2 * 4 + 3] * b[3 * 4 + 1]
+            out[2 * 4 + 2] =
+                a[2 * 4 + 0] * b[0 * 4 + 2] + a[2 * 4 + 1] * b[1 * 4 + 2] + a[2 * 4 + 2] * b[2 * 4 + 2] + a[2 * 4 + 3] * b[3 * 4 + 2]
+            out[2 * 4 + 3] =
+                a[2 * 4 + 0] * b[0 * 4 + 3] + a[2 * 4 + 1] * b[1 * 4 + 3] + a[2 * 4 + 2] * b[2 * 4 + 3] + a[2 * 4 + 3] * b[3 * 4 + 3]
+            out[3 * 4 + 0] =
+                a[3 * 4 + 0] * b[0 * 4 + 0] + a[3 * 4 + 1] * b[1 * 4 + 0] + a[3 * 4 + 2] * b[2 * 4 + 0] + a[3 * 4 + 3] * b[3 * 4 + 0]
+            out[3 * 4 + 1] =
+                a[3 * 4 + 0] * b[0 * 4 + 1] + a[3 * 4 + 1] * b[1 * 4 + 1] + a[3 * 4 + 2] * b[2 * 4 + 1] + a[3 * 4 + 3] * b[3 * 4 + 1]
+            out[3 * 4 + 2] =
+                a[3 * 4 + 0] * b[0 * 4 + 2] + a[3 * 4 + 1] * b[1 * 4 + 2] + a[3 * 4 + 2] * b[2 * 4 + 2] + a[3 * 4 + 3] * b[3 * 4 + 2]
+            out[3 * 4 + 3] =
+                a[3 * 4 + 0] * b[0 * 4 + 3] + a[3 * 4 + 1] * b[1 * 4 + 3] + a[3 * 4 + 2] * b[2 * 4 + 3] + a[3 * 4 + 3] * b[3 * 4 + 3]
         }
     }
 
@@ -862,21 +773,21 @@ object tr_main {
      R_TransposeGLMatrix
      ================
      */
-    fun R_TransposeGLMatrix(`in`: FloatArray? /*[16]*/, out: FloatArray? /*[16]*/) {
+    fun R_TransposeGLMatrix(`in`: FloatArray /*[16]*/, out: FloatArray /*[16]*/) {
         var i: Int
         var j: Int
         i = 0
         while (i < 4) {
             j = 0
             while (j < 4) {
-                out.get(i * 4 + j) = `in`.get(j * 4 + i)
+                out[i * 4 + j] = `in`[j * 4 + i]
                 j++
             }
             i++
         }
     }
 
-    fun R_SetViewMatrix(viewDef: viewDef_s?) {
+    fun R_SetViewMatrix(viewDef: viewDef_s) {
         val origin = idVec3()
         val world: viewEntity_s?
         val viewerMatrix = FloatArray(16)
@@ -884,31 +795,31 @@ object tr_main {
         world = viewDef.worldSpace //memset(world, 0, sizeof(world));
 
         // the model matrix is an identity
-        world.modelMatrix[0 * 4 + 0] = 1
-        world.modelMatrix[1 * 4 + 1] = 1
-        world.modelMatrix[2 * 4 + 2] = 1
+        world.modelMatrix[0 * 4 + 0] = 1f
+        world.modelMatrix[1 * 4 + 1] = 1f
+        world.modelMatrix[2 * 4 + 2] = 1f
 
         // transform by the camera placement
         origin.set(viewDef.renderView.vieworg)
-        viewerMatrix[0] = viewDef.renderView.viewaxis.get(0, 0)
-        viewerMatrix[4] = viewDef.renderView.viewaxis.get(0, 1)
-        viewerMatrix[8] = viewDef.renderView.viewaxis.get(0, 2)
+        viewerMatrix[0] = viewDef.renderView.viewaxis[0, 0]
+        viewerMatrix[4] = viewDef.renderView.viewaxis[0, 1]
+        viewerMatrix[8] = viewDef.renderView.viewaxis[0, 2]
         viewerMatrix[12] =
-            -origin.get(0) * viewerMatrix[0] + -origin.get(1) * viewerMatrix[4] + -origin.get(2) * viewerMatrix[8]
-        viewerMatrix[1] = viewDef.renderView.viewaxis.get(1, 0)
-        viewerMatrix[5] = viewDef.renderView.viewaxis.get(1, 1)
-        viewerMatrix[9] = viewDef.renderView.viewaxis.get(1, 2)
+            -origin[0] * viewerMatrix[0] + -origin[1] * viewerMatrix[4] + -origin[2] * viewerMatrix[8]
+        viewerMatrix[1] = viewDef.renderView.viewaxis[1, 0]
+        viewerMatrix[5] = viewDef.renderView.viewaxis[1, 1]
+        viewerMatrix[9] = viewDef.renderView.viewaxis[1, 2]
         viewerMatrix[13] =
-            -origin.get(0) * viewerMatrix[1] + -origin.get(1) * viewerMatrix[5] + -origin.get(2) * viewerMatrix[9]
-        viewerMatrix[2] = viewDef.renderView.viewaxis.get(2, 0)
-        viewerMatrix[6] = viewDef.renderView.viewaxis.get(2, 1)
-        viewerMatrix[10] = viewDef.renderView.viewaxis.get(2, 2)
+            -origin[0] * viewerMatrix[1] + -origin[1] * viewerMatrix[5] + -origin[2] * viewerMatrix[9]
+        viewerMatrix[2] = viewDef.renderView.viewaxis[2, 0]
+        viewerMatrix[6] = viewDef.renderView.viewaxis[2, 1]
+        viewerMatrix[10] = viewDef.renderView.viewaxis[2, 2]
         viewerMatrix[14] =
-            -origin.get(0) * viewerMatrix[2] + -origin.get(1) * viewerMatrix[6] + -origin.get(2) * viewerMatrix[10]
-        viewerMatrix[3] = 0
-        viewerMatrix[7] = 0
-        viewerMatrix[11] = 0
-        viewerMatrix[15] = 1
+            -origin[0] * viewerMatrix[2] + -origin[1] * viewerMatrix[6] + -origin[2] * viewerMatrix[10]
+        viewerMatrix[3] = 0f
+        viewerMatrix[7] = 0f
+        viewerMatrix[11] = 0f
+        viewerMatrix[15] = 1f
 
         // convert from our coordinate system (looking down X)
         // to OpenGL's coordinate system (looking down -Z)
@@ -941,41 +852,41 @@ object tr_main {
         // set up projection matrix
         //
         zNear = RenderSystem_init.r_znear.GetFloat()
-        if (tr_local.tr.viewDef.renderView.cramZNear) {
+        if (tr_local.tr.viewDef!!.renderView.cramZNear) {
             zNear *= 0.25.toFloat()
         }
-        ymax = (zNear * Math.tan((tr_local.tr.viewDef.renderView.fov_y * idMath.PI / 360.0f).toDouble())).toFloat()
+        ymax = (zNear * tan((tr_local.tr.viewDef!!.renderView.fov_y * idMath.PI / 360.0f).toDouble())).toFloat()
         ymin = -ymax
-        xmax = (zNear * Math.tan((tr_local.tr.viewDef.renderView.fov_x * idMath.PI / 360.0f).toDouble())).toFloat()
+        xmax = (zNear * tan((tr_local.tr.viewDef!!.renderView.fov_x * idMath.PI / 360.0f).toDouble())).toFloat()
         xmin = -xmax
         width = xmax - xmin
         height = ymax - ymin
-        jitterx = jitterx * width / (tr_local.tr.viewDef.viewport.x2 - tr_local.tr.viewDef.viewport.x1 + 1)
+        jitterx = jitterx * width / (tr_local.tr.viewDef!!.viewport.x2 - tr_local.tr.viewDef!!.viewport.x1 + 1)
         xmin += jitterx
         xmax += jitterx
-        jittery = jittery * height / (tr_local.tr.viewDef.viewport.y2 - tr_local.tr.viewDef.viewport.y1 + 1)
+        jittery = jittery * height / (tr_local.tr.viewDef!!.viewport.y2 - tr_local.tr.viewDef!!.viewport.y1 + 1)
         ymin += jittery
         ymax += jittery
-        tr_local.tr.viewDef.projectionMatrix[0] = 2 * zNear / width
-        tr_local.tr.viewDef.projectionMatrix[4] = 0
-        tr_local.tr.viewDef.projectionMatrix[8] = (xmax + xmin) / width // normally 0
-        tr_local.tr.viewDef.projectionMatrix[12] = 0
-        tr_local.tr.viewDef.projectionMatrix[1] = 0
-        tr_local.tr.viewDef.projectionMatrix[5] = 2 * zNear / height
-        tr_local.tr.viewDef.projectionMatrix[9] = (ymax + ymin) / height // normally 0
-        tr_local.tr.viewDef.projectionMatrix[13] = 0
+        tr_local.tr.viewDef!!.projectionMatrix[0] = 2 * zNear / width
+        tr_local.tr.viewDef!!.projectionMatrix[4] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[8] = (xmax + xmin) / width // normally 0
+        tr_local.tr.viewDef!!.projectionMatrix[12] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[1] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[5] = 2 * zNear / height
+        tr_local.tr.viewDef!!.projectionMatrix[9] = (ymax + ymin) / height // normally 0
+        tr_local.tr.viewDef!!.projectionMatrix[13] = 0f
 
         // this is the far-plane-at-infinity formulation, and
         // crunches the Z range slightly so w=0 vertexes do not
         // rasterize right at the wraparound point
-        tr_local.tr.viewDef.projectionMatrix[2] = 0
-        tr_local.tr.viewDef.projectionMatrix[6] = 0
-        tr_local.tr.viewDef.projectionMatrix[10] = -0.999f
-        tr_local.tr.viewDef.projectionMatrix[14] = -2.0f * zNear
-        tr_local.tr.viewDef.projectionMatrix[3] = 0
-        tr_local.tr.viewDef.projectionMatrix[7] = 0
-        tr_local.tr.viewDef.projectionMatrix[11] = -1
-        tr_local.tr.viewDef.projectionMatrix[15] = 0
+        tr_local.tr.viewDef!!.projectionMatrix[2] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[6] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[10] = -0.999f
+        tr_local.tr.viewDef!!.projectionMatrix[14] = -2.0f * zNear
+        tr_local.tr.viewDef!!.projectionMatrix[3] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[7] = 0f
+        tr_local.tr.viewDef!!.projectionMatrix[11] = -1f
+        tr_local.tr.viewDef!!.projectionMatrix[15] = 0f
     }
 
     /*
@@ -991,38 +902,36 @@ object tr_main {
         val xs = CFloat(0.0f)
         val xc = CFloat(0.0f)
         var ang: Float
-        ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_x) * 0.5f
+        ang = Math_h.DEG2RAD(tr_local.tr.viewDef!!.renderView.fov_x) * 0.5f
         idMath.SinCos(ang, xs, xc)
-        tr_local.tr.viewDef.frustum[0].set(
-            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs._val)
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.get(1).times(xc._val))
+        tr_local.tr.viewDef!!.frustum[0].set(
+            tr_local.tr.viewDef!!.renderView.viewaxis[0].times(xs._val)
+                .plus(tr_local.tr.viewDef!!.renderView.viewaxis[1].times(xc._val))
         )
-        tr_local.tr.viewDef.frustum[1].set(
-            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs._val)
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.get(1).times(xc._val))
+        tr_local.tr.viewDef!!.frustum[1].set(
+            tr_local.tr.viewDef!!.renderView.viewaxis[0].times(xs._val)
+                .minus(tr_local.tr.viewDef!!.renderView.viewaxis[1].times(xc._val))
         )
-        ang = Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_y) * 0.5f
+        ang = Math_h.DEG2RAD(tr_local.tr.viewDef!!.renderView.fov_y) * 0.5f
         idMath.SinCos(ang, xs, xc)
-        tr_local.tr.viewDef.frustum[2].set(
-            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs._val)
-                .oPlus(tr_local.tr.viewDef.renderView.viewaxis.get(2).times(xc._val))
+        tr_local.tr.viewDef!!.frustum[2].set(
+            tr_local.tr.viewDef!!.renderView.viewaxis[0].times(xs._val)
+                .plus(tr_local.tr.viewDef!!.renderView.viewaxis[2].times(xc._val))
         )
-        tr_local.tr.viewDef.frustum[3].set(
-            tr_local.tr.viewDef.renderView.viewaxis.get(0).times(xs._val)
-                .oMinus(tr_local.tr.viewDef.renderView.viewaxis.get(2).times(xc._val))
+        tr_local.tr.viewDef!!.frustum[3].set(
+            tr_local.tr.viewDef!!.renderView.viewaxis[0].times(xs._val)
+                .minus(tr_local.tr.viewDef!!.renderView.viewaxis[2].times(xc._val))
         )
 
         // plane four is the front clipping plane
-        tr_local.tr.viewDef.frustum[4].set( /* vec3_origin - */tr_local.tr.viewDef.renderView.viewaxis.get(0))
+        tr_local.tr.viewDef!!.frustum[4].set( /* vec3_origin - */tr_local.tr.viewDef!!.renderView.viewaxis[0])
         i = 0
         while (i < 5) {
 
             // flip direction so positive side faces out (FIXME: globally unify this)
-            tr_local.tr.viewDef.frustum[i].set(tr_local.tr.viewDef.frustum[i].Normal().oNegative())
-            tr_local.tr.viewDef.frustum[i].set(
-                3,
-                -tr_local.tr.viewDef.renderView.vieworg.times(tr_local.tr.viewDef.frustum[i].Normal())
-            )
+            tr_local.tr.viewDef!!.frustum[i].set(tr_local.tr.viewDef!!.frustum[i].Normal().unaryMinus())
+            tr_local.tr.viewDef!!.frustum[i][3] =
+                -tr_local.tr.viewDef!!.renderView.vieworg.times(tr_local.tr.viewDef!!.frustum[i].Normal())
             i++
         }
 
@@ -1032,15 +941,15 @@ object tr_main {
         val dLeft: Float
         val dUp: Float
         dNear = RenderSystem_init.r_znear.GetFloat()
-        if (tr_local.tr.viewDef.renderView.cramZNear) {
+        if (tr_local.tr.viewDef!!.renderView.cramZNear) {
             dNear *= 0.25f
         }
         dFar = Lib.MAX_WORLD_SIZE.toFloat()
-        dLeft = (dFar * Math.tan(Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_x * 0.5f).toDouble())).toFloat()
-        dUp = (dFar * Math.tan(Math_h.DEG2RAD(tr_local.tr.viewDef.renderView.fov_y * 0.5f).toDouble())).toFloat()
-        tr_local.tr.viewDef.viewFrustum.SetOrigin(tr_local.tr.viewDef.renderView.vieworg)
-        tr_local.tr.viewDef.viewFrustum.SetAxis(tr_local.tr.viewDef.renderView.viewaxis)
-        tr_local.tr.viewDef.viewFrustum.SetSize(dNear, dFar, dLeft, dUp)
+        dLeft = (dFar * tan(Math_h.DEG2RAD(tr_local.tr.viewDef!!.renderView.fov_x * 0.5f).toDouble())).toFloat()
+        dUp = (dFar * tan(Math_h.DEG2RAD(tr_local.tr.viewDef!!.renderView.fov_y * 0.5f).toDouble())).toFloat()
+        tr_local.tr.viewDef!!.viewFrustum.SetOrigin(tr_local.tr.viewDef!!.renderView.vieworg)
+        tr_local.tr.viewDef!!.viewFrustum.SetAxis(tr_local.tr.viewDef!!.renderView.viewaxis)
+        tr_local.tr.viewDef!!.viewFrustum.SetSize(dNear, dFar, dLeft, dUp)
     }
 
     /*
@@ -1053,19 +962,19 @@ object tr_main {
 
         // constrain the view frustum to the total bounds of all visible lights and visible entities
         bounds.Clear()
-        var vLight = tr_local.tr.viewDef.viewLights
+        var vLight = tr_local.tr.viewDef!!.viewLights
         while (vLight != null) {
-            bounds.AddBounds(vLight.lightDef.frustumTris.bounds)
+            bounds.AddBounds(vLight.lightDef.frustumTris!!.bounds)
             vLight = vLight.next
         }
-        var vEntity = tr_local.tr.viewDef.viewEntitys
+        var vEntity = tr_local.tr.viewDef!!.viewEntitys
         while (vEntity != null) {
             bounds.AddBounds(vEntity.entityDef.referenceBounds)
             vEntity = vEntity.next
         }
-        tr_local.tr.viewDef.viewFrustum.ConstrainToBounds(bounds)
+        tr_local.tr.viewDef!!.viewFrustum.ConstrainToBounds(bounds)
         if (RenderSystem_init.r_useFrustumFarDistance.GetFloat() > 0.0f) {
-            tr_local.tr.viewDef.viewFrustum.MoveFarDistance(RenderSystem_init.r_useFrustumFarDistance.GetFloat())
+            tr_local.tr.viewDef!!.viewFrustum.MoveFarDistance(RenderSystem_init.r_useFrustumFarDistance.GetFloat())
         }
     }
 
@@ -1076,25 +985,25 @@ object tr_main {
      */
     fun R_SortDrawSurfs() {
         // sort the drawsurfs by sort type, then orientation, then shader
-//        qsort(tr.viewDef.drawSurfs, tr.viewDef.numDrawSurfs, sizeof(tr.viewDef.drawSurfs[0]), R_QsortSurfaces);
-        if (tr_local.tr.viewDef.drawSurfs != null) {
-            Arrays.sort(tr_local.tr.viewDef.drawSurfs, 0, tr_local.tr.viewDef.numDrawSurfs, R_QsortSurfaces())
+//        qsort(tr.viewDef!!.drawSurfs, tr.viewDef!!.numDrawSurfs, sizeof(tr.viewDef!!.drawSurfs[0]), R_QsortSurfaces);
+        if (tr_local.tr.viewDef!!.drawSurfs != null) {
+            Arrays.sort(tr_local.tr.viewDef!!.drawSurfs, 0, tr_local.tr.viewDef!!.numDrawSurfs, R_QsortSurfaces())
             //            int bla = 0;
-//            for (int i = 0; i < tr.viewDef.numDrawSurfs; i++) {
-//                Material.shaderStage_t[] stages = tr.viewDef.drawSurfs[i].material.stages;
+//            for (int i = 0; i < tr.viewDef!!.numDrawSurfs; i++) {
+//                Material.shaderStage_t[] stages = tr.viewDef!!.drawSurfs[i].material.stages;
 //                if (stages != null && stages[0].texture.image[0] != null &&
 //                        stages[0].texture.image[0].imgName.toString().contains("env/cloudy")) {
-//                    tr.viewDef.drawSurfs[bla++] = tr.viewDef.drawSurfs[i];
+//                    tr.viewDef!!.drawSurfs[bla++] = tr.viewDef!!.drawSurfs[i];
 //                    System.out.println(stages[0].texture.image[0].imgName);
 //                }
 //            }
-//            tr.viewDef.numDrawSurfs = bla;
+//            tr.viewDef!!.numDrawSurfs = bla;
 //
 //            final int from = 61;
-//            final int to = Math.min(tr.viewDef.numDrawSurfs - from, from + 1);
-//            tr.viewDef.drawSurfs = Arrays.copyOfRange(tr.viewDef.drawSurfs, from, to);
-//            tr.viewDef.numDrawSurfs = to - from;
-//           tr.viewDef.drasawwwwwwwwwwwwwwwwwwwwwwwwwwwwaw a    wSurfs[0].geo.indexes = null;
+//            final int to = Math.min(tr.viewDef!!.numDrawSurfs - from, from + 1);
+//            tr.viewDef!!.drawSurfs = Arrays.copyOfRange(tr.viewDef!!.drawSurfs, from, to);
+//            tr.viewDef!!.numDrawSurfs = to - from;
+//           tr.viewDef!!.drasawwwwwwwwwwwwwwwwwwwwwwwwwwwwaw a    wSurfs[0].geo.indexes = null;
         }
     }
 
@@ -1102,7 +1011,7 @@ object tr_main {
     //    
     //    
     //==============================================================================
-    fun R_RenderView(parms: viewDef_s?) {
+    fun R_RenderView(parms: viewDef_s) {
         val oldView: viewDef_s?
         tr_main.DEBUG_R_RenderView++
         if (parms.renderView.width <= 0 || parms.renderView.height <= 0) {
@@ -1117,7 +1026,7 @@ object tr_main {
         tr_local.tr.sortOffset = 0f
 
         // set the matrix for world space to eye space
-        tr_main.R_SetViewMatrix(tr_local.tr.viewDef)
+        tr_main.R_SetViewMatrix(tr_local.tr.viewDef!!)
 
         // the four sides of the view frustum are needed
         // for culling and portal visibility
@@ -1130,7 +1039,7 @@ object tr_main {
         // identify all the visible portalAreas, and the entityDefs and
         // lightDefs that are in them and pass culling.
 //	static_cast<idRenderWorldLocal *>(parms.renderWorld).FindViewLightsAndEntities();
-        parms.renderWorld.FindViewLightsAndEntities()
+        parms.renderWorld!!.FindViewLightsAndEntities()
 
         // constrain the view frustum to the view lights and entities
         tr_main.R_ConstrainViewFrustum()
@@ -1162,7 +1071,7 @@ object tr_main {
         // write everything needed to the demo file
         if (Session.session.writeDemo != null) {
 //		static_cast<idRenderWorldLocal *>(parms.renderWorld)->WriteVisibleDefs( tr.viewDef );
-            parms.renderWorld.WriteVisibleDefs(tr_local.tr.viewDef)
+            parms.renderWorld!!.WriteVisibleDefs(tr_local.tr.viewDef!!)
         }
 
         // add the rendering commands for this viewDef

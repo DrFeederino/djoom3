@@ -1,7 +1,7 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Material.dynamicidImage_t
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Material.shaderStage_t
 import neo.Renderer.Material.textureStage_t
 import neo.Renderer.Model.srfTriangles_s
@@ -11,9 +11,9 @@ import neo.Renderer.tr_local.viewDef_s
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idFixedWinding
-import neo.idlib.math.*
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 
 /**
@@ -113,7 +113,7 @@ object tr_subview {
             var pointFlags: Int
             tr_main.R_TransformModelToClip(
                 tri.verts[i].xyz, drawSurf.space.modelViewMatrix,
-                tr_local.tr.viewDef.projectionMatrix, eye, clip
+                tr_local.tr.viewDef!!.projectionMatrix, eye, clip
             )
             pointFlags = 0
             j = 0
@@ -137,7 +137,7 @@ object tr_subview {
 
         // backface and frustum cull
         numTriangles = tri.numIndexes / 3
-        tr_main.R_GlobalPointToLocal(drawSurf.space.modelMatrix, tr_local.tr.viewDef.renderView.vieworg, localView)
+        tr_main.R_GlobalPointToLocal(drawSurf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localView)
         i = 0
         while (i < tri.numIndexes) {
             val dir = idVec3()
@@ -178,7 +178,7 @@ object tr_subview {
             w[0].s = w[0].t
             j = 0
             while (j < 4) {
-                if (!w.ClipInPlace(tr_local.tr.viewDef.frustum[j].unaryMinus(), 0.1f)) {
+                if (!w.ClipInPlace(tr_local.tr.viewDef!!.frustum[j].unaryMinus(), 0.1f)) {
                     break
                 }
                 j++
@@ -202,7 +202,7 @@ object tr_subview {
      R_MirrorViewBySurface
      ========================
      */
-    fun R_MirrorViewBySurface(drawSurf: drawSurf_s?): viewDef_s? {
+    fun R_MirrorViewBySurface(drawSurf: drawSurf_s): viewDef_s {
         val parms: viewDef_s
         val surface = orientation_t()
         val camera = orientation_t()
@@ -210,53 +210,53 @@ object tr_subview {
         val plane = idPlane()
 
         // copy the viewport size from the original
-        parms = viewDef_s(tr_local.tr.viewDef) //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
+        parms = viewDef_s(tr_local.tr.viewDef!!) //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.isSubview = true
         parms.isMirror = true
 
         // create plane axis for the portal we are seeing
-        tr_subview.R_PlaneForSurface(drawSurf.geo, originalPlane)
+        R_PlaneForSurface(drawSurf.geo, originalPlane)
         tr_main.R_LocalPlaneToGlobal(drawSurf.space.modelMatrix, originalPlane, plane)
         surface.origin.set(plane.Normal().times(-plane[3]))
         surface.axis[0] = plane.Normal()
         surface.axis[0].NormalVectors(surface.axis[1], surface.axis[2])
-        surface.axis[2] = surface.axis[2].oNegative()
+        surface.axis[2] = surface.axis[2].unaryMinus()
         camera.origin.set(surface.origin)
-        camera.axis[0] = surface.axis[0].oNegative()
+        camera.axis[0] = surface.axis[0].unaryMinus()
         camera.axis[1] = surface.axis[1]
         camera.axis[2] = surface.axis[2]
 
         // set the mirrored origin and axis
-        tr_subview.R_MirrorPoint(tr_local.tr.viewDef.renderView.vieworg, surface, camera, parms.renderView.vieworg)
-        tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis[0],
+        R_MirrorPoint(tr_local.tr.viewDef!!.renderView.vieworg, surface, camera, parms.renderView.vieworg)
+        R_MirrorVector(
+            tr_local.tr.viewDef!!.renderView.viewaxis[0],
             surface,
             camera,
             parms.renderView.viewaxis[0]
         )
-        tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis[1],
+        R_MirrorVector(
+            tr_local.tr.viewDef!!.renderView.viewaxis[1],
             surface,
             camera,
             parms.renderView.viewaxis[1]
         )
-        tr_subview.R_MirrorVector(
-            tr_local.tr.viewDef.renderView.viewaxis[2],
+        R_MirrorVector(
+            tr_local.tr.viewDef!!.renderView.viewaxis[2],
             surface,
             camera,
             parms.renderView.viewaxis[2]
         )
 
         // make the view origin 16 units away from the center of the surface
-        val viewOrigin = idVec3(drawSurf.geo.bounds[0].oPlus(drawSurf.geo.bounds[1]).oMultiply(0.5f))
-        viewOrigin.oPluSet(originalPlane.Normal().times(16f))
+        val viewOrigin = idVec3(drawSurf.geo.bounds[0].plus(drawSurf.geo.bounds[1]).times(0.5f))
+        viewOrigin.plusAssign(originalPlane.Normal().times(16f))
         parms.initialViewAreaOrigin.set(tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin))
 
         // set the mirror clip plane
         parms.numClipPlanes = 1
         parms.clipPlanes[0] = idPlane()
-        parms.clipPlanes[0].set(camera.axis[0].oNegative())
+        parms.clipPlanes[0].set(camera.axis[0].unaryMinus())
         parms.clipPlanes[0][3] = -camera.origin.times(parms.clipPlanes[0].Normal())
         return parms
     }
@@ -266,14 +266,14 @@ object tr_subview {
      R_XrayViewBySurface
      ========================
      */
-    fun R_XrayViewBySurface(drawSurf: drawSurf_s?): viewDef_s? {
-        val parms: viewDef_s?
+    fun R_XrayViewBySurface(drawSurf: drawSurf_s): viewDef_s {
+        val parms: viewDef_s
         //	orientation_t	surface, camera;
 //	idPlane			originalPlane, plane;
 
         // copy the viewport size from the original
 //	parms = (viewDef_s )R_FrameAlloc( sizeof( parms ) );
-        parms = tr_local.tr.viewDef
+        parms = tr_local.tr.viewDef!!
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.isSubview = true
         parms.isXraySubview = true
@@ -285,7 +285,7 @@ object tr_subview {
      R_RemoteRender
      ===============
      */
-    fun R_RemoteRender(surf: drawSurf_s?, stage: textureStage_t?) {
+    fun R_RemoteRender(surf: drawSurf_s, stage: textureStage_t) {
         val parms: viewDef_s?
 
         // remote views can be reused in a single frame
@@ -300,10 +300,10 @@ object tr_subview {
 
         // copy the viewport size from the original
 //	parms = (viewDef_t *)R_FrameAlloc( sizeof( *parms ) );
-        parms = tr_local.tr.viewDef
+        parms = tr_local.tr.viewDef!!
         parms.isSubview = true
         parms.isMirror = false
-        parms.renderView = surf.space.entityDef.parms.remoteRenderView
+        parms.renderView = surf.space.entityDef.parms.remoteRenderView!!
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.initialViewAreaOrigin.set(parms.renderView.vieworg)
         tr_local.tr.CropRenderSize(stage.width, stage.height, true)
@@ -324,7 +324,7 @@ object tr_subview {
 
         // copy this rendering to the image
         stage.dynamicFrameCount = tr_local.tr.frameCount
-        if (null == stage.image[0]) {
+        if (stage.image.isNullOrEmpty()) {
             stage.image[0] = Image.globalImages.scratchImage
         }
         tr_local.tr.CaptureRenderToImage(stage.image[0].imgName.toString())
@@ -336,7 +336,7 @@ object tr_subview {
      R_MirrorRender
      =================
      */
-    fun R_MirrorRender(surf: drawSurf_s?, stage: textureStage_t?, scissor: idScreenRect?) {
+    fun R_MirrorRender(surf: drawSurf_s, stage: textureStage_t, scissor: idScreenRect) {
         val parms: viewDef_s?
 
         // remote views can be reused in a single frame
@@ -345,7 +345,7 @@ object tr_subview {
         }
 
         // issue a new view command
-        parms = tr_subview.R_MirrorViewBySurface(surf)
+        parms = R_MirrorViewBySurface(surf)
         if (null == parms) {
             return
         }
@@ -363,7 +363,7 @@ object tr_subview {
         parms.subviewSurface = surf
 
         // triangle culling order changes with mirroring
-        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef.isMirror
+        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef!!.isMirror
 
         // generate render commands for it
         tr_main.R_RenderView(parms)
@@ -380,7 +380,7 @@ object tr_subview {
      R_XrayRender
      =================
      */
-    fun R_XrayRender(surf: drawSurf_s?, stage: textureStage_t?, scissor: idScreenRect?) {
+    fun R_XrayRender(surf: drawSurf_s, stage: textureStage_t, scissor: idScreenRect) {
         val parms: viewDef_s?
 
         // remote views can be reused in a single frame
@@ -389,7 +389,7 @@ object tr_subview {
         }
 
         // issue a new view command
-        parms = tr_subview.R_XrayViewBySurface(surf)
+        parms = R_XrayViewBySurface(surf)
         if (null == parms) {
             return
         }
@@ -407,7 +407,7 @@ object tr_subview {
         parms.subviewSurface = surf
 
         // triangle culling order changes with mirroring
-        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef.isMirror // != 0 );
+        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef!!.isMirror // != 0 );
 
         // generate render commands for it
         tr_main.R_RenderView(parms)
@@ -424,25 +424,25 @@ object tr_subview {
      R_GenerateSurfaceSubview
      ==================
      */
-    fun R_GenerateSurfaceSubview(drawSurf: drawSurf_s?): Boolean {
+    fun R_GenerateSurfaceSubview(drawSurf: drawSurf_s): Boolean {
         val ndcBounds = idBounds()
         var parms: viewDef_s?
-        val shader: idMaterial?
+        val shader: idMaterial
 
         // for testing the performance hit
         if (RenderSystem_init.r_skipSubviews.GetBool()) {
             return false
         }
-        if (tr_subview.R_PreciseCullSurface(drawSurf, ndcBounds)) {
+        if (R_PreciseCullSurface(drawSurf, ndcBounds)) {
             return false
         }
-        shader = drawSurf.material
+        shader = drawSurf.material!!
 
         // never recurse through a subview surface that we are
         // already seeing through
         parms = tr_local.tr.viewDef
         while (parms != null) {
-            if (parms.subviewSurface != null && parms.subviewSurface.geo === drawSurf.geo && parms.subviewSurface.space.entityDef === drawSurf.space.entityDef) {
+            if (parms.subviewSurface != null && parms.subviewSurface!!.geo === drawSurf.geo && parms.subviewSurface!!.space.entityDef === drawSurf.space.entityDef) {
                 break
             }
             parms = parms.superView
@@ -453,7 +453,7 @@ object tr_subview {
 
         // crop the scissor bounds based on the precise cull
         val scissor = idScreenRect()
-        val v = tr_local.tr.viewDef.viewport
+        val v = tr_local.tr.viewDef!!.viewport
         scissor.x1 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds[0, 0] + 1.0f)).toInt()
         scissor.y1 = v.y1 + ((v.y2 - v.y1 + 1) * 0.5f * (ndcBounds[0, 1] + 1.0f)).toInt()
         scissor.x2 = v.x1 + ((v.x2 - v.x1 + 1) * 0.5f * (ndcBounds[1, 0] + 1.0f)).toInt()
@@ -461,7 +461,7 @@ object tr_subview {
 
         // nudge a bit for safety
         scissor.Expand()
-        scissor.Intersect(tr_local.tr.viewDef.scissor)
+        scissor.Intersect(tr_local.tr.viewDef!!.scissor)
         if (scissor.IsEmpty()) {
             // cropped out
             return false
@@ -472,13 +472,13 @@ object tr_subview {
             for (i in 0 until shader.GetNumStages()) {
                 val stage: shaderStage_t = shader.GetStage(i)
                 when (stage.texture.dynamic) {
-                    dynamicidImage_t.DI_REMOTE_RENDER -> tr_subview.R_RemoteRender(drawSurf, stage.texture)
-                    dynamicidImage_t.DI_MIRROR_RENDER -> tr_subview.R_MirrorRender(
+                    dynamicidImage_t.DI_REMOTE_RENDER -> R_RemoteRender(drawSurf, stage.texture)
+                    dynamicidImage_t.DI_MIRROR_RENDER -> R_MirrorRender(
                         drawSurf,  /*const_cast<textureStage_t *>*/
                         stage.texture,
                         scissor
                     )
-                    dynamicidImage_t.DI_XRAY_RENDER -> tr_subview.R_XrayRender(
+                    dynamicidImage_t.DI_XRAY_RENDER -> R_XrayRender(
                         drawSurf,  /*const_cast<textureStage_t *>*/
                         stage.texture,
                         scissor
@@ -489,7 +489,7 @@ object tr_subview {
         }
 
         // issue a new view command
-        parms = tr_subview.R_MirrorViewBySurface(drawSurf)
+        parms = R_MirrorViewBySurface(drawSurf)
         if (null == parms) {
             return false
         }
@@ -498,7 +498,7 @@ object tr_subview {
         parms.subviewSurface = drawSurf
 
         // triangle culling order changes with mirroring
-        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef.isMirror // != 0 );
+        parms.isMirror = parms.isMirror xor tr_local.tr.viewDef!!.isMirror // != 0 );
 
         // generate render commands for it
         tr_main.R_RenderView(parms)
@@ -521,7 +521,7 @@ object tr_subview {
         var drawSurf: drawSurf_s?
         var i: Int
         var subviews: Boolean
-        var shader: Material.idMaterial?
+        var shader: idMaterial?
 
         // for testing the performance hit
         if (RenderSystem_init.r_skipSubviews.GetBool()) {
@@ -532,8 +532,8 @@ object tr_subview {
         // scan the surfaces until we either find a subview, or determine
         // there are no more subview surfaces.
         i = 0
-        while (i < tr_local.tr.viewDef.numDrawSurfs) {
-            drawSurf = tr_local.tr.viewDef.drawSurfs[i]
+        while (i < tr_local.tr.viewDef!!.numDrawSurfs) {
+            drawSurf = tr_local.tr.viewDef!!.drawSurfs[i]
             shader = drawSurf.material
             if (null == shader || !shader.HasSubview()) {
                 i++

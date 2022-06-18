@@ -166,7 +166,7 @@ class RenderWindow {
                         worldEntity.hModel,
                         modelAnim,
                         worldEntity.numJoints,
-                        worldEntity.joints,
+                        worldEntity.joints.toTypedArray(),
                         animLength - (animEndTime - time),
                         Vector.getVec3_origin(),
                         false

@@ -164,7 +164,7 @@ object draw_arb {
     class RB_ARB_DrawInteraction private constructor() : DrawInteraction() {
         override fun run(din: drawInteraction_t) {
             val surf = din.surf
-            val tri = din.surf.geo
+            val tri = din.surf!!.geo
 
             // set the vertex arrays, which may not all be enabled on a given pass
             val ac =
@@ -192,21 +192,21 @@ object draw_arb {
 // ATI R100 can't do partial texgens
             val NO_MIXED_TEXGEN = true
             if (NO_MIXED_TEXGEN) {
-                val plane = idVec4(0, 0, 0, 0.5f)
+                val plane = idVec4(0f, 0f, 0f, 0.5f)
                 //plane[0] = 0;
 //plane[1] = 0;
 //plane[2] = 0;
 //plane[3] = 0.5;
                 qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
                 qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
-                plane.set(0, 0f)
-                plane.set(1, 0f)
-                plane.set(2, 0f)
-                plane.set(3, 1f)
+                plane[0] = 0f
+                plane[1] = 0f
+                plane[2] = 0f
+                plane[3] = 1f
                 qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
                 qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
             }
-            din.lightFalloffImage.Bind()
+            din.lightFalloffImage!!.Bind()
 
             // draw it
             tr_render.RB_DrawElementsWithCounters(tri)
@@ -242,7 +242,7 @@ object draw_arb {
                 tr_backend.GL_SelectTexture(0)
                 qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
                 //	FIXME: matrix work!	RB_BindStageTexture( surfaceRegs, &surfaceStage.texture, surf );
-                din.bumpImage.Bind()
+                din.bumpImage!!.Bind()
 
                 // texture 1 is the normalization cube map
                 // the texccords are the non-normalized vector towards the light origin
@@ -326,7 +326,7 @@ object draw_arb {
             qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
             // FIXME: does this not get the texture matrix?
 //	RB_BindStageTexture( surfaceRegs, &surfaceStage.texture, surf );
-            din.diffuseImage.Bind()
+            din.diffuseImage!!.Bind()
 
             // texture 1 will get the light projected texture
             tr_backend.GL_SelectTexture(1)
@@ -337,7 +337,7 @@ object draw_arb {
             qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, din.lightProjection[0].ToFloatPtr())
             qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, din.lightProjection[1].ToFloatPtr())
             qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, din.lightProjection[2].ToFloatPtr())
-            din.lightImage.Bind()
+            din.lightImage!!.Bind()
 
             // draw it
             tr_render.RB_DrawElementsWithCounters(tri)
@@ -355,7 +355,7 @@ object draw_arb {
         }
 
         companion object {
-            val INSTANCE: DrawInteraction? = RB_ARB_DrawInteraction()
+            val INSTANCE: DrawInteraction = RB_ARB_DrawInteraction()
         }
     }
 
@@ -373,9 +373,9 @@ object draw_arb {
      ==================
      */
     class RB_ARB_DrawThreeTextureInteraction private constructor() : DrawInteraction() {
-        override fun run(din: drawInteraction_t?) {
+        override fun run(din: drawInteraction_t) {
             val surf = din.surf
-            val tri = din.surf.geo
+            val tri = din.surf!!.geo
 
             // set the vertex arrays, which may not all be enabled on a given pass
             val ac =
@@ -397,7 +397,7 @@ object draw_arb {
             tr_backend.GL_SelectTexture(0)
             qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
             //	FIXME: matrix work!	RB_BindStageTexture( surfaceRegs, &surfaceStage.texture, surf );
-            din.bumpImage.Bind()
+            din.bumpImage!!.Bind()
 
             // texture 1 is the normalization cube map
             // the texccords are the non-normalized vector towards the light origin
@@ -480,7 +480,7 @@ object draw_arb {
             qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
             // FIXME: does this not get the texture matrix?
 //	RB_BindStageTexture( surfaceRegs, &surfaceStage.texture, surf );
-            din.diffuseImage.Bind()
+            din.diffuseImage!!.Bind()
 
             // texture 1 will get the light projected texture
             tr_backend.GL_SelectTexture(1)
@@ -491,7 +491,7 @@ object draw_arb {
             qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, din.lightProjection[0].ToFloatPtr())
             qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, din.lightProjection[1].ToFloatPtr())
             qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, din.lightProjection[2].ToFloatPtr())
-            din.lightImage.Bind()
+            din.lightImage!!.Bind()
 
             // texture 2 will get the light falloff texture
             tr_backend.GL_SelectTexture(2)
@@ -501,17 +501,17 @@ object draw_arb {
             qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
             qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, din.lightProjection[3].ToFloatPtr())
             val plane = idVec4()
-            plane.set(0, 0f)
-            plane.set(1, 0f)
-            plane.set(2, 0f)
-            plane.set(3, 0.5f)
+            plane[0] = 0f
+            plane[1] = 0f
+            plane[2] = 0f
+            plane[3] = 0.5f
             qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
-            plane.set(0, 0f)
-            plane.set(1, 0f)
-            plane.set(2, 0f)
-            plane.set(3, 1f)
+            plane[0] = 0f
+            plane[1] = 0f
+            plane[2] = 0f
+            plane[3] = 1f
             qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
-            din.lightFalloffImage.Bind()
+            din.lightFalloffImage!!.Bind()
 
             // draw it
             tr_render.RB_DrawElementsWithCounters(tri)
@@ -534,7 +534,7 @@ object draw_arb {
         }
 
         companion object {
-            val INSTANCE: DrawInteraction? = RB_ARB_DrawThreeTextureInteraction()
+            val INSTANCE: DrawInteraction = RB_ARB_DrawThreeTextureInteraction()
         }
     }
 }

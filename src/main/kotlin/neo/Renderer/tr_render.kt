@@ -1,9 +1,9 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Cinematic.cinData_t
 import neo.Renderer.Image.idImage
 import neo.Renderer.Material.cullType_t
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Material.shaderStage_t
 import neo.Renderer.Material.stageLighting_t
 import neo.Renderer.Material.texgen_t
@@ -51,28 +51,28 @@ object tr_render {
      Handles generating a cinematic frame if needed
      ======================
      */
-    private const val DBG_RB_BindVariableStageImage = 0
+    private var DBG_RB_BindVariableStageImage = 0
 
     /*
      ======================
      RB_GetShaderTextureMatrix
      ======================
      */
-    private const val DBG_RB_GetShaderTextureMatrix = 0
+    private var DBG_RB_GetShaderTextureMatrix = 0
 
     /*
      ======================
      RB_RenderDrawSurfChainWithFunction
      ======================
      */
-    private const val DBG_RB_RenderDrawSurfChainWithFunction = 0
+    private var DBG_RB_RenderDrawSurfChainWithFunction = 0
 
     /*
      =================
      RB_SubmittInteraction
      =================
      */
-    private const val DBG_RB_SubmittInteraction = 0
+    private var DBG_RB_SubmittInteraction = 0
 
     /*
      =================
@@ -82,15 +82,15 @@ object tr_render {
      This should never happen if the vertex cache is operating properly.
      =================
      */
-    fun RB_DrawElementsImmediate(tri: srfTriangles_s?) {
+    fun RB_DrawElementsImmediate(tri: srfTriangles_s) {
         tr_local.backEnd.pc.c_drawElements++
         tr_local.backEnd.pc.c_drawIndexes += tri.numIndexes
         tr_local.backEnd.pc.c_drawVertexes += tri.numVerts
         if (tri.ambientSurface != null) {
-            if (tri.indexes == tri.ambientSurface.indexes) {
+            if (tri.indexes.contentEquals(tri.ambientSurface!!.indexes)) {
                 tr_local.backEnd.pc.c_drawRefIndexes += tri.numIndexes
             }
-            if (tri.verts == tri.ambientSurface.verts) {
+            if (tri.verts == tri.ambientSurface!!.verts) {
                 tr_local.backEnd.pc.c_drawRefVertexes += tri.numVerts
             }
         }
@@ -102,17 +102,17 @@ object tr_render {
         qgl.qglEnd()
     }
 
-    fun RB_DrawElementsWithCounters(tri: srfTriangles_s?) {
+    fun RB_DrawElementsWithCounters(tri: srfTriangles_s) {
         tr_local.backEnd.pc.c_drawElements++
         tr_local.backEnd.pc.c_drawIndexes += tri.numIndexes
         tr_local.backEnd.pc.c_drawVertexes += tri.numVerts
-        tr_render.DEBUG_RB_DrawElementsWithCounters++
+        DEBUG_RB_DrawElementsWithCounters++
         //        TempDump.printCallStack("" + DEBUG_RB_DrawElementsWithCounters);
         if (tri.ambientSurface != null) {
-            if (tri.indexes == tri.ambientSurface.indexes) {
+            if (tri.indexes.contentEquals(tri.ambientSurface!!.indexes)) {
                 tr_local.backEnd.pc.c_drawRefIndexes += tri.numIndexes
             }
-            if (tri.verts == tri.ambientSurface.verts) {
+            if (tri.verts == tri.ambientSurface!!.verts) {
                 tr_local.backEnd.pc.c_drawRefVertexes += tri.numVerts
             }
         }
@@ -141,7 +141,7 @@ object tr_render {
      May not use all the indexes in the surface if caps are skipped
      ================
      */
-    fun RB_DrawShadowElementsWithCounters(tri: srfTriangles_s?, numIndexes: Int) {
+    fun RB_DrawShadowElementsWithCounters(tri: srfTriangles_s, numIndexes: Int) {
         tr_local.backEnd.pc.c_shadowElements++
         tr_local.backEnd.pc.c_shadowIndexes += numIndexes
         tr_local.backEnd.pc.c_shadowVertexes += tri.numVerts
@@ -150,7 +150,7 @@ object tr_render {
                 GL11.GL_TRIANGLES,
                 if (RenderSystem_init.r_singleTriangle.GetBool()) 3 else numIndexes,
                 Model.GL_INDEX_TYPE,
-                VertexCache.vertexCache.Position(tri.indexCache)
+                VertexCache.vertexCache.Position(tri.indexCache!!)
             )
             tr_local.backEnd.pc.c_vboIndexes += numIndexes
         } else {
@@ -173,16 +173,16 @@ object tr_render {
      Sets texcoord and vertex pointers
      ===============
      */
-    fun RB_RenderTriangleSurface(tri: srfTriangles_s?) {
-        if (TempDump.NOT(tri.ambientCache)) {
-            tr_render.RB_DrawElementsImmediate(tri)
+    fun RB_RenderTriangleSurface(tri: srfTriangles_s) {
+        if (null == tri.ambientCache) {
+            RB_DrawElementsImmediate(tri)
             return
         }
         val ac =
             idDrawVert(VertexCache.vertexCache.Position(tri.ambientCache)) //TODO:figure out how to work these damn casts.
-        qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
-        qgl.qglTexCoordPointer(2, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.stOffset().toLong())
-        tr_render.RB_DrawElementsWithCounters(tri)
+        qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, ac.xyzOffset().toLong())
+        qgl.qglTexCoordPointer(2, GL11.GL_FLOAT, idDrawVert.BYTES, ac.stOffset().toLong())
+        RB_DrawElementsWithCounters(tri)
     }
 
     /*
@@ -240,23 +240,23 @@ object tr_render {
      be updated after the triangle function completes.
      ====================
      */
-    fun RB_RenderDrawSurfListWithFunction(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int, triFunc_: triFunc?) {
+    fun RB_RenderDrawSurfListWithFunction(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int, triFunc_: triFunc) {
         var i: Int
         var drawSurf: drawSurf_s?
         tr_local.backEnd.currentSpace = null
         i = 0
         while (i < numDrawSurfs) {
-            drawSurf = drawSurfs.get(i)
+            drawSurf = drawSurfs[i]
 
             // change the matrix if needed
             if (drawSurf.space !== tr_local.backEnd.currentSpace) {
                 qgl.qglLoadMatrixf(drawSurf.space.modelViewMatrix)
             }
             if (drawSurf.space.weaponDepthHack) {
-                tr_render.RB_EnterWeaponDepthHack()
+                RB_EnterWeaponDepthHack()
             }
             if (drawSurf.space.modelDepthHack != 0.0f) {
-                tr_render.RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
+                RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
             }
 
             // change the scissor if needed
@@ -273,16 +273,16 @@ object tr_render {
             // render it
             triFunc_.run(drawSurf)
             if (drawSurf.space.weaponDepthHack || drawSurf.space.modelDepthHack != 0.0f) {
-                tr_render.RB_LeaveDepthHack()
+                RB_LeaveDepthHack()
             }
             tr_local.backEnd.currentSpace = drawSurf.space
             i++
         }
     }
 
-    fun RB_RenderDrawSurfChainWithFunction(drawSurfs: drawSurf_s?, triFunc_: triFunc?) {
+    fun RB_RenderDrawSurfChainWithFunction(drawSurfs: drawSurf_s, triFunc_: triFunc) {
         var drawSurf: drawSurf_s?
-        tr_render.DBG_RB_RenderDrawSurfChainWithFunction++
+        DBG_RB_RenderDrawSurfChainWithFunction++
         tr_local.backEnd.currentSpace = null
         drawSurf = drawSurfs
         while (drawSurf != null) {
@@ -292,10 +292,10 @@ object tr_render {
                 qgl.qglLoadMatrixf(drawSurf.space.modelViewMatrix)
             }
             if (drawSurf.space.weaponDepthHack) {
-                tr_render.RB_EnterWeaponDepthHack()
+                RB_EnterWeaponDepthHack()
             }
             if (drawSurf.space.modelDepthHack != 0f) {
-                tr_render.RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
+                RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
             }
 
             // change the scissor if needed
@@ -312,7 +312,7 @@ object tr_render {
             // render it
             triFunc_.run(drawSurf)
             if (drawSurf.space.weaponDepthHack || drawSurf.space.modelDepthHack != 0.0f) {
-                tr_render.RB_LeaveDepthHack()
+                RB_LeaveDepthHack()
             }
             tr_local.backEnd.currentSpace = drawSurf.space
             drawSurf = drawSurf.nextOnLight
@@ -320,15 +320,15 @@ object tr_render {
     }
 
     fun RB_GetShaderTextureMatrix(
-        shaderRegisters: FloatArray?,
-        texture: textureStage_t?,
-        matrix: FloatArray? /*[16]*/
+        shaderRegisters: FloatArray,
+        texture: textureStage_t,
+        matrix: FloatArray /*[16]*/
     ) {
-        matrix.get(0) = shaderRegisters.get(texture.matrix[0][0])
-        matrix.get(4) = shaderRegisters.get(texture.matrix[0][1])
-        matrix.get(8) = 0
-        matrix.get(12) = shaderRegisters.get(texture.matrix[0][2])
-        tr_render.DBG_RB_GetShaderTextureMatrix++
+        matrix[0] = shaderRegisters[texture.matrix[0][0]]
+        matrix[4] = shaderRegisters[texture.matrix[0][1]]
+        matrix[8] = 0f
+        matrix[12] = shaderRegisters[texture.matrix[0][2]]
+        DBG_RB_GetShaderTextureMatrix++
         //        System.out.println(">>>>>>" + DBG_RB_GetShaderTextureMatrix);
 //        System.out.println("0:" + Arrays.toString(texture.matrix[0]));
 //        System.out.println("1:" + Arrays.toString(texture.matrix[1]));
@@ -336,24 +336,24 @@ object tr_render {
 
         // we attempt to keep scrolls from generating incredibly large texture values, but
         // center rotations and center scales can still generate offsets that need to be > 1
-        if (matrix.get(12) < -40 || matrix.get(12) > 40) {
-            matrix.get(12) -= matrix.get(12) as Int
+        if (matrix[12] < -40 || matrix[12] > 40) {
+            matrix[12] -= matrix[12]
         }
-        matrix.get(1) = shaderRegisters.get(texture.matrix[1][0])
-        matrix.get(5) = shaderRegisters.get(texture.matrix[1][1])
-        matrix.get(9) = 0
-        matrix.get(13) = shaderRegisters.get(texture.matrix[1][2])
-        if (matrix.get(13) < -40 || matrix.get(13) > 40) {
-            matrix.get(13) -= matrix.get(13) as Int
+        matrix[1] = shaderRegisters[texture.matrix[1][0]]
+        matrix[5] = shaderRegisters[texture.matrix[1][1]]
+        matrix[9] = 0f
+        matrix[13] = shaderRegisters[texture.matrix[1][2]]
+        if (matrix[13] < -40 || matrix[13] > 40) {
+            matrix[13] -= matrix[13]
         }
-        matrix.get(2) = 0
-        matrix.get(6) = 0
-        matrix.get(10) = 1
-        matrix.get(14) = 0
-        matrix.get(3) = 0
-        matrix.get(7) = 0
-        matrix.get(11) = 0
-        matrix.get(15) = 1
+        matrix[2] = 0f
+        matrix[6] = 0f
+        matrix[10] = 1f
+        matrix[14] = 0f
+        matrix[3] = 0f
+        matrix[7] = 0f
+        matrix[11] = 0f
+        matrix[15] = 1f
     }
 
     /*
@@ -361,9 +361,9 @@ object tr_render {
      RB_LoadShaderTextureMatrix
      ======================
      */
-    fun RB_LoadShaderTextureMatrix(shaderRegisters: FloatArray?, texture: textureStage_t?) {
+    fun RB_LoadShaderTextureMatrix(shaderRegisters: FloatArray, texture: textureStage_t) {
         val matrix = FloatArray(16)
-        tr_render.RB_GetShaderTextureMatrix(shaderRegisters, texture, matrix)
+        RB_GetShaderTextureMatrix(shaderRegisters, texture, matrix)
         //        final float[] m = matrix;
 //        System.out.printf("RB_LoadShaderTextureMatrix("
 //                + "%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f)\n",
@@ -375,8 +375,8 @@ object tr_render {
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
     }
 
-    fun RB_BindVariableStageImage(texture: textureStage_t?, shaderRegisters: FloatArray?) {
-        tr_render.DBG_RB_BindVariableStageImage++
+    fun RB_BindVariableStageImage(texture: textureStage_t, shaderRegisters: FloatArray) {
+        DBG_RB_BindVariableStageImage++
         //        if (DBG_RB_BindVariableStageImage == 50) {
 //            for (drawSurf_s draw : backEnd.viewDef.drawSurfs) {
 //                System.out.println("=============================");
@@ -386,7 +386,7 @@ object tr_render {
 //                }
 //            }
 //        }
-        if (texture.cinematic[0] != null) {
+        if (texture.cinematic.isNotEmpty()) {
             val cin: cinData_t?
             if (RenderSystem_init.r_skipDynamicTextures.GetBool()) {
                 Image.globalImages.defaultImage.Bind()
@@ -399,13 +399,13 @@ object tr_render {
             cin =
                 texture.cinematic[0].ImageForTime((1000 * (tr_local.backEnd.viewDef.floatTime + tr_local.backEnd.viewDef.renderView.shaderParms[11])).toInt())
             if (cin.image != null) {
-                Image.globalImages.cinematicImage.UploadScratch(cin.image, cin.imageWidth, cin.imageHeight)
+                Image.globalImages.cinematicImage.UploadScratch(cin.image!!, cin.imageWidth, cin.imageHeight)
             } else {
                 Image.globalImages.blackImage.Bind()
             }
         } else {
             //FIXME: see why image is invalid
-            if (texture.image[0] != null) {
+            if (texture.image.isNotEmpty()) {
 //                final int titty = texture.image[0].texNum;
 //                if (titty != 58) return;
                 texture.image[0].Bind()
@@ -418,15 +418,15 @@ object tr_render {
      RB_BindStageTexture
      ======================
      */
-    fun RB_BindStageTexture(shaderRegisters: FloatArray?, texture: textureStage_t?, surf: drawSurf_s?) {
+    fun RB_BindStageTexture(shaderRegisters: FloatArray, texture: textureStage_t, surf: drawSurf_s) {
         // image
-        tr_render.RB_BindVariableStageImage(texture, shaderRegisters)
+        RB_BindVariableStageImage(texture, shaderRegisters)
 
         // texgens
         if (texture.texgen == texgen_t.TG_DIFFUSE_CUBE) {
             val vert =
                 idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) //TODO:figure out how to work these damn casts.
-            qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, vert.normal.ToFloatPtr())
+            qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, vert.normal.ToFloatPtr())
         }
         if (texture.texgen == texgen_t.TG_SKYBOX_CUBE || texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
             qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, 0, VertexCache.vertexCache.Position(surf.dynamicTexCoords))
@@ -441,7 +441,7 @@ object tr_render {
             qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
             val vert =
                 idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) // {//TODO:figure out how to work these damn casts.
-            qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, vert.normalOffset().toLong())
+            qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.BYTES, vert.normalOffset().toLong())
             qgl.qglMatrixMode(GL11.GL_TEXTURE)
             val mat = FloatArray(16)
             tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef.worldSpace.modelViewMatrix, mat)
@@ -451,7 +451,7 @@ object tr_render {
 
         // matrix
         if (texture.hasMatrix) {
-            tr_render.RB_LoadShaderTextureMatrix(shaderRegisters, texture)
+            RB_LoadShaderTextureMatrix(shaderRegisters, texture)
         }
     }
 
@@ -460,14 +460,14 @@ object tr_render {
      RB_FinishStageTexture
      ======================
      */
-    fun RB_FinishStageTexture(texture: textureStage_t?, surf: drawSurf_s?) {
+    fun RB_FinishStageTexture(texture: textureStage_t, surf: drawSurf_s) {
         if (texture.texgen == texgen_t.TG_DIFFUSE_CUBE || texture.texgen == texgen_t.TG_SKYBOX_CUBE || texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
             val vert =
                 idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) // {//TODO:figure out how to work these damn casts.
             qgl.qglTexCoordPointer(
                 2,
                 GL11.GL_FLOAT,
-                idDrawVert.Companion.BYTES,  //			(void *)&(((idDrawVert *)vertexCache.Position( surf.geo.ambientCache )).st) );
+                idDrawVert.BYTES,  //			(void *)&(((idDrawVert *)vertexCache.Position( surf.geo.ambientCache )).st) );
                 vert.st.ToFloatPtr()
             ) //TODO:WDF?
         }
@@ -615,57 +615,57 @@ object tr_render {
      ==================
      */
     fun R_SetDrawInteraction(
-        surfaceStage: shaderStage_t?,
-        surfaceRegs: FloatArray?,
-        image: Array<idImage?>?,
-        matrix: Array<idVec4>? /*[2]*/,
-        color: idVec4 /*[4]*/
+        surfaceStage: shaderStage_t,
+        surfaceRegs: FloatArray,
+        image: Array<idImage>,
+        matrix: Array<idVec4> /*[2]*/,
+        color: idVec4? /*[4]*/
     ) {
-        image.get(0) = surfaceStage.texture.image[0]
+        image[0] = surfaceStage.texture.image[0]
         if (surfaceStage.texture.hasMatrix) {
-            matrix.get(0).set(0, surfaceRegs.get(surfaceStage.texture.matrix[0][0]))
-            matrix.get(0).set(1, surfaceRegs.get(surfaceStage.texture.matrix[0][1]))
-            matrix.get(0).set(2, 0f)
-            matrix.get(0).set(3, surfaceRegs.get(surfaceStage.texture.matrix[0][2]))
-            matrix.get(1).set(0, surfaceRegs.get(surfaceStage.texture.matrix[1][0]))
-            matrix.get(1).set(1, surfaceRegs.get(surfaceStage.texture.matrix[1][1]))
-            matrix.get(1).set(2, 0f)
-            matrix.get(1).set(3, surfaceRegs.get(surfaceStage.texture.matrix[1][2]))
+            matrix[0][0] = surfaceRegs[surfaceStage.texture.matrix[0][0]]
+            matrix[0][1] = surfaceRegs[surfaceStage.texture.matrix[0][1]]
+            matrix[0][2] = 0f
+            matrix[0][3] = surfaceRegs[surfaceStage.texture.matrix[0][2]]
+            matrix[1][0] = surfaceRegs[surfaceStage.texture.matrix[1][0]]
+            matrix[1][1] = surfaceRegs[surfaceStage.texture.matrix[1][1]]
+            matrix[1][2] = 0f
+            matrix[1][3] = surfaceRegs[surfaceStage.texture.matrix[1][2]]
 
             // we attempt to keep scrolls from generating incredibly large texture values, but
             // center rotations and center scales can still generate offsets that need to be > 1
-            if (matrix.get(0).get(3) < -40 || matrix.get(0).get(3) > 40) {
-                matrix.get(0).minusAssign(3, matrix.get(0).get(3).toInt().toFloat())
+            if (matrix[0][3] < -40 || matrix[0][3] > 40) {
+                matrix[0].minusAssign(3, matrix[0][3].toInt().toFloat())
             }
-            if (matrix.get(1).get(3) < -40 || matrix.get(1).get(3) > 40) {
-                matrix.get(1).minusAssign(3, matrix.get(1).get(3).toInt().toFloat())
+            if (matrix[1][3] < -40 || matrix[1][3] > 40) {
+                matrix[1].minusAssign(3, matrix[1][3].toInt().toFloat())
             }
         } else {
-            matrix.get(0).set(0, 1f)
-            matrix.get(0).set(1, 0f)
-            matrix.get(0).set(2, 0f)
-            matrix.get(0).set(3, 0f)
-            matrix.get(1).set(0, 0f)
-            matrix.get(1).set(1, 1f)
-            matrix.get(1).set(2, 0f)
-            matrix.get(1).set(3, 0f)
+            matrix[0][0] = 1f
+            matrix[0][1] = 0f
+            matrix[0][2] = 0f
+            matrix[0][3] = 0f
+            matrix[1][0] = 0f
+            matrix[1][1] = 1f
+            matrix[1][2] = 0f
+            matrix[1][3] = 0f
         }
         if (color != null) {
             for (i in 0..3) {
-                color.set(i, surfaceRegs.get(surfaceStage.color.registers[i]))
+                color[i] = surfaceRegs[surfaceStage.color.registers[i]]
                 // clamp here, so card with greater range don't look different.
                 // we could perform overbrighting like we do for lights, but
                 // it doesn't currently look worth it.
-                if (color.get(i) < 0) {
-                    color.set(i, 0f)
-                } else if (color.get(i) > 1.0) {
-                    color.set(i, 1.0f)
+                if (color[i] < 0) {
+                    color[i] = 0f
+                } else if (color[i] > 1.0) {
+                    color[i] = 1.0f
                 }
             }
         }
     }
 
-    fun RB_SubmittInteraction(din: drawInteraction_t?, drawInteraction: DrawInteraction?) {
+    fun RB_SubmittInteraction(din: drawInteraction_t, drawInteraction: DrawInteraction) {
         if (null == din.bumpImage) {
             return
         }
@@ -680,10 +680,10 @@ object tr_render {
         }
 
         // if we wouldn't draw anything, don't call the Draw function
-        if ((din.diffuseColor.get(0) > 0 || din.diffuseColor.get(1) > 0 || din.diffuseColor.get(2) > 0) && din.diffuseImage !== Image.globalImages.blackImage
-            || (din.specularColor.get(0) > 0 || din.specularColor.get(1) > 0 || din.specularColor.get(2) > 0) && din.specularImage !== Image.globalImages.blackImage
+        if ((din.diffuseColor[0] > 0 || din.diffuseColor[1] > 0 || din.diffuseColor[2] > 0) && din.diffuseImage !== Image.globalImages.blackImage
+            || (din.specularColor[0] > 0 || din.specularColor[1] > 0 || din.specularColor[2] > 0) && din.specularImage !== Image.globalImages.blackImage
         ) {
-            tr_render.DBG_RB_SubmittInteraction++
+            DBG_RB_SubmittInteraction++
             drawInteraction.run(din)
         }
     }
@@ -696,11 +696,11 @@ object tr_render {
      interaction into primitive interactions
      =============
      */
-    fun RB_CreateSingleDrawInteractions(surf: drawSurf_s?, drawInteraction: DrawInteraction?) {
-        val surfaceShader: idMaterial? = surf.material
+    fun RB_CreateSingleDrawInteractions(surf: drawSurf_s, drawInteraction: DrawInteraction) {
+        val surfaceShader: idMaterial = surf.material!!
         val surfaceRegs = surf.shaderRegisters
         val vLight = tr_local.backEnd.vLight
-        val lightShader: idMaterial? = vLight.lightShader
+        val lightShader: idMaterial = vLight.lightShader
         val lightRegs = vLight.shaderRegisters
         val inter = drawInteraction_t()
         if (RenderSystem_init.r_skipInteractions.GetBool() || TempDump.NOT(surf.geo) || TempDump.NOT(surf.geo.ambientCache)) {
@@ -733,10 +733,10 @@ object tr_render {
 
         // hack depth range if needed
         if (surf.space.weaponDepthHack) {
-            tr_render.RB_EnterWeaponDepthHack()
+            RB_EnterWeaponDepthHack()
         }
         if (surf.space.modelDepthHack != 0f) {
-            tr_render.RB_EnterModelDepthHack(surf.space.modelDepthHack)
+            RB_EnterModelDepthHack(surf.space.modelDepthHack)
         }
         inter.surf = surf
         inter.lightFalloffImage = vLight.falloffImage
@@ -746,12 +746,12 @@ object tr_render {
             tr_local.backEnd.viewDef.renderView.vieworg,
             inter.localViewOrigin
         )
-        inter.localLightOrigin.set(3, 0f)
-        inter.localViewOrigin.set(3, 1f)
+        inter.localLightOrigin[3] = 0f
+        inter.localViewOrigin[3] = 1f
         inter.ambientLight = TempDump.btoi(lightShader.IsAmbientLight())
 
         // the base projections may be modified by texture matrix on light stages
-        val lightProject: Array<idPlane> = idPlane.Companion.generateArray(4)
+        val lightProject: Array<idPlane> = idPlane.generateArray(4)
         for (i in 0..3) {
             tr_main.R_GlobalPlaneToLocal(
                 surf.space.modelMatrix,
@@ -763,7 +763,7 @@ object tr_render {
             val lightStage: shaderStage_t = lightShader.GetStage(lightStageNum)
 
             // ignore stages that fail the condition
-            if (0 == lightRegs[lightStage.conditionRegister]) {
+            if (0 == lightRegs[lightStage.conditionRegister].toInt()) {
                 continue
             }
             inter.lightImage = lightStage.texture.image[0] //TODO:pointeR?
@@ -774,7 +774,7 @@ object tr_render {
             }
             // now multiply the texgen by the light texture matrix
             if (lightStage.texture.hasMatrix) {
-                tr_render.RB_GetShaderTextureMatrix(lightRegs, lightStage.texture, tr_local.backEnd.lightTextureMatrix)
+                RB_GetShaderTextureMatrix(lightRegs, lightStage.texture, tr_local.backEnd.lightTextureMatrix)
                 draw_common.RB_BakeTextureMatrixIntoTexgen( /*reinterpret_cast<class idPlane *>*/inter.lightProjection,
                     tr_local.backEnd.lightTextureMatrix
                 )
@@ -801,31 +801,31 @@ object tr_render {
                     stageLighting_t.SL_BUMP -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister]) {
+                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         // draw any previous interaction
-                        tr_render.RB_SubmittInteraction(inter, drawInteraction)
+                        RB_SubmittInteraction(inter, drawInteraction)
                         inter.diffuseImage = null
                         inter.specularImage = null
                         run {
-                            val bumpImage = arrayOf<idImage?>(null)
-                            tr_render.R_SetDrawInteraction(surfaceStage, surfaceRegs, bumpImage, inter.bumpMatrix, null)
+                            val bumpImage = arrayOf(idImage())
+                            R_SetDrawInteraction(surfaceStage, surfaceRegs, bumpImage, inter.bumpMatrix, null)
                             inter.bumpImage = bumpImage[0]
                         }
                     }
                     stageLighting_t.SL_DIFFUSE -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister]) {
+                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         if (inter.diffuseImage != null) {
-                            tr_render.RB_SubmittInteraction(inter, drawInteraction)
+                            RB_SubmittInteraction(inter, drawInteraction)
                         }
                         run {
-                            val diffuseImage = arrayOf<idImage?>(null)
-                            tr_render.R_SetDrawInteraction(
+                            val diffuseImage = arrayOf(idImage())
+                            R_SetDrawInteraction(
                                 surfaceStage,
                                 surfaceRegs,
                                 diffuseImage,
@@ -843,15 +843,15 @@ object tr_render {
                     stageLighting_t.SL_SPECULAR -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister]) {
+                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         if (inter.specularImage != null) {
-                            tr_render.RB_SubmittInteraction(inter, drawInteraction)
+                            RB_SubmittInteraction(inter, drawInteraction)
                         }
                         run {
-                            val specularImage = arrayOf<idImage?>(null)
-                            tr_render.R_SetDrawInteraction(
+                            val specularImage = arrayOf(idImage())
+                            R_SetDrawInteraction(
                                 surfaceStage,
                                 surfaceRegs,
                                 specularImage,
@@ -870,12 +870,12 @@ object tr_render {
             }
 
             // draw the final interaction
-            tr_render.RB_SubmittInteraction(inter, drawInteraction)
+            RB_SubmittInteraction(inter, drawInteraction)
         }
 
         // unhack depth range if needed
         if (surf.space.weaponDepthHack || surf.space.modelDepthHack != 0.0f) {
-            tr_render.RB_LeaveDepthHack()
+            RB_LeaveDepthHack()
         }
     }
 
@@ -884,9 +884,9 @@ object tr_render {
      RB_DrawView
      =============
      */
-    fun RB_DrawView(data: Any?) {
+    fun RB_DrawView(data: Any) {
         val cmd: drawSurfsCommand_t?
-        cmd = data as drawSurfsCommand_t?
+        cmd = data as drawSurfsCommand_t
         tr_local.backEnd.viewDef = cmd.viewDef
 
         // we will need to do a new copyTexSubImage of the screen
@@ -939,7 +939,7 @@ object tr_render {
      */
     class RB_T_RenderTriangleSurface private constructor() : triFunc() {
         override fun run(surf: drawSurf_s) {
-            tr_render.RB_RenderTriangleSurface(surf.geo)
+            RB_RenderTriangleSurface(surf.geo)
         }
 
         companion object {

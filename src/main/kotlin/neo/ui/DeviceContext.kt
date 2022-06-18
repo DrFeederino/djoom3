@@ -32,7 +32,7 @@ class DeviceContext {
     class idDeviceContext {
         private val cursorImages: Array<idMaterial> = Array(CURSOR.CURSOR_COUNT.ordinal) { idMaterial() }
         private val scrollBarImages: Array<idMaterial> = Array(SCROLLBAR.SCROLLBAR_COUNT.ordinal) { idMaterial() }
-        private lateinit var activeFont: fontInfoEx_t
+        private var activeFont: fontInfoEx_t = fontInfoEx_t()
 
         //
         private val clipRects: idList<idRectangle> = idList()
@@ -1158,7 +1158,7 @@ class DeviceContext {
                 glyph2.t,
                 glyph2.s2,
                 glyph2.t2,
-                glyph2.glyph
+                glyph2.glyph!!
             )
         }
 
@@ -1239,7 +1239,7 @@ class DeviceContext {
                             glyph.t,
                             glyph.s2,
                             glyph.t2,
-                            glyph.glyph
+                            glyph.glyph!!
                         )
                         if (cursor == count) {
                             DrawEditCursor(x, y, scale)

@@ -9,7 +9,9 @@ import neo.framework.File_h.fsOrigin_t
 import neo.framework.File_h.idFile
 import neo.idlib.Lib
 import neo.idlib.Text.Str.idStr
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.IntBuffer
 import kotlin.experimental.and
 
 /**
@@ -372,7 +374,7 @@ object Cinematic {
         private var onQuad: Long = 0
 
         //        private byte[][][] qStatus = new byte[2][][];
-        private var qStatus: Array<Array<ByteBuffer?>?> = arrayOfNulls<Array<ByteBuffer?>>(2)
+        private var qStatus: Array<ArrayList<ByteBuffer>> = Array<ArrayList<ByteBuffer>>(2) { ArrayList() }
         private var roqF0: Long = 0
         private var roqF1: Long = 0
         private var roqFPS: Long = 0
@@ -583,7 +585,7 @@ object Cinematic {
             roq_flags = (file[14] + file[15] * 256).toLong()
         }
 
-        private fun blitVQQuad32fs(status: Array<ByteBuffer>, data: IntArray, offset: Int = 0) {
+        private fun blitVQQuad32fs(status: ArrayList<ByteBuffer>, data: IntArray, offset: Int = 0) {
             var newd: Short
             var celdata: Int
             var code: Int
@@ -712,7 +714,7 @@ object Cinematic {
             val tempFile: ByteBuffer?
             var redump: Boolean
             tempFile = ByteBuffer.allocate(file.size)
-            iFile.Read(tempFile, RoQFrameSize + 8)
+            iFile!!.Read(tempFile, RoQFrameSize + 8)
             file = expandBuffer(tempFile)
             if (RoQPlayed >= ROQSize) {
                 if (looping) {
@@ -734,7 +736,7 @@ object Cinematic {
                             normalBuffer0 = t[1]
                             RoQPrepMcomp(roqF0, roqF1)
                             blitVQQuad32fs(qStatus[1], file, framedata)
-                            buf = point(image, screenDelta.toLong())
+                            buf = point(image!!, screenDelta.toLong())
                         } else {
                             normalBuffer0 = t[0]
                             RoQPrepMcomp(roqF0, roqF1)
@@ -744,9 +746,9 @@ object Cinematic {
                         if (numQuads == 0L) {        // first frame
 //				memcpy(image+screenDelta, image, samplesPerLine*ysize);
                             System.arraycopy(
-                                image.array(),
+                                image!!.array(),
                                 0,
-                                image.array(),
+                                image!!.array(),
                                 screenDelta,
                                 samplesPerLine.toInt() * ySize
                             )
@@ -776,7 +778,7 @@ object Cinematic {
                     ROQ_QUAD_HANG -> RoQFrameSize = 0
                     ROQ_QUAD_JPEG -> if (0L == numQuads) {
                         normalBuffer0 = t[0]
-                        JPEGBlit(image, file, framedata, RoQFrameSize)
+                        JPEGBlit(image!!, file, framedata, RoQFrameSize)
                         //				memcpy(image+screenDelta, image, samplesPerLine*ysize);
                         System.arraycopy(image, 0, image, screenDelta, samplesPerLine.toInt() * ySize)
                         numQuads++
@@ -799,8 +801,8 @@ object Cinematic {
                 RoQFrameSize =
                     file[framedata + 2] + file[framedata + 3] * 256 + file[framedata + 4] * 65536
                 roq_flags = (file[framedata + 6] + file[framedata + 7] * 256).toLong()
-                roqF0 = file[framedata + 7] as Byte.toLong()
-                roqF1 = file[framedata + 6] as Byte.toLong()
+                roqF0 = file[framedata + 7] as Long
+                roqF1 = file[framedata + 6] as Long
                 //                System.out.printf("roq_id=%d, roqF0=%d, roqF1=%d\n", roq_id, roqF0, roqF1);
                 if (RoQFrameSize > 65536 || roq_id == 0x1084) {
                     Common.common.DPrintf("roq_size>65536||roq_id==0x1084\n")
@@ -1232,12 +1234,12 @@ object Cinematic {
                     if (samplesPerPixel == 2L) {
                         i = 0
                         while (i < two) {
-                            y0 = input[i_ptr++]
-                            y1 = input[i_ptr++]
-                            y2 = input[i_ptr++]
-                            y3 = input[i_ptr++]
-                            cr = input[i_ptr++]
-                            cb = input[i_ptr++]
+                            y0 = input[i_ptr++].toLong()
+                            y1 = input[i_ptr++].toLong()
+                            y2 = input[i_ptr++].toLong()
+                            y3 = input[i_ptr++].toLong()
+                            cr = input[i_ptr++].toLong()
+                            cb = input[i_ptr++].toLong()
                             bptr.putShort(yuv_to_rgb(y0, cr, cb))
                             bptr.putShort(yuv_to_rgb(y1, cr, cb))
                             bptr.putShort(yuv_to_rgb(y2, cr, cb))
@@ -1265,12 +1267,12 @@ object Cinematic {
                         var x3: Int
                         i = 0
                         while (i < two) {
-                            y0 = input[i_ptr++]
-                            y1 = input[i_ptr++]
-                            y2 = input[i_ptr++]
-                            y3 = input[i_ptr++] //TODO:beware the signed vs unsigned shit.
-                            cr = input[i_ptr++]
-                            cb = input[i_ptr++]
+                            y0 = input[i_ptr++].toLong()
+                            y1 = input[i_ptr++].toLong()
+                            y2 = input[i_ptr++].toLong()
+                            y3 = input[i_ptr++].toLong() //TODO:beware the signed vs unsigned shit.
+                            cr = input[i_ptr++].toLong()
+                            cb = input[i_ptr++].toLong()
                             ibptr.put(yuv_to_rgb24(y0, cr, cb).also { x0 = it })
                             ibptr.put(yuv_to_rgb24(y1, cr, cb).also { x1 = it })
                             ibptr.put(yuv_to_rgb24(y2, cr, cb).also { x2 = it })
@@ -1298,12 +1300,12 @@ object Cinematic {
                     if (samplesPerPixel == 2L) {
                         i = 0
                         while (i < two) {
-                            y0 = input[i_ptr++]
-                            y1 = input[i_ptr++]
-                            y2 = input[i_ptr++]
-                            y3 = input[i_ptr++]
-                            cr = input[i_ptr++]
-                            cb = input[i_ptr++]
+                            y0 = input[i_ptr++].toLong()
+                            y1 = input[i_ptr++].toLong()
+                            y2 = input[i_ptr++].toLong()
+                            y3 = input[i_ptr++].toLong()
+                            cr = input[i_ptr++].toLong()
+                            cb = input[i_ptr++].toLong()
                             bptr.putShort(yuv_to_rgb(y0, cr, cb))
                             bptr.putShort(yuv_to_rgb(y1, cr, cb))
                             bptr.putShort(yuv_to_rgb((y0 * 3 + y2) / 4, cr, cb))
@@ -1332,12 +1334,12 @@ object Cinematic {
                         ibptr = bptr.asIntBuffer()
                         i = 0
                         while (i < two) {
-                            y0 = input[i_ptr++]
-                            y1 = input[i_ptr++]
-                            y2 = input[i_ptr++]
-                            y3 = input[i_ptr++]
-                            cr = input[i_ptr++]
-                            cb = input[i_ptr++]
+                            y0 = input[i_ptr++].toLong()
+                            y1 = input[i_ptr++].toLong()
+                            y2 = input[i_ptr++].toLong()
+                            y3 = input[i_ptr++].toLong()
+                            cr = input[i_ptr++].toLong()
+                            cb = input[i_ptr++].toLong()
                             ibptr.put(yuv_to_rgb24(y0, cr, cb))
                             ibptr.put(yuv_to_rgb24(y1, cr, cb))
                             ibptr.put(yuv_to_rgb24((y0 * 3 + y2) / 4, cr, cb))
@@ -1371,12 +1373,12 @@ object Cinematic {
                 if (samplesPerPixel == 2L) {
                     i = 0
                     while (i < two) {
-                        y0 = input[i_ptr]
+                        y0 = input[i_ptr].toLong()
                         i_ptr += 2
-                        y2 = input[i_ptr]
+                        y2 = input[i_ptr].toLong()
                         i_ptr += 2
-                        cr = input[i_ptr++]
-                        cb = input[i_ptr++]
+                        cr = input[i_ptr++].toLong()
+                        cb = input[i_ptr++].toLong()
                         bptr.putShort(yuv_to_rgb(y0, cr, cb))
                         bptr.putShort(yuv_to_rgb(y2, cr, cb))
                         i++
@@ -1398,12 +1400,12 @@ object Cinematic {
                     ibptr = bptr.asIntBuffer()
                     i = 0
                     while (i < two) {
-                        y0 = input[i_ptr]
+                        y0 = input[i_ptr].toLong()
                         i_ptr += 2
-                        y2 = input[i_ptr]
+                        y2 = input[i_ptr].toLong()
                         i_ptr += 2
-                        cr = input[i_ptr++]
-                        cb = input[i_ptr++]
+                        cr = input[i_ptr++].toLong()
+                        cb = input[i_ptr++].toLong()
                         ibptr.put(yuv_to_rgb24(y0, cr, cb))
                         ibptr.put(yuv_to_rgb24(y2, cr, cb))
                         i++
@@ -1449,7 +1451,7 @@ object Cinematic {
                 useY = startY
                 val offering =
                     ((useY + (CIN_HEIGHT - bigY shr 1) + yOff) * samplesPerLine + (startX + xOff) * samplesPerPixel).toInt()
-                scrOff = point(image, offering.toLong())
+                scrOff = point(image!!, offering.toLong())
                 qStatus[0][onQuad.toInt()] = scrOff
                 qStatus[1][onQuad++.toInt()] = point(scrOff, offset.toLong())
             }
@@ -1488,7 +1490,7 @@ object Cinematic {
             i = (numQuadCels - 64).toInt()
             while (i < numQuadCels) {
                 //temp;			// eoq
-                qStatus[1][i] = temp
+                qStatus[1][i] = ByteBuffer.allocate(1)
                 qStatus[0][i] = qStatus[1][i] // eoq
                 i++
             }
@@ -1566,8 +1568,8 @@ object Cinematic {
             status = cinStatus_t.FMV_EOF
             buf = null
             iFile = null
-            qStatus[0] = arrayOfNulls<ByteBuffer?>(32768) // Mem_Alloc(32768);
-            qStatus[1] = arrayOfNulls<ByteBuffer?>(32768) // Mem_Alloc(32768);
+            qStatus[0] = ArrayList<ByteBuffer>(32768) // Mem_Alloc(32768);
+            qStatus[1] = ArrayList<ByteBuffer>(32768) // Mem_Alloc(32768);
         }
     } //    private static void flushBufferToDisk(final ByteBuffer buffer) {
     //        try {

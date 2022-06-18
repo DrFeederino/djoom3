@@ -1,6 +1,5 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Material.stageVertexColor_t
 import neo.Renderer.tr_local.drawInteraction_t
 import neo.Renderer.tr_local.drawSurf_s
@@ -13,7 +12,7 @@ import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
-import neo.idlib.*
+import neo.idlib.CmdArgs
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str.idStr
 import neo.idlib.geometry.DrawVert.idDrawVert
@@ -22,7 +21,7 @@ import org.lwjgl.opengl.ARBFragmentProgram
 import org.lwjgl.opengl.ARBMultitexture
 import org.lwjgl.opengl.ARBVertexProgram
 import org.lwjgl.opengl.GL11
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -37,14 +36,14 @@ object draw_arb2 {
 
      =========================================================================================
      */
-    private val NEG_ONE: FloatArray? = floatArrayOf(-1f, -1f, -1f, -1f)
-    private val ONE: FloatArray? = floatArrayOf(1f, 1f, 1f, 1f)
+    private val NEG_ONE: FloatArray = floatArrayOf(-1f, -1f, -1f, -1f)
+    private val ONE: FloatArray = floatArrayOf(1f, 1f, 1f, 1f)
 
     //
-    private val ZERO: FloatArray? = floatArrayOf(0f, 0f, 0f, 0f)
+    private val ZERO: FloatArray = floatArrayOf(0f, 0f, 0f, 0f)
 
     // a single file can have both a vertex program and a fragment program
-    var progs: Array<progDef_t?>? = arrayOfNulls<progDef_t?>(draw_arb2.MAX_GLPROGS)
+    var progs: ArrayList<progDef_t> = ArrayList<progDef_t>(MAX_GLPROGS)
     fun cg_error_callback() {
         throw TODO_Exception()
         //        CGerror i = cgGetError();
@@ -70,7 +69,7 @@ object draw_arb2 {
      */
     fun RB_ARB2_CreateDrawInteractions(surf: drawSurf_s?) {
         var surf = surf
-        if (TempDump.NOT(surf)) {
+        if (null == surf) {
             return
         }
 
@@ -96,7 +95,7 @@ object draw_arb2 {
         qgl.qglEnableClientState(GL11.GL_COLOR_ARRAY)
 
         // texture 0 is the normalization cube map for the vector towards the light
-        draw_arb2.GL_SelectTextureNoClient(0)
+        GL_SelectTextureNoClient(0)
         if (tr_local.backEnd.vLight.lightShader.IsAmbientLight()) {
             Image.globalImages.ambientNormalMap.Bind()
         } else {
@@ -104,7 +103,7 @@ object draw_arb2 {
         }
 
         // texture 6 is the specular lookup table
-        draw_arb2.GL_SelectTextureNoClient(6)
+        GL_SelectTextureNoClient(6)
         if (RenderSystem_init.r_testARBProgram.GetBool()) {
             Image.globalImages.specular2DTableImage.Bind() // variable specularity in alpha channel
         } else {
@@ -170,17 +169,17 @@ object draw_arb2 {
         qgl.qglDisableClientState(GL11.GL_COLOR_ARRAY)
 
         // disable features
-        draw_arb2.GL_SelectTextureNoClient(6)
+        GL_SelectTextureNoClient(6)
         Image.globalImages.BindNull()
-        draw_arb2.GL_SelectTextureNoClient(5)
+        GL_SelectTextureNoClient(5)
         Image.globalImages.BindNull()
-        draw_arb2.GL_SelectTextureNoClient(4)
+        GL_SelectTextureNoClient(4)
         Image.globalImages.BindNull()
-        draw_arb2.GL_SelectTextureNoClient(3)
+        GL_SelectTextureNoClient(3)
         Image.globalImages.BindNull()
-        draw_arb2.GL_SelectTextureNoClient(2)
+        GL_SelectTextureNoClient(2)
         Image.globalImages.BindNull()
-        draw_arb2.GL_SelectTextureNoClient(1)
+        GL_SelectTextureNoClient(1)
         Image.globalImages.BindNull()
         tr_local.backEnd.glState.currenttmu = -1
         tr_backend.GL_SelectTexture(0)
@@ -195,7 +194,7 @@ object draw_arb2 {
      */
     fun RB_ARB2_DrawInteractions() {
         var vLight: viewLight_s?
-        var lightShader: idMaterial?
+        var lightShader: Material.idMaterial?
         tr_backend.GL_SelectTexture(0)
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
 
@@ -244,18 +243,18 @@ object draw_arb2 {
             if (RenderSystem_init.r_useShadowVertexProgram.GetBool()) {
                 qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                draw_common.RB_StencilShadowPass(vLight.globalShadows[0])
-                draw_arb2.RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0])
+                draw_common.RB_StencilShadowPass(vLight.globalShadows[0]!!)
+                RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0]!!)
                 qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                draw_common.RB_StencilShadowPass(vLight.localShadows[0])
-                draw_arb2.RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
+                draw_common.RB_StencilShadowPass(vLight.localShadows[0]!!)
+                RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
                 qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) // if there weren't any globalInteractions, it would have stayed on
             } else {
-                draw_common.RB_StencilShadowPass(vLight.globalShadows[0])
-                draw_arb2.RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0])
-                draw_common.RB_StencilShadowPass(vLight.localShadows[0])
-                draw_arb2.RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
+                draw_common.RB_StencilShadowPass(vLight.globalShadows[0]!!)
+                RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0])
+                draw_common.RB_StencilShadowPass(vLight.localShadows[0]!!)
+                RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
             }
 
             // translucent surfaces never get stencil shadowed
@@ -265,7 +264,7 @@ object draw_arb2 {
             }
             qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
             tr_local.backEnd.depthFunc = tr_local.GLS_DEPTHFUNC_LESS
-            draw_arb2.RB_ARB2_CreateDrawInteractions(vLight.translucentInteractions[0])
+            RB_ARB2_CreateDrawInteractions(vLight.translucentInteractions[0])
             tr_local.backEnd.depthFunc = tr_local.GLS_DEPTHFUNC_EQUAL
             vLight = vLight.next
         }
@@ -284,8 +283,8 @@ object draw_arb2 {
     fun R_LoadARBProgram(progIndex: Int) {
         val ofs = BufferUtils.createIntBuffer(16)
         val err: Int
-        val fullPath = idStr("glprogs/" + draw_arb2.progs[progIndex].name)
-        val fileBuffer = arrayOf<ByteBuffer?>(null)
+        val fullPath = idStr("glprogs/" + progs[progIndex].name)
+        val fileBuffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
         var buffer: String
         var start = 0
         val end: Int
@@ -310,21 +309,21 @@ object draw_arb2 {
         //
         // submit the program string at start to GL
         //
-        if (draw_arb2.progs[progIndex].ident == program_t.PROG_INVALID.ordinal) {
+        if (progs[progIndex].ident == program_t.PROG_INVALID.ordinal) {
             // allocate a new identifier for this program
-            draw_arb2.progs[progIndex].ident = program_t.PROG_USER.ordinal + progIndex
+            progs[progIndex].ident = program_t.PROG_USER.ordinal + progIndex
         }
 
         // vertex and fragment programs can both be present in a single file, so
         // scan for the proper header to be the start point, and stamp a 0 in after the end
-        if (draw_arb2.progs[progIndex].target == ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) {
+        if (progs[progIndex].target == ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) {
             if (!tr_local.glConfig.ARBVertexProgramAvailable) {
                 Common.common.Printf(": GL_VERTEX_PROGRAM_ARB not available\n")
                 return
             }
             start = buffer.indexOf("!!ARBvp")
         }
-        if (draw_arb2.progs[progIndex].target == ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB) {
+        if (progs[progIndex].target == ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB) {
             if (!tr_local.glConfig.ARBFragmentProgramAvailable) {
                 Common.common.Printf(": GL_FRAGMENT_PROGRAM_ARB not available\n")
                 return
@@ -343,10 +342,10 @@ object draw_arb2 {
         buffer = buffer.substring(start, end + 3) //end[3] = 0;
         val substring = BufferUtils.createByteBuffer(buffer.length)
         substring.put(buffer.toByteArray()).flip()
-        qgl.qglBindProgramARB(draw_arb2.progs[progIndex].target, draw_arb2.progs[progIndex].ident)
+        qgl.qglBindProgramARB(progs[progIndex].target, progs[progIndex].ident)
         qgl.qglGetError()
         qgl.qglProgramStringARB(
-            draw_arb2.progs[progIndex].target,
+            progs[progIndex].target,
             ARBVertexProgram.GL_PROGRAM_FORMAT_ASCII_ARB,
             0,  /*(unsigned char *)*/
             substring
@@ -381,7 +380,7 @@ object draw_arb2 {
      ==================
      */
     fun R_FindARBProgram( /*GLenum */
-        target: Int, program: String?
+        target: Int, program: String
     ): Int {
         var i: Int
         val stripped = idStr(program)
@@ -389,26 +388,26 @@ object draw_arb2 {
 
         // see if it is already loaded
         i = 0
-        while (draw_arb2.progs[i] != null && TempDump.isNotNullOrEmpty(draw_arb2.progs[i].name)) {
-            if (draw_arb2.progs[i].target != target) {
+        while (progs[i] != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
+            if (progs[i].target != target) {
                 i++
                 continue
             }
-            val compare = idStr(draw_arb2.progs[i].name)
+            val compare = idStr(progs[i].name)
             compare.StripFileExtension()
             if (TempDump.NOT(idStr.Companion.Icmp(stripped, compare).toDouble())) {
-                return draw_arb2.progs[i].ident
+                return progs[i].ident
             }
             i++
         }
-        if (i == draw_arb2.MAX_GLPROGS) {
+        if (i == MAX_GLPROGS) {
             Common.common.Error("R_FindARBProgram: MAX_GLPROGS")
         }
 
         // add it to the list and load it
-        draw_arb2.progs[i] = progDef_t(target, program_t.PROG_INVALID, program) // will be gen'd by R_LoadARBProgram
-        draw_arb2.R_LoadARBProgram(i)
-        return draw_arb2.progs[i].ident
+        progs[i] = progDef_t(target, program_t.PROG_INVALID, program) // will be gen'd by R_LoadARBProgram
+        R_LoadARBProgram(i)
+        return progs[i].ident
     }
 
     /*
@@ -435,7 +434,7 @@ object draw_arb2 {
      ==================
      */
     internal class RB_ARB2_DrawInteraction private constructor() : DrawInteraction() {
-        override fun run(din: drawInteraction_t?) {
+        override fun run(din: drawInteraction_t) {
             DBG_RB_ARB2_DrawInteraction++
             // load all the vertex program parameters
             qgl.qglProgramEnvParameter4fvARB(
@@ -517,36 +516,36 @@ object draw_arb2 {
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
-                        draw_arb2.ZERO
+                        ZERO
                     )
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
-                        draw_arb2.ONE
+                        ONE
                     )
                 }
                 stageVertexColor_t.SVC_MODULATE -> {
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
-                        draw_arb2.ONE
+                        ONE
                     )
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
-                        draw_arb2.ZERO
+                        ZERO
                     )
                 }
                 stageVertexColor_t.SVC_INVERSE_MODULATE -> {
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
-                        draw_arb2.NEG_ONE
+                        NEG_ONE
                     )
                     qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
-                        draw_arb2.ONE
+                        ONE
                     )
                 }
             }
@@ -565,41 +564,41 @@ object draw_arb2 {
 
             // set the textures
             // texture 1 will be the per-surface bump map
-            draw_arb2.GL_SelectTextureNoClient(1)
-            din.bumpImage.Bind()
+            GL_SelectTextureNoClient(1)
+            din.bumpImage!!.Bind()
 
             // texture 2 will be the light falloff texture
-            draw_arb2.GL_SelectTextureNoClient(2)
-            din.lightFalloffImage.Bind()
+            GL_SelectTextureNoClient(2)
+            din.lightFalloffImage!!.Bind()
 
             // texture 3 will be the light projection texture
-            draw_arb2.GL_SelectTextureNoClient(3)
-            din.lightImage.Bind()
+            GL_SelectTextureNoClient(3)
+            din.lightImage!!.Bind()
 
             // texture 4 is the per-surface diffuse map
-            draw_arb2.GL_SelectTextureNoClient(4)
-            din.diffuseImage.Bind()
+            GL_SelectTextureNoClient(4)
+            din.diffuseImage!!.Bind()
 
             // texture 5 is the per-surface specular map
-            draw_arb2.GL_SelectTextureNoClient(5)
-            din.specularImage.Bind()
+            GL_SelectTextureNoClient(5)
+            din.specularImage!!.Bind()
 
             // draw it
-            tr_render.RB_DrawElementsWithCounters(din.surf.geo)
+            tr_render.RB_DrawElementsWithCounters(din.surf!!.geo)
         }
 
         companion object {
-            val INSTANCE: DrawInteraction? = RB_ARB2_DrawInteraction()
+            val INSTANCE: DrawInteraction = RB_ARB2_DrawInteraction()
             private var DBG_RB_ARB2_DrawInteraction = 0
         }
     }
 
     //===================================================================================
-    internal class progDef_t(
+    class progDef_t(
         var target: Int, var ident: Int, // char			name[64];
-        var name: String?
+        var name: String
     ) {
-        constructor(target: Int, ident: program_t?, name: String?) : this(target, ident.ordinal, name)
+        constructor(target: Int, ident: program_t, name: String) : this(target, ident.ordinal, name)
     }
 
     /*
@@ -608,78 +607,80 @@ object draw_arb2 {
      ==================
      */
     class R_ReloadARBPrograms_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             Common.common.Printf("----- R_ReloadARBPrograms -----\n")
             i = 0
-            while (draw_arb2.progs[i] != null && TempDump.isNotNullOrEmpty(draw_arb2.progs[i].name)) {
-                draw_arb2.R_LoadARBProgram(i)
+            while (progs[i] != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
+                R_LoadARBProgram(i)
                 i++
             }
             Common.common.Printf("-------------------------------\n")
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ReloadARBPrograms_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ReloadARBPrograms_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
     }
 
+    var a = 0
+
     //        
     init {
-        val a = 0
-        draw_arb2.progs[neo.Renderer.a++] =
+
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_TEST, "test.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_TEST, "test.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_INTERACTION, "interaction.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_INTERACTION, "interaction.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp")
-        draw_arb2.progs[neo.Renderer.a++] = progDef_t(
+        progs[a++] = progDef_t(
             ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
             program_t.FPROG_BUMPY_ENVIRONMENT,
             "bumpyEnvironment.vfp"
         )
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_AMBIENT, "ambientLight.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_AMBIENT, "ambientLight.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW, "shadow.vp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_R200_INTERACTION, "R200_interaction.vp")
-        draw_arb2.progs[neo.Renderer.a++] = progDef_t(
+        progs[a++] = progDef_t(
             ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
             program_t.VPROG_NV20_BUMP_AND_LIGHT,
             "nv20_bumpAndLight.vp"
         )
-        draw_arb2.progs[neo.Renderer.a++] = progDef_t(
+        progs[a++] = progDef_t(
             ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
             program_t.VPROG_NV20_DIFFUSE_COLOR,
             "nv20_diffuseColor.vp"
         )
-        draw_arb2.progs[neo.Renderer.a++] = progDef_t(
+        progs[a++] = progDef_t(
             ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
             program_t.VPROG_NV20_SPECULAR_COLOR,
             "nv20_specularColor.vp"
         )
-        draw_arb2.progs[neo.Renderer.a++] = progDef_t(
+        progs[a++] = progDef_t(
             ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
             program_t.VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
             "nv20_diffuseAndSpecularColor.vp"
         )
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_ENVIRONMENT, "environment.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_ENVIRONMENT, "environment.vfp")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_GLASSWARP, "arbVP_glasswarp.txt")
-        draw_arb2.progs[neo.Renderer.a++] =
+        progs[a++] =
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_GLASSWARP, "arbFP_glasswarp.txt")
 
         // additional programs can be dynamically specified in materials

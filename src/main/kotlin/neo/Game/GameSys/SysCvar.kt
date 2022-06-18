@@ -1115,7 +1115,7 @@ class SysCvar {
 
         //
         //
-        lateinit var BUILD_DEBUG: String
+        var BUILD_DEBUG: String = "-release"
         val gameVersion: gameVersion_s = gameVersion_s() //TODO:static final?
 
         //

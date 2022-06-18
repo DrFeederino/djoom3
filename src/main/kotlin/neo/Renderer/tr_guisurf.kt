@@ -160,7 +160,7 @@ object tr_guisurf {
 
         // call the gui, which will call the 2D drawing functions
         tr_local.tr.guiModel.Clear()
-        gui.Redraw(tr_local.tr.viewDef.renderView.time)
+        gui.Redraw(tr_local.tr.viewDef!!.renderView.time)
         tr_local.tr.guiModel.EmitToCurrentView(modelMatrix, drawSurf.space.weaponDepthHack)
         tr_local.tr.guiModel.Clear()
         tr_local.tr.guiRecursionLevel--
@@ -178,7 +178,7 @@ object tr_guisurf {
      ================
      */
     class R_ReloadGuis_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             val all: Boolean
             if (0 == idStr.Companion.Icmp(args.Argv(1), "all")) {
                 all = true
@@ -191,8 +191,8 @@ object tr_guisurf {
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ReloadGuis_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ReloadGuis_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }
@@ -205,13 +205,13 @@ object tr_guisurf {
      ================
      */
     class R_ListGuis_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             UserInterface.uiManager.ListGuis()
         }
 
         companion object {
-            private val instance: cmdFunction_t? = R_ListGuis_f()
-            fun getInstance(): cmdFunction_t? {
+            private val instance: cmdFunction_t = R_ListGuis_f()
+            fun getInstance(): cmdFunction_t {
                 return instance
             }
         }

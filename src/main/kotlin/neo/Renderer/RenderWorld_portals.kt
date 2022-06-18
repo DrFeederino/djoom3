@@ -22,7 +22,7 @@ object RenderWorld_portals {
     // view down, which is still correct, just conservative
     const val MAX_PORTAL_PLANES = 20
 
-    internal class portalStack_s {
+    class portalStack_s {
         var next: portalStack_s? = null
 
         //

@@ -56,7 +56,7 @@ object tr_turboshadow {
         }
         val numFaces = tri.numIndexes / 3
         var numShadowingFaces = 0
-        facing = cullInfo.facing
+        facing = cullInfo.facing!!
 
         // if all the triangles are inside the light frustum
         if (cullInfo.cullBits == Interaction.LIGHT_CULL_ALL_FRONT || !RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
@@ -72,8 +72,8 @@ object tr_turboshadow {
 
             // make all triangles that are outside the light frustum "facing", so they won't cast shadows
             indexes = tri.indexes
-            val modifyFacing = cullInfo.facing
-            val cullBits = cullInfo.cullBits
+            val modifyFacing = cullInfo.facing!!
+            val cullBits = cullInfo.cullBits!!
             j = 0.also { i = it }
             while (i < tri.numIndexes) {
                 if (0 == modifyFacing[j].toInt()) {
@@ -202,7 +202,7 @@ object tr_turboshadow {
         val newTri: srfTriangles_s
         var sil: silEdge_t
         var indexes: IntArray
-        val facing: ByteArray
+        val facing: ByteArray?
         Interaction.R_CalcInteractionFacing(ent, tri, light, cullInfo)
         if (RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
             Interaction.R_CalcInteractionCullBits(ent, tri, light, cullInfo)
@@ -212,12 +212,12 @@ object tr_turboshadow {
         facing = cullInfo.facing
 
         // if all the triangles are inside the light frustum
-        if (cullInfo.cullBits == Interaction.LIGHT_CULL_ALL_FRONT || !RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
+        if (cullInfo.cullBits.contentEquals(Interaction.LIGHT_CULL_ALL_FRONT) || !RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
 
             // count the number of shadowing faces
             i = 0
             while (i < numFaces) {
-                numShadowingFaces += facing[i]
+                numShadowingFaces += facing!![i]
                 i++
             }
             numShadowingFaces = numFaces - numShadowingFaces
@@ -225,8 +225,8 @@ object tr_turboshadow {
 
             // make all triangles that are outside the light frustum "facing", so they won't cast shadows
             indexes = tri.indexes
-            val modifyFacing = cullInfo.facing
-            val cullBits = cullInfo.cullBits
+            val modifyFacing = cullInfo.facing!!
+            val cullBits = cullInfo.cullBits!!
             j = 0.also { i = it }
             while (i < tri.numIndexes) {
                 if (0 == modifyFacing[j].toInt()) {
@@ -251,7 +251,7 @@ object tr_turboshadow {
         val shadowVerts: Array<shadowCache_s>
         shadowVerts = if (tr_local.USE_TRI_DATA_ALLOCATOR) {
             tr_trisurf.R_AllocStaticTriSurfShadowVerts(newTri, tri.numVerts * 2)
-            newTri.shadowVertexes
+            newTri.shadowVertexes.toTypedArray()
         } else {
             shadowCache_s.generateArray(tri.numVerts * 2)
         }
@@ -261,7 +261,7 @@ object tr_turboshadow {
         i = 0
         j = 0
         while (i < tri.numIndexes) {
-            if (facing[j].toInt() != 0) {
+            if (facing!![j].toInt() != 0) {
                 i += 3
                 j++
                 continue
@@ -280,7 +280,13 @@ object tr_turboshadow {
                 shadows[a] = shadowVerts[a].xyz
             }
             newTri.numVerts =
-                Simd.SIMDProcessor.CreateShadowCache(shadows, vertRemap, localLightOrigin, tri.verts, tri.numVerts)
+                Simd.SIMDProcessor.CreateShadowCache(
+                    shadows,
+                    vertRemap,
+                    localLightOrigin,
+                    tri.verts.toTypedArray(),
+                    tri.numVerts
+                )
         }
         c_turboUsedVerts += newTri.numVerts
         c_turboUnusedVerts += tri.numVerts * 2 - newTri.numVerts
@@ -312,8 +318,8 @@ object tr_turboshadow {
         sil = tri.silEdges[sil_index]
         i = tri.numSilEdges
         while (i > 0) {
-            val f1: Int = facing[sil.p1].toInt()
-            val f2: Int = facing[sil.p2].toInt()
+            val f1: Int = facing!![sil.p1].toInt()
+            val f2: Int = facing!![sil.p2].toInt()
             if (0 == f1 xor f2) {
                 i--
                 sil = tri.silEdges[++sil_index]
@@ -361,7 +367,7 @@ object tr_turboshadow {
         i = 0
         j = 0
         while (i < tri.numIndexes) {
-            if (facing[j].toInt() != 0) {
+            if (facing!![j].toInt() != 0) {
                 i += 3
                 j++
                 continue

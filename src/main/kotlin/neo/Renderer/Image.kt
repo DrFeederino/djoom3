@@ -1,5 +1,6 @@
 package neo.Renderer
 
+import neo.Renderer.Image_files.R_WritePalTGA
 import neo.Renderer.Image_init.R_AlphaNotchImage
 import neo.Renderer.Image_init.R_AmbientNormalImage
 import neo.Renderer.Image_init.R_BlackImage
@@ -19,11 +20,11 @@ import neo.Renderer.Image_init.R_Specular2DTableImage
 import neo.Renderer.Image_init.R_SpecularTableImage
 import neo.Renderer.Image_init.R_WhiteImage
 import neo.Renderer.Image_init.makeNormalizeVectorCubeMap
+import neo.Renderer.Image_program.R_LoadImageProgram
 import neo.Renderer.Material.textureFilter_t
 import neo.Renderer.Material.textureRepeat_t
 import neo.Renderer.tr_local.tmu_t
 import neo.TempDump
-import neo.TempDump.CPP_class.Char
 import neo.TempDump.SERiAL
 import neo.framework.*
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork
@@ -33,26 +34,37 @@ import neo.framework.Common.MemInfo_t
 import neo.framework.FileSystem_h.backgroundDownload_s
 import neo.framework.FileSystem_h.dlType_t
 import neo.framework.File_h.idFile
-import neo.idlib.*
+import neo.idlib.CmdArgs
+import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
-import neo.idlib.containers.idStrList
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Vector.idVec3
 import neo.sys.win_shared
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.*
-import java.nio.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import kotlin.experimental.and
+import kotlin.experimental.or
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.max
 
 /**
  *
  */
 class Image {
     companion object {
+
+        fun DDS_MAKEFOURCC(a: Int, b: Int, c: Int, d: Int): Int {
+            return a shl 0 or (b shl 8) or (c shl 16) or (d shl 24)
+        }
+
         //
         const val MAX_IMAGE_NAME = 256
 
@@ -106,12 +118,9 @@ class Image {
         var globalImages: idImageManager = Image.imageManager
     }
 
-    fun DDS_MAKEFOURCC(a: Int, b: Int, c: Int, d: Int): Int {
-        return a shl 0 or (b shl 8) or (c shl 16) or (d shl 24)
-    }
 
     //
-    internal enum class cubeFiles_t {
+    enum class cubeFiles_t {
         CF_2D,  // not a cube map
         CF_NATIVE,  // _px, _nx, _py, etc, directly sent to GL
         CF_CAMERA // _forward, _back, etc, rotated and flipped as needed before sending to GL
@@ -152,7 +161,7 @@ class Image {
     }
 
     // increasing numeric values imply more information is stored
-    internal enum class textureDepth_t {
+    enum class textureDepth_t {
         TD_SPECULAR,  // may be compressed, and always zeros the alpha channel
         TD_DIFFUSE,  // may be compressed
         TD_DEFAULT,  // will use compressed formats when possible
@@ -187,7 +196,7 @@ class Image {
     }
 
     internal class ddsFileHeader_t : SERiAL {
-        var ddspf: ddsFilePixelFormat_t? = null
+        lateinit var ddspf: ddsFilePixelFormat_t
         var   /*long*/dwCaps1 = 0
         var   /*long*/dwCaps2 = 0
         var   /*long*/dwDepth = 0
@@ -195,43 +204,43 @@ class Image {
         var   /*long*/dwHeight = 0
         var   /*long*/dwMipMapCount = 0
         var   /*long*/dwPitchOrLinearSize = 0
-        var dwReserved1: IntArray? = IntArray(11)
-        var dwReserved2: IntArray? = IntArray(3)
+        var dwReserved1: IntArray = IntArray(11)
+        var dwReserved2: IntArray = IntArray(3)
         var   /*long*/dwSize = 0
         var   /*long*/dwWidth = 0
 
         constructor()
-        constructor(data: ByteBuffer?) {
+        constructor(data: ByteBuffer) {
             Read(data)
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
-            dwSize = buffer.getInt()
-            dwFlags = buffer.getInt()
-            dwHeight = buffer.getInt()
-            dwWidth = buffer.getInt()
-            dwPitchOrLinearSize = buffer.getInt()
-            dwDepth = buffer.getInt()
-            dwMipMapCount = buffer.getInt()
+        override fun Read(buffer: ByteBuffer) {
+            dwSize = buffer.int
+            dwFlags = buffer.int
+            dwHeight = buffer.int
+            dwWidth = buffer.int
+            dwPitchOrLinearSize = buffer.int
+            dwDepth = buffer.int
+            dwMipMapCount = buffer.int
             for (a in dwReserved1.indices) {
-                dwReserved1.get(a) = buffer.getInt()
+                dwReserved1[a] = buffer.int
             }
             ddspf = ddsFilePixelFormat_t(
-                buffer.getInt(), buffer.getInt(), buffer.getInt(), buffer.getInt(),
-                buffer.getInt(), buffer.getInt(), buffer.getInt(), buffer.getInt()
+                buffer.int, buffer.int, buffer.int, buffer.int,
+                buffer.int, buffer.int, buffer.int, buffer.int
             )
-            dwCaps1 = buffer.getInt()
-            dwCaps2 = buffer.getInt()
+            dwCaps1 = buffer.int
+            dwCaps2 = buffer.int
             for (b in dwReserved2.indices) {
-                dwReserved2.get(b) = buffer.getInt()
+                dwReserved2[b] = buffer.int
             }
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -256,7 +265,7 @@ class Image {
     }
 
     abstract class GeneratorFunction {
-        abstract fun run(image: idImage?)
+        abstract fun run(image: idImage)
     }
 
     class idImage {
@@ -264,7 +273,7 @@ class Image {
                 : Boolean
         var backgroundLoadInProgress // true if another thread is reading the complete d3t file
                 : Boolean
-        var bgl: backgroundDownload_s?
+        var bgl: backgroundDownload_s = backgroundDownload_s()
         var bglNext // linked from tr.backgroundImageLoads
                 : idImage?
         var bindCount // incremented each bind
@@ -279,11 +288,11 @@ class Image {
         var classification // just for resource profiling
                 : Int
         var cubeFiles // determines the naming and flipping conventions for the six images
-                : cubeFiles_t?
+                : cubeFiles_t = cubeFiles_t.CF_2D
         var defaulted // true if the default image was generated because a file couldn't be loaded
                 : Boolean
-        var depth: textureDepth_t?
-        var filter: textureFilter_t?
+        var depth: textureDepth_t = textureDepth_t.TD_DEFAULT
+        var filter: textureFilter_t = textureFilter_t.TF_DEFAULT
         var frameUsed // for texture usage in frame statistics
                 : Int
         var generatorFunction // NULL for files           //public void (        *generatorFunction)( idImage *image );	// NULL for files
@@ -295,14 +304,14 @@ class Image {
 
         //
         var imageHash // for identical-image checking
-                : String? = null
+                : String = ""
 
         //
         // parameters that define this image
         var imgName // game path, including extension (except for cube maps), may be an image program
-                : idStr?
+                : idStr = idStr()
         var internalFormat: Int
-        var isMonochrome: BooleanArray? = booleanArrayOf(false) // so the NV20 path can use a reduced pass count
+        var isMonochrome: BooleanArray = booleanArrayOf(false) // so the NV20 path can use a reduced pass count
         var isPartialImage // true if this is pointed to by another image
                 : Boolean
         var levelLoadReferenced // for determining if it needs to be purged
@@ -321,12 +330,12 @@ class Image {
 
         //
         var referencedOutsideLevelLoad: Boolean
-        var repeat: textureRepeat_t?
+        var repeat: textureRepeat_t = textureRepeat_t.TR_REPEAT
         /*GLuint*/  var texNum // gl texture binding, will be TEXTURE_NOT_LOADED if not loaded
                 : Int
-        /*ID_TIME_T*/  var timestamp: LongArray? =
+        /*ID_TIME_T*/  var timestamp: LongArray =
             longArrayOf(0) // the most recent of all images used in creation, for reloadImages command
-        var type: textureType_t?
+        var type: textureType_t = textureType_t.TT_DISABLED
 
         //
         // data for listImages
@@ -379,7 +388,7 @@ class Image {
          *
          * @param image
          */
-        internal constructor(image: idImage?) {
+        internal constructor(image: idImage) {
             texNum = image.texNum
             type = image.type
             frameUsed = image.frameUsed
@@ -400,8 +409,8 @@ class Image {
             levelLoadReferenced = image.levelLoadReferenced
             precompressedFile = image.precompressedFile
             defaulted = image.defaulted
-            isMonochrome.get(0) = image.isMonochrome.get(0)
-            timestamp.get(0) = image.timestamp.get(0)
+            isMonochrome[0] = image.isMonochrome[0]
+            timestamp[0] = image.timestamp[0]
             imageHash = image.imageHash
             classification = image.classification
             uploadWidth = image.uploadWidth
@@ -434,21 +443,21 @@ class Image {
             if (partialImage != null) {
                 if (cacheUsageNext != null) {
                     // unlink from old position
-                    cacheUsageNext.cacheUsagePrev = cacheUsagePrev
-                    cacheUsagePrev.cacheUsageNext = cacheUsageNext
+                    cacheUsageNext!!.cacheUsagePrev = cacheUsagePrev
+                    cacheUsagePrev!!.cacheUsageNext = cacheUsageNext
                 }
                 // link in at the head of the list
-                cacheUsageNext = Image.globalImages.cacheLRU.cacheUsageNext
+                cacheUsageNext = Image.globalImages.cacheLRU!!.cacheUsageNext
                 cacheUsagePrev = Image.globalImages.cacheLRU
-                cacheUsageNext.cacheUsagePrev = this
-                cacheUsagePrev.cacheUsageNext = this
+                cacheUsageNext!!.cacheUsagePrev = this
+                cacheUsagePrev!!.cacheUsageNext = this
             }
 
             // load the image if necessary (FIXME: not SMP safe!)
             if (texNum == TEXTURE_NOT_LOADED) {
                 if (partialImage != null) {
                     // if we have a partial image, go ahead and use that
-                    partialImage.Bind()
+                    partialImage!!.Bind()
 
                     // start a background load of the full thing if it isn't already in the queue
                     if (!backgroundLoadInProgress) {
@@ -529,21 +538,21 @@ class Image {
             if (partialImage != null) {
                 if (cacheUsageNext != null) {
                     // unlink from old position
-                    cacheUsageNext.cacheUsagePrev = cacheUsagePrev
-                    cacheUsagePrev.cacheUsageNext = cacheUsageNext
+                    cacheUsageNext!!.cacheUsagePrev = cacheUsagePrev
+                    cacheUsagePrev!!.cacheUsageNext = cacheUsageNext
                 }
                 // link in at the head of the list
-                cacheUsageNext = Image.globalImages.cacheLRU.cacheUsageNext
+                cacheUsageNext = Image.globalImages.cacheLRU!!.cacheUsageNext
                 cacheUsagePrev = Image.globalImages.cacheLRU
-                cacheUsageNext.cacheUsagePrev = this
-                cacheUsagePrev.cacheUsageNext = this
+                cacheUsageNext!!.cacheUsagePrev = this
+                cacheUsagePrev!!.cacheUsageNext = this
             }
 
             // load the image if necessary (FIXME: not SMP safe!)
             if (texNum == TEXTURE_NOT_LOADED) {
                 if (partialImage != null) {
                     // if we have a partial image, go ahead and use that
-                    partialImage.BindFragment()
+                    partialImage!!.BindFragment()
 
                     // start a background load of the full thing if it isn't already in the queue
                     if (!backgroundLoadInProgress) {
@@ -629,14 +638,14 @@ class Image {
         // These perform an implicit Bind() on the current texture unit
         // FIXME: should we implement cinematics this way, instead of with explicit calls?
         fun GenerateImage(
-            pic: ByteBuffer?, width: Int, height: Int,
-            filterParm: textureFilter_t?, allowDownSizeParm: Boolean,
-            repeatParm: textureRepeat_t?, depthParm: textureDepth_t?
+            pic: ByteBuffer, width: Int, height: Int,
+            filterParm: textureFilter_t, allowDownSizeParm: Boolean,
+            repeatParm: textureRepeat_t, depthParm: textureDepth_t
         ) {
             var width = width
             var height = height
             val preserveBorder: Boolean
-            val scaledBuffer: ByteBuffer?
+            val scaledBuffer: ByteBuffer
             val scaled_width = CInt()
             val scaled_height = CInt()
             var shrunk: ByteBuffer?
@@ -658,8 +667,8 @@ class Image {
             preserveBorder = repeat == textureRepeat_t.TR_CLAMP_TO_ZERO
 
             // make sure it is a power of 2
-            scaled_width.setVal(Image_load.MakePowerOfTwo(width))
-            scaled_height.setVal(Image_load.MakePowerOfTwo(height))
+            scaled_width._val = (Image_load.MakePowerOfTwo(width))
+            scaled_height._val = (Image_load.MakePowerOfTwo(height))
             if (scaled_width._val != width || scaled_height._val != height) {
                 Common.common.Error("R_CreateImage: not a power of 2 image")
             }
@@ -713,11 +722,11 @@ class Image {
                 }
 
                 // one might have shrunk down below the target size
-                scaled_width.setVal(width)
-                scaled_height.setVal(height)
+                scaled_width._val = (width)
+                scaled_height._val = (height)
             }
-            uploadHeight.setVal(scaled_height._val)
-            uploadWidth.setVal(scaled_width._val)
+            uploadHeight._val = (scaled_height._val)
+            uploadWidth._val = (scaled_width._val)
             type = textureType_t.TT_2D
 
             // zero the border if desired, allowing clamped projection textures
@@ -741,7 +750,7 @@ class Image {
             if (generatorFunction == null && (depth == textureDepth_t.TD_BUMP && idImageManager.image_writeNormalTGA.GetBool() || depth != textureDepth_t.TD_BUMP && idImageManager.image_writeTGA.GetBool())) {
                 // Optionally write out the texture to a .tga
 //                String[] filename = {null};
-                val filename = arrayOfNulls<String?>(1)
+                val filename = arrayOf("")
                 ImageProgramStringToCompressedFileName(imgName.toString(), filename)
                 val ext = filename[0].lastIndexOf('.')
                 if (ext > -1) {
@@ -827,10 +836,10 @@ class Image {
                 scaled_width.rightShift(1)
                 scaled_height.rightShift(1)
                 if (scaled_width._val < 1) {
-                    scaled_width.setVal(1)
+                    scaled_width._val = (1)
                 }
                 if (scaled_height._val < 1) {
-                    scaled_height.setVal(1)
+                    scaled_height._val = (1)
                 }
                 miplevel++
 
@@ -842,7 +851,7 @@ class Image {
                     Image_process.R_BlendOverTexture(
                         scaledBuffer,
                         scaled_width._val * scaled_height._val,
-                        mipBlendColors.get(miplevel)
+                        mipBlendColors[miplevel]
                     )
                 }
 
@@ -873,9 +882,9 @@ class Image {
 
         //
         fun Generate3DImage(
-            pic: ByteBuffer?, width: Int, height: Int, picDepth: Int,
-            filterParm: textureFilter_t?, allowDownSizeParm: Boolean,
-            repeatParm: textureRepeat_t?, minDepthParm: textureDepth_t?
+            pic: ByteBuffer, width: Int, height: Int, picDepth: Int,
+            filterParm: textureFilter_t, allowDownSizeParm: Boolean,
+            repeatParm: textureRepeat_t, minDepthParm: textureDepth_t
         ) {
             var scaled_width: Int
             var scaled_height: Int
@@ -910,9 +919,9 @@ class Image {
             // select proper internal format before we resample
             // this function doesn't need to know it is 3D, so just make it very "tall"
             internalFormat = SelectInternalFormat(pic, 1, width, height * picDepth, minDepthParm, isMonochrome)
-            uploadHeight.setVal(scaled_height)
-            uploadWidth.setVal(scaled_width)
-            uploadDepth.setVal(scaled_depth)
+            uploadHeight._val = (scaled_height)
+            uploadWidth._val = (scaled_width)
+            uploadDepth._val = (scaled_depth)
             type = textureType_t.TT_3D
 
             // upload the main image level
@@ -1014,9 +1023,9 @@ class Image {
          ====================
          */
         fun GenerateCubeImage(
-            pics: Array<ByteBuffer?>? /*[6]*/, size: Int,
-            filterParm: textureFilter_t?, allowDownSizeParm: Boolean,
-            depthParm: textureDepth_t?
+            pics: Array<ByteBuffer> /*[6]*/, size: Int,
+            filterParm: textureFilter_t, allowDownSizeParm: Boolean,
+            depthParm: textureDepth_t
         ) {
             var scaled_width: Int
             var scaled_height: Int
@@ -1052,8 +1061,8 @@ class Image {
             // don't bother with downsample for now
             scaled_width = width
             scaled_height = height
-            uploadHeight.setVal(scaled_height)
-            uploadWidth.setVal(scaled_width)
+            uploadHeight._val = (scaled_height)
+            uploadWidth._val = (scaled_width)
             Bind()
 
             // no other clamp mode makes sense
@@ -1103,22 +1112,20 @@ class Image {
             // FIXME: support 0x80E5?
             i = 0
             while (i < 6) {
-                pics.get(i).rewind()
+                pics[i].rewind()
                 qgl.qglTexImage2D(
                     GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X /*_EXT*/ + i, 0, internalFormat, scaled_width, scaled_height, 0,
-                    GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pics.get(i)
+                    GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, pics[i]
                 )
                 i++
             }
 
             // create and upload the mip map levels
             var miplevel: Int
-            val shrunk = arrayOfNulls<ByteBuffer?>(6)
-            i = 0
-            while (i < 6) {
-                shrunk[i] = Image_process.R_MipMap(pics.get(i), scaled_width, scaled_height, false)
-                i++
+            val shrunk = Array<ByteBuffer>(6) {
+                Image_process.R_MipMap(pics[it], scaled_width, scaled_height, false)
             }
+            i = 0
             miplevel = 1
             while (scaled_width > 1) {
                 i = 0
@@ -1152,15 +1159,15 @@ class Image {
         fun CopyFramebuffer(x: Int, y: Int, imageWidth: CInt, imageHeight: CInt, useOversizedBuffer: Boolean) {
             Bind()
             if (CVarSystem.cvarSystem.GetCVarBool("g_lowresFullscreenFX")) {
-                imageWidth.setVal(512)
-                imageHeight.setVal(512)
+                imageWidth._val = (512)
+                imageHeight._val = (512)
             }
 
             // if the size isn't a power of 2, the image must be increased in size
             val potWidth = CInt()
             val potHeight = CInt()
-            potWidth.setVal(Image_load.MakePowerOfTwo(imageWidth._val))
-            potHeight.setVal(Image_load.MakePowerOfTwo(imageHeight._val))
+            potWidth._val = (Image_load.MakePowerOfTwo(imageWidth._val))
+            potHeight._val = (Image_load.MakePowerOfTwo(imageHeight._val))
             GetDownsize(imageWidth, imageHeight)
             GetDownsize(potWidth, potHeight)
             qgl.qglReadBuffer(GL11.GL_BACK)
@@ -1170,8 +1177,8 @@ class Image {
             if (useOversizedBuffer && (uploadWidth._val < potWidth._val || uploadHeight._val < potHeight._val)
                 || !useOversizedBuffer && (uploadWidth._val != potWidth._val || uploadHeight._val != potHeight._val)
             ) {
-                uploadWidth.setVal(potWidth._val)
-                uploadHeight.setVal(potHeight._val)
+                uploadWidth._val = (potWidth._val)
+                uploadHeight._val = (potHeight._val)
                 if (potWidth._val == imageWidth._val && potHeight._val == imageHeight._val) {
                     qgl.qglCopyTexImage2D(
                         GL11.GL_TEXTURE_2D,
@@ -1275,8 +1282,8 @@ class Image {
             potWidth = Image_load.MakePowerOfTwo(imageWidth)
             potHeight = Image_load.MakePowerOfTwo(imageHeight)
             if (uploadWidth._val != potWidth || uploadHeight._val != potHeight) {
-                uploadWidth.setVal(potWidth)
-                uploadHeight.setVal(potHeight)
+                uploadWidth._val = (potWidth)
+                uploadHeight._val = (potHeight)
                 if (potWidth == imageWidth && potHeight == imageHeight) {
                     qgl.qglCopyTexImage2D(
                         GL11.GL_TEXTURE_2D,
@@ -1300,7 +1307,7 @@ class Image {
                         0,
                         GL11.GL_DEPTH_COMPONENT,
                         GL11.GL_UNSIGNED_BYTE,
-                        null as ByteArray?
+                        null as ByteArray
                     )
                     qgl.qglCopyTexSubImage2D(GL11.GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth, imageHeight)
                 }
@@ -1323,7 +1330,7 @@ class Image {
          if rows = cols * 6, assume it is a cube map animation
          =============
          */
-        fun UploadScratch(pic: ByteBuffer?, cols: Int, rows: Int) {
+        fun UploadScratch(pic: ByteBuffer, cols: Int, rows: Int) {
             var rows = rows
             var i: Int
             val pos = pic.position()
@@ -1332,14 +1339,14 @@ class Image {
             if (rows == cols * 6) {
                 if (type != textureType_t.TT_CUBIC) {
                     type = textureType_t.TT_CUBIC
-                    uploadWidth.setVal(-1) // for a non-sub upload
+                    uploadWidth._val = (-1) // for a non-sub upload
                 }
                 Bind()
                 rows /= 6
                 // if the scratchImage isn't in the format we want, specify it as a new texture
                 if (cols != uploadWidth._val || rows != uploadHeight._val) {
-                    uploadWidth.setVal(cols)
-                    uploadHeight.setVal(rows)
+                    uploadWidth._val = (cols)
+                    uploadHeight._val = (rows)
 
                     // upload the base level
                     i = 0
@@ -1374,14 +1381,14 @@ class Image {
                 // otherwise, it is a 2D image
                 if (type != textureType_t.TT_2D) {
                     type = textureType_t.TT_2D
-                    uploadWidth.setVal(-1) // for a non-sub upload
+                    uploadWidth._val = (-1) // for a non-sub upload
                 }
                 Bind()
 
                 // if the scratchImage isn't in the format we want, specify it as a new texture
                 if (cols != uploadWidth._val || rows != uploadHeight._val) {
-                    uploadWidth.setVal(cols)
-                    uploadHeight.setVal(rows)
+                    uploadWidth._val = (cols)
+                    uploadHeight._val = (rows)
                     qgl.qglTexImage2D(
                         GL11.GL_TEXTURE_2D,
                         0,
@@ -1513,7 +1520,7 @@ class Image {
             // always regenerate functional images
             if (generatorFunction != null) {
                 Common.common.DPrintf("regenerating %s.\n", imgName)
-                generatorFunction.run(this)
+                generatorFunction!!.run(this)
                 return
             }
 
@@ -1526,7 +1533,7 @@ class Image {
                     // get the current values
                     R_LoadImageProgram(imgName.toString(), null, null, current)
                 }
-                if (current[0] <= timestamp.get(0)) {
+                if (current[0] <= timestamp[0]) {
                     return
                 }
             }
@@ -1582,10 +1589,10 @@ class Image {
 
             // clamp to minimum size
             if (scaled_width._val < 1) {
-                scaled_width.setVal(1)
+                scaled_width._val = (1)
             }
             if (scaled_height._val < 1) {
-                scaled_height.setVal(1)
+                scaled_height._val = (1)
             }
 
             // clamp size to the hardware specific upper limit
@@ -1604,17 +1611,17 @@ class Image {
         fun MakeDefault() {    // fill with a grid pattern
             var x: Int
             var y: Int
-            val data = Array<Array<ByteArray?>?>(DEFAULT_SIZE) { Array(DEFAULT_SIZE) { ByteArray(4) } }
+            val data = Array<Array<ByteArray>>(DEFAULT_SIZE) { Array(DEFAULT_SIZE) { ByteArray(4) } }
             if (Common.com_developer.GetBool()) {
                 // grey center
                 y = 0
                 while (y < DEFAULT_SIZE) {
                     x = 0
                     while (x < DEFAULT_SIZE) {
-                        data[y].get(x).get(0) = 32
-                        data[y].get(x).get(1) = 32
-                        data[y].get(x).get(2) = 32
-                        data[y].get(x).get(3) = 255.toByte()
+                        data[y][x][0] = 32
+                        data[y][x][1] = 32
+                        data[y][x][2] = 32
+                        data[y][x][3] = 255.toByte()
                         x++
                     }
                     y++
@@ -1623,22 +1630,22 @@ class Image {
                 // white border
                 x = 0
                 while (x < DEFAULT_SIZE) {
-                    data[0].get(x).get(3) = 255.toByte()
-                    data[0].get(x).get(2) = data[0].get(x).get(3)
-                    data[0].get(x).get(1) = data[0].get(x).get(2)
-                    data[0].get(x).get(0) = data[0].get(x).get(1)
-                    data[x].get(0).get(3) = 255.toByte()
-                    data[x].get(0).get(2) = data[x].get(0).get(3)
-                    data[x].get(0).get(1) = data[x].get(0).get(2)
-                    data[x].get(0).get(0) = data[x].get(0).get(1)
-                    data[DEFAULT_SIZE - 1].get(x).get(3) = 255.toByte()
-                    data[DEFAULT_SIZE - 1].get(x).get(2) = data[DEFAULT_SIZE - 1].get(x).get(3)
-                    data[DEFAULT_SIZE - 1].get(x).get(1) = data[DEFAULT_SIZE - 1].get(x).get(2)
-                    data[DEFAULT_SIZE - 1].get(x).get(0) = data[DEFAULT_SIZE - 1].get(x).get(1)
-                    data[x].get(DEFAULT_SIZE - 1).get(3) = 255.toByte()
-                    data[x].get(DEFAULT_SIZE - 1).get(2) = data[x].get(DEFAULT_SIZE - 1).get(3)
-                    data[x].get(DEFAULT_SIZE - 1).get(1) = data[x].get(DEFAULT_SIZE - 1).get(2)
-                    data[x].get(DEFAULT_SIZE - 1).get(0) = data[x].get(DEFAULT_SIZE - 1).get(1)
+                    data[0][x][3] = 255.toByte()
+                    data[0][x][2] = data[0][x][3]
+                    data[0][x][1] = data[0][x][2]
+                    data[0][x][0] = data[0][x][1]
+                    data[x][0][3] = 255.toByte()
+                    data[x][0][2] = data[x][0][3]
+                    data[x][0][1] = data[x][0][2]
+                    data[x][0][0] = data[x][0][1]
+                    data[DEFAULT_SIZE - 1][x][3] = 255.toByte()
+                    data[DEFAULT_SIZE - 1][x][2] = data[DEFAULT_SIZE - 1][x][3]
+                    data[DEFAULT_SIZE - 1][x][1] = data[DEFAULT_SIZE - 1][x][2]
+                    data[DEFAULT_SIZE - 1][x][0] = data[DEFAULT_SIZE - 1][x][1]
+                    data[x][DEFAULT_SIZE - 1][3] = 255.toByte()
+                    data[x][DEFAULT_SIZE - 1][2] = data[x][DEFAULT_SIZE - 1][3]
+                    data[x][DEFAULT_SIZE - 1][1] = data[x][DEFAULT_SIZE - 1][2]
+                    data[x][DEFAULT_SIZE - 1][0] = data[x][DEFAULT_SIZE - 1][1]
                     x++
                 }
             } else {
@@ -1646,10 +1653,10 @@ class Image {
                 while (y < DEFAULT_SIZE) {
                     x = 0
                     while (x < DEFAULT_SIZE) {
-                        data[y].get(x).get(0) = 0
-                        data[y].get(x).get(1) = 0
-                        data[y].get(x).get(2) = 0
-                        data[y].get(x).get(3) = 0
+                        data[y][x][0] = 0
+                        data[y][x][1] = 0
+                        data[y][x][2] = 0
+                        data[y][x][3] = 0
                         x++
                     }
                     y++
@@ -1756,14 +1763,14 @@ class Image {
             if (FileSystem_h.fileSystem.PerformingCopyFiles()) {
                 return false
             }
-            val filename = arrayOf<String?>(null)
-            val filename1: String?
+            val filename = arrayOf("")
+            val filename1: String
             ImageProgramStringToCompressedFileName(imgName.toString(), filename)
             filename1 = filename[0]
 
             // get the file timestamp
             FileSystem_h.fileSystem.ReadFile(filename1, null, timestamp)
-            if (timestamp.get(0) == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
+            if (timestamp[0].toInt() == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
                 return false
             }
 
@@ -1799,7 +1806,7 @@ class Image {
             if (!tr_local.glConfig.isInitialized) {
                 return
             }
-            val filename0 = arrayOf<String?>(null)
+            val filename0 = arrayOf("")
             ImageProgramStringToCompressedFileName(imgName.toString(), filename0)
             val filename = filename0[0]
             val numLevels = NumLevelsForImageSize(uploadWidth._val, uploadHeight._val)
@@ -1843,7 +1850,7 @@ class Image {
                 val inFile = idStr(outFile)
                 inFile.StripFileExtension()
                 inFile.SetFileExtension("tga")
-                var format: String? = null
+                var format: String = ""
                 if (depth == textureDepth_t.TD_BUMP) {
                     format = "RXGB +red 0.0 +green 0.5 +blue 0.5"
                 } else {
@@ -1873,7 +1880,7 @@ class Image {
             header.dwWidth = uploadWidth._val
 
             // hack in our monochrome flag for the NV20 optimization
-            if (isMonochrome.get(0)) {
+            if (isMonochrome[0]) {
                 header.dwFlags = header.dwFlags or Image.DDSF_ID_MONOCHROME
             }
             if (Image_load.FormatIsDXT(altInternalFormat)) {
@@ -1964,9 +1971,9 @@ class Image {
                     data = ByteBuffer.allocate(size) // R_StaticAlloc(size);
                 }
                 if (Image_load.FormatIsDXT(altInternalFormat)) {
-                    qgl.qglGetCompressedTexImageARB(GL11.GL_TEXTURE_2D, level, data)
+                    qgl.qglGetCompressedTexImageARB(GL11.GL_TEXTURE_2D, level, data!!)
                 } else {
-                    qgl.qglGetTexImage(GL11.GL_TEXTURE_2D, level, altInternalFormat, GL11.GL_UNSIGNED_BYTE, data)
+                    qgl.qglGetTexImage(GL11.GL_TEXTURE_2D, level, altInternalFormat, GL11.GL_UNSIGNED_BYTE, data!!)
                 }
                 f.Write(data, size)
                 uw /= 2
@@ -2016,23 +2023,23 @@ class Image {
 //                return true;
             }
             DEBUG_CheckPrecompressedImage++
-            val filename = arrayOf<String?>(null)
+            val filename = arrayOf("")
             ImageProgramStringToCompressedFileName(imgName.toString(), filename)
             //            System.out.println("====" + filename[0]);
 
             // get the file timestamp
             val precompTimestamp/*ID_TIME_T */ = longArrayOf(0)
             FileSystem_h.fileSystem.ReadFile(filename[0], null, precompTimestamp)
-            if (precompTimestamp[0] == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
+            if (precompTimestamp[0].toInt() == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
                 return false
             }
-            if (null == generatorFunction && timestamp.get(0) != FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
-                if (precompTimestamp[0] < timestamp.get(0)) {
+            if (null == generatorFunction && timestamp[0].toInt() != FileSystem_h.FILE_NOT_FOUND_TIMESTAMP) {
+                if (precompTimestamp[0] < timestamp[0]) {
                     // The image has changed after being precompressed
                     return false
                 }
             }
-            timestamp.get(0) = precompTimestamp[0]
+            timestamp[0] = precompTimestamp[0]
 
             // open it and just read the header
             val f: idFile?
@@ -2052,10 +2059,10 @@ class Image {
             f.Read(data)
             FileSystem_h.fileSystem.CloseFile(f)
             data.order(ByteOrder.LITTLE_ENDIAN)
-            val magic: Long = Lib.Companion.LittleLong(data.int).toLong()
+            val magic: Long = Lib.LittleLong(data.int).toLong()
             data.position(4) //, 4);
             val _header = ddsFileHeader_t(data)
-            val ddspf_dwFlags: Int = Lib.Companion.LittleLong(_header.ddspf.dwFlags)
+            val ddspf_dwFlags: Int = Lib.LittleLong(_header.ddspf.dwFlags)
             if (magic != Image.DDS_MAKEFOURCC('D'.code, 'D'.code, 'S'.code, ' '.code).toLong()) {
                 Common.common.Printf("CheckPrecompressedImage( %s ): magic != 'DDS '\n", imgName.toString())
                 //                R_StaticFree(data);
@@ -2076,28 +2083,28 @@ class Image {
             return true
         }
 
-        fun UploadPrecompressedImage(data: ByteBuffer?, len: Int) {
+        fun UploadPrecompressedImage(data: ByteBuffer, len: Int) {
             data.position(4) //, 4)
             val header = ddsFileHeader_t(data)
 
             // ( not byte swapping dwReserved1 dwReserved2 )
-            header.dwSize = Lib.Companion.LittleLong(header.dwSize)
-            header.dwFlags = Lib.Companion.LittleLong(header.dwFlags)
-            header.dwHeight = Lib.Companion.LittleLong(header.dwHeight)
-            header.dwWidth = Lib.Companion.LittleLong(header.dwWidth)
-            header.dwPitchOrLinearSize = Lib.Companion.LittleLong(header.dwPitchOrLinearSize)
-            header.dwDepth = Lib.Companion.LittleLong(header.dwDepth)
-            header.dwMipMapCount = Lib.Companion.LittleLong(header.dwMipMapCount)
-            header.dwCaps1 = Lib.Companion.LittleLong(header.dwCaps1)
-            header.dwCaps2 = Lib.Companion.LittleLong(header.dwCaps2)
-            header.ddspf.dwSize = Lib.Companion.LittleLong(header.ddspf.dwSize)
-            header.ddspf.dwFlags = Lib.Companion.LittleLong(header.ddspf.dwFlags)
-            header.ddspf.dwFourCC = Lib.Companion.LittleLong(header.ddspf.dwFourCC)
-            header.ddspf.dwRGBBitCount = Lib.Companion.LittleLong(header.ddspf.dwRGBBitCount)
-            header.ddspf.dwRBitMask = Lib.Companion.LittleLong(header.ddspf.dwRBitMask)
-            header.ddspf.dwGBitMask = Lib.Companion.LittleLong(header.ddspf.dwGBitMask)
-            header.ddspf.dwBBitMask = Lib.Companion.LittleLong(header.ddspf.dwBBitMask)
-            header.ddspf.dwABitMask = Lib.Companion.LittleLong(header.ddspf.dwABitMask)
+            header.dwSize = Lib.LittleLong(header.dwSize)
+            header.dwFlags = Lib.LittleLong(header.dwFlags)
+            header.dwHeight = Lib.LittleLong(header.dwHeight)
+            header.dwWidth = Lib.LittleLong(header.dwWidth)
+            header.dwPitchOrLinearSize = Lib.LittleLong(header.dwPitchOrLinearSize)
+            header.dwDepth = Lib.LittleLong(header.dwDepth)
+            header.dwMipMapCount = Lib.LittleLong(header.dwMipMapCount)
+            header.dwCaps1 = Lib.LittleLong(header.dwCaps1)
+            header.dwCaps2 = Lib.LittleLong(header.dwCaps2)
+            header.ddspf.dwSize = Lib.LittleLong(header.ddspf.dwSize)
+            header.ddspf.dwFlags = Lib.LittleLong(header.ddspf.dwFlags)
+            header.ddspf.dwFourCC = Lib.LittleLong(header.ddspf.dwFourCC)
+            header.ddspf.dwRGBBitCount = Lib.LittleLong(header.ddspf.dwRGBBitCount)
+            header.ddspf.dwRBitMask = Lib.LittleLong(header.ddspf.dwRBitMask)
+            header.ddspf.dwGBitMask = Lib.LittleLong(header.ddspf.dwGBitMask)
+            header.ddspf.dwBBitMask = Lib.LittleLong(header.ddspf.dwBBitMask)
+            header.ddspf.dwABitMask = Lib.LittleLong(header.ddspf.dwABitMask)
 
             // generate the texture number
             texNum = qgl.qglGenTextures()
@@ -2117,8 +2124,8 @@ class Image {
 //            }
             var externalFormat = 0
             precompressedFile = true
-            uploadWidth.setVal(header.dwWidth)
-            uploadHeight.setVal(header.dwHeight)
+            uploadWidth._val = (header.dwWidth)
+            uploadHeight._val = (header.dwHeight)
             if (header.ddspf.dwFlags and Image.DDSF_FOURCC != 0) {
 //                System.out.printf("%d\n", header.ddspf.dwFourCC);
 //                switch (bla[DEBUG_dwFourCC++]) {
@@ -2162,7 +2169,7 @@ class Image {
 
             // we need the monochrome flag for the NV20 optimized path
             if (header.dwFlags and Image.DDSF_ID_MONOCHROME != 0) {
-                isMonochrome.get(0) = true
+                isMonochrome[0] = true
             }
             type = textureType_t.TT_2D // FIXME: we may want to support pre-compressed cube maps in the future
             Bind()
@@ -2235,14 +2242,14 @@ class Image {
             val width = intArrayOf(0)
             val height = intArrayOf(0)
             var pic: ByteBuffer? = null
-            if (imgName == "guis/assets/splash/launch") {
+            if (imgName.toString() == "guis/assets/splash/launch") {
 //                return;
             }
             //            System.out.println((DBG_ActuallyLoadImage++) + " " + imgName);
 
             // this is the ONLY place generatorFunction will ever be called
             if (generatorFunction != null) {
-                generatorFunction.run(this)
+                generatorFunction!!.run(this)
                 return
             }
 
@@ -2269,7 +2276,7 @@ class Image {
                     MakeDefault()
                     return
                 }
-                GenerateCubeImage( /*(const byte **)*/pics, width[0], filter, allowDownSize, depth)
+                GenerateCubeImage( /*(const byte **)*/pics as Array<ByteBuffer>, width[0], filter, allowDownSize, depth)
                 precompressedFile = false
                 //
 //                for (int i = 0; i < 6; i++) {
@@ -2314,7 +2321,7 @@ class Image {
                 // NOTE: takes about 10% of image load times (SD)
                 // may not be strictly necessary, but some code uses it, so let's leave it in
                 //imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
-                GenerateImage(pic, width[0], height[0], filter, allowDownSize, repeat, depth)
+                GenerateImage(pic!!, width[0], height[0], filter, allowDownSize, repeat, depth)
                 timestamp = timestamp //why, because we rock!
                 precompressedFile = false
 
@@ -2341,7 +2348,7 @@ class Image {
             }
             bglNext = Image.globalImages.backgroundImageLoads
             Image.globalImages.backgroundImageLoads = this
-            val filename = arrayOf<String?>(null)
+            val filename = arrayOf("")
             ImageProgramStringToCompressedFileName(imgName, filename)
             bgl.completed = false
             bgl.f = FileSystem_h.fileSystem.OpenFileRead(filename[0])
@@ -2350,7 +2357,7 @@ class Image {
                 return
             }
             bgl.file.position = 0
-            bgl.file.length = bgl.f.Length()
+            bgl.file.length = bgl.f!!.Length()
             if (bgl.file.length < ddsFileHeader_t.BYTES) {
                 Common.common.Warning(
                     "idImageManager::StartBackgroundImageLoad: %s had a bad file length",
@@ -2364,15 +2371,15 @@ class Image {
 
             // purge some images if necessary
             var totalSize = 0
-            var check: idImage? = Image.globalImages.cacheLRU.cacheUsageNext
+            var check: idImage? = Image.globalImages.cacheLRU!!.cacheUsageNext
             while (check !== Image.globalImages.cacheLRU) {
-                totalSize += check.StorageSize()
+                totalSize += check!!.StorageSize()
                 check = check.cacheUsageNext
             }
             val needed = StorageSize()
             while (totalSize + needed > idImageManager.image_cacheMegs.GetFloat() * 1024 * 1024) {
                 // purge the least recently used
-                val check: idImage? = Image.globalImages.cacheLRU.cacheUsagePrev
+                val check: idImage = Image.globalImages.cacheLRU!!.cacheUsagePrev!!
                 if (check.texNum != TEXTURE_NOT_LOADED) {
                     totalSize -= check.StorageSize()
                     if (idImageManager.image_showBackgroundLoads.GetBool()) {
@@ -2381,8 +2388,8 @@ class Image {
                     check.PurgeImage()
                 }
                 // remove it from the cached list
-                check.cacheUsageNext.cacheUsagePrev = check.cacheUsagePrev
-                check.cacheUsagePrev.cacheUsageNext = check.cacheUsageNext
+                check.cacheUsageNext!!.cacheUsagePrev = check.cacheUsagePrev
+                check.cacheUsagePrev!!.cacheUsageNext = check.cacheUsageNext
                 check.cacheUsageNext = null
                 check.cacheUsagePrev = null
             }
@@ -2427,7 +2434,7 @@ class Image {
          Create a 256 color palette to be used by compressed normal maps
          ==================
          */
-        fun UploadCompressedNormalMap(width: Int, height: Int, rgba: ByteArray?, mipLevel: Int) {
+        fun UploadCompressedNormalMap(width: Int, height: Int, rgba: ByteArray, mipLevel: Int) {
             val normals: ByteArray
             var `in`: Int
             var out: Int
@@ -2439,9 +2446,9 @@ class Image {
             val row: Int
 
             // OpenGL's pixel packing rule
-            row = Math.max(width, 4)
+            row = max(width, 4)
             normals = ByteArray(row * height)
-            if (TempDump.NOT(*normals)) {
+            if (TempDump.NOT(normals)) {
                 Common.common.Error("R_UploadCompressedNormalMap: _alloca failed")
             }
             `in` = 0
@@ -2450,16 +2457,16 @@ class Image {
             while (i < height) {
                 j = 0
                 while (j < width) {
-                    x = rgba.get(`in` + j * 4 + 0)
-                    y = rgba.get(`in` + j * 4 + 1)
-                    z = rgba.get(`in` + j * 4 + 2)
+                    x = rgba[`in` + j * 4 + 0].toInt()
+                    y = rgba[`in` + j * 4 + 1].toInt()
+                    z = rgba[`in` + j * 4 + 2].toInt()
                     var c: Int
                     if (x == 128 && y == 128 && z == 128) {
                         // the "nullnormal" color
                         c = 255
                     } else {
                         c =
-                            Image.globalImages.originalToCompressed[x] shl 4 or Image.globalImages.originalToCompressed[y]
+                            Image.globalImages.originalToCompressed[x].toInt() shl 4 or Image.globalImages.originalToCompressed[y].toInt()
                         if (c == 255) {
                             c = 254 // don't use the nullnormal color
                         }
@@ -2474,7 +2481,7 @@ class Image {
             if (mipLevel == 0) {
                 // Optionally write out the paletized normal map to a .tga
                 if (idImageManager.image_writeNormalTGAPalletized.GetBool()) {
-                    val filename = arrayOf<String?>(null)
+                    val filename = arrayOf("")
                     ImageProgramStringToCompressedFileName(imgName, filename)
                     val ext = filename[0].lastIndexOf('.')
                     if (ext != -1) {
@@ -2499,8 +2506,8 @@ class Image {
         }
 
         fun  /*GLenum*/SelectInternalFormat(
-            dataPtrs: ByteBuffer?, numDataPtrs: Int, width: Int, height: Int,
-            minimumDepth: textureDepth_t?, monochromeResult: BooleanArray?
+            dataPtrs: ByteBuffer, numDataPtrs: Int, width: Int, height: Int,
+            minimumDepth: textureDepth_t, monochromeResult: BooleanArray
         ): Int {
             return SelectInternalFormat(arrayOf(dataPtrs), numDataPtrs, width, height, minimumDepth, monochromeResult)
         }
@@ -2513,14 +2520,14 @@ class Image {
          ===============
          */
         fun  /*GLenum*/SelectInternalFormat(
-            dataPtrs: Array<ByteBuffer?>?, numDataPtrs: Int, width: Int, height: Int,
-            minimumDepth: textureDepth_t?, monochromeResult: BooleanArray?
+            dataPtrs: Array<ByteBuffer>, numDataPtrs: Int, width: Int, height: Int,
+            minimumDepth: textureDepth_t, monochromeResult: BooleanArray
         ): Int {
             var minimumDepth = minimumDepth
             var i: Int
             val c: Int
             var pos: Int
-            var scan: ByteBuffer?
+            var scan: ByteBuffer
             var rgbOr: Int
             var rgbAnd: Int
             var aOr: Int
@@ -2537,18 +2544,18 @@ class Image {
             rgbAnd = -1
             aOr = 0
             aAnd = -1
-            monochromeResult.get(0) = true // until shown otherwise
+            monochromeResult[0] = true // until shown otherwise
             for (side in 0 until numDataPtrs) {
-                scan = dataPtrs.get(side)
+                scan = dataPtrs[side]
                 i = 0
                 pos = 0
                 while (i < c) {
                     var cOr: Int
                     var cAnd: Int
-                    aOr = aOr or scan.get(pos + 3)
-                    aAnd = aAnd and scan.get(pos + 3)
-                    cOr = scan.get(pos + 0) or scan.get(pos + 1) or scan.get(pos + 2)
-                    cAnd = scan.get(pos + 0) and scan.get(pos + 1) and scan.get(pos + 2)
+                    aOr = aOr or scan.get(pos + 3).toInt()
+                    aAnd = aAnd and scan.get(pos + 3).toInt()
+                    cOr = (scan.get(pos + 0) or scan.get(pos + 1) or scan.get(pos + 2)).toInt()
+                    cAnd = (scan.get(pos + 0) and scan.get(pos + 1) and scan.get(pos + 2)).toInt()
 
                     // if rgb are all the same, the or and and will match
                     rgbDiffer = rgbDiffer or (cOr xor cAnd)
@@ -2556,17 +2563,17 @@ class Image {
                     // our "isMonochrome" test is more lax than rgbDiffer,
                     // allowing the values to be off by several units and
                     // still use the NV20 mono path
-                    if (monochromeResult.get(0)) {
-                        if (Math.abs(scan.get(pos + 0) - scan.get(pos + 1)) > 16
-                            || Math.abs(scan.get(pos + 0) - scan.get(pos + 2)) > 16
+                    if (monochromeResult[0]) {
+                        if (abs(scan.get(pos + 0) - scan.get(pos + 1)) > 16
+                            || abs(scan.get(pos + 0) - scan.get(pos + 2)) > 16
                         ) {
-                            monochromeResult.get(0) = false
+                            monochromeResult[0] = false
                         }
                     }
                     rgbOr = rgbOr or cOr
                     rgbAnd = rgbAnd and cAnd
-                    cOr = cOr or scan.get(pos + 3)
-                    cAnd = cAnd and scan.get(pos + 3)
+                    cOr = cOr or scan.get(pos + 3).toInt()
+                    cAnd = cAnd and scan.get(pos + 3).toInt()
                     rgbaDiffer = rgbaDiffer or (cOr xor cAnd)
                     i++
                     pos += 4
@@ -2671,24 +2678,24 @@ class Image {
             // two bytes
         }
 
-        fun ImageProgramStringToCompressedFileName(imageProg: String?, fileName: Array<String?>?) {
+        fun ImageProgramStringToCompressedFileName(imageProg: String, fileName: Array<String>) {
 //            char s;
             var f: Int
             var i: Int
             val ff = CharArray(imageProg.length + 10)
 
 //	strcpy( fileName, "dds/" );
-            fileName.get(0) = "dds/"
-            f = fileName.get(0).length
+            fileName[0] = "dds/"
+            f = fileName[0].length
             //            ff = fileName[0].toCharArray();
-            System.arraycopy(fileName.get(0).toCharArray(), 0, ff, 0, f)
+            System.arraycopy(fileName[0].toCharArray(), 0, ff, 0, f)
             var depth = 0
 
             // convert all illegal characters to underscores
             // this could conceivably produce a duplicated mapping, but we aren't going to worry about it
             i = 0
             while (i < imageProg.length) {
-                val s: Char = imageProg.get(i)
+                val s: Char = imageProg[i]
                 if (s == '/' || s == '\\' || s == '(') {
                     if (depth < 4) {
                         ff[f] = '/'
@@ -2708,12 +2715,12 @@ class Image {
                 }
                 i++
             }
-            ff[f++] = 0
+            ff[f++] = Char(0)
             //	strcat( fileName, ".dds" );
-            fileName.get(0) = TempDump.ctos(ff) + ".dds"
+            fileName[0] = TempDump.ctos(ff) + ".dds"
         }
 
-        fun ImageProgramStringToCompressedFileName(imageProg: idStr?, fileName: Array<String?>?) {
+        fun ImageProgramStringToCompressedFileName(imageProg: idStr, fileName: Array<String>) {
             ImageProgramStringToCompressedFileName(imageProg.toString(), fileName)
         }
 
@@ -2748,9 +2755,9 @@ class Image {
                     + TempDump.CPP_class.Pointer.SIZE //idImage
                     + TempDump.CPP_class.Bool.SIZE
                     + TempDump.CPP_class.Bool.SIZE
-                    + backgroundDownload_s.Companion.SIZE
+                    + backgroundDownload_s.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //idImage
-                    + idStr.Companion.SIZE
+                    + idStr.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //idImage.//TODO:does a function pointer have size?
                     + TempDump.CPP_class.Bool.SIZE
                     + TempDump.CPP_class.Enum.SIZE
@@ -2773,7 +2780,7 @@ class Image {
 
             // data commonly accessed is grouped here
             const val TEXTURE_NOT_LOADED = -1
-            val mipBlendColors /*[16][4]*/: Array<IntArray?>? = arrayOf(
+            val mipBlendColors /*[16][4]*/: Array<IntArray> = arrayOf(
                 intArrayOf(0, 0, 0, 0),
                 intArrayOf(255, 0, 0, 128),
                 intArrayOf(0, 255, 0, 128),
@@ -2830,66 +2837,66 @@ class Image {
     }
 
     class idImageManager {
-        var accumImage: idImage? = null
-        var alphaNotchImage // 2x1 texture with just 1110 and 1111 with point sampling
-                : idImage? = null
-        var alphaRampImage // 0-255 in alpha, 255 in RGB
-                : idImage? = null
-        var ambientNormalMap // tr.ambientLightVector encoded in all pixels
-                : idImage? = null
+        lateinit var accumImage: idImage
+        lateinit var alphaNotchImage // 2x1 texture with just 1110 and 1111 with point sampling
+                : idImage
+        lateinit var alphaRampImage // 0-255 in alpha, 255 in RGB
+                : idImage
+        lateinit var ambientNormalMap // tr.ambientLightVector encoded in all pixels
+                : idImage
 
         //
         var backgroundImageLoads // chain of images that have background file loads active
                 : idImage? = null
-        var blackImage // full of 0x00
-                : idImage? = null
-        var borderClampImage // white inside, black outside
-                : idImage? = null
+        lateinit var blackImage // full of 0x00
+                : idImage
+        lateinit var borderClampImage // white inside, black outside
+                : idImage
         var cacheLRU // head/tail of doubly linked list
                 : idImage?
-        var cinematicImage: idImage? = null
-        var compressedPalette: ByteArray? = ByteArray(768) // the palette that normal maps use
-        var currentRenderImage // for SS_POST_PROCESS shaders
-                : idImage? = null
-        var ddsHash: idHashIndex? = null
-        var ddsList: idStrList? = null
+        lateinit var cinematicImage: idImage
+        var compressedPalette: ByteArray = ByteArray(768) // the palette that normal maps use
+        lateinit var currentRenderImage // for SS_POST_PROCESS shaders
+                : idImage
+        var ddsHash: idHashIndex = idHashIndex()
+        var ddsList: ArrayList<String> = ArrayList()
 
         //
         // built-in images
-        var defaultImage: idImage? = null
-        var flatNormalMap // 128 128 255 in all pixels
-                : idImage? = null
-        var fogEnterImage // adjust fogImage alpha based on terminator plane
-                : idImage? = null
-        var fogImage // increasing alpha is denser fog
-                : idImage? = null
+        lateinit var defaultImage: idImage
+        lateinit var flatNormalMap // 128 128 255 in all pixels
+                : idImage
+        lateinit var fogEnterImage // adjust fogImage alpha based on terminator plane
+                : idImage
+        lateinit var fogImage // increasing alpha is denser fog
+                : idImage
 
         //
-        var imageHashTable: Array<idImage?>? = arrayOfNulls<idImage?>(Str.FILE_HASH_SIZE)
-        val images: idList<idImage?>? = idList()
+        var imageHashTable: ArrayList<idImage> = ArrayList<idImage>(Str.FILE_HASH_SIZE)
+        val images: idList<idImage> = idList()
 
         //
         var insideLevelLoad // don't actually load images now
                 = false
-        var noFalloffImage // all 255, but zero clamped
-                : idImage? = null
-        var normalCubeMapImage // cube map to normalize STR into RGB
-                : idImage? = null
+        lateinit var noFalloffImage // all 255, but zero clamped
+                : idImage
+        lateinit var normalCubeMapImage // cube map to normalize STR into RGB
+                : idImage
 
         //
         var numActiveBackgroundImageLoads = 0
 
         //
-        var originalToCompressed: ByteArray? = ByteArray(256) // maps normal maps to 8 bit textures
-        var rampImage // 0-255 in RGBA in S
-                : idImage? = null
-        var scratchCubeMapImage: idImage? = null
-        var scratchImage: idImage? = null
-        var scratchImage2: idImage? = null
-        var specular2DTableImage // 2D intensity texture with our specular function with variable specularity
-                : idImage? = null
-        var specularTableImage // 1D intensity texture with our specular function
-                : idImage? = null
+        var originalToCompressed: ByteArray = ByteArray(256) // maps normal maps to 8 bit textures
+        lateinit var rampImage // 0-255 in RGBA in S
+                : idImage
+        lateinit var scratchCubeMapImage: idImage
+        lateinit var scratchImage: idImage
+        lateinit var scratchImage2: idImage
+        lateinit var specular2DTableImage // 2D intensity texture with our specular function with variable specularity
+                : idImage
+        lateinit var specularTableImage // 1D intensity texture with our specular function
+                : idImage
         var textureAnisotropy = 0f
         var textureLODBias = 0f
         /*GLenum*/  var textureMaxFilter = 0
@@ -2899,65 +2906,65 @@ class Image {
         /*GLenum*/  var textureMinFilter = 0
         var totalCachedImageSize // for determining when something should be purged
                 = 0
-        var whiteImage // full of 0xff
-                : idImage? = null
+        lateinit var whiteImage // full of 0xff
+                : idImage
 
         @Throws(idException::class)
         fun Init() {
 
 //	memset(imageHashTable, 0, sizeof(imageHashTable));
-            imageHashTable = arrayOfNulls<idImage?>(imageHashTable.size)
+            imageHashTable = ArrayList<idImage>(imageHashTable.size)
             images.Resize(1024, 1024)
 
             // clear the cached LRU
-            cacheLRU.cacheUsageNext = cacheLRU
-            cacheLRU.cacheUsagePrev = cacheLRU
+            cacheLRU!!.cacheUsageNext = cacheLRU
+            cacheLRU!!.cacheUsagePrev = cacheLRU
 
             // set default texture filter modes
             ChangeTextureFilter()
 
             // create built in images
-            defaultImage = ImageFromFunction("_default", R_DefaultImage.Companion.getInstance())
-            whiteImage = ImageFromFunction("_white", R_WhiteImage.Companion.getInstance())
-            blackImage = ImageFromFunction("_black", R_BlackImage.Companion.getInstance())
-            borderClampImage = ImageFromFunction("_borderClamp", R_BorderClampImage.Companion.getInstance())
-            flatNormalMap = ImageFromFunction("_flat", R_FlatNormalImage.Companion.getInstance())
-            ambientNormalMap = ImageFromFunction("_ambient", R_AmbientNormalImage.Companion.getInstance())
-            specularTableImage = ImageFromFunction("_specularTable", R_SpecularTableImage.Companion.getInstance())
-            specular2DTableImage = ImageFromFunction("_specular2DTable", R_Specular2DTableImage.Companion.getInstance())
-            rampImage = ImageFromFunction("_ramp", R_RampImage.Companion.getInstance())
-            alphaRampImage = ImageFromFunction("_alphaRamp", R_RampImage.Companion.getInstance())
-            alphaNotchImage = ImageFromFunction("_alphaNotch", R_AlphaNotchImage.Companion.getInstance())
-            fogImage = ImageFromFunction("_fog", R_FogImage.Companion.getInstance())
-            fogEnterImage = ImageFromFunction("_fogEnter", R_FogEnterImage.Companion.getInstance())
-            normalCubeMapImage = ImageFromFunction("_normalCubeMap", makeNormalizeVectorCubeMap.Companion.getInstance())
-            noFalloffImage = ImageFromFunction("_noFalloff", R_CreateNoFalloffImage.Companion.getInstance())
-            ImageFromFunction("_quadratic", R_QuadraticImage.Companion.getInstance())
+            defaultImage = ImageFromFunction("_default", R_DefaultImage.getInstance())
+            whiteImage = ImageFromFunction("_white", R_WhiteImage.getInstance())
+            blackImage = ImageFromFunction("_black", R_BlackImage.getInstance())
+            borderClampImage = ImageFromFunction("_borderClamp", R_BorderClampImage.getInstance())
+            flatNormalMap = ImageFromFunction("_flat", R_FlatNormalImage.getInstance())
+            ambientNormalMap = ImageFromFunction("_ambient", R_AmbientNormalImage.getInstance())
+            specularTableImage = ImageFromFunction("_specularTable", R_SpecularTableImage.getInstance())
+            specular2DTableImage = ImageFromFunction("_specular2DTable", R_Specular2DTableImage.getInstance())
+            rampImage = ImageFromFunction("_ramp", R_RampImage.getInstance())
+            alphaRampImage = ImageFromFunction("_alphaRamp", R_RampImage.getInstance())
+            alphaNotchImage = ImageFromFunction("_alphaNotch", R_AlphaNotchImage.getInstance())
+            fogImage = ImageFromFunction("_fog", R_FogImage.getInstance())
+            fogEnterImage = ImageFromFunction("_fogEnter", R_FogEnterImage.getInstance())
+            normalCubeMapImage = ImageFromFunction("_normalCubeMap", makeNormalizeVectorCubeMap.getInstance())
+            noFalloffImage = ImageFromFunction("_noFalloff", R_CreateNoFalloffImage.getInstance())
+            ImageFromFunction("_quadratic", R_QuadraticImage.getInstance())
 
             // cinematicImage is used for cinematic drawing
             // scratchImage is used for screen wipes/doublevision etc..
-            cinematicImage = ImageFromFunction("_cinematic", R_RGBA8Image.Companion.getInstance())
-            scratchImage = ImageFromFunction("_scratch", R_RGBA8Image.Companion.getInstance())
-            scratchImage2 = ImageFromFunction("_scratch2", R_RGBA8Image.Companion.getInstance())
-            accumImage = ImageFromFunction("_accum", R_RGBA8Image.Companion.getInstance())
+            cinematicImage = ImageFromFunction("_cinematic", R_RGBA8Image.getInstance())
+            scratchImage = ImageFromFunction("_scratch", R_RGBA8Image.getInstance())
+            scratchImage2 = ImageFromFunction("_scratch2", R_RGBA8Image.getInstance())
+            accumImage = ImageFromFunction("_accum", R_RGBA8Image.getInstance())
             scratchCubeMapImage =
-                ImageFromFunction("_scratchCubeMap", makeNormalizeVectorCubeMap.Companion.getInstance())
-            currentRenderImage = ImageFromFunction("_currentRender", R_RGBA8Image.Companion.getInstance())
+                ImageFromFunction("_scratchCubeMap", makeNormalizeVectorCubeMap.getInstance())
+            currentRenderImage = ImageFromFunction("_currentRender", R_RGBA8Image.getInstance())
             CmdSystem.cmdSystem.AddCommand(
                 "reloadImages",
-                R_ReloadImages_f.Companion.getInstance(),
+                R_ReloadImages_f.getInstance(),
                 CmdSystem.CMD_FL_RENDERER,
                 "reloads images"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listImages",
-                R_ListImages_f.Companion.getInstance(),
+                R_ListImages_f.getInstance(),
                 CmdSystem.CMD_FL_RENDERER,
                 "lists images"
             )
             CmdSystem.cmdSystem.AddCommand(
                 "combineCubeImages",
-                R_CombineCubeImages_f.Companion.getInstance(),
+                R_CombineCubeImages_f.getInstance(),
                 CmdSystem.CMD_FL_RENDERER,
                 "combines six images for roq compression"
             )
@@ -2977,15 +2984,15 @@ class Image {
         // grid pattern.
         // Will automatically resample non-power-of-two images and execute image programs if needed.
         fun ImageFromFile(
-            _name: String?, filter: textureFilter_t?, allowDownSize: Boolean,
-            repeat: textureRepeat_t?, depth: textureDepth_t?, cubeMap: cubeFiles_t? /* = CF_2D */
+            _name: String?, filter: textureFilter_t, allowDownSize: Boolean,
+            repeat: textureRepeat_t, depth: textureDepth_t, cubeMap: cubeFiles_t = cubeFiles_t.CF_2D /* = CF_2D */
         ): idImage? {
             var allowDownSize = allowDownSize
             var depth = depth
             val name: idStr
-            var image: idImage?
+            var image: idImage
             val hash: Int
-            if (null == _name || _name.isEmpty() || idStr.Companion.Icmp(_name, "default") == 0 || idStr.Companion.Icmp(
+            if (null == _name || _name.isEmpty() || idStr.Icmp(_name, "default") == 0 || idStr.Icmp(
                     _name,
                     "_default"
                 ) == 0
@@ -3004,11 +3011,11 @@ class Image {
             // are in a reloadImages call
             //
             hash = name.FileNameHash()
-            image = imageHashTable.get(hash)
-            while (image != null) {
+            image = imageHashTable[hash]
+            while (image.hashNext != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     // the built in's, like _white and _flat always match the other options
-                    if (name.get(0) == '_') {
+                    if (name[0] == '_') {
                         return image
                     }
                     if (image.cubeFiles != cubeMap) {
@@ -3017,14 +3024,14 @@ class Image {
                     if (image.filter != filter || image.repeat != repeat) {
                         // we might want to have the system reset these parameters on every bind and
                         // share the image data
-                        image = image.hashNext
+                        image = image.hashNext!!
                         continue
                     }
                     if (image.allowDownSize == allowDownSize && image.depth == depth) {
                         // note that it is used this level load
                         image.levelLoadReferenced = true
                         if (image.partialImage != null) {
-                            image.partialImage.levelLoadReferenced = true
+                            image.partialImage!!.levelLoadReferenced = true
                         }
                         return image
                     }
@@ -3041,7 +3048,7 @@ class Image {
                         // the already created one is already the highest quality
                         image.levelLoadReferenced = true
                         if (image.partialImage != null) {
-                            image.partialImage.levelLoadReferenced = true
+                            image.partialImage!!.levelLoadReferenced = true
                         }
                         return image
                     }
@@ -3049,7 +3056,7 @@ class Image {
                     image.depth = depth
                     image.levelLoadReferenced = true
                     if (image.partialImage != null) {
-                        image.partialImage.levelLoadReferenced = true
+                        image.partialImage!!.levelLoadReferenced = true
                     }
                     if (image_preload.GetBool() && !insideLevelLoad) {
                         image.referencedOutsideLevelLoad = true
@@ -3063,7 +3070,7 @@ class Image {
                     }
                     return image
                 }
-                image = image.hashNext
+                image = image.hashNext!!
             }
 
             //
@@ -3088,28 +3095,31 @@ class Image {
             if (image.ShouldImageBePartialCached()) {
                 // if we only loaded part of the file, create a new idImage for the shrunken version
                 image.partialImage = idImage()
-                image.partialImage.allowDownSize = allowDownSize
-                image.partialImage.repeat = repeat
-                image.partialImage.depth = depth
-                image.partialImage.type = textureType_t.TT_2D
-                image.partialImage.cubeFiles = cubeMap
-                image.partialImage.filter = filter
-                image.partialImage.levelLoadReferenced = true
+                image.partialImage!!.allowDownSize = allowDownSize
+                image.partialImage!!.repeat = repeat
+                image.partialImage!!.depth = depth
+                image.partialImage!!.type = textureType_t.TT_2D
+                image.partialImage!!.cubeFiles = cubeMap
+                image.partialImage!!.filter = filter
+                image.partialImage!!.levelLoadReferenced = true
 
                 // we don't bother hooking this into the hash table for lookup, but we do add it to the manager
                 // list for listImages
-                Image.globalImages.images.Append(image.partialImage)
-                image.partialImage.imgName.set(image.imgName)
-                image.partialImage.isPartialImage = true
+                Image.globalImages.images.Append(image.partialImage!!)
+                image.partialImage!!.imgName.set(image.imgName)
+                image.partialImage!!.isPartialImage = true
 
                 // let the background file loader know that we can load
                 image.precompressedFile = true
                 if (image_preload.GetBool() && !insideLevelLoad) {
-                    image.partialImage.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
+                    image.partialImage!!.ActuallyLoadImage(
+                        true,
+                        false
+                    ) // check for precompressed, load is from front end
                     DeclManager.declManager.MediaPrint(
                         "%dx%d %s\n",
-                        image.partialImage.uploadWidth,
-                        image.partialImage.uploadHeight,
+                        image.partialImage!!.uploadWidth,
+                        image.partialImage!!.uploadHeight,
                         image.imgName.toString()
                     )
                 } else {
@@ -3121,7 +3131,7 @@ class Image {
             // load it if we aren't in a level preload
             if (image_preload.GetBool() && !insideLevelLoad) {
                 image.referencedOutsideLevelLoad = true
-                if (idMaterial.Companion.DBG_ParseStage == 41) {
+                if (Material.idMaterial.Companion.DBG_ParseStage == 41) {
 //                    return null;
                 }
                 image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
@@ -3146,8 +3156,8 @@ class Image {
          ==============
          */
         fun ImageFromFile(
-            name: String?, filter: textureFilter_t?, allowDownSize: Boolean,
-            repeat: textureRepeat_t?, depth: textureDepth_t?
+            name: String?, filter: textureFilter_t, allowDownSize: Boolean,
+            repeat: textureRepeat_t, depth: textureDepth_t
         ): idImage? {
             return ImageFromFile(name, filter, allowDownSize, repeat, depth, cubeFiles_t.CF_2D)
         }
@@ -3157,7 +3167,7 @@ class Image {
             val name: idStr
             var image: idImage?
             val hash: Int
-            if (null == _name || _name.isEmpty() || idStr.Companion.Icmp(_name, "default") == 0 || idStr.Companion.Icmp(
+            if (null == _name || _name.isEmpty() || idStr.Icmp(_name, "default") == 0 || idStr.Icmp(
                     _name,
                     "_default"
                 ) == 0
@@ -3175,7 +3185,7 @@ class Image {
             // look in loaded images
             //
             hash = name.FileNameHash()
-            image = imageHashTable.get(hash)
+            image = imageHashTable[hash]
             while (image != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     return image
@@ -3196,12 +3206,13 @@ class Image {
          */
         // The callback will be issued immediately, and later if images are reloaded or vid_restart
         // The callback function should call one of the idImage::Generate* functions to fill in the data
-        fun ImageFromFunction(_name: String?, generatorFunction: GeneratorFunction?): idImage? {
+        fun ImageFromFunction(_name: String?, generatorFunction: GeneratorFunction?): idImage {
             val name: idStr
             var image: idImage?
             val hash: Int
             if (null == _name) { //tut tut tut
                 Common.common.FatalError("idImageManager::ImageFromFunction: NULL name")
+                throw RuntimeException("idImageManager::ImageFromFunction: NULL name")
             }
 
             // strip any .tga file extensions from anywhere in the _name
@@ -3211,7 +3222,7 @@ class Image {
 
             // see if the image already exists
             hash = name.FileNameHash()
-            image = imageHashTable.get(hash)
+            image = imageHashTable[hash]
             while (image != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     if (image.generatorFunction !== generatorFunction) {
@@ -3244,16 +3255,16 @@ class Image {
         // to turn into textures.
         fun CompleteBackgroundImageLoads() {
             var remainingList: idImage? = null
-            var next: idImage
-            var image = backgroundImageLoads
+            var next: idImage?
+            var image = backgroundImageLoads as idImage?
             while (image != null) {
                 next = image.bglNext
                 if (image.bgl.completed) {
                     numActiveBackgroundImageLoads--
-                    FileSystem_h.fileSystem.CloseFile(image.bgl.f)
+                    FileSystem_h.fileSystem.CloseFile(image.bgl.f!!)
                     // upload the image
                     image.UploadPrecompressedImage(image.bgl.file.buffer, image.bgl.file.length)
-                    image.bgl.file.buffer = null //R_StaticFree(image.bgl.file.buffer);
+                    image.bgl.file.buffer = ByteBuffer.allocate(1) //R_StaticFree(image.bgl.file.buffer);
                     if (image_showBackgroundLoads.GetBool()) {
                         Common.common.Printf("R_CompleteBackgroundImageLoad: %s\n", image.imgName)
                     }
@@ -3280,7 +3291,7 @@ class Image {
             total = 0
             i = 0
             while (i < images.Num()) {
-                image = images.get(i)
+                image = images[i]
                 if (image.frameUsed == tr_local.backEnd.frameCount) {
                     total += image.StorageSize()
                 }
@@ -3306,7 +3317,7 @@ class Image {
             var image: idImage?
             i = 0
             while (i < images.Num()) {
-                image = images.get(i)
+                image = images[i]
                 image.PurgeImage()
                 i++
             }
@@ -3319,7 +3330,7 @@ class Image {
             // build the compressed normal map palette
             SetNormalPalette()
             args.TokenizeString("reloadImages reload", false)
-            R_ReloadImages_f.Companion.getInstance().run(args)
+            R_ReloadImages_f.getInstance().run(args)
         }
 
         // disable the active texture unit
@@ -3355,7 +3366,7 @@ class Image {
         fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until images.Num()) {
-                val image = images.get(i)
+                val image = images[i]
 
                 // generator function images are always kept around
                 if (image.generatorFunction != null) {
@@ -3399,7 +3410,7 @@ class Image {
 
             // purge the ones we don't need
             for (i in 0 until images.Num()) {
-                val image = images.get(i)
+                val image = images[i]
                 if (image.generatorFunction != null) {
                     continue
                 }
@@ -3415,7 +3426,7 @@ class Image {
 
             // load the ones we do need, if we are preloading
             for (i in 0 until images.Num()) {
-                val image = images.get(i)
+                val image = images[i]
                 if (image.generatorFunction != null) {
                     continue
                 }
@@ -3424,7 +3435,7 @@ class Image {
                     loadCount++
                     image.ActuallyLoadImage(true, false)
                     if (loadCount and 15 == 0) {
-                        Session.Companion.session.PacifierUpdate()
+                        Session.session.PacifierUpdate()
                     }
                 }
             }
@@ -3442,15 +3453,22 @@ class Image {
             ddsHash.Free()
         }
 
+        fun java.util.ArrayList<String>.addUnique(str: String): Int {
+            if (indexOf(str) == -1) {
+                add(str)
+            }
+            return indexOf(str)
+        }
+
         @JvmOverloads
         fun FinishBuild(removeDups: Boolean = false /*= false */) {
             val batchFile: idFile?
             if (removeDups) {
                 ddsList.clear()
-                val buffer = arrayOf<ByteBuffer?>(null)
+                val buffer = arrayOf(ByteBuffer.allocate(1))
                 FileSystem_h.fileSystem.ReadFile("makedds.bat", buffer)
-                if (buffer[0] != null) {
-                    var str: idStr? = idStr(String(buffer[0].array()))
+                if (!buffer.isNullOrEmpty() && buffer[0].capacity() > 1) {
+                    var str: idStr = idStr(String(buffer[0].array()))
                     while (str.Length() != 0) {
                         val n = str.Find('\n')
                         if (n > 0) {
@@ -3458,7 +3476,7 @@ class Image {
                             val right = idStr()
                             str.Right(str.Length() - n - 1, right)
                             str = right
-                            ddsList.addUnique(line)
+                            ddsList.addUnique(line.toString())
                         } else {
                             break
                         }
@@ -3468,10 +3486,10 @@ class Image {
             batchFile = FileSystem_h.fileSystem.OpenFileWrite(if (removeDups) "makedds2.bat" else "makedds.bat")
             if (batchFile != null) {
                 var i: Int
-                val ddsNum = ddsList.size()
+                val ddsNum = ddsList.size
                 i = 0
                 while (i < ddsNum) {
-                    batchFile.WriteFloatString("%s", ddsList.get(i).toString())
+                    batchFile.WriteFloatString("%s", ddsList[i].toString())
                     batchFile.Printf(
                         "@echo Finished compressing %d of %d.  %.1f percent done.\n",
                         i + 1,
@@ -3486,7 +3504,11 @@ class Image {
             ddsHash.Free()
         }
 
-        fun AddDDSCommand(cmd: String?) {
+        fun String.Icmp(s2: String): Int {
+            return ("" + this).compareTo("" + s2, ignoreCase = true)
+        }
+
+        fun AddDDSCommand(cmd: String) {
             var i: Int
             val key: Int
             if (!(cmd != null && !cmd.isEmpty())) { //TODO:WdaF?
@@ -3495,19 +3517,19 @@ class Image {
             key = ddsHash.GenerateKey(cmd, false)
             i = ddsHash.First(key)
             while (i != -1) {
-                if (ddsList.get(i).Icmp(cmd) == 0) {
+                if (ddsList[i].Icmp(cmd) == 0) {
                     break
                 }
                 i = ddsHash.Next(i)
             }
             if (i == -1) {
-                ddsList.add(idStr(cmd))
+                ddsList.add(cmd)
             }
         }
 
         //
         //--------------------------------------------------------
-        fun PrintMemInfo(mi: MemInfo_t?) {
+        fun PrintMemInfo(mi: MemInfo_t) {
             var i: Int
             var j: Int
             var total = 0
@@ -3529,7 +3551,7 @@ class Image {
             while (i < images.Num() - 1) {
                 j = i + 1
                 while (j < images.Num()) {
-                    if (images.get(sortIndex[i]).StorageSize() < images.get(sortIndex[j]).StorageSize()) {
+                    if (images[sortIndex[i]].StorageSize() < images[sortIndex[j]].StorageSize()) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
                         sortIndex[j] = temp
@@ -3542,17 +3564,17 @@ class Image {
             // print next
             i = 0
             while (i < images.Num()) {
-                val im = images.get(sortIndex[i])
+                val im = images[sortIndex[i]]
                 var size: Int
                 size = im.StorageSize()
                 total += size
-                f.Printf("%s %3d %s\n", idStr.Companion.FormatNumber(size), im.refCount, im.imgName)
+                f.Printf("%s %3d %s\n", idStr.FormatNumber(size), im.refCount, im.imgName)
                 i++
             }
 
 //	delete sortIndex;
             mi.imageAssetsTotal = total
-            f.Printf("\nTotal image bytes allocated: %s\n", idStr.Companion.FormatNumber(total))
+            f.Printf("\nTotal image bytes allocated: %s\n", idStr.FormatNumber(total))
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
@@ -3564,7 +3586,7 @@ class Image {
          copies the name, and adds it to the hash chain.
          ==============
          */
-        fun AllocImage(name: String?): idImage? {
+        fun AllocImage(name: String): idImage {
             val image: idImage
             val hash: Int
             if (name.length >= Image.MAX_IMAGE_NAME) {
@@ -3575,8 +3597,8 @@ class Image {
 //            System.out.printf(">>>>>>>>>>>>>>%d--%s\n", idStr.IHash(name.toCharArray()), name);
             image = idImage()
             images.Append(image)
-            image.hashNext = imageHashTable.get(hash)
-            imageHashTable.get(hash) = image
+            image.hashNext = imageHashTable[hash]
+            imageHashTable[hash] = image
             image.imgName.set(name)
             return image
         }
@@ -3612,9 +3634,9 @@ class Image {
             i = 0
             while (i < 256) {
                 if (i <= compressedToOriginal[0]) {
-                    originalToCompressed.get(i) = 0
+                    originalToCompressed[i] = 0
                 } else if (i >= compressedToOriginal[15]) {
-                    originalToCompressed.get(i) = 15
+                    originalToCompressed[i] = 15
                 } else {
                     j = 0
                     while (j < 14) {
@@ -3624,9 +3646,9 @@ class Image {
                         j++
                     }
                     if (i - compressedToOriginal[j] < compressedToOriginal[j + 1] - i) {
-                        originalToCompressed.get(i) = j.toByte()
+                        originalToCompressed[i] = j.toByte()
                     } else {
-                        originalToCompressed.get(i) = (j + 1).toByte()
+                        originalToCompressed[i] = (j + 1).toByte()
                     }
                 }
                 i++
@@ -3654,18 +3676,18 @@ class Image {
                 while (i < 16) {
                     j = 0
                     while (j < 16) {
-                        v.set(0, (compressedToOriginal[i] - 127.5f) / 128f)
-                        v.set(1, (compressedToOriginal[j] - 127.5f) / 128f)
-                        t = 1.0f - (v.get(0) * v.get(0) + v.get(1) * v.get(1))
+                        v[0] = (compressedToOriginal[i] - 127.5f) / 128f
+                        v[1] = (compressedToOriginal[j] - 127.5f) / 128f
+                        t = 1.0f - (v[0] * v[0] + v[1] * v[1])
                         if (t < 0) {
                             t = 0f
                         }
-                        v.set(2, idMath.Sqrt(t))
-                        temptable.get((i * 16 + j) * 3 + 0) = (128 + Math.floor(127 * v.get(0) + 0.5)).toInt().toByte()
-                        temptable.get((i * 16 + j) * 3 + 1) =
-                            (128 + Math.floor((127 * v.get(1)).toDouble())).toInt().toByte()
-                        temptable.get((i * 16 + j) * 3 + 2) =
-                            (128 + Math.floor((127 * v.get(2)).toDouble())).toInt().toByte()
+                        v[2] = idMath.Sqrt(t)
+                        temptable[(i * 16 + j) * 3 + 0] = (128 + floor(127 * v[0] + 0.5)).toInt().toByte()
+                        temptable[(i * 16 + j) * 3 + 1] =
+                            (128 + floor((127 * v[1]).toDouble())).toInt().toByte()
+                        temptable[(i * 16 + j) * 3 + 2] =
+                            (128 + floor((127 * v[2]).toDouble())).toInt().toByte()
                         j++
                     }
                     i++
@@ -3673,9 +3695,9 @@ class Image {
             }
 
             // color 255 will be the "nullnormal" color for no reflection
-            temptable.get(255 * 3 + 2) = 128.toByte()
-            temptable.get(255 * 3 + 1) = temptable.get(255 * 3 + 2)
-            temptable.get(255 * 3 + 0) = temptable.get(255 * 3 + 1)
+            temptable[255 * 3 + 2] = 128.toByte()
+            temptable[255 * 3 + 1] = temptable[255 * 3 + 2]
+            temptable[255 * 3 + 0] = temptable[255 * 3 + 1]
             if (!tr_local.glConfig.sharedTexturePaletteAvailable) {
                 return
             }
@@ -3701,16 +3723,16 @@ class Image {
         fun ChangeTextureFilter() {
             var i: Int
             var glt: idImage?
-            val string: String?
+            val string: String
 
             // if these are changed dynamically, it will force another ChangeTextureFilter
             image_filter.ClearModified()
             image_anisotropy.ClearModified()
             image_lodbias.ClearModified()
-            string = image_filter.GetString()
+            string = image_filter.GetString()!!
             i = 0
             while (i < 6) {
-                if (0 == idStr.Companion.Icmp(textureFilters.get(i).name, string)) {
+                if (0 == idStr.Icmp(textureFilters[i].name, string)) {
                     break
                 }
                 i++
@@ -3722,8 +3744,8 @@ class Image {
             }
 
             // set the values for future images
-            textureMinFilter = textureFilters.get(i).minimize
-            textureMaxFilter = textureFilters.get(i).maximize
+            textureMinFilter = textureFilters[i].minimize
+            textureMaxFilter = textureFilters[i].maximize
             textureAnisotropy = image_anisotropy.GetFloat()
             if (textureAnisotropy < 1) {
                 textureAnisotropy = 1f
@@ -3736,7 +3758,7 @@ class Image {
             i = 0
             while (i < images.Num()) {
                 var texEnum = GL11.GL_TEXTURE_2D
-                glt = images.get(i)
+                glt = images[i]
                 when (glt.type) {
                     textureType_t.TT_2D -> texEnum = GL11.GL_TEXTURE_2D
                     textureType_t.TT_3D -> texEnum = GL12.GL_TEXTURE_3D
@@ -3775,10 +3797,10 @@ class Image {
             }
         }
 
-        internal class filterName_t(var name: String?, var minimize: Int, var maximize: Int)
+        internal class filterName_t(var name: String, var minimize: Int, var maximize: Int)
         companion object {
             const val MAX_BACKGROUND_IMAGE_LOADS = 8
-            private val textureFilters: Array<filterName_t?>? = arrayOf(
+            private val textureFilters: Array<filterName_t> = arrayOf(
                 filterName_t("GL_LINEAR_MIPMAP_NEAREST", GL11.GL_LINEAR_MIPMAP_NEAREST, GL11.GL_LINEAR),
                 filterName_t("GL_LINEAR_MIPMAP_LINEAR", GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_LINEAR),
                 filterName_t("GL_NEAREST", GL11.GL_NEAREST, GL11.GL_NEAREST),
@@ -3786,7 +3808,7 @@ class Image {
                 filterName_t("GL_NEAREST_MIPMAP_NEAREST", GL11.GL_NEAREST_MIPMAP_NEAREST, GL11.GL_NEAREST),
                 filterName_t("GL_NEAREST_MIPMAP_LINEAR", GL11.GL_NEAREST_MIPMAP_LINEAR, GL11.GL_NEAREST)
             )
-            var image_anisotropy: idCVar? = idCVar(
+            var image_anisotropy: idCVar = idCVar(
                 "image_anisotropy",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
@@ -3794,61 +3816,61 @@ class Image {
             )
 
             //
-            var image_cacheMegs: idCVar? = idCVar(
+            var image_cacheMegs: idCVar = idCVar(
                 "image_cacheMegs",
                 "20",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "maximum MB set aside for temporary loading of full-sized precompressed images"
             )
-            var image_cacheMinK: idCVar? = idCVar(
+            var image_cacheMinK: idCVar = idCVar(
                 "image_cacheMinK",
                 "200",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
                 "maximum KB of precompressed files to read at specification time"
             )
-            var image_colorMipLevels: idCVar? = idCVar(
+            var image_colorMipLevels: idCVar = idCVar(
                 "image_colorMipLevels",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
                 "development aid to see texture mip usage"
             )
-            var image_downSize: idCVar? = idCVar(
+            var image_downSize: idCVar = idCVar(
                 "image_downSize",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls texture downsampling"
             )
-            var image_downSizeBump: idCVar? = idCVar(
+            var image_downSizeBump: idCVar = idCVar(
                 "image_downSizeBump",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls normal map downsampling"
             )
-            var image_downSizeBumpLimit: idCVar? = idCVar(
+            var image_downSizeBumpLimit: idCVar = idCVar(
                 "image_downSizeBumpLimit",
                 "128",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls normal map downsample limit"
             )
-            var image_downSizeLimit: idCVar? = idCVar(
+            var image_downSizeLimit: idCVar = idCVar(
                 "image_downSizeLimit",
                 "256",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls diffuse map downsample limit"
             )
-            var image_downSizeSpecular: idCVar? = idCVar(
+            var image_downSizeSpecular: idCVar = idCVar(
                 "image_downSizeSpecular",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls specular downsampling"
             )
-            var image_downSizeSpecularLimit: idCVar? = idCVar(
+            var image_downSizeSpecularLimit: idCVar = idCVar(
                 "image_downSizeSpecularLimit",
                 "64",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "controls specular downsampled limit"
             )
-            var image_filter: idCVar? = idCVar(
+            var image_filter: idCVar = idCVar(
                 "image_filter",
                 Image_init.imageFilter[1],
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
@@ -3856,19 +3878,19 @@ class Image {
                 Image_init.imageFilter,
                 ArgCompletion_String(Image_init.imageFilter)
             )
-            var image_forceDownSize: idCVar? = idCVar(
+            var image_forceDownSize: idCVar = idCVar(
                 "image_forceDownSize",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 ""
             )
-            var image_ignoreHighQuality: idCVar? = idCVar(
+            var image_ignoreHighQuality: idCVar = idCVar(
                 "image_ignoreHighQuality",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "ignore high quality setting on materials"
             )
-            var image_lodbias: idCVar? = idCVar(
+            var image_lodbias: idCVar = idCVar(
                 "image_lodbias",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
@@ -3877,7 +3899,7 @@ class Image {
 
             //
             //
-            var image_preload: idCVar? = idCVar(
+            var image_preload: idCVar = idCVar(
                 "image_preload",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
@@ -3886,13 +3908,13 @@ class Image {
 
             //
             // cvars
-            var image_roundDown: idCVar? = idCVar(
+            var image_roundDown: idCVar = idCVar(
                 "image_roundDown",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 "round bad sizes down to nearest power of two"
             )
-            var image_showBackgroundLoads: idCVar? = idCVar(
+            var image_showBackgroundLoads: idCVar = idCVar(
                 "image_showBackgroundLoads",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
@@ -3900,19 +3922,19 @@ class Image {
             )
 
             //		
-            var image_useAllFormats: idCVar? = idCVar(
+            var image_useAllFormats: idCVar = idCVar(
                 "image_useAllFormats",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 "allow alpha/intensity/luminance/luminance+alpha"
             )
-            var image_useCache: idCVar? = idCVar(
+            var image_useCache: idCVar = idCVar(
                 "image_useCache",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 "1 = do background load image caching"
             )
-            var image_useCompression: idCVar? = idCVar(
+            var image_useCompression: idCVar = idCVar(
                 "image_useCompression",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
@@ -3920,43 +3942,43 @@ class Image {
             )
 
             //
-            var image_useNormalCompression: idCVar? = idCVar(
+            var image_useNormalCompression: idCVar = idCVar(
                 "image_useNormalCompression",
                 "2",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
                 "2 = use rxgb compression for normal maps, 1 = use 256 color compression for normal maps if available"
             )
-            var image_useOffLineCompression: idCVar? = idCVar(
+            var image_useOffLineCompression: idCVar = idCVar(
                 "image_useOfflineCompression",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
                 "write a batch file for offline compression of DDS files"
             )
-            var image_usePrecompressedTextures: idCVar? = idCVar(
+            var image_usePrecompressedTextures: idCVar = idCVar(
                 "image_usePrecompressedTextures",
                 "1",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
                 "use .dds files if present"
             )
-            var image_writeNormalTGA: idCVar? = idCVar(
+            var image_writeNormalTGA: idCVar = idCVar(
                 "image_writeNormalTGA",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
                 "write .tgas of the final normal maps for debugging"
             )
-            var image_writeNormalTGAPalletized: idCVar? = idCVar(
+            var image_writeNormalTGAPalletized: idCVar = idCVar(
                 "image_writeNormalTGAPalletized",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
                 "write .tgas of the final palletized normal maps for debugging"
             )
-            var image_writePrecompressedTextures: idCVar? = idCVar(
+            var image_writePrecompressedTextures: idCVar = idCVar(
                 "image_writePrecompressedTextures",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
                 "write .dds files if necessary"
             )
-            var image_writeTGA: idCVar? = idCVar(
+            var image_writeTGA: idCVar = idCVar(
                 "image_writeTGA",
                 "0",
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,

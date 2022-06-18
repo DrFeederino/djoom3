@@ -1273,6 +1273,13 @@ object Vector {
             this.w = w
         }
 
+        constructor(x: Int, y: Int, z: Int, w: Int) {
+            this.x = x.toFloat()
+            this.y = y.toFloat()
+            this.z = z.toFloat()
+            this.w = w.toFloat()
+        }
+
         fun set(x: Float, y: Float, z: Float, w: Float) {
             this.x = x
             this.y = y

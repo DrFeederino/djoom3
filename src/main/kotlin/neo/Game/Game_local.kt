@@ -3814,7 +3814,7 @@ class Game_local {
                 projectionOrigin,
                 parallel,
                 depth * 0.5f,
-                DeclManager.declManager.FindMaterial(material!!),
+                DeclManager.declManager.FindMaterial(material!!)!!,
                 time
             )
         }
@@ -6475,7 +6475,7 @@ class Game_local {
                 CVarSystem.setCvarSystems(gameImport.cvarSystem)
                 FileSystem_h.setFileSystems(gameImport.fileSystem) //TODO:set both the fileSystem and the fileSystemLocal it's referencing.
                 NetworkSystem.setNetworkSystems(gameImport.networkSystem)
-                RenderSystem.setRenderSystem(gameImport.renderSystem)
+                RenderSystem.setRenderSystems(gameImport.renderSystem)
                 snd_system.setSoundSystems(gameImport.soundSystem)
                 ModelManager.setRenderModelManagers(gameImport.renderModelManager)
                 UserInterface.setUiManagers(gameImport.uiManager)

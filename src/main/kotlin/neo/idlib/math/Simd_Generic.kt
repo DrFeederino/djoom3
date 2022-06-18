@@ -798,12 +798,12 @@ object Simd_Generic {
             max.x = max.y
             for (_IX in 0 until count) {
                 val v = src[_IX].xyz
-                if (v.get(0) < min.x) min.x = v.get(0)
-                if (v.get(0) > max.x) max.x = v.get(0)
-                if (v.get(1) < min.y) min.y = v.get(1)
-                if (v.get(1) > max.y) max.y = v.get(1)
-                if (v.get(2) < min.z) min.z = v.get(2)
-                if (v.get(2) > max.z) max.z = v.get(2)
+                if (v[0] < min.x) min.x = v[0]
+                if (v[0] > max.x) max.x = v[0]
+                if (v[1] < min.y) min.y = v[1]
+                if (v[1] > max.y) max.y = v[1]
+                if (v[2] < min.z) min.z = v[2]
+                if (v[2] > max.z) max.z = v[2]
             }
         }
 
@@ -816,12 +816,12 @@ object Simd_Generic {
             max.x = max.y
             for (_IX in 0 until count) {
                 val v = src[indexes[_IX]].xyz
-                if (v.get(0) < min.x) min.x = v.get(0)
-                if (v.get(0) > max.x) max.x = v.get(0)
-                if (v.get(1) < min.y) min.y = v.get(1)
-                if (v.get(1) > max.y) max.y = v.get(1)
-                if (v.get(2) < min.z) min.z = v.get(2)
-                if (v.get(2) > max.z) max.z = v.get(2)
+                if (v[0] < min.x) min.x = v[0]
+                if (v[0] > max.x) max.x = v[0]
+                if (v[1] < min.y) min.y = v[1]
+                if (v[1] > max.y) max.y = v[1]
+                if (v[2] < min.z) min.z = v[2]
+                if (v[2] > max.z) max.z = v[2]
             }
         }
 
@@ -2587,7 +2587,7 @@ object Simd_Generic {
             }
 
 //	lptr = L[skip];
-            lptr = L.get(skip)
+            lptr = L[skip]
             var j: Int
             var s0: Double
             var s1: Double
@@ -2823,7 +2823,7 @@ object Simd_Generic {
             i--
             while (i >= 0) {
                 s0 = b[i]
-                lptr = L.get(0)
+                lptr = L[0]
                 lIndex = i
                 j = i + 1
                 while (j < n) {
@@ -2879,7 +2879,7 @@ object Simd_Generic {
             if (n <= 0) {
                 return true
             }
-            mptr = mat.get(0)
+            mptr = mat[0]
             sum = mptr[0]
             if (sum == 0.0f) {
                 return false
@@ -2889,33 +2889,33 @@ object Simd_Generic {
             if (n <= 1) {
                 return true
             }
-            mptr = mat.get(0)
+            mptr = mat[0]
             j = 1
             while (j < n) {
                 mptr[j * nc + 0] = mptr[j * nc + 0] * d
                 j++
             }
-            mptr = mat.get(1)
+            mptr = mat[1]
             v[0] = diag[0] * mptr[0]
             s0 = v[0] * mptr[0]
             sum = mptr[1] - s0
             if (sum == 0.0f) {
                 return false
             }
-            mat.set(1, 1, sum)
+            mat[1, 1] = sum
             diag[1] = sum
             d = 1.0f / sum
             invDiag.p[1] = d
             if (n <= 2) {
                 return true
             }
-            mptr = mat.get(0)
+            mptr = mat[0]
             j = 2
             while (j < n) {
                 mptr[j * nc + 1] = (mptr[j * nc + 1] - v[0] * mptr[j * nc + 0]) * d
                 j++
             }
-            mptr = mat.get(2)
+            mptr = mat[2]
             v[0] = diag[0] * mptr[0]
             s0 = v[0] * mptr[0]
             v[1] = diag[1] * mptr[1]
@@ -2924,20 +2924,20 @@ object Simd_Generic {
             if (sum == 0.0f) {
                 return false
             }
-            mat.set(2, 2, sum)
+            mat[2, 2] = sum
             diag[2] = sum
             d = 1.0f / sum
             invDiag.p[2] = d
             if (n <= 3) {
                 return true
             }
-            mptr = mat.get(0)
+            mptr = mat[0]
             j = 3
             while (j < n) {
                 mptr[j * nc + 2] = (mptr[j * nc + 2] - v[0] * mptr[j * nc + 0] - v[1] * mptr[j * nc + 1]) * d
                 j++
             }
-            mptr = mat.get(3)
+            mptr = mat[3]
             v[0] = diag[0] * mptr[0]
             s0 = v[0] * mptr[0]
             v[1] = diag[1] * mptr[1]
@@ -2948,14 +2948,14 @@ object Simd_Generic {
             if (sum == 0.0f) {
                 return false
             }
-            mat.set(3, 3, sum)
+            mat[3, 3] = sum
             diag[3] = sum
             d = 1.0f / sum
             invDiag.p[3] = d
             if (n <= 4) {
                 return true
             }
-            mptr = mat.get(0)
+            mptr = mat[0]
             j = 4
             while (j < n) {
                 mptr[j * nc + 3] =
@@ -2964,7 +2964,7 @@ object Simd_Generic {
             }
             var i: Int = 4
             while (i < n) {
-                mptr = mat.get(i)
+                mptr = mat[i]
                 v[0] = diag[0] * mptr[0]
                 s0 = v[0] * mptr[0]
                 v[1] = diag[1] * mptr[1]
@@ -3014,14 +3014,14 @@ object Simd_Generic {
                 if (sum == 0.0f) {
                     return false
                 }
-                mat.set(i, i, sum)
+                mat[i, i] = sum
                 diag[i] = sum
                 d = 1.0f / sum
                 invDiag.p[i] = d
                 if (i + 1 >= n) {
                     return true
                 }
-                mptr = mat.get(i + 1)
+                mptr = mat[i + 1]
                 j = i + 1
                 while (j < n) {
                     s0 = mptr[mIndex + 0] * v[0]
@@ -3349,8 +3349,8 @@ object Simd_Generic {
                 var d0: Float
                 var d1: Float
                 val v = verts[i].xyz
-                texCoords[i].set(0, planes[0].Distance(v).also { d0 = it })
-                texCoords[i].set(1, planes[1].Distance(v).also { d1 = it })
+                texCoords[i][0] = planes[0].Distance(v).also { d0 = it }
+                texCoords[i][1] = planes[1].Distance(v).also { d1 = it }
                 bits = Math_h.FLOATSIGNBITSET(d0) shl 0
                 d0 = 1.0f - d0
                 bits = bits or (Math_h.FLOATSIGNBITSET(d1) shl 1)
@@ -3387,12 +3387,12 @@ object Simd_Generic {
                 val a: idDrawVert = verts[indexes[i + 0]]
                 val b: idDrawVert = verts[indexes[i + 1]]
                 val c: idDrawVert = verts[indexes[i + 2]]
-                d0[0] = b.xyz.get(0) - a.xyz.get(0)
-                d0[1] = b.xyz.get(1) - a.xyz.get(1)
-                d0[2] = b.xyz.get(2) - a.xyz.get(2)
-                d1[0] = c.xyz.get(0) - a.xyz.get(0)
-                d1[1] = c.xyz.get(1) - a.xyz.get(1)
-                d1[2] = c.xyz.get(2) - a.xyz.get(2)
+                d0[0] = b.xyz[0] - a.xyz[0]
+                d0[1] = b.xyz[1] - a.xyz[1]
+                d0[2] = b.xyz[2] - a.xyz[2]
+                d1[0] = c.xyz[0] - a.xyz[0]
+                d1[1] = c.xyz[1] - a.xyz[1]
+                d1[2] = c.xyz[2] - a.xyz[2]
                 n.set(
                     idVec3(
                         d1[1] * d0[2] - d1[2] * d0[1],
@@ -3450,16 +3450,16 @@ object Simd_Generic {
                 a = verts[v0]
                 b = verts[v1]
                 c = verts[v2]
-                d0[0] = b.xyz.get(0) - a.xyz.get(0)
-                d0[1] = b.xyz.get(1) - a.xyz.get(1)
-                d0[2] = b.xyz.get(2) - a.xyz.get(2)
-                d0[3] = b.st.get(0) - a.st.get(0)
-                d0[4] = b.st.get(1) - a.st.get(1)
-                d1[0] = c.xyz.get(0) - a.xyz.get(0)
-                d1[1] = c.xyz.get(1) - a.xyz.get(1)
-                d1[2] = c.xyz.get(2) - a.xyz.get(2)
-                d1[3] = c.st.get(0) - a.st.get(0)
-                d1[4] = c.st.get(1) - a.st.get(1)
+                d0[0] = b.xyz[0] - a.xyz[0]
+                d0[1] = b.xyz[1] - a.xyz[1]
+                d0[2] = b.xyz[2] - a.xyz[2]
+                d0[3] = b.st[0] - a.st[0]
+                d0[4] = b.st[1] - a.st[1]
+                d1[0] = c.xyz[0] - a.xyz[0]
+                d1[1] = c.xyz[1] - a.xyz[1]
+                d1[2] = c.xyz[2] - a.xyz[2]
+                d1[3] = c.st[0] - a.st[0]
+                d1[4] = c.st[1] - a.st[1]
 
                 // normal
                 n.set(
@@ -3482,9 +3482,9 @@ object Simd_Generic {
                 signBit = java.lang.Float.floatToIntBits(area) and (1 shl 31)
 
                 // first tangent
-                t0.set(0, d0[0] * d1[4] - d0[4] * d1[0])
-                t0.set(1, d0[1] * d1[4] - d0[4] * d1[1])
-                t0.set(2, d0[2] * d1[4] - d0[4] * d1[2])
+                t0[0] = d0[0] * d1[4] - d0[4] * d1[0]
+                t0[1] = d0[1] * d1[4] - d0[4] * d1[1]
+                t0[2] = d0[2] * d1[4] - d0[4] * d1[2]
                 f = idMath.RSqrt(t0.x * t0.x + t0.y * t0.y + t0.z * t0.z)
                 f = java.lang.Float.intBitsToFloat(java.lang.Float.floatToIntBits(f) xor signBit)
                 t0.x *= f
@@ -3492,9 +3492,9 @@ object Simd_Generic {
                 t0.z *= f
 
                 // second tangent
-                t1.set(0, d0[3] * d1[0] - d0[0] * d1[3])
-                t1.set(1, d0[3] * d1[1] - d0[1] * d1[3])
-                t1.set(2, d0[3] * d1[2] - d0[2] * d1[3])
+                t1[0] = d0[3] * d1[0] - d0[0] * d1[3]
+                t1[1] = d0[3] * d1[1] - d0[1] * d1[3]
+                t1[2] = d0[3] * d1[2] - d0[2] * d1[3]
                 f = idMath.RSqrt(t1.x * t1.x + t1.y * t1.y + t1.z * t1.z)
                 f = java.lang.Float.intBitsToFloat(java.lang.Float.floatToIntBits(f) xor signBit)
                 t1.x *= f
@@ -3560,16 +3560,16 @@ object Simd_Generic {
                 val a: idDrawVert = verts[i]
                 b = verts[dt.v2]
                 c = verts[dt.v3]
-                val d0: Float = b.xyz.get(0) - a.xyz.get(0)
-                val d1: Float = b.xyz.get(1) - a.xyz.get(1)
-                val d2: Float = b.xyz.get(2) - a.xyz.get(2)
-                val d3: Float = b.st.get(0) - a.st.get(0)
-                val d4: Float = b.st.get(1) - a.st.get(1)
-                val d5: Float = c.xyz.get(0) - a.xyz.get(0)
-                val d6: Float = c.xyz.get(1) - a.xyz.get(1)
-                val d7: Float = c.xyz.get(2) - a.xyz.get(2)
-                val d8: Float = c.st.get(0) - a.st.get(0)
-                val d9: Float = c.st.get(1) - a.st.get(1)
+                val d0: Float = b.xyz[0] - a.xyz[0]
+                val d1: Float = b.xyz[1] - a.xyz[1]
+                val d2: Float = b.xyz[2] - a.xyz[2]
+                val d3: Float = b.st[0] - a.st[0]
+                val d4: Float = b.st[1] - a.st[1]
+                val d5: Float = c.xyz[0] - a.xyz[0]
+                val d6: Float = c.xyz[1] - a.xyz[1]
+                val d7: Float = c.xyz[2] - a.xyz[2]
+                val d8: Float = c.st[0] - a.st[0]
+                val d9: Float = c.st[1] - a.st[1]
                 s0 = dt.normalizationScale[0]
                 s1 = dt.normalizationScale[1]
                 s2 = dt.normalizationScale[2]
@@ -3588,15 +3588,15 @@ object Simd_Generic {
                     t4 = s1 * (d3 * d6 - d1 * d8)
                     t5 = s1 * (d3 * d7 - d2 * d8)
                 }
-                a.normal.set(0, n0)
-                a.normal.set(1, n1)
-                a.normal.set(2, n2)
-                a.tangents[0].set(0, t0)
-                a.tangents[0].set(1, t1)
-                a.tangents[0].set(2, t2)
-                a.tangents[1].set(0, t3)
-                a.tangents[1].set(1, t4)
-                a.tangents[1].set(2, t5)
+                a.normal[0] = n0
+                a.normal[1] = n1
+                a.normal[2] = n2
+                a.tangents[0][0] = t0
+                a.tangents[0][1] = t1
+                a.tangents[0][2] = t2
+                a.tangents[1][0] = t3
+                a.tangents[1][1] = t4
+                a.tangents[1][2] = t5
             }
         }
 
@@ -3655,9 +3655,9 @@ object Simd_Generic {
                 }
                 val v = verts[i]
                 val lightDir = idVec3(lightOrigin - v.xyz)
-                lightVectors[i].set(0, lightDir * v.tangents[0])
-                lightVectors[i].set(1, lightDir * v.tangents[1])
-                lightVectors[i].set(2, lightDir * v.normal)
+                lightVectors[i][0] = lightDir * v.tangents[0]
+                lightVectors[i][1] = lightDir * v.tangents[1]
+                lightVectors[i][2] = lightDir * v.normal
             }
         }
 
@@ -3697,10 +3697,10 @@ object Simd_Generic {
                 ilength = idMath.RSqrt(viewDir * viewDir)
                 viewDir.timesAssign(ilength)
                 lightDir.plusAssign(viewDir)
-                texCoords[i].set(0, lightDir * v.tangents[0])
-                texCoords[i].set(1, lightDir * v.tangents[1])
-                texCoords[i].set(2, lightDir * v.normal)
-                texCoords[i].set(3, 1.0f)
+                texCoords[i][0] = lightDir * v.tangents[0]
+                texCoords[i][1] = lightDir * v.tangents[1]
+                texCoords[i][2] = lightDir * v.normal
+                texCoords[i][3] = 1.0f
             }
         }
 
@@ -3717,18 +3717,18 @@ object Simd_Generic {
                     continue
                 }
                 val v = verts[i].xyz.ToFloatPtr()
-                vertexCache[outVerts + 0].set(0, v[0])
-                vertexCache[outVerts + 0].set(1, v[1])
-                vertexCache[outVerts + 0].set(2, v[2])
-                vertexCache[outVerts + 0].set(3, 1.0f)
+                vertexCache[outVerts + 0][0] = v[0]
+                vertexCache[outVerts + 0][1] = v[1]
+                vertexCache[outVerts + 0][2] = v[2]
+                vertexCache[outVerts + 0][3] = 1.0f
 
                 // R_SetupProjection() builds the projection matrix with a slight crunch
                 // for depth, which keeps this w=0 division from rasterizing right at the
                 // wrap around point and causing depth fighting with the rear caps
-                vertexCache[outVerts + 1].set(0, v[0] - lightOrigin.get(0))
-                vertexCache[outVerts + 1].set(1, v[1] - lightOrigin.get(1))
-                vertexCache[outVerts + 1].set(2, v[2] - lightOrigin.get(2))
-                vertexCache[outVerts + 1].set(3, 0.0f)
+                vertexCache[outVerts + 1][0] = v[0] - lightOrigin[0]
+                vertexCache[outVerts + 1][1] = v[1] - lightOrigin[1]
+                vertexCache[outVerts + 1][2] = v[2] - lightOrigin[2]
+                vertexCache[outVerts + 1][3] = 0.0f
                 vertRemap[i] = outVerts
                 outVerts += 2
             }
@@ -3742,14 +3742,14 @@ object Simd_Generic {
         ): Int {
             for (i in 0 until numVerts) {
                 val v = verts[i].xyz.ToFloatPtr()
-                vertexCache[i * 2 + 0].set(0, v[0])
-                vertexCache[i * 2 + 1].set(0, v[0])
-                vertexCache[i * 2 + 0].set(1, v[1])
-                vertexCache[i * 2 + 1].set(1, v[1])
-                vertexCache[i * 2 + 0].set(2, v[2])
-                vertexCache[i * 2 + 1].set(2, v[2])
-                vertexCache[i * 2 + 0].set(3, 1.0f)
-                vertexCache[i * 2 + 1].set(3, 0.0f)
+                vertexCache[i * 2 + 0][0] = v[0]
+                vertexCache[i * 2 + 1][0] = v[0]
+                vertexCache[i * 2 + 0][1] = v[1]
+                vertexCache[i * 2 + 1][1] = v[1]
+                vertexCache[i * 2 + 0][2] = v[2]
+                vertexCache[i * 2 + 1][2] = v[2]
+                vertexCache[i * 2 + 0][3] = 1.0f
+                vertexCache[i * 2 + 1][3] = 0.0f
             }
             return numVerts * 2
         }

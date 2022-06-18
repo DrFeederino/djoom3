@@ -13,8 +13,9 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
-import java.util.*
-import java.util.stream.Stream
+import kotlin.experimental.or
+import kotlin.experimental.xor
+import kotlin.math.abs
 
 /**
  *
@@ -32,10 +33,10 @@ object tr_stencilshadow {
     //
     const val MAX_SHADOW_INDEXES = 0x18000
     const val MAX_SHADOW_VERTS = 0x18000
-    val clipSilEdges: Array<IntArray?>? = Array(tr_stencilshadow.MAX_CLIP_SIL_EDGES) { IntArray(2) }
+    val clipSilEdges: Array<IntArray> = Array(MAX_CLIP_SIL_EDGES) { IntArray(2) }
 
     //
-    val pointLightFrustums /*[6][6]*/: Array<Array<idPlane>?>? = arrayOf(
+    val pointLightFrustums /*[6][6]*/: Array<Array<idPlane>> = arrayOf(
         arrayOf(
             idPlane(1, 0, 0, 0),
             idPlane(1, 1, 0, 0),
@@ -80,8 +81,7 @@ object tr_stencilshadow {
             idPlane(0, 0, 1, 0)
         )
     )
-    val shadowVerts = Stream.generate { idVec4() }.limit(tr_stencilshadow.MAX_SHADOW_VERTS.toLong())
-        .toArray<idVec4> { _Dummy_.__Array__() }
+    val shadowVerts = idVec4.generateArray(MAX_SHADOW_VERTS)
 
     /*
      ===================
@@ -90,7 +90,7 @@ object tr_stencilshadow {
      Called at definition derivation time
      ===================
      */
-    private val faceCorners /*[6][4]*/: Array<IntArray?>? = arrayOf(
+    private val faceCorners /*[6][4]*/: Array<IntArray> = arrayOf(
         intArrayOf(7, 5, 1, 3),
         intArrayOf(4, 6, 2, 0),
         intArrayOf(6, 7, 3, 2),
@@ -98,7 +98,7 @@ object tr_stencilshadow {
         intArrayOf(6, 4, 5, 7),
         intArrayOf(3, 1, 0, 2)
     )
-    private val faceEdgeAdjacent /*[6][4]*/: Array<IntArray?>? = arrayOf(
+    private val faceEdgeAdjacent /*[6][4]*/: Array<IntArray> = arrayOf(
         intArrayOf(4, 4, 2, 2),
         intArrayOf(7, 7, 1, 1),
         intArrayOf(5, 5, 0, 0),
@@ -118,23 +118,23 @@ object tr_stencilshadow {
     //
     // faceCastsShadow will be 1 if the face is in the projection
     // and facing the apropriate direction
-    var faceCastsShadow: ByteArray?
+    lateinit var faceCastsShadow: ByteArray
 
     //
     // facing will be 0 if forward facing, 1 if backwards facing
     // grabbed with alloca
-    var globalFacing: ByteArray?
+    var globalFacing: ByteArray? = null
     var indexFrustumNumber // which shadow generating side of a light the indexRef is for
             = 0
-    var indexRef = Stream.generate { indexRef_t() }.limit(6).toArray<indexRef_t?> { _Dummy_.__Array__() }
+    var indexRef = Array(6) { indexRef_t() }
     var numClipSilEdges = 0
     var numShadowIndexes = 0
     var numShadowVerts = 0
     var overflowed = false
 
     //
-    var remap: IntArray?
-    var shadowIndexes: IntArray? = IntArray(tr_stencilshadow.MAX_SHADOW_INDEXES)
+    lateinit var remap: IntArray
+    var shadowIndexes: IntArray = IntArray(MAX_SHADOW_INDEXES)
 
     /*
 
@@ -211,23 +211,23 @@ object tr_stencilshadow {
 
 
      */
-    fun TRIANGLE_CULLED(p1: Int, p2: Int, p3: Int, pointCull: IntArray?): Int {
-        return pointCull.get(p1) and pointCull.get(p2) and pointCull.get(p3) and 0x3f
+    fun TRIANGLE_CULLED(p1: Int, p2: Int, p3: Int, pointCull: IntArray): Int {
+        return pointCull[p1] and pointCull[p2] and pointCull[p3] and 0x3f
     }
 
     //
     //#define TRIANGLE_CLIPPED(p1,p2,p3) ( ( pointCull[p1] | pointCull[p2] | pointCull[p3] ) & 0xfc0 )
-    fun TRIANGLE_CLIPPED(p1: Int, p2: Int, p3: Int, pointCull: IntArray?): Boolean {
-        return pointCull.get(p1) and pointCull.get(p2) and pointCull.get(p3) and 0xfc0 != 0xfc0
+    fun TRIANGLE_CLIPPED(p1: Int, p2: Int, p3: Int, pointCull: IntArray): Boolean {
+        return pointCull[p1] and pointCull[p2] and pointCull[p3] and 0xfc0 != 0xfc0
     }
 
     // an edge that is on the plane is NOT culled
-    fun EDGE_CULLED(p1: Int, p2: Int, pointCull: IntArray?): Int {
-        return pointCull.get(p1) xor 0xfc0 and (pointCull.get(p2) xor 0xfc0) and 0xfc0
+    fun EDGE_CULLED(p1: Int, p2: Int, pointCull: IntArray): Int {
+        return pointCull[p1] xor 0xfc0 and (pointCull[p2] xor 0xfc0) and 0xfc0
     }
 
-    fun EDGE_CLIPPED(p1: Int, p2: Int, pointCull: IntArray?): Boolean {
-        return pointCull.get(p1) and pointCull.get(p2) and 0xfc0 != 0xfc0
+    fun EDGE_CLIPPED(p1: Int, p2: Int, pointCull: IntArray): Boolean {
+        return pointCull[p1] and pointCull[p2] and 0xfc0 != 0xfc0
     }
 
     //
@@ -249,8 +249,8 @@ object tr_stencilshadow {
      */
     // a point that is on the plane is NOT culled
     //#define	POINT_CULLED(p1) ( ( pointCull[p1] ^ 0xfc0 ) & 0xfc0 )
-    fun POINT_CULLED(p1: Int, pointCull: IntArray?): Boolean {
-        return pointCull.get(p1) and 0xfc0 != 0xfc0
+    fun POINT_CULLED(p1: Int, pointCull: IntArray): Boolean {
+        return pointCull[p1] and 0xfc0 != 0xfc0
     }
 
     fun PointsOrdered(a: idVec3, b: idVec3): Boolean {
@@ -264,8 +264,8 @@ object tr_stencilshadow {
         // to 8, -8, 8
         // in the very rare case that these might be equal, all that would
         // happen is an oportunity for a tiny rasterization shadow crack
-        i = a.get(0) + a.get(1) * 127 + a.get(2) * 1023
-        j = b.get(0) + b.get(1) * 127 + b.get(2) * 1023
+        i = a[0] + a[1] * 127 + a[2] * 1023
+        j = b[0] + b[1] * 127 + b[2] * 1023
         return i < j
     }
 
@@ -287,22 +287,22 @@ object tr_stencilshadow {
         lg = rearPlane.ToVec4().times(lv)
 
         // outer product
-        mat.get(0).set(0, lg - rearPlane.get(0) * lv.get(0))
-        mat.get(0).set(1, -rearPlane.get(1) * lv.get(0))
-        mat.get(0).set(2, -rearPlane.get(2) * lv.get(0))
-        mat.get(0).set(3, -rearPlane.get(3) * lv.get(0))
-        mat.get(1).set(0, -rearPlane.get(0) * lv.get(1))
-        mat.get(1).set(1, lg - rearPlane.get(1) * lv.get(1))
-        mat.get(1).set(2, -rearPlane.get(2) * lv.get(1))
-        mat.get(1).set(3, -rearPlane.get(3) * lv.get(1))
-        mat.get(2).set(0, -rearPlane.get(0) * lv.get(2))
-        mat.get(2).set(1, -rearPlane.get(1) * lv.get(2))
-        mat.get(2).set(2, lg - rearPlane.get(2) * lv.get(2))
-        mat.get(2).set(3, -rearPlane.get(3) * lv.get(2))
-        mat.get(3).set(0, -rearPlane.get(0) * lv.get(3))
-        mat.get(3).set(1, -rearPlane.get(1) * lv.get(3))
-        mat.get(3).set(2, -rearPlane.get(2) * lv.get(3))
-        mat.get(3).set(3, lg - rearPlane.get(3) * lv.get(3))
+        mat[0][0] = lg - rearPlane[0] * lv[0]
+        mat[0][1] = -rearPlane[1] * lv[0]
+        mat[0][2] = -rearPlane[2] * lv[0]
+        mat[0][3] = -rearPlane[3] * lv[0]
+        mat[1][0] = -rearPlane[0] * lv[1]
+        mat[1][1] = lg - rearPlane[1] * lv[1]
+        mat[1][2] = -rearPlane[2] * lv[1]
+        mat[1][3] = -rearPlane[3] * lv[1]
+        mat[2][0] = -rearPlane[0] * lv[2]
+        mat[2][1] = -rearPlane[1] * lv[2]
+        mat[2][2] = lg - rearPlane[2] * lv[2]
+        mat[2][3] = -rearPlane[3] * lv[2]
+        mat[3][0] = -rearPlane[0] * lv[3]
+        mat[3][1] = -rearPlane[1] * lv[3]
+        mat[3][2] = -rearPlane[2] * lv[3]
+        mat[3][3] = lg - rearPlane[3] * lv[3]
     }
 
     /*
@@ -314,16 +314,16 @@ object tr_stencilshadow {
      ===================
      */
     fun R_ProjectPointsToFarPlane(
-        ent: idRenderEntityLocal?, light: idRenderLightLocal?,
+        ent: idRenderEntityLocal, light: idRenderLightLocal,
         lightPlaneLocal: idPlane,
         firstShadowVert: Int, numShadowVerts: Int
     ) {
         val lv = idVec3()
-        val mat = Stream.generate { idVec4() }.limit(4).toArray<idVec4> { _Dummy_.__Array__() }
+        val mat = idVec4.generateArray(4)
         var i: Int
         var `in`: Int
         tr_main.R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, lv)
-        tr_stencilshadow.R_LightProjectionMatrix(lv, lightPlaneLocal, mat)
+        R_LightProjectionMatrix(lv, lightPlaneLocal, mat)
         if (true) {
             // make a projected copy of the even verts into the odd spots
             `in` = firstShadowVert
@@ -331,22 +331,22 @@ object tr_stencilshadow {
             while (i < numShadowVerts) {
                 var w: Float
                 var oow: Float
-                tr_stencilshadow.shadowVerts[`in` + 0].w = 1f
-                w = tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[3].ToVec3()) + mat[3].get(3)
+                shadowVerts[`in` + 0].w = 1f
+                w = shadowVerts[`in`].ToVec3().times(mat[3].ToVec3()) + mat[3][3]
                 if (w == 0f) {
-                    tr_stencilshadow.shadowVerts[`in` + 1] = tr_stencilshadow.shadowVerts[`in` + 0]
+                    shadowVerts[`in` + 1] = shadowVerts[`in` + 0]
                     i += 2
                     `in` += 2
                     continue
                 }
                 oow = 1.0f / w
-                tr_stencilshadow.shadowVerts[`in` + 1].x =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[0].ToVec3()) + mat[0].get(3)) * oow
-                tr_stencilshadow.shadowVerts[`in` + 1].y =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[1].ToVec3()) + mat[1].get(3)) * oow
-                tr_stencilshadow.shadowVerts[`in` + 1].z =
-                    (tr_stencilshadow.shadowVerts[`in`].ToVec3().times(mat[2].ToVec3()) + mat[2].get(3)) * oow
-                tr_stencilshadow.shadowVerts[`in` + 1].w = 1f
+                shadowVerts[`in` + 1].x =
+                    (shadowVerts[`in`].ToVec3().times(mat[0].ToVec3()) + mat[0][3]) * oow
+                shadowVerts[`in` + 1].y =
+                    (shadowVerts[`in`].ToVec3().times(mat[1].ToVec3()) + mat[1][3]) * oow
+                shadowVerts[`in` + 1].z =
+                    (shadowVerts[`in`].ToVec3().times(mat[2].ToVec3()) + mat[2][3]) * oow
+                shadowVerts[`in` + 1].w = 1f
                 i += 2
                 `in` += 2
             }
@@ -378,11 +378,11 @@ object tr_stencilshadow {
      multiple times near the epsilon.
      =============
      */
-    fun R_ChopWinding(clipTris: Array<tr_stencilshadow.clipTri_t?>? /*[2]*/, inNum: Int, plane: idPlane): Int {
-        val `in`: tr_stencilshadow.clipTri_t?
-        val out: tr_stencilshadow.clipTri_t?
-        val dists = FloatArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
-        val sides = IntArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
+    fun R_ChopWinding(clipTris: Array<clipTri_t> /*[2]*/, inNum: Int, plane: idPlane): Int {
+        val `in`: clipTri_t?
+        val out: clipTri_t?
+        val dists = FloatArray(MAX_CLIPPED_POINTS)
+        val sides = IntArray(MAX_CLIPPED_POINTS)
         val counts = IntArray(3)
         var dot: Float
         var i: Int
@@ -390,8 +390,8 @@ object tr_stencilshadow {
         val p1 = idVec3()
         val p2 = idVec3()
         val mid = idVec3()
-        `in` = clipTris.get(inNum)
-        out = clipTris.get(inNum xor 1)
+        `in` = clipTris[inNum]
+        out = clipTris[inNum xor 1]
         counts[2] = 0
         counts[1] = counts[2]
         counts[0] = counts[1]
@@ -401,9 +401,9 @@ object tr_stencilshadow {
         while (i < `in`.numVerts) {
             dot = plane.Distance(`in`.verts[i])
             dists[i] = dot
-            if (dot < -tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            if (dot < -LIGHT_CLIP_EPSILON) {
                 sides[i] = Plane.SIDE_BACK
-            } else if (dot > tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            } else if (dot > LIGHT_CLIP_EPSILON) {
                 sides[i] = Plane.SIDE_FRONT
             } else {
                 sides[i] = Plane.SIDE_ON
@@ -447,7 +447,7 @@ object tr_stencilshadow {
                 dot = dists[i] / (dists[i] - dists[i + 1])
                 j = 0
                 while (j < 3) {
-                    mid.set(j, p1.get(j) + dot * (p2.get(j) - p1.get(j)))
+                    mid[j] = p1[j] + dot * (p2[j] - p1[j])
                     j++
                 }
                 out.verts[out.numVerts].set(mid)
@@ -477,12 +477,12 @@ object tr_stencilshadow {
         b: idVec3,
         c: idVec3,
         planeBits: Int,
-        frustum: Array<idPlane>? /*[6] */
+        frustum: Array<idPlane> /*[6] */
     ): Boolean {
         var i: Int
         val base: Int
-        val pingPong = arrayOf<tr_stencilshadow.clipTri_t?>(tr_stencilshadow.clipTri_t(), tr_stencilshadow.clipTri_t())
-        val ct: tr_stencilshadow.clipTri_t?
+        val pingPong = arrayOf<clipTri_t>(clipTri_t(), clipTri_t())
+        val ct: clipTri_t?
         var p: Int
         pingPong[0].numVerts = 3
         pingPong[0].edgeFlags[0] = 0
@@ -495,7 +495,7 @@ object tr_stencilshadow {
         i = 0
         while (i < 6) {
             if (planeBits and (1 shl i) != 0) {
-                p = tr_stencilshadow.R_ChopWinding(pingPong, p, frustum.get(i))
+                p = R_ChopWinding(pingPong, p, frustum[i])
                 if (pingPong[p].numVerts < 1) {
                     return false
                 }
@@ -505,26 +505,26 @@ object tr_stencilshadow {
         ct = pingPong[p]
 
         // copy the clipped points out to shadowVerts
-        if (tr_stencilshadow.numShadowVerts + ct.numVerts * 2 > tr_stencilshadow.MAX_SHADOW_VERTS) {
-            tr_stencilshadow.overflowed = true
+        if (numShadowVerts + ct.numVerts * 2 > MAX_SHADOW_VERTS) {
+            overflowed = true
             return false
         }
-        base = tr_stencilshadow.numShadowVerts
+        base = numShadowVerts
         i = 0
         while (i < ct.numVerts) {
-            tr_stencilshadow.shadowVerts[base + i * 2].set(ct.verts[i])
+            shadowVerts[base + i * 2].set(ct.verts[i])
             i++
         }
-        tr_stencilshadow.numShadowVerts += ct.numVerts * 2
-        if (tr_stencilshadow.numShadowIndexes + 3 * (ct.numVerts - 2) > tr_stencilshadow.MAX_SHADOW_INDEXES) {
-            tr_stencilshadow.overflowed = true
+        numShadowVerts += ct.numVerts * 2
+        if (numShadowIndexes + 3 * (ct.numVerts - 2) > MAX_SHADOW_INDEXES) {
+            overflowed = true
             return false
         }
         i = 2
         while (i < ct.numVerts) {
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = base + i * 2
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = base + (i - 1) * 2
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = base
+            shadowIndexes[numShadowIndexes++] = base + i * 2
+            shadowIndexes[numShadowIndexes++] = base + (i - 1) * 2
+            shadowIndexes[numShadowIndexes++] = base
             i++
         }
 
@@ -534,16 +534,16 @@ object tr_stencilshadow {
         i = 0
         while (i < ct.numVerts) {
             if (ct.edgeFlags[i] != 0) {
-                if (tr_stencilshadow.numClipSilEdges == tr_stencilshadow.MAX_CLIP_SIL_EDGES) {
+                if (numClipSilEdges == MAX_CLIP_SIL_EDGES) {
                     break
                 }
-                tr_stencilshadow.clipSilEdges[tr_stencilshadow.numClipSilEdges][0] = base + i * 2
+                clipSilEdges[numClipSilEdges][0] = base + i * 2
                 if (i == ct.numVerts - 1) {
-                    tr_stencilshadow.clipSilEdges[tr_stencilshadow.numClipSilEdges][1] = base
+                    clipSilEdges[numClipSilEdges][1] = base
                 } else {
-                    tr_stencilshadow.clipSilEdges[tr_stencilshadow.numClipSilEdges][1] = base + (i + 1) * 2
+                    clipSilEdges[numClipSilEdges][1] = base + (i + 1) * 2
                 }
-                tr_stencilshadow.numClipSilEdges++
+                numClipSilEdges++
             }
             i++
         }
@@ -565,11 +565,11 @@ object tr_stencilshadow {
     fun R_ClipLineToLight(
         a: idVec3,
         b: idVec3,
-        frustum: Array<idPlane>? /*[4]*/,
+        frustum: Array<idPlane> /*[4]*/,
         p1: idVec3,
         p2: idVec3
     ): Boolean {
-        var clip: FloatArray?
+        var clip: FloatArray
         var j: Int
         var d1: Float
         var d2: Float
@@ -580,20 +580,20 @@ object tr_stencilshadow {
         // clip it
         j = 0
         while (j < 6) {
-            d1 = frustum.get(j).Distance(p1)
-            d2 = frustum.get(j).Distance(p2)
+            d1 = frustum[j].Distance(p1)
+            d2 = frustum[j].Distance(p2)
 
             // if both on or in front, not clipped to this plane
-            if (d1 > -tr_stencilshadow.LIGHT_CLIP_EPSILON && d2 > -tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            if (d1 > -LIGHT_CLIP_EPSILON && d2 > -LIGHT_CLIP_EPSILON) {
                 j++
                 continue
             }
 
             // if one is behind and the other isn't clearly in front, the edge is clipped off
-            if (d1 <= -tr_stencilshadow.LIGHT_CLIP_EPSILON && d2 < tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            if (d1 <= -LIGHT_CLIP_EPSILON && d2 < LIGHT_CLIP_EPSILON) {
                 return false
             }
-            if (d2 <= -tr_stencilshadow.LIGHT_CLIP_EPSILON && d1 < tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            if (d2 <= -LIGHT_CLIP_EPSILON && d1 < LIGHT_CLIP_EPSILON) {
                 return false
             }
 
@@ -610,9 +610,9 @@ object tr_stencilshadow {
 //		}
 //}
             f = d1 / (d1 - d2)
-            clip[0] = p1.get(0) + f * (p2.get(0) - p1.get(0))
-            clip[1] = p1.get(1) + f * (p2.get(1) - p1.get(1))
-            clip[2] = p1.get(2) + f * (p2.get(2) - p1.get(2))
+            clip[0] = p1[0] + f * (p2[0] - p1[0])
+            clip[1] = p1[1] + f * (p2[1] - p1[1])
+            clip[2] = p1[2] + f * (p2[2] - p1[2])
             j++
         }
         return true // retain a fragment
@@ -636,34 +636,34 @@ object tr_stencilshadow {
         var i: Int
 
         // don't allow it to overflow
-        if (tr_stencilshadow.numShadowIndexes + tr_stencilshadow.numClipSilEdges * 6 > tr_stencilshadow.MAX_SHADOW_INDEXES) {
-            tr_stencilshadow.overflowed = true
+        if (numShadowIndexes + numClipSilEdges * 6 > MAX_SHADOW_INDEXES) {
+            overflowed = true
             return
         }
         i = 0
-        while (i < tr_stencilshadow.numClipSilEdges) {
-            v1 = tr_stencilshadow.clipSilEdges[i][0]
-            v2 = tr_stencilshadow.clipSilEdges[i][1]
+        while (i < numClipSilEdges) {
+            v1 = clipSilEdges[i][0]
+            v2 = clipSilEdges[i][1]
             v1_back = v1 + 1
             v2_back = v2 + 1
-            if (tr_stencilshadow.PointsOrdered(
-                    tr_stencilshadow.shadowVerts[v1].ToVec3(),
-                    tr_stencilshadow.shadowVerts[v2].ToVec3()
+            if (PointsOrdered(
+                    shadowVerts[v1].ToVec3(),
+                    shadowVerts[v2].ToVec3()
                 )
             ) {
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1_back
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2_back
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1_back
+                shadowIndexes[numShadowIndexes++] = v1
+                shadowIndexes[numShadowIndexes++] = v2
+                shadowIndexes[numShadowIndexes++] = v1_back
+                shadowIndexes[numShadowIndexes++] = v2
+                shadowIndexes[numShadowIndexes++] = v2_back
+                shadowIndexes[numShadowIndexes++] = v1_back
             } else {
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2_back
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2_back
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1_back
+                shadowIndexes[numShadowIndexes++] = v1
+                shadowIndexes[numShadowIndexes++] = v2
+                shadowIndexes[numShadowIndexes++] = v2_back
+                shadowIndexes[numShadowIndexes++] = v1
+                shadowIndexes[numShadowIndexes++] = v2_back
+                shadowIndexes[numShadowIndexes++] = v1_back
             }
             i++
         }
@@ -677,7 +677,7 @@ object tr_stencilshadow {
      for each silhouette edge in the light
      =================
      */
-    fun R_AddSilEdges(tri: srfTriangles_s?, pointCull: IntArray?, frustum: Array<idPlane>? /*[6]*/) {
+    fun R_AddSilEdges(tri: srfTriangles_s, pointCull: IntArray, frustum: Array<idPlane> /*[6]*/) {
         var v1: Int
         var v2: Int
         var i: Int
@@ -699,7 +699,7 @@ object tr_stencilshadow {
             // not just that it has the correct facing direction
             // This will cause edges that are exactly on the frustum plane
             // to be considered sil edges if the face inside casts a shadow.
-            if (0 == tr_stencilshadow.faceCastsShadow[sil.p1] xor tr_stencilshadow.faceCastsShadow[sil.p2]) {
+            if (0.toByte() == faceCastsShadow[sil.p1] xor faceCastsShadow[sil.p2]) {
                 i++
                 continue
             }
@@ -708,40 +708,40 @@ object tr_stencilshadow {
             // a frustum plane, don't add it at all.  This can still
             // happen even if the face is visible and casting a shadow
             // if it is partially clipped
-            if (tr_stencilshadow.EDGE_CULLED(sil.v1, sil.v2, pointCull) != 0) {
+            if (EDGE_CULLED(sil.v1, sil.v2, pointCull) != 0) {
                 i++
                 continue
             }
 
             // see if the edge needs to be clipped
-            if (tr_stencilshadow.EDGE_CLIPPED(sil.v1, sil.v2, pointCull)) {
-                if (tr_stencilshadow.numShadowVerts + 4 > tr_stencilshadow.MAX_SHADOW_VERTS) {
-                    tr_stencilshadow.overflowed = true
+            if (EDGE_CLIPPED(sil.v1, sil.v2, pointCull)) {
+                if (numShadowVerts + 4 > MAX_SHADOW_VERTS) {
+                    overflowed = true
                     return
                 }
-                v1 = tr_stencilshadow.numShadowVerts
+                v1 = numShadowVerts
                 v2 = v1 + 2
-                if (!tr_stencilshadow.R_ClipLineToLight(
+                if (!R_ClipLineToLight(
                         tri.verts[sil.v1].xyz, tri.verts[sil.v2].xyz,
-                        frustum, tr_stencilshadow.shadowVerts[v1].ToVec3(), tr_stencilshadow.shadowVerts[v2].ToVec3()
+                        frustum, shadowVerts[v1].ToVec3(), shadowVerts[v2].ToVec3()
                     )
                 ) {
                     i++
                     continue  // clipped away
                 }
-                tr_stencilshadow.numShadowVerts += 4
+                numShadowVerts += 4
             } else {
                 // use the entire edge
-                v1 = tr_stencilshadow.remap[sil.v1]
-                v2 = tr_stencilshadow.remap[sil.v2]
+                v1 = remap[sil.v1]
+                v2 = remap[sil.v2]
                 if (v1 < 0 || v2 < 0) {
                     Common.common.Error("R_AddSilEdges: bad remap[]")
                 }
             }
 
             // don't overflow
-            if (tr_stencilshadow.numShadowIndexes + 6 > tr_stencilshadow.MAX_SHADOW_INDEXES) {
-                tr_stencilshadow.overflowed = true
+            if (numShadowIndexes + 6 > MAX_SHADOW_INDEXES) {
+                overflowed = true
                 return
             }
 
@@ -749,45 +749,45 @@ object tr_stencilshadow {
             // consistantly between any two points, no matter which order they are specified.
             // If this wasn't done, slight rasterization cracks would show in the shadow
             // volume when two sil edges were exactly coincident
-            if (tr_stencilshadow.faceCastsShadow[sil.p2] != 0) {
-                if (tr_stencilshadow.PointsOrdered(
-                        tr_stencilshadow.shadowVerts[v1].ToVec3(),
-                        tr_stencilshadow.shadowVerts[v2].ToVec3()
+            if (faceCastsShadow[sil.p2].toInt() != 0) {
+                if (PointsOrdered(
+                        shadowVerts[v1].ToVec3(),
+                        shadowVerts[v2].ToVec3()
                     )
                 ) {
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
                 } else {
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
                 }
             } else {
-                if (tr_stencilshadow.PointsOrdered(
-                        tr_stencilshadow.shadowVerts[v1].ToVec3(),
-                        tr_stencilshadow.shadowVerts[v2].ToVec3()
+                if (PointsOrdered(
+                        shadowVerts[v1].ToVec3(),
+                        shadowVerts[v2].ToVec3()
                     )
                 ) {
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
                 } else {
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v2 + 1
-                    tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = v1 + 1
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v2
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v1
+                    shadowIndexes[numShadowIndexes++] = v2 + 1
+                    shadowIndexes[numShadowIndexes++] = v1 + 1
                 }
             }
             i++
@@ -801,14 +801,14 @@ object tr_stencilshadow {
      Also inits the remap[] array to all -1
      ================
      */
-    fun R_CalcPointCull(tri: srfTriangles_s?, frustum: Array<idPlane>? /*[6]*/, pointCull: IntArray?) {
+    fun R_CalcPointCull(tri: srfTriangles_s, frustum: Array<idPlane> /*[6]*/, pointCull: IntArray) {
         var i: Int
         var frontBits: Int
         val planeSide: FloatArray
         val side1: ByteArray
         val side2: ByteArray
         Simd.SIMDProcessor.Memset(
-            tr_stencilshadow.remap,
+            remap,
             -1,
             tri.numVerts /* sizeof( remap[0] )*/
         ) //TODO:create template functions that call the standard functions, that way we just have to replace the template body.
@@ -817,7 +817,7 @@ object tr_stencilshadow {
         while (i < 6) {
 
             // get front bits for the whole surface
-            if (tri.bounds.PlaneDistance(frustum.get(i)) >= tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+            if (tri.bounds.PlaneDistance(frustum[i]) >= LIGHT_CLIP_EPSILON) {
                 frontBits = frontBits or (1 shl i + 6)
             }
             i++
@@ -826,7 +826,7 @@ object tr_stencilshadow {
         // initialize point cull
         i = 0
         while (i < tri.numVerts) {
-            pointCull.get(i) = frontBits
+            pointCull[i] = frontBits
             i++
         }
 
@@ -843,14 +843,14 @@ object tr_stencilshadow {
                 i++
                 continue
             }
-            Simd.SIMDProcessor.Dot(planeSide, frustum.get(i), tri.verts, tri.numVerts)
-            Simd.SIMDProcessor.CmpLT(side1, i.toByte(), planeSide, tr_stencilshadow.LIGHT_CLIP_EPSILON, tri.numVerts)
-            Simd.SIMDProcessor.CmpGT(side2, i.toByte(), planeSide, -tr_stencilshadow.LIGHT_CLIP_EPSILON, tri.numVerts)
+            Simd.SIMDProcessor.Dot(planeSide, frustum[i], tri.verts.toTypedArray(), tri.numVerts)
+            Simd.SIMDProcessor.CmpLT(side1, i.toByte(), planeSide, LIGHT_CLIP_EPSILON, tri.numVerts)
+            Simd.SIMDProcessor.CmpGT(side2, i.toByte(), planeSide, -LIGHT_CLIP_EPSILON, tri.numVerts)
             i++
         }
         i = 0
         while (i < tri.numVerts) {
-            pointCull.get(i) = pointCull.get(i) or (side1[i] or (side2[i] shl 6))
+            pointCull[i] = pointCull[i] or (side1[i] or ((side2[i].toInt() shl 6).toByte())).toInt()
             i++
         }
     }
@@ -870,11 +870,11 @@ object tr_stencilshadow {
      =================
      */
     fun R_CreateShadowVolumeInFrustum(
-        ent: idRenderEntityLocal?,
-        tri: srfTriangles_s?,
-        light: idRenderLightLocal?,
+        ent: idRenderEntityLocal,
+        tri: srfTriangles_s,
+        light: idRenderLightLocal,
         lightOrigin: idVec3,
-        frustum: Array<idPlane>? /*[6]*/,
+        frustum: Array<idPlane> /*[6]*/,
         farPlane: idPlane,
         makeClippedPlanes: Boolean
     ) {
@@ -889,25 +889,25 @@ object tr_stencilshadow {
 
         // test the vertexes for inside the light frustum, which will allow
         // us to completely cull away some triangles from consideration.
-        tr_stencilshadow.R_CalcPointCull(tri, frustum, pointCull)
+        R_CalcPointCull(tri, frustum, pointCull)
 
         // this may not be the first frustum added to the volume
-        firstShadowIndex = tr_stencilshadow.numShadowIndexes
-        firstShadowVert = tr_stencilshadow.numShadowVerts
+        firstShadowIndex = numShadowIndexes
+        firstShadowVert = numShadowVerts
 
         // decide which triangles front shadow volumes, clipping as needed
-        tr_stencilshadow.numClipSilEdges = 0
+        numClipSilEdges = 0
         numTris = tri.numIndexes / 3
         i = 0
         while (i < numTris) {
             var i1: Int
             var i2: Int
             var i3: Int
-            tr_stencilshadow.faceCastsShadow[i] = 0 // until shown otherwise
+            faceCastsShadow[i] = 0 // until shown otherwise
 
             // if it isn't facing the right way, don't add it
             // to the shadow volume
-            if (tr_stencilshadow.globalFacing[i] != 0) {
+            if (globalFacing!![i].toInt() != 0) {
                 i++
                 continue
             }
@@ -917,7 +917,7 @@ object tr_stencilshadow {
 
             // if all the verts are off one side of the frustum,
             // don't add any of them
-            if (tr_stencilshadow.TRIANGLE_CULLED(i1, i2, i3, pointCull) != 0) {
+            if (TRIANGLE_CULLED(i1, i2, i3, pointCull) != 0) {
                 i++
                 continue
             }
@@ -927,58 +927,58 @@ object tr_stencilshadow {
             // we need to get the original verts even from clipped triangles
             // so the edges reference correctly, because an edge may be unclipped
             // even when a triangle is clipped.
-            if (tr_stencilshadow.numShadowVerts + 6 > tr_stencilshadow.MAX_SHADOW_VERTS) {
-                tr_stencilshadow.overflowed = true
+            if (numShadowVerts + 6 > MAX_SHADOW_VERTS) {
+                overflowed = true
                 return
             }
-            if (!tr_stencilshadow.POINT_CULLED(i1, pointCull) && tr_stencilshadow.remap[i1] == -1) {
-                tr_stencilshadow.remap[i1] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i1].xyz)
-                tr_stencilshadow.numShadowVerts += 2
+            if (!POINT_CULLED(i1, pointCull) && remap[i1] == -1) {
+                remap[i1] = numShadowVerts
+                shadowVerts[numShadowVerts].set(tri.verts[i1].xyz)
+                numShadowVerts += 2
             }
-            if (!tr_stencilshadow.POINT_CULLED(i2, pointCull) && tr_stencilshadow.remap[i2] == -1) {
-                tr_stencilshadow.remap[i2] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i2].xyz)
-                tr_stencilshadow.numShadowVerts += 2
+            if (!POINT_CULLED(i2, pointCull) && remap[i2] == -1) {
+                remap[i2] = numShadowVerts
+                shadowVerts[numShadowVerts].set(tri.verts[i2].xyz)
+                numShadowVerts += 2
             }
-            if (!tr_stencilshadow.POINT_CULLED(i3, pointCull) && tr_stencilshadow.remap[i3] == -1) {
-                tr_stencilshadow.remap[i3] = tr_stencilshadow.numShadowVerts
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts].set(tri.verts[i3].xyz)
-                tr_stencilshadow.numShadowVerts += 2
+            if (!POINT_CULLED(i3, pointCull) && remap[i3] == -1) {
+                remap[i3] = numShadowVerts
+                shadowVerts[numShadowVerts].set(tri.verts[i3].xyz)
+                numShadowVerts += 2
             }
 
             // clip the triangle if any points are on the negative sides
-            if (tr_stencilshadow.TRIANGLE_CLIPPED(i1, i2, i3, pointCull)) {
+            if (TRIANGLE_CLIPPED(i1, i2, i3, pointCull)) {
                 cullBits = pointCull[i1] xor 0xfc0 or (pointCull[i2] xor 0xfc0) or (pointCull[i3] xor 0xfc0) shr 6
                 // this will also define clip edges that will become
                 // silhouette planes
-                if (tr_stencilshadow.R_ClipTriangleToLight(
+                if (R_ClipTriangleToLight(
                         tri.verts[i1].xyz, tri.verts[i2].xyz,
                         tri.verts[i3].xyz, cullBits, frustum
                     )
                 ) {
-                    tr_stencilshadow.faceCastsShadow[i] = 1
+                    faceCastsShadow[i] = 1
                 }
             } else {
                 // instead of overflowing or drawing a streamer shadow, don't draw a shadow at all
-                if (tr_stencilshadow.numShadowIndexes + 3 > tr_stencilshadow.MAX_SHADOW_INDEXES) {
-                    tr_stencilshadow.overflowed = true
+                if (numShadowIndexes + 3 > MAX_SHADOW_INDEXES) {
+                    overflowed = true
                     return
                 }
-                if (tr_stencilshadow.remap[i1] == -1 || tr_stencilshadow.remap[i2] == -1 || tr_stencilshadow.remap[i3] == -1) {
+                if (remap[i1] == -1 || remap[i2] == -1 || remap[i3] == -1) {
                     Common.common.Error("R_CreateShadowVolumeInFrustum: bad remap[]")
                 }
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = tr_stencilshadow.remap[i3]
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = tr_stencilshadow.remap[i2]
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes++] = tr_stencilshadow.remap[i1]
-                tr_stencilshadow.faceCastsShadow[i] = 1
+                shadowIndexes[numShadowIndexes++] = remap[i3]
+                shadowIndexes[numShadowIndexes++] = remap[i2]
+                shadowIndexes[numShadowIndexes++] = remap[i1]
+                faceCastsShadow[i] = 1
             }
             i++
         }
 
         // add indexes for the back caps, which will just be reversals of the
         // front caps using the back vertexes
-        numCapIndexes = tr_stencilshadow.numShadowIndexes - firstShadowIndex
+        numCapIndexes = numShadowIndexes - firstShadowIndex
 
         // if no faces have been defined for the shadow volume,
         // there won't be anything at all
@@ -989,40 +989,40 @@ object tr_stencilshadow {
         //--------------- off-line processing ------------------
         // if we are running from dmap, perform the (very) expensive shadow optimizations
         // to remove internal sil edges and optimize the caps
-        if (tr_stencilshadow.callOptimizer) {
+        if (callOptimizer) {
             val opt: optimizedShadow_t?
 
             // project all of the vertexes to the shadow plane, generating
             // an equal number of back vertexes
 //		R_ProjectPointsToFarPlane( ent, light, farPlane, firstShadowVert, numShadowVerts );
             opt = shadowopt3.SuperOptimizeOccluders(
-                tr_stencilshadow.shadowVerts,
-                Arrays.copyOf(tr_stencilshadow.shadowIndexes, firstShadowIndex),
+                shadowVerts,
+                shadowIndexes.copyOf(firstShadowIndex),
                 numCapIndexes,
                 farPlane,
                 lightOrigin
             )
 
             // pull off the non-optimized data
-            tr_stencilshadow.numShadowIndexes = firstShadowIndex
-            tr_stencilshadow.numShadowVerts = firstShadowVert
+            numShadowIndexes = firstShadowIndex
+            numShadowVerts = firstShadowVert
 
             // add the optimized data
-            if (tr_stencilshadow.numShadowIndexes + opt.totalIndexes > tr_stencilshadow.MAX_SHADOW_INDEXES
-                || tr_stencilshadow.numShadowVerts + opt.numVerts > tr_stencilshadow.MAX_SHADOW_VERTS
+            if (numShadowIndexes + opt.totalIndexes > MAX_SHADOW_INDEXES
+                || numShadowVerts + opt.numVerts > MAX_SHADOW_VERTS
             ) {
-                tr_stencilshadow.overflowed = true
+                overflowed = true
                 Common.common.Printf("WARNING: overflowed MAX_SHADOW tables, shadow discarded\n")
-                opt.verts = null
-                opt.indexes = null //Mem_Free(opt.indexes);
+                opt.verts.clear()
+                opt.indexes.clear() //Mem_Free(opt.indexes);
                 return
             }
             i = 0
             while (i < opt.numVerts) {
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(0, opt.verts[i].get(0))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(1, opt.verts[i].get(1))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(2, opt.verts[i].get(2))
-                tr_stencilshadow.shadowVerts[tr_stencilshadow.numShadowVerts + i].set(3, 1f)
+                shadowVerts[numShadowVerts + i][0] = opt.verts[i][0]
+                shadowVerts[numShadowVerts + i][1] = opt.verts[i][1]
+                shadowVerts[numShadowVerts + i][2] = opt.verts[i][2]
+                shadowVerts[numShadowVerts + i][3] = 1f
                 i++
             }
             i = 0
@@ -1031,23 +1031,23 @@ object tr_stencilshadow {
                 if (index < 0 || index > opt.numVerts) {
                     Common.common.Error("optimized shadow index out of range")
                 }
-                tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes + i] =
-                    index + tr_stencilshadow.numShadowVerts
+                shadowIndexes[numShadowIndexes + i] =
+                    index + numShadowVerts
                 i++
             }
-            tr_stencilshadow.numShadowVerts += opt.numVerts
-            tr_stencilshadow.numShadowIndexes += opt.totalIndexes
+            numShadowVerts += opt.numVerts
+            numShadowIndexes += opt.totalIndexes
 
             // note the index distribution so we can sort all the caps after all the sils
-            tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].frontCapStart = firstShadowIndex
-            tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].rearCapStart =
+            indexRef[indexFrustumNumber].frontCapStart = firstShadowIndex
+            indexRef[indexFrustumNumber].rearCapStart =
                 firstShadowIndex + opt.numFrontCapIndexes
-            tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].silStart =
+            indexRef[indexFrustumNumber].silStart =
                 firstShadowIndex + opt.numFrontCapIndexes + opt.numRearCapIndexes
-            tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].end = tr_stencilshadow.numShadowIndexes
-            tr_stencilshadow.indexFrustumNumber++
-            opt.verts = null //Mem_Free(opt.verts);
-            opt.indexes = null //Mem_Free(opt.indexes);
+            indexRef[indexFrustumNumber].end = numShadowIndexes
+            indexFrustumNumber++
+            opt.verts.clear() //Mem_Free(opt.verts);
+            opt.indexes.clear() //Mem_Free(opt.indexes);
             return
         }
 
@@ -1055,69 +1055,67 @@ object tr_stencilshadow {
         // the dangling edge "face" is never considered to cast a shadow,
         // so any face with dangling edges that casts a shadow will have
         // it's dangling sil edge trigger a sil plane
-        tr_stencilshadow.faceCastsShadow[numTris] = 0
+        faceCastsShadow[numTris] = 0
 
         // instead of overflowing or drawing a streamer shadow, don't draw a shadow at all
         // if we ran out of space
-        if (tr_stencilshadow.numShadowIndexes + numCapIndexes > tr_stencilshadow.MAX_SHADOW_INDEXES) {
-            tr_stencilshadow.overflowed = true
+        if (numShadowIndexes + numCapIndexes > MAX_SHADOW_INDEXES) {
+            overflowed = true
             return
         }
         i = 0
         while (i < numCapIndexes) {
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes + i + 0] =
-                tr_stencilshadow.shadowIndexes[firstShadowIndex + i + 2] + 1
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes + i + 1] =
-                tr_stencilshadow.shadowIndexes[firstShadowIndex + i + 1] + 1
-            tr_stencilshadow.shadowIndexes[tr_stencilshadow.numShadowIndexes + i + 2] =
-                tr_stencilshadow.shadowIndexes[firstShadowIndex + i + 0] + 1
+            shadowIndexes[numShadowIndexes + i + 0] =
+                shadowIndexes[firstShadowIndex + i + 2] + 1
+            shadowIndexes[numShadowIndexes + i + 1] =
+                shadowIndexes[firstShadowIndex + i + 1] + 1
+            shadowIndexes[numShadowIndexes + i + 2] =
+                shadowIndexes[firstShadowIndex + i + 0] + 1
             i += 3
         }
-        tr_stencilshadow.numShadowIndexes += numCapIndexes
-        tr_stencilshadow.c_caps += numCapIndexes * 2
-        val preSilIndexes = tr_stencilshadow.numShadowIndexes
+        numShadowIndexes += numCapIndexes
+        c_caps += numCapIndexes * 2
+        val preSilIndexes = numShadowIndexes
 
         // if any triangles were clipped, we will have a list of edges
         // on the frustum which must now become sil edges
         if (makeClippedPlanes) {
-            tr_stencilshadow.R_AddClipSilEdges()
+            R_AddClipSilEdges()
         }
 
         // any edges that are a transition between a shadowing and
         // non-shadowing triangle will cast a silhouette edge
-        tr_stencilshadow.R_AddSilEdges(tri, pointCull, frustum)
-        tr_stencilshadow.c_sils += tr_stencilshadow.numShadowIndexes - preSilIndexes
+        R_AddSilEdges(tri, pointCull, frustum)
+        c_sils += numShadowIndexes - preSilIndexes
 
         // project all of the vertexes to the shadow plane, generating
         // an equal number of back vertexes
-        tr_stencilshadow.R_ProjectPointsToFarPlane(
+        R_ProjectPointsToFarPlane(
             ent,
             light,
             farPlane,
             firstShadowVert,
-            tr_stencilshadow.numShadowVerts
+            numShadowVerts
         )
 
         // note the index distribution so we can sort all the caps after all the sils
-        tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].frontCapStart = firstShadowIndex
-        tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].rearCapStart = firstShadowIndex + numCapIndexes
-        tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].silStart = preSilIndexes
-        tr_stencilshadow.indexRef[tr_stencilshadow.indexFrustumNumber].end = tr_stencilshadow.numShadowIndexes
-        tr_stencilshadow.indexFrustumNumber++
+        indexRef[indexFrustumNumber].frontCapStart = firstShadowIndex
+        indexRef[indexFrustumNumber].rearCapStart = firstShadowIndex + numCapIndexes
+        indexRef[indexFrustumNumber].silStart = preSilIndexes
+        indexRef[indexFrustumNumber].end = numShadowIndexes
+        indexFrustumNumber++
     }
 
-    fun R_MakeShadowFrustums(light: idRenderLightLocal?) {
+    fun R_MakeShadowFrustums(light: idRenderLightLocal) {
         var i: Int
         var j: Int
         if (light.parms.pointLight) {
 
             // exact projection,taking into account asymetric frustums when
             // globalLightOrigin isn't centered
-            val centerOutside = Math.abs(light.parms.lightCenter.get(0)) > light.parms.lightRadius.get(0) || Math.abs(
-                light.parms.lightCenter.get(1)
-            ) > light.parms.lightRadius.get(1) || Math.abs(light.parms.lightCenter.get(2)) > light.parms.lightRadius.get(
-                2
-            )
+            val centerOutside = abs(light.parms.lightCenter[0]) > light.parms.lightRadius[0] || abs(
+                light.parms.lightCenter[1]
+            ) > light.parms.lightRadius[1] || abs(light.parms.lightCenter[2]) > light.parms.lightRadius[2]
 
             // if the light center of projection is outside the light bounds,
             // we will need to build the planes a little differently
@@ -1130,23 +1128,23 @@ object tr_stencilshadow {
                 j = 0
                 while (j < 3) {
                     if (i and (1 shl j) != 0) {
-                        temp.set(j, light.parms.lightRadius.get(j))
+                        temp[j] = light.parms.lightRadius[j]
                     } else {
-                        temp.set(j, -light.parms.lightRadius.get(j))
+                        temp[j] = -light.parms.lightRadius[j]
                     }
                     j++
                 }
 
                 // transform to global space
-                corners[i].set(light.parms.origin.oPlus(light.parms.axis.times(temp)))
+                corners[i].set(light.parms.origin.plus(light.parms.axis.times(temp)))
                 i++
             }
             light.numShadowFrustums = 0
             for (side in 0..5) {
                 val frust = light.shadowFrustums[light.numShadowFrustums]
-                val p1 = corners[tr_stencilshadow.faceCorners[side][0]]
-                val p2 = corners[tr_stencilshadow.faceCorners[side][1]]
-                val p3 = corners[tr_stencilshadow.faceCorners[side][2]]
+                val p1 = corners[faceCorners[side][0]]
+                val p2 = corners[faceCorners[side][1]]
+                val p3 = corners[faceCorners[side][2]]
                 val backPlane = idPlane()
 
                 // plane will have positive side inward
@@ -1163,15 +1161,15 @@ object tr_stencilshadow {
 
                 // make planes with positive side facing inwards in light local coordinates
                 for (edge in 0..3) {
-                    val p4 = corners[tr_stencilshadow.faceCorners[side][edge]]
-                    val p5 = corners[tr_stencilshadow.faceCorners[side][edge + 1 and 3]]
+                    val p4 = corners[faceCorners[side][edge]]
+                    val p5 = corners[faceCorners[side][edge + 1 and 3]]
 
                     // create a plane that goes through the center of projection
                     frust.planes[edge].FromPoints(p5, p4, light.globalLightOrigin)
 
                     // see if we should use an adjacent plane instead
                     if (centerOutside) {
-                        val p6 = corners[tr_stencilshadow.faceEdgeAdjacent[side][edge]]
+                        val p6 = corners[faceEdgeAdjacent[side][edge]]
                         val sidePlane = idPlane()
                         sidePlane.FromPoints(p5, p4, p6)
                         d = sidePlane.Distance(light.globalLightOrigin)
@@ -1200,7 +1198,7 @@ object tr_stencilshadow {
         i = 0
         while (i < 6) {
             val plane = frust.planes[i]
-            plane.SetNormal(light.frustum[i].Normal().oNegative())
+            plane.SetNormal(light.frustum[i].Normal().unaryMinus())
             plane.SetDist(-light.frustum[i].Dist())
             i++
         }
@@ -1237,9 +1235,9 @@ object tr_stencilshadow {
      =================
      */
     fun R_CreateShadowVolume(
-        ent: idRenderEntityLocal?,
-        tri: srfTriangles_s?, light: idRenderLightLocal?,
-        optimize: shadowGen_t?, cullInfo: srfCullInfo_t?
+        ent: idRenderEntityLocal,
+        tri: srfTriangles_s, light: idRenderLightLocal,
+        optimize: shadowGen_t, cullInfo: srfCullInfo_t
     ): srfTriangles_s? {
         var i: Int
         var j: Int
@@ -1275,7 +1273,7 @@ object tr_stencilshadow {
         var allFront = 1
         i = 0
         while (i < numFaces && allFront != 0) {
-            allFront = allFront and cullInfo.facing[i]
+            allFront = allFront and cullInfo.facing!![i].toInt()
             i++
         }
         if (allFront != 0) {
@@ -1284,18 +1282,18 @@ object tr_stencilshadow {
         }
 
         // clear the shadow volume
-        tr_stencilshadow.numShadowIndexes = 0
-        tr_stencilshadow.numShadowVerts = 0
-        tr_stencilshadow.overflowed = false
-        tr_stencilshadow.indexFrustumNumber = 0
+        numShadowIndexes = 0
+        numShadowVerts = 0
+        overflowed = false
+        indexFrustumNumber = 0
         capPlaneBits = 0
-        tr_stencilshadow.callOptimizer = optimize == shadowGen_t.SG_OFFLINE
+        callOptimizer = optimize == shadowGen_t.SG_OFFLINE
 
         // the facing information will be the same for all six projections
         // from a point light, as well as for any directed lights
-        tr_stencilshadow.globalFacing = cullInfo.facing
-        tr_stencilshadow.faceCastsShadow = ByteArray(tri.numIndexes / 3 + 1) // + 1 for fake dangling edge face
-        tr_stencilshadow.remap = IntArray(tri.numVerts)
+        globalFacing = cullInfo.facing
+        faceCastsShadow = ByteArray(tri.numIndexes / 3 + 1) // + 1 for fake dangling edge face
+        remap = IntArray(tri.numVerts)
         tr_main.R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, lightOrigin)
 
         // run through all the shadow frustums, which is one for a projected light,
@@ -1304,7 +1302,7 @@ object tr_stencilshadow {
         for (frustumNum in 0 until light.numShadowFrustums) {
             val frust = light.shadowFrustums[frustumNum]
             //		ALIGN16( idPlane[] frustum=new idPlane[6] );
-            val frustum = arrayOfNulls<idPlane>(6)
+            val frustum = Array<idPlane>(6) { idPlane() }
 
             // transform the planes into entity space
             // we could share and reverse some of the planes between frustums for a minor
@@ -1313,12 +1311,12 @@ object tr_stencilshadow {
             // the surface has already been checked against the main light frustums
             j = 0
             while (j < frust.numPlanes) {
-                frustum[j] = idPlane()
+                //frustum[j] = idPlane()
                 tr_main.R_GlobalPlaneToLocal(ent.modelMatrix, frust.planes[j], frustum[j])
 
                 // try to cull the entire surface against this frustum
                 val d = tri.bounds.PlaneDistance(frustum[j])
-                if (d < -tr_stencilshadow.LIGHT_CLIP_EPSILON) {
+                if (d < -LIGHT_CLIP_EPSILON) {
                     break
                 }
                 j++
@@ -1327,8 +1325,8 @@ object tr_stencilshadow {
                 continue
             }
             // we need to check all the triangles
-            val oldFrustumNumber = tr_stencilshadow.indexFrustumNumber
-            tr_stencilshadow.R_CreateShadowVolumeInFrustum(
+            val oldFrustumNumber = indexFrustumNumber
+            R_CreateShadowVolumeInFrustum(
                 ent,
                 tri,
                 light,
@@ -1340,10 +1338,10 @@ object tr_stencilshadow {
 
             // if we couldn't make a complete shadow volume, it is better to
             // not draw one at all, avoiding streamer problems
-            if (tr_stencilshadow.overflowed) {
+            if (overflowed) {
                 return null
             }
-            if (tr_stencilshadow.indexFrustumNumber != oldFrustumNumber) {
+            if (indexFrustumNumber != oldFrustumNumber) {
                 // note that we have caps projected against this frustum,
                 // which may allow us to skip drawing the caps if all projected
                 // planes face away from the viewer and the viewer is outside the light volume
@@ -1353,13 +1351,13 @@ object tr_stencilshadow {
 
         // if no faces have been defined for the shadow volume,
         // there won't be anything at all
-        if (tr_stencilshadow.numShadowIndexes == 0) {
+        if (numShadowIndexes == 0) {
             return null
         }
 
         // this should have been prevented by the overflowed flag, so if it ever happens,
         // it is a code error
-        if (tr_stencilshadow.numShadowVerts > tr_stencilshadow.MAX_SHADOW_VERTS || tr_stencilshadow.numShadowIndexes > tr_stencilshadow.MAX_SHADOW_INDEXES) {
+        if (numShadowVerts > MAX_SHADOW_VERTS || numShadowIndexes > MAX_SHADOW_INDEXES) {
             Common.common.FatalError("Shadow volume exceeded allocation")
         }
 
@@ -1371,13 +1369,13 @@ object tr_stencilshadow {
         newTri.bounds.Clear()
 
         // copy off the verts and indexes
-        newTri.numVerts = tr_stencilshadow.numShadowVerts
-        newTri.numIndexes = tr_stencilshadow.numShadowIndexes
+        newTri.numVerts = numShadowVerts
+        newTri.numIndexes = numShadowIndexes
 
         // the shadow verts will go into a main memory buffer as well as a vertex
         // cache buffer, so they can be copied back if they are purged
         tr_trisurf.R_AllocStaticTriSurfShadowVerts(newTri, newTri.numVerts)
-        Simd.SIMDProcessor.Memcpy(newTri.shadowVertexes, tr_stencilshadow.shadowVerts, newTri.numVerts)
+        Simd.SIMDProcessor.Memcpy(newTri.shadowVertexes, shadowVerts, newTri.numVerts)
         tr_trisurf.R_AllocStaticTriSurfIndexes(newTri, newTri.numIndexes)
         if (true /* sortCapIndexes */) {
             newTri.shadowCapPlaneBits = capPlaneBits
@@ -1385,13 +1383,13 @@ object tr_stencilshadow {
             // copy the sil indexes first
             newTri.numShadowIndexesNoCaps = 0
             i = 0
-            while (i < tr_stencilshadow.indexFrustumNumber) {
-                val c = tr_stencilshadow.indexRef[i].end - tr_stencilshadow.indexRef[i].silStart
+            while (i < indexFrustumNumber) {
+                val c = indexRef[i].end - indexRef[i].silStart
                 Simd.SIMDProcessor.Memcpy(
                     newTri.indexes,
                     newTri.numShadowIndexesNoCaps,
-                    tr_stencilshadow.shadowIndexes,
-                    tr_stencilshadow.indexRef[i].silStart,
+                    shadowIndexes,
+                    indexRef[i].silStart,
                     c
                 )
                 newTri.numShadowIndexesNoCaps += c
@@ -1400,13 +1398,13 @@ object tr_stencilshadow {
             // copy rear cap indexes next
             newTri.numShadowIndexesNoFrontCaps = newTri.numShadowIndexesNoCaps
             i = 0
-            while (i < tr_stencilshadow.indexFrustumNumber) {
-                val c = tr_stencilshadow.indexRef[i].silStart - tr_stencilshadow.indexRef[i].rearCapStart
+            while (i < indexFrustumNumber) {
+                val c = indexRef[i].silStart - indexRef[i].rearCapStart
                 Simd.SIMDProcessor.Memcpy(
                     newTri.indexes,
                     newTri.numShadowIndexesNoFrontCaps,
-                    tr_stencilshadow.shadowIndexes,
-                    tr_stencilshadow.indexRef[i].rearCapStart,
+                    shadowIndexes,
+                    indexRef[i].rearCapStart,
                     c
                 )
                 newTri.numShadowIndexesNoFrontCaps += c
@@ -1415,13 +1413,13 @@ object tr_stencilshadow {
             // copy front cap indexes last
             newTri.numIndexes = newTri.numShadowIndexesNoFrontCaps
             i = 0
-            while (i < tr_stencilshadow.indexFrustumNumber) {
-                val c = tr_stencilshadow.indexRef[i].rearCapStart - tr_stencilshadow.indexRef[i].frontCapStart
+            while (i < indexFrustumNumber) {
+                val c = indexRef[i].rearCapStart - indexRef[i].frontCapStart
                 Simd.SIMDProcessor.Memcpy(
                     newTri.indexes,
                     newTri.numIndexes,
-                    tr_stencilshadow.shadowIndexes,
-                    tr_stencilshadow.indexRef[i].frontCapStart,
+                    shadowIndexes,
+                    indexRef[i].frontCapStart,
                     c
                 )
                 newTri.numIndexes += c
@@ -1429,7 +1427,7 @@ object tr_stencilshadow {
             }
         } else {
             newTri.shadowCapPlaneBits = 63 // we don't have optimized index lists
-            Simd.SIMDProcessor.Memcpy(newTri.indexes, tr_stencilshadow.shadowIndexes, newTri.numIndexes)
+            Simd.SIMDProcessor.Memcpy(newTri.indexes, shadowIndexes, newTri.numIndexes)
         }
         if (optimize == shadowGen_t.SG_OFFLINE) {
             shadowopt3.CleanupOptimizedShadowTris(newTri)
@@ -1452,16 +1450,16 @@ object tr_stencilshadow {
         SG_OFFLINE // perform very time consuming optimizations
     }
 
-    internal class indexRef_t {
+    class indexRef_t {
         var end = 0
         var frontCapStart = 0
         var rearCapStart = 0
         var silStart = 0
     }
 
-    internal class clipTri_t {
-        var edgeFlags: IntArray? = IntArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
+    class clipTri_t {
+        var edgeFlags: IntArray = IntArray(MAX_CLIPPED_POINTS)
         var numVerts = 0
-        val verts: Array<idVec3>? = idVec3.Companion.generateArray(tr_stencilshadow.MAX_CLIPPED_POINTS)
+        val verts: Array<idVec3> = idVec3.Companion.generateArray(MAX_CLIPPED_POINTS)
     }
 }

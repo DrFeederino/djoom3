@@ -15,8 +15,8 @@ import java.nio.ByteBuffer
  */
 object Image_program {
     // we build a canonical token form of the image program here
-    val parseBuffer: StringBuffer? = StringBuffer(Image.MAX_IMAGE_NAME)
-    private val factors: Array<FloatArray?>? =
+    val parseBuffer: StringBuffer = StringBuffer(Image.MAX_IMAGE_NAME)
+    private val factors: Array<FloatArray> =
         arrayOf(floatArrayOf(1f, 1f, 1f), floatArrayOf(1f, 1f, 1f), floatArrayOf(1f, 1f, 1f))
 
     /*
@@ -26,18 +26,18 @@ object Image_program {
      */
     @JvmOverloads
     fun R_LoadImageProgram(
-        name: String?, width: IntArray?, height: IntArray?,  /*ID_TIME_T */
-        timestamps: LongArray?, depth: Array<textureDepth_t?>? = null
+        name: String, width: IntArray?, height: IntArray?,  /*ID_TIME_T */
+        timestamps: LongArray?, depth: Array<textureDepth_t>? = null
     ): ByteBuffer? {
         val src = idLexer()
         val pic = arrayOf<ByteBuffer?>(null)
         src.LoadMemory(name, name.length, name)
         src.SetFlags(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_ALLOWPATHNAMES)
-        Image_program.parseBuffer.delete(0, Image_program.parseBuffer.capacity())
+        parseBuffer.delete(0, parseBuffer.capacity())
         if (timestamps != null) {
             timestamps[0] = 0
         }
-        Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+        R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
         src.FreeSource()
         return pic[-+-0]
     }
@@ -52,188 +52,191 @@ object Image_program {
      ===================
      */
     fun R_ParseImageProgram_r(
-        src: idLexer?,
+        src: idLexer,
         pic: Array<ByteBuffer?>?,
         width: IntArray?,
         height: IntArray?,
         timestamps: LongArray?,
-        depth: Array<textureDepth_t?>?
+        depth: Array<textureDepth_t>?
     ): Boolean {
         val token = idToken()
         val scale: Float
         val timestamp = longArrayOf(0)
         src.ReadToken(token)
-        Image_program.AppendToken(token)
+        AppendToken(token)
         if (0 == token.Icmp("heightmap")) {
-            Image_program.MatchAndAppendToken(src, "(")
-            if (!Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
+            MatchAndAppendToken(src, "(")
+            if (!R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
                 return false
             }
-            Image_program.MatchAndAppendToken(src, ",")
+            MatchAndAppendToken(src, ",")
             src.ReadToken(token)
-            Image_program.AppendToken(token)
+            AppendToken(token)
             scale = token.GetFloatValue()
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_HeightmapToNormalMap(pic[0], width.get(0), height.get(0), scale)
+                R_HeightmapToNormalMap(pic[0]!!, width!![0], height!![0], scale)
                 if (depth != null) {
                     depth[0] = textureDepth_t.TD_BUMP
                 }
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("addnormals")) {
-            var pic2: Array<ByteBuffer?>? =
-                arrayOf(if (pic != null && pic[0] != null) ByteBuffer.allocate(pic[0].capacity()) else null)
+            var pic2: Array<ByteBuffer?> =
+                arrayOf(if (pic != null && pic[0] != null) ByteBuffer.allocate(pic[0]!!.capacity()) else null)
             val width2 = intArrayOf(0)
             val height2 = intArrayOf(0)
-            Image_program.MatchAndAppendToken(src, "(")
-            if (!Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
+            MatchAndAppendToken(src, "(")
+            if (!R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
                 return false
             }
-            Image_program.MatchAndAppendToken(src, ",")
-            if (!Image_program.R_ParseImageProgram_r(src, pic2, width2, height2, timestamps, depth)) {
+            MatchAndAppendToken(src, ",")
+            if (!R_ParseImageProgram_r(src, pic2, width2, height2, timestamps, depth)) {
                 if (pic != null && pic[0] != null) {
-                    pic[0].clear() //R_StaticFree(pic);
+                    pic[0]!!.clear() //R_StaticFree(pic);
                 }
                 return false
             }
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_AddNormalMaps(pic[0], width.get(0), height.get(0), pic2.get(0), width2[0], height2[0])
+                R_AddNormalMaps(pic[0]!!, width!![0], height!![0], pic2[0]!!, width2[0], height2[0])
                 //                R_StaticFree(pic2);
-                pic2 = null
+                //pic2
                 if (depth != null) {
                     depth[0] = textureDepth_t.TD_BUMP
                 }
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("smoothnormals")) {
-            Image_program.MatchAndAppendToken(src, "(")
-            if (!Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
+            MatchAndAppendToken(src, "(")
+            if (!R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
                 return false
             }
             if (pic != null && pic[0] != null) {
-                Image_program.R_SmoothNormalMap(pic[0], width.get(0), height.get(0))
+                R_SmoothNormalMap(pic[0]!!, width!![0], height!![0])
                 if (depth != null) {
                     depth[0] = textureDepth_t.TD_BUMP
                 }
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("add")) {
-            val pic2 = arrayOf(if (pic != null) ByteBuffer.allocate(pic[0].capacity()) else null)
+            val pic2 = arrayOf(if (pic != null) ByteBuffer.allocate(pic[0]!!.capacity()) else null)
             val width2 = intArrayOf(0)
             val height2 = intArrayOf(0)
-            Image_program.MatchAndAppendToken(src, "(")
-            if (!Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
+            MatchAndAppendToken(src, "(")
+            if (!R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)) {
                 return false
             }
-            Image_program.MatchAndAppendToken(src, ",")
-            if (!Image_program.R_ParseImageProgram_r(src, pic2, width2, height2, timestamps, depth)) {
+            MatchAndAppendToken(src, ",")
+            if (!R_ParseImageProgram_r(src, pic2, width2, height2, timestamps, depth)) {
                 if (pic != null && pic[0] != null) {
-                    pic[0].clear() //R_StaticFree(pic[0]);
+                    pic[0]!!.clear() //R_StaticFree(pic[0]);
                 }
                 return false
             }
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_ImageAdd(pic[0], width.get(0), height.get(0), pic2[0], width2[0], height2[0])
+                R_ImageAdd(pic[0]!!, width!![0], height!![0], pic2[0]!!, width2[0], height2[0])
                 //                R_StaticFree(pic2);
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("scale")) {
             val scale2 = FloatArray(4)
             var i: Int
-            Image_program.MatchAndAppendToken(src, "(")
-            Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+            MatchAndAppendToken(src, "(")
+            R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
             i = 0
             while (i < 4) {
-                Image_program.MatchAndAppendToken(src, ",")
+                MatchAndAppendToken(src, ",")
                 src.ReadToken(token)
-                Image_program.AppendToken(token)
+                AppendToken(token)
                 scale2[i] = token.GetFloatValue()
                 i++
             }
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_ImageScale(pic[0], width.get(0), height.get(0), scale2)
+                R_ImageScale(pic[0]!!, width!![0], height!!.get(0), scale2)
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("invertAlpha")) {
-            Image_program.MatchAndAppendToken(src, "(")
-            Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+            MatchAndAppendToken(src, "(")
+            R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_InvertAlpha(pic[0], width.get(0), height.get(0))
+                R_InvertAlpha(pic[0]!!, width!![0], height!![0])
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("invertColor")) {
-            Image_program.MatchAndAppendToken(src, "(")
-            Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+            MatchAndAppendToken(src, "(")
+            R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
 
             // process it
             if (pic != null && pic[0] != null) {
-                Image_program.R_InvertColor(pic[0], width.get(0), height.get(0))
+                R_InvertColor(pic[0]!!, width!![0], height!![0])
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("makeIntensity")) {
             var i: Int
-            Image_program.MatchAndAppendToken(src, "(")
-            Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+            MatchAndAppendToken(src, "(")
+            R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
 
             // copy red to green, blue, and alpha
             if (pic != null && pic[0] != null) {
                 val c: Int
-                c = width.get(0) * height.get(0) * 4
-                pic[0].position(0)
+                c = width!![0] * height!![0] * 4
+                pic[0]!!.position(0)
                 i = 0
                 while (i < c) {
-                    val r = pic[0].get(i)
+                    val r = pic[0]!!.get(i)
                     val rgba = byteArrayOf(r, r, r, r)
-                    pic[0].put(rgba)
+                    pic[0]!!.put(rgba)
                     i += 4
                 }
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
         if (0 == token.Icmp("makeAlpha")) {
             var i: Int
-            Image_program.MatchAndAppendToken(src, "(")
-            Image_program.R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
+            MatchAndAppendToken(src, "(")
+            R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
 
             // average RGB into alpha, then set RGB to white
             if (pic != null && pic[0] != null) {
                 val c: Int
-                pic[0].position(0)
-                c = width.get(0) * height.get(0) * 4
+                pic[0]!!.position(0)
+                c = width!![0] * height!![0] * 4
                 i = 0
                 while (i < c) {
                     val rgb = byteArrayOf(255.toByte(), 255.toByte(), 255.toByte())
-                    pic[0].put(i + 3, ((pic[0].get(i + 0) + pic[0].get(i + 1) + pic[0].get(i + 2)) / 3).toByte())
-                    pic[0].put(rgb)
+                    pic[0]!!.put(
+                        i + 3,
+                        ((pic[0]!!.get(i + 0) + pic[0]!!.get(i + 1) + pic[0]!!.get(i + 2)) / 3).toByte()
+                    )
+                    pic[0]!!.put(rgb)
                     i += 4
                 }
             }
-            Image_program.MatchAndAppendToken(src, ")")
+            MatchAndAppendToken(src, ")")
             return true
         }
 
@@ -244,8 +247,8 @@ object Image_program {
         }
 
         // load it as an image
-        pic.get(0) = Image_files.R_LoadImage(token.toString(), width, height, timestamp, true)
-        if (timestamp[0] == -1) {
+        pic!![0] = Image_files.R_LoadImage(token.toString(), width, height, timestamp, true)
+        if (timestamp[0].toInt() == -1) {
             return false
         }
 
@@ -265,12 +268,12 @@ object Image_program {
      */
     fun AppendToken(token: idToken?) {
         // add a leading space if not at the beginning
-        if (Image_program.parseBuffer.length > 0) {
+        if (parseBuffer.length > 0) {
 //            idStr.Append(parseBuffer, MAX_IMAGE_NAME, " ");
-            Image_program.parseBuffer.append(" ")
+            parseBuffer.append(" ")
         }
         //        idStr.Append(parseBuffer, MAX_IMAGE_NAME, token.toString());
-        Image_program.parseBuffer.append(token.toString())
+        parseBuffer.append(token.toString())
     }
 
     /*
@@ -278,13 +281,13 @@ object Image_program {
      MatchAndAppendToken
      ===================
      */
-    fun MatchAndAppendToken(src: idLexer?, match: String?) {
+    fun MatchAndAppendToken(src: idLexer, match: String) {
         if (!src.ExpectTokenString(match)) {
             return
         }
         // a matched token won't need a leading space
 //        idStr.Append(parseBuffer, MAX_IMAGE_NAME, match);
-        Image_program.parseBuffer.append(match)
+        parseBuffer.append(match)
     }
 
     /*
@@ -296,7 +299,7 @@ object Image_program {
      We can assume constant and equal ST vectors for walls, but not for characters.
      =================
      */
-    fun R_HeightmapToNormalMap(data: ByteBuffer?, width: Int, height: Int, scale: Float) {
+    fun R_HeightmapToNormalMap(data: ByteBuffer, width: Int, height: Int, scale: Float) {
         var scale = scale
         var i: Int
         var j: Int
@@ -308,7 +311,7 @@ object Image_program {
         depth = ByteArray(j) //R_StaticAlloc(j);
         i = 0
         while (i < j) {
-            depth[i] = ((data.get(i * 4) + data.get(i * 4 + 1) + data.get(i * 4 + 2)) / 3).toByte()
+            depth[i] = ((data!!.get(i * 4) + data.get(i * 4 + 1) + data.get(i * 4 + 2)) / 3).toByte()
             i++
         }
         val dir = idVec3()
@@ -328,32 +331,32 @@ object Image_program {
 
                 // FIXME: look at five points?
                 // look at three points to estimate the gradient
-                d1 = depth[i * width + j]
+                d1 = depth[i * width + j].toInt()
                 a1 = d1
-                d2 = depth[i * width + (j + 1 and width - 1)]
+                d2 = depth[i * width + (j + 1 and width - 1)].toInt()
                 a2 = d2
-                d3 = depth[(i + 1 and height - 1) * width + j]
+                d3 = depth[(i + 1 and height - 1) * width + j].toInt()
                 a3 = d3
-                d4 = depth[(i + 1 and height - 1) * width + (j + 1 and width - 1)]
+                d4 = depth[(i + 1 and height - 1) * width + (j + 1 and width - 1)].toInt()
                 a4 = d4
                 d2 -= d1
                 d3 -= d1
-                dir.set(0, -d2 * scale)
-                dir.set(1, -d3 * scale)
-                dir.set(2, 1f)
+                dir[0] = -d2 * scale
+                dir[1] = -d3 * scale
+                dir[2] = 1f
                 dir.NormalizeFast()
                 a1 -= a3
                 a4 -= a3
-                dir2.set(0, -a4 * scale)
-                dir2.set(1, a1 * scale)
-                dir2.set(2, 1f)
+                dir2[0] = -a4 * scale
+                dir2[1] = a1 * scale
+                dir2[2] = 1f
                 dir2.NormalizeFast()
                 dir.plusAssign(dir2)
                 dir.NormalizeFast()
                 a1 = (i * width + j) * 4
-                data.put(a1 + 0, (dir.get(0) * 127 + 128).toInt().toByte())
-                data.put(a1 + 1, (dir.get(1) * 127 + 128).toInt().toByte())
-                data.put(a1 + 2, (dir.get(2) * 127 + 128).toInt().toByte())
+                data.put(a1 + 0, (dir[0] * 127 + 128).toInt().toByte())
+                data.put(a1 + 1, (dir[1] * 127 + 128).toInt().toByte())
+                data.put(a1 + 2, (dir[2] * 127 + 128).toInt().toByte())
                 data.put(a1 + 3, 255.toByte())
                 j++
             }
@@ -368,7 +371,7 @@ object Image_program {
      R_SmoothNormalMap
      ================
      */
-    fun R_SmoothNormalMap(data: ByteBuffer?, width: Int, height: Int) {
+    fun R_SmoothNormalMap(data: ByteBuffer, width: Int, height: Int) {
         val orig: ByteArray
         var i: Int
         var j: Int
@@ -392,26 +395,26 @@ object Image_program {
                         `in` =  /*orig +*/((j + l and height - 1) * width + (i + k and width - 1)) * 4
 
                         // ignore 000 and -1 -1 -1
-                        if (orig[`in` + 0] == 0 && orig[`in` + 1] == 0 && orig[`in` + 2] == 0) {
+                        if (orig[`in` + 0].toInt() == 0 && orig[`in` + 1].toInt() == 0 && orig[`in` + 2].toInt() == 0) {
                             l++
                             continue
                         }
-                        if (orig[`in` + 0] == 128 && orig[`in` + 1] == 128 && orig[`in` + 2] == 128) {
+                        if (orig[`in` + 0].toInt() == 128 && orig[`in` + 1].toInt() == 128 && orig[`in` + 2].toInt() == 128) {
                             l++
                             continue
                         }
-                        normal.plusAssign(0, Image_program.factors[k + 1][l + 1] * (orig[`in` + 0] - 128))
-                        normal.plusAssign(1, Image_program.factors[k + 1][l + 1] * (orig[`in` + 1] - 128))
-                        normal.plusAssign(2, Image_program.factors[k + 1][l + 1] * (orig[`in` + 2] - 128))
+                        normal.plusAssign(0, factors[k + 1][l + 1] * (orig[`in` + 0] - 128))
+                        normal.plusAssign(1, factors[k + 1][l + 1] * (orig[`in` + 1] - 128))
+                        normal.plusAssign(2, factors[k + 1][l + 1] * (orig[`in` + 2] - 128))
                         l++
                     }
                     k++
                 }
                 normal.Normalize()
                 out =  /*data +*/(j * width + i) * 4
-                data.put(out + 0, (128 + 127 * normal.get(0)).toInt().toByte())
-                data.put(out + 1, (128 + 127 * normal.get(1)).toInt().toByte())
-                data.put(out + 2, (128 + 127 * normal.get(2)).toInt().toByte())
+                data.put(out + 0, (128 + 127 * normal[0]).toInt().toByte())
+                data.put(out + 1, (128 + 127 * normal[1]).toInt().toByte())
+                data.put(out + 2, (128 + 127 * normal[2]).toInt().toByte())
                 j++
             }
             i++
@@ -426,7 +429,7 @@ object Image_program {
 
      ===================
      */
-    fun R_ImageAdd(data1: ByteBuffer?, width1: Int, height1: Int, data2: ByteBuffer?, width2: Int, height2: Int) {
+    fun R_ImageAdd(data1: ByteBuffer, width1: Int, height1: Int, data2: ByteBuffer, width2: Int, height2: Int) {
         var i: Int
         var j: Int
         val c: Int
@@ -460,14 +463,14 @@ object Image_program {
      R_ImageScale
      =================
      */
-    fun R_ImageScale(data: ByteBuffer?, width: Int, height: Int, scale: FloatArray? /*[4]*/) {
+    fun R_ImageScale(data: ByteBuffer, width: Int, height: Int, scale: FloatArray /*[4]*/) {
         var i: Int
         var j: Int
         val c: Int
         c = width * height * 4
         i = 0
         while (i < c) {
-            j = (data.get(i) * scale.get(i and 3)).toInt().toByte().toInt()
+            j = (data.get(i) * scale[i and 3]).toInt().toByte().toInt()
             if (j < 0) {
                 j = 0
             } else if (j > 255) {
@@ -483,7 +486,7 @@ object Image_program {
      R_InvertAlpha
      =================
      */
-    fun R_InvertAlpha(data: ByteBuffer?, width: Int, height: Int) {
+    fun R_InvertAlpha(data: ByteBuffer, width: Int, height: Int) {
         var i: Int
         val c: Int
         c = width * height * 4
@@ -499,7 +502,7 @@ object Image_program {
      R_InvertColor
      =================
      */
-    fun R_InvertColor(data: ByteBuffer?, width: Int, height: Int) {
+    fun R_InvertColor(data: ByteBuffer, width: Int, height: Int) {
         var i: Int
         val c: Int
         c = width * height * 4
@@ -518,7 +521,7 @@ object Image_program {
 
      ===================
      */
-    fun R_AddNormalMaps(data1: ByteBuffer?, width1: Int, height1: Int, data2: ByteBuffer?, width2: Int, height2: Int) {
+    fun R_AddNormalMaps(data1: ByteBuffer, width1: Int, height1: Int, data2: ByteBuffer, width2: Int, height2: Int) {
         var data2 = data2
         var i: Int
         var j: Int
@@ -543,22 +546,22 @@ object Image_program {
                 var len: Float
                 d1 =  /* data1 + */(i * width1 + j) * 4
                 d2 =  /*data2 + */(i * width1 + j) * 4
-                n.set(0, (data1.get(d1 + 0) - 128) / 127.0f)
-                n.set(1, (data1.get(d1 + 1) - 128) / 127.0f)
-                n.set(2, (data1.get(d1 + 2) - 128) / 127.0f)
+                n[0] = (data1.get(d1 + 0) - 128) / 127.0f
+                n[1] = (data1.get(d1 + 1) - 128) / 127.0f
+                n[2] = (data1.get(d1 + 2) - 128) / 127.0f
 
                 // There are some normal maps that blend to 0,0,0 at the edges
                 // this screws up compression, so we try to correct that here by instead fading it to 0,0,1
                 len = n.LengthFast()
                 if (len < 1.0f) {
-                    n.set(2, idMath.Sqrt(1.0f - n.get(0) * n.get(0) - n.get(1) * n.get(1)))
+                    n[2] = idMath.Sqrt(1.0f - n[0] * n[0] - n[1] * n[1])
                 }
                 n.plusAssign(0, (data2.get(d2 + 0) - 128) / 127.0f)
                 n.plusAssign(1, (data2.get(d2 + 1) - 128) / 127.0f)
                 n.Normalize()
-                data1.put(d1 + 0, (n.get(0) * 127 + 128).toInt().toByte())
-                data1.put(d1 + 1, (n.get(1) * 127 + 128).toInt().toByte())
-                data1.put(d1 + 2, (n.get(2) * 127 + 128).toInt().toByte())
+                data1.put(d1 + 0, (n[0] * 127 + 128).toInt().toByte())
+                data1.put(d1 + 1, (n[1] * 127 + 128).toInt().toByte())
+                data1.put(d1 + 2, (n[2] * 127 + 128).toInt().toByte())
                 data1.put(d1 + 3, 255.toByte())
                 j++
             }
@@ -575,9 +578,9 @@ object Image_program {
      R_ParsePastImageProgram
      ===================
      */
-    fun R_ParsePastImageProgram(src: idLexer?): String? {
-        Image_program.parseBuffer.delete(0, Image_program.parseBuffer.capacity())
-        Image_program.R_ParseImageProgram_r(src, null, null, null, null, null)
-        return String(Image_program.parseBuffer)
+    fun R_ParsePastImageProgram(src: idLexer): String {
+        parseBuffer.delete(0, parseBuffer.capacity())
+        R_ParseImageProgram_r(src, null, null, null, null, null)
+        return String(parseBuffer)
     }
 }

@@ -21,7 +21,7 @@ import java.util.*
  *
  */
 object Model_prt {
-    val parametricParticle_SnapshotName: String? = "_ParametricParticle_Snapshot_"
+    val parametricParticle_SnapshotName: String = "_ParametricParticle_Snapshot_"
 
     /*
      ===============================================================================
@@ -32,8 +32,8 @@ object Model_prt {
      */
     class idRenderModelPrt : idRenderModelStatic() {
         //
-        private var particleSystem: idDeclParticle? = null
-        override fun InitFromFile(fileName: String?) {
+        private lateinit var particleSystem: idDeclParticle
+        override fun InitFromFile(fileName: String) {
             name = idStr(fileName)
             particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, fileName) as idDeclParticle
         }
@@ -43,17 +43,17 @@ object Model_prt {
             particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, name) as idDeclParticle
         }
 
-        override fun IsDynamicModel(): dynamicModel_t? {
+        override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CONTINUOUS
         }
 
         override fun InstantiateDynamicModel(
-            renderEntity: renderEntity_s?,
+            renderEntity: renderEntity_s,
             viewDef: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel? {
             var cachedModel = cachedModel
-            val staticModel: idRenderModelStatic?
+            val staticModel: idRenderModelStatic
             if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels.GetBool()) {
 //		delete cachedModel;
                 cachedModel = null
@@ -77,11 +77,11 @@ object Model_prt {
              }
              */if (cachedModel != null) {
                 assert(cachedModel is idRenderModelStatic)
-                assert(idStr.Companion.Icmp(cachedModel.Name(), Model_prt.parametricParticle_SnapshotName) == 0)
-                staticModel = cachedModel as idRenderModelStatic?
+                assert(idStr.Icmp(cachedModel.Name(), parametricParticle_SnapshotName) == 0)
+                staticModel = cachedModel as idRenderModelStatic
             } else {
                 staticModel = idRenderModelStatic()
-                staticModel.InitEmpty(Model_prt.parametricParticle_SnapshotName)
+                staticModel.InitEmpty(parametricParticle_SnapshotName)
             }
             val g = particleGen_t()
             g.renderEnt = renderEntity
@@ -108,25 +108,26 @@ object Model_prt {
                 //                int inCycleTime = stageAge - stageCycle * stage.cycleMsec;
 
                 // some particles will be in this cycle, some will be in the previous cycle
-                steppingRandom.SetSeed(stageCycle shl 10 and idRandom.Companion.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.Companion.MAX_RAND).toInt())
-                steppingRandom2.SetSeed(stageCycle - 1 shl 10 and idRandom.Companion.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.Companion.MAX_RAND).toInt())
+                steppingRandom.SetSeed(stageCycle shl 10 and idRandom.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt())
+                steppingRandom2.SetSeed(stageCycle - 1 shl 10 and idRandom.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt())
                 val count = stage.totalParticles * stage.NumQuadsPerParticle()
                 val surfaceNum = CInt()
-                var surf: modelSurface_s?
+                var surf: modelSurface_s
                 if (staticModel.FindSurfaceWithId(stageNum, surfaceNum)) {
                     surf = staticModel.surfaces.get(surfaceNum._val)
-                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry)
+                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry!!)
                 } else {
-                    surf = staticModel.surfaces.Alloc()
+                    surf = modelSurface_s()
+                    staticModel.surfaces.add(surf)
                     surf.id = stageNum
                     surf.shader = stage.material
                     surf.geometry = srfTriangles_s() //R_AllocStaticTriSurf();
-                    tr_trisurf.R_AllocStaticTriSurfVerts(surf.geometry, 4 * count)
-                    tr_trisurf.R_AllocStaticTriSurfIndexes(surf.geometry, 6 * count)
-                    tr_trisurf.R_AllocStaticTriSurfPlanes(surf.geometry, 6 * count)
+                    tr_trisurf.R_AllocStaticTriSurfVerts(surf.geometry!!, 4 * count)
+                    tr_trisurf.R_AllocStaticTriSurfIndexes(surf.geometry!!, 6 * count)
+                    tr_trisurf.R_AllocStaticTriSurfPlanes(surf.geometry!!, 6 * count)
                 }
                 var numVerts = 0
-                val verts = surf.geometry.verts
+                val verts = surf.geometry!!.verts
                 for (index in 0 until stage.totalParticles) {
                     g.index = index
 
@@ -153,7 +154,7 @@ object Model_prt {
                         g.random = idRandom(steppingRandom2)
                     }
                     val inCycleTime = particleAge - particleCycle * stage.cycleMsec
-                    if (renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] != 0
+                    if (renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] != 0f
                         && g.renderView.time - inCycleTime >= renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] * 1000
                     ) {
                         // don't fire any more particles
@@ -176,14 +177,14 @@ object Model_prt {
                     g.age = g.frac * stage.particleLife
 
                     // if the particle doesn't get drawn because it is faded out or beyond a kill region, don't increment the verts
-                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange(verts, numVerts, verts.size))
+                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange(verts.toTypedArray(), numVerts, verts.size))
                 }
                 assert(numVerts and 3 == 0 && numVerts <= 4 * count)
 
                 // build the indexes
                 var numIndexes = 0
                 /*glIndex_t*/
-                val indexes = surf.geometry.indexes
+                val indexes = surf.geometry!!.indexes
                 var i = 0
                 while (i < numVerts) {
                     indexes[numIndexes + 0] = i
@@ -195,11 +196,11 @@ object Model_prt {
                     numIndexes += 6
                     i += 4
                 }
-                surf.geometry.tangentsCalculated = false
-                surf.geometry.facePlanesCalculated = false
-                surf.geometry.numVerts = numVerts
-                surf.geometry.numIndexes = numIndexes
-                surf.geometry.bounds.set(stage.bounds) // just always draw the particles
+                surf.geometry!!.tangentsCalculated = false
+                surf.geometry!!.facePlanesCalculated = false
+                surf.geometry!!.numVerts = numVerts
+                surf.geometry!!.numIndexes = numIndexes
+                surf.geometry!!.bounds.set(stage.bounds) // just always draw the particles
                 val a = 0
             }
             return staticModel

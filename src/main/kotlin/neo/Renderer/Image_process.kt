@@ -2,7 +2,7 @@ package neo.Renderer
 
 import neo.idlib.Lib.idLib
 import org.lwjgl.BufferUtils
-import java.nio.*
+import java.nio.ByteBuffer
 
 /**
  *
@@ -23,25 +23,25 @@ object Image_process {
      after resampling to the next lower power of two.
      ================
      */
-    fun R_ResampleTexture(`in`: ByteBuffer?, inwidth: Int, inheight: Int, outwidth: Int, outheight: Int): ByteBuffer? {
+    fun R_ResampleTexture(`in`: ByteBuffer, inwidth: Int, inheight: Int, outwidth: Int, outheight: Int): ByteBuffer {
         var outwidth = outwidth
         var outheight = outheight
         var i: Int
         var j: Int
-        var inrow: ByteBuffer?
-        var inrow2: ByteBuffer?
+        var inrow: ByteBuffer
+        var inrow2: ByteBuffer
         /*unsigned*/
         var frac: Int
         val fracstep: Int
         /*unsigned*/
         val p1 = IntArray(Image_process.MAX_DIMENSION)
         val p2 = IntArray(Image_process.MAX_DIMENSION)
-        var pix1: ByteBuffer?
-        var pix2: ByteBuffer?
-        var pix3: ByteBuffer?
-        var pix4: ByteBuffer?
-        val out: ByteBuffer?
-        val out_p: ByteBuffer?
+        var pix1: ByteBuffer
+        var pix2: ByteBuffer
+        var pix3: ByteBuffer
+        var pix4: ByteBuffer
+        val out: ByteBuffer
+        val out_p: ByteBuffer
         if (outwidth > Image_process.MAX_DIMENSION) {
             outwidth = Image_process.MAX_DIMENSION
         }
@@ -125,7 +125,7 @@ object Image_process {
      Normal maps and such should not be bilerped.
      ================
      */
-    fun R_Dropsample(`in`: ByteBuffer?, inwidth: Int, inheight: Int, outwidth: Int, outheight: Int): ByteArray? {
+    fun R_Dropsample(`in`: ByteBuffer, inwidth: Int, inheight: Int, outwidth: Int, outheight: Int): ByteArray {
         var i: Int
         var j: Int
         var k: Int
@@ -160,46 +160,46 @@ object Image_process {
 
      ===============
      */
-    fun R_SetBorderTexels(inBase: ByteBuffer?, width: Int, height: Int, border: ByteArray? /*[4]*/) {
+    fun R_SetBorderTexels(inBase: ByteBuffer, width: Int, height: Int, border: ByteArray /*[4]*/) {
         var i: Int
         var out: Int
         out = 0 //inBase;
         i = 0
         while (i < height) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i++
             out += width * 4
         }
         out =  /*inBase+*/(width - 1) * 4
         i = 0
         while (i < height) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i++
             out += width * 4
         }
         out = 0 //inBase;
         i = 0
         while (i < width) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i++
             out += 4
         }
         out =  /*inBase+*/width * 4 * (height - 1)
         i = 0
         while (i < width) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i++
             out += 4
         }
@@ -211,7 +211,7 @@ object Image_process {
 
      ===============
      */
-    fun R_SetBorderTexels3D(inBase: ByteBuffer?, width: Int, height: Int, depth: Int, border: ByteArray? /*[4]*/) {
+    fun R_SetBorderTexels3D(inBase: ByteBuffer, width: Int, height: Int, depth: Int, border: ByteArray /*[4]*/) {
         var i: Int
         var j: Int
         var out: Int
@@ -224,40 +224,40 @@ object Image_process {
             out =  /*inBase +*/j * plane
             i = 0
             while (i < height) {
-                inBase.put(out + 0, border.get(0))
-                inBase.put(out + 1, border.get(1))
-                inBase.put(out + 2, border.get(2))
-                inBase.put(out + 3, border.get(3))
+                inBase.put(out + 0, border[0])
+                inBase.put(out + 1, border[1])
+                inBase.put(out + 2, border[2])
+                inBase.put(out + 3, border[3])
                 i++
                 out += row
             }
             out =  /*inBase+*/(width - 1) * 4 + j * plane
             i = 0
             while (i < height) {
-                inBase.put(out + 0, border.get(0))
-                inBase.put(out + 1, border.get(1))
-                inBase.put(out + 2, border.get(2))
-                inBase.put(out + 3, border.get(3))
+                inBase.put(out + 0, border[0])
+                inBase.put(out + 1, border[1])
+                inBase.put(out + 2, border[2])
+                inBase.put(out + 3, border[3])
                 i++
                 out += row
             }
             out =  /*inBase +*/j * plane
             i = 0
             while (i < width) {
-                inBase.put(out + 0, border.get(0))
-                inBase.put(out + 1, border.get(1))
-                inBase.put(out + 2, border.get(2))
-                inBase.put(out + 3, border.get(3))
+                inBase.put(out + 0, border[0])
+                inBase.put(out + 1, border[1])
+                inBase.put(out + 2, border[2])
+                inBase.put(out + 3, border[3])
                 i++
                 out += 4
             }
             out =  /*inBase+*/width * 4 * (height - 1) + j * plane
             i = 0
             while (i < width) {
-                inBase.put(out + 0, border.get(0))
-                inBase.put(out + 1, border.get(1))
-                inBase.put(out + 2, border.get(2))
-                inBase.put(out + 3, border.get(3))
+                inBase.put(out + 0, border[0])
+                inBase.put(out + 1, border[1])
+                inBase.put(out + 2, border[2])
+                inBase.put(out + 3, border[3])
                 i++
                 out += 4
             }
@@ -266,20 +266,20 @@ object Image_process {
         out = 0 //inBase;
         i = 0
         while (i < plane) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i += 4
             out += 4
         }
         out =  /*inBase+*/(depth - 1) * plane
         i = 0
         while (i < plane) {
-            inBase.put(out + 0, border.get(0))
-            inBase.put(out + 1, border.get(1))
-            inBase.put(out + 2, border.get(2))
-            inBase.put(out + 3, border.get(3))
+            inBase.put(out + 0, border[0])
+            inBase.put(out + 1, border[1])
+            inBase.put(out + 2, border[2])
+            inBase.put(out + 3, border[3])
             i += 4
             out += 4
         }
@@ -427,7 +427,7 @@ object Image_process {
     fun addUnsignedBytes(vararg bytes: Byte): Int {
         var result = 0
         for (b in bytes) {
-            result += b and 0xFF
+            result += (b.toInt() and 0xFF).toByte()
         }
         return result
     }
@@ -445,7 +445,7 @@ object Image_process {
      smeared clamps...
      ================
      */
-    fun R_MipMap3D(`in`: ByteBuffer?, width: Int, height: Int, depth: Int, preserveBorder: Boolean): ByteBuffer? {
+    fun R_MipMap3D(`in`: ByteBuffer, width: Int, height: Int, depth: Int, preserveBorder: Boolean): ByteBuffer {
         var width = width
         var height = height
         var depth = depth
@@ -453,7 +453,7 @@ object Image_process {
         var j: Int
         var k: Int
         var in_p: Int
-        val out: ByteBuffer?
+        val out: ByteBuffer
         var out_p: Int
         val row: Int
         val plane: Int
@@ -564,22 +564,22 @@ object Image_process {
      Apply a color blend over a set of pixels
      ==================
      */
-    fun R_BlendOverTexture(data: ByteBuffer?, pixelCount: Int, blend: IntArray? /*[4]*/) {
+    fun R_BlendOverTexture(data: ByteBuffer, pixelCount: Int, blend: IntArray /*[4]*/) {
         var i: Int
         val inverseAlpha: Int
         val premult = IntArray(3)
-        inverseAlpha = 255 - blend.get(3)
-        premult[0] = blend.get(0) * blend.get(3)
-        premult[1] = blend.get(1) * blend.get(3)
-        premult[2] = blend.get(2) * blend.get(3)
+        inverseAlpha = 255 - blend[3]
+        premult[0] = blend[0] * blend[3]
+        premult[1] = blend[1] * blend[3]
+        premult[2] = blend[2] * blend[3]
         i = 0
         while (i < pixelCount) {
             data.put(
                 i * 4 + 0,
-                (data.get(i * 4 + 0) and 0xFF * inverseAlpha + premult[0] shr 9).toByte()
+                (data.get(i * 4 + 0).toInt() and 0xFF * inverseAlpha + premult[0] shr 9).toByte()
             ) //TODO:signed byte arithmetic(overflow)
-            data.put(i * 4 + 1, (data.get(i * 4 + 1) and 0xFF * inverseAlpha + premult[1] shr 9).toByte())
-            data.put(i * 4 + 2, (data.get(i * 4 + 2) and 0xFF * inverseAlpha + premult[2] shr 9).toByte())
+            data.put(i * 4 + 1, (data.get(i * 4 + 1).toInt() and 0xFF * inverseAlpha + premult[1] shr 9).toByte())
+            data.put(i * 4 + 2, (data.get(i * 4 + 2).toInt() and 0xFF * inverseAlpha + premult[2] shr 9).toByte())
             i++
         }
     }
@@ -591,7 +591,7 @@ object Image_process {
      Flip the image in place
      ==================
      */
-    fun R_HorizontalFlip(data: ByteBuffer?, width: Int, height: Int) {
+    fun R_HorizontalFlip(data: ByteBuffer, width: Int, height: Int) {
         var i: Int
         var j: Int
         var temp: Int
@@ -608,7 +608,7 @@ object Image_process {
         }
     }
 
-    fun R_VerticalFlip(data: ByteBuffer?, width: Int, height: Int) {
+    fun R_VerticalFlip(data: ByteBuffer, width: Int, height: Int) {
         var i: Int
         var j: Int
         var temp: Int
@@ -626,10 +626,10 @@ object Image_process {
         }
     }
 
-    fun R_RotatePic(data: ByteBuffer?, width: Int) {
+    fun R_RotatePic(data: ByteBuffer, width: Int) {
         var i: Int
         var j: Int
-        val temp: ByteBuffer?
+        val temp: ByteBuffer
         temp = ByteBuffer.allocate(width * width * 4) // R_StaticAlloc(width * width * 4);
         i = 0
         while (i < width) {

@@ -1,7 +1,7 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Material.cullType_t
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Material.materialCoverage_t
 import neo.Renderer.Material.shaderStage_t
 import neo.Renderer.Material.stageLighting_t
@@ -38,7 +38,7 @@ object draw_common {
      =====================
      */
     //========================================================================
-    private val fogPlanes: Array<idPlane>? = idPlane.Companion.generateArray(4)
+    private val fogPlanes: Array<idPlane> = idPlane.Companion.generateArray(4)
 
     /*
      ================
@@ -54,38 +54,38 @@ object draw_common {
      This is also called for the generated 2D rendering
      ==================
      */
-    private const val DBG_RB_STD_T_RenderShaderPasses = 0
+    private var DBG_RB_STD_T_RenderShaderPasses = 0
     private const val DBG_hasMatrix = 0
-    fun RB_BakeTextureMatrixIntoTexgen(   /*idPlane[]*/lightProject: Array<idVec4>? /*[3]*/,
-                                                       textureMatrix: FloatArray?
+    fun RB_BakeTextureMatrixIntoTexgen(   /*idPlane[]*/lightProject: Array<idVec4> /*[3]*/,
+                                                       textureMatrix: FloatArray
     ) {
         val genMatrix = FloatArray(16)
         val finale = FloatArray(16)
-        genMatrix[0] = lightProject.get(0).get(0)
-        genMatrix[4] = lightProject.get(0).get(1)
-        genMatrix[8] = lightProject.get(0).get(2)
-        genMatrix[12] = lightProject.get(0).get(3)
-        genMatrix[1] = lightProject.get(1).get(0)
-        genMatrix[5] = lightProject.get(1).get(1)
-        genMatrix[9] = lightProject.get(1).get(2)
-        genMatrix[13] = lightProject.get(1).get(3)
-        genMatrix[2] = 0
-        genMatrix[6] = 0
-        genMatrix[10] = 0
-        genMatrix[14] = 0
-        genMatrix[3] = lightProject.get(2).get(0)
-        genMatrix[7] = lightProject.get(2).get(1)
-        genMatrix[11] = lightProject.get(2).get(2)
-        genMatrix[15] = lightProject.get(2).get(3)
+        genMatrix[0] = lightProject[0][0]
+        genMatrix[4] = lightProject[0][1]
+        genMatrix[8] = lightProject[0][2]
+        genMatrix[12] = lightProject[0][3]
+        genMatrix[1] = lightProject[1][0]
+        genMatrix[5] = lightProject[1][1]
+        genMatrix[9] = lightProject[1][2]
+        genMatrix[13] = lightProject[1][3]
+        genMatrix[2] = 0f
+        genMatrix[6] = 0f
+        genMatrix[10] = 0f
+        genMatrix[14] = 0f
+        genMatrix[3] = lightProject[2][0]
+        genMatrix[7] = lightProject[2][1]
+        genMatrix[11] = lightProject[2][2]
+        genMatrix[15] = lightProject[2][3]
         tr_main.myGlMultMatrix(genMatrix, tr_local.backEnd.lightTextureMatrix, finale)
-        lightProject.get(0).set(0, finale[0])
-        lightProject.get(0).set(1, finale[4])
-        lightProject.get(0).set(2, finale[8])
-        lightProject.get(0).set(3, finale[12])
-        lightProject.get(1).set(0, finale[1])
-        lightProject.get(1).set(1, finale[5])
-        lightProject.get(1).set(2, finale[9])
-        lightProject.get(1).set(3, finale[13])
+        lightProject[0][0] = finale[0]
+        lightProject[0][1] = finale[4]
+        lightProject[0][2] = finale[8]
+        lightProject[0][3] = finale[12]
+        lightProject[1][0] = finale[1]
+        lightProject[1][1] = finale[5]
+        lightProject[1][2] = finale[9]
+        lightProject[1][3] = finale[13]
     }
 
     /*
@@ -93,7 +93,7 @@ object draw_common {
      RB_PrepareStageTexturing
      ================
      */
-    fun RB_PrepareStageTexturing(pStage: shaderStage_t?, surf: drawSurf_s?, ac: idDrawVert?) {
+    fun RB_PrepareStageTexturing(pStage: shaderStage_t, surf: drawSurf_s, ac: idDrawVert) {
         // set privatePolygonOffset if necessary
         if (pStage.privatePolygonOffset != 0f) {
             qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
@@ -196,7 +196,7 @@ object draw_common {
         if (pStage.texture.texgen == texgen_t.TG_REFLECT_CUBE) {
             if (tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2) {
                 // see if there is also a bump map specified
-                val bumpStage = surf.material.GetBumpStage()
+                val bumpStage = surf.material!!.GetBumpStage()
                 if (bumpStage != null) {
                     // per-pixel reflection mapping with bump mapping
                     tr_backend.GL_SelectTexture(1)
@@ -255,9 +255,9 @@ object draw_common {
         }
     }
 
-    fun RB_FinishStageTexturing(pStage: shaderStage_t?, surf: drawSurf_s?, ac: idDrawVert?) {
+    fun RB_FinishStageTexturing(pStage: shaderStage_t, surf: drawSurf_s, ac: idDrawVert) {
         // unset privatePolygonOffset if necessary
-        if (pStage.privatePolygonOffset != 0f && !surf.material.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
+        if (pStage.privatePolygonOffset != 0f && !surf.material!!.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
             qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
         }
         if (pStage.texture.texgen == texgen_t.TG_DIFFUSE_CUBE || pStage.texture.texgen == texgen_t.TG_SKYBOX_CUBE || pStage.texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
@@ -292,7 +292,7 @@ object draw_common {
         if (pStage.texture.texgen == texgen_t.TG_REFLECT_CUBE) {
             if (tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2) {
                 // see if there is also a bump map specified
-                val bumpStage = surf.material.GetBumpStage()
+                val bumpStage = surf.material!!.GetBumpStage()
                 if (bumpStage != null) {
                     // per-pixel reflection mapping with bump mapping
                     tr_backend.GL_SelectTexture(1)
@@ -349,7 +349,7 @@ object draw_common {
      to force the alpha test to fail when behind that clip plane
      =====================
      */
-    fun RB_STD_FillDepthBuffer(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int) {
+    fun RB_STD_FillDepthBuffer(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         // if we are just doing 2D rendering, no need to fill the depth buffer
         if (TempDump.NOT(tr_local.backEnd.viewDef.viewEntitys)) {
             return
@@ -448,9 +448,9 @@ object draw_common {
         //
         // set eye position in global space
         //
-        parm.put(0, tr_local.backEnd.viewDef.renderView.vieworg.get(0))
-        parm.put(1, tr_local.backEnd.viewDef.renderView.vieworg.get(1))
-        parm.put(2, tr_local.backEnd.viewDef.renderView.vieworg.get(2))
+        parm.put(0, tr_local.backEnd.viewDef.renderView.vieworg[0])
+        parm.put(1, tr_local.backEnd.viewDef.renderView.vieworg[1])
+        parm.put(2, tr_local.backEnd.viewDef.renderView.vieworg[2])
         parm.put(3, 1f)
         qgl.qglProgramEnvParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 1, parm)
     }
@@ -466,7 +466,7 @@ object draw_common {
         if (!tr_local.glConfig.ARBVertexProgramAvailable) {
             return
         }
-        val space = tr_local.backEnd.currentSpace
+        val space = tr_local.backEnd.currentSpace!!
         val parm = BufferUtils.createFloatBuffer(4)
 
         // set eye position in local space
@@ -493,7 +493,7 @@ object draw_common {
         qgl.qglProgramEnvParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 8, parm)
     }
 
-    fun RB_STD_T_RenderShaderPasses(surf: drawSurf_s?) {
+    fun RB_STD_T_RenderShaderPasses(surf: drawSurf_s) {
         var stage: Int
         draw_common.DBG_RB_STD_T_RenderShaderPasses++
         val shader: idMaterial?
@@ -502,7 +502,7 @@ object draw_common {
         val color = BufferUtils.createFloatBuffer(4)
         val tri: srfTriangles_s?
         tri = surf.geo
-        shader = surf.material
+        shader = surf.material!!
         if (!shader.HasAmbient()) {
             return
         }
@@ -571,7 +571,7 @@ object draw_common {
 
 //            if(pStage.texture.image[0].imgName.equals("guis/assets/caverns/testmat2"))continue;
             // check the enable condition
-            if (regs[pStage.conditionRegister] == 0) {
+            if (regs[pStage.conditionRegister] == 0f) {
                 stage++
                 continue
             }
@@ -634,14 +634,14 @@ object draw_common {
 
                 // megaTextures bind a lot of images and set a lot of parameters
                 if (newStage.megaTexture != null) {
-                    newStage.megaTexture.SetMappingForSurface(tri)
+                    newStage.megaTexture!!.SetMappingForSurface(tri)
                     val localViewer = idVec3()
                     tr_main.R_GlobalPointToLocal(
                         surf.space.modelMatrix,
                         tr_local.backEnd.viewDef.renderView.vieworg,
                         localViewer
                     )
-                    newStage.megaTexture.BindForViewOrigin(localViewer)
+                    newStage.megaTexture!!.BindForViewOrigin(localViewer)
                 }
                 for (i in 0 until newStage.numVertexParms) {
                     val parm = BufferUtils.createFloatBuffer(4)
@@ -669,7 +669,7 @@ object draw_common {
                     }
                 }
                 if (newStage.megaTexture != null) {
-                    newStage.megaTexture.Unbind()
+                    newStage.megaTexture!!.Unbind()
                 }
                 tr_backend.GL_SelectTexture(0)
                 qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
@@ -815,7 +815,7 @@ object draw_common {
      Draw non-light dependent passes
      =====================
      */
-    fun RB_STD_DrawShaderPasses(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int): Int {
+    fun RB_STD_DrawShaderPasses(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int): Int {
         var i: Int
 
         // only obey skipAmbient if we are rendering a view
@@ -826,7 +826,7 @@ object draw_common {
 
         // if we are about to draw the first surface that needs
         // the rendering in a texture, copy it over
-        if (drawSurfs.get(0).material.GetSort() >= Material.SS_POST_PROCESS) {
+        if (drawSurfs.get(0).material!!.GetSort() >= Material.SS_POST_PROCESS) {
             if (RenderSystem_init.r_skipPostProcess.GetBool()) {
                 return 0
             }
@@ -854,7 +854,7 @@ object draw_common {
         tr_local.backEnd.currentSpace = null
         i = 0
         while (i < numDrawSurfs /*&& numDrawSurfs == 5*/) {
-            if (drawSurfs.get(i).material.SuppressInSubview()) {
+            if (drawSurfs.get(i).material!!.SuppressInSubview()) {
                 i++
                 continue
             }
@@ -866,7 +866,7 @@ object draw_common {
             }
 
             // we need to draw the post process shaders after we have drawn the fog lights
-            if (drawSurfs.get(i).material.GetSort() >= Material.SS_POST_PROCESS
+            if (drawSurfs.get(i).material!!.GetSort() >= Material.SS_POST_PROCESS
                 && !tr_local.backEnd.currentRenderCopied
             ) {
                 break
@@ -898,7 +898,7 @@ object draw_common {
         if (!RenderSystem_init.r_shadows.GetBool()) {
             return
         }
-        if (TempDump.NOT(drawSurfs)) {
+        if (null == drawSurfs) {
             return
         }
         tr_backend.RB_LogComment("---------- RB_StencilShadowPass ----------\n")
@@ -950,7 +950,7 @@ object draw_common {
      mode to the framebuffer, instead of interacting with the surface texture
      =====================
      */
-    fun RB_BlendLight(drawSurfs: drawSurf_s?, drawSurfs2: drawSurf_s?) {
+    fun RB_BlendLight(drawSurfs: drawSurf_s, drawSurfs2: drawSurf_s) {
         val lightShader: idMaterial?
         var stage: shaderStage_t
         var i: Int
@@ -970,7 +970,7 @@ object draw_common {
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
         qgl.qglTexCoord2f(0f, 0.5f)
-        tr_local.backEnd.vLight.falloffImage.Bind()
+        tr_local.backEnd.vLight.falloffImage!!.Bind()
 
         // texture 0 will get the projected texture
         tr_backend.GL_SelectTexture(0)
@@ -981,7 +981,7 @@ object draw_common {
         i = 0
         while (i < lightShader.GetNumStages()) {
             stage = lightShader.GetStage(i)
-            if (0 == regs[stage.conditionRegister]) {
+            if (0f == regs[stage.conditionRegister]) {
                 i++
                 continue
             }
@@ -1029,8 +1029,8 @@ object draw_common {
      RB_FogPass
      ==================
      */
-    fun RB_FogPass(drawSurfs: drawSurf_s?, drawSurfs2: drawSurf_s?) {
-        val frustumTris: srfTriangles_s?
+    fun RB_FogPass(drawSurfs: drawSurf_s, drawSurfs2: drawSurf_s) {
+        val frustumTris: srfTriangles_s
         val ds = drawSurf_s() //memset( &ds, 0, sizeof( ds ) );
         val lightShader: idMaterial?
         val stage: shaderStage_t
@@ -1079,14 +1079,14 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
         qgl.qglTexCoord2f(0.5f, 0.5f) // make sure Q is set
-        draw_common.fogPlanes[0].set(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2])
-        draw_common.fogPlanes[0].set(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6])
-        draw_common.fogPlanes[0].set(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10])
-        draw_common.fogPlanes[0].set(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14])
-        draw_common.fogPlanes[1].set(0, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0])
-        draw_common.fogPlanes[1].set(1, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4])
-        draw_common.fogPlanes[1].set(2, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8])
-        draw_common.fogPlanes[1].set(3, a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12])
+        draw_common.fogPlanes[0][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2]
+        draw_common.fogPlanes[0][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6]
+        draw_common.fogPlanes[0][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10]
+        draw_common.fogPlanes[0][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14]
+        draw_common.fogPlanes[1][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0]
+        draw_common.fogPlanes[1][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4]
+        draw_common.fogPlanes[1][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8]
+        draw_common.fogPlanes[1][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12]
 
         // texture 1 is the entering plane fade correction
         tr_backend.GL_SelectTexture(1)
@@ -1096,20 +1096,18 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
 
         // T will get a texgen for the fade plane, which is always the "top" plane on unrotated lights
-        draw_common.fogPlanes[2].set(0, 0.001f * tr_local.backEnd.vLight.fogPlane.get(0))
-        draw_common.fogPlanes[2].set(1, 0.001f * tr_local.backEnd.vLight.fogPlane.get(1))
-        draw_common.fogPlanes[2].set(2, 0.001f * tr_local.backEnd.vLight.fogPlane.get(2))
-        draw_common.fogPlanes[2].set(3, 0.001f * tr_local.backEnd.vLight.fogPlane.get(3))
+        draw_common.fogPlanes[2][0] = 0.001f * tr_local.backEnd.vLight.fogPlane[0]
+        draw_common.fogPlanes[2][1] = 0.001f * tr_local.backEnd.vLight.fogPlane[1]
+        draw_common.fogPlanes[2][2] = 0.001f * tr_local.backEnd.vLight.fogPlane[2]
+        draw_common.fogPlanes[2][3] = 0.001f * tr_local.backEnd.vLight.fogPlane[3]
 
         // S is based on the view origin
         val s =
-            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2].get(
-                3
-            )
-        draw_common.fogPlanes[3].set(0, 0f)
-        draw_common.fogPlanes[3].set(1, 0f)
-        draw_common.fogPlanes[3].set(2, 0f)
-        draw_common.fogPlanes[3].set(3, tr_local.FOG_ENTER + s)
+            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2][3]
+        draw_common.fogPlanes[3][0] = 0f
+        draw_common.fogPlanes[3][1] = 0f
+        draw_common.fogPlanes[3][2] = 0f
+        draw_common.fogPlanes[3][3] = tr_local.FOG_ENTER + s
         qgl.qglTexCoord2f(tr_local.FOG_ENTER + s, tr_local.FOG_ENTER)
 
         // draw it
@@ -1176,9 +1174,9 @@ object draw_common {
 //		}
 //}
             if (vLight.lightShader.IsFogLight()) {
-                draw_common.RB_FogPass(vLight.globalInteractions[0], vLight.localInteractions[0])
+                draw_common.RB_FogPass(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
             } else if (vLight.lightShader.IsBlendLight()) {
-                draw_common.RB_BlendLight(vLight.globalInteractions[0], vLight.localInteractions[0])
+                draw_common.RB_BlendLight(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
             }
             qgl.qglDisable(GL11.GL_STENCIL_TEST)
             vLight = vLight.next
@@ -1256,7 +1254,7 @@ object draw_common {
      =============
      */
     fun RB_STD_DrawView() {
-        val drawSurfs: Array<drawSurf_s?>?
+        val drawSurfs: Array<drawSurf_s>
         val numDrawSurfs: Int
         tr_backend.RB_LogComment("---------- RB_STD_DrawView ----------\n")
         tr_local.backEnd.depthFunc = tr_local.GLS_DEPTHFUNC_EQUAL
@@ -1312,7 +1310,7 @@ object draw_common {
      ==================
      */
     class RB_T_FillDepthBuffer private constructor() : triFunc() {
-        override fun run(surf: drawSurf_s?) {
+        override fun run(surf: drawSurf_s) {
             var stage: Int
             val shader: idMaterial?
             var pStage: shaderStage_t
@@ -1320,7 +1318,7 @@ object draw_common {
             val color = FloatArray(4)
             val tri: srfTriangles_s?
             tri = surf.geo
-            shader = surf.material
+            shader = surf.material!!
 
             // update the clip plane if needed
             if (tr_local.backEnd.viewDef.numClipPlanes != 0 && surf.space !== tr_local.backEnd.currentSpace) {
@@ -1358,7 +1356,7 @@ object draw_common {
             while (stage < shader.GetNumStages()) {
                 pStage = shader.GetStage(stage)
                 // check the stage enable condition
-                if (regs[pStage.conditionRegister] != 0) {
+                if (regs[pStage.conditionRegister] != 0f) {
                     break
                 }
                 stage++
@@ -1382,13 +1380,13 @@ object draw_common {
                 color[2] = 1.0f / tr_local.backEnd.overBright
                 color[1] = color[2]
                 color[0] = color[1]
-                color[3] = 1
+                color[3] = 1f
             } else {
                 // others just draw black
-                color[2] = 0
+                color[2] = 0f
                 color[1] = color[2]
                 color[0] = color[1]
-                color[3] = 1
+                color[3] = 1f
             }
             val ac =
                 idDrawVert(VertexCache.vertexCache.Position(tri.ambientCache)) //TODO:figure out how to work these damn casts.
@@ -1417,7 +1415,7 @@ object draw_common {
                     }
 
                     // check the stage enable condition
-                    if (regs[pStage.conditionRegister] == 0) {
+                    if (regs[pStage.conditionRegister] == 0f) {
                         stage++
                         continue
                     }
@@ -1475,7 +1473,7 @@ object draw_common {
         }
 
         companion object {
-            val INSTANCE: triFunc? = RB_T_FillDepthBuffer()
+            val INSTANCE: triFunc = RB_T_FillDepthBuffer()
         }
     }
 
@@ -1487,7 +1485,7 @@ object draw_common {
      =====================
      */
     class RB_T_Shadow private constructor() : triFunc() {
-        override fun run(surf: drawSurf_s?) {
+        override fun run(surf: drawSurf_s) {
             val tri: srfTriangles_s? //TODO: should this be an array?
 
             // set the light position if we are using a vertex program to project the rear surfaces
@@ -1638,7 +1636,7 @@ object draw_common {
         }
 
         companion object {
-            val INSTANCE: triFunc? = RB_T_Shadow()
+            val INSTANCE: triFunc = RB_T_Shadow()
         }
     }
 
@@ -1650,7 +1648,7 @@ object draw_common {
      =====================
      */
     class RB_T_BlendLight private constructor() : triFunc() {
-        override fun run(surf: drawSurf_s?) {
+        override fun run(surf: drawSurf_s) {
             val tri: srfTriangles_s?
             tri = surf.geo
             if (tr_local.backEnd.currentSpace !== surf.space) {
@@ -1687,7 +1685,7 @@ object draw_common {
         }
 
         companion object {
-            val INSTANCE: triFunc? = RB_T_BlendLight()
+            val INSTANCE: triFunc = RB_T_BlendLight()
         }
     }
 
@@ -1699,7 +1697,7 @@ object draw_common {
      =====================
      */
     class RB_T_BasicFog private constructor() : triFunc() {
-        override fun run(surf: drawSurf_s?) {
+        override fun run(surf: drawSurf_s) {
             if (tr_local.backEnd.currentSpace !== surf.space) {
                 val local = idPlane()
                 tr_backend.GL_SelectTexture(0)
@@ -1709,7 +1707,7 @@ object draw_common {
 
 //		R_GlobalPlaneToLocal( surf.space.modelMatrix, fogPlanes[1], local );
 //		local[3] += 0.5;
-                local.set(0, local.set(1, local.set(2, local.set(3, 0.5f))))
+                local[0] = local.set(1, local.set(2, local.set(3, 0.5f)))
                 qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
                 tr_backend.GL_SelectTexture(1)
 
@@ -1724,7 +1722,7 @@ object draw_common {
         }
 
         companion object {
-            val INSTANCE: triFunc? = RB_T_BasicFog()
+            val INSTANCE: triFunc = RB_T_BasicFog()
         }
     }
 }

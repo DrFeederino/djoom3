@@ -188,7 +188,7 @@ object Pvs {
             return Game_local.gameRenderWorld.PointInArea(point)
         }
 
-        fun GetPVSAreas(bounds: idBounds, areas: IntArray?, maxAreas: Int): Int {    // returns number of areas
+        fun GetPVSAreas(bounds: idBounds, areas: IntArray, maxAreas: Int): Int {    // returns number of areas
             return Game_local.gameRenderWorld.BoundsInAreas(bounds, areas, maxAreas)
         }
 

@@ -1,5 +1,6 @@
 package neo.Renderer
 
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Model.dynamicModel_t
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.modelSurface_s
@@ -8,10 +9,10 @@ import neo.Renderer.Model_local.idRenderModelStatic
 import neo.framework.Common
 import neo.framework.DemoFile.idDemoFile
 import neo.idlib.containers.CInt
-import neo.idlib.containers.List.idList
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec2
+import kotlin.experimental.and
 
 /**
  *
@@ -26,7 +27,7 @@ object ModelOverlay {
      */
     const val MAX_OVERLAY_SURFACES = 16
 
-    internal class overlayVertex_s {
+    class overlayVertex_s {
         var st: FloatArray = FloatArray(2)
         var vertexNum = 0
 
@@ -37,13 +38,13 @@ object ModelOverlay {
         }
     }
 
-    private class overlaySurface_s {
-        var indexes: IntArray
+    class overlaySurface_s {
+        var indexes: IntArray = IntArray(0)
         var numIndexes = 0
         var numVerts = 0
         var surfaceId = 0
         var surfaceNum: CInt = CInt()
-        var verts: Array<overlayVertex_s>
+        var verts: Array<overlayVertex_s> = emptyArray()
         fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
@@ -51,13 +52,13 @@ object ModelOverlay {
 
     internal class overlayMaterial_s {
         var material: Material.idMaterial? = null
-        val surfaces: idList<overlaySurface_s> = idList()
+        val surfaces: ArrayList<overlaySurface_s> = ArrayList()
     }
 
     class idRenderModelOverlay  // ~idRenderModelOverlay();
     {
         //
-        private val materials: idList<overlayMaterial_s> = idList()
+        private val materials: ArrayList<overlayMaterial_s> = ArrayList()
 
         /*
          =====================
@@ -74,7 +75,7 @@ object ModelOverlay {
         // light interaction shaders. Materials for overlays should always
         // be clamped, because the projected texcoords can run well off the
         // texture since no new clip vertexes are generated.
-        fun CreateOverlay(model: idRenderModel?, localTextureAxis: Array<idPlane>? /*[2]*/, mtr: idMaterial?) {
+        fun CreateOverlay(model: idRenderModel, localTextureAxis: Array<idPlane> /*[2]*/, mtr: idMaterial?) {
             var i: Int
             var maxVerts: Int
             var maxIndexes: Int
@@ -87,17 +88,17 @@ object ModelOverlay {
             surfNum = 0
             while (surfNum < model.NumSurfaces()) {
                 val surf = model.Surface(surfNum)
-                if (surf.geometry.numVerts > maxVerts) {
-                    maxVerts = surf.geometry.numVerts
+                if (surf.geometry!!.numVerts > maxVerts) {
+                    maxVerts = surf.geometry!!.numVerts
                 }
-                if (surf.geometry.numIndexes > maxIndexes) {
-                    maxIndexes = surf.geometry.numIndexes
+                if (surf.geometry!!.numIndexes > maxIndexes) {
+                    maxIndexes = surf.geometry!!.numIndexes
                 }
                 surfNum++
             }
 
             // make temporary buffers for the building process
-            val overlayVerts = arrayOfNulls<overlayVertex_s?>(maxVerts)
+            val overlayVerts = Array<overlayVertex_s>(maxVerts) { overlayVertex_s() }
             val   /*glIndex_t*/overlayIndexes = IntArray(maxIndexes)
 
             // pull out the triangles we need from the base surfaces
@@ -111,28 +112,34 @@ object ModelOverlay {
                 }
 
                 // some surfaces can explicitly disallow overlays
-                if (!surf.shader.AllowOverlays()) {
+                if (!surf.shader!!.AllowOverlays()) {
                     surfNum++
                     continue
                 }
-                val stri = surf.geometry
+                val stri = surf.geometry!!
 
                 // try to cull the whole surface along the first texture axis
-                d = stri.bounds.PlaneDistance(localTextureAxis.get(0))
+                d = stri.bounds.PlaneDistance(localTextureAxis[0])
                 if (d < 0.0f || d > 1.0f) {
                     surfNum++
                     continue
                 }
 
                 // try to cull the whole surface along the second texture axis
-                d = stri.bounds.PlaneDistance(localTextureAxis.get(1))
+                d = stri.bounds.PlaneDistance(localTextureAxis[1])
                 if (d < 0.0f || d > 1.0f) {
                     surfNum++
                     continue
                 }
                 val cullBits = ByteArray(stri.numVerts)
-                val texCoords = arrayOfNulls<idVec2>(stri.numVerts)
-                Simd.SIMDProcessor.OverlayPointCull(cullBits, texCoords, localTextureAxis, stri.verts, stri.numVerts)
+                val texCoords = idVec2.generateArray(stri.numVerts)
+                Simd.SIMDProcessor.OverlayPointCull(
+                    cullBits,
+                    texCoords,
+                    localTextureAxis,
+                    stri.verts.toTypedArray(),
+                    stri.numVerts
+                )
                 val   /*glIndex_t */vertexRemap = IntArray(stri.numVerts)
                 Simd.SIMDProcessor.Memset(vertexRemap, -1, stri.numVerts)
 
@@ -147,7 +154,7 @@ object ModelOverlay {
                     val v3 = stri.indexes[index + 2]
 
                     // skip triangles completely off one side
-                    if (cullBits[v1] and cullBits[v2] and cullBits[v3] != 0) {
+                    if (cullBits[v1] and cullBits[v2] and cullBits[v3] != 0.toByte()) {
                         index += 3
                         triNum++
                         continue
@@ -160,8 +167,8 @@ object ModelOverlay {
                         if (vertexRemap[ind] == -1) {
                             vertexRemap[ind] = numVerts
                             overlayVerts[numVerts].vertexNum = ind
-                            overlayVerts[numVerts].st.get(0) = texCoords[ind].get(0)
-                            overlayVerts[numVerts].st.get(1) = texCoords[ind].get(1)
+                            overlayVerts[numVerts].st[0] = texCoords[ind][0]
+                            overlayVerts[numVerts].st[1] = texCoords[ind][1]
                             numVerts++
                         }
                         overlayIndexes[numIndexes++] = vertexRemap[ind]
@@ -174,13 +181,13 @@ object ModelOverlay {
                     continue
                 }
                 val s = overlaySurface_s() // Mem_Alloc(sizeof(overlaySurface_t));
-                s.surfaceNum.setVal(surfNum)
+                s.surfaceNum._val = (surfNum)
                 s.surfaceId = surf.id
-                s.verts = arrayOfNulls<overlayVertex_s?>(numVerts) // Mem_Alloc(numVerts);
+                s.verts = Array<overlayVertex_s>(numVerts) { overlayVertex_s(overlayVerts[it]) } // Mem_Alloc(numVerts);
                 //                memcpy(s.verts, overlayVerts, numVerts * sizeof(s.verts[0]));
                 i = 0
                 while (i < numVerts) {
-                    s.verts.get(i) = overlayVertex_s(overlayVerts[i])
+                    s.verts[i] = overlayVertex_s(overlayVerts[i])
                     i++
                 }
                 s.numVerts = numVerts
@@ -189,36 +196,36 @@ object ModelOverlay {
                 System.arraycopy(overlayIndexes, 0, s.indexes, 0, numIndexes)
                 s.numIndexes = numIndexes
                 i = 0
-                while (i < materials.Num()) {
-                    if (materials.get(i).material === mtr) {
+                while (i < materials.size) {
+                    if (materials[i].material === mtr) {
                         break
                     }
                     i++
                 }
-                if (i < materials.Num()) {
-                    materials.get(i).surfaces.Append(s)
+                if (i < materials.size) {
+                    materials[i].surfaces.add(s)
                 } else {
                     val mat = overlayMaterial_s()
                     mat.material = mtr
-                    mat.surfaces.Append(s)
-                    materials.Append(mat)
+                    mat.surfaces.add(s)
+                    materials.add(mat)
                 }
                 surfNum++
             }
 
             // remove the oldest overlay surfaces if there are too many per material
             i = 0
-            while (i < materials.Num()) {
-                while (materials.get(i).surfaces.Num() > ModelOverlay.MAX_OVERLAY_SURFACES) {
-                    FreeSurface(materials.get(i).surfaces.get(0))
-                    materials.get(i).surfaces.RemoveIndex(0)
+            while (i < materials.size) {
+                while (materials[i].surfaces.size > ModelOverlay.MAX_OVERLAY_SURFACES) {
+                    FreeSurface(materials[i].surfaces[0])
+                    materials[i].surfaces.removeAt(0)
                 }
                 i++
             }
         }
 
         // Creates new model surfaces for baseModel, which should be a static instantiation of a dynamic model.
-        fun AddOverlaySurfacesToModel(baseModel: idRenderModel) {
+        fun AddOverlaySurfacesToModel(baseModel: idRenderModel?) {
             var i: Int
             var j: Int
             var k: Int
@@ -229,7 +236,7 @@ object ModelOverlay {
             val staticModel: idRenderModelStatic?
             var surf: overlaySurface_s?
             var newTri: srfTriangles_s
-            var newSurf: modelSurface_s?
+            var newSurf: modelSurface_s
             if (baseModel == null || baseModel.IsDefaultModel()) {
                 return
             }
@@ -243,45 +250,46 @@ object ModelOverlay {
             }
 
 //	assert( dynamic_cast<idRenderModelStatic *>(baseModel) != null );
-            staticModel = baseModel as idRenderModelStatic?
+            staticModel = baseModel as idRenderModelStatic
             staticModel.overlaysAdded = 0
-            if (0 == materials.Num()) {
+            if (0 == materials.size) {
                 staticModel.DeleteSurfacesWithNegativeId()
                 return
             }
             k = 0
-            while (k < materials.Num()) {
+            while (k < materials.size) {
                 numIndexes = 0
                 numVerts = numIndexes
                 i = 0
-                while (i < materials.get(k).surfaces.Num()) {
-                    numVerts += materials.get(k).surfaces.get(i).numVerts
-                    numIndexes += materials.get(k).surfaces.get(i).numIndexes
+                while (i < materials[k].surfaces.size) {
+                    numVerts += materials[k].surfaces[i].numVerts
+                    numIndexes += materials[k].surfaces[i].numIndexes
                     i++
                 }
                 if (staticModel.FindSurfaceWithId(-1 - k, surfaceNum)) {
-                    newSurf = staticModel.surfaces.get(surfaceNum._val)
+                    newSurf = staticModel.surfaces[surfaceNum._val]
                 } else {
-                    newSurf = staticModel.surfaces.Alloc()
+                    newSurf = modelSurface_s()
+                    staticModel.surfaces.add(newSurf)
                     newSurf.geometry = null
-                    newSurf.shader = materials.get(k).material
+                    newSurf.shader = materials[k].material
                     newSurf.id = -1 - k
                 }
-                if (newSurf.geometry == null || newSurf.geometry.numVerts < numVerts || newSurf.geometry.numIndexes < numIndexes) {
+                if (newSurf.geometry == null || newSurf.geometry!!.numVerts < numVerts || newSurf.geometry!!.numIndexes < numIndexes) {
                     tr_trisurf.R_FreeStaticTriSurf(newSurf.geometry)
                     newSurf.geometry = tr_trisurf.R_AllocStaticTriSurf()
-                    tr_trisurf.R_AllocStaticTriSurfVerts(newSurf.geometry, numVerts)
-                    tr_trisurf.R_AllocStaticTriSurfIndexes(newSurf.geometry, numIndexes)
-                    Simd.SIMDProcessor.Memset(newSurf.geometry.verts, 0, numVerts)
+                    tr_trisurf.R_AllocStaticTriSurfVerts(newSurf.geometry!!, numVerts)
+                    tr_trisurf.R_AllocStaticTriSurfIndexes(newSurf.geometry!!, numIndexes)
+                    Simd.SIMDProcessor.Memset(newSurf.geometry!!.verts.toTypedArray(), 0, numVerts)
                 } else {
-                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(newSurf.geometry)
+                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(newSurf.geometry!!)
                 }
-                newTri = newSurf.geometry
+                newTri = newSurf.geometry!!
                 numIndexes = 0
                 numVerts = numIndexes
                 i = 0
-                while (i < materials.get(k).surfaces.Num()) {
-                    surf = materials.get(k).surfaces.get(i)
+                while (i < materials[k].surfaces.size) {
+                    surf = materials[k].surfaces[i]
 
                     // get the model surface for this overlay surface
                     baseSurf = if (surf.surfaceNum._val < staticModel.NumSurfaces()) {
@@ -298,7 +306,7 @@ object ModelOverlay {
                         } else {
                             // the surface with this id no longer exists
                             FreeSurface(surf)
-                            materials.get(k).surfaces.RemoveIndex(i)
+                            materials[k].surfaces.removeAt(i)
                             i--
                             i++
                             continue
@@ -308,7 +316,7 @@ object ModelOverlay {
                     // copy indexes;
                     j = 0
                     while (j < surf.numIndexes) {
-                        newTri.indexes[numIndexes + j] = numVerts + surf.indexes.get(j)
+                        newTri.indexes[numIndexes + j] = numVerts + surf.indexes[j]
                         j++
                     }
                     numIndexes += surf.numIndexes
@@ -316,18 +324,18 @@ object ModelOverlay {
                     // copy vertices
                     j = 0
                     while (j < surf.numVerts) {
-                        val overlayVert = surf.verts.get(j)
-                        newTri.verts[numVerts].st.set(0, overlayVert.st.get(0))
-                        newTri.verts[numVerts].st.set(1, overlayVert.st.get(1))
-                        if (overlayVert.vertexNum >= baseSurf.geometry.numVerts) {
+                        val overlayVert = surf.verts[j]
+                        newTri.verts[numVerts].st[0] = overlayVert.st[0]
+                        newTri.verts[numVerts].st[1] = overlayVert.st[1]
+                        if (overlayVert.vertexNum >= baseSurf.geometry!!.numVerts) {
                             // This can happen when playing a demofile and a model has been changed since it was recorded, so just issue a warning and go on.
                             Common.common.Warning("idRenderModelOverlay::AddOverlaySurfacesToModel: overlay vertex out of range.  Model has probably changed since generating the overlay.")
                             FreeSurface(surf)
-                            materials.get(k).surfaces.RemoveIndex(i)
+                            materials[k].surfaces.removeAt(i)
                             staticModel.DeleteSurfaceWithId(newSurf.id)
                             return
                         }
-                        newTri.verts[numVerts].xyz.set(baseSurf.geometry.verts[overlayVert.vertexNum].xyz)
+                        newTri.verts[numVerts].xyz.set(baseSurf.geometry!!.verts[overlayVert.vertexNum].xyz)
                         numVerts++
                         j++
                     }
@@ -351,13 +359,13 @@ object ModelOverlay {
 
         //
         private fun FreeSurface(surface: overlaySurface_s) {
-            if (surface.verts != null) {
+            if (surface.verts.isNotEmpty()) {
 //                Mem_Free(surface.verts);
-                surface.verts = null
+                surface.verts = emptyArray()
             }
-            if (surface.indexes != null) {
+            if (surface.indexes.isNotEmpty()) {
 //                Mem_Free(surface.indexes);
-                surface.indexes = null
+                surface.indexes = IntArray(0)
             }
             surface.clear()
         }

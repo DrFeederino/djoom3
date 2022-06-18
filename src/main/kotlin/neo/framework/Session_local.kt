@@ -129,7 +129,7 @@ object Session_local {
         //
         var cmdDemoFile // if non-zero, we are reading commands from a file
                 : idFile? = null
-        var currentDemoRenderView: renderView_s? = null
+        var currentDemoRenderView: renderView_s = renderView_s()
         val currentMapName: idStr = idStr() // for checking reload on same level
         var demoTimeOffset = 0
 
@@ -2226,7 +2226,7 @@ object Session_local {
                 DBG_Draw++
                 guiActive!!.Redraw(Common.com_frameTime)
             } else if (readDemo != null) {
-                rw.RenderScene(currentDemoRenderView)
+                rw.RenderScene(currentDemoRenderView!!)
                 RenderSystem.renderSystem.DrawDemoPics()
             } else if (mapSpawned) {
                 var gameDraw = false

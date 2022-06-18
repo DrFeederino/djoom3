@@ -224,8 +224,8 @@ class idMatX {
     }
 
     //public	friend idVecX	operator*( const idVecX &vec, const idMatX &m );
-    //public	static idVecX	oMultiply( final idVecX vec, final idMatX m ){
-    //	return m.oMultiply(vec);
+    //public	static idVecX	times( final idVecX vec, final idMatX m ){
+    //	return m.times(vec);
     //}
     //public	friend idVecX &	operator*=( idVecX &vec, const idMatX &m );
     fun plusAssign(a: idMatX): idMatX {

@@ -51,7 +51,7 @@ class Session {
     class logStats_t : SERiAL {
         var combat = 0
         var health = 0
-        var heartRate = 0
+        var heartRate = 0f
         var stamina = 0
         override fun AllocBuffer(): ByteBuffer {
             throw TODO_Exception()

@@ -1,10 +1,10 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Cinematic.idCinematic
 import neo.Renderer.GuiModel.idGuiModel
 import neo.Renderer.Image.*
 import neo.Renderer.Interaction.idInteraction
+import neo.Renderer.Material.idMaterial
 import neo.Renderer.Material.stageVertexColor_t
 import neo.Renderer.Material.textureFilter_t
 import neo.Renderer.Material.textureRepeat_t
@@ -33,10 +33,8 @@ import neo.idlib.BV.Frustum.idFrustum
 import neo.idlib.Lib
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
-import neo.idlib.containers.List.idList
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Vector
@@ -47,9 +45,8 @@ import neo.sys.win_glimp
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import java.io.IOException
-import java.nio.*
+import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.math.floor
@@ -176,7 +173,7 @@ object tr_local {
     var glConfig: glconfig_s = glconfig_s() // outside of TR since it shouldn't be cleared during ref re-init
     var tr: idRenderSystemLocal = idRenderSystemLocal()
 
-    internal enum class backEndName_t {
+    enum class backEndName_t {
         BE_ARB, BE_NV10, BE_NV20, BE_R200, BE_ARB2, BE_BAD
     }
 
@@ -401,8 +398,8 @@ object tr_local {
                 : Material.idMaterial? = null
         var nextOnLight // viewLight chains
                 : drawSurf_s? = null
-        var scissorRect // for scissor clipping, local inside renderView viewport
-                : idScreenRect? = null
+        lateinit var scissorRect // for scissor clipping, local inside renderView viewport
+                : idScreenRect
         var shaderRegisters // evaluated and adjusted for referenceShaders
                 : FloatArray = FloatArray(0)
 
@@ -437,7 +434,7 @@ object tr_local {
     // areas have references to hold all the lights and entities in them
     class areaReference_s {
         var area // so owners can find all the areas they are in
-                : portalArea_s? = null
+                : portalArea_s = portalArea_s()
         var areaNext // chain in the area
                 : areaReference_s? = null
         var areaPrev: areaReference_s? = null
@@ -512,7 +509,7 @@ object tr_local {
         var foggedPortals: doublePortal_s?
         var frustumTris // triangulated frustumWindings[]
                 : srfTriangles_s?
-        var frustumWindings: Array<idWinding?> = arrayOfNulls<idWinding?>(6) // used for culling
+        var frustumWindings: Array<idWinding?> = kotlin.arrayOfNulls(6) // used for culling
         var index // in world lightdefs
                 : Int
         var lastInteraction: idInteraction?
@@ -741,11 +738,11 @@ object tr_local {
         val localShadows: Array<drawSurf_s?> = arrayOf(null) // don't shadow local Surfaces
         val translucentInteractions: Array<drawSurf_s?> = arrayOf(null) // get shadows from everything
         var falloffImage // falloff image used by backend
-                : idImage = idImage()
+                : idImage? = null
         var fogPlane // fog plane for backend fog volume rendering
                 : idPlane = idPlane()
         var frustumTris // light frustum for backend fog volume rendering
-                : srfTriangles_s? = null
+                : srfTriangles_s = srfTriangles_s()
 
         //
         // back end should NOT reference the lightDef, because it can change when running SMP
@@ -760,7 +757,7 @@ object tr_local {
         // seen through any portals
         var scissorRect: idScreenRect = idScreenRect()
         var shaderRegisters // shader registers used by backend
-                : FloatArray
+                : FloatArray = FloatArray(0)
 
         //
         // if the view isn't inside the light, we can use the non-reversed
@@ -799,7 +796,7 @@ object tr_local {
         //
         var modelMatrix: FloatArray = FloatArray(16) // local coords to global coords
         var modelViewMatrix: FloatArray = FloatArray(16) // local coords to eye coords
-        var next: viewEntity_s = viewEntity_s()
+        var next: viewEntity_s? = null
 
         //
         // for scissor clipping, local inside renderView viewport
@@ -843,7 +840,7 @@ object tr_local {
     class viewDef_s {
         // specified in the call to DrawScene()
         val clipPlanes // in world space, the positive side
-                : Array<idPlane>
+                : kotlin.collections.ArrayList<idPlane>
         val frustum: Array<idPlane>
 
         //
@@ -854,7 +851,7 @@ object tr_local {
                 = 0
 
         //
-        var connectedAreas: BooleanArray
+        var connectedAreas: BooleanArray = BooleanArray(0)
 
         //
         // drawSurfs are the visible surfaces of the viewEntities, sorted
@@ -928,7 +925,7 @@ object tr_local {
         constructor() {
             renderView = renderView_s()
             worldSpace = viewEntity_s()
-            clipPlanes = arrayOfNulls<idPlane>(MAX_CLIP_PLANES)
+            clipPlanes = ArrayList<idPlane>(MAX_CLIP_PLANES)
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
@@ -947,7 +944,7 @@ object tr_local {
             isXraySubview = v.isXraySubview
             isEditor = v.isEditor
             numClipPlanes = v.numClipPlanes
-            clipPlanes = idPlane.generateArray(MAX_CLIP_PLANES)
+            clipPlanes = arrayListOf(*idPlane.generateArray(MAX_CLIP_PLANES))
             for (i in 0 until MAX_CLIP_PLANES) {
                 clipPlanes[i].set(v.clipPlanes[i])
             }
@@ -960,7 +957,7 @@ object tr_local {
             maxDrawSurfs = v.maxDrawSurfs
             viewLights = v.viewLights
             viewEntitys = v.viewEntitys
-            frustum = Arrays.stream(v.frustum).map { plane: idPlane -> idPlane(plane) }.toArray { _Dummy_.__Array__() }
+            frustum = Array(v.frustum.size) { idPlane(v.frustum[it]) }
             viewFrustum = idFrustum(v.viewFrustum)
             areaNum = v.areaNum
             if (v.connectedAreas != null) {
@@ -1030,7 +1027,7 @@ object tr_local {
 
     class drawSurfsCommand_t : emptyCommand_t() {
         //        renderCommand_t commandId, next;
-        var viewDef: viewDef_s? = null
+        var viewDef: viewDef_s = viewDef_s()
     }
 
     class copyRenderCommand_t : emptyCommand_t() {
@@ -1073,9 +1070,9 @@ object tr_local {
         // the currently building command list
         // commands can be inserted at the front if needed, as for required
         // dynamically generated textures
-        var cmdHead: emptyCommand_t? = null
+        var cmdHead: emptyCommand_t = emptyCommand_t()
         var cmdTail // may be of other command type based on commandId
-                : emptyCommand_t? = null
+                : emptyCommand_t = emptyCommand_t()
 
         //
         var firstDeferredFreeTriSurf: srfTriangles_s? = null
@@ -1132,7 +1129,7 @@ object tr_local {
         var current3DMap = 0
         var currentCubeMap = 0
         var texEnv = 0
-        val textureType: textureType_t = textureType_t.TT_DISABLED
+        var textureType: textureType_t = textureType_t.TT_DISABLED
     }
 
     class glstate_t {
@@ -1202,7 +1199,7 @@ object tr_local {
 
         //
         // our OpenGL state deltas
-        var glState: glstate_t?
+        var glState: glstate_t
         var lightColor: FloatArray = FloatArray(4) // evaluation of current light's color stage
 
         //
@@ -1214,12 +1211,12 @@ object tr_local {
         // A card with high dynamic range will have this set to 1.0
         var overBright // The amount that all light interactions must be multiplied by
                 = 0f
-        var pc: backEndCounters_t?
+        var pc: backEndCounters_t
 
         // for scissor clipping, local inside renderView viewport
         //
-        var vLight: viewLight_s? = null
-        var viewDef: viewDef_s? = null
+        lateinit var vLight: viewLight_s
+        lateinit var viewDef: viewDef_s
 
         init {
             pc = backEndCounters_t()
@@ -1245,7 +1242,7 @@ object tr_local {
         //
         //
         //
-        val worlds: idList<idRenderWorldLocal>
+        val worlds: kotlin.collections.ArrayList<idRenderWorldLocal>
         var DBG_viewCount // incremented every view (twice a scene if subviewed)
                 = 0
 
@@ -1261,7 +1258,7 @@ object tr_local {
 
         //
         // determines which back end to use, and if vertex programs are in use
-        var backEndRenderer: backEndName_t? = null
+        var backEndRenderer: backEndName_t = backEndName_t.BE_NV20
         var backEndRendererHasVertexPrograms = false
         var backEndRendererMaxLight // 1.0 for standard, unlimited for floats
                 = 0f
@@ -1283,7 +1280,7 @@ object tr_local {
         //
         @Deprecated("")
         var gammaTable: ShortArray = ShortArray(256) // brightness / gamma modify this
-        var guiModel: idGuiModel? = null
+        lateinit var guiModel: idGuiModel
 
         //
         // GUI drawing variables for surface creation
@@ -1303,7 +1300,7 @@ object tr_local {
         //
         var pc // performance counters
                 : performanceCounters_t = performanceCounters_t()
-        var primaryRenderView: renderView_s? = null
+        var primaryRenderView: renderView_s = renderView_s()
         var primaryView: viewDef_s? = null
 
         //
@@ -1360,7 +1357,7 @@ object tr_local {
             backEndRendererMaxLight = 1.0f
             ambientLightVector.Zero()
             sortOffset = 0f
-            worlds.Clear()
+            worlds.clear()
             primaryWorld = null
             //            memset(primaryRenderView, 0, sizeof(primaryRenderView));
             primaryRenderView = renderView_s()
@@ -1381,7 +1378,7 @@ object tr_local {
             //            memset(renderCrops, 0, sizeof(renderCrops));
             currentRenderCrop = 0
             guiRecursionLevel = 0
-            guiModel = null
+            guiModel = idGuiModel()
             demoGuiModel = null
             //            memset(gammaTable, 0, sizeof(gammaTable));
             gammaTable = ShortArray(256)
@@ -1510,7 +1507,7 @@ object tr_local {
             guiModel = idGuiModel()
             guiModel.Clear()
             demoGuiModel = idGuiModel()
-            demoGuiModel.Clear()
+            demoGuiModel!!.Clear()
             tr_trisurf.R_InitTriSurfData()
             Image.globalImages.Init()
             idCinematic.InitCinematic()
@@ -1545,8 +1542,8 @@ object tr_local {
             // close the r_logFile
             if (logFile != null) {
                 try {
-                    TempDump.fprintf(logFile, "*** CLOSING LOG ***\n")
-                    logFile.close()
+                    TempDump.fprintf(logFile!!, "*** CLOSING LOG ***\n")
+                    logFile!!.close()
                 } catch (ex: IOException) {
                     Logger.getLogger(tr_local::class.java.name).log(Level.SEVERE, null, ex)
                 }
@@ -1603,18 +1600,18 @@ object tr_local {
             return glConfig.vidHeight
         }
 
-        override fun AllocRenderWorld(): idRenderWorld? {
+        override fun AllocRenderWorld(): idRenderWorld {
             val rw: idRenderWorldLocal
             rw = idRenderWorldLocal()
-            worlds.Append(rw)
+            worlds.add(rw)
             return rw
         }
 
-        override fun FreeRenderWorld(rw: idRenderWorld?) {
+        override fun FreeRenderWorld(rw: idRenderWorld) {
             if (primaryWorld === rw) {
                 primaryWorld = null
             }
-            worlds.Remove(rw as idRenderWorldLocal?)
+            worlds.remove(rw as idRenderWorldLocal)
             //	delete rw;
         }
 
@@ -1638,7 +1635,7 @@ object tr_local {
          Loads 3 point sizes, 12, 24, and 48
          ============
          */
-        override fun RegisterFont(fontName: String?, font: fontInfoEx_t?): Boolean {
+        override fun RegisterFont(fontName: String, font: fontInfoEx_t): Boolean {
 //if( BUILD_FREETYPE){
 //            FT_Face face;
 //            int j, k, xOut, yOut, lastStart, imageNumber;
@@ -1649,7 +1646,7 @@ object tr_local {
 //            idMaterial h;
 //            float max;
 //}
-            val faceData = arrayOf<ByteBuffer?>(null)
+            val faceData = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
             val fTime = longArrayOf(0)
             var i: Int
             var len: Int
@@ -1738,7 +1735,7 @@ object tr_local {
                 while (i < RenderSystem.GLYPH_END) {
                     idStr.snPrintf(name, name.capacity(), "%s/%s", fontName, outFont.glyphs[i].shaderName)
                     outFont.glyphs[i].glyph = DeclManager.declManager.FindMaterial(name.toString())
-                    outFont.glyphs[i].glyph.SetSort(Material.SS_GUI.toFloat())
+                    outFont.glyphs[i].glyph!!.SetSort(Material.SS_GUI.toFloat())
                     if (mh < outFont.glyphs[i].height) {
                         mh = outFont.glyphs[i].height
                     }
@@ -1894,7 +1891,7 @@ object tr_local {
          =============
          */
         override fun SetColor(rgba: idVec4) {
-            SetColor4(rgba.get(0), rgba.get(1), rgba.get(2), rgba.get(3))
+            SetColor4(rgba[0], rgba[1], rgba[2], rgba[3])
         }
 
         override fun SetColor4(r: Float, g: Float, b: Float, a: Float) {
@@ -1902,7 +1899,7 @@ object tr_local {
         }
 
         override fun DrawStretchPic(
-            verts: Array<idDrawVert?>?,
+            verts: Array<idDrawVert>,
             indexes: IntArray?,
             vertCount: Int,
             indexCount: Int,
@@ -1960,12 +1957,12 @@ object tr_local {
             tr_main.R_GlobalToNormalizedDeviceCoordinates(global, ndc)
         }
 
-        override fun GetGLSettings(width: IntArray?, height: IntArray?) {
-            width.get(0) = glConfig.vidWidth
-            height.get(0) = glConfig.vidHeight
+        override fun GetGLSettings(width: IntArray, height: IntArray) {
+            width[0] = glConfig.vidWidth
+            height[0] = glConfig.vidHeight
         }
 
-        override fun PrintMemInfo(mi: MemInfo_t?) {
+        override fun PrintMemInfo(mi: MemInfo_t) {
             // sum up image totals
             Image.globalImages.PrintMemInfo(mi)
 
@@ -2027,7 +2024,7 @@ object tr_local {
         override fun DrawSmallStringExt(
             x: Int,
             y: Int,
-            string: CharArray?,
+            string: CharArray,
             setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
@@ -2040,21 +2037,21 @@ object tr_local {
             s = 0 //(const unsigned char*)string;
             xx = x
             SetColor(setColor)
-            while (s < string.size && string.get(s) != '\u0000') {
+            while (s < string.size && string[s] != '\u0000') {
                 if (idStr.IsColor(TempDump.ctos(string).substring(s))) {
                     if (!forceColor) {
-                        if (string.get(s + 1) == Str.C_COLOR_DEFAULT) {
+                        if (string[s + 1].code == Str.C_COLOR_DEFAULT) {
                             SetColor(setColor)
                         } else {
-                            color = idStr.ColorForIndex(string.get(s + 1))
-                            color[3] = setColor.get(3)
+                            color = idStr.ColorForIndex(string[s + 1].code)
+                            color[3] = setColor[3]
                             SetColor(color)
                         }
                     }
                     s += 2
                     continue
                 }
-                DrawSmallChar(xx, y, string.get(s), material)
+                DrawSmallChar(xx, y, string[s].code, material)
                 xx += RenderSystem.SMALLCHAR_WIDTH
                 s++
             }
@@ -2106,7 +2103,7 @@ object tr_local {
         override fun DrawBigStringExt(
             x: Int,
             y: Int,
-            string: String?,
+            string: String,
             setColor: idVec4,
             forceColor: Boolean,
             material: idMaterial?
@@ -2122,18 +2119,18 @@ object tr_local {
             while (s < string.length) {
                 if (idStr.IsColor(string.substring(s))) {
                     if (!forceColor) {
-                        if (string.get(s + 1).code == Str.C_COLOR_DEFAULT) {
+                        if (string[s + 1].code == Str.C_COLOR_DEFAULT) {
                             SetColor(setColor)
                         } else {
-                            color = idStr.ColorForIndex(string.get(s + 1).code)
-                            color[3] = setColor.get(3)
+                            color = idStr.ColorForIndex(string[s + 1].code)
+                            color[3] = setColor[3]
                             SetColor(color)
                         }
                     }
                     s += 2
                     continue
                 }
-                DrawBigChar(xx, y, string.get(s).code, material)
+                DrawBigChar(xx, y, string[s].code, material)
                 xx += RenderSystem.BIGCHAR_WIDTH
                 s++
             }
@@ -2141,19 +2138,19 @@ object tr_local {
         }
 
         override fun WriteDemoPics() {
-            Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-            Session.session.writeDemo.WriteInt(demoCommand_t.DC_GUI_MODEL)
-            guiModel.WriteToDemo(Session.session.writeDemo)
+            Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
+            Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_GUI_MODEL)
+            guiModel.WriteToDemo(Session.session.writeDemo!!)
         }
 
         override fun DrawDemoPics() {
-            demoGuiModel.EmitFullScreen()
+            demoGuiModel!!.EmitFullScreen()
         }
 
         override fun BeginFrame(windowWidth: Int, windowHeight: Int) {
             var windowWidth = windowWidth
             var windowHeight = windowHeight
-            var cmd: setBufferCommand_t?
+            var cmd: setBufferCommand_t
             if (!glConfig.isInitialized) {
                 return
             }
@@ -2240,7 +2237,7 @@ object tr_local {
 
             // add the swapbuffers command
             RenderSystem.R_GetCommandBuffer(emptyCommand_t().also { cmd = it /*sizeof(cmd)*/ })
-            cmd.commandId = renderCommand_t.RC_SWAP_BUFFERS
+            cmd!!.commandId = renderCommand_t.RC_SWAP_BUFFERS
 
             // start the back end up again with the new command list
             RenderSystem.R_IssueRenderCommands()
@@ -2252,8 +2249,8 @@ object tr_local {
             // we can now release the vertexes used this frame
             VertexCache.vertexCache.EndFrame()
             if (Session.session.writeDemo != null) {
-                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.session.writeDemo.WriteInt(demoCommand_t.DC_END_FRAME)
+                Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_END_FRAME)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_END_FRAME\n")
                 }
@@ -2271,7 +2268,7 @@ object tr_local {
          If ref == NULL, session->updateScreen will be used
          ==================
          */
-        override fun TakeScreenshot(width: Int, height: Int, fileName: String?, blends: Int, ref: renderView_s?) {
+        override fun TakeScreenshot(width: Int, height: Int, fileName: String, blends: Int, ref: renderView_s?) {
             val buffer: ByteArray
             var i: Int
             var j: Int
@@ -2294,7 +2291,7 @@ object tr_local {
                     RenderSystem_init.R_ReadTiledPixels(width, height, buffer, 18, ref)
                     j = 0
                     while (j < pix * 3) {
-                        shortBuffer[j] += buffer[18 + j]
+                        shortBuffer[j] = (shortBuffer[j] + buffer[18 + j].toShort()).toShort()
                         j++
                     }
                     i++
@@ -2323,7 +2320,7 @@ object tr_local {
             c = 18 + width * height * 3
             i = 18
             while (i < c) {
-                temp = buffer[i]
+                temp = buffer[i].toInt()
                 buffer[i] = buffer[i + 2]
                 buffer[i + 2] = temp.toByte()
                 i += 3
@@ -2363,11 +2360,11 @@ object tr_local {
                 Common.common.Error("CropRenderSize: bad sizes")
             }
             if (Session.session.writeDemo != null) {
-                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.session.writeDemo.WriteInt(demoCommand_t.DC_CROP_RENDER)
-                Session.session.writeDemo.WriteInt(width)
-                Session.session.writeDemo.WriteInt(height)
-                Session.session.writeDemo.WriteInt(TempDump.btoi(makePowerOfTwo))
+                Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_CROP_RENDER)
+                Session.session.writeDemo!!.WriteInt(width)
+                Session.session.writeDemo!!.WriteInt(height)
+                Session.session.writeDemo!!.WriteInt(TempDump.btoi(makePowerOfTwo))
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_CROP_RENDER\n")
                 }
@@ -2424,9 +2421,9 @@ object tr_local {
             guiModel.EmitFullScreen()
             guiModel.Clear()
             if (Session.session.writeDemo != null) {
-                Session.session.writeDemo.WriteInt(demoSystem_t.DS_RENDER)
-                Session.session.writeDemo.WriteInt(demoCommand_t.DC_CAPTURE_RENDER)
-                Session.session.writeDemo.WriteHashString(imageName)
+                Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
+                Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_CAPTURE_RENDER)
+                Session.session.writeDemo!!.WriteHashString(imageName)
                 if (RenderSystem_init.r_showDemo.GetBool()) {
                     Common.common.Printf("write DC_CAPTURE_RENDER: %s\n", imageName)
                 }
@@ -2507,7 +2504,7 @@ object tr_local {
                 tr.backEndRenderer == backEndName_t.BE_ARB || tr.backEndRenderer == backEndName_t.BE_R200 || tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
         }
 
-        override fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean {
+        override fun UploadImage(imageName: String?, data: ByteBuffer, width: Int, height: Int): Boolean {
             val image = Image.globalImages.GetImage(imageName) ?: return false
             image.UploadScratch(data, width, height)
             image.SetImageFilterAndRepeat()
@@ -2567,7 +2564,7 @@ object tr_local {
         // internal functions
         init {
             ambientLightVector = idVec4()
-            worlds = idList()
+            worlds = ArrayList()
             Clear()
         }
     }
@@ -2587,7 +2584,7 @@ object tr_local {
      */
     class optimizedShadow_t {
         var indexes // caller should free
-                : IntArray
+                : kotlin.collections.ArrayList<Int> = ArrayList()
 
         //
         // indexes must be sorted frontCap, rearCap, silPlanes so the caps can be removed
@@ -2598,17 +2595,17 @@ object tr_local {
         var numVerts = 0
         var totalIndexes = 0
         var verts // includes both front and back projections, caller should free
-                : Array<idVec3>
+                : ArrayList<idVec3> = ArrayList()
     }
 
     // deformable meshes precalculate as much as possible from a base frame, then generate
     // complete srfTriangles_t from just a new set of vertexes
     class deformInfo_s {
         //
-        var dominantTris: Array<dominantTri_s?>?
-        var dupVerts: IntArray?
-        var   /*glIndex_t */indexes: IntArray?
-        var mirroredVerts: IntArray?
+        var dominantTris: ArrayList<dominantTri_s> = ArrayList()
+        var dupVerts: IntArray = IntArray(0)
+        var   /*glIndex_t */indexes: IntArray = IntArray(0)
+        var mirroredVerts: IntArray = IntArray(0)
 
         //
         var numDupVerts = 0
@@ -2627,10 +2624,10 @@ object tr_local {
         //
         var numSilEdges = 0
         var numSourceVerts = 0
-        var silEdges: Array<silEdge_t?>?
+        var silEdges: ArrayList<silEdge_t> = ArrayList()
 
         //
-        var   /*glIndex_t */silIndexes: IntArray?
+        var   /*glIndex_t */silIndexes: IntArray = IntArray(0)
 
         companion object {
             const val BYTES = Integer.BYTES * 11

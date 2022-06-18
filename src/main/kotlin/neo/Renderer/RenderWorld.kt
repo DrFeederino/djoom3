@@ -23,13 +23,13 @@ import neo.idlib.containers.CInt
 import neo.idlib.geometry.JointTransform.idJointMat
 import neo.idlib.geometry.Winding.idFixedWinding
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.*
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
+import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.UserInterface.idUserInterface
-import java.nio.*
+import java.nio.ByteBuffer
 import java.util.*
 
 class RenderWorld {
@@ -42,6 +42,52 @@ class RenderWorld {
      */
 
     companion object {
+        /*
+     ===============
+     R_GlobalShaderOverride
+     ===============
+     */
+        @Throws(idException::class)
+        fun R_GlobalShaderOverride(shader: Array<idMaterial>): Boolean {
+            if (!shader[0].IsDrawn()) {
+                return false
+            }
+            if (tr_local.tr.primaryRenderView!!.globalMaterial != null) {
+                shader[0] = tr_local.tr.primaryRenderView.globalMaterial!!
+                return true
+            }
+            if (TempDump.isNotNullOrEmpty(RenderSystem_init.r_materialOverride.GetString())) {
+                shader[0] = DeclManager.declManager.FindMaterial(RenderSystem_init.r_materialOverride.GetString()!!)!!
+                return true
+            }
+            return false
+        }
+
+        /*
+     ===============
+     R_RemapShaderBySkin
+     ===============
+     */
+        fun R_RemapShaderBySkin(shader: idMaterial?, skin: idDeclSkin?, customShader: idMaterial?): idMaterial? {
+            if (null == shader) {
+                return null
+            }
+
+            // never remap surfaces that were originally nodraw, like collision hulls
+            if (!shader.IsDrawn()) {
+                return shader
+            }
+            if (customShader != null) {
+                // this is sort of a hack, but cause deformed surfaces to map to empty surfaces,
+                // so the item highlight overlay doesn't highlight the autosprite surface
+                return if (shader.Deform() != null) {
+                    null
+                } else customShader
+            }
+            return if (null == skin) {
+                shader
+            } else skin.RemapShaderBySkin(shader)
+        }
 
         // shader parms
         const val MAX_GLOBAL_SHADER_PARMS = 12
@@ -90,52 +136,6 @@ class RenderWorld {
 
     }
 
-    /*
-     ===============
-     R_GlobalShaderOverride
-     ===============
-     */
-    @Throws(idException::class)
-    fun R_GlobalShaderOverride(shader: Array<idMaterial>): Boolean {
-        if (!shader.get(0).IsDrawn()) {
-            return false
-        }
-        if (tr_local.tr.primaryRenderView.globalMaterial != null) {
-            shader.get(0) = tr_local.tr.primaryRenderView.globalMaterial
-            return true
-        }
-        if (TempDump.isNotNullOrEmpty(RenderSystem_init.r_materialOverride.GetString())) {
-            shader.get(0) = DeclManager.declManager.FindMaterial(RenderSystem_init.r_materialOverride.GetString())
-            return true
-        }
-        return false
-    }
-
-    /*
-     ===============
-     R_RemapShaderBySkin
-     ===============
-     */
-    fun R_RemapShaderBySkin(shader: idMaterial?, skin: idDeclSkin?, customShader: idMaterial?): idMaterial? {
-        if (null == shader) {
-            return null
-        }
-
-        // never remap surfaces that were originally nodraw, like collision hulls
-        if (!shader.IsDrawn()) {
-            return shader
-        }
-        if (customShader != null) {
-            // this is sort of a hack, but cause deformed surfaces to map to empty surfaces,
-            // so the item highlight overlay doesn't highlight the autosprite surface
-            return if (shader.Deform() != null) {
-                null
-            } else customShader
-        }
-        return if (null == skin) {
-            shader
-        } else skin.RemapShaderBySkin(shader)
-    }
 
     enum class portalConnection_t {
         PS_BLOCK_NONE,  // = 0,
@@ -276,7 +276,7 @@ class RenderWorld {
             bounds = idBounds()
         }
 
-        constructor(newEntity: renderEntity_s?) {
+        constructor(newEntity: renderEntity_s) {
             hModel = newEntity.hModel
             entityNum = newEntity.entityNum
             bodyId = newEntity.bodyId
@@ -295,7 +295,7 @@ class RenderWorld {
             referenceSound = newEntity.referenceSound
             System.arraycopy(newEntity.shaderParms, 0, shaderParms, 0, shaderParms.size)
             for (i in gui.indices) {
-                gui.get(i) = newEntity.gui.get(i)
+                gui[i] = newEntity.gui[i]
             }
             remoteRenderView = newEntity.remoteRenderView
             numJoints = newEntity.numJoints
@@ -310,7 +310,7 @@ class RenderWorld {
             xrayIndex = newEntity.xrayIndex
         }
 
-        fun atomicSet(shadow: renderEntityShadow?) {
+        fun atomicSet(shadow: renderEntityShadow) {
             hModel = shadow.hModel
             entityNum = shadow.entityNum._val
             bodyId = shadow.bodyId._val
@@ -322,19 +322,20 @@ class RenderWorld {
             suppressShadowInLightID = shadow.suppressShadowInLightID._val
             allowSurfaceInViewID = shadow.allowSurfaceInViewID._val
             origin.set(shadow.origin)
-            axis = shadow.axis
+            axis.set(shadow.axis)
             customShader = shadow.customShader
             referenceShader = shadow.referenceShader
             customSkin = shadow.customSkin
             referenceSound = shadow.referenceSound
             remoteRenderView = shadow.remoteRenderView
             numJoints = shadow.numJoints._val
-            joints = shadow.joints
+            joints.clear()
+            joints.addAll(shadow.joints)
             modelDepthHack = shadow.modelDepthHack._val
-            noSelfShadow = shadow.noSelfShadow.isVal
-            noShadow = shadow.noShadow.isVal
-            noDynamicInteractions = shadow.noDynamicInteractions.isVal
-            weaponDepthHack = shadow.weaponDepthHack.isVal
+            noSelfShadow = shadow.noSelfShadow._val
+            noShadow = shadow.noShadow._val
+            noDynamicInteractions = shadow.noDynamicInteractions._val
+            weaponDepthHack = shadow.weaponDepthHack._val
             forceUpdate = shadow.forceUpdate._val
             timeGroup = shadow.timeGroup._val
             xrayIndex = shadow.xrayIndex._val
@@ -353,7 +354,7 @@ class RenderWorld {
             suppressShadowInLightID = newEntity.suppressShadowInLightID
             allowSurfaceInViewID = newEntity.allowSurfaceInViewID
             origin.set(newEntity.origin)
-            axis = newEntity.axis
+            axis.set(newEntity.axis)
             customShader = newEntity.customShader
             referenceShader = newEntity.referenceShader
             customSkin = newEntity.customSkin
@@ -389,11 +390,11 @@ class RenderWorld {
             hash = 71 * hash + Objects.hashCode(referenceShader)
             hash = 71 * hash + Objects.hashCode(customSkin)
             hash = 71 * hash + Objects.hashCode(referenceSound)
-            hash = 71 * hash + Arrays.hashCode(shaderParms)
-            hash = 71 * hash + Arrays.deepHashCode(gui)
+            hash = 71 * hash + shaderParms.contentHashCode()
+            hash = 71 * hash + gui.toTypedArray().contentDeepHashCode()
             hash = 71 * hash + Objects.hashCode(remoteRenderView)
             hash = 71 * hash + numJoints
-            hash = 71 * hash + Arrays.deepHashCode(joints)
+            hash = 71 * hash + joints.toTypedArray().contentDeepHashCode()
             hash = 71 * hash + java.lang.Float.floatToIntBits(modelDepthHack)
             hash = 71 * hash + if (noSelfShadow) 1 else 0
             hash = 71 * hash + if (noShadow) 1 else 0
@@ -412,7 +413,7 @@ class RenderWorld {
             if (javaClass != obj.javaClass) {
                 return false
             }
-            val other = obj as renderEntity_s?
+            val other = obj as renderEntity_s
             if (hModel != other.hModel) {
                 return false
             }
@@ -461,10 +462,10 @@ class RenderWorld {
             if (referenceSound != other.referenceSound) {
                 return false
             }
-            if (!Arrays.equals(shaderParms, other.shaderParms)) {
+            if (!shaderParms.contentEquals(other.shaderParms)) {
                 return false
             }
-            if (!Arrays.deepEquals(gui, other.gui)) {
+            if (!gui.toTypedArray().contentDeepEquals(other.gui.toTypedArray())) {
                 return false
             }
             if (remoteRenderView != other.remoteRenderView) {
@@ -473,7 +474,7 @@ class RenderWorld {
             if (numJoints != other.numJoints) {
                 return false
             }
-            if (!Arrays.deepEquals(joints, other.joints)) {
+            if (!joints.toTypedArray().contentDeepEquals(other.joints.toTypedArray())) {
                 return false
             }
             if (java.lang.Float.floatToIntBits(modelDepthHack) != java.lang.Float.floatToIntBits(other.modelDepthHack)) {
@@ -569,7 +570,7 @@ class RenderWorld {
 
         //copy constructor
         constructor(other: renderLight_s) {
-            axis = idMat3(other.axis)
+            axis.set(idMat3(other.axis))
             origin.set(other.origin)
             suppressLightInViewID = other.suppressLightInViewID
             allowLightInViewID = other.allowLightInViewID
@@ -593,7 +594,7 @@ class RenderWorld {
 
         fun clear() { //TODO:hardcoded values
             val temp = renderLight_s()
-            axis = temp.axis
+            axis.set(temp.axis)
             origin.set(temp.origin)
             suppressLightInViewID = temp.suppressLightInViewID
             allowLightInViewID = temp.allowLightInViewID
@@ -615,14 +616,14 @@ class RenderWorld {
         }
 
         fun atomicSet(shadow: renderLightShadow) {
-            axis = shadow.axis
+            axis.set(shadow.axis)
             origin.set(shadow.origin)
             suppressLightInViewID = shadow.suppressLightInViewID._val
             allowLightInViewID = shadow.allowLightInViewID._val
-            noShadows = shadow.noShadows.isVal
-            noSpecular = shadow.noSpecular.isVal
-            pointLight = shadow.pointLight.isVal
-            parallel = shadow.parallel.isVal
+            noShadows = shadow.noShadows._val
+            noSpecular = shadow.noSpecular._val
+            pointLight = shadow.pointLight._val
+            parallel = shadow.parallel._val
             lightRadius.set(shadow.lightRadius)
             lightCenter.set(shadow.lightCenter)
             target.set(shadow.target)
@@ -685,7 +686,7 @@ class RenderWorld {
             globalMaterial = renderView.globalMaterial
         }
 
-        fun atomicSet(shadow: renderViewShadow?) {
+        fun atomicSet(shadow: renderViewShadow) {
             viewID = shadow.viewID._val
             x = shadow.x._val
             y = shadow.y._val
@@ -694,25 +695,25 @@ class RenderWorld {
             fov_x = shadow.fov_x._val
             fov_y = shadow.fov_y._val
             vieworg.set(shadow.vieworg)
-            viewaxis = idMat3(shadow.viewaxis)
-            cramZNear = shadow.cramZNear.isVal
-            forceUpdate = shadow.forceUpdate.isVal
+            viewaxis.set(idMat3(shadow.viewaxis))
+            cramZNear = shadow.cramZNear._val
+            forceUpdate = shadow.forceUpdate._val
             time = shadow.time._val
             for (a in 0 until RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
-                shaderParms.get(a) = shadow.shaderParms[a]._val
+                shaderParms[a] = shadow.shaderParms[a]._val
             }
             globalMaterial = shadow.globalMaterial
         }
 
-        override fun AllocBuffer(): ByteBuffer? {
+        override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Read(buffer: ByteBuffer?) {
+        override fun Read(buffer: ByteBuffer) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun Write(): ByteBuffer? {
+        override fun Write(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
@@ -745,13 +746,13 @@ class RenderWorld {
     // modelTrace_t is for tracing vs. visual geometry
     class modelTrace_s {
         var entity // render entity that was hit
-                : renderEntity_s? = null
+                : renderEntity_s = renderEntity_s()
         var fraction // fraction of trace completed
                 = 0f
         var jointNumber // md5 joint nearest to the hit triangle
                 = 0
         var material // material of hit surface
-                : idMaterial? = null
+                : idMaterial = idMaterial()
         val normal: idVec3 = idVec3() // hit triangle normal vector in global space
         val point: idVec3 = idVec3() // end point of trace in global space
         fun clear() {
@@ -775,12 +776,12 @@ class RenderWorld {
         // entityDefs and lightDefs are added to a given world to determine
         // what will be drawn for a rendered scene.  Most update work is defered
         // until it is determined that it is actually needed for a given view.
-        abstract fun AddEntityDef(re: renderEntity_s?): Int
-        abstract fun UpdateEntityDef(entityHandle: Int, re: renderEntity_s?)
+        abstract fun AddEntityDef(re: renderEntity_s): Int
+        abstract fun UpdateEntityDef(entityHandle: Int, re: renderEntity_s)
         abstract fun FreeEntityDef(entityHandle: Int)
         abstract fun GetRenderEntity(entityHandle: Int): renderEntity_s?
-        abstract fun AddLightDef(rlight: renderLight_s?): Int
-        abstract fun UpdateLightDef(lightHandle: Int, rlight: renderLight_s?)
+        abstract fun AddLightDef(rlight: renderLight_s): Int
+        abstract fun UpdateLightDef(lightHandle: Int, rlight: renderLight_s)
         abstract fun FreeLightDef(lightHandle: Int)
         abstract fun GetRenderLight(lightHandle: Int): renderLight_s?
 
@@ -798,29 +799,29 @@ class RenderWorld {
         // The decals are depth faded from the winding plane to a certain distance infront of the
         // winding plane and the same distance from the projection origin towards the winding.
         abstract fun ProjectDecalOntoWorld(
-            winding: idFixedWinding?,
+            winding: idFixedWinding,
             projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
-            material: idMaterial?,
+            material: idMaterial,
             startTime: Int
         )
 
         // Creates decals on static models.
         abstract fun ProjectDecal(
             entityHandle: Int,
-            winding: idFixedWinding?,
+            winding: idFixedWinding,
             projectionOrigin: idVec3,
             parallel: Boolean,
             fadeDepth: Float,
-            material: idMaterial?,
+            material: idMaterial,
             startTime: Int
         )
 
         // Creates overlays on dynamic models.
         abstract fun ProjectOverlay(
             entityHandle: Int,
-            localTextureAxis: Array<idPlane>? /*[2]*/,
+            localTextureAxis: Array<idPlane> /*[2]*/,
             material: idMaterial?
         )
 
@@ -830,12 +831,12 @@ class RenderWorld {
         //-------------- Scene Rendering -----------------
         // some calls to material functions use the current renderview time when servicing cinematics.  this function
         // ensures that any parms accessed (such as time) are properly set.
-        abstract fun SetRenderView(renderView: renderView_s?)
+        abstract fun SetRenderView(renderView: renderView_s)
 
         // rendering a scene may actually render multiple subviews for mirrors and portals, and
         // may render composite textures for gui console screens and light projections
         // It would also be acceptable to render a scene multiple times, for "rear view mirrors", etc
-        abstract fun RenderScene(renderView: renderView_s?)
+        abstract fun RenderScene(renderView: renderView_s)
 
         //-------------- Portal Area Information -----------------
         // returns the number of portals
@@ -854,7 +855,7 @@ class RenderWorld {
 
         // returns true only if a chain of portals without the given connection bits set
         // exists between the two areas (a door doesn't separate them, etc)
-        abstract fun AreasAreConnected(areaNum1: Int, areaNum2: Int, connection: portalConnection_t?): Boolean
+        abstract fun AreasAreConnected(areaNum1: Int, areaNum2: Int, connection: portalConnection_t): Boolean
 
         // returns the number of portal areas in a map, so game code can build information
         // tables for the different areas
@@ -866,7 +867,7 @@ class RenderWorld {
 
         // fills the *areas array with the numbers of the areas the bounds cover
         // returns the total number of areas the bounds cover
-        abstract fun BoundsInAreas(bounds: idBounds, areas: IntArray?, maxAreas: Int): Int
+        abstract fun BoundsInAreas(bounds: idBounds, areas: IntArray, maxAreas: Int): Int
 
         // Used by the sound system to do area flowing
         abstract fun NumPortalsInArea(areaNum: Int): Int
@@ -883,7 +884,7 @@ class RenderWorld {
 
         // Traces vs the render model, possibly instantiating a dynamic version, and returns true if something was hit
         abstract fun ModelTrace(
-            trace: modelTrace_s?,
+            trace: modelTrace_s,
             entityHandle: Int,
             start: idVec3,
             end: idVec3,
@@ -892,7 +893,7 @@ class RenderWorld {
 
         // Traces vs the whole rendered world. FIXME: we need some kind of material flags.
         abstract fun Trace(
-            trace: modelTrace_s?,
+            trace: modelTrace_s,
             start: idVec3,
             end: idVec3,
             radius: Float,
@@ -902,7 +903,7 @@ class RenderWorld {
 
         @JvmOverloads
         fun Trace(
-            trace: modelTrace_s?,
+            trace: modelTrace_s,
             start: idVec3,
             end: idVec3,
             radius: Float,
@@ -912,7 +913,7 @@ class RenderWorld {
         }
 
         // Traces vs the world model bsp tree.
-        abstract fun FastWorldTrace(trace: modelTrace_s?, start: idVec3, end: idVec3): Boolean
+        abstract fun FastWorldTrace(trace: modelTrace_s, start: idVec3, end: idVec3): Boolean
 
         //-------------- Demo Control  -----------------
         // Writes a loadmap command to the demo, and clears archive counters.
@@ -928,7 +929,7 @@ class RenderWorld {
         // the next renderScene
         abstract fun ProcessDemoCommand(
             readDemo: idDemoFile?,
-            demoRenderView: renderView_s?,
+            demoRenderView: renderView_s,
             demoTimeOffset: CInt
         ): Boolean
 
@@ -959,7 +960,7 @@ class RenderWorld {
 
         abstract fun DebugWinding(
             color: idVec4,
-            w: idWinding?,
+            w: idWinding,
             origin: idVec3,
             axis: idMat3,
             lifetime: Int /*= 0*/,
@@ -967,7 +968,7 @@ class RenderWorld {
         )
 
         @JvmOverloads
-        fun DebugWinding(color: idVec4, w: idWinding?, origin: idVec3, axis: idMat3, lifetime: Int = 0 /*= 0*/) {
+        fun DebugWinding(color: idVec4, w: idWinding, origin: idVec3, axis: idMat3, lifetime: Int = 0 /*= 0*/) {
             DebugWinding(color, w, origin, axis, lifetime, false)
         }
 
@@ -995,13 +996,13 @@ class RenderWorld {
 
         abstract fun DebugSphere(
             color: idVec4,
-            sphere: idSphere?,
+            sphere: idSphere,
             lifetime: Int /* = 0*/,
             depthTest: Boolean /* = false */
         )
 
         @JvmOverloads
-        fun DebugSphere(color: idVec4, sphere: idSphere?, lifetime: Int = 0 /* = 0*/) {
+        fun DebugSphere(color: idVec4, sphere: idSphere, lifetime: Int = 0 /* = 0*/) {
             DebugSphere(color, sphere, lifetime, false)
         }
 
@@ -1017,20 +1018,20 @@ class RenderWorld {
             DebugBounds(color, bounds, org, 0)
         }
 
-        abstract fun DebugBox(color: idVec4, box: idBox?, lifetime: Int /* = 0*/)
-        fun DebugBox(color: idVec4, box: idBox?) {
+        abstract fun DebugBox(color: idVec4, box: idBox, lifetime: Int /* = 0*/)
+        fun DebugBox(color: idVec4, box: idBox) {
             DebugBox(color, box, 0)
         }
 
         abstract fun DebugFrustum(
             color: idVec4,
-            frustum: idFrustum?,
+            frustum: idFrustum,
             showFromOrigin: Boolean /* = false*/,
             lifetime: Int /*= 0*/
         )
 
         @JvmOverloads
-        fun DebugFrustum(color: idVec4, frustum: idFrustum?, showFromOrigin: Boolean = false /* = false*/) {
+        fun DebugFrustum(color: idVec4, frustum: idFrustum, showFromOrigin: Boolean = false /* = false*/) {
             DebugFrustum(color, frustum, showFromOrigin, 0)
         }
 
@@ -1053,13 +1054,13 @@ class RenderWorld {
         abstract fun DebugClearPolygons(time: Int) // a time of 0 will clear all polygons
         abstract fun DebugPolygon(
             color: idVec4,
-            winding: idWinding?,
+            winding: idWinding,
             lifeTime: Int /* = 0*/,
             depthTest: Boolean /*= false*/
         )
 
         @JvmOverloads
-        fun DebugPolygon(color: idVec4, winding: idWinding?, lifeTime: Int = 0 /* = 0*/) {
+        fun DebugPolygon(color: idVec4, winding: idWinding, lifeTime: Int = 0 /* = 0*/) {
             DebugPolygon(color, winding, lifeTime, false)
         }
 
@@ -1095,7 +1096,7 @@ class RenderWorld {
      ===================
      */
     class R_ListRenderLightDefs_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs?) {
+        override fun run(args: CmdArgs.idCmdArgs) {
             var i: Int
             var ldef: idRenderLightLocal?
             if (null == tr_local.tr.primaryWorld) {
@@ -1105,8 +1106,8 @@ class RenderWorld {
             var totalRef = 0
             var totalIntr = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld.lightDefs.Num()) {
-                ldef = tr_local.tr.primaryWorld.lightDefs.get(i)
+            while (i < tr_local.tr.primaryWorld!!.lightDefs.size) {
+                ldef = tr_local.tr.primaryWorld!!.lightDefs[i]
                 if (null == ldef) {
                     idLib.common.Printf("%4d: FREED\n", i)
                     i++
@@ -1130,7 +1131,7 @@ class RenderWorld {
                     ref = ref.ownerNext
                 }
                 totalRef += rCount
-                idLib.common.Printf("%4d: %3d intr %2d refs %s\n", i, iCount, rCount, ldef.lightShader.GetName())
+                idLib.common.Printf("%4d: %3d intr %2d refs %s\n", i, iCount, rCount, ldef.lightShader!!.GetName())
                 active++
                 i++
             }
@@ -1161,8 +1162,8 @@ class RenderWorld {
             var totalRef = 0
             var totalIntr = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld!!.entityDefs.Num()) {
-                mdef = tr_local.tr.primaryWorld.entityDefs.get(i)
+            while (i < tr_local.tr.primaryWorld!!.entityDefs!!.size) {
+                mdef = tr_local.tr.primaryWorld!!.entityDefs[i]
                 if (null == mdef) {
                     idLib.common.Printf("%4d: FREED\n", i)
                     i++
@@ -1186,7 +1187,7 @@ class RenderWorld {
                     ref = ref.ownerNext
                 }
                 totalRef += rCount
-                idLib.common.Printf("%4d: %3d intr %2d refs %s\n", i, iCount, rCount, mdef.parms.hModel.Name())
+                idLib.common.Printf("%4d: %3d intr %2d refs %s\n", i, iCount, rCount, mdef.parms.hModel!!.Name())
                 active++
                 i++
             }

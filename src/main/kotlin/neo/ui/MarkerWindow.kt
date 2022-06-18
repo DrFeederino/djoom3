@@ -238,7 +238,7 @@ class MarkerWindow {
                                 loggedStats[i].stamina = 0
                             }
                             if (loggedStats[i].heartRate < 0) {
-                                loggedStats[i].heartRate = 0
+                                loggedStats[i].heartRate = 0f
                             }
                             if (loggedStats[i].combat < 0) {
                                 loggedStats[i].combat = 0
@@ -296,7 +296,7 @@ class MarkerWindow {
                     }
                     val stage = background!!.GetStage(0)
                     stage.texture?.image?.get(0)
-                        ?.UploadScratch(TempDump.wrapToNativeBuffer(TempDump.itob(imageBuff!!)), 512, 64)
+                        ?.UploadScratch(TempDump.wrapToNativeBuffer(TempDump.itob(imageBuff!!))!!, 512, 64)
                     //                    Mem_Free(imageBuff);
                     imageBuff = null
                 }

@@ -352,10 +352,10 @@ object CmdSystem {
      */
     class commandDef_s {
         var argCompletion: argCompletion_t? = null
-        var description: String? = null
+        var description: String = ""
         var flags: Long = 0
         var function: cmdFunction_t? = null
-        var name: String? = null
+        var name: String = ""
         var next: commandDef_s? = null
         private fun set(last: commandDef_s) {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
@@ -499,8 +499,8 @@ object CmdSystem {
             var cmd = commands
             while (cmd != null) {
                 val next = cmd.next
-                cmd.description = null
-                cmd.name = null
+                cmd.description = ""
+                cmd.name = ""
                 cmd.function = null
                 cmd.argCompletion = null
                 cmd = next

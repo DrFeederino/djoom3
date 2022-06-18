@@ -21,7 +21,7 @@ object Model_sprite {
      A simple sprite model that always faces the view axis.
 
      */
-    val sprite_SnapshotName: String? = "_sprite_Snapshot_"
+    val sprite_SnapshotName: String = "_sprite_Snapshot_"
 
     /*
      ================================================================================
@@ -31,7 +31,7 @@ object Model_sprite {
      ================================================================================
      */
     class idRenderModelSprite : idRenderModelStatic() {
-        override fun IsDynamicModel(): dynamicModel_t? {
+        override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CONTINUOUS
         }
 
@@ -40,14 +40,14 @@ object Model_sprite {
         }
 
         override fun InstantiateDynamicModel(
-            renderEntity: renderEntity_s?,
+            renderEntity: renderEntity_s,
             viewDef: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel? {
             var cachedModel = cachedModel
-            val staticModel: idRenderModelStatic?
-            val tri: srfTriangles_s?
-            var surf: modelSurface_s? = modelSurface_s()
+            val staticModel: idRenderModelStatic
+            val tri: srfTriangles_s
+            var surf: modelSurface_s = modelSurface_s()
             if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels.GetBool()) {
 //		delete cachedModel;
                 cachedModel = null
@@ -60,9 +60,9 @@ object Model_sprite {
 
 //		assert( dynamic_cast<idRenderModelStatic *>( cachedModel ) != null );
 //		assert( idStr.Icmp( cachedModel.Name(), sprite_SnapshotName ) == 0 );
-                staticModel = cachedModel as idRenderModelStatic?
+                staticModel = cachedModel as idRenderModelStatic
                 surf = staticModel.Surface(0)
-                tri = surf.geometry
+                tri = surf.geometry!!
             } else {
                 staticModel = idRenderModelStatic()
                 staticModel.InitEmpty(Model_sprite.sprite_SnapshotName)
@@ -73,26 +73,26 @@ object Model_sprite {
                 tri.verts[0].normal.set(1.0f, 0.0f, 0.0f)
                 tri.verts[0].tangents[0].set(0.0f, 1.0f, 0.0f)
                 tri.verts[0].tangents[1].set(0.0f, 0.0f, 1.0f)
-                tri.verts[0].st.set(0, 0.0f)
-                tri.verts[0].st.set(1, 0.0f)
+                tri.verts[0].st[0] = 0.0f
+                tri.verts[0].st[1] = 0.0f
                 tri.verts[1].Clear()
                 tri.verts[1].normal.set(1.0f, 0.0f, 0.0f)
                 tri.verts[1].tangents[0].set(0.0f, 1.0f, 0.0f)
                 tri.verts[1].tangents[1].set(0.0f, 0.0f, 1.0f)
-                tri.verts[1].st.set(0, 1.0f)
-                tri.verts[1].st.set(1, 0.0f)
+                tri.verts[1].st[0] = 1.0f
+                tri.verts[1].st[1] = 0.0f
                 tri.verts[2].Clear()
                 tri.verts[2].normal.set(1.0f, 0.0f, 0.0f)
                 tri.verts[2].tangents[0].set(0.0f, 1.0f, 0.0f)
                 tri.verts[2].tangents[1].set(0.0f, 0.0f, 1.0f)
-                tri.verts[2].st.set(0, 1.0f)
-                tri.verts[2].st.set(1, 1.0f)
+                tri.verts[2].st[0] = 1.0f
+                tri.verts[2].st[1] = 1.0f
                 tri.verts[3].Clear()
                 tri.verts[3].normal.set(1.0f, 0.0f, 0.0f)
                 tri.verts[3].tangents[0].set(0.0f, 1.0f, 0.0f)
                 tri.verts[3].tangents[1].set(0.0f, 0.0f, 1.0f)
-                tri.verts[3].st.set(0, 0.0f)
-                tri.verts[3].st.set(1, 1.0f)
+                tri.verts[3].st[0] = 0.0f
+                tri.verts[3].st[1] = 1.0f
                 tri.indexes[0] = 0
                 tri.indexes[1] = 1
                 tri.indexes[2] = 3
@@ -112,7 +112,7 @@ object Model_sprite {
             val alpha = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] * 255.0f).toByte()
             val right = idVec3(0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f)
             val up = idVec3(0.0f, 0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_HEIGHT] * 0.5f)
-            tri.verts[0].xyz.set(up.oPlus(right))
+            tri.verts[0].xyz.set(up.plus(right))
             tri.verts[0].color[0] = red
             tri.verts[0].color[1] = green
             tri.verts[0].color[2] = blue
@@ -122,7 +122,7 @@ object Model_sprite {
             tri.verts[1].color[1] = green
             tri.verts[1].color[2] = blue
             tri.verts[1].color[3] = alpha
-            tri.verts[2].xyz.set(right.minus(up).oNegative())
+            tri.verts[2].xyz.set(right.minus(up).unaryMinus())
             tri.verts[2].color[0] = red
             tri.verts[2].color[1] = green
             tri.verts[2].color[2] = blue

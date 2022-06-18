@@ -421,18 +421,18 @@ object tr_backend {
 
      =============
      */
-    fun RB_SetBuffer(data: Any?) {
+    fun RB_SetBuffer(data: Any) {
         val cmd: setBufferCommand_t?
 
         // see which draw buffer we want to render the frame to
-        cmd = data as setBufferCommand_t?
+        cmd = data as setBufferCommand_t
         tr_local.backEnd.frameCount = cmd.frameCount
         qgl.qglDrawBuffer(cmd.buffer)
 
         // clear screen for debugging
         // automatically enable this with several other debug tools
         // that might leave unrendered portions of the screen
-        if (RenderSystem_init.r_clear.GetFloat() != 0f || RenderSystem_init.r_clear.GetString().length != 1 || RenderSystem_init.r_lockSurfaces.GetBool() || RenderSystem_init.r_singleArea.GetBool() || RenderSystem_init.r_showOverDraw.GetBool()) {
+        if (RenderSystem_init.r_clear.GetFloat() != 0f || RenderSystem_init.r_clear.GetString()!!.length != 1 || RenderSystem_init.r_lockSurfaces.GetBool() || RenderSystem_init.r_singleArea.GetBool() || RenderSystem_init.r_showOverDraw.GetBool()) {
             try {
                 Scanner(RenderSystem_init.r_clear.GetString()).use { sscanf ->
 //		if ( sscanf( r_clear.GetString(), "%f %f %f", c[0], c[1], c[2] ) == 3 ) {
@@ -544,7 +544,7 @@ object tr_backend {
      */
     fun RB_CopyRender(data: Any?) {
         val cmd: copyRenderCommand_t?
-        cmd = data as copyRenderCommand_t?
+        cmd = data as copyRenderCommand_t
         if (RenderSystem_init.r_skipCopyTexture.GetBool()) {
             return
         }
@@ -552,15 +552,14 @@ object tr_backend {
         if (cmd.image != null) {
             val imageWidth = CInt(cmd.imageWidth)
             val imageHeight = CInt(cmd.imageHeight)
-            cmd.image.CopyFramebuffer(cmd.x, cmd.y, imageWidth, imageHeight, false)
+            cmd.image!!.CopyFramebuffer(cmd.x, cmd.y, imageWidth, imageHeight, false)
             cmd.imageWidth = imageWidth._val
             cmd.imageHeight = imageHeight._val
         }
     }
 
-    fun RB_ExecuteBackEndCommands(cmds: emptyCommand_t?) {
+    fun RB_ExecuteBackEndCommands(cmds: emptyCommand_t) {
         // r_debugRenderToTexture
-        var cmds = cmds
         var c_draw3d = 0
         var c_draw2d = 0
         var c_setBuffers = 0
@@ -576,12 +575,13 @@ object tr_backend {
 
         // upload any image loads that have completed
         Image.globalImages.CompleteBackgroundImageLoads()
+        var cmds = cmds as emptyCommand_t?
         while (cmds != null) {
             when (cmds.commandId) {
                 renderCommand_t.RC_NOP -> {}
                 renderCommand_t.RC_DRAW_VIEW -> {
                     tr_render.RB_DrawView(cmds)
-                    if ((cmds as drawSurfsCommand_t?).viewDef.viewEntitys != null) {
+                    if ((cmds as drawSurfsCommand_t).viewDef.viewEntitys != null) {
                         c_draw3d++
                     } else {
                         c_draw2d++
@@ -625,8 +625,8 @@ object tr_backend {
         }
     }
 
-    private fun fprintf(logFile: FileChannel?, string: String?) {
-        if (TempDump.NOT(logFile)) {
+    private fun fprintf(logFile: FileChannel?, string: String) {
+        if (null == logFile) {
             return
         }
         try {
@@ -637,11 +637,11 @@ object tr_backend {
     }
 
     private fun vfprintf(logFile: FileChannel?, vararg comments: Any?) {
-        if (TempDump.NOT(logFile)) {
+        if (null == logFile) {
             return
         }
         try {
-            var bla: String? = ""
+            var bla: String = ""
             for (c in comments) {
                 bla += c
             }

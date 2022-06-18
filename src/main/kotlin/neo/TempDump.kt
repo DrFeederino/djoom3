@@ -584,7 +584,7 @@ object TempDump {
      *
      */
     interface NiLLABLE<type> {
-        open fun oSet(node: type?): type?
+        open fun oSet(node: type): type
         open fun isNULL(): Boolean
     }
 
@@ -596,7 +596,7 @@ object TempDump {
     abstract class argCompletion_t<E> {
         //TODO
         //    public abstract void run(type... objects);
-        abstract fun load(args: CmdArgs.idCmdArgs?, callback: void_callback<String?>?)
+        abstract fun load(args: CmdArgs.idCmdArgs, callback: void_callback<String?>?)
     }
 
     /**
@@ -859,9 +859,9 @@ object TempDump {
             var forceUpdate: CInt = CInt()
 
             //
-            var gui: Array<idUserInterface?>? = arrayOfNulls<idUserInterface?>(RenderWorld.MAX_RENDERENTITY_GUI)
+            var gui: ArrayList<idUserInterface> = ArrayList<idUserInterface>(RenderWorld.MAX_RENDERENTITY_GUI)
             var hModel: idRenderModel? = null
-            var joints: Array<idJointMat?>? = null
+            var joints: ArrayList<idJointMat> = ArrayList()
 
             //
             var modelDepthHack: CFloat = CFloat()
@@ -926,7 +926,7 @@ object TempDump {
             //
             //
             var shader: idMaterial? = null
-            var shaderParms: FloatArray? = FloatArray(Material.MAX_ENTITY_SHADER_PARMS)
+            var shaderParms: FloatArray = FloatArray(Material.MAX_ENTITY_SHADER_PARMS)
             val start: idVec3 = idVec3()
 
             //

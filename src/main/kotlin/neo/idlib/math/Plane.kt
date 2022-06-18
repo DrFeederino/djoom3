@@ -64,6 +64,13 @@ object Plane {
             this.d = d
         }
 
+        constructor(a: Int, b: Int, c: Int, d: Int) {
+            abc.x = a.toFloat()
+            abc.y = b.toFloat()
+            abc.z = c.toFloat()
+            this.d = d.toFloat()
+        }
+
         constructor(array: FloatArray) {
             abc.x = array[0]
             abc.y = array[1]

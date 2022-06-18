@@ -2478,9 +2478,9 @@ object SysCmds {
     class Cmd_TestSave_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs) {
             val f: idFile?
-            f = FileSystem_h.fileSystem.OpenFileWrite("test.sav")
+            f = FileSystem_h.fileSystem.OpenFileWrite("test.sav")!!
             Game_local.gameLocal.SaveGame(f)
-            FileSystem_h.fileSystem.CloseFile(f!!)
+            FileSystem_h.fileSystem.CloseFile(f)
         }
 
         companion object {
@@ -2527,8 +2527,8 @@ object SysCmds {
             viewComments.plusAssign(origin.ToString())
             viewComments.plusAssign("\n")
             viewComments.plusAssign(args.Argv(3))
-            player.hud.SetStateString("viewcomments", viewComments.toString())
-            player.hud.HandleNamedEvent("showViewComments")
+            player.hud!!.SetStateString("viewcomments", viewComments.toString())
+            player.hud!!.HandleNamedEvent("showViewComments")
         }
 
         companion object {
@@ -2547,8 +2547,8 @@ object SysCmds {
     class Cmd_CloseViewNotes_f private constructor() : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs) {
             val player = Game_local.gameLocal.GetLocalPlayer() ?: return
-            player.hud.SetStateString("viewcomments", "")
-            player.hud.HandleNamedEvent("hideViewComments")
+            player.hud!!.SetStateString("viewcomments", "")
+            player.hud!!.HandleNamedEvent("hideViewComments")
         }
 
         companion object {
@@ -2593,12 +2593,12 @@ object SysCmds {
             if (parser.ExpectTokenString("view") && parser.Parse1DMatrix(3, origin)
                 && parser.Parse1DMatrix(9, axis) && parser.ExpectTokenString("comments") && parser.ReadToken(token)
             ) {
-                player.hud.SetStateString("viewcomments", token.toString())
-                player.hud.HandleNamedEvent("showViewComments")
+                player.hud!!.SetStateString("viewcomments", token.toString())
+                player.hud!!.HandleNamedEvent("showViewComments")
                 player.Teleport(origin, axis.ToAngles(), null)
             } else {
                 parser.FreeSource()
-                player.hud.HandleNamedEvent("hideViewComments")
+                player.hud!!.HandleNamedEvent("hideViewComments")
                 return
             }
         }

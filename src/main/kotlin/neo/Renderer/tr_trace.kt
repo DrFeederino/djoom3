@@ -1,6 +1,5 @@
 package neo.Renderer
 
-import neo.Renderer.*
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.localTrace_t
@@ -12,8 +11,7 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
 import org.lwjgl.opengl.GL11
-import kotlin.experimental.and
-import kotlin.experimental.xor
+import kotlin.experimental.or
 
 /**
  *
@@ -28,7 +26,7 @@ object tr_trace {
      If we resort the vertexes so all silverts come first, we can save some work here.
      =================
      */
-    fun R_LocalTrace(start: idVec3, end: idVec3, radius: Float, tri: srfTriangles_s?): localTrace_t? {
+    fun R_LocalTrace(start: idVec3, end: idVec3, radius: Float, tri: srfTriangles_s): localTrace_t {
         var i: Int
         var j: Int
         val cullBits: ByteArray
@@ -51,27 +49,27 @@ object tr_trace {
         startDir.set(end.minus(start))
         startDir.Normalize()
         startDir.NormalVectors(planes[0].Normal(), planes[1].Normal())
-        planes[0].set(3, -start.times(planes[0].Normal()))
-        planes[1].set(3, -start.times(planes[1].Normal()))
+        planes[0][3] = -start.times(planes[0].Normal())
+        planes[1][3] = -start.times(planes[1].Normal())
 
         // create front and end planes so the trace is on the positive sides of both
         planes[2].set(startDir)
-        planes[2].set(3, -start.times(planes[2].Normal()))
+        planes[2][3] = -start.times(planes[2].Normal())
         planes[3].set(startDir.unaryMinus())
-        planes[3].set(3, -end.times(planes[3].Normal()))
+        planes[3][3] = -end.times(planes[3].Normal())
 
         // catagorize each point against the four planes
         cullBits = ByteArray(tri.numVerts)
-        Simd.SIMDProcessor.TracePointCull(cullBits, totalOr, radius, planes, tri.verts, tri.numVerts)
+        Simd.SIMDProcessor.TracePointCull(cullBits, totalOr, radius, planes, tri.verts.toTypedArray(), tri.numVerts)
 
         // if we don't have points on both sides of both the ray planes, no intersection
-        if (totalOr[0] xor (totalOr[0] shr 4) and 3 != 0) {
+        if (totalOr[0].toInt() xor (totalOr[0].toInt() shr 4) and 3 != 0) {
             //common.Printf( "nothing crossed the trace planes\n" );
             return hit
         }
 
         // if we don't have any points between front and end, no intersection
-        if (totalOr[0] xor (totalOr[0] shr 1) and 4 != 0) {
+        if (totalOr[0].toInt() xor (totalOr[0].toInt() shr 1) and 4 != 0) {
             //common.Printf( "trace didn't reach any triangles\n" );
             return hit
         }
@@ -82,7 +80,7 @@ object tr_trace {
         c_intersect = 0
         radiusSqr = Math_h.Square(radius)
         startDir.set(end.minus(start))
-        if (null == tri.facePlanes || !tri.facePlanesCalculated) {
+        if (tri.facePlanes.isEmpty() || !tri.facePlanesCalculated) {
             tr_trisurf.R_DeriveFacePlanes(tri)
         }
         i = 0
@@ -106,14 +104,14 @@ object tr_trace {
             triOr = triOr or cullBits[tri.indexes[i + 2]]
 
             // if we don't have points on both sides of both the ray planes, no intersection
-            if (triOr xor (triOr shr 4) and 3 != 0) {
+            if (triOr.toInt() xor (triOr.toInt() shr 4) and 3 != 0) {
                 i += 3
                 j++
                 continue
             }
 
             // if we don't have any points between front and end, no intersection
-            if (triOr xor (triOr shr 1) and 4 != 0) {
+            if (triOr.toInt() xor (triOr.toInt() shr 1) and 4 != 0) {
                 i += 3
                 j++
                 continue
@@ -151,7 +149,7 @@ object tr_trace {
             c_testEdges++
 
             // find the exact point of impact with the plane
-            point.set(start.oPlus(startDir.times(f)))
+            point.set(start.plus(startDir.times(f)))
 
             // see if the point is within the three edges
             // if radius > 0 the triangle is expanded with a circle in the triangle plane
@@ -285,7 +283,7 @@ object tr_trace {
             j++
         }
         if (tr_trace.TEST_TRACE) {
-            trace_timer.Stop()
+            trace_timer!!.Stop()
             Common.common.Printf(
                 "testVerts:%d c_testPlanes:%d c_testEdges:%d c_intersect:%d msec:%1.4f\n",
                 tri.numVerts, c_testPlanes, c_testEdges, c_intersect, trace_timer.Milliseconds()
@@ -299,7 +297,7 @@ object tr_trace {
      RB_DrawExpandedTriangles
      =================
      */
-    fun RB_DrawExpandedTriangles(tri: srfTriangles_s?, radius: Float, vieworg: idVec3) {
+    fun RB_DrawExpandedTriangles(tri: srfTriangles_s, radius: Float, vieworg: idVec3) {
         var i: Int
         var j: Int
         var k: Int
@@ -331,22 +329,22 @@ object tr_trace {
             j = 0
             while (j < 3) {
                 k = (j + 1) % 3
-                dir[4].set(dir[j].oPlus(dir[k]).oMultiply(0.5f))
+                dir[4].set(dir[j].plus(dir[k]).times(0.5f))
                 dir[4].Normalize()
-                dir[3].set(dir[j].oPlus(dir[4]).oMultiply(0.5f))
+                dir[3].set(dir[j].plus(dir[4]).times(0.5f))
                 dir[3].Normalize()
-                dir[5].set(dir[4].oPlus(dir[k]).oMultiply(0.5f))
+                dir[5].set(dir[4].plus(dir[k]).times(0.5f))
                 dir[5].Normalize()
-                point.set(p[k].oPlus(dir[j].times(radius)))
-                qgl.qglVertex3f(point.get(0), point.get(1), point.get(2))
-                point.set(p[k].oPlus(dir[3].times(radius)))
-                qgl.qglVertex3f(point.get(0), point.get(1), point.get(2))
-                point.set(p[k].oPlus(dir[4].times(radius)))
-                qgl.qglVertex3f(point.get(0), point.get(1), point.get(2))
-                point.set(p[k].oPlus(dir[5].times(radius)))
-                qgl.qglVertex3f(point.get(0), point.get(1), point.get(2))
-                point.set(p[k].oPlus(dir[k].times(radius)))
-                qgl.qglVertex3f(point.get(0), point.get(1), point.get(2))
+                point.set(p[k].plus(dir[j].times(radius)))
+                qgl.qglVertex3f(point[0], point[1], point[2])
+                point.set(p[k].plus(dir[3].times(radius)))
+                qgl.qglVertex3f(point[0], point[1], point[2])
+                point.set(p[k].plus(dir[4].times(radius)))
+                qgl.qglVertex3f(point[0], point[1], point[2])
+                point.set(p[k].plus(dir[5].times(radius)))
+                qgl.qglVertex3f(point[0], point[1], point[2])
+                point.set(p[k].plus(dir[k].times(radius)))
+                qgl.qglVertex3f(point[0], point[1], point[2])
                 j++
             }
             qgl.qglEnd()
@@ -361,7 +359,7 @@ object tr_trace {
      Debug visualization
      ================
      */
-    fun RB_ShowTrace(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int) {
+    fun RB_ShowTrace(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var tri: srfTriangles_s
         var surf: drawSurf_s?
@@ -382,7 +380,7 @@ object tr_trace {
 
         // determine the points of the trace
         start.set(tr_local.backEnd.viewDef.renderView.vieworg)
-        end.set(start.oPlus(tr_local.backEnd.viewDef.renderView.viewaxis.get(0).times(4000f)))
+        end.set(start.plus(tr_local.backEnd.viewDef.renderView.viewaxis[0].times(4000f)))
 
         // check and draw the surfaces
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -392,13 +390,13 @@ object tr_trace {
         // find how many are ambient
         i = 0
         while (i < numDrawSurfs) {
-            surf = drawSurfs.get(i)
+            surf = drawSurfs[i]
             tri = surf.geo
             if (i > 211) {
                 i++
                 continue
             }
-            if (tri == null || tri.verts == null) {
+            if (tri == null || tri.verts.isEmpty()) {
                 i++
                 continue
             }

@@ -1,10 +1,12 @@
 package neo.idlib.hashing
 
 import neo.idlib.Lib.idException
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.security.Security
 
 object MD4 {
     private const val MD4 = true
@@ -38,8 +40,9 @@ object MD4 {
     fun BlockChecksum(data: ByteBuffer, length: Int, MD4: Boolean): String {
         var hash = 0
         hash = try {
+            Security.addProvider(BouncyCastleProvider())
             val currentPosition = data.position()
-            val messageDigest = if (MD4) sun.security.provider.MD4.getInstance() else MessageDigest.getInstance("MD5")
+            val messageDigest = if (MD4) MessageDigest.getInstance("MD4") else MessageDigest.getInstance("MD5")
             messageDigest.update(data)
             data.position(currentPosition)
             val digest = ByteBuffer.wrap(messageDigest.digest())

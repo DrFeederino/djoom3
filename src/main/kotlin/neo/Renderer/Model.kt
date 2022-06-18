@@ -83,7 +83,7 @@ object Model {
         var v3 = 0
     }
 
-    internal class lightingCache_s(Position: ByteBuffer) {
+    class lightingCache_s(Position: ByteBuffer?) {
         val localLightVector: idVec3 = idVec3() // this is the statically computed vector to the light
 
         companion object {
@@ -132,9 +132,9 @@ object Model {
         val DBG_count = DBG_counter++
         val bounds: idBounds = idBounds() // for culling
         var facePlanes // [numIndexes/3] plane equations
-                : Array<idPlane>
+                : ArrayList<idPlane> = ArrayList()
         var indexes // indexes, allocated with special allocator
-                : IntArray
+                : IntArray = IntArray(0)
         var numIndexes // for shadows, this has both front and rear end caps and silhouette planes
                 = 0
         var numShadowIndexesNoCaps // shadow volumes with the front and rear caps omitted
@@ -148,13 +148,13 @@ object Model {
         var shadowCapPlaneBits // bits 0-5 are set when that plane of the interacting light has triangles
                 = 0
         var shadowVertexes // these will be copied to shadowCache when it is going to be drawn.
-                : Array<shadowCache_s>
+                : ArrayList<shadowCache_s> = ArrayList()
         var silIndexes // indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
-                : IntArray
+                : IntArray = IntArray(0)
         var tangentsCalculated // set when the vertex tangents have been calculated
                 = false
         var verts // vertices, allocated with special allocator
-                : Array<idDrawVert>
+                : ArrayList<idDrawVert> = ArrayList()
         var ambientCache // idDrawVert
                 : vertCache_s? = null
         var ambientSurface // for light interactions, point back at the original surface that generated
@@ -164,9 +164,9 @@ object Model {
         var deformedSurface // if true, indexes, silIndexes, mirrorVerts, and silEdges are
                 = false
         var dominantTris // [numVerts] for deformed surface fast tangent calculation
-                : Array<dominantTri_s?>?
+                : ArrayList<dominantTri_s> = ArrayList()
         var dupVerts // pairs of the number of the first vertex and the number of the duplicate vertex
-                : IntArray?
+                : IntArray = IntArray(0)
         var facePlanesCalculated // set when the face planes have been calculated
                 = false
         var generateNormals // create normals from geometry, instead of using explicit ones
@@ -184,7 +184,7 @@ object Model {
 
         // these are NULL when vertex programs are available
         var mirroredVerts // tri->mirroredVerts[0] is the mirror of tri->numVerts - tri->numMirroredVerts + 0
-                : IntArray?
+                : IntArray = IntArray(0)
 
         // the interaction, which we will get the ambientCache from
         var nextDeferredFree // chain of tris to free next frame
@@ -200,28 +200,28 @@ object Model {
         var shadowCache // shadowCache_t
                 : vertCache_s? = null
         var silEdges // silhouette edges
-                : Array<silEdge_t>
+                : ArrayList<silEdge_t> = ArrayList()
 
         override fun toString(): String {
             return "srfTriangles_s{" +
                     "DBG_count=" + DBG_count +
                     ", bounds=" + bounds +
-                    ", facePlanes=" + Arrays.toString(facePlanes) +
+                    ", facePlanes=" + facePlanes.toString() +
                     ", indexes=" + Arrays.toString(indexes) +
                     ", numIndexes=" + numIndexes +
                     ", numShadowIndexesNoCaps=" + numShadowIndexesNoCaps +
                     ", numShadowIndexesNoFrontCaps=" + numShadowIndexesNoFrontCaps +
                     ", numVerts=" + numVerts +
                     ", shadowCapPlaneBits=" + shadowCapPlaneBits +
-                    ", shadowVertexes=" + Arrays.toString(shadowVertexes) +
+                    ", shadowVertexes=" + shadowVertexes.toString() +
                     ", silIndexes=" + Arrays.toString(silIndexes) +
                     ", tangentsCalculated=" + tangentsCalculated +
-                    ", verts=" + Arrays.toString(verts) +
+                    ", verts=" + verts.toString() +
                     ", ambientCache=" + ambientCache +
                     ", ambientSurface=" + ambientSurface +
                     ", ambientViewCount=" + ambientViewCount +
                     ", deformedSurface=" + deformedSurface +
-                    ", dominantTris=" + Arrays.toString(dominantTris) +
+                    ", dominantTris=" + dominantTris.toString() +
                     ", dupVerts=" + Arrays.toString(dupVerts) +
                     ", facePlanesCalculated=" + facePlanesCalculated +
                     ", generateNormals=" + generateNormals +
@@ -234,7 +234,7 @@ object Model {
                     ", numSilEdges=" + numSilEdges +
                     ", perfectHull=" + perfectHull +
                     ", shadowCache=" + shadowCache +
-                    ", silEdges=" + Arrays.toString(silEdges) +
+                    ", silEdges=" + silEdges.toString() +
                     '}'
         }
 
@@ -243,7 +243,7 @@ object Model {
         }
     }
 
-    internal class idTriList : idList<srfTriangles_s?>()
+    internal class idTriList : idList<srfTriangles_s>()
     class modelSurface_s {
         var geometry: srfTriangles_s? = null
         var id = 0
@@ -271,20 +271,20 @@ object Model {
         // public abstract						~idRenderModel() {};
         // Loads static models only, dynamic models must be loaded by the modelManager
         @Throws(idException::class)
-        abstract fun InitFromFile(fileName: String?)
+        abstract fun InitFromFile(fileName: String)
 
         // renderBump uses this to load the very high poly count models, skipping the
         // shadow and tangent generation, along with some surface cleanup to make it load faster
-        abstract fun PartialInitFromFile(fileName: String?)
+        abstract fun PartialInitFromFile(fileName: String)
 
         // this is used for dynamically created surfaces, which are assumed to not be reloadable.
         // It can be called again to clear out the surfaces of a dynamic model for regeneration.
-        abstract fun InitEmpty(name: String?)
+        abstract fun InitEmpty(name: String)
 
         // dynamic model instantiations will be created with this
         // the geometry data will be owned by the model, and freed when it is freed
         // the geoemtry should be raw triangles, with no extra processing
-        abstract fun AddSurface(surface: modelSurface_s?)
+        abstract fun AddSurface(surface: modelSurface_s)
 
         // cleans all the geometry and performs cross-surface processing
         // like shadow hulls
@@ -331,7 +331,7 @@ object Model {
         abstract fun Memory(): Int
 
         // for reloadModels
-        abstract fun  /*ID_TIME_T*/Timestamp(): LongArray?
+        abstract fun  /*ID_TIME_T*/Timestamp(): LongArray
 
         // returns the number of surfaces
         abstract fun NumSurfaces(): Int
@@ -365,7 +365,7 @@ object Model {
         abstract fun IsReloadable(): Boolean
 
         // md3, md5, particles, etc
-        abstract fun IsDynamicModel(): dynamicModel_t?
+        abstract fun IsDynamicModel(): dynamicModel_t
 
         // if the load failed for any reason, this will return true
         abstract fun IsDefaultModel(): Boolean
@@ -386,7 +386,7 @@ object Model {
         // This isn't const, because it may need to reload a purged model if it
         // wasn't precached correctly.
         abstract fun InstantiateDynamicModel(
-            ent: renderEntity_s?,
+            ent: renderEntity_s,
             view: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel?
@@ -398,7 +398,7 @@ object Model {
         abstract fun GetJoints(): ArrayList<idMD5Joint>
 
         // Returns the handle for the joint with the given name.
-        abstract /*jointHandle_t*/  fun GetJointHandle(name: String?): Int
+        abstract /*jointHandle_t*/  fun GetJointHandle(name: String): Int
 
         // Returns the name for the joint with the given handle.
         abstract fun GetJointName(jointHandle_t: Int): String

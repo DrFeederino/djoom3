@@ -46,11 +46,7 @@ abstract class AbstractCollisionModel_local {
             val BYTES = SIZE / java.lang.Byte.SIZE
 
             fun generateArray(length: Int): Array<cm_vertex_s> {
-                val arr = arrayOf<cm_vertex_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_vertex_s()
-                }
-                return arr
+                return Array(length) { cm_vertex_s() }
             }
         }
     }
@@ -70,11 +66,7 @@ abstract class AbstractCollisionModel_local {
             val BYTES = SIZE / java.lang.Byte.SIZE
 
             fun generateArray(length: Int): Array<cm_edge_s> {
-                val arr = arrayOf<cm_edge_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_edge_s()
-                }
-                return arr
+                return Array(length) { cm_edge_s() }
             }
         }
     }
@@ -228,11 +220,7 @@ abstract class AbstractCollisionModel_local {
 
         companion object {
             fun generateArray(length: Int): Array<cm_model_s> {
-                val arr = arrayOf<cm_model_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_model_s()
-                }
-                return arr
+                return Array(length) { cm_model_s() }
             }
         }
     }
@@ -255,11 +243,7 @@ abstract class AbstractCollisionModel_local {
 
         companion object {
             fun generateArray(length: Int): Array<cm_trmVertex_s> {
-                val arr = arrayOf<cm_trmVertex_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_trmVertex_s()
-                }
-                return arr
+                return Array(length) { cm_trmVertex_s() }
             }
         }
     }
@@ -277,11 +261,7 @@ abstract class AbstractCollisionModel_local {
 
         companion object {
             fun generateArray(length: Int): Array<cm_trmEdge_s> {
-                val arr = arrayOf<cm_trmEdge_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_trmEdge_s()
-                }
-                return arr
+                return Array<cm_trmEdge_s>(length) { cm_trmEdge_s() }
             }
         }
     }
@@ -295,11 +275,7 @@ abstract class AbstractCollisionModel_local {
 
         companion object {
             fun generateArray(length: Int): Array<cm_trmPolygon_s> {
-                val arr = arrayOf<cm_trmPolygon_s>()
-                for (i in 0..length) {
-                    arr[i] = cm_trmPolygon_s()
-                }
-                return arr
+                return Array(length) { cm_trmPolygon_s() }
             }
         }
     }

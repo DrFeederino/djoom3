@@ -766,11 +766,11 @@ object BrittleFracture {
             }
             tris.tangentsCalculated = true
             decalTris.tangentsCalculated = true
-            Simd.SIMDProcessor.MinMax(tris.bounds[0], tris.bounds[1], tris.verts, tris.numVerts)
+            Simd.SIMDProcessor.MinMax(tris.bounds[0], tris.bounds[1], tris.verts.toTypedArray(), tris.numVerts)
             Simd.SIMDProcessor.MinMax(
                 decalTris.bounds[0],
                 decalTris.bounds[1],
-                decalTris.verts,
+                decalTris.verts.toTypedArray(),
                 decalTris.numVerts
             )
 

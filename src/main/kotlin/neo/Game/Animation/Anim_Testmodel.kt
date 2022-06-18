@@ -91,9 +91,9 @@ class Anim_Testmodel {
             init {
                 eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks())
                 eventCallbacks[Actor.EV_FootstepLeft] =
-                    eventCallback_t0<idTestModel?> { obj: Any? -> idTestModel::Event_Footstep }
+                    eventCallback_t0<idTestModel> { obj: Any? -> idTestModel::Event_Footstep }
                 eventCallbacks[Actor.EV_FootstepRight] =
-                    eventCallback_t0<idTestModel?> { obj: Any? -> idTestModel::Event_Footstep }
+                    eventCallback_t0<idTestModel> { obj: Any? -> idTestModel::Event_Footstep }
             }
         }
 
