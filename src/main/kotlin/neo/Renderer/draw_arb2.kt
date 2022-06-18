@@ -611,7 +611,7 @@ object draw_arb2 {
             var i: Int
             Common.common.Printf("----- R_ReloadARBPrograms -----\n")
             i = 0
-            while (progs[i] != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
+            while (progs.getOrNull(i) != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
                 R_LoadARBProgram(i)
                 i++
             }
@@ -631,57 +631,93 @@ object draw_arb2 {
     //        
     init {
 
-        progs[a++] =
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_TEST, "test.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_TEST, "test.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_INTERACTION, "interaction.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_INTERACTION, "interaction.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_BUMPY_ENVIRONMENT, "bumpyEnvironment.vfp")
-        progs[a++] = progDef_t(
-            ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
-            program_t.FPROG_BUMPY_ENVIRONMENT,
-            "bumpyEnvironment.vfp"
         )
-        progs[a++] =
+        progs.add(
+            a++, progDef_t(
+                ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
+                program_t.FPROG_BUMPY_ENVIRONMENT,
+                "bumpyEnvironment.vfp"
+            )
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_AMBIENT, "ambientLight.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_AMBIENT, "ambientLight.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW, "shadow.vp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_R200_INTERACTION, "R200_interaction.vp")
-        progs[a++] = progDef_t(
-            ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
-            program_t.VPROG_NV20_BUMP_AND_LIGHT,
-            "nv20_bumpAndLight.vp"
         )
-        progs[a++] = progDef_t(
-            ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
-            program_t.VPROG_NV20_DIFFUSE_COLOR,
-            "nv20_diffuseColor.vp"
+        progs.add(
+            a++, progDef_t(
+                ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
+                program_t.VPROG_NV20_BUMP_AND_LIGHT,
+                "nv20_bumpAndLight.vp"
+            )
         )
-        progs[a++] = progDef_t(
-            ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
-            program_t.VPROG_NV20_SPECULAR_COLOR,
-            "nv20_specularColor.vp"
+        progs.add(
+            a++, progDef_t(
+                ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
+                program_t.VPROG_NV20_DIFFUSE_COLOR,
+                "nv20_diffuseColor.vp"
+            )
         )
-        progs[a++] = progDef_t(
-            ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
-            program_t.VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
-            "nv20_diffuseAndSpecularColor.vp"
+        progs.add(
+            a++, progDef_t(
+                ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
+                program_t.VPROG_NV20_SPECULAR_COLOR,
+                "nv20_specularColor.vp"
+            )
         )
-        progs[a++] =
+        progs.add(
+            a++, progDef_t(
+                ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
+                program_t.VPROG_NV20_DIFFUSE_AND_SPECULAR_COLOR,
+                "nv20_diffuseAndSpecularColor.vp"
+            )
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_ENVIRONMENT, "environment.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_ENVIRONMENT, "environment.vfp")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_GLASSWARP, "arbVP_glasswarp.txt")
-        progs[a++] =
+        )
+        progs.add(
+            a++,
             progDef_t(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_GLASSWARP, "arbFP_glasswarp.txt")
+        )
 
         // additional programs can be dynamically specified in materials
     }

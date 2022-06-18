@@ -3229,7 +3229,7 @@ object FileSystem_h {
             if (0 == extensions.size()) {
                 return 0
             }
-            if (null == relativePath) {
+            if (relativePath.isEmpty()) {
                 return 0
             }
             pathLength = relativePath.length

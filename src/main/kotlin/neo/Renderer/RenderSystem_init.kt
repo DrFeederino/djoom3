@@ -140,13 +140,11 @@ class RenderSystem_init {
             while (i < 2) {
 
                 // set the parameters we are trying
-                run {
-                    val vidWidth = intArrayOf(0)
-                    val vidHeight = intArrayOf(0)
-                    R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger())
-                    tr_local.glConfig.vidWidth = 1024 //vidWidth[0];HACKME::0
-                    tr_local.glConfig.vidHeight = 768 //vidHeight[0];
-                }
+                val vidWidth = intArrayOf(0)
+                val vidHeight = intArrayOf(0)
+                R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger())
+                tr_local.glConfig.vidWidth = 1024 //vidWidth[0];HACKME::0
+                tr_local.glConfig.vidHeight = 768 //vidHeight[0];
                 parms.width = tr_local.glConfig.vidWidth
                 parms.height = tr_local.glConfig.vidHeight
                 parms.fullScreen = r_fullscreen.GetBool()
@@ -181,8 +179,9 @@ class RenderSystem_init {
             val bla = StringBuilder()
             var ext: String?
             var j = 0
-            while (qgl.qglGetStringi(GL11.GL_EXTENSIONS, j).also { ext = it } != null) {
-                bla.append(ext).append(' ')
+            val glExtensions = qgl.qglGetStringi(GL11.GL_EXTENSIONS, j)!!.split(" ")
+            while (glExtensions.size != j) {
+                bla.append(glExtensions[j]).append(' ')
                 j++
             }
             tr_local.glConfig.extensions_string = bla.toString()
@@ -2781,7 +2780,7 @@ class RenderSystem_init {
         )
         r_frontBuffer = idCVar(
             "r_frontBuffer",
-            "0",
+            "1",
             CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
             "draw to front buffer for debugging"
         )

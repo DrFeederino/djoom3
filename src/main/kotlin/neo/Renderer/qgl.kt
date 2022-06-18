@@ -486,7 +486,7 @@ object qgl {
 
     fun qglColor3fv(v: FloatArray) {
         DEBUG_printName("glColor3fv")
-        qglColor3f(v.get(0), v.get(1), v.get(2))
+        qglColor3f(v[0], v[1], v[2])
     }
 
     fun qglColor3i(red: Int, green: Int, blue: Int) {
@@ -551,7 +551,7 @@ object qgl {
 
     fun qglColor4d(red: Double, green: Double, blue: Double, alpha: Double) {
         DEBUG_printName("glColor4d")
-        GL11.glColor4d(red, green, blue, alpha)
+        GL33.glColor4d(red, green, blue, alpha)
     }
 
     fun qglColor4dv(v: DoubleArray) {
@@ -566,7 +566,7 @@ object qgl {
 
     fun qglColor4fv(v: FloatArray) {
         DEBUG_printName("glColor4fv")
-        qglColor4f(v.get(0), v.get(1), v.get(2), v.get(3))
+        qglColor4f(v[0], v[1], v[2], v[3])
     }
 
     fun qglColor4i(red: Int, green: Int, blue: Int, alpha: Int) {
@@ -596,7 +596,7 @@ object qgl {
 
     fun qglColor4ubv(v: ByteArray) {
         DEBUG_printName("glColor4ubv")
-        GL11.glColor4ub(v.get(0), v.get(1), v.get(2), v.get(3))
+        GL11.glColor4ub(v[0], v[1], v[2], v[3])
     }
 
     fun qglColor4ui(red: Int, green: Int, blue: Int, alpha: Int) {
@@ -1023,9 +1023,9 @@ object qgl {
         return GL11.glGetString(name)!!
     }
 
-    fun qglGetStringi(name: Int, index: Int): String {
+    fun qglGetStringi(name: Int, index: Int): String? {
         DEBUG_printName("glGetStringi")
-        return GL30.glGetStringi(name, index)!!
+        return GL11.glGetString(name)
     }
 
     fun qglGetTexEnvfv(target: Int, pName: Int, params: FloatArray) {
@@ -1808,7 +1808,7 @@ object qgl {
 
     fun qglTexCoord2fv(v: FloatArray) {
         DEBUG_printName("glTexCoord2fv")
-        qglTexCoord2f(v.get(0), v.get(1))
+        qglTexCoord2f(v[0], v[1])
     }
 
     fun qglTexCoord2i(s: Int, t: Int) {
@@ -2138,7 +2138,7 @@ object qgl {
 
     fun qglVertex3fv(v: FloatArray) {
         DEBUG_printName("glVertex3fv")
-        qglVertex3f(v.get(0), v.get(1), v.get(2))
+        qglVertex3f(v[0], v[1], v[2])
     }
 
     fun qglVertex3i(x: Int, y: Int, z: Int) {

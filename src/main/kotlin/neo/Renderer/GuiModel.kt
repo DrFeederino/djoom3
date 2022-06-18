@@ -713,7 +713,7 @@ class GuiModel {
             var s = surf.firstVert
             var d = 0
             while (d < tri.numVerts) {
-                tri.verts[d] = idDrawVert(verts[s])
+                tri.verts.add(d, idDrawVert(verts[s]))
                 s++
                 d++
             }

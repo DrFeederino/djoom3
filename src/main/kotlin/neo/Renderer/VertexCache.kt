@@ -11,7 +11,6 @@ import neo.framework.Common
 import neo.idlib.CmdArgs
 import neo.idlib.geometry.DrawVert
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.Simd
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import org.lwjgl.BufferUtils
@@ -206,7 +205,7 @@ object VertexCache {
             var junk = BufferUtils.createByteBuffer(frameBytes) // Mem_Alloc(frameBytes);
             for (i in 0 until VertexCache.NUM_VERTEX_FRAMES) {
                 allocatingTempBuffer = true // force the alloc to use GL_STREAM_DRAW_ARB
-                tempBuffers[i] = Alloc(junk, frameBytes)
+                tempBuffers.add(i, Alloc(junk, frameBytes))
                 allocatingTempBuffer = false
                 tempBuffers[i].tag = vertBlockTag_t.TAG_FIXED
                 // unlink these from the static list, so they won't ever get purged
@@ -507,7 +506,12 @@ object VertexCache {
                 //                GL15.glBufferData(GL_ARRAY_BUFFER, DrawVert.toByteBuffer(data), GL15.GL_STATIC_DRAW);
 //                GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
             } else {
-                Simd.SIMDProcessor.Memcpy(block.virtMem!!.position(block.offset), data, size)
+                var i = 0
+                while (i != size) {
+                    block.virtMem!!.position(block.offset).put(i, data.get(i))
+                    i++
+                }
+                //Simd.SIMDProcessor.Memcpy(block.virtMem!!.position(block.offset), data, size)
             }
             return block
         }

@@ -520,7 +520,7 @@ object win_main {
             // passing a slash as extension will find directories
             if (extension == "/") {
 //                    _A_SUBDIR = false;
-                return@FilenameFilter pathname.isDirectory
+                return@FilenameFilter pathname.isDirectory()
             } else {
 //                    _A_SUBDIR = true;
                 return@FilenameFilter name.endsWith(extension)
@@ -533,11 +533,18 @@ object win_main {
         if (!findinfo.exists()) {
             return -1
         }
-        for (findhandle in findinfo.listFiles(search)) {
-//            if (_A_SUBDIR ^ (findinfo.isDirectory())) {
-            list.add(findhandle.name)
-            //            }
+        val files = findinfo.listFiles(search)
+        if (files != null) {
+            for (file in files) {
+                list.add(file.name)
+            }
         }
+
+//        for (findhandle in findinfo.listFiles(search)) {
+////            if (_A_SUBDIR ^ (findinfo.isDirectory())) {
+//            list.add(findhandle.name)
+//            //            }
+//        }
         return list.size()
     }
 

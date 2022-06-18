@@ -568,7 +568,7 @@ object UsercmdGen {
          */
         override fun CommandStringUsercmdData(cmdString: String): Int {
             for (ucs in userCmdStrings) {
-                if (idStr.Icmp(cmdString, ucs.string!!) == 0) {
+                if (idStr.Icmp(cmdString, ucs.string ?: "") == 0) {
                     return ucs.button.ordinal
                 }
             }

@@ -8,9 +8,12 @@ import neo.framework.FileSystem_h
 import neo.framework.UsercmdGen
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str.idStr
-import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.system.Configuration
+import org.lwjgl.system.MemoryUtil
 import java.io.IOException
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
@@ -104,32 +107,39 @@ object win_glimp {
 //            Display.setDisplayMode(dm);
 //            Display.setVSyncEnabled(true);
 //            Display.setTitle("BLAAAAAAAAAAAAAAAAAArrrGGGGHH!!");
-        GLFW.glfwInit()
-        GLFW.glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err).also { errorCallback = it })
-        GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE)
-        //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        window = GLFW.glfwCreateWindow(parms.width, parms.height, "Doom 3", 0, 0)
-        val currentMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())!!
-        GLFW.glfwSetWindowPos(
+        GLFWErrorCallback.createPrint(System.err).set();
+        if (!glfwInit())
+            throw IllegalStateException("Unable to initialize GLFW");
+        glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err).set())
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+
+        window = glfwCreateWindow(parms.width, parms.height, "DOOM 3", MemoryUtil.NULL, MemoryUtil.NULL)
+
+        val currentMode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
+        glfwSetWindowPos(
             window,
-            currentMode.width() / 2 - parms.width / 2,
-            currentMode.height() / 2 - parms.height / 2
+            (currentMode.width() - parms.width) / 2,
+            (currentMode.height() - parms.height) / 2
         )
-        if (window != 0L) {
-            GLFW.glfwMakeContextCurrent(window)
-            GL.createCapabilities()
-            GLFW.glfwShowWindow(window)
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_LOCK_KEY_MODS, GLFW.GLFW_TRUE)
-            GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED)
-            GLFW.glfwSetKeyCallback(window, UsercmdGen.usercmdGen.keyboardCallback)
-            GLFW.glfwSetCursorPosCallback(window, UsercmdGen.usercmdGen.mouseCursorCallback)
-            GLFW.glfwSetScrollCallback(window, UsercmdGen.usercmdGen.mouseScrollCallback)
-            GLFW.glfwSetMouseButtonCallback(window, UsercmdGen.usercmdGen.mouseButtonCallback)
-            idLib.common.Printf("ok\n")
-            return true
-        }
-        //        }
+        glfwMakeContextCurrent(window)
+        GL.createCapabilities();
+
+        var glVersion = glGetString(GL_VERSION);
+
+        glfwShowWindow(window)
+        glfwFocusWindow(window)
+
+        glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_FALSE)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+        glfwSetKeyCallback(window, UsercmdGen.usercmdGen.keyboardCallback)
+        glfwSetCursorPosCallback(window, UsercmdGen.usercmdGen.mouseCursorCallback)
+        glfwSetScrollCallback(window, UsercmdGen.usercmdGen.mouseScrollCallback)
+        glfwSetMouseButtonCallback(window, UsercmdGen.usercmdGen.mouseButtonCallback)
+        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        idLib.common.Printf("ok\n")
+        return true
 //
 //	//
 //	// the exact mode failed, so scan EnumDisplaySettings for the next largest mode
@@ -178,6 +188,8 @@ object win_glimp {
      ===================
      */
     fun GLimp_Init(parms: glimpParms_t): Boolean {
+        Configuration.DISABLE_CHECKS.set(true)
+        Configuration.DEBUG.set(true)
 ////	const char	*driverName;
 ////	HDC		hDC;
 ////
@@ -221,6 +233,7 @@ object win_glimp {
 //        // try to change to fullscreen
 ////        if (parms.fullScreen) {//TODO:change this back.
 //        try {
+        println(Thread.currentThread().toString())
         if (!GLW_SetFullScreen(parms)) {
             GLimp_Shutdown()
             return false
@@ -344,13 +357,15 @@ object win_glimp {
 ////
 ////        // shutdown QGL subsystem
 ////        QGL_Shutdown();//not necessary.
-        GLFW.glfwDestroyWindow(window)
-        GLFW.glfwTerminate()
+        glfwDestroyWindow(window)
+        glfwTerminate()
     }
 
     // Destroys the rendering context, closes the window, resets the resolution,
     // and resets the gamma ramps.
     fun GLimp_SwapBuffers() {
+        println(Thread.currentThread().toString())
+        GL.createCapabilities();
         if (RenderSystem_init.r_swapInterval.IsModified()) {
             RenderSystem_init.r_swapInterval.ClearModified()
 
@@ -363,8 +378,8 @@ object win_glimp {
 //        }
         }
         //            Display.swapBuffers();//qwglSwapBuffers(win32.hDC);
-        GLFW.glfwPollEvents()
-        GLFW.glfwSwapBuffers(window)
+        glfwPollEvents()
+        glfwSwapBuffers(window)
 
         //Sys_DebugPrintf( "*** SwapBuffers() ***\n" );
     }

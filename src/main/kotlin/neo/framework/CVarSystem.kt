@@ -228,7 +228,7 @@ object CVarSystem {
         //
         //
         // Never use the default constructor.
-        private constructor() {
+        constructor() {
             //assert (!this.getClass().equals(idCVar.class));
         }
 
@@ -584,7 +584,7 @@ object CVarSystem {
             internalVar = this
         }
 
-        constructor(cvar: idCVar) : super(cvar.GetName(), cvar.value!!, cvar.GetFlags(), cvar.GetDescription()!!) {
+        constructor(cvar: idCVar) : super() {
             nameString.set(cvar.GetName())
             name = cvar.GetName()
             valueString.set(cvar.GetString())

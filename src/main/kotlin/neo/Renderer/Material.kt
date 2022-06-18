@@ -21,6 +21,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token
 import neo.idlib.Text.Token.idToken
 import neo.idlib.precompiled
+import neo.idlib.precompiled.MAX_EXPRESSION_OPS
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
 import org.lwjgl.opengl.ARBFragmentProgram
@@ -286,8 +287,8 @@ object Material {
     }
 
     class textureStage_t {
-        var cinematic: Array<idCinematic> = emptyArray()
-        val image: Array<idImage> = emptyArray()
+        var cinematic: Array<idCinematic> = arrayOf()
+        val image: Array<idImage> = arrayOf(idImage())
         val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
 
         // dynamic image variables
@@ -303,7 +304,7 @@ object Material {
         }
 
         constructor(texture: textureStage_t) {
-            cinematic[0] = texture.cinematic[0] //pointer
+            cinematic = arrayOf(*texture.cinematic) //pointer
             image[0] = texture.image[0] //pointer
             texgen = texture.texgen
             hasMatrix = texture.hasMatrix
@@ -441,12 +442,8 @@ object Material {
         }
 
         init {
-            for (s in shaderOps.indices) {
-                shaderOps[s] = expOp_t()
-            }
-            for (p in parseStages.indices) {
-                parseStages[p] = shaderStage_t()
-            }
+            shaderOps.addAll(arrayListOf(*Array(MAX_EXPRESSION_OPS) { expOp_t() }))
+            parseStages.addAll(arrayListOf(*Array(MAX_SHADER_STAGES) { shaderStage_t() }))
         }
     }
 
@@ -831,7 +828,7 @@ object Material {
                 DEBUG_Parse++
                 //                System.out.printf("%d-->%s\n", DEBUG_Parse, text);
                 for (a in 0 until numStages) {
-                    stages[a] = shaderStage_t(pd!!.parseStages[a])
+                    stages.add(shaderStage_t(pd!!.parseStages[a]))
                 }
             }
             if (numOps != 0) {
@@ -1819,7 +1816,7 @@ object Material {
             }
 
             // currently a surface can only have one unique texgen for all the stages on old hardware
-            var firstGen: texgen_t? = texgen_t.TG_EXPLICIT
+            var firstGen: texgen_t = texgen_t.TG_EXPLICIT
             i = 0
             while (i < numStages) {
                 if (pd!!.parseStages[i].texture.texgen != texgen_t.TG_EXPLICIT) {

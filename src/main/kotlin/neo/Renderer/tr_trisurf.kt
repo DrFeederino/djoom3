@@ -1085,7 +1085,7 @@ object tr_trisurf {
         tri.silEdges = ArrayList(numSilEdges)
         i = 0
         while (i < tri.numSilEdges) {
-            tri.silEdges[i] = silEdge_t(silEdges[i])
+            tri.silEdges.add(silEdge_t(silEdges[i]))
             i++
         }
     }
@@ -1220,11 +1220,7 @@ object tr_trisurf {
         var j: Int
         var totalVerts: Int
         var numMirror: Int
-        tVerts = kotlin.collections.ArrayList<tangentVert_t>(tri.numVerts)
-        for (t in tVerts.indices) {
-//	memset( tverts, 0, tri.numVerts * sizeof( *tverts ) );
-            tVerts[t] = tangentVert_t()
-        }
+        tVerts = kotlin.collections.ArrayList(arrayListOf(*Array(tri.numVerts) { tangentVert_t() }))
 
         // determine texture polarity of each surface
         // mark each vert with the polarities it uses
