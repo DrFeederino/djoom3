@@ -293,7 +293,7 @@ object List {
          ================
          */
         fun Resize(newsize: Int) {                                // resizes list to the given number of elements
-            val temp: Array<T>
+            val temp: Array<T>?
             var i: Int
             assert(newsize >= 0)
 
@@ -306,7 +306,7 @@ object List {
                 // not changing the size, so just exit
                 return
             }
-            temp = list!!
+            temp = list
             size = newsize
             if (size < num) {
                 num = size
@@ -316,7 +316,7 @@ object List {
             list = arrayOfNulls<Any>(size) as Array<T>
             i = 0
             while (i < num) {
-                list!![i] = temp[i]
+                list!![i] = temp!![i]
                 i++
             }
 
@@ -335,7 +335,7 @@ object List {
          ================
          */
         fun Resize(newsize: Int, newgranularity: Int) {            // resizes list and sets new granularity
-            val temp: Array<T>
+            val temp: Array<T>?
             var i: Int
             assert(newsize >= 0)
             assert(newgranularity > 0)
@@ -346,7 +346,7 @@ object List {
                 Clear()
                 return
             }
-            temp = list!!
+            temp = list
             size = newsize
             if (size < num) {
                 num = size
@@ -356,7 +356,7 @@ object List {
             list = arrayOfNulls<Any>(size) as Array<T>
             i = 0
             while (i < num) {
-                list!![i] = temp[i]
+                list!![i] = temp!![i]
                 i++
             }
 

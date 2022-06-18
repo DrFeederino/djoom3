@@ -164,7 +164,7 @@ object MultiplayerGame {
                 = 0
 
         //
-        private lateinit var playerState: Array<mpPlayerState_s>
+        private var playerState: Array<mpPlayerState_s> = emptyArray()
 
         //
         private var pureReady // defaults to false, set to true once server game is running with pure checksums

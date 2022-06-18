@@ -283,7 +283,11 @@ class Common {
                     argv = args.GetArgs(cArg)
                     argc = cArg[0]
                 }
-                ParseCommandLine(argc, argv as Array<String>)
+                if (argv != null && argv.isNotEmpty()) {
+                    ParseCommandLine(argc, argv)
+                } else {
+                    ParseCommandLine(argc)
+                }
 
                 // init console command system
                 CmdSystem.cmdSystem.Init()
@@ -875,7 +879,7 @@ class Common {
             val msg = arrayOf<String>("") //[MAX_PRINT_MSG_SIZE];
 
 //	va_start( argptr, fmt );
-            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = 0;
             Printf(
@@ -1833,7 +1837,7 @@ class Common {
             return added
         }
 
-        private fun ParseCommandLine(argc: Int, argv: Array<String>) {
+        private fun ParseCommandLine(argc: Int, argv: Array<String> = emptyArray()) {
             var i: Int
             val current_count: Int
             com_numConsoleLines = 0

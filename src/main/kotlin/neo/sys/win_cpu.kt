@@ -160,6 +160,9 @@ object win_cpu {
             cpuid = wmic("cpu get ProcessorId")
             return !cpuid.isEmpty()
         }
+        if (BuildDefines._MACOSX) {
+            return false
+        }
         throw TODO_Exception()
         //	__asm
 //	{

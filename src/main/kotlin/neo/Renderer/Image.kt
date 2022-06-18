@@ -3222,7 +3222,7 @@ class Image {
 
             // see if the image already exists
             hash = name.FileNameHash()
-            image = imageHashTable[hash]
+            image = imageHashTable.getOrNull(hash)
             while (image != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     if (image.generatorFunction !== generatorFunction) {
@@ -3597,8 +3597,8 @@ class Image {
 //            System.out.printf(">>>>>>>>>>>>>>%d--%s\n", idStr.IHash(name.toCharArray()), name);
             image = idImage()
             images.Append(image)
-            image.hashNext = imageHashTable[hash]
-            imageHashTable[hash] = image
+            image.hashNext = imageHashTable.getOrNull(hash)
+            imageHashTable.add(hash, image)
             image.imgName.set(name)
             return image
         }

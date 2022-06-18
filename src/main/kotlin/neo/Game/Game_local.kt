@@ -2359,7 +2359,7 @@ class Game_local {
                             // pak 0 will always miss when client doesn't ask for game bin
                             Common.common.DPrintf("no game pak request\n")
                         } else {
-                            Common.common.DPrintf("no pak %d\n", i)
+                            Common.common.DPrintf("no pak %d\n", i.toString())
                         }
                         i++
                         continue
@@ -2377,7 +2377,7 @@ class Game_local {
                         val url = idStr(CVarSystem.cvarSystem.GetCVarString("net_serverDlBaseURL"))
                         url.AppendPath(dlTable[j])
                         reply += url
-                        Common.common.DPrintf("download for %s: %s\n", IP, url)
+                        Common.common.DPrintf("download for %s: %s\n", IP, url.toString())
                     }
                     i++
                 }
@@ -6314,8 +6314,8 @@ class Game_local {
 
         init {
             for (u in 0 until MAX_CLIENTS) {
-                userInfo[u] = idDict()
-                persistentPlayerInfo[u] = idDict()
+                userInfo.add(idDict())
+                persistentPlayerInfo.add(idDict())
             }
             lastGUIEnt = idEntityPtr()
             lastAIAlertEntity = idEntityPtr()

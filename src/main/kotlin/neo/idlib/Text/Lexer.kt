@@ -170,7 +170,7 @@ object Lexer {
         punctuation_t(";", P_SEMICOLON),  //label indication
         punctuation_t(":", P_COLON),  // pre-compiler
         //if statement
-        punctuation_t("", P_QUESTIONMARK),  // pre-compiler
+        punctuation_t("?", P_QUESTIONMARK),  // pre-compiler
         //embracements
         punctuation_t("(", P_PARENTHESESOPEN),  // pre-compiler
         punctuation_t(")", P_PARENTHESESCLOSE),  // pre-compiler

@@ -239,7 +239,7 @@ class snd_system {
             var useEAXReverb = true
 
             // latches
-            var useOpenAL = true
+            var useOpenAL = false
 
             init {
                 if (BuildDefines.ID_DEDICATED) {

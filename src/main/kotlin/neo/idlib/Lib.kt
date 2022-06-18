@@ -3,8 +3,11 @@ package neo.idlib
 import neo.Game.Entity.idEntity.entityFlags_s
 import neo.Game.Projectile.idProjectile.projectileFlags_s
 import neo.TempDump
+import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idCVarSystem
+import neo.framework.Common
 import neo.framework.Common.idCommon
+import neo.framework.FileSystem_h
 import neo.framework.FileSystem_h.idFileSystem
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Dict_h.idDict
@@ -86,9 +89,9 @@ class Lib {
      ===============================================================================
      */
     object idLib {
-        lateinit var common: idCommon
-        lateinit var cvarSystem: idCVarSystem
-        lateinit var fileSystem: idFileSystem
+        var common: idCommon = Common.idCommonLocal()
+        var cvarSystem: idCVarSystem = CVarSystem.idCVarSystemLocal()
+        var fileSystem: idFileSystem = FileSystem_h.idFileSystemLocal()
         var frameNumber = 0
         lateinit var sys: idSys
         fun Init() {

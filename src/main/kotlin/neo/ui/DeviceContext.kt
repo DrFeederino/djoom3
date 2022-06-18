@@ -32,7 +32,7 @@ class DeviceContext {
     class idDeviceContext {
         private val cursorImages: Array<idMaterial> = Array(CURSOR.CURSOR_COUNT.ordinal) { idMaterial() }
         private val scrollBarImages: Array<idMaterial> = Array(SCROLLBAR.SCROLLBAR_COUNT.ordinal) { idMaterial() }
-        private var activeFont: fontInfoEx_t = fontInfoEx_t()
+        private var activeFont: fontInfoEx_t? = null
 
         //
         private val clipRects: idList<idRectangle> = idList()
@@ -62,7 +62,7 @@ class DeviceContext {
 
         //
         private var overStrikeMode = false
-        private lateinit var useFont: fontInfo_t
+        private var useFont: fontInfo_t? = null
 
         //
         private var vidHeight = 0f
@@ -385,7 +385,7 @@ class DeviceContext {
                 // update the width
                 bla++
                 if (buff[len - 1].code != Str.C_COLOR_ESCAPE && (len <= 1 || buff[len - 2].code != Str.C_COLOR_ESCAPE)) {
-                    textWidth += textScale * useFont.glyphScale * useFont.glyphs.get(buff[len - 1].code).xSkip
+                    textWidth += textScale * useFont!!.glyphScale * useFont!!.glyphs[buff[len - 1].code].xSkip
                     // Jim Dosé, I don't know who you are..but I hate you.
                 }
             }
@@ -702,7 +702,7 @@ class DeviceContext {
             val glyph: glyphInfo_t
             val useScale: Float
             SetFontByScale(scale)
-            val font = useFont
+            val font = useFont!!
             useScale = scale * font.glyphScale
             glyph = font.glyphs[c.code]
             return idMath.FtoiFast(glyph.xSkip * useScale)
@@ -712,7 +712,7 @@ class DeviceContext {
             var i: Int
             var width: Int
             SetFontByScale(scale)
-            val glyphs = useFont.glyphs
+            val glyphs = useFont!!.glyphs
             if (text == null) {
                 return 0
             }
@@ -738,7 +738,7 @@ class DeviceContext {
                     i++
                 }
             }
-            return idMath.FtoiFast(scale * useFont.glyphScale * width)
+            return idMath.FtoiFast(scale * useFont!!.glyphScale * width)
         }
 
         fun TextWidth(text: idStr?, scale: Float, limit: Int): Int {
@@ -753,7 +753,7 @@ class DeviceContext {
             val useScale: Float
             var s = 0 //text;
             SetFontByScale(scale)
-            val font = useFont
+            val font = useFont!!
             useScale = scale * font.glyphScale
             max = 0f
             if (text != null) {
@@ -781,14 +781,14 @@ class DeviceContext {
 
         fun MaxCharHeight(scale: Float): Int {
             SetFontByScale(scale)
-            val useScale = scale * useFont.glyphScale
-            return idMath.FtoiFast(activeFont.maxHeight * useScale)
+            val useScale = scale * useFont!!.glyphScale
+            return idMath.FtoiFast(activeFont!!.maxHeight * useScale)
         }
 
         fun MaxCharWidth(scale: Float): Int {
             SetFontByScale(scale)
-            val useScale = scale * useFont.glyphScale
-            return idMath.FtoiFast(activeFont.maxWidth * useScale)
+            val useScale = scale * useFont!!.glyphScale
+            return idMath.FtoiFast(activeFont!!.maxWidth * useScale)
         }
 
         fun FindFont(name: String): Int {
@@ -1145,8 +1145,8 @@ class DeviceContext {
                 return
             }
             SetFontByScale(scale)
-            val useScale = scale * useFont.glyphScale
-            val glyph2 = useFont.glyphs.get(if (overStrikeMode) '_'.code else '|'.code)
+            val useScale = scale * useFont!!.glyphScale
+            val glyph2 = useFont!!.glyphs[if (overStrikeMode) '_'.code else '|'.code]
             val yadj = useScale * glyph2.top
             PaintChar(
                 x,
@@ -1180,7 +1180,7 @@ class DeviceContext {
             var glyph: glyphInfo_t
             val useScale: Float
             SetFontByScale(scale)
-            useScale = scale * useFont.glyphScale
+            useScale = scale * useFont!!.glyphScale
             count = 0
             if (text != null && text.isNotEmpty() && color.w != 0.0f) {
                 var s: Char = text[0] //(const unsigned char*)text;
@@ -1197,7 +1197,7 @@ class DeviceContext {
                         s_i++
                         continue
                     }
-                    glyph = useFont.glyphs[text[s_i].also { s = it }.code]
+                    glyph = useFont!!.glyphs[text[s_i].also { s = it }.code]
 
                     //
                     // int yadj = Assets.textFont.glyphs[text[i]].bottom +
@@ -1286,24 +1286,24 @@ class DeviceContext {
 
         private fun SetFontByScale(scale: Float) {
             if (scale <= gui_smallFontLimit.GetFloat()) {
-                useFont = activeFont.fontInfoSmall
-                activeFont.maxHeight = activeFont.maxHeightSmall
-                activeFont.maxWidth = activeFont.maxWidthSmall
+                useFont = activeFont!!.fontInfoSmall
+                activeFont!!.maxHeight = activeFont!!.maxHeightSmall
+                activeFont!!.maxWidth = activeFont!!.maxWidthSmall
             } else if (scale <= gui_mediumFontLimit.GetFloat()) {
-                useFont = activeFont.fontInfoMedium
-                activeFont.maxHeight = activeFont.maxHeightMedium
-                activeFont.maxWidth = activeFont.maxWidthMedium
+                useFont = activeFont!!.fontInfoMedium
+                activeFont!!.maxHeight = activeFont!!.maxHeightMedium
+                activeFont!!.maxWidth = activeFont!!.maxWidthMedium
             } else {
-                useFont = activeFont.fontInfoLarge
-                activeFont.maxHeight = activeFont.maxHeightLarge
-                activeFont.maxWidth = activeFont.maxWidthLarge
+                useFont = activeFont!!.fontInfoLarge
+                activeFont!!.maxHeight = activeFont!!.maxHeightLarge
+                activeFont!!.maxWidth = activeFont!!.maxWidthLarge
             }
         }
 
         private fun Clear() {
             initialized = false
-            useFont = activeFont.fontInfoMedium
-            activeFont = fonts[0]
+            useFont = null
+            activeFont = null
             mbcs = false
         }
 

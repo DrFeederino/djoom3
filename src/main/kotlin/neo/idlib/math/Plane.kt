@@ -585,11 +585,7 @@ object Plane {
             //public	float			operator[]( int index ) const
             //public	float &			operator[]( int index )
             fun generateArray(length: Int): Array<idPlane> {
-                val arr = arrayOf<idPlane>()
-                for (i in 0..length) {
-                    arr[i] = idPlane()
-                }
-                return arr
+                return Array(length) { idPlane() }
             }
         }
     }

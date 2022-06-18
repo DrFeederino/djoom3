@@ -3220,7 +3220,7 @@ object Entity {
                         }
                         if (i == c) {
                             // not handled
-                            idLib.common.DPrintf("idEntity::HandleGuiCommands: '%s' not handled\n", token)
+                            idLib.common.DPrintf("idEntity::HandleGuiCommands: '%s' not handled\n", token.toString())
                             src.ReadToken(token)
                         }
                     }
@@ -3449,8 +3449,8 @@ object Entity {
                         // too old, skip it ( reliable messages don't need to be parsed in full )
                         idLib.common.DPrintf(
                             "ent 0x%x: start sound shader too old (%d ms)\n",
-                            entityNumber,
-                            Game_local.gameLocal.realClientTime - time
+                            entityNumber.toString(),
+                            (Game_local.gameLocal.realClientTime - time).toString()
                         )
                         return true
                     }

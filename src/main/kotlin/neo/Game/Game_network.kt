@@ -45,11 +45,11 @@ class Game_network {
                     val outOfOrder = RemoveLast()!!
                     idLib.common.DPrintf(
                         "WARNING: new event with id %d ( time %d ) caused removal of event with id %d ( time %d ), game time = %d.\n",
-                        event.event,
-                        event.time,
-                        outOfOrder.event,
-                        outOfOrder.time,
-                        Game_local.gameLocal.time
+                        event.event.toString(),
+                        event.time.toString(),
+                        outOfOrder.event.toString(),
+                        outOfOrder.time.toString(),
+                        Game_local.gameLocal.time.toString()
                     )
                     Free(outOfOrder)
                 }

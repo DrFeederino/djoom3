@@ -595,7 +595,7 @@ object CVarSystem {
             flags = cvar.GetFlags() or CVAR_MODIFIED
             valueMin = cvar.GetMinValue()
             valueMax = cvar.GetMaxValue()
-            valueStrings = CopyValueStrings(cvar.GetValueStrings()!!)
+            valueStrings = CopyValueStrings(cvar.GetValueStrings())
             valueCompletion = cvar.GetValueCompletion()
             UpdateValue()
             UpdateCheat()
@@ -604,7 +604,7 @@ object CVarSystem {
 
         //	// virtual					~idInternalCVar( void );
         //
-        fun CopyValueStrings(strings: Array<String>): Array<String> {
+        fun CopyValueStrings(strings: Array<String>?): Array<String>? {
 //	int i, totalLength;
 //	const char **ptr;
 //	char *str;
@@ -631,7 +631,7 @@ object CVarSystem {
 //	return ptr;
 
 //            return Arrays.copyOf(strings, strings.length);
-            return strings.clone()
+            return if (strings == null) null else strings.clone()
         }
 
         @Throws(idException::class)
@@ -666,7 +666,7 @@ object CVarSystem {
                 valueMin = cvar.GetMinValue()
                 valueMax = cvar.GetMaxValue()
                 //                Mem_Free(valueStrings);
-                valueStrings = CopyValueStrings(cvar.GetValueStrings()!!)
+                valueStrings = CopyValueStrings(cvar.GetValueStrings())
                 valueCompletion = cvar.GetValueCompletion()
                 UpdateValue()
                 cvarSystem.SetModifiedFlags(cvar.GetFlags())

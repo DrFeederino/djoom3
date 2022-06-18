@@ -2033,12 +2033,12 @@ object Vector {
     //===============================================================
     public class idVecX {
         private var size // size of the vector
-                : Int = 0
+                : Int = 1
         var p // memory the vector is stored
-                : FloatArray = FloatArray(size)
+                : FloatArray = FloatArray(1)
         var VECX_SIMD = false
         private var alloced // if -1 p points to data set with SetData
-                : Int = 0
+                : Int = 1
 
         constructor()
 

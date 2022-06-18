@@ -2551,11 +2551,11 @@ class DeclManager {
                 val code: huffmanCode_s = huffmanCodes[text[i].code]
                 j = 0
                 while (j < code.numBits shr 5) {
-                    msg.WriteBits(code.bits[j] as Int, 32)
+                    msg.WriteBits(code.bits[j].toInt(), 32)
                     j++
                 }
                 if (code.numBits and 31 != 0) {
-                    msg.WriteBits(code.bits[j] as Int, code.numBits and 31)
+                    msg.WriteBits(code.bits[j].toInt(), code.numBits and 31)
                 }
                 i++
             }
