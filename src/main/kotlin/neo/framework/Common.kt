@@ -856,7 +856,7 @@ class Common {
             }
 
 //	va_start( argptr, fmt );
-            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = '\0';
 //
@@ -909,7 +909,7 @@ class Common {
             }
 
 //	va_start( argptr, fmt );
-            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, args)
+            idStr.vsnPrintf(msg, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end( argptr );
 //            msg[MAX_PRINT_MSG_SIZE - 1] = '\0';
             Printf(
@@ -999,7 +999,7 @@ class Common {
             com_errorEntered = code
 
 //	va_start (argptr,fmt);
-            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
+            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end (argptr);
 //            errorMessage[errorMessage[.length - 1] = '\0';//TODO:is this needed?
 
@@ -1055,7 +1055,7 @@ class Common {
                 win_main.Sys_Printf("FATAL: recursed fatal error:\n%s\n", errorMessage[0])
 
 //		va_start( argptr, fmt );
-                idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
+                idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, *args)
                 //		va_end( argptr );
 //                errorMessage[errorMessage.length - 1] = '\0';//TODO:useless
                 win_main.Sys_Printf("%s\n", errorMessage[0])
@@ -1066,7 +1066,7 @@ class Common {
             com_errorEntered = TempDump.etoi(errorParm_t.ERP_FATAL)
 
 //	va_start( argptr, fmt );
-            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, args)
+            idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end( argptr );
 //            errorMessage[errorMessage.length - 1] = '\0';
             if (CVarSystem.cvarSystem.GetCVarBool("r_fullscreen")) {

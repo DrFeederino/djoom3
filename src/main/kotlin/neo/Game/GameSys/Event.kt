@@ -237,7 +237,7 @@ object Event {
                 eventError = true
                 eventErrorMsg = String.format("numEventDefs >= MAX_EVENTS")
             }
-            eventDefList[numEventDefs] = ev
+            eventDefList.add(numEventDefs, ev)
             numEventDefs++
         }
     }

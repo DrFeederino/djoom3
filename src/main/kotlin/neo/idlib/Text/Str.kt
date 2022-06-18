@@ -1335,7 +1335,7 @@ object Str {
         fun vsprintf(string: idStr, fmt: String, vararg args: Any): Int { //char[] argptr) {
             val l: Int
             val buffer = emptyArray<String>() //new char[32000];
-            l = vsnPrintf(buffer, 32000, fmt, args)
+            l = vsnPrintf(buffer, 32000, fmt, *args)
             //	buffer[buffer.length-1] = '\0';
 
 //	string = buffer;

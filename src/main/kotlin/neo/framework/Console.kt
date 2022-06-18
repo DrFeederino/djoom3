@@ -1062,7 +1062,7 @@ class Console {
             val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
             //	va_list argptr;
 //	va_start( argptr, text );
-            idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
+            idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, *text)
             //	va_end( argptr );
             RenderSystem.renderSystem.DrawSmallStringExt(
                 0,
@@ -1084,7 +1084,7 @@ class Console {
             val string = arrayOf<String>("") //new char[MAX_STRING_CHARS];
             //	va_list argptr;
 //	va_start( argptr, text );
-            val i: Int = idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, text)
+            val i: Int = idStr.vsnPrintf(string, Lib.MAX_STRING_CHARS, fmt, *text)
             //	va_end( argptr );
             RenderSystem.renderSystem.DrawSmallStringExt(
                 635 - i * RenderSystem.SMALLCHAR_WIDTH,

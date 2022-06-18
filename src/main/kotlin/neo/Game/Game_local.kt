@@ -133,6 +133,7 @@ import neo.Renderer.RenderWorld.*
 import neo.Sound.snd_shader
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.snd_system
+import neo.Sound.snd_world
 import neo.Sound.sound.idSoundWorld
 import neo.TempDump
 import neo.TempDump.void_callback
@@ -4481,8 +4482,10 @@ class Game_local {
             var i: Int
             i = if (clearClients) 0 else MAX_CLIENTS
             while (i < MAX_GENTITIES) {
-                entities.removeAt(i)
-                assert(null == entities[i])
+                if (entities.getOrNull(i) != null) {
+                    entities.removeAt(i)
+                }
+                assert(entities.getOrNull(i) == null)
                 spawnIds[i] = -1
                 i++
             }
@@ -4491,7 +4494,7 @@ class Game_local {
                 // add back the hashes of the clients
                 i = 0
                 while (i < MAX_CLIENTS) {
-                    if (null == entities[i]) {
+                    if (entities.getOrNull(i) == null) {
                         i++
                         continue
                     }
@@ -6329,8 +6332,8 @@ class Game_local {
         //
         const val DEFAULT_GRAVITY = 1066.0f
 
-        lateinit var gameRenderWorld: idRenderWorld
-        lateinit var gameSoundWorld: idSoundWorld
+        var gameRenderWorld: idRenderWorld = RenderWorld_local.idRenderWorldLocal()
+        var gameSoundWorld: idSoundWorld = snd_world.idSoundWorldLocal()
 
         //============================================================================
         // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden

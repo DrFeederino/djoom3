@@ -1862,7 +1862,9 @@ object Lexer {
             var punc: punctuation_t
 
 // #ifdef PUNCTABLE
-            n = punctuationTable[buffer.get(script_p).code]
+            val readCode = buffer.get(script_p)
+            //println(script_p)
+            n = punctuationTable[readCode.code]
             while (n >= 0) {
                 punc = punctuations[n]
                 // #else

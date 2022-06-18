@@ -2872,7 +2872,7 @@ class Image {
                 : idImage
 
         //
-        var imageHashTable: ArrayList<idImage> = ArrayList<idImage>(Str.FILE_HASH_SIZE)
+        var imageHashTable: Array<idImage?> = arrayOfNulls(Str.FILE_HASH_SIZE)
         val images: idList<idImage> = idList()
 
         //
@@ -2913,7 +2913,7 @@ class Image {
         fun Init() {
 
 //	memset(imageHashTable, 0, sizeof(imageHashTable));
-            imageHashTable = ArrayList<idImage>(imageHashTable.size)
+            imageHashTable = arrayOfNulls(imageHashTable.size)
             images.Resize(1024, 1024)
 
             // clear the cached LRU
@@ -3011,7 +3011,7 @@ class Image {
             // are in a reloadImages call
             //
             hash = name.FileNameHash()
-            image = imageHashTable[hash]
+            image = imageHashTable[hash]!!
             while (image.hashNext != null) {
                 if (name.Icmp(image.imgName.toString()) == 0) {
                     // the built in's, like _white and _flat always match the other options
@@ -3598,7 +3598,7 @@ class Image {
             image = idImage()
             images.Append(image)
             image.hashNext = imageHashTable.getOrNull(hash)
-            imageHashTable.add(hash, image)
+            imageHashTable[hash] = image
             image.imgName.set(name)
             return image
         }

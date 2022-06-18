@@ -282,7 +282,7 @@ object File_h {
             //            va_list argptr;
 
 //            va_start(argptr, fmt);
-            length = idStr.vsnPrintf(buf, MAX_PRINT_MSG - 1, fmt, args /*, argptr*/)
+            length = idStr.vsnPrintf(buf, MAX_PRINT_MSG - 1, fmt, *args /*, argptr*/)
             //            va_end(argptr);
 
             // so notepad formats the lines correctly
