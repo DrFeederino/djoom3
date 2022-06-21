@@ -318,11 +318,11 @@ object Script_Compiler {
             if (var_a != null) {
                 vectorPtr.set(var_a.value.getidVec3Ptr())
             }
-            val varA = var_a!!
+            val varA = var_a
             val varB = var_b
             when (opcodes.indexOf(op)) {
                 OP_ADD_F -> {
-                    float_c = varA.value.getFloatPtr() + varB!!.value.getFloatPtr()
+                    float_c = varA!!.value.getFloatPtr() + varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_ADD_V -> {
@@ -330,7 +330,7 @@ object Script_Compiler {
                     type = Script_Program.type_vector
                 }
                 OP_SUB_F -> {
-                    float_c = varA.value.getFloatPtr() - varB!!.value.getFloatPtr()
+                    float_c = varA!!.value.getFloatPtr() - varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_SUB_V -> {
@@ -338,7 +338,7 @@ object Script_Compiler {
                     type = Script_Program.type_vector
                 }
                 OP_MUL_F -> {
-                    float_c = varA.value.getFloatPtr() * varB!!.value.getFloatPtr()
+                    float_c = varA!!.value.getFloatPtr() * varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_MUL_V -> {
@@ -346,7 +346,7 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 OP_MUL_FV -> {
-                    vec_c.set(varB!!.value.getidVec3Ptr().times(varA.value.getFloatPtr()))
+                    vec_c.set(varB!!.value.getidVec3Ptr().times(varA!!.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
                 OP_MUL_VF -> {
@@ -354,53 +354,53 @@ object Script_Compiler {
                     type = Script_Program.type_vector
                 }
                 OP_DIV_F -> {
-                    float_c = Divide(varA.value.getFloatPtr(), varB!!.value.getFloatPtr())
+                    float_c = Divide(varA!!.value.getFloatPtr(), varB!!.value.getFloatPtr())
                     type = Script_Program.type_float
                 }
                 OP_MOD_F -> {
-                    float_c = (varA.value.getFloatPtr().toInt() % varB!!.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varA!!.value.getFloatPtr().toInt() % varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_BITAND -> {
-                    float_c = (varA.value.getFloatPtr().toInt() and varB!!.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varA!!.value.getFloatPtr().toInt() and varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_BITOR -> {
-                    float_c = (varA.value.getFloatPtr().toInt() or varB!!.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varA!!.value.getFloatPtr().toInt() or varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_GE -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() >= varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() >= varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_LE -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() <= varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() <= varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_GT -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() > varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() > varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_LT -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() < varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() < varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_AND -> {
                     float_c =
-                        TempDump.btoi(varA.value.getFloatPtr() != 0f && varB!!.value.getFloatPtr() != 0f).toFloat()
+                        TempDump.btoi(varA!!.value.getFloatPtr() != 0f && varB!!.value.getFloatPtr() != 0f).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_OR -> {
                     float_c =
-                        TempDump.btoi(varA.value.getFloatPtr() != 0f || varB!!.value.getFloatPtr() != 0f).toFloat()
+                        TempDump.btoi(varA!!.value.getFloatPtr() != 0f || varB!!.value.getFloatPtr() != 0f).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_NOT_BOOL -> {
-                    int_c = TempDump.btoi(!TempDump.itob(varA.value.getIntPtr()))
+                    int_c = TempDump.btoi(!TempDump.itob(varA!!.value.getIntPtr()))
                     type = Script_Program.type_boolean
                 }
                 OP_NOT_F -> {
-                    float_c = TempDump.btoi(!TempDump.itob(varA.value.getFloatPtr().toInt())).toFloat()
+                    float_c = TempDump.btoi(!TempDump.itob(varA!!.value.getFloatPtr().toInt())).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_NOT_V -> {
@@ -408,7 +408,7 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 OP_NEG_F -> {
-                    float_c = -varA.value.getFloatPtr()
+                    float_c = -varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_NEG_V -> {
@@ -416,11 +416,11 @@ object Script_Compiler {
                     type = Script_Program.type_vector
                 }
                 OP_INT_F -> {
-                    float_c = varA.value.getFloatPtr().toInt().toFloat()
+                    float_c = varA!!.value.getFloatPtr().toInt().toFloat()
                     type = Script_Program.type_float
                 }
                 OP_EQ_F -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() == varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() == varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_EQ_V -> {
@@ -428,11 +428,11 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 OP_EQ_E -> {
-                    float_c = TempDump.btoi(varA.value.getIntPtr() == varB!!.value.getIntPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getIntPtr() == varB!!.value.getIntPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_NE_F -> {
-                    float_c = TempDump.btoi(varA.value.getFloatPtr() != varB!!.value.getFloatPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getFloatPtr() != varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_NE_V -> {
@@ -440,47 +440,47 @@ object Script_Compiler {
                     type = Script_Program.type_float
                 }
                 OP_NE_E -> {
-                    float_c = TempDump.btoi(varA.value.getIntPtr() != varB!!.value.getIntPtr()).toFloat()
+                    float_c = TempDump.btoi(varA!!.value.getIntPtr() != varB!!.value.getIntPtr()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_UADD_F -> {
-                    float_c = varB!!.value.getFloatPtr() + varA.value.getFloatPtr()
+                    float_c = varB!!.value.getFloatPtr() + varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_USUB_F -> {
-                    float_c = varB!!.value.getFloatPtr() - varA.value.getFloatPtr()
+                    float_c = varB!!.value.getFloatPtr() - varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_UMUL_F -> {
-                    float_c = varB!!.value.getFloatPtr() * varA.value.getFloatPtr()
+                    float_c = varB!!.value.getFloatPtr() * varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
                 OP_UDIV_F -> {
-                    float_c = Divide(varB!!.value.getFloatPtr(), varA.value.getFloatPtr())
+                    float_c = Divide(varB!!.value.getFloatPtr(), varA!!.value.getFloatPtr())
                     type = Script_Program.type_float
                 }
                 OP_UMOD_F -> {
-                    float_c = (varB!!.value.getFloatPtr().toInt() % varA.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varB!!.value.getFloatPtr().toInt() % varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_UOR_F -> {
-                    float_c = (varB!!.value.getFloatPtr().toInt() or varA.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varB!!.value.getFloatPtr().toInt() or varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_UAND_F -> {
-                    float_c = (varB!!.value.getFloatPtr().toInt() and varA.value.getFloatPtr().toInt()).toFloat()
+                    float_c = (varB!!.value.getFloatPtr().toInt() and varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
                 OP_UINC_F -> {
-                    float_c = varA.value.getFloatPtr() + 1
+                    float_c = varA!!.value.getFloatPtr() + 1
                     type = Script_Program.type_float
                 }
                 OP_UDEC_F -> {
-                    float_c = varA.value.getFloatPtr() - 1
+                    float_c = varA!!.value.getFloatPtr() - 1
                     type = Script_Program.type_float
                 }
                 OP_COMP_F -> {
-                    float_c = varA.value.getFloatPtr().toInt().inv().toFloat()
+                    float_c = varA!!.value.getFloatPtr().toInt().inv().toFloat()
                     type = Script_Program.type_float
                 }
                 else -> type = null
@@ -496,8 +496,8 @@ object Script_Compiler {
                 return null
             }
             if (varA != null) {
-                varA.numUsers--
-                if (varA.numUsers <= 0) {
+                varA!!.numUsers--
+                if (varA!!.numUsers <= 0) {
                     Game_local.gameLocal.program.FreeDef(varA, null)
                 }
             }
@@ -1019,7 +1019,7 @@ object Script_Compiler {
             startsize: Int,
             `object`: idVarDef?
         ): idVarDef? {
-            var e: idVarDef
+            var e: idVarDef?
             val type: idTypeDef?
             var funcArg: idTypeDef?
             val returnDef: idVarDef?
@@ -1040,9 +1040,9 @@ object Script_Compiler {
                     if (arg >= type.NumParameters()) {
                         Error("too many parameters")
                     }
-                    e = GetExpression(TOP_PRIORITY)!!
+                    e = GetExpression(TOP_PRIORITY)
                     funcArg = type.GetParmType(arg)
-                    if (!EmitPush(e, funcArg)) {
+                    if (!EmitPush(e!!, funcArg)) {
                         Error("type mismatch on parm %d of call to '%s'", arg + 1, func.Name())
                     }
                     size += if (funcArg.Type() == Script_Program.ev_object) {
@@ -1440,7 +1440,7 @@ object Script_Compiler {
             DBG_GetExpression++
             var op: opcode_s
             var oldop: opcode_s
-            var e: idVarDef
+            var e: idVarDef?
             var e2: idVarDef
             var oldtype: idVarDef?
             var   /*ctype_t*/type_a: Int
@@ -1450,7 +1450,7 @@ object Script_Compiler {
             if (priority == 0) {
                 return GetTerm()
             }
-            e = GetExpression(priority - 1)!!
+            e = GetExpression(priority - 1)
             if (token.toString() == ";") {
                 // save us from searching through the opcodes unnecessarily
                 return e
@@ -1458,7 +1458,7 @@ object Script_Compiler {
 
             while (true) {
                 if (priority == FUNCTION_PRIORITY && CheckToken("(")) {
-                    return ParseFunctionCall(e)
+                    return ParseFunctionCall(e!!)
                 }
 
                 // has to be a punctuation
@@ -1470,7 +1470,7 @@ object Script_Compiler {
                     if (op.priority == priority && CheckToken(op.name)) {
                         break
                     }
-                    op = opcodes.get(++op_i)
+                    op = opcodes[++op_i]
                 }
                 if (null == op || op.name.isNullOrEmpty()) {
                     // next token isn't at this priority level
@@ -1479,15 +1479,14 @@ object Script_Compiler {
 
                 // unary operators act only on the left operand
                 if (op.type_b === Script_Program.def_void) {
-                    e = EmitOpcode(op, e, null)!!
-                    return e
+                    return EmitOpcode(op, e, null)
                 }
 
                 // preserve our base type
                 oldtype = basetype
 
                 // field access needs scope from object
-                if (op.name[0] == '.' && e.TypeDef()!!.Inherits(Script_Program.type_object)) {
+                if (op.name[0] == '.' && e!!.TypeDef()!!.Inherits(Script_Program.type_object)) {
                     // save off what type this field is part of
                     basetype = e.TypeDef()!!.def
                 }
@@ -1498,7 +1497,7 @@ object Script_Compiler {
                             Game_local.gameLocal.program.GetStatement(Game_local.gameLocal.program.NumStatements() - 1)
                         if (statement.op >= OP_INDIRECT_F && statement.op < OP_ADDRESS) {
                             statement.op = OP_ADDRESS
-                            Script_Program.type_pointer.SetPointerType(e.TypeDef())
+                            Script_Program.type_pointer.SetPointerType(e!!.TypeDef())
                             e.SetTypeDef(Script_Program.type_pointer)
                         }
                     }
@@ -1511,7 +1510,7 @@ object Script_Compiler {
                 basetype = oldtype
 
                 // type check
-                type_a = e.Type()
+                type_a = e!!.Type()
                 type_b = e2.Type()
 
                 // field access gets type from field

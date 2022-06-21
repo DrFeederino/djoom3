@@ -79,7 +79,11 @@ class DeclManager {
      */
     enum class declType_t {
         DECL_TABLE,  //0
-        DECL_MATERIAL, DECL_SKIN, DECL_SOUND, DECL_ENTITYDEF, DECL_MODELDEF, DECL_FX, DECL_PARTICLE, DECL_AF, DECL_PDA, DECL_VIDEO, DECL_AUDIO, DECL_EMAIL, DECL_MODELEXPORT, DECL_MAPDEF,  //14
+        DECL_MATERIAL,
+        DECL_SKIN,
+        DECL_SOUND,
+        DECL_ENTITYDEF,
+        DECL_MODELDEF, DECL_FX, DECL_PARTICLE, DECL_AF, DECL_PDA, DECL_VIDEO, DECL_AUDIO, DECL_EMAIL, DECL_MODELEXPORT, DECL_MAPDEF,  //14
 
         // new decl types can be added here
         _15_, _16_, _17_, _18_, _19_, _20_, _21_, _22_, _23_, _24_, _25_, _26_, _27_, _28_, _29_, _30_, _31_, DECL_MAX_TYPES //32
@@ -759,7 +763,7 @@ class DeclManager {
             if (null == self) {
                 try {
                     DBG_AllocateSelf++
-                    self = declManagerLocal.GetDeclType(TempDump.etoi(type)).allocator.newInstance()
+                    self = declManagerLocal.GetDeclType(TempDump.etoi(type))!!.allocator.newInstance()
                     self!!.base = this
                 } catch (ex: InstantiationException) {
                     Logger.getLogger(DeclManager::class.java.name).log(Level.SEVERE, null, ex)
@@ -784,7 +788,7 @@ class DeclManager {
             self!!.FreeData()
             declManagerLocal.MediaPrint(
                 "parsing %s %s\n",
-                declManagerLocal.declTypes[type.ordinal].typeName,
+                declManagerLocal.declTypes[type.ordinal]!!.typeName,
                 name
             )
 
@@ -1010,8 +1014,8 @@ class DeclManager {
                 numTypes = declManagerLocal.GetNumDeclTypes()
                 i = 0
                 while (i < numTypes) {
-                    val typeInfo: idDeclType = declManagerLocal.GetDeclType(i)
-                    if (typeInfo.typeName.Icmp(token.toString()) == 0) {
+                    val typeInfo: idDeclType? = declManagerLocal.GetDeclType(i)
+                    if (typeInfo != null && typeInfo.typeName.Icmp(token.toString()) == 0) {
                         identifiedType = typeInfo.type
                         break
                     }
@@ -1137,7 +1141,7 @@ class DeclManager {
         private var checksum // checksum of all loaded decl text
                 : BigInteger = BigInteger.ZERO
         private val declFolders: idList<idDeclFolder>
-        val declTypes: idList<idDeclType>
+        val declTypes: MutableMap<Int, idDeclType> = HashMap(32)
         val implicitDecls // this holds all the decls that were created because explicit
                 : idDeclFile? = null
         var indent // for MediaPrint
@@ -1409,7 +1413,7 @@ class DeclManager {
             loadedFiles.DeleteContents(true)
 
             // free the decl types and folders
-            declTypes.DeleteContents(true)
+            declTypes.clear()
             declFolders.DeleteContents(true)
             if (USE_COMPRESSED_DECLS) {
                 ShutdownHuffman()
@@ -1452,7 +1456,7 @@ class DeclManager {
             allocator: Constructor<T>
         ) where  T : idDecl {
             val declType: idDeclType
-            if (type.ordinal < declTypes.Num() && declTypes[type.ordinal] != null) {
+            if (type.ordinal < declTypes.size && declTypes[type.ordinal] != null) {
                 Common.common.Warning("idDeclManager::RegisterDeclType: type '%s' already exists", typeName)
                 return
             }
@@ -1460,9 +1464,9 @@ class DeclManager {
             declType.typeName.set(typeName)
             declType.type = type
             declType.allocator = allocator as Constructor<idDecl>
-            if (type.ordinal + 1 > declTypes.Num()) {
-                declTypes.AssureSize(type.ordinal + 1, declType)
-            }
+//            if (type.ordinal + 1 > declTypes.size) {
+//                //declTypes.ensureCapacity(type.ordinal + 1)
+//            }
             declTypes[type.ordinal] = declType
         }
 
@@ -1563,24 +1567,24 @@ class DeclManager {
         }
 
         override fun GetNumDeclTypes(): Int {
-            return declTypes.Num()
+            return declTypes.size
         }
 
         @Throws(idException::class)
         override fun GetDeclNameFromType(type: declType_t): String {
             val typeIndex = type.ordinal
-            if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
+            if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::GetDeclNameFromType: bad type: %d", typeIndex)
             }
-            return declTypes[typeIndex].typeName.toString()
+            return declTypes[typeIndex]!!.typeName.toString()
         }
 
         override fun GetDeclTypeFromName(typeName: String): declType_t {
             var i: Int
             i = 0
-            while (i < declTypes.Num()) {
-                if (declTypes[i] != null && declTypes[i].typeName.Icmp(typeName) == 0) {
-                    return declTypes[i].type
+            while (i < declTypes.size) {
+                if (declTypes[i] != null && declTypes[i]!!.typeName.Icmp(typeName) == 0) {
+                    return declTypes[i]!!.type
                 }
                 i++
             }
@@ -1644,7 +1648,7 @@ class DeclManager {
         @Throws(idException::class)
         override fun GetNumDecls(typeIndex: Int): Int {
 //            int typeIndex = typeIndex;
-            if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
+            if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::GetNumDecls: bad type: %d", typeIndex)
             }
             return linearLists[typeIndex].Num()
@@ -1653,7 +1657,7 @@ class DeclManager {
         @Throws(idException::class)
         override fun DeclByIndex(type: declType_t, index: Int, forceParse: Boolean): idDecl {
             val typeIndex = type.ordinal
-            if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
+            if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::DeclByIndex: bad type: %d", typeIndex)
             }
             if (index < 0 || index >= linearLists[typeIndex].Num()) {
@@ -1727,7 +1731,7 @@ class DeclManager {
                 }
             }
             Common.common.Printf("--------------------\n")
-            Common.common.Printf("%d of %d %s\n", printed, count, declTypes[type.ordinal].typeName.toString())
+            Common.common.Printf("%d of %d %s\n", printed, count, declTypes[type.ordinal]!!.typeName.toString())
         }
 
         @Throws(idException::class)
@@ -1743,14 +1747,14 @@ class DeclManager {
             if (null == decl) {
                 Common.common.Printf(
                     "%s '%s' not found.\n",
-                    declTypes[type.ordinal].typeName.toString(),
+                    declTypes[type.ordinal]!!.typeName.toString(),
                     args.Argv(1)
                 )
                 return
             }
 
             // print information common to all decls
-            Common.common.Printf("%s %s:\n", declTypes[type.ordinal].typeName.toString(), decl.name.toString())
+            Common.common.Printf("%s %s:\n", declTypes[type.ordinal]!!.typeName.toString(), decl.name.toString())
             Common.common.Printf("source: %s:%d\n", decl.sourceFile!!.fileName.toString(), decl.sourceLine)
             Common.common.Printf("----------\n")
             if (decl.textSource != null) {
@@ -1783,7 +1787,7 @@ class DeclManager {
             val typeIndex = type.ordinal
             var i: Int
             val hash: Int
-            if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
+            if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::CreateNewDecl: bad type: %d", typeIndex)
             }
             val canonicalName = CharArray(Lib.MAX_STRING_CHARS)
@@ -1822,7 +1826,7 @@ class DeclManager {
             decl.type = type
             decl.declState = declState_t.DS_UNPARSED
             decl.AllocateSelf()
-            val header = declTypes[typeIndex].typeName
+            val header = declTypes[typeIndex]!!.typeName
             val defaultText = idStr(decl.self!!.DefaultDefinition())
             val size: Int = header.Length() + 1 + idStr.Length(canonicalName) + 1 + defaultText.Length()
             val declText = CharArray(size + 1)
@@ -1925,7 +1929,7 @@ class DeclManager {
         }
 
         override fun WritePrecacheCommands(f: idFile) {
-            for (i in 0 until declTypes.Num()) {
+            for (i in 0 until declTypes.size) {
                 var num: Int
                 if (declTypes[i] == null) {
                     continue
@@ -1937,7 +1941,7 @@ class DeclManager {
                         continue
                     }
                     var str: String //[1024];
-                    str = String.format("touch %s %s\n", declTypes[i].typeName.toString(), decl.GetName())
+                    str = String.format("touch %s %s\n", declTypes[i]!!.typeName.toString(), decl.GetName())
                     Common.common.Printf("%s", str)
                     f.Printf("%s", str)
                 }
@@ -2005,7 +2009,7 @@ class DeclManager {
             val typeIndex = type.ordinal
             var i: Int
             val hash: Int
-            if (typeIndex < 0 || typeIndex >= declTypes.Num() || declTypes[typeIndex] == null) {
+            if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager.FindTypeWithoutParsing: bad type: %d", typeIndex)
             }
             val canonicalName = CharArray(Lib.MAX_STRING_CHARS)
@@ -2018,7 +2022,7 @@ class DeclManager {
                 if (linearLists[typeIndex][i].name.Icmp(TempDump.ctos(canonicalName)) == 0) {
                     // only print these when decl_show is set to 2, because it can be a lot of clutter
                     if (decl_show.GetInteger() > 1) {
-                        MediaPrint("referencing %s %s\n", declTypes[type.ordinal].typeName.toString(), name)
+                        MediaPrint("referencing %s %s\n", declTypes[type.ordinal]!!.typeName.toString(), name)
                     }
                     return linearLists[typeIndex][i]
                 }
@@ -2045,8 +2049,8 @@ class DeclManager {
             return decl
         }
 
-        fun GetDeclType(type: Int): idDeclType {
-            return declTypes[type]
+        fun GetDeclType(type: Int): idDeclType? {
+            return declTypes.get(type)
         }
 
         fun GetImplicitDeclFile(): idDeclFile? {
@@ -2067,7 +2071,7 @@ class DeclManager {
                 var totalText = 0
                 var totalStructs = 0
                 i = 0
-                while (i < declManagerLocal.declTypes.Num()) {
+                while (i < declManagerLocal.declTypes.size) {
                     var size: Int
                     var num: Int
                     if (declManagerLocal.declTypes[i] == null) {
@@ -2090,7 +2094,7 @@ class DeclManager {
                         "%4dk %4d %s\n",
                         size shr 10,
                         num,
-                        declManagerLocal.declTypes[i].typeName.toString()
+                        declManagerLocal.declTypes[i]!!.typeName.toString()
                     )
                     i++
                 }
@@ -2163,11 +2167,11 @@ class DeclManager {
                     Common.common.Printf("usage: touch <type> <name>\n")
                     Common.common.Printf("valid types: ")
                     i = 0
-                    while (i < declManagerLocal.declTypes.Num()) {
+                    while (i < declManagerLocal.declTypes.size) {
                         if (declManagerLocal.declTypes[i] != null) {
                             Common.common.Printf(
                                 "%s ",
-                                declManagerLocal.declTypes[i].typeName.toString()
+                                declManagerLocal.declTypes[i]!!.typeName.toString()
                             )
                         }
                         i++
@@ -2176,14 +2180,18 @@ class DeclManager {
                     return
                 }
                 i = 0
-                while (i < declManagerLocal.declTypes.Num()) {
-                    if (declManagerLocal.declTypes[i] != null && declManagerLocal.declTypes[i].typeName.Icmp(args.Argv(1)) == 0
+                while (i < declManagerLocal.declTypes.size) {
+                    if (declManagerLocal.declTypes[i] != null && declManagerLocal.declTypes[i]!!.typeName.Icmp(
+                            args.Argv(
+                                1
+                            )
+                        ) == 0
                     ) {
                         break
                     }
                     i++
                 }
-                if (i >= declManagerLocal.declTypes.Num()) {
+                if (i >= declManagerLocal.declTypes.size) {
                     Common.common.Printf("unknown decl type '%s'\n", args.Argv(1))
                     return
                 }
@@ -2193,7 +2201,7 @@ class DeclManager {
                     if (null == decl) {
                         Common.common.Printf(
                             "%s '%s' not found\n",
-                            declManagerLocal.declTypes[i].typeName.toString(),
+                            declManagerLocal.declTypes[i]!!.typeName.toString(),
                             args.Argv(2)
                         )
                     }
@@ -2253,7 +2261,7 @@ class DeclManager {
         }
 
         init {
-            declTypes = idList()
+            //declTypes = ArrayList(32)
             declFolders = idList()
             loadedFiles = idList()
             hashTables = Array(TempDump.etoi(declType_t.DECL_MAX_TYPES)) { idHashIndex() }

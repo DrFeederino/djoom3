@@ -34,6 +34,7 @@ import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.VectorSet.idVectorSubset
+import neo.idlib.geometry.DrawVert
 import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Math_h.idMath
@@ -56,6 +57,10 @@ object Model_local {
      ================
      */
     fun AddCubeFace(tri: srfTriangles_s, v1: idVec3, v2: idVec3, v3: idVec3, v4: idVec3) {
+        tri.verts.add(DrawVert.idDrawVert())
+        tri.verts.add(DrawVert.idDrawVert())
+        tri.verts.add(DrawVert.idDrawVert())
+        tri.verts.add(DrawVert.idDrawVert())
         tri.verts[tri.numVerts + 0].Clear()
         tri.verts[tri.numVerts + 0].xyz.set(v1.times(8f))
         tri.verts[tri.numVerts + 0].st[0] = 0f
