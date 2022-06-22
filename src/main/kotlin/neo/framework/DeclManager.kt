@@ -582,7 +582,7 @@ class DeclManager {
         }
 
         override fun GetFileName(): String {
-            return sourceFile?.fileName?.toString() ?: "*invalid*"
+            return sourceFile?.fileName.toString() ?: "*invalid*"
         }
 
         override fun GetText(text: Array<String>) {
@@ -2605,6 +2605,10 @@ class DeclManager {
                 i++
             }
             //        text[0] += '\0';
+            // Dr: For some reason, text is twice the read count. Slice it?
+            if (text[0].length > msg.GetReadCount()) {
+                text[0] = text[0].substring(0, msg.GetReadCount())
+            }
             return msg.GetReadCount()
         }
 

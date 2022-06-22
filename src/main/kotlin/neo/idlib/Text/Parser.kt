@@ -95,7 +95,7 @@ object Parser {
         var next // next indent on the indent stack
                 : indent_s? = null
         var script // script the indent was in
-                : idLexer? = null
+                : idLexer = idLexer()
         var skip // true if skipping current indent
                 = 0
         var type // indent type
@@ -106,7 +106,7 @@ object Parser {
         private var OSPath // true if the file was loaded from an OS path
                 : Boolean
         private var definehash // hash chain with defines
-                : Array<define_s?> = emptyArray()
+                : Array<define_s?> = arrayOfNulls(DEFINEHASHSIZE)
         private var defines // list with macro definitions
                 : Array<define_s?>?
         private val filename // file name of the script
@@ -263,7 +263,7 @@ object Parser {
             loaded = true
             if (definehash.isEmpty()) {
                 defines = null
-                definehash = Array(DEFINEHASHSIZE) { define_s() } // Mem_ClearedAlloc(DEFINEHASHSIZE);
+                //definehash = Array(DEFINEHASHSIZE) { define_s() } // Mem_ClearedAlloc(DEFINEHASHSIZE);
                 AddGlobalDefinesToSource()
             }
             return true
@@ -294,7 +294,7 @@ object Parser {
             loaded = true
             if (definehash.isEmpty()) {
                 defines = null
-                definehash = Array(DEFINEHASHSIZE) { define_s() }  // Mem_ClearedAlloc(DEFINEHASHSIZE);
+                definehash = arrayOfNulls(DEFINEHASHSIZE) // Mem_ClearedAlloc(DEFINEHASHSIZE);
                 AddGlobalDefinesToSource()
             }
             return true
@@ -347,7 +347,7 @@ object Parser {
                     }
                     defines = null
                     //                    Mem_Free(this.definehash);
-                    definehash = emptyArray()
+                    definehash = arrayOfNulls(DEFINEHASHSIZE)
                 }
             }
             loaded = false
@@ -1113,7 +1113,7 @@ object Parser {
 //	indent = (indent_t *) Mem_Alloc(sizeof(indent_t));
             indent = indent_s()
             indent.type = type
-            indent.script = scriptstack
+            indent.script = scriptstack!!
             indent.skip = if (skip != 0) 1 else 0 //TODO:booleanize?
             this.skip += indent.skip
             indent.next = indentstack

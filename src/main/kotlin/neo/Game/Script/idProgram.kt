@@ -53,7 +53,7 @@ class idProgram {
     private val fileList = ArrayList<String>()
     private val filename: idStr = idStr()
     private var filenum = 0
-    private val functions: ArrayList<function_t> = ArrayList(Script_Program.MAX_FUNCS)
+    private val functions: ArrayList<function_t> = ArrayList(MAX_FUNCS)
 
     fun ArrayList<*>.MemoryUsed(): Int {
         return size * Integer.BYTES
@@ -66,7 +66,7 @@ class idProgram {
     //
     private var numVariables = 0
     private val statements: ArrayList<statement_s> =
-        ArrayList(Script_Program.MAX_STATEMENTS)
+        ArrayList(MAX_STATEMENTS)
 
     //
     private var sysDef: idVarDef? = null
@@ -123,7 +123,7 @@ class idProgram {
             funcMem += functions[i].Allocated()
             i++
         }
-        memallocated = funcMem + memused + idProgram.BYTES
+        memallocated = funcMem + memused + BYTES
         memused += statements.MemoryUsed()
         memused += functions.MemoryUsed() // name and filename of functions are shared, so no need to include them
         memused += variables.size
@@ -133,7 +133,7 @@ class idProgram {
         Game_local.gameLocal.Printf("   Functions: %d, %d bytes\n", functions.size, funcMem)
         Game_local.gameLocal.Printf("   Variables: %d bytes\n", numVariables)
         Game_local.gameLocal.Printf("    Mem used: %d bytes\n", memused)
-        Game_local.gameLocal.Printf(" Static data: %d bytes\n", idProgram.BYTES)
+        Game_local.gameLocal.Printf(" Static data: %d bytes\n", BYTES)
         Game_local.gameLocal.Printf("   Allocated: %d bytes\n", memallocated)
         Game_local.gameLocal.Printf(" Thread size: %d bytes\n\n", idThread.BYTES)
     }
@@ -537,7 +537,7 @@ class idProgram {
     }
 
     fun GetFilename(num: Int): String {
-        return fileList[num].toString()
+        return fileList[num]
     }
 
     fun kotlin.collections.ArrayList<String>.addUnique(s: String): Int {
@@ -972,7 +972,7 @@ class idProgram {
 
     fun SetEntity(name: String, ent: idEntity?) {
         val def: idVarDef?
-        var defName: String = "$"
+        var defName = "$"
         defName += name
         def = GetDef(Script_Program.type_entity, defName, Script_Program.def_namespace)
         if (def != null && def.initialized != initialized_t.stackVariable) {

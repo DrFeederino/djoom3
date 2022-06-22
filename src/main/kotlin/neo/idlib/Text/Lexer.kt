@@ -229,7 +229,7 @@ object Lexer {
         private var punctuations // the punctuations used in the script
                 : Array<punctuation_t> = default_punctuations
         private var token // available token
-                : idToken?
+                : idToken = idToken()
         private var tokenAvailable // set by unreadToken
                 = false
         private var whiteSpaceEnd_p // end of last white space
@@ -405,7 +405,7 @@ object Lexer {
                 return false
             }
             filename = idStr(name)
-            buffer = CharBuffer.wrap(ptr.toString() + '\u0000') ///TODO:should ptr and name be the same
+            buffer = CharBuffer.wrap(ptr.toString()) ///TODO:should ptr and name be the same
             fileTime = 0
             this.length = length
             // pointer in script buffer
@@ -450,7 +450,7 @@ object Lexer {
                 allocated = false
             }
             tokenAvailable = false //0;
-            token = null
+            token = idToken()
             loaded = false
         }
 
@@ -463,7 +463,6 @@ object Lexer {
         @Throws(idException::class)
         fun ReadToken(token: idToken): Boolean {
             var c: Char
-            val c2: Char
             if (!loaded) {
                 idLib.common.Error("idLexer::ReadToken: no file loaded")
                 return false
@@ -472,7 +471,7 @@ object Lexer {
             // if there is a token available (from unreadToken)
             if (tokenAvailable) {
                 tokenAvailable = false
-                token.set(this.token!!)
+                token.set(this.token)
                 return true
             }
             // save script pointer
@@ -499,7 +498,6 @@ object Lexer {
             // clear token flags
             token.flags = 0
             c = buffer.get(script_p)
-            c2 = buffer.get(script_p + 1)
 
             // if we're keeping everything as whitespace deliminated strings
             if (flags and LEXFL_ONLYSTRINGS != 0) {
@@ -508,8 +506,8 @@ object Lexer {
                     ReadString(token, c.code)
                 } else ReadName(token)
             } // if there is a number
-            else if (Character.isDigit(c)
-                || c == '.' && Character.isDigit(c2)
+            else if ((c >= '0' && c <= '9') ||
+                (c == '.' && ((buffer.get(script_p + 1)) >= '0' && buffer.get(script_p + 1) <= '9'))
             ) {
                 if (!ReadNumber(token)) {
                     return false
@@ -547,7 +545,7 @@ object Lexer {
                 Error("couldn't find expected '%s'", string)
                 return false
             }
-            if (token.toString() != string) {
+            if (!token.toString().contentEquals(string)) {
                 Error("expected '%s' but found '%s'", string, token)
                 return false
             }
@@ -559,6 +557,7 @@ object Lexer {
         fun ExpectTokenType(type: Int, subtype: Int, token: idToken): Int {
             val str = idStr()
             if (!ReadToken(token)) {
+                println("Expected token is " + token.toString())
                 Error("couldn't read expected token")
                 return 0
             }
@@ -621,6 +620,7 @@ object Lexer {
         // expect a token
         @Throws(idException::class)
         fun ExpectAnyToken(token: idToken): Boolean {
+            println(token.toString())
             return if (!ReadToken(token)) {
                 Error("couldn't read expected token")
                 false
@@ -637,7 +637,7 @@ object Lexer {
                 return false
             }
             // if the given string is available
-            if (tok.Cmp(string) == 0) {
+            if (tok.toString().compareTo(string) == 0) {
                 return true
             }
             // unread token
@@ -654,7 +654,7 @@ object Lexer {
                 return 0
             }
             // if the type matches
-            if (tok.type == type && tok.subtype and subtype == subtype) {
+            if (tok.type == type && (tok.subtype and subtype) == subtype) {
                 token.set(tok)
                 return 1
             }
@@ -760,7 +760,7 @@ object Lexer {
             if (tokenAvailable) {
                 idLib.common.FatalError("idLexer::unreadToken, unread token twice\n")
             }
-            this.token = token
+            this.token.set(token)
             tokenAvailable = true
         }
 

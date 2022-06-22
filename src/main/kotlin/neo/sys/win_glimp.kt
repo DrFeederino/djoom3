@@ -12,7 +12,6 @@ import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.system.Configuration
 import org.lwjgl.system.MemoryUtil
 import java.io.IOException
 import java.nio.channels.FileChannel
@@ -113,7 +112,7 @@ object win_glimp {
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err).set())
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 
         window = glfwCreateWindow(parms.width, parms.height, "DOOM 3", MemoryUtil.NULL, MemoryUtil.NULL)
 
@@ -188,8 +187,6 @@ object win_glimp {
      ===================
      */
     fun GLimp_Init(parms: glimpParms_t): Boolean {
-        Configuration.DISABLE_CHECKS.set(true)
-        Configuration.DEBUG.set(true)
 ////	const char	*driverName;
 ////	HDC		hDC;
 ////

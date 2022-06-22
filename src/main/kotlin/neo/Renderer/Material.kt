@@ -292,7 +292,7 @@ object Material {
         val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
 
         // dynamic image variables
-        var dynamic: dynamicidImage_t = Material.dynamicidImage_t.values()[0]
+        var dynamic: dynamicidImage_t = dynamicidImage_t.DI_STATIC
         var dynamicFrameCount = 0
         var hasMatrix = false
         var texgen: texgen_t = Material.texgen_t.values()[0]
@@ -428,14 +428,14 @@ object Material {
 
         //
         var registersAreConstant = false
-        var shaderOps: ArrayList<expOp_t> = ArrayList<expOp_t>(precompiled.MAX_EXPRESSION_OPS)
+        var shaderOps: ArrayList<expOp_t> = ArrayList<expOp_t>(MAX_EXPRESSION_OPS)
         var shaderRegisters: FloatArray = FloatArray(precompiled.MAX_EXPRESSION_REGISTERS)
 
         companion object {
             @Transient
             val SIZE = (TempDump.CPP_class.Bool.SIZE * precompiled.MAX_EXPRESSION_REGISTERS
                     + java.lang.Float.SIZE * precompiled.MAX_EXPRESSION_REGISTERS
-                    + expOp_t.SIZE * precompiled.MAX_EXPRESSION_OPS
+                    + expOp_t.SIZE * MAX_EXPRESSION_OPS
                     + shaderStage_t.SIZE * MAX_SHADER_STAGES
                     + TempDump.CPP_class.Bool.SIZE
                     + TempDump.CPP_class.Bool.SIZE)
@@ -447,6 +447,7 @@ object Material {
         }
     }
 
+    @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
     class idMaterial : idDecl, SERiAL {
         var isNil = false
 
@@ -860,7 +861,7 @@ object Material {
 
         override fun FreeData() {
             var i: Int
-            if (stages != null) {
+            if (stages.isNotEmpty()) {
                 // delete any idCinematic textures
                 i = 0
                 while (i < numStages) {
@@ -931,7 +932,7 @@ object Material {
                 return "_scratch"
             }
             val image = stages[0].texture.image[0]
-            return image?.imgName?.toString() ?: "_scratch"
+            return image.imgName.toString() ?: "_scratch"
         }
 
         fun ReloadImages(force: Boolean) {
@@ -1157,7 +1158,7 @@ object Material {
         }
 
         // get material description
-        fun GetDescription(): String? {
+        fun GetDescription(): String {
             return desc.toString()
         }
 
@@ -1189,8 +1190,8 @@ object Material {
         }
 
         // currently a surface can only have one unique texgen for all the stages
-        fun Texgen(): texgen_t? {
-            if (stages != null) {
+        fun Texgen(): texgen_t {
+            if (stages.isNotEmpty()) {
                 for (i in 0 until numStages) {
                     if (stages[i].texture.texgen != texgen_t.TG_EXPLICIT) {
                         return stages[i].texture.texgen
@@ -1287,7 +1288,7 @@ object Material {
             // if we don't have an editorImageName, use the first stage image
             if (0 == editorImageName.Length()) {
                 // _D3XP :: First check for a diffuse image, then use the first
-                if (numStages != 0 && stages != null) {
+                if (numStages != 0 && stages.isNotEmpty()) {
                     var i: Int
                     i = 0
                     while (i < numStages) {
@@ -1414,9 +1415,9 @@ object Material {
                     expOpType_t.OP_TYPE_DIVIDE -> regs[opT.c] =
                         regs[opT.a] / regs[opT.b]
                     expOpType_t.OP_TYPE_MOD -> {
-                        b = regs[opT.b] as Int
+                        b = regs[opT.b].toInt()
                         b = if (b != 0) b else 1
-                        regs[opT.c] = (regs[opT.a] as Int % b).toFloat()
+                        regs[opT.c] = (regs[opT.a].toInt() % b).toFloat()
                     }
                     expOpType_t.OP_TYPE_TABLE -> {
                         val table =
@@ -2719,7 +2720,7 @@ object Material {
         }
 
         private fun GetExpressionOp(): expOp_t {
-            if (numOps == precompiled.MAX_EXPRESSION_OPS) {
+            if (numOps == MAX_EXPRESSION_OPS) {
                 Common.common.Warning("GetExpressionOp: material '%s' hit MAX_EXPRESSION_OPS", GetName())
                 SetMaterialFlag(MF_DEFAULTED)
                 return pd!!.shaderOps[0]
@@ -3259,19 +3260,19 @@ object Material {
 
             other as idMaterial
 
-            if (deformRegisters != null) {
-                if (other.deformRegisters == null) return false
+            if (deformRegisters.isNotEmpty()) {
+                if (other.deformRegisters.isEmpty()) return false
                 if (!deformRegisters.contentEquals(other.deformRegisters)) return false
-            } else if (other.deformRegisters != null) return false
-            if (texGenRegisters != null) {
+            } else if (other.deformRegisters.isNotEmpty()) return false
+            if (texGenRegisters.isNotEmpty()) {
                 if (other.texGenRegisters == null) return false
                 if (!texGenRegisters.contentEquals(other.texGenRegisters)) return false
-            } else if (other.texGenRegisters != null) return false
+            } else if (other.texGenRegisters.isNotEmpty()) return false
             if (DBG_BALLS != other.DBG_BALLS) return false
-            if (stages != null) {
-                if (other.stages == null) return false
+            if (stages.isNotEmpty()) {
+                if (other.stages.isEmpty()) return false
                 if (stages != other.stages) return false
-            } else if (other.stages != null) return false
+            } else if (other.stages.isNotEmpty()) return false
             if (allowOverlays != other.allowOverlays) return false
             if (ambientLight != other.ambientLight) return false
             if (blendLight != other.blendLight) return false
@@ -3304,10 +3305,10 @@ object Material {
             if (numOps != other.numOps) return false
             if (numRegisters != other.numRegisters) return false
             if (numStages != other.numStages) return false
-            if (ops != null) {
-                if (other.ops == null) return false
+            if (ops.isNotEmpty()) {
+                if (other.ops.isEmpty()) return false
                 if (ops != other.ops) return false
-            } else if (other.ops != null) return false
+            } else if (other.ops.isNotEmpty()) return false
             if (pd != other.pd) return false
             if (polygonOffset != other.polygonOffset) return false
             if (portalSky != other.portalSky) return false
@@ -3325,17 +3326,17 @@ object Material {
         }
 
         override fun hashCode(): Int {
-            var result = deformRegisters?.contentHashCode() ?: 0
-            result = 31 * result + (texGenRegisters?.contentHashCode() ?: 0)
+            var result = deformRegisters.contentHashCode() ?: 0
+            result = 31 * result + (texGenRegisters.contentHashCode() ?: 0)
             result = 31 * result + DBG_BALLS
-            result = 31 * result + (stages?.hashCode() ?: 0)
+            result = 31 * result + (stages.hashCode() ?: 0)
             result = 31 * result + allowOverlays.hashCode()
             result = 31 * result + ambientLight.hashCode()
             result = 31 * result + blendLight.hashCode()
-            result = 31 * result + (constantRegisters?.contentHashCode() ?: 0)
+            result = 31 * result + (constantRegisters.contentHashCode() ?: 0)
             result = 31 * result + contentFlags
-            result = 31 * result + (coverage?.hashCode() ?: 0)
-            result = 31 * result + (cullType?.hashCode() ?: 0)
+            result = 31 * result + (coverage.hashCode() ?: 0)
+            result = 31 * result + (cullType.hashCode() ?: 0)
             result = 31 * result + (decalInfo?.hashCode() ?: 0)
             result = 31 * result + (deform?.hashCode() ?: 0)
             result = 31 * result + (deformDecl?.hashCode() ?: 0)

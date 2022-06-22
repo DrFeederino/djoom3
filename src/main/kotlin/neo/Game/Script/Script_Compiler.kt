@@ -219,7 +219,12 @@ object Script_Compiler {
         var type_a: idVarDef?,
         var type_b: idVarDef?,
         var type_c: idVarDef?
-    )
+
+    ) {
+        override fun toString(): String {
+            return "opcode_s(name='$name', opname='$opname', priority=$priority, rightAssociative=$rightAssociative, type_a=$type_a, type_b=$type_b, type_c=$type_c)"
+        }
+    }
 
     //    
     internal class idCompiler {
@@ -496,8 +501,8 @@ object Script_Compiler {
                 return null
             }
             if (varA != null) {
-                varA!!.numUsers--
-                if (varA!!.numUsers <= 0) {
+                varA.numUsers--
+                if (varA.numUsers <= 0) {
                     Game_local.gameLocal.program.FreeDef(varA, null)
                 }
             }
@@ -583,11 +588,12 @@ object Script_Compiler {
             out = null
             op = opcodes[OP_PUSH_F.also { op_ptr = it }]
             while (op.name.isNotEmpty() && op.name == "<PUSH>") {
+                op_ptr = op_ptr.inc()
                 if (funcArg.Type() == op.type_a!!.Type() && expression.Type() == op.type_b!!.Type()) {
                     out = op
                     break
                 }
-                op = opcodes[++op_ptr]
+                op = opcodes[op_ptr]
             }
             if (null == out) {
                 if (expression.TypeDef() != funcArg && !expression.TypeDef()!!.Inherits(funcArg)) {
@@ -730,6 +736,7 @@ object Script_Compiler {
          =============
          */
         private fun CheckToken(string: String): Boolean {
+            println("Checking token " + token.toString() + " and string " + string)
             if (token.toString() != string) { //TODO:try to use the idStr::Cmp in the overridden token.equals() method.
                 return false
             }
@@ -1256,8 +1263,9 @@ object Script_Compiler {
                                 // catches object calls that return a value
                                 break
                             }
-                            op = opcodes[++op_i]
-                            if (op.name.isNullOrEmpty() || op.name != ".") {
+                            op_i = op_i.inc()
+                            op = opcodes[op_i]
+                            if (op.name.isEmpty() || op.name != ".") {
                                 Error("no valid opcode to access type '%s'", field.TypeDef()!!.SuperClass()!!.Name())
                             }
                         }
@@ -1333,7 +1341,7 @@ object Script_Compiler {
         private fun GetTerm(): idVarDef? {
             val e: idVarDef?
             val op: Int
-            if (TempDump.NOT(immediateType) && CheckToken("~")) {
+            if (null == immediateType && CheckToken("~")) {
                 e = GetExpression(TILDE_PRIORITY)!!
                 op = when (e.Type()) {
                     Script_Program.ev_float -> OP_COMP_F
@@ -1346,7 +1354,7 @@ object Script_Compiler {
                 }
                 return EmitOpcode(op, e, null)
             }
-            if (TempDump.NOT(immediateType) && CheckToken("!")) {
+            if (null == immediateType && CheckToken("!")) {
                 e = GetExpression(NOT_PRIORITY)!!
                 op = when (e.Type()) {
                     Script_Program.ev_boolean -> OP_NOT_BOOL
@@ -1438,7 +1446,7 @@ object Script_Compiler {
 
         private fun GetExpression(priority: Int): idVarDef? {
             DBG_GetExpression++
-            var op: opcode_s
+            var op: opcode_s? = null
             var oldop: opcode_s
             var e: idVarDef?
             var e2: idVarDef
@@ -1446,7 +1454,7 @@ object Script_Compiler {
             var   /*ctype_t*/type_a: Int
             var   /*ctype_t*/type_b: Int
             var   /*ctype_t*/type_c: Int
-            var op_i: Int
+            var op_i: Int = 0
             if (priority == 0) {
                 return GetTerm()
             }
@@ -1465,13 +1473,20 @@ object Script_Compiler {
                 if (immediateType != null) {
                     break
                 }
-                op = opcodes[0.also { op_i = it }]
-                while (op_i < opcodes.size && opcodes.getOrNull(++op_i) != null && !op.name.isNullOrEmpty()) {
-                    if (op.priority == priority && CheckToken(op.name)) {
+                op = opcodes[op_i]
+                while (op_i < opcodes.size && op != null && op.name.isNotEmpty()) {
+                    if ((op.priority == priority) && CheckToken(op.name)) {
                         break
                     }
-                    op = opcodes[++op_i]
+                    op = opcodes.getOrNull(++op_i)
                 }
+//                op = opcodes[0.also { op_i = it }]
+//                while (op_i < opcodes.size && opcodes.getOrNull(++op_i) != null && !op.name.isNullOrEmpty()) {
+//                    if (op.priority == priority && CheckToken(op.name)) {
+//                        break
+//                    }
+//                    op = opcodes[++op_i]
+//                }
                 if (null == op || op.name.isNullOrEmpty()) {
                     // next token isn't at this priority level
                     break
@@ -1527,18 +1542,29 @@ object Script_Compiler {
                     Script_Program.ev_void
                 }
                 oldop = op
-                while (!TypeMatches(type_a, op.type_a!!.Type()) || !TypeMatches(type_b, op.type_b!!.Type())
-                    || type_c != Script_Program.ev_void && !TypeMatches(type_c, op.type_c!!.Type())
+                while (!TypeMatches(type_a, op!!.type_a!!.Type()) || !TypeMatches(
+                        type_b,
+                        op.type_b!!.Type()
+                    ) || type_c != Script_Program.ev_void && !TypeMatches(type_c, op.type_c!!.Type())
                 ) {
-                    if (op.priority == FUNCTION_PRIORITY && TypeMatches(
-                            type_a,
-                            op.type_a!!.Type()
-                        ) && TypeMatches(type_b, op.type_b!!.Type())
+                    if (
+                        (op.priority == FUNCTION_PRIORITY) &&
+                        TypeMatches(type_a, op.type_a!!.Type()) &&
+                        TypeMatches(type_b, op.type_b!!.Type())
                     ) {
+                        println("Matched for type " + op.toString())
+                        println("Matched for type name" + op.opname.toString())
+                        println("Matching type " + type_a)
+                        println("Matching type " + type_b)
+                        println(token.toString())
                         break
                     }
-                    op = opcodes[++op_i]
+                    op_i = op_i.inc()
+                    op = opcodes[op_i]
                     if (op.name.isNullOrEmpty() || op.name != oldop.name) {
+                        println("Could not matched for type " + op.toString())
+                        println("Matching type " + type_a)
+                        println("Matching type " + type_b)
                         Error("type mismatch for '%s'", oldop.name)
                     }
                 }
@@ -1576,32 +1602,38 @@ object Script_Compiler {
                                 !!.Type() == Script_Program.ev_boolean
                             ) {
                                 // copy from float to boolean pointer
-                                op = opcodes[OP_STOREP_FTOBOOL.also { op_i = it }]
+                                op_i = OP_STOREP_FTOBOOL
+                                op = opcodes[op_i]
                             } else if (op_i == OP_STOREP_BOOL && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_float
                             ) {
                                 // copy from boolean to float pointer
-                                op = opcodes[OP_STOREP_BOOLTOF.also { op_i = it }]
+                                op_i = OP_STOREP_BOOLTOF
+                                op = opcodes[op_i]
                             } else if (op_i == OP_STOREP_F && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from float to string pointer
-                                op = opcodes[OP_STOREP_FTOS.also { op_i = it }]
+                                op_i = OP_STOREP_FTOS
+                                op = opcodes[op_i]
                             } else if (op_i == OP_STOREP_BOOL && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from boolean to string pointer
-                                op = opcodes[OP_STOREP_BTOS.also { op_i = it }]
+                                op_i = OP_STOREP_BTOS
+                                op = opcodes[op_i]
                             } else if (op_i == OP_STOREP_V && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from vector to string pointer
-                                op = opcodes[OP_STOREP_VTOS.also { op_i = it }]
+                                op_i = OP_STOREP_VTOS
+                                op = opcodes[op_i]
                             } else if (op_i == OP_STOREP_ENT && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_object
                             ) {
                                 // store an entity into an object pointer
-                                op = opcodes[OP_STOREP_OBJENT.also { op_i = it }]
+                                op_i = OP_STOREP_OBJENT
+                                op = opcodes[op_i]
                             } else {
                                 Error("type mismatch for '%s'", op.name)
                             }
@@ -1650,7 +1682,7 @@ object Script_Compiler {
 
         private fun PatchLoop(start: Int, continuePos: Int) {
             var i: Int
-            var pos: statement_s?
+            var pos: statement_s
             pos = Game_local.gameLocal.program.GetStatement(start)
             i = start
             while (i < Game_local.gameLocal.program.NumStatements()) {
@@ -1689,15 +1721,17 @@ object Script_Compiler {
             }
             op = opcodes[0.also { op_i = it }]
             while (!op.name.isNullOrEmpty()) {
+                op_i = op_i.inc()
                 if (op.name == "=") {
                     break
                 }
-                op = opcodes[++op_i]
+                op = opcodes[op_i]
             }
             assert(!op.name.isNullOrEmpty())
             while (!TypeMatches(type_a, op.type_a!!.Type()) || !TypeMatches(type_b, op.type_b!!.Type())) {
-                op = opcodes[++op_i]
-                if (null == op.name || op.name != "=") {
+                op_i = op_i.inc()
+                op = opcodes[op_i]
+                if (op.name.isEmpty() || op.name != "=") {
                     Error("type mismatch for return value")
                 }
             }
@@ -2152,7 +2186,7 @@ object Script_Compiler {
                     if (destructorFunc != null) {
                         break
                     }
-                    superClass = superClass!!.SuperClass()
+                    superClass = superClass.SuperClass()
                 }
                 if (destructorFunc != null) {
                     if (func.firstStatement < Game_local.gameLocal.program.NumStatements()) {
@@ -2290,7 +2324,7 @@ object Script_Compiler {
             }
 
             // set the return type
-            expectedType = GetTypeForEventArg(ev.GetReturnType().toChar())
+            expectedType = GetTypeForEventArg(ev.GetReturnType())
             if (TempDump.NOT(expectedType)) {
                 Error("Invalid return type '%c' in definition of '%s' event.", ev.GetReturnType(), name)
             }
