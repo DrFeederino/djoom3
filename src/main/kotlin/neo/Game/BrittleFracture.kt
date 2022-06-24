@@ -4,11 +4,8 @@ import neo.CM.CollisionModel
 import neo.CM.CollisionModel.trace_s
 import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
-import neo.Game.GameSys.Class.EV_Remove
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
+import neo.Game.GameSys.Class.Companion.EV_Remove
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame

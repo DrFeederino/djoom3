@@ -2,13 +2,8 @@ package neo.Game
 
 import neo.CM.CollisionModel_local
 import neo.Game.Entity.idEntity
-import neo.Game.GameSys.Class.EV_Remove
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
+import neo.Game.GameSys.Class.Companion.EV_Remove
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame

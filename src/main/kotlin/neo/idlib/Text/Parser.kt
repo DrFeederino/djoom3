@@ -140,7 +140,7 @@ object Parser {
             flags = 0
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -153,7 +153,7 @@ object Parser {
             this.flags = flags
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -166,7 +166,7 @@ object Parser {
             flags = 0
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -180,7 +180,7 @@ object Parser {
             this.flags = flags
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -194,7 +194,7 @@ object Parser {
             this.flags = flags
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -210,7 +210,7 @@ object Parser {
             flags = 0
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null
@@ -224,7 +224,7 @@ object Parser {
             this.flags = flags
             scriptstack = null
             indentstack = null
-            definehash = emptyArray()
+            definehash = arrayOfNulls(DEFINEHASHSIZE)
             defines = null
             tokens = null
             marker_p = null

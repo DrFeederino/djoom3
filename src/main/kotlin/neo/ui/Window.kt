@@ -455,7 +455,7 @@ object Window {
                     background!!.SetSort(Material.SS_GUI.toFloat())
                 }
             }
-            backGroundName.SetMaterialPtr(background!!)
+            backGroundName.SetMaterialPtr(background)
         }
 
         fun FindChildByName(_name: String): drawWin_t? {

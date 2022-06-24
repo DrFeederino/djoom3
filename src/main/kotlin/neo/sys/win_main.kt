@@ -1066,7 +1066,6 @@ object win_main {
      ====================
      */
     fun Win_Frame() {
-
         // if "viewlog" has been modified, show or hide the log console
         if (Win32Vars_t.win_viewlog.IsModified()) {
             if (!Common.com_skipRenderer.GetBool() && idAsyncNetwork.serverDedicated.GetInteger() != 1) {

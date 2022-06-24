@@ -122,7 +122,7 @@ object Script_Interpreter {
                 val appendOffset = TempDump.strLen(localstack, offset)
                 System.arraycopy(str.toByteArray(), 0, localstack, appendOffset, length)
             } else {
-                def.value.stringPtr = idStr.Append(def.value.stringPtr!!, Script_Program.MAX_STRING_LEN, from)
+                def.value.stringPtr = idStr.Append(def.value.stringPtr!!, Script_Program.MAX_STRING_LEN, from)!!
             }
         }
 
@@ -226,7 +226,7 @@ object Script_Interpreter {
                 Game_local.gameLocal.Printf(
                     "%d: %s(%d): exit %s",
                     Game_local.gameLocal.time,
-                    Game_local.gameLocal.program.GetFilename(line.file),
+                    Game_local.gameLocal.program.GetFilename(line.file.toInt()),
                     line.linenumber,
                     currentFunction!!.Name()
                 )
@@ -549,7 +549,7 @@ object Script_Interpreter {
         fun CurrentLine(): Int {
             return if (instructionPointer < 0) {
                 0
-            } else Game_local.gameLocal.program.GetLineNumberForStatement(instructionPointer)
+            } else Game_local.gameLocal.program.GetLineNumberForStatement(instructionPointer).toInt()
         }
 
         fun CurrentFile(): String? {
@@ -572,7 +572,7 @@ object Script_Interpreter {
                 val line = Game_local.gameLocal.program.GetStatement(instructionPointer)
                 Common.common.Error(
                     "%s(%d): Thread '%s': %s\n",
-                    Game_local.gameLocal.program.GetFilename(line.file),
+                    Game_local.gameLocal.program.GetFilename(line.file.toInt()),
                     line.linenumber,
                     thread.GetThreadName(),
                     text
@@ -595,7 +595,7 @@ object Script_Interpreter {
                 val line = Game_local.gameLocal.program.GetStatement(instructionPointer)
                 Common.common.Warning(
                     "%s(%d): Thread '%s': %s",
-                    Game_local.gameLocal.program.GetFilename(line.file),
+                    Game_local.gameLocal.program.GetFilename(line.file.toInt()),
                     line.linenumber,
                     thread!!.GetThreadName(),
                     text
@@ -815,9 +815,9 @@ object Script_Interpreter {
                 val a = st.a!!
                 val b = st.b!!
                 val c = st.c!!
-                when (st.op) {
-                    Script_Compiler.OP_RETURN -> LeaveFunction(a)
-                    Script_Compiler.OP_THREAD -> {
+                when (Script_Compiler.op_codes.values()[st.op.toInt()]) {
+                    Script_Compiler.op_codes.OP_RETURN -> LeaveFunction(a)
+                    Script_Compiler.op_codes.OP_THREAD -> {
                         newThread = idThread(this, a.value.functionPtr, b.value.getArgSize())
                         newThread.Start()
 
@@ -825,7 +825,7 @@ object Script_Interpreter {
                         Game_local.gameLocal.program.ReturnFloat(newThread.GetThreadNum().toFloat())
                         PopParms(b.value.getArgSize())
                     }
-                    Script_Compiler.OP_OBJTHREAD -> {
+                    Script_Compiler.op_codes.OP_OBJTHREAD -> {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
@@ -842,9 +842,9 @@ object Script_Interpreter {
                         }
                         PopParms(c.value.getArgSize())
                     }
-                    Script_Compiler.OP_CALL -> EnterFunction(a.value.functionPtr!!, false)
-                    Script_Compiler.OP_EVENTCALL -> CallEvent(a.value.functionPtr, b.value.getArgSize())
-                    Script_Compiler.OP_OBJECTCALL -> {
+                    Script_Compiler.op_codes.OP_CALL -> EnterFunction(a.value.functionPtr!!, false)
+                    Script_Compiler.op_codes.OP_EVENTCALL -> CallEvent(a.value.functionPtr, b.value.getArgSize())
+                    Script_Compiler.op_codes.OP_OBJECTCALL -> {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
@@ -857,93 +857,93 @@ object Script_Interpreter {
                             PopParms(c.value.getArgSize())
                         }
                     }
-                    Script_Compiler.OP_SYSCALL -> CallSysEvent(a.value.functionPtr, b.value.getArgSize())
-                    Script_Compiler.OP_IFNOT -> {
+                    Script_Compiler.op_codes.OP_SYSCALL -> CallSysEvent(a.value.functionPtr, b.value.getArgSize())
+                    Script_Compiler.op_codes.OP_IFNOT -> {
                         var_a = GetVariable(a)
                         if (var_a.getIntPtr() == 0) {
                             NextInstruction(instructionPointer + b.value.getJumpOffset())
                         }
                     }
-                    Script_Compiler.OP_IF -> {
+                    Script_Compiler.op_codes.OP_IF -> {
                         var_a = GetVariable(a)
                         if (var_a.getIntPtr() != 0) {
                             NextInstruction(instructionPointer + b.value.getJumpOffset())
                         }
                     }
-                    Script_Compiler.OP_GOTO -> NextInstruction(instructionPointer + a.value.getJumpOffset())
-                    Script_Compiler.OP_ADD_F -> {
+                    Script_Compiler.op_codes.OP_GOTO -> NextInstruction(instructionPointer + a.value.getJumpOffset())
+                    Script_Compiler.op_codes.OP_ADD_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getFloatPtr() + var_b.getFloatPtr())
                     }
-                    Script_Compiler.OP_ADD_V -> {
+                    Script_Compiler.op_codes.OP_ADD_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setVectorPtr(var_a.getidVec3Ptr().plus(var_b.getidVec3Ptr()))
                     }
-                    Script_Compiler.OP_ADD_S -> {
+                    Script_Compiler.op_codes.OP_ADD_S -> {
                         SetString(c, GetString(a)!!)
                         AppendString(c, GetString(b)!!)
                     }
-                    Script_Compiler.OP_ADD_FS -> {
+                    Script_Compiler.op_codes.OP_ADD_FS -> {
                         var_a = GetVariable(a)
                         SetString(c, FloatToString(var_a.getFloatPtr()))
                         AppendString(c, GetString(b)!!)
                     }
-                    Script_Compiler.OP_ADD_SF -> {
+                    Script_Compiler.op_codes.OP_ADD_SF -> {
                         var_b = GetVariable(b)
                         SetString(c, GetString(a)!!)
                         AppendString(c, FloatToString(var_b.getFloatPtr()))
                     }
-                    Script_Compiler.OP_ADD_VS -> {
+                    Script_Compiler.op_codes.OP_ADD_VS -> {
                         var_a = GetVariable(a)
                         SetString(c, var_a.getidVec3Ptr().ToString())
                         AppendString(c, GetString(b)!!)
                     }
-                    Script_Compiler.OP_ADD_SV -> {
+                    Script_Compiler.op_codes.OP_ADD_SV -> {
                         var_b = GetVariable(b)
                         SetString(c, GetString(a)!!)
                         AppendString(c, var_b.getidVec3Ptr().ToString())
                     }
-                    Script_Compiler.OP_SUB_F -> {
+                    Script_Compiler.op_codes.OP_SUB_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getFloatPtr() - var_b.getFloatPtr())
                     }
-                    Script_Compiler.OP_SUB_V -> {
+                    Script_Compiler.op_codes.OP_SUB_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setVectorPtr(var_a.getidVec3Ptr().minus(var_b.getidVec3Ptr()))
                     }
-                    Script_Compiler.OP_MUL_F -> {
+                    Script_Compiler.op_codes.OP_MUL_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getFloatPtr() * var_b.getFloatPtr())
                     }
-                    Script_Compiler.OP_MUL_V -> {
+                    Script_Compiler.op_codes.OP_MUL_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getidVec3Ptr().times(var_b.getidVec3Ptr()))
                     }
-                    Script_Compiler.OP_MUL_FV -> {
+                    Script_Compiler.op_codes.OP_MUL_FV -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setVectorPtr(var_b.getidVec3Ptr().times(var_a.getFloatPtr()))
                     }
-                    Script_Compiler.OP_MUL_VF -> {
+                    Script_Compiler.op_codes.OP_MUL_VF -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.getidVec3Ptr().set(var_a.getidVec3Ptr().times(var_b.getFloatPtr()))
                     }
-                    Script_Compiler.OP_DIV_F -> {
+                    Script_Compiler.op_codes.OP_DIV_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -954,7 +954,7 @@ object Script_Interpreter {
                             var_c.setFloatPtr(var_a.getFloatPtr() / var_b.getFloatPtr())
                         }
                     }
-                    Script_Compiler.OP_MOD_F -> {
+                    Script_Compiler.op_codes.OP_MOD_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -967,43 +967,43 @@ object Script_Interpreter {
                             ) //TODO:casts!
                         }
                     }
-                    Script_Compiler.OP_BITAND -> {
+                    Script_Compiler.op_codes.OP_BITAND -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr((var_a.getFloatPtr().toInt() and var_b.getFloatPtr().toInt()).toFloat())
                     }
-                    Script_Compiler.OP_BITOR -> {
+                    Script_Compiler.op_codes.OP_BITOR -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr((var_a.getFloatPtr().toInt() or var_b.getFloatPtr().toInt()).toFloat())
                     }
-                    Script_Compiler.OP_GE -> {
+                    Script_Compiler.op_codes.OP_GE -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() >= var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_LE -> {
+                    Script_Compiler.op_codes.OP_LE -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() <= var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_GT -> {
+                    Script_Compiler.op_codes.OP_GT -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() > var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_LT -> {
+                    Script_Compiler.op_codes.OP_LT -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() < var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_AND -> {
+                    Script_Compiler.op_codes.OP_AND -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1011,7 +1011,7 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getFloatPtr() != 0.0f && var_b.getFloatPtr() != 0.0f).toFloat()
                         )
                     }
-                    Script_Compiler.OP_AND_BOOLF -> {
+                    Script_Compiler.op_codes.OP_AND_BOOLF -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1019,7 +1019,7 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getIntPtr() != 0 && var_b.getFloatPtr() != 0.0f).toFloat()
                         )
                     }
-                    Script_Compiler.OP_AND_FBOOL -> {
+                    Script_Compiler.op_codes.OP_AND_FBOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1027,13 +1027,13 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getFloatPtr() != 0.0f && var_b.getIntPtr() != 0).toFloat()
                         )
                     }
-                    Script_Compiler.OP_AND_BOOLBOOL -> {
+                    Script_Compiler.op_codes.OP_AND_BOOLBOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getIntPtr() != 0 && var_b.getIntPtr() != 0).toFloat())
                     }
-                    Script_Compiler.OP_OR -> {
+                    Script_Compiler.op_codes.OP_OR -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1041,7 +1041,7 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getFloatPtr() != 0.0f || var_b.getFloatPtr() != 0.0f).toFloat()
                         )
                     }
-                    Script_Compiler.OP_OR_BOOLF -> {
+                    Script_Compiler.op_codes.OP_OR_BOOLF -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1049,7 +1049,7 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getIntPtr() != 0 || var_b.getFloatPtr() != 0.0f).toFloat()
                         )
                     }
-                    Script_Compiler.OP_OR_FBOOL -> {
+                    Script_Compiler.op_codes.OP_OR_FBOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1057,64 +1057,64 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getFloatPtr() != 0.0f || var_b.getIntPtr() != 0).toFloat()
                         )
                     }
-                    Script_Compiler.OP_OR_BOOLBOOL -> {
+                    Script_Compiler.op_codes.OP_OR_BOOLBOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getIntPtr() != 0 || var_b.getIntPtr() != 0).toFloat())
                     }
-                    Script_Compiler.OP_NOT_BOOL -> {
+                    Script_Compiler.op_codes.OP_NOT_BOOL -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getIntPtr() == 0).toFloat())
                     }
-                    Script_Compiler.OP_NOT_F -> {
+                    Script_Compiler.op_codes.OP_NOT_F -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() == 0.0f).toFloat())
                     }
-                    Script_Compiler.OP_NOT_V -> {
+                    Script_Compiler.op_codes.OP_NOT_V -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getidVec3Ptr() == getVec3_zero()).toFloat())
                     }
-                    Script_Compiler.OP_NOT_S -> {
+                    Script_Compiler.op_codes.OP_NOT_S -> {
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(!TempDump.isNotNullOrEmpty(GetString(a))).toFloat())
                     }
-                    Script_Compiler.OP_NOT_ENT -> {
+                    Script_Compiler.op_codes.OP_NOT_ENT -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(GetEntity(var_a.getEntityNumberPtr()) == null).toFloat())
                     }
-                    Script_Compiler.OP_NEG_F -> {
+                    Script_Compiler.op_codes.OP_NEG_F -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(-var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_NEG_V -> {
+                    Script_Compiler.op_codes.OP_NEG_V -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setVectorPtr(var_a.getidVec3Ptr().unaryMinus())
                     }
-                    Script_Compiler.OP_INT_F -> {
+                    Script_Compiler.op_codes.OP_INT_F -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_EQ_F -> {
+                    Script_Compiler.op_codes.OP_EQ_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() == var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_EQ_V -> {
+                    Script_Compiler.op_codes.OP_EQ_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getidVec3Ptr() == var_b.getidVec3Ptr()).toFloat())
                     }
-                    Script_Compiler.OP_EQ_S -> {
+                    Script_Compiler.op_codes.OP_EQ_S -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1122,7 +1122,7 @@ object Script_Interpreter {
                             TempDump.btoi(idStr.Cmp(GetString(a)!!, GetString(b)!!) == 0).toFloat()
                         )
                     }
-                    Script_Compiler.OP_EQ_E, Script_Compiler.OP_EQ_EO, Script_Compiler.OP_EQ_OE, Script_Compiler.OP_EQ_OO -> {
+                    Script_Compiler.op_codes.OP_EQ_E, Script_Compiler.op_codes.OP_EQ_EO, Script_Compiler.op_codes.OP_EQ_OE, Script_Compiler.op_codes.OP_EQ_OO -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1130,25 +1130,25 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getEntityNumberPtr() == var_b.getEntityNumberPtr()).toFloat()
                         )
                     }
-                    Script_Compiler.OP_NE_F -> {
+                    Script_Compiler.op_codes.OP_NE_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getFloatPtr() != var_b.getFloatPtr()).toFloat())
                     }
-                    Script_Compiler.OP_NE_V -> {
+                    Script_Compiler.op_codes.OP_NE_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(TempDump.btoi(var_a.getidVec3Ptr() != var_b.getidVec3Ptr()).toFloat())
                     }
-                    Script_Compiler.OP_NE_S -> {
+                    Script_Compiler.op_codes.OP_NE_S -> {
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(
                             TempDump.btoi(idStr.Cmp(GetString(a)!!, GetString(b)!!) != 0).toFloat()
                         )
                     }
-                    Script_Compiler.OP_NE_E, Script_Compiler.OP_NE_EO, Script_Compiler.OP_NE_OE, Script_Compiler.OP_NE_OO -> {
+                    Script_Compiler.op_codes.OP_NE_E, Script_Compiler.op_codes.OP_NE_EO, Script_Compiler.op_codes.OP_NE_OE, Script_Compiler.op_codes.OP_NE_OO -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_c = GetVariable(c)
@@ -1156,37 +1156,37 @@ object Script_Interpreter {
                             TempDump.btoi(var_a.getEntityNumberPtr() != var_b.getEntityNumberPtr()).toFloat()
                         )
                     }
-                    Script_Compiler.OP_UADD_F -> {
+                    Script_Compiler.op_codes.OP_UADD_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr(var_b.getFloatPtr() + var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_UADD_V -> {
+                    Script_Compiler.op_codes.OP_UADD_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setVectorPtr(var_b.getidVec3Ptr().plus(var_a.getidVec3Ptr()))
                     }
-                    Script_Compiler.OP_USUB_F -> {
+                    Script_Compiler.op_codes.OP_USUB_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr(var_b.getFloatPtr() - var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_USUB_V -> {
+                    Script_Compiler.op_codes.OP_USUB_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setVectorPtr(var_b.getidVec3Ptr().minus(var_a.getidVec3Ptr()))
                     }
-                    Script_Compiler.OP_UMUL_F -> {
+                    Script_Compiler.op_codes.OP_UMUL_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr(var_b.getFloatPtr() * var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_UMUL_V -> {
+                    Script_Compiler.op_codes.OP_UMUL_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setVectorPtr(var_b.getidVec3Ptr().times(var_a.getFloatPtr()))
                     }
-                    Script_Compiler.OP_UDIV_F -> {
+                    Script_Compiler.op_codes.OP_UDIV_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         if (var_a.getFloatPtr() == 0.0f) {
@@ -1196,7 +1196,7 @@ object Script_Interpreter {
                             var_b.setFloatPtr(var_b.getFloatPtr() / var_a.getFloatPtr())
                         }
                     }
-                    Script_Compiler.OP_UDIV_V -> {
+                    Script_Compiler.op_codes.OP_UDIV_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         if (var_a.getFloatPtr() == 0.0f) {
@@ -1206,7 +1206,7 @@ object Script_Interpreter {
                             var_b.setVectorPtr(var_b.getidVec3Ptr().div(var_a.getFloatPtr()))
                         }
                     }
-                    Script_Compiler.OP_UMOD_F -> {
+                    Script_Compiler.op_codes.OP_UMOD_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         if (var_a.getFloatPtr() == 0.0f) {
@@ -1216,21 +1216,21 @@ object Script_Interpreter {
                             var_b.setFloatPtr((var_b.getFloatPtr().toInt() % var_a.getFloatPtr().toInt()).toFloat())
                         }
                     }
-                    Script_Compiler.OP_UOR_F -> {
+                    Script_Compiler.op_codes.OP_UOR_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr((var_b.getFloatPtr().toInt() or var_a.getFloatPtr().toInt()).toFloat())
                     }
-                    Script_Compiler.OP_UAND_F -> {
+                    Script_Compiler.op_codes.OP_UAND_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr((var_b.getFloatPtr().toInt() and var_a.getFloatPtr().toInt()).toFloat())
                     }
-                    Script_Compiler.OP_UINC_F -> {
+                    Script_Compiler.op_codes.OP_UINC_F -> {
                         var_a = GetVariable(a)
                         var_a.setFloatPtr(var_a.getFloatPtr() + 1)
                     }
-                    Script_Compiler.OP_UINCP_F -> {
+                    Script_Compiler.op_codes.OP_UINCP_F -> {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
@@ -1238,11 +1238,11 @@ object Script_Interpreter {
                             `var`.setFloatPtr(`var`.getFloatPtr() + 1)
                         }
                     }
-                    Script_Compiler.OP_UDEC_F -> {
+                    Script_Compiler.op_codes.OP_UDEC_F -> {
                         var_a = GetVariable(a)
                         var_a.setFloatPtr(var_a.getFloatPtr() - 1)
                     }
-                    Script_Compiler.OP_UDECP_F -> {
+                    Script_Compiler.op_codes.OP_UDECP_F -> {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
@@ -1250,27 +1250,27 @@ object Script_Interpreter {
                             `var`.setFloatPtr(`var`.getFloatPtr() - 1)
                         }
                     }
-                    Script_Compiler.OP_COMP_F -> {
+                    Script_Compiler.op_codes.OP_COMP_F -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         var_c.setFloatPtr(var_a.getFloatPtr().toInt().inv().toFloat())
                     }
-                    Script_Compiler.OP_STORE_F -> {
+                    Script_Compiler.op_codes.OP_STORE_F -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr(var_a.getFloatPtr())
                     }
-                    Script_Compiler.OP_STORE_ENT -> {
+                    Script_Compiler.op_codes.OP_STORE_ENT -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setEntityNumberPtr(var_a.getEntityNumberPtr())
                     }
-                    Script_Compiler.OP_STORE_BOOL -> {
+                    Script_Compiler.op_codes.OP_STORE_BOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setIntPtr(var_a.getIntPtr())
                     }
-                    Script_Compiler.OP_STORE_OBJENT -> {
+                    Script_Compiler.op_codes.OP_STORE_OBJENT -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1283,30 +1283,30 @@ object Script_Interpreter {
                             var_b.setEntityNumberPtr(var_a.getEntityNumberPtr())
                         }
                     }
-                    Script_Compiler.OP_STORE_OBJ, Script_Compiler.OP_STORE_ENTOBJ -> {
+                    Script_Compiler.op_codes.OP_STORE_OBJ, Script_Compiler.op_codes.OP_STORE_ENTOBJ -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setEntityNumberPtr(var_a.getEntityNumberPtr())
                     }
-                    Script_Compiler.OP_STORE_S -> SetString(b, GetString(a)!!)
-                    Script_Compiler.OP_STORE_V -> {
+                    Script_Compiler.op_codes.OP_STORE_S -> SetString(b, GetString(a)!!)
+                    Script_Compiler.op_codes.OP_STORE_V -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setVectorPtr(var_a.getidVec3Ptr())
                     }
-                    Script_Compiler.OP_STORE_FTOS -> {
+                    Script_Compiler.op_codes.OP_STORE_FTOS -> {
                         var_a = GetVariable(a)
                         SetString(b, FloatToString(var_a.getFloatPtr()))
                     }
-                    Script_Compiler.OP_STORE_BTOS -> {
+                    Script_Compiler.op_codes.OP_STORE_BTOS -> {
                         var_a = GetVariable(a)
                         SetString(b, if (TempDump.itob(var_a.getIntPtr())) "true" else "false")
                     }
-                    Script_Compiler.OP_STORE_VTOS -> {
+                    Script_Compiler.op_codes.OP_STORE_VTOS -> {
                         var_a = GetVariable(a)
                         SetString(b, var_a.getidVec3Ptr().ToString())
                     }
-                    Script_Compiler.OP_STORE_FTOBOOL -> {
+                    Script_Compiler.op_codes.OP_STORE_FTOBOOL -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         if (var_a.getFloatPtr() != 0.0f) {
@@ -1315,53 +1315,53 @@ object Script_Interpreter {
                             var_b.setIntPtr(0)
                         }
                     }
-                    Script_Compiler.OP_STORE_BOOLTOF -> {
+                    Script_Compiler.op_codes.OP_STORE_BOOLTOF -> {
                         var_a = GetVariable(a)
                         var_b = GetVariable(b)
                         var_b.setFloatPtr(java.lang.Float.intBitsToFloat(var_a.getIntPtr()))
                     }
-                    Script_Compiler.OP_STOREP_F -> {
+                    Script_Compiler.op_codes.OP_STOREP_F -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setFloatPtr(var_a.getFloatPtr())
                         }
                     }
-                    Script_Compiler.OP_STOREP_ENT -> {
+                    Script_Compiler.op_codes.OP_STOREP_ENT -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setEntityNumberPtr(var_a.getEntityNumberPtr())
                         }
                     }
-                    Script_Compiler.OP_STOREP_FLD, Script_Compiler.OP_STOREP_BOOL -> {
+                    Script_Compiler.op_codes.OP_STOREP_FLD, Script_Compiler.op_codes.OP_STOREP_BOOL -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setIntPtr(var_a.getIntPtr())
                         }
                     }
-                    Script_Compiler.OP_STOREP_S -> {
+                    Script_Compiler.op_codes.OP_STOREP_S -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_b.evalPtr!!.setString(GetString(a)!!) //idStr.Copynz(var_b.evalPtr.stringPtr, GetString(st.a), MAX_STRING_LEN);
                         }
                     }
-                    Script_Compiler.OP_STOREP_V -> {
+                    Script_Compiler.op_codes.OP_STOREP_V -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setVectorPtr(var_a.getidVec3Ptr())
                         }
                     }
-                    Script_Compiler.OP_STOREP_FTOS -> {
+                    Script_Compiler.op_codes.OP_STOREP_FTOS -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setString(FloatToString(var_a.getFloatPtr())) //idStr.Copynz(var_b.evalPtr.stringPtr, FloatToString(var_a.floatPtr.oGet()), MAX_STRING_LEN);
                         }
                     }
-                    Script_Compiler.OP_STOREP_BTOS -> {
+                    Script_Compiler.op_codes.OP_STOREP_BTOS -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
@@ -1372,7 +1372,7 @@ object Script_Interpreter {
                             }
                         }
                     }
-                    Script_Compiler.OP_STOREP_VTOS -> {
+                    Script_Compiler.op_codes.OP_STOREP_VTOS -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
@@ -1381,7 +1381,7 @@ object Script_Interpreter {
                             ) //idStr.Copynz(var_b.evalPtr.stringPtr, var_a.vectorPtr[0].ToString(), MAX_STRING_LEN);
                         }
                     }
-                    Script_Compiler.OP_STOREP_FTOBOOL -> {
+                    Script_Compiler.op_codes.OP_STOREP_FTOBOOL -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
@@ -1392,21 +1392,21 @@ object Script_Interpreter {
                             }
                         }
                     }
-                    Script_Compiler.OP_STOREP_BOOLTOF -> {
+                    Script_Compiler.op_codes.OP_STOREP_BOOLTOF -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.setFloatPtr(java.lang.Float.intBitsToFloat(var_a.getIntPtr()))
                         }
                     }
-                    Script_Compiler.OP_STOREP_OBJ -> {
+                    Script_Compiler.op_codes.OP_STOREP_OBJ -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
                             var_b.evalPtr!!.setEntityNumberPtr(var_a.getEntityNumberPtr())
                         }
                     }
-                    Script_Compiler.OP_STOREP_OBJENT -> {
+                    Script_Compiler.op_codes.OP_STOREP_OBJENT -> {
                         var_b = GetEvalVariable(b)
                         if (var_b != null && var_b.evalPtr != null) {
                             var_a = GetVariable(a)
@@ -1425,7 +1425,7 @@ object Script_Interpreter {
                             }
                         }
                     }
-                    Script_Compiler.OP_ADDRESS -> {
+                    Script_Compiler.op_codes.OP_ADDRESS -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1436,7 +1436,7 @@ object Script_Interpreter {
                             var_c.setEvalPtr(NULL_ENTITY)
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_F -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_F -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1447,7 +1447,7 @@ object Script_Interpreter {
                             var_c.setFloatPtr(0.0f)
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_ENT -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_ENT -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1458,7 +1458,7 @@ object Script_Interpreter {
                             var_c.setEntityNumberPtr(0)
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_BOOL -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_BOOL -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1469,7 +1469,7 @@ object Script_Interpreter {
                             var_c.setIntPtr(0)
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_S -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_S -> {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
@@ -1479,7 +1479,7 @@ object Script_Interpreter {
                             SetString(c, "")
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_V -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_V -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1490,7 +1490,7 @@ object Script_Interpreter {
                             var_c.setVectorPtr(getVec3_zero())
                         }
                     }
-                    Script_Compiler.OP_INDIRECT_OBJ -> {
+                    Script_Compiler.op_codes.OP_INDIRECT_OBJ -> {
                         var_a = GetVariable(a)
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
@@ -1501,20 +1501,20 @@ object Script_Interpreter {
                             var_c.setEntityNumberPtr(`var`.getEntityNumberPtr())
                         }
                     }
-                    Script_Compiler.OP_PUSH_F -> {
+                    Script_Compiler.op_codes.OP_PUSH_F -> {
                         var_a = GetVariable(a)
                         Push(var_a.getIntPtr())
                     }
-                    Script_Compiler.OP_PUSH_FTOS -> {
+                    Script_Compiler.op_codes.OP_PUSH_FTOS -> {
                         var_a = GetVariable(a)
                         PushString(FloatToString(var_a.getFloatPtr()))
                     }
-                    Script_Compiler.OP_PUSH_BTOF -> {
+                    Script_Compiler.op_codes.OP_PUSH_BTOF -> {
                         var_a = GetVariable(a)
                         floatVal = var_a.getIntPtr().toFloat()
                         Push(java.lang.Float.floatToIntBits(floatVal))
                     }
-                    Script_Compiler.OP_PUSH_FTOB -> {
+                    Script_Compiler.op_codes.OP_PUSH_FTOB -> {
                         var_a = GetVariable(a)
                         if (var_a.getFloatPtr() != 0.0f) {
                             Push(1)
@@ -1522,34 +1522,37 @@ object Script_Interpreter {
                             Push(0)
                         }
                     }
-                    Script_Compiler.OP_PUSH_VTOS -> {
+                    Script_Compiler.op_codes.OP_PUSH_VTOS -> {
                         var_a = GetVariable(a)
                         PushString(var_a.getidVec3Ptr().ToString())
                     }
-                    Script_Compiler.OP_PUSH_BTOS -> {
+                    Script_Compiler.op_codes.OP_PUSH_BTOS -> {
                         var_a = GetVariable(a)
                         PushString(if (TempDump.itob(var_a.getIntPtr())) "true" else "false")
                     }
-                    Script_Compiler.OP_PUSH_ENT -> {
+                    Script_Compiler.op_codes.OP_PUSH_ENT -> {
                         var_a = GetVariable(a)
                         Push(var_a.getEntityNumberPtr())
                     }
-                    Script_Compiler.OP_PUSH_S -> PushString(GetString(a)!!)
-                    Script_Compiler.OP_PUSH_V -> {
+                    Script_Compiler.op_codes.OP_PUSH_S -> PushString(GetString(a)!!)
+                    Script_Compiler.op_codes.OP_PUSH_V -> {
                         var_a = GetVariable(a)
                         Push(java.lang.Float.floatToIntBits(var_a.getidVec3Ptr().x))
                         Push(java.lang.Float.floatToIntBits(var_a.getidVec3Ptr().y))
                         Push(java.lang.Float.floatToIntBits(var_a.getidVec3Ptr().z))
                     }
-                    Script_Compiler.OP_PUSH_OBJ -> {
+                    Script_Compiler.op_codes.OP_PUSH_OBJ -> {
                         var_a = GetVariable(a)
                         Push(var_a.getEntityNumberPtr())
                     }
-                    Script_Compiler.OP_PUSH_OBJENT -> {
+                    Script_Compiler.op_codes.OP_PUSH_OBJENT -> {
                         var_a = GetVariable(a)
                         Push(var_a.getEntityNumberPtr())
                     }
-                    Script_Compiler.OP_BREAK, Script_Compiler.OP_CONTINUE -> Error("Bad opcode %d", st.op)
+                    Script_Compiler.op_codes.OP_BREAK, Script_Compiler.op_codes.OP_CONTINUE -> Error(
+                        "Bad opcode %d",
+                        st.op
+                    )
                     else -> Error("Bad opcode %d", st.op)
                 }
             }
@@ -1694,7 +1697,7 @@ object Script_Interpreter {
                     }
                 }
                 Script_Program.ev_string -> {
-                    if (reg.stringPtr != null) {
+                    if (reg.stringPtr.isNotEmpty()) {
                         out.set("\"")
                         out.plusAssign(reg.stringPtr!!)
                         out.plusAssign("\"")

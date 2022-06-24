@@ -119,14 +119,18 @@ import java.lang.Class
 /**
  *
  */
-object Class {
-    val EV_Remove: idEventDef = idEventDef("<immediateremove>", null)
-    val EV_SafeRemove: idEventDef = idEventDef("remove", null)
-    var classHierarchy: idHierarchy<idTypeInfo> = idHierarchy()
-    var eventCallbackMemory = 0
+class Class {
+    companion object {
+        val EV_Remove: idEventDef = idEventDef("<immediateremove>", null)
+        val EV_SafeRemove: idEventDef = idEventDef("remove", null)
 
-    // this is the head of a singly linked list of all the idTypes
-    var typelist: idTypeInfo? = null
+        var classHierarchy: idHierarchy<idTypeInfo> = idHierarchy()
+        var eventCallbackMemory = 0
+
+        // this is the head of a singly linked list of all the idTypes
+        var typelist: idTypeInfo? = null
+    }
+
 
     fun interface eventCallback_t<T : idClass> {
         open fun accept(t: T, vararg args: idEventArg<*>)

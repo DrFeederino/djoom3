@@ -103,7 +103,7 @@ class RegExp {
                     Common.common.FatalError("idRegister::SetToRegs: bad reg type")
                 }
             }
-            for (i in 0..regCount) {
+            for (i in 0 until regCount) {
                 registers[regs[i]] = v[i]
             }
         }

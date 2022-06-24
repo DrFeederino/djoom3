@@ -26,188 +26,164 @@ import neo.idlib.math.Vector.idVec3
  *
  */
 object Script_Compiler {
-    //};
-    //
-    //
     const val FUNCTION_PRIORITY = 2
     const val INT_PRIORITY = 2
     const val NOT_PRIORITY = 5
-
-    //
     const val NUM_OPCODES = 123
-
-    //
-    const val OP_ADDRESS = 45
-    const val OP_ADD_F = 12
-    const val OP_ADD_FS = 15
-    const val OP_ADD_S = 14
-    const val OP_ADD_SF = 16
-    const val OP_ADD_SV = 18
-    const val OP_ADD_V = 13
-    const val OP_ADD_VS = 17
-
-    //
-    const val OP_AND = 111
-    const val OP_AND_BOOLBOOL = 114
-    const val OP_AND_BOOLF = 112
-    const val OP_AND_FBOOL = 113
-
-    //
-    const val OP_BITAND = 119
-    const val OP_BITOR = 120
-
-    //
-    const val OP_BREAK = 121 // placeholder op.  not used in final code
-
-    //
-    const val OP_CALL = 96
-    const val OP_COMP_F = 5
-    const val OP_CONTINUE = 122 // placeholder op.  not used in final code
-    const val OP_DIV_F = 10
-    const val OP_EQ_E = 24
-    const val OP_EQ_EO = 25
-
-    //
-    const val OP_EQ_F = 21
-    const val OP_EQ_OE = 26
-    const val OP_EQ_OO = 27
-    const val OP_EQ_S = 23
-    const val OP_EQ_V = 22
-
-    //
-    const val OP_EVENTCALL = 46
-    const val OP_GE = 36
-
-    //
-    const val OP_GOTO = 110
-    const val OP_GT = 38
-    const val OP_IF = 94
-    const val OP_IFNOT = 95
-    const val OP_INDIRECT_BOOL = 43
-    const val OP_INDIRECT_ENT = 42
-
-    //
-    const val OP_INDIRECT_F = 39
-    const val OP_INDIRECT_OBJ = 44
-    const val OP_INDIRECT_S = 41
-    const val OP_INDIRECT_V = 40
-
-    //
-    const val OP_INT_F = 93
-
-    //
-    const val OP_LE = 35
-    const val OP_LT = 37
-    const val OP_MOD_F = 11
-
-    //
-    const val OP_MUL_F = 6
-    const val OP_MUL_FV = 8
-    const val OP_MUL_V = 7
-    const val OP_MUL_VF = 9
-
-    //
-    const val OP_NEG_F = 91
-    const val OP_NEG_V = 92
-    const val OP_NE_E = 31
-    const val OP_NE_EO = 32
-
-    //
-    const val OP_NE_F = 28
-    const val OP_NE_OE = 33
-    const val OP_NE_OO = 34
-    const val OP_NE_S = 30
-    const val OP_NE_V = 29
-
-    //
-    const val OP_NOT_BOOL = 86
-    const val OP_NOT_ENT = 90
-    const val OP_NOT_F = 87
-    const val OP_NOT_S = 89
-    const val OP_NOT_V = 88
-    const val OP_OBJECTCALL = 47
-    const val OP_OBJTHREAD = 98
-    const val OP_OR = 115
-    const val OP_OR_BOOLBOOL = 118
-    const val OP_OR_BOOLF = 116
-    const val OP_OR_FBOOL = 117
-    const val OP_PUSH_BTOF = 106
-    const val OP_PUSH_BTOS = 109
-    const val OP_PUSH_ENT = 102
-
-    //
-    const val OP_PUSH_F = 99
-    const val OP_PUSH_FTOB = 107
-    const val OP_PUSH_FTOS = 105
-    const val OP_PUSH_OBJ = 103
-    const val OP_PUSH_OBJENT = 104
-    const val OP_PUSH_S = 101
-    const val OP_PUSH_V = 100
-    const val OP_PUSH_VTOS = 108
-
     // These opcodes are no longer necessary:
     // OP_PUSH_OBJ:
     // OP_PUSH_OBJENT:
-    //enum {
-    const val OP_RETURN = 0
-    const val OP_STOREP_BOOL = 67
-    const val OP_STOREP_BOOLTOF = 74
-    const val OP_STOREP_BTOS = 71
-    const val OP_STOREP_ENT = 65
+    enum class op_codes {
+        OP_RETURN,
 
-    //
-    const val OP_STOREP_F = 62
-    const val OP_STOREP_FLD = 66
-    const val OP_STOREP_FTOBOOL = 73
+        OP_UINC_F,
+        OP_UINCP_F,
+        OP_UDEC_F,
+        OP_UDECP_F,
+        OP_COMP_F,
 
-    //
-    const val OP_STOREP_FTOS = 70
-    const val OP_STOREP_OBJ = 68
-    const val OP_STOREP_OBJENT = 69
-    const val OP_STOREP_S = 64
-    const val OP_STOREP_V = 63
-    const val OP_STOREP_VTOS = 72
-    const val OP_STORE_BOOL = 53
-    const val OP_STORE_BOOLTOF = 61
-    const val OP_STORE_BTOS = 58
-    const val OP_STORE_ENT = 52
-    const val OP_STORE_ENTOBJ = 56
+        OP_MUL_F,
+        OP_MUL_V,
+        OP_MUL_FV,
+        OP_MUL_VF,
+        OP_DIV_F,
+        OP_MOD_F,
+        OP_ADD_F,
+        OP_ADD_V,
+        OP_ADD_S,
+        OP_ADD_FS,
+        OP_ADD_SF,
+        OP_ADD_VS,
+        OP_ADD_SV,
+        OP_SUB_F,
+        OP_SUB_V,
 
-    //
-    const val OP_STORE_F = 49
-    const val OP_STORE_FTOBOOL = 60
+        OP_EQ_F,
+        OP_EQ_V,
+        OP_EQ_S,
+        OP_EQ_E,
+        OP_EQ_EO,
+        OP_EQ_OE,
+        OP_EQ_OO,
 
-    //
-    const val OP_STORE_FTOS = 57
-    const val OP_STORE_OBJ = 55
-    const val OP_STORE_OBJENT = 54
-    const val OP_STORE_S = 51
-    const val OP_STORE_V = 50
-    const val OP_STORE_VTOS = 59
-    const val OP_SUB_F = 19
-    const val OP_SUB_V = 20
-    const val OP_SYSCALL = 48
-    const val OP_THREAD = 97
-    const val OP_UADD_F = 80
-    const val OP_UADD_V = 81
-    const val OP_UAND_F = 84
-    const val OP_UDECP_F = 4
-    const val OP_UDEC_F = 3
-    const val OP_UDIV_F = 77
-    const val OP_UDIV_V = 78
-    const val OP_UINCP_F = 2
+        OP_NE_F,
+        OP_NE_V,
+        OP_NE_S,
+        OP_NE_E,
+        OP_NE_EO,
+        OP_NE_OE,
+        OP_NE_OO,
 
-    //
-    const val OP_UINC_F = 1
-    const val OP_UMOD_F = 79
+        OP_LE,
+        OP_GE,
+        OP_LT,
+        OP_GT,
 
-    //
-    const val OP_UMUL_F = 75
-    const val OP_UMUL_V = 76
-    const val OP_UOR_F = 85
-    const val OP_USUB_F = 82
-    const val OP_USUB_V = 83
-    val RESULT_STRING: String = "<RESULT>"
+        OP_INDIRECT_F,
+        OP_INDIRECT_V,
+        OP_INDIRECT_S,
+        OP_INDIRECT_ENT,
+        OP_INDIRECT_BOOL,
+        OP_INDIRECT_OBJ,
+
+        OP_ADDRESS,
+
+        OP_EVENTCALL,
+        OP_OBJECTCALL,
+        OP_SYSCALL,
+
+        OP_STORE_F,
+        OP_STORE_V,
+        OP_STORE_S,
+        OP_STORE_ENT,
+        OP_STORE_BOOL,
+        OP_STORE_OBJENT,
+        OP_STORE_OBJ,
+        OP_STORE_ENTOBJ,
+
+        OP_STORE_FTOS,
+        OP_STORE_BTOS,
+        OP_STORE_VTOS,
+        OP_STORE_FTOBOOL,
+        OP_STORE_BOOLTOF,
+
+        OP_STOREP_F,
+        OP_STOREP_V,
+        OP_STOREP_S,
+        OP_STOREP_ENT,
+        OP_STOREP_FLD,
+        OP_STOREP_BOOL,
+        OP_STOREP_OBJ,
+        OP_STOREP_OBJENT,
+
+        OP_STOREP_FTOS,
+        OP_STOREP_BTOS,
+        OP_STOREP_VTOS,
+        OP_STOREP_FTOBOOL,
+        OP_STOREP_BOOLTOF,
+
+        OP_UMUL_F,
+        OP_UMUL_V,
+        OP_UDIV_F,
+        OP_UDIV_V,
+        OP_UMOD_F,
+        OP_UADD_F,
+        OP_UADD_V,
+        OP_USUB_F,
+        OP_USUB_V,
+        OP_UAND_F,
+        OP_UOR_F,
+
+        OP_NOT_BOOL,
+        OP_NOT_F,
+        OP_NOT_V,
+        OP_NOT_S,
+        OP_NOT_ENT,
+
+        OP_NEG_F,
+        OP_NEG_V,
+
+        OP_INT_F,
+        OP_IF,
+        OP_IFNOT,
+
+        OP_CALL,
+        OP_THREAD,
+        OP_OBJTHREAD,
+
+        OP_PUSH_F,
+        OP_PUSH_V,
+        OP_PUSH_S,
+        OP_PUSH_ENT,
+        OP_PUSH_OBJ,
+        OP_PUSH_OBJENT,
+        OP_PUSH_FTOS,
+        OP_PUSH_BTOF,
+        OP_PUSH_FTOB,
+        OP_PUSH_VTOS,
+        OP_PUSH_BTOS,
+
+        OP_GOTO,
+
+        OP_AND,
+        OP_AND_BOOLF,
+        OP_AND_FBOOL,
+        OP_AND_BOOLBOOL,
+        OP_OR,
+        OP_OR_BOOLF,
+        OP_OR_FBOOL,
+        OP_OR_BOOLBOOL,
+
+        OP_BITAND,
+        OP_BITOR,
+
+        OP_BREAK,            // placeholder op.  not used in final code
+        OP_CONTINUE,        // placeholder op.  not used in final code
+
+        NUM_OPCODES
+    }
+
+    const val RESULT_STRING: String = "<RESULT>"
     const val TILDE_PRIORITY = 5
     const val TOP_PRIORITY = 7
 
@@ -235,8 +211,8 @@ object Script_Compiler {
         private var braceDepth: Int
         private var callthread: Boolean
         private var console: Boolean
-        private var currentFileNumber: Int
-        private var currentLineNumber: Int
+        private var currentFileNumber: UShort
+        private var currentLineNumber: UShort
 
         //
         private var eof: Boolean
@@ -325,166 +301,166 @@ object Script_Compiler {
             }
             val varA = var_a
             val varB = var_b
-            when (opcodes.indexOf(op)) {
-                OP_ADD_F -> {
+            when (op_codes.values()[opcodes.indexOf(op)]) {
+                op_codes.OP_ADD_F -> {
                     float_c = varA!!.value.getFloatPtr() + varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_ADD_V -> {
+                op_codes.OP_ADD_V -> {
                     vec_c.set(vectorPtr.plus(varB!!.value.getidVec3Ptr()))
                     type = Script_Program.type_vector
                 }
-                OP_SUB_F -> {
+                op_codes.OP_SUB_F -> {
                     float_c = varA!!.value.getFloatPtr() - varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_SUB_V -> {
+                op_codes.OP_SUB_V -> {
                     vec_c.set(vectorPtr.minus(varB!!.value.getidVec3Ptr()))
                     type = Script_Program.type_vector
                 }
-                OP_MUL_F -> {
+                op_codes.OP_MUL_F -> {
                     float_c = varA!!.value.getFloatPtr() * varB!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_MUL_V -> {
+                op_codes.OP_MUL_V -> {
                     float_c = vectorPtr.times(varB!!.value.getidVec3Ptr())
                     type = Script_Program.type_float
                 }
-                OP_MUL_FV -> {
+                op_codes.OP_MUL_FV -> {
                     vec_c.set(varB!!.value.getidVec3Ptr().times(varA!!.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
-                OP_MUL_VF -> {
+                op_codes.OP_MUL_VF -> {
                     vec_c.set(vectorPtr.times(varB!!.value.getFloatPtr()))
                     type = Script_Program.type_vector
                 }
-                OP_DIV_F -> {
+                op_codes.OP_DIV_F -> {
                     float_c = Divide(varA!!.value.getFloatPtr(), varB!!.value.getFloatPtr())
                     type = Script_Program.type_float
                 }
-                OP_MOD_F -> {
+                op_codes.OP_MOD_F -> {
                     float_c = (varA!!.value.getFloatPtr().toInt() % varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_BITAND -> {
+                op_codes.OP_BITAND -> {
                     float_c = (varA!!.value.getFloatPtr().toInt() and varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_BITOR -> {
+                op_codes.OP_BITOR -> {
                     float_c = (varA!!.value.getFloatPtr().toInt() or varB!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_GE -> {
+                op_codes.OP_GE -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() >= varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_LE -> {
+                op_codes.OP_LE -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() <= varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_GT -> {
+                op_codes.OP_GT -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() > varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_LT -> {
+                op_codes.OP_LT -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() < varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_AND -> {
+                op_codes.OP_AND -> {
                     float_c =
                         TempDump.btoi(varA!!.value.getFloatPtr() != 0f && varB!!.value.getFloatPtr() != 0f).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_OR -> {
+                op_codes.OP_OR -> {
                     float_c =
                         TempDump.btoi(varA!!.value.getFloatPtr() != 0f || varB!!.value.getFloatPtr() != 0f).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NOT_BOOL -> {
+                op_codes.OP_NOT_BOOL -> {
                     int_c = TempDump.btoi(!TempDump.itob(varA!!.value.getIntPtr()))
                     type = Script_Program.type_boolean
                 }
-                OP_NOT_F -> {
+                op_codes.OP_NOT_F -> {
                     float_c = TempDump.btoi(!TempDump.itob(varA!!.value.getFloatPtr().toInt())).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NOT_V -> {
+                op_codes.OP_NOT_V -> {
                     float_c = TempDump.btoi(0f == vectorPtr.x && 0f == vectorPtr.y && 0f == vectorPtr.z).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NEG_F -> {
+                op_codes.OP_NEG_F -> {
                     float_c = -varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_NEG_V -> {
+                op_codes.OP_NEG_V -> {
                     vec_c.set(vectorPtr.unaryMinus())
                     type = Script_Program.type_vector
                 }
-                OP_INT_F -> {
+                op_codes.OP_INT_F -> {
                     float_c = varA!!.value.getFloatPtr().toInt().toFloat()
                     type = Script_Program.type_float
                 }
-                OP_EQ_F -> {
+                op_codes.OP_EQ_F -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() == varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_EQ_V -> {
+                op_codes.OP_EQ_V -> {
                     float_c = TempDump.btoi(vectorPtr.Compare(varB!!.value.getidVec3Ptr())).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_EQ_E -> {
+                op_codes.OP_EQ_E -> {
                     float_c = TempDump.btoi(varA!!.value.getIntPtr() == varB!!.value.getIntPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NE_F -> {
+                op_codes.OP_NE_F -> {
                     float_c = TempDump.btoi(varA!!.value.getFloatPtr() != varB!!.value.getFloatPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NE_V -> {
+                op_codes.OP_NE_V -> {
                     float_c = TempDump.btoi(!vectorPtr.Compare(varB!!.value.getidVec3Ptr())).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_NE_E -> {
+                op_codes.OP_NE_E -> {
                     float_c = TempDump.btoi(varA!!.value.getIntPtr() != varB!!.value.getIntPtr()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_UADD_F -> {
+                op_codes.OP_UADD_F -> {
                     float_c = varB!!.value.getFloatPtr() + varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_USUB_F -> {
+                op_codes.OP_USUB_F -> {
                     float_c = varB!!.value.getFloatPtr() - varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_UMUL_F -> {
+                op_codes.OP_UMUL_F -> {
                     float_c = varB!!.value.getFloatPtr() * varA!!.value.getFloatPtr()
                     type = Script_Program.type_float
                 }
-                OP_UDIV_F -> {
+                op_codes.OP_UDIV_F -> {
                     float_c = Divide(varB!!.value.getFloatPtr(), varA!!.value.getFloatPtr())
                     type = Script_Program.type_float
                 }
-                OP_UMOD_F -> {
+                op_codes.OP_UMOD_F -> {
                     float_c = (varB!!.value.getFloatPtr().toInt() % varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_UOR_F -> {
+                op_codes.OP_UOR_F -> {
                     float_c = (varB!!.value.getFloatPtr().toInt() or varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_UAND_F -> {
+                op_codes.OP_UAND_F -> {
                     float_c = (varB!!.value.getFloatPtr().toInt() and varA!!.value.getFloatPtr().toInt()).toFloat()
                     type = Script_Program.type_float
                 }
-                OP_UINC_F -> {
+                op_codes.OP_UINC_F -> {
                     float_c = varA!!.value.getFloatPtr() + 1
                     type = Script_Program.type_float
                 }
-                OP_UDEC_F -> {
+                op_codes.OP_UDEC_F -> {
                     float_c = varA!!.value.getFloatPtr() - 1
                     type = Script_Program.type_float
                 }
-                OP_COMP_F -> {
+                op_codes.OP_COMP_F -> {
                     float_c = varA!!.value.getFloatPtr().toInt().inv().toFloat()
                     type = Script_Program.type_float
                 }
@@ -554,7 +530,7 @@ object Script_Compiler {
                 // set user count back to 1, a result def needs to be used twice before it can be reused
                 var_c.numUsers = 1
             }
-            statement.op = opcodes.indexOf(op)
+            statement.op = opcodes.indexOf(op).toUShort()
             statement.a = var_a
             statement.b = var_b
             statement.c = var_c
@@ -570,8 +546,8 @@ object Script_Compiler {
          Emits a primitive statement, returning the var it places it's value in
          ============
          */
-        private fun EmitOpcode(op: Int, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
-            return EmitOpcode(opcodes[op], var_a, var_b)
+        private fun EmitOpcode(op: op_codes, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
+            return EmitOpcode(opcodes[op.ordinal], var_a, var_b)
         }
 
         /*
@@ -586,7 +562,7 @@ object Script_Compiler {
             var out: opcode_s?
             var op_ptr: Int = 0
             out = null
-            op = opcodes[OP_PUSH_F.also { op_ptr = it }]
+            op = opcodes[op_codes.OP_PUSH_F.ordinal.also { op_ptr = it }]
             while (op.name.isNotEmpty() && op.name == "<PUSH>") {
                 op_ptr = op_ptr.inc()
                 if (funcArg.Type() == op.type_a!!.Type() && expression.Type() == op.type_b!!.Type()) {
@@ -599,7 +575,7 @@ object Script_Compiler {
                 if (expression.TypeDef() != funcArg && !expression.TypeDef()!!.Inherits(funcArg)) {
                     return false
                 }
-                out = opcodes[OP_PUSH_ENT]
+                out = opcodes[op_codes.OP_PUSH_ENT.ordinal]
             }
             EmitOpcode(out, expression, null)
             return true
@@ -613,14 +589,16 @@ object Script_Compiler {
 
             // Save the token's line number and filename since when we emit opcodes the current
             // token is always the next one to be read
-            currentLineNumber = token.line
-            currentFileNumber = Game_local.gameLocal.program.GetFilenum(parserPtr.GetFileName().toString())
+            currentLineNumber = token.line.toUShort()
+            currentFileNumber = Game_local.gameLocal.program.GetFilenum(parserPtr.GetFileName().toString()).toUShort()
             bla2++
             if (!parserPtr.ReadToken(token)) {
                 eof = true
                 return
             }
-            if (currentFileNumber != Game_local.gameLocal.program.GetFilenum(parserPtr.GetFileName().toString())) {
+            if (currentFileNumber != Game_local.gameLocal.program.GetFilenum(parserPtr.GetFileName().toString())
+                    .toUShort()
+            ) {
                 if (braceDepth > 0 && token.toString() != "}") {
                     // missing a closing brace.  try to give as much info as possible.
                     if (scope!!.Type() == Script_Program.ev_function) {
@@ -826,7 +804,7 @@ object Script_Compiler {
          Parses a variable type, including functions types
          ============
          */
-        private fun ParseType(): idTypeDef? {
+        private fun ParseType(): idTypeDef {
             val type: idTypeDef?
             type = CheckType()
             if (null == type) {
@@ -839,7 +817,7 @@ object Script_Compiler {
                 Error("A namespace may only be defined globally, or within another namespace")
             }
             NextToken()
-            return type
+            return type!!
         }
 
         /*
@@ -934,7 +912,7 @@ object Script_Compiler {
             val eval: eval_s
 
 //	memset( &eval, 0, sizeof( eval ) );
-            eval = eval_s(func.scope!!.TypeDef()!!.GetFunctionNumber(func.value.functionPtr))
+            eval = eval_s(func.scope!!.TypeDef()!!.GetFunctionNumber(func.value.functionPtr!!))
             if (eval._int < 0) {
                 Error("Function '%s' not found in scope '%s'", func.Name(), func.scope!!.Name())
             }
@@ -1020,7 +998,7 @@ object Script_Compiler {
         }
 
         private fun EmitFunctionParms(
-            op: Int,
+            op: op_codes,
             func: idVarDef,
             startarg: Int,
             startsize: Int,
@@ -1033,7 +1011,7 @@ object Script_Compiler {
             val returnType: idTypeDef?
             var arg: Int
             var size: Int
-            val resultOp: Int
+            val resultOp: op_codes
             type = func.TypeDef()!!
             if (func.Type() != Script_Program.ev_function) {
                 Error("'%s' is not a function", func.Name())
@@ -1064,9 +1042,9 @@ object Script_Compiler {
             if (arg < type.NumParameters()) {
                 Error("too few parameters for function '%s'", func.Name())
             }
-            if (op == OP_CALL) {
+            if (op == op_codes.OP_CALL) {
                 EmitOpcode(op, func, null)
-            } else if (op == OP_OBJECTCALL || op == OP_OBJTHREAD) {
+            } else if (op == op_codes.OP_OBJECTCALL || op == op_codes.OP_OBJTHREAD) {
                 EmitOpcode(op, `object`, VirtualFunctionConstant(func))
 
                 // need arg size seperate since script object may be NULL
@@ -1080,22 +1058,22 @@ object Script_Compiler {
             // we need to copy off the result into a temporary result location, so figure out the opcode
             returnType = type.ReturnType()!!
             if (returnType.Type() == Script_Program.ev_string) {
-                resultOp = OP_STORE_S
+                resultOp = op_codes.OP_STORE_S
                 returnDef = Game_local.gameLocal.program.returnStringDef
             } else {
                 Game_local.gameLocal.program.returnDef!!.SetTypeDef(returnType)
                 returnDef = Game_local.gameLocal.program.returnDef
                 resultOp = when (returnType.Type()) {
-                    Script_Program.ev_void -> OP_STORE_F
-                    Script_Program.ev_boolean -> OP_STORE_BOOL
-                    Script_Program.ev_float -> OP_STORE_F
-                    Script_Program.ev_vector -> OP_STORE_V
-                    Script_Program.ev_entity -> OP_STORE_ENT
-                    Script_Program.ev_object -> OP_STORE_OBJ
+                    Script_Program.ev_void -> op_codes.OP_STORE_F
+                    Script_Program.ev_boolean -> op_codes.OP_STORE_BOOL
+                    Script_Program.ev_float -> op_codes.OP_STORE_F
+                    Script_Program.ev_vector -> op_codes.OP_STORE_V
+                    Script_Program.ev_entity -> op_codes.OP_STORE_ENT
+                    Script_Program.ev_object -> op_codes.OP_STORE_OBJ
                     else -> {
                         Error("Invalid return type for function '%s'", func.Name())
                         // shut up compiler
-                        OP_STORE_OBJ
+                        op_codes.OP_STORE_OBJ
                     }
                 }
             }
@@ -1134,7 +1112,7 @@ object Script_Compiler {
                     Error("Built-in functions cannot be called as threads")
                 }
                 callthread = false
-                EmitFunctionParms(OP_THREAD, funcDef, 0, 0, null)
+                EmitFunctionParms(op_codes.OP_THREAD, funcDef, 0, 0, null)
             } else {
                 if (funcDef.initialized != initialized_t.uninitialized && funcDef.value.functionPtr!!.eventdef != null) {
                     if (scope!!.Type() != Script_Program.ev_namespace && scope!!.scope!!.Type() == Script_Program.ev_object) {
@@ -1149,7 +1127,7 @@ object Script_Compiler {
                         Error("Built-in functions cannot be called without an object")
                     }
                 }
-                EmitFunctionParms(OP_CALL, funcDef, 0, 0, null)
+                EmitFunctionParms(op_codes.OP_CALL, funcDef, 0, 0, null)
             }
         }
 
@@ -1157,9 +1135,9 @@ object Script_Compiler {
             EmitPush(`object`, `object`.TypeDef()!!)
             return if (callthread) {
                 callthread = false
-                EmitFunctionParms(OP_OBJTHREAD, func, 1, Script_Program.type_object.Size(), `object`)
+                EmitFunctionParms(op_codes.OP_OBJTHREAD, func, 1, Script_Program.type_object.Size(), `object`)
             } else {
-                EmitFunctionParms(OP_OBJECTCALL, func, 1, 0, `object`)
+                EmitFunctionParms(op_codes.OP_OBJECTCALL, func, 1, 0, `object`)
             }
         }
 
@@ -1178,7 +1156,7 @@ object Script_Compiler {
             } else {
                 EmitPush(`object`, `object`.TypeDef()!!)
             }
-            return EmitFunctionParms(OP_EVENTCALL, funcDef, 0, Script_Program.type_object.Size(), null)
+            return EmitFunctionParms(op_codes.OP_EVENTCALL, funcDef, 0, Script_Program.type_object.Size(), null)
         }
 
         private fun ParseSysObjectCall(funcDef: idVarDef): idVarDef? {
@@ -1196,7 +1174,7 @@ object Script_Compiler {
 //            if (!idThread.Type.RespondsTo(funcDef.value.functionPtr.eventdef)) {
 //                Error("\"%s\" is not callable as a 'sys' function", funcDef.Name());
 //            }
-            return EmitFunctionParms(OP_SYSCALL, funcDef, 0, 0, null)
+            return EmitFunctionParms(op_codes.OP_SYSCALL, funcDef, 0, 0, null)
         }
 
         private fun LookupDef(name: String, baseobj: idVarDef?): idVarDef? {
@@ -1243,17 +1221,17 @@ object Script_Compiler {
                                 if (type_c != Script_Program.ev_float) {
                                     Error("Invalid type for ++")
                                 }
-                                def = EmitOpcode(OP_UINCP_F, thisdef, field)
+                                def = EmitOpcode(op_codes.OP_UINCP_F, thisdef, field)
                                 return def
                             } else if (CheckToken("--")) {
                                 if (type_c != Script_Program.ev_float) {
                                     Error("Invalid type for --")
                                 }
-                                def = EmitOpcode(OP_UDECP_F, thisdef, field)
+                                def = EmitOpcode(op_codes.OP_UDECP_F, thisdef, field)
                                 return def
                             }
                         }
-                        op = opcodes[OP_INDIRECT_F.also { op_i = it }]
+                        op = opcodes[op_codes.OP_INDIRECT_F.ordinal.also { op_i = it }]
                         while (op.type_a!!.Type() != Script_Program.ev_object
                             || type_b != op.type_b!!.Type() || type_c != op.type_c!!.Type()
                         ) {
@@ -1270,8 +1248,8 @@ object Script_Compiler {
                             }
                         }
 
-//				if ( ( op - opcodes ) == OP_OBJECTCALL ) {
-                        if (op_i == OP_OBJECTCALL) {
+//				if ( ( op - opcodes ) == op_codes.OP_OBJECTCALL ) {
+                        if (op_i == op_codes.OP_OBJECTCALL.ordinal) {
                             ExpectToken("(")
                             def = ParseObjectCall(thisdef, field)
                         } else {
@@ -1340,43 +1318,43 @@ object Script_Compiler {
 
         private fun GetTerm(): idVarDef? {
             val e: idVarDef?
-            val op: Int
+            val op: UShort
             if (null == immediateType && CheckToken("~")) {
                 e = GetExpression(TILDE_PRIORITY)!!
                 op = when (e.Type()) {
-                    Script_Program.ev_float -> OP_COMP_F
+                    Script_Program.ev_float -> op_codes.OP_COMP_F.ordinal.toUShort()
                     else -> {
                         Error("type mismatch for ~")
 
                         // shut up compiler
-                        OP_COMP_F
+                        op_codes.OP_COMP_F.ordinal.toUShort()
                     }
                 }
-                return EmitOpcode(op, e, null)
+                return EmitOpcode(op_codes.values()[op.toInt()], e, null)
             }
             if (null == immediateType && CheckToken("!")) {
                 e = GetExpression(NOT_PRIORITY)!!
                 op = when (e.Type()) {
-                    Script_Program.ev_boolean -> OP_NOT_BOOL
-                    Script_Program.ev_float -> OP_NOT_F
-                    Script_Program.ev_string -> OP_NOT_S
-                    Script_Program.ev_vector -> OP_NOT_V
-                    Script_Program.ev_entity -> OP_NOT_ENT
+                    Script_Program.ev_boolean -> op_codes.OP_NOT_BOOL.ordinal.toUShort()
+                    Script_Program.ev_float -> op_codes.OP_NOT_F.ordinal.toUShort()
+                    Script_Program.ev_string -> op_codes.OP_NOT_S.ordinal.toUShort()
+                    Script_Program.ev_vector -> op_codes.OP_NOT_V.ordinal.toUShort()
+                    Script_Program.ev_entity -> op_codes.OP_NOT_ENT.ordinal.toUShort()
                     Script_Program.ev_function -> {
                         Error("Invalid type for !")
 
                         // shut up compiler
-                        OP_NOT_F
+                        op_codes.OP_NOT_F.ordinal.toUShort()
                     }
-                    Script_Program.ev_object -> OP_NOT_ENT
+                    Script_Program.ev_object -> op_codes.OP_NOT_ENT.ordinal.toUShort()
                     else -> {
                         Error("type mismatch for !")
 
                         // shut up compiler
-                        OP_NOT_F
+                        op_codes.OP_NOT_F.ordinal.toUShort()
                     }
                 }
-                return EmitOpcode(op, e, null)
+                return EmitOpcode(op_codes.values()[op.toInt()], e, null)
             }
 
             // check for negation operator
@@ -1393,16 +1371,16 @@ object Script_Compiler {
                 } else {
                     e = GetExpression(NOT_PRIORITY)!!
                     op = when (e.Type()) {
-                        Script_Program.ev_float -> OP_NEG_F
-                        Script_Program.ev_vector -> OP_NEG_V
+                        Script_Program.ev_float -> op_codes.OP_NEG_F.ordinal.toUShort()
+                        Script_Program.ev_vector -> op_codes.OP_NEG_V.ordinal.toUShort()
                         else -> {
                             Error("type mismatch for -")
 
                             // shut up compiler
-                            OP_NEG_F
+                            op_codes.OP_NEG_F.ordinal.toUShort()
                         }
                     }
-                    EmitOpcode(opcodes[op], e, null)
+                    EmitOpcode(opcodes[op.toInt()], e, null)
                 }
             }
             if (CheckToken("int")) {
@@ -1412,7 +1390,7 @@ object Script_Compiler {
                     Error("type mismatch for int()")
                 }
                 ExpectToken(")")
-                return EmitOpcode(OP_INT_F, e, null)
+                return EmitOpcode(op_codes.OP_INT_F, e, null)
             }
             if (CheckToken("thread")) {
                 callthread = true
@@ -1510,9 +1488,9 @@ object Script_Compiler {
                     if (Game_local.gameLocal.program.NumStatements() > 0) {
                         val statement =
                             Game_local.gameLocal.program.GetStatement(Game_local.gameLocal.program.NumStatements() - 1)
-                        if (statement.op >= OP_INDIRECT_F && statement.op < OP_ADDRESS) {
-                            statement.op = OP_ADDRESS
-                            Script_Program.type_pointer.SetPointerType(e!!.TypeDef())
+                        if (statement.op >= op_codes.OP_INDIRECT_F.ordinal.toUShort() && statement.op < op_codes.OP_ADDRESS.ordinal.toUShort()) {
+                            statement.op = op_codes.OP_ADDRESS.ordinal.toUShort()
+                            Script_Program.type_pointer.SetPointerType(e!!.TypeDef()!!)
                             e.SetTypeDef(Script_Program.type_pointer)
                         }
                     }
@@ -1568,12 +1546,12 @@ object Script_Compiler {
                         Error("type mismatch for '%s'", oldop.name)
                     }
                 }
-                when (op_i) {
-                    OP_SYSCALL -> {
+                when (op_codes.values()[op_i]) {
+                    op_codes.OP_SYSCALL -> {
                         ExpectToken("(")
                         e = ParseSysObjectCall(e2)!!
                     }
-                    OP_OBJECTCALL -> {
+                    op_codes.OP_OBJECTCALL -> {
                         ExpectToken("(")
                         e =
                             if (e2.initialized != initialized_t.uninitialized && e2.value.functionPtr!!.eventdef != null) {
@@ -1582,7 +1560,7 @@ object Script_Compiler {
                                 ParseObjectCall(e, e2)!!
                             }
                     }
-                    OP_EVENTCALL -> {
+                    op_codes.OP_EVENTCALL -> {
                         ExpectToken("(")
                         e =
                             if (e2.initialized != initialized_t.uninitialized && e2.value.functionPtr!!.eventdef != null) {
@@ -1597,42 +1575,42 @@ object Script_Compiler {
                         }
                         if (type_a == Script_Program.ev_pointer && type_b != e.TypeDef()!!.PointerType()!!.Type()) {
                             // FIXME: need to make a general case for this
-//				if ( ( op - opcodes == OP_STOREP_F ) && ( e.TypeDef().PointerType().Type() == ev_boolean ) ) {
-                            if (op_i == OP_STOREP_F && e.TypeDef()!!.PointerType()
+//				if ( ( op - opcodes == op_codes.OP_STOREP_F ) && ( e.TypeDef().PointerType().Type() == ev_boolean ) ) {
+                            if (op_i == op_codes.OP_STOREP_F.ordinal && e.TypeDef()!!.PointerType()
                                 !!.Type() == Script_Program.ev_boolean
                             ) {
                                 // copy from float to boolean pointer
-                                op_i = OP_STOREP_FTOBOOL
+                                op_i = op_codes.OP_STOREP_FTOBOOL.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == OP_STOREP_BOOL && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_float
                             ) {
                                 // copy from boolean to float pointer
-                                op_i = OP_STOREP_BOOLTOF
+                                op_i = op_codes.OP_STOREP_BOOLTOF.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == OP_STOREP_F && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_F.ordinal && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from float to string pointer
-                                op_i = OP_STOREP_FTOS
+                                op_i = op_codes.OP_STOREP_FTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == OP_STOREP_BOOL && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from boolean to string pointer
-                                op_i = OP_STOREP_BTOS
+                                op_i = op_codes.OP_STOREP_BTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == OP_STOREP_V && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_V.ordinal && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from vector to string pointer
-                                op_i = OP_STOREP_VTOS
+                                op_i = op_codes.OP_STOREP_VTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == OP_STOREP_ENT && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_ENT.ordinal && e.TypeDef()!!.PointerType()!!
                                     .Type() == Script_Program.ev_object
                             ) {
                                 // store an entity into an object pointer
-                                op_i = OP_STOREP_OBJENT
+                                op_i = op_codes.OP_STOREP_OBJENT.ordinal
                                 op = opcodes[op_i]
                             } else {
                                 Error("type mismatch for '%s'", op.name)
@@ -1643,7 +1621,7 @@ object Script_Compiler {
                         } else {
                             EmitOpcode(op, e, e2)!!
                         }
-                        if (op_i == OP_STOREP_OBJENT) {
+                        if (op_i == op_codes.OP_STOREP_OBJENT.ordinal) {
                             // statement.b points to type_pointer, which is just a temporary that gets its type reassigned, so we store the real type in statement.c
                             // so that we can do a type check during run time since we don't know what type the script object is at compile time because it
                             // comes from an entity
@@ -1687,11 +1665,11 @@ object Script_Compiler {
             i = start
             while (i < Game_local.gameLocal.program.NumStatements()) {
                 pos = Game_local.gameLocal.program.GetStatement(i)
-                if (pos.op == OP_BREAK) {
-                    pos.op = OP_GOTO
+                if (pos.op == op_codes.OP_BREAK.ordinal.toUShort()) {
+                    pos.op = op_codes.OP_GOTO.ordinal.toUShort()
                     pos.a = JumpFrom(i)
-                } else if (pos.op == OP_CONTINUE) {
-                    pos.op = OP_GOTO
+                } else if (pos.op == op_codes.OP_CONTINUE.ordinal.toUShort()) {
+                    pos.op = op_codes.OP_GOTO.ordinal.toUShort()
                     pos.a = JumpDef(i, continuePos)
                 }
                 i++
@@ -1708,7 +1686,7 @@ object Script_Compiler {
                 if (scope!!.TypeDef()!!.ReturnType()!!.Type() != Script_Program.ev_void) {
                     Error("expecting return value")
                 }
-                EmitOpcode(OP_RETURN, null, null)
+                EmitOpcode(op_codes.OP_RETURN, null, null)
                 return
             }
             e = GetExpression(TOP_PRIORITY)!!
@@ -1716,7 +1694,7 @@ object Script_Compiler {
             type_a = e.Type()
             type_b = scope!!.TypeDef()!!.ReturnType()!!.Type()
             if (TypeMatches(type_a, type_b)) {
-                EmitOpcode(OP_RETURN, e, null)
+                EmitOpcode(op_codes.OP_RETURN, e, null)
                 return
             }
             op = opcodes[0.also { op_i = it }]
@@ -1742,7 +1720,7 @@ object Script_Compiler {
                 Game_local.gameLocal.program.returnDef!!.SetTypeDef(returnType)
                 EmitOpcode(op, e, Game_local.gameLocal.program.returnDef)
             }
-            EmitOpcode(OP_RETURN, null, null)
+            EmitOpcode(op_codes.OP_RETURN, null, null)
         }
 
         private fun ParseWhileStatement() {
@@ -1757,12 +1735,12 @@ object Script_Compiler {
             if (e.initialized == initialized_t.initializedConstant && e.value.getIntPtr() != 0) {
                 //FIXME: we can completely skip generation of this code in the opposite case
                 ParseStatement()
-                EmitOpcode(OP_GOTO, JumpTo(patch2), null)
+                EmitOpcode(op_codes.OP_GOTO, JumpTo(patch2), null)
             } else {
                 patch1 = Game_local.gameLocal.program.NumStatements()
-                EmitOpcode(OP_IFNOT, e, null)
+                EmitOpcode(op_codes.OP_IFNOT, e, null)
                 ParseStatement()
-                EmitOpcode(OP_GOTO, JumpTo(patch2), null)
+                EmitOpcode(op_codes.OP_GOTO, JumpTo(patch2), null)
                 Game_local.gameLocal.program.GetStatement(patch1).b = JumpFrom(patch1)
             }
 
@@ -1836,12 +1814,12 @@ object Script_Compiler {
 
             //FIXME: add check for constant expression
             patch1 = Game_local.gameLocal.program.NumStatements()
-            EmitOpcode(OP_IFNOT, e, null)
+            EmitOpcode(op_codes.OP_IFNOT, e, null)
 
             // counter
             if (!CheckToken(")")) {
                 patch3 = Game_local.gameLocal.program.NumStatements()
-                EmitOpcode(OP_IF, e, null)
+                EmitOpcode(op_codes.OP_IF, e, null)
                 patch4 = patch2
                 patch2 = Game_local.gameLocal.program.NumStatements()
                 do {
@@ -1850,7 +1828,7 @@ object Script_Compiler {
                 ExpectToken(")")
 
                 // goto patch4
-                EmitOpcode(OP_GOTO, JumpTo(patch4), null)
+                EmitOpcode(op_codes.OP_GOTO, JumpTo(patch4), null)
 
                 // fixup patch3
                 Game_local.gameLocal.program.GetStatement(patch3).b = JumpFrom(patch3)
@@ -1858,7 +1836,7 @@ object Script_Compiler {
             ParseStatement()
 
             // goto patch2
-            EmitOpcode(OP_GOTO, JumpTo(patch2), null)
+            EmitOpcode(op_codes.OP_GOTO, JumpTo(patch2), null)
 
             // fixup patch1
             Game_local.gameLocal.program.GetStatement(patch1).b = JumpFrom(patch1)
@@ -1879,7 +1857,7 @@ object Script_Compiler {
             e = GetExpression(TOP_PRIORITY)
             ExpectToken(")")
             ExpectToken(";")
-            EmitOpcode(OP_IF, e, JumpTo(patch1))
+            EmitOpcode(op_codes.OP_IF, e, JumpTo(patch1))
 
             // fixup breaks and continues
             PatchLoop(patch1, patch1)
@@ -1896,11 +1874,11 @@ object Script_Compiler {
 
             //FIXME: add check for constant expression
             patch1 = Game_local.gameLocal.program.NumStatements()
-            EmitOpcode(OP_IFNOT, e, null)
+            EmitOpcode(op_codes.OP_IFNOT, e, null)
             ParseStatement()
             if (CheckToken("else")) {
                 patch2 = Game_local.gameLocal.program.NumStatements()
-                EmitOpcode(OP_GOTO, null, null)
+                EmitOpcode(op_codes.OP_GOTO, null, null)
                 Game_local.gameLocal.program.GetStatement(patch1).b = JumpFrom(patch1)
                 ParseStatement()
                 Game_local.gameLocal.program.GetStatement(patch2).a = JumpFrom(patch2)
@@ -1941,7 +1919,7 @@ object Script_Compiler {
                 if (0 == loopDepth) {
                     Error("cannot break outside of a loop")
                 }
-                EmitOpcode(OP_BREAK, null, null)
+                EmitOpcode(op_codes.OP_BREAK, null, null)
                 return
             }
             if (CheckToken("continue")) {
@@ -1949,7 +1927,7 @@ object Script_Compiler {
                 if (0 == loopDepth) {
                     Error("cannot contine outside of a loop")
                 }
-                EmitOpcode(OP_CONTINUE, null, null)
+                EmitOpcode(op_codes.OP_CONTINUE, null, null)
                 return
             }
             if (CheckType() != null) {
@@ -2158,7 +2136,7 @@ object Script_Compiler {
                 if (constructorFunc != null) {
                     val selfDef = Game_local.gameLocal.program.GetDef(type.GetParmType(0), type.GetParmName(0), def)!!
                     EmitPush(selfDef, selfDef.TypeDef()!!)
-                    EmitOpcode(opcodes[OP_CALL], constructorFunc.def, null)
+                    EmitOpcode(opcodes[op_codes.OP_CALL.ordinal], constructorFunc.def, null)
                 }
             }
 
@@ -2195,8 +2173,8 @@ object Script_Compiler {
                         i = func.firstStatement
                         while (i < Game_local.gameLocal.program.NumStatements()) {
                             pos = Game_local.gameLocal.program.GetStatement(i)
-                            if (pos.op == OP_RETURN) {
-                                pos.op = OP_GOTO
+                            if (pos.op == op_codes.OP_RETURN.ordinal.toUShort()) {
+                                pos.op = op_codes.OP_GOTO.ordinal.toUShort()
                                 pos.a = JumpDef(i, Game_local.gameLocal.program.NumStatements())
                             }
                             i++
@@ -2206,7 +2184,7 @@ object Script_Compiler {
                     // emit the call to the destructor
                     val selfDef = Game_local.gameLocal.program.GetDef(type.GetParmType(0), type.GetParmName(0), def)!!
                     EmitPush(selfDef, selfDef.TypeDef()!!)
-                    EmitOpcode(opcodes[OP_CALL], destructorFunc.def, null)
+                    EmitOpcode(opcodes[op_codes.OP_CALL.ordinal], destructorFunc.def, null)
                 }
             }
 
@@ -2219,7 +2197,7 @@ object Script_Compiler {
             // }
 // #else
             // always emit the return opcode
-            EmitOpcode(OP_RETURN, null, null)
+            EmitOpcode(op_codes.OP_RETURN, null, null)
             // #endif
 
             // record the number of statements in the function
@@ -2243,31 +2221,31 @@ object Script_Compiler {
                 if (scope!!.Type() == Script_Program.ev_function) {
                     def2 = GetExpression(TOP_PRIORITY)
                     if (type == Script_Program.type_float && def2!!.TypeDef() == Script_Program.type_float) {
-                        EmitOpcode(OP_STORE_F, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_F, def2, def)
                     } else if (type == Script_Program.type_vector && def2!!.TypeDef() == Script_Program.type_vector) {
-                        EmitOpcode(OP_STORE_V, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_V, def2, def)
                     } else if (type == Script_Program.type_string && def2!!.TypeDef() == Script_Program.type_string) {
-                        EmitOpcode(OP_STORE_S, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_S, def2, def)
                     } else if (type == Script_Program.type_entity && (def2!!.TypeDef() == Script_Program.type_entity || def2.TypeDef()
                         !!.Inherits(Script_Program.type_object))
                     ) {
-                        EmitOpcode(OP_STORE_ENT, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_ENT, def2, def)
                     } else if (type.Inherits(Script_Program.type_object) && def2!!.TypeDef() == Script_Program.type_entity) {
-                        EmitOpcode(OP_STORE_OBJENT, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_OBJENT, def2, def)
                     } else if (type.Inherits(Script_Program.type_object) && def2!!.TypeDef()!!.Inherits(type)) {
-                        EmitOpcode(OP_STORE_OBJ, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_OBJ, def2, def)
                     } else if (type == Script_Program.type_boolean && def2!!.TypeDef() == Script_Program.type_boolean) {
-                        EmitOpcode(OP_STORE_BOOL, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_BOOL, def2, def)
                     } else if (type == Script_Program.type_string && def2!!.TypeDef() == Script_Program.type_float) {
-                        EmitOpcode(OP_STORE_FTOS, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_FTOS, def2, def)
                     } else if (type == Script_Program.type_string && def2!!.TypeDef() == Script_Program.type_boolean) {
-                        EmitOpcode(OP_STORE_BTOS, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_BTOS, def2, def)
                     } else if (type == Script_Program.type_string && def2!!.TypeDef() == Script_Program.type_vector) {
-                        EmitOpcode(OP_STORE_VTOS, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_VTOS, def2, def)
                     } else if (type == Script_Program.type_boolean && def2!!.TypeDef() == Script_Program.type_float) {
-                        EmitOpcode(OP_STORE_FTOBOOL, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_FTOBOOL, def2, def)
                     } else if (type == Script_Program.type_float && def2!!.TypeDef() == Script_Program.type_boolean) {
-                        EmitOpcode(OP_STORE_BOOLTOF, def2, def)
+                        EmitOpcode(op_codes.OP_STORE_BOOLTOF, def2, def)
                     } else {
                         Error("bad initialization for '%s'", name)
                     }
@@ -2485,7 +2463,7 @@ object Script_Compiler {
             eof = false
             braceDepth = 0
             immediateType = null
-            currentLineNumber = 0
+            currentLineNumber = 0u
             console = toConsole
 
 //	memset( &immediate, 0, sizeof( immediate ) );
@@ -2531,8 +2509,8 @@ object Script_Compiler {
                 } else {
                     String.format(
                         "Error: file %s, line %d: %s\n",
-                        Game_local.gameLocal.program.GetFilename(currentFileNumber),
-                        currentLineNumber,
+                        Game_local.gameLocal.program.GetFilename(currentFileNumber.toInt()),
+                        currentLineNumber.toInt(),
                         err.error
                     )
                 }
@@ -3691,7 +3669,7 @@ object Script_Compiler {
         init {
             var ptr: Int
             var id: Int
-            assert(opcodes.size == NUM_OPCODES + 1)
+            assert(opcodes.size == NUM_OPCODES)
             eof = true
             parserPtr = parser
             callthread = false
@@ -3700,8 +3678,8 @@ object Script_Compiler {
             braceDepth = 0
             immediateType = null
             basetype = null
-            currentLineNumber = 0
-            currentFileNumber = 0
+            currentLineNumber = 0u
+            currentFileNumber = 0u
             errorCount = 0
             console = false
             scope = Script_Program.def_namespace

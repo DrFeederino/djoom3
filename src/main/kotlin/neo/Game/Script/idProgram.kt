@@ -47,13 +47,35 @@ import java.util.*
 
  ***********************************************************************/
 class idProgram {
-    //
-    var returnDef: idVarDef? = null
-    var returnStringDef: idVarDef? = null
+
     private val fileList = ArrayList<String>()
     private val filename: idStr = idStr()
     private var filenum = 0
+
+    private var numVariables = 0
+    private var variables: ByteArray = ByteArray(Script_Program.MAX_GLOBALS)
+    private val variableDefaults: ArrayList<Byte> = ArrayList(Script_Program.MAX_GLOBALS)
     private val functions: ArrayList<function_t> = ArrayList(MAX_FUNCS)
+    private val statements: ArrayList<statement_s> = ArrayList(MAX_STATEMENTS)
+    private val types: ArrayList<idTypeDef> = ArrayList()
+    private val varDefNames: ArrayList<idVarDefName> = ArrayList()
+    private val varDefNameHash: idHashIndex = idHashIndex()
+    private val varDefs: ArrayList<idVarDef> = ArrayList()
+
+    private var sysDef: idVarDef? = null
+
+    private var top_functions = 0
+    private var top_statements = 0
+    private var top_types = 0
+    private var top_defs = 0
+    private var top_files = 0
+
+    public var returnDef: idVarDef? = null
+    public var returnStringDef: idVarDef? = null
+
+    // save games
+    // Used to insure program code has not
+    //    changed between savegames
 
     fun ArrayList<*>.MemoryUsed(): Int {
         return size * Integer.BYTES
@@ -63,26 +85,6 @@ class idProgram {
         return idStr.SIZE * size
     }
 
-    //
-    private var numVariables = 0
-    private val statements: ArrayList<statement_s> =
-        ArrayList(MAX_STATEMENTS)
-
-    //
-    private var sysDef: idVarDef? = null
-    private var top_defs = 0
-    private var top_files = 0
-
-    //
-    private var top_functions = 0
-    private var top_statements = 0
-    private var top_types = 0
-    private val types: ArrayList<idTypeDef> = ArrayList()
-    private val varDefNameHash: idHashIndex = idHashIndex()
-    private val varDefNames: ArrayList<idVarDefName> = ArrayList()
-    private val varDefs: ArrayList<idVarDef> = ArrayList()
-    private val variableDefaults: ArrayList<Byte> = ArrayList(Script_Program.MAX_GLOBALS)
-    private var variables: ByteArray = ByteArray(Script_Program.MAX_GLOBALS)
 
     /*
      ==============
@@ -211,11 +213,11 @@ class idProgram {
             var a = 0
             var b = 0
             var c = 0
-            var file = 0
-            var lineNumber = 0
-            var   /*unsigned short*/op = 0
+            var file: UShort = 0u
+            var lineNumber: UShort = 0u
+            var   /*unsigned short*/op: UShort = 0u
             fun toArray(): IntArray {
-                return intArrayOf(op, a, b, c, lineNumber, file)
+                return intArrayOf(op.toInt(), a, b, c, lineNumber.toInt(), file.toInt())
             }
         }
 
@@ -396,9 +398,9 @@ class idProgram {
         try {
             // make the first statement a return for a "NULL" function
             statement = AllocStatement()
-            statement.linenumber = 0
-            statement.file = 0
-            statement.op = Script_Compiler.OP_RETURN
+            statement.linenumber = 0u
+            statement.file = 0u
+            statement.op = Script_Compiler.op_codes.OP_RETURN.ordinal.toUShort()
             statement.a = null
             statement.b = null
             statement.c = null
@@ -445,10 +447,10 @@ class idProgram {
         val op: opcode_s
         val statement: statement_s?
         statement = statements[instructionPointer]
-        op = idCompiler.opcodes.get(statement.op)
+        op = idCompiler.opcodes.get(statement.op.toInt())
         file.Printf(
             "%20s(%d):\t%6d: %15s\t",
-            fileList[statement.file],
+            fileList[statement.file.toInt()],
             statement.linenumber,
             instructionPointer,
             op.opname
@@ -567,12 +569,12 @@ class idProgram {
         return filenum
     }
 
-    fun GetLineNumberForStatement(index: Int): Int {
+    fun GetLineNumberForStatement(index: Int): UShort {
         return statements[index].linenumber
     }
 
     fun GetFilenameForStatement(index: Int): String {
-        return GetFilename(statements[index].file)
+        return GetFilename(statements[index].file.toInt())
     }
 
     fun AllocType(type: idTypeDef): idTypeDef {
@@ -986,21 +988,20 @@ class idProgram {
     }
 
     fun AllocStatement(): statement_s {
-        if (statements.size == 61960) {
-            val a = 0
-        }
         if (statements.size >= MAX_STATEMENTS) {
             throw idCompileError(Str.va("Exceeded maximum allowed number of statements (%d)", MAX_STATEMENTS))
         }
-        var addedElement = statement_s()
+        val addedElement = statement_s()
         statements.add(addedElement)
         return addedElement
     }
 
+    /*
+    ================
+    idProgram::GetStatement
+    ================
+    */
     fun GetStatement(index: Int): statement_s {
-        if (index == 61961) {
-            val a = 0
-        }
         return statements[index]
     }
 

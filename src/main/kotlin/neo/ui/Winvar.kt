@@ -44,7 +44,7 @@ object Winvar {
             } else ""
         }
 
-        fun SetName(_name: String) {
+        fun SetName(_name: String?) {
             // delete []name;
             name = _name
             //            if (_name != null) {
@@ -57,12 +57,12 @@ object Winvar {
         // idWinVar &operator=( final idWinVar other );
         fun set(other: idWinVar): idWinVar {
             guiDict = other.guiDict
-            SetName(other.name!!)
+            SetName(other.name)
             return this
         }
 
-        fun GetDict(): idDict {
-            return guiDict!!
+        fun GetDict(): idDict? {
+            return guiDict
         }
 
         fun NeedsUpdate(): Boolean {
@@ -1184,7 +1184,7 @@ object Winvar {
             return sz + data.Allocated()
         }
 
-        fun SetMaterialPtr(m: idMaterial) {
+        fun SetMaterialPtr(m: idMaterial?) {
             mat[0] = m
         }
 

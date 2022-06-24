@@ -16,11 +16,8 @@ import neo.Game.Entity.idEntity
 import neo.Game.Entity.signalNum_t
 import neo.Game.FX.idEntityFx
 import neo.Game.GameEdit.idDragEntity
-import neo.Game.GameSys.Class.EV_Remove
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
+import neo.Game.GameSys.Class.Companion.EV_Remove
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame

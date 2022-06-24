@@ -31,6 +31,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.math.BigInteger
 import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -589,6 +590,7 @@ class DeclManager {
             if (USE_COMPRESSED_DECLS) {
                 HuffmanDecompressText(text, textLength, textSource!!, compressedLength)
             } else {
+                text[0] = StandardCharsets.ISO_8859_1.decode(textSource!!).toString()
                 // memcpy( text, textSource, textLength+1 );
             }
         }
@@ -2381,7 +2383,7 @@ class DeclManager {
             0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001
         )
         var huffmanCodes = Array(MAX_HUFFMAN_SYMBOLS) { huffmanCode_s() }
-        var huffmanTree: huffmanNode_s? = null
+        lateinit var huffmanTree: huffmanNode_s
         var maxHuffmanBits = 0
         var totalCompressedLength = 0
         var totalUncompressedLength = 0
@@ -2407,7 +2409,7 @@ class DeclManager {
          InsertHuffmanNode
          ================
          */
-        fun InsertHuffmanNode(firstNode: huffmanNode_s, node: huffmanNode_s): huffmanNode_s {
+        fun InsertHuffmanNode(firstNode: huffmanNode_s?, node: huffmanNode_s): huffmanNode_s? {
             var firstNode = firstNode
             var n: huffmanNode_s?
             var lastNode: huffmanNode_s?
@@ -2493,7 +2495,7 @@ class DeclManager {
         fun SetupHuffman() {
             var i: Int
             val height: Int
-            var firstNode: huffmanNode_s = huffmanNode_s()
+            var firstNode: huffmanNode_s? = null
             var node: huffmanNode_s
             val code: huffmanCode_s
             i = 0
@@ -2511,17 +2513,17 @@ class DeclManager {
             while (i < MAX_HUFFMAN_SYMBOLS) {
                 node = huffmanNode_s()
                 node.symbol = -1
-                node.frequency = firstNode.frequency + firstNode.next!!.frequency
+                node.frequency = firstNode!!.frequency + firstNode.next!!.frequency
                 node.next = null
                 node.children[0] = firstNode
                 node.children[1] = firstNode.next
-                firstNode = InsertHuffmanNode(firstNode.next!!.next!!, node)
+                firstNode = InsertHuffmanNode(firstNode.next!!.next, node)
                 i++
             }
             maxHuffmanBits = 0
             code = huffmanCode_s() //memset( &code, 0, sizeof( code ) );
-            BuildHuffmanCode_r(firstNode, code, huffmanCodes)
-            huffmanTree = firstNode
+            BuildHuffmanCode_r(firstNode!!, code, huffmanCodes)
+            huffmanTree = firstNode!!
             height = HuffmanHeight_r(firstNode)
             assert(maxHuffmanBits == height)
         }
@@ -2548,16 +2550,14 @@ class DeclManager {
             compressed: ByteBuffer,
             maxCompressedSize: Int
         ): Int {
-            var i: Int
-            var j: Int
+            var i: Int = 0
+            var j: Int = 0
             val msg = idBitMsg()
             totalUncompressedLength += textLength
             msg.Init(compressed, maxCompressedSize)
             msg.BeginWriting()
-            i = 0
-            while (i < textLength) {
+            for (i in 0 until textLength) {
                 val code: huffmanCode_s = huffmanCodes[text[i].code]
-                j = 0
                 while (j < code.numBits shr 5) {
                     msg.WriteBits(code.bits[j].toInt(), 32)
                     j++
@@ -2565,7 +2565,6 @@ class DeclManager {
                 if (code.numBits and 31 != 0) {
                     msg.WriteBits(code.bits[j].toInt(), code.numBits and 31)
                 }
-                i++
             }
             totalCompressedLength += msg.GetSize()
             return msg.GetSize()
@@ -2589,10 +2588,8 @@ class DeclManager {
             msg.Init(compressed, compressedSize)
             msg.SetSize(compressedSize)
             msg.BeginReading()
-            text[0] = ""
-            i = 0
-            while (i < textLength) {
-                node = huffmanTree!!
+            for (i in 0 until textLength) {
+                node = huffmanTree
                 do {
                     bit = msg.ReadBits(1)
                     if (bit == -1) {
@@ -2602,13 +2599,8 @@ class DeclManager {
                     //                System.out.println(bit + ":" + node.symbol);
                 } while (node.symbol == -1)
                 text[0] = text[0] + node.symbol.toChar()
-                i++
             }
-            //        text[0] += '\0';
-            // Dr: For some reason, text is twice the read count. Slice it?
-            if (text[0].length > msg.GetReadCount()) {
-                text[0] = text[0].substring(0, msg.GetReadCount())
-            }
+
             return msg.GetReadCount()
         }
 

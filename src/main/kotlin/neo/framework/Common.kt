@@ -1165,7 +1165,6 @@ class Common {
 
             // load the font, etc
             Console.console.LoadGraphics()
-
             // init journalling, etc
             EventLoop.eventLoop.Init()
             PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04345"))

@@ -506,8 +506,9 @@ object Lexer {
                     ReadString(token, c.code)
                 } else ReadName(token)
             } // if there is a number
-            else if ((c >= '0' && c <= '9') ||
-                (c == '.' && ((buffer.get(script_p + 1)) >= '0' && buffer.get(script_p + 1) <= '9'))
+            else if (
+                (c in '0'..'9') ||
+                (c == '.' && ((buffer.get(script_p + 1)) in '0'..'9'))
             ) {
                 if (!ReadNumber(token)) {
                     return false
@@ -557,7 +558,6 @@ object Lexer {
         fun ExpectTokenType(type: Int, subtype: Int, token: idToken): Int {
             val str = idStr()
             if (!ReadToken(token)) {
-                println("Expected token is " + token.toString())
                 Error("couldn't read expected token")
                 return 0
             }
@@ -620,7 +620,6 @@ object Lexer {
         // expect a token
         @Throws(idException::class)
         fun ExpectAnyToken(token: idToken): Boolean {
-            println(token.toString())
             return if (!ReadToken(token)) {
                 Error("couldn't read expected token")
                 false
@@ -1647,7 +1646,7 @@ object Lexer {
                         Warning("literal is not one character long")
                     }
                 }
-                token.subtype = token.get(0).code
+                token.subtype = token[0].code
             } else {
                 // the sub type is the length of the string
                 token.subtype = token.Length()
@@ -1694,8 +1693,8 @@ object Lexer {
                     token.AppendDirty(buffer.get(script_p++))
                     c = buffer.get(script_p)
                     while (Character.isDigit(c)
-                        || c >= 'a' && c <= 'f'
-                        || c >= 'A' && c <= 'F'
+                        || c in 'a'..'f'
+                        || c in 'A'..'F'
                     ) {
                         token.AppendDirty(c)
                         c = buffer.get(++script_p)
@@ -1715,7 +1714,7 @@ object Lexer {
                 else {
                     token.AppendDirty(buffer.get(script_p++))
                     c = buffer.get(script_p)
-                    while (c >= '0' && c <= '7') {
+                    while (c in '0'..'7') {
                         token.AppendDirty(c)
                         c = buffer.get(++script_p)
                     }
@@ -1863,7 +1862,6 @@ object Lexer {
 
 // #ifdef PUNCTABLE
             val readCode = buffer.get(script_p)
-            //println(script_p)
             n = punctuationTable[readCode.code]
             while (n >= 0) {
                 punc = punctuations[n]
@@ -1889,7 +1887,7 @@ object Lexer {
                     while (i < l) {
 
 //                        token.data[i] = p[i];
-                        token.set(i, p[i])
+                        token[i] = p[i]
                         i++
                     }
                     token.len = l

@@ -392,7 +392,7 @@ class SimpleWindow {
             textAlign = win.textAlign.code
             textAlignx = win.textAlignx
             textAligny = win.textAligny
-            background = win.background!!
+            background = win.background
             flags = win.flags
             textShadow = win.textShadow.code
             text.set(win.text)
@@ -411,7 +411,7 @@ class SimpleWindow {
                 background!!.SetSort(Material.SS_GUI.toFloat())
                 background!!.SetImageClassifications(1) // just for resource tracking
             }
-            backGroundName.SetMaterialPtr(background!!)
+            backGroundName.SetMaterialPtr(background)
 
             // 
             //  added parent

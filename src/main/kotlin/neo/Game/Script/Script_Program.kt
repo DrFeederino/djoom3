@@ -18,52 +18,48 @@ import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/**
- *
- */
 object Script_Program {
     const val MAX_STRING_LEN = 128
-    const val MAX_FUNCS = 3072
-    const val MAX_GLOBALS = 196608 // in bytes
-    const val MAX_STATEMENTS = 81920 // statement_s - 18 bytes last I checked
+    const val MAX_GLOBALS =
+        296608 // in bytes - DG: increased this for better support of mods that use the vanilla game dll
     const val MAX_STRINGS = 1024
-    const val ev_argsize = 13
-    const val ev_boolean = 14
-    const val ev_entity = 6
+    const val MAX_FUNCS = 3072
+    const val MAX_STATEMENTS = 81920 // statement_s - 18 bytes last I checked
 
     //    public enum etype_t {
     const val ev_error = -1
-    const val ev_field = 7
-    const val ev_float = 4
-    const val ev_function = 8
-    const val ev_jumpoffset = 12
-    const val ev_namespace = 2
-    const val ev_object = 11
-    const val ev_pointer = 10
-    const val ev_scriptevent = 1
-    const val ev_string = 3
-    const val ev_vector = 5
-    const val ev_virtualfunction = 9
     const val ev_void = 0
+    const val ev_scriptevent = 1
+    const val ev_namespace = 2
+    const val ev_string = 3
+    const val ev_float = 4
+    const val ev_vector = 5
+    const val ev_entity = 6
+    const val ev_field = 7
+    const val ev_function = 8
+    const val ev_virtualfunction = 9
+    const val ev_pointer = 10
+    const val ev_object = 11
+    const val ev_jumpoffset = 12
+    const val ev_argsize = 13
+    const val ev_boolean = 14
+
     val type_argsize: idTypeDef =
         idTypeDef(ev_argsize, "<argsize>", 4, null) // only used for function call and thread opcodes
     val def_argsize: idVarDef = idVarDef(type_argsize)
     val type_boolean: idTypeDef = idTypeDef(ev_boolean, "boolean", 4, null)
     val def_boolean: idVarDef = idVarDef(type_boolean)
-    val type_entity: idTypeDef =
-        idTypeDef(ev_entity, "entity", 4, null) // stored as entity number pointer
+    val type_entity: idTypeDef = idTypeDef(ev_entity, "entity", 4, null) // stored as entity number pointer
     val def_entity: idVarDef = idVarDef(type_entity)
     val type_field: idTypeDef = idTypeDef(ev_field, "field", 4, null)
     val def_field: idVarDef = idVarDef(type_field)
     val type_float: idTypeDef = idTypeDef(ev_float, "float", 4, null)
     val def_float: idVarDef = idVarDef(type_float)
-    val type_jumpoffset: idTypeDef =
-        idTypeDef(ev_jumpoffset, "<jump>", 4, null) // only used for jump opcodes
+    val type_jumpoffset: idTypeDef = idTypeDef(ev_jumpoffset, "<jump>", 4, null) // only used for jump opcodes
     val def_jumpoffset: idVarDef = idVarDef(type_jumpoffset) // only used for jump opcodes
     val type_namespace: idTypeDef = idTypeDef(ev_namespace, "namespace", 4, null)
     val def_namespace: idVarDef = idVarDef(type_namespace)
-    val type_object: idTypeDef =
-        idTypeDef(ev_object, "object", 4, null) // stored as entity number pointer
+    val type_object: idTypeDef = idTypeDef(ev_object, "object", 4, null) // stored as entity number pointer
     val def_object: idVarDef = idVarDef(type_object)
     val type_pointer: idTypeDef = idTypeDef(ev_pointer, "pointer", 4, null)
     val def_pointer: idVarDef = idVarDef(type_pointer)
@@ -76,7 +72,6 @@ object Script_Program {
     val type_virtualfunction: idTypeDef = idTypeDef(ev_virtualfunction, "virtual function", 4, null)
     val def_virtualfunction: idVarDef = idVarDef(type_virtualfunction)
 
-    //    };
     /* **********************************************************************
 
      Variable and type defintions
@@ -86,8 +81,6 @@ object Script_Program {
     val type_void: idTypeDef = idTypeDef(ev_void, "void", 0, null)
     val type_function: idTypeDef = idTypeDef(ev_function, "function", 4, type_void)
     val def_function: idVarDef = idVarDef(type_function)
-
-    //
     val def_void: idVarDef = idVarDef(type_void)
 
     /* **********************************************************************
@@ -239,14 +232,12 @@ object Script_Program {
 
      ***********************************************************************/
     class idTypeDef {
-        //
-        var def // a def that points to this type
-                : idVarDef? = null
+        // a def that points to this type
+        var def: idVarDef? = null
 
-        //
         // function types are more complex
-        private var auxType // return type
-                : idTypeDef? = null
+        // return type
+        private var auxType: idTypeDef? = null
         private val functions: ArrayList<function_t> = ArrayList()
         private var name: idStr = idStr()
         private var parmNames: ArrayList<idStr> = ArrayList()
@@ -349,13 +340,12 @@ object Script_Program {
             if (parmTypes.size != matchtype.parmTypes.size) {
                 return false
             }
-            i = 0
-            while (i < matchtype.parmTypes.size) {
+            for (i in 0 until matchtype.parmTypes.size) {
                 if (parmTypes[i] != matchtype.parmTypes[i]) {
                     return false
                 }
-                i++
             }
+
             return true
         }
 
@@ -382,13 +372,12 @@ object Script_Program {
                     return false
                 }
             }
-            i = 1
-            while (i < matchfunc.parmTypes.size) {
+            for (i in 1 until matchfunc.parmTypes.size) {
                 if (parmTypes[i] != matchfunc.parmTypes[i]) {
                     return false
                 }
-                i++
             }
+
             return true
         }
 
@@ -500,11 +489,11 @@ object Script_Program {
          If type is a field, then returns it's type
          ================
          */
-        fun FieldType(): idTypeDef? {
+        fun FieldType(): idTypeDef {
             if (type != ev_field) {
                 throw idCompileError("idTypeDef::FieldType: tried to get field type on non-field type")
             }
-            return auxType
+            return auxType!!
         }
 
         /*
@@ -514,7 +503,7 @@ object Script_Program {
          If type is a field, then sets the function's return type
          ================
          */
-        fun SetFieldType(fieldtype: idTypeDef?) {
+        fun SetFieldType(fieldtype: idTypeDef) {
             if (type != ev_field) {
                 throw idCompileError("idTypeDef::SetFieldType: tried to set return type on non-function type")
             }
@@ -528,11 +517,11 @@ object Script_Program {
          If type is a pointer, then returns the type it points to
          ================
          */
-        fun PointerType(): idTypeDef? {
+        fun PointerType(): idTypeDef {
             if (type != ev_pointer) {
                 throw idCompileError("idTypeDef::PointerType: tried to get pointer type on non-pointer")
             }
-            return auxType
+            return auxType!!
         }
 
         /*
@@ -542,7 +531,7 @@ object Script_Program {
          If type is a pointer, then sets the pointer's type
          ================
          */
-        fun SetPointerType(pointertype: idTypeDef?) {
+        fun SetPointerType(pointertype: idTypeDef) {
             if (type != ev_pointer) {
                 throw idCompileError("idTypeDef::SetPointerType: tried to set type on non-pointer")
             }
@@ -569,19 +558,18 @@ object Script_Program {
             return functions.size
         }
 
-        fun GetFunctionNumber(func: function_t?): Int {
+        fun GetFunctionNumber(func: function_t): Int {
             var i: Int
-            i = 0
-            while (i < functions.size) {
+            for (i in 0 until functions.size) {
                 if (functions[i] == func) {
                     return i
                 }
-                i++
             }
+
             return -1
         }
 
-        fun GetFunction(funcNumber: Int): function_t? {
+        fun GetFunction(funcNumber: Int): function_t {
             assert(funcNumber >= 0)
             assert(funcNumber < functions.size)
             return functions[funcNumber]
@@ -591,7 +579,7 @@ object Script_Program {
             var i: Int
             i = 0
             while (i < functions.size) {
-                if (functions[i].def!!.Name() == func.def!!.Name()) {
+                if (functions[i].def!!.Name() != func.def!!.Name()) {
                     if (func.def!!.TypeDef()!!.MatchesVirtualFunction(functions[i].def!!.TypeDef()!!)) {
                         functions[i] = func
                         return
@@ -927,7 +915,7 @@ object Script_Program {
         var evalPtr: varEval_s? = null
         var functionPtr: function_t? = null
         var objectPtrPtr: idScriptObject? = null
-        var stringPtr: String? = null
+        var stringPtr: String = ""
 
         //        final         float[]        floatPtr;
         val vectorPtr: idVec3 = idVec3()
@@ -1043,7 +1031,7 @@ object Script_Program {
         }
 
         fun setStringPtr(data: ByteBuffer, offset: Int) {
-            stringPtr = TempDump.btos(data.array(), offset)
+            stringPtr = TempDump.btos(data.array(), offset)!!
         }
 
         fun setString(string: String) { //TODO:clean up all these weird string pointers
@@ -1062,24 +1050,25 @@ object Script_Program {
     class idVarDef @JvmOverloads constructor(  //
         private var typeDef: idTypeDef? = null /*= NULL*/
     ) {
-        //
-        var initialized: initialized_t
+        var initialized: initialized_t = initialized_t.uninitialized
         var num = 0
-        var numUsers // number of users if this is a constant
-                = 0
-        var scope // function, namespace, or object the var was defined in
-                : idVarDef? = null
 
-        //
+        // number of users if this is a constant
+        var numUsers = 0
+
+        // function, namespace, or object the var was defined in
+        var scope: idVarDef? = null
         lateinit var value: varEval_s
-        var name // name of this var
-                : idVarDefName = idVarDefName()
-        var next // next var with the same name
-                : idVarDef?
+
+        // name of this var
+        var name: idVarDefName = idVarDefName()
+
+        // next var with the same name
+        var next: idVarDef?
 
         // ~idVarDef();
         fun close() {
-            name?.RemoveDef(this)
+            name.RemoveDef(this)
         }
 
         fun Name(): String {
@@ -1133,7 +1122,6 @@ object Script_Program {
             assert(typeDef != null)
             initialized = initialized
             assert(typeDef!!.Inherits(type_object))
-            value = varEval_s()
             value.objectPtrPtr = `object`
         }
 
@@ -1189,7 +1177,7 @@ object Script_Program {
                     file.Printf(
                         "address %d [%s(%d)]",
                         jumpto,
-                        Game_local.gameLocal.program.GetFilename(jumpst.file),
+                        Game_local.gameLocal.program.GetFilename(jumpst.file.toInt()),
                         jumpst.linenumber
                     )
                 }
@@ -1261,9 +1249,6 @@ object Script_Program {
     class idVarDefName {
         private var defs: idVarDef?
         private val name: idStr = idStr()
-
-        //
-        //
         constructor() {
             defs = null
         }
@@ -1307,12 +1292,21 @@ object Script_Program {
     }
 
     class statement_s {
+        var op: UShort = 0u
+        var flags: UShort = 0u
+
+        enum class OP_OBJECTCALL {
+            // op is OP_OBJECTCALL and when the statement was created the function/method
+            // implementation hasn't been parsed yet (only the declaration/prototype)
+            // see idCompiler::EmitFunctionParms() and idProgram::CalculateChecksum()
+            FLAG_OBJECTCALL_IMPL_NOT_PARSED_YET
+        }
+
+        var file: UShort = 0u
+        var linenumber: UShort = 0u
         var a: idVarDef? = null
         var b: idVarDef? = null
         var c: idVarDef? = null
-        var file = 0
-        var linenumber = 0
-        var   /*unsigned short*/op = 0
     }
 
     init {
