@@ -78,7 +78,7 @@ object tr_polytope {
             j = 0
             while (j < w.GetNumPoints()) {
                 tri.verts[tri.numVerts + j].Clear()
-                tri.verts[tri.numVerts + j].xyz.set(w.get(j).ToVec3())
+                tri.verts[tri.numVerts + j].xyz.set(w[j].ToVec3())
                 j++
             }
             j = 1

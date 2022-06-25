@@ -434,7 +434,7 @@ object Game {
             if (TempDump.isNotNullOrEmpty(temp)) {
                 modelDef = TempDump.dynamic_cast(
                     idDeclModelDef::class.java,
-                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false)!!
+                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false)
                 ) as idDeclModelDef?
                 if (modelDef != null) {
                     renderEntity.hModel = modelDef.ModelHandle()

@@ -75,7 +75,7 @@ object RenderWorld_local {
     const val WRITE_GUIS = false
 
     class portal_s {
-        lateinit var doublePortal: doublePortal_s
+        var doublePortal: doublePortal_s = doublePortal_s()
         var intoArea // area this portal leads to
                 = 0
         var next // next portal of the area
@@ -410,7 +410,7 @@ object RenderWorld_local {
             } else {
                 // create a new one
                 light = idRenderLightLocal()
-                lightDefs[lightHandle] = light
+                lightDefs.add(lightHandle, light)
                 light.world = this
                 light.index = lightHandle
             }
@@ -479,7 +479,7 @@ object RenderWorld_local {
         override fun CheckAreaForPortalSky(areaNum: Int): Boolean {
             var ref: areaReference_s
             assert(areaNum >= 0 && areaNum < numPortalAreas)
-            ref = portalAreas[areaNum].entityRefs.areaNext!!
+            ref = portalAreas[areaNum].entityRefs!!.areaNext!!
             while (ref.entity != null) {
                 assert(ref.area === portalAreas[areaNum])
                 if (ref.entity != null && ref.entity!!.needsPortalSky) {
@@ -603,7 +603,7 @@ object RenderWorld_local {
                 area = portalAreas[areas[i]]
 
                 // check all models in this area
-                ref = area.entityRefs.areaNext!!
+                ref = area.entityRefs!!.areaNext!!
                 while (ref !== area.entityRefs) {
                     def = ref.entity!!
 
@@ -1177,7 +1177,7 @@ object RenderWorld_local {
                 area = portalAreas[areas[i]]
 
                 // check all models in this area
-                ref = area.entityRefs.areaNext!!
+                ref = area.entityRefs!!.areaNext!!
                 while (ref !== area.entityRefs) {
                     def = ref!!.entity!!
                     model = def.parms.hModel
@@ -1203,7 +1203,7 @@ object RenderWorld_local {
                                     }
                                     k++
                                 }
-                                if (playerModelExcludeList[k] != null) {
+                                if (playerModelExcludeList.getOrNull(k) != null) {
                                     ref = ref.areaNext
                                     continue
                                 }
@@ -1782,10 +1782,10 @@ object RenderWorld_local {
             i = 0
             while (i < numPortalAreas) {
                 portalAreas[i].areaNum = i
-                portalAreas[i].lightRefs.areaPrev = portalAreas[i].lightRefs
-                portalAreas[i].lightRefs.areaNext = portalAreas[i].lightRefs.areaPrev
-                portalAreas[i].entityRefs.areaPrev = portalAreas[i].entityRefs
-                portalAreas[i].entityRefs.areaNext = portalAreas[i].entityRefs.areaPrev
+                portalAreas[i].lightRefs!!.areaPrev = portalAreas[i].lightRefs
+                portalAreas[i].lightRefs!!.areaNext = portalAreas[i].lightRefs!!.areaPrev
+                portalAreas[i].entityRefs!!.areaPrev = portalAreas[i].entityRefs
+                portalAreas[i].entityRefs!!.areaNext = portalAreas[i].entityRefs!!.areaPrev
                 i++
             }
         }
@@ -1922,10 +1922,10 @@ object RenderWorld_local {
                 }
 
                 // there shouldn't be any remaining lightRefs or entityRefs
-                if (area.lightRefs.areaNext !== area.lightRefs) {
+                if (area.lightRefs!!.areaNext !== area.lightRefs) {
                     Common.common.Error("FreeWorld: unexpected remaining lightRefs")
                 }
-                if (area.entityRefs.areaNext !== area.entityRefs) {
+                if (area.entityRefs!!.areaNext !== area.entityRefs) {
                     Common.common.Error("FreeWorld: unexpected remaining entityRefs")
                 }
                 i++
@@ -2757,7 +2757,7 @@ object RenderWorld_local {
             var vEnt: viewEntity_s?
             //            idBounds b;
             area = portalAreas[areaNum]
-            ref = area.entityRefs.areaNext!!
+            ref = area.entityRefs!!.areaNext!!
             while (ref !== area.entityRefs) {
                 entity = ref.entity!!
 
@@ -2889,7 +2889,7 @@ object RenderWorld_local {
             var vLight: viewLight_s?
             DEBUG_AddAreaLightRefs++
             area = portalAreas[areaNum]
-            lref = area.lightRefs.areaNext!!
+            lref = area.lightRefs!!.areaNext!!
             while (lref !== area.lightRefs) {
                 light = lref.light!!
 
@@ -3925,7 +3925,7 @@ object RenderWorld_local {
             // link to end of area list
             ref.area = area
             ref.areaNext = area.entityRefs
-            ref.areaPrev = area.entityRefs.areaPrev
+            ref.areaPrev = area.entityRefs!!.areaPrev
             ref.areaNext!!.areaPrev = ref
             ref.areaPrev!!.areaNext = ref
         }
@@ -3942,10 +3942,10 @@ object RenderWorld_local {
             tr_local.tr.pc.c_lightReferences++
 
             // doubly linked list so we can free them easily later
-            area.lightRefs.areaNext!!.areaPrev = lref
-            lref.areaNext = area.lightRefs.areaNext
+            area.lightRefs!!.areaNext!!.areaPrev = lref
+            lref.areaNext = area.lightRefs!!.areaNext
             lref.areaPrev = area.lightRefs
-            area.lightRefs.areaNext = lref
+            area.lightRefs!!.areaNext = lref
         }
 
         fun RecurseProcBSP_r(
@@ -4300,10 +4300,10 @@ object RenderWorld_local {
             var j = 0
             lRef = lDef.references
             while (lRef != null) {
-                area = lRef.area
+                area = lRef.area!!
 
                 // check all the models in this area
-                eRef = area.entityRefs.areaNext
+                eRef = area.entityRefs!!.areaNext
                 while (eRef != null && eRef !== area.entityRefs) {
                     eDef = eRef.entity!!
 

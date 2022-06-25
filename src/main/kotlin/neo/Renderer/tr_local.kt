@@ -434,7 +434,7 @@ object tr_local {
     // areas have references to hold all the lights and entities in them
     class areaReference_s {
         var area // so owners can find all the areas they are in
-                : portalArea_s = portalArea_s()
+                : portalArea_s? = null
         var areaNext // chain in the area
                 : areaReference_s? = null
         var areaPrev: areaReference_s? = null

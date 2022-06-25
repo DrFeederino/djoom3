@@ -405,7 +405,7 @@ object Lexer {
                 return false
             }
             filename = idStr(name)
-            buffer = CharBuffer.wrap(ptr.toString()) ///TODO:should ptr and name be the same
+            buffer = CharBuffer.wrap(ptr.toString() + Char(0)) ///TODO:should ptr and name be the same
             fileTime = 0
             this.length = length
             // pointer in script buffer
@@ -1724,7 +1724,7 @@ object Lexer {
                 // decimal integer or floating point number or ip address
                 dot = 0
                 while (true) {
-                    if (Character.isDigit(c)) {
+                    if (c in '0'..'9') {
                         // if (c >= '0' && c <= '9') {
                     } else if (c == '.') {
                         dot++
@@ -1732,6 +1732,9 @@ object Lexer {
                         break
                     }
                     token.AppendDirty(c)
+                    if (buffer.length <= script_p + 1) {
+                        return false
+                    }
                     c = buffer.get(++script_p)
                 }
                 if (c == 'e' && dot == 0) {

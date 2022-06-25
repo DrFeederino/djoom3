@@ -578,8 +578,8 @@ object tr_trisurf {
     fun R_AllocStaticTriSurfVerts(tri: srfTriangles_s, numVerts: Int) {
         assert(tri.verts.isEmpty())
         tri.verts = ArrayList(numVerts) //triVertexAllocator.Alloc(numVerts);
-        for (a in tri.verts.indices) {
-            tri.verts[a] = idDrawVert()
+        for (i in 0..numVerts) {
+            tri.verts.add(i, idDrawVert())
         }
     }
 

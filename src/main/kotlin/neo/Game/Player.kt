@@ -4897,7 +4897,7 @@ object Player {
                         val c: Int = mat.GetNumStages()
                         for (i in 0 until c) {
                             val stage: shaderStage_t = mat.GetStage(i)
-                            if (stage != null && stage.texture.cinematic[0] != null) {
+                            if (stage != null && stage.texture.cinematic.getOrNull(0) != null) {
                                 stage.texture.cinematic[0]!!.ResetTime(Game_local.gameLocal.time)
                             }
                         }

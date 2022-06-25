@@ -2179,7 +2179,7 @@ object Material {
                             continue
                         }
                     }
-                    ts.cinematic[0] = idCinematic.Alloc()
+                    ts.cinematic = arrayOf(idCinematic.Alloc())
                     ts.cinematic[0].InitFromFile(token.toString(), loop)
                     continue
                 }

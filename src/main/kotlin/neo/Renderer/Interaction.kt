@@ -43,20 +43,21 @@ object Interaction {
      ===============================================================================
      */
     const val LIGHT_CLIP_EPSILON = 0.1f
-    var LIGHT_TRIS_DEFERRED // = -03146;//((srfTriangles_s *)-1)
-            : srfTriangles_s = run {
-        srfTriangles_s()
-        val s = LIGHT_TRIS_DEFERRED
-        s.shadowCapPlaneBits = -1638
-        s.numSilEdges = s.shadowCapPlaneBits
-        s.numShadowIndexesNoFrontCaps = s.numSilEdges
-        s.numShadowIndexesNoCaps = s.numShadowIndexesNoFrontCaps
-        s.numIndexes = s.numShadowIndexesNoCaps
-        s.numMirroredVerts = s.numIndexes
-        s.numVerts = s.numMirroredVerts
-        s.numDupVerts = s.numVerts
-        s.ambientViewCount = s.numDupVerts
-        return@run s
+
+    // = -03146;//((srfTriangles_s *)-1)
+    var LIGHT_TRIS_DEFERRED = srfTriangles_s()
+
+    init {
+        LIGHT_TRIS_DEFERRED
+        LIGHT_TRIS_DEFERRED.shadowCapPlaneBits = -1638
+        LIGHT_TRIS_DEFERRED.numSilEdges = LIGHT_TRIS_DEFERRED.shadowCapPlaneBits
+        LIGHT_TRIS_DEFERRED.numShadowIndexesNoFrontCaps = LIGHT_TRIS_DEFERRED.numSilEdges
+        LIGHT_TRIS_DEFERRED.numShadowIndexesNoCaps = LIGHT_TRIS_DEFERRED.numShadowIndexesNoFrontCaps
+        LIGHT_TRIS_DEFERRED.numIndexes = LIGHT_TRIS_DEFERRED.numShadowIndexesNoCaps
+        LIGHT_TRIS_DEFERRED.numMirroredVerts = LIGHT_TRIS_DEFERRED.numIndexes
+        LIGHT_TRIS_DEFERRED.numVerts = LIGHT_TRIS_DEFERRED.numMirroredVerts
+        LIGHT_TRIS_DEFERRED.numDupVerts = LIGHT_TRIS_DEFERRED.numVerts
+        LIGHT_TRIS_DEFERRED.ambientViewCount = LIGHT_TRIS_DEFERRED.numDupVerts
     }
 
     const val MAX_CLIPPED_POINTS = 20
@@ -1334,7 +1335,7 @@ object Interaction {
                     var ref = entityDef!!.entityRefs
                     while (ref != null) {
                         area = areaNumRef_s() //entityDef!!.world.areaNumRefAllocator.Alloc();
-                        area.areaNum = ref.area.areaNum
+                        area.areaNum = ref.area!!.areaNum
                         area.next = frustumAreas
                         frustumAreas = area
                         ref = ref.ownerNext

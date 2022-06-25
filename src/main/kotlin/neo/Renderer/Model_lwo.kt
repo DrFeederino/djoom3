@@ -3079,8 +3079,10 @@ object Model_lwo {
         if (oldtag.isNotEmpty()) {
             System.arraycopy(oldtag, 0, tList.tag, 0, tList.offset)
         }
-
-        /* copy the new tags to the tag array */System.arraycopy(tags, 0, tList.tag, tList.offset, nTags)
+        for (i in 0 until nTags) {
+            tList.tag.add(tList.offset + i, tags[i]!!)
+        }
+        /* copy the new tags to the tag array *///System.arraycopy(tags, 0, tList.tag, tList.offset, nTags)
         return true
     }
 
@@ -4285,7 +4287,7 @@ object Model_lwo {
     }
 
     class lwClipXRef {
-        var clip: lwClip = lwClip()
+        var clip: lwClip? = null
         var index = 0
         var string: String = ""
     }

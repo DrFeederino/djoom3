@@ -466,7 +466,7 @@ object TempDump {
         return temp
     }
 
-    fun dynamic_cast(glass: Class<*>, `object`: Any): Any? {
+    fun dynamic_cast(glass: Class<*>, `object`: Any?): Any? {
         return if (glass.isInstance(`object`)) {
             `object`
         } else null

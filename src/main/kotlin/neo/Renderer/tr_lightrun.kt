@@ -521,7 +521,7 @@ object tr_lightrun {
             area = lref.area
             var prt: portal_s?
             var dp: doublePortal_s?
-            prt = area.portals
+            prt = area!!.portals
             while (prt != null) {
                 dp = prt.doublePortal
 

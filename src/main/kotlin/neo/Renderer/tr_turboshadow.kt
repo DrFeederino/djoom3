@@ -59,7 +59,7 @@ object tr_turboshadow {
         facing = cullInfo.facing!!
 
         // if all the triangles are inside the light frustum
-        if (cullInfo.cullBits == Interaction.LIGHT_CULL_ALL_FRONT || !RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
+        if (cullInfo.cullBits.contentEquals(Interaction.LIGHT_CULL_ALL_FRONT) || !RenderSystem_init.r_useShadowProjectedCull.GetBool()) {
 
             // count the number of shadowing faces
             i = 0

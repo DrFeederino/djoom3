@@ -2005,7 +2005,7 @@ object FileSystem_h {
             if (null == searchPaths) {
                 idLib.common.FatalError("Filesystem call made without initialization\n")
             }
-            if (null == relativePath) {
+            if (relativePath.isEmpty()) {
                 idLib.common.FatalError("idFileSystemLocal::OpenFileRead: null 'relativePath' parameter passed\n")
             }
             if (foundInPak != null) {
