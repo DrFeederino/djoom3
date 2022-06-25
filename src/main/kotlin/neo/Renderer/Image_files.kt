@@ -435,7 +435,7 @@ object Image_files {
         var row: Int
         var column: Int
         val buf_p: ByteBuffer
-        val buffer = arrayOf<ByteBuffer>()
+        val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
         val targa_header = TargaHeader()
         val targa_rgba: ByteBuffer?
         if (TempDump.NOT(width, height)) {
@@ -447,7 +447,7 @@ object Image_files {
         // load the file
         //
         fileSize = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (buffer.isEmpty()) {
+        if (buffer[0].capacity() == 1) { // basically not found
             return null
         }
         buf_p = buffer[0]
