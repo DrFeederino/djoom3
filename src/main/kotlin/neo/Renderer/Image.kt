@@ -2990,7 +2990,7 @@ class Image {
             var allowDownSize = allowDownSize
             var depth = depth
             val name: idStr
-            var image: idImage
+            var image: idImage?
             val hash: Int
             if (null == _name || _name.isEmpty() || idStr.Icmp(_name, "default") == 0 || idStr.Icmp(
                     _name,
@@ -3011,67 +3011,73 @@ class Image {
             // are in a reloadImages call
             //
             hash = name.FileNameHash()
-            image = imageHashTable[hash]!!
-            while (image.hashNext != null) {
-                if (name.Icmp(image.imgName.toString()) == 0) {
-                    // the built in's, like _white and _flat always match the other options
-                    if (name[0] == '_') {
-                        return image
-                    }
-                    if (image.cubeFiles != cubeMap) {
-                        Common.common.Error("Image '%s' has been referenced with conflicting cube map states", _name)
-                    }
-                    if (image.filter != filter || image.repeat != repeat) {
-                        // we might want to have the system reset these parameters on every bind and
-                        // share the image data
-                        image = image.hashNext!!
-                        continue
-                    }
-                    if (image.allowDownSize == allowDownSize && image.depth == depth) {
-                        // note that it is used this level load
-                        image.levelLoadReferenced = true
-                        if (image.partialImage != null) {
-                            image.partialImage!!.levelLoadReferenced = true
+            image = imageHashTable.getOrNull(hash)
+            if (image != null) {
+                while (image!!.hashNext != null) {
+                    if (name.Icmp(image.imgName.toString()) == 0) {
+                        // the built in's, like _white and _flat always match the other options
+                        if (name[0] == '_') {
+                            return image
                         }
-                        return image
-                    }
+                        if (image.cubeFiles != cubeMap) {
+                            Common.common.Error(
+                                "Image '%s' has been referenced with conflicting cube map states",
+                                _name
+                            )
+                        }
+                        if (image.filter != filter || image.repeat != repeat) {
+                            // we might want to have the system reset these parameters on every bind and
+                            // share the image data
+                            image = image.hashNext!!
+                            continue
+                        }
+                        if (image.allowDownSize == allowDownSize && image.depth == depth) {
+                            // note that it is used this level load
+                            image.levelLoadReferenced = true
+                            if (image.partialImage != null) {
+                                image.partialImage!!.levelLoadReferenced = true
+                            }
+                            return image
+                        }
 
-                    // the same image is being requested, but with a different allowDownSize or depth
-                    // so pick the highest of the two and reload the old image with those parameters
-                    if (!image.allowDownSize) {
-                        allowDownSize = false
-                    }
-                    if (image.depth.ordinal > depth.ordinal) {
-                        depth = image.depth
-                    }
-                    if (image.allowDownSize == allowDownSize && image.depth == depth) {
-                        // the already created one is already the highest quality
+                        // the same image is being requested, but with a different allowDownSize or depth
+                        // so pick the highest of the two and reload the old image with those parameters
+                        if (!image.allowDownSize) {
+                            allowDownSize = false
+                        }
+                        if (image.depth.ordinal > depth.ordinal) {
+                            depth = image.depth
+                        }
+                        if (image.allowDownSize == allowDownSize && image.depth == depth) {
+                            // the already created one is already the highest quality
+                            image.levelLoadReferenced = true
+                            if (image.partialImage != null) {
+                                image.partialImage!!.levelLoadReferenced = true
+                            }
+                            return image
+                        }
+                        image.allowDownSize = allowDownSize
+                        image.depth = depth
                         image.levelLoadReferenced = true
                         if (image.partialImage != null) {
                             image.partialImage!!.levelLoadReferenced = true
                         }
+                        if (image_preload.GetBool() && !insideLevelLoad) {
+                            image.referencedOutsideLevelLoad = true
+                            image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
+                            DeclManager.declManager.MediaPrint(
+                                "%dx%d %s (reload for mixed referneces)\n",
+                                image.uploadWidth,
+                                image.uploadHeight,
+                                image.imgName.toString()
+                            )
+                        }
                         return image
                     }
-                    image.allowDownSize = allowDownSize
-                    image.depth = depth
-                    image.levelLoadReferenced = true
-                    if (image.partialImage != null) {
-                        image.partialImage!!.levelLoadReferenced = true
-                    }
-                    if (image_preload.GetBool() && !insideLevelLoad) {
-                        image.referencedOutsideLevelLoad = true
-                        image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
-                        DeclManager.declManager.MediaPrint(
-                            "%dx%d %s (reload for mixed referneces)\n",
-                            image.uploadWidth,
-                            image.uploadHeight,
-                            image.imgName.toString()
-                        )
-                    }
-                    return image
+                    image = image.hashNext!!
                 }
-                image = image.hashNext!!
             }
+
 
             //
             // create a new image

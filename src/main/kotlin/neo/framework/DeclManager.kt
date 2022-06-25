@@ -2592,9 +2592,6 @@ class DeclManager {
                 node = huffmanTree
                 do {
                     bit = msg.ReadBits(1)
-                    if (bit == -1) {
-                        break
-                    }
                     node = node.children[bit]!!
                     //                System.out.println(bit + ":" + node.symbol);
                 } while (node.symbol == -1)

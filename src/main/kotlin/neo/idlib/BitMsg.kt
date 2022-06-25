@@ -290,7 +290,7 @@ object BitMsg {
                     fraction = value and (1 shl put) - 1
                     val pos = curSize - 1
                     val `val` = writeData.get(pos).toInt()
-                    writeData.put(pos, (`val` or fraction shl writeBit).toByte())
+                    writeData.put(pos, (`val` or (fraction shl writeBit)).toByte())
                     numBits -= put
                     value = value shr put
                     writeBit = writeBit + put and 7
@@ -587,7 +587,7 @@ object BitMsg {
                 fraction = fraction and (1 shl get) - 1
                 value = value or (fraction shl valueBits)
                 valueBits += get
-                readBit = readBit + get and 7
+                readBit = (readBit + get) and 7
             }
             if (sgn) {
                 if (value and (1 shl numBits - 1) != 0) {
