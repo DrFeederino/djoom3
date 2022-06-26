@@ -710,7 +710,7 @@ object Session_local {
             }
 
             // FIXME: deserves a cleanup and abstraction
-            if (BuildDefines._WIN32) {
+            if (BuildDefines._WIN32 || BuildDefines._MACOSX) {
                 // Spin in place if needed.  The game should yield the cpu if
                 // it is running over 60 hz, because there is fundamentally
                 // nothing useful for it to do.

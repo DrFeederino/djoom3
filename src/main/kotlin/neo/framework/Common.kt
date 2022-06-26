@@ -260,7 +260,6 @@ class Common {
             var argc = argc
             var argv = argv
             try {
-
                 // set interface pointers used by idLib
                 idLib.sys = sys_public.sys
                 idLib.common = common

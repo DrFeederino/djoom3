@@ -72,8 +72,6 @@ object Event {
         private val numargs: Int
         private val returnType: Int
 
-        //
-        //
         @JvmOverloads
         constructor(command: String, formatspec: String? = null /*= NULL*/) : this(command, formatspec, 0.toChar())
 
@@ -122,7 +120,6 @@ object Event {
         }
 
         companion object {
-            //
             private val eventDefList: ArrayList<idEventDef> = ArrayList(MAX_EVENTS)
             private var numEventDefs = 0
             fun NumEventCommands(): Int {

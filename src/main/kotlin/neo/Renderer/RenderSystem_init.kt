@@ -143,8 +143,8 @@ class RenderSystem_init {
                 val vidWidth = intArrayOf(0)
                 val vidHeight = intArrayOf(0)
                 R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger())
-                tr_local.glConfig.vidWidth = 1024 //vidWidth[0];HACKME::0
-                tr_local.glConfig.vidHeight = 768 //vidHeight[0];
+                tr_local.glConfig.vidWidth = 640 //vidWidth[0];HACKME::0
+                tr_local.glConfig.vidHeight = 480 //vidHeight[0];
                 parms.width = tr_local.glConfig.vidWidth
                 parms.height = tr_local.glConfig.vidHeight
                 parms.fullScreen = r_fullscreen.GetBool()
@@ -2780,7 +2780,7 @@ class RenderSystem_init {
         )
         r_frontBuffer = idCVar(
             "r_frontBuffer",
-            "1",
+            "0",
             CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
             "draw to front buffer for debugging"
         )
