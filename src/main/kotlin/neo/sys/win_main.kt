@@ -234,7 +234,7 @@ object win_main {
     @JvmOverloads
     fun Sys_LeaveCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
-        if ((win_local.win32.criticalSections[index] as ReentrantLock).isLocked) {
+        if (win_local.win32.criticalSections[index].isLocked) {
             win_local.win32.criticalSections[index].unlock()
         }
     }
@@ -246,7 +246,7 @@ object win_main {
      */
     @JvmOverloads
     fun Sys_WaitForEvent(index: Int = sys_public.TRIGGER_EVENT_ZERO) {
-        throw TODO_Exception()
+        return
         //	assert( index == 0 );
 //	if ( !win32.backgroundDownloadSemaphore ) {
 //		win32.backgroundDownloadSemaphore = CreateEvent( NULL, TRUE, FALSE, NULL );

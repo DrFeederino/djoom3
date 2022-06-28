@@ -4,7 +4,6 @@ import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idCVar
 import java.awt.event.KeyListener
 import java.awt.event.MouseListener
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 /**
@@ -117,7 +116,7 @@ abstract class win_local {
         var   /*cpuid_t*/cpuid = 0
 
         //
-        var criticalSections: Array<Lock> = Array(sys_public.MAX_CRITICAL_SECTIONS) { ReentrantLock() }
+        var criticalSections: Array<ReentrantLock> = Array(sys_public.MAX_CRITICAL_SECTIONS) { ReentrantLock() }
 
         //
         //	HINSTANCE		hinstOpenGL;	// HINSTANCE for the OpenGL library

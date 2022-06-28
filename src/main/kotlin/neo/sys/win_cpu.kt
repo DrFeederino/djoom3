@@ -7,6 +7,7 @@ import neo.idlib.containers.CInt
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -156,12 +157,19 @@ object win_cpu {
     @Throws(IOException::class)
     fun HasCPUID(): Boolean {
         if (BuildDefines._WIN32) {
-            val cpuid: String
-            cpuid = wmic("cpu get ProcessorId")
-            return !cpuid.isEmpty()
+            val cpuid: String = wmic("cpu get ProcessorId")
+            return cpuid.isNotEmpty()
         }
         if (BuildDefines._MACOSX) {
-            return false
+            val command = "system_profiler SPHardwareDataType"
+            val sysctl: Process = Runtime.getRuntime().exec(command)
+            val scanner = Scanner(sysctl.inputStream)
+            val sb = StringBuffer()
+            while (scanner.hasNextLine()) {
+                sb.append(scanner.nextLine())
+            }
+            val cpu = sb.toString()
+            return cpu.isNotEmpty() && cpu.contains("Apple")
         }
         throw TODO_Exception()
         //	__asm
@@ -226,7 +234,7 @@ object win_cpu {
      ================
      */
     fun IsAMD(): Boolean {
-        return System.getenv("PROCESSOR_IDENTIFIER").startsWith("AMD")
+        return System.getenv("PROCESSOR_IDENTIFIER")?.startsWith("AMD") ?: false
         //        throw new TODO_Exception();
 //	char pstring[16];
 //	char processorString[13];
