@@ -65,16 +65,10 @@ object win_glimp {
 
         glfwMakeContextCurrent(window)
         GL.createCapabilities()
-        //glViewport(0, 0, parms.width, parms.height)
+        glViewport(0, 0, parms.width, parms.height)
         glfwShowWindow(window)
         glfwFocusWindow(window)
-        var allocateDirect = PointerBuffer.allocateDirect(1024)
-        var error = glfwGetError(allocateDirect)
-        //println(allocateDirect.)
-        //glfwPollEvents()
-
-        allocateDirect = PointerBuffer.allocateDirect(1024)
-        error = glfwGetError(allocateDirect)
+        glfwPollEvents()
 
         glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_FALSE)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
@@ -245,11 +239,7 @@ object win_glimp {
             throw RuntimeException("GL Error " + allocateDirect.stringASCII)
         }
         glfwSwapBuffers(window)
-        glfwPostEmptyEvent()
-        if (System.currentTimeMillis() - win_shared.sys_timeBase > 60000L) {
-            println(System.currentTimeMillis() - win_shared.sys_timeBase > 60000L)
-            glfwPollEvents()
-        }
+        glfwPollEvents()
     }
 
     // These are used for managing SMP handoffs of the OpenGL context
