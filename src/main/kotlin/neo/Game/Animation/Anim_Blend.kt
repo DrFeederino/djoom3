@@ -1157,7 +1157,7 @@ object Anim_Blend {
                         return false
                     }
                     val copy =
-                        DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, token2, false) as idDeclModelDef
+                        DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, token2, false) as idDeclModelDef?
                     if (null == copy) {
                         idLib.common.Warning("Unknown model definition '%s'", token2)
                     } else if (copy.GetState() == declState_t.DS_DEFAULTED) {
@@ -1399,8 +1399,8 @@ object Anim_Blend {
             return skin
         }
 
-        fun GetDefaultPose(): ArrayList<idJointQuat> {
-            return modelHandle!!.GetDefaultPose()
+        fun GetDefaultPose(): ArrayList<idJointQuat>? {
+            return if (modelHandle == null) null else modelHandle!!.GetDefaultPose()
         }
 
         fun SetupJoints(
@@ -1429,7 +1429,7 @@ object Anim_Blend {
 
             // set up initial pose for model (with no pose, model is just a jumbled mess)
             list = arrayListOf(*Array(num) { idJointMat() })
-            pose = GetDefaultPose()
+            pose = GetDefaultPose()!!
 
             // convert the joint quaternions to joint matrices
             Simd.SIMDProcessor.ConvertJointQuatsToJointMats(list, pose, joints.size)
@@ -3221,7 +3221,7 @@ object Anim_Blend {
             var blend: kotlin.collections.ArrayList<idAnimBlend>
             val jointParent: kotlin.collections.ArrayList<Int>
             var jointMod: jointMod_t?
-            val defaultPose: ArrayList<idJointQuat>
+            val defaultPose: ArrayList<idJointQuat>?
             if (Game_local.gameLocal.inCinematic && Game_local.gameLocal.skipCinematic) {
                 return false
             }
