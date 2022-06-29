@@ -197,7 +197,7 @@ object Anim_Blend {
         fun MD5Anim(num: Int): idMD5Anim? {
             return if (anims.isNullOrEmpty()) {
                 null
-            } else anims[num]
+            } else anims.getOrNull(num)
         }
 
         fun modelDef(): idDeclModelDef? {
@@ -506,7 +506,7 @@ object Anim_Blend {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
-                if (!token.IsEmpty() && TempDump.NOT(modelDef!!.FindJoint(token.toString()))) {
+                if (!token.IsEmpty() && TempDump.NOT(modelDef.FindJoint(token.toString()))) {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_MUZZLEFLASH
@@ -518,7 +518,7 @@ object Anim_Blend {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
-                if (TempDump.NOT(modelDef!!.FindJoint(token.toString()))) {
+                if (TempDump.NOT(modelDef.FindJoint(token.toString()))) {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_CREATEMISSILE
@@ -527,7 +527,7 @@ object Anim_Blend {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
-                if (TempDump.NOT(modelDef!!.FindJoint(token.toString()))) {
+                if (TempDump.NOT(modelDef.FindJoint(token.toString()))) {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_LAUNCHMISSILE
@@ -536,7 +536,7 @@ object Anim_Blend {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
-                jointInfo = modelDef!!.FindJoint(token.toString())
+                jointInfo = modelDef.FindJoint(token.toString())
                 if (null == jointInfo) {
                     return Str.va("Joint '%s' not found", token)
                 }
@@ -677,11 +677,11 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_EVENTFUNCTION -> {
                             val ev: Event.idEventDef = Event.idEventDef.FindEvent(command.string.toString())!!
-                            ent!!.ProcessEvent(ev)
+                            ent.ProcessEvent(ev)
                         }
                         frameCommandType_t.FC_SOUND -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ANY,
                                         0,
@@ -690,11 +690,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_ANY.ordinal,
                                     0,
@@ -704,7 +704,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_VOICE -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_VOICE,
                                         0,
@@ -713,11 +713,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_voice' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_VOICE.ordinal,
                                     0,
@@ -727,7 +727,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_VOICE2 -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_VOICE2,
                                         0,
@@ -736,11 +736,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_voice2' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_VOICE2.ordinal,
                                     0,
@@ -750,7 +750,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_BODY -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY,
                                         0,
@@ -759,11 +759,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_body' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_BODY.ordinal,
                                     0,
@@ -773,7 +773,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_BODY2 -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY2,
                                         0,
@@ -782,11 +782,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_body2' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_BODY2.ordinal,
                                     0,
@@ -796,7 +796,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_BODY3 -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY3,
                                         0,
@@ -805,11 +805,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_body3' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_BODY3.ordinal,
                                     0,
@@ -819,7 +819,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_WEAPON -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_WEAPON,
                                         0,
@@ -828,11 +828,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_weapon' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_WEAPON.ordinal,
                                     0,
@@ -842,7 +842,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_GLOBAL -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ANY,
                                         Sound.SSF_GLOBAL,
@@ -851,11 +851,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_global' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_ANY.ordinal,
                                     Sound.SSF_GLOBAL,
@@ -865,7 +865,7 @@ object Anim_Blend {
                         }
                         frameCommandType_t.FC_SOUND_ITEM -> {
                             if (TempDump.NOT(command.soundShader)) {
-                                if (!ent!!.StartSound(
+                                if (!ent.StartSound(
                                         command.string.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ITEM,
                                         0,
@@ -874,11 +874,11 @@ object Anim_Blend {
                                 ) {
                                     Game_local.gameLocal.Warning(
                                         "Framecommand 'sound_item' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                        ent!!.name, FullName(), frame + 1, command.string
+                                        ent.name, FullName(), frame + 1, command.string
                                     )
                                 }
                             } else {
-                                ent!!.StartSoundShader(
+                                ent.StartSoundShader(
                                     command.soundShader,
                                     gameSoundChannel_t.SND_CHANNEL_ITEM.ordinal,
                                     0,
@@ -887,9 +887,9 @@ object Anim_Blend {
                             }
                         }
                         frameCommandType_t.FC_SOUND_CHATTER -> {
-                            if (ent!!.CanPlayChatterSounds()) {
+                            if (ent.CanPlayChatterSounds()) {
                                 if (TempDump.NOT(command.soundShader)) {
-                                    if (!ent!!.StartSound(
+                                    if (!ent.StartSound(
                                             command.string.toString(),
                                             gameSoundChannel_t.SND_CHANNEL_VOICE,
                                             0,
@@ -898,11 +898,11 @@ object Anim_Blend {
                                     ) {
                                         Game_local.gameLocal.Warning(
                                             "Framecommand 'sound_chatter' on entity '%s', anim '%s', frame %d: Could not find sound '%s'",
-                                            ent!!.name, FullName(), frame + 1, command.string
+                                            ent.name, FullName(), frame + 1, command.string
                                         )
                                     }
                                 } else {
-                                    ent!!.StartSoundShader(
+                                    ent.StartSoundShader(
                                         command.soundShader,
                                         gameSoundChannel_t.SND_CHANNEL_VOICE.ordinal,
                                         0,
@@ -921,7 +921,7 @@ object Anim_Blend {
                             )
                         }
                         frameCommandType_t.FC_SKIN -> {
-                            ent!!.SetSkin(command.skin)
+                            ent.SetSkin(command.skin)
                         }
                         frameCommandType_t.FC_TRIGGER -> {
                             var target: idEntity?
@@ -933,82 +933,82 @@ object Anim_Blend {
                             } else {
                                 Game_local.gameLocal.Warning(
                                     "Framecommand 'trigger' on entity '%s', anim '%s', frame %d: Could not find entity '%s'",
-                                    ent!!.name, FullName(), frame + 1, command.string
+                                    ent.name, FullName(), frame + 1, command.string
                                 )
                             }
                         }
                         frameCommandType_t.FC_TRIGGER_SMOKE_PARTICLE -> {
-                            ent!!.ProcessEvent(AI_Events.AI_TriggerParticles, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_TriggerParticles, command.string.toString())
                         }
                         frameCommandType_t.FC_MELEE -> {
-                            ent!!.ProcessEvent(AI_Events.AI_AttackMelee, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_AttackMelee, command.string.toString())
                         }
                         frameCommandType_t.FC_DIRECTDAMAGE -> {
-                            ent!!.ProcessEvent(AI_Events.AI_DirectDamage, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_DirectDamage, command.string.toString())
                         }
                         frameCommandType_t.FC_BEGINATTACK -> {
-                            ent!!.ProcessEvent(AI_Events.AI_BeginAttack, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_BeginAttack, command.string.toString())
                         }
                         frameCommandType_t.FC_ENDATTACK -> {
-                            ent!!.ProcessEvent(AI_Events.AI_EndAttack)
+                            ent.ProcessEvent(AI_Events.AI_EndAttack)
                         }
                         frameCommandType_t.FC_MUZZLEFLASH -> {
-                            ent!!.ProcessEvent(AI_Events.AI_MuzzleFlash, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_MuzzleFlash, command.string.toString())
                         }
                         frameCommandType_t.FC_CREATEMISSILE -> {
-                            ent!!.ProcessEvent(AI_Events.AI_CreateMissile, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_CreateMissile, command.string.toString())
                         }
                         frameCommandType_t.FC_LAUNCHMISSILE -> {
-                            ent!!.ProcessEvent(AI_Events.AI_AttackMissile, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_AttackMissile, command.string.toString())
                         }
                         frameCommandType_t.FC_FIREMISSILEATTARGET -> {
-                            ent!!.ProcessEvent(
+                            ent.ProcessEvent(
                                 AI_Events.AI_FireMissileAtTarget,
                                 modelDef!!.GetJointName(command.index),
                                 command.string.toString()
                             )
                         }
                         frameCommandType_t.FC_FOOTSTEP -> {
-                            ent!!.ProcessEvent(Actor.EV_Footstep)
+                            ent.ProcessEvent(Actor.EV_Footstep)
                         }
                         frameCommandType_t.FC_LEFTFOOT -> {
-                            ent!!.ProcessEvent(Actor.EV_FootstepLeft)
+                            ent.ProcessEvent(Actor.EV_FootstepLeft)
                         }
                         frameCommandType_t.FC_RIGHTFOOT -> {
-                            ent!!.ProcessEvent(Actor.EV_FootstepRight)
+                            ent.ProcessEvent(Actor.EV_FootstepRight)
                         }
                         frameCommandType_t.FC_ENABLE_EYE_FOCUS -> {
-                            ent!!.ProcessEvent(Actor.AI_EnableEyeFocus)
+                            ent.ProcessEvent(Actor.AI_EnableEyeFocus)
                         }
                         frameCommandType_t.FC_DISABLE_EYE_FOCUS -> {
-                            ent!!.ProcessEvent(Actor.AI_DisableEyeFocus)
+                            ent.ProcessEvent(Actor.AI_DisableEyeFocus)
                         }
                         frameCommandType_t.FC_DISABLE_GRAVITY -> {
-                            ent!!.ProcessEvent(AI_Events.AI_DisableGravity)
+                            ent.ProcessEvent(AI_Events.AI_DisableGravity)
                         }
                         frameCommandType_t.FC_ENABLE_GRAVITY -> {
-                            ent!!.ProcessEvent(AI_Events.AI_EnableGravity)
+                            ent.ProcessEvent(AI_Events.AI_EnableGravity)
                         }
                         frameCommandType_t.FC_JUMP -> {
-                            ent!!.ProcessEvent(AI_Events.AI_JumpFrame)
+                            ent.ProcessEvent(AI_Events.AI_JumpFrame)
                         }
                         frameCommandType_t.FC_ENABLE_CLIP -> {
-                            ent!!.ProcessEvent(AI_Events.AI_EnableClip)
+                            ent.ProcessEvent(AI_Events.AI_EnableClip)
                         }
                         frameCommandType_t.FC_DISABLE_CLIP -> {
-                            ent!!.ProcessEvent(AI_Events.AI_DisableClip)
+                            ent.ProcessEvent(AI_Events.AI_DisableClip)
                         }
                         frameCommandType_t.FC_ENABLE_WALK_IK -> {
-                            ent!!.ProcessEvent(Actor.EV_EnableWalkIK)
+                            ent.ProcessEvent(Actor.EV_EnableWalkIK)
                         }
                         frameCommandType_t.FC_DISABLE_WALK_IK -> {
-                            ent!!.ProcessEvent(Actor.EV_DisableWalkIK)
+                            ent.ProcessEvent(Actor.EV_DisableWalkIK)
                         }
                         frameCommandType_t.FC_ENABLE_LEG_IK -> {
-                            ent!!.ProcessEvent(Actor.EV_EnableLegIK, command.index)
+                            ent.ProcessEvent(Actor.EV_EnableLegIK, command.index)
                         }
                         frameCommandType_t.FC_DISABLE_LEG_IK -> {
-                            ent!!.ProcessEvent(Actor.EV_DisableLegIK, command.index)
+                            ent.ProcessEvent(Actor.EV_DisableLegIK, command.index)
                         }
                         frameCommandType_t.FC_RECORDDEMO -> {
                             if (!command.string.toString().isNullOrEmpty()) {
@@ -1110,7 +1110,7 @@ object Anim_Blend {
 
         constructor(def: idDeclModelDef) {
             Collections.copy(anims, def.anims)
-            for (i in channelJoints.indices) {
+            for (i in 0 until channelJoints.size) {
                 Collections.copy(channelJoints[i], def.channelJoints[i])
             }
             Collections.copy(jointParents, def.jointParents)
@@ -1414,7 +1414,7 @@ object Anim_Blend {
             val list: kotlin.collections.ArrayList<idJointMat>
             if (null == modelHandle || modelHandle!!.IsDefaultModel()) {
 //                Mem_Free16(jointList);
-                for (i in jointList.indices) {
+                for (i in 0 until jointList.size) {
                     jointList.removeAt(i)
                 }
                 frameBounds.Clear()
@@ -1822,7 +1822,7 @@ object Anim_Blend {
                     if (md5anim.Length() != md5anims[0].Length()) {
                         src.Warning(
                             "Anim '%s' does not match length of anim '%s'",
-                            md5anim!!.Name(),
+                            md5anim.Name(),
                             md5anims[0].Name()
                         )
                         MakeDefault()
@@ -2021,12 +2021,12 @@ object Anim_Blend {
             if (null == modelDef) {
                 return
             }
-            val _anim = modelDef!!.GetAnim(_animNum) ?: return
+            val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef!!.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().size != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
-                    modelDef!!.GetModelName(),
+                    modelDef.GetModelName(),
                     md5anim.Name()
                 )
                 return
@@ -2057,12 +2057,12 @@ object Anim_Blend {
             if (null == modelDef) {
                 return
             }
-            val _anim = modelDef!!.GetAnim(_animNum) ?: return
+            val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef!!.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().size != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
-                    modelDef!!.GetModelName(),
+                    modelDef.GetModelName(),
                     md5anim.Name()
                 )
                 return
@@ -2090,12 +2090,12 @@ object Anim_Blend {
             if (null == modelDef) {
                 return
             }
-            val _anim = modelDef!!.GetAnim(_animNum) ?: return
+            val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef!!.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().size != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
-                    modelDef!!.GetModelName(),
+                    modelDef.GetModelName(),
                     md5anim.Name()
                 )
                 return
@@ -2509,11 +2509,11 @@ object Anim_Blend {
             animNum = savefile.ReadInt()
             if (null == modelDef) {
                 animNum = 0
-            } else if (animNum < 0 || animNum > modelDef!!.NumAnims()) {
+            } else if (animNum < 0 || animNum > modelDef.NumAnims()) {
                 Game_local.gameLocal.Warning(
                     "Anim number %d out of range for model '%s' during save game",
                     animNum,
-                    modelDef!!.GetModelName()
+                    modelDef.GetModelName()
                 )
                 animNum = 0
             }
@@ -3421,7 +3421,7 @@ object Anim_Blend {
                 // transform any joints preceding the joint modifier
                 Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, jointMod.jointnum - 1)
                 i = jointMod.jointnum
-                parentNum = jointParent!![i]
+                parentNum = jointParent[i]
                 when (jointMod.transform_axis) {
                     jointModTransform_t.JOINTMOD_NONE -> joints[i]
                         .SetRotation(joints[i].ToMat3().times(joints[parentNum].ToMat3()))
@@ -3950,7 +3950,7 @@ object Anim_Blend {
                 // transform any joints preceding the joint modifier
                 Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, jointMod - 1)
                 i = jointMod
-                parentNum = jointParent!![i]
+                parentNum = jointParent[i]
                 when (AFPoseJointMods[jointMod].mod) {
                     AFJointModType_t.AF_JOINTMOD_AXIS -> {
                         joints[i].SetRotation(AFPoseJointMods[jointMod].axis)
@@ -3989,7 +3989,7 @@ object Anim_Blend {
                 jointNum = AFPoseJoints[i]
                 while (jointNum != Model.INVALID_JOINT) {
                     blendJoints[jointNum] = true
-                    jointNum = jointParent!![jointNum]
+                    jointNum = jointParent[jointNum]
                 }
                 i++
             }

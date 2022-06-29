@@ -835,8 +835,8 @@ object Material {
             if (numOps != 0) {
                 ops = ArrayList(numOps) // R_StaticAlloc(numOps * sizeof( ops[0] )
                 //		memcpy( ops, pd!!.shaderOps, numOps * sizeof( ops[0] ) );
-                for (a in ops.indices) {
-                    ops[a] = expOp_t(pd!!.shaderOps[a])
+                for (a in 0 until ops.size) {
+                    ops.add(a, expOp_t(pd!!.shaderOps[a]))
                 }
             }
             if (numRegisters != 0) {
@@ -2058,7 +2058,10 @@ object Material {
             str = Image_program.R_ParsePastImageProgram(src)
             var loadStage =
                 Image.globalImages.ImageFromFile(str, tf, allowPicmip, trp, td, cubeMap)
-            newStage.fragmentProgramImages[unit] = if (loadStage == null) Image.globalImages.defaultImage else loadStage
+            newStage.fragmentProgramImages.add(
+                unit,
+                if (loadStage == null) Image.globalImages.defaultImage else loadStage
+            )
         }
 
         private fun ParseStage(
@@ -2560,7 +2563,7 @@ object Material {
                     } else {
                         Image.globalImages.defaultImage
                     })!!
-            } else if (TempDump.NOT(ts.cinematic[0]) && TempDump.NOT(ts.dynamic) && TempDump.NOT(ss.newStage)) {
+            } else if (TempDump.NOT(ts.cinematic.getOrNull(0)) && TempDump.NOT(ts.dynamic) && TempDump.NOT(ss.newStage)) {
                 Common.common.Warning("material '%s' had stage with no image", GetName())
                 ts.image[0] = Image.globalImages.defaultImage
             }

@@ -9,7 +9,7 @@ import java.io.File
 import java.lang.management.ManagementFactory
 
 object win_shared {
-    private val sys_timeBase = System.currentTimeMillis()
+    public val sys_timeBase = System.currentTimeMillis()
 
     /*
      ================

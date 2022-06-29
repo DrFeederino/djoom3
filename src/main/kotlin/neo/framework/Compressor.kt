@@ -328,7 +328,7 @@ object Compressor {
                 writeData.putInt(
                     writeByte - 1,
                     value
-                ) //TODO:check if inputs should be cast to bytes or stores as INT in this case (4 bytes)
+                ) //TODO:check if inputs should be cast to bytes or stores.toInt() in this case (4 bytes)
                 return
             }
             while (numBits != 0) {
@@ -458,7 +458,7 @@ object Compressor {
                 var remain = bitsRemain shr 3
 
                 // Compare the middle bytes as ints
-                while (remain >= 4 && src1[p1] as Int == src2[p2] as Int) {
+                while (remain >= 4 && src1[p1].toInt() == src2[p2].toInt()) {
                     p1 += 4
                     p2 += 4
                     remain -= 4

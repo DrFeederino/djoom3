@@ -1100,8 +1100,8 @@ object Game {
             val modifiedOrigin: Array<idVec3> =
                 idVec3.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
             modifiedAxis = ArrayList<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
-            for (m in modifiedAxis.indices) {
-                modifiedAxis[m] = idMat3()
+            for (m in 0 until modifiedAxis.size) {
+                modifiedAxis.add(m, idMat3())
             }
 
             // get all the joint modifications

@@ -401,7 +401,7 @@ class DeviceContext {
             wrap: Boolean,
             cursor: Int /*= -1*/,
             calcOnly: Boolean /*= false*/,
-            breaks: idList<Int> /*= NULL*/
+            breaks: idList<Int>? = null /*= NULL*/
         ): Int {
             return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, calcOnly, breaks, 0)
         }
@@ -415,7 +415,7 @@ class DeviceContext {
             wrap: Boolean,
             cursor: Int
         ): Int {
-            return DrawText(text, textScale, textAlign, color, rectDraw, wrap, cursor)
+            return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, false, null, 0)
         }
 
         fun DrawMaterialRect(x: Float, y: Float, w: Float, h: Float, size: Float, mat: idMaterial, color: idVec4) {

@@ -3,22 +3,28 @@ package neo.sys
 import neo.Renderer.RenderSystem_init
 import neo.Renderer.tr_local
 import neo.TempDump
-import neo.TempDump.TODO_Exception
+import neo.framework.Common.Companion.common
 import neo.framework.FileSystem_h
 import neo.framework.UsercmdGen
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str.idStr
+import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
+import org.lwjgl.glfw.GLFWGammaRamp
+import org.lwjgl.glfw.GLFWImage
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.MemoryUtil
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ShortBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
+
 
 object win_glimp {
     private val ospath: StringBuilder = StringBuilder(FileSystem_h.MAX_OSPATH)
@@ -26,6 +32,14 @@ object win_glimp {
     var window: Long = 0
     private var initialFrames = 0
     private var isEnabled = false
+    private val d3_ico_resource = win_glimp.javaClass.classLoader.getResourceAsStream("neo/sys/RC/res/doom.ico")
+    private val d3_icon = GLFWImage.Buffer(ByteBuffer.wrap(d3_ico_resource.readAllBytes()))
+    var gammaOrigError = false
+    var gammaOrigSet = false
+    val gammaOrigRed: UShortArray = UShortArray(256)
+    val gammaOrigGreen: UShortArray = UShortArray(256)
+    val gammaOrigBlue: UShortArray = UShortArray(256)
+
 
     /*
      ===================
@@ -33,31 +47,34 @@ object win_glimp {
      ===================
      */
     fun GLW_SetFullScreen(parms: glimpParms_t): Boolean {
-        if (!glfwInit())
-            throw IllegalStateException("Unable to initialize GLFW")
         glfwDefaultWindowHints()
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err).set())
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1)
 
         if (window == 0L) {
-            window = glfwCreateWindow(parms.width, parms.height, "DOOM 3", MemoryUtil.NULL, MemoryUtil.NULL)
+            window = glfwCreateWindow(
+                parms.width,
+                parms.height,
+                "DOOM 3",
+                if (parms.fullScreen) glfwGetPrimaryMonitor() else MemoryUtil.NULL,
+                MemoryUtil.NULL
+            )
         }
 
-        val currentMode = glfwGetVideoMode(glfwGetPrimaryMonitor())!!
-        glfwSetWindowPos(
-            window,
-            (currentMode.width() - parms.width) / 2,
-            (currentMode.height() - parms.height) / 2
-        )
-
         glfwMakeContextCurrent(window)
-        GL.createCapabilities();
-        glViewport(0, 0, parms.width, parms.height)
+        GL.createCapabilities()
+        //glViewport(0, 0, parms.width, parms.height)
         glfwShowWindow(window)
         glfwFocusWindow(window)
-        glfwPollEvents()
+        var allocateDirect = PointerBuffer.allocateDirect(1024)
+        var error = glfwGetError(allocateDirect)
+        //println(allocateDirect.)
+        //glfwPollEvents()
+
+        allocateDirect = PointerBuffer.allocateDirect(1024)
+        error = glfwGetError(allocateDirect)
 
         glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_FALSE)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
@@ -86,18 +103,109 @@ object win_glimp {
      ===================
      */
     fun GLimp_Init(parms: glimpParms_t): Boolean {
+        common.Printf("Initializing OpenGL subsystem\n")
+
+        if (!glfwInit())
+            throw IllegalStateException("Unable to initialize GLFW")
+
+        var colorbits = 24
+        var depthbits = 24
+        var stencilbits = 8
+
+        for (i in 0 until 16) {
+            val multisamples = parms.multiSamples
+            if (i % 4 == 0 && i != 0) {
+                // one pass, reduce
+                when (i / 4) {
+                    2 -> if (colorbits == 24) colorbits = 16
+                    1 -> {
+                        if (depthbits == 24) depthbits = 16 else if (depthbits == 16) depthbits = 8
+                        if (stencilbits == 24) stencilbits = 16 else if (stencilbits == 16) stencilbits = 8
+                    }
+                    3 -> if (stencilbits == 24) stencilbits = 16 else if (stencilbits == 16) stencilbits = 8
+                }
+            }
+
+            var tcolorbits = colorbits
+            var tdepthbits = depthbits
+            var tstencilbits = stencilbits
+
+            if (i % 4 == 3) {
+                // reduce colorbits
+                if (tcolorbits == 24) tcolorbits = 16
+            }
+
+            if (i % 4 == 2) {
+                // reduce depthbits
+                if (tdepthbits == 24) tdepthbits = 16 else if (tdepthbits == 16) tdepthbits = 8
+            }
+
+            if (i % 4 == 1) {
+                // reduce stencilbits
+                tstencilbits = if (tstencilbits == 24) 16 else if (tstencilbits == 16) 8 else 0
+            }
+
+            var channelcolorbits = 4
+            if (tcolorbits == 24) channelcolorbits = 8
+
+            val talphabits = channelcolorbits
+
+            glfwWindowHint(GLFW_RED_BITS, channelcolorbits)
+            glfwWindowHint(GLFW_GREEN_BITS, channelcolorbits)
+            glfwWindowHint(GLFW_BLUE_BITS, channelcolorbits)
+            glfwWindowHint(GLFW_DOUBLEBUFFER, 1)
+            glfwWindowHint(GLFW_DEPTH_BITS, tdepthbits)
+            glfwWindowHint(GL_STENCIL_BITS, tstencilbits)
+
+            glfwWindowHint(GLFW_ALPHA_BITS, talphabits)
+
+            glfwWindowHint(GLFW_STEREO, if (parms.stereo) 1 else 0)
+
+            glfwWindowHint(GLFW_SAMPLES, multisamples)
+
+            //glfwCreateWindow()
+        }
+
+
         if (!GLW_SetFullScreen(parms)) {
             GLimp_Shutdown()
             return false
         }
+
+        if (window == 0L) {
+            common.Warning("No usable GL mode found: %d", glGetError())
+            return false
+        }
+
         return true
+    }
+
+    fun GLimp_GrabInput(flags: Integer) {
+        if (window == 0L) {
+            common.Warning("GLimp_GrabInput called without window")
+            return
+        }
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
     }
 
     // If the desired mode can't be set satisfactorily, false will be returned.
     // The renderer will then reset the glimpParms to "safe mode" of 640x480
     // fullscreen and try again.  If that also fails, the error will be fatal.
-    fun GLimp_SetScreenParms(parms: glimpParms_t): Boolean {
-        return false
+    fun GLimp_SetGamma(red: UShortArray, green: UShortArray, blue: UShortArray) {
+        if (window == 0L) {
+            common.Warning("GLimp_SetGamma called without window")
+            return
+        }
+
+        if (!gammaOrigSet) {
+            gammaOrigSet = true;
+//            if ( glfwGetGammaRamp( window) == -1 ) {
+//                gammaOrigError = true;
+//                common.Warning( "Failed to get Gamma Ramp: %d\n", glfwGetError() glGetError() );
+//                }
+        }
+
     }
 
     /*
@@ -115,89 +223,33 @@ object win_glimp {
 
     // Destroys the rendering context, closes the window, resets the resolution,
     // and resets the gamma ramps.
+    fun GLimp_ResetGamma() {
+        if (gammaOrigError) {
+            common.Warning("Can't reset hardware gamma because getting the Gamma Ramp at startup failed!\n")
+            common.Warning("You might have to restart the game for gamma/brightness in shaders to work properly.\n")
+            return
+        }
+
+        if (gammaOrigSet) {
+            val gammaRamp = GLFWGammaRamp.create()
+            gammaRamp.red(ShortBuffer.wrap(gammaOrigRed.toShortArray()))
+            gammaRamp.green(ShortBuffer.wrap(gammaOrigGreen.toShortArray()))
+            gammaRamp.blue(ShortBuffer.wrap(gammaOrigBlue.toShortArray()))
+            glfwSetGammaRamp(window, gammaRamp)
+        }
+    }
+
     fun GLimp_SwapBuffers() {
-        println("Swapping")
+        var allocateDirect = PointerBuffer.allocateDirect(1024)
+        if (glfwGetError(allocateDirect) != 0) {
+            throw RuntimeException("GL Error " + allocateDirect.stringASCII)
+        }
         glfwSwapBuffers(window)
-        glfwPollEvents()
-    }
-
-    /*
-     ========================
-     GLimp_GetOldGammaRamp
-     ========================
-     */
-    @Deprecated("")
-    fun GLimp_SaveGamma() { //TODO:is this function needed?
-//	HDC			hDC;
-//	BOOL		success;
-//
-//	hDC = GetDC( GetDesktopWindow() );
-//	success = GetDeviceGammaRamp( hDC, win32.oldHardwareGamma );
-//	common->DPrintf( "...getting default gamma ramp: %s\n", success ? "success" : "failed" );
-//	ReleaseDC( GetDesktopWindow(), hDC );
-    }
-
-    /*
-     ========================
-     GLimp_RestoreGamma
-     ========================
-     */
-    @Deprecated("")
-    fun GLimp_RestoreGamma() { //TODO:is this function needed?
-//	HDC hDC;
-//	BOOL success;
-//
-//	// if we never read in a reasonable looking
-//	// table, don't write it out
-//	if ( win32.oldHardwareGamma[0][255] == 0 ) {
-//		return;
-//	}
-//
-//	hDC = GetDC( GetDesktopWindow() );
-//	success = SetDeviceGammaRamp( hDC, win32.oldHardwareGamma );
-//	common->DPrintf ( "...restoring hardware gamma: %s\n", success ? "success" : "failed" );
-//	ReleaseDC( GetDesktopWindow(), hDC );
-    }
-
-    // Calls the system specific swapbuffers routine, and may also perform
-    // other system specific cvar checks that happen every frame.
-    // This will not be called if 'r_drawBuffer GL_FRONT'
-    fun GLimp_SetGamma(gamma: Float, brightness: Float, contrast: Float) {
-//        try {
-//            //    public static void GLimp_SetGamma(short[] red/*[256]*/, short[] green/*[256]*/, short[] blue/*[256]*/) {
-////        Gamma.setDisplayGamma(null, gamma, 0, 0);
-//            Display.setDisplayConfiguration(gamma, 0, 0);//TODO:check if GL was started.
-//        } catch (LWJGLException ex) {
-//            Logger.getLogger(win_glimp.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    //    // Sets the hardware gamma ramps for gamma and brightness adjustment.
-    //    // These are now taken as 16 bit values, so we can take full advantage
-    //    // of dacs with >8 bits of precision
-    //    public static boolean GLimp_SpawnRenderThread(glimpRenderThread function) {
-    //        throw new TODO_Exception();
-    //    }
-    // Returns false if the system only has a single processor
-    fun GLimp_BackEndSleep(): Any {
-        throw TODO_Exception()
-    }
-
-    fun GLimp_FrontEndSleep() {
-        throw TODO_Exception()
-    }
-
-    fun GLimp_WakeBackEnd(data: Any) {
-        throw TODO_Exception()
-    }
-
-    // these functions implement the dual processor syncronization
-    fun GLimp_ActivateContext() {
-        throw TODO_Exception()
-    }
-
-    fun GLimp_DeactivateContext() {
-        throw TODO_Exception()
+        glfwPostEmptyEvent()
+        if (System.currentTimeMillis() - win_shared.sys_timeBase > 60000L) {
+            println(System.currentTimeMillis() - win_shared.sys_timeBase > 60000L)
+            glfwPollEvents()
+        }
     }
 
     // These are used for managing SMP handoffs of the OpenGL context
@@ -270,6 +322,18 @@ object win_glimp {
         }
     }
 
+    fun GLimp_DeactivateContext() {
+        common.DPrintf("TODO: GLimp_ActivateContext\n")
+    }
+
+    fun GLimp_ActivateContext() {
+        common.DPrintf("TODO: GLimp_DeactivateContext\n");
+    }
+
+    fun GLimp_SetScreenParms(parms: glimpParms_t) {
+        common.DPrintf("TODO: GLimp_SetScreenParms\n");
+    }
+
     /*
      ====================================================================
 
@@ -279,10 +343,10 @@ object win_glimp {
      */
     class glimpParms_t {
         var displayHz = 0
-        var fullScreen = false
-        var height = 0
+        var fullScreen = true
+        var height = 1280
         var multiSamples = 0
         var stereo = false
-        var width = 0
+        var width = 720
     }
 }

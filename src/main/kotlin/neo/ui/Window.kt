@@ -3395,7 +3395,7 @@ object Window {
                         registers[op.c] = registers[op.getA()] / registers[op.b]
                     }
                     wexpOpType_t.WOP_TYPE_MOD -> {
-                        b = registers[op.b] as Int
+                        b = registers[op.b].toInt()
                         b = if (b != 0) b else 1
                         registers[op.c] = registers[op.getA()] % b
                     }
@@ -3429,7 +3429,7 @@ object Window {
                         if (op.b >= 0 && registers[op.b] >= 0 && registers[op.b] < 4) {
                             // grabs vector components
                             val winVec4 = op.a as idWinVec4
-                            registers[op.c] = winVec4.data[registers[op.b] as Int]
+                            registers[op.c] = winVec4.data[registers[op.b].toInt()]
                         } else {
                             registers[op.c] = op.a!!.x()
                         }

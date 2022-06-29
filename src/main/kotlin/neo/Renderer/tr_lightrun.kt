@@ -345,7 +345,7 @@ object tr_lightrun {
         } else {
             // point light
 //            memset(light.lightProject, 0, sizeof(light.lightProject));
-            for (l in light.lightProject.indices) {
+            for (l in 0 until light.lightProject.size) {
                 light.lightProject[l] = idPlane()
             }
             light.lightProject[0][0] = 0.5f / light.parms.lightRadius[0]

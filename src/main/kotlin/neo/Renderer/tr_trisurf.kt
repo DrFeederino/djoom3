@@ -1263,7 +1263,7 @@ object tr_trisurf {
             //	memcpy( tri.verts, oldVerts, tri.numVerts * sizeof( tri.verts[0] ) );
             i = 0
             while (i < tri.numVerts) {
-                tri.verts[i] = idDrawVert(oldVerts[i])
+                tri.verts.add(i, idDrawVert(oldVerts[i]))
                 i++
             }
             //            triVertexAllocator.Free(oldVerts);
@@ -1275,7 +1275,7 @@ object tr_trisurf {
         while (i < tri.numVerts) {
             j = tVerts[i].negativeRemap
             if (j != 0) {
-                tri.verts[j] = idDrawVert(tri.verts[i])
+                tri.verts.add(j, idDrawVert(tri.verts[i]))
                 tri.mirroredVerts[numMirror] = i
                 numMirror++
             }
@@ -2202,8 +2202,8 @@ object tr_trisurf {
 
     private fun Resize(verts: ArrayList<idDrawVert>, totalVerts: Int): ArrayList<idDrawVert> {
         val newVerts = kotlin.collections.ArrayList<idDrawVert>(totalVerts)
-        for (i in verts.indices) {
-            newVerts[i] = idDrawVert(verts[i])
+        for (i in 0 until verts.size) {
+            newVerts.add(i, idDrawVert(verts[i]))
         }
         return newVerts
     }

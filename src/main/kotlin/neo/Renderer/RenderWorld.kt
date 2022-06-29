@@ -294,8 +294,8 @@ class RenderWorld {
             customSkin = newEntity.customSkin
             referenceSound = newEntity.referenceSound
             System.arraycopy(newEntity.shaderParms, 0, shaderParms, 0, shaderParms.size)
-            for (i in gui.indices) {
-                gui[i] = newEntity.gui[i]
+            for (i in 0 until gui.size) {
+                gui.add(i, newEntity.gui[i])
             }
             remoteRenderView = newEntity.remoteRenderView
             numJoints = newEntity.numJoints

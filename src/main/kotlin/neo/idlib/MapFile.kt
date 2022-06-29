@@ -165,7 +165,7 @@ object MapFile {
     }
 
     class idMapBrush : idMapPrimitive() {
-        protected val sides: idList<idMapBrushSide>
+        protected val sides: ArrayList<idMapBrushSide>
         protected var numSides = 0
         fun Write(fp: idFile, primitiveNum: Int, origin: idVec3): Boolean {
             var i: Int
@@ -207,11 +207,12 @@ object MapFile {
         }
 
         fun GetNumSides(): Int {
-            return sides.Num()
+            return sides.size
         }
 
         fun AddSide(side: idMapBrushSide): Int {
-            return sides.Append(side)
+            sides.add(side)
+            return sides.indexOf(side)
         }
 
         fun GetSide(i: Int): idMapBrushSide {
@@ -434,13 +435,12 @@ object MapFile {
         //
         init {
             type = TYPE_BRUSH
-            sides = idList()
-            sides.Resize(8, 4)
+            sides = ArrayList(8)
         }
     }
 
     class idMapPatch : idMapPrimitive {
-        protected val verts: idList<idDrawVert> = idList() // vertices
+        protected val verts: ArrayList<idDrawVert> = ArrayList() // vertices
         protected var expanded // true if vertices are spaced out
                 = false
         protected var explicitSubdivisions = false
@@ -484,7 +484,7 @@ object MapFile {
             width = height
             maxWidth = maxPatchWidth
             maxHeight = maxPatchHeight
-            verts.SetNum(maxWidth * maxHeight)
+            verts.ensureCapacity(maxWidth * maxHeight)
             expanded = false
         }
 
@@ -606,7 +606,7 @@ object MapFile {
             }
             width = patchWidth
             height = patchHeight
-            verts.SetNum(width * height, false)
+            verts.ensureCapacity(width * height)
         }
 
         companion object {
@@ -641,16 +641,16 @@ object MapFile {
                         return null
                     }
                 }
-                val patch = idMapPatch(info[0] as Int, info[1] as Int)
-                patch.SetSize(info[0] as Int, info[1] as Int)
+                val patch = idMapPatch(info[0].toInt(), info[1].toInt())
+                patch.SetSize(info[0].toInt(), info[1].toInt())
                 if (version < 2.0f) {
                     patch.SetMaterial("textures/$token")
                 } else {
                     patch.SetMaterial("" + token) //TODO:accept Objects, and cast within
                 }
                 if (patchDef3) {
-                    patch.SetHorzSubdivisions(info[2] as Int)
-                    patch.SetVertSubdivisions(info[3] as Int)
+                    patch.SetHorzSubdivisions(info[2].toInt())
+                    patch.SetVertSubdivisions(info[3].toInt())
                     patch.SetExplicitlySubdivided(true)
                 }
                 if (patch.GetWidth() < 0 || patch.GetHeight() < 0) {

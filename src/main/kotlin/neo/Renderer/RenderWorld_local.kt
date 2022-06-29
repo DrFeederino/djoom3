@@ -1840,7 +1840,7 @@ object RenderWorld_local {
                 p.w.GetPlane(p.plane)
                 p.next = portalAreas[a1].portals
                 portalAreas[a1].portals = p
-                doublePortals[i].portals[0] = p
+                doublePortals[i].portals.add(0, p)
 
                 // reverse it for a2
                 p = portal_s() // R_ClearedStaticAlloc(sizeof(p));
@@ -1850,7 +1850,7 @@ object RenderWorld_local {
                 p.w.GetPlane(p.plane)
                 p.next = portalAreas[a2].portals
                 portalAreas[a2].portals = p
-                doublePortals[i].portals[1] = p
+                doublePortals[i].portals.add(1, p)
                 i++
             }
             src.ExpectTokenString("}")

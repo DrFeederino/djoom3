@@ -4086,7 +4086,7 @@ object Simd_Generic {
             private fun jmtobb(joints: kotlin.collections.ArrayList<idJointMat>): ByteBuffer {
                 val byteBuffer =
                     ByteBuffer.allocate(idJointMat.SIZE * joints.size).order(ByteOrder.LITTLE_ENDIAN)
-                for (i in joints.indices) {
+                for (i in 0 until joints.size) {
                     byteBuffer.position(i * idJointMat.SIZE)
                     byteBuffer.asFloatBuffer().put(joints[i].ToFloatPtr())
                 }

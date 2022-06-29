@@ -730,10 +730,10 @@ object renderbump {
         }
 
         // itterate over the bounding box, testing against edge vectors
-        i = ibounds[0][1] as Int
+        i = ibounds[0][1].toInt()
         q = 0
         while (i < ibounds[1][1]) {
-            j = ibounds[0][0] as Int
+            j = ibounds[0][0].toInt()
             while (j < ibounds[1][0]) {
                 val dists = FloatArray(3)
                 val rb =

@@ -495,7 +495,7 @@ object draw_common {
 
     fun RB_STD_T_RenderShaderPasses(surf: drawSurf_s) {
         var stage: Int
-        draw_common.DBG_RB_STD_T_RenderShaderPasses++
+        DBG_RB_STD_T_RenderShaderPasses++
         val shader: idMaterial?
         var pStage: shaderStage_t
         val regs: FloatArray?
@@ -514,7 +514,7 @@ object draw_common {
         if (surf.space !== tr_local.backEnd.currentSpace) {
             qgl.qglLoadMatrixf(surf.space.modelViewMatrix)
             tr_local.backEnd.currentSpace = surf.space
-            draw_common.RB_SetProgramEnvironmentSpace()
+            RB_SetProgramEnvironmentSpace()
         }
 
         // change the scissor if needed
@@ -783,11 +783,11 @@ object draw_common {
 
             // set the state
             tr_backend.GL_State(pStage.drawStateBits) //marquisDeSade
-            draw_common.RB_PrepareStageTexturing(pStage, surf, ac)
+            RB_PrepareStageTexturing(pStage, surf, ac)
 
             // draw it
             tr_render.RB_DrawElementsWithCounters(tri)
-            draw_common.RB_FinishStageTexturing(pStage, surf, ac)
+            RB_FinishStageTexturing(pStage, surf, ac)
             if (pStage.vertexColor != stageVertexColor_t.SVC_IGNORE) {
                 qgl.qglDisableClientState(GL11.GL_COLOR_ARRAY)
                 tr_backend.GL_SelectTexture(1)
@@ -826,7 +826,7 @@ object draw_common {
 
         // if we are about to draw the first surface that needs
         // the rendering in a texture, copy it over
-        if (drawSurfs.get(0).material!!.GetSort() >= Material.SS_POST_PROCESS) {
+        if (drawSurfs[0].material!!.GetSort() >= Material.SS_POST_PROCESS) {
             if (RenderSystem_init.r_skipPostProcess.GetBool()) {
                 return 0
             }
@@ -846,7 +846,7 @@ object draw_common {
         Image.globalImages.BindNull()
         tr_backend.GL_SelectTexture(0)
         qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        draw_common.RB_SetProgramEnvironment()
+        RB_SetProgramEnvironment()
 
         // we don't use RB_RenderDrawSurfListWithFunction()
         // because we want to defer the matrix load because many
@@ -854,24 +854,24 @@ object draw_common {
         tr_local.backEnd.currentSpace = null
         i = 0
         while (i < numDrawSurfs /*&& numDrawSurfs == 5*/) {
-            if (drawSurfs.get(i).material!!.SuppressInSubview()) {
+            if (drawSurfs[i].material!!.SuppressInSubview()) {
                 i++
                 continue
             }
-            if (tr_local.backEnd.viewDef.isXraySubview && drawSurfs.get(i).space.entityDef != null) {
-                if (drawSurfs.get(i).space.entityDef.parms.xrayIndex != 2) {
+            if (tr_local.backEnd.viewDef.isXraySubview && drawSurfs[i].space.entityDef != null) {
+                if (drawSurfs[i].space.entityDef.parms.xrayIndex != 2) {
                     i++
                     continue
                 }
             }
 
             // we need to draw the post process shaders after we have drawn the fog lights
-            if (drawSurfs.get(i).material!!.GetSort() >= Material.SS_POST_PROCESS
+            if (drawSurfs[i].material!!.GetSort() >= Material.SS_POST_PROCESS
                 && !tr_local.backEnd.currentRenderCopied
             ) {
                 break
             }
-            draw_common.RB_STD_T_RenderShaderPasses(drawSurfs.get(i))
+            RB_STD_T_RenderShaderPasses(drawSurfs[i])
             i++
         }
         tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
@@ -1079,14 +1079,14 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
         qgl.qglTexCoord2f(0.5f, 0.5f) // make sure Q is set
-        draw_common.fogPlanes[0][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2]
-        draw_common.fogPlanes[0][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6]
-        draw_common.fogPlanes[0][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10]
-        draw_common.fogPlanes[0][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14]
-        draw_common.fogPlanes[1][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0]
-        draw_common.fogPlanes[1][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4]
-        draw_common.fogPlanes[1][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8]
-        draw_common.fogPlanes[1][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12]
+        fogPlanes[0][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2]
+        fogPlanes[0][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6]
+        fogPlanes[0][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10]
+        fogPlanes[0][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14]
+        fogPlanes[1][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0]
+        fogPlanes[1][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4]
+        fogPlanes[1][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8]
+        fogPlanes[1][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12]
 
         // texture 1 is the entering plane fade correction
         tr_backend.GL_SelectTexture(1)
@@ -1096,18 +1096,18 @@ object draw_common {
         qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
 
         // T will get a texgen for the fade plane, which is always the "top" plane on unrotated lights
-        draw_common.fogPlanes[2][0] = 0.001f * tr_local.backEnd.vLight.fogPlane[0]
-        draw_common.fogPlanes[2][1] = 0.001f * tr_local.backEnd.vLight.fogPlane[1]
-        draw_common.fogPlanes[2][2] = 0.001f * tr_local.backEnd.vLight.fogPlane[2]
-        draw_common.fogPlanes[2][3] = 0.001f * tr_local.backEnd.vLight.fogPlane[3]
+        fogPlanes[2][0] = 0.001f * tr_local.backEnd.vLight.fogPlane[0]
+        fogPlanes[2][1] = 0.001f * tr_local.backEnd.vLight.fogPlane[1]
+        fogPlanes[2][2] = 0.001f * tr_local.backEnd.vLight.fogPlane[2]
+        fogPlanes[2][3] = 0.001f * tr_local.backEnd.vLight.fogPlane[3]
 
         // S is based on the view origin
         val s =
-            tr_local.backEnd.viewDef.renderView.vieworg.times(draw_common.fogPlanes[2].Normal()) + draw_common.fogPlanes[2][3]
-        draw_common.fogPlanes[3][0] = 0f
-        draw_common.fogPlanes[3][1] = 0f
-        draw_common.fogPlanes[3][2] = 0f
-        draw_common.fogPlanes[3][3] = tr_local.FOG_ENTER + s
+            tr_local.backEnd.viewDef.renderView.vieworg.times(fogPlanes[2].Normal()) + fogPlanes[2][3]
+        fogPlanes[3][0] = 0f
+        fogPlanes[3][1] = 0f
+        fogPlanes[3][2] = 0f
+        fogPlanes[3][3] = tr_local.FOG_ENTER + s
         qgl.qglTexCoord2f(tr_local.FOG_ENTER + s, tr_local.FOG_ENTER)
 
         // draw it
@@ -1174,9 +1174,9 @@ object draw_common {
 //		}
 //}
             if (vLight.lightShader.IsFogLight()) {
-                draw_common.RB_FogPass(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
+                RB_FogPass(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
             } else if (vLight.lightShader.IsBlendLight()) {
-                draw_common.RB_BlendLight(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
+                RB_BlendLight(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
             }
             qgl.qglDisable(GL11.GL_STENCIL_TEST)
             vLight = vLight.next
@@ -1269,7 +1269,7 @@ object draw_common {
 
         // fill the depth buffer and clear color buffer to black except on
         // subviews
-        draw_common.RB_STD_FillDepthBuffer(drawSurfs, numDrawSurfs)
+        RB_STD_FillDepthBuffer(drawSurfs, numDrawSurfs)
         when (tr_local.tr.backEndRenderer) {
             backEndName_t.BE_ARB -> draw_arb.RB_ARB_DrawInteractions()
             backEndName_t.BE_ARB2 -> draw_arb2.RB_ARB2_DrawInteractions()
@@ -1279,17 +1279,17 @@ object draw_common {
         qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
 
         // uplight the entire screen to crutch up not having better blending range
-        draw_common.RB_STD_LightScale()
+        RB_STD_LightScale()
 
         // now draw any non-light dependent shading passes
-        val processed = draw_common.RB_STD_DrawShaderPasses(drawSurfs, numDrawSurfs)
+        val processed = RB_STD_DrawShaderPasses(drawSurfs, numDrawSurfs)
 
         // fob and blend lights
-        draw_common.RB_STD_FogAllLights()
+        RB_STD_FogAllLights()
 
         // now draw any post-processing effects using _currentRender
         if (processed < numDrawSurfs) {
-            draw_common.RB_STD_DrawShaderPasses(
+            RB_STD_DrawShaderPasses(
                 Arrays.copyOfRange(drawSurfs, processed, numDrawSurfs),
                 numDrawSurfs - processed
             )
@@ -1439,11 +1439,11 @@ object draw_common {
                     pStage.texture.image[0].Bind()
 
                     // set texture matrix and texGens
-                    draw_common.RB_PrepareStageTexturing(pStage, surf, ac)
+                    RB_PrepareStageTexturing(pStage, surf, ac)
 
                     // draw it
                     tr_render.RB_DrawElementsWithCounters(tri)
-                    draw_common.RB_FinishStageTexturing(pStage, surf, ac)
+                    RB_FinishStageTexturing(pStage, surf, ac)
                     stage++
                 }
                 qgl.qglDisable(GL11.GL_ALPHA_TEST)
@@ -1701,7 +1701,7 @@ object draw_common {
             if (tr_local.backEnd.currentSpace !== surf.space) {
                 val local = idPlane()
                 tr_backend.GL_SelectTexture(0)
-                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[0], local)
+                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[0], local)
                 local.plusAssign(3, 0.5f)
                 qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
 
@@ -1712,10 +1712,10 @@ object draw_common {
                 tr_backend.GL_SelectTexture(1)
 
                 // GL_S is constant per viewer
-                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[2], local)
+                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[2], local)
                 local.plusAssign(3, tr_local.FOG_ENTER)
                 qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
-                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, draw_common.fogPlanes[3], local)
+                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[3], local)
                 qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
             }
             RB_T_RenderTriangleSurface.Companion.INSTANCE.run(surf)

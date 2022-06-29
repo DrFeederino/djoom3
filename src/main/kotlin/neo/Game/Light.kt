@@ -1,14 +1,7 @@
 package neo.Game
 
 import neo.Game.Entity.idEntity
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t3
-import neo.Game.GameSys.Class.eventCallback_t4
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -656,9 +649,9 @@ object Light {
                 ).toInt()
             )
             msg.WriteFloat(renderLight.shaderParms[RenderWorld.SHADERPARM_TIMESCALE], 5, 10)
-            msg.WriteLong(renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] as Int)
+            msg.WriteLong(renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET].toInt())
             //msg.WriteByte( renderLight.shaderParms[SHADERPARM_DIVERSITY] );
-            msg.WriteShort(renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] as Int)
+            msg.WriteShort(renderLight.shaderParms[RenderWorld.SHADERPARM_MODE].toInt())
             WriteColorToSnapshot(msg)
         }
 

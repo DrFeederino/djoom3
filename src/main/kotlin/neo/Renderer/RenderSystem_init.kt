@@ -43,6 +43,7 @@ import neo.sys.win_main
 import neo.sys.win_shared
 import neo.ui.UserInterface
 import org.lwjgl.BufferUtils
+import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.*
 import java.nio.ByteBuffer
 import kotlin.math.abs
@@ -143,8 +144,8 @@ class RenderSystem_init {
                 val vidWidth = intArrayOf(0)
                 val vidHeight = intArrayOf(0)
                 R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger())
-                tr_local.glConfig.vidWidth = 640 //vidWidth[0];HACKME::0
-                tr_local.glConfig.vidHeight = 480 //vidHeight[0];
+                tr_local.glConfig.vidWidth = 1280 //vidWidth[0];HACKME::0
+                tr_local.glConfig.vidHeight = 720 //vidHeight[0];
                 parms.width = tr_local.glConfig.vidWidth
                 parms.height = tr_local.glConfig.vidHeight
                 parms.fullScreen = r_fullscreen.GetBool()
@@ -173,13 +174,14 @@ class RenderSystem_init {
             snd_system.soundSystem.InitHW()
 
             // get our config strings
-            tr_local.glConfig.vendor_string = qgl.qglGetString(GL11.GL_VENDOR)
-            tr_local.glConfig.renderer_string = qgl.qglGetString(GL11.GL_RENDERER)
-            tr_local.glConfig.version_string = qgl.qglGetString(GL11.GL_VERSION)
+
+            tr_local.glConfig.vendor_string = qgl.qglGetString(GL21.GL_VENDOR)
+            tr_local.glConfig.renderer_string = qgl.qglGetString(GL21.GL_RENDERER)
+            tr_local.glConfig.version_string = GLFW.glfwGetVersionString()
             val bla = StringBuilder()
             var ext: String?
             var j = 0
-            val glExtensions = qgl.qglGetStringi(GL11.GL_EXTENSIONS, j)!!.split(" ")
+            val glExtensions = qgl.qglGetStringi(GL21.GL_EXTENSIONS, j)!!.split(" ")
             while (glExtensions.size != j) {
                 bla.append(glExtensions[j]).append(' ')
                 j++
@@ -187,7 +189,7 @@ class RenderSystem_init {
             tr_local.glConfig.extensions_string = bla.toString()
 
             // OpenGL driver constants
-            qgl.qglGetIntegerv(GL11.GL_MAX_TEXTURE_SIZE, temp)
+            qgl.qglGetIntegerv(GL21.GL_MAX_TEXTURE_SIZE, temp)
             tr_local.glConfig.maxTextureSize = temp.get()
 
             // stubbed or broken drivers may have reported 0...
@@ -201,9 +203,6 @@ class RenderSystem_init {
 
             // parse our vertex and fragment programs, possibly disable support for
             // one of the paths if there was an error
-//        R_NV10_Init();
-//        R_NV20_Init();
-//        R_R200_Init();
             draw_arb2.R_ARB2_Init()
             CmdSystem.cmdSystem.AddCommand(
                 "reloadARBprograms",
@@ -2372,7 +2371,7 @@ class RenderSystem_init {
         )
         r_fullscreen = idCVar(
             "r_fullscreen",
-            "1",
+            "0",
             CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
             "0 = windowed, 1 = full screen"
         )

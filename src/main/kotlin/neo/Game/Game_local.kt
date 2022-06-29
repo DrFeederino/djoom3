@@ -25,11 +25,9 @@ import neo.Game.Game.gameImport_t
 import neo.Game.Game.gameReturn_t
 import neo.Game.Game.idGame
 import neo.Game.GameEdit.idEditEntities
-import neo.Game.GameSys.Class.idAllocError
-import neo.Game.GameSys.Class.idClass
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Class.idClass.DisplayInfo_f
 import neo.Game.GameSys.Class.idClass.ListClasses_f
-import neo.Game.GameSys.Class.idTypeInfo
 import neo.Game.GameSys.Event.idEvent
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -704,7 +702,7 @@ class Game_local {
                             i++
                             continue
                         }
-                        if (entities[i] != null && entities[i] is idPlayer) {
+                        if (entities.getOrNull(i) != null && entities[i] is idPlayer) {
                             if (0 == idStr.Icmp(
                                     this.userInfo[clientNum].GetString("ui_name"),
                                     this.userInfo[i].GetString("ui_name")
@@ -721,7 +719,7 @@ class Game_local {
                         i++
                     }
                 }
-                if (entities[clientNum] != null && entities[clientNum] is idPlayer) {
+                if (entities.getOrNull(clientNum) != null && entities[clientNum] is idPlayer) {
                     modifiedInfo = modifiedInfo or (entities[clientNum] as idPlayer).UserInfoChanged(canModify)
                 }
                 if (!isClient) {
@@ -738,7 +736,7 @@ class Game_local {
         }
 
         override fun GetUserInfo(clientNum: Int): idDict? {
-            return if (entities[clientNum] != null && entities[clientNum] is idPlayer) {
+            return if (entities.getOrNull(clientNum) != null && entities[clientNum] is idPlayer) {
                 userInfo[clientNum]
             } else null
         }
@@ -758,11 +756,11 @@ class Game_local {
         }
 
         override fun GetPersistentPlayerInfo(clientNum: Int): idDict {
-            val ent: idEntity
+            val ent: idEntity?
             persistentPlayerInfo[clientNum].Clear()
-            ent = entities[clientNum]
+            ent = entities.getOrNull(clientNum)
             if (ent != null && ent is idPlayer) {
-                (ent as idPlayer).SavePersistantInfo()
+                ent.SavePersistantInfo()
             }
             return persistentPlayerInfo[clientNum]
         }
@@ -871,7 +869,7 @@ class Game_local {
                 spawnIds[i] = savegame.ReadInt()
 
                 // restore the entityNumber
-                if (entities[i] != null) {
+                if (entities.getOrNull(i) != null) {
                     entities[i].entityNumber = i
                 }
                 i++
@@ -4270,12 +4268,12 @@ class Game_local {
                 i++
             }
             //	memset( usercmds, 0, sizeof( usercmds ) );
-            for (u in usercmds.indices) {
+            for (u in 0 until usercmds.size) {
                 usercmds[u] = usercmd_t()
             }
             //	memset( entities, 0, sizeof( entities ) );
-            for (e in entities.indices) {
-                entities[e] = idEntity()
+            for (e in 0 until entities.size) {
+                entities.add(e, idEntity())
             }
             spawnIds = IntArray(spawnIds.size)
             Arrays.fill(spawnIds, -1) //	memset( spawnIds, -1, sizeof( spawnIds ) );
@@ -4342,14 +4340,14 @@ class Game_local {
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             for (a in clientEntityStates.indices) {
                 for (b in 0 until clientEntityStates[0].size) {
-                    clientEntityStates[a][b] = entityState_s()
+                    clientEntityStates[a].add(b, entityState_s())
                 }
             }
             clientPVS =
                 Array(clientPVS.size) { IntArray(clientPVS[0].size) } //memset( clientPVS, 0, sizeof( clientPVS ) );
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            for (c in clientSnapshots.indices) {
-                clientSnapshots[c] = snapshot_s()
+            for (c in 0 until clientSnapshots.size) {
+                clientSnapshots.add(c, snapshot_s())
             }
             eventQueue.Init()
             savedEventQueue.Init()
@@ -5534,7 +5532,7 @@ class Game_local {
             while (i < MAX_CLIENTS) {
                 type = 0
                 while (type < DeclManager.declManager.GetNumDeclTypes()) {
-                    clientDeclRemap[i][type] = ArrayList()
+                    clientDeclRemap[i].add(type, ArrayList())
                     type++
                 }
                 i++

@@ -388,7 +388,7 @@ object draw_arb2 {
 
         // see if it is already loaded
         i = 0
-        while (progs[i] != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
+        while (progs.getOrNull(i) != null && TempDump.isNotNullOrEmpty(progs[i].name)) {
             if (progs[i].target != target) {
                 i++
                 continue
@@ -405,7 +405,7 @@ object draw_arb2 {
         }
 
         // add it to the list and load it
-        progs[i] = progDef_t(target, program_t.PROG_INVALID, program) // will be gen'd by R_LoadARBProgram
+        progs.add(i, progDef_t(target, program_t.PROG_INVALID, program)) // will be gen'd by R_LoadARBProgram
         R_LoadARBProgram(i)
         return progs[i].ident
     }
