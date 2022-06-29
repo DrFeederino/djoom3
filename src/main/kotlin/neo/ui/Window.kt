@@ -13,7 +13,6 @@ import neo.framework.File_h.idFile
 import neo.framework.KeyInput.idKeyInput
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Dict_h.idKeyValue
-import neo.idlib.Lib
 import neo.idlib.Text.Lexer
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str
@@ -36,6 +35,7 @@ import neo.ui.BindWindow.idBindWindow
 import neo.ui.ChoiceWindow.idChoiceWindow
 import neo.ui.DeviceContext.idDeviceContext
 import neo.ui.DeviceContext.idDeviceContext.CURSOR
+import neo.ui.DeviceContext.idDeviceContext.Companion.colorBlack
 import neo.ui.EditWindow.idEditWindow
 import neo.ui.FieldWindow.idFieldWindow
 import neo.ui.GameBearShootWindow.idGameBearShootWindow
@@ -1790,7 +1790,7 @@ object Window {
                     shadowText.toString(),
                     textScale.data,
                     textAlign.code,
-                    Lib.colorBlack,
+                    colorBlack,
                     shadowRect,
                     !TempDump.itob(flags and WIN_NOWRAP),
                     -1

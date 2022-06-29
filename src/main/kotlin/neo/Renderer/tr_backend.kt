@@ -436,6 +436,7 @@ object tr_backend {
             try {
                 Scanner(RenderSystem_init.r_clear.GetString()).use { sscanf ->
 //		if ( sscanf( r_clear.GetString(), "%f %f %f", c[0], c[1], c[2] ) == 3 ) {
+                    sscanf.useLocale(Locale.US)
                     val c = floatArrayOf(sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat())
                     //if 3 floats are parsed
                     qgl.qglClearColor(c[0], c[1], c[2], 1f)

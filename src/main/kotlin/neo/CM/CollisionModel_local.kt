@@ -1051,9 +1051,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 )
             } else {
                 sscanf = Scanner(CollisionModel_debug.cm_testOrigin.GetString())
+                sscanf.useLocale(Locale.US)
                 CollisionModel_debug.start.set(sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat())
             }
             sscanf = Scanner(CollisionModel_debug.cm_testBox.GetString())
+            sscanf.useLocale(Locale.US)
             bounds.set(
                 sscanf.nextFloat(),
                 sscanf.nextFloat(),
@@ -1065,6 +1067,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             //	sscanf( cm_testBox.GetString(), "%f %f %f %f %f %f", &bounds[0][0], &bounds[0][1], &bounds[0][2],
 //										&bounds[1][0], &bounds[1][1], &bounds[1][2] );
             sscanf = Scanner(CollisionModel_debug.cm_testBoxRotation.GetString())
+            sscanf.useLocale(Locale.US)
             boxAngles.set(sscanf.nextFloat(), sscanf.nextFloat(), sscanf.nextFloat())
             //	sscanf( cm_testBoxRotation.GetString(), "%f %f %f", &boxAngles[0], &boxAngles[1], &boxAngles[2] );
             boxAxis = boxAngles.ToMat3()

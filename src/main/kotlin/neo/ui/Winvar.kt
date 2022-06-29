@@ -617,6 +617,7 @@ object Winvar {
 
         override fun set(`val`: String) {
             Scanner(`val`).use { sscanf ->
+                sscanf.useLocale(Locale.US)
                 if (`val`.contains(",")) {
 //			sscanf( val, "%f,%f,%f,%f", data.x, data.y, data.w, data.h );
                     if (sscanf.hasNext()) {

@@ -798,6 +798,7 @@ object Item {
                         if (TempDump.isNotNullOrEmpty(SysCvar.g_dropItemRotation.GetString())) {
                             angles.Zero()
                             val sscanf = Scanner(SysCvar.g_dropItemRotation.GetString())
+                            sscanf.useLocale(Locale.US)
                             angles.pitch = sscanf.nextFloat()
                             angles.yaw = sscanf.nextFloat()
                             angles.roll = sscanf.nextFloat()

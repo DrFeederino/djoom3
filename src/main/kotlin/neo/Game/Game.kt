@@ -1070,6 +1070,7 @@ object Game {
                 }
                 //		sscanf( arg.GetValue(), "%f %f %f %f %f %f", &origin.x, &origin.y, &origin.z, &angles.pitch, &angles.yaw, &angles.roll );
                 val sscanf = Scanner(arg.GetValue().toString())
+                sscanf.useLocale(Locale.US)
                 origin.x = sscanf.nextFloat()
                 origin.y = sscanf.nextFloat()
                 origin.z = sscanf.nextFloat()

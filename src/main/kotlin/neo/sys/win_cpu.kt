@@ -164,6 +164,7 @@ object win_cpu {
             val command = "system_profiler SPHardwareDataType"
             val sysctl: Process = Runtime.getRuntime().exec(command)
             val scanner = Scanner(sysctl.inputStream)
+            scanner.useLocale(Locale.US)
             val sb = StringBuffer()
             while (scanner.hasNextLine()) {
                 sb.append(scanner.nextLine())

@@ -678,7 +678,8 @@ object MapFile {
                         }
 
 //                    vert = patch.oGet(i * patch.GetWidth() + j);
-                        vert = patch.verts.set(i * patch.GetWidth() + j, idDrawVert())
+                        patch.verts.add(i * patch.GetWidth() + j, idDrawVert())
+                        vert = patch.verts[i * patch.GetWidth() + j]
                         vert.xyz[0] = v[0] - origin[0]
                         vert.xyz[1] = v[1] - origin[1]
                         vert.xyz[2] = v[2] - origin[2]
