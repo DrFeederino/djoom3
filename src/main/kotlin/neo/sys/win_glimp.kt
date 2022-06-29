@@ -68,7 +68,7 @@ object win_glimp {
         glViewport(0, 0, parms.width, parms.height)
         glfwShowWindow(window)
         glfwFocusWindow(window)
-        glfwPollEvents()
+        //glfwPollEvents()
 
         glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_FALSE)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)

@@ -260,9 +260,6 @@ class idProgram {
     //    changed between savegames
     fun Startup(defaultScript: String) {
         Game_local.gameLocal.Printf("Initializing scripts\n")
-        // Dr. Feederino: Initializing scripts fails due to issues with '&&' in weapon_script.script.
-        // Needs further investigation. Currently, startup returns ASAP, doesn't break anything.
-        return
         // make sure all data is freed up
         idThread.Restart()
 
