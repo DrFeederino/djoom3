@@ -3025,7 +3025,7 @@ class Image {
                     if (image.filter != filter || image.repeat != repeat) {
                         // we might want to have the system reset these parameters on every bind and
                         // share the image data
-                        image = image.hashNext!!
+                        image = image.hashNext
                         continue
                     }
                     if (image.allowDownSize == allowDownSize && image.depth == depth) {
