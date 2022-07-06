@@ -39,7 +39,7 @@ object Image_program {
         }
         R_ParseImageProgram_r(src, pic, width, height, timestamps, depth)
         src.FreeSource()
-        return pic[-+-0]
+        return pic[0]
     }
 
     /*

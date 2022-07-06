@@ -115,7 +115,7 @@ class Image {
         private val imageManager: idImageManager = idImageManager()
 
         // pointer to global list for the rest of the system
-        var globalImages: idImageManager = Image.imageManager
+        var globalImages: idImageManager = imageManager
     }
 
 
@@ -447,8 +447,8 @@ class Image {
                     cacheUsagePrev!!.cacheUsageNext = cacheUsageNext
                 }
                 // link in at the head of the list
-                cacheUsageNext = Image.globalImages.cacheLRU!!.cacheUsageNext
-                cacheUsagePrev = Image.globalImages.cacheLRU
+                cacheUsageNext = globalImages.cacheLRU!!.cacheUsageNext
+                cacheUsagePrev = globalImages.cacheLRU
                 cacheUsageNext!!.cacheUsagePrev = this
                 cacheUsagePrev!!.cacheUsageNext = this
             }
@@ -542,8 +542,8 @@ class Image {
                     cacheUsagePrev!!.cacheUsageNext = cacheUsageNext
                 }
                 // link in at the head of the list
-                cacheUsageNext = Image.globalImages.cacheLRU!!.cacheUsageNext
-                cacheUsagePrev = Image.globalImages.cacheLRU
+                cacheUsageNext = globalImages.cacheLRU!!.cacheUsageNext
+                cacheUsagePrev = globalImages.cacheLRU
                 cacheUsageNext!!.cacheUsagePrev = this
                 cacheUsagePrev!!.cacheUsageNext = this
             }
@@ -975,12 +975,12 @@ class Image {
                     qgl.qglTexParameterf(
                         GL12.GL_TEXTURE_3D,
                         GL11.GL_TEXTURE_MIN_FILTER,
-                        Image.globalImages.textureMinFilter.toFloat()
+                        globalImages.textureMinFilter.toFloat()
                     )
                     qgl.qglTexParameterf(
                         GL12.GL_TEXTURE_3D,
                         GL11.GL_TEXTURE_MAG_FILTER,
-                        Image.globalImages.textureMaxFilter.toFloat()
+                        globalImages.textureMaxFilter.toFloat()
                     )
                 }
                 textureFilter_t.TF_LINEAR -> {
@@ -1073,12 +1073,12 @@ class Image {
                     qgl.qglTexParameterf(
                         GL13.GL_TEXTURE_CUBE_MAP /*_EXT*/,
                         GL11.GL_TEXTURE_MIN_FILTER,
-                        Image.globalImages.textureMinFilter.toFloat()
+                        globalImages.textureMinFilter.toFloat()
                     )
                     qgl.qglTexParameterf(
                         GL13.GL_TEXTURE_CUBE_MAP /*_EXT*/,
                         GL11.GL_TEXTURE_MAG_FILTER,
-                        Image.globalImages.textureMaxFilter.toFloat()
+                        globalImages.textureMaxFilter.toFloat()
                     )
                 }
                 textureFilter_t.TF_LINEAR -> {
@@ -1681,12 +1681,12 @@ class Image {
                     qgl.qglTexParameterf(
                         GL11.GL_TEXTURE_2D,
                         GL11.GL_TEXTURE_MIN_FILTER,
-                        Image.globalImages.textureMinFilter.toFloat()
+                        globalImages.textureMinFilter.toFloat()
                     )
                     qgl.qglTexParameterf(
                         GL11.GL_TEXTURE_2D,
                         GL11.GL_TEXTURE_MAG_FILTER,
-                        Image.globalImages.textureMaxFilter.toFloat()
+                        globalImages.textureMaxFilter.toFloat()
                     )
                 }
                 textureFilter_t.TF_LINEAR -> {
@@ -1705,7 +1705,7 @@ class Image {
                     qgl.qglTexParameterf(
                         GL11.GL_TEXTURE_2D,
                         EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                        Image.globalImages.textureAnisotropy
+                        globalImages.textureAnisotropy
                     )
                 } else {
                     qgl.qglTexParameterf(
@@ -1716,7 +1716,7 @@ class Image {
                 }
             }
             if (tr_local.glConfig.textureLODBiasAvailable) {
-                qgl.qglTexParameterf(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, Image.globalImages.textureLODBias)
+                qgl.qglTexParameterf(GL11.GL_TEXTURE_2D, GL14.GL_TEXTURE_LOD_BIAS, globalImages.textureLODBias)
             }
             when (repeat) {
                 textureRepeat_t.TR_REPEAT -> {
@@ -1810,7 +1810,7 @@ class Image {
             ImageProgramStringToCompressedFileName(imgName.toString(), filename0)
             val filename = filename0[0]
             val numLevels = NumLevelsForImageSize(uploadWidth._val, uploadHeight._val)
-            if (numLevels > Image.MAX_TEXTURE_LEVELS) {
+            if (numLevels > MAX_TEXTURE_LEVELS) {
                 Common.common.Warning("R_WritePrecompressedImage: level > MAX_TEXTURE_LEVELS for image %s", filename)
                 return
             }
@@ -1861,7 +1861,7 @@ class Image {
                         EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT -> format = "DXT5"
                     }
                 }
-                Image.globalImages.AddDDSCommand(
+                globalImages.AddDDSCommand(
                     Str.va(
                         "z:/d3xp/compressonator/thecompressonator -convert \"%s\" \"%s\" %s -mipmaps\n",
                         inFile.toString(),
@@ -1875,53 +1875,53 @@ class Image {
             //	memset( &header, 0, sizeof(header) );
             header = ddsFileHeader_t()
             //            header.dwSize = sizeof(header);
-            header.dwFlags = Image.DDSF_CAPS or Image.DDSF_PIXELFORMAT or Image.DDSF_WIDTH or Image.DDSF_HEIGHT
+            header.dwFlags = DDSF_CAPS or DDSF_PIXELFORMAT or DDSF_WIDTH or DDSF_HEIGHT
             header.dwHeight = uploadHeight._val
             header.dwWidth = uploadWidth._val
 
             // hack in our monochrome flag for the NV20 optimization
             if (isMonochrome[0]) {
-                header.dwFlags = header.dwFlags or Image.DDSF_ID_MONOCHROME
+                header.dwFlags = header.dwFlags or DDSF_ID_MONOCHROME
             }
             if (Image_load.FormatIsDXT(altInternalFormat)) {
                 // size (in bytes) of the compressed base image
-                header.dwFlags = header.dwFlags or Image.DDSF_LINEARSIZE
+                header.dwFlags = header.dwFlags or DDSF_LINEARSIZE
                 header.dwPitchOrLinearSize = ((uploadWidth._val + 3) / 4 * ((uploadHeight._val + 3) / 4)
                         * if (altInternalFormat <= EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) 8 else 16)
             } else {
                 // 4 Byte aligned line width (from nv_dds)
-                header.dwFlags = header.dwFlags or Image.DDSF_PITCH
+                header.dwFlags = header.dwFlags or DDSF_PITCH
                 header.dwPitchOrLinearSize = uploadWidth._val * bitSize + 31 and -32 shr 3
             }
-            header.dwCaps1 = Image.DDSF_TEXTURE
+            header.dwCaps1 = DDSF_TEXTURE
             if (numLevels > 1) {
                 header.dwMipMapCount = numLevels
-                header.dwFlags = header.dwFlags or Image.DDSF_MIPMAPCOUNT
-                header.dwCaps1 = header.dwCaps1 or (Image.DDSF_MIPMAP or Image.DDSF_COMPLEX)
+                header.dwFlags = header.dwFlags or DDSF_MIPMAPCOUNT
+                header.dwCaps1 = header.dwCaps1 or (DDSF_MIPMAP or DDSF_COMPLEX)
             }
 
 //            header.ddspf.dwSize = sizeof(header.ddspf);
             if (Image_load.FormatIsDXT(altInternalFormat)) {
-                header.ddspf.dwFlags = Image.DDSF_FOURCC
+                header.ddspf.dwFlags = DDSF_FOURCC
                 when (altInternalFormat) {
                     EXTTextureCompressionS3TC.GL_COMPRESSED_RGB_S3TC_DXT1_EXT -> header.ddspf.dwFourCC =
-                        Image.DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '1'.code)
+                        DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '1'.code)
                     EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT -> {
-                        header.ddspf.dwFlags = header.ddspf.dwFlags or Image.DDSF_ALPHAPIXELS
-                        header.ddspf.dwFourCC = Image.DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '1'.code)
+                        header.ddspf.dwFlags = header.ddspf.dwFlags or DDSF_ALPHAPIXELS
+                        header.ddspf.dwFourCC = DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '1'.code)
                     }
                     EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT -> header.ddspf.dwFourCC =
-                        Image.DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '3'.code)
+                        DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '3'.code)
                     EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT -> header.ddspf.dwFourCC =
-                        Image.DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '5'.code)
+                        DDS_MAKEFOURCC('D'.code, 'X'.code, 'T'.code, '5'.code)
                 }
             } else {
                 header.ddspf.dwFlags =
-                    if (internalFormat == 0x80E5) Image.DDSF_RGB or Image.DDSF_ID_INDEXCOLOR else Image.DDSF_RGB
+                    if (internalFormat == 0x80E5) DDSF_RGB or DDSF_ID_INDEXCOLOR else DDSF_RGB
                 header.ddspf.dwRGBBitCount = bitSize
                 when (altInternalFormat) {
                     EXTBGRA.GL_BGRA_EXT, GL11.GL_LUMINANCE_ALPHA -> {
-                        header.ddspf.dwFlags = header.ddspf.dwFlags or Image.DDSF_ALPHAPIXELS
+                        header.ddspf.dwFlags = header.ddspf.dwFlags or DDSF_ALPHAPIXELS
                         header.ddspf.dwABitMask = -0x1000000
                         header.ddspf.dwRBitMask = 0x00FF0000
                         header.ddspf.dwGBitMask = 0x0000FF00
@@ -1933,7 +1933,7 @@ class Image {
                         header.ddspf.dwBBitMask = 0x000000FF
                     }
                     GL11.GL_ALPHA -> {
-                        header.ddspf.dwFlags = Image.DDSF_ALPHAPIXELS
+                        header.ddspf.dwFlags = DDSF_ALPHAPIXELS
                         header.ddspf.dwABitMask = -0x1000000
                     }
                     else -> {
@@ -2063,7 +2063,7 @@ class Image {
             data.position(4) //, 4);
             val _header = ddsFileHeader_t(data)
             val ddspf_dwFlags: Int = Lib.LittleLong(_header.ddspf.dwFlags)
-            if (magic != Image.DDS_MAKEFOURCC('D'.code, 'D'.code, 'S'.code, ' '.code).toLong()) {
+            if (magic != DDS_MAKEFOURCC('D'.code, 'D'.code, 'S'.code, ' '.code).toLong()) {
                 Common.common.Printf("CheckPrecompressedImage( %s ): magic != 'DDS '\n", imgName.toString())
                 //                R_StaticFree(data);
                 return false
@@ -2071,7 +2071,7 @@ class Image {
 
             // if we don't support color index textures, we must load the full image
             // should we just expand the 256 color image to 32 bit for upload?
-            if (ddspf_dwFlags and Image.DDSF_ID_INDEXCOLOR != 0 && !tr_local.glConfig.sharedTexturePaletteAvailable) {
+            if (ddspf_dwFlags and DDSF_ID_INDEXCOLOR != 0 && !tr_local.glConfig.sharedTexturePaletteAvailable) {
 //                R_StaticFree(daDta);
                 return false
             }
@@ -2126,33 +2126,33 @@ class Image {
             precompressedFile = true
             uploadWidth._val = (header.dwWidth)
             uploadHeight._val = (header.dwHeight)
-            if (header.ddspf.dwFlags and Image.DDSF_FOURCC != 0) {
+            if (header.ddspf.dwFlags and DDSF_FOURCC != 0) {
 //                System.out.printf("%d\n", header.ddspf.dwFourCC);
 //                switch (bla[DEBUG_dwFourCC++]) {
                 internalFormat = when (header.ddspf.dwFourCC) {
-                    Image.DDS_MAKEFOURCC_DXT1 -> if (header.ddspf.dwFlags and Image.DDSF_ALPHAPIXELS != 0) {
+                    DDS_MAKEFOURCC_DXT1 -> if (header.ddspf.dwFlags and DDSF_ALPHAPIXELS != 0) {
                         EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
                         //                            System.out.printf("GL_COMPRESSED_RGBA_S3TC_DXT1_EXT\n");
                     } else {
                         EXTTextureCompressionS3TC.GL_COMPRESSED_RGB_S3TC_DXT1_EXT
                         //                            System.out.printf("GL_COMPRESSED_RGB_S3TC_DXT1_EXT\n");
                     }
-                    Image.DDS_MAKEFOURCC_DXT3 -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
-                    Image.DDS_MAKEFOURCC_DXT5 -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
-                    Image.DDS_MAKEFOURCC_RXGB -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+                    DDS_MAKEFOURCC_DXT3 -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
+                    DDS_MAKEFOURCC_DXT5 -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+                    DDS_MAKEFOURCC_RXGB -> EXTTextureCompressionS3TC.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
                     else -> {
                         Common.common.Warning("Invalid compressed internal format\n")
                         return
                     }
                 }
-            } else if (header.ddspf.dwFlags and Image.DDSF_RGBA != 0 && header.ddspf.dwRGBBitCount == 32) {
+            } else if (header.ddspf.dwFlags and DDSF_RGBA != 0 && header.ddspf.dwRGBBitCount == 32) {
                 externalFormat = EXTBGRA.GL_BGRA_EXT
                 internalFormat = GL11.GL_RGBA8
-            } else if (header.ddspf.dwFlags and Image.DDSF_RGB != 0 && header.ddspf.dwRGBBitCount == 32) {
+            } else if (header.ddspf.dwFlags and DDSF_RGB != 0 && header.ddspf.dwRGBBitCount == 32) {
                 externalFormat = EXTBGRA.GL_BGRA_EXT
                 internalFormat = GL11.GL_RGBA8
-            } else if (header.ddspf.dwFlags and Image.DDSF_RGB != 0 && header.ddspf.dwRGBBitCount == 24) {
-                if (header.ddspf.dwFlags and Image.DDSF_ID_INDEXCOLOR != 0) {
+            } else if (header.ddspf.dwFlags and DDSF_RGB != 0 && header.ddspf.dwRGBBitCount == 24) {
+                if (header.ddspf.dwFlags and DDSF_ID_INDEXCOLOR != 0) {
                     externalFormat = GL11.GL_COLOR_INDEX
                     internalFormat = 0x80E5
                 } else {
@@ -2168,13 +2168,13 @@ class Image {
             }
 
             // we need the monochrome flag for the NV20 optimized path
-            if (header.dwFlags and Image.DDSF_ID_MONOCHROME != 0) {
+            if (header.dwFlags and DDSF_ID_MONOCHROME != 0) {
                 isMonochrome[0] = true
             }
             type = textureType_t.TT_2D // FIXME: we may want to support pre-compressed cube maps in the future
             Bind()
             var numMipmaps = 1
-            if (header.dwFlags and Image.DDSF_MIPMAPCOUNT != 0) {
+            if (header.dwFlags and DDSF_MIPMAPCOUNT != 0) {
                 numMipmaps = header.dwMipMapCount
             }
             var uw = uploadWidth._val
@@ -2249,7 +2249,7 @@ class Image {
 
             // this is the ONLY place generatorFunction will ever be called
             if (generatorFunction != null) {
-                generatorFunction!!.run(this)
+                generatorFunction?.run(this)
                 return
             }
 
@@ -2294,11 +2294,9 @@ class Image {
                     }
                     // fall through to load the normal image
                 }
-                run {
-                    val depth = arrayOf(this.depth)
-                    pic = Image_program.R_LoadImageProgram(imgName.toString(), width, height, timestamp, depth)
-                    this.depth = depth[0]
-                }
+                val depth = arrayOf(this.depth)
+                pic = R_LoadImageProgram(imgName.toString(), width, height, timestamp, depth)
+                this.depth = depth[0]
                 if (pic == null) {
                     Common.common.Warning("Couldn't load image: %s", imgName)
                     MakeDefault()
@@ -2321,7 +2319,7 @@ class Image {
                 // NOTE: takes about 10% of image load times (SD)
                 // may not be strictly necessary, but some code uses it, so let's leave it in
                 //imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
-                GenerateImage(pic!!, width[0], height[0], filter, allowDownSize, repeat, depth)
+                GenerateImage(pic!!, width[0], height[0], filter, allowDownSize, repeat, this.depth)
                 timestamp = timestamp //why, because we rock!
                 precompressedFile = false
 
@@ -2332,7 +2330,7 @@ class Image {
         }
 
         fun StartBackgroundImageLoad() {
-            if (Image.imageManager.numActiveBackgroundImageLoads >= idImageManager.MAX_BACKGROUND_IMAGE_LOADS) {
+            if (imageManager.numActiveBackgroundImageLoads >= idImageManager.MAX_BACKGROUND_IMAGE_LOADS) {
                 return
             }
             if (idImageManager.image_showBackgroundLoads.GetBool()) {
@@ -2346,8 +2344,8 @@ class Image {
                 )
                 return
             }
-            bglNext = Image.globalImages.backgroundImageLoads
-            Image.globalImages.backgroundImageLoads = this
+            bglNext = globalImages.backgroundImageLoads
+            globalImages.backgroundImageLoads = this
             val filename = arrayOf("")
             ImageProgramStringToCompressedFileName(imgName, filename)
             bgl.completed = false
@@ -2367,19 +2365,19 @@ class Image {
             }
             bgl.file.buffer = ByteBuffer.allocate(bgl.file.length)
             FileSystem_h.fileSystem.BackgroundDownload(bgl)
-            Image.imageManager.numActiveBackgroundImageLoads++
+            imageManager.numActiveBackgroundImageLoads++
 
             // purge some images if necessary
             var totalSize = 0
-            var check: idImage? = Image.globalImages.cacheLRU!!.cacheUsageNext
-            while (check !== Image.globalImages.cacheLRU) {
+            var check: idImage? = globalImages.cacheLRU!!.cacheUsageNext
+            while (check !== globalImages.cacheLRU) {
                 totalSize += check!!.StorageSize()
                 check = check.cacheUsageNext
             }
             val needed = StorageSize()
             while (totalSize + needed > idImageManager.image_cacheMegs.GetFloat() * 1024 * 1024) {
                 // purge the least recently used
-                val check: idImage = Image.globalImages.cacheLRU!!.cacheUsagePrev!!
+                val check: idImage = globalImages.cacheLRU!!.cacheUsagePrev!!
                 if (check.texNum != TEXTURE_NOT_LOADED) {
                     totalSize -= check.StorageSize()
                     if (idImageManager.image_showBackgroundLoads.GetBool()) {
@@ -2466,7 +2464,7 @@ class Image {
                         c = 255
                     } else {
                         c =
-                            Image.globalImages.originalToCompressed[x].toInt() shl 4 or Image.globalImages.originalToCompressed[y].toInt()
+                            globalImages.originalToCompressed[x].toInt() shl 4 or globalImages.originalToCompressed[y].toInt()
                         if (c == 255) {
                             c = 254 // don't use the nullnormal color
                         }
@@ -2486,7 +2484,7 @@ class Image {
                     val ext = filename[0].lastIndexOf('.')
                     if (ext != -1) {
                         filename[0] = filename[0].substring(0, ext) + "_pal.tga" //strcpy(ext, "_pal.tga");
-                        R_WritePalTGA(filename[0], normals, Image.globalImages.compressedPalette, width, height)
+                        R_WritePalTGA(filename[0], normals, globalImages.compressedPalette, width, height)
                     }
                 }
             }
@@ -2998,7 +2996,7 @@ class Image {
                 ) == 0
             ) {
                 DeclManager.declManager.MediaPrint("DEFAULTED\n")
-                return Image.globalImages.defaultImage
+                return globalImages.defaultImage
             }
 
             // strip any .tga file extensions from anywhere in the _name, including image program parameters
@@ -3012,70 +3010,68 @@ class Image {
             //
             hash = name.FileNameHash()
             image = imageHashTable.getOrNull(hash)
-            if (image != null) {
-                while (image!!.hashNext != null) {
-                    if (name.Icmp(image.imgName.toString()) == 0) {
-                        // the built in's, like _white and _flat always match the other options
-                        if (name[0] == '_') {
-                            return image
-                        }
-                        if (image.cubeFiles != cubeMap) {
-                            Common.common.Error(
-                                "Image '%s' has been referenced with conflicting cube map states",
-                                _name
-                            )
-                        }
-                        if (image.filter != filter || image.repeat != repeat) {
-                            // we might want to have the system reset these parameters on every bind and
-                            // share the image data
-                            image = image.hashNext!!
-                            continue
-                        }
-                        if (image.allowDownSize == allowDownSize && image.depth == depth) {
-                            // note that it is used this level load
-                            image.levelLoadReferenced = true
-                            if (image.partialImage != null) {
-                                image.partialImage!!.levelLoadReferenced = true
-                            }
-                            return image
-                        }
-
-                        // the same image is being requested, but with a different allowDownSize or depth
-                        // so pick the highest of the two and reload the old image with those parameters
-                        if (!image.allowDownSize) {
-                            allowDownSize = false
-                        }
-                        if (image.depth.ordinal > depth.ordinal) {
-                            depth = image.depth
-                        }
-                        if (image.allowDownSize == allowDownSize && image.depth == depth) {
-                            // the already created one is already the highest quality
-                            image.levelLoadReferenced = true
-                            if (image.partialImage != null) {
-                                image.partialImage!!.levelLoadReferenced = true
-                            }
-                            return image
-                        }
-                        image.allowDownSize = allowDownSize
-                        image.depth = depth
+            while (image != null) {
+                if (name.toString() == image.imgName.toString()) {
+                    // the built in's, like _white and _flat always match the other options
+                    if (name.toString().startsWith('_')) {
+                        return image
+                    }
+                    if (image.cubeFiles != cubeMap) {
+                        Common.common.Error(
+                            "Image '%s' has been referenced with conflicting cube map states",
+                            _name
+                        )
+                    }
+                    if (image.filter != filter || image.repeat != repeat) {
+                        // we might want to have the system reset these parameters on every bind and
+                        // share the image data
+                        image = image.hashNext!!
+                        continue
+                    }
+                    if (image.allowDownSize == allowDownSize && image.depth == depth) {
+                        // note that it is used this level load
                         image.levelLoadReferenced = true
                         if (image.partialImage != null) {
                             image.partialImage!!.levelLoadReferenced = true
                         }
-                        if (image_preload.GetBool() && !insideLevelLoad) {
-                            image.referencedOutsideLevelLoad = true
-                            image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
-                            DeclManager.declManager.MediaPrint(
-                                "%dx%d %s (reload for mixed referneces)\n",
-                                image.uploadWidth,
-                                image.uploadHeight,
-                                image.imgName.toString()
-                            )
+                        return image
+                    }
+
+                    // the same image is being requested, but with a different allowDownSize or depth
+                    // so pick the highest of the two and reload the old image with those parameters
+                    if (!image.allowDownSize) {
+                        allowDownSize = false
+                    }
+                    if (image.depth.ordinal > depth.ordinal) {
+                        depth = image.depth
+                    }
+                    if (image.allowDownSize == allowDownSize && image.depth == depth) {
+                        // the already created one is already the highest quality
+                        image.levelLoadReferenced = true
+                        if (image.partialImage != null) {
+                            image.partialImage!!.levelLoadReferenced = true
                         }
                         return image
                     }
-                    image = image.hashNext!!
+                    image.allowDownSize = allowDownSize
+                    image.depth = depth
+                    image.levelLoadReferenced = true
+                    if (image.partialImage != null) {
+                        image.partialImage!!.levelLoadReferenced = true
+                    }
+                    if (image_preload.GetBool() && !insideLevelLoad) {
+                        image.referencedOutsideLevelLoad = true
+                        image.ActuallyLoadImage(true, false) // check for precompressed, load is from front end
+                        DeclManager.declManager.MediaPrint(
+                            "%dx%d %s (reload for mixed referneces)\n",
+                            image.uploadWidth,
+                            image.uploadHeight,
+                            image.imgName.toString()
+                        )
+                    }
+                    return image
                 }
+                image = image.hashNext!!
             }
 
 
@@ -3111,7 +3107,7 @@ class Image {
 
                 // we don't bother hooking this into the hash table for lookup, but we do add it to the manager
                 // list for listImages
-                Image.globalImages.images.Append(image.partialImage!!)
+                globalImages.images.Append(image.partialImage!!)
                 image.partialImage!!.imgName.set(image.imgName)
                 image.partialImage!!.isPartialImage = true
 
@@ -3179,7 +3175,7 @@ class Image {
                 ) == 0
             ) {
                 DeclManager.declManager.MediaPrint("DEFAULTED\n")
-                return Image.globalImages.defaultImage
+                return globalImages.defaultImage
             }
 
             // strip any .tga file extensions from anywhere in the _name, including image program parameters
@@ -3595,7 +3591,7 @@ class Image {
         fun AllocImage(name: String): idImage {
             val image: idImage
             val hash: Int
-            if (name.length >= Image.MAX_IMAGE_NAME) {
+            if (name.length >= MAX_IMAGE_NAME) {
                 Common.common.Error("idImageManager::AllocImage: \"%s\" is too long\n", name)
             }
             hash = idStr(name).FileNameHash()
@@ -3781,23 +3777,23 @@ class Image {
                     qgl.qglTexParameterf(
                         texEnum,
                         GL11.GL_TEXTURE_MIN_FILTER,
-                        Image.globalImages.textureMinFilter.toFloat()
+                        globalImages.textureMinFilter.toFloat()
                     )
                     qgl.qglTexParameterf(
                         texEnum,
                         GL11.GL_TEXTURE_MAG_FILTER,
-                        Image.globalImages.textureMaxFilter.toFloat()
+                        globalImages.textureMaxFilter.toFloat()
                     )
                 }
                 if (tr_local.glConfig.anisotropicAvailable) {
                     qgl.qglTexParameterf(
                         texEnum,
                         EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                        Image.globalImages.textureAnisotropy
+                        globalImages.textureAnisotropy
                     )
                 }
                 if (tr_local.glConfig.textureLODBiasAvailable) {
-                    qgl.qglTexParameterf(texEnum, GL14.GL_TEXTURE_LOD_BIAS, Image.globalImages.textureLODBias)
+                    qgl.qglTexParameterf(texEnum, GL14.GL_TEXTURE_LOD_BIAS, globalImages.textureLODBias)
                 }
                 i++
             }
