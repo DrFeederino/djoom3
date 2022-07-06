@@ -3071,7 +3071,7 @@ class Image {
                     }
                     return image
                 }
-                image = image.hashNext!!
+                image = image.hashNext
             }
 
 
