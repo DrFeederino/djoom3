@@ -2574,14 +2574,15 @@ object Model_lwo {
         point.count += np
         var oldpt = point.pt
         point.pt = ArrayList<lwPoint>(point.count) // Mem_Alloc(point.count);
-        if (point.pt.isEmpty()) {
-            return false
-        }
+        // This is used by original source code to check if memory was allocated, however, if in
+//        if (point.pt.isNullOrEmpty()) {
+//            return false
+//        }
         if (oldpt.isNotEmpty()) {
 //            memcpy(point.pt, oldpt, point.offset * sizeof(lwPoint));
             i = 0
             while (i < point.offset) {
-                point.pt[i] = lwPoint(oldpt[i])
+                point.pt.add(i, lwPoint(oldpt[i]))
                 i++
             }
             //            Mem_Free(oldpt);
@@ -2589,7 +2590,7 @@ object Model_lwo {
         }
         //	memset( &point.pt[ point.offset ], 0, np * sizeof( lwPoint ) );
         for (n in point.offset until np) {
-            point.pt[n] = lwPoint()
+            point.pt.add(n, lwPoint())
         }
 
         /* read the whole chunk */f = ByteBuffer.wrap(getbytes(fp, cksize))
@@ -2673,7 +2674,7 @@ object Model_lwo {
 //            memcpy(plist.pol, oldpol, plist.offset);
             i = 0
             while (i < plist.offset) {
-                plist.pol[i] = lwPolygon(oldpol[i])
+                plist.pol.add(i, lwPolygon(oldpol[i]))
                 i++
             }
             //            Mem_Free(oldpol);
@@ -2682,7 +2683,7 @@ object Model_lwo {
         //        memset(plist.pol + plist.offset, 0, npols);
         i = 0
         while (i < npols) {
-            plist.pol[plist.offset + i] = lwPolygon()
+            plist.pol.add(plist.offset + i, lwPolygon())
             i++
         }
         plist.voffset = plist.vcount
@@ -2700,7 +2701,7 @@ object Model_lwo {
         //        memset(plist.pol[ 0].v + plist.voffset, 0, nverts);
         i = 0
         while (i < nverts) {
-            plist.pol[0].v[plist.voffset + i] = lwPolVert()
+            plist.pol[0].v.add(plist.voffset + i, lwPolVert())
             i++
         }
 
@@ -2708,7 +2709,7 @@ object Model_lwo {
         while (i < plist.offset) {
             for (j in plist.pol[i].v.indices) {
 //            plist.pol[i].v = plist.pol[i - 1].v + plist.pol[i - 1].nverts;
-                plist.pol[i].v[j] = lwPolVert() //TODO:simplify.
+                plist.pol[i].v.add(j, lwPolVert()) //TODO:simplify.
             }
             i++
         }
