@@ -1277,8 +1277,8 @@ object Model_local {
             val vRemap: IntArray
             val tvList: kotlin.collections.ArrayList<idVec2>
             val tvRemap: IntArray
-            var mvTable: ArrayList<matchVert_s> // all of the match verts
-            var mvHash: ArrayList<matchVert_s> // points inside mvTable for each xyz index
+            var mvTable: Array<matchVert_s?> // all of the match verts
+            var mvHash: Array<matchVert_s?> // points inside mvTable for each xyz index
             var lastmv: matchVert_s?
             var mv: matchVert_s?
             val normal = idVec3()
@@ -1412,7 +1412,7 @@ object Model_local {
                 Common.common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing uv data", name)
                 numTVertexes = 1
                 tvList = ArrayList<idVec2>(numTVertexes) // Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
-                tvList[0] = idVec2()
+                tvList.add(0, idVec2())
             }
 
             // It seems like the tools our artists are using often generate
@@ -1462,7 +1462,7 @@ object Model_local {
                 texCoordSubset.Init(mins, maxs, 32, 1024)
                 j = 0
                 while (j < numTVertexes) {
-                    tvRemap[j] = texCoordSubset.FindVector(tvList as Array<Vector.idVec<*>>, j, texCoordEpsilon)
+                    tvRemap[j] = texCoordSubset.FindVector(tvList.toTypedArray(), j, texCoordEpsilon)
                     j++
                 }
             }
@@ -1483,11 +1483,11 @@ object Model_local {
 
                 // we need to find out how many unique vertex / texcoord combinations there are
                 // the maximum possible number of combined vertexes is the number of indexes
-                mvTable = ArrayList<matchVert_s>(layer.polygon.count * 3)
+                mvTable = arrayOfNulls<matchVert_s?>(layer.polygon.count * 3)
 
                 // we will have a hash chain based on the xyz values
                 mvHash =
-                    kotlin.collections.ArrayList<matchVert_s>(layer.point.count) // R_ClearedStaticAlloc(layer.point.count, matchVert_s.class/* sizeof( mvHash[0] ) */);
+                    arrayOfNulls<matchVert_s?>(layer.point.count) // R_ClearedStaticAlloc(layer.point.count, matchVert_s.class/* sizeof( mvHash[0] ) */);
 
                 // allocate triangle surface
                 tri = tr_trisurf.R_AllocStaticTriSurf()
@@ -1567,7 +1567,7 @@ object Model_local {
 
                         // find a matching vert
                         lastmv = null
-                        mv = mvHash.getOrNull(v)
+                        mv = mvHash[v]
                         while (mv != null) {
                             if (mv.tv != tv) {
                                 lastmv = mv
@@ -1593,7 +1593,7 @@ object Model_local {
                         if (null == mv) {
                             // allocate a new match vert and link to hash chain
                             mvTable[tri.numVerts] = matchVert_s(tri.numVerts)
-                            mv = mvTable[tri.numVerts]
+                            mv = mvTable[tri.numVerts]!!
                             mv.v = v
                             mv.tv = tv
                             mv.normal.set(normal)
@@ -1625,7 +1625,7 @@ object Model_local {
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
                 j = 0
                 while (j < tri.numVerts) {
-                    mv = mvTable[j]
+                    mv = mvTable[j]!!
                     tri.verts[j].Clear()
                     tri.verts[j].xyz.set(vList[mv.v])
                     tri.verts[j].st = tvList[mv.tv]

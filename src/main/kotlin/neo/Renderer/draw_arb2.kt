@@ -243,11 +243,11 @@ object draw_arb2 {
             if (RenderSystem_init.r_useShadowVertexProgram.GetBool()) {
                 qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                draw_common.RB_StencilShadowPass(vLight.globalShadows[0]!!)
+                draw_common.RB_StencilShadowPass(vLight.globalShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0]!!)
                 qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                draw_common.RB_StencilShadowPass(vLight.localShadows[0]!!)
+                draw_common.RB_StencilShadowPass(vLight.localShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
                 qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) // if there weren't any globalInteractions, it would have stayed on
             } else {

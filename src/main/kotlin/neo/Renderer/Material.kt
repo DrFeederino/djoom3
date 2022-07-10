@@ -835,7 +835,7 @@ object Material {
             if (numOps != 0) {
                 ops = ArrayList(numOps) // R_StaticAlloc(numOps * sizeof( ops[0] )
                 //		memcpy( ops, pd!!.shaderOps, numOps * sizeof( ops[0] ) );
-                for (a in 0 until ops.size) {
+                for (a in 0 until numOps) {
                     ops.add(a, expOp_t(pd!!.shaderOps[a]))
                 }
             }
@@ -1404,7 +1404,7 @@ object Material {
             op = 0 // = ops;
             i = 0
             while (i < numOps) {
-                val opT = ops!![op]!!
+                val opT = ops[op]
                 when (opT.opType) {
                     expOpType_t.OP_TYPE_ADD -> regs[opT.c] =
                         regs[opT.a] + regs[opT.b]
