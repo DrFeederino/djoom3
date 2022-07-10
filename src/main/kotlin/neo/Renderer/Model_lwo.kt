@@ -12,6 +12,7 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.stream.Collectors
 import kotlin.experimental.and
 import kotlin.math.abs
 import kotlin.math.floor
@@ -1554,7 +1555,6 @@ object Model_lwo {
         while (true) {
             j++
             cksize += (cksize and 1)
-            println(cksize)
             when (id) {
                 ID_LAYR -> {
                     if (`object`.nlayers > 0) {
@@ -3063,14 +3063,17 @@ object Model_lwo {
             return true
         }
 
-        /* read the whole chunk */set_flen(0)
-        buf = ByteBuffer.wrap(getbytes(fp, ckSize - 1))
+        /* read the whole chunk */
+        set_flen(0)
+        buf = ByteBuffer.wrap(getbytes(fp, ckSize))
         if (null == buf) {
             return false
         }
 
-        /* count the strings */bp = String(buf.array())
-        tags = bp.split(Char(0)).toTypedArray() //TODO:make sure we don't need the \0?
+        /* count the strings */
+        bp = String(buf.array())
+        val split = bp.split("\u0000").stream().filter { it.isNotEmpty() }.collect(Collectors.toList())
+        tags = split.toTypedArray() //TODO:make sure we don't need the \0?
         nTags = tags.size
 
         /* expand the string array to hold the new tags */tList.offset = tList.count

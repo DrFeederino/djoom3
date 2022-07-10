@@ -144,10 +144,10 @@ class VectorSet {
      */
     class idVectorSubset<type> {
         //
-        private var dimension: Int = -1
-        private var boxHalfSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
+        private var dimension: Int = 0
+        private lateinit var boxHalfSize: FloatArray /*= new float[dimension]*/
         private var boxHashSize = 0
-        private var boxInvSize /*= new float[dimension]*/: FloatArray = FloatArray(dimension)
+        private lateinit var boxInvSize: FloatArray /*= new float[dimension]*/
         private val hash: idHashIndex = idHashIndex()
         private var maxs: idVec<*>? = null
         private var mins: idVec<*>? = null
