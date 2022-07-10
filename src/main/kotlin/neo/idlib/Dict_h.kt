@@ -54,8 +54,8 @@ class Dict_h {
      */
     class idKeyValue : idDict(), Cloneable {
         //	friend class idDict;
-        val key: idPoolStr = idPoolStr()
-        val value: idPoolStr = idPoolStr()
+        var key: idPoolStr = idPoolStr()
+        var value: idPoolStr = idPoolStr()
 
         //
         //
@@ -156,8 +156,8 @@ class Dict_h {
             argHash.set(other.argHash)
             i = 0
             while (i < args.size) {
-                args[i].key.set(globalKeys.CopyString(args[i].key))
-                args[i].value.set(globalValues.CopyString(args[i].value))
+                args[i].key = globalKeys.CopyString(args[i].key)
+                args[i].value = globalValues.CopyString(args[i].value)
                 i++
             }
             return this
@@ -198,11 +198,11 @@ class Dict_h {
                 if (found != null && found[i] != -1) {
                     // first set the new value and then free the old value to allow proper self copying
                     val oldValue = args[found[i]].value
-                    args[found[i]].value.set(globalValues.CopyString(other.args[i].value))
+                    args[found[i]].value = globalValues.CopyString(other.args[i].value)
                     globalValues.FreeString(oldValue)
                 } else {
-                    kv.key.set(globalKeys.CopyString(other.args[i].key))
-                    kv.value.set(globalValues.CopyString(other.args[i].value))
+                    kv.key = globalKeys.CopyString(other.args[i].key)
+                    kv.value = globalValues.CopyString(other.args[i].value)
                     args.add(kv)
                     argHash.Add(argHash.GenerateKey(kv.GetKey().toString() + "", false), args.indexOf(kv))
                 }
@@ -283,8 +283,8 @@ class Dict_h {
                 val kv = FindKey(def.GetKey().toString() + "") //TODO:override toString?
                 val newkv = idKeyValue()
                 if (null == kv) {
-                    newkv.key.set(globalKeys.CopyString(def.key))
-                    newkv.value.set(globalValues.CopyString(def.value))
+                    newkv.key = globalKeys.CopyString(def.key)
+                    newkv.value = globalValues.CopyString(def.value)
                     args.add(newkv)
                     argHash.Add(argHash.GenerateKey(newkv.GetKey().toString() + "", false), args.indexOf(newkv))
                 }
@@ -357,11 +357,11 @@ class Dict_h {
             if (i != -1) {
                 // first set the new value and then free the old value to allow proper self copying
                 val oldValue = args[i].value
-                args[i].value.set(globalValues.AllocString(value))
+                args[i].value = globalValues.AllocString(value)
                 globalValues.FreeString(oldValue)
             } else {
-                kv.key.set(globalKeys.AllocString(key))
-                kv.value.set(globalValues.AllocString(value))
+                kv.key = globalKeys.AllocString(key)
+                kv.value = globalValues.AllocString(value)
                 args.add(kv)
                 argHash.Add(argHash.GenerateKey("" + kv.GetKey(), false), args.indexOf(kv))
             }

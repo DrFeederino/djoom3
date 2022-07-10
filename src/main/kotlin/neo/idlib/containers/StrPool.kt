@@ -21,7 +21,7 @@ class StrPool {
         //	friend class idStrPool;
         //
         var numUsers = 0
-        var pool: idStrPool = idStrPool()
+        lateinit var pool: idStrPool
 
         // returns total size of allocated memory including size of string pool type
         override fun Size(): Int {
