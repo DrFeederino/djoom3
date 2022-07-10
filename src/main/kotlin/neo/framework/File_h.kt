@@ -1184,20 +1184,26 @@ object File_h {
         }
 
         override fun Read(buffer: ByteBuffer, len: Int): Int {
-            var len = len
             var l = 0
+            var len = len
             var read = 0
             try {
-                if (null == inputStream) {
+                if (inputStream == null) {
                     inputStream = ZipFile(fullPath.toString()).getInputStream(z)
                 }
+//                while (l != len) {
+//                    assert(buffer.capacity() != 0)
+//                    assert(inputStream!!.available() != 0)
+//                    read = inputStream!!.read(buffer.array(), l, len - l)
+//                    l += read
+//                }
                 while (read > -1 && len != 0) {
                     read = inputStream!!.read(buffer.array(), l, len)
                     l += read
                     len -= read
                 }
             } catch (ex: IOException) {
-                idLib.common.FatalError("idFile_InZip::Read: error whilest reading from %s", name)
+                idLib.common.FatalError("idFile_InZip::Read: error while reading from %s", name)
             }
             FileSystem_h.fileSystem.AddToReadCount(l)
             byteCounter += l

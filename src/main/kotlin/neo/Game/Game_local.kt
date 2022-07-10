@@ -329,7 +329,7 @@ class Game_local {
     }
 
     //============================================================================
-    class idGameLocal : idGame() {
+    class idGameLocal() : idGame() {
         val lastGUIEnt // last entity with a GUI, used by Cmd_NextGUI_f
                 : idEntityPtr<idEntity>
 
@@ -379,7 +379,7 @@ class Game_local {
         var clip: idClip = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: ArrayList<idEntity> = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES) // index to entities
+        var entities: ArrayList<idEntity> = ArrayList(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
         var entityHash: idHashIndex = idHashIndex() // hash table to quickly find entities by name
@@ -4272,7 +4272,7 @@ class Game_local {
                 usercmds[u] = usercmd_t()
             }
             //	memset( entities, 0, sizeof( entities ) );
-            for (e in 0 until entities.size) {
+            for (e in 0 until MAX_GENTITIES) {
                 entities.add(e, idEntity())
             }
             spawnIds = IntArray(spawnIds.size)

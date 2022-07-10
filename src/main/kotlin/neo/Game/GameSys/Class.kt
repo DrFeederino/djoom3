@@ -333,10 +333,14 @@ class Class {
     //
     //class idSaveGame;
     //class idRestoreGame;
-    abstract class idClass /*<nameOfClass>*/ {
+    abstract class idClass() /*<nameOfClass>*/ {
         companion object {
-            //        public static final idTypeInfo Type = null;
-            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
+            private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = run {
+                val map = HashMap<idEventDef, eventCallback_t<*>>()
+                map[EV_Remove] = eventCallback_t0 { obj: Any? -> idClass::Event_Remove }
+                map[EV_SafeRemove] = eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove }
+                map
+            }
 
             //
             private var initialized = false
@@ -587,13 +591,10 @@ class Class {
             fun delete(clazz: idClass?) {
                 clazz?._deconstructor()
             }
+        }
 
-            init {
-                eventCallbacks[EV_Remove] =
-                    eventCallback_t0 { obj: Any? -> idClass::Event_Remove }
-                eventCallbacks[EV_SafeRemove] =
-                    eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove }
-            }
+        init {
+            assert(eventCallbacks[EV_Remove] != null)
         }
 
         abstract fun CreateInstance(): idClass

@@ -1121,7 +1121,7 @@ object Model_lwo {
             flen = FLEN_ERROR
             return 0
         }
-        Lib.Companion.BigRevBytes(i,  /*2,*/1)
+        Lib.BigRevBytes(i,  /*2,*/1)
         flen += 2
         return i.short
     }
@@ -1135,7 +1135,7 @@ object Model_lwo {
             flen = FLEN_ERROR
             return 0
         }
-        Lib.Companion.BigRevBytes(i,  /*4,*/1)
+        Lib.BigRevBytes(i,  /*4,*/1)
         flen += 4
         return i.int
     }
@@ -1165,7 +1165,7 @@ object Model_lwo {
             flen = FLEN_ERROR
             return 0
         }
-        Lib.Companion.BigRevBytes(i,  /*2*,*/1)
+        Lib.BigRevBytes(i,  /*2*,*/1)
         flen += 2
         return i.short
     }
@@ -1179,7 +1179,7 @@ object Model_lwo {
             flen = FLEN_ERROR
             return 0
         }
-        Lib.Companion.BigRevBytes(i,  /*4,*/1)
+        Lib.BigRevBytes(i,  /*4,*/1)
         flen += 4
         return i.int
     }
@@ -1220,7 +1220,7 @@ object Model_lwo {
             i = i or TempDump.btoi(c)
             flen += 4
         }
-        return i
+        return abs(i)
     }
 
     fun getF4(fp: idFile): Float {
@@ -1232,7 +1232,7 @@ object Model_lwo {
             flen = FLEN_ERROR
             return 0.0f
         }
-        Lib.Companion.BigRevBytes(f,  /*4,*/1)
+        Lib.BigRevBytes(f,  /*4,*/1)
         flen += 4
         return if (Math_h.FLOAT_IS_DENORMAL(f.getFloat(0))) {
             0f
@@ -1308,7 +1308,7 @@ object Model_lwo {
             return 0
         }
         //   memcpy( i, bp, 2 );
-        Lib.Companion.BigRevBytes(bp,  /*bp.position(), 2,*/1)
+        Lib.BigRevBytes(bp,  /*bp.position(), 2,*/1)
         flen += 2
         i = bp.getShort()
         bp.position(bp.position() + 2)
@@ -1364,7 +1364,7 @@ object Model_lwo {
             return 0
         }
         //   memcpy( &i, *bp, 4 );
-        Lib.Companion.BigRevBytes(bp,  /*bp.position(), 4,*/1)
+        Lib.BigRevBytes(bp,  /*bp.position(), 4,*/1)
         flen += 4
         i = bp.getInt()
         //        bp.position(bp.position() + 4);
@@ -1388,7 +1388,7 @@ object Model_lwo {
             flen += 4
             bp.position(pos + 4)
         }
-        return i
+        return abs(i)
     }
 
     fun sgetF4(bp: ByteBuffer): Float {
@@ -1398,7 +1398,7 @@ object Model_lwo {
             return 0.0f
         }
         //   memcpy( &f, *bp, 4 );
-        Lib.Companion.BigRevBytes(bp,  /*bp.position(), 4,*/1)
+        Lib.BigRevBytes(bp,  /*bp.position(), 4,*/1)
         flen += 4
         f = bp.getFloat()
         //        bp.position(bp.position() + 4);
@@ -1481,7 +1481,7 @@ object Model_lwo {
     fun lwGetObject(filename: String, failID: IntArray, failpos: IntArray): lwObject? {
         var fp: idFile? // = null;
         val `object`: lwObject
-        var layer: lwLayer
+        var layer: lwLayer?
         var node: lwNode?
         var id: Int
         val formsize: Int
@@ -1522,7 +1522,7 @@ object Model_lwo {
             }
         }
         /* allocate an object and a default layer */
-            `object` = lwObject() // Mem_ClearedAlloc(sizeof(lwObject));
+        `object` = lwObject() // Mem_ClearedAlloc(sizeof(lwObject));
         //            if (null == object) {
 //                break Fail;
 //            }
@@ -1553,7 +1553,8 @@ object Model_lwo {
         var j = 0
         while (true) {
             j++
-            cksize += cksize and 1
+            cksize += (cksize and 1)
+            println(cksize)
             when (id) {
                 ID_LAYR -> {
                     if (`object`.nlayers > 0) {
@@ -1565,7 +1566,7 @@ object Model_lwo {
                     }
                     `object`.nlayers++
                     set_flen(0)
-                    layer.index = getU2(fp).toInt()
+                    layer!!.index = getU2(fp).toInt()
                     layer.flags = getU2(fp).toInt()
                     layer.pivot[0] = getF4(fp)
                     layer.pivot[1] = getF4(fp)
@@ -1593,7 +1594,7 @@ object Model_lwo {
                         fp.Seek((cksize - rlen).toLong(), fsOrigin_t.FS_SEEK_CUR)
                     }
                 }
-                ID_PNTS -> if (!lwGetPoints(fp, cksize, layer.point)) {
+                ID_PNTS -> if (!lwGetPoints(fp, cksize, layer!!.point)) {
                     if (failID != null) {
                         failID[0] = id
                     }
@@ -1606,7 +1607,7 @@ object Model_lwo {
                     //        lwFreeObject(object);
                     return null
                 }
-                ID_POLS -> if (!lwGetPolygons(fp, cksize, layer.polygon, layer.point.offset)) {
+                ID_POLS -> if (!lwGetPolygons(fp, cksize, layer!!.polygon, layer.point.offset)) {
                     if (failID != null) {
                         failID[0] = id
                     }
@@ -1623,7 +1624,7 @@ object Model_lwo {
                     node = lwGetVMap(
                         fp,
                         cksize,
-                        layer.point.offset,
+                        layer!!.point.offset,
                         layer.polygon.offset,
                         if (id == ID_VMAD) 1 else 0
                     )
@@ -1640,10 +1641,10 @@ object Model_lwo {
                         //        lwFreeObject(object);
                         return null
                     }
-                    layer.vmap = lwListAdd(layer.vmap, node)!!
+                    layer!!.vmap = lwListAdd(layer.vmap, node)!!
                     layer.nvmaps++
                 }
-                ID_PTAG -> if (!lwGetPolygonTags(fp, cksize, `object`.taglist, layer.polygon)) {
+                ID_PTAG -> if (!lwGetPolygonTags(fp, cksize, `object`.taglist, layer!!.polygon)) {
                     if (failID != null) {
                         failID[0] = id
                     }
@@ -1660,7 +1661,7 @@ object Model_lwo {
                     set_flen(0)
                     i = 0
                     while (i < 6) {
-                        layer.bbox[i] = getF4(fp)
+                        layer!!.bbox[i] = getF4(fp)
                         i++
                     }
                     rlen = get_flen()
@@ -1755,11 +1756,13 @@ object Model_lwo {
                 else -> fp.Seek(cksize.toLong(), fsOrigin_t.FS_SEEK_CUR)
             }
 
-            /* end of the file? */if (formsize <= fp.Tell() - 8) {
+            /* end of the file? */
+            if (formsize <= fp.Tell() - 8) {
                 break
             }
 
-            /* get the next chunk header */set_flen(0)
+            /* get the next chunk header */
+            set_flen(0)
             id = getU4(fp)
             cksize = getU4(fp)
             if (8 != get_flen()) {
@@ -1776,70 +1779,70 @@ object Model_lwo {
                 return null
             }
         }
-            FileSystem_h.fileSystem.CloseFile(fp)
-            fp = null
-            if (`object`.nlayers == 0) {
-                `object`.nlayers = 1
+        FileSystem_h.fileSystem.CloseFile(fp)
+        fp = null
+        if (`object`.nlayers == 0) {
+            `object`.nlayers = 1
+        }
+        layer = `object`.layer
+        while (layer != null) {
+            lwGetBoundingBox(layer.point, layer.bbox)
+            lwGetPolyNormals(layer.point, layer.polygon)
+            if (!lwGetPointPolygons(layer.point, layer.polygon)) {
+                if (failID != null) {
+                    failID[0] = id
+                }
+                if (fp != null) {
+                    if (failpos != null) {
+                        failpos[0] = fp.Tell()
+                    }
+                    FileSystem_h.fileSystem.CloseFile(fp)
+                }
+                //        lwFreeObject(object);
+                return null
             }
-            layer = `object`.layer
-            while (layer != null) {
-                lwGetBoundingBox(layer.point, layer.bbox)
-                lwGetPolyNormals(layer.point, layer.polygon)
-                if (!lwGetPointPolygons(layer.point, layer.polygon)) {
-                    if (failID != null) {
-                        failID[0] = id
-                    }
-                    if (fp != null) {
-                        if (failpos != null) {
-                            failpos[0] = fp.Tell()
-                        }
-                        FileSystem_h.fileSystem.CloseFile(fp)
-                    }
-                    //        lwFreeObject(object);
-                    return null
+            if (!lwResolvePolySurfaces(layer.polygon, `object`)) {
+                if (failID != null) {
+                    failID[0] = id
                 }
-                if (!lwResolvePolySurfaces(layer.polygon, `object`)) {
-                    if (failID != null) {
-                        failID[0] = id
+                if (fp != null) {
+                    if (failpos != null) {
+                        failpos[0] = fp.Tell()
                     }
-                    if (fp != null) {
-                        if (failpos != null) {
-                            failpos[0] = fp.Tell()
-                        }
-                        FileSystem_h.fileSystem.CloseFile(fp)
-                    }
-                    //        lwFreeObject(object);
-                    return null
+                    FileSystem_h.fileSystem.CloseFile(fp)
                 }
-                lwGetVertNormals(layer.point, layer.polygon)
-                if (!lwGetPointVMaps(layer.point, layer.vmap)) {
-                    if (failID != null) {
-                        failID[0] = id
-                    }
-                    if (fp != null) {
-                        if (failpos != null) {
-                            failpos[0] = fp.Tell()
-                        }
-                        FileSystem_h.fileSystem.CloseFile(fp)
-                    }
-                    //        lwFreeObject(object);
-                    return null
-                }
-                if (!lwGetPolyVMaps(layer.polygon, layer.vmap)) {
-                    if (failID != null) {
-                        failID[0] = id
-                    }
-                    if (fp != null) {
-                        if (failpos != null) {
-                            failpos[0] = fp.Tell()
-                        }
-                        FileSystem_h.fileSystem.CloseFile(fp)
-                    }
-                    //        lwFreeObject(object);
-                    return null
-                }
-                layer = layer.next!!
+                //        lwFreeObject(object);
+                return null
             }
+            lwGetVertNormals(layer.point, layer.polygon)
+            if (!lwGetPointVMaps(layer.point, layer.vmap)) {
+                if (failID != null) {
+                    failID[0] = id
+                }
+                if (fp != null) {
+                    if (failpos != null) {
+                        failpos[0] = fp.Tell()
+                    }
+                    FileSystem_h.fileSystem.CloseFile(fp)
+                }
+                //        lwFreeObject(object);
+                return null
+            }
+            if (!lwGetPolyVMaps(layer.polygon, layer.vmap)) {
+                if (failID != null) {
+                    failID[0] = id
+                }
+                if (fp != null) {
+                    if (failpos != null) {
+                        failpos[0] = fp.Tell()
+                    }
+                    FileSystem_h.fileSystem.CloseFile(fp)
+                }
+                //        lwFreeObject(object);
+                return null
+            }
+            layer = layer.next
+        }
         return `object`
 
     }
@@ -2597,7 +2600,7 @@ object Model_lwo {
         if (null == f) {
             return false
         }
-        Lib.Companion.BigRevBytes(f,  /*4,*/np * 3)
+        Lib.BigRevBytes(f,  /*4,*/np * 3)
 
         /* assign position values */i = 0
         j = 0
@@ -2690,9 +2693,9 @@ object Model_lwo {
         plist.vcount += nverts
         var oldpolv = plist.pol[0].v
         plist.pol[0].v = ArrayList<lwPolVert>(plist.vcount) // Mem_Alloc(plist.vcount);
-        if (plist.pol[0].v.isEmpty()) {
-            return false
-        }
+//        if (plist.pol[0].v.isEmpty()) {
+//            return false
+//        }
         if (oldpolv.isNotEmpty()) {
 //            memcpy(plist.pol[0].v, oldpolv, plist.voffset);
             System.arraycopy(oldpolv, 0, plist.pol[0].v, 0, plist.offset)
@@ -2875,9 +2878,9 @@ object Model_lwo {
                 continue
             }
             point.pt[i].pol = IntArray(point.pt[i].npols) // Mem_ClearedAlloc(point.pt[ i].npols);
-            if (point.pt[i].pol.isNotEmpty()) {
-                return false
-            }
+//            if (point.pt[i].pol.isNotEmpty()) {
+//                return false
+//            }
             point.pt[i].npols = 0
             i++
         }
@@ -2914,7 +2917,7 @@ object Model_lwo {
         if (tlist.count == 0) {
             return true
         }
-        s = kotlin.collections.ArrayList<lwSurface>(tlist.count) // Mem_ClearedAlloc(tlist.count);
+        s = ArrayList<lwSurface>(tlist.count) // Mem_ClearedAlloc(tlist.count);
         //        if (null == s) {
 //            return 0;
 //        }
@@ -2923,7 +2926,7 @@ object Model_lwo {
             st = surf
             while (st != null) {
                 if (st.name.isNotEmpty() && st.name == tlist.tag[i]) {
-                    s[i] = st
+                    s.add(i, st)
                     break
                 }
                 st = st.next
@@ -2937,14 +2940,14 @@ object Model_lwo {
                 return false
             }
             if (null == s.getOrNull(index)) {
-                s[index] = lwDefaultSurface()
+                s.add(index - 1, lwDefaultSurface())
                 if (null == s.getOrNull(index)) {
                     return false
                 }
                 s[index].name = "" //(String) Mem_ClearedAlloc(tlist.tag[ index].length() + 1);
-                if (s[index].name.isNotEmpty()) {
-                    return false
-                }
+//                if (s[index].name.isNotEmpty()) {
+//                    return false
+//                }
                 s[index].name = tlist.tag[index]
                 surf = lwListAdd(surf, s[index])
                 `object`.nsurfs++
@@ -3061,13 +3064,13 @@ object Model_lwo {
         }
 
         /* read the whole chunk */set_flen(0)
-        buf = ByteBuffer.wrap(getbytes(fp, ckSize))
+        buf = ByteBuffer.wrap(getbytes(fp, ckSize - 1))
         if (null == buf) {
             return false
         }
 
         /* count the strings */bp = String(buf.array())
-        tags = bp.split("\u0000+").toTypedArray() //TODO:make sure we don't need the \0?
+        tags = bp.split(Char(0)).toTypedArray() //TODO:make sure we don't need the \0?
         nTags = tags.size
 
         /* expand the string array to hold the new tags */tList.offset = tList.count
@@ -3078,7 +3081,9 @@ object Model_lwo {
             return false
         }
         if (oldtag.isNotEmpty()) {
-            System.arraycopy(oldtag, 0, tList.tag, 0, tList.offset)
+            for (tag in oldtag) {
+                tList.tag.add(tag)
+            }
         }
         for (i in 0 until nTags) {
             tList.tag.add(tList.offset + i, tags[i]!!)
@@ -4744,8 +4749,8 @@ object Model_lwo {
         var pivot: FloatArray = FloatArray(3)
         var point: lwPointList = lwPointList()
         var polygon: lwPolygonList = lwPolygonList()
-        lateinit var vmap // linked list of vmaps
-                : lwVMap
+        var vmap // linked list of vmaps
+                : lwVMap = lwVMap()
 
         override fun getNext(): lwNode? {
             return next

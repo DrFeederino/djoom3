@@ -8,14 +8,7 @@ import neo.Game.Animation.Anim_Blend.idAnim
 import neo.Game.Animation.Anim_Blend.idAnimator
 import neo.Game.FX.idEntityFx
 import neo.Game.Game.refSound_t
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t3
-import neo.Game.GameSys.Class.eventCallback_t4
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -257,7 +250,8 @@ object Entity {
         val signal: Array<idList<signal_t>> = Array(TempDump.etoi(signalNum_t.NUM_SIGNALS)) { idList() }
     }
 
-    open class idEntity : idClass(), NiLLABLE<idEntity?>, SERiAL {
+    open class idEntity() : idClass(), NiLLABLE<idEntity?>, SERiAL {
+
         companion object {
             const val EVENT_MAXEVENTS = 2
 

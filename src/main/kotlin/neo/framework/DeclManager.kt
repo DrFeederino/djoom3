@@ -25,7 +25,6 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.HashIndex.idHashIndex
-import neo.idlib.containers.List.idList
 import neo.idlib.hashing.MD5
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
@@ -512,8 +511,8 @@ class DeclManager {
                 : Boolean
         var index // index in the per-type list
                 : Int
-        val name // name of the decl
-                : idStr = idStr()
+        var name // name of the decl
+                : String = ""
         var nextInFile // next decl in the decl file
                 : idDeclLocal?
         var parsedOutsideLevelLoad // these decls will never be purged
@@ -539,7 +538,7 @@ class DeclManager {
                 : declType_t = declType_t.DECL_ENTITYDEF
 
         override fun GetName(): String {
-            return name.toString()
+            return name
         }
 
         override fun GetType(): declType_t {
@@ -732,7 +731,7 @@ class DeclManager {
         }
 
         override fun Size(): Long {
-            return  /*sizeof(idDecl) +*/name.Allocated().toLong()
+            return  /*sizeof(idDecl) +*/name.length.toLong()
         }
 
         override fun SetDefaultText(): Boolean {
@@ -874,7 +873,7 @@ class DeclManager {
         }
 
         init {
-            name.set("unnamed")
+            name = "unnamed"
             textSource = null
             textLength = 0
             compressedLength = 0
@@ -1024,8 +1023,7 @@ class DeclManager {
                     i++
                 }
                 if (i >= numTypes) {
-                    identifiedType = if (token.Icmp("{") == 0) {
-
+                    identifiedType = if (token.toString() == "{") {
                         // if we ever see an open brace, we somehow missed the [type] <name> prefix
                         src.Warning("Missing decl name")
                         src.SkipBracedSection(false)
@@ -1046,7 +1044,7 @@ class DeclManager {
                     src.Warning("Type without definition at end of file")
                     break
                 }
-                if (0 == token.Icmp("{")) {
+                if (token.toString() == "{") {
                     // if we ever see an open brace, we somehow missed the [type] <name> prefix
                     src.Warning("Missing decl name")
                     src.SkipBracedSection(false)
@@ -1136,13 +1134,13 @@ class DeclManager {
 
     internal class idDeclManagerLocal : idDeclManager() {
         private val hashTables: Array<idHashIndex>
-        private val linearLists: Array<idList<idDeclLocal>>
+        private val linearLists: Array<ArrayList<idDeclLocal>>
 
         //                               // text definitions were not found. Decls that became default
         //                               // because of a parse error are not in this list.
         private var checksum // checksum of all loaded decl text
                 : BigInteger = BigInteger.ZERO
-        private val declFolders: idList<idDeclFolder>
+        private val declFolders: ArrayList<idDeclFolder>
         val declTypes: MutableMap<Int, idDeclType> = HashMap(32)
         val implicitDecls // this holds all the decls that were created because explicit
                 : idDeclFile? = null
@@ -1153,7 +1151,7 @@ class DeclManager {
         //
         //
         //
-        private val loadedFiles: idList<idDeclFile>
+        private val loadedFiles: ArrayList<idDeclFile>
 
         @Throws(idException::class)
         override fun Init() {
@@ -1397,7 +1395,7 @@ class DeclManager {
             i = 0
             while (i < declType_t.DECL_MAX_TYPES.ordinal) {
                 j = 0
-                while (j < linearLists[i].Num()) {
+                while (j < linearLists[i].size) {
                     decl = linearLists[i][j]
                     decl.self?.FreeData()
                     if (decl.textSource != null) {
@@ -1406,17 +1404,17 @@ class DeclManager {
                     }
                     j++
                 }
-                linearLists[i].Clear()
+                linearLists[i].clear()
                 hashTables[i].Free()
                 i++
             }
 
             // free decl files
-            loadedFiles.DeleteContents(true)
+            loadedFiles.clear()
 
             // free the decl types and folders
             declTypes.clear()
-            declFolders.DeleteContents(true)
+            declFolders.clear()
             if (USE_COMPRESSED_DECLS) {
                 ShutdownHuffman()
             }
@@ -1424,8 +1422,8 @@ class DeclManager {
 
         @Throws(idException::class)
         override fun Reload(force: Boolean) {
-            for (i in 0 until loadedFiles.Num()) {
-                loadedFiles[i].Reload(force)
+            for (loadedFile in loadedFiles) {
+                loadedFile.Reload(force)
             }
         }
 
@@ -1436,7 +1434,7 @@ class DeclManager {
             // clear all the referencedThisLevel flags and purge all the data
             // so the next reference will cause a reparse
             for (i in 0 until declType_t.DECL_MAX_TYPES.ordinal) {
-                val num = linearLists[i].Num()
+                val num = linearLists[i].size
                 for (j in 0 until num) {
                     val decl = linearLists[i][j]
                     decl.Purge()
@@ -1466,9 +1464,9 @@ class DeclManager {
             declType.typeName.set(typeName)
             declType.type = type
             declType.allocator = allocator as Constructor<idDecl>
-//            if (type.ordinal + 1 > declTypes.size) {
-//                //declTypes.ensureCapacity(type.ordinal + 1)
-//            }
+//           if (type.ordinal + 1 > declTypes.size) {
+//               declTypes.ensureCapacity(type.ordinal + 1)
+//           }
             declTypes[type.ordinal] = declType
         }
 
@@ -1476,27 +1474,27 @@ class DeclManager {
         override fun RegisterDeclFolder(folder: String, extension: String, defaultType: declType_t) {
             var i: Int
             var j: Int
-            var fileName: idStr?
+            var fileName: String = ""
             val declFolder: idDeclFolder?
             val fileList: idFileList?
             var df: idDeclFile?
 
             // check whether this folder / extension combination already exists
             i = 0
-            while (i < declFolders.Num()) {
-                if (declFolders[i].folder.Icmp(folder) == 0 && declFolders[i].extension.Icmp(extension) == 0) {
+            while (i < declFolders.size) {
+                if (declFolders[i].folder.toString() == folder && declFolders[i].extension.toString() == extension) {
                     break
                 }
                 i++
             }
-            if (i < declFolders.Num()) {
+            if (i < declFolders.size) {
                 declFolder = declFolders[i]
             } else {
                 declFolder = idDeclFolder()
                 declFolder.folder.set(folder)
                 declFolder.extension = idStr(extension)
                 declFolder.defaultType = defaultType
-                declFolders.Append(declFolder)
+                declFolders.add(declFolder)
             }
 
             // scan for decl files
@@ -1506,21 +1504,20 @@ class DeclManager {
             // load and parse decl files
             i = 0
             while (i < fileList.GetNumFiles()) {
-                fileName = idStr(declFolder.folder.toString() + "/" + fileList.GetFile(i))
-
+                fileName = declFolder.folder.toString() + "/" + fileList.GetFile(i)
                 // check whether this file has already been loaded
                 j = 0
-                while (j < loadedFiles.Num()) {
-                    if (fileName.Icmp(loadedFiles[j].fileName.toString()) == 0) {
+                for (loadedFile in loadedFiles) {
+                    if (fileName == loadedFiles[j].fileName.toString()) {
                         break
                     }
                     j++
                 }
-                if (j < loadedFiles.Num()) {
+                if (j < loadedFiles.size) {
                     df = loadedFiles[j]
                 } else {
-                    df = idDeclFile(fileName.toString(), defaultType)
-                    loadedFiles.Append(df)
+                    df = idDeclFile(fileName, defaultType)
+                    loadedFiles.add(df)
                 }
                 df.LoadAndParse()
                 i++
@@ -1585,7 +1582,7 @@ class DeclManager {
             var i: Int
             i = 0
             while (i < declTypes.size) {
-                if (declTypes[i] != null && declTypes[i]!!.typeName.Icmp(typeName) == 0) {
+                if (declTypes[i] != null && declTypes[i]!!.typeName.toString() == typeName) {
                     return declTypes[i]!!.type
                 }
                 i++
@@ -1638,13 +1635,14 @@ class DeclManager {
 
         @Throws(idException::class)
         override fun ReloadFile(filename: String, force: Boolean) {
-            for (i in 0 until loadedFiles.Num()) {
-                if (0 == loadedFiles[i].fileName.Icmp(filename)) {
-                    checksum = checksum.xor(loadedFiles[i].checksum)
-                    loadedFiles[i].Reload(force)
-                    checksum = checksum.xor(loadedFiles[i].checksum)
+            for (loadedFile in loadedFiles) {
+                if (0 == loadedFile.fileName.Icmp(filename)) {
+                    checksum = checksum.xor(loadedFile.checksum)
+                    loadedFile.Reload(force)
+                    checksum = checksum.xor(loadedFile.checksum)
                 }
             }
+
         }
 
         @Throws(idException::class)
@@ -1653,7 +1651,7 @@ class DeclManager {
             if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::GetNumDecls: bad type: %d", typeIndex)
             }
-            return linearLists[typeIndex].Num()
+            return linearLists[typeIndex].size
         }
 
         @Throws(idException::class)
@@ -1662,7 +1660,7 @@ class DeclManager {
             if (typeIndex < 0 || typeIndex >= declTypes.size || declTypes[typeIndex] == null) {
                 Common.common.FatalError("idDeclManager::DeclByIndex: bad type: %d", typeIndex)
             }
-            if (index < 0 || index >= linearLists[typeIndex].Num()) {
+            if (index < 0 || index >= linearLists[typeIndex].size) {
                 Common.common.Error("idDeclManager::DeclByIndex: out of range")
             }
             val decl = linearLists[typeIndex][index]
@@ -1698,11 +1696,11 @@ class DeclManager {
         override fun ListType(args: CmdArgs.idCmdArgs, type: declType_t) {
             val all: Boolean
             val ever: Boolean
-            all = 0 == idStr.Icmp(args.Argv(1), "all")
-            ever = 0 == idStr.Icmp(args.Argv(1), "ever")
+            all = args.Argv(1) == "all"
+            ever = args.Argv(1) == "ever"
             Common.common.Printf("--------------------\n")
             var printed = 0
-            val count = linearLists[type.ordinal].Num()
+            val count = linearLists[type.ordinal].size
             for (i in 0 until count) {
                 val decl = linearLists[type.ordinal][i]
                 if (!all && decl.declState == declState_t.DS_UNPARSED) {
@@ -1756,7 +1754,7 @@ class DeclManager {
             }
 
             // print information common to all decls
-            Common.common.Printf("%s %s:\n", declTypes[type.ordinal]!!.typeName.toString(), decl.name.toString())
+            Common.common.Printf("%s %s:\n", declTypes[type.ordinal]!!.typeName.toString(), decl.name)
             Common.common.Printf("source: %s:%d\n", decl.sourceFile!!.fileName.toString(), decl.sourceLine)
             Common.common.Printf("----------\n")
             if (decl.textSource != null) {
@@ -1801,7 +1799,7 @@ class DeclManager {
             hash = hashTables[typeIndex].GenerateKey(canonicalName, false)
             i = hashTables[typeIndex].First(hash)
             while (i >= 0) {
-                if (linearLists[typeIndex][i].name.Icmp(TempDump.ctos(canonicalName)) == 0) {
+                if (linearLists[typeIndex][i].name == TempDump.ctos(canonicalName)) {
                     linearLists[typeIndex][i].AllocateSelf()
                     return linearLists[typeIndex][i].self
                 }
@@ -1811,20 +1809,20 @@ class DeclManager {
 
             // find existing source file or create a new one
             i = 0
-            while (i < loadedFiles.Num()) {
+            while (i < loadedFiles.size) {
                 if (loadedFiles[i].fileName.Icmp(fileName.toString()) == 0) {
                     break
                 }
                 i++
             }
-            if (i < loadedFiles.Num()) {
+            if (i < loadedFiles.size) {
                 sourceFile = loadedFiles[i]
             } else {
                 sourceFile = idDeclFile(fileName.toString(), type)
-                loadedFiles.Append(sourceFile)
+                loadedFiles.add(sourceFile)
             }
             val decl = idDeclLocal()
-            decl.name.set(TempDump.ctos(canonicalName))
+            decl.name = TempDump.ctos(canonicalName)
             decl.type = type
             decl.declState = declState_t.DS_UNPARSED
             decl.AllocateSelf()
@@ -1860,8 +1858,10 @@ class DeclManager {
             sourceFile.decls = decl
 
             // add it to the hash table and linear list
-            decl.index = linearLists[typeIndex].Num()
-            hashTables[typeIndex].Add(hash, linearLists[typeIndex].Append(decl))
+            decl.index = linearLists[typeIndex].size
+            linearLists[typeIndex].add(decl)
+            assert(linearLists[typeIndex].indexOf(decl) == linearLists[typeIndex].size - 1)
+            hashTables[typeIndex].Add(hash, linearLists[typeIndex].size - 1)
             return decl.self
         }
 
@@ -1880,7 +1880,7 @@ class DeclManager {
             hash = hashTables[typeIndex].GenerateKey(canonicalOldName, false)
             i = hashTables[typeIndex].First(hash)
             while (i >= 0) {
-                if (linearLists[typeIndex][i].name.Icmp(TempDump.ctos(canonicalOldName)) == 0) {
+                if (linearLists[typeIndex][i].name == TempDump.ctos(canonicalOldName)) {
                     decl = linearLists[typeIndex][i]
                     break
                 }
@@ -1894,7 +1894,7 @@ class DeclManager {
             //	return false;
             //decl = *declPtr;
             //Change the name
-            decl.name.set(TempDump.ctos(canonicalNewName))
+            decl.name == TempDump.ctos(canonicalNewName)
 
             // add it to the hash table
             //hashTables[(int)decl.type].Set( decl.name, decl );
@@ -1936,7 +1936,7 @@ class DeclManager {
                 if (declTypes[i] == null) {
                     continue
                 }
-                num = linearLists[i].Num()
+                num = linearLists[i].size
                 for (j in 0 until num) {
                     val decl = linearLists[i][j]
                     if (!decl.referencedThisLevel) {
@@ -2021,7 +2021,7 @@ class DeclManager {
             hash = hashTables[typeIndex].GenerateKey(canonicalName, false)
             i = hashTables[typeIndex].First(hash)
             while (i >= 0) {
-                if (linearLists[typeIndex][i].name.Icmp(TempDump.ctos(canonicalName)) == 0) {
+                if (linearLists[typeIndex][i].name == TempDump.ctos(canonicalName)) {
                     // only print these when decl_show is set to 2, because it can be a lot of clutter
                     if (decl_show.GetInteger() > 1) {
                         MediaPrint("referencing %s %s\n", declTypes[type.ordinal]!!.typeName.toString(), name)
@@ -2035,7 +2035,7 @@ class DeclManager {
             }
             val decl = idDeclLocal()
             decl.self = null
-            decl.name.set(TempDump.ctos(canonicalName))
+            decl.name = TempDump.ctos(canonicalName)
             decl.type = type
             decl.declState = declState_t.DS_UNPARSED
             decl.textSource = null
@@ -2046,8 +2046,10 @@ class DeclManager {
             decl.parsedOutsideLevelLoad = !insideLevelLoad
 
             // add it to the linear list and hash table
-            decl.index = linearLists[typeIndex].Num()
-            hashTables[typeIndex].Add(hash, linearLists[typeIndex].Append(decl))
+            decl.index = linearLists[typeIndex].size
+            linearLists[typeIndex].add(decl)
+            assert(linearLists[typeIndex].indexOf(decl) == linearLists[typeIndex].size - 1)
+            hashTables[typeIndex].Add(hash, linearLists[typeIndex].size - 1)
             return decl
         }
 
@@ -2080,7 +2082,7 @@ class DeclManager {
                         i++
                         continue
                     }
-                    num = declManagerLocal.linearLists[i].Num()
+                    num = declManagerLocal.linearLists[i].size
                     totalDecls += num
                     size = 0
                     j = 0
@@ -2101,7 +2103,7 @@ class DeclManager {
                     i++
                 }
                 i = 0
-                while (i < declManagerLocal.loadedFiles.Num()) {
+                while (i < declManagerLocal.loadedFiles.size) {
                     val df: idDeclFile = declManagerLocal.loadedFiles[i]
                     totalText += df.fileSize
                     i++
@@ -2109,7 +2111,7 @@ class DeclManager {
                 Common.common.Printf(
                     "%d total decls is %d decl files\n",
                     totalDecls,
-                    declManagerLocal.loadedFiles.Num()
+                    declManagerLocal.loadedFiles.size
                 )
                 Common.common.Printf("%dKB in text, %dKB in structures\n", totalText shr 10, totalStructs shr 10)
             }
@@ -2264,10 +2266,10 @@ class DeclManager {
 
         init {
             //declTypes = ArrayList(32)
-            declFolders = idList()
-            loadedFiles = idList()
+            declFolders = ArrayList()
+            loadedFiles = ArrayList()
             hashTables = Array(TempDump.etoi(declType_t.DECL_MAX_TYPES)) { idHashIndex() }
-            linearLists = Array(TempDump.etoi(declType_t.DECL_MAX_TYPES)) { idList() }
+            linearLists = Array(TempDump.etoi(declType_t.DECL_MAX_TYPES)) { ArrayList() }
         }
     }
 
