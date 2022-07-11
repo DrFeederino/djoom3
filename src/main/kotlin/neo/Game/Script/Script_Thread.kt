@@ -6,16 +6,7 @@ import neo.Game.Camera.idCamera
 import neo.Game.Entity
 import neo.Game.Entity.idEntity
 import neo.Game.Entity.signalNum_t
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t3
-import neo.Game.GameSys.Class.eventCallback_t4
-import neo.Game.GameSys.Class.eventCallback_t5
-import neo.Game.GameSys.Class.eventCallback_t6
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -1542,7 +1533,7 @@ object Script_Thread {
                     Game_local.gameLocal.Printf(
                         "Waiting for entity #%3d '%s'\n",
                         waitingFor,
-                        Game_local.gameLocal.entities[waitingFor].name
+                        Game_local.gameLocal.entities[waitingFor]!!.name
                     )
                 } else if (waitingUntil != 0) {
                     Game_local.gameLocal.Printf(

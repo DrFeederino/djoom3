@@ -621,10 +621,10 @@ object Item {
                             if (Game_local.gameLocal.entities[i] != null && Game_local.gameLocal.entities[i] is idObjectiveComplete) {
                                 if (idStr.Icmp(
                                         spawnArgs.GetString("objectivetitle"),
-                                        Game_local.gameLocal.entities[i].spawnArgs.GetString("objectivetitle")
+                                        Game_local.gameLocal.entities[i]!!.spawnArgs.GetString("objectivetitle")
                                     ) == 0
                                 ) {
-                                    Game_local.gameLocal.entities[i].spawnArgs.SetBool("objEnabled", true)
+                                    Game_local.gameLocal.entities[i]!!.spawnArgs.SetBool("objEnabled", true)
                                     break
                                 }
                             }

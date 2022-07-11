@@ -7299,7 +7299,7 @@ object AI {
         class List_f private constructor() : cmdFunction_t() {
             override fun run(args: CmdArgs.idCmdArgs) {
                 var e: Int
-                var check: idEntity
+                var check: idEntity?
                 var count: Int
                 var statename: String?
                 count = 0
@@ -7308,7 +7308,7 @@ object AI {
                 e = 0
                 while (e < Game_local.MAX_GENTITIES) {
                     check = Game_local.gameLocal.entities[e]
-                    if (TempDump.NOT(check) || check !is idAI) {
+                    if (null == check || check !is idAI) {
                         e++
                         continue
                     }

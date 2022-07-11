@@ -651,7 +651,7 @@ object Projectile {
 
             // projectiles can apply an additional impulse next to the rigid body physics impulse
             if (spawnArgs.GetFloat("push", "0", push) && push._val > 0) {
-                ent.ApplyImpulse(this, collision.c.id, collision.c.point, dir.times(push._val))
+                ent!!.ApplyImpulse(this, collision.c.id, collision.c.point, dir.times(push._val))
             }
 
             // MP: projectiles open doors
@@ -690,7 +690,7 @@ object Projectile {
             ignore = null
 
             // if the hit entity takes damage
-            if (ent.fl.takedamage) {
+            if (ent!!.fl.takedamage) {
                 damageScale = if (damagePower != 0f) {
                     damagePower
                 } else {
@@ -707,7 +707,7 @@ object Projectile {
                     }
                 }
                 if (!damageDefName.isEmpty()) { //[0] != '\0') {
-                    ent.Damage(
+                    ent!!.Damage(
                         this,
                         owner.GetEntity(),
                         dir,
@@ -722,7 +722,7 @@ object Projectile {
             // if the projectile causes a damage effect
             if (spawnArgs.GetBool("impact_damage_effect")) {
                 // if the hit entity has a special damage effect
-                if (ent.spawnArgs.GetBool("bleed")) {
+                if (ent!!.spawnArgs.GetBool("bleed")) {
                     ent.AddDamageEffect(collision, velocity, damageDefName)
                 } else {
                     AddDefaultDamageEffect(collision, velocity)

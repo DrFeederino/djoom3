@@ -2809,7 +2809,7 @@ object Player {
             var i: Int
             var balanceTeam: Int
             val teamCount = IntArray(2)
-            var ent: idEntity
+            var ent: idEntity?
             teamCount[1] = 0
             teamCount[0] = teamCount[1]
             i = 0
@@ -2977,7 +2977,7 @@ object Player {
         }
 
         override fun Collide(collision: trace_s, velocity: idVec3): Boolean {
-            val other: idEntity
+            val other: idEntity?
             if (Game_local.gameLocal.isClient) {
                 return false
             }
@@ -7756,7 +7756,7 @@ object Player {
             val trace = trace_s()
             val start = idVec3()
             val end = idVec3()
-            val ent: idEntity
+            val ent: idEntity?
             if (GetBindMaster() != null && GetBindMaster() is idAFEntity_Vehicle) {
                 Show()
                 (GetBindMaster() as idAFEntity_Vehicle).Use(this)

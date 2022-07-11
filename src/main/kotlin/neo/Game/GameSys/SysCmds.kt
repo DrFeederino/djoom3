@@ -2086,7 +2086,7 @@ object SysCmds {
         override fun run(args: CmdArgs.idCmdArgs) {
             var e: Int
             var i: Int
-            var m: idMoveable
+            var m: idMoveable?
             var mapEnt: idMapEntity?
             val mapFile = Game_local.gameLocal.GetLevelMap()!!
             val mapName = idStr()
@@ -2113,7 +2113,7 @@ object SysCmds {
             if (e < Game_local.MAX_GENTITIES) {
                 Game_local.gameLocal.Warning(
                     "map not saved because the moveable entity %s is not at rest",
-                    Game_local.gameLocal.entities[e].name
+                    Game_local.gameLocal.entities[e]!!.name
                 )
                 return
             }
@@ -2125,8 +2125,8 @@ object SysCmds {
             }
             e = 0
             while (e < Game_local.MAX_GENTITIES) {
-                m = Game_local.gameLocal.entities[e] as idMoveable
-                if (TempDump.NOT(m) || m !is idMoveable) {
+                m = Game_local.gameLocal.entities[e] as idMoveable?
+                if (null == m || m !is idMoveable) {
                     e++
                     continue
                 }
@@ -2213,7 +2213,7 @@ object SysCmds {
                 if (!af.IsAtRest()) {
                     Game_local.gameLocal.Warning(
                         "the articulated figure for entity %s is not at rest",
-                        Game_local.gameLocal.entities[e].name
+                        Game_local.gameLocal.entities[e]!!.name
                     )
                 }
                 dict.Clear()

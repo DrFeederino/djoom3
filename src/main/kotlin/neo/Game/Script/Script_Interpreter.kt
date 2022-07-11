@@ -161,7 +161,7 @@ object Script_Interpreter {
         private fun GetEvalVariable(def: idVarDef): varEval_s {
             val `var` = GetVariable(def)
             if (`var`.getEntityNumberPtr() != NULL_ENTITY) {
-                val scriptObject = Game_local.gameLocal.entities[`var`.getEntityNumberPtr() - 1].scriptObject
+                val scriptObject = Game_local.gameLocal.entities[`var`.getEntityNumberPtr() - 1]!!.scriptObject
                 val data = scriptObject.data
                 if (data.capacity() > 1) {
                     `var`.evalPtr = varEval_s()

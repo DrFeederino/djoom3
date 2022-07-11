@@ -1257,12 +1257,12 @@ object BrittleFracture {
 
         class ModelCallback private constructor() : deferredEntityCallback_t() {
             override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
-                val ent: idBrittleFracture
-                ent = Game_local.gameLocal.entities[e.entityNum] as idBrittleFracture
+                val ent: idBrittleFracture?
+                ent = Game_local.gameLocal.entities[e.entityNum] as idBrittleFracture?
                 if (null == ent) {
                     idGameLocal.Error("idBrittleFracture::ModelCallback: callback with NULL game entity")
                 }
-                return ent.UpdateRenderEntity(e, v)
+                return ent!!.UpdateRenderEntity(e, v)
             }
 
             override fun AllocBuffer(): ByteBuffer {

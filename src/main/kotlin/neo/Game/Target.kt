@@ -1732,7 +1732,7 @@ object Target {
                 i = 0
                 while (i < Game_local.gameLocal.numClients) {
                     if (Game_local.gameLocal.entities[i] != null) {
-                        Game_local.gameLocal.entities[i].ProcessEvent(Player.EV_Player_DisableWeapon)
+                        Game_local.gameLocal.entities[i]!!.ProcessEvent(Player.EV_Player_DisableWeapon)
                     }
                     i++
                 }
@@ -1741,9 +1741,9 @@ object Target {
                 i = 0
                 while (i < Game_local.gameLocal.numClients) {
                     if (Game_local.gameLocal.entities[i] != null) {
-                        Game_local.gameLocal.entities[i].ProcessEvent(Player.EV_Player_EnableWeapon)
+                        Game_local.gameLocal.entities[i]!!.ProcessEvent(Player.EV_Player_EnableWeapon)
                         if (TempDump.isNotNullOrEmpty(weap)) {
-                            Game_local.gameLocal.entities[i].PostEventSec(Player.EV_Player_SelectWeapon, 0.5f, weap)
+                            Game_local.gameLocal.entities[i]!!.PostEventSec(Player.EV_Player_SelectWeapon, 0.5f, weap)
                         }
                     }
                     i++

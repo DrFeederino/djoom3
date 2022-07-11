@@ -4236,7 +4236,7 @@ object Entity {
                 if (null == ent) {
                     idGameLocal.Error("idEntity::ModelCallback: callback with NULL game entity")
                 }
-                return ent.UpdateRenderEntity(e, v)
+                return ent!!.UpdateRenderEntity(e, v)
             }
 
             override fun AllocBuffer(): ByteBuffer {

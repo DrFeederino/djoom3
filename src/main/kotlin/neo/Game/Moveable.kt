@@ -1049,7 +1049,7 @@ object Moveable {
                         continue
                     }
                     val v = idVec3(
-                        Game_local.gameLocal.entities[i].GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
+                        Game_local.gameLocal.entities[i]!!.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
                     )
                     val dist = v.Length()
                     if (minDist < 0 || dist < minDist) {

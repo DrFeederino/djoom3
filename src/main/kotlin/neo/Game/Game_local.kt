@@ -379,7 +379,7 @@ class Game_local {
         var clip: idClip = idClip() // collision detection
         var editEntities // in game editing
                 : idEditEntities? = null
-        var entities: ArrayList<idEntity> = ArrayList(MAX_GENTITIES) // index to entities
+        var entities: Array<idEntity?> = arrayOfNulls(MAX_GENTITIES) // index to entities
         var entityDefBits // bits required to store an entity def number
                 = 0
         var entityHash: idHashIndex = idHashIndex() // hash table to quickly find entities by name
@@ -869,8 +869,8 @@ class Game_local {
                 spawnIds[i] = savegame.ReadInt()
 
                 // restore the entityNumber
-                if (entities.getOrNull(i) != null) {
-                    entities[i].entityNumber = i
+                if (entities[i] != null) {
+                    entities[i]?.entityNumber = i
                 }
                 i++
             }
@@ -1047,7 +1047,7 @@ class Game_local {
             }
             i = 0
             while (i < MAX_GENTITIES) {
-                savegame.WriteObject(entities[i])
+                savegame.WriteObject(entities[i]!!)
                 savegame.WriteInt(spawnIds[i])
                 i++
             }
@@ -1664,7 +1664,7 @@ class Game_local {
             if (entities.size > clientNum) {
                 Common.common.DPrintf("ServerClientConnect: remove old player entity\n")
                 //		delete entities[ clientNum ];
-                entities.removeAt(clientNum)
+                entities[clientNum] = null
             }
             userInfo[clientNum].Clear()
             mpGame.ServerClientConnect(clientNum)
@@ -1728,7 +1728,7 @@ class Game_local {
 
             // delete the player entity
 //	delete entities[ clientNum ];
-            entities.removeAt(clientNum)
+            entities[clientNum] = null
             mpGame.DisconnectClient(clientNum)
         }
 
@@ -2117,7 +2117,7 @@ class Game_local {
                     val spawnId = msg.ReadLong()
                     if (null == entities[client]) {
                         SpawnPlayer(client)
-                        entities[client].FreeModelDef()
+                        entities[client]!!.FreeModelDef()
                     }
                     // fix up the spawnId to match what the server says
                     // otherwise there is going to be a bogus delete/new of the client entity in the first ClientReadFromSnapshot
@@ -2418,7 +2418,7 @@ class Game_local {
             numClients = 0
 
             // initialize all entities for this game
-            entities = ArrayList(entities.size) //	memset( entities, 0, sizeof( entities ) );
+            entities = arrayOfNulls(entities.size) //	memset( entities, 0, sizeof( entities ) );
             usercmds = Array(usercmds.size) { usercmd_t() } //memset( usercmds, 0, sizeof( usercmds ) );
             spawnIds = IntArray(spawnIds.size) //memset( spawnIds, -1, sizeof( spawnIds ) );
             spawnCount = INITIAL_SPAWN_COUNT
@@ -3006,7 +3006,7 @@ class Game_local {
             }
             if (ent.entityNumber != ENTITYNUM_NONE && entities[ent.entityNumber] === ent) {
                 ent.spawnNode.Remove()
-                entities.removeAt(ent.entityNumber)
+                entities[ent.entityNumber] = null
                 spawnIds[ent.entityNumber] = -1
                 if (ent.entityNumber >= MAX_CLIENTS && ent.entityNumber < firstFreeIndex) {
                     firstFreeIndex = ent.entityNumber
@@ -3263,7 +3263,7 @@ class Game_local {
             hash = entityHash.GenerateKey(name, true)
             i = entityHash.First(hash)
             while (i != -1) {
-                if (entities[i] != null && entities[i] == ent && entities[i].name.Icmp(name) == 0) {
+                if (entities[i] != null && entities[i] == ent && entities[i]!!.name.Icmp(name) == 0) {
                     entityHash.Remove(hash, i)
                     return true
                 }
@@ -3314,7 +3314,7 @@ class Game_local {
             if (null == entities[trace.c.entityNum]) {
                 return null
             }
-            master = entities[trace.c.entityNum].GetBindMaster()
+            master = entities[trace.c.entityNum]!!.GetBindMaster()
             return master ?: entities[trace.c.entityNum]
         }
 
@@ -3363,7 +3363,7 @@ class Game_local {
             hash = entityHash.GenerateKey(name, true)
             i = entityHash.First(hash)
             while (i != -1) {
-                if (entities[i] != null && entities[i].name.Icmp(name) == 0) {
+                if (entities[i] != null && entities[i]!!.name.Icmp(name) == 0) {
                     return entities[i]
                 }
                 i = entityHash.Next(i)
@@ -4100,7 +4100,7 @@ class Game_local {
                             j++
                             continue
                         }
-                        dist = pos.minus(entities[j].GetPhysics().GetOrigin()).LengthSqr()
+                        dist = pos.minus(entities[j]!!.GetPhysics().GetOrigin()).LengthSqr()
                         if (dist < spawnSpots[i].dist) {
                             spawnSpots[i].dist = dist.toInt()
                         }
@@ -4273,7 +4273,7 @@ class Game_local {
             }
             //	memset( entities, 0, sizeof( entities ) );
             for (e in 0 until MAX_GENTITIES) {
-                entities.add(e, idEntity())
+                entities[e] = idEntity()
             }
             spawnIds = IntArray(spawnIds.size)
             Arrays.fill(spawnIds, -1) //	memset( spawnIds, -1, sizeof( spawnIds ) );
@@ -4480,10 +4480,10 @@ class Game_local {
             var i: Int
             i = if (clearClients) 0 else MAX_CLIENTS
             while (i < MAX_GENTITIES) {
-                if (entities.getOrNull(i) != null) {
-                    entities.removeAt(i)
+                if (entities[i] != null) {
+                    entities[i] = null
                 }
-                assert(entities.getOrNull(i) == null)
+                assert(entities[i] == null)
                 spawnIds[i] = -1
                 i++
             }
@@ -4492,11 +4492,11 @@ class Game_local {
                 // add back the hashes of the clients
                 i = 0
                 while (i < MAX_CLIENTS) {
-                    if (entities.getOrNull(i) == null) {
+                    if (entities[i] == null) {
                         i++
                         continue
                     }
-                    entityHash.Add(entityHash.GenerateKey(entities[i].name.c_str(), true), i)
+                    entityHash.Add(entityHash.GenerateKey(entities[i]!!.name.c_str(), true), i)
                     i++
                 }
             }
@@ -6214,15 +6214,12 @@ class Game_local {
             override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 var i: Int
                 i = 0
-                for (entity in gameLocal.entities) {
-                    callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
+                while (i < gameLocal.num_entities) {
+                    if (gameLocal.entities[i] != null) {
+                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i]!!.name))
+                    }
+                    i++
                 }
-//                while (i < gameLocal.num_entities) {
-//                    if (gameLocal.entities[i] != null) {
-//                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i].name))
-//                    }
-//                    i++
-//                }
             }
 
             companion object {
