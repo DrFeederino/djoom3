@@ -1353,10 +1353,10 @@ object Model_lwo {
             return 0
         }
         //        i = (short) ((bp.get() << 8) | bp.get());//TODO: &0xFF???
-        i = bp.getShort()
+
         flen += 2
         //        *bp += 2;
-        return i
+        return bp.short
     }
 
     fun sgetU4(bp: ByteBuffer): Int {
@@ -1367,9 +1367,8 @@ object Model_lwo {
         //   memcpy( &i, *bp, 4 );
         Lib.BigRevBytes(bp,  /*bp.position(), 4,*/1)
         flen += 4
-        i = bp.getInt()
         //        bp.position(bp.position() + 4);
-        return i
+        return bp.int
     }
 
     fun sgetVX(bp: ByteBuffer): Int {
@@ -1641,7 +1640,7 @@ object Model_lwo {
                         //        lwFreeObject(object);
                         return null
                     }
-                    layer!!.vmap = lwListAdd(layer.vmap, node)!!
+                    layer.vmap = lwListAdd(layer.vmap, node)!!
                     layer.nvmaps++
                 }
                 ID_PTAG -> if (!lwGetPolygonTags(fp, cksize, `object`.taglist, layer!!.polygon)) {
@@ -3948,7 +3947,8 @@ object Model_lwo {
             ++npts
         }
 
-        /* allocate the vmap */vmap.nverts = npts
+        /* allocate the vmap */
+        vmap.nverts = npts
         vmap.vindex = IntArray(npts) // Mem_ClearedAlloc(npts);
         if (perpoly != 0) {
             vmap.pindex = IntArray(npts) // Mem_ClearedAlloc(npts);
@@ -3956,13 +3956,12 @@ object Model_lwo {
         if (vmap.dim > 0) {
             vmap.`val` =
                 ArrayList<FloatArray>(arrayListOf(*Array(npts) { FloatArray(npts) { 0f } })) // Mem_ClearedAlloc(npts);
-            i = 0
-            while (i < npts) {
-
-//                    vmap.val[i] = f[i] * vmap.dim;
-                vmap.`val`[i] = FloatArray(vmap.dim)
-                i++
-            }
+            //i = 0
+//            while (i < npts) {
+////                    vmap.val[i] = f[i] * vmap.dim;
+//                vmap.`val`[i] = FloatArray(vmap.dim)
+//                i++
+//            }
         }
 
         /* fill in the vmap values */buf.position(rlen)
@@ -3980,7 +3979,7 @@ object Model_lwo {
             i++
         }
         buf = null
-        lwFreeVMap.getInstance().run(vmap)
+        //lwFreeVMap.getInstance().run(vmap)
         return vmap
 
     }
@@ -4603,7 +4602,7 @@ object Model_lwo {
         var perpoly = 0
         var pindex // array of polygon indexes
                 : IntArray = IntArray(0)
-        var type: Long = 0
+        var type: Long = 0L
         var `val`: ArrayList<FloatArray> = ArrayList()
         var vindex // array of point indexes
                 : IntArray = IntArray(0)
