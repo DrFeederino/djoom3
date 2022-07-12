@@ -482,19 +482,19 @@ class snd_system {
 
                 // adjust source count back up to allow for freeing of all resources
                 openalSourceCount += 8
-                for ( /*ALsizei*/i in openalSources.indices) {
+                for ( /*ALsizei*/source in openalSources) {
                     // stop source
-                    if (openalSources[i] != null) {
-                        AL10.alSourceStop(openalSources[i].handle)
-                        AL10.alSourcei(openalSources[i].handle, AL10.AL_BUFFER, 0)
-                        AL10.alDeleteSources(openalSources[i].handle)
+                    if (source != null) {
+                        AL10.alSourceStop(source.handle)
+                        AL10.alSourcei(source.handle, AL10.AL_BUFFER, 0)
+                        AL10.alDeleteSources(source.handle)
 
                         // clear entry in source array
-                        openalSources[i].handle = 0
-                        openalSources[i].startTime = 0
-                        openalSources[i].chan = null
-                        openalSources[i].inUse = false
-                        openalSources[i].looping = false
+                        source.handle = 0
+                        source.startTime = 0
+                        source.chan = null
+                        source.inUse = false
+                        source.looping = false
                     }
                 }
             }

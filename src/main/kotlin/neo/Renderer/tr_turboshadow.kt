@@ -276,7 +276,7 @@ object tr_turboshadow {
         }
         run {
             val shadows = idVec4.generateArray(shadowVerts.size)
-            for (a in shadows.indices) {
+            for (a in 0 until shadows.size) {
                 shadows[a] = shadowVerts[a].xyz
             }
             newTri.numVerts =

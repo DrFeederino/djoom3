@@ -389,9 +389,10 @@ object TempDump {
     fun itoi(integerArray: Array<Int>?): IntArray? {
         if (integerArray == null) return null
         val intArray = IntArray(integerArray.size)
-        for (a in intArray.indices) {
-            intArray[a] = integerArray[a]
+        for (i in 0 until intArray.size) {
+            intArray[i] = integerArray[i]
         }
+
         return intArray
     }
 

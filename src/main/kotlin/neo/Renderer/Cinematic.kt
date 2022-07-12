@@ -153,10 +153,10 @@ object Cinematic {
      * The original file[] was a byte array.
      */
     private fun expandBuffer(tempFile: ByteBuffer): IntArray {
-        for (f in file!!.indices) {
-            file!![f] = (tempFile.get(f) and 0xFF.toByte()).toInt()
+        for (f in file.indices) {
+            file[f] = (tempFile.get(f) and 0xFF.toByte()).toInt()
         }
-        return file!!
+        return file
     }
 
     /**

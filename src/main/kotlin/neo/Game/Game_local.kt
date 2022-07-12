@@ -4338,15 +4338,15 @@ class Game_local {
             lastGUI = 0
 
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
-            for (a in clientEntityStates.indices) {
-                for (b in 0 until clientEntityStates[0].size) {
+            for (a in 0 until MAX_CLIENTS) {
+                for (b in 0 until MAX_GENTITIES) {
                     clientEntityStates[a].add(b, entityState_s())
                 }
             }
             clientPVS =
                 Array(clientPVS.size) { IntArray(clientPVS[0].size) } //memset( clientPVS, 0, sizeof( clientPVS ) );
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            for (c in 0 until clientSnapshots.size) {
+            for (c in 0 until MAX_CLIENTS) {
                 clientSnapshots.add(c, snapshot_s())
             }
             eventQueue.Init()
