@@ -236,14 +236,14 @@ object TempDump {
      * Byte TO Int
      */
     fun btoi(b: Byte): Int {
-        return b.toInt()
+        return b.toInt() and 0xFF
     }
 
     /**
      * Byte TO Int
      */
     fun btoi(b: ByteBuffer): Int {
-        return b.get(0).toInt()
+        return b.get(0).toInt() and 0xFF
     }
 
     /**
