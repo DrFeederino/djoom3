@@ -1221,7 +1221,7 @@ object Model_lwo {
             i = i or TempDump.btoi(c)
             flen += 4
         }
-        return abs(i)
+        return i
     }
 
     fun getF4(fp: idFile): Float {
@@ -1388,7 +1388,7 @@ object Model_lwo {
             flen += 4
             bp.position(pos + 4)
         }
-        return abs(i)
+        return i
     }
 
     fun sgetF4(bp: ByteBuffer): Float {
@@ -2990,7 +2990,7 @@ object Model_lwo {
                     polygon.pol[j].getV(n).norm[k] = polygon.pol[j].norm[k]
                     k++
                 }
-                if (polygon.pol[j].surf!!.smooth <= 0) {
+                if (polygon.pol[j].surf.smooth <= 0) {
                     n++
                     continue
                 }
@@ -3007,7 +3007,7 @@ object Model_lwo {
                         continue
                     }
                     a = idMath.ACos(dot(polygon.pol[j].norm, polygon.pol[h].norm))
-                    if (a > polygon.pol[j].surf!!.smooth) {
+                    if (a > polygon.pol[j].surf.smooth) {
                         g++
                         continue
                     }
@@ -4581,11 +4581,10 @@ object Model_lwo {
             if (obj == null) {
                 return false
             }
-            if (javaClass != obj.javaClass) {
+            if (obj !is lwSurface) {
                 return false
             }
-            val other = obj as lwSurface
-            return name == other.name
+            return name === obj.name
         }
     }
 

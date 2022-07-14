@@ -3,7 +3,6 @@ package neo.sys
 import neo.Renderer.RenderSystem_init
 import neo.Renderer.tr_local
 import neo.TempDump
-import neo.framework.BuildDefines._WIN32
 import neo.framework.Common.Companion.common
 import neo.framework.FileSystem_h
 import neo.framework.UsercmdGen
@@ -150,9 +149,6 @@ object win_glimp {
             glfwWindowHint(GLFW_BLUE_BITS, channelcolorbits)
             glfwWindowHint(GLFW_DOUBLEBUFFER, 1)
             glfwWindowHint(GLFW_DEPTH_BITS, tdepthbits)
-            if (_WIN32) { // only works OK in Windows
-                glfwWindowHint(GL_STENCIL_BITS, tstencilbits)
-            }
 
             glfwWindowHint(GLFW_ALPHA_BITS, talphabits)
 
