@@ -4364,7 +4364,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             maxModels = 0
             numModels = 0
             models = null
-            trmPolygons = emptyArray()
+            trmPolygons = arrayOfNulls(TraceModel.MAX_TRACEMODEL_POLYS)
             trmBrushes[0] = null
             trmMaterial = null
             numProcNodes = 0

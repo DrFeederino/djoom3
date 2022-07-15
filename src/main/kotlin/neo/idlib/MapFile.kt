@@ -484,7 +484,10 @@ object MapFile {
             width = height
             maxWidth = maxPatchWidth
             maxHeight = maxPatchHeight
-            verts.ensureCapacity(maxWidth * maxHeight)
+            //verts.ensureCapacity(maxWidth * maxHeight)
+            for (i in 0 until maxWidth * maxHeight) {
+                verts.add(idDrawVert())
+            }
             expanded = false
         }
 
