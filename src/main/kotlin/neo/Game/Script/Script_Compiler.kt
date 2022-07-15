@@ -714,7 +714,6 @@ object Script_Compiler {
          =============
          */
         private fun CheckToken(string: String): Boolean {
-            println("Checking token " + token.toString() + " and string " + string)
             if (token.toString() != string) { //TODO:try to use the idStr::Cmp in the overridden token.equals() method.
                 return false
             }
@@ -1530,19 +1529,11 @@ object Script_Compiler {
                         TypeMatches(type_a, op.type_a!!.Type()) &&
                         TypeMatches(type_b, op.type_b!!.Type())
                     ) {
-                        println("Matched for type " + op.toString())
-                        println("Matched for type name" + op.opname.toString())
-                        println("Matching type " + type_a)
-                        println("Matching type " + type_b)
-                        println(token.toString())
                         break
                     }
                     op_i = op_i.inc()
                     op = opcodes[op_i]
                     if (op.name.isNullOrEmpty() || op.name != oldop.name) {
-                        println("Could not matched for type " + op.toString())
-                        println("Matching type " + type_a)
-                        println("Matching type " + type_b)
                         Error("type mismatch for '%s'", oldop.name)
                     }
                 }
