@@ -922,15 +922,15 @@ object Model_ma {
      =================
      */
     fun MA_Load(fileName: String): maModel_s? {
-        val buf = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+        val buf = arrayOfNulls<ByteBuffer>(1)
         val timeStamp = LongArray(1)
         var ma: maModel_s?
         FileSystem_h.fileSystem.ReadFile(fileName, buf, timeStamp)
-        if (buf[0].capacity() == 1) {
+        if (buf[0] == null) {
             return null
         }
         try {
-            ma = MA_Parse(TempDump.bbtocb(buf[0]), fileName, false)
+            ma = MA_Parse(TempDump.bbtocb(buf[0]!!), fileName, false)
             ma.timeStamp = timeStamp
         } catch (e: idException) {
             Common.common.Warning("%s", e.error)

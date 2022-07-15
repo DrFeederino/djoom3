@@ -861,7 +861,7 @@ object AsyncServer {
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
             outMsg.Init(msgBuf, msgBuf.capacity())
             outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal.toByte())
-            outMsg.WriteData(msg.GetData(), msg.GetSize())
+            outMsg.WriteData(msg.GetData()!!, msg.GetSize())
             if (clientNum >= 0 && clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS) {
                 if (clients[clientNum].clientState == serverClientState_t.SCS_INGAME) {
                     SendReliableMessage(clientNum, outMsg)
@@ -886,7 +886,7 @@ object AsyncServer {
             assert(clientNum >= 0 && clientNum < AsyncNetwork.MAX_ASYNC_CLIENTS)
             outMsg.Init(msgBuf, msgBuf.capacity())
             outMsg.WriteByte(SERVER_RELIABLE.SERVER_RELIABLE_MESSAGE_GAME.ordinal.toByte())
-            outMsg.WriteData(msg.GetData(), msg.GetSize())
+            outMsg.WriteData(msg.GetData()!!, msg.GetSize())
             i = 0
             while (i < AsyncNetwork.MAX_ASYNC_CLIENTS) {
                 if (i == clientNum) {
@@ -936,7 +936,7 @@ object AsyncServer {
                     outMsg.Init(msgBuf, msgBuf.capacity())
                     outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                     outMsg.WriteString("heartbeat")
-                    serverPort.SendPacket(adr, outMsg.GetData(), outMsg.GetSize())
+                    serverPort.SendPacket(adr, outMsg.GetData()!!, outMsg.GetSize())
                 }
             }
         }
@@ -1099,7 +1099,7 @@ object AsyncServer {
             outMsg.WriteString("print")
             outMsg.WriteLong(opcode)
             outMsg.WriteString(string)
-            serverPort.SendPacket(to, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(to, outMsg.GetData()!!, outMsg.GetSize())
         }
 
         private fun DuplicateUsercmds(frame: Int, time: Int) {
@@ -1804,7 +1804,7 @@ object AsyncServer {
             outMsg.WriteShort(serverId.toShort())
             outMsg.WriteString(CVarSystem.cvarSystem.GetCVarString("fs_game_base"))
             outMsg.WriteString(CVarSystem.cvarSystem.GetCVarString("fs_game"))
-            serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
             if (win_net.Sys_IsLANAddress(from)) {
                 // no CD Key check for LAN clients
                 challenges[i].authState = authState_t.CDK_OK
@@ -1825,7 +1825,7 @@ object AsyncServer {
                     outMsg.WriteLong(-1) // this identifies "challenge" auth vs "connect" auth
                     // protocol 1.37 addition
                     outMsg.WriteByte(if (FileSystem_h.fileSystem.RunningD3XP()) 1 else 0)
-                    serverPort.SendPacket(idAsyncNetwork.GetMasterAddress(), outMsg.GetData(), outMsg.GetSize())
+                    serverPort.SendPacket(idAsyncNetwork.GetMasterAddress(), outMsg.GetData()!!, outMsg.GetSize())
                 }
             }
         }
@@ -1917,7 +1917,7 @@ object AsyncServer {
                         outMsg2.Init(msgBuf2, msgBuf2.capacity())
                         outMsg2.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                         outMsg2.WriteString("authrequired")
-                        serverPort.SendPacket(from, outMsg2.GetData(), outMsg2.GetSize())
+                        serverPort.SendPacket(from, outMsg2.GetData()!!, outMsg2.GetSize())
                     }
                     PrintOOB(from, SERVER_PRINT.SERVER_PRINT_MISC.ordinal, msg2)
 
@@ -1940,7 +1940,7 @@ object AsyncServer {
                         outMsg.WriteString(TempDump.ctos(guid))
                         // protocol 1.37 addition
                         outMsg.WriteByte(if (FileSystem_h.fileSystem.RunningD3XP()) 1 else 0)
-                        serverPort.SendPacket(idAsyncNetwork.GetMasterAddress(), outMsg.GetData(), outMsg.GetSize())
+                        serverPort.SendPacket(idAsyncNetwork.GetMasterAddress(), outMsg.GetData()!!, outMsg.GetSize())
                     }
                     return
                 }
@@ -1978,7 +1978,7 @@ object AsyncServer {
                 outMsg.WriteLong(SERVER_PRINT.SERVER_PRINT_GAMEDENY.ordinal)
                 outMsg.WriteLong(reply.ordinal)
                 outMsg.WriteString(TempDump.ctos(reason))
-                serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+                serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
                 return
             }
 
@@ -2056,7 +2056,7 @@ object AsyncServer {
             outMsg.WriteLong(gameFrame)
             outMsg.WriteLong(gameTime)
             outMsg.WriteDeltaDict(Session.sessLocal.mapSpawnData.serverInfo, null)
-            serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
             InitClient(clientNum, clientId, clientRate)
             clients[clientNum].gameInitSequence = 1
             clients[clientNum].snapshotSequence = 1
@@ -2126,7 +2126,7 @@ object AsyncServer {
             }
             outMsg.WriteByte(AsyncNetwork.MAX_ASYNC_CLIENTS.toByte())
             outMsg.WriteLong(FileSystem_h.fileSystem.GetOSMask())
-            serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
         }
 
         private fun ConnectionlessMessage(from: netadr_t, msg: idBitMsg): Boolean {
@@ -2245,7 +2245,7 @@ object AsyncServer {
             outMsg.Init(msgBuf, msgBuf.capacity())
             outMsg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             outMsg.WriteString("disconnect")
-            serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
             return false
         }
 
@@ -2387,7 +2387,7 @@ object AsyncServer {
 
             // write the pak checksum for game code
             outMsg.WriteLong(gamePakChecksum._val)
-            serverPort.SendPacket(to, outMsg.GetData(), outMsg.GetSize())
+            serverPort.SendPacket(to, outMsg.GetData()!!, outMsg.GetSize())
             return true
         }
 
@@ -2715,7 +2715,7 @@ object AsyncServer {
             ) {
                 Common.common.DPrintf("game: no downloads\n")
                 outMsg.WriteByte(SERVER_DL.SERVER_DL_NONE.ordinal.toByte())
-                serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+                serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
                 return
             }
             var token: String
@@ -2733,7 +2733,7 @@ object AsyncServer {
                     Common.common.DPrintf("download request: redirect to URL %s\n", token)
                     outMsg.WriteByte(SERVER_DL.SERVER_DL_REDIRECT.ordinal.toByte())
                     outMsg.WriteString(token)
-                    serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+                    serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
                     return
                 } else if (type == SERVER_DL.SERVER_DL_LIST.ordinal) {
                     pakURLs.add(idStr(token))
@@ -2772,7 +2772,7 @@ object AsyncServer {
 
                     // keep last 5 bytes for an 'end of message' - SERVER_PAK_END and the totalDlSize long
                     if (outMsg.GetRemainingSpace() - tmpMsg.GetSize() > 5) {
-                        outMsg.WriteData(tmpMsg.GetData(), tmpMsg.GetSize())
+                        outMsg.WriteData(tmpMsg.GetData()!!, tmpMsg.GetSize())
                     } else {
                         outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal.toByte())
                         break
@@ -2784,7 +2784,7 @@ object AsyncServer {
                     outMsg.WriteByte(SERVER_PAK.SERVER_PAK_END.ordinal.toByte())
                 }
                 Common.common.DPrintf("download request: download %d paks, %d bytes\n", numActualPaks, totalDlSize)
-                serverPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+                serverPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
             }
         }
 

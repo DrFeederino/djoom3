@@ -262,14 +262,14 @@ class idProgram {
         Game_local.gameLocal.Printf("Initializing scripts\n")
         // make sure all data is freed up
         idThread.Restart()
-
         // get ready for loading scripts
         BeginCompilation()
 
         // load the default script
-        if (TempDump.isNotNullOrEmpty(defaultScript)) {
+        if (!defaultScript.isNullOrEmpty()) {
             CompileFile(defaultScript)
         }
+
         FinishCompilation()
     }
 
@@ -369,12 +369,12 @@ class idProgram {
     }
 
     fun CompileFile(filename: String) {
-        val src = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+        val src = arrayOf<ByteBuffer?>(null)
         val result: Boolean
         if (idLib.fileSystem.ReadFile(filename, src, null) < 0) {
             idGameLocal.Error("Couldn't load %s\n", filename)
         }
-        result = CompileText(filename, String(src[0].array()), false)
+        result = CompileText(filename, String(src[0]!!.array()), false)
         idLib.fileSystem.FreeFile(src)
         if (SysCvar.g_disasm.GetBool()) {
             Disassemble()

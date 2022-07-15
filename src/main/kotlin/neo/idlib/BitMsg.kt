@@ -59,11 +59,11 @@ object BitMsg {
         private var readCount // number of bytes read so far
                 = 0
         private var readData // pointer to data for reading
-                : ByteBuffer = ByteBuffer.allocate(0)
+                : ByteBuffer? = null
         private var writeBit // number of bits written to the last written byte
                 = 0
         private var writeData // pointer to data for writing
-                : ByteBuffer = ByteBuffer.allocate(0)
+                : ByteBuffer? = null
 
         fun Init(data: ByteArray) {
             this.Init(ByteBuffer.wrap(data), data.size)
@@ -77,19 +77,19 @@ object BitMsg {
         }
 
         fun InitReadOnly(data: ByteBuffer, length: Int) {
-            writeData = ByteBuffer.allocate(0)
+            writeData = null
             readData = data
             maxSize = length
         }
 
         // get data for writing
-        fun GetData(): ByteBuffer {
+        fun GetData(): ByteBuffer? {
             return writeData
         }
 
         // get data for reading
         fun GetDataReadOnly(): ByteBuffer {
-            return readData.duplicate()
+            return readData!!.duplicate()
         }
 
         // get the maximum message size
@@ -135,8 +135,8 @@ object BitMsg {
             writeBit = bit and 7
             if (writeBit != 0) {
                 val pos = curSize - 1
-                val `val` = writeData.getInt(pos)
-                writeData.putInt(pos, `val` and (1 shl writeBit) - 1)
+                val `val` = writeData!!.getInt(pos)
+                writeData!!.putInt(pos, `val` and (1 shl writeBit) - 1)
             }
         }
 
@@ -162,8 +162,8 @@ object BitMsg {
             writeBit = b and 7
             if (writeBit != 0) {
                 val pos = curSize - 1
-                val `val` = writeData.getInt(pos)
-                writeData.putInt(pos, `val` and (1 shl writeBit) - 1)
+                val `val` = writeData!!.getInt(pos)
+                writeData!!.putInt(pos, `val` and (1 shl writeBit) - 1)
             }
         }
 
@@ -240,7 +240,7 @@ object BitMsg {
             var put: Int
             var fraction: Int
             try {
-                if (writeData.array().isEmpty()) {
+                if (writeData == null) {
                     idLib.common.Error("idBitMsg.WriteBits: cannot write to message")
                 }
 
@@ -280,7 +280,7 @@ object BitMsg {
                 while (numBits != 0) {
                     if (writeBit == 0) {
 //                        writeData.putInt(curSize, 0);
-                        writeData.put(0.toByte())
+                        writeData!!.put(0.toByte())
                         curSize++
                     }
                     put = 8 - writeBit
@@ -289,8 +289,8 @@ object BitMsg {
                     }
                     fraction = value and (1 shl put) - 1
                     val pos = curSize - 1
-                    val `val` = writeData.get(pos).toInt()
-                    writeData.put(pos, (`val` or (fraction shl writeBit)).toByte())
+                    val `val` = writeData!!.get(pos).toInt()
+                    writeData!!.put(pos, (`val` or (fraction shl writeBit)).toByte())
                     numBits -= put
                     value = value shr put
                     writeBit = writeBit + put and 7
@@ -553,7 +553,7 @@ object BitMsg {
             var get: Int
             var fraction: Int
             val sgn: Boolean
-            if (readData.array().isEmpty()) {
+            if (readData == null) {
                 idLib.common.FatalError("idBitMsg.ReadBits: cannot read from message")
             }
 
@@ -582,7 +582,7 @@ object BitMsg {
                 if (get > numBits - valueBits) {
                     get = numBits - valueBits
                 }
-                fraction = readData.get(readCount - 1).toInt()
+                fraction = readData!!.get(readCount - 1).toInt()
                 fraction = fraction shr readBit
                 fraction = fraction and (1 shl get) - 1
                 value = value or (fraction shl valueBits)
@@ -684,10 +684,10 @@ object BitMsg {
             ReadByteAlign()
             cnt = readCount
             if (readCount + length > curSize) {
-                data!!.put(readData.array(), readCount, GetRemaingData())
+                data!!.put(readData!!.array(), readCount, GetRemaingData())
                 readCount = curSize
             } else {
-                data!!.put(readData.array(), readCount, length)
+                data!!.put(readData!!.array(), readCount, length)
                 readCount += length
             }
             return readCount - cnt
@@ -819,7 +819,7 @@ object BitMsg {
         @Throws(idException::class)
         private fun GetByteSpace(length: Int): ByteArray {
             val ptr: ByteArray
-            if (writeData.array().isEmpty()) {
+            if (writeData == null) {
                 idLib.common.FatalError("idBitMsg::GetByteSpace: cannot write to message")
             }
 
@@ -828,8 +828,8 @@ object BitMsg {
 
             // check for overflow
             CheckOverflow(length shl 3)
-            ptr = ByteArray(writeData.capacity() - curSize)
-            writeData.mark().position(curSize)[ptr].rewind()
+            ptr = ByteArray(writeData!!.capacity() - curSize)
+            writeData!!.mark().position(curSize)[ptr].rewind()
             curSize += length
             return ptr
         }

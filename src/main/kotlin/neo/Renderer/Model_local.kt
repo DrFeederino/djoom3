@@ -744,7 +744,7 @@ object Model_local {
          =================
          */
         fun LoadFLT(fileName: String): Boolean {
-            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             val data: FloatBuffer
             val len: Int
             len = FileSystem_h.fileSystem.ReadFile(fileName, buffer)
@@ -752,7 +752,7 @@ object Model_local {
                 return false
             }
             val size = sqrt((len / 4.0f).toDouble()).toInt()
-            data = buffer[0].asFloatBuffer()
+            data = buffer[0]!!.asFloatBuffer()
 
             // bound the altitudes
             var min = 9999999f

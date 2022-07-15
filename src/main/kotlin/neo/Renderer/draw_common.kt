@@ -200,7 +200,7 @@ object draw_common {
                 if (bumpStage != null) {
                     // per-pixel reflection mapping with bump mapping
                     tr_backend.GL_SelectTexture(1)
-                    bumpStage.texture.image[0].Bind()
+                    bumpStage.texture.image[0]!!.Bind()
                     tr_backend.GL_SelectTexture(0)
                     qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
                     qgl.qglVertexAttribPointerARB(
@@ -987,7 +987,7 @@ object draw_common {
             }
             tr_backend.GL_State(tr_local.GLS_DEPTHMASK or stage.drawStateBits or tr_local.GLS_DEPTHFUNC_EQUAL)
             tr_backend.GL_SelectTexture(0)
-            stage.texture.image[0].Bind()
+            stage.texture.image[0]!!.Bind()
             if (stage.texture.hasMatrix) {
                 tr_render.RB_LoadShaderTextureMatrix(regs, stage.texture)
             }
@@ -1436,7 +1436,7 @@ object draw_common {
                     qgl.qglAlphaFunc(GL11.GL_GREATER, regs[pStage.alphaTestRegister])
 
                     // bind the texture
-                    pStage.texture.image[0].Bind()
+                    pStage.texture.image[0]!!.Bind()
 
                     // set texture matrix and texGens
                     RB_PrepareStageTexturing(pStage, surf, ac)

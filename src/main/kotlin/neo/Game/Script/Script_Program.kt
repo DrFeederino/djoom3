@@ -411,10 +411,10 @@ object Script_Program {
             parmTypes.add(fieldtype)
             val parmName = parmNames.addEmptyStr()
             parmName.set(name)
-            size += if (fieldtype.FieldType()!!.Inherits(type_object)) {
+            size += if (fieldtype.FieldType().Inherits(type_object)) {
                 type_object.Size()
             } else {
-                fieldtype.FieldType()!!.Size()
+                fieldtype.FieldType().Size()
             }
         }
 
@@ -605,21 +605,21 @@ object Script_Program {
      ***********************************************************************/
     class idScriptObject : SERiAL {
         //
-        var data: ByteBuffer = ByteBuffer.allocate(1)
+        var data: ByteBuffer? = null
         var offset = 0
         private var type: idTypeDef
 
         // ~idScriptObject();
         fun Save(savefile: idSaveGame) {            // archives object for save game file
             val   /*size_t*/size: Int
-            if (type == type_object && data.capacity() > 1) {
+            if (type == type_object && data == null) {
                 // Write empty string for uninitialized object
                 savefile.WriteString("")
             } else {
                 savefile.WriteString(type.Name())
                 size = type.Size()
                 savefile.WriteInt(size)
-                savefile.Write(data, size)
+                savefile.Write(data!!, size)
             }
         }
 
@@ -642,14 +642,14 @@ object Script_Program {
                     typeName
                 )
             }
-            savefile.Read(data, size._val)
+            savefile.Read(data!!, size._val)
         }
 
         fun Free() {
 //            if (data != null) {
 //                Mem_Free(data);
 //            }
-            data = ByteBuffer.allocate(1)
+            data = null
             type = type_object
         }
 
@@ -708,7 +708,7 @@ object Script_Program {
                 // init object memory
                 size = type.Size()
                 //		memset( data, 0, size );
-                data.clear()
+                data!!.clear()
             }
         }
 
@@ -764,14 +764,14 @@ object Script_Program {
                 while (i < t.NumParameters()) {
                     parm = t.GetParmType(i)
                     if (t.GetParmName(i) == name) {
-                        return if (etype != parm.FieldType()!!.Type()) {
+                        return if (etype != parm.FieldType().Type()) {
                             null
-                        } else data.position(pos).slice()
+                        } else data!!.position(pos).slice()
                     }
-                    pos += if (parm.FieldType()!!.Inherits(type_object)) {
+                    pos += if (parm.FieldType().Inherits(type_object)) {
                         type_object.Size()
                     } else {
-                        parm.FieldType()!!.Size()
+                        parm.FieldType().Size()
                     }
                     i++
                 }
@@ -1194,7 +1194,7 @@ object Script_Program {
                         when (etype) {
                             ev_string -> {
                                 file.Printf("\"")
-                                for (ch in value.stringPtr!!.toCharArray()) {
+                                for (ch in value.stringPtr.toCharArray()) {
                                     if (idStr.Companion.CharIsPrintable(ch.code)) {
                                         file.Printf("%c", ch)
                                     } else if (ch == '\n') {

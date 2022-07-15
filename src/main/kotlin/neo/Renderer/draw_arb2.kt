@@ -284,7 +284,7 @@ object draw_arb2 {
         val ofs = BufferUtils.createIntBuffer(16)
         val err: Int
         val fullPath = idStr("glprogs/" + progs[progIndex].name)
-        val fileBuffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+        val fileBuffer = arrayOfNulls<ByteBuffer>(1)
         var buffer: String
         var start = 0
         val end: Int
@@ -300,7 +300,7 @@ object draw_arb2 {
 
         // copy to stack memory and free
 //        buffer = /*(char *)*/ _alloca(strlen(fileBuffer) + 1);
-        buffer = String(fileBuffer[0].array())
+        buffer = String(fileBuffer[0]!!.array())
         //        fileSystem.FreeFile(fileBuffer);
         if (!tr_local.glConfig.isInitialized) {
             return

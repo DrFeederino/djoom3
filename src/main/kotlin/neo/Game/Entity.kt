@@ -3582,7 +3582,7 @@ object Entity {
             outMsg.WriteLong(Game_local.gameLocal.time)
             if (msg != null) {
                 outMsg.WriteBits(msg.GetSize(), idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
-                outMsg.WriteData(msg.GetData(), msg.GetSize())
+                outMsg.WriteData(msg.GetData()!!, msg.GetSize())
             } else {
                 outMsg.WriteBits(0, idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
             }
@@ -3615,7 +3615,7 @@ object Entity {
             outMsg.WriteLong(Game_local.gameLocal.time)
             if (msg != null) {
                 outMsg.WriteBits(msg.GetSize(), idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
-                outMsg.WriteData(msg.GetData(), msg.GetSize())
+                outMsg.WriteData(msg.GetData()!!, msg.GetSize())
             } else {
                 outMsg.WriteBits(0, idMath.BitsForInteger(Game_local.MAX_EVENT_PARAM_SIZE))
             }

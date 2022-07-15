@@ -287,8 +287,8 @@ object Material {
     }
 
     class textureStage_t {
-        var cinematic: Array<idCinematic> = arrayOf()
-        val image: Array<idImage> = arrayOf(idImage())
+        var cinematic: Array<idCinematic?> = arrayOfNulls(1)
+        var image: Array<idImage?> = arrayOfNulls(1)
         val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
 
         // dynamic image variables
@@ -304,7 +304,7 @@ object Material {
         }
 
         constructor(texture: textureStage_t) {
-            cinematic = arrayOf(*texture.cinematic) //pointer
+            cinematic[0] = texture.cinematic[0]//pointer
             image[0] = texture.image[0] //pointer
             texgen = texture.texgen
             hasMatrix = texture.hasMatrix
@@ -326,7 +326,7 @@ object Material {
                     + TempDump.CPP_class.Enum.SIZE //dynamicidImage_t
                     + Integer.SIZE * 2
                     + Integer.SIZE)
-            private var blaCounter = 0
+            var blaCounter = 0
         }
     }
 
@@ -829,7 +829,7 @@ object Material {
                 DEBUG_Parse++
                 //                System.out.printf("%d-->%s\n", DEBUG_Parse, text);
                 for (a in 0 until numStages) {
-                    stages.add(shaderStage_t(pd!!.parseStages[a]))
+                    stages.add(pd!!.parseStages[a])
                 }
             }
             if (numOps != 0) {
@@ -866,9 +866,9 @@ object Material {
                 i = 0
                 while (i < numStages) {
                     //TODO:for loop is unnecessary
-                    if (stages[i].texture.cinematic.isNotEmpty()) {
+                    if (stages[i].texture.cinematic[0] != null) {
 //				delete stages[i].texture.cinematic;
-                        stages[i].texture.cinematic = emptyArray()
+                        stages[i].texture.cinematic = arrayOfNulls(1)
                     }
                     if (stages[i].newStage != null) {
                         stages[i].newStage = null
@@ -932,7 +932,7 @@ object Material {
                 return "_scratch"
             }
             val image = stages[0].texture.image[0]
-            return image.imgName.toString() ?: "_scratch"
+            return image!!.imgName.toString() ?: "_scratch"
         }
 
         fun ReloadImages(force: Boolean) {
@@ -943,8 +943,8 @@ object Material {
                             stages[i].newStage!!.fragmentProgramImages[j].Reload(false, force)
                         }
                     }
-                } else if (stages[i].texture.image.isNotEmpty()) {
-                    stages[i].texture.image[0].Reload(false, force)
+                } else if (stages[i].texture.image[0] != null) {
+                    stages[i].texture.image[0]!!.Reload(false, force)
                 }
             }
         }
@@ -1250,16 +1250,16 @@ object Material {
         fun CinematicLength(): Int {
             return if (TempDump.NOT(stages) || TempDump.NOT(stages[0].texture.cinematic[0])) {
                 0
-            } else stages[0].texture.cinematic[0].AnimationLength()
+            } else stages[0].texture.cinematic[0]!!.AnimationLength()
         }
 
         //------------------------------------------------------------------
         fun CloseCinematic() {
             for (i in 0 until numStages) {
                 if (stages[i].texture.cinematic.getOrNull(0) != null) {
-                    stages[i].texture.cinematic[0].Close()
+                    stages[i].texture.cinematic[0]!!.Close()
                     //			delete stages[i].texture.cinematic;
-                    stages[i].texture.cinematic = emptyArray()
+                    stages[i].texture.cinematic = arrayOfNulls(1)
                 }
             }
         }
@@ -1267,7 +1267,7 @@ object Material {
         fun ResetCinematicTime(time: Int) {
             for (i in 0 until numStages) {
                 if (stages[i].texture.cinematic.getOrNull(0) != null) {
-                    stages[i].texture.cinematic[0].ResetTime(time)
+                    stages[i].texture.cinematic[0]!!.ResetTime(time)
                 }
             }
         }
@@ -1276,7 +1276,7 @@ object Material {
             if (TempDump.NOT(stages) || TempDump.NOT(stages[0].texture.cinematic[0]) || TempDump.NOT(tr_local.backEnd.viewDef)) {
                 return
             }
-            stages[0].texture.cinematic[0].ImageForTime(tr_local.tr.primaryRenderView.time)
+            stages[0].texture.cinematic[0]!!.ImageForTime(tr_local.tr.primaryRenderView.time)
         }
 
         // gets an image for the editor to use
@@ -1322,12 +1322,12 @@ object Material {
 
         fun GetImageWidth(): Int {
             assert(GetStage(0) != null && GetStage(0).texture.image[0] != null)
-            return GetStage(0).texture.image[0].uploadWidth._val
+            return GetStage(0).texture.image[0]!!.uploadWidth._val
         }
 
         fun GetImageHeight(): Int {
             assert(GetStage(0) != null && GetStage(0).texture.image.getOrNull(0) != null)
-            return GetStage(0).texture.image[0].uploadHeight._val
+            return GetStage(0).texture.image[0]!!.uploadHeight._val
         }
 
         fun SetGui(_gui: String) {
@@ -1474,7 +1474,7 @@ object Material {
             for (i in 0 until numStages) {
                 val s = stages[i]
                 if (s.texture.image[0] != null) {
-                    s.texture.image[0].AddReference()
+                    s.texture.image[0]!!.AddReference()
                 }
             }
         }
@@ -2182,8 +2182,8 @@ object Material {
                             continue
                         }
                     }
-                    ts.cinematic = arrayOf(idCinematic.Alloc())
-                    ts.cinematic[0].InitFromFile(token.toString(), loop)
+                    ts.cinematic[0] = idCinematic.Alloc()
+                    ts.cinematic[0]!!.InitFromFile(token.toString(), loop)
                     continue
                 }
                 if (0 == token.Icmp("soundmap")) {
@@ -2192,7 +2192,7 @@ object Material {
                         continue
                     }
                     ts.cinematic[0] = idSndWindow()
-                    ts.cinematic[0].InitFromFile(token.toString(), true)
+                    ts.cinematic[0]!!.InitFromFile(token.toString(), true)
                     continue
                 }
                 if (0 == token.Icmp("cubeMap")) {

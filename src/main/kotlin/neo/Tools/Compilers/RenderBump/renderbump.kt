@@ -739,7 +739,7 @@ object renderbump {
                 val rb =
                     rbs[q] //TODO: triple check the 'q' value against 'k', and make sure we don't go out of bounds.
                 k = ((i and rb.height - 1) * rb.width + (j and rb.width - 1)) * 4
-                colorDest = rb.colorPic //[k];
+                colorDest = rb.colorPic!! //[k];
                 localDest = rb.localPic //[k];
                 globalDest = rb.globalPic //[k];
 
@@ -1056,7 +1056,7 @@ object renderbump {
         while (i < outLinePixels) {
             OutlineNormalMap(rb.localPic, width, height, 128, 128, 128)
             OutlineNormalMap(rb.globalPic, width, height, 128, 128, 128)
-            OutlineColorMap(rb.colorPic, width, height, 128, 128, 128)
+            OutlineColorMap(rb.colorPic!!, width, height, 128, 128, 128)
             i++
         }
 
@@ -1070,8 +1070,8 @@ object renderbump {
             old = rb.globalPic
             rb.globalPic = Image_process.R_MipMap(rb.globalPic, width, height, false)
             //Mem_Free(old);
-            old = rb.colorPic
-            rb.colorPic = Image_process.R_MipMap(rb.colorPic, width, height, false)
+            old = rb.colorPic!!
+            rb.colorPic = Image_process.R_MipMap(rb.colorPic!!, width, height, false)
             width = width shr 1
             height = height shr 1
             i++
@@ -1094,7 +1094,7 @@ object renderbump {
             filename.StripFileExtension()
             filename.Append("_color.tga")
             Common.common.Printf("writing %s (%d,%d)\n", filename, width, height)
-            Image_files.R_WriteTGA(filename, rb.colorPic, width, height)
+            Image_files.R_WriteTGA(filename, rb.colorPic!!, width, height)
         }
 //        rb.localPic = null //Mem_Free(rb.localPic);
 //        rb.globalPic = null //Mem_Free(rb.globalPic);
@@ -1172,10 +1172,10 @@ object renderbump {
             rb.globalPic.put(i + 1, 128.toByte())
             rb.globalPic.put(i + 2, 128.toByte())
             rb.globalPic.put(i + 3, 0.toByte())
-            rb.colorPic.put(i + 0, 128.toByte())
-            rb.colorPic.put(i + 1, 128.toByte())
-            rb.colorPic.put(i + 2, 128.toByte())
-            rb.colorPic.put(i + 3, 0.toByte())
+            rb.colorPic!!.put(i + 0, 128.toByte())
+            rb.colorPic!!.put(i + 1, 128.toByte())
+            rb.colorPic!!.put(i + 2, 128.toByte())
+            rb.colorPic!!.put(i + 3, 0.toByte())
             rb.edgeDistances[i / 4] = -1f // not traced yet
             i += 4
         }
@@ -1206,7 +1206,7 @@ object renderbump {
 
     class renderBump_t {
         var antiAlias = 0
-        var colorPic: ByteBuffer = ByteBuffer.allocate(0)
+        var colorPic: ByteBuffer? = null
         var edgeDistances // starts out -1 for untraced, for each texel, 0 = true interior, >0 = off-edge rasterization
                 : FloatArray = FloatArray(0)
         lateinit var globalPic: ByteBuffer

@@ -202,7 +202,7 @@ object Compressor {
         protected var readBit = 0
         protected var readByte = 0
         protected var readData //= new byte[1];
-                : ByteBuffer = ByteBuffer.allocate(0)
+                : ByteBuffer? = null
         protected var readLength = 0
 
         //
@@ -211,7 +211,7 @@ object Compressor {
         protected var writeBit = 0
         protected var writeByte = 0
         protected var writeData //= new byte[1];
-                : ByteBuffer = ByteBuffer.allocate(0)
+                : ByteBuffer? = null
         protected var writeLength = 0
 
         //
@@ -225,12 +225,12 @@ object Compressor {
             readLength = 0
             readByte = 0
             readBit = 0
-            readData = ByteBuffer.allocate(0)
+            readData = null
             writeTotalBytes = 0
             writeLength = 0
             writeByte = 0
             writeBit = 0
-            writeData = ByteBuffer.allocate(0)
+            writeData = null
         }
 
         override fun FinishCompress() {
@@ -325,7 +325,7 @@ object Compressor {
             if (writeBit == 0 && numBits == 8 && writeByte < writeLength) {
                 writeByte++
                 writeTotalBytes++
-                writeData.putInt(
+                writeData!!.putInt(
                     writeByte - 1,
                     value
                 ) //TODO:check if inputs should be cast to bytes or stores.toInt() in this case (4 bytes)
@@ -345,7 +345,7 @@ object Compressor {
                             return
                         }
                     }
-                    writeData.putInt(writeByte, 0)
+                    writeData!!.putInt(writeByte, 0)
                     writeByte++
                     writeTotalBytes++
                 }
@@ -356,8 +356,8 @@ object Compressor {
                 fraction = value and (1 shl put) - 1
                 run {
                     val pos = writeByte - 1
-                    val `val` = writeData.getInt(pos) or fraction shl writeBit
-                    writeData.putInt(pos, `val`)
+                    val `val` = writeData!!.getInt(pos) or fraction shl writeBit
+                    writeData!!.putInt(pos, `val`)
                 }
                 numBits -= put
                 value = value shr put
@@ -377,7 +377,7 @@ object Compressor {
             if (readBit == 0 && numBits == 8 && readByte < readLength) {
                 readByte++
                 readTotalBytes++
-                return readData.getInt(readByte - 1)
+                return readData!!.getInt(readByte - 1)
             }
             while (valueBits < numBits) {
                 if (readBit == 0) {
@@ -400,7 +400,7 @@ object Compressor {
                 if (get > numBits - valueBits) {
                     get = numBits - valueBits
                 }
-                fraction = readData.get(readByte - 1).toInt()
+                fraction = readData!!.get(readByte - 1).toInt()
                 fraction = fraction shr readBit
                 fraction = fraction and (1 shl get) - 1
                 value = value or (fraction shl valueBits)

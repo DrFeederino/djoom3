@@ -227,7 +227,7 @@ object Model_md3 {
             var st: md3St_t
             var xyz: md3XyzNormal_t
             var tag: md3Tag_s
-            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             val version: Int
             var size: Int
             name.set(fileName)
@@ -236,7 +236,7 @@ object Model_md3 {
                 return
             }
             pinmodel = md3Header_s()
-            pinmodel.Read(buffer[0])
+            pinmodel.Read(buffer[0]!!)
             version = Lib.LittleLong(pinmodel.version)
             if (version != MD3_VERSION) {
                 FileSystem_h.fileSystem.FreeFile(buffer)
@@ -253,7 +253,7 @@ object Model_md3 {
 //            memcpy(md3, buffer, LittleLong(pinmodel.ofsEnd));
 //            for (int h = 0; h < size; h++) {
             md3 = md3Header_s()
-            md3!!.Read(buffer[0])
+            md3!!.Read(buffer[0]!!)
             md3!!.ident = LL(md3!!.ident)
             md3!!.version = LL(md3!!.version)
             md3!!.numFrames = LL(md3!!.numFrames)

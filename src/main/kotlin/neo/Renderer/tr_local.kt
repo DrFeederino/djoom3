@@ -1646,7 +1646,7 @@ object tr_local {
 //            idMaterial h;
 //            float max;
 //}
-            val faceData = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+            val faceData = arrayOfNulls<ByteBuffer>(1)
             val fTime = longArrayOf(0)
             var i: Int
             var len: Int
@@ -1705,7 +1705,7 @@ object tr_local {
                 }
                 FileSystem_h.fileSystem.ReadFile(name.toString(), faceData, fTime)
                 tr_font.fdOffset = 0
-                tr_font.fdFile = faceData[0].array()
+                tr_font.fdFile = faceData[0]!!.array()
                 i = 0
                 while (i < RenderSystem.GLYPHS_PER_FONT) {
                     outFont.glyphs[i] = glyphInfo_t()

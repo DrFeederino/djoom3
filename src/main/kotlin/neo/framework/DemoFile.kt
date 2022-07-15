@@ -36,7 +36,7 @@ object DemoFile {
         private val demoStrings: idList<idStr>
         private var f: idFile? = null
         private var fLog: idFile? = null
-        private var fileImage: ByteBuffer = ByteBuffer.allocate(0)
+        private var fileImage: ByteBuffer? = null
         private var log = false
         private val logStr: idStr = idStr()
 
@@ -76,11 +76,11 @@ object DemoFile {
             fileLength = f!!.Length()
             if (com_preloadDemos.GetBool()) {
                 fileImage = ByteBuffer.allocate(fileLength) // Mem_Alloc(fileLength);
-                f!!.Read(fileImage, fileLength)
+                f!!.Read(fileImage!!, fileLength)
                 FileSystem_h.fileSystem.CloseFile(f!!)
                 f = idFile_Memory(
                     Str.va("preloaded(%s)", fileName),
-                    fileImage,
+                    fileImage!!,
                     fileLength
                 ) //TODO:should fileImage be a reference??
             }
@@ -133,9 +133,9 @@ object DemoFile {
                 FileSystem_h.fileSystem.CloseFile(fLog!!)
                 fLog = null
             }
-            if (fileImage.capacity() > 0) {
+            if (fileImage != null) {
 //                Mem_Free(fileImage);
-                fileImage = ByteBuffer.allocate(0)
+                fileImage = null
             }
             if (compressor != null) {
 //		delete compressor;

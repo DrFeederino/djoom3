@@ -967,7 +967,7 @@ class DeclManager {
             val src = idLexer()
             val token = idToken()
             var startMarker: Int
-            val buffer = arrayOf(ByteBuffer.allocate(1))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             val length: Int
             var size: Int
             var sourceLine: Int
@@ -982,7 +982,7 @@ class DeclManager {
                 Common.common.FatalError("couldn't load %s", fileName.toString())
                 return BigInteger.ZERO
             }
-            if (!src.LoadMemory(TempDump.bbtocb(buffer[0]), length, fileName.toString())) {
+            if (!src.LoadMemory(TempDump.bbtocb(buffer[0]!!), length, fileName.toString())) {
                 Common.common.Error("Couldn't parse %s", fileName.toString())
                 //                Mem_Free(buffer);
                 return BigInteger.ZERO
@@ -997,7 +997,7 @@ class DeclManager {
                 }
             }
             src.SetFlags(DECL_LEXER_FLAGS)
-            checksum = BigInteger(MD5.MD5_BlockChecksum(buffer[0].array(), length))
+            checksum = BigInteger(MD5.MD5_BlockChecksum(buffer[0]!!.array(), length))
             fileSize = length
 
             // scan through, identifying each individual declaration
@@ -1102,7 +1102,7 @@ class DeclManager {
 //                    Mem_Free(newDecl.textSource);
                     newDecl.textSource = null
                 }
-                newDecl.SetTextLocal(String(buffer[0].array()).substring(startMarker), size)
+                newDecl.SetTextLocal(String(buffer[0]!!.array()).substring(startMarker), size)
                 newDecl.sourceFile = this
                 newDecl.sourceTextOffset = startMarker
                 newDecl.sourceTextLength = size

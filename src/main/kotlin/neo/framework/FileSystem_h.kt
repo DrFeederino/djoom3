@@ -349,7 +349,7 @@ object FileSystem_h {
     }
 
     class fileDownload_s {
-        var buffer: ByteBuffer = ByteBuffer.allocate(1)
+        var buffer: ByteBuffer? = null
         var length = 0
         var position = 0
 
@@ -363,7 +363,7 @@ object FileSystem_h {
         constructor(file: fileDownload_s) {
             position = file.position
             length = file.length
-            buffer = file.buffer.duplicate()
+            buffer = file.buffer!!.duplicate()
         }
 
         companion object {
@@ -583,19 +583,19 @@ object FileSystem_h {
         // As a quick check for existance. -1 length == not present.
         // A 0 byte will always be appended at the end, so string ops are safe.
         // The buffer should be considered read-only, because it may be cached for other uses.
-        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?, timestamp: LongArray?): Int
-        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?): Int
-        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>?, timeStamp: LongArray?): Int {
+        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer?>?, timestamp: LongArray?): Int
+        abstract fun ReadFile(relativePath: String, buffer: Array<ByteBuffer?>?): Int
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer?>?, timeStamp: LongArray?): Int {
             return ReadFile(name.toString(), buffer, timeStamp)
         }
 
-        fun ReadFile(name: idStr, buffer: Array<ByteBuffer>?): Int {
+        fun ReadFile(name: idStr, buffer: Array<ByteBuffer?>?): Int {
             return ReadFile(name.toString(), buffer)
         }
 
         // Frees the memory allocated by ReadFile.
         @Deprecated("")
-        abstract fun FreeFile(buffer: Array<ByteBuffer>)
+        abstract fun FreeFile(buffer: Array<ByteBuffer?>)
 
         // Writes a complete file, will create any needed subdirectories.
         // Returns the length of the file, or -1 on failure.
@@ -1826,7 +1826,7 @@ object FileSystem_h {
          timestamp can be NULL if not required
          ============
          */
-        override fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?, timestamp: LongArray?): Int {
+        override fun ReadFile(relativePath: String, buffer: Array<ByteBuffer?>?, timestamp: LongArray?): Int {
             val f: idFile?
             val buf: ByteBuffer?
             val len = CInt()
@@ -1841,7 +1841,7 @@ object FileSystem_h {
                 timestamp[0] = FILE_NOT_FOUND_TIMESTAMP.toLong()
             }
             if (buffer != null) {
-                buffer[0].clear() //TODO:
+                buffer[0] = null //TODO:
             }
 
 //            buf = null;	// quiet compiler warning
@@ -1859,7 +1859,7 @@ object FileSystem_h {
                     r = EventLoop.eventLoop.com_journalDataFile!!.ReadInt(len)
                     val r_bits = r * 8
                     if (r_bits != Integer.SIZE) {
-                        buffer!![0].clear()
+                        buffer!![0] = null
                         return -1
                     }
                     buf = ByteBuffer.allocate(len._val + 1) // Heap.Mem_ClearedAlloc(len + 1);
@@ -1881,7 +1881,7 @@ object FileSystem_h {
             f = OpenFileRead(relativePath, buffer != null)
             if (f == null) {
                 if (buffer != null) {
-                    buffer[0].clear()
+                    buffer[0] = null
                 }
                 return -1
             }
@@ -1913,11 +1913,11 @@ object FileSystem_h {
             return len._val
         }
 
-        override fun ReadFile(relativePath: String, buffer: Array<ByteBuffer>?): Int {
+        override fun ReadFile(relativePath: String, buffer: Array<ByteBuffer?>?): Int {
             return ReadFile(relativePath, buffer, null)
         }
 
-        override fun FreeFile(buffer: Array<ByteBuffer>) {
+        override fun FreeFile(buffer: Array<ByteBuffer?>) {
             if (null == searchPaths) {
                 idLib.common.FatalError("Filesystem call made without initialization\n")
             }
@@ -2414,7 +2414,7 @@ object FileSystem_h {
                 } else {
                     // read zipped file directly
                     bgl.f!!.Seek(bgl.file.position.toLong(), fsOrigin_t.FS_SEEK_SET)
-                    bgl.f!!.Read(bgl.file.buffer, bgl.file.length)
+                    bgl.f!!.Read(bgl.file.buffer!!, bgl.file.length)
                     bgl.completed = true
                 }
             } else {
@@ -4422,11 +4422,11 @@ object FileSystem_h {
                     idLib.common.Printf("Usage: touchFileList <filename>\n")
                     return
                 }
-                val buffer = arrayOf(ByteBuffer.allocate(1))
+                val buffer = arrayOfNulls<ByteBuffer>(1)
                 val src =
                     idParser(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
                 if (fileSystem.ReadFile(args.Argv(1), buffer, null) != 0 && buffer[0] != null) {
-                    src.LoadMemory(String(buffer[0].array()), buffer[0].capacity(), args.Argv(1))
+                    src.LoadMemory(String(buffer[0]!!.array()), buffer[0]!!.capacity(), args.Argv(1))
                     if (src.IsLoaded()) {
                         val token = idToken()
                         while (src.ReadToken(token)) {

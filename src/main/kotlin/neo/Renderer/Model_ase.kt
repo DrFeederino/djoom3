@@ -21,14 +21,14 @@ object Model_ase {
      =================
      */
     fun ASE_Load(fileName: String): aseModel_s? {
-        val buf = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+        val buf = arrayOfNulls<ByteBuffer>(1)
         val timeStamp = LongArray(1)
         val ase: aseModel_s?
         FileSystem_h.fileSystem.ReadFile(fileName, buf, timeStamp)
-        if (buf.size > 1) {
+        if (buf[0] == null) {
             return null
         }
-        ase = ASE_Parse(buf[0], false)
+        ase = ASE_Parse(buf[0]!!, false)
         ase.timeStamp[0] = timeStamp[0]
         FileSystem_h.fileSystem.FreeFile(buf)
         return ase

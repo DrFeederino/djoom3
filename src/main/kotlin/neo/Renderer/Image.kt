@@ -3265,8 +3265,8 @@ class Image {
                     numActiveBackgroundImageLoads--
                     FileSystem_h.fileSystem.CloseFile(image.bgl.f!!)
                     // upload the image
-                    image.UploadPrecompressedImage(image.bgl.file.buffer, image.bgl.file.length)
-                    image.bgl.file.buffer = ByteBuffer.allocate(1) //R_StaticFree(image.bgl.file.buffer);
+                    image.UploadPrecompressedImage(image.bgl.file.buffer!!, image.bgl.file.length)
+                    image.bgl.file.buffer = null //R_StaticFree(image.bgl.file.buffer);
                     if (image_showBackgroundLoads.GetBool()) {
                         Common.common.Printf("R_CompleteBackgroundImageLoad: %s\n", image.imgName)
                     }
@@ -3467,10 +3467,10 @@ class Image {
             val batchFile: idFile?
             if (removeDups) {
                 ddsList.clear()
-                val buffer = arrayOf(ByteBuffer.allocate(1))
+                val buffer = arrayOfNulls<ByteBuffer>(1)
                 FileSystem_h.fileSystem.ReadFile("makedds.bat", buffer)
-                if (!buffer.isNullOrEmpty() && buffer[0].capacity() > 1) {
-                    var str: idStr = idStr(String(buffer[0].array()))
+                if (buffer[0] != null) {
+                    var str: idStr = idStr(String(buffer[0]!!.array()))
                     while (str.Length() != 0) {
                         val n = str.Find('\n')
                         if (n > 0) {

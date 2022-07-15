@@ -45,7 +45,7 @@ class LangDict {
             if (clear) {
                 Clear()
             }
-            val buffer = arrayOf(ByteBuffer.allocate(1))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             val src =
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
             val len = idLib.fileSystem.ReadFile(fileName, buffer)

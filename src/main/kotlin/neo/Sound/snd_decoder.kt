@@ -313,7 +313,7 @@ object snd_decoder {
                     failed = true
                     return 0
                 }
-                file.SetData(sample.nonCacheData, sample.objectMemSize)
+                file.SetData(sample.nonCacheData!!, sample.objectMemSize)
                 val error = intArrayOf(0)
                 ogg = ov_openFile(file, error)
                 if (error[0] != 0) {

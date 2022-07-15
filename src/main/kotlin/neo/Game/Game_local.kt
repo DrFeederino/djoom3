@@ -4143,7 +4143,7 @@ class Game_local {
             if (msg != null) {
                 event.paramsSize = msg.GetSize()
                 //		memcpy( event.paramsBuf, msg.GetData(), msg.GetSize() );
-                System.arraycopy(msg.GetData().array(), 0, event.paramsBuf.array(), 0, msg.GetSize())
+                System.arraycopy(msg.GetData()!!.array(), 0, event.paramsBuf.array(), 0, msg.GetSize())
             } else {
                 event.paramsSize = 0
             }

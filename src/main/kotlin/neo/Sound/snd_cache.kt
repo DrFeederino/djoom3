@@ -19,6 +19,9 @@ import neo.idlib.math.Simd
 import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL10
 import java.nio.ByteBuffer
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 
 /**
  *
@@ -45,7 +48,7 @@ object snd_cache {
 
     class idSoundSample {
         var amplitudeData // precomputed min,max amplitude pairs
-                : ByteBuffer
+                : ByteBuffer?
         var defaultSound: Boolean
         var hardwareBuffer: Boolean
         var levelLoadReferenced // so we can tell which samples aren't needed any more
@@ -53,7 +56,7 @@ object snd_cache {
         val name // name of the sample file
                 : idStr = idStr()
         var nonCacheData // if it's not cached
-                : ByteBuffer
+                : ByteBuffer?
 
         //
         var objectInfo // what are we caching
@@ -106,10 +109,10 @@ object snd_cache {
             objectSize = Simd.MIXBUFFER_SAMPLES * 2
             objectMemSize = objectSize * 2 //* sizeof(short);
             nonCacheData = BufferUtils.createByteBuffer(objectMemSize) //soundCacheAllocator.Alloc(objectMemSize);
-            val ncd = nonCacheData.asShortBuffer()
+            val ncd = nonCacheData!!.asShortBuffer()
             i = 0
             while (i < Simd.MIXBUFFER_SAMPLES) {
-                v = Math.sin((idMath.PI * 2 * i / 64).toDouble()).toFloat()
+                v = sin((idMath.PI * 2 * i / 64).toDouble()).toFloat()
                 sample = (v * 0x4000).toInt().toShort()
                 ncd.put(i * 2 + 0, sample)
                 ncd.put(i * 2 + 1, sample)
@@ -198,7 +201,7 @@ object snd_cache {
             nonCacheData = BufferUtils.createByteBuffer(objectMemSize) //soundCacheAllocator.Alloc( objectMemSize );
             val temp = ByteBuffer.allocate(objectMemSize)
             fh.Read(temp, objectMemSize, null)
-            nonCacheData.put(temp).rewind()
+            nonCacheData!!.put(temp).rewind()
 
             // optionally convert it to 22kHz to save memory
             CheckForDownSample()
@@ -234,7 +237,7 @@ object snd_cache {
                                 BufferUtils.createByteBuffer((objectSize / blockSize + 1) * 2 * java.lang.Short.BYTES) //soundCacheAllocator.Alloc( ( objectSize / blockSize + 1 ) * 2 * sizeof( short) );
 
                             // Creating array of min/max amplitude pairs per blockSize samples
-                            val ncd = nonCacheData.asShortBuffer()
+                            val ncd = nonCacheData!!.asShortBuffer()
                             var i: Int
                             i = 0
                             while (i < objectSize) {
@@ -243,12 +246,12 @@ object snd_cache {
                                 var j: Int
                                 j = 0
                                 while (j < Lib.Min(objectSize - i, blockSize)) {
-                                    min = Math.min(ncd[i + j].toInt(), min.toInt()).toShort()
-                                    max = Math.max(ncd[i + j].toInt(), max.toInt()).toShort()
+                                    min = min(ncd[i + j].toInt(), min.toInt()).toShort()
+                                    max = max(ncd[i + j].toInt(), max.toInt()).toShort()
                                     j++
                                 }
-                                amplitudeData.putShort(i / blockSize * 2, min)
-                                amplitudeData.putShort(i / blockSize * 2 + 1, max)
+                                amplitudeData!!.putShort(i / blockSize * 2, min)
+                                amplitudeData!!.putShort(i / blockSize * 2 + 1, max)
                                 i += blockSize
                             }
                             hardwareBuffer = true
@@ -337,8 +340,8 @@ object snd_cache {
                                         max = if (destData.getShort(i + j) > max) destData.getShort(i + j) else max
                                         j++
                                     }
-                                    amplitudeData.putShort(i / blockSize * 2, min)
-                                    amplitudeData.putShort(i / blockSize * 2 + 1, max)
+                                    amplitudeData!!.putShort(i / blockSize * 2, min)
+                                    amplitudeData!!.putShort(i / blockSize * 2 + 1, max)
                                     i += blockSize
                                 }
                                 hardwareBuffer = true
@@ -354,7 +357,7 @@ object snd_cache {
                 // Free memory if sample was loaded into hardware
                 if (hardwareBuffer) {
 //			soundCacheAllocator.Free( nonCacheData );
-                    nonCacheData.clear()
+                    nonCacheData!!.clear()
                 }
             }
             fh.Close()
@@ -398,11 +401,11 @@ object snd_cache {
             }
             if (amplitudeData != null) {
 //                soundCacheAllocator.Free(amplitudeData);
-                amplitudeData.clear()
+                amplitudeData!!.clear()
             }
             if (nonCacheData != null) {
 //                soundCacheAllocator.Free(nonCacheData);
-                nonCacheData.clear()
+                nonCacheData!!.clear()
             }
         }
 
@@ -417,13 +420,13 @@ object snd_cache {
             val converted = BufferUtils.createByteBuffer(shortSamples * 2) // soundCacheAllocator.Alloc(shortSamples);
             if (objectInfo.nChannels == 1) {
                 for (i in 0 until shortSamples) {
-                    converted.putShort(i, nonCacheData.getShort(i * 2))
+                    converted.putShort(i, nonCacheData!!.getShort(i * 2))
                 }
             } else {
                 var i = 0
                 while (i < shortSamples) {
-                    converted.putShort(i + 0, nonCacheData.getShort(i * 2 + 0))
-                    converted.putShort(i + 1, nonCacheData.getShort(i * 2 + 1))
+                    converted.putShort(i + 0, nonCacheData!!.getShort(i * 2 + 0))
+                    converted.putShort(i + 1, nonCacheData!!.getShort(i * 2 + 1))
                     i += 2
                 }
             }
@@ -458,10 +461,10 @@ object snd_cache {
                 return false
             }
             if (output != null) {
-                nonCacheData.mark()
-                nonCacheData.position(offset)
+                nonCacheData!!.mark()
+                nonCacheData!!.position(offset)
                 output.put(nonCacheData)
-                nonCacheData.reset()
+                nonCacheData!!.reset()
             }
             if (position != null) {
                 position[0] = 0
@@ -482,8 +485,8 @@ object snd_cache {
             objectInfo = waveformatex_s()
             objectSize = 0
             objectMemSize = 0
-            nonCacheData = ByteBuffer.allocate(0)
-            amplitudeData = ByteBuffer.allocate(0)
+            nonCacheData = null
+            amplitudeData = null
             openalBuffer = 0
             hardwareBuffer = false
             defaultSound = false

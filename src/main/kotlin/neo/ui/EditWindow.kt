@@ -344,9 +344,9 @@ object EditWindow {
                 maxChars = 10
             }
             if (sourceFile.Length() != 0) {
-                val buffer = Array(0) { ByteBuffer.allocate(0) }
+                val buffer = arrayOfNulls<ByteBuffer>(1)
                 FileSystem_h.fileSystem.ReadFile(sourceFile, buffer)
-                text.data.set(String(buffer[0].array()))
+                text.data.set(String(buffer[0]!!.array()))
                 FileSystem_h.fileSystem.FreeFile(buffer)
             }
             InitCvar()

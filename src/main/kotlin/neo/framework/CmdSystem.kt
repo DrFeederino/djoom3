@@ -962,7 +962,7 @@ object CmdSystem {
         private class Exec_f private constructor() : cmdFunction_t() {
             @Throws(idException::class)
             override fun run(args: CmdArgs.idCmdArgs) {
-                val f = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
+                val f = arrayOfNulls<ByteBuffer>(1)
                 val len: Int
                 val filename: idStr
                 if (args.Argc() != 2) {
@@ -977,7 +977,7 @@ object CmdSystem {
                     return
                 }
                 idLib.common.Printf("execing %s\n", args.Argv(1))
-                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0].array()))
+                cmdSystemLocal.BufferCommandText(cmdExecution_t.CMD_EXEC_INSERT, String(f[0]!!.array()))
                 FileSystem_h.fileSystem.FreeFile(f)
             }
 

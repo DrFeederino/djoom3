@@ -386,7 +386,7 @@ object tr_render {
 //                }
 //            }
 //        }
-        if (texture.cinematic.isNotEmpty()) {
+        if (texture.cinematic[0] != null) {
             val cin: cinData_t?
             if (RenderSystem_init.r_skipDynamicTextures.GetBool()) {
                 Image.globalImages.defaultImage.Bind()
@@ -397,7 +397,7 @@ object tr_render {
             // We make no attempt to optimize for multiple identical cinematics being in view, or
             // for cinematics going at a lower framerate than the renderer.
             cin =
-                texture.cinematic[0].ImageForTime((1000 * (tr_local.backEnd.viewDef.floatTime + tr_local.backEnd.viewDef.renderView.shaderParms[11])).toInt())
+                texture.cinematic[0]!!.ImageForTime((1000 * (tr_local.backEnd.viewDef.floatTime + tr_local.backEnd.viewDef.renderView.shaderParms[11])).toInt())
             if (cin.image != null) {
                 Image.globalImages.cinematicImage.UploadScratch(cin.image!!, cin.imageWidth, cin.imageHeight)
             } else {
@@ -408,7 +408,7 @@ object tr_render {
             if (texture.image.isNotEmpty()) {
 //                final int titty = texture.image[0].texNum;
 //                if (titty != 58) return;
-                texture.image[0].Bind()
+                texture.image[0]!!.Bind()
             }
         }
     }
@@ -617,7 +617,7 @@ object tr_render {
     fun R_SetDrawInteraction(
         surfaceStage: shaderStage_t,
         surfaceRegs: FloatArray,
-        image: Array<idImage>,
+        image: Array<idImage?>,
         matrix: Array<idVec4> /*[2]*/,
         color: idVec4? /*[4]*/
     ) {
@@ -809,7 +809,7 @@ object tr_render {
                         inter.diffuseImage = null
                         inter.specularImage = null
                         run {
-                            val bumpImage = arrayOf(idImage())
+                            val bumpImage = arrayOfNulls<idImage>(1)
                             R_SetDrawInteraction(surfaceStage, surfaceRegs, bumpImage, inter.bumpMatrix, null)
                             inter.bumpImage = bumpImage[0]
                         }
@@ -824,7 +824,7 @@ object tr_render {
                             RB_SubmittInteraction(inter, drawInteraction)
                         }
                         run {
-                            val diffuseImage = arrayOf(idImage())
+                            val diffuseImage = arrayOfNulls<idImage>(1)
                             R_SetDrawInteraction(
                                 surfaceStage,
                                 surfaceRegs,
@@ -850,7 +850,7 @@ object tr_render {
                             RB_SubmittInteraction(inter, drawInteraction)
                         }
                         run {
-                            val specularImage = arrayOf(idImage())
+                            val specularImage = arrayOfNulls<idImage>(1)
                             R_SetDrawInteraction(
                                 surfaceStage,
                                 surfaceRegs,

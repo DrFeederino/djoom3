@@ -1340,7 +1340,7 @@ class Common {
             val out = idStr()
             val ws = idStr()
             var work: idStr
-            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             out.Empty()
             var k: Int
             var ch: Char
@@ -1350,7 +1350,7 @@ class Common {
             val src =
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
             if (FileSystem_h.fileSystem.ReadFile(fileName, buffer) > 0) {
-                src.LoadMemory(TempDump.bbtocb(buffer[0]), TempDump.bbtocb(buffer[0]).capacity(), fileName)
+                src.LoadMemory(TempDump.bbtocb(buffer[0]!!), TempDump.bbtocb(buffer[0]!!).capacity(), fileName)
                 if (src.IsLoaded()) {
                     val outFile = FileSystem_h.fileSystem.OpenFileWrite(fileName)!!
                     common.Printf("Processing %s\n", fileName)
@@ -1428,12 +1428,12 @@ class Common {
 
         @Throws(idException::class)
         fun LocalizeMapData(fileName: String, langDict: idLangDict) {
-            val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(0))
+            val buffer = arrayOfNulls<ByteBuffer>(1)
             val src =
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
             common.SetRefreshOnPrint(true)
             if (FileSystem_h.fileSystem.ReadFile(fileName, buffer) > 0) {
-                src.LoadMemory(TempDump.bbtocb(buffer[0]), TempDump.bbtocb(buffer[0]).capacity(), fileName)
+                src.LoadMemory(TempDump.bbtocb(buffer[0]!!), TempDump.bbtocb(buffer[0]!!).capacity(), fileName)
                 if (src.IsLoaded()) {
                     common.Printf("Processing %s\n", fileName)
                     var mapFileName: idStr?

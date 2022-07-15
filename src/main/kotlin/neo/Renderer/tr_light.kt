@@ -35,7 +35,6 @@ import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.idlib.precompiled
 import neo.ui.UserInterface.idUserInterface
-import java.nio.ByteBuffer
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -133,7 +132,7 @@ object tr_light {
         }
         tr_main.R_GlobalPointToLocal(ent.modelMatrix, light.globalLightOrigin, localLightOrigin)
         val size: Int = tri.ambientSurface!!.numVerts * lightingCache_s.BYTES
-        val cache = Array<lightingCache_s>(size) { lightingCache_s(ByteBuffer.allocate(1)) }
+        val cache = Array<lightingCache_s>(size) { lightingCache_s(null) }
         if (true) {
             Simd.SIMDProcessor.CreateTextureSpaceLightVectors(
                 cache[0].localLightVector,

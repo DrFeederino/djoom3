@@ -141,7 +141,7 @@ object Image_files {
         var row: Int
         var column: Int
         val buf_p: ByteBuffer
-        val buffer = arrayOf<ByteBuffer>()
+        val buffer = arrayOfNulls<ByteBuffer>(1)
         val length: Int
         val bmpHeader = BMPHeader_t()
         val bmpRGBA: ByteBuffer?
@@ -154,10 +154,10 @@ object Image_files {
         // load the file
         //
         length = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (TempDump.NOT(*buffer)) {
+        if (buffer[0] == null) {
             return null
         }
-        buf_p = buffer[0].duplicate()
+        buf_p = buffer[0]!!.duplicate()
         bmpHeader.id[0] = Char(buf_p.get().toUShort()) //*buf_p++;
         bmpHeader.id[1] = Char(buf_p.get().toUShort()) //*buf_p++;
         bmpHeader.fileSize = Lib.Companion.LittleLong( /* ( long * )*/buf_p.long).toLong() //	buf_p += 4;
@@ -297,7 +297,7 @@ object Image_files {
         height: IntArray?,
         timestamp: LongArray?
     ) {
-        val raw = arrayOf<ByteBuffer>()
+        val raw = arrayOfNulls<ByteBuffer>(1)
         val pcx: pcx_t
         var x: Int
         var y: Int
@@ -319,7 +319,7 @@ object Image_files {
         // load the file
         //
         len = FileSystem_h.fileSystem.ReadFile(filename, raw, timestamp)
-        if (TempDump.NOT(*raw)) {
+        if (raw[0] == null) {
             return
         }
 
@@ -327,7 +327,7 @@ object Image_files {
         // parse the PCX file
         //
         pcx = pcx_t(raw[0])
-        raw[0].position(pcx.dataPosition)
+        raw[0]!!.position(pcx.dataPosition)
         xmax = Lib.Companion.LittleShort(pcx.xmax).toInt()
         ymax = Lib.Companion.LittleShort(pcx.ymax).toInt()
         if (pcx.manufacturer.code != 0x0a || pcx.version.code != 5 || pcx.encoding.code != 1 || pcx.bits_per_pixel.code != 8 || xmax >= 1024 || ymax >= 1024) {
@@ -359,10 +359,10 @@ object Image_files {
         while (y <= ymax) {
             x = 0
             while (x <= xmax) {
-                dataByte = raw[0].get()
+                dataByte = raw[0]!!.get()
                 if (dataByte.toInt() and 0xC0 == 0xC0) {
                     runLength = dataByte.toInt() and 0x3F
-                    dataByte = raw[0].get()
+                    dataByte = raw[0]!!.get()
                 } else {
                     runLength = 1
                 }
@@ -373,7 +373,7 @@ object Image_files {
             y++
             pix.position(pix.position() + xmax + 1)
         }
-        if (raw[0].position() > len) //TODO: is this even possible?
+        if (raw[0]!!.position() > len) //TODO: is this even possible?
         {
             idLib.common.Printf("PCX file %s was malformed", filename)
             //		R_StaticFree (*pic);
@@ -435,7 +435,7 @@ object Image_files {
         var row: Int
         var column: Int
         val buf_p: ByteBuffer
-        val buffer = arrayOf<ByteBuffer>(ByteBuffer.allocate(1))
+        val buffer = arrayOfNulls<ByteBuffer>(1)
         val targa_header = TargaHeader()
         val targa_rgba: ByteBuffer?
         if (TempDump.NOT(width, height)) {
@@ -447,10 +447,10 @@ object Image_files {
         // load the file
         //
         fileSize = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (buffer[0].capacity() == 1) { // basically not found
+        if (buffer[0]!!.capacity() == 1) { // basically not found
             return null
         }
-        buf_p = buffer[0]
+        buf_p = buffer[0]!!
         buf_p.order(ByteOrder.LITTLE_ENDIAN).rewind()
         targa_header.id_length = buf_p.get()
         targa_header.colormap_type = buf_p.get()

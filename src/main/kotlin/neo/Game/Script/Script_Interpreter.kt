@@ -122,7 +122,7 @@ object Script_Interpreter {
                 val appendOffset = TempDump.strLen(localstack, offset)
                 System.arraycopy(str.toByteArray(), 0, localstack, appendOffset, length)
             } else {
-                def.value.stringPtr = idStr.Append(def.value.stringPtr!!, Script_Program.MAX_STRING_LEN, from)!!
+                def.value.stringPtr = idStr.Append(def.value.stringPtr, Script_Program.MAX_STRING_LEN, from)!!
             }
         }
 
@@ -163,7 +163,7 @@ object Script_Interpreter {
             if (`var`.getEntityNumberPtr() != NULL_ENTITY) {
                 val scriptObject = Game_local.gameLocal.entities[`var`.getEntityNumberPtr() - 1]!!.scriptObject
                 val data = scriptObject.data
-                if (data.capacity() > 1) {
+                if (data != null) {
                     `var`.evalPtr = varEval_s()
                     `var`.evalPtr!!.setBytePtr(data, scriptObject.offset)
                 }
@@ -597,7 +597,7 @@ object Script_Interpreter {
                     "%s(%d): Thread '%s': %s",
                     Game_local.gameLocal.program.GetFilename(line.file.toInt()),
                     line.linenumber,
-                    thread!!.GetThreadName(),
+                    thread.GetThreadName(),
                     text
                 )
             } else {
@@ -829,7 +829,7 @@ object Script_Interpreter {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            func = obj.GetTypeDef()!!.GetFunction(b.value.getVirtualFunction())!!
+                            func = obj.GetTypeDef()!!.GetFunction(b.value.getVirtualFunction())
                             assert(c.value.getArgSize() == func.parmTotal)
                             newThread = idThread(this, GetEntity(var_a.getEntityNumberPtr())!!, func, func.parmTotal)
                             newThread.Start()
@@ -848,7 +848,7 @@ object Script_Interpreter {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            func = obj.GetTypeDef()!!.GetFunction(b.value.getVirtualFunction())!!
+                            func = obj.GetTypeDef()!!.GetFunction(b.value.getVirtualFunction())
                             EnterFunction(func, false)
                         } else {
                             // return a 'safe' value
@@ -1234,7 +1234,7 @@ object Script_Interpreter {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             `var`.setFloatPtr(`var`.getFloatPtr() + 1)
                         }
                     }
@@ -1246,7 +1246,7 @@ object Script_Interpreter {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             `var`.setFloatPtr(`var`.getFloatPtr() - 1)
                         }
                     }
@@ -1441,7 +1441,7 @@ object Script_Interpreter {
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             var_c.setFloatPtr(`var`.getFloatPtr())
                         } else {
                             var_c.setFloatPtr(0.0f)
@@ -1452,7 +1452,7 @@ object Script_Interpreter {
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             var_c.setEntityNumberPtr(`var`.getEntityNumberPtr())
                         } else {
                             var_c.setEntityNumberPtr(0)
@@ -1463,7 +1463,7 @@ object Script_Interpreter {
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             var_c.setIntPtr(`var`.getIntPtr())
                         } else {
                             var_c.setIntPtr(0)
@@ -1473,8 +1473,8 @@ object Script_Interpreter {
                         var_a = GetVariable(a)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setStringPtr(obj.data, b.value.getPtrOffset())
-                            SetString(c, `var`.stringPtr!!)
+                            `var`.setStringPtr(obj.data!!, b.value.getPtrOffset())
+                            SetString(c, `var`.stringPtr)
                         } else {
                             SetString(c, "")
                         }
@@ -1484,7 +1484,7 @@ object Script_Interpreter {
                         var_c = GetVariable(c)
                         obj = GetScriptObject(var_a.getEntityNumberPtr())
                         if (obj != null) {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             var_c.setVectorPtr(`var`.getidVec3Ptr())
                         } else {
                             var_c.setVectorPtr(getVec3_zero())
@@ -1497,7 +1497,7 @@ object Script_Interpreter {
                         if (null == obj) {
                             var_c.setEntityNumberPtr(0)
                         } else {
-                            `var`.setBytePtr(obj.data, b.value.getPtrOffset())
+                            `var`.setBytePtr(obj.data!!, b.value.getPtrOffset())
                             var_c.setEntityNumberPtr(`var`.getEntityNumberPtr())
                         }
                     }
@@ -1686,11 +1686,11 @@ object Script_Interpreter {
                     }
                     when (field.Type()) {
                         Script_Program.ev_boolean -> {
-                            out.set(Str.va("%d", obj.data.getInt(reg.getPtrOffset())))
+                            out.set(Str.va("%d", obj.data!!.getInt(reg.getPtrOffset())))
                             true
                         }
                         Script_Program.ev_float -> {
-                            out.set(Str.va("%g", obj.data.getFloat(reg.getPtrOffset())))
+                            out.set(Str.va("%g", obj.data!!.getFloat(reg.getPtrOffset())))
                             true
                         }
                         else -> false
@@ -1699,7 +1699,7 @@ object Script_Interpreter {
                 Script_Program.ev_string -> {
                     if (reg.stringPtr.isNotEmpty()) {
                         out.set("\"")
-                        out.plusAssign(reg.stringPtr!!)
+                        out.plusAssign(reg.stringPtr)
                         out.plusAssign("\"")
                     } else {
                         out.set("\"\"")

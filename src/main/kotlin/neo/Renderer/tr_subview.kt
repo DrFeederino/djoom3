@@ -324,10 +324,10 @@ object tr_subview {
 
         // copy this rendering to the image
         stage.dynamicFrameCount = tr_local.tr.frameCount
-        if (stage.image.isNullOrEmpty()) {
+        if (stage.image[0] == null) {
             stage.image[0] = Image.globalImages.scratchImage
         }
-        tr_local.tr.CaptureRenderToImage(stage.image[0].imgName.toString())
+        tr_local.tr.CaptureRenderToImage(stage.image[0]!!.imgName.toString())
         tr_local.tr.UnCrop()
     }
 
@@ -371,7 +371,7 @@ object tr_subview {
         // copy this rendering to the image
         stage.dynamicFrameCount = tr_local.tr.frameCount
         stage.image[0] = Image.globalImages.scratchImage
-        tr_local.tr.CaptureRenderToImage(stage.image[0].imgName.toString())
+        tr_local.tr.CaptureRenderToImage(stage.image[0]!!.imgName.toString())
         tr_local.tr.UnCrop()
     }
 
@@ -415,7 +415,7 @@ object tr_subview {
         // copy this rendering to the image
         stage.dynamicFrameCount = tr_local.tr.frameCount
         stage.image[0] = Image.globalImages.scratchImage2
-        tr_local.tr.CaptureRenderToImage(stage.image[0].imgName.toString())
+        tr_local.tr.CaptureRenderToImage(stage.image[0]!!.imgName.toString())
         tr_local.tr.UnCrop()
     }
 

@@ -277,7 +277,7 @@ object MsgChannel {
             WriteMessageData(unsentMsg, msg)
 
             // send the packet
-            port.SendPacket(remoteAddress, unsentMsg.GetData(), unsentMsg.GetSize())
+            port.SendPacket(remoteAddress, unsentMsg.GetData()!!, unsentMsg.GetSize())
 
             // update rate control variables
             UpdateOutgoingRate(time, unsentMsg.GetSize())
@@ -325,10 +325,10 @@ object MsgChannel {
             }
             msg.WriteShort(unsentFragmentStart.toShort())
             msg.WriteShort(fragLength.toShort())
-            msg.WriteData(unsentMsg.GetData(), unsentFragmentStart, fragLength)
+            msg.WriteData(unsentMsg.GetData()!!, unsentFragmentStart, fragLength)
 
             // send the packet
-            port.SendPacket(remoteAddress, msg.GetData(), msg.GetSize())
+            port.SendPacket(remoteAddress, msg.GetData()!!, msg.GetSize())
 
             // update rate control variables
             UpdateOutgoingRate(time, msg.GetSize())
@@ -490,9 +490,9 @@ object MsgChannel {
                     return false
                 }
 
-//		memcpy( fragmentBuffer + fragmentLength, msg.GetData() + msg.GetReadCount(), fragLength );
+//		memcpy( fragmentBuffer + fragmentLength, msg.GetData()!! + msg.GetReadCount(), fragLength );
                 System.arraycopy(
-                    msg.GetData().array(), msg.GetReadCount(),
+                    msg.GetData()!!.array(), msg.GetReadCount(),
                     fragmentBuffer.array(), fragmentLength, fragLength
                 )
                 fragmentLength += fragLength
@@ -503,9 +503,9 @@ object MsgChannel {
                     return false
                 }
             } else {
-//		memcpy( fragmentBuffer, msg.GetData() + msg.GetReadCount(), msg.GetRemaingData() );
+//		memcpy( fragmentBuffer, msg.GetData()!! + msg.GetReadCount(), msg.GetRemaingData() );
                 System.arraycopy(
-                    msg.GetData().array(), msg.GetReadCount(),
+                    msg.GetData()!!.array(), msg.GetReadCount(),
                     fragmentBuffer.array(), 0, msg.GetRemaingData()
                 )
                 fragmentLength = msg.GetRemaingData()
@@ -528,7 +528,7 @@ object MsgChannel {
             if (remoteAddress.type == netadrtype_t.NA_BAD) {
                 return false
             }
-            result = reliableSend.Add(msg.GetData().array(), msg.GetSize())
+            result = reliableSend.Add(msg.GetData()!!.array(), msg.GetSize())
             if (!result) {
                 Common.common.Warning("idMsgChannel::SendReliableMessage: overflowed")
                 return false
@@ -541,8 +541,8 @@ object MsgChannel {
         fun GetReliableMessage(msg: idBitMsg): Boolean {
             val size = CInt()
             val result: Boolean
-            result = reliableReceive.Get(msg.GetData().array(), size)
-            msg.SetSize(msg.GetData().capacity()) //TODO:phase out size and length fields.
+            result = reliableReceive.Get(msg.GetData()!!.array(), size)
+            msg.SetSize(msg.GetData()!!.capacity()) //TODO:phase out size and length fields.
             msg.BeginReading()
             return result
         }
@@ -565,16 +565,16 @@ object MsgChannel {
             // write reliable messages
             reliableSend.CopyToBuffer(
                 Arrays.copyOfRange(
-                    tmp.GetData().array(),
+                    tmp.GetData()!!.array(),
                     tmp.GetSize(),
-                    tmp.GetData().capacity()
+                    tmp.GetData()!!.capacity()
                 )
             )
             tmp.SetSize(tmp.GetSize() + reliableSend.GetTotalSize())
             tmp.WriteShort(0)
 
             // write data
-            tmp.WriteData(msg.GetData(), msg.GetSize())
+            tmp.WriteData(msg.GetData()!!, msg.GetSize())
 
             // write message size
             out.WriteShort(tmp.GetSize().toShort())
@@ -582,7 +582,7 @@ object MsgChannel {
             // compress message
             val file = idFile_BitMsg(out)
             compressor.Init(file, true, 3)
-            compressor.Write(tmp.GetData(), tmp.GetSize())
+            compressor.Write(tmp.GetData()!!, tmp.GetSize())
             compressor.FinishCompress()
             outgoingCompression = compressor.GetCompressionRatio()
         }
@@ -598,7 +598,7 @@ object MsgChannel {
             // decompress message
             val file = idFile_BitMsg(msg)
             compressor.Init(file, false, 3)
-            compressor.Read(out.GetData(), out.GetSize())
+            compressor.Read(out.GetData()!!, out.GetSize())
             incomingCompression = compressor.GetCompressionRatio()
             out.BeginReading()
 
@@ -623,9 +623,9 @@ object MsgChannel {
                 if (reliableSequence == reliableReceive.GetLast() + 1) {
                     reliableReceive.Add(
                         Arrays.copyOfRange(
-                            out.GetData().array(),
+                            out.GetData()!!.array(),
                             out.GetReadCount(),
-                            out.GetData().capacity()
+                            out.GetData()!!.capacity()
                         ), reliableMessageSize._val
                     )
                 }

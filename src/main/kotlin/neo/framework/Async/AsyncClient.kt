@@ -333,7 +333,7 @@ object AsyncClient {
             msg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
             msg.WriteString("getInfo")
             msg.WriteLong(serverList.GetChallenge()) // challenge
-            clientPort.SendPacket(adr, msg.GetData(), msg.GetSize())
+            clientPort.SendPacket(adr, msg.GetData()!!, msg.GetSize())
         }
 
         fun GetServerInfo(address: String?) {
@@ -378,7 +378,7 @@ object AsyncClient {
             i = 0
             while (i < AsyncNetwork.MAX_SERVER_PORTS) {
                 broadcastAddress.port = (Licensee.PORT_SERVER + i)
-                clientPort.SendPacket(broadcastAddress, msg.GetData(), msg.GetSize())
+                clientPort.SendPacket(broadcastAddress, msg.GetData()!!!!, msg.GetSize())
                 i++
             }
         }
@@ -402,7 +402,7 @@ object AsyncClient {
             msg.WriteBits(CVarSystem.cvarSystem.GetCVarInteger("gui_filter_gameType"), 2)
             val adr = netadr_t()
             if (idAsyncNetwork.GetMasterAddress(0, adr)) {
-                clientPort.SendPacket(adr, msg.GetData(), msg.GetSize())
+                clientPort.SendPacket(adr, msg.GetData()!!, msg.GetSize())
             }
         }
 
@@ -447,7 +447,7 @@ object AsyncClient {
             msg.WriteString("rcon")
             msg.WriteString(idAsyncNetwork.clientRemoteConsolePassword.GetString())
             msg.WriteString(command)
-            clientPort.SendPacket(adr, msg.GetData(), msg.GetSize())
+            clientPort.SendPacket(adr, msg.GetData()!!, msg.GetSize())
         }
 
         fun IsPortInitialized(): Boolean {
@@ -657,7 +657,7 @@ object AsyncClient {
             }
             outMsg.Init(msgBuf, msgBuf.capacity())
             outMsg.WriteByte(CLIENT_RELIABLE.CLIENT_RELIABLE_MESSAGE_GAME.ordinal.toByte())
-            outMsg.WriteData(msg.GetData(), msg.GetSize())
+            outMsg.WriteData(msg.GetData()!!, msg.GetSize())
             if (!channel.SendReliableMessage(outMsg)) {
                 Common.common.Error("client->server reliable messages overflow\n")
             }
@@ -680,7 +680,7 @@ object AsyncClient {
             msg.WriteShort(sys_public.BUILD_OS_ID.toShort())
             msg.WriteString(CVarSystem.cvarSystem.GetCVarString("si_version"))
             msg.WriteString(CVarSystem.cvarSystem.GetCVarString("com_guid"))
-            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData(), msg.GetSize())
+            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData()!!, msg.GetSize())
             Common.common.DPrintf("sent a version check request\n")
             updateState = clientUpdateState_t.UPDATE_SENT
             updateSentTime = clientTime
@@ -701,7 +701,7 @@ object AsyncClient {
             msg.WriteByte(if (xpkey != null) 1 else 0)
             msg.WriteString(xpkey ?: "")
             InitPort()
-            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData(), msg.GetSize())
+            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData()!!, msg.GetSize())
             return true
         }
 
@@ -1738,7 +1738,7 @@ object AsyncClient {
                 msg.WriteShort(MsgChannel.CONNECTIONLESS_MESSAGE_ID.toShort())
                 msg.WriteString("challenge")
                 msg.WriteLong(clientId)
-                clientPort.SendPacket(serverAddress, msg.GetData(), msg.GetSize())
+                clientPort.SendPacket(serverAddress, msg.GetData()!!, msg.GetSize())
             } else if (clientState == clientState_t.CS_CONNECTING) {
                 Common.common.Printf(
                     "sending connect to %s with challenge 0x%x\n",
@@ -1763,7 +1763,7 @@ object AsyncClient {
                 msg.WriteString(CVarSystem.cvarSystem.GetCVarString("password"), -1, false)
                 // do not make the protocol depend on PB
                 msg.WriteShort(0)
-                clientPort.SendPacket(serverAddress, msg.GetData(), msg.GetSize())
+                clientPort.SendPacket(serverAddress, msg.GetData()!!, msg.GetSize())
                 if (idAsyncNetwork.LANServer.GetBool()) {
                     Common.common.Printf("net_LANServer is set, connecting in LAN mode\n")
                 } else {
@@ -1783,7 +1783,7 @@ object AsyncClient {
                     if (xpkey != null) {
                         msg.WriteString(xpkey)
                     }
-                    clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData(), msg.GetSize())
+                    clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData()!!, msg.GetSize())
                 }
             } else {
                 return
@@ -1816,7 +1816,7 @@ object AsyncClient {
             }
             outMsg.WriteLong(0)
             outMsg.WriteLong(gamePakChecksum._val)
-            clientPort.SendPacket(from, outMsg.GetData(), outMsg.GetSize())
+            clientPort.SendPacket(from, outMsg.GetData()!!, outMsg.GetSize())
         }
 
         @Throws(idException::class)
@@ -1932,7 +1932,7 @@ object AsyncClient {
                             dlmsg.WriteLong(missingChecksums[i++])
                         }
                         dlmsg.WriteLong(0)
-                        clientPort.SendPacket(from, dlmsg.GetData(), dlmsg.GetSize())
+                        clientPort.SendPacket(from, dlmsg.GetData()!!, dlmsg.GetSize())
                     }
                     return false
                 }
@@ -2019,7 +2019,7 @@ object AsyncClient {
             msg.WriteString("versionDL")
             msg.WriteLong(AsyncNetwork.ASYNC_PROTOCOL_VERSION)
             msg.WriteShort(state.toShort())
-            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData(), msg.GetSize())
+            clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData()!!, msg.GetSize())
         }
 
         @Throws(idException::class)
