@@ -2214,6 +2214,8 @@ object AI {
                             PlayChatter()
                             CheckBlink()
                         }
+
+                        else -> {}
                     }
                 }
 
@@ -3587,10 +3589,13 @@ object AI {
                     }
                     return false
                 }
+
                 moveCommand_t.MOVE_SLIDE_TO_POSITION -> {
                     seekPos.set(org)
                     return false
                 }
+
+                else -> {}
             }
             if (move.moveCommand == moveCommand_t.MOVE_TO_ENTITY) {
                 MoveToEntity(move.goalEntity.GetEntity())
@@ -6819,7 +6824,9 @@ object AI {
                     savedMove.moveDest,
                     savedMove.duration.toFloat()
                 )
+
                 moveCommand_t.MOVE_WANDER -> WanderAround()
+                else -> {}
             }
             if (GetMovePos(goalPos)) {
                 CheckObstacleAvoidance(goalPos, dest)

@@ -1164,6 +1164,7 @@ object tr_light {
         when (shader.Texgen()) {
             texgen_t.TG_SKYBOX_CUBE -> R_SkyboxTexGen(drawSurf, tr_local.tr.viewDef!!.renderView.vieworg)
             texgen_t.TG_WOBBLESKY_CUBE -> R_WobbleskyTexGen(drawSurf, tr_local.tr.viewDef!!.renderView.vieworg)
+            else -> {}
         }
 
         // check for gui surfaces

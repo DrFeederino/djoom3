@@ -261,6 +261,7 @@ class idProgram {
     fun Startup(defaultScript: String) {
         Game_local.gameLocal.Printf("Initializing scripts\n")
         // make sure all data is freed up
+        return
         idThread.Restart()
         // get ready for loading scripts
         BeginCompilation()
@@ -446,7 +447,7 @@ class idProgram {
         val op: opcode_s
         val statement: statement_s?
         statement = statements[instructionPointer]
-        op = idCompiler.opcodes.get(statement.op.toInt())
+        op = idCompiler.opcodes.get(statement.op.toInt())!!
         file.Printf(
             "%20s(%d):\t%6d: %15s\t",
             fileList[statement.file.toInt()],

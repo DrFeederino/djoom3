@@ -1526,6 +1526,8 @@ object Clip {
                             winding
                         ) //TODO:is this function necessary?
                     }
+
+                    else -> {}
                 }
             }
 

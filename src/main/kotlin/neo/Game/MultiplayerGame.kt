@@ -396,6 +396,8 @@ object MultiplayerGame {
                         fragLimitTimeout = 0
                     }
                 }
+
+                else -> {}
             }
         }
 
@@ -1566,10 +1568,13 @@ object MultiplayerGame {
                         CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "nextMap")
                     }
                 }
+
                 vote_flags_t.VOTE_NEXTMAP -> CmdSystem.cmdSystem.BufferCommandText(
                     cmdExecution_t.CMD_EXEC_APPEND,
                     "serverNextMap\n"
                 )
+
+                else -> {}
             }
         }
 

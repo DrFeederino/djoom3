@@ -1228,6 +1228,8 @@ object AsyncClient {
                             )
                             CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_USERINFO)
                         }
+
+                        else -> {}
                     }
                 } else {
 //			default: {

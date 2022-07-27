@@ -3,14 +3,7 @@ package neo.Game
 import neo.CM.CollisionModel.trace_s
 import neo.Game.Entity.idEntity
 import neo.Game.Entity.signalNum_t
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t3
-import neo.Game.GameSys.Class.eventCallback_t5
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -606,9 +599,12 @@ object Mover {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
                     StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
                 }
+
                 moveStage_t.FINISHED_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
                 }
+
+                else -> {}
             }
         }
 
@@ -625,9 +621,12 @@ object Mover {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
                     StartSound("snd_decel", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
                 }
+
                 moveStage_t.FINISHED_STAGE -> {
                     StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), false)
                 }
+
+                else -> {}
             }
         }
 

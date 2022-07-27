@@ -1260,6 +1260,8 @@ object AF {
                     c.SetSpring(fc.stretch, fc.compress, fc.damping, fc.restLength)
                     c.SetLimit(fc.minLength, fc.maxLength)
                 }
+
+                else -> {}
             }
             return true
         }

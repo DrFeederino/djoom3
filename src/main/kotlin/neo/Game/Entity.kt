@@ -607,9 +607,8 @@ object Entity {
                 eventCallbacks.putAll(idClass.getEventCallBacks())
                 eventCallbacks[EV_GetName] =
                     eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetName }
-                eventCallbacks[EV_SetName] = eventCallback_t1<idEntity> { e: Any?, newName: idEventArg<*>? ->
-                    idEntity::Event_SetName
-                }
+                eventCallbacks[EV_SetName] =
+                    eventCallback_t1<idEntity> { e: Any?, newName: idEventArg<*>? -> idEntity::Event_SetName }
                 eventCallbacks[EV_FindTargets] =
                     eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_FindTargets }
                 eventCallbacks[EV_ActivateTargets] =

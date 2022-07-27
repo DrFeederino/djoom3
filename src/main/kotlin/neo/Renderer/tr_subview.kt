@@ -483,6 +483,8 @@ object tr_subview {
                         stage.texture,
                         scissor
                     )
+
+                    else -> {}
                 }
             }
             return true

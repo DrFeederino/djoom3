@@ -3765,6 +3765,7 @@ class Image {
                     textureType_t.TT_2D -> texEnum = GL11.GL_TEXTURE_2D
                     textureType_t.TT_3D -> texEnum = GL12.GL_TEXTURE_3D
                     textureType_t.TT_CUBIC -> texEnum = GL13.GL_TEXTURE_CUBE_MAP /*_EXT*/
+                    else -> {}
                 }
 
                 // make sure we don't start a background load

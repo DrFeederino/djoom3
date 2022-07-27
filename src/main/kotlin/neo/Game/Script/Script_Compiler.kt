@@ -224,7 +224,7 @@ object Script_Compiler {
         //
         private var immediateType: idTypeDef?
         private var loopDepth: Int
-        private var parserPtr: idParser = idParser()
+        private var parserPtr: idParser
 
         //
         private var scope // the function being parsed, or NULL
@@ -283,7 +283,7 @@ object Script_Compiler {
          try to optimize when the operator works on constants only
          ============
          */
-        private fun OptimizeOpcode(op: opcode_s, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
+        private fun OptimizeOpcode(op: opcode_s?, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
             val c: eval_s
             val type: idTypeDef?
             if (var_a != null && var_a.initialized != initialized_t.initializedConstant) {
@@ -498,7 +498,7 @@ object Script_Compiler {
          Emits a primitive statement, returning the var it places it's value in
          ============
          */
-        private fun EmitOpcode(op: opcode_s, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
+        private fun EmitOpcode(op: opcode_s?, var_a: idVarDef?, var_b: idVarDef?): idVarDef? {
             val statement: statement_s?
             var var_c: idVarDef?
             var_c = OptimizeOpcode(op, var_a, var_b)
@@ -514,7 +514,7 @@ object Script_Compiler {
             statement = Game_local.gameLocal.program.AllocStatement()
             statement.linenumber = currentLineNumber
             statement.file = currentFileNumber
-            if (op.type_c === Script_Program.def_void || op.rightAssociative) {
+            if (op!!.type_c === Script_Program.def_void || op!!.rightAssociative) {
                 // ifs, gotos, and assignments don't need vars allocated
                 var_c = null
             } else {
@@ -534,7 +534,7 @@ object Script_Compiler {
             statement.a = var_a
             statement.b = var_b
             statement.c = var_c
-            return if (op.rightAssociative) {
+            return if (op!!.rightAssociative) {
                 var_a
             } else var_c
         }
@@ -558,12 +558,12 @@ object Script_Compiler {
          ============
          */
         private fun EmitPush(expression: idVarDef, funcArg: idTypeDef): Boolean {
-            var op: opcode_s
+            var op: opcode_s?
             var out: opcode_s?
             var op_ptr: Int = 0
             out = null
             op = opcodes[op_codes.OP_PUSH_F.ordinal.also { op_ptr = it }]
-            while (op.name.isNotEmpty() && op.name == "<PUSH>") {
+            while (op!!.name.isNotEmpty() && op.name == "<PUSH>") {
                 op_ptr = op_ptr.inc()
                 if (funcArg.Type() == op.type_a!!.Type() && expression.Type() == op.type_b!!.Type()) {
                     out = op
@@ -848,12 +848,15 @@ object Script_Compiler {
                     Script_Program.ev_jumpoffset -> if (def.value.getJumpOffset() == eval._int) {
                         return def
                     }
+
                     Script_Program.ev_entity -> if (def.value.getIntPtr() == eval.entity) {
                         return def
                     }
-                    Script_Program.ev_string -> if (idStr.Cmp(def.value.stringPtr!!, string) == 0) {
+
+                    Script_Program.ev_string -> if (idStr.Cmp(def.value.stringPtr, string) == 0) {
                         return def
                     }
+
                     Script_Program.ev_float -> if (def.value.getFloatPtr() == eval._float) {
                         return def
                     }
@@ -1181,7 +1184,7 @@ object Script_Compiler {
             val field: idVarDef?
             val   /*ctype_t*/type_b: Int
             val   /*ctype_t*/type_c: Int
-            var op: opcode_s
+            var op: opcode_s?
             var op_i: Int
             bla++
 
@@ -1215,7 +1218,7 @@ object Script_Compiler {
                         if (field.Type() == Script_Program.ev_function) {
                             type_c = field.TypeDef()!!.ReturnType()!!.Type()
                         } else {
-                            type_c = field.TypeDef()!!.FieldType()!!.Type() // field access gets type from field
+                            type_c = field.TypeDef()!!.FieldType().Type() // field access gets type from field
                             if (CheckToken("++")) {
                                 if (type_c != Script_Program.ev_float) {
                                     Error("Invalid type for ++")
@@ -1231,7 +1234,7 @@ object Script_Compiler {
                             }
                         }
                         op = opcodes[op_codes.OP_INDIRECT_F.ordinal.also { op_i = it }]
-                        while (op.type_a!!.Type() != Script_Program.ev_object
+                        while (op!!.type_a!!.Type() != Script_Program.ev_object
                             || type_b != op.type_b!!.Type() || type_c != op.type_c!!.Type()
                         ) {
                             if (op.priority == FUNCTION_PRIORITY && op.type_a!!.Type() == Script_Program.ev_object && op.type_c!!.Type() == Script_Program.ev_void
@@ -1242,7 +1245,7 @@ object Script_Compiler {
                             }
                             op_i = op_i.inc()
                             op = opcodes[op_i]
-                            if (op.name.isEmpty() || op.name != ".") {
+                            if (op!!.name.isEmpty() || op.name != ".") {
                                 Error("no valid opcode to access type '%s'", field.TypeDef()!!.SuperClass()!!.Name())
                             }
                         }
@@ -1510,7 +1513,7 @@ object Script_Compiler {
                     if (e2.Type() == Script_Program.ev_function && e2.TypeDef()!!.ReturnType() != null) {
                         e2.TypeDef()!!.ReturnType()!!.Type()
                     } else if (e2.TypeDef()!!.FieldType() != null) {
-                        e2.TypeDef()!!.FieldType()!!.Type()
+                        e2.TypeDef()!!.FieldType().Type()
                     } else {
                         // not a field
                         Script_Program.ev_error
@@ -1533,7 +1536,7 @@ object Script_Compiler {
                     }
                     op_i = op_i.inc()
                     op = opcodes[op_i]
-                    if (op.name.isNullOrEmpty() || op.name != oldop.name) {
+                    if (op!!.name.isNullOrEmpty() || op.name != oldop.name) {
                         Error("type mismatch for '%s'", oldop.name)
                     }
                 }
@@ -1564,40 +1567,40 @@ object Script_Compiler {
                         if (callthread) {
                             Error("Expecting function call after 'thread'")
                         }
-                        if (type_a == Script_Program.ev_pointer && type_b != e.TypeDef()!!.PointerType()!!.Type()) {
+                        if (type_a == Script_Program.ev_pointer && type_b != e.TypeDef()!!.PointerType().Type()) {
                             // FIXME: need to make a general case for this
 //				if ( ( op - opcodes == op_codes.OP_STOREP_F ) && ( e.TypeDef().PointerType().Type() == ev_boolean ) ) {
                             if (op_i == op_codes.OP_STOREP_F.ordinal && e.TypeDef()!!.PointerType()
-                                !!.Type() == Script_Program.ev_boolean
+                                    .Type() == Script_Program.ev_boolean
                             ) {
                                 // copy from float to boolean pointer
                                 op_i = op_codes.OP_STOREP_FTOBOOL.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()
                                     .Type() == Script_Program.ev_float
                             ) {
                                 // copy from boolean to float pointer
                                 op_i = op_codes.OP_STOREP_BOOLTOF.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == op_codes.OP_STOREP_F.ordinal && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_F.ordinal && e.TypeDef()!!.PointerType()
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from float to string pointer
                                 op_i = op_codes.OP_STOREP_FTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_BOOL.ordinal && e.TypeDef()!!.PointerType()
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from boolean to string pointer
                                 op_i = op_codes.OP_STOREP_BTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == op_codes.OP_STOREP_V.ordinal && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_V.ordinal && e.TypeDef()!!.PointerType()
                                     .Type() == Script_Program.ev_string
                             ) {
                                 // copy from vector to string pointer
                                 op_i = op_codes.OP_STOREP_VTOS.ordinal
                                 op = opcodes[op_i]
-                            } else if (op_i == op_codes.OP_STOREP_ENT.ordinal && e.TypeDef()!!.PointerType()!!
+                            } else if (op_i == op_codes.OP_STOREP_ENT.ordinal && e.TypeDef()!!.PointerType()
                                     .Type() == Script_Program.ev_object
                             ) {
                                 // store an entity into an object pointer
@@ -1607,7 +1610,7 @@ object Script_Compiler {
                                 Error("type mismatch for '%s'", op.name)
                             }
                         }
-                        e = if (op.rightAssociative) {
+                        e = if (op!!.rightAssociative) {
                             EmitOpcode(op, e2, e)!!
                         } else {
                             EmitOpcode(op, e, e2)!!
@@ -1618,7 +1621,7 @@ object Script_Compiler {
                             // comes from an entity
                             val statement =
                                 Game_local.gameLocal.program.GetStatement(Game_local.gameLocal.program.NumStatements() - 1)
-                            statement.c = Script_Program.type_pointer.PointerType()!!.def
+                            statement.c = Script_Program.type_pointer.PointerType().def
                         }
 
                         // field access gets type from field
@@ -1671,7 +1674,7 @@ object Script_Compiler {
             val e: idVarDef?
             val   /*ctype_t*/type_a: Int
             val   /*ctype_t*/type_b: Int
-            var op: opcode_s
+            var op: opcode_s?
             var op_i: Int
             if (CheckToken(";")) {
                 if (scope!!.TypeDef()!!.ReturnType()!!.Type() != Script_Program.ev_void) {
@@ -1689,7 +1692,7 @@ object Script_Compiler {
                 return
             }
             op = opcodes[0.also { op_i = it }]
-            while (!op.name.isNullOrEmpty()) {
+            while (!op!!.name.isNullOrEmpty()) {
                 op_i = op_i.inc()
                 if (op.name == "=") {
                     break
@@ -1697,10 +1700,10 @@ object Script_Compiler {
                 op = opcodes[op_i]
             }
             assert(!op.name.isNullOrEmpty())
-            while (!TypeMatches(type_a, op.type_a!!.Type()) || !TypeMatches(type_b, op.type_b!!.Type())) {
+            while (!TypeMatches(type_a, op!!.type_a!!.Type()) || !TypeMatches(type_b, op.type_b!!.Type())) {
                 op_i = op_i.inc()
                 op = opcodes[op_i]
-                if (op.name.isEmpty() || op.name != "=") {
+                if (op!!.name.isEmpty() || op.name != "=") {
                     Error("type mismatch for return value")
                 }
             }
@@ -1958,7 +1961,7 @@ object Script_Compiler {
             if (!CheckToken(":")) {
                 parentType = Script_Program.type_object
             } else {
-                parentType = ParseType()!!
+                parentType = ParseType()
                 if (!parentType.Inherits(Script_Program.type_object)) {
                     Error("Objects may only inherit from objects.")
                 }
@@ -1977,7 +1980,7 @@ object Script_Compiler {
             num = parentType.NumFunctions()
             i = 0
             while (i < parentType.NumFunctions()) {
-                val func = parentType.GetFunction(i)!!
+                val func = parentType.GetFunction(i)
                 objtype.AddFunction(func)
                 i++
             }
@@ -1989,7 +1992,7 @@ object Script_Compiler {
                 }
                 fieldtype = ParseType()
                 newtype.SetFieldType(fieldtype)
-                fieldname = Str.va("%s field", fieldtype!!.Name())
+                fieldname = Str.va("%s field", fieldtype.Name())
                 newtype.SetName(fieldname)
                 ParseName(name)
 
@@ -2026,7 +2029,7 @@ object Script_Compiler {
             if (!CheckToken(")")) {
                 val parmName = idStr()
                 do {
-                    type = ParseType()!!
+                    type = ParseType()
                     ParseName(parmName)
                     newtype.AddFunctionParm(type, parmName.toString())
                 } while (CheckToken(","))
@@ -2175,7 +2178,7 @@ object Script_Compiler {
                     // emit the call to the destructor
                     val selfDef = Game_local.gameLocal.program.GetDef(type.GetParmType(0), type.GetParmName(0), def)!!
                     EmitPush(selfDef, selfDef.TypeDef()!!)
-                    EmitOpcode(opcodes[op_codes.OP_CALL.ordinal], destructorFunc.def, null)
+                    EmitOpcode(opcodes[op_codes.OP_CALL.ordinal]!!, destructorFunc.def, null)
                 }
             }
 
@@ -2320,7 +2323,7 @@ object Script_Compiler {
                         i + 1, parmName, expectedType.Name(), name
                     )
                 }
-                newtype.AddFunctionParm(argType!!, "")
+                newtype.AddFunctionParm(argType, "")
                 if (i < num - 1) {
                     if (CheckToken(")")) {
                         Error("Too few parameters for event definition.  Internal definition has %d parameters.", num)
@@ -2403,7 +2406,7 @@ object Script_Compiler {
             } else if (CheckToken("(")) {        // check for a function prototype or declaraction
                 ParseFunctionDef(type, name.toString())
             } else {
-                ParseVariableDef(type!!, name.toString())
+                ParseVariableDef(type, name.toString())
                 while (CheckToken(",")) {
                     ParseName(name)
                     ParseVariableDef(type, name.toString())
@@ -2517,7 +2520,7 @@ object Script_Compiler {
 
         companion object {
             //
-            val opcodes: Array<opcode_s> = arrayOf(
+            val opcodes: Array<opcode_s?> = arrayOf(
                 opcode_s(
                     "<RETURN>",
                     "RETURN",
@@ -3625,7 +3628,8 @@ object Script_Compiler {
                     Script_Program.def_float,
                     Script_Program.def_void,
                     Script_Program.def_void
-                )
+                ),
+                null
             )
             private val punctuation: Array<String> = arrayOf(
                 "+=", "-=", "*=", "/=", "%=", "&=", "|=", "++", "--",
@@ -3660,7 +3664,7 @@ object Script_Compiler {
         init {
             var ptr: Int
             var id: Int
-            assert(opcodes.size == NUM_OPCODES)
+            assert(opcodes.size == NUM_OPCODES + 1)
             eof = true
             parserPtr = parser
             callthread = false

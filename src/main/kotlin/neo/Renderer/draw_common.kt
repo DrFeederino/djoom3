@@ -1273,6 +1273,7 @@ object draw_common {
         when (tr_local.tr.backEndRenderer) {
             backEndName_t.BE_ARB -> draw_arb.RB_ARB_DrawInteractions()
             backEndName_t.BE_ARB2 -> draw_arb2.RB_ARB2_DrawInteractions()
+            else -> {}
         }
 
         // disable stencil shadow test

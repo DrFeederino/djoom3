@@ -505,6 +505,8 @@ object FX {
                             }
                         }
                     }
+
+                    else -> {}
                 }
                 ieff++
             }
