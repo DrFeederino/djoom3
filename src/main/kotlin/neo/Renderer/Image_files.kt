@@ -447,7 +447,7 @@ object Image_files {
         // load the file
         //
         fileSize = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (buffer[0]!!.capacity() == 1) { // basically not found
+        if (buffer[0] == null) { // basically not found
             return null
         }
         buf_p = buffer[0]!!

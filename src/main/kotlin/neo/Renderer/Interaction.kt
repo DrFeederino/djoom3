@@ -363,7 +363,7 @@ object Interaction {
         R_CalcInteractionCullBits(ent, tri, light, cullInfo)
 
         // if the surface is completely inside the light frustum
-        if (cullInfo.cullBits == LIGHT_CULL_ALL_FRONT) {
+        if (cullInfo.cullBits.contentEquals(LIGHT_CULL_ALL_FRONT)) {
 
             // if we aren't self shadowing, let back facing triangles get
             // through so the smooth shaded bump maps light all the way around
@@ -891,7 +891,7 @@ object Interaction {
                     // on a previous use that only needed the shadow
                     if (sint.lightTris === LIGHT_TRIS_DEFERRED) {
                         sint.lightTris = R_CreateLightTris(
-                            vEntity.entityDef,
+                            vEntity.entityDef!!,
                             sint.ambientTris,
                             vLight.lightDef,
                             sint.shader,

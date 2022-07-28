@@ -27,6 +27,7 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import kotlin.math.abs
 
 /**
  *
@@ -481,7 +482,7 @@ object File_h {
             ReadInt(len)
             if (len._val > 0) {
                 var capacity = len._val * 2
-                capacity = if (capacity < len._val) Int.MAX_VALUE - 1 else Math.abs(capacity) //just in case
+                capacity = if (capacity < len._val) Int.MAX_VALUE - 1 else abs(capacity) //just in case
                 stringBytes = ByteBuffer.allocate(capacity) //2 bytes per char
                 //                string.Fill(' ', len[0]);
                 result = Read(stringBytes)
