@@ -110,8 +110,7 @@ object snd_wavefile {
             mdwSize = (mck.cksize / java.lang.Short.BYTES).toLong()
             mMemSize = mck.cksize.toLong()
             if (mck.cksize != -0x1) {
-                pwfx[0] =
-                    waveformatex_s(mpwfx.Format)
+                pwfx[0] = mpwfx.Format
                 return 0
             }
             return -1
@@ -382,7 +381,7 @@ object snd_wavefile {
                     mpwfx.Format.wFormatTag = snd_local.WAVE_FORMAT_TAG_PCM
                     mMemSize = mdwSize * java.lang.Short.SIZE / java.lang.Byte.SIZE
                 }
-                pwfx[0] = waveformatex_s(mpwfx.Format)
+                pwfx[0] = mpwfx.Format
             } finally {
                 win_main.Sys_LeaveCriticalSection(sys_public.CRITICAL_SECTION_ONE)
             }

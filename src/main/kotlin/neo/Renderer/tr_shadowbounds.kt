@@ -350,7 +350,7 @@ object tr_shadowbounds {
             val v = idVec4()
             world_to_hclip(viewDef, out_segs[i], v)
             if (v.w <= 0.0f) {
-                return lightDef.viewLight!!.scissorRect
+                return lightDef.viewLight!!.scissorRect!!
             }
             val rv = idVec3(v.x, v.y, v.z)
             rv.divAssign(v.w)
@@ -380,7 +380,7 @@ object tr_shadowbounds {
         rect.y1 = (outbounds[0].y * h2 + h2 + y).toInt()
         rect.y2 = (outbounds[1].y * h2 + h2 + y).toInt()
         rect.Expand()
-        rect.Intersect(lightDef.viewLight!!.scissorRect)
+        rect.Intersect(lightDef.viewLight!!.scissorRect!!)
 
         // debug //
         if (RenderSystem_init.r_useInteractionScissors.GetInteger() == -2 && !rect.IsEmpty()) {

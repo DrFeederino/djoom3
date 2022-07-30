@@ -582,7 +582,7 @@ object tr_backend {
                 renderCommand_t.RC_NOP -> {}
                 renderCommand_t.RC_DRAW_VIEW -> {
                     tr_render.RB_DrawView(cmds)
-                    if ((cmds as drawSurfsCommand_t).viewDef.viewEntitys != null) {
+                    if ((cmds as drawSurfsCommand_t).viewDef!!.viewEntitys != null) {
                         c_draw3d++
                     } else {
                         c_draw2d++

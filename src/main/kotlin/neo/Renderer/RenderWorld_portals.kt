@@ -38,14 +38,5 @@ object RenderWorld_portals {
             p = portal_s()
             rect = idScreenRect()
         }
-
-        constructor(p: portalStack_s) {
-            this.p = p.p
-            next = p.next
-            rect = idScreenRect(p.rect)
-            for (i in portalPlanes.indices) {
-                portalPlanes[i].set(p.portalPlanes[i])
-            }
-        }
     }
 }

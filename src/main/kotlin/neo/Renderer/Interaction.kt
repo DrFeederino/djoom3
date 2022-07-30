@@ -828,13 +828,13 @@ object Interaction {
             shadowScissor = if (!HasShadows()) {
 
                 // use the entity scissor rectangle
-                idScreenRect(vEntity.scissorRect)
+                vEntity.scissorRect
 
                 // culling does not seem to be worth it for static world models
             } else if (entityDef!!.parms.hModel!!.IsStaticWorldModel()) {
 
                 // use the light scissor rectangle
-                idScreenRect(vLight.scissorRect)
+                vLight.scissorRect
             } else {
 
                 // try to cull the interaction
@@ -845,7 +845,7 @@ object Interaction {
                 }
 
                 // calculate the shadow scissor rectangle
-                idScreenRect(CalcInteractionScissorRectangle(tr_local.tr.viewDef!!.viewFrustum))
+                CalcInteractionScissorRectangle(tr_local.tr.viewDef!!.viewFrustum)
             }
 
             // get out before making the dynamic model if the shadow scissor rectangle is empty
@@ -876,7 +876,7 @@ object Interaction {
 
             // calculate the scissor as the intersection of the light and model rects
             // this is used for light triangles, but not for shadow triangles
-            lightScissor = idScreenRect(vLight.scissorRect)
+            lightScissor = vLight.scissorRect
             lightScissor.Intersect(vEntity.scissorRect)
             val lightScissorsEmpty = lightScissor.IsEmpty()
 
@@ -1314,7 +1314,7 @@ object Interaction {
             var portalRect: idScreenRect = idScreenRect()
             val scissorRect: idScreenRect?
             if (RenderSystem_init.r_useInteractionScissors.GetInteger() == 0) {
-                return lightDef.viewLight!!.scissorRect
+                return lightDef.viewLight!!.scissorRect!!
             }
             if (RenderSystem_init.r_useInteractionScissors.GetInteger() < 0) {
                 // this is the code from Cass at nvidia, it is more precise, but slower
@@ -1324,7 +1324,7 @@ object Interaction {
             // the following is Mr.E's code
             // frustum must be initialized and valid
             if (frustumState == frustumStates.FRUSTUM_UNINITIALIZED || frustumState == frustumStates.FRUSTUM_INVALID) {
-                return lightDef.viewLight!!.scissorRect
+                return lightDef.viewLight!!.scissorRect!!
             }
 
             // calculate scissors for the portals through which the interaction is visible

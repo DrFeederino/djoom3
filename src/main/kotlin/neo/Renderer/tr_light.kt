@@ -525,7 +525,7 @@ object tr_light {
         drawSurf.geo = tri
         drawSurf.space = space
         drawSurf.material = shader
-        drawSurf.scissorRect = idScreenRect(scissor)
+        drawSurf.scissorRect = scissor
         drawSurf.dsFlags = 0
         if (viewInsideShadow) {
             drawSurf.dsFlags = drawSurf.dsFlags or tr_local.DSF_VIEW_INSIDE_SHADOW
@@ -1082,7 +1082,7 @@ object tr_light {
         drawSurf.geo = tri
         drawSurf.space = space
         drawSurf.material = shader
-        drawSurf.scissorRect = idScreenRect(scissor)
+        drawSurf.scissorRect = scissor
         drawSurf.sort = shader.GetSort() + tr_local.tr.sortOffset
         drawSurf.dsFlags = 0
 

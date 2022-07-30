@@ -257,14 +257,6 @@ object Material {
         var c = 0
         var opType: expOpType_t = expOpType_t.OP_TYPE_ADD
 
-        constructor()
-        constructor(op: expOp_t) {
-            opType = op.opType
-            a = op.a
-            b = op.b
-            c = op.c
-        }
-
         companion object {
             @Transient
             val SIZE = (TempDump.CPP_class.Enum.SIZE
@@ -276,9 +268,6 @@ object Material {
         val registers: IntArray = IntArray(4)
 
         constructor()
-        constructor(color: colorStage_t) {
-            System.arraycopy(color.registers, 0, registers, 0, registers.size)
-        }
 
         companion object {
             @Transient
@@ -301,19 +290,6 @@ object Material {
 
         constructor() {
             blaCounter++
-        }
-
-        constructor(texture: textureStage_t) {
-            cinematic[0] = texture.cinematic[0]//pointer
-            image[0] = texture.image[0] //pointer
-            texgen = texture.texgen
-            hasMatrix = texture.hasMatrix
-            System.arraycopy(texture.matrix[0], 0, matrix[0], 0, matrix[0].size)
-            System.arraycopy(texture.matrix[1], 0, matrix[1], 0, matrix[1].size)
-            dynamic = texture.dynamic
-            width = texture.width
-            height = texture.height
-            dynamicFrameCount = texture.dynamicFrameCount
         }
 
         companion object {
@@ -380,25 +356,6 @@ object Material {
             lighting = Material.stageLighting_t.values()[0]
             color = colorStage_t()
             texture = textureStage_t()
-        }
-
-        /**
-         * copy constructor
-         *
-         * @param shader
-         */
-        constructor(shader: shaderStage_t) {
-            conditionRegister = shader.conditionRegister
-            lighting = shader.lighting
-            drawStateBits = shader.drawStateBits
-            color = colorStage_t(shader.color)
-            hasAlphaTest = shader.hasAlphaTest
-            alphaTestRegister = shader.alphaTestRegister
-            texture = textureStage_t(shader.texture)
-            vertexColor = shader.vertexColor
-            ignoreAlphaTest = shader.ignoreAlphaTest
-            privatePolygonOffset = shader.privatePolygonOffset
-            newStage = shader.newStage //pointer
         }
 
         companion object {
@@ -571,49 +528,6 @@ object Material {
             // we put this here instead of in CommonInit, because
             // we don't want it cleared when a material is purged
             surfaceArea = 0f
-        }
-
-        constructor(shader: idMaterial) {
-            desc = shader.desc
-            renderBump = shader.renderBump
-            lightFalloffImage = shader.lightFalloffImage
-            entityGui = shader.entityGui
-            gui = shader.gui
-            noFog = shader.noFog
-            spectrum = shader.spectrum
-            polygonOffset = shader.polygonOffset
-            contentFlags = shader.contentFlags
-            surfaceFlags = shader.surfaceFlags
-            materialFlags = shader.materialFlags
-            decalInfo = shader.decalInfo
-            sort = shader.sort
-            deform = shader.deform
-            deformDecl = shader.deformDecl
-            coverage = shader.coverage
-            cullType = shader.cullType
-            shouldCreateBackSides = shader.shouldCreateBackSides
-            fogLight = shader.fogLight
-            blendLight = shader.blendLight
-            ambientLight = shader.ambientLight
-            unsmoothedTangents = shader.unsmoothedTangents
-            hasSubview = shader.hasSubview
-            allowOverlays = shader.allowOverlays
-            numOps = shader.numOps
-            ops = shader.ops
-            numRegisters = shader.numRegisters
-            expressionRegisters = shader.expressionRegisters
-            constantRegisters = shader.constantRegisters
-            numStages = shader.numStages
-            numAmbientStages = shader.numAmbientStages
-            stages = shader.stages
-            pd = shader.pd
-            surfaceArea = shader.surfaceArea
-            editorImageName = shader.editorImageName
-            editorImage = shader.editorImage
-            editorAlpha = shader.editorAlpha
-            suppressInSubview = shader.suppressInSubview
-            portalSky = shader.portalSky
-            refCount = shader.refCount
         }
 
         override fun SetDefaultText(): Boolean {
@@ -836,7 +750,7 @@ object Material {
                 ops = ArrayList(numOps) // R_StaticAlloc(numOps * sizeof( ops[0] )
                 //		memcpy( ops, pd!!.shaderOps, numOps * sizeof( ops[0] ) );
                 for (a in 0 until numOps) {
-                    ops.add(a, expOp_t(pd!!.shaderOps[a]))
+                    ops.add(a, pd!!.shaderOps[a])
                 }
             }
             if (numRegisters != 0) {
@@ -3376,23 +3290,16 @@ object Material {
         }
 
         // info parms
-        class infoParm_t {
-            var clearSolid: Int
-            var surfaceFlags: Int
-            var contents: Int
-            var name: String
+        class infoParm_t(name: String, clearSolid: Int, surfaceFlags: Int, contents: Int) {
+            val name: String
+            val clearSolid: Int
+            val surfaceFlags: Int
+            val contents: Int
 
-            constructor(name: String, clearSolid: Int, surfaceFlags: Int, contents: Int) {
+            init {
                 this.name = name
                 this.clearSolid = clearSolid
                 this.surfaceFlags = surfaceFlags
-                this.contents = contents
-            }
-
-            constructor(name: String, clearSolid: Int, surfaceFlags: surfTypes_t, contents: Int) {
-                this.name = name
-                this.clearSolid = clearSolid
-                this.surfaceFlags = surfaceFlags.ordinal
                 this.contents = contents
             }
         }
@@ -3489,28 +3396,28 @@ object Material {
                 infoParm_t("nosteps", 0, SURF_NOSTEPS, 0),  // no footsteps
                 //
                 // material types for particle, sound, footstep feedback
-                infoParm_t("metal", 0, surfTypes_t.SURFTYPE_METAL, 0),  // metal
-                infoParm_t("stone", 0, surfTypes_t.SURFTYPE_STONE, 0),  // stone
-                infoParm_t("flesh", 0, surfTypes_t.SURFTYPE_FLESH, 0),  // flesh
-                infoParm_t("wood", 0, surfTypes_t.SURFTYPE_WOOD, 0),  // wood
-                infoParm_t("cardboard", 0, surfTypes_t.SURFTYPE_CARDBOARD, 0),  // cardboard
-                infoParm_t("liquid", 0, surfTypes_t.SURFTYPE_LIQUID, 0),  // liquid
-                infoParm_t("glass", 0, surfTypes_t.SURFTYPE_GLASS, 0),  // glass
-                infoParm_t("plastic", 0, surfTypes_t.SURFTYPE_PLASTIC, 0),  // plastic
+                infoParm_t("metal", 0, surfTypes_t.SURFTYPE_METAL.ordinal, 0),  // metal
+                infoParm_t("stone", 0, surfTypes_t.SURFTYPE_STONE.ordinal, 0),  // stone
+                infoParm_t("flesh", 0, surfTypes_t.SURFTYPE_FLESH.ordinal, 0),  // flesh
+                infoParm_t("wood", 0, surfTypes_t.SURFTYPE_WOOD.ordinal, 0),  // wood
+                infoParm_t("cardboard", 0, surfTypes_t.SURFTYPE_CARDBOARD.ordinal, 0),  // cardboard
+                infoParm_t("liquid", 0, surfTypes_t.SURFTYPE_LIQUID.ordinal, 0),  // liquid
+                infoParm_t("glass", 0, surfTypes_t.SURFTYPE_GLASS.ordinal, 0),  // glass
+                infoParm_t("plastic", 0, surfTypes_t.SURFTYPE_PLASTIC.ordinal, 0),  // plastic
                 infoParm_t(
                     "ricochet",
                     0,
-                    surfTypes_t.SURFTYPE_RICOCHET,
+                    surfTypes_t.SURFTYPE_RICOCHET.ordinal,
                     0
                 ),  // behaves like metal but causes a ricochet sound
                 //
                 // unassigned surface types
-                infoParm_t("surftype10", 0, surfTypes_t.SURFTYPE_10, 0),
-                infoParm_t("surftype11", 0, surfTypes_t.SURFTYPE_11, 0),
-                infoParm_t("surftype12", 0, surfTypes_t.SURFTYPE_12, 0),
-                infoParm_t("surftype13", 0, surfTypes_t.SURFTYPE_13, 0),
-                infoParm_t("surftype14", 0, surfTypes_t.SURFTYPE_14, 0),
-                infoParm_t("surftype15", 0, surfTypes_t.SURFTYPE_15, 0)
+                infoParm_t("surftype10", 0, surfTypes_t.SURFTYPE_10.ordinal, 0),
+                infoParm_t("surftype11", 0, surfTypes_t.SURFTYPE_11.ordinal, 0),
+                infoParm_t("surftype12", 0, surfTypes_t.SURFTYPE_12.ordinal, 0),
+                infoParm_t("surftype13", 0, surfTypes_t.SURFTYPE_13.ordinal, 0),
+                infoParm_t("surftype14", 0, surfTypes_t.SURFTYPE_14.ordinal, 0),
+                infoParm_t("surftype15", 0, surfTypes_t.SURFTYPE_15.ordinal, 0)
             )
             val numInfoParms = infoParms.size
             var DBG_ParseStage = 0

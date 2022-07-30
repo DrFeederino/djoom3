@@ -1045,7 +1045,7 @@ object tr_trisurf {
                     // we can cull this sil edge
 //				memmove( &silEdges[i], &silEdges[i+1], (numSilEdges-i-1) * sizeof( silEdges[i] ) );
                     for (k in i until numSilEdges - i - 1) {
-                        silEdges[i] = silEdge_t(silEdges[i + 1])
+                        silEdges[i] = silEdges[i + 1]
                     }
                     c_coplanarCulled++
                     numSilEdges--
@@ -1085,7 +1085,7 @@ object tr_trisurf {
         tri.silEdges = ArrayList(numSilEdges)
         i = 0
         while (i < tri.numSilEdges) {
-            tri.silEdges.add(silEdge_t(silEdges[i]))
+            tri.silEdges.add(silEdges[i])
             i++
         }
     }

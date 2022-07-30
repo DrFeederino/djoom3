@@ -61,14 +61,6 @@ object Model {
         var v2 // verts defining the edge
                 = 0
 
-        constructor()
-        constructor(fromVal: silEdge_t) {
-            p1 = fromVal.p1
-            p2 = fromVal.p2
-            v1 = fromVal.v1
-            v2 = fromVal.v2
-        }
-
         companion object {
             fun generateArray(length: Int): Array<silEdge_t> {
                 return Array(length) { silEdge_t() }
@@ -248,13 +240,6 @@ object Model {
         var geometry: srfTriangles_s? = null
         var id = 0
         var shader: Material.idMaterial? = null
-
-        constructor()
-        constructor(other: modelSurface_s) {
-            geometry = other.geometry
-            id = other.id
-            shader = other.shader
-        }
     }
 
     //} jointHandle_t;

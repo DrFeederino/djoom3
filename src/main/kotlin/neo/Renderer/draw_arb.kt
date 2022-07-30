@@ -4,7 +4,6 @@ import neo.Renderer.Material.stageVertexColor_t
 import neo.Renderer.Model.lightingCache_s
 import neo.Renderer.tr_local.drawInteraction_t
 import neo.Renderer.tr_local.drawSurf_s
-import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.viewLight_s
 import neo.Renderer.tr_render.DrawInteraction
 import neo.idlib.geometry.DrawVert.idDrawVert
@@ -102,7 +101,7 @@ object draw_arb {
 
         // clear the stencil buffer if needed
         if (vLight.globalShadows[0] != null || vLight.localShadows[0] != null) {
-            tr_local.backEnd.currentScissor = idScreenRect(vLight.scissorRect)
+            tr_local.backEnd.currentScissor = vLight.scissorRect!!
             if (RenderSystem_init.r_useScissor.GetBool()) {
                 qgl.qglScissor(
                     tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,

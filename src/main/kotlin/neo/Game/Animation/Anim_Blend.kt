@@ -60,7 +60,6 @@ import neo.idlib.math.Simd
 import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
-import java.util.*
 import java.util.function.Consumer
 
 /**
@@ -104,14 +103,13 @@ object Anim_Blend {
             numAnims = 0
             flags = animFlags_t()
         }
-
         constructor(modelDef: idDeclModelDef?, anim: idAnim) {
             var i: Int
             this.modelDef = modelDef
             numAnims = anim.numAnims
             name.set(anim.name)
             realname.set(anim.realname)
-            flags = animFlags_t(anim.flags)
+            flags = anim.flags
             anims = ArrayList(anims.size)
             i = 0
             while (i < numAnims) {
@@ -1071,7 +1069,7 @@ object Anim_Blend {
         }
 
         fun SetAnimFlags(animflags: animFlags_t) {
-            flags = animFlags_t(animflags)
+            flags = animflags
         }
 
         fun GetAnimFlags(): animFlags_t {
@@ -1106,17 +1104,6 @@ object Anim_Blend {
             for (i in 0 until Anim.ANIM_NumAnimChannels) {
                 channelJoints[i] = ArrayList()
             }
-        }
-
-        constructor(def: idDeclModelDef) {
-            Collections.copy(anims, def.anims)
-            for (i in 0 until channelJoints.size) {
-                Collections.copy(channelJoints[i], def.channelJoints[i])
-            }
-            Collections.copy(jointParents, def.jointParents)
-            Collections.copy(joints, def.joints)
-            offset.set(def.offset)
-            modelHandle = def.modelHandle
         }
 
         override fun DefaultDefinition(): String {
@@ -1944,23 +1931,6 @@ object Anim_Blend {
             Reset(null)
         }
 
-        constructor(blend: idAnimBlend) {
-            modelDef = blend.modelDef
-            starttime = blend.starttime
-            endtime = blend.endtime
-            timeOffset = blend.timeOffset
-            rate = blend.rate
-            blendStartTime = blend.blendStartTime
-            blendDuration = blend.blendDuration
-            blendStartValue = blend.blendStartValue
-            blendEndValue = blend.blendEndValue
-            System.arraycopy(blend.animWeights, 0, animWeights, 0, Anim.ANIM_MaxSyncedAnims)
-            cycle = blend.cycle
-            frame = blend.frame
-            animNum = blend.animNum
-            allowMove = blend.allowMove
-            allowFrameCommands = blend.allowFrameCommands
-        }
 
         fun Reset(_modelDef: idDeclModelDef?) {
             modelDef = _modelDef
@@ -3711,8 +3681,8 @@ object Anim_Blend {
             if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels || fromChannelNum < 0 || fromChannelNum >= Anim.ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::SyncToChannel : channel out of range")
             }
-            val fromBlend = idAnimBlend(channels[fromChannelNum][0])
-            var toBlend = idAnimBlend(channels[channelNum][0])
+            val fromBlend = channels[fromChannelNum][0]
+            var toBlend = channels[channelNum][0]
             val weight = fromBlend.blendEndValue
             if (fromBlend.Anim() !== toBlend.Anim() || fromBlend.GetStartTime() != toBlend.GetStartTime() || fromBlend.GetEndTime() != toBlend.GetEndTime()) {
                 PushAnims(channelNum, currentTime, blendTime)
@@ -4203,7 +4173,7 @@ object Anim_Blend {
             }
             i = Anim.ANIM_MaxAnimsPerChannel - 1
             while (i > 0) {
-                channel[i] = idAnimBlend(channel[i - 1])
+                channel[i] = channel[i - 1]
                 i--
             }
             channel[0].Reset(modelDef)

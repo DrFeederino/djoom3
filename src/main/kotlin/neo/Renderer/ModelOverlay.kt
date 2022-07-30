@@ -30,12 +30,6 @@ object ModelOverlay {
     class overlayVertex_s {
         var st: FloatArray = FloatArray(2)
         var vertexNum = 0
-
-        constructor()
-        constructor(`val`: overlayVertex_s) {
-            vertexNum = `val`.vertexNum
-            System.arraycopy(`val`.st, 0, st, 0, st.size)
-        }
     }
 
     class overlaySurface_s {
@@ -183,11 +177,11 @@ object ModelOverlay {
                 val s = overlaySurface_s() // Mem_Alloc(sizeof(overlaySurface_t));
                 s.surfaceNum._val = (surfNum)
                 s.surfaceId = surf.id
-                s.verts = Array<overlayVertex_s>(numVerts) { overlayVertex_s(overlayVerts[it]) } // Mem_Alloc(numVerts);
+                s.verts = Array<overlayVertex_s>(numVerts) { overlayVerts[it] } // Mem_Alloc(numVerts);
                 //                memcpy(s.verts, overlayVerts, numVerts * sizeof(s.verts[0]));
                 i = 0
                 while (i < numVerts) {
-                    s.verts[i] = overlayVertex_s(overlayVerts[i])
+                    s.verts[i] = overlayVerts[i]
                     i++
                 }
                 s.numVerts = numVerts

@@ -11,7 +11,6 @@ import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.tr_local.backEndName_t
 import neo.Renderer.tr_local.drawSurf_s
-import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.programParameter_t
 import neo.Renderer.tr_local.program_t
 import neo.Renderer.tr_local.viewLight_s
@@ -1046,7 +1045,7 @@ object draw_common {
         }
         ds.space = tr_local.backEnd.viewDef.worldSpace
         ds.geo = frustumTris
-        ds.scissorRect = idScreenRect(tr_local.backEnd.viewDef.scissor)
+        ds.scissorRect = tr_local.backEnd.viewDef.scissor
 
         // find the current color and density of the fog
         lightShader = tr_local.backEnd.vLight.lightShader

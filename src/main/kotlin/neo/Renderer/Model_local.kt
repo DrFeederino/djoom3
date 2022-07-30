@@ -220,7 +220,7 @@ object Model_local {
         }
 
         override fun AddSurface(surface: modelSurface_s) {
-            surfaces.add(modelSurface_s(surface))
+            surfaces.add(surface)
             //surfaces.addClone(surface);
             if (surface.geometry != null) {
                 bounds.timesAssign(surface.geometry!!.bounds)

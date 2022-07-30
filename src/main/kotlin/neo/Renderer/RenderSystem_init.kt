@@ -144,8 +144,8 @@ class RenderSystem_init {
                 val vidWidth = intArrayOf(0)
                 val vidHeight = intArrayOf(0)
                 R_GetModeInfo(vidWidth, vidHeight, r_mode.GetInteger())
-                tr_local.glConfig.vidWidth = 1280 //vidWidth[0];HACKME::0
-                tr_local.glConfig.vidHeight = 720 //vidHeight[0];
+                tr_local.glConfig.vidWidth = 1024 //vidWidth[0];HACKME::0
+                tr_local.glConfig.vidHeight = 768 //vidHeight[0];
                 parms.width = tr_local.glConfig.vidWidth
                 parms.height = tr_local.glConfig.vidHeight
                 parms.fullScreen = r_fullscreen.GetBool()
@@ -1513,7 +1513,7 @@ class RenderSystem_init {
                     idLib.common.Printf("No primary view.\n")
                     return
                 }
-                primary = viewDef_s(tr_local.tr.primaryView!!)
+                primary = tr_local.tr.primaryView!!
 
 //	memset( &axis, 0, sizeof( axis ) );
                 axis[0].set(0, 0, 1f)
@@ -1536,7 +1536,7 @@ class RenderSystem_init {
                 axis[5].set(2, 1, 1f)
                 i = 0
                 while (i < 6) {
-                    ref = renderView_s(primary.renderView)
+                    ref = primary.renderView
                     ref.y = 0
                     ref.x = ref.y
                     ref.fov_y = 90f

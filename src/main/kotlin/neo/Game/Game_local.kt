@@ -2268,7 +2268,7 @@ class Game_local {
             // set the user commands for this frame
 //            memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
             for (i in 0 until numClients) {
-                usercmds[i] = usercmd_t(clientCmds[i])
+                usercmds[i] = clientCmds[i]
             }
 
             // run prediction on all entities from the last snapshot

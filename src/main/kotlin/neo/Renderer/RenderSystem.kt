@@ -265,7 +265,7 @@ object RenderSystem {
         while (vModel != null) {
             tr_main.myGlMultMatrix(
                 vModel.modelMatrix,
-                tr_local.tr.lockSurfacesCmd.viewDef.worldSpace.modelViewMatrix,
+                tr_local.tr.lockSurfacesCmd.viewDef!!.worldSpace.modelViewMatrix,
                 vModel.modelViewMatrix
             )
             vModel = vModel.next

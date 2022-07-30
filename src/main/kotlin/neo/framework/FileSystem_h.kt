@@ -324,19 +324,6 @@ object FileSystem_h {
 
         constructor()
 
-        /**
-         * copy constructor
-         *
-         * @param url
-         */
-        constructor(url: urlDownload_s) {
-            this.url = idStr(url.url)
-            dlerror = url.dlerror
-            dlnow = url.dlnow
-            dlstatus = url.dlstatus
-            status = url.status
-        }
-
         companion object {
             @Transient
             val SIZE: Int = (idStr.SIZE
@@ -354,17 +341,6 @@ object FileSystem_h {
         var position = 0
 
         constructor()
-
-        /**
-         * copy constructor
-         *
-         * @param file
-         */
-        constructor(file: fileDownload_s) {
-            position = file.position
-            length = file.length
-            buffer = file.buffer!!.duplicate()
-        }
 
         companion object {
             @Transient
@@ -385,20 +361,6 @@ object FileSystem_h {
         var url: urlDownload_s = urlDownload_s()
 
         constructor()
-
-        /**
-         * cop constructor
-         *
-         * @param bgl
-         */
-        constructor(bgl: backgroundDownload_s) {
-            next = bgl.next //pointer
-            opcode = bgl.opcode
-            f = bgl.f //pointer
-            file = fileDownload_s(bgl.file)
-            url = urlDownload_s(bgl.url)
-            completed = bgl.completed
-        }
 
         companion object {
             @Transient

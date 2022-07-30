@@ -210,7 +210,7 @@ object tr_subview {
         val plane = idPlane()
 
         // copy the viewport size from the original
-        parms = viewDef_s(tr_local.tr.viewDef!!) //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
+        parms = tr_local.tr.viewDef!! //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.isSubview = true
         parms.isMirror = true

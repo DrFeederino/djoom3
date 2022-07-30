@@ -144,7 +144,7 @@ object ubrush {
 //
 //        newbrush = AllocBrush(brush.numsides);
 //        memcpy(newbrush, brush, size);
-        newBrush = uBrush_t(brush)
+        newBrush = brush
         c_active_brushes++
         i = 0
         while (i < brush.numsides) {
@@ -630,7 +630,7 @@ object ubrush {
         // split it for real
         i = 0
         while (i < 2) {
-            b[i] = uBrush_t(brush) //AllocBrush(brush.numsides + 1);
+            b[i] = brush //AllocBrush(brush.numsides + 1);
             //            memcpy(b[i], brush, sizeof(uBrush_t) - sizeof(brush.sides));
             c_active_brushes++
             b[i]!!.numsides = 0

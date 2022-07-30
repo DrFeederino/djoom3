@@ -437,7 +437,7 @@ object AFEntity {
 
         override fun AddDamageEffect(collision: trace_s, velocity: idVec3, damageDefName: String) {
             if (body != null) {
-                val c = trace_s(collision)
+                val c = collision
                 c.c.id = Clip.JOINT_HANDLE_TO_CLIPMODEL_ID(attachJoint)
                 body!!.AddDamageEffect(c, velocity, damageDefName)
             }

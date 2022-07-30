@@ -47,18 +47,6 @@ class snd_local {
         //byte offsets
         var wFormatTag // format type
                 = 0
-
-        constructor()
-        constructor(mpwfx: waveformatex_s) {
-            wFormatTag = mpwfx.wFormatTag
-            nChannels = mpwfx.nChannels
-            nSamplesPerSec = mpwfx.nSamplesPerSec
-            nAvgBytesPerSec = mpwfx.nAvgBytesPerSec
-            nBlockAlign = mpwfx.nBlockAlign
-            wBitsPerSample = mpwfx.wBitsPerSample
-            cbSize = mpwfx.cbSize
-        }
-
         companion object {
             const val SIZE = (java.lang.Short.SIZE
                     + java.lang.Short.SIZE
@@ -156,6 +144,14 @@ class snd_local {
         var   /*dword*/dwChannelMask // which channels are */
                 = 0
 
+        companion object {
+            private const val SIZE = (waveformatex_s.SIZE
+                    + java.lang.Short.SIZE //union
+                    + Integer.SIZE
+                    + Integer.SIZE)
+            private const val BYTES = SIZE / java.lang.Byte.SIZE
+        }
+
         constructor(pcmWaveFormat: pcmwaveformat_s) : this() {
             Format.wFormatTag = pcmWaveFormat.wf.wFormatTag
             Format.nChannels = pcmWaveFormat.wf.nChannels
@@ -163,14 +159,6 @@ class snd_local {
             Format.nAvgBytesPerSec = pcmWaveFormat.wf.nAvgBytesPerSec
             Format.nBlockAlign = pcmWaveFormat.wf.nBlockAlign
             Format.wBitsPerSample = pcmWaveFormat.wBitsPerSample
-        }
-
-        companion object {
-            private const val SIZE = (waveformatex_s.SIZE
-                    + java.lang.Short.SIZE //union
-                    + Integer.SIZE
-                    + Integer.SIZE)
-            private const val BYTES = SIZE / java.lang.Byte.SIZE
         }
 
         init {

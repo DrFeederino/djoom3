@@ -586,6 +586,7 @@ object BitMsg {
                 fraction = fraction shr readBit
                 fraction = fraction and (1 shl get) - 1
                 value = value or (fraction shl valueBits)
+
                 valueBits += get
                 readBit = (readBit + get) and 7
             }

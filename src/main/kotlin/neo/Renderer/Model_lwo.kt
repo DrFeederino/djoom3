@@ -2584,7 +2584,7 @@ object Model_lwo {
 //            memcpy(point.pt, oldpt, point.offset * sizeof(lwPoint));
             i = 0
             while (i < point.offset) {
-                point.pt.add(i, lwPoint(oldpt[i]))
+                point.pt.add(i, oldpt[i])
                 i++
             }
             //            Mem_Free(oldpt);
@@ -2676,7 +2676,7 @@ object Model_lwo {
 //            memcpy(plist.pol, oldpol, plist.offset);
             i = 0
             while (i < plist.offset) {
-                plist.pol.add(i, lwPolygon(oldpol[i]))
+                plist.pol.add(i, oldpol[i])
                 i++
             }
             //            Mem_Free(oldpol);
@@ -4660,14 +4660,6 @@ object Model_lwo {
         var vm // array of vmap references
                 : ArrayList<lwVMapPt> = kotlin.collections.ArrayList()
 
-        constructor()
-        constructor(`val`: lwPoint) {
-            npols = `val`.npols
-            nvmaps = `val`.nvmaps
-            pol = `val`.pol
-            pos = `val`.pos
-            vm = `val`.vm
-        }
     }
 
     class lwPolVert {
@@ -4703,18 +4695,6 @@ object Model_lwo {
             this.vOffset = vOffset
         }
 
-        constructor()
-        constructor(`val`: lwPolygon) {
-            flags = `val`.flags
-            norm = `val`.norm
-            nverts = `val`.nverts
-            part = `val`.part
-            smoothgrp = `val`.smoothgrp
-            surf = `val`.surf
-            type = `val`.type
-            v = `val`.v
-            vOffset = `val`.vOffset
-        }
     }
 
     class lwPointList {

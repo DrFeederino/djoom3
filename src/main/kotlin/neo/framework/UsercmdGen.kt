@@ -243,21 +243,6 @@ object UsercmdGen {
                 : Byte = 0
 
         constructor()
-        constructor(fromValue: usercmd_t) {
-            angles = fromValue.angles
-            buttons = fromValue.buttons
-            duplicateCount = fromValue.duplicateCount
-            flags = fromValue.flags
-            forwardmove = fromValue.forwardmove
-            gameFrame = fromValue.gameFrame
-            gameTime = fromValue.gameTime
-            impulse = fromValue.impulse
-            mx = fromValue.mx
-            my = fromValue.my
-            rightmove = fromValue.rightmove
-            sequence = fromValue.sequence
-            upmove = fromValue.upmove
-        }
 
         fun ByteSwap() {            // on big endian systems, byte swap the shorts and ints
             angles[0] = Lib.LittleShort(angles[0])

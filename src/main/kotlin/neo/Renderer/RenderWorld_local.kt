@@ -414,7 +414,7 @@ object RenderWorld_local {
                 light.world = this
                 light.index = lightHandle
             }
-            light.parms = renderLight_s(rlight)
+            light.parms = rlight
             light.lastModifiedFrameNum = tr_local.tr.frameCount
             if (Session.session.writeDemo != null && light.archived) {
                 WriteFreeLight(lightHandle)
@@ -738,7 +738,7 @@ object RenderWorld_local {
          ====================
          */
         override fun SetRenderView(renderView: renderView_s) {
-            tr_local.tr.primaryRenderView = renderView_s(renderView)
+            tr_local.tr.primaryRenderView = renderView
         }
 
         /*
@@ -758,7 +758,6 @@ object RenderWorld_local {
                 if (!tr_local.glConfig.isInitialized) {
                     return
                 }
-                copy = renderView_s(renderView)
 
                 // skip front end rendering work, which will result
                 // in only gui drawing
@@ -781,7 +780,7 @@ object RenderWorld_local {
                 // setup view parms for the initial view
                 //
                 val parms = viewDef_s() // R_ClearedFrameAlloc(sizeof(parms));
-                parms.renderView = renderView_s(renderView)
+                parms.renderView = renderView
                 if (tr_local.tr.takingScreenshot) {
                     parms.renderView.forceUpdate = true
                 }
@@ -817,7 +816,7 @@ object RenderWorld_local {
 
                 // save this world for use by some console commands
                 tr_local.tr.primaryWorld = this
-                tr_local.tr.primaryRenderView = renderView_s(renderView)
+                tr_local.tr.primaryRenderView = renderView
                 tr_local.tr.primaryView = parms
 
                 // rendering this view may cause other views to be rendered
@@ -2321,7 +2320,7 @@ object RenderWorld_local {
             // cull models and lights to the current collection of planes
             AddAreaRefs(areaNum, ps)
             if (areaScreenRect[areaNum].IsEmpty()) {
-                areaScreenRect[areaNum] = idScreenRect(ps.rect)
+                areaScreenRect[areaNum] = ps.rect
             } else {
                 areaScreenRect[areaNum].Union(ps.rect)
             }
@@ -2362,7 +2361,7 @@ object RenderWorld_local {
                 if (d < 1.0f) {
 
                     // go through this portal
-                    newStack = portalStack_s(ps)
+                    newStack = ps
                     newStack.p = p
                     newStack.next = ps
                     FloodViewThroughArea_r(origin, p.intoArea, newStack)
@@ -2457,11 +2456,11 @@ object RenderWorld_local {
                 i++
             }
             ps.numPortalPlanes = numPlanes
-            ps.rect = idScreenRect(tr_local.tr.viewDef!!.scissor)
+            ps.rect = tr_local.tr.viewDef!!.scissor
             if (tr_local.tr.viewDef!!.areaNum < 0) {
                 i = 0
                 while (i < numPortalAreas) {
-                    areaScreenRect[i] = idScreenRect(tr_local.tr.viewDef!!.scissor) //TODO:copy constructor?
+                    areaScreenRect[i] = tr_local.tr.viewDef!!.scissor
                     i++
                 }
 
@@ -2531,7 +2530,7 @@ object RenderWorld_local {
                 // it, which tends to give epsilon problems that make the area vanish
                 if (d < 1.0f) {
                     // go through this portal
-                    newStack = portalStack_s(ps)
+                    newStack = ps
                     newStack.p = p
                     newStack.next = ps
                     FloodLightThroughArea_r(light, p.intoArea, newStack)
@@ -3024,7 +3023,7 @@ object RenderWorld_local {
                         i++
                     }
                     ps.numPortalPlanes = 5
-                    ps.rect = idScreenRect(tr_local.tr.viewDef!!.scissor)
+                    ps.rect = tr_local.tr.viewDef!!.scissor
                     AddAreaRefs(tr_local.tr.viewDef!!.areaNum, ps)
                 }
             } else {

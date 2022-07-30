@@ -506,7 +506,7 @@ object PlayerView {
             }
 
             // hack the shake in at the very last moment, so it can't cause any consistency problems
-            val hackedView = renderView_s(view)
+            val hackedView = view
             hackedView.viewaxis.set(hackedView.viewaxis.times(ShakeAxis()))
             //            hackedView.viewaxis = idMat3.getMat3_identity();//HACKME::10
 //            hackedView.viewaxis = new idMat3(-1.0f, -3.8941437E-7f, -0.0f, 3.8941437E-7f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);

@@ -262,17 +262,7 @@ object tr_local {
 
         //
         //
-        constructor()
-
-        //copy constructor
-        constructor(other: idScreenRect) {
-            x1 = other.x1
-            y1 = other.y1
-            x2 = other.x2
-            y2 = other.y2
-            zmin = other.zmin
-            zmax = other.zmax
-        }
+        constructor() {}
 
         // clear to backwards values
         fun Clear() {
@@ -406,7 +396,7 @@ object tr_local {
         // specular directions for non vertex program cards, skybox texcoords, etc
         var sort // material->sort, modified by gui / entity sort offsets
                 = 0f
-        var space: viewEntity_s = viewEntity_s()
+        lateinit var space: viewEntity_s
 
         companion object {
             private var DBG_counter = 0
@@ -755,7 +745,7 @@ object tr_local {
         // for scissor clipping, local inside renderView viewport
         // scissorRect.Empty() is true if the viewEntity_t was never actually
         // seen through any portals
-        var scissorRect: idScreenRect = idScreenRect()
+        lateinit var scissorRect: idScreenRect
         var shaderRegisters // shader registers used by backend
                 : FloatArray = FloatArray(0)
 
@@ -811,16 +801,6 @@ object tr_local {
 
         constructor() {
 //            TempDump.printCallStack("--------------"+DBG_COUNT);
-        }
-
-        constructor(v: viewEntity_s) {
-            next = v.next
-            entityDef = v.entityDef
-            scissorRect = idScreenRect(v.scissorRect)
-            weaponDepthHack = v.weaponDepthHack
-            modelDepthHack = v.modelDepthHack
-            System.arraycopy(v.modelMatrix, 0, modelMatrix, 0, 16)
-            System.arraycopy(v.modelViewMatrix, 0, modelViewMatrix, 0, 16)
         }
 
         fun memSetZero() {
@@ -932,39 +912,6 @@ object tr_local {
             frustum = idPlane.generateArray(5)
         }
 
-        constructor(v: viewDef_s) {
-            renderView = renderView_s(v.renderView)
-            System.arraycopy(v.projectionMatrix, 0, projectionMatrix, 0, 16)
-            worldSpace = viewEntity_s(v.worldSpace)
-            renderWorld = v.renderWorld
-            floatTime = v.floatTime
-            initialViewAreaOrigin.set(v.initialViewAreaOrigin)
-            isSubview = v.isSubview
-            isMirror = v.isMirror
-            isXraySubview = v.isXraySubview
-            isEditor = v.isEditor
-            numClipPlanes = v.numClipPlanes
-            clipPlanes = arrayListOf(*idPlane.generateArray(MAX_CLIP_PLANES))
-            for (i in 0 until MAX_CLIP_PLANES) {
-                clipPlanes[i].set(v.clipPlanes[i])
-            }
-            viewport = idScreenRect(v.viewport)
-            scissor = idScreenRect(v.scissor)
-            superView = v.superView
-            subviewSurface = v.subviewSurface
-            drawSurfs = v.drawSurfs
-            numDrawSurfs = v.numDrawSurfs
-            maxDrawSurfs = v.maxDrawSurfs
-            viewLights = v.viewLights
-            viewEntitys = v.viewEntitys
-            frustum = Array(v.frustum.size) { idPlane(v.frustum[it]) }
-            viewFrustum = idFrustum(v.viewFrustum)
-            areaNum = v.areaNum
-            if (v.connectedAreas != null) {
-                connectedAreas = BooleanArray(v.connectedAreas.size)
-                System.arraycopy(v.connectedAreas, 0, connectedAreas, 0, v.connectedAreas.size)
-            }
-        }
     }
 
     // complex light / surface interactions are broken up into multiple passes of a
@@ -1027,7 +974,7 @@ object tr_local {
 
     class drawSurfsCommand_t : emptyCommand_t() {
         //        renderCommand_t commandId, next;
-        var viewDef: viewDef_s = viewDef_s()
+        var viewDef: viewDef_s? = null
     }
 
     class copyRenderCommand_t : emptyCommand_t() {
@@ -1187,7 +1134,7 @@ object tr_local {
         //
         var currentRenderCopied // true if any material has already referenced _currentRender
                 = false
-        var currentScissor: idScreenRect = idScreenRect()
+        lateinit var currentScissor: idScreenRect
 
         //
         var currentSpace // for detecting when a matrix must change
@@ -1238,9 +1185,13 @@ object tr_local {
      ** but may read fields that aren't dynamically modified
      ** by the frontend.
      */
-    class idRenderSystemLocal : idRenderSystem() {
-        //
-        //
+    class idRenderSystemLocal : idRenderSystem {
+        constructor() {
+            ambientLightVector = idVec4()
+            worlds = ArrayList()
+            Clear()
+        }
+
         //
         val worlds: kotlin.collections.ArrayList<idRenderWorldLocal>
         var DBG_viewCount // incremented every view (twice a scene if subviewed)
@@ -1288,19 +1239,19 @@ object tr_local {
                 = 0
 
         //
-        var identitySpace // can use if we don't know viewDef->worldSpace is valid
-                : viewEntity_s = viewEntity_s()
+        lateinit var identitySpace // can use if we don't know viewDef->worldSpace is valid
+                : viewEntity_s
 
         //
-        var lockSurfacesCmd // use this when r_lockSurfaces = 1
-                : drawSurfsCommand_t = drawSurfsCommand_t()
+        lateinit var lockSurfacesCmd // use this when r_lockSurfaces = 1
+                : drawSurfsCommand_t
         var   /*FILE*/logFile // for logging GL calls and frame breaks
                 : FileChannel? = null
 
         //
         var pc // performance counters
                 : performanceCounters_t = performanceCounters_t()
-        var primaryRenderView: renderView_s = renderView_s()
+        lateinit var primaryRenderView: renderView_s
         var primaryView: viewDef_s? = null
 
         //
@@ -2562,11 +2513,6 @@ object tr_local {
         // virtual void			GetCardCaps( bool &oldCard, bool &nv10or20 );
         // virtual bool			UploadImage( const char *imageName, const byte *data, int width, int height );
         // internal functions
-        init {
-            ambientLightVector = idVec4()
-            worlds = ArrayList()
-            Clear()
-        }
     }
 
     //optimizedShadow_t SuperOptimizeOccluders( idVec4 *verts, glIndex_t *indexes, int numIndexes,

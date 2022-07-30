@@ -334,7 +334,7 @@ object Simd {
         fun  /*VPCALL*/Memcpy(dst: Array<idAnimBlend>, src: Array<idAnimBlend>, count: Int) {
             //System.arraycopy(src, 0, dst, 0, count);
             for (i in 0 until count) {
-                dst[i] = idAnimBlend(src[i])
+                dst[i] = src[i]
             }
         }
 

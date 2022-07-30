@@ -12,7 +12,6 @@ import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.tr_local.drawInteraction_t
 import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.drawSurfsCommand_t
-import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.viewLight_s
 import neo.TempDump
 import neo.idlib.geometry.DrawVert.idDrawVert
@@ -300,7 +299,7 @@ object tr_render {
 
             // change the scissor if needed
             if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(drawSurf.scissorRect)) {
-                tr_local.backEnd.currentScissor = idScreenRect(drawSurf.scissorRect)
+                tr_local.backEnd.currentScissor = drawSurf.scissorRect
                 qgl.qglScissor(
                     tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
                     tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
@@ -887,7 +886,7 @@ object tr_render {
     fun RB_DrawView(data: Any) {
         val cmd: drawSurfsCommand_t?
         cmd = data as drawSurfsCommand_t
-        tr_local.backEnd.viewDef = cmd.viewDef
+        tr_local.backEnd.viewDef = cmd.viewDef!!
 
         // we will need to do a new copyTexSubImage of the screen
         // when a SS_POST_PROCESS material is used

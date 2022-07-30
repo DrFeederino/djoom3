@@ -331,9 +331,9 @@ object win_glimp {
     class glimpParms_t {
         var displayHz = 0
         var fullScreen = true
-        var height = 1280
+        var height = 0
         var multiSamples = 0
         var stereo = false
-        var width = 720
+        var width = 0
     }
 }

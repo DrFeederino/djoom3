@@ -568,30 +568,6 @@ class RenderWorld {
 
         constructor()
 
-        //copy constructor
-        constructor(other: renderLight_s) {
-            axis.set(idMat3(other.axis))
-            origin.set(other.origin)
-            suppressLightInViewID = other.suppressLightInViewID
-            allowLightInViewID = other.allowLightInViewID
-            noShadows = other.noShadows
-            noSpecular = other.noSpecular
-            pointLight = other.pointLight
-            parallel = other.parallel
-            lightRadius.set(other.lightRadius)
-            lightCenter.set(other.lightCenter)
-            target.set(other.target)
-            right.set(other.right)
-            up.set(other.up)
-            start.set(other.start)
-            end.set(other.end)
-            prelightModel = other.prelightModel
-            lightId = other.lightId
-            shader = other.shader
-            System.arraycopy(other.shaderParms, 0, shaderParms, 0, other.shaderParms.size)
-            referenceSound = other.referenceSound
-        }
-
         fun clear() { //TODO:hardcoded values
             val temp = renderLight_s()
             axis.set(temp.axis)

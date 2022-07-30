@@ -485,16 +485,6 @@ object dmap {
         //
         var winding // only clipped to the other sides of the brush
                 : idWinding? = null
-
-        constructor(`val`: side_s) {
-            material = `val`.material
-            planenum = `val`.planenum
-            texVec = `val`.texVec
-            visibleHull = `val`.visibleHull
-            winding = `val`.winding
-        }
-
-        constructor()
     }
 
     open class bspbrush_s {
@@ -521,27 +511,7 @@ object dmap {
         var sides: Array<side_s> = Array(6) { side_s() } // variably sized
     }
 
-    class uBrush_t : bspbrush_s {
-        constructor()
-
-        //copy constructor
-        constructor(brush: uBrush_t) {
-            next = brush.next
-            original = brush.original
-            entitynum = brush.entitynum
-            brushnum = brush.brushnum
-            contentShader = brush.contentShader
-            contents = brush.contents
-            opaque = brush.opaque
-            outputNumber = brush.outputNumber
-            bounds.set(brush.bounds)
-            numsides = brush.numsides
-            //System.arraycopy(brush.sides, 0, this.sides, 0, 6);
-            for (i in 0..5) {
-                sides[i] = side_s(brush.sides[i])
-            }
-        }
-
+    class uBrush_t : bspbrush_s() {
         fun clear() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }

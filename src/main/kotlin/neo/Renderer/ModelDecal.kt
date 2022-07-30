@@ -379,7 +379,7 @@ object ModelDecal {
                 }
                 assert(material != null)
                 info.projectionOrigin.set(projectionOrigin)
-                info.material = idMaterial(material)
+                info.material = material
                 info.parallel = parallel
                 info.fadeDepth = fadeDepth
                 info.startTime = startTime
@@ -483,7 +483,7 @@ object ModelDecal {
                 localInfo.projectionBounds = info.projectionBounds
                 localInfo.projectionBounds.TranslateSelf(origin.unaryMinus())
                 localInfo.projectionBounds.RotateSelf(axis.Transpose())
-                localInfo.material = idMaterial(info.material!!)
+                localInfo.material = info.material
                 localInfo.parallel = info.parallel
                 localInfo.fadeDepth = info.fadeDepth
                 localInfo.startTime = info.startTime

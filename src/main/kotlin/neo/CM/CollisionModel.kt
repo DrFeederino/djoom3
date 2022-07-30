@@ -70,19 +70,6 @@ object CollisionModel {
                 = 0
         var type // contact type
                 : contactType_t = contactType_t.CONTACT_NONE
-
-        constructor(c: contactInfo_t) : this() {
-            type = c.type
-            point.set(c.point)
-            normal.set(c.normal)
-            dist = c.dist
-            contents = c.contents
-            material = c.material
-            modelFeature = c.modelFeature
-            trmFeature = c.trmFeature
-            entityNum = c.entityNum
-            id = c.id
-        }
     }
 
     // trace result
@@ -93,13 +80,6 @@ object CollisionModel {
         var fraction = 0f // fraction of movement completed, 1.0 = didn't hit anything
 
         constructor()
-
-        constructor(other: trace_s) {
-            endpos.set(other.endpos)
-            endAxis = idMat3(other.endAxis)
-            c = contactInfo_t(other.c)
-            fraction = other.fraction
-        }
 
         override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.

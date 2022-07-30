@@ -132,14 +132,6 @@ object Anim {
                 = false
         var random_cycle_start //: 1;
                 = false
-
-        constructor()
-        constructor(fromVal: animFlags_t) {
-            ai_no_turn = fromVal.ai_no_turn
-            anim_turn = fromVal.anim_turn
-            prevent_idle_override = fromVal.prevent_idle_override
-            random_cycle_start = fromVal.random_cycle_start
-        }
     }
 
     /*

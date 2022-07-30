@@ -10,14 +10,7 @@ import neo.Game.Entity.idAnimatedEntity
 import neo.Game.Entity.idEntity
 import neo.Game.Entity.signalNum_t
 import neo.Game.Game.refSound_t
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t4
-import neo.Game.GameSys.Class.eventCallback_t5
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -1087,7 +1080,7 @@ object Weapon {
             }
 
             // the world muzzle flash is the same, just positioned differently
-            worldMuzzleFlash = renderLight_s(muzzleFlash)
+            worldMuzzleFlash = muzzleFlash
             worldMuzzleFlash.suppressLightInViewID = owner!!.entityNumber + 1
             worldMuzzleFlash.allowLightInViewID = 0
             worldMuzzleFlash.lightId = LIGHTID_WORLD_MUZZLE_FLASH + owner!!.entityNumber

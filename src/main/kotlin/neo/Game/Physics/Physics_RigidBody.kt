@@ -137,13 +137,6 @@ object Physics_RigidBody {
             fromFloats(state)
         }
 
-        constructor(r: rigidBodyIState_s) {
-            position = idVec3(r.position)
-            orientation = idMat3(r.orientation)
-            linearMomentum = idVec3(r.linearMomentum)
-            angularMomentum = idVec3(r.angularMomentum)
-        }
-
         fun toFloats(): FloatArray {
             val buffer = FloatBuffer.allocate(BYTES / java.lang.Float.BYTES)
             buffer.put(position.ToFloatPtr())
@@ -207,17 +200,6 @@ object Physics_RigidBody {
             pushVelocity = idVec6()
             externalForce = idVec3()
             externalTorque = idVec3()
-        }
-
-        constructor(r: rigidBodyPState_s) {
-            atRest = r.atRest
-            lastTimeStep = r.lastTimeStep
-            localOrigin = idVec3(r.localOrigin)
-            localAxis = idMat3(r.localAxis)
-            pushVelocity = idVec6(r.pushVelocity)
-            externalForce = idVec3(r.externalForce)
-            externalTorque = idVec3(r.externalTorque)
-            i = rigidBodyIState_s(r.i)
         }
     }
 
@@ -540,7 +522,7 @@ object Physics_RigidBody {
 //	current.i.linearMomentum -= current.pushVelocity.SubVec3( 0 ) * mass;
 //	current.i.angularMomentum -= current.pushVelocity.SubVec3( 1 ) * inertiaTensor;
             clipModel!!.Unlink()
-            next = rigidBodyPState_s(current)
+            next = current
 
             // calculate next position and orientation
             Integrate(timeStep, next)
@@ -555,7 +537,7 @@ object Physics_RigidBody {
             }
 
             // set the new state
-            current = rigidBodyPState_s(next)
+            current = next
             if (collided) {
                 // apply collision impulse
                 if (CollisionImpulse(collision, impulse)) {

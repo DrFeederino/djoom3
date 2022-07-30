@@ -383,45 +383,6 @@ class Image {
             refCount = 0
         }
 
-        /**
-         * copy constructor
-         *
-         * @param image
-         */
-        internal constructor(image: idImage) {
-            texNum = image.texNum
-            type = image.type
-            frameUsed = image.frameUsed
-            bindCount = image.bindCount
-            partialImage = image.partialImage //pointer
-            isPartialImage = image.isPartialImage
-            backgroundLoadInProgress = image.backgroundLoadInProgress
-            bgl = backgroundDownload_s(image.bgl)
-            bglNext = image.bglNext //pointer
-            imgName = idStr(image.imgName)
-            generatorFunction = image.generatorFunction
-            allowDownSize = image.allowDownSize
-            filter = image.filter
-            repeat = image.repeat
-            depth = image.depth
-            cubeFiles = image.cubeFiles
-            referencedOutsideLevelLoad = image.referencedOutsideLevelLoad
-            levelLoadReferenced = image.levelLoadReferenced
-            precompressedFile = image.precompressedFile
-            defaulted = image.defaulted
-            isMonochrome[0] = image.isMonochrome[0]
-            timestamp[0] = image.timestamp[0]
-            imageHash = image.imageHash
-            classification = image.classification
-            uploadWidth = image.uploadWidth
-            uploadHeight = image.uploadHeight
-            uploadDepth = image.uploadDepth
-            internalFormat = image.internalFormat
-            cacheUsagePrev = image.cacheUsagePrev //pointer
-            cacheUsageNext = image.cacheUsageNext //pointer
-            hashNext = image.hashNext //pointer
-            refCount = image.refCount
-        }
 
         /*
          ==============

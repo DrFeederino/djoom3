@@ -129,7 +129,7 @@ object Session_local {
         //
         var cmdDemoFile // if non-zero, we are reading commands from a file
                 : idFile? = null
-        var currentDemoRenderView: renderView_s = renderView_s()
+        lateinit var currentDemoRenderView: renderView_s
         val currentMapName: idStr = idStr() // for checking reload on same level
         var demoTimeOffset = 0
 

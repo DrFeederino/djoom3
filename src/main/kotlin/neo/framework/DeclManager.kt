@@ -2283,7 +2283,6 @@ class DeclManager {
     class huffmanCode_s {
         var bits: LongArray = LongArray(8)
         var numBits = 0
-
         constructor()
         constructor(code: huffmanCode_s) {
             numBits = code.numBits
