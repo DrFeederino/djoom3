@@ -42,6 +42,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
+import neo.idlib.hashing.MD4.MD4_BlockChecksum
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Vector.idVec3
 import neo.sys.win_shared
@@ -2279,8 +2280,8 @@ class Image {
                 // build a hash for checking duplicate image files
                 // NOTE: takes about 10% of image load times (SD)
                 // may not be strictly necessary, but some code uses it, so let's leave it in
-                //imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
-                GenerateImage(pic!!, width[0], height[0], filter, allowDownSize, repeat, this.depth)
+                imageHash = MD4_BlockChecksum(pic, width[0] * height[0] * 4);
+                GenerateImage(pic, width[0], height[0], filter, allowDownSize, repeat, this.depth)
                 timestamp = timestamp //why, because we rock!
                 precompressedFile = false
 

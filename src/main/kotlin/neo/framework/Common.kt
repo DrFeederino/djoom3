@@ -1497,8 +1497,6 @@ class Common {
             val vidRam = 512 // Sys_GetVideoRam();
             val sysRam = win_shared.Sys_GetSystemRam()
             val oldCard = booleanArrayOf(false)
-            val nv10or20 = booleanArrayOf(false)
-            RenderSystem.renderSystem.GetCardCaps(oldCard, nv10or20)
             Printf(
                 """Detected
  	%d x %.2f GHz CPU
@@ -2734,7 +2732,6 @@ class Common {
             }
             val oldCard = booleanArrayOf(false)
             val nv10or20 = booleanArrayOf(false)
-            RenderSystem.renderSystem.GetCardCaps(oldCard, nv10or20)
             if (oldCard[0]) {
                 CVarSystem.cvarSystem.SetCVarBool("g_decals", false, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarBool("g_projectileLights", false, CVarSystem.CVAR_ARCHIVE)

@@ -174,7 +174,7 @@ object tr_local {
     var tr: idRenderSystemLocal = idRenderSystemLocal()
 
     enum class backEndName_t {
-        BE_ARB, BE_NV10, BE_NV20, BE_R200, BE_ARB2, BE_BAD
+        BE_ARB2, BE_BAD
     }
 
     internal enum class demoCommand_t {
@@ -1192,7 +1192,8 @@ object tr_local {
             Clear()
         }
 
-        //
+        private var origWidth: Int = 0
+        private var origHeight: Int = 0
         val worlds: kotlin.collections.ArrayList<idRenderWorldLocal>
         var DBG_viewCount // incremented every view (twice a scene if subviewed)
                 = 0
@@ -1209,7 +1210,7 @@ object tr_local {
 
         //
         // determines which back end to use, and if vertex programs are in use
-        var backEndRenderer: backEndName_t = backEndName_t.BE_NV20
+        var backEndRenderer: backEndName_t = backEndName_t.BE_ARB2
         var backEndRendererHasVertexPrograms = false
         var backEndRendererMaxLight // 1.0 for standard, unlimited for floats
                 = 0f
@@ -1349,24 +1350,11 @@ object tr_local {
             }
             val oldVPstate = backEndRendererHasVertexPrograms
             backEndRenderer = backEndName_t.BE_BAD
+
             val r_rendererString = RenderSystem_init.r_renderer.GetString()!!
-            if (idStr.Icmp(r_rendererString, "arb") == 0) {
-                backEndRenderer = backEndName_t.BE_ARB
-            } else if (idStr.Icmp(r_rendererString, "arb2") == 0) {
+            if (idStr.Icmp(r_rendererString, "arb2") == 0) {
                 if (glConfig.allowARB2Path) {
                     backEndRenderer = backEndName_t.BE_ARB2
-                }
-            } else if (idStr.Icmp(r_rendererString, "nv10") == 0) {
-                if (glConfig.allowNV10Path) {
-                    backEndRenderer = backEndName_t.BE_NV10
-                }
-            } else if (idStr.Icmp(r_rendererString, "nv20") == 0) {
-                if (glConfig.allowNV20Path) {
-                    backEndRenderer = backEndName_t.BE_NV20
-                }
-            } else if (idStr.Icmp(r_rendererString, "r200") == 0) {
-                if (glConfig.allowR200Path) {
-                    backEndRenderer = backEndName_t.BE_R200
                 }
             }
 
@@ -1375,30 +1363,13 @@ object tr_local {
                 // choose the best
                 backEndRenderer = if (glConfig.allowARB2Path) {
                     backEndName_t.BE_ARB2
-                } else if (glConfig.allowR200Path) {
-                    backEndName_t.BE_R200
-                } else if (glConfig.allowNV20Path) {
-                    backEndName_t.BE_NV20
-                } else if (glConfig.allowNV10Path) {
-                    backEndName_t.BE_NV10
                 } else {
-                    // the others are considered experimental
-                    backEndName_t.BE_ARB
+                    backEndName_t.BE_BAD
                 }
             }
             backEndRendererHasVertexPrograms = false
             backEndRendererMaxLight = 1.0f
             when (backEndRenderer) {
-                backEndName_t.BE_ARB -> Common.common.Printf("using ARB renderSystem\n")
-                backEndName_t.BE_NV10 -> Common.common.Printf("using NV10 renderSystem\n")
-                backEndName_t.BE_NV20 -> {
-                    Common.common.Printf("using NV20 renderSystem\n")
-                    backEndRendererHasVertexPrograms = true
-                }
-                backEndName_t.BE_R200 -> {
-                    Common.common.Printf("using R200 renderSystem\n")
-                    backEndRendererHasVertexPrograms = true
-                }
                 backEndName_t.BE_ARB2 -> {
                     Common.common.Printf("using ARB2 renderSystem\n")
                     backEndRendererHasVertexPrograms = true
@@ -1453,19 +1424,25 @@ object tr_local {
 
 //            memset(backEnd, 0, sizeof(backEnd));
             backEnd = backEndState_t()
+
             RenderSystem_init.R_InitCvars()
+
             RenderSystem_init.R_InitCommands()
+
             guiModel = idGuiModel()
             guiModel.Clear()
+
             demoGuiModel = idGuiModel()
             demoGuiModel!!.Clear()
+
             tr_trisurf.R_InitTriSurfData()
+
             Image.globalImages.Init()
+
             idCinematic.InitCinematic()
 
-            // build brightness translation tables
-            RenderSystem_init.R_SetColorMappings()
             RenderSystem_init.R_InitMaterials()
+
             ModelManager.renderModelManager.Init()
 
             // set the identity space
@@ -1473,9 +1450,9 @@ object tr_local {
             identitySpace.modelMatrix[1 * 4 + 1] = 1.0f
             identitySpace.modelMatrix[2 * 4 + 2] = 1.0f
 
-            // determine which back end we will use
-            // ??? this is invalid here as there is not enough information to set it up correctly
-            SetBackEndRenderer()
+            origWidth = 0
+            origHeight = origWidth
+
             Common.common.Printf("renderSystem initialized.\n")
             Common.common.Printf("--------------------------------------\n")
         }
@@ -2446,13 +2423,6 @@ object tr_local {
                     Common.common.Printf("write DC_UNCROP\n")
                 }
             }
-        }
-
-        override fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray) {
-            nv10or20[0] =
-                tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
-            oldCard[0] =
-                tr.backEndRenderer == backEndName_t.BE_ARB || tr.backEndRenderer == backEndName_t.BE_R200 || tr.backEndRenderer == backEndName_t.BE_NV10 || tr.backEndRenderer == backEndName_t.BE_NV20
         }
 
         override fun UploadImage(imageName: String?, data: ByteBuffer, width: Int, height: Int): Boolean {

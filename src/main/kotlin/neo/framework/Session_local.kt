@@ -2898,8 +2898,16 @@ object Session_local {
         @Throws(idException::class)
         fun GetBytesNeededForMapLoad(mapName: String): Int {
             val mapDecl = DeclManager.declManager.FindType(declType_t.DECL_MAPDEF, mapName, false)
-            val mapDef = mapDecl as idDeclEntityDef
-            return mapDef.dict.GetInt(Str.va("size%d", Lib.Max(0, Common.com_machineSpec.GetInteger())))
+            val mapDef = mapDecl as idDeclEntityDef?
+            if (mapDef != null) {
+                return mapDef.dict.GetInt(Str.va("size%d", Lib.Max(0, Common.com_machineSpec.GetInteger())))
+            } else {
+                return if (Common.com_machineSpec.GetInteger() < 2) {
+                    200 * 1024 * 1024
+                } else {
+                    400 * 1024 * 1024
+                }
+            }
         }
 
         //

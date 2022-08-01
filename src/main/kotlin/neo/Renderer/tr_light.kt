@@ -12,7 +12,6 @@ import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.ModelOverlay.idRenderModelOverlay
 import neo.Renderer.RenderWorld.renderEntity_s
-import neo.Renderer.tr_local.backEndName_t
 import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.idRenderEntityLocal
 import neo.Renderer.tr_local.idRenderLightLocal
@@ -552,7 +551,7 @@ object tr_light {
             }
 
             // calculate the specular coordinates if we aren't using vertex programs
-            if (!tr_local.tr.backEndRendererHasVertexPrograms && !RenderSystem_init.r_skipSpecular.GetBool() && tr_local.tr.backEndRenderer != backEndName_t.BE_ARB) {
+            if (!tr_local.tr.backEndRendererHasVertexPrograms && !RenderSystem_init.r_skipSpecular.GetBool()) {
                 R_SpecularTexGen(drawSurf, light.globalLightOrigin, tr_local.tr.viewDef!!.renderView.vieworg)
                 // if we failed to allocate space for the specular calculations, drop the surface
                 if (TempDump.NOT(drawSurf.dynamicTexCoords)) {

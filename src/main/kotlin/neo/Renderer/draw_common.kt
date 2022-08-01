@@ -95,7 +95,7 @@ object draw_common {
     fun RB_PrepareStageTexturing(pStage: shaderStage_t, surf: drawSurf_s, ac: idDrawVert) {
         // set privatePolygonOffset if necessary
         if (pStage.privatePolygonOffset != 0f) {
-            qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglEnable(GL14.GL_POLYGON_OFFSET_FILL)
             qgl.qglPolygonOffset(
                 RenderSystem_init.r_offsetFactor.GetFloat(),
                 RenderSystem_init.r_offsetUnits.GetFloat() * pStage.privatePolygonOffset
@@ -109,15 +109,15 @@ object draw_common {
 
         // texgens
         if (pStage.texture.texgen == texgen_t.TG_DIFFUSE_CUBE) {
-            qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
+            qgl.qglTexCoordPointer(3, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
         }
         if (pStage.texture.texgen == texgen_t.TG_SKYBOX_CUBE || pStage.texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
-            qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, 0, VertexCache.vertexCache.Position(surf.dynamicTexCoords))
+            qgl.qglTexCoordPointer(3, GL14.GL_FLOAT, 0, VertexCache.vertexCache.Position(surf.dynamicTexCoords))
         }
         if (pStage.texture.texgen == texgen_t.TG_SCREEN) {
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
             val mat = FloatArray(16)
             val plane = FloatArray(4)
             tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
@@ -125,22 +125,22 @@ object draw_common {
             plane[1] = mat[4]
             plane[2] = mat[8]
             plane[3] = mat[12]
-            qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane)
             plane[0] = mat[1]
             plane[1] = mat[5]
             plane[2] = mat[9]
             plane[3] = mat[13]
-            qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, plane)
             plane[0] = mat[3]
             plane[1] = mat[7]
             plane[2] = mat[11]
             plane[3] = mat[15]
-            qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_Q, GL14.GL_OBJECT_PLANE, plane)
         }
         if (pStage.texture.texgen == texgen_t.TG_SCREEN2) {
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
             val mat = FloatArray(16)
             val plane = FloatArray(4)
             tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
@@ -148,17 +148,17 @@ object draw_common {
             plane[1] = mat[4]
             plane[2] = mat[8]
             plane[3] = mat[12]
-            qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane)
             plane[0] = mat[1]
             plane[1] = mat[5]
             plane[2] = mat[9]
             plane[3] = mat[13]
-            qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, plane)
             plane[0] = mat[3]
             plane[1] = mat[7]
             plane[2] = mat[11]
             plane[3] = mat[15]
-            qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, plane)
+            qgl.qglTexGenfv(GL14.GL_Q, GL14.GL_OBJECT_PLANE, plane)
         }
         if (pStage.texture.texgen == texgen_t.TG_GLASSWARP) {
             if (tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2 /*|| tr.backEndRenderer == BE_NV30*/) {
@@ -168,9 +168,9 @@ object draw_common {
                 Image.globalImages.scratchImage.Bind()
                 tr_backend.GL_SelectTexture(1)
                 Image.globalImages.scratchImage2.Bind()
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
                 val mat = FloatArray(16)
                 val plane = FloatArray(4)
                 tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
@@ -178,17 +178,17 @@ object draw_common {
                 plane[1] = mat[4]
                 plane[2] = mat[8]
                 plane[3] = mat[12]
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, plane)
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane)
                 plane[0] = mat[1]
                 plane[1] = mat[5]
                 plane[2] = mat[9]
                 plane[3] = mat[13]
-                qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, plane)
+                qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, plane)
                 plane[0] = mat[3]
                 plane[1] = mat[7]
                 plane[2] = mat[11]
                 plane[3] = mat[15]
-                qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, plane)
+                qgl.qglTexGenfv(GL14.GL_Q, GL14.GL_OBJECT_PLANE, plane)
                 tr_backend.GL_SelectTexture(0)
             }
         }
@@ -201,11 +201,11 @@ object draw_common {
                     tr_backend.GL_SelectTexture(1)
                     bumpStage.texture.image[0]!!.Bind()
                     tr_backend.GL_SelectTexture(0)
-                    qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
+                    qgl.qglNormalPointer(GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
                     qgl.qglVertexAttribPointerARB(
                         10,
                         3,
-                        GL11.GL_FLOAT,
+                        GL14.GL_FLOAT,
                         false,
                         idDrawVert.Companion.BYTES,
                         ac.tangentsOffset_1().toLong()
@@ -213,14 +213,14 @@ object draw_common {
                     qgl.qglVertexAttribPointerARB(
                         9,
                         3,
-                        GL11.GL_FLOAT,
+                        GL14.GL_FLOAT,
                         false,
                         idDrawVert.Companion.BYTES,
                         ac.tangentsOffset_0().toLong()
                     )
                     qgl.qglEnableVertexAttribArrayARB(9)
                     qgl.qglEnableVertexAttribArrayARB(10)
-                    qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
+                    qgl.qglEnableClientState(GL14.GL_NORMAL_ARRAY)
 
                     // Program env 5, 6, 7, 8 have been set in RB_SetProgramEnvironmentSpace
                     qgl.qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_BUMPY_ENVIRONMENT)
@@ -229,27 +229,27 @@ object draw_common {
                     qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 } else {
                     // per-pixel reflection mapping without a normal map
-                    qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
-                    qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
+                    qgl.qglNormalPointer(GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
+                    qgl.qglEnableClientState(GL14.GL_NORMAL_ARRAY)
                     qgl.qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_ENVIRONMENT)
                     qgl.qglEnable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
                     qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_ENVIRONMENT)
                     qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 }
             } else {
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
-                qgl.qglEnable(GL11.GL_TEXTURE_GEN_R)
-                qgl.qglTexGenf(GL11.GL_S, GL11.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
-                qgl.qglTexGenf(GL11.GL_T, GL11.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
-                qgl.qglTexGenf(GL11.GL_R, GL11.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
-                qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
-                qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
-                qgl.qglMatrixMode(GL11.GL_TEXTURE)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
+                qgl.qglEnable(GL14.GL_TEXTURE_GEN_R)
+                qgl.qglTexGenf(GL14.GL_S, GL14.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
+                qgl.qglTexGenf(GL14.GL_T, GL14.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
+                qgl.qglTexGenf(GL14.GL_R, GL14.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
+                qgl.qglEnableClientState(GL14.GL_NORMAL_ARRAY)
+                qgl.qglNormalPointer(GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
+                qgl.qglMatrixMode(GL14.GL_TEXTURE)
                 val mat = FloatArray(16)
                 tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef.worldSpace.modelViewMatrix, mat)
                 qgl.qglLoadMatrixf(mat)
-                qgl.qglMatrixMode(GL11.GL_MODELVIEW)
+                qgl.qglMatrixMode(GL14.GL_MODELVIEW)
             }
         }
     }
@@ -257,20 +257,20 @@ object draw_common {
     fun RB_FinishStageTexturing(pStage: shaderStage_t, surf: drawSurf_s, ac: idDrawVert) {
         // unset privatePolygonOffset if necessary
         if (pStage.privatePolygonOffset != 0f && !surf.material!!.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
-            qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglDisable(GL14.GL_POLYGON_OFFSET_FILL)
         }
         if (pStage.texture.texgen == texgen_t.TG_DIFFUSE_CUBE || pStage.texture.texgen == texgen_t.TG_SKYBOX_CUBE || pStage.texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
-            qgl.qglTexCoordPointer(2, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.stOffset().toLong())
+            qgl.qglTexCoordPointer(2, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.stOffset().toLong())
         }
         if (pStage.texture.texgen == texgen_t.TG_SCREEN) {
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_Q)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_Q)
         }
         if (pStage.texture.texgen == texgen_t.TG_SCREEN2) {
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_Q)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_Q)
         }
         if (pStage.texture.texgen == texgen_t.TG_GLASSWARP) {
             if (tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2 /*|| tr.backEndRenderer == BE_NV30*/) {
@@ -280,9 +280,9 @@ object draw_common {
                 if (pStage.texture.hasMatrix) {
                     tr_render.RB_LoadShaderTextureMatrix(surf.shaderRegisters, pStage.texture)
                 }
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_Q)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_Q)
                 qgl.qglDisable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
                 Image.globalImages.BindNull()
                 tr_backend.GL_SelectTexture(0)
@@ -302,30 +302,30 @@ object draw_common {
                 } else {
                     // per-pixel reflection mapping without bump mapping
                 }
-                qgl.qglDisableClientState(GL11.GL_NORMAL_ARRAY)
+                qgl.qglDisableClientState(GL14.GL_NORMAL_ARRAY)
                 qgl.qglDisable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
                 qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
                 // Fixme: Hack to get around an apparent bug in ATI drivers.  Should remove as soon as it gets fixed.
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 0)
             } else {
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
-                qgl.qglDisable(GL11.GL_TEXTURE_GEN_R)
-                qgl.qglTexGenf(GL11.GL_S, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
-                qgl.qglTexGenf(GL11.GL_T, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
-                qgl.qglTexGenf(GL11.GL_R, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_OBJECT_LINEAR.toFloat())
-                qgl.qglDisableClientState(GL11.GL_NORMAL_ARRAY)
-                qgl.qglMatrixMode(GL11.GL_TEXTURE)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
+                qgl.qglDisable(GL14.GL_TEXTURE_GEN_R)
+                qgl.qglTexGenf(GL14.GL_S, GL14.GL_TEXTURE_GEN_MODE, GL14.GL_OBJECT_LINEAR.toFloat())
+                qgl.qglTexGenf(GL14.GL_T, GL14.GL_TEXTURE_GEN_MODE, GL14.GL_OBJECT_LINEAR.toFloat())
+                qgl.qglTexGenf(GL14.GL_R, GL14.GL_TEXTURE_GEN_MODE, GL14.GL_OBJECT_LINEAR.toFloat())
+                qgl.qglDisableClientState(GL14.GL_NORMAL_ARRAY)
+                qgl.qglMatrixMode(GL14.GL_TEXTURE)
                 qgl.qglLoadIdentity()
-                qgl.qglMatrixMode(GL11.GL_MODELVIEW)
+                qgl.qglMatrixMode(GL14.GL_MODELVIEW)
             }
         }
         if (pStage.texture.hasMatrix) {
 //            DBG_hasMatrix++;
 //            System.out.println(DBG_RB_FinishStageTexturing + "---" + DBG_hasMatrix);
-            qgl.qglMatrixMode(GL11.GL_TEXTURE)
+            qgl.qglMatrixMode(GL14.GL_TEXTURE)
             qgl.qglLoadIdentity()
-            qgl.qglMatrixMode(GL11.GL_MODELVIEW)
+            qgl.qglMatrixMode(GL14.GL_MODELVIEW)
             val qglGetError = qgl.qglGetError()
             if (qglGetError != 0) {
                 System.err.println(String.format("GL Error code: %d", qglGetError))
@@ -359,14 +359,14 @@ object draw_common {
         if (tr_local.backEnd.viewDef.numClipPlanes != 0) {
             tr_backend.GL_SelectTexture(1)
             Image.globalImages.alphaNotchImage.Bind()
-            qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-            qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
+            qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+            qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
             qgl.qglTexCoord2f(1f, 0.5f)
         }
 
         // the first texture will be used for alpha tested surfaces
         tr_backend.GL_SelectTexture(0)
-        qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
 
         // decal surfaces may enable polygon offset
         qgl.qglPolygonOffset(RenderSystem_init.r_offsetFactor.GetFloat(), RenderSystem_init.r_offsetUnits.GetFloat())
@@ -375,13 +375,13 @@ object draw_common {
         // Enable stencil test if we are going to be using it for shadows.
         // If we didn't do this, it would be legal behavior to get z fighting
         // from the ambient pass and the light passes.
-        qgl.qglEnable(GL11.GL_STENCIL_TEST)
-        qgl.qglStencilFunc(GL11.GL_ALWAYS, 1, 255)
+        qgl.qglEnable(GL14.GL_STENCIL_TEST)
+        qgl.qglStencilFunc(GL14.GL_ALWAYS, 1, 255)
         tr_render.RB_RenderDrawSurfListWithFunction(drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer.INSTANCE)
         if (tr_local.backEnd.viewDef.numClipPlanes != 0) {
             tr_backend.GL_SelectTexture(1)
             Image.globalImages.BindNull()
-            qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
+            qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
             tr_backend.GL_SelectTexture(0)
         }
     }
@@ -544,7 +544,7 @@ object draw_common {
 
         // set polygon offset if necessary
         if (shader.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
-            qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglEnable(GL14.GL_POLYGON_OFFSET_FILL)
             qgl.qglPolygonOffset(
                 RenderSystem_init.r_offsetFactor.GetFloat(),
                 RenderSystem_init.r_offsetUnits.GetFloat() * shader.GetPolygonOffset()
@@ -558,8 +558,8 @@ object draw_common {
         }
         val ac =
             idDrawVert(VertexCache.vertexCache.Position(tri.ambientCache)) //TODO:figure out how to work these damn casts. EDIT:easy peasy.
-        qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
-        qgl.qglTexCoordPointer(2, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.stOffset().toLong())
+        qgl.qglVertexPointer(3, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
+        qgl.qglTexCoordPointer(2, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.stOffset().toLong())
         stage = 0
         while (stage < shader.GetNumStages()) {
             if (stage == 2 || stage == 3) {
@@ -605,11 +605,11 @@ object draw_common {
                     stage++
                     continue
                 }
-                qgl.qglColorPointer(4, GL11.GL_UNSIGNED_BYTE, idDrawVert.Companion.BYTES, ac.colorOffset().toLong())
+                qgl.qglColorPointer(4, GL14.GL_UNSIGNED_BYTE, idDrawVert.Companion.BYTES, ac.colorOffset().toLong())
                 qgl.qglVertexAttribPointerARB(
                     9,
                     3,
-                    GL11.GL_FLOAT,
+                    GL14.GL_FLOAT,
                     false,
                     idDrawVert.Companion.BYTES,
                     ac.tangentsOffset_0().toLong()
@@ -617,16 +617,16 @@ object draw_common {
                 qgl.qglVertexAttribPointerARB(
                     10,
                     3,
-                    GL11.GL_FLOAT,
+                    GL14.GL_FLOAT,
                     false,
                     idDrawVert.Companion.BYTES,
                     ac.tangentsOffset_1().toLong()
                 )
-                qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
-                qgl.qglEnableClientState(GL11.GL_COLOR_ARRAY)
+                qgl.qglNormalPointer(GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
+                qgl.qglEnableClientState(GL14.GL_COLOR_ARRAY)
                 qgl.qglEnableVertexAttribArrayARB(9)
                 qgl.qglEnableVertexAttribArrayARB(10)
-                qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
+                qgl.qglEnableClientState(GL14.GL_NORMAL_ARRAY)
                 tr_backend.GL_State(pStage.drawStateBits)
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, newStage.vertexProgram)
                 qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
@@ -675,10 +675,10 @@ object draw_common {
                 qgl.qglDisable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
                 // Fixme: Hack to get around an apparent bug in ATI drivers.  Should remove as soon as it gets fixed.
                 qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 0)
-                qgl.qglDisableClientState(GL11.GL_COLOR_ARRAY)
+                qgl.qglDisableClientState(GL14.GL_COLOR_ARRAY)
                 qgl.qglDisableVertexAttribArrayARB(9)
                 qgl.qglDisableVertexAttribArrayARB(10)
-                qgl.qglDisableClientState(GL11.GL_NORMAL_ARRAY)
+                qgl.qglDisableClientState(GL14.GL_NORMAL_ARRAY)
                 stage++
                 continue
             }
@@ -715,27 +715,27 @@ object draw_common {
             } else {
                 qgl.qglColorPointer(
                     4,
-                    GL11.GL_UNSIGNED_BYTE,
+                    GL14.GL_UNSIGNED_BYTE,
                     idDrawVert.Companion.BYTES,  /*(void *)&*/
                     ac.colorOffset().toLong()
                 )
-                qgl.qglEnableClientState(GL11.GL_COLOR_ARRAY)
+                qgl.qglEnableClientState(GL14.GL_COLOR_ARRAY)
                 if (pStage.vertexColor == stageVertexColor_t.SVC_INVERSE_MODULATE) {
                     tr_backend.GL_TexEnv(ARBTextureEnvCombine.GL_COMBINE_ARB)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_RGB_ARB, GL11.GL_MODULATE)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_SOURCE0_RGB_ARB, GL11.GL_TEXTURE)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_RGB_ARB, GL14.GL_MODULATE)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_SOURCE0_RGB_ARB, GL14.GL_TEXTURE)
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_SOURCE1_RGB_ARB,
                         ARBTextureEnvCombine.GL_PRIMARY_COLOR_ARB
                     )
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_RGB_ARB, GL11.GL_SRC_COLOR)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_RGB_ARB, GL14.GL_SRC_COLOR)
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_OPERAND1_RGB_ARB,
-                        GL11.GL_ONE_MINUS_SRC_COLOR
+                        GL14.GL_ONE_MINUS_SRC_COLOR
                     )
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_RGB_SCALE_ARB, 1)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_RGB_SCALE_ARB, 1)
                 }
 
                 // for vertex color and modulated color, we need to enable a second
@@ -744,35 +744,35 @@ object draw_common {
                     tr_backend.GL_SelectTexture(1)
                     Image.globalImages.whiteImage.Bind()
                     tr_backend.GL_TexEnv(ARBTextureEnvCombine.GL_COMBINE_ARB)
-                    qgl.qglTexEnvfv(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_COLOR, color)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_RGB_ARB, GL11.GL_MODULATE)
+                    qgl.qglTexEnvfv(GL14.GL_TEXTURE_ENV, GL14.GL_TEXTURE_ENV_COLOR, color)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_RGB_ARB, GL14.GL_MODULATE)
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_SOURCE0_RGB_ARB,
                         ARBTextureEnvCombine.GL_PREVIOUS_ARB
                     )
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_SOURCE1_RGB_ARB,
                         ARBTextureEnvCombine.GL_CONSTANT_ARB
                     )
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_RGB_ARB, GL11.GL_SRC_COLOR)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND1_RGB_ARB, GL11.GL_SRC_COLOR)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_RGB_SCALE_ARB, 1)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_ALPHA_ARB, GL11.GL_MODULATE)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_RGB_ARB, GL14.GL_SRC_COLOR)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND1_RGB_ARB, GL14.GL_SRC_COLOR)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_RGB_SCALE_ARB, 1)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_COMBINE_ALPHA_ARB, GL14.GL_MODULATE)
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_SOURCE0_ALPHA_ARB,
                         ARBTextureEnvCombine.GL_PREVIOUS_ARB
                     )
                     qgl.qglTexEnvi(
-                        GL11.GL_TEXTURE_ENV,
+                        GL14.GL_TEXTURE_ENV,
                         ARBTextureEnvCombine.GL_SOURCE1_ALPHA_ARB,
                         ARBTextureEnvCombine.GL_CONSTANT_ARB
                     )
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_ALPHA_ARB, GL11.GL_SRC_ALPHA)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND1_ALPHA_ARB, GL11.GL_SRC_ALPHA)
-                    qgl.qglTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_ALPHA_SCALE, 1)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND0_ALPHA_ARB, GL14.GL_SRC_ALPHA)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, ARBTextureEnvCombine.GL_OPERAND1_ALPHA_ARB, GL14.GL_SRC_ALPHA)
+                    qgl.qglTexEnvi(GL14.GL_TEXTURE_ENV, GL14.GL_ALPHA_SCALE, 1)
                     tr_backend.GL_SelectTexture(0)
                 }
             }
@@ -788,19 +788,19 @@ object draw_common {
             tr_render.RB_DrawElementsWithCounters(tri)
             RB_FinishStageTexturing(pStage, surf, ac)
             if (pStage.vertexColor != stageVertexColor_t.SVC_IGNORE) {
-                qgl.qglDisableClientState(GL11.GL_COLOR_ARRAY)
+                qgl.qglDisableClientState(GL14.GL_COLOR_ARRAY)
                 tr_backend.GL_SelectTexture(1)
-                tr_backend.GL_TexEnv(GL11.GL_MODULATE)
+                tr_backend.GL_TexEnv(GL14.GL_MODULATE)
                 Image.globalImages.BindNull()
                 tr_backend.GL_SelectTexture(0)
-                tr_backend.GL_TexEnv(GL11.GL_MODULATE)
+                tr_backend.GL_TexEnv(GL14.GL_MODULATE)
             }
             stage++
         }
 
         // reset polygon offset
         if (shader.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
-            qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglDisable(GL14.GL_POLYGON_OFFSET_FILL)
         }
         if (surf.space.weaponDepthHack || surf.space.modelDepthHack != 0.0f) {
             tr_render.RB_LeaveDepthHack()
@@ -844,7 +844,7 @@ object draw_common {
         tr_backend.GL_SelectTexture(1)
         Image.globalImages.BindNull()
         tr_backend.GL_SelectTexture(0)
-        qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
         RB_SetProgramEnvironment()
 
         // we don't use RB_RenderDrawSurfListWithFunction()
@@ -902,7 +902,7 @@ object draw_common {
         }
         tr_backend.RB_LogComment("---------- RB_StencilShadowPass ----------\n")
         Image.globalImages.BindNull()
-        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
 
         // for visualizing the shadows
         if (RenderSystem_init.r_showShadows.GetInteger() != 0) {
@@ -922,23 +922,23 @@ object draw_common {
                 RenderSystem_init.r_shadowPolygonFactor.GetFloat(),
                 -RenderSystem_init.r_shadowPolygonOffset.GetFloat()
             )
-            qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglEnable(GL14.GL_POLYGON_OFFSET_FILL)
         }
-        qgl.qglStencilFunc(GL11.GL_ALWAYS, 1, 255)
+        qgl.qglStencilFunc(GL14.GL_ALWAYS, 1, 255)
         if (tr_local.glConfig.depthBoundsTestAvailable && RenderSystem_init.r_useDepthBoundsTest.GetBool()) {
             qgl.qglEnable(EXTDepthBoundsTest.GL_DEPTH_BOUNDS_TEST_EXT)
         }
         tr_render.RB_RenderDrawSurfChainWithFunction(drawSurfs, RB_T_Shadow.INSTANCE)
         tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
         if (RenderSystem_init.r_shadowPolygonFactor.GetFloat() != 0f || RenderSystem_init.r_shadowPolygonOffset.GetFloat() != 0f) {
-            qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
+            qgl.qglDisable(GL14.GL_POLYGON_OFFSET_FILL)
         }
         if (tr_local.glConfig.depthBoundsTestAvailable && RenderSystem_init.r_useDepthBoundsTest.GetBool()) {
             qgl.qglDisable(EXTDepthBoundsTest.GL_DEPTH_BOUNDS_TEST_EXT)
         }
-        qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        qgl.qglStencilFunc(GL11.GL_GEQUAL, 128, 255)
-        qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP)
+        qgl.qglEnableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglStencilFunc(GL14.GL_GEQUAL, 128, 255)
+        qgl.qglStencilOp(GL14.GL_KEEP, GL14.GL_KEEP, GL14.GL_KEEP)
     }
 
     /*
@@ -966,17 +966,17 @@ object draw_common {
 
         // texture 1 will get the falloff texture
         tr_backend.GL_SelectTexture(1)
-        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
+        qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
         qgl.qglTexCoord2f(0f, 0.5f)
         tr_local.backEnd.vLight.falloffImage!!.Bind()
 
         // texture 0 will get the projected texture
         tr_backend.GL_SelectTexture(0)
-        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_Q)
+        qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
         i = 0
         while (i < lightShader.GetNumStages()) {
             stage = lightShader.GetStage(i)
@@ -1001,19 +1001,19 @@ object draw_common {
             tr_render.RB_RenderDrawSurfChainWithFunction(drawSurfs2, RB_T_BlendLight.INSTANCE)
             if (stage.texture.hasMatrix) {
                 tr_backend.GL_SelectTexture(0)
-                qgl.qglMatrixMode(GL11.GL_TEXTURE)
+                qgl.qglMatrixMode(GL14.GL_TEXTURE)
                 qgl.qglLoadIdentity()
-                qgl.qglMatrixMode(GL11.GL_MODELVIEW)
+                qgl.qglMatrixMode(GL14.GL_MODELVIEW)
             }
             i++
         }
         tr_backend.GL_SelectTexture(1)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
         Image.globalImages.BindNull()
         tr_backend.GL_SelectTexture(0)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_Q)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_Q)
     }
 
     /*
@@ -1074,9 +1074,9 @@ object draw_common {
         tr_backend.GL_SelectTexture(0)
         Image.globalImages.fogImage.Bind()
         //GL_Bind( tr.whiteImage );
-        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
+        qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
         qgl.qglTexCoord2f(0.5f, 0.5f) // make sure Q is set
         fogPlanes[0][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2]
         fogPlanes[0][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6]
@@ -1090,9 +1090,9 @@ object draw_common {
         // texture 1 is the entering plane fade correction
         tr_backend.GL_SelectTexture(1)
         Image.globalImages.fogEnterImage.Bind()
-        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglEnable(GL11.GL_TEXTURE_GEN_T)
+        qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
 
         // T will get a texgen for the fade plane, which is always the "top" plane on unrotated lights
         fogPlanes[2][0] = 0.001f * tr_local.backEnd.vLight.fogPlane[0]
@@ -1120,12 +1120,12 @@ object draw_common {
         tr_render.RB_RenderDrawSurfChainWithFunction(ds, RB_T_BasicFog.INSTANCE)
         tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
         tr_backend.GL_SelectTexture(1)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
         Image.globalImages.BindNull()
         tr_backend.GL_SelectTexture(0)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_S)
-        qgl.qglDisable(GL11.GL_TEXTURE_GEN_T)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
+        qgl.qglDisable(GL14.GL_TEXTURE_GEN_T)
     }
 
     /*
@@ -1139,7 +1139,7 @@ object draw_common {
             return
         }
         tr_backend.RB_LogComment("---------- RB_STD_FogAllLights ----------\n")
-        qgl.qglDisable(GL11.GL_STENCIL_TEST)
+        qgl.qglDisable(GL14.GL_STENCIL_TEST)
         vLight = tr_local.backEnd.viewDef.viewLights
         while (vLight != null) {
             tr_local.backEnd.vLight = vLight
@@ -1177,10 +1177,10 @@ object draw_common {
             } else if (vLight.lightShader.IsBlendLight()) {
                 RB_BlendLight(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
             }
-            qgl.qglDisable(GL11.GL_STENCIL_TEST)
+            qgl.qglDisable(GL14.GL_STENCIL_TEST)
             vLight = vLight.next
         }
-        qgl.qglEnable(GL11.GL_STENCIL_TEST)
+        qgl.qglEnable(GL14.GL_STENCIL_TEST)
     }
 
     /*
@@ -1215,15 +1215,15 @@ object draw_common {
 
         // full screen blends
         qgl.qglLoadIdentity()
-        qgl.qglMatrixMode(GL11.GL_PROJECTION)
+        qgl.qglMatrixMode(GL14.GL_PROJECTION)
         qgl.qglPushMatrix()
         qgl.qglLoadIdentity()
         qgl.qglOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0)
         tr_backend.GL_State(tr_local.GLS_SRCBLEND_DST_COLOR or tr_local.GLS_DSTBLEND_SRC_COLOR)
         tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED) // so mirror views also get it
         Image.globalImages.BindNull()
-        qgl.qglDisable(GL11.GL_DEPTH_TEST)
-        qgl.qglDisable(GL11.GL_STENCIL_TEST)
+        qgl.qglDisable(GL14.GL_DEPTH_TEST)
+        qgl.qglDisable(GL14.GL_STENCIL_TEST)
         v = 1f
         while (Math.abs(v - tr_local.backEnd.overBright) > 0.01) {    // a little extra slop
             f = tr_local.backEnd.overBright / v
@@ -1233,7 +1233,7 @@ object draw_common {
             }
             qgl.qglColor3f(f, f, f)
             v = v * f * 2
-            qgl.qglBegin(GL11.GL_QUADS)
+            qgl.qglBegin(GL14.GL_QUADS)
             qgl.qglVertex2f(0f, 0f)
             qgl.qglVertex2f(0f, 1f)
             qgl.qglVertex2f(1f, 1f)
@@ -1241,8 +1241,8 @@ object draw_common {
             qgl.qglEnd()
         }
         qgl.qglPopMatrix()
-        qgl.qglEnable(GL11.GL_DEPTH_TEST)
-        qgl.qglMatrixMode(GL11.GL_MODELVIEW)
+        qgl.qglEnable(GL14.GL_DEPTH_TEST)
+        qgl.qglMatrixMode(GL14.GL_MODELVIEW)
         tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
     }
 
@@ -1270,13 +1270,12 @@ object draw_common {
         // subviews
         RB_STD_FillDepthBuffer(drawSurfs, numDrawSurfs)
         when (tr_local.tr.backEndRenderer) {
-            backEndName_t.BE_ARB -> draw_arb.RB_ARB_DrawInteractions()
             backEndName_t.BE_ARB2 -> draw_arb2.RB_ARB2_DrawInteractions()
             else -> {}
         }
 
         // disable stencil shadow test
-        qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
+        qgl.qglStencilFunc(GL14.GL_ALWAYS, 128, 255)
 
         // uplight the entire screen to crutch up not having better blending range
         RB_STD_LightScale()
@@ -1326,7 +1325,7 @@ object draw_common {
                 val plane = idPlane()
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, tr_local.backEnd.viewDef.clipPlanes[0], plane)
                 plane.plusAssign(3, 0.5f) // the notch is in the middle
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, plane.ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane.ToFloatPtr())
                 tr_backend.GL_SelectTexture(0)
             }
             if (!shader.IsDrawn()) {
@@ -1367,7 +1366,7 @@ object draw_common {
 
             // set polygon offset if necessary
             if (shader.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
-                qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
+                qgl.qglEnable(GL14.GL_POLYGON_OFFSET_FILL)
                 qgl.qglPolygonOffset(
                     RenderSystem_init.r_offsetFactor.GetFloat(),
                     RenderSystem_init.r_offsetUnits.GetFloat() * shader.GetPolygonOffset()
@@ -1390,10 +1389,10 @@ object draw_common {
             }
             val ac =
                 idDrawVert(VertexCache.vertexCache.Position(tri.ambientCache)) //TODO:figure out how to work these damn casts.
-            qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
+            qgl.qglVertexPointer(3, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
             qgl.qglTexCoordPointer(
                 2,
-                GL11.GL_FLOAT,
+                GL14.GL_FLOAT,
                 idDrawVert.Companion.BYTES,  /*reinterpret_cast<void *>*/
                 ac.stOffset().toLong()
             )
@@ -1404,7 +1403,7 @@ object draw_common {
                 // if the only alpha tested stages are condition register omitted,
                 // draw a normal opaque surface
                 var didDraw = false
-                qgl.qglEnable(GL11.GL_ALPHA_TEST)
+                qgl.qglEnable(GL14.GL_ALPHA_TEST)
                 // perforated surfaces may have multiple alpha tested stages
                 stage = 0
                 while (stage < shader.GetNumStages()) {
@@ -1433,7 +1432,7 @@ object draw_common {
                         continue
                     }
                     qgl.qglColor4fv(color)
-                    qgl.qglAlphaFunc(GL11.GL_GREATER, regs[pStage.alphaTestRegister])
+                    qgl.qglAlphaFunc(GL14.GL_GREATER, regs[pStage.alphaTestRegister])
 
                     // bind the texture
                     pStage.texture.image[0]!!.Bind()
@@ -1446,7 +1445,7 @@ object draw_common {
                     RB_FinishStageTexturing(pStage, surf, ac)
                     stage++
                 }
-                qgl.qglDisable(GL11.GL_ALPHA_TEST)
+                qgl.qglDisable(GL14.GL_ALPHA_TEST)
                 if (!didDraw) {
                     drawSolid = true
                 }
@@ -1463,7 +1462,7 @@ object draw_common {
 
             // reset polygon offset
             if (shader.TestMaterialFlag(Material.MF_POLYGONOFFSET)) {
-                qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
+                qgl.qglDisable(GL14.GL_POLYGON_OFFSET_FILL)
             }
 
             // reset blending
@@ -1512,7 +1511,7 @@ object draw_common {
             }
             qgl.qglVertexPointer(
                 4,
-                GL11.GL_FLOAT,
+                GL14.GL_FLOAT,
                 shadowCache_s.Companion.BYTES,
                 VertexCache.vertexCache.Position(tri.shadowCache).int.toLong()
             )
@@ -1605,12 +1604,12 @@ object draw_common {
                         }
                     }
                 }
-                qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP)
-                qgl.qglDisable(GL11.GL_STENCIL_TEST)
+                qgl.qglStencilOp(GL14.GL_KEEP, GL14.GL_KEEP, GL14.GL_KEEP)
+                qgl.qglDisable(GL14.GL_STENCIL_TEST)
                 tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
                 tr_render.RB_DrawShadowElementsWithCounters(tri, numIndexes)
                 tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
-                qgl.qglEnable(GL11.GL_STENCIL_TEST)
+                qgl.qglEnable(GL14.GL_STENCIL_TEST)
                 return
             }
 
@@ -1618,19 +1617,19 @@ object draw_common {
             if (!external) {
                 // "preload" the stencil buffer with the number of volumes
                 // that get clipped by the near or far clip plane
-                qgl.qglStencilOp(GL11.GL_KEEP, tr_local.tr.stencilDecr, tr_local.tr.stencilDecr)
+                qgl.qglStencilOp(GL14.GL_KEEP, tr_local.tr.stencilDecr, tr_local.tr.stencilDecr)
                 tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
                 tr_render.RB_DrawShadowElementsWithCounters(tri, numIndexes)
-                qgl.qglStencilOp(GL11.GL_KEEP, tr_local.tr.stencilIncr, tr_local.tr.stencilIncr)
+                qgl.qglStencilOp(GL14.GL_KEEP, tr_local.tr.stencilIncr, tr_local.tr.stencilIncr)
                 tr_backend.GL_Cull(cullType_t.CT_BACK_SIDED)
                 tr_render.RB_DrawShadowElementsWithCounters(tri, numIndexes)
             }
 
             // traditional depth-pass stencil shadows
-            qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, tr_local.tr.stencilIncr)
+            qgl.qglStencilOp(GL14.GL_KEEP, GL14.GL_KEEP, tr_local.tr.stencilIncr)
             tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
             tr_render.RB_DrawShadowElementsWithCounters(tri, numIndexes)
-            qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, tr_local.tr.stencilDecr)
+            qgl.qglStencilOp(GL14.GL_KEEP, GL14.GL_KEEP, tr_local.tr.stencilDecr)
             tr_backend.GL_Cull(cullType_t.CT_BACK_SIDED)
             tr_render.RB_DrawShadowElementsWithCounters(tri, numIndexes)
         }
@@ -1664,22 +1663,22 @@ object draw_common {
                     i++
                 }
                 tr_backend.GL_SelectTexture(0)
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, lightProject[0].ToFloatPtr())
-                qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, lightProject[1].ToFloatPtr())
-                qgl.qglTexGenfv(GL11.GL_Q, GL11.GL_OBJECT_PLANE, lightProject[2].ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, lightProject[0].ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, lightProject[1].ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_Q, GL14.GL_OBJECT_PLANE, lightProject[2].ToFloatPtr())
                 tr_backend.GL_SelectTexture(1)
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, lightProject[3].ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, lightProject[3].ToFloatPtr())
             }
 
             // this gets used for both blend lights and shadow draws
             if (tri.ambientCache != null) {
                 val ac =
                     idDrawVert(VertexCache.vertexCache.Position(tri.ambientCache)) //TODO:figure out how to work these damn casts.
-                qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
+                qgl.qglVertexPointer(3, GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
             } else if (tri.shadowCache != null) {
                 val sc =
                     shadowCache_s(VertexCache.vertexCache.Position(tri.shadowCache)) //TODO:figure out how to work these damn casts.
-                qgl.qglVertexPointer(3, GL11.GL_FLOAT, shadowCache_s.Companion.BYTES, sc.xyz.ToFloatPtr())
+                qgl.qglVertexPointer(3, GL14.GL_FLOAT, shadowCache_s.Companion.BYTES, sc.xyz.ToFloatPtr())
             }
             tr_render.RB_DrawElementsWithCounters(tri)
         }
@@ -1703,20 +1702,20 @@ object draw_common {
                 tr_backend.GL_SelectTexture(0)
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[0], local)
                 local.plusAssign(3, 0.5f)
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, local.ToFloatPtr())
 
 //		R_GlobalPlaneToLocal( surf.space.modelMatrix, fogPlanes[1], local );
 //		local[3] += 0.5;
                 local[0] = local.set(1, local.set(2, local.set(3, 0.5f)))
-                qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, local.ToFloatPtr())
                 tr_backend.GL_SelectTexture(1)
 
                 // GL_S is constant per viewer
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[2], local)
                 local.plusAssign(3, tr_local.FOG_ENTER)
-                qgl.qglTexGenfv(GL11.GL_T, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_T, GL14.GL_OBJECT_PLANE, local.ToFloatPtr())
                 tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, fogPlanes[3], local)
-                qgl.qglTexGenfv(GL11.GL_S, GL11.GL_OBJECT_PLANE, local.ToFloatPtr())
+                qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, local.ToFloatPtr())
             }
             RB_T_RenderTriangleSurface.Companion.INSTANCE.run(surf)
         }

@@ -638,7 +638,6 @@ object RenderSystem {
         }
 
         abstract fun UnCrop()
-        abstract fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray)
 
         // the image has to be already loaded ( most straightforward way would be through a FindMaterial )
         // texture filter / mipmapping / repeat won't be modified by the upload

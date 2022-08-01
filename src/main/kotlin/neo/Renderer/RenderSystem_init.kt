@@ -1804,34 +1804,6 @@ class RenderSystem_init {
                 }
                 idLib.common.Printf("CPU: %s\n", win_main.Sys_GetProcessorString())
                 val active /*[2]*/ = arrayOf<String>("", " (ACTIVE)")
-                idLib.common.Printf(
-                    "ARB path ENABLED%s\n",
-                    active[TempDump.btoi(tr_local.tr.backEndRenderer == backEndName_t.BE_ARB)]
-                )
-                if (tr_local.glConfig.allowNV10Path) {
-                    idLib.common.Printf(
-                        "NV10 path ENABLED%s\n",
-                        active[TempDump.btoi(tr_local.tr.backEndRenderer == backEndName_t.BE_NV10)]
-                    )
-                } else {
-                    idLib.common.Printf("NV10 path disabled\n")
-                }
-                if (tr_local.glConfig.allowNV20Path) {
-                    idLib.common.Printf(
-                        "NV20 path ENABLED%s\n",
-                        active[TempDump.btoi(tr_local.tr.backEndRenderer == backEndName_t.BE_NV20)]
-                    )
-                } else {
-                    idLib.common.Printf("NV20 path disabled\n")
-                }
-                if (tr_local.glConfig.allowR200Path) {
-                    idLib.common.Printf(
-                        "R200 path ENABLED%s\n",
-                        active[TempDump.btoi(tr_local.tr.backEndRenderer == backEndName_t.BE_R200)]
-                    )
-                } else {
-                    idLib.common.Printf("R200 path disabled\n")
-                }
                 if (tr_local.glConfig.allowARB2Path) {
                     idLib.common.Printf(
                         "ARB2 path ENABLED%s\n",

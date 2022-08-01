@@ -146,47 +146,7 @@ object Token {
                         floatValue = nan.toFloat()
                     }
                 } else {
-                    while ( /*p[pIndex]!=null &&*/p[pIndex] != '.' && p[pIndex] != 'e') {
-                        floatValue = floatValue * 10.0f + (p[pIndex] - '0')
-                        pIndex++
-                    }
-                    if (p[pIndex] == '.') {
-                        pIndex++
-                        m = 0.1f
-                        while (pIndex < p.size && p[pIndex] != 'e') {
-                            floatValue = (floatValue + (p[pIndex] - '0') * m)
-                            m *= 0.1f
-                            pIndex++
-                        }
-                    }
-                    if (pIndex < p.size && p[pIndex] == 'e') {
-                        pIndex++
-                        if (p[pIndex] == '-') {
-                            div = true
-                            pIndex++
-                        } else if (p[pIndex] == '+') {
-                            div = false
-                            pIndex++
-                        } else {
-                            div = false
-                        }
-                        pow = 0
-                        while (pIndex < p.size) {
-                            pow = pow * 10 + (p[pIndex] - '0')
-                            pIndex++
-                        }
-                        m = 1.0f
-                        i = 0
-                        while (i < pow) {
-                            m *= 10.0f
-                            i++
-                        }
-                        if (div) {
-                            floatValue /= m
-                        } else {
-                            floatValue *= m
-                        }
-                    }
+                    floatValue = data.toFloat()
                 }
                 intValue = idMath.Ftol(floatValue).toInt()
             } else if (subtype and TT_DECIMAL != 0) {
