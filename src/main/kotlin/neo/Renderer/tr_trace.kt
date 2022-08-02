@@ -379,8 +379,8 @@ object tr_trace {
         }
 
         // determine the points of the trace
-        start.set(tr_local.backEnd.viewDef.renderView.vieworg)
-        end.set(start.plus(tr_local.backEnd.viewDef.renderView.viewaxis[0].times(4000f)))
+        start.set(tr_local.backEnd.viewDef!!.renderView.vieworg)
+        end.set(start.plus(tr_local.backEnd.viewDef!!.renderView.viewaxis[0].times(4000f)))
 
         // check and draw the surfaces
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)

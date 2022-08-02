@@ -193,8 +193,8 @@ object tr_render {
         qgl.qglDepthRange(0.0, 0.5)
         val matrix = FloatArray(16)
 
-//	memcpy( matrix, backEnd.viewDef.projectionMatrix, sizeof( matrix ) );
-        System.arraycopy(tr_local.backEnd.viewDef.projectionMatrix, 0, matrix, 0, matrix.size)
+//	memcpy( matrix, backEnd.viewDef!!.projectionMatrix, sizeof( matrix ) );
+        System.arraycopy(tr_local.backEnd.viewDef!!.projectionMatrix, 0, matrix, 0, matrix.size)
         qgl.qglMatrixMode(GL11.GL_PROJECTION)
         qgl.qglLoadMatrixf(matrix)
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
@@ -209,8 +209,8 @@ object tr_render {
         qgl.qglDepthRange(0.0, 1.0)
         val matrix = FloatArray(16)
 
-//	memcpy( matrix, backEnd.viewDef.projectionMatrix, sizeof( matrix ) );
-        System.arraycopy(tr_local.backEnd.viewDef.projectionMatrix, 0, matrix, 0, matrix.size)
+//	memcpy( matrix, backEnd.viewDef!!.projectionMatrix, sizeof( matrix ) );
+        System.arraycopy(tr_local.backEnd.viewDef!!.projectionMatrix, 0, matrix, 0, matrix.size)
         matrix[14] -= depth
         qgl.qglMatrixMode(GL11.GL_PROJECTION)
         qgl.qglLoadMatrixf(matrix)
@@ -225,7 +225,7 @@ object tr_render {
     fun RB_LeaveDepthHack() {
         qgl.qglDepthRange(0.0, 1.0)
         qgl.qglMatrixMode(GL11.GL_PROJECTION)
-        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef.projectionMatrix)
+        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef!!.projectionMatrix)
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
     }
 
@@ -262,8 +262,8 @@ object tr_render {
             if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(drawSurf.scissorRect)) {
                 tr_local.backEnd.currentScissor = drawSurf.scissorRect
                 qgl.qglScissor(
-                    tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                    tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                    tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                    tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                     tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                     tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
                 )
@@ -301,8 +301,8 @@ object tr_render {
             if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(drawSurf.scissorRect)) {
                 tr_local.backEnd.currentScissor = drawSurf.scissorRect
                 qgl.qglScissor(
-                    tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                    tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                    tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                    tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                     tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                     tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
                 )
@@ -377,7 +377,7 @@ object tr_render {
     fun RB_BindVariableStageImage(texture: textureStage_t, shaderRegisters: FloatArray) {
         DBG_RB_BindVariableStageImage++
         //        if (DBG_RB_BindVariableStageImage == 50) {
-//            for (drawSurf_s draw : backEnd.viewDef.drawSurfs) {
+//            for (drawSurf_s draw : backEnd.viewDef!!.drawSurfs) {
 //                System.out.println("=============================");
 //                for (int s = 0; draw != null && s < draw.material.GetNumStages(); s++) {
 //                    if(draw.material.GetStage(s).texture.image[0]!=null)
@@ -396,7 +396,7 @@ object tr_render {
             // We make no attempt to optimize for multiple identical cinematics being in view, or
             // for cinematics going at a lower framerate than the renderer.
             cin =
-                texture.cinematic[0]!!.ImageForTime((1000 * (tr_local.backEnd.viewDef.floatTime + tr_local.backEnd.viewDef.renderView.shaderParms[11])).toInt())
+                texture.cinematic[0]!!.ImageForTime((1000 * (tr_local.backEnd.viewDef!!.floatTime + tr_local.backEnd.viewDef!!.renderView.shaderParms[11])).toInt())
             if (cin.image != null) {
                 Image.globalImages.cinematicImage.UploadScratch(cin.image!!, cin.imageWidth, cin.imageHeight)
             } else {
@@ -443,7 +443,7 @@ object tr_render {
             qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.BYTES, vert.normalOffset().toLong())
             qgl.qglMatrixMode(GL11.GL_TEXTURE)
             val mat = FloatArray(16)
-            tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef.worldSpace.modelViewMatrix, mat)
+            tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix, mat)
             qgl.qglLoadMatrixf(mat)
             qgl.qglMatrixMode(GL11.GL_MODELVIEW)
         }
@@ -521,7 +521,7 @@ object tr_render {
         // if there are no lights, this will remain at 1.0, so GUI-only
         // rendering will not lose any bits of precision
         max = 1.0f
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
 
             // lights with no surfaces or shaderparms may still be present
@@ -569,31 +569,31 @@ object tr_render {
     fun RB_BeginDrawingView() {
         // set the modelview matrix for the viewer
         qgl.qglMatrixMode(GL11.GL_PROJECTION)
-        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef.projectionMatrix)
+        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef!!.projectionMatrix)
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
 
         // set the window clipping
         qgl.qglViewport(
-            tr_local.tr.viewportOffset[0] + tr_local.backEnd.viewDef.viewport.x1,
-            tr_local.tr.viewportOffset[1] + tr_local.backEnd.viewDef.viewport.y1,
-            tr_local.backEnd.viewDef.viewport.x2 + 1 - tr_local.backEnd.viewDef.viewport.x1,
-            tr_local.backEnd.viewDef.viewport.y2 + 1 - tr_local.backEnd.viewDef.viewport.y1
+            tr_local.tr.viewportOffset[0] + tr_local.backEnd.viewDef!!.viewport.x1,
+            tr_local.tr.viewportOffset[1] + tr_local.backEnd.viewDef!!.viewport.y1,
+            tr_local.backEnd.viewDef!!.viewport.x2 + 1 - tr_local.backEnd.viewDef!!.viewport.x1,
+            tr_local.backEnd.viewDef!!.viewport.y2 + 1 - tr_local.backEnd.viewDef!!.viewport.y1
         )
 
         // the scissor may be smaller than the viewport for subviews
         qgl.qglScissor(
-            tr_local.tr.viewportOffset[0] + tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.viewDef.scissor.x1,
-            tr_local.tr.viewportOffset[1] + tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.viewDef.scissor.y1,
-            tr_local.backEnd.viewDef.scissor.x2 + 1 - tr_local.backEnd.viewDef.scissor.x1,
-            tr_local.backEnd.viewDef.scissor.y2 + 1 - tr_local.backEnd.viewDef.scissor.y1
+            tr_local.tr.viewportOffset[0] + tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.viewDef!!.scissor.x1,
+            tr_local.tr.viewportOffset[1] + tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.viewDef!!.scissor.y1,
+            tr_local.backEnd.viewDef!!.scissor.x2 + 1 - tr_local.backEnd.viewDef!!.scissor.x1,
+            tr_local.backEnd.viewDef!!.scissor.y2 + 1 - tr_local.backEnd.viewDef!!.scissor.y1
         )
-        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef.scissor
+        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
 
         // ensures that depth writes are enabled for the depth clear
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
 
         // we don't have to clear the depth / stencil buffer for 2D rendering
-        if (tr_local.backEnd.viewDef.viewEntitys != null) {
+        if (tr_local.backEnd.viewDef!!.viewEntitys != null) {
             qgl.qglStencilMask(0xff)
             // some cards may have 7 bit stencil buffers, so don't assume this
             // should be 128
@@ -723,8 +723,8 @@ object tr_render {
         if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(surf.scissorRect)) {
             tr_local.backEnd.currentScissor = surf.scissorRect
             qgl.qglScissor(
-                tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                 tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                 tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
             )
@@ -742,7 +742,7 @@ object tr_render {
         tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, vLight.globalLightOrigin, inter.localLightOrigin)
         tr_main.R_GlobalPointToLocal(
             surf.space.modelMatrix,
-            tr_local.backEnd.viewDef.renderView.vieworg,
+            tr_local.backEnd.viewDef!!.renderView.vieworg,
             inter.localViewOrigin
         )
         inter.localLightOrigin[3] = 0f
@@ -893,30 +893,30 @@ object tr_render {
         tr_local.backEnd.currentRenderCopied = false
 
         // if there aren't any drawsurfs, do nothing
-        if (0 == tr_local.backEnd.viewDef.numDrawSurfs) {
+        if (0 == tr_local.backEnd.viewDef!!.numDrawSurfs) {
             return
         }
 
         // skip render bypasses everything that has models, assuming
         // them to be 3D views, but leaves 2D rendering visible
-        if (RenderSystem_init.r_skipRender.GetBool() && tr_local.backEnd.viewDef.viewEntitys != null) {
+        if (RenderSystem_init.r_skipRender.GetBool() && tr_local.backEnd.viewDef!!.viewEntitys != null) {
             return
         }
 
         // skip render context sets the wgl context to NULL,
         // which should factor out the API cost, under the assumption
         // that all gl calls just return if the context isn't valid
-        if (RenderSystem_init.r_skipRenderContext.GetBool() && tr_local.backEnd.viewDef.viewEntitys != null) {
+        if (RenderSystem_init.r_skipRenderContext.GetBool() && tr_local.backEnd.viewDef!!.viewEntitys != null) {
             win_glimp.GLimp_DeactivateContext()
         }
-        tr_local.backEnd.pc.c_surfaces += tr_local.backEnd.viewDef.numDrawSurfs
+        tr_local.backEnd.pc.c_surfaces += tr_local.backEnd.viewDef!!.numDrawSurfs
         tr_rendertools.RB_ShowOverdraw()
 
         // render the scene, jumping to the hardware specific interaction renderers
         draw_common.RB_STD_DrawView()
 
         // restore the context for 2D drawing if we were stubbing it out
-        if (RenderSystem_init.r_skipRenderContext.GetBool() && tr_local.backEnd.viewDef.viewEntitys != null) {
+        if (RenderSystem_init.r_skipRenderContext.GetBool() && tr_local.backEnd.viewDef!!.viewEntitys != null) {
             win_glimp.GLimp_ActivateContext()
             tr_backend.RB_SetDefaultGLState()
         }

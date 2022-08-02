@@ -163,13 +163,13 @@ object tr_backend {
                 qgl.qglEnable(GL11.GL_CULL_FACE)
             }
             if (cullType == cullType_t.CT_BACK_SIDED.ordinal) {
-                if (tr_local.backEnd.viewDef.isMirror) {
+                if (tr_local.backEnd.viewDef!!.isMirror) {
                     qgl.qglCullFace(GL11.GL_FRONT)
                 } else {
                     qgl.qglCullFace(GL11.GL_BACK)
                 }
             } else {
-                if (tr_local.backEnd.viewDef.isMirror) {
+                if (tr_local.backEnd.viewDef!!.isMirror) {
                     qgl.qglCullFace(GL11.GL_BACK)
                 } else {
                     qgl.qglCullFace(GL11.GL_FRONT)
@@ -331,13 +331,13 @@ object tr_backend {
         // alpha test
         //
         if (diff and tr_local.GLS_ATEST_BITS != 0) {
-            if (tr_local.backEnd.viewDef.numDrawSurfs == 5) {
-                val temp = tr_local.backEnd.viewDef.drawSurfs[3]
-                //                backEnd.viewDef.drawSurfs[0] =
-//                backEnd.viewDef.drawSurfs[1] =
-//                backEnd.viewDef.drawSurfs[2] =
-//                backEnd.viewDef.drawSurfs[3] =
-//                backEnd.viewDef.drawSurfs[4] =
+            if (tr_local.backEnd.viewDef!!.numDrawSurfs == 5) {
+                val temp = tr_local.backEnd.viewDef!!.drawSurfs[3]
+                //                backEnd.viewDef!!.drawSurfs[0] =
+//                backEnd.viewDef!!.drawSurfs[1] =
+//                backEnd.viewDef!!.drawSurfs[2] =
+//                backEnd.viewDef!!.drawSurfs[3] =
+//                backEnd.viewDef!!.drawSurfs[4] =
 //                temp;
 ////                temp.shaderRegisters[0] = 330.102997f;
 ////                temp.shaderRegisters[1] = 1.00000000f;

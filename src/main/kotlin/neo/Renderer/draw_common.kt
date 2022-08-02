@@ -120,7 +120,7 @@ object draw_common {
             qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
             val mat = FloatArray(16)
             val plane = FloatArray(4)
-            tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
+            tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef!!.projectionMatrix, mat)
             plane[0] = mat[0]
             plane[1] = mat[4]
             plane[2] = mat[8]
@@ -143,7 +143,7 @@ object draw_common {
             qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
             val mat = FloatArray(16)
             val plane = FloatArray(4)
-            tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
+            tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef!!.projectionMatrix, mat)
             plane[0] = mat[0]
             plane[1] = mat[4]
             plane[2] = mat[8]
@@ -173,7 +173,7 @@ object draw_common {
                 qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
                 val mat = FloatArray(16)
                 val plane = FloatArray(4)
-                tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef.projectionMatrix, mat)
+                tr_main.myGlMultMatrix(surf.space.modelViewMatrix, tr_local.backEnd.viewDef!!.projectionMatrix, mat)
                 plane[0] = mat[0]
                 plane[1] = mat[4]
                 plane[2] = mat[8]
@@ -247,7 +247,7 @@ object draw_common {
                 qgl.qglNormalPointer(GL14.GL_FLOAT, idDrawVert.Companion.BYTES, ac.normalOffset().toLong())
                 qgl.qglMatrixMode(GL14.GL_TEXTURE)
                 val mat = FloatArray(16)
-                tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef.worldSpace.modelViewMatrix, mat)
+                tr_main.R_TransposeGLMatrix(tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix, mat)
                 qgl.qglLoadMatrixf(mat)
                 qgl.qglMatrixMode(GL14.GL_MODELVIEW)
             }
@@ -350,13 +350,13 @@ object draw_common {
      */
     fun RB_STD_FillDepthBuffer(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         // if we are just doing 2D rendering, no need to fill the depth buffer
-        if (TempDump.NOT(tr_local.backEnd.viewDef.viewEntitys)) {
+        if (TempDump.NOT(tr_local.backEnd.viewDef!!.viewEntitys)) {
             return
         }
         tr_backend.RB_LogComment("---------- RB_STD_FillDepthBuffer ----------\n")
 
         // enable the second texture for mirror plane clipping if needed
-        if (tr_local.backEnd.viewDef.numClipPlanes != 0) {
+        if (tr_local.backEnd.viewDef!!.numClipPlanes != 0) {
             tr_backend.GL_SelectTexture(1)
             Image.globalImages.alphaNotchImage.Bind()
             qgl.qglDisableClientState(GL14.GL_TEXTURE_COORD_ARRAY)
@@ -378,7 +378,7 @@ object draw_common {
         qgl.qglEnable(GL14.GL_STENCIL_TEST)
         qgl.qglStencilFunc(GL14.GL_ALWAYS, 1, 255)
         tr_render.RB_RenderDrawSurfListWithFunction(drawSurfs, numDrawSurfs, RB_T_FillDepthBuffer.INSTANCE)
-        if (tr_local.backEnd.viewDef.numClipPlanes != 0) {
+        if (tr_local.backEnd.viewDef!!.numClipPlanes != 0) {
             tr_backend.GL_SelectTexture(1)
             Image.globalImages.BindNull()
             qgl.qglDisable(GL14.GL_TEXTURE_GEN_S)
@@ -403,7 +403,7 @@ object draw_common {
 //if (false){
 //	// screen power of two correction factor, one pixel in so we don't get a bilerp
 //	// of an uncopied pixel
-//	int	 w = backEnd.viewDef.viewport.x2 - backEnd.viewDef.viewport.x1 + 1;
+//	int	 w = backEnd.viewDef!!.viewport.x2 - backEnd.viewDef!!.viewport.x1 + 1;
 //	pot = globalImages.currentRenderImage.uploadWidth;
 //	if ( w == pot ) {
 //		parm0[0] = 1.0f;
@@ -411,7 +411,7 @@ object draw_common {
 //		parm0[0] = (float)(w-1) / pot;
 //	}
 //
-//	int	 h = backEnd.viewDef.viewport.y2 - backEnd.viewDef.viewport.y1 + 1;
+//	int	 h = backEnd.viewDef!!.viewport.y2 - backEnd.viewDef!!.viewport.y1 + 1;
 //	pot = globalImages.currentRenderImage.uploadHeight;
 //	if ( h == pot ) {
 //		parm0[1] = 1.0;
@@ -425,10 +425,10 @@ object draw_common {
 //}else{
         // screen power of two correction factor, assuming the copy to _currentRender
         // also copied an extra row and column for the bilerp
-        val w = tr_local.backEnd.viewDef.viewport.x2 - tr_local.backEnd.viewDef.viewport.x1 + 1
+        val w = tr_local.backEnd.viewDef!!.viewport.x2 - tr_local.backEnd.viewDef!!.viewport.x1 + 1
         pot = Image.globalImages.currentRenderImage.uploadWidth._val
         parm.put(0, w.toFloat() / pot)
-        val h = tr_local.backEnd.viewDef.viewport.y2 - tr_local.backEnd.viewDef.viewport.y1 + 1
+        val h = tr_local.backEnd.viewDef!!.viewport.y2 - tr_local.backEnd.viewDef!!.viewport.y1 + 1
         pot = Image.globalImages.currentRenderImage.uploadHeight._val
         parm.put(1, h.toFloat() / pot)
         parm.put(2, 0f)
@@ -447,9 +447,9 @@ object draw_common {
         //
         // set eye position in global space
         //
-        parm.put(0, tr_local.backEnd.viewDef.renderView.vieworg[0])
-        parm.put(1, tr_local.backEnd.viewDef.renderView.vieworg[1])
-        parm.put(2, tr_local.backEnd.viewDef.renderView.vieworg[2])
+        parm.put(0, tr_local.backEnd.viewDef!!.renderView.vieworg[0])
+        parm.put(1, tr_local.backEnd.viewDef!!.renderView.vieworg[1])
+        parm.put(2, tr_local.backEnd.viewDef!!.renderView.vieworg[2])
         parm.put(3, 1f)
         qgl.qglProgramEnvParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 1, parm)
     }
@@ -469,7 +469,7 @@ object draw_common {
         val parm = BufferUtils.createFloatBuffer(4)
 
         // set eye position in local space
-        tr_main.R_GlobalPointToLocal(space.modelMatrix, tr_local.backEnd.viewDef.renderView.vieworg, parm)
+        tr_main.R_GlobalPointToLocal(space.modelMatrix, tr_local.backEnd.viewDef!!.renderView.vieworg, parm)
         parm.put(3, 1.0f)
         qgl.qglProgramEnvParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, 5, parm)
 
@@ -520,8 +520,8 @@ object draw_common {
         if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(surf.scissorRect)) {
             tr_local.backEnd.currentScissor = surf.scissorRect
             qgl.qglScissor(
-                tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                 tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                 tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
             )
@@ -637,7 +637,7 @@ object draw_common {
                     val localViewer = idVec3()
                     tr_main.R_GlobalPointToLocal(
                         surf.space.modelMatrix,
-                        tr_local.backEnd.viewDef.renderView.vieworg,
+                        tr_local.backEnd.viewDef!!.renderView.vieworg,
                         localViewer
                     )
                     newStage.megaTexture!!.BindForViewOrigin(localViewer)
@@ -818,7 +818,7 @@ object draw_common {
         var i: Int
 
         // only obey skipAmbient if we are rendering a view
-        if (tr_local.backEnd.viewDef.viewEntitys != null && RenderSystem_init.r_skipAmbient.GetBool()) {
+        if (tr_local.backEnd.viewDef!!.viewEntitys != null && RenderSystem_init.r_skipAmbient.GetBool()) {
             return numDrawSurfs
         }
         tr_backend.RB_LogComment("---------- RB_STD_DrawShaderPasses ----------\n")
@@ -831,11 +831,13 @@ object draw_common {
             }
 
             // only dump if in a 3d view
-            if (tr_local.backEnd.viewDef.viewEntitys != null && tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2) {
-                val imageWidth = CInt(tr_local.backEnd.viewDef.viewport.x2 - tr_local.backEnd.viewDef.viewport.x1 + 1)
-                val imageHeight = CInt(tr_local.backEnd.viewDef.viewport.y2 - tr_local.backEnd.viewDef.viewport.y1 + 1)
+            if (tr_local.backEnd.viewDef!!.viewEntitys != null && tr_local.tr.backEndRenderer == backEndName_t.BE_ARB2) {
+                val imageWidth =
+                    CInt(tr_local.backEnd.viewDef!!.viewport.x2 - tr_local.backEnd.viewDef!!.viewport.x1 + 1)
+                val imageHeight =
+                    CInt(tr_local.backEnd.viewDef!!.viewport.y2 - tr_local.backEnd.viewDef!!.viewport.y1 + 1)
                 Image.globalImages.currentRenderImage.CopyFramebuffer(
-                    tr_local.backEnd.viewDef.viewport.x1, tr_local.backEnd.viewDef.viewport.y1,
+                    tr_local.backEnd.viewDef!!.viewport.x1, tr_local.backEnd.viewDef!!.viewport.y1,
                     imageWidth, imageHeight, true
                 )
             }
@@ -857,7 +859,7 @@ object draw_common {
                 i++
                 continue
             }
-            if (tr_local.backEnd.viewDef.isXraySubview && drawSurfs[i].space.entityDef != null) {
+            if (tr_local.backEnd.viewDef!!.isXraySubview && drawSurfs[i].space.entityDef != null) {
                 if (drawSurfs[i].space.entityDef.parms.xrayIndex != 2) {
                     i++
                     continue
@@ -1043,9 +1045,9 @@ object draw_common {
         if (TempDump.NOT(frustumTris.ambientCache)) {
             return
         }
-        ds.space = tr_local.backEnd.viewDef.worldSpace
+        ds.space = tr_local.backEnd.viewDef!!.worldSpace
         ds.geo = frustumTris
-        ds.scissorRect = tr_local.backEnd.viewDef.scissor
+        ds.scissorRect = tr_local.backEnd.viewDef!!.scissor
 
         // find the current color and density of the fog
         lightShader = tr_local.backEnd.vLight.lightShader
@@ -1078,14 +1080,14 @@ object draw_common {
         qgl.qglEnable(GL14.GL_TEXTURE_GEN_S)
         qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
         qgl.qglTexCoord2f(0.5f, 0.5f) // make sure Q is set
-        fogPlanes[0][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[2]
-        fogPlanes[0][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[6]
-        fogPlanes[0][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[10]
-        fogPlanes[0][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[14]
-        fogPlanes[1][0] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[0]
-        fogPlanes[1][1] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[4]
-        fogPlanes[1][2] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[8]
-        fogPlanes[1][3] = a * tr_local.backEnd.viewDef.worldSpace.modelViewMatrix[12]
+        fogPlanes[0][0] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[2]
+        fogPlanes[0][1] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[6]
+        fogPlanes[0][2] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[10]
+        fogPlanes[0][3] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[14]
+        fogPlanes[1][0] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[0]
+        fogPlanes[1][1] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[4]
+        fogPlanes[1][2] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[8]
+        fogPlanes[1][3] = a * tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix[12]
 
         // texture 1 is the entering plane fade correction
         tr_backend.GL_SelectTexture(1)
@@ -1102,7 +1104,7 @@ object draw_common {
 
         // S is based on the view origin
         val s =
-            tr_local.backEnd.viewDef.renderView.vieworg.times(fogPlanes[2].Normal()) + fogPlanes[2][3]
+            tr_local.backEnd.viewDef!!.renderView.vieworg.times(fogPlanes[2].Normal()) + fogPlanes[2][3]
         fogPlanes[3][0] = 0f
         fogPlanes[3][1] = 0f
         fogPlanes[3][2] = 0f
@@ -1135,12 +1137,12 @@ object draw_common {
      */
     fun RB_STD_FogAllLights() {
         var vLight: viewLight_s?
-        if (RenderSystem_init.r_skipFogLights.GetBool() || RenderSystem_init.r_showOverDraw.GetInteger() != 0 || tr_local.backEnd.viewDef.isXraySubview /* dont fog in xray mode*/) {
+        if (RenderSystem_init.r_skipFogLights.GetBool() || RenderSystem_init.r_showOverDraw.GetInteger() != 0 || tr_local.backEnd.viewDef!!.isXraySubview /* dont fog in xray mode*/) {
             return
         }
         tr_backend.RB_LogComment("---------- RB_STD_FogAllLights ----------\n")
         qgl.qglDisable(GL14.GL_STENCIL_TEST)
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             tr_local.backEnd.vLight = vLight
             if (!vLight.lightShader.IsFogLight() && !vLight.lightShader.IsBlendLight()) {
@@ -1155,8 +1157,8 @@ object draw_common {
 //			// units from the origin
 //			backEnd.currentScissor = vLight.scissorRect;
 //			if ( r_useScissor.GetBool() ) {
-//				qglScissor( backEnd.viewDef.viewport.x1 + backEnd.currentScissor.x1,
-//					backEnd.viewDef.viewport.y1 + backEnd.currentScissor.y1,
+//				qglScissor( backEnd.viewDef!!.viewport.x1 + backEnd.currentScissor.x1,
+//					backEnd.viewDef!!.viewport.y1 + backEnd.currentScissor.y1,
 //					backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
 //					backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1 );
 //			}
@@ -1205,12 +1207,12 @@ object draw_common {
         // the scissor may be smaller than the viewport for subviews
         if (RenderSystem_init.r_useScissor.GetBool()) {
             qgl.qglScissor(
-                tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.viewDef.scissor.x1,
-                tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.viewDef.scissor.y1,
-                tr_local.backEnd.viewDef.scissor.x2 - tr_local.backEnd.viewDef.scissor.x1 + 1,
-                tr_local.backEnd.viewDef.scissor.y2 - tr_local.backEnd.viewDef.scissor.y1 + 1
+                tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.viewDef!!.scissor.x1,
+                tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.viewDef!!.scissor.y1,
+                tr_local.backEnd.viewDef!!.scissor.x2 - tr_local.backEnd.viewDef!!.scissor.x1 + 1,
+                tr_local.backEnd.viewDef!!.scissor.y2 - tr_local.backEnd.viewDef!!.scissor.y1 + 1
             )
-            tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef.scissor
+            tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
         }
 
         // full screen blends
@@ -1257,8 +1259,8 @@ object draw_common {
         val numDrawSurfs: Int
         tr_backend.RB_LogComment("---------- RB_STD_DrawView ----------\n")
         tr_local.backEnd.depthFunc = tr_local.GLS_DEPTHFUNC_EQUAL
-        drawSurfs = tr_local.backEnd.viewDef.drawSurfs
-        numDrawSurfs = tr_local.backEnd.viewDef.numDrawSurfs
+        drawSurfs = tr_local.backEnd.viewDef!!.drawSurfs
+        numDrawSurfs = tr_local.backEnd.viewDef!!.numDrawSurfs
 
         // clear the z buffer, set the projection matrix, etc
         tr_render.RB_BeginDrawingView()
@@ -1320,10 +1322,10 @@ object draw_common {
             shader = surf.material!!
 
             // update the clip plane if needed
-            if (tr_local.backEnd.viewDef.numClipPlanes != 0 && surf.space !== tr_local.backEnd.currentSpace) {
+            if (tr_local.backEnd.viewDef!!.numClipPlanes != 0 && surf.space !== tr_local.backEnd.currentSpace) {
                 tr_backend.GL_SelectTexture(1)
                 val plane = idPlane()
-                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, tr_local.backEnd.viewDef.clipPlanes[0], plane)
+                tr_main.R_GlobalPlaneToLocal(surf.space.modelMatrix, tr_local.backEnd.viewDef!!.clipPlanes[0], plane)
                 plane.plusAssign(3, 0.5f) // the notch is in the middle
                 qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane.ToFloatPtr())
                 tr_backend.GL_SelectTexture(0)

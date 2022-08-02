@@ -1163,7 +1163,7 @@ object tr_local {
         // for scissor clipping, local inside renderView viewport
         //
         lateinit var vLight: viewLight_s
-        lateinit var viewDef: viewDef_s
+        var viewDef: viewDef_s? = null
 
         init {
             pc = backEndCounters_t()

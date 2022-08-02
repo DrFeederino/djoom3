@@ -179,7 +179,7 @@ object draw_arb2 {
         //
         // for each light, perform adding and shadowing
         //
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             tr_local.backEnd.vLight = vLight
 
@@ -206,8 +206,8 @@ object draw_arb2 {
                 tr_local.backEnd.currentScissor = vLight.scissorRect
                 if (RenderSystem_init.r_useScissor.GetBool()) {
                     qgl.qglScissor(
-                        tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                        tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                        tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                        tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                         tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                         tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
                     )

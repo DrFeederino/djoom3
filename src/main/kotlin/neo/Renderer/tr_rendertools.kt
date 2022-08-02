@@ -134,8 +134,8 @@ object tr_rendertools {
         if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(drawSurf.scissorRect)) {
             tr_local.backEnd.currentScissor = drawSurf.scissorRect
             qgl.qglScissor(
-                tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+                tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+                tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
                 tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
                 tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
             )
@@ -148,12 +148,12 @@ object tr_rendertools {
      ================
      */
     fun RB_SimpleWorldSetup() {
-        tr_local.backEnd.currentSpace = tr_local.backEnd.viewDef.worldSpace
-        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef.worldSpace.modelViewMatrix)
-        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef.scissor
+        tr_local.backEnd.currentSpace = tr_local.backEnd.viewDef!!.worldSpace
+        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix)
+        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
         qgl.qglScissor(
-            tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+            tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+            tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
             tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
             tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
         )
@@ -317,10 +317,10 @@ object tr_rendertools {
         if (material == null) {
             return
         }
-        drawSurfs = tr_local.backEnd.viewDef.drawSurfs
-        numDrawSurfs = tr_local.backEnd.viewDef.numDrawSurfs
+        drawSurfs = tr_local.backEnd.viewDef!!.drawSurfs
+        numDrawSurfs = tr_local.backEnd.viewDef!!.numDrawSurfs
         var interactions = 0
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             surf = vLight.localInteractions[0]
             while (surf != null) {
@@ -346,7 +346,7 @@ object tr_rendertools {
             newDrawSurfs[i] = surf
             i++
         }
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             surf = vLight.localInteractions[0]
             while (surf != null) {
@@ -366,16 +366,16 @@ object tr_rendertools {
         }
         when (RenderSystem_init.r_showOverDraw.GetInteger()) {
             1 -> {
-                tr_local.backEnd.viewDef.drawSurfs = newDrawSurfs
-                tr_local.backEnd.viewDef.numDrawSurfs = numDrawSurfs
+                tr_local.backEnd.viewDef!!.drawSurfs = newDrawSurfs
+                tr_local.backEnd.viewDef!!.numDrawSurfs = numDrawSurfs
             }
             2 -> {
-                tr_local.backEnd.viewDef.drawSurfs[0] = newDrawSurfs[numDrawSurfs] //TODO: check pointer refs
-                tr_local.backEnd.viewDef.numDrawSurfs = interactions
+                tr_local.backEnd.viewDef!!.drawSurfs[0] = newDrawSurfs[numDrawSurfs] //TODO: check pointer refs
+                tr_local.backEnd.viewDef!!.numDrawSurfs = interactions
             }
             3 -> {
-                tr_local.backEnd.viewDef.drawSurfs = newDrawSurfs
-                tr_local.backEnd.viewDef.numDrawSurfs += interactions
+                tr_local.backEnd.viewDef!!.drawSurfs = newDrawSurfs
+                tr_local.backEnd.viewDef!!.numDrawSurfs += interactions
             }
         }
     }
@@ -539,7 +539,7 @@ object tr_rendertools {
         qgl.qglStencilFunc(GL11.GL_ALWAYS, 1, 255)
         Image.globalImages.defaultImage.Bind()
         var counter = 0
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
@@ -597,8 +597,8 @@ object tr_rendertools {
         tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         tr_render.RB_RenderDrawSurfListWithFunction(
-            tr_local.backEnd.viewDef.drawSurfs,
-            tr_local.backEnd.viewDef.numDrawSurfs,
+            tr_local.backEnd.viewDef!!.drawSurfs,
+            tr_local.backEnd.viewDef!!.numDrawSurfs,
             RB_T_RenderTriangleSurface.Companion.INSTANCE
         )
 
@@ -608,7 +608,7 @@ object tr_rendertools {
         RB_SimpleWorldSetup()
         qgl.qglColor3f(0.5f, 0f, 0f)
         tr_backend.GL_State(tr_local.GLS_SRCBLEND_ONE or tr_local.GLS_DSTBLEND_ONE)
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
@@ -679,7 +679,7 @@ object tr_rendertools {
 
         // draw both sides
         tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
@@ -1231,7 +1231,7 @@ object tr_rendertools {
                         pos,
                         0.01f,
                         idDeviceContext.Companion.colorWhite,
-                        tr_local.backEnd.viewDef.renderView.viewaxis,
+                        tr_local.backEnd.viewDef!!.renderView.viewaxis,
                         1
                     )
                     j++
@@ -1250,7 +1250,7 @@ object tr_rendertools {
                         pos,
                         0.01f,
                         Lib.Companion.colorCyan,
-                        tr_local.backEnd.viewDef.renderView.viewaxis,
+                        tr_local.backEnd.viewDef!!.renderView.viewaxis,
                         1
                     )
                     j += 3
@@ -1617,7 +1617,7 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         Common.common.Printf("volumes: ") // FIXME: not in back end!
         count = 0
-        vLight = tr_local.backEnd.viewDef.viewLights
+        vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             light = vLight.lightDef
             count++
@@ -1639,7 +1639,7 @@ object tr_rendertools {
                 tr_render.RB_RenderTriangleSurface(tri)
             }
             var index: Int
-            index = tr_local.backEnd.viewDef.renderWorld!!.lightDefs.indexOf(vLight.lightDef)
+            index = tr_local.backEnd.viewDef!!.renderWorld!!.lightDefs.indexOf(vLight.lightDef)
             if (vLight.viewInsideLight) {
                 // view is in this volume
                 Common.common.Printf("[%d] ", index)
@@ -1673,7 +1673,7 @@ object tr_rendertools {
         Image.globalImages.BindNull()
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
-        tr_local.backEnd.viewDef.renderWorld!!.ShowPortals()
+        tr_local.backEnd.viewDef!!.renderWorld!!.ShowPortals()
         qgl.qglEnable(GL11.GL_DEPTH_TEST)
     }
 
@@ -2334,7 +2334,7 @@ object tr_rendertools {
         if (tr_local.tr.testVideo != null) {
             val cin: cinData_t?
             cin =
-                tr_local.tr.testVideo!!.ImageForTime((1000 * (tr_local.backEnd.viewDef.floatTime - tr_local.tr.testVideoStartTime)).toInt())
+                tr_local.tr.testVideo!!.ImageForTime((1000 * (tr_local.backEnd.viewDef!!.floatTime - tr_local.tr.testVideoStartTime)).toInt())
             if (cin.image != null) {
                 image.UploadScratch(cin.image!!, cin.imageWidth, cin.imageHeight)
             } else {
@@ -2378,15 +2378,15 @@ object tr_rendertools {
      */
     fun RB_RenderDebugTools(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         // don't do anything if this was a 2D rendering
-        if (null == tr_local.backEnd.viewDef.viewEntitys) {
+        if (null == tr_local.backEnd.viewDef!!.viewEntitys) {
             return
         }
         tr_backend.RB_LogComment("---------- RB_RenderDebugTools ----------\n")
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
-        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef.scissor
+        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
         qgl.qglScissor(
-            tr_local.backEnd.viewDef.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.viewDef.viewport.y1 + tr_local.backEnd.currentScissor.y1,
+            tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
+            tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
             tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
             tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
         )
@@ -2400,7 +2400,7 @@ object tr_rendertools {
         RB_ShowSurfaceInfo(drawSurfs, numDrawSurfs)
         RB_ShowEdges(drawSurfs, numDrawSurfs)
         RB_ShowNormals(drawSurfs, numDrawSurfs)
-        RB_ShowViewEntitys(tr_local.backEnd.viewDef.viewEntitys)
+        RB_ShowViewEntitys(tr_local.backEnd.viewDef!!.viewEntitys)
         RB_ShowLights()
         RB_ShowTextureVectors(drawSurfs, numDrawSurfs)
         RB_ShowDominantTris(drawSurfs, numDrawSurfs)
