@@ -23,6 +23,9 @@ import neo.Renderer.tr_trisurf.R_ShowTriSurfMemory_f
 import neo.Sound.snd_system
 import neo.TempDump
 import neo.framework.*
+import neo.framework.CVarSystem.CVAR_ARCHIVE
+import neo.framework.CVarSystem.CVAR_BOOL
+import neo.framework.CVarSystem.CVAR_RENDERER
 import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
@@ -344,6 +347,7 @@ class RenderSystem_init {
             idLib.cvarSystem.SetCVarBool("fs_restrict", restrict)
         }
 
+        lateinit var r_gammaInShader: idCVar
         lateinit var r_brightness // changes gamma tables
                 : idCVar
         lateinit var r_cgFragmentProfile // arbfp1, fp30
@@ -2508,6 +2512,12 @@ class RenderSystem_init {
             "changes gamma tables",
             0.5f,
             3.0f
+        )
+        r_gammaInShader = idCVar(
+            "r_gammaInShader",
+            "1",
+            CVAR_RENDERER or CVAR_ARCHIVE or CVAR_BOOL,
+            "Set gamma and brightness in shaders instead using hardware gamma"
         )
         r_brightness = idCVar(
             "r_brightness",

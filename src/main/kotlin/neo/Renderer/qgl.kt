@@ -367,33 +367,33 @@ object qgl {
     //    }
     fun qglAccum(op: Int, value: Float) {
         DEBUG_printName("glAccum")
-        GL21.glAccum(op, value)
+        GL14.glAccum(op, value)
     }
 
     fun qglAlphaFunc(func: Int, ref: Float) {
         DEBUG_printName("glAlphaFunc")
-        GL21.glAlphaFunc(func, ref)
+        GL14.glAlphaFunc(func, ref)
     }
 
     fun qglAreTexturesResident(n: Int, textures: IntBuffer, residences: ByteBuffer): Boolean {
         DEBUG_printName("glAreTexturesResident")
-        return GL21.glAreTexturesResident(textures, residences) //TODO:is n really necessary
+        return GL14.glAreTexturesResident(textures, residences) //TODO:is n really necessary
     }
 
     fun qglArrayElement(i: Int) {
         DEBUG_printName("glArrayElement")
-        GL21.glArrayElement(i)
+        GL14.glArrayElement(i)
     }
 
     fun qglBegin(mode: Int) {
         DEBUG_printName("glBegin")
-        GL21.glBegin(mode)
+        GL14.glBegin(mode)
     }
 
     fun qglBindTexture(target: Int, texture: Int) {
         DEBUG_printName("glBindTexture")
         //        System.out.printf("qglBindTexture(%d, %d)\n", target, texture);
-        GL21.glBindTexture(target, texture)
+        GL14.glBindTexture(target, texture)
     }
 
     fun qglBitmap(
@@ -406,43 +406,43 @@ object qgl {
         bitmap: ByteBuffer
     ) {
         DEBUG_printName("glBitmap")
-        GL21.glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap)
+        GL14.glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap)
     }
 
     fun qglBlendFunc(sFactor: Int, dFactor: Int) {
         DEBUG_printName("glBlendFunc")
         //        System.out.printf("--%d, %d\n", sFactor, dFactor);
-        GL21.glBlendFunc(sFactor, dFactor)
+        GL14.glBlendFunc(sFactor, dFactor)
     }
 
     fun qglCallList(list: Int) {
         DEBUG_printName("glCallList")
-        GL21.glCallList(list)
+        GL14.glCallList(list)
     }
 
     fun qglCallLists(n: Int, type: Int, lists: Any) {
-//        GL21.glCallLists(lists);
+//        GL14.glCallLists(lists);
         throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglClear(mask: Int) {
         DEBUG_printName("glClear")
-        GL21.glClear(mask)
+        GL14.glClear(mask)
     }
 
     fun qglClearAccum(red: Float, green: Float, blue: Float, alpha: Float) {
         DEBUG_printName("glClearAccum")
-        GL21.glClearAccum(red, green, blue, alpha)
+        GL14.glClearAccum(red, green, blue, alpha)
     }
 
     fun qglClearColor(red: Float, green: Float, blue: Float, alpha: Float) {
         DEBUG_printName("glClearColor")
-        GL21.glClearColor(red, green, blue, alpha)
+        GL14.glClearColor(red, green, blue, alpha)
     }
 
     fun qglClearDepth(depth: Double) {
         DEBUG_printName("glClearDepth")
-        GL21.glClearDepth(depth)
+        GL14.glClearDepth(depth)
     }
 
     fun qglClearIndex(c: Float) {
@@ -451,17 +451,17 @@ object qgl {
 
     fun qglClearStencil(s: Int) {
         DEBUG_printName("glClearStencil")
-        GL21.glClearStencil(s)
+        GL14.glClearStencil(s)
     }
 
     fun qglClipPlane(plane: Int, equation: DoubleBuffer) {
         DEBUG_printName("glClipPlane")
-        GL21.glClipPlane(plane, equation)
+        GL14.glClipPlane(plane, equation)
     }
 
     fun qglColor3b(red: Byte, green: Byte, blue: Byte) {
         DEBUG_printName("glColor3b")
-        GL21.glColor3b(red, green, blue)
+        GL14.glColor3b(red, green, blue)
     }
 
     fun qglColor3bv(v: ByteArray) {
@@ -471,7 +471,7 @@ object qgl {
 
     fun qglColor3d(red: Double, green: Double, blue: Double) {
         DEBUG_printName("glColor3d")
-        GL21.glColor3d(red, green, blue)
+        GL14.glColor3d(red, green, blue)
     }
 
     fun qglColor3dv(v: DoubleArray) {
@@ -481,7 +481,7 @@ object qgl {
 
     fun qglColor3f(red: Float, green: Float, blue: Float) {
         DEBUG_printName("glColor3f")
-        GL21.glColor3f(red, green, blue)
+        GL14.glColor3f(red, green, blue)
     }
 
     fun qglColor3fv(v: FloatArray) {
@@ -511,7 +511,7 @@ object qgl {
 
     fun qglColor3ub(red: Byte, green: Byte, blue: Byte) {
         DEBUG_printName("glColor3ub")
-        GL21.glColor3ub(red, green, blue)
+        GL14.glColor3ub(red, green, blue)
     }
 
     fun qglColor3ubv(v: ByteArray) {
@@ -541,7 +541,7 @@ object qgl {
 
     fun qglColor4b(red: Byte, green: Byte, blue: Byte, alpha: Byte) {
         DEBUG_printName("glColor4b")
-        GL21.glColor4b(red, green, blue, alpha)
+        GL14.glColor4b(red, green, blue, alpha)
     }
 
     fun qglColor4bv(v: ByteArray) {
@@ -551,7 +551,7 @@ object qgl {
 
     fun qglColor4d(red: Double, green: Double, blue: Double, alpha: Double) {
         DEBUG_printName("glColor4d")
-        GL21.glColor4d(red, green, blue, alpha)
+        GL14.glColor4d(red, green, blue, alpha)
     }
 
     fun qglColor4dv(v: DoubleArray) {
@@ -561,7 +561,7 @@ object qgl {
 
     fun qglColor4f(red: Float, green: Float, blue: Float, alpha: Float) {
         DEBUG_printName("glColor4f")
-        GL21.glColor4f(red, green, blue, alpha)
+        GL14.glColor4f(red, green, blue, alpha)
     }
 
     fun qglColor4fv(v: FloatArray) {
@@ -591,12 +591,12 @@ object qgl {
 
     fun qglColor4ub(red: Byte, green: Byte, blue: Byte, alpha: Byte) {
         DEBUG_printName("glColor4ub")
-        GL21.glColor4ub(red, green, blue, alpha)
+        GL14.glColor4ub(red, green, blue, alpha)
     }
 
     fun qglColor4ubv(v: ByteArray) {
         DEBUG_printName("glColor4ubv")
-        GL21.glColor4ub(v[0], v[1], v[2], v[3])
+        GL14.glColor4ub(v[0], v[1], v[2], v[3])
     }
 
     fun qglColor4ui(red: Int, green: Int, blue: Int, alpha: Int) {
@@ -611,7 +611,7 @@ object qgl {
 
     fun qglColor4usv(v: ShortArray) {
         DEBUG_printName("glColor4usv")
-        GL21.glColor4usv(v)
+        GL14.glColor4usv(v)
     }
 
     fun qglColor4us(red: Short, green: Short, blue: Short, alpha: Short) {
@@ -625,17 +625,17 @@ object qgl {
 
     fun qglColorMask(red: Boolean, green: Boolean, blue: Boolean, alpha: Boolean) {
         DEBUG_printName("glColorMask")
-        GL21.glColorMask(red, green, blue, alpha)
+        GL14.glColorMask(red, green, blue, alpha)
     }
 
     fun qglColorMaterial(face: Int, mode: Int) {
         DEBUG_printName("glColorMaterial")
-        GL21.glColorMaterial(face, mode)
+        GL14.glColorMaterial(face, mode)
     }
 
     fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Long) {
         DEBUG_printName("glColorPointer")
-        GL21.glColorPointer(size, type, stride, pointer)
+        GL14.glColorPointer(size, type, stride, pointer)
     }
 
     @Deprecated("")
@@ -646,12 +646,12 @@ object qgl {
 
     fun qglCopyPixels(x: Int, y: Int, width: Int, height: Int, type: Int) {
         DEBUG_printName("glCopyPixels")
-        GL21.glCopyPixels(x, y, width, height, type)
+        GL14.glCopyPixels(x, y, width, height, type)
     }
 
     fun qglCopyTexImage1D(target: Int, level: Int, internalFormat: Int, x: Int, y: Int, width: Int, border: Int) {
         DEBUG_printName("glCopyTexImage1D")
-        GL21.glCopyTexImage1D(target, level, internalFormat, x, y, width, border)
+        GL14.glCopyTexImage1D(target, level, internalFormat, x, y, width, border)
     }
 
     fun qglCopyTexImage2D(
@@ -665,12 +665,12 @@ object qgl {
         border: Int
     ) {
         DEBUG_printName("glCopyTexImage2D")
-        GL21.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border)
+        GL14.glCopyTexImage2D(target, level, internalFormat, x, y, width, height, border)
     }
 
     fun qglCopyTexSubImage1D(target: Int, level: Int, xoffset: Int, x: Int, y: Int, width: Int) {
         DEBUG_printName("glCopyTexSubImage1D")
-        GL21.glCopyTexSubImage1D(target, level, xoffset, x, y, width)
+        GL14.glCopyTexSubImage1D(target, level, xoffset, x, y, width)
     }
 
     fun qglCopyTexSubImage2D(
@@ -684,22 +684,22 @@ object qgl {
         height: Int
     ) {
         DEBUG_printName("glCopyTexSubImage2D")
-        GL21.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
+        GL14.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
     }
 
     fun qglCullFace(mode: Int) {
         DEBUG_printName("glCullFace")
-        GL21.glCullFace(mode)
+        GL14.glCullFace(mode)
     }
 
     fun qglDeleteLists(list: Int, range: Int) {
         DEBUG_printName("glDeleteLists")
-        GL21.glDeleteLists(list, range)
+        GL14.glDeleteLists(list, range)
     }
 
     fun qglDeleteTextures(n: Int, texture: Int) {
         DEBUG_printName("glDeleteTextures")
-        GL21.glDeleteTextures(texture)
+        GL14.glDeleteTextures(texture)
     }
 
     fun qglDeleteTextures(n: Int, textures: IntArray) {
@@ -709,52 +709,52 @@ object qgl {
 
     fun qglDepthFunc(func: Int) {
         DEBUG_printName("glDepthFunc")
-        GL21.glDepthFunc(func)
+        GL14.glDepthFunc(func)
     }
 
     fun qglDepthMask(flag: Boolean) {
         DEBUG_printName("glDepthMask")
-        GL21.glDepthMask(flag)
+        GL14.glDepthMask(flag)
     }
 
     fun qglDepthRange(zNear: Double, zFar: Double) {
         DEBUG_printName("glDepthRange")
-        GL21.glDepthRange(zNear, zFar)
+        GL14.glDepthRange(zNear, zFar)
     }
 
     fun qglDisable(cap: Int) {
         DEBUG_printName("glDisable")
-        GL21.glDisable(cap)
+        GL14.glDisable(cap)
     }
 
     fun qglDisableClientState(array: Int) {
         DEBUG_printName("glDisableClientState")
-        GL21.glDisableClientState(array)
+        GL14.glDisableClientState(array)
     }
 
     fun qglDrawArrays(mode: Int, first: Int, count: Int) {
         DEBUG_printName("glDrawArrays")
-        GL21.glDrawArrays(mode, first, count)
+        GL14.glDrawArrays(mode, first, count)
     }
 
     fun qglDrawBuffer(mode: Int) {
         DEBUG_printName("glDrawBuffer")
-        GL21.glDrawBuffer(mode)
+        GL14.glDrawBuffer(mode)
     }
 
     fun qglDrawElements(mode: Int, count: Int, type: Int, indices: ByteBuffer) {
         DEBUG_printName("glDrawElements1")
-        GL21.glDrawElements(mode, type, indices)
+        GL14.glDrawElements(mode, type, indices)
     }
 
     fun qglDrawElements(mode: Int, count: Int, type: Int, indices: IntArray) {
         DEBUG_printName("glDrawElements2")
-        GL21.glDrawElements(mode, wrap(indices).position(count).flip()) //TODO:subarray
+        GL14.glDrawElements(mode, wrap(indices).position(count).flip()) //TODO:subarray
     }
 
     fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer) {
         DEBUG_printName("glDrawPixels")
-        GL21.glDrawPixels(width, height, format, type, pixels)
+        GL14.glDrawPixels(width, height, format, type, pixels)
     }
 
     fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: Array<Array<ByteArray>>) {
@@ -764,7 +764,7 @@ object qgl {
 
     fun qglEdgeFlag(flag: Boolean) {
         DEBUG_printName("glEdgeFlag")
-        GL21.glEdgeFlag(flag)
+        GL14.glEdgeFlag(flag)
     }
 
     fun qglEdgeFlagPointer(stride: Int, pointer: Any) {
@@ -780,27 +780,27 @@ object qgl {
     fun qglEnable(cap: Int) {
         DEBUG_printName("glEnable")
         //        System.out.println("--"+cap);
-        GL21.glEnable(cap)
+        GL14.glEnable(cap)
     }
 
     fun qglEnableClientState(array: Int) {
         DEBUG_printName("glEnableClientState")
-        GL21.glEnableClientState(array)
+        GL14.glEnableClientState(array)
     }
 
     fun qglEnd() {
         DEBUG_printName("glEnd")
-        GL21.glEnd()
+        GL14.glEnd()
     }
 
     fun qglEndList() {
         DEBUG_printName("glEndList")
-        GL21.glEndList()
+        GL14.glEndList()
     }
 
     fun qglEvalCoord1d(u: Double) {
         DEBUG_printName("glEvalCoord1d")
-        GL21.glEvalCoord1d(u)
+        GL14.glEvalCoord1d(u)
     }
 
     fun qglEvalCoord1dv(u: DoubleArray) {
@@ -810,7 +810,7 @@ object qgl {
 
     fun qglEvalCoord1f(u: Float) {
         DEBUG_printName("glEvalCoord1f")
-        GL21.glEvalCoord1f(u)
+        GL14.glEvalCoord1f(u)
     }
 
     fun qglEvalCoord1fv(u: FloatArray) {
@@ -820,7 +820,7 @@ object qgl {
 
     fun qglEvalCoord2d(u: Double, v: Double) {
         DEBUG_printName("glEvalCoord2d")
-        GL21.glEvalCoord2d(u, v)
+        GL14.glEvalCoord2d(u, v)
     }
 
     fun qglEvalCoord2dv(u: DoubleArray) {
@@ -830,7 +830,7 @@ object qgl {
 
     fun qglEvalCoord2f(u: Float, v: Float) {
         DEBUG_printName("glEvalCoord2f")
-        GL21.glEvalCoord2f(u, v)
+        GL14.glEvalCoord2f(u, v)
     }
 
     fun qglEvalCoord2fv(u: FloatArray) {
@@ -840,42 +840,42 @@ object qgl {
 
     fun qglEvalMesh1(mode: Int, i1: Int, i2: Int) {
         DEBUG_printName("glEvalMesh1")
-        GL21.glEvalMesh1(mode, i1, i2)
+        GL14.glEvalMesh1(mode, i1, i2)
     }
 
     fun qglEvalMesh2(mode: Int, i1: Int, i2: Int, j1: Int, j2: Int) {
         DEBUG_printName("glEvalMesh2")
-        GL21.glEvalMesh2(mode, i1, i2, j1, j2)
+        GL14.glEvalMesh2(mode, i1, i2, j1, j2)
     }
 
     fun qglEvalPoint1(i: Int) {
         DEBUG_printName("glEvalPoint1")
-        GL21.glEvalPoint1(i)
+        GL14.glEvalPoint1(i)
     }
 
     fun qglEvalPoint2(i: Int, j: Int) {
         DEBUG_printName("glEvalPoint2")
-        GL21.glEvalPoint2(i, j)
+        GL14.glEvalPoint2(i, j)
     }
 
     fun qglFeedbackBuffer(size: Int, type: Int, buffer: FloatBuffer) {
         DEBUG_printName("glFeedbackBuffer")
-        GL21.glFeedbackBuffer(type, buffer)
+        GL14.glFeedbackBuffer(type, buffer)
     }
 
     fun qglFinish() {
         DEBUG_printName("glFinish")
-        GL21.glFinish()
+        GL14.glFinish()
     }
 
     fun qglFlush() {
         DEBUG_printName("glFlush")
-        GL21.glFlush()
+        GL14.glFlush()
     }
 
     fun qglFogf(pName: Int, param: Float) {
         DEBUG_printName("glFogf")
-        GL21.glFogf(pName, param)
+        GL14.glFogf(pName, param)
     }
 
     fun qglFogfv(pName: Int, params: FloatArray) {
@@ -885,7 +885,7 @@ object qgl {
 
     fun qglFogi(pName: Int, param: Int) {
         DEBUG_printName("glFogi")
-        GL21.glFogi(pName, param)
+        GL14.glFogi(pName, param)
     }
 
     fun qglFogiv(pName: Int, params: IntArray) {
@@ -895,12 +895,12 @@ object qgl {
 
     fun qglFrontFace(mode: Int) {
         DEBUG_printName("glFrontFace")
-        GL21.glFrontFace(mode)
+        GL14.glFrontFace(mode)
     }
 
     fun qglFrustum(left: Double, right: Double, bottom: Double, top: Double, zNear: Double, zFar: Double) {
         DEBUG_printName("glFrustum")
-        GL21.glFrustum(left, right, bottom, top, zNear, zFar)
+        GL14.glFrustum(left, right, bottom, top, zNear, zFar)
     }
 
     fun qglGenLists(range: Enum<*>): Int {
@@ -909,19 +909,19 @@ object qgl {
 
     fun qglGenLists(range: Int): Int {
         DEBUG_printName("glGenLists")
-        return GL21.glGenLists(range)
+        return GL14.glGenLists(range)
     }
 
     fun qglGenTextures(): Int {
         DEBUG_printName("glGenTextures")
         //        System.out.println("-----"+ (bla++));
 //        TempDump.printCallStack("" + (bla++));
-        return GL21.glGenTextures()
+        return GL14.glGenTextures()
     }
 
     fun qglGenTextures(n: Int, textures: IntArray) {
         DEBUG_printName("glGenTextures")
-        GL21.glGenTextures()
+        GL14.glGenTextures()
     }
 
     fun qglGetBooleanv(pName: Int, params: BooleanArray) {
@@ -931,7 +931,7 @@ object qgl {
 
     fun qglGetClipPlane(plane: Int, equation: DoubleBuffer) {
         DEBUG_printName("glGetClipPlane")
-        GL21.glGetClipPlane(plane, equation)
+        GL14.glGetClipPlane(plane, equation)
     }
 
     fun qglGetDoublev(pName: Int, params: DoubleArray) {
@@ -940,22 +940,22 @@ object qgl {
     }
 
     fun qglGetError(): Int { //DEBUG_printName("glGetError");
-        return GL21.glGetError()
+        return GL14.glGetError()
     }
 
     fun qglGetFloatv(pName: Int, params: FloatBuffer) {
         DEBUG_printName("glGetFloatv")
-        GL21.glGetFloatv(pName, params)
+        GL14.glGetFloatv(pName, params)
     }
 
     fun qglGetInteger(pName: Int): Int {
         DEBUG_printName("glGetInteger")
-        return GL21.glGetInteger(pName)
+        return GL14.glGetInteger(pName)
     }
 
     fun qglGetIntegerv(pName: Int, params: IntBuffer) {
         DEBUG_printName("glGetIntegerv")
-        GL21.glGetIntegerv(pName, params)
+        GL14.glGetIntegerv(pName, params)
     }
 
     fun qglGetLightfv(light: Int, pName: Int, params: FloatArray) {
@@ -1020,12 +1020,12 @@ object qgl {
 
     fun qglGetString(name: Int): String {
         DEBUG_printName("glGetString")
-        return GL21.glGetString(name)!!
+        return GL14.glGetString(name)!!
     }
 
     fun qglGetStringi(name: Int, index: Int): String? {
         DEBUG_printName("glGetStringi")
-        return GL21.glGetString(name)
+        return GL14.glGetString(name)
     }
 
     fun qglGetTexEnvfv(target: Int, pName: Int, params: FloatArray) {
@@ -1055,7 +1055,7 @@ object qgl {
 
     fun qglGetTexImage(target: Int, level: Int, format: Int, type: Int, pixels: ByteBuffer) {
         DEBUG_printName("glGetTexImage")
-        GL21.glGetTexImage(target, level, format, type, pixels)
+        GL14.glGetTexImage(target, level, format, type, pixels)
     }
 
     fun qglGetTexLevelParameterfv(target: Int, level: Int, pName: Int, params: FloatArray) {
@@ -1080,7 +1080,7 @@ object qgl {
 
     fun qglHint(target: Int, mode: Int) {
         DEBUG_printName("glHint")
-        GL21.glHint(target, mode)
+        GL14.glHint(target, mode)
     }
 
     fun qglIndexMask(mask: Int) {
@@ -1145,118 +1145,118 @@ object qgl {
 
     fun qglInitNames() {
         DEBUG_printName("glInitNames")
-        GL21.glInitNames()
+        GL14.glInitNames()
     }
 
     fun qglInterleavedArrays(format: Int, stride: Int, pointer: ByteBuffer) {
         DEBUG_printName("glInterleavedArrays")
-        GL21.glInterleavedArrays(format, stride, pointer)
+        GL14.glInterleavedArrays(format, stride, pointer)
         throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglIsEnabled(cap: Int): Boolean {
         DEBUG_printName("glIsEnabled")
-        return GL21.glIsEnabled(cap)
+        return GL14.glIsEnabled(cap)
     }
 
     fun qglIsList(list: Int): Boolean {
         DEBUG_printName("glIsList")
-        return GL21.glIsList(list)
+        return GL14.glIsList(list)
     }
 
     fun qglIsTexture(texture: Int): Boolean {
         DEBUG_printName("glIsTexture")
-        return GL21.glIsTexture(texture)
+        return GL14.glIsTexture(texture)
     }
 
     fun qglLightModelf(pName: Int, param: Float) {
         DEBUG_printName("glLightModelf")
-        GL21.glLightModelf(pName, param)
+        GL14.glLightModelf(pName, param)
     }
 
     fun qglLightModelfv(pName: Int, params: FloatBuffer) {
         DEBUG_printName("glLightModelfv")
-        GL21.glLightModelfv(pName, params)
+        GL14.glLightModelfv(pName, params)
     }
 
     fun qglLightModeli(pName: Int, param: Int) {
         DEBUG_printName("glLightModeli")
-        GL21.glLightModeli(pName, param)
+        GL14.glLightModeli(pName, param)
     }
 
     fun qglLightModeliv(pName: Int, params: IntBuffer) {
         DEBUG_printName("glLightModeliv")
-        GL21.glLightModeliv(pName, params)
+        GL14.glLightModeliv(pName, params)
     }
 
     fun qglLightf(light: Int, pName: Int, param: Float) {
         DEBUG_printName("glLightf")
-        GL21.glLightf(light, pName, param)
+        GL14.glLightf(light, pName, param)
     }
 
     fun qglLightfv(light: Int, pName: Int, params: FloatBuffer) {
         DEBUG_printName("glLightfv")
-        GL21.glLightfv(light, pName, params)
+        GL14.glLightfv(light, pName, params)
     }
 
     fun qglLighti(light: Int, pName: Int, param: Int) {
         DEBUG_printName("glLighti")
-        GL21.glLighti(light, pName, param)
+        GL14.glLighti(light, pName, param)
     }
 
     fun qglLightiv(light: Int, pName: Int, params: IntBuffer) {
         DEBUG_printName("glLightiv")
-        GL21.glLightiv(light, pName, params)
+        GL14.glLightiv(light, pName, params)
     }
 
     fun qglLineStipple(factor: Int, pattern: Short) {
         DEBUG_printName("glLineStipple")
-        GL21.glLineStipple(factor, pattern)
+        GL14.glLineStipple(factor, pattern)
     }
 
     fun qglLineWidth(width: Float) {
         DEBUG_printName("glLineWidth")
-        GL21.glLineWidth(width)
+        GL14.glLineWidth(width)
     }
 
     fun qglListBase(base: Int) {
         DEBUG_printName("glListBase")
-        GL21.glListBase(base)
+        GL14.glListBase(base)
     }
 
     fun qglLoadIdentity() {
         DEBUG_printName("glLoadIdentity")
-        GL21.glLoadIdentity()
+        GL14.glLoadIdentity()
     }
 
     fun qglLoadMatrixd(m: DoubleBuffer) {
         DEBUG_printName("glLoadMatrixd")
-        GL21.glLoadMatrixd(m)
+        GL14.glLoadMatrixd(m)
     }
 
     fun qglLoadMatrixf(m: FloatArray) {
         DEBUG_printName("glLoadMatrixf") //TODO:convert to FloatBuffer.
-        GL21.glLoadMatrixf(m)
+        GL14.glLoadMatrixf(m)
     }
 
     fun qglLoadName(name: Int) {
         DEBUG_printName("glLoadName")
-        GL21.glLoadName(name)
+        GL14.glLoadName(name)
     }
 
     fun qglLogicOp(opcode: Int) {
         DEBUG_printName("glLogicOp")
-        GL21.glLogicOp(opcode)
+        GL14.glLogicOp(opcode)
     }
 
     fun qglMap1d(target: Int, u1: Double, u2: Double, stride: Int, order: Int, points: DoubleBuffer) {
         DEBUG_printName("glMap1d")
-        GL21.glMap1d(target, u1, u2, stride, order, points)
+        GL14.glMap1d(target, u1, u2, stride, order, points)
     }
 
     fun qglMap1f(target: Int, u1: Float, u2: Float, stride: Int, order: Int, points: FloatBuffer) {
         DEBUG_printName("glMap1f")
-        GL21.glMap1f(target, u1, u2, stride, order, points)
+        GL14.glMap1f(target, u1, u2, stride, order, points)
     }
 
     fun qglMap2d(
@@ -1272,7 +1272,7 @@ object qgl {
         points: DoubleBuffer
     ) {
         DEBUG_printName("glMap2d")
-        GL21.glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
+        GL14.glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
     }
 
     fun qglMap2f(
@@ -1288,32 +1288,32 @@ object qgl {
         points: FloatBuffer
     ) {
         DEBUG_printName("glMap2f")
-        GL21.glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
+        GL14.glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
     }
 
     fun qglMapGrid1d(un: Int, u1: Double, u2: Double) {
         DEBUG_printName("glMapGrid1d")
-        GL21.glMapGrid1d(un, u1, u2)
+        GL14.glMapGrid1d(un, u1, u2)
     }
 
     fun qglMapGrid1f(un: Int, u1: Float, u2: Float) {
         DEBUG_printName("glMapGrid1f")
-        GL21.glMapGrid1f(un, u1, u2)
+        GL14.glMapGrid1f(un, u1, u2)
     }
 
     fun qglMapGrid2d(un: Int, u1: Double, u2: Double, vn: Int, v1: Double, v2: Double) {
         DEBUG_printName("glMapGrid2d")
-        GL21.glMapGrid2d(un, u1, u2, vn, v1, v2)
+        GL14.glMapGrid2d(un, u1, u2, vn, v1, v2)
     }
 
     fun qglMapGrid2f(un: Int, u1: Float, u2: Float, vn: Int, v1: Float, v2: Float) {
         DEBUG_printName("glMapGrid2f")
-        GL21.glMapGrid2f(un, u1, u2, vn, v1, v2)
+        GL14.glMapGrid2f(un, u1, u2, vn, v1, v2)
     }
 
     fun qglMaterialf(face: Int, pName: Int, param: Float) {
         DEBUG_printName("glMaterialf")
-        GL21.glMaterialf(face, pName, param)
+        GL14.glMaterialf(face, pName, param)
     }
 
     fun qglMaterialfv(face: Int, pName: Int, params: FloatArray) {
@@ -1323,7 +1323,7 @@ object qgl {
 
     fun qglMateriali(face: Int, pName: Int, param: Int) {
         DEBUG_printName("glMateriali")
-        GL21.glMateriali(face, pName, param)
+        GL14.glMateriali(face, pName, param)
     }
 
     fun qglMaterialiv(face: Int, pName: Int, params: IntArray) {
@@ -1333,7 +1333,7 @@ object qgl {
 
     fun qglMatrixMode(mode: Int) {
         DEBUG_printName("glMatrixMode")
-        GL21.glMatrixMode(mode)
+        GL14.glMatrixMode(mode)
     }
 
     fun qglMultMatrixd(m: DoubleArray) {
@@ -1348,12 +1348,12 @@ object qgl {
 
     fun qglNewList(list: Int, mode: Int) {
         DEBUG_printName("glNewList")
-        GL21.glNewList(list, mode)
+        GL14.glNewList(list, mode)
     }
 
     fun qglNormal3b(nx: Byte, ny: Byte, nz: Byte) {
         DEBUG_printName("glNormal3b")
-        GL21.glNormal3b(nx, ny, nz)
+        GL14.glNormal3b(nx, ny, nz)
     }
 
     fun qglNormal3bv(v: ByteArray) {
@@ -1363,7 +1363,7 @@ object qgl {
 
     fun qglNormal3d(nx: Double, ny: Double, nz: Double) {
         DEBUG_printName("glNormal3d")
-        GL21.glNormal3d(nx, ny, nz)
+        GL14.glNormal3d(nx, ny, nz)
     }
 
     fun qglNormal3dv(v: DoubleArray) {
@@ -1373,7 +1373,7 @@ object qgl {
 
     fun qglNormal3f(nx: Float, ny: Float, nz: Float) {
         DEBUG_printName("glNormal3f")
-        GL21.glNormal3f(nx, ny, nz)
+        GL14.glNormal3f(nx, ny, nz)
     }
 
     fun qglNormal3fv(v: FloatArray) {
@@ -1383,7 +1383,7 @@ object qgl {
 
     fun qglNormal3i(nx: Int, ny: Int, nz: Int) {
         DEBUG_printName("glNormal3i")
-        GL21.glNormal3i(nx, ny, nz)
+        GL14.glNormal3i(nx, ny, nz)
     }
 
     fun qglNormal3iv(v: IntArray) {
@@ -1403,17 +1403,17 @@ object qgl {
 
     fun qglNormalPointer(type: Int, stride: Int, pointer: Long) {
         DEBUG_printName("glNormalPointer")
-        GL21.glNormalPointer(type, stride, pointer)
+        GL14.glNormalPointer(type, stride, pointer)
     }
 
     fun qglOrtho(left: Double, right: Double, bottom: Double, top: Double, zNear: Double, zFar: Double) {
         DEBUG_printName("glOrtho")
-        GL21.glOrtho(left, right, bottom, top, zNear, zFar)
+        GL14.glOrtho(left, right, bottom, top, zNear, zFar)
     }
 
     fun qglPassThrough(token: Float) {
         DEBUG_printName("glPassThrough")
-        GL21.glPassThrough(token)
+        GL14.glPassThrough(token)
     }
 
     fun qglPixelMapfv(map: Int, mapsize: Int, values: FloatArray) {
@@ -1433,67 +1433,67 @@ object qgl {
 
     fun qglPixelStoref(pName: Int, param: Float) {
         DEBUG_printName("glPixelStoref")
-        GL21.glPixelStoref(pName, param)
+        GL14.glPixelStoref(pName, param)
     }
 
     fun qglPixelStorei(pName: Int, param: Int) {
         DEBUG_printName("glPixelStorei")
-        GL21.glPixelStorei(pName, param)
+        GL14.glPixelStorei(pName, param)
     }
 
     fun qglPixelTransferf(pName: Int, param: Float) {
         DEBUG_printName("glPixelTransferf")
-        GL21.glPixelTransferf(pName, param)
+        GL14.glPixelTransferf(pName, param)
     }
 
     fun qglPixelTransferi(pName: Int, param: Int) {
         DEBUG_printName("glPixelTransferi")
-        GL21.glPixelTransferi(pName, param)
+        GL14.glPixelTransferi(pName, param)
     }
 
     fun qglPixelZoom(xfactor: Float, yfactor: Float) {
         DEBUG_printName("glPixelZoom")
-        GL21.glPixelZoom(xfactor, yfactor)
+        GL14.glPixelZoom(xfactor, yfactor)
     }
 
     fun qglPointSize(size: Float) {
         DEBUG_printName("glPointSize")
-        GL21.glPointSize(size)
+        GL14.glPointSize(size)
     }
 
     fun qglPolygonMode(face: Int, mode: Int) {
         DEBUG_printName("glPolygonMode")
-        GL21.glPolygonMode(face, mode)
+        GL14.glPolygonMode(face, mode)
     }
 
     fun qglPolygonOffset(factor: Float, units: Float) {
         DEBUG_printName("glPolygonOffset")
-        GL21.glPolygonOffset(factor, units)
+        GL14.glPolygonOffset(factor, units)
     }
 
     fun qglPolygonStipple(mask: ByteBuffer) {
         DEBUG_printName("glPolygonStipple")
-        GL21.glPolygonStipple(mask)
+        GL14.glPolygonStipple(mask)
     }
 
     fun qglPopAttrib() {
         DEBUG_printName("glPopAttrib")
-        GL21.glPopAttrib()
+        GL14.glPopAttrib()
     }
 
     fun qglPopClientAttrib() {
         DEBUG_printName("glPopClientAttrib")
-        GL21.glPopClientAttrib()
+        GL14.glPopClientAttrib()
     }
 
     fun qglPopMatrix() {
         DEBUG_printName("glPopMatrix")
-        GL21.glPopMatrix()
+        GL14.glPopMatrix()
     }
 
     fun qglPopName() {
         DEBUG_printName("glPopName")
-        GL21.glPopName()
+        GL14.glPopName()
     }
 
     fun qglPrioritizeTextures(n: Int, textures: Int, priorities: Float) {
@@ -1503,32 +1503,32 @@ object qgl {
 
     fun qglPrioritizeTextures(n: Int, textures: IntBuffer, priorities: FloatBuffer) {
         DEBUG_printName("glPrioritizeTextures")
-        GL21.glPrioritizeTextures(textures, priorities)
+        GL14.glPrioritizeTextures(textures, priorities)
     }
 
     fun qglPushAttrib(mask: Int) {
         DEBUG_printName("glPushAttrib")
-        GL21.glPushAttrib(mask)
+        GL14.glPushAttrib(mask)
     }
 
     fun qglPushClientAttrib(mask: Int) {
         DEBUG_printName("glPushClientAttrib")
-        GL21.glPushClientAttrib(mask)
+        GL14.glPushClientAttrib(mask)
     }
 
     fun qglPushMatrix() {
         DEBUG_printName("glPushMatrix")
-        GL21.glPushMatrix()
+        GL14.glPushMatrix()
     }
 
     fun qglPushName(name: Int) {
         DEBUG_printName("glPushName")
-        GL21.glPushName(name)
+        GL14.glPushName(name)
     }
 
     fun qglRasterPos2d(x: Double, y: Double) {
         DEBUG_printName("glRasterPos2d")
-        GL21.glRasterPos2d(x, y)
+        GL14.glRasterPos2d(x, y)
     }
 
     fun qglRasterPos2dv(v: DoubleArray) {
@@ -1538,7 +1538,7 @@ object qgl {
 
     fun qglRasterPos2f(x: Float, y: Float) {
         DEBUG_printName("glRasterPos2f")
-        GL21.glRasterPos2f(x, y)
+        GL14.glRasterPos2f(x, y)
     }
 
     fun qglRasterPos2fv(v: FloatArray) {
@@ -1548,7 +1548,7 @@ object qgl {
 
     fun qglRasterPos2i(x: Int, y: Int) {
         DEBUG_printName("glRasterPos2i")
-        GL21.glRasterPos2i(x, y)
+        GL14.glRasterPos2i(x, y)
     }
 
     fun qglRasterPos2iv(v: IntArray) {
@@ -1568,7 +1568,7 @@ object qgl {
 
     fun qglRasterPos3d(x: Double, y: Double, z: Double) {
         DEBUG_printName("glRasterPos3d")
-        GL21.glRasterPos3d(x, y, z)
+        GL14.glRasterPos3d(x, y, z)
     }
 
     fun qglRasterPos3dv(v: DoubleArray) {
@@ -1578,7 +1578,7 @@ object qgl {
 
     fun qglRasterPos3f(x: Float, y: Float, z: Float) {
         DEBUG_printName("glRasterPos3f")
-        GL21.glRasterPos3f(x, y, z)
+        GL14.glRasterPos3f(x, y, z)
     }
 
     fun qglRasterPos3fv(v: FloatArray) {
@@ -1588,7 +1588,7 @@ object qgl {
 
     fun qglRasterPos3i(x: Int, y: Int, z: Int) {
         DEBUG_printName("glRasterPos3i")
-        GL21.glRasterPos3i(x, y, z)
+        GL14.glRasterPos3i(x, y, z)
     }
 
     fun qglRasterPos3iv(v: IntArray) {
@@ -1608,7 +1608,7 @@ object qgl {
 
     fun qglRasterPos4d(x: Double, y: Double, z: Double, w: Double) {
         DEBUG_printName("glRasterPos4d")
-        GL21.glRasterPos4d(x, y, z, w)
+        GL14.glRasterPos4d(x, y, z, w)
     }
 
     fun qglRasterPos4dv(v: DoubleArray) {
@@ -1618,7 +1618,7 @@ object qgl {
 
     fun qglRasterPos4f(x: Float, y: Float, z: Float, w: Float) {
         DEBUG_printName("glRasterPos4f")
-        GL21.glRasterPos4f(x, y, z, w)
+        GL14.glRasterPos4f(x, y, z, w)
     }
 
     fun qglRasterPos4fv(v: FloatArray) {
@@ -1628,7 +1628,7 @@ object qgl {
 
     fun qglRasterPos4i(x: Int, y: Int, z: Int, w: Int) {
         DEBUG_printName("glRasterPos4i")
-        GL21.glRasterPos4i(x, y, z, w)
+        GL14.glRasterPos4i(x, y, z, w)
     }
 
     fun qglRasterPos4iv(v: IntArray) {
@@ -1648,17 +1648,17 @@ object qgl {
 
     fun qglReadBuffer(mode: Int) {
         DEBUG_printName("glReadBuffer")
-        GL21.glReadBuffer(mode)
+        GL14.glReadBuffer(mode)
     }
 
     fun qglReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer) {
         DEBUG_printName("glReadPixels")
-        GL21.glReadPixels(x, y, width, height, format, type, pixels)
+        GL14.glReadPixels(x, y, width, height, format, type, pixels)
     }
 
     fun qglRectd(x1: Double, y1: Double, x2: Double, y2: Double) {
         DEBUG_printName("glRectd")
-        GL21.glRectd(x1, y1, x2, y2)
+        GL14.glRectd(x1, y1, x2, y2)
     }
 
     fun qglRectdv(v1: DoubleArray, v2: DoubleArray) {
@@ -1668,7 +1668,7 @@ object qgl {
 
     fun qglRectf(x1: Float, y1: Float, x2: Float, y2: Float) {
         DEBUG_printName("glRectf")
-        GL21.glRectf(x1, y1, x2, y2)
+        GL14.glRectf(x1, y1, x2, y2)
     }
 
     fun qglRectfv(v1: FloatArray, v2: FloatArray) {
@@ -1678,7 +1678,7 @@ object qgl {
 
     fun qglRecti(x1: Int, y1: Int, x2: Int, y2: Int) {
         DEBUG_printName("glRecti")
-        GL21.glRecti(x1, y1, x2, y2)
+        GL14.glRecti(x1, y1, x2, y2)
     }
 
     fun qglRectiv(v1: IntArray, v2: IntArray) {
@@ -1698,62 +1698,62 @@ object qgl {
 
     fun qglRenderMode(mode: Int): Int {
         DEBUG_printName("glRenderMode")
-        return GL21.glRenderMode(mode)
+        return GL14.glRenderMode(mode)
     }
 
     fun qglRotated(angle: Double, x: Double, y: Double, z: Double) {
         DEBUG_printName("glRotated")
-        GL21.glRotated(angle, x, y, z)
+        GL14.glRotated(angle, x, y, z)
     }
 
     fun qglRotatef(angle: Float, x: Float, y: Float, z: Float) {
         DEBUG_printName("glRotatef")
-        GL21.glRotatef(angle, x, y, z)
+        GL14.glRotatef(angle, x, y, z)
     }
 
     fun qglScaled(x: Double, y: Double, z: Double) {
         DEBUG_printName("glScaled")
-        GL21.glScaled(x, y, z)
+        GL14.glScaled(x, y, z)
     }
 
     fun qglScalef(x: Float, y: Float, z: Float) {
         DEBUG_printName("glScalef")
-        GL21.glScalef(x, y, z)
+        GL14.glScalef(x, y, z)
     }
 
     fun qglScissor(x: Int, y: Int, width: Int, height: Int) {
         DEBUG_printName("glScissor")
-        GL21.glScissor(x, y, width, height)
+        GL14.glScissor(x, y, width, height)
     }
 
     fun qglSelectBuffer(size: Int, buffer: IntBuffer) {
         DEBUG_printName("glSelectBuffer")
-        GL21.glSelectBuffer(buffer)
+        GL14.glSelectBuffer(buffer)
     }
 
     fun qglShadeModel(mode: Int) {
         DEBUG_printName("glShadeModel")
-        GL21.glShadeModel(mode)
+        GL14.glShadeModel(mode)
     }
 
     fun qglStencilFunc(func: Int, ref: Int, mask: Int) {
         DEBUG_printName("glStencilFunc")
-        GL21.glStencilFunc(func, ref, mask)
+        GL14.glStencilFunc(func, ref, mask)
     }
 
     fun qglStencilMask(mask: Int) {
         DEBUG_printName("glStencilMask")
-        GL21.glStencilMask(mask)
+        GL14.glStencilMask(mask)
     }
 
     fun qglStencilOp(fail: Int, zfail: Int, zpass: Int) {
         DEBUG_printName("glStencilOp")
-        GL21.glStencilOp(fail, zfail, zpass)
+        GL14.glStencilOp(fail, zfail, zpass)
     }
 
     fun qglTexCoord1d(s: Double) {
         DEBUG_printName("glTexCoord1d")
-        GL21.glTexCoord1d(s)
+        GL14.glTexCoord1d(s)
     }
 
     fun qglTexCoord1dv(v: DoubleArray) {
@@ -1763,7 +1763,7 @@ object qgl {
 
     fun qglTexCoord1f(s: Float) {
         DEBUG_printName("glTexCoord1f")
-        GL21.glTexCoord1f(s)
+        GL14.glTexCoord1f(s)
     }
 
     fun qglTexCoord1fv(v: FloatArray) {
@@ -1793,7 +1793,7 @@ object qgl {
 
     fun qglTexCoord2d(s: Double, t: Double) {
         DEBUG_printName("glTexCoord2d")
-        GL21.glTexCoord2d(s, t)
+        GL14.glTexCoord2d(s, t)
     }
 
     fun qglTexCoord2dv(v: DoubleArray) {
@@ -1803,7 +1803,7 @@ object qgl {
 
     fun qglTexCoord2f(s: Float, t: Float) {
         DEBUG_printName("glTexCoord2f")
-        GL21.glTexCoord2f(s, t)
+        GL14.glTexCoord2f(s, t)
     }
 
     fun qglTexCoord2fv(v: FloatArray) {
@@ -1833,7 +1833,7 @@ object qgl {
 
     fun qglTexCoord3d(s: Double, t: Double, r: Double) {
         DEBUG_printName("glTexCoord3d")
-        GL21.glTexCoord3d(s, t, r)
+        GL14.glTexCoord3d(s, t, r)
     }
 
     fun qglTexCoord3dv(v: DoubleArray) {
@@ -1843,7 +1843,7 @@ object qgl {
 
     fun qglTexCoord3f(s: Float, t: Float, r: Float) {
         DEBUG_printName("glTexCoord3f")
-        GL21.glTexCoord3f(s, t, r)
+        GL14.glTexCoord3f(s, t, r)
     }
 
     fun qglTexCoord3fv(v: FloatArray) {
@@ -1873,7 +1873,7 @@ object qgl {
 
     fun qglTexCoord4d(s: Double, t: Double, r: Double, q: Double) {
         DEBUG_printName("glTexCoord4d")
-        GL21.glTexCoord4d(s, t, r, q)
+        GL14.glTexCoord4d(s, t, r, q)
     }
 
     fun qglTexCoord4dv(v: DoubleArray) {
@@ -1883,7 +1883,7 @@ object qgl {
 
     fun qglTexCoord4f(s: Float, t: Float, r: Float, q: Float) {
         DEBUG_printName("glTexCoord4f")
-        GL21.glTexCoord4f(s, t, r, q)
+        GL14.glTexCoord4f(s, t, r, q)
     }
 
     fun qglTexCoord4fv(v: FloatArray) {
@@ -1913,7 +1913,7 @@ object qgl {
 
     fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: Long) {
         DEBUG_printName("glTexCoordPointer")
-        GL21.glTexCoordPointer(size, type, stride, pointer)
+        GL14.glTexCoordPointer(size, type, stride, pointer)
     }
 
     @Deprecated("")
@@ -1924,22 +1924,22 @@ object qgl {
 
     fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer) {
         DEBUG_printName("glTexCoordPointer")
-        GL21.glTexCoordPointer(size, type, stride, pointer)
+        GL14.glTexCoordPointer(size, type, stride, pointer)
     }
 
     fun qglTexEnvf(target: Int, pName: Int, param: Float) {
         DEBUG_printName("glTexEnvf")
-        GL21.glTexEnvf(target, pName, param)
+        GL14.glTexEnvf(target, pName, param)
     }
 
     fun qglTexEnvfv(target: Int, pName: Int, params: FloatBuffer) {
         DEBUG_printName("glTexEnvfv")
-        GL21.glTexEnvfv(target, pName, params)
+        GL14.glTexEnvfv(target, pName, params)
     }
 
     fun qglTexEnvi(target: Int, pName: Int, param: Int) {
         DEBUG_printName("glTexEnvi") //ENVY!!
-        GL21.glTexEnvi(target, pName, param)
+        GL14.glTexEnvi(target, pName, param)
     }
 
     fun qglTexEnviv(target: Int, pName: Int, params: IntArray) {
@@ -1949,7 +1949,7 @@ object qgl {
 
     fun qglTexGend(coord: Int, pName: Int, param: Double) {
         DEBUG_printName("glTexGend")
-        GL21.glTexGend(coord, pName, param)
+        GL14.glTexGend(coord, pName, param)
     }
 
     fun qglTexGendv(coord: Int, pName: Int, params: DoubleArray) {
@@ -1959,17 +1959,17 @@ object qgl {
 
     fun qglTexGenf(coord: Int, pName: Int, param: Float) {
         DEBUG_printName("glTexGenf")
-        GL21.glTexGenf(coord, pName, param)
+        GL14.glTexGenf(coord, pName, param)
     }
 
     fun qglTexGenfv(coord: Int, pName: Int, params: FloatArray) {
         DEBUG_printName("glTexGenfv")
-        GL21.glTexGenfv(coord, pName, params)
+        GL14.glTexGenfv(coord, pName, params)
     }
 
     fun qglTexGeni(coord: Int, pName: Int, param: Int) {
         DEBUG_printName("glTexGeni")
-        GL21.glTexGeni(coord, pName, param)
+        GL14.glTexGeni(coord, pName, param)
     }
 
     fun qglTexGeniv(coord: Int, pName: Int, params: IntArray) {
@@ -1988,7 +1988,7 @@ object qgl {
         pixels: ByteBuffer
     ) {
         DEBUG_printName("glTexImage1D")
-        GL21.glTexImage1D(target, level, internalformat, width, border, format, type, pixels)
+        GL14.glTexImage1D(target, level, internalformat, width, border, format, type, pixels)
     }
 
     @Deprecated("")
@@ -2020,22 +2020,22 @@ object qgl {
         pixels: ByteBuffer
     ) {
         DEBUG_printName("glTexImage2D")
-        GL21.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
+        GL14.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
     }
 
     fun qglTexParameterf(target: Int, pName: Int, param: Float) {
         DEBUG_printName("glTexParameterf")
-        GL21.glTexParameterf(target, pName, param)
+        GL14.glTexParameterf(target, pName, param)
     }
 
     fun qglTexParameterfv(target: Int, pName: Int, params: FloatBuffer) {
         DEBUG_printName("glTexParameterfv")
-        GL21.glTexParameterfv(target, pName, params)
+        GL14.glTexParameterfv(target, pName, params)
     }
 
     fun qglTexParameteri(target: Int, pName: Int, param: Int) {
         DEBUG_printName("glTexParameteri")
-        GL21.glTexParameteri(target, pName, param)
+        GL14.glTexParameteri(target, pName, param)
     }
 
     fun qglTexParameteriv(target: Int, pName: Int, params: IntArray) {
@@ -2053,7 +2053,7 @@ object qgl {
         pixels: ByteBuffer
     ) {
         DEBUG_printName("glTexSubImage1D")
-        GL21.glTexSubImage1D(target, level, xoffset, width, format, type, pixels)
+        GL14.glTexSubImage1D(target, level, xoffset, width, format, type, pixels)
     }
 
     fun qglTexSubImage2D(
@@ -2068,22 +2068,22 @@ object qgl {
         pixels: ByteBuffer
     ) {
         DEBUG_printName("glTexSubImage2D")
-        GL21.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
+        GL14.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
     }
 
     fun qglTranslated(x: Double, y: Double, z: Double) {
         DEBUG_printName("glTranslated")
-        GL21.glTranslated(x, y, z)
+        GL14.glTranslated(x, y, z)
     }
 
     fun qglTranslatef(x: Float, y: Float, z: Float) {
         DEBUG_printName("glTranslatef")
-        GL21.glTranslatef(x, y, z)
+        GL14.glTranslatef(x, y, z)
     }
 
     fun qglVertex2d(x: Double, y: Double) {
         DEBUG_printName("glVertex2d")
-        GL21.glVertex2d(x, y)
+        GL14.glVertex2d(x, y)
     }
 
     fun qglVertex2dv(v: DoubleArray) {
@@ -2093,7 +2093,7 @@ object qgl {
 
     fun qglVertex2f(x: Float, y: Float) {
         DEBUG_printName("glVertex2f")
-        GL21.glVertex2f(x, y)
+        GL14.glVertex2f(x, y)
     }
 
     fun qglVertex2fv(v: FloatArray) {
@@ -2103,7 +2103,7 @@ object qgl {
 
     fun qglVertex2i(x: Int, y: Int) {
         DEBUG_printName("glVertex2i")
-        GL21.glVertex2i(x, y)
+        GL14.glVertex2i(x, y)
     }
 
     fun qglVertex2iv(v: IntArray) {
@@ -2123,7 +2123,7 @@ object qgl {
 
     fun qglVertex3d(x: Double, y: Double, z: Double) {
         DEBUG_printName("glVertex3d")
-        GL21.glVertex3d(x, y, z)
+        GL14.glVertex3d(x, y, z)
     }
 
     fun qglVertex3dv(v: DoubleArray) {
@@ -2133,7 +2133,7 @@ object qgl {
 
     fun qglVertex3f(x: Float, y: Float, z: Float) {
         DEBUG_printName("glVertex3f")
-        GL21.glVertex3f(x, y, z)
+        GL14.glVertex3f(x, y, z)
     }
 
     fun qglVertex3fv(v: FloatArray) {
@@ -2143,7 +2143,7 @@ object qgl {
 
     fun qglVertex3i(x: Int, y: Int, z: Int) {
         DEBUG_printName("glVertex3i")
-        GL21.glVertex3i(x, y, z)
+        GL14.glVertex3i(x, y, z)
     }
 
     fun qglVertex3iv(v: IntArray) {
@@ -2160,7 +2160,7 @@ object qgl {
 
     fun qglVertex4d(x: Double, y: Double, z: Double, w: Double) {
         DEBUG_printName("glVertex4d")
-        GL21.glVertex4d(x, y, z, w)
+        GL14.glVertex4d(x, y, z, w)
     }
 
     fun qglVertex4dv(v: DoubleArray) {
@@ -2169,7 +2169,7 @@ object qgl {
 
     fun qglVertex4f(x: Float, y: Float, z: Float, w: Float) {
         DEBUG_printName("glVertex4f")
-        GL21.glVertex4f(x, y, z, w)
+        GL14.glVertex4f(x, y, z, w)
     }
 
     fun qglVertex4fv(v: FloatArray) {
@@ -2178,7 +2178,7 @@ object qgl {
 
     fun qglVertex4i(x: Int, y: Int, z: Int, w: Int) {
         DEBUG_printName("glVertex4i")
-        GL21.glVertex4i(x, y, z, w)
+        GL14.glVertex4i(x, y, z, w)
     }
 
     fun qglVertex4iv(v: IntArray) {
@@ -2195,24 +2195,24 @@ object qgl {
 
     fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: Long) {
         DEBUG_printName("glVertexPointer")
-        GL21.glVertexPointer(size, type, stride, pointer)
+        GL14.glVertexPointer(size, type, stride, pointer)
     }
 
     @Deprecated("")
     fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: FloatArray) {
-//        GL21.glVertexPointer(size, type, stride, 0);
-//        GL21.glVertexPointer(size, stride, wrap(pointer));//TODO:use FloatBuffer.
+//        GL14.glVertexPointer(size, type, stride, 0);
+//        GL14.glVertexPointer(size, stride, wrap(pointer));//TODO:use FloatBuffer.
         throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer) {
         DEBUG_printName("glVertexPointer")
-        GL21.glVertexPointer(size, type, stride, pointer)
+        GL14.glVertexPointer(size, type, stride, pointer)
     }
 
     fun qglViewport(x: Int, y: Int, width: Int, height: Int) {
         DEBUG_printName("glViewport")
-        GL21.glViewport(x, y, width, height)
+        GL14.glViewport(x, y, width, height)
     }
 
     private fun DEBUG_printName(functionName: String) {
