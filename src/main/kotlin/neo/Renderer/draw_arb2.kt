@@ -281,7 +281,7 @@ object draw_arb2 {
         val fileBuffer = arrayOfNulls<ByteBuffer>(1)
         var buffer: String
         var start = 0
-        val end: Int
+        var end: Int
         Common.common.Printf("%s", fullPath)
 
         // load the program even if we don't support it, so
@@ -334,9 +334,7 @@ object draw_arb2 {
             Common.common.Printf(": END not found\n")
             return
         }
-        //buffer = buffer.substring(start, end + 3) //end[3] = 0;
-        val substring = BufferUtils.createByteBuffer(buffer.length)
-        substring.put(buffer.toByteArray()).flip()
+        buffer = buffer.substring(start, end + 3)
         if (r_gammaInShader.GetBool() && progs[progIndex].target == GL_FRAGMENT_PROGRAM_ARB) {
             // note that strlen("dhewm3tmpres") == strlen("result.color")
             val tmpres = "TEMP dhewm3tmpres; # injected by dhewm3 for gamma correction\n"
@@ -352,17 +350,16 @@ object draw_arb2 {
             // first multiply with brightness
             // then do pow(dhewm3tmpres.xyz, vec3(1/gamma))
             // (apparently POW only supports scalars, not whole vectors)
-            val extraLines = """# gamma correction in shader, injected by dhewm3 \n
-            MUL_SAT dhewm3tmpres.xyz, program.env[4], dhewm3tmpres;\n 
-            POW result.color.x, dhewm3tmpres.x, program.env[4].w;\n
-            POW result.color.y, dhewm3tmpres.y, program.env[4].w;\n 
-            POW result.color.z, dhewm3tmpres.z, program.env[4].w;\n
-            MOV result.color.w, dhewm3tmpres.w;\n" // alpha remains unmodified
-            \nEND\n\n""" // we add this block right at the end, replacing the original "END" string
+            // alpha remains unmodified
+            val extraLines =
+                "# gamma correction in shader, injected by dhewm3 \r\nMUL_SAT dhewm3tmpres.xyz, program.env[4], dhewm3tmpres;\r\nPOW result.color.x, dhewm3tmpres.x, program.env[4].w;\r\nPOW result.color.y, dhewm3tmpres.y, program.env[4].w;\r\nPOW result.color.z, dhewm3tmpres.z, program.env[4].w;\r\nMOV result.color.w, dhewm3tmpres.w;\r\n \r\nEND\r\n\r\n" // we add this block right at the end, replacing the original "END" string
             val fullLen = start + tmpres.length + extraLines.length
             val outStr = StringBuilder(fullLen)
             // add tmpres right after OPTION line (if any)
+            start = buffer.indexOf("!!ARBfp1.0 \r\n") + "!!ARBfp1.0 \r\n".length
+            end = buffer.indexOf("END", start) + 3
             var insertPos = buffer.indexOf("OPTION", start)
+
             if (insertPos == -1) {
                 // no OPTION? then just put it after the first line (usually sth like "!!ARBfp1.0\n")
                 insertPos = start
@@ -376,17 +373,24 @@ object draw_arb2 {
                 ++insertPos;
             }
             // copy text up to insertPos
-            outStr.append(buffer.substring(start, insertPos))
+            outStr.append(buffer.substring(0, insertPos))
             // copy tmpres ("TEMP dhewm3tmpres; # ..")
             outStr.append(tmpres)
             // copy remaining original shader up to (excluding) "END"
-            outStr.append(buffer.substring(insertPos))
+            outStr.append(buffer.substring(insertPos, end - 3))
 
-            outStr.replace(Regex("result.color"), "dhewm3tmpres")
+            // Stupid replace creates a "new" string instead of replacing sequence of chars in the builder!
+            val out = outStr.replace("result.color".toRegex(), "dhewm3tmpres")
+            outStr.clear()
+            outStr.append(out)
 
             outStr.append(extraLines)
             buffer = outStr.toString()
         }
+        //end[3] = 0;
+        val substring = BufferUtils.createByteBuffer(buffer.length)
+        substring.put(buffer.toByteArray()).flip()
+
         qgl.qglBindProgramARB(progs[progIndex].target, progs[progIndex].ident)
         qgl.qglGetError()
 
@@ -397,6 +401,7 @@ object draw_arb2 {
         err = qgl.qglGetError()
         qgl.qglGetIntegerv(ARBVertexProgram.GL_PROGRAM_ERROR_POSITION_ARB, ofs)
         if (err == GL14.GL_INVALID_OPERATION) {
+            val outputString = substring.asCharBuffer().toString()
             val   /*GLubyte*/str = qgl.qglGetString(ARBVertexProgram.GL_PROGRAM_ERROR_STRING_ARB)
             Common.common.Printf("\nGL_PROGRAM_ERROR_STRING_ARB: %s\n", str)
             if (ofs[0] < 0) {
@@ -431,7 +436,7 @@ object draw_arb2 {
         stripped.StripFileExtension()
 
         // see if it is already loaded
-        while (progs.getOrNull(i) != null || progs[i].name.isNotEmpty()) {
+        while (progs.getOrNull(i) != null && progs[i].name.isNotEmpty()) {
             if (progs[i].target != target) {
                 i++
                 continue

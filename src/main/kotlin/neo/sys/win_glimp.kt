@@ -8,7 +8,6 @@ import neo.framework.FileSystem_h
 import neo.framework.UsercmdGen
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str.idStr
-import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.glfw.GLFWGammaRamp
@@ -231,9 +230,9 @@ object win_glimp {
     }
 
     fun GLimp_SwapBuffers() {
-        var allocateDirect = PointerBuffer.allocateDirect(1024)
-        if (glfwGetError(allocateDirect) != 0) {
-            throw RuntimeException("GL Error " + allocateDirect.stringASCII)
+        var error = glGetError()
+        if (error > 0) {
+            common.Warning("GL Error: %d", error)
         }
         glfwSwapBuffers(window)
         glfwPollEvents()
