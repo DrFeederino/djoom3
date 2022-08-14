@@ -15,6 +15,9 @@ nbdist/
 nbactions.xml
 nb-configuration.xml
 .nb-gradle/
+.gradle/**
+gradle/**
+include/
 
 dependency-reduced-pom.xml
 buildNumber.properties

@@ -1,0 +1,3 @@
+headers = al.h
+headerFilter = /*
+package = openal

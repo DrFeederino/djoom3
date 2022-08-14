@@ -1,0 +1,3 @@
+headers = sdl.h
+headerFilter = /*
+package = sdl2
