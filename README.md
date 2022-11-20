@@ -1,7 +1,7 @@
 # DOOM3 Kotlin
 
 Inspired by [DJOOM 3 by Blackbeard334](https://github.com/blackbeard334/djoom3/)
-Currently being moved to Kotlin Native.
+Compliation is recommended under Azul JDK 11 & Kotlin ver. 1.6.0.
 
 #### 21-06-2022
 
