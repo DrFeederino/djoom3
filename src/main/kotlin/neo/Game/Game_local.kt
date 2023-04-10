@@ -1027,8 +1027,8 @@ class Game_local {
                 }
                 i++
             }
-            val threads: kotlin.collections.ArrayList<idThread> = idThread.GetThreads()
-            for (thread in threads) {
+            val threads: idList<idThread> = idThread.GetThreads()
+            for (thread in threads.getList()!!) {
                 savegame.AddObject(thread)
             }
 
@@ -4996,7 +4996,7 @@ class Game_local {
             )
             CmdSystem.cmdSystem.AddCommand(
                 "listThreads",
-                ListThreads_f.getInstance(),
+                ListThreads_f.instance,
                 CmdSystem.CMD_FL_GAME or CmdSystem.CMD_FL_CHEAT,
                 "lists script threads"
             )

@@ -221,7 +221,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // try to load a .ASE or .LWO model and convert it to a collision model
-            models?.set(numModels, LoadRenderModel(modelName))
+            models!![numModels] = LoadRenderModel(modelName)
             if (models!!.size < numModels) {
                 numModels++
                 return numModels - 1
@@ -487,10 +487,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     if (0 == entered && !getContacts) {
                         entered = 1
                         // if already messed up to begin with
-                        Contents(start, trm!!, trmAxis, -1, model, modelOrigin, modelAxis)
-//                        if (Contents(start, trm!!, trmAxis, -1, model, modelOrigin, modelAxis) and contentMask != 0) {
-//                            //startsolid = true
-//                        }
+                        if (Contents(start, trm!!, trmAxis, -1, model, modelOrigin, modelAxis) and contentMask != 0) {
+                            //startsolid = true
+                        }
                         entered = 0
                     }
                 }
@@ -716,7 +715,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 edge.cross[1] = dir[0] * tw.dir[2] - dir[2] * tw.dir[0]
                 edge.cross[2] = dir[1] * tw.dir[2] - dir[2] * tw.dir[1]
                 // bit for vertex sidedness bit cache
-                edge.bitNum = i
+                edge.bitNum = i.toShort()
                 i++
             }
 
@@ -783,16 +782,16 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 if (model_rotated) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts[i].normal.timesAssign(modelAxis)
-                        tw.contacts[i].point.timesAssign(modelAxis)
+                        tw.contacts!![i].normal.timesAssign(modelAxis)
+                        tw.contacts!![i].point.timesAssign(modelAxis)
                         i++
                     }
                 }
                 if (modelOrigin != getVec3_origin()) {
                     i = 0
                     while (i < tw.numContacts) {
-                        tw.contacts[i].point.plusAssign(modelOrigin)
-                        tw.contacts[i].dist += modelOrigin.times(tw.contacts[i].normal)
+                        tw.contacts!![i].point.plusAssign(modelOrigin)
+                        tw.contacts!![i].dist += modelOrigin.times(tw.contacts!![i].normal)
                         i++
                     }
                 }
@@ -1079,13 +1078,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // if many traces in one random direction
                 i = 0
                 while (i < 3) {
-                    CollisionModel_debug.testend[0][i] =
+                    CollisionModel_debug.testend!![0][i] =
                         CollisionModel_debug.start[i] + random.CRandomFloat() * CollisionModel_debug.cm_testLength.GetFloat()
                     i++
                 }
                 k = 1
                 while (k < CollisionModel_debug.cm_testTimes.GetInteger()) {
-                    CollisionModel_debug.testend[k].set(CollisionModel_debug.testend[0])
+                    CollisionModel_debug.testend!![k].set(CollisionModel_debug.testend!![0])
                     k++
                 }
             } else {
@@ -1094,7 +1093,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (k < CollisionModel_debug.cm_testTimes.GetInteger()) {
                     i = 0
                     while (i < 3) {
-                        CollisionModel_debug.testend[k][i] =
+                        CollisionModel_debug.testend!![k][i] =
                             CollisionModel_debug.start[i] + random.CRandomFloat() * CollisionModel_debug.cm_testLength.GetFloat()
                         i++
                     }
@@ -1110,7 +1109,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 Translation(
                     trace,
                     CollisionModel_debug.start,
-                    CollisionModel_debug.testend[i],
+                    CollisionModel_debug.testend!![i],
                     itm,
                     boxAxis,
                     Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP,
@@ -1147,13 +1146,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // if many traces in one random direction
                 i = 0
                 while (i < 3) {
-                    CollisionModel_debug.testend[0][i] =
+                    CollisionModel_debug.testend!![0][i] =
                         CollisionModel_debug.start[i] + random.CRandomFloat() * CollisionModel_debug.cm_testRadius.GetFloat()
                     i++
                 }
                 k = 1
                 while (k < CollisionModel_debug.cm_testTimes.GetInteger()) {
-                    CollisionModel_debug.testend[k].set(CollisionModel_debug.testend[0])
+                    CollisionModel_debug.testend!![k].set(CollisionModel_debug.testend!![0])
                     k++
                 }
             } else {
@@ -1162,7 +1161,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (k < CollisionModel_debug.cm_testTimes.GetInteger()) {
                     i = 0
                     while (i < 3) {
-                        CollisionModel_debug.testend[k][i] =
+                        CollisionModel_debug.testend!![k][i] =
                             CollisionModel_debug.start[i] + random.CRandomFloat() * CollisionModel_debug.cm_testRadius.GetFloat()
                         i++
                     }
@@ -1178,7 +1177,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 timer.Start()
                 i = 0
                 while (i < CollisionModel_debug.cm_testTimes.GetInteger()) {
-                    rotation.SetOrigin(CollisionModel_debug.testend[i])
+                    rotation.SetOrigin(CollisionModel_debug.testend!![i])
                     Rotation(
                         trace,
                         CollisionModel_debug.start,
@@ -1502,7 +1501,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     trmEdge.vertexNum[1]
                 )
                 // if the trm edge start and end vertex do not pass the polygon edge at different sides
-                if (0 == edge.side shr trmEdge.vertexNum[0] xor (edge.side shr trmEdge.vertexNum[1]) and 1) {
+                if (0L == edge.side shr trmEdge.vertexNum[0] xor (edge.side shr trmEdge.vertexNum[1]) and 1) {
                     i++
                     continue
                 }
@@ -1512,17 +1511,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     v1,
                     tw.polygonVertexPlueckerCache[i],
                     trmEdge.pl,
-                    trmEdge.bitNum
+                    trmEdge.bitNum.toInt()
                 )
                 v2 = tw.model!!.vertices!![edge.vertexNum[Math_h.INTSIGNBITNOTSET(edgeNum)]]
                 CollisionModel_translate.CM_SetVertexSidedness(
                     v2,
                     tw.polygonVertexPlueckerCache[i + 1],
                     trmEdge.pl,
-                    trmEdge.bitNum
+                    trmEdge.bitNum.toInt()
                 )
                 // if the polygon edge start and end vertex do not pass the trm edge at different sides
-                if (0 == v1.side xor v2.side and (1 shl trmEdge.bitNum)) {
+                if (0L == v1.side xor v2.side and (1L shl trmEdge.bitNum.toInt())) {
                     i++
                     continue
                 }
@@ -1610,7 +1609,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     edgeNum = poly.edges[i]
                     edge = tw.model!!.edges!![abs(edgeNum)]
                     CollisionModel_translate.CM_SetEdgeSidedness(edge, tw.polygonEdgePlueckerCache[i], v.pl, bitNum)
-                    if (Math_h.INTSIGNBITSET(edgeNum) xor (edge.side shr bitNum and 1) != 0) {
+                    if (Math_h.INTSIGNBITSET(edgeNum) xor ((edge.side shr bitNum) and 1).toInt() != 0) {
                         return
                     }
                     i++
@@ -1658,11 +1657,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                             tw.model!!.vertices!![edge.vertexNum[1]].p
                         )
                         fl = v.pl.PermutedInnerProduct(pl)
-                        edge.side = Math_h.FLOATSIGNBITSET(fl)
+                        edge.side = Math_h.FLOATSIGNBITSET(fl).toLong()
                     }
                     // if the point passes the edge at the wrong side
                     //if ( (edgeNum > 0) == edge.side ) {
-                    if (Math_h.INTSIGNBITSET(edgeNum) xor edge.side != 0) {
+                    if (Math_h.INTSIGNBITSET(edgeNum) xor edge.side.toInt() != 0) {
                         return
                     }
                     i++
@@ -1707,8 +1706,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 while (i < trmpoly.numEdges) {
                     edgeNum = trmpoly.edges[i]
                     edge = tw.edges[abs(edgeNum)]
-                    CollisionModel_translate.CM_SetVertexSidedness(v, pl, edge.pl, edge.bitNum)
-                    if (Math_h.INTSIGNBITSET(edgeNum) xor (v.side shr edge.bitNum and 1) != 0) {
+                    CollisionModel_translate.CM_SetVertexSidedness(v, pl, edge.pl, edge.bitNum.toInt())
+                    if (Math_h.INTSIGNBITSET(edgeNum) xor ((v.side shr edge.bitNum.toInt()) and 1).toInt() != 0) {
                         return
                     }
                     i++
@@ -3547,11 +3546,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         while (j < poly.numEdges) {
                             edgeNum = poly.edges[j]
                             edge = tw.edges[abs(edgeNum)]
-                            if (0 == edge.bitNum and 2) {
+                            if (0 == edge.bitNum.toInt() and 2) {
                                 d = plaxis.PermutedInnerProduct(edge.pl)
-                                edge.bitNum = (Math_h.FLOATSIGNBITSET(d) or 2)
+                                edge.bitNum = (Math_h.FLOATSIGNBITSET(d) or 2).toShort()
                             }
-                            if (edge.bitNum xor Math_h.INTSIGNBITSET(edgeNum) and 1 == 1) {
+                            if (edge.bitNum.toInt() xor Math_h.INTSIGNBITSET(edgeNum) and 1 == 1) {
                                 break
                             }
                             j++
@@ -3833,7 +3832,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         tw.polygonEdgePlueckerCache[j],
                         i
                     )
-                    if (Math_h.INTSIGNBITSET(edgeNum) xor (edge.side shr i and 1) xor flip != 0) {
+                    if (Math_h.INTSIGNBITSET(edgeNum) xor ((edge.side shr i) and 1).toInt() xor flip != 0) {
                         break
                     }
                     j++
@@ -3870,11 +3869,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     v2 = tw.model!!.vertices!![edge.vertexNum[1]]
                     CollisionModel_contents.CM_SetTrmPolygonSidedness(v2, tw.polys[j].plane, j)
                     // if the polygon edge does not cross the trm polygon plane
-                    if (0 == v1.side xor v2.side shr j and 1) {
+                    if (0L == v1.side xor v2.side shr j and 1) {
                         j++
                         continue
                     }
-                    flip = (v1.side shr j and 1)
+                    flip = ((v1.side shr j) and 1).toInt()
                     // test if polygon edge goes through the trm polygon between the trm polygon edges
                     k = 0
                     while (k < tw.polys[j].numEdges) {
@@ -3887,7 +3886,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                             tw.polygonEdgePlueckerCache[i],
                             bitNum
                         )
-                        if (Math_h.INTSIGNBITSET(trmEdgeNum) xor (edge.side shr bitNum and 1) xor flip != 0) {
+                        if (Math_h.INTSIGNBITSET(trmEdgeNum) xor ((edge.side shr bitNum) and 1).toInt() xor flip != 0) {
                             break
                         }
                         k++
@@ -6856,7 +6855,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 procNodes = null
 
                 // write the collision models to a file
-                WriteCollisionModelsToFile(mapFile.GetName(), 0, numModels, mapFile.GetGeometryCRC().toLong())
+                WriteCollisionModelsToFile(mapFile.GetName(), 0, numModels, mapFile.GetGeometryCRC())
             }
             timer.Stop()
 
@@ -7694,11 +7693,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         }
 
         //
-        private fun LoadCollisionModelFile(name: idStr, mapFileCRC: Int): Boolean {
+        private fun LoadCollisionModelFile(name: idStr, mapFileCRC: Long): Boolean {
             val fileName: idStr
             val token = idToken()
-            val src: idLexer?
-            val crc: Int
+            var src: idLexer?
+            val crc: Long
 
             // load it
             fileName = idStr(name)
@@ -7725,9 +7724,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 Common.common.Warning("%s has no map file CRC", fileName)
                 return false
             }
-            crc = token.GetUnsignedLongValue().toInt()
-            if (mapFileCRC != 0 && crc != mapFileCRC) {
+            crc = token.GetUnsignedLongValue()
+            if (mapFileCRC != 0L && crc != mapFileCRC) {
                 Common.common.Printf("%s is out of date\n", fileName)
+                Common.common.Warning("Possibly a bug in the calculation of CRC values. Oh well...\n", fileName)
+                src = null
                 return false
             }
 

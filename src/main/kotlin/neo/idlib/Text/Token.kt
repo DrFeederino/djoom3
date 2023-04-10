@@ -64,7 +64,7 @@ object Token {
 
         //
         var intValue // integer value
-                : Int = 0
+                : Long = 0L
         var next // next token in chain, only used by idParser
                 : idToken? = null
         var whiteSpaceEnd_p // end of white space before token, only used by idLexer
@@ -95,7 +95,7 @@ object Token {
             return GetDoubleValue()
         }
 
-        fun GetUnsignedLongValue(): Int {        // unsigned long value of TT_NUMBER
+        fun GetUnsignedLongValue(): Long {        // unsigned long value of TT_NUMBER
             if (type != TT_NUMBER) {
                 return 0
             }
@@ -106,7 +106,7 @@ object Token {
         }
 
         fun GetIntValue(): Int {                // int value of TT_NUMBER
-            return GetUnsignedLongValue()
+            return GetUnsignedLongValue().toInt()
         }
 
         fun WhiteSpaceBeforeToken(): Boolean { // returns length of whitespace before token
@@ -148,7 +148,7 @@ object Token {
                 } else {
                     floatValue = data.toFloat()
                 }
-                intValue = idMath.Ftol(floatValue).toInt()
+                intValue = idMath.Ftol(floatValue)
             } else if (subtype and TT_DECIMAL != 0) {
                 while (pIndex < p.size) {
                     intValue = intValue * 10 + (p[pIndex] - '0')

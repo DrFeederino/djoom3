@@ -102,7 +102,7 @@ class CollisionModel_debug {
         var num_rotation = 0
         var num_translation = 0
         val start: idVec3 = idVec3()
-        var testend: Array<idVec3> = emptyArray()
+        var testend: Array<idVec3>? = null
         var total_rotation = 0
         var total_translation = 0
     }

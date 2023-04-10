@@ -264,10 +264,8 @@ object Material {
         }
     }
 
-    class colorStage_t {
+    class colorStage_t() {
         val registers: IntArray = IntArray(4)
-
-        constructor()
 
         companion object {
             @Transient
@@ -275,7 +273,7 @@ object Material {
         }
     }
 
-    class textureStage_t {
+    class textureStage_t() {
         var cinematic: Array<idCinematic?> = arrayOfNulls(1)
         var image: Array<idImage?> = arrayOfNulls(1)
         val matrix: Array<IntArray> = Array(2) { IntArray(3) } // we only allow a subset of the full projection matrix
@@ -288,7 +286,7 @@ object Material {
         var width = 0
         var height = 0
 
-        constructor() {
+        init {
             blaCounter++
         }
 

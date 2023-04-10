@@ -1047,14 +1047,14 @@ class Class {
             return ProcessEventArgs(
                 ev,
                 8,
-                idEventArg.toArg<Any?>(arg1),
-                idEventArg.toArg<Any?>(arg2),
-                idEventArg.toArg<Any?>(arg3),
-                idEventArg.toArg<Any?>(arg4),
-                idEventArg.toArg<Any?>(arg5),
-                idEventArg.toArg<Any?>(arg6),
-                idEventArg.toArg<Any?>(arg7),
-                idEventArg.toArg<Any?>(arg8)
+                idEventArg.toArg(arg1),
+                idEventArg.toArg(arg2),
+                idEventArg.toArg(arg3),
+                idEventArg.toArg(arg4),
+                idEventArg.toArg(arg5),
+                idEventArg.toArg(arg6),
+                idEventArg.toArg(arg7),
+                idEventArg.toArg(arg8)
             )
         }
 

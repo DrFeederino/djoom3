@@ -3375,6 +3375,8 @@ class Common {
 
         //
         private var commonLocal: idCommonLocal = idCommonLocal()
+
+        @JvmField
         var common: /*final*/idCommon = commonLocal
 
         fun LoadMapLocalizeData(listHash: ListHash) {

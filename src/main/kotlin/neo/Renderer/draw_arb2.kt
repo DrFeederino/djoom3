@@ -537,9 +537,9 @@ object draw_arb2 {
                 )
             }
 
-            val NEG_ONE: FloatArray = floatArrayOf(-1f, -1f, -1f, -1f)
-            val ONE: FloatArray = floatArrayOf(1f, 1f, 1f, 1f)
             val ZERO: FloatArray = floatArrayOf(0f, 0f, 0f, 0f)
+            val ONE: FloatArray = floatArrayOf(1f, 1f, 1f, 1f)
+            val NEG_ONE: FloatArray = floatArrayOf(-1f, -1f, -1f, -1f)
 
             when (din.vertexColor) {
                 stageVertexColor_t.SVC_IGNORE -> {

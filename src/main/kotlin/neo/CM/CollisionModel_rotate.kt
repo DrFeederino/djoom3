@@ -38,14 +38,17 @@ object CollisionModel_rotate {
         val proj = idVec3()
         val v1 = idVec3()
         val v2 = idVec3()
+
         point.minusAssign(origin)
-        proj.set(axis.times(point.times(axis)))
+        proj.set(axis * (point * axis))
         v1.set(point - proj)
         v2.set(axis.Cross(v1))
+
         val t: Double = (tanHalfAngle * tanHalfAngle).toDouble()
         val d: Double = 1.0f / (1.0f + t)
         val s: Double = 2.0f * tanHalfAngle * d
         val c: Double = (1.0f - t) * d
+
         point.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
     }
 

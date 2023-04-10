@@ -39,11 +39,9 @@ object CollisionModel_load {
         var pref: cm_polygonRef_s?
         var n: cm_node_s?
         var forceSplit = false
-        i = 0
-        while (i < 3) {
+        for (i in 0..2) {
             size[i] = bounds[1, i] - bounds[0, i]
             axis[i] = i
-            i++
         }
         // sort on largest axis
         i = 0
@@ -72,9 +70,7 @@ object CollisionModel_load {
             }
         }
         // find an axial aligned splitter
-        i = 0
-        while (i < 3) {
-
+        for (i in 0..2) {
             // start with the largest axis first
             type = axis[i]
             bestt = size[i]
@@ -149,7 +145,6 @@ object CollisionModel_load {
                     return true
                 }
             }
-            i++
         }
         return false
     }
@@ -187,31 +182,27 @@ object CollisionModel_load {
      =================
      */
     fun CM_EstimateVertsAndEdges(mapEnt: idMapEntity, numVerts: CInt, numEdges: CInt) {
-        var j: Int
         var width: Int
         var height: Int
-        numVerts._val = (0)
-        numEdges._val = (0)
-        j = 0
-        while (j < mapEnt.GetNumPrimitives()) {
+        numVerts._val = 0
+        numEdges._val = 0
+        for (j in 0 until mapEnt.GetNumPrimitives()) {
             val mapPrim: idMapPrimitive = mapEnt.GetPrimitive(j)
             if (mapPrim.GetType() == idMapPrimitive.TYPE_PATCH) {
                 // assume maximum tesselation without adding verts
                 width = (mapPrim as idMapPatch).GetWidth()
                 height = mapPrim.GetHeight()
-                numVerts._val = (width * height + numVerts._val)
+                numVerts._val = width * height + numVerts._val
                 numEdges._val =
-                    ((width - 1) * height + width * (height - 1) + (width - 1) * (height - 1) + numEdges._val)
-                j++
+                    (width - 1) * height + width * (height - 1) + (width - 1) * (height - 1) + numEdges._val
                 continue
             }
             if (mapPrim.GetType() == idMapPrimitive.TYPE_BRUSH) {
                 // assume cylinder with a polygon with (numSides - 2) edges ontop and on the bottom
-                numVerts._val = (((mapPrim as idMapBrush).GetNumSides() - 2) * 2 + numVerts._val)
-                numEdges._val = ((mapPrim.GetNumSides() - 2) * 3 + numEdges._val)
-                //                continue;
+                numVerts._val = ((mapPrim as idMapBrush).GetNumSides() - 2) * 2 + numVerts._val
+                numEdges._val = (mapPrim.GetNumSides() - 2) * 3 + numEdges._val
+                continue;
             }
-            j++
         }
     }
 

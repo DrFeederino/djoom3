@@ -36,10 +36,10 @@ abstract class AbstractCollisionModel_local {
      ===============================================================================
      */
     class cm_vertex_s {
-        var checkcount = 0 // for multi-check avoidance
+        var checkcount: Int = 0 // for multi-check avoidance
         val p: idVec3 = idVec3() // vertex point
-        var side: Int = 0// each bit tells at which side this vertex passes one of the trace model edges
-        var sideSet: Int = 0 // each bit tells if sidedness for the trace model edge has been calculated yet
+        var side: Long = 0// each bit tells at which side this vertex passes one of the trace model edges
+        var sideSet: Long = 0 // each bit tells if sidedness for the trace model edge has been calculated yet
 
         companion object {
             val SIZE: Int = idVec3.SIZE + Integer.SIZE + java.lang.Long.SIZE + java.lang.Long.SIZE
@@ -52,12 +52,12 @@ abstract class AbstractCollisionModel_local {
     }
 
     class cm_edge_s {
-        var checkcount = 0 // for multi-check avoidance
+        var checkcount: Int = 0 // for multi-check avoidance
         var internal = false // a trace model can never collide with internal edges
         val normal: idVec3 = idVec3() // edge normal
         var numUsers: Short = 0 // number of polygons using this edge
-        var side: Int = 0// each bit tells at which side of this edge one of the trace model vertices passes
-        var sideSet: Int = 0// each bit tells if sidedness for the trace model vertex has been calculated yet
+        var side: Long = 0// each bit tells at which side of this edge one of the trace model vertices passes
+        var sideSet: Long = 0// each bit tells if sidedness for the trace model vertex has been calculated yet
         var vertexNum: IntArray = IntArray(2) // start and end point of edge
 
         companion object {
@@ -72,17 +72,17 @@ abstract class AbstractCollisionModel_local {
     }
 
     class cm_polygonBlock_s {
-        var bytesRemaining = 0
+        var bytesRemaining: Int = 0
         var next: cm_polygonBlock_s? = null
     }
 
     class cm_polygon_s {
         val bounds: idBounds = idBounds() // polygon bounds
-        var checkcount = 0 // for multi-check avoidance
-        var contents = 0 // contents behind polygon
+        var checkcount: Int = 0 // for multi-check avoidance
+        var contents: Int = 0 // contents behind polygon
         var edges: IntArray = IntArray(1) // variable sized, indexes into cm_edge_t list
         var material: idMaterial? = null// material
-        var numEdges = 0 // number of edges
+        var numEdges: Int = 0 // number of edges
         val plane: idPlane = idPlane() // polygon plane
 
         companion object {
@@ -104,6 +104,35 @@ abstract class AbstractCollisionModel_local {
             numEdges = p.numEdges
             edges[0] = p.edges[0]
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as cm_polygon_s
+
+            if (bounds != other.bounds) return false
+            if (checkcount != other.checkcount) return false
+            if (contents != other.contents) return false
+            if (!edges.contentEquals(other.edges)) return false
+            if (material != other.material) return false
+            if (numEdges != other.numEdges) return false
+            if (plane != other.plane) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = bounds.hashCode()
+            result = 31 * result + checkcount
+            result = 31 * result + contents
+            result = 31 * result + edges.contentHashCode()
+            result = 31 * result + (material?.hashCode() ?: 0)
+            result = 31 * result + numEdges
+            result = 31 * result + plane.hashCode()
+            return result
+        }
+
     }
 
     class cm_polygonRef_s {
@@ -121,14 +150,14 @@ abstract class AbstractCollisionModel_local {
     }
 
     class cm_brushBlock_s {
-        var bytesRemaining = 0
+        var bytesRemaining: Int = 0
         var next: cm_brushBlock_s? = null
     }
 
     class cm_brush_s {
         val bounds: idBounds = idBounds()// brush bounds
-        var checkcount = 0// for multi-check avoidance
-        var contents = 0// contents of brush
+        var checkcount: Int = 0// for multi-check avoidance
+        var contents: Int = 0// contents of brush
         var material: idMaterial? = null // material
         var numPlanes = 0 // number of bounding planes
         var planes: Array<idPlane> = idPlane.generateArray(1) // variable sized
@@ -161,10 +190,10 @@ abstract class AbstractCollisionModel_local {
 
     class cm_node_s {
         var brushes: cm_brushRef_s? = null// brushes in node
-        var children: Array<cm_node_s?> = arrayOf(null, null) // node children
+        var children: Array<cm_node_s?> = kotlin.arrayOfNulls(2) // node children
         var parent: cm_node_s? = null // parent of this node
-        var planeDist = 0f // node plane distance
-        var planeType = 0// node axial plane type
+        var planeDist: Float = 0f // node plane distance
+        var planeType: Int = 0// node axial plane type
         var polygons: cm_polygonRef_s? = null // polygons in node
 
         companion object {
@@ -249,7 +278,7 @@ abstract class AbstractCollisionModel_local {
     }
 
     class cm_trmEdge_s {
-        var bitNum: Int = 0// vertex bit number
+        var bitNum: Short = 0// vertex bit number
         val cross: idVec3 = idVec3() // (z,-y,x) of cross product between edge dir and movement dir
         val end: idVec3 = idVec3()// end of edge
         var pl: idPluecker = idPluecker() // pluecker coordinate for edge
@@ -285,7 +314,7 @@ abstract class AbstractCollisionModel_local {
         val axis: idVec3 = idVec3() // rotation axis in model space
         var axisIntersectsTrm = false // true if the rotation axis intersects the trace model
         val bounds: idBounds = idBounds() // bounds of full trace
-        var contacts: Array<contactInfo_t> = emptyArray() // array with contacts
+        var contacts: Array<contactInfo_t>? = null // array with contacts
         var contents = 0// ignore polygons that do not have any of these contents flags
         val dir: idVec3 = idVec3()// trace direction
         var edges: Array<cm_trmEdge_s> = cm_trmEdge_s.generateArray(TraceModel.MAX_TRACEMODEL_EDGES + 1) // trm edges

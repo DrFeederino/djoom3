@@ -460,9 +460,10 @@ class Image {
             if (type == textureType_t.TT_2D) {
                 if (tmu.current2DMap != texNum) {
                     tmu.current2DMap = texNum
+                    //println("Binding texNum:$texNum")
                     qgl.qglBindTexture(GL11.GL_TEXTURE_2D, texNum)
                     if (texNum == 25) {
-                        println("Blaaaaaaasphemy!")
+                        //println("Blaaaaaaasphemy!")
                     }
                 }
             } else if (type == textureType_t.TT_CUBIC) {

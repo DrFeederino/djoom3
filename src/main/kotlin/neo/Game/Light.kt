@@ -748,7 +748,7 @@ object Light {
             if (parmnum < 0 || parmnum >= Material.MAX_ENTITY_SHADER_PARMS) {
                 idGameLocal.Companion.Error("shader parm index (%d) out of range", parmnum)
             }
-            idThread.Companion.ReturnFloat(renderLight.shaderParms[parmnum])
+            idThread.ReturnFloat(renderLight.shaderParms[parmnum])
         }
 
         private fun Event_SetLightParm(parmnum: idEventArg<Int>, value: idEventArg<Float>) {

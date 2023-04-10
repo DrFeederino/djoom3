@@ -79,8 +79,6 @@ object CollisionModel {
         val endpos: idVec3 = idVec3() // final position of trace model
         var fraction = 0f // fraction of movement completed, 1.0 = didn't hit anything
 
-        constructor()
-
         override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }

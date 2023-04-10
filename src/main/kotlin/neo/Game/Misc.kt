@@ -485,7 +485,7 @@ object Misc {
         private fun Event_RandomPath() {
             val path: idPathCorner?
             path = RandomPath(this, null)
-            idThread.Companion.ReturnEntity(path)
+            idThread.ReturnEntity(path)
         }
 
         override fun CreateInstance(): idClass {

@@ -50,10 +50,10 @@ object CollisionModel_translate {
      ================
      */
     fun CM_SetVertexSidedness(v: cm_vertex_s, vpl: idPluecker, epl: idPluecker, bitNum: Int) {
-        if (0 == v.sideSet and (1 shl bitNum)) {
+        if (0L == v.sideSet and (1L shl bitNum)) {
             val fl = vpl.PermutedInnerProduct(epl)
-            v.side = v.side and (1 shl bitNum).inv() or (Math_h.FLOATSIGNBITSET(fl) shl bitNum)
-            v.sideSet = v.sideSet or (1 shl bitNum)
+            v.side = v.side and (1L shl bitNum).inv() or (Math_h.FLOATSIGNBITSET(fl).toLong() shl bitNum)
+            v.sideSet = v.sideSet or (1L shl bitNum)
         }
     }
 
@@ -65,10 +65,10 @@ object CollisionModel_translate {
      ================
      */
     fun CM_SetEdgeSidedness(edge: cm_edge_s, vpl: idPluecker, epl: idPluecker, bitNum: Int) {
-        if (0 == edge.sideSet and (1 shl bitNum)) {
+        if (0L == edge.sideSet and (1L shl bitNum)) {
             val fl = vpl.PermutedInnerProduct(epl)
-            edge.side = edge.side and (1 shl bitNum).inv() or (Math_h.FLOATSIGNBITSET(fl) shl bitNum)
-            edge.sideSet = edge.sideSet or (1 shl bitNum)
+            edge.side = edge.side and (1L shl bitNum).inv() or (Math_h.FLOATSIGNBITSET(fl).toLong() shl bitNum)
+            edge.sideSet = edge.sideSet or (1L shl bitNum)
         }
     }
 

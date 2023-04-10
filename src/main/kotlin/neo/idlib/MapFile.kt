@@ -79,13 +79,13 @@ object MapFile {
         return Integer.toUnsignedLong(java.lang.Float.floatToIntBits(f))
     }
 
-    private fun StringCRC(str: String): Int {
+    private fun StringCRC(str: String): Long {
         var i: Int
-        var crc: Int
+        var crc: Long
         crc = 0
         i = 0
         while (i < str.length) {
-            crc = crc xor (str[i].code shl (i and 3))
+            crc = crc xor ((str[i].code shl (i and 3)).toLong())
             i++
         }
         return crc
@@ -160,8 +160,6 @@ object MapFile {
             }
         }
 
-        //
-        //
     }
 
     class idMapBrush : idMapPrimitive() {
@@ -219,7 +217,7 @@ object MapFile {
             return sides[i]
         }
 
-        fun GetGeometryCRC(): Int {
+        fun GetGeometryCRC(): Long {
             var i: Int
             var j: Int
             var mapSide: idMapBrushSide
@@ -233,10 +231,10 @@ object MapFile {
                     crc = crc xor FloatCRC(mapSide.GetPlane()[j])
                     j++
                 }
-                crc = crc xor StringCRC(mapSide.GetMaterial().toString()).toLong()
+                crc = crc xor StringCRC(mapSide.GetMaterial().toString())
                 i++
             }
-            return crc.toInt()
+            return crc
         }
 
         companion object {
@@ -571,7 +569,7 @@ object MapFile {
             explicitSubdivisions = b
         }
 
-        fun GetGeometryCRC(): Int {
+        fun GetGeometryCRC(): Long {
             var i: Int
             var j: Int
             var crc: Long
@@ -587,8 +585,8 @@ object MapFile {
                 }
                 i++
             }
-            crc = crc xor StringCRC(GetMaterial().toString()).toLong()
-            return crc.toInt()
+            crc = crc xor StringCRC(GetMaterial().toString())
+            return crc
         }
 
         fun GetWidth(): Int {
@@ -767,11 +765,11 @@ object MapFile {
             primitives.Append(p)
         }
 
-        fun GetGeometryCRC(): Int {
+        fun GetGeometryCRC(): Long {
             var i: Int
-            var crc: Int
+            var crc: Long
             var mapPrim: idMapPrimitive
-            crc = 0
+            crc = 0L
             i = 0
             while (i < GetNumPrimitives()) {
                 mapPrim = GetPrimitive(i)
@@ -913,7 +911,7 @@ object MapFile {
     class idMapFile {
         protected val entities: idList<idMapEntity>
         protected var fileTime: Long
-        protected var geometryCRC: Int
+        protected var geometryCRC: Long
         protected var hasPrimitiveData: Boolean
         protected val name: idStr = idStr()
         protected var version: Float
@@ -1101,7 +1099,7 @@ object MapFile {
 
         // get CRC for the map geometry
         // texture coordinates and entity key/value pairs are not taken into account
-        fun GetGeometryCRC(): Int {
+        fun GetGeometryCRC(): Long {
             return geometryCRC
         }
 

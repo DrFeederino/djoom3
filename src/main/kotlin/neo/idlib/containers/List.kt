@@ -90,7 +90,7 @@ object List {
         protected var num = 0
         private var list: Array<T>? = null
         private var size = 0
-        private lateinit var type: Class<T>
+        private var type: Class<T>? = null
 
         //
         //public	typedef int		cmp_t( const T *, const T * );
@@ -511,7 +511,7 @@ object List {
                 Resize(size + granularity)
             }
             try {
-                return type.newInstance().also { list!![num++] = it }
+                return type!!.newInstance().also { list!![num++] = it }
             } catch (ex: InstantiationException) {
 //                Logger.getLogger(List.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ex: IllegalAccessException) {

@@ -49,8 +49,6 @@ object win_glimp {
         glfwDefaultWindowHints()
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err).set())
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2)
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1)
 
         if (window == 0L) {
             window = glfwCreateWindow(

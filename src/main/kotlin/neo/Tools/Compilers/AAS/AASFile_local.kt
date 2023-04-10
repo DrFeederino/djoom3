@@ -440,7 +440,7 @@ object AASFile_local {
                 idLexer(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGESCAPECHARS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWPATHNAMES)
             val token = idToken()
             val depth: Int
-            val c: Int
+            val c: Long
             name.set(fileName)
             crc = mapFileCRC
             Common.common.Printf("[Load AAS]\n")
@@ -465,8 +465,8 @@ object AASFile_local {
                 Common.common.Warning("AAS file '%s' has no map file CRC", name)
                 return false
             }
-            c = token.GetUnsignedLongValue().toInt()
-            if (mapFileCRC != 0L && c.toLong() != mapFileCRC) {
+            c = token.GetUnsignedLongValue()
+            if (mapFileCRC != 0L && c != mapFileCRC) {
                 Common.common.Warning("AAS file '%s' is out of date", name)
                 return false
             }

@@ -26,6 +26,7 @@ import java.nio.ByteBuffer
  *
  */
 object Event {
+
     val D_EVENT_ENTITY: Char = 'e'
     val D_EVENT_ENTITY_NULL: Char = 'E' // event can handle NULL entity pointers
     val D_EVENT_FLOAT: Char = 'f'
@@ -36,8 +37,7 @@ object Event {
     val D_EVENT_TRACE: Char = 't'
     val D_EVENT_VECTOR: Char = 'v'
 
-    //                                                          // running the game will then generate c:\doom\base\events.txt, the contents of which should be copied into the switch statement.
-    //
+    // running the game will then generate c:\doom\base\events.txt, the contents of which should be copied into the switch statement.
     val D_EVENT_VOID: Char = 0.toChar()
 
     //

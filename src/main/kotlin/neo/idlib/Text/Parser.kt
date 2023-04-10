@@ -1388,7 +1388,7 @@ object Parser {
                 BUILTIN_LINE -> {
                     buf = String.format("%d", defToken.line)
                     token.set(buf)
-                    token.intValue = defToken.line
+                    token.intValue = defToken.line.toLong()
                     token.floatValue = defToken.line.toFloat()
                     token.type = Token.TT_NUMBER
                     token.subtype = Token.TT_DECIMAL or Token.TT_INTEGER or Token.TT_VALUESVALID
@@ -2910,7 +2910,7 @@ object Parser {
             token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_INTEGER or Token.TT_LONG or Token.TT_DECIMAL or Token.TT_VALUESVALID
-            token.intValue = abs(value._val)
+            token.intValue = abs(value._val).toLong()
             token.floatValue = abs(value._val).toFloat()
             UnreadSourceToken(token)
             if (value._val < 0) {
@@ -2936,7 +2936,7 @@ object Parser {
             token.set(buf)
             token.type = Token.TT_NUMBER
             token.subtype = Token.TT_FLOAT or Token.TT_LONG or Token.TT_DECIMAL or Token.TT_VALUESVALID
-            token.intValue = abs(value._val).toInt()
+            token.intValue = abs(value._val).toLong()
             token.floatValue = abs(value._val)
             UnreadSourceToken(token)
             if (value._val < 0) {
