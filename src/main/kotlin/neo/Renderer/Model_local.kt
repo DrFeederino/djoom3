@@ -935,8 +935,8 @@ object Model_local {
             var tv: Int
             var vRemap: IntArray
             var tvRemap: IntArray
-            var mvTable: kotlin.collections.ArrayList<matchVert_s> // all of the match verts
-            var mvHash: ArrayList<matchVert_s> // points inside mvTable for each xyz index
+            var mvTable: Array<matchVert_s?> // all of the match verts
+            var mvHash: Array<matchVert_s?> // points inside mvTable for each xyz index
             var lastmv: matchVert_s?
             var mv: matchVert_s?
             val normal = idVec3()
@@ -1092,10 +1092,10 @@ object Model_local {
                 // we need to find out how many unique vertex / texcoord combinations
                 // there are, because ASE tracks them separately but we need them unified
                 // the maximum possible number of combined vertexes is the number of indexes
-                mvTable = ArrayList<matchVert_s>(mesh.numFaces * 3)
+                mvTable = arrayOfNulls<matchVert_s>(mesh.numFaces * 3)
 
                 // we will have a hash chain based on the xyz values
-                mvHash = ArrayList<matchVert_s>(mesh.numVertexes)
+                mvHash = arrayOfNulls<matchVert_s>(mesh.numVertexes)
 
                 // allocate triangle surface
                 tri = tr_trisurf.R_AllocStaticTriSurf()
@@ -1178,7 +1178,7 @@ object Model_local {
                             // allocate a new match vert and link to hash chain
                             mvTable[tri.numVerts] = matchVert_s(tri.numVerts)
                             mv = mvTable[tri.numVerts]
-                            mv.v = v
+                            mv!!.v = v
                             mv.tv = tv
                             mv.normal.set(normal)
                             System.arraycopy(color, 0, mv.color, 0, color.size)
@@ -1229,7 +1229,7 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts[j].Clear()
-                    tri.verts[j].xyz.set(mesh.vertexes[mv.v])
+                    tri.verts[j].xyz.set(mesh.vertexes[mv!!.v])
                     tri.verts[j].normal.set(mv.normal)
                     System.arraycopy(mv.color, 0, mv.color.also { tri.verts[j].color = it }, 0, mv.color.size)
                     if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {

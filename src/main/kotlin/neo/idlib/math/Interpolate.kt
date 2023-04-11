@@ -301,7 +301,7 @@ class Interpolate {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        private fun _Multiply(t: T, f: Float): T {
+        private fun _Multiply(t: T?, f: Float): T {
             if (t is idVec3) {
                 return (t as idVec3 * f) as T
             } else if (t is idVec4) {
@@ -548,7 +548,7 @@ class Interpolate {
             return java.lang.Float.valueOf(f * t as Float) as T
         }
 
-        private fun _Plus(t1: T, t2: Any): T {
+        private fun _Plus(t1: T?, t2: Any): T {
             if (t1 is idVec3) {
                 return (t1 as idVec3 + t2 as idVec3) as T
             } else if (t1 is idVec4) {
@@ -561,7 +561,7 @@ class Interpolate {
             return java.lang.Float.valueOf(t1 as Float + t2 as Float) as T
         }
 
-        private fun _Minus(t1: T, t2: Any): T {
+        private fun _Minus(t1: T?, t2: Any): T {
             if (t1 is idVec3) {
                 return (t1 as idVec3 - t2 as idVec3) as T
             } else if (t1 is idVec4) {

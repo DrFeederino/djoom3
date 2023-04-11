@@ -1,11 +1,7 @@
 package neo.Game
 
 import neo.Game.Entity.idEntity
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -561,7 +557,7 @@ object Camera {
                 parser.Parse1DMatrix(3, cam.t)
                 parser.Parse1DMatrix(3, cam.q)
                 cam.fov = parser.ParseFloat()
-                camera[i] = cam
+                camera.add(i, cam)
                 i++
             }
             parser.ExpectTokenString("}")

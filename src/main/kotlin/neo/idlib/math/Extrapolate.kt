@@ -42,9 +42,9 @@ object Extrapolate {
         fun Init(
             startTime: Float,
             duration: Float,
-            startValue: T,
-            baseSpeed: T,
-            speed: T,
+            startValue: T?,
+            baseSpeed: T?,
+            speed: T?,
             extrapolationType: Int
         ) {
             this.extrapolationType = extrapolationType
@@ -186,21 +186,21 @@ object Extrapolate {
             return duration
         }
 
-        fun SetStartValue(value: T) {
+        fun SetStartValue(value: T?) {
             startValue = value
             currentTime = -1f
         }
 
-        fun GetStartValue(): T {
-            return startValue!!
+        fun GetStartValue(): T? {
+            return startValue
         }
 
-        fun GetBaseSpeed(): T {
-            return baseSpeed!!
+        fun GetBaseSpeed(): T? {
+            return baseSpeed
         }
 
-        fun GetSpeed(): T {
-            return speed!!
+        fun GetSpeed(): T? {
+            return speed
         }
 
         /*extrapolation_t*/   fun GetExtrapolationType(): Int {

@@ -542,7 +542,7 @@ object Model_ase {
             val pMesh: aseMesh_t = ASE_GetCurrentMesh()
             if ("*MESH_FACE" == token) {
                 ASE_GetToken(false) // skip face number
-                pMesh.faces[ase.currentFace] = aseFace_t()
+                pMesh.faces.add(ase.currentFace, aseFace_t())
 
                 // we are flipping the order here to change the front/back facing
                 // from 3DS to our standard (clockwise facing out)
@@ -654,7 +654,7 @@ object Model_ase {
                 val v: String?
                 val w: String?
                 ASE_GetToken(false)
-                pMesh.tvertexes[ase.currentVertex] = idVec2()
+                pMesh.tvertexes.add(ase.currentVertex, idVec2())
                 ASE_GetToken(false)
                 //		strcpy( u, ase.token );
                 u = ase.token
