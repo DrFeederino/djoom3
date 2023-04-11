@@ -184,7 +184,6 @@ import neo.sys.sys_public
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  *
@@ -339,7 +338,7 @@ class Game_local {
 
         //
         private val clientDeclRemap: Array<ArrayList<ArrayList<Int>>> =
-            Array<ArrayList<ArrayList<Int>>>(MAX_CLIENTS) { ArrayList<ArrayList<Int>>(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
+            Array(MAX_CLIENTS) { ArrayList(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
 
         //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
         //        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
@@ -424,7 +423,7 @@ class Game_local {
         var num_entities // current number <= MAX_GENTITIES
                 = 0
         var persistentLevelInfo: idDict = idDict() // contains args that are kept around between levels
-        var persistentPlayerInfo: kotlin.collections.ArrayList<idDict> = ArrayList<idDict>(MAX_CLIENTS)
+        var persistentPlayerInfo: ArrayList<idDict> = ArrayList(MAX_CLIENTS)
         var previousTime // time in msec of last frame
                 = 0
 
@@ -466,7 +465,7 @@ class Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: ArrayList<idDict> = ArrayList<idDict>(MAX_CLIENTS) // client specific settings
+        var userInfo: ArrayList<idDict> = ArrayList(MAX_CLIENTS) // client specific settings
         var usercmds = Array(MAX_CLIENTS) { usercmd_t() } // client input commands
 
         //
@@ -480,10 +479,10 @@ class Game_local {
 
         //
         private var clientEntityStates: Array<ArrayList<entityState_s>> =
-            Array(MAX_CLIENTS) { ArrayList<entityState_s>(MAX_GENTITIES) }
+            Array(MAX_CLIENTS) { ArrayList(MAX_GENTITIES) }
         private var clientPVS: Array<IntArray> =
             Array(MAX_CLIENTS) { IntArray(ENTITY_PVS_SIZE) }
-        private var clientSnapshots: kotlin.collections.ArrayList<snapshot_s> = ArrayList<snapshot_s>(MAX_CLIENTS)
+        private var clientSnapshots: ArrayList<snapshot_s> = ArrayList(MAX_CLIENTS)
         private var currentInitialSpot = 0
         private var gamestate // keeps track of whether we're spawning, shutting down, or normal gameplay
                 : gameState_t = gameState_t.GAMESTATE_UNINITIALIZED
@@ -499,7 +498,7 @@ class Game_local {
 
         //
         private var locationEntities // for location names, etc
-                : kotlin.collections.ArrayList<idLocationEntity> = ArrayList()
+                : Array<idLocationEntity?>? = null
         private var mapCycleLoaded = false
         private var mapFile // will be NULL during the game unless in-game editing is used
                 : idMapFile? = null
@@ -519,7 +518,7 @@ class Game_local {
         private var playerPVS: pvsHandle_t = pvsHandle_t() // merged pvs of all players
 
         //
-        private val shakeSounds: kotlin.collections.ArrayList<idStr> = kotlin.collections.ArrayList()
+        private val shakeSounds: ArrayList<idStr> = kotlin.collections.ArrayList()
 
         //
         private var spawnCount = 0
@@ -635,7 +634,7 @@ class Game_local {
             idEvent.Shutdown()
 
 //	delete[] locationEntities;
-            locationEntities.clear()
+            locationEntities = null
 
 //	delete smokeParticles;
             smokeParticles = null
@@ -947,8 +946,7 @@ class Game_local {
                 if (num != gameRenderWorld.NumAreas()) {
                     savegame.Error("idGameLocal.InitFromSaveGame: number of areas in map differs from save game.")
                 }
-                locationEntities.clear()
-                locationEntities.addAll(Array<idLocationEntity>(num) { idLocationEntity() })
+                locationEntities = arrayOfNulls(num)
 
                 i = 0
                 while (i < num) {
@@ -1116,7 +1114,7 @@ class Game_local {
                 savegame.WriteInt(gameRenderWorld.NumAreas())
                 i = 0
                 while (i < gameRenderWorld.NumAreas()) {
-                    savegame.WriteObject(locationEntities!![i])
+                    savegame.WriteObject(locationEntities!![i]!!)
                     i++
                 }
             }
@@ -1333,7 +1331,7 @@ class Game_local {
         }
 
         override fun SpawnPlayer(clientNum: Int) {
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity?>(1)
             val args = idDict()
 
             // they can connect
@@ -1350,7 +1348,7 @@ class Game_local {
                 Error(
                     "'%s' spawned the player as a '%s'.  Player spawnclass must be a subclass of idPlayer.",
                     args.GetString("classname"),
-                    ent[0].GetClassname()
+                    ent[0]!!.GetClassname()
                 )
             }
             if (clientNum >= numClients) {
@@ -1724,7 +1722,7 @@ class Game_local {
 
             // clear the client PVS
 //	memset( clientPVS[ clientNum ], 0, sizeof( clientPVS[ clientNum ] ) );
-            Arrays.fill(clientPVS[clientNum], 0)
+            clientPVS[clientNum].fill(0)
 
             // delete the player entity
 //	delete entities[ clientNum ];
@@ -1845,7 +1843,7 @@ class Game_local {
             snapshot.next = clientSnapshots[clientNum]
             clientSnapshots[clientNum] = snapshot
             //            memset(snapshot.pvs, 0, sizeof(snapshot.pvs));
-            Arrays.fill(snapshot.pvs, 0)
+            snapshot.pvs.fill(0)
 
             // get PVS for this player
             // don't use PVSAreas for networking - PVSAreas depends on animations (and md5 bounds), which are not synchronized
@@ -2891,7 +2889,7 @@ class Game_local {
         @JvmOverloads
         fun SpawnEntityDef(
             args: idDict,
-            ent: ArrayList<idEntity> = arrayListOf() /*= NULL*/,
+            ent: Array<idEntity?>? = null /*= NULL*/,
             setDefaults: Boolean = true /*= true*/
         ): Boolean {
             val classname = arrayOf("")
@@ -2900,9 +2898,9 @@ class Game_local {
             var error = ""
             val name = arrayOf("")
 
-//            if (ent != null) {
-//                ent[0] = null;
-//            }
+            if (ent != null) {
+                ent[0] = null;
+            }
             spawnArgs.set(args)
             if (spawnArgs.GetString("name", "", name)) {
                 error = String.format(" on '%s'", name[0])
@@ -2927,7 +2925,7 @@ class Game_local {
                 // many objects rely on spawn args and default state may break spawns for many classes.
                 obj.spawnArgs.set(args)
                 obj.Spawn()
-                if (ent.isNotEmpty() && obj is idEntity) {
+                if (ent != null && obj is idEntity) {
                     ent[0] = obj
                 }
                 return true
@@ -3278,7 +3276,7 @@ class Game_local {
             return idEntityPtr
         }
 
-        fun GetTargets(args: idDict, list: kotlin.collections.ArrayList<idEntityPtr<idEntity>>, ref: String): Int {
+        fun GetTargets(args: idDict, list: ArrayList<idEntityPtr<idEntity>>, ref: String): Int {
             var i: Int
             val num: Int
             val refLength: Int
@@ -3821,7 +3819,7 @@ class Game_local {
         fun BloodSplat(origin: idVec3, dir: idVec3, size: Float, material: String) {
             var size = size
             val halfSize = size * 0.5f
-            val verts = arrayOf<idVec3>(
+            val verts = arrayOf(
                 idVec3(0.0f, +halfSize, +halfSize),
                 idVec3(0.0f, +halfSize, -halfSize),
                 idVec3(0.0f, -halfSize, -halfSize),
@@ -3970,7 +3968,7 @@ class Game_local {
 
             // allocate the area table
             val numAreas = gameRenderWorld.NumAreas()
-            locationEntities = kotlin.collections.ArrayList<idLocationEntity>(numAreas)
+            locationEntities = arrayOfNulls(numAreas)
             //	memset( locationEntities, 0, numAreas * sizeof( *locationEntities ) );
 
             // for each location entity, make pointers from every area it touches
@@ -3993,7 +3991,7 @@ class Game_local {
                 if (locationEntities!![areaNum] != null) {
                     Warning(
                         "location entity '%s' overlaps '%s'", ent.spawnArgs.GetString("name"),
-                        locationEntities!![areaNum].spawnArgs.GetString("name")
+                        locationEntities!![areaNum]!!.spawnArgs.GetString("name")
                     )
                     ent = ent.spawnNode.Next()
                     continue
@@ -4276,7 +4274,7 @@ class Game_local {
                 entities[e] = idEntity()
             }
             spawnIds = IntArray(spawnIds.size)
-            Arrays.fill(spawnIds, -1) //	memset( spawnIds, -1, sizeof( spawnIds ) );
+            spawnIds.fill(-1) //	memset( spawnIds, -1, sizeof( spawnIds ) );
             firstFreeIndex = 0
             num_entities = 0
             spawnedEntities.Clear()
@@ -4295,7 +4293,7 @@ class Game_local {
             clip.Shutdown()
             pvs.Shutdown()
             sessionCommand.Clear()
-            locationEntities.clear()
+            locationEntities = null
             smokeParticles = null
             editEntities = null
             entityHash.Clear(1024, MAX_GENTITIES)
@@ -4509,7 +4507,7 @@ class Game_local {
             }
 
 //	delete[] locationEntities;
-            locationEntities.clear()
+            locationEntities = null
         }
 
         private fun GetClientPVS(player: idPlayer, type: pvsType_t): pvsHandle_t {
@@ -5561,11 +5559,11 @@ class Game_local {
             savedEventQueue.Shutdown()
             //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             clientEntityStates =
-                Array(clientEntityStates.size) { ArrayList<entityState_s>(clientEntityStates[0].size) }
+                Array(clientEntityStates.size) { ArrayList(clientEntityStates[0].size) }
             //	memset( clientPVS, 0, sizeof( clientPVS ) );
             clientPVS = Array(clientPVS.size) { IntArray(clientPVS[0].size) }
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            clientSnapshots = ArrayList<snapshot_s>(clientSnapshots.size)
+            clientSnapshots = ArrayList(clientSnapshots.size)
         }
 
         private fun InitLocalClient(clientNum: Int) {
@@ -5933,7 +5931,7 @@ class Game_local {
             currentInitialSpot = 0
         }
 
-        fun kotlin.collections.ArrayList<idStr>.addUnique(s: idStr): Int {
+        fun ArrayList<idStr>.addUnique(s: idStr): Int {
             var index = indexOf(s)
             if (index == -1) {
                 add(s)

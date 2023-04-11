@@ -4858,7 +4858,7 @@ object Player {
                     _health -= amt
                     entityGui.spawnArgs.SetInt("gui_parm1", _health)
                     if (entityGui.GetRenderEntity() != null && entityGui.GetRenderEntity().gui[0] != null) {
-                        entityGui.GetRenderEntity().gui[0].SetStateInt("gui_parm1", _health)
+                        entityGui.GetRenderEntity().gui[0]!!.SetStateInt("gui_parm1", _health)
                     }
                     health += amt
                     if (health > 100) {
@@ -7246,7 +7246,7 @@ object Player {
             var pt: guiPoint_t
             var kv: idKeyValue?
             var ev: sysEvent_s
-            var ui: idUserInterface
+            var ui: idUserInterface?
             if (Game_local.gameLocal.inCinematic) {
                 return
             }
@@ -7356,7 +7356,7 @@ object Player {
                         continue
                     }
                 }
-                if (TempDump.NOT(ent.GetRenderEntity()) || TempDump.NOT(ent.GetRenderEntity().gui[0]) || !ent.GetRenderEntity().gui[0].IsInteractive()) {
+                if (TempDump.NOT(ent.GetRenderEntity()) || TempDump.NOT(ent.GetRenderEntity().gui[0]) || !ent.GetRenderEntity().gui[0]!!.IsInteractive()) {
                     i++
                     continue
                 }

@@ -1188,7 +1188,7 @@ object Material {
             if (TempDump.NOT(stages) || TempDump.NOT(stages[0].texture.cinematic[0]) || TempDump.NOT(tr_local.backEnd.viewDef)) {
                 return
             }
-            stages[0].texture.cinematic[0]!!.ImageForTime(tr_local.tr.primaryRenderView.time)
+            stages[0].texture.cinematic[0]!!.ImageForTime(tr_local.tr.primaryRenderView!!.time)
         }
 
         // gets an image for the editor to use

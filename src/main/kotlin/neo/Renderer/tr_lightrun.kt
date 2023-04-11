@@ -608,7 +608,7 @@ object tr_lightrun {
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
                 if (def.parms.gui[i] != null) {
 //				delete def.parms.gui[ i ];
-                    def.parms.gui.removeAt(i)
+                    def.parms.gui[i] = null
                 }
                 i++
             }

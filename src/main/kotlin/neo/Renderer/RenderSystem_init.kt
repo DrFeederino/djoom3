@@ -1198,7 +1198,7 @@ class RenderSystem_init {
          R_RenderingFPS
          ================
          */
-        fun R_RenderingFPS(renderView: renderView_s): Float {
+        fun R_RenderingFPS(renderView: renderView_s?): Float {
             qgl.qglFinish()
             val start = win_shared.Sys_Milliseconds()
             var end: Int
@@ -1942,7 +1942,7 @@ class RenderSystem_init {
                 idLib.common.Printf("%d x %d images\n", cin.imageWidth, cin.imageHeight)
                 val len = tr_local.tr.testVideo!!.AnimationLength()
                 idLib.common.Printf("%5.1f seconds of video\n", len * 0.001)
-                tr_local.tr.testVideoStartTime = (tr_local.tr.primaryRenderView.time * 0.001).toFloat()
+                tr_local.tr.testVideoStartTime = (tr_local.tr.primaryRenderView!!.time * 0.001).toFloat()
 
                 // try to play the matching wav file
                 val wavString = idStr(args.Argv(if (args.Argc() == 2) 1 else 2))

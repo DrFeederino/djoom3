@@ -229,31 +229,29 @@ object CollisionModel_load {
      ================
      */
     fun CM_R_GetNodeBounds(bounds: idBounds, node: cm_node_s) {
-        var currentNode = node
+        var node = node
         var pref: cm_polygonRef_s?
         var bref: cm_brushRef_s?
-
         while (true) {
-            pref = currentNode.polygons
+            pref = node.polygons
             while (pref != null) {
                 bounds.AddPoint(pref.p!!.bounds[0])
                 bounds.AddPoint(pref.p!!.bounds[1])
                 pref = pref.next
             }
-            bref = currentNode.brushes
+            bref = node.brushes
             while (bref != null) {
                 bounds.AddPoint(bref.b!!.bounds[0])
                 bounds.AddPoint(bref.b!!.bounds[1])
                 bref = bref.next
             }
-            if (currentNode.planeType == -1) {
+            if (node.planeType == -1) {
                 break
             }
-            CM_R_GetNodeBounds(bounds, currentNode.children[1]!!)
-            currentNode = node.children[0]!!
+            CM_R_GetNodeBounds(bounds, node.children[1]!!)
+            node = node.children[0]!!
         }
     }
-
     /*
      ================
      CM_GetNodeBounds

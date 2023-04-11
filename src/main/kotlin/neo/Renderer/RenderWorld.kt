@@ -48,12 +48,12 @@ class RenderWorld {
      ===============
      */
         @Throws(idException::class)
-        fun R_GlobalShaderOverride(shader: Array<idMaterial>): Boolean {
-            if (!shader[0].IsDrawn()) {
+        fun R_GlobalShaderOverride(shader: Array<idMaterial?>): Boolean {
+            if (!shader[0]!!.IsDrawn()) {
                 return false
             }
             if (tr_local.tr.primaryRenderView!!.globalMaterial != null) {
-                shader[0] = tr_local.tr.primaryRenderView.globalMaterial!!
+                shader[0] = tr_local.tr.primaryRenderView!!.globalMaterial
                 return true
             }
             if (TempDump.isNotNullOrEmpty(RenderSystem_init.r_materialOverride.GetString())) {
@@ -208,7 +208,7 @@ class RenderWorld {
                 = 0
 
         // networking: see WriteGUIToSnapshot / ReadGUIFromSnapshot
-        var gui: ArrayList<idUserInterface> = ArrayList(RenderWorld.MAX_RENDERENTITY_GUI)
+        var gui: Array<idUserInterface?> = kotlin.arrayOfNulls(MAX_RENDERENTITY_GUI)
         var hModel // this can only be null if callback is set
                 : idRenderModel? = null
         var joints // array of joints that will modify vertices.
@@ -295,7 +295,7 @@ class RenderWorld {
             referenceSound = newEntity.referenceSound
             System.arraycopy(newEntity.shaderParms, 0, shaderParms, 0, shaderParms.size)
             for (i in 0 until gui.size) {
-                gui.add(i, newEntity.gui[i])
+                gui[i] = newEntity.gui[i]
             }
             remoteRenderView = newEntity.remoteRenderView
             numJoints = newEntity.numJoints
@@ -391,7 +391,7 @@ class RenderWorld {
             hash = 71 * hash + Objects.hashCode(customSkin)
             hash = 71 * hash + Objects.hashCode(referenceSound)
             hash = 71 * hash + shaderParms.contentHashCode()
-            hash = 71 * hash + gui.toTypedArray().contentDeepHashCode()
+            hash = 71 * hash + gui.contentDeepHashCode()
             hash = 71 * hash + Objects.hashCode(remoteRenderView)
             hash = 71 * hash + numJoints
             hash = 71 * hash + joints.toTypedArray().contentDeepHashCode()
@@ -465,7 +465,7 @@ class RenderWorld {
             if (!shaderParms.contentEquals(other.shaderParms)) {
                 return false
             }
-            if (!gui.toTypedArray().contentDeepEquals(other.gui.toTypedArray())) {
+            if (!gui.contentDeepEquals(other.gui)) {
                 return false
             }
             if (remoteRenderView != other.remoteRenderView) {
@@ -812,7 +812,7 @@ class RenderWorld {
         // rendering a scene may actually render multiple subviews for mirrors and portals, and
         // may render composite textures for gui console screens and light projections
         // It would also be acceptable to render a scene multiple times, for "rear view mirrors", etc
-        abstract fun RenderScene(renderView: renderView_s)
+        abstract fun RenderScene(renderView: renderView_s?)
 
         //-------------- Portal Area Information -----------------
         // returns the number of portals

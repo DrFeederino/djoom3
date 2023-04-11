@@ -2387,7 +2387,7 @@ object MultiplayerGame {
                 scoreBoard.SetStateString(Str.va("player%d_status", i + 1), "")
                 scoreBoard.SetStateInt(Str.va("rank%d", i + 1), 0)
                 scoreBoard.SetStateInt("rank_self", 0)
-                val player = Game_local.gameLocal.entities[i] as idPlayer
+                val player = Game_local.gameLocal.entities[i] as idPlayer?
                 if (null == player || null == player.hud) {
                     i++
                     continue

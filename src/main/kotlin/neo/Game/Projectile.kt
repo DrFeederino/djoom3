@@ -861,7 +861,7 @@ object Projectile {
                 if (debris != null) {
                     val amount = Game_local.gameLocal.random.RandomInt(fxdebris.toDouble())
                     for (i in 0 until amount) {
-                        val ent = arrayListOf<idEntity>()
+                        val ent = arrayOfNulls<idEntity>(1)
                         val dir = idVec3()
                         dir.x = Game_local.gameLocal.random.CRandomFloat() * 4.0f
                         dir.y = Game_local.gameLocal.random.CRandomFloat() * 4.0f
@@ -880,7 +880,7 @@ object Projectile {
                 if (debris != null) {
                     val amount = Game_local.gameLocal.random.RandomInt(fxdebris.toDouble())
                     for (i in 0 until amount) {
-                        val ent = arrayListOf<idEntity>()
+                        val ent = arrayOfNulls<idEntity>(1)
                         val dir = idVec3()
                         dir.x = Game_local.gameLocal.random.CRandomFloat() * 8.0f
                         dir.y = Game_local.gameLocal.random.CRandomFloat() * 8.0f

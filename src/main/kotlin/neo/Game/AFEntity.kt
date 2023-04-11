@@ -495,7 +495,7 @@ object AFEntity {
             fun DropAFs(ent: idEntity, type: String, list: ArrayList<idEntity>?) {
                 var kv: idKeyValue?
                 val skinName: String?
-                val newEnt = arrayListOf<idEntity>()
+                val newEnt = arrayOfNulls<idEntity>(1)
                 var af: idAFEntity_Base
                 val args = idDict()
                 val skin: idDeclSkin?

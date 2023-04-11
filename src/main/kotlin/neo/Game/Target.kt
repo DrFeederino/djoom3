@@ -752,7 +752,7 @@ object Target {
                         val d2 = idDict()
                         d2.Copy(dict)
                         d2.Set("name", Str.va("givenitem_%d", giveNum++))
-                        val ent = arrayListOf<idEntity>()
+                        val ent = arrayOfNulls<idEntity>(1)
                         if (Game_local.gameLocal.SpawnEntityDef(d2, ent) && ent.isNotEmpty() && ent[0] is idItem) {
                             val item = ent[0] as idItem
                             item.GiveToPlayer(Game_local.gameLocal.GetLocalPlayer())
@@ -1441,8 +1441,8 @@ object Target {
                             for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                                 if (ent.GetRenderEntity().gui[j] != null) {
                                     if (idStr.Icmpn(key, "gui_", 4) == 0) {
-                                        ent.GetRenderEntity().gui[j].SetStateString(key, `val`)
-                                        ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time)
+                                        ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
+                                        ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time)
                                     }
                                 }
                             }

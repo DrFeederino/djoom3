@@ -72,9 +72,9 @@ object Surface_Polytope {
                 }
                 j = 2
                 while (j < w.GetNumPoints()) {
-                    indexes.Append(windingVerts[0])
-                    indexes.Append(windingVerts[j - 1])
-                    indexes.Append(windingVerts[j])
+                    indexes.add(windingVerts[0])
+                    indexes.add(windingVerts[j - 1])
+                    indexes.add(windingVerts[j])
                     j++
                 }
                 i++
@@ -98,7 +98,7 @@ object Surface_Polytope {
             verts[1].xyz.set(center + idVec3(2.0f * c1 * scale.x, 0.0f, c3 * scale.z))
             verts[2].xyz.set(center + idVec3(-c1 * scale.x, c2 * scale.y, c3 * scale.z))
             verts[3].xyz.set(center + idVec3(-c1 * scale.x, -c2 * scale.y, c3 * scale.z))
-            indexes.SetNum(4 * 3)
+            indexes.ensureCapacity(4 * 3)
             indexes[0 * 3 + 0] = 0
             indexes[0 * 3 + 1] = 1
             indexes[0 * 3 + 2] = 2
@@ -130,7 +130,7 @@ object Surface_Polytope {
             verts[6].xyz.set(center + idVec3(scale.x, scale.y, scale.z))
             verts[7].xyz.set(center + idVec3(-scale.x, scale.y, scale.z))
 
-            indexes.SetNum(12 * 3)
+            indexes.ensureCapacity(12 * 3)
             indexes[0 * 3 + 0] = 0
             indexes[0 * 3 + 1] = 3
             indexes[0 * 3 + 2] = 2
@@ -184,7 +184,7 @@ object Surface_Polytope {
             verts[4].xyz.set(center + idVec3(0.0f, 0.0f, scale.z))
             verts[5].xyz.set(center + idVec3(0.0f, 0.0f, -scale.z))
 
-            indexes.SetNum(8 * 3)
+            indexes.ensureCapacity(8 * 3)
             indexes[0 * 3 + 0] = 4
             indexes[0 * 3 + 1] = 0
             indexes[0 * 3 + 2] = 2
@@ -234,7 +234,7 @@ object Surface_Polytope {
             val surface = Array<Array<Array<idSurface?>?>>(2) { Array(1) { arrayOfNulls<idSurface?>(1) } }
             val polytopeSurfaces = Array(2) { idSurface_Polytope() }
             var surf: idSurface_Polytope
-            val onPlaneEdges = Array(2) { IntArray(indexes.Num() / 3) }
+            val onPlaneEdges = Array(2) { IntArray(indexes.size / 3) }
 
             side = Split(plane, epsilon, surface[0], surface[1], onPlaneEdges[0], onPlaneEdges[1])
             front[0] = polytopeSurfaces[0]
@@ -281,9 +281,9 @@ object Surface_Polytope {
                     edgeNum = surf.edgeIndexes[onPlaneEdges[s][i]]
                     v1 = surf.edges[abs(edgeNum)].verts[Math_h.INTSIGNBITNOTSET(edgeNum)]
                     v2 = surf.edges[abs(edgeNum)].verts[Math_h.INTSIGNBITSET(edgeNum)]
-                    surf.indexes.Append(v0)
-                    surf.indexes.Append(v1)
-                    surf.indexes.Append(v2)
+                    surf.indexes.add(v0)
+                    surf.indexes.add(v1)
+                    surf.indexes.add(v2)
                     i++
                 }
                 surf.GenerateEdgeIndexes()

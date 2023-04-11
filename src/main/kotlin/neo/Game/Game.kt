@@ -1221,7 +1221,7 @@ object Game {
             return Game_local.gameLocal.FindEntityDefDict(name, makeDefault)
         }
 
-        fun SpawnEntityDef(args: idDict, ent: ArrayList<idEntity>) {
+        fun SpawnEntityDef(args: idDict, ent: Array<idEntity?>?) {
             Game_local.gameLocal.SpawnEntityDef(args, ent)
         }
 

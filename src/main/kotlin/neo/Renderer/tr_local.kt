@@ -1252,7 +1252,7 @@ object tr_local {
         //
         var pc // performance counters
                 : performanceCounters_t = performanceCounters_t()
-        lateinit var primaryRenderView: renderView_s
+        var primaryRenderView: renderView_s? = null
         var primaryView: viewDef_s? = null
 
         //

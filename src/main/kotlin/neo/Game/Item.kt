@@ -835,7 +835,7 @@ object Item {
             ): idEntity? {
                 var removeDelay = removeDelay
                 val args = idDict()
-                val item = arrayListOf<idEntity>()
+                val item = arrayOfNulls<idEntity>(1)
                 args.Set("classname", classname)
                 args.Set("dropped", "1")
 
@@ -845,20 +845,20 @@ object Item {
                     args.SetBool("triggerFirst", true)
                 }
                 Game_local.gameLocal.SpawnEntityDef(args, item)
-                if (item.isNotEmpty()) {
+                if (item.isNotEmpty() && item[0] != null) {
                     // set item position
-                    item[0].GetPhysics().SetOrigin(origin)
-                    item[0].GetPhysics().SetAxis(axis)
-                    item[0].GetPhysics().SetLinearVelocity(velocity)
-                    item[0].UpdateVisuals()
+                    item[0]!!.GetPhysics().SetOrigin(origin)
+                    item[0]!!.GetPhysics().SetAxis(axis)
+                    item[0]!!.GetPhysics().SetLinearVelocity(velocity)
+                    item[0]!!.UpdateVisuals()
                     if (activateDelay != 0) {
-                        item[0].PostEventMS(Entity.EV_Activate, activateDelay.toFloat(), item[0])
+                        item[0]!!.PostEventMS(Entity.EV_Activate, activateDelay.toFloat(), item[0])
                     }
                     if (0 == removeDelay) {
                         removeDelay = 5 * 60 * 1000
                     }
                     // always remove a dropped item after 5 minutes in case it dropped to an unreachable location
-                    item[0].PostEventMS(EV_Remove, removeDelay)
+                    item[0]!!.PostEventMS(EV_Remove, removeDelay)
                 }
                 return item[0]
             }

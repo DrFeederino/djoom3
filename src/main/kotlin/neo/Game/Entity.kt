@@ -504,8 +504,8 @@ object Entity {
                         if (idStr.Icmpn(key, "gui_", 4) == 0) {
                             e.spawnArgs.Set(key, `val`)
                         }
-                        e.renderEntity.gui[i].SetStateString(key, `val`)
-                        e.renderEntity.gui[i].StateChanged(Game_local.gameLocal.time)
+                        e.renderEntity.gui[i]!!.SetStateString(key, `val`)
+                        e.renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time)
                     }
                 }
             }
@@ -513,8 +513,8 @@ object Entity {
             private fun Event_SetGuiFloat(e: idEntity, key: idEventArg<String>, f: idEventArg<Float>) {
                 for (i in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                     if (e.renderEntity.gui[i] != null) {
-                        e.renderEntity.gui[i].SetStateString(key.value, Str.va("%f", f.value))
-                        e.renderEntity.gui[i].StateChanged(Game_local.gameLocal.time)
+                        e.renderEntity.gui[i]!!.SetStateString(key.value, Str.va("%f", f.value))
+                        e.renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time)
                     }
                 }
             }
@@ -862,7 +862,7 @@ object Entity {
         //
         //
         protected var renderEntity // used to present a model to the renderer
-                : renderEntity_s
+                : renderEntity_s //TODO: null
         private var bindBody // body bound to if unequal -1
                 : Int
         private var   /*jointHandle_t*/bindJoint // joint bound to if unequal INVALID_JOINT
@@ -3066,7 +3066,7 @@ object Entity {
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
                 if (renderEntity.gui.isNotEmpty()) {
-                    renderEntity.gui[i].Trigger(Game_local.gameLocal.time)
+                    renderEntity.gui[i]!!.Trigger(Game_local.gameLocal.time)
                 }
                 i++
             }
@@ -3168,9 +3168,9 @@ object Entity {
                     }
                     if (0 == token.Icmp("turkeyscore")) {
                         if (src.ReadToken(token2) && entityGui.renderEntity.gui[0] != null) {
-                            var score = entityGui.renderEntity.gui[0].State().GetInt("score")
+                            var score = entityGui.renderEntity.gui[0]!!.State().GetInt("score")
                             score += token2.toString().toInt()
-                            entityGui.renderEntity.gui[0].SetStateInt("score", score)
+                            entityGui.renderEntity.gui[0]!!.SetStateInt("score", score)
                             if (Game_local.gameLocal.GetLocalPlayer() != null && score >= 25000 && !Game_local.gameLocal.GetLocalPlayer()!!.inventory.turkeyScore) {
                                 Game_local.gameLocal.GetLocalPlayer()!!.GiveEmail("highScore")
                                 Game_local.gameLocal.GetLocalPlayer()!!.inventory.turkeyScore = true
@@ -3293,7 +3293,7 @@ object Entity {
                 j = 0
                 while (j < RenderWorld.MAX_RENDERENTITY_GUI) {
                     if (ent.renderEntity.gui[j] != null) {
-                        ent.renderEntity.gui[j].Trigger(Game_local.gameLocal.time)
+                        ent.renderEntity.gui[j]!!.Trigger(Game_local.gameLocal.time)
                     }
                     j++
                 }
@@ -3536,7 +3536,7 @@ object Entity {
         fun WriteGUIToSnapshot(msg: idBitMsgDelta) {
             // no need to loop over MAX_RENDERENTITY_GUI at this time
             if (renderEntity.gui.isNotEmpty()) {
-                msg.WriteByte(renderEntity.gui[0].State().GetInt("networkState"))
+                msg.WriteByte(renderEntity.gui[0]!!.State().GetInt("networkState"))
             } else {
                 msg.WriteByte(0)
             }

@@ -363,8 +363,8 @@ object Moveable {
                     PostEventMS(EV_Remove, 1000)
                 }
             }
-            if (renderEntity.gui.isNotEmpty()) {
-                renderEntity.gui.removeAt(0)
+            if (renderEntity.gui[0] != null) {
+                renderEntity.gui[0] = null
             }
             ActivateTargets(this)
             fl.takedamage = false
@@ -875,7 +875,7 @@ object Moveable {
             while (kv != null) {
                 val debris_args = Game_local.gameLocal.FindEntityDefDict(kv.GetValue().toString(), false)
                 if (debris_args != null) {
-                    val ent = arrayListOf<idEntity>()
+                    val ent = arrayOfNulls<idEntity>(1)
                     val dir2 = idVec3()
                     var debris: idDebris?
                     //if ( first ) {

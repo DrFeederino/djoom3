@@ -331,9 +331,9 @@ object RenderWorld_local {
             // if we are playing a demo, these will have been freed
             // in R_FreeEntityDefDerivedData(), otherwise the gui
             // object still exists in the game
-            def.parms.gui.removeAt(2)
-            def.parms.gui.removeAt(1)
-            def.parms.gui.removeAt(0)
+            def.parms.gui[2] = null
+            def.parms.gui[1] = null
+            def.parms.gui[0] = null
 
 //	delete def;
             entityDefs.removeAt(entityHandle)
@@ -752,7 +752,7 @@ object RenderWorld_local {
          to handle mirrors,
          ====================
          */
-        override fun RenderScene(renderView: renderView_s) {
+        override fun RenderScene(renderView: renderView_s?) {
             if (!BuildDefines.ID_DEDICATED) {
                 val copy: renderView_s
                 if (!tr_local.glConfig.isInitialized) {
@@ -764,7 +764,7 @@ object RenderWorld_local {
                 if (RenderSystem_init.r_skipFrontEnd.GetBool()) {
                     return
                 }
-                if (renderView.fov_x <= 0 || renderView.fov_y <= 0) {
+                if (renderView!!.fov_x <= 0 || renderView.fov_y <= 0) {
                     Common.common.Error(
                         "idRenderWorld::RenderScene: bad FOVs: %f, %f",
                         renderView.fov_x,
@@ -828,7 +828,7 @@ object RenderWorld_local {
                 // now write delete commands for any modified-but-not-visible entities, and
                 // add the renderView command to the demo
                 if (Session.session.writeDemo != null) {
-                    WriteRenderView(renderView)
+                    WriteRenderView(renderView!!)
                 }
 
 //                if (false) {
@@ -3622,7 +3622,7 @@ object RenderWorld_local {
             }
             for (i in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
 //                session.writeDemo!!.WriteInt((int &) ent.gui[i]);
-                Session.session.writeDemo!!.Write(ent.gui[i])
+                Session.session.writeDemo!!.Write(ent.gui[i]!!)
             }
             //            session.writeDemo!!.WriteInt((int) ent.remoteRenderView);
             Session.session.writeDemo!!.Write(ent.remoteRenderView!!)

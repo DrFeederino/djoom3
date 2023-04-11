@@ -106,7 +106,7 @@ object Clip {
     class clipSector_s {
         var axis // -1 = leaf node
                 = 0
-        var children: ArrayList<clipSector_s> = ArrayList<clipSector_s>(2)
+        var children: Array<clipSector_s?> = arrayOfNulls(2)
         var clipLinks: clipLink_s? = null
         var dist = 0f //        private void oSet(clipSector_s clip) {
         //            this.axis = clip.axis;
@@ -119,7 +119,7 @@ object Clip {
     class clipLink_s {
         lateinit var clipModel: idClipModel
         var nextInSector: clipLink_s? = null
-        lateinit var nextLink: clipLink_s
+        var nextLink: clipLink_s? = null
         var prevInSector: clipLink_s? = null
         lateinit var sector: clipSector_s
     }
@@ -540,12 +540,12 @@ object Clip {
             val link: clipLink_s
             while (node.axis != -1) {
                 node = if (absBounds[0, node.axis] > node.dist) {
-                    node.children[0]
+                    node.children[0]!!
                 } else if (absBounds[1, node.axis] < node.dist) {
-                    node.children[1]
+                    node.children[1]!!
                 } else {
-                    Link_r(node.children[0])
-                    node.children[1]
+                    Link_r(node.children[0]!!)
+                    node.children[1]!!
                 }
             }
             link = clipLink_s() //clipLinkAllocator.Alloc();
@@ -557,7 +557,7 @@ object Clip {
                 node.clipLinks!!.prevInSector = link
             }
             node.clipLinks = link
-            link.nextLink = clipLinks!!
+            link.nextLink = clipLinks
             clipLinks = link
         }
 
@@ -1723,11 +1723,11 @@ object Clip {
             val size = idVec3()
             val front: idBounds
             val back: idBounds
-            clipSectors[numClipSectors++] = clipSector_s()
+            //clipSectors[numClipSectors++] = clipSector_s()
             anode = clipSectors[numClipSectors++]
             if (depth == MAX_SECTOR_DEPTH) {
                 anode.axis = -1
-                anode.children.removeAt(1)
+                anode.children[1] = null
                 anode.children[0] = anode.children[1]
                 i = 0
                 while (i < 3) {
@@ -1759,12 +1759,12 @@ object Clip {
             var node = node
             while (node.axis != -1) {
                 node = if (parms.bounds[0, node.axis] > node.dist) {
-                    node.children[0]
+                    node.children[0]!!
                 } else if (parms.bounds[1, node.axis] < node.dist) {
-                    node.children[1]
+                    node.children[1]!!
                 } else {
-                    ClipModelsTouchingBounds_r(node.children[0], parms)
-                    node.children[1]
+                    ClipModelsTouchingBounds_r(node.children[0]!!, parms)
+                    node.children[1]!!
                 }
             }
             var link = node.clipLinks

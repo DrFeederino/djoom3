@@ -953,7 +953,7 @@ object Interaction {
 
                             // add the surface to the light list
                             val shader: Array<idMaterial> = arrayOf(sint.shader)
-                            RenderWorld.R_GlobalShaderOverride(shader)
+                            RenderWorld.R_GlobalShaderOverride(shader as Array<idMaterial?>)
                             sint.shader = shader[0]
 
                             // there will only be localSurfaces if the light casts shadows and

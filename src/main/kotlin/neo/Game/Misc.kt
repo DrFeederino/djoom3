@@ -362,7 +362,7 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idActivator> { a: Any?, activator: idEventArg<*>? ->
+                    eventCallback_t1<idActivator> { a: idActivator, activator: idEventArg<*>? ->
                         idActivator::Event_Activate
                     }
             }
@@ -1325,7 +1325,7 @@ object Misc {
             val targetPos = idVec3()
             val axis = idMat3()
             val dir = idVec3()
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity>(1)
             val projectile: idProjectile?
             val projectileDef: idDict?
             val projectilename: String?
@@ -1518,12 +1518,12 @@ object Misc {
                     val player = Game_local.gameLocal.GetLocalPlayer()
                     if (player != null) {
                         if (!player.objectiveSystemOpen) {
-                            renderEntity.gui[0].StateChanged(Game_local.gameLocal.time, true)
+                            renderEntity.gui[0]!!.StateChanged(Game_local.gameLocal.time, true)
                             if (renderEntity.gui[1] != null) {
-                                renderEntity.gui[1].StateChanged(Game_local.gameLocal.time, true)
+                                renderEntity.gui[1]!!.StateChanged(Game_local.gameLocal.time, true)
                             }
                             if (renderEntity.gui[2] != null) {
-                                renderEntity.gui[2].StateChanged(Game_local.gameLocal.time, true)
+                                renderEntity.gui[2]!!.StateChanged(Game_local.gameLocal.time, true)
                             }
                         }
                     }

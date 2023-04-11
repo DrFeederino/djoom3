@@ -1102,7 +1102,7 @@ object Anim_Blend {
             skin = null
             offset.Zero()
             for (i in 0 until Anim.ANIM_NumAnimChannels) {
-                channelJoints[i] = ArrayList()
+                channelJoints.add(i, ArrayList())
             }
         }
 

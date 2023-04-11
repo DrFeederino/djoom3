@@ -1127,7 +1127,7 @@ object Weapon {
                     ammoClip = ammoAvail
                 }
             }
-            renderEntity.gui.removeAt(0)
+            renderEntity.gui[0] = null
             guiName = weaponDef!!.dict.GetString("gui")
             if (TempDump.isNotNullOrEmpty(guiName)) {
                 renderEntity.gui[0] = UserInterface.uiManager.FindGui(guiName, true, false, true)!!
@@ -1212,20 +1212,23 @@ object Weapon {
             val ammoamount = AmmoAvailable()
             if (ammoamount < 0) {
                 // show infinite ammo
-                renderEntity.gui[0].SetStateString("player_ammo", "")
+                renderEntity!!.gui[0]!!.SetStateString("player_ammo", "")
             } else {
                 // show remaining ammo
-                renderEntity.gui[0].SetStateString("player_totalammo", Str.va("%d", ammoamount - inclip))
-                renderEntity.gui[0].SetStateString("player_ammo", if (ClipSize() != 0) Str.va("%d", inclip) else "--")
-                renderEntity.gui[0].SetStateString(
+                renderEntity!!.gui[0]!!.SetStateString("player_totalammo", Str.va("%d", ammoamount - inclip))
+                renderEntity!!.gui[0]!!.SetStateString(
+                    "player_ammo",
+                    if (ClipSize() != 0) Str.va("%d", inclip) else "--"
+                )
+                renderEntity!!.gui[0]!!.SetStateString(
                     "player_clips",
                     if (ClipSize() != 0) Str.va("%d", ammoamount / ClipSize()) else "--"
                 )
-                renderEntity.gui[0].SetStateString("player_allammo", Str.va("%d/%d", inclip, ammoamount - inclip))
+                renderEntity!!.gui[0]!!.SetStateString("player_allammo", Str.va("%d/%d", inclip, ammoamount - inclip))
             }
-            renderEntity.gui[0].SetStateBool("player_ammo_empty", ammoamount == 0)
-            renderEntity.gui[0].SetStateBool("player_clip_empty", inclip == 0)
-            renderEntity.gui[0].SetStateBool("player_clip_low", inclip <= lowAmmo)
+            renderEntity!!.gui[0]!!.SetStateBool("player_ammo_empty", ammoamount == 0)
+            renderEntity!!.gui[0]!!.SetStateBool("player_clip_empty", inclip == 0)
+            renderEntity!!.gui[0]!!.SetStateBool("player_clip_low", inclip <= lowAmmo)
         }
 
         override fun SetModel(modelname: String) {
@@ -2455,7 +2458,7 @@ object Weapon {
             val spread: Float = _spread.value
             var dmgPower: Float = _dmgPower.value
             var proj: idProjectile?
-            val ent = ArrayList<idEntity>(1)
+            val ent = arrayOfNulls<idEntity>(1)
             var i: Int
             val dir = idVec3()
             var ang: Float
@@ -2595,8 +2598,8 @@ object Weapon {
                     dir.Normalize()
                     if (projectileEnt != null) {
                         ent[0] = projectileEnt!!
-                        ent[0].Show()
-                        ent[0].Unbind()
+                        ent[0]!!.Show()
+                        ent[0]!!.Unbind()
                         projectileEnt = null
                     } else {
                         Game_local.gameLocal.SpawnEntityDef(projectileDict, ent, false)
@@ -2607,7 +2610,7 @@ object Weapon {
                     }
                     if (projectileDict.GetBool("net_instanthit")) {
                         // don't synchronize this on top of the already predicted effect
-                        ent[0].fl.networkSync = false
+                        ent[0]!!.fl.networkSync = false
                     }
                     proj = ent[0] as idProjectile
                     proj.Create(owner, muzzleOrigin, dir)
@@ -2654,7 +2657,7 @@ object Weapon {
 
         private fun Event_CreateProjectile() {
             if (!Game_local.gameLocal.isClient) {
-                val projectileEnt2 = arrayListOf<idEntity>()
+                val projectileEnt2 = arrayOfNulls<idEntity>(1)
                 Game_local.gameLocal.SpawnEntityDef(projectileDict, projectileEnt2, false)
                 projectileEnt = projectileEnt2[0]
                 if (projectileEnt != null) {
@@ -2689,7 +2692,7 @@ object Weapon {
             val origin = idVec3()
             val linear_velocity = idVec3()
             val angular_velocity = idVec3()
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity>(1)
             if (!GetGlobalJointTransform(true, ejectJointView, origin, axis)) {
                 return
             }

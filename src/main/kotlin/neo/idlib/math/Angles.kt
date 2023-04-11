@@ -286,7 +286,7 @@ object Angles {
 
         //
         @JvmOverloads
-        fun ToVectors(forward: idVec3, right: idVec3? = null, up: idVec3? = null) {
+        fun ToVectors(forward: idVec3?, right: idVec3? = null, up: idVec3? = null) {
             val sr = CFloat()
             val sp = CFloat()
             val sy = CFloat()
@@ -296,7 +296,7 @@ object Angles {
             idMath.SinCos(Math_h.DEG2RAD(yaw), sy, cy)
             idMath.SinCos(Math_h.DEG2RAD(pitch), sp, cp)
             idMath.SinCos(Math_h.DEG2RAD(roll), sr, cr)
-            forward.set(cp._val * cy._val, cp._val * sy._val, -sp._val)
+            forward?.set(cp._val * cy._val, cp._val * sy._val, -sp._val)
             right?.set(
                 -sr._val * sp._val * cy._val + cr._val * sy._val,
                 -sr._val * sp._val * sy._val + -cr._val * cy._val,

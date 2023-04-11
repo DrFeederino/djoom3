@@ -1247,7 +1247,7 @@ object tr_light {
             }
             surf.shader = RenderWorld.R_RemapShaderBySkin(surf.shader, def.parms.customSkin, def.parms.customShader)
             shader[0] = surf.shader
-            RenderWorld.R_GlobalShaderOverride(shader as Array<idMaterial>)
+            RenderWorld.R_GlobalShaderOverride(shader)
             if (null == shader[0]) {
                 i++
                 continue

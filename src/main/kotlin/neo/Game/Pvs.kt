@@ -61,7 +61,7 @@ object Pvs {
 
     class pvsPassage_t {
         var canSee // bit set for all portals that can be seen through this passage
-                : ByteArray = ByteArray(0)
+                : ByteArray? = null
     }
 
     class pvsPortal_t {
@@ -137,7 +137,7 @@ object Pvs {
             numPortals = GetPortalCount()
             portalVisBytes = numPortals + 31 and 31.inv() shr 3
             portalVisLongs = portalVisBytes / java.lang.Long.BYTES
-            for (i in 0 until Pvs.MAX_CURRENT_PVS) {
+            for (i in 0 until MAX_CURRENT_PVS) {
                 currentPVS[i].handle.i = -1
                 currentPVS[i].handle.h = 0
                 currentPVS[i].pvs = ByteArray(areaVisBytes) //memset( currentPVS[i].pvs, 0, areaVisBytes );
@@ -176,7 +176,7 @@ object Pvs {
                 areaPVS = ByteArray(0)
             }
             if (currentPVS != null) {
-                for (i in 0 until Pvs.MAX_CURRENT_PVS) {
+                for (i in 0 until MAX_CURRENT_PVS) {
 //			delete currentPVS[i].pvs;
                     currentPVS[i].pvs = null
                 }
@@ -201,8 +201,8 @@ object Pvs {
 
         fun SetupCurrentPVS(source: idBounds, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t {
             val numSourceAreas: Int
-            val sourceAreas = IntArray(Pvs.MAX_BOUNDS_AREAS)
-            numSourceAreas = Game_local.gameRenderWorld.BoundsInAreas(source, sourceAreas, Pvs.MAX_BOUNDS_AREAS)
+            val sourceAreas = IntArray(MAX_BOUNDS_AREAS)
+            numSourceAreas = Game_local.gameRenderWorld.BoundsInAreas(source, sourceAreas, MAX_BOUNDS_AREAS)
             return SetupCurrentPVS(sourceAreas, numSourceAreas, type)
         }
 
@@ -338,7 +338,7 @@ object Pvs {
             val pvs2Ptr: LongArray?
             val ptr: LongArray?
             val handle: pvsHandle_t?
-            if (pvs1.i < 0 || pvs1.i >= Pvs.MAX_CURRENT_PVS || pvs1.h != currentPVS[pvs1.i].handle.h || pvs2.i < 0 || pvs2.i >= Pvs.MAX_CURRENT_PVS || pvs2.h != currentPVS[pvs2.i].handle.h
+            if (pvs1.i < 0 || pvs1.i >= MAX_CURRENT_PVS || pvs1.h != currentPVS[pvs1.i].handle.h || pvs2.i < 0 || pvs2.i >= MAX_CURRENT_PVS || pvs2.h != currentPVS[pvs2.i].handle.h
             ) {
                 idGameLocal.Error("idPVS::MergeCurrentPVS: invalid handle")
             }
@@ -355,7 +355,7 @@ object Pvs {
         }
 
         fun FreeCurrentPVS(handle: pvsHandle_t) {
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::FreeCurrentPVS: invalid handle")
             }
             currentPVS[handle.i].handle.i = -1
@@ -364,7 +364,7 @@ object Pvs {
         // returns true if the target is within the current PVS
         fun InCurrentPVS(handle: pvsHandle_t, target: idVec3): Boolean {
             val targetArea: Int
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
             targetArea = Game_local.gameRenderWorld.PointInArea(target)
@@ -376,11 +376,11 @@ object Pvs {
         fun InCurrentPVS(handle: pvsHandle_t, target: idBounds): Boolean {
             var i: Int
             val numTargetAreas: Int
-            val targetAreas = IntArray(Pvs.MAX_BOUNDS_AREAS)
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            val targetAreas = IntArray(MAX_BOUNDS_AREAS)
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
-            numTargetAreas = Game_local.gameRenderWorld.BoundsInAreas(target, targetAreas, Pvs.MAX_BOUNDS_AREAS)
+            numTargetAreas = Game_local.gameRenderWorld.BoundsInAreas(target, targetAreas, MAX_BOUNDS_AREAS)
             i = 0
             while (i < numTargetAreas) {
                 if (currentPVS[handle.i].pvs!![targetAreas[i] shr 3].toInt() and (1 shl (targetAreas[i] and 7)) != 0) {
@@ -392,7 +392,7 @@ object Pvs {
         }
 
         fun InCurrentPVS(handle: pvsHandle_t, targetArea: Int): Boolean {
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
             return if (targetArea < 0 || targetArea >= numAreas) {
@@ -402,7 +402,7 @@ object Pvs {
 
         fun InCurrentPVS(handle: pvsHandle_t, targetAreas: IntArray, numTargetAreas: Int): Boolean {
             var i: Int
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
             i = 0
@@ -480,13 +480,13 @@ object Pvs {
             var numPoints: Int
             var n: Int
             val num: Int
-            val areas = IntArray(Pvs.MAX_BOUNDS_AREAS)
+            val areas = IntArray(MAX_BOUNDS_AREAS)
             var portal: exitPortal_t?
             val plane = idPlane()
             val offset = idVec3()
             var color: idVec4
             val handle: pvsHandle_t?
-            num = Game_local.gameRenderWorld.BoundsInAreas(source, areas, Pvs.MAX_BOUNDS_AREAS)
+            num = Game_local.gameRenderWorld.BoundsInAreas(source, areas, MAX_BOUNDS_AREAS)
             if (0 == num) {
                 return
             }
@@ -546,7 +546,7 @@ object Pvs {
             val plane = idPlane()
             val offset = idVec3()
             var color: idVec4
-            if (handle.i < 0 || handle.i >= Pvs.MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
+            if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::DrawCurrentPVS: invalid handle")
             }
             sourceArea = Game_local.gameRenderWorld.PointInArea(source)
@@ -649,7 +649,7 @@ object Pvs {
             portalPtrs = ArrayList<pvsPortal_t>(numPortals)
             i = 0
             while (i < numAreas) {
-                pvsAreas[i] = pvsArea_t()
+                pvsAreas.add(i, pvsArea_t())
                 area = pvsAreas[i]
                 area.bounds.Clear()
                 //                area.portals = portalPtrs + cp;
@@ -657,8 +657,8 @@ object Pvs {
                 j = 0
                 while (j < n) {
                     portal = Game_local.gameRenderWorld.GetPortal(i, j)
-                    pvsPortals[cp++] = pvsPortal_t()
-                    p = pvsPortals[cp++]
+                    p = pvsPortal_t()
+                    pvsPortals.add(cp++, p)
                     // the winding goes counter clockwise seen from this area
                     p.w = portal.w.Copy()
                     p.areaNum = portal.areas[1] // area[1] is always the area the portal leads to
@@ -670,7 +670,7 @@ object Pvs {
                     p.plane.set(p.plane.unaryMinus())
                     // no PVS calculated for this portal yet
                     p.done = false
-                    portalPtrs[area.numPortals++] = p
+                    portalPtrs.add(area.numPortals++, p)
                     area.bounds.timesAssign(p.bounds)
                     j++
                 }
@@ -895,7 +895,7 @@ object Pvs {
 
                 // get pointers to vis data
                 prevMightSee = TempDump.reinterpret_cast_long_array(prevStack.mightSee)
-                passageVis = TempDump.reinterpret_cast_long_array(passage.canSee)
+                passageVis = TempDump.reinterpret_cast_long_array(passage.canSee!!)
                 sourceVis = TempDump.reinterpret_cast_long_array(source.vis)
                 mightSee = TempDump.reinterpret_cast_long_array(stack.mightSee)
                 more = 0
@@ -1146,14 +1146,14 @@ object Pvs {
                 while (j < area.numPortals) {
                     target = area.portals[j]
                     n = pvsPortals.indexOf(target)
-                    source.passages[j] = pvsPassage_t()
+                    source.passages.add(j, pvsPassage_t())
                     passage = source.passages[j]
 
                     // if the source portal cannot see this portal
                     if (0 == (source.mightSee[n shr 3].toInt() and (1 shl (n and 7)))) {
                         // not all portals in the area have to be visible because areas are not necesarily convex
                         // also no passage has to be created for the portal which is the opposite of the source
-                        passage.canSee = ByteArray(0)
+                        passage.canSee = null
                         j++
                         continue
                     }
@@ -1234,12 +1234,12 @@ object Pvs {
                         }
 
                         // store results of all eight portals
-                        passage.canSee[byteNum] = canSee
+                        passage.canSee!![byteNum] = canSee
                         byteNum++
                     }
 
                     // can always see the target portal
-                    passage.canSee[n shr 3] = (passage.canSee[n shr 3].toInt() or (1 shl (n and 7))).toByte()
+                    passage.canSee!![n shr 3] = (passage.canSee!![n shr 3].toInt() or (1 shl (n and 7))).toByte()
                     j++
                 }
                 i++
@@ -1262,9 +1262,9 @@ object Pvs {
                 area = pvsAreas[p.areaNum]
                 j = 0
                 while (j < area.numPortals) {
-                    if (p.passages[j].canSee.isNotEmpty()) {
+                    if (p.passages[j].canSee != null) {
 //				delete[] p.passages[j].canSee;
-                        p.passages[j].canSee = ByteArray(0)
+                        p.passages[j].canSee = null
                     }
                     j++
                 }
@@ -1404,7 +1404,7 @@ object Pvs {
             var i: Int
             val handle = pvsHandle_t()
             i = 0
-            while (i < Pvs.MAX_CURRENT_PVS) {
+            while (i < MAX_CURRENT_PVS) {
                 if (currentPVS[i].handle.i == -1) {
                     currentPVS[i].handle.i = i
                     currentPVS[i].handle.h = h
@@ -1432,7 +1432,7 @@ object Pvs {
                 pvsCurrent_t()
             }
 
-            while (i < Pvs.MAX_CURRENT_PVS) {
+            while (i < MAX_CURRENT_PVS) {
                 currentPVS[i] = pvsCurrent_t()
                 currentPVS[i].handle.i = -1
                 currentPVS[i].handle.h = 0

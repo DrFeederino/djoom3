@@ -2,26 +2,36 @@ package neo.Game.Script
 
 import neo.CM.CollisionModel.trace_s
 import neo.Game.AFEntity.idAFEntity_Base
+import neo.Game.Camera.idCamera
+import neo.Game.Entity
+import neo.Game.Entity.EV_Activate
+import neo.Game.Entity.EV_CacheSoundShader
 import neo.Game.Entity.idEntity
+import neo.Game.Entity.signalNum_t
 import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local
+import neo.Game.Game_local.Companion.gameLocal
 import neo.Game.Game_local.idGameLocal
 import neo.Game.Game_local.idGameLocal.Companion.Error
 import neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE
 import neo.Game.Player.idPlayer
 import neo.Game.Script.Script_Interpreter.idInterpreter
 import neo.Game.Script.Script_Program.function_t
+import neo.Game.Script.Script_Thread.idThread
+import neo.Renderer.RenderWorld
 import neo.TempDump.btoi
+import neo.TempDump.etoi
 import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.CmdSystem.cmdSystem
 import neo.framework.DeclManager
 import neo.framework.UsercmdGen.USERCMD_HZ
+import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.CmdArgs
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Text.Str.idStr
@@ -29,10 +39,15 @@ import neo.idlib.Text.Str.idStr.Companion.Cmpn
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Angles.idAngles
+import neo.idlib.math.Math_h.DEG2RAD
 import neo.idlib.math.Math_h.MS2SEC
 import neo.idlib.math.Math_h.SEC2MS
-import neo.idlib.math.Vector.getVec3_zero
+import neo.idlib.math.Math_h.idMath.Cos
+import neo.idlib.math.Math_h.idMath.Sin
+import neo.idlib.math.Math_h.idMath.Sqrt
+import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
+import neo.idlib.math.Vector.idVec4
 
 /**
  *
@@ -145,9 +160,9 @@ object Script_Thread {
             Init()
             SetThreadName(String.format("thread_%d", threadIndex))
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: create thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -160,9 +175,9 @@ object Script_Thread {
             SetThreadName(self!!.name.toString())
             interpreter.EnterObjectFunction(self, func, false)
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: create thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -175,9 +190,9 @@ object Script_Thread {
             SetThreadName(func!!.Name())
             interpreter.EnterFunction(func, false)
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: create thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -188,9 +203,9 @@ object Script_Thread {
             Init()
             interpreter.ThreadCall(source, func, args)
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: create thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -203,9 +218,9 @@ object Script_Thread {
             SetThreadName(self!!.name.toString())
             interpreter.ThreadCall(source, func, args)
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: create thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -222,7 +237,7 @@ object Script_Thread {
             } while (GetThread(threadIndex) != null)
             threadNum = threadIndex
             threadList.Append(this)
-            creationTime = Game_local.gameLocal.time
+            creationTime = gameLocal.time
             lastExecuteTime = 0
             manualControl = false
             ClearWaitFor()
@@ -248,15 +263,15 @@ object Script_Thread {
         }
 
         private fun Event_GetTime() {
-            ReturnFloat(MS2SEC(Game_local.gameLocal.realClientTime.toFloat()))
+            ReturnFloat(MS2SEC(gameLocal.realClientTime.toFloat()))
         }
 
         private fun Event_ClearPersistantArgs() {
-            Game_local.gameLocal.persistentLevelInfo.Clear()
+            gameLocal.persistentLevelInfo.Clear()
         }
 
         private fun Event_FirstPerson() {
-            Game_local.gameLocal.SetCamera(null)
+            gameLocal.SetCamera(null)
         }
 
         private fun Event_GetTraceFraction() {
@@ -277,7 +292,7 @@ object Script_Thread {
 
         private fun Event_GetTraceEntity() {
             if (trace.fraction < 1.0f) {
-                ReturnEntity(Game_local.gameLocal.entities[trace.c.entityNum])
+                ReturnEntity(gameLocal.entities[trace.c.entityNum])
             } else {
                 ReturnEntity(null)
             }
@@ -285,7 +300,7 @@ object Script_Thread {
 
         private fun Event_GetTraceJoint() {
             if (trace.fraction < 1.0f && trace.c.id < 0) {
-                val af = Game_local.gameLocal.entities[trace.c.entityNum] as idAFEntity_Base?
+                val af = gameLocal.entities[trace.c.entityNum] as idAFEntity_Base?
                 if (af != null && af is idAFEntity_Base && af.IsActiveAF()) {
                     ReturnString(af.GetAnimator().GetJointName(CLIPMODEL_ID_TO_JOINT_HANDLE(trace.c.id)))
                     return
@@ -296,7 +311,7 @@ object Script_Thread {
 
         private fun Event_GetTraceBody() {
             if (trace.fraction < 1.0f && trace.c.id < 0) {
-                val af = Game_local.gameLocal.entities[trace.c.entityNum] as idAFEntity_Base?
+                val af = gameLocal.entities[trace.c.entityNum] as idAFEntity_Base?
                 if (af != null && af is idAFEntity_Base && af.IsActiveAF()) {
                     val bodyId = af.BodyForClipModelId(trace.c.id)
                     val body = af.GetAFPhysics().GetBody(bodyId)
@@ -310,11 +325,11 @@ object Script_Thread {
         }
 
         private fun Event_IsClient() {
-            ReturnFloat(btoi(Game_local.gameLocal.isClient).toFloat())
+            ReturnFloat(btoi(gameLocal.isClient).toFloat())
         }
 
         private fun Event_IsMultiplayer() {
-            ReturnFloat(btoi(Game_local.gameLocal.isMultiplayer).toFloat())
+            ReturnFloat(btoi(gameLocal.isMultiplayer).toFloat())
         }
 
         private fun Event_GetFrameTime() {
@@ -327,7 +342,7 @@ object Script_Thread {
 
         private fun Event_InfluenceActive() {
             val player: idPlayer?
-            player = Game_local.gameLocal.GetLocalPlayer()
+            player = gameLocal.GetLocalPlayer()
             ReturnInt(player != null && player.GetInfluenceLevel() != 0)
         }
 
@@ -337,9 +352,9 @@ object Script_Thread {
             var i: Int
             val n: Int
             if (SysCvar.g_debugScript.GetBool()) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     "%d: end thread (%d) '%s'\n",
-                    Game_local.gameLocal.time,
+                    gameLocal.time,
                     threadNum,
                     threadName
                 )
@@ -405,7 +420,7 @@ object Script_Thread {
 
         fun WaitMS(time: Int) {
             Pause()
-            waitingUntil = Game_local.gameLocal.time + time
+            waitingUntil = gameLocal.time + time
         }
 
         fun WaitSec(time: Float) {
@@ -418,7 +433,7 @@ object Script_Thread {
             // manual control threads don't set waitingUntil so that they can be run again
             // that frame if necessary.
             if (!manualControl) {
-                waitingUntil = Game_local.gameLocal.time + idGameLocal.msec
+                waitingUntil = gameLocal.time + idGameLocal.msec
             }
         }
 
@@ -448,48 +463,48 @@ object Script_Thread {
         }
 
         fun DisplayInfo() {
-            Game_local.gameLocal.Printf(
+            gameLocal.Printf(
                 """%12i: '%s'
         File: %s(%d)
      Created: %d (%d ms ago)
       Status: """,
                 threadNum, threadName,
                 interpreter.CurrentFile(), interpreter.CurrentLine(),
-                creationTime, Game_local.gameLocal.time - creationTime
+                creationTime, gameLocal.time - creationTime
             )
             if (interpreter.threadDying) {
-                Game_local.gameLocal.Printf("Dying\n")
+                gameLocal.Printf("Dying\n")
             } else if (interpreter.doneProcessing) {
-                Game_local.gameLocal.Printf(
+                gameLocal.Printf(
                     """Paused since %d (%d ms)
-      Reason: """, lastExecuteTime, Game_local.gameLocal.time - lastExecuteTime
+      Reason: """, lastExecuteTime, gameLocal.time - lastExecuteTime
                 )
                 if (waitingForThread != null) {
-                    Game_local.gameLocal.Printf(
+                    gameLocal.Printf(
                         "Waiting for thread #%3d '%s'\n",
                         waitingForThread!!.GetThreadNum(),
                         waitingForThread!!.GetThreadName()
                     )
-                } else if (waitingFor != Game_local.ENTITYNUM_NONE && Game_local.gameLocal.entities[waitingFor] != null) {
-                    Game_local.gameLocal.Printf(
+                } else if (waitingFor != Game_local.ENTITYNUM_NONE && gameLocal.entities[waitingFor] != null) {
+                    gameLocal.Printf(
                         "Waiting for entity #%3d '%s'\n",
                         waitingFor,
-                        Game_local.gameLocal.entities[waitingFor]!!.name
+                        gameLocal.entities[waitingFor]!!.name
                     )
                 } else if (waitingUntil != 0) {
-                    Game_local.gameLocal.Printf(
+                    gameLocal.Printf(
                         "Waiting until %d (%d ms total wait time)\n",
                         waitingUntil,
                         waitingUntil - lastExecuteTime
                     )
                 } else {
-                    Game_local.gameLocal.Printf("None\n")
+                    gameLocal.Printf("None\n")
                 }
             } else {
-                Game_local.gameLocal.Printf("Processing\n")
+                gameLocal.Printf("Processing\n")
             }
             interpreter.DisplayInfo()
-            Game_local.gameLocal.Printf("\n")
+            gameLocal.Printf("\n")
         }
 
         override fun CreateInstance(): idClass {
@@ -526,12 +541,12 @@ object Script_Thread {
 //            return false;//HACKME::6
             val oldThread: idThread?
             val done: Boolean
-            if (manualControl && waitingUntil > Game_local.gameLocal.time) {
+            if (manualControl && waitingUntil > gameLocal.time) {
                 return false
             }
             oldThread = currentThread
             currentThread = this
-            lastExecuteTime = Game_local.gameLocal.time
+            lastExecuteTime = gameLocal.time
             ClearWaitFor()
             done = interpreter.Execute()
             if (done) {
@@ -581,7 +596,7 @@ object Script_Thread {
         fun IsWaiting(): Boolean {
             return if (waitingForThread != null || waitingFor != Game_local.ENTITYNUM_NONE) {
                 true
-            } else waitingUntil != 0 && waitingUntil > Game_local.gameLocal.time
+            } else waitingUntil != 0 && waitingUntil > gameLocal.time
         }
 
         fun ClearWaitFor() {
@@ -616,7 +631,7 @@ object Script_Thread {
         fun DelayedStart(delay: Int) {
             var delay = delay
             CancelEvents(EV_Thread_Execute)
-            if (Game_local.gameLocal.time <= 0) {
+            if (gameLocal.time <= 0) {
                 delay++
             }
             PostEventMS(EV_Thread_Execute, delay)
@@ -675,7 +690,7 @@ object Script_Thread {
                 while (i < n) {
 
                     //threadList[ i ].DisplayInfo();
-                    Game_local.gameLocal.Printf(
+                    gameLocal.Printf(
                         "%3d: %-20s : %s(%d)\n",
                         threadList[i].threadNum,
                         threadList[i].threadName,
@@ -684,7 +699,7 @@ object Script_Thread {
                     )
                     i++
                 }
-                Game_local.gameLocal.Printf("%d active threads\n\n", n)
+                gameLocal.Printf("%d active threads\n\n", n)
             }
 
             companion object {
@@ -712,84 +727,473 @@ object Script_Thread {
             init {
                 eventCallbacks.putAll(getEventCallBacks())
                 eventCallbacks.putAll(getEventCallBacks())
-                //            eventCallbacks.put(EV_Thread_Execute, (eventCallback_t0<idThread>) idThread::Event_Execute);
-//            eventCallbacks.put(EV_Thread_TerminateThread, (eventCallback_t1<idThread>)  (idEventArg<?>) idThread::Event_TerminateThread);
-//            eventCallbacks.put(EV_Thread_Pause, (eventCallback_t0<idThread>) idThread::Event_Pause);
-//            eventCallbacks.put(EV_Thread_Wait, (eventCallback_t1<idThread>) idThread::Event_Wait);
-//            eventCallbacks.put(EV_Thread_WaitFrame, (eventCallback_t0<idThread>) idThread::Event_WaitFrame);
-//            eventCallbacks.put(EV_Thread_WaitFor, (eventCallback_t1<idThread>) idThread::Event_WaitFor);
-//            eventCallbacks.put(EV_Thread_WaitForThread, (eventCallback_t1<idThread>) idThread::Event_WaitForThread);
-//            eventCallbacks.put(EV_Thread_Print, (eventCallback_t1<idThread>) idThread::Event_Print);
-//            eventCallbacks.put(EV_Thread_PrintLn, (eventCallback_t1<idThread>) idThread::Event_PrintLn);
-//            eventCallbacks.put(EV_Thread_Say, (eventCallback_t1<idThread>) idThread::Event_Say);
-//            eventCallbacks.put(EV_Thread_Assert, (eventCallback_t1<idThread>) idThread::Event_Assert);
-//            eventCallbacks.put(EV_Thread_Trigger, (eventCallback_t1<idThread>) idThread::Event_Trigger);
-//            eventCallbacks.put(EV_Thread_SetCvar, (eventCallback_t2<idThread>) idThread::Event_SetCvar);
-//            eventCallbacks.put(EV_Thread_GetCvar, (eventCallback_t1<idThread>) idThread::Event_GetCvar);
-//            eventCallbacks.put(EV_Thread_Random, (eventCallback_t1<idThread>) idThread::Event_Random);
-//            eventCallbacks.put(EV_Thread_GetTime, (eventCallback_t0<idThread>) idThread::Event_GetTime);
-//            eventCallbacks.put(EV_Thread_KillThread, (eventCallback_t1<idThread>) idThread::Event_KillThread);
-//            eventCallbacks.put(EV_Thread_SetThreadName, (eventCallback_t1<idThread>) idThread::Event_SetThreadName);
-//            eventCallbacks.put(EV_Thread_GetEntity, (eventCallback_t1<idThread>) idThread::Event_GetEntity);
-//            eventCallbacks.put(EV_Thread_Spawn, (eventCallback_t1<idThread>) idThread::Event_Spawn);
-//            eventCallbacks.put(EV_Thread_CopySpawnArgs, (eventCallback_t1<idThread>) idThread::Event_CopySpawnArgs);
-//            eventCallbacks.put(EV_Thread_SetSpawnArg, (eventCallback_t2<idThread>) idThread::Event_SetSpawnArg);
-//            eventCallbacks.put(EV_Thread_SpawnString, (eventCallback_t2<idThread>) idThread::Event_SpawnString);
-//            eventCallbacks.put(EV_Thread_SpawnFloat, (eventCallback_t2<idThread>) idThread::Event_SpawnFloat);
-//            eventCallbacks.put(EV_Thread_SpawnVector, (eventCallback_t2<idThread>) idThread::Event_SpawnVector);
-//            eventCallbacks.put(EV_Thread_ClearPersistantArgs, (eventCallback_t0<idThread>) idThread::Event_ClearPersistantArgs);
-//            eventCallbacks.put(EV_Thread_SetPersistantArg, (eventCallback_t2<idThread>) idThread::Event_SetPersistantArg);
-//            eventCallbacks.put(EV_Thread_GetPersistantString, (eventCallback_t1<idThread>) idThread::Event_GetPersistantString);
-//            eventCallbacks.put(EV_Thread_GetPersistantFloat, (eventCallback_t1<idThread>) idThread::Event_GetPersistantFloat);
-//            eventCallbacks.put(EV_Thread_GetPersistantVector, (eventCallback_t1<idThread>) idThread::Event_GetPersistantVector);
-//            eventCallbacks.put(EV_Thread_AngToForward, (eventCallback_t1<idThread>) idThread::Event_AngToForward);
-//            eventCallbacks.put(EV_Thread_AngToRight, (eventCallback_t1<idThread>) idThread::Event_AngToRight);
-//            eventCallbacks.put(EV_Thread_AngToUp, (eventCallback_t1<idThread>) idThread::Event_AngToUp);
-//            eventCallbacks.put(EV_Thread_Sine, (eventCallback_t1<idThread>) idThread::Event_GetSine);
-//            eventCallbacks.put(EV_Thread_Cosine, (eventCallback_t1<idThread>) idThread::Event_GetCosine);
-//            eventCallbacks.put(EV_Thread_SquareRoot, (eventCallback_t1<idThread>) idThread::Event_GetSquareRoot);
-//            eventCallbacks.put(EV_Thread_Normalize, (eventCallback_t1<idThread>) idThread::Event_VecNormalize);
-//            eventCallbacks.put(EV_Thread_VecLength, (eventCallback_t1<idThread>) idThread::Event_VecLength);
-//            eventCallbacks.put(EV_Thread_VecDotProduct, (eventCallback_t2<idThread>) idThread::Event_VecDotProduct);
-//            eventCallbacks.put(EV_Thread_VecCrossProduct, (eventCallback_t2<idThread>) idThread::Event_VecCrossProduct);
-//            eventCallbacks.put(EV_Thread_VecToAngles, (eventCallback_t1<idThread>) idThread::Event_VecToAngles);
-//            eventCallbacks.put(EV_Thread_OnSignal, (eventCallback_t3<idThread>) idThread::Event_OnSignal);
-//            eventCallbacks.put(EV_Thread_ClearSignal, (eventCallback_t2<idThread>) idThread::Event_ClearSignalThread);
-//            eventCallbacks.put(EV_Thread_SetCamera, (eventCallback_t1<idThread>) idThread::Event_SetCamera);
-//            eventCallbacks.put(EV_Thread_FirstPerson, (eventCallback_t0<idThread>) idThread::Event_FirstPerson);
-//            eventCallbacks.put(EV_Thread_Trace, (eventCallback_t6<idThread>) idThread::Event_Trace);
-//            eventCallbacks.put(EV_Thread_TracePoint, (eventCallback_t4<idThread>) idThread::Event_TracePoint);
-//            eventCallbacks.put(EV_Thread_GetTraceFraction, (eventCallback_t0<idThread>) idThread::Event_GetTraceFraction);
-//            eventCallbacks.put(EV_Thread_GetTraceEndPos, (eventCallback_t0<idThread>) idThread::Event_GetTraceEndPos);
-//            eventCallbacks.put(EV_Thread_GetTraceNormal, (eventCallback_t0<idThread>) idThread::Event_GetTraceNormal);
-//            eventCallbacks.put(EV_Thread_GetTraceEntity, (eventCallback_t0<idThread>) idThread::Event_GetTraceEntity);
-//            eventCallbacks.put(EV_Thread_GetTraceJoint, (eventCallback_t0<idThread>) idThread::Event_GetTraceJoint);
-//            eventCallbacks.put(EV_Thread_GetTraceBody, (eventCallback_t0<idThread>) idThread::Event_GetTraceBody);
-//            eventCallbacks.put(EV_Thread_FadeIn, (eventCallback_t2<idThread>) idThread::Event_FadeIn);
-//            eventCallbacks.put(EV_Thread_FadeOut, (eventCallback_t2<idThread>) idThread::Event_FadeOut);
-//            eventCallbacks.put(EV_Thread_FadeTo, (eventCallback_t3<idThread>) idThread::Event_FadeTo);
-//            eventCallbacks.put(Entity.INSTANCE.getEV_SetShaderParm(), (eventCallback_t2<idThread>) idThread::Event_SetShaderParm);
-//            eventCallbacks.put(EV_Thread_StartMusic, (eventCallback_t1<idThread>) idThread::Event_StartMusic);
-//            eventCallbacks.put(EV_Thread_Warning, (eventCallback_t1<idThread>) idThread::Event_Warning);
-//            eventCallbacks.put(EV_Thread_Error, (eventCallback_t1<idThread>) idThread::Event_Error);
-//            eventCallbacks.put(EV_Thread_StrLen, (eventCallback_t1<idThread>) idThread::Event_StrLen);
-//            eventCallbacks.put(EV_Thread_StrLeft, (eventCallback_t2<idThread>) idThread::Event_StrLeft);
-//            eventCallbacks.put(EV_Thread_StrRight, (eventCallback_t2<idThread>) idThread::Event_StrRight);
-//            eventCallbacks.put(EV_Thread_StrSkip, (eventCallback_t2<idThread>) idThread::Event_StrSkip);
-//            eventCallbacks.put(EV_Thread_StrMid, (eventCallback_t3<idThread>) idThread::Event_StrMid);
-//            eventCallbacks.put(EV_Thread_StrToFloat, (eventCallback_t1<idThread>) idThread::Event_StrToFloat);
-//            eventCallbacks.put(EV_Thread_RadiusDamage, (eventCallback_t6<idThread>) idThread::Event_RadiusDamage);
-//            eventCallbacks.put(EV_Thread_IsClient, (eventCallback_t0<idThread>) idThread::Event_IsClient);
-//            eventCallbacks.put(EV_Thread_IsMultiplayer, (eventCallback_t0<idThread>) idThread::Event_IsMultiplayer);
-//            eventCallbacks.put(EV_Thread_GetFrameTime, (eventCallback_t0<idThread>) idThread::Event_GetFrameTime);
-//            eventCallbacks.put(EV_Thread_GetTicsPerSecond, (eventCallback_t0<idThread>) idThread::Event_GetTicsPerSecond);
-//            eventCallbacks.put(Entity.INSTANCE.getEV_CacheSoundShader(), (eventCallback_t1<idThread>) idThread::Event_CacheSoundShader);
-//            eventCallbacks.put(EV_Thread_DebugLine, (eventCallback_t4<idThread>) idThread::Event_DebugLine);
-//            eventCallbacks.put(EV_Thread_DebugArrow, (eventCallback_t5<idThread>) idThread::Event_DebugArrow);
-//            eventCallbacks.put(EV_Thread_DebugCircle, (eventCallback_t6<idThread>) idThread::Event_DebugCircle);
-//            eventCallbacks.put(EV_Thread_DebugBounds, (eventCallback_t4<idThread>) idThread::Event_DebugBounds);
-//            eventCallbacks.put(EV_Thread_DrawText, (eventCallback_t6<idThread>) idThread::Event_DrawText);
-//            eventCallbacks.put(EV_Thread_InfluenceActive, (eventCallback_t0<idThread>) idThread::Event_InfluenceActive);
+                eventCallbacks[EV_Thread_Execute] = eventCallback_t0<idThread> { idThread::Event_Execute }
+                eventCallbacks[EV_Thread_TerminateThread] =
+                    eventCallback_t1<idThread> { t: idThread, num: idEventArg<*>? -> idThread::Event_TerminateThread }
+                eventCallbacks[EV_Thread_Pause] = eventCallback_t0<idThread> { idThread::Event_Pause }
+                eventCallbacks[EV_Thread_Wait] =
+                    eventCallback_t1<idThread> { t: idThread, time: idEventArg<*>? -> idThread::Event_Wait }
+                eventCallbacks[EV_Thread_WaitFrame] = eventCallback_t0<idThread> { idThread::Event_WaitFrame }
+                eventCallbacks[EV_Thread_WaitFor] =
+                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_WaitFor }
+                eventCallbacks[EV_Thread_WaitForThread] =
+                    eventCallback_t1<idThread> { t: idThread, num: idEventArg<*>? -> idThread::Event_WaitForThread }
+                eventCallbacks[EV_Thread_Print] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Print }
+                eventCallbacks[EV_Thread_PrintLn] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_PrintLn }
+                eventCallbacks[EV_Thread_Say] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Say }
+                eventCallbacks[EV_Thread_Assert] =
+                    eventCallback_t1<idThread> { t: idThread, value: idEventArg<*>? -> idThread::Event_Assert }
+                eventCallbacks[EV_Thread_Trigger] =
+                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_Trigger }
+                eventCallbacks[EV_Thread_SetCvar] =
+                    eventCallback_t2<idThread> { t: idThread, name: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetCvar }
+                eventCallbacks[EV_Thread_GetCvar] =
+                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_GetCvar }
+                eventCallbacks[EV_Thread_Random] =
+                    eventCallback_t1<idThread> { t: idThread, range: idEventArg<*>? -> idThread::Event_Random }
+                eventCallbacks[EV_Thread_GetTime] = eventCallback_t0<idThread> { idThread::Event_GetTime }
+                eventCallbacks[EV_Thread_KillThread] =
+                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_KillThread }
+                eventCallbacks[EV_Thread_SetThreadName] =
+                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_SetThreadName }
+                eventCallbacks[EV_Thread_GetEntity] =
+                    eventCallback_t1<idThread> { t: idThread, n: idEventArg<*>? -> idThread::Event_GetEntity }
+                eventCallbacks[EV_Thread_Spawn] =
+                    eventCallback_t1<idThread> { t: idThread, classname: idEventArg<*>? -> idThread::Event_Spawn }
+                eventCallbacks[EV_Thread_CopySpawnArgs] =
+                    eventCallback_t1<idThread> { t: idThread, ent: idEventArg<*>? -> idThread::Event_CopySpawnArgs }
+                eventCallbacks[EV_Thread_SetSpawnArg] =
+                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetSpawnArg }
+                eventCallbacks[EV_Thread_SpawnString] =
+                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, defaultvalue: idEventArg<*>? -> idThread::Event_SpawnString }
+                eventCallbacks[EV_Thread_SpawnFloat] =
+                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, defaultvalue: idEventArg<*>? -> idThread::Event_SpawnFloat }
+                eventCallbacks[EV_Thread_SpawnVector] =
+                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, d: idEventArg<*>? -> idThread::Event_SpawnVector }
+                eventCallbacks[EV_Thread_ClearPersistantArgs] =
+                    eventCallback_t0<idThread> { idThread::Event_ClearPersistantArgs }
+                eventCallbacks[EV_Thread_SetPersistantArg] =
+                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetPersistantArg }
+                eventCallbacks[EV_Thread_GetPersistantString] =
+                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantString }
+                eventCallbacks[EV_Thread_GetPersistantFloat] =
+                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantFloat }
+                eventCallbacks[EV_Thread_GetPersistantVector] =
+                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantVector }
+                eventCallbacks[EV_Thread_AngToForward] =
+                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToForward }
+                eventCallbacks[EV_Thread_AngToRight] =
+                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToRight }
+                eventCallbacks[EV_Thread_AngToUp] =
+                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToUp }
+                eventCallbacks[EV_Thread_Sine] =
+                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_GetSine }
+                eventCallbacks[EV_Thread_Cosine] =
+                    eventCallback_t1<idThread> { t: idThread, angle: idEventArg<*>? -> idThread::Event_GetCosine }
+                eventCallbacks[EV_Thread_SquareRoot] =
+                    eventCallback_t1<idThread> { t: idThread, theSquare: idEventArg<*>? -> idThread::Event_GetSquareRoot }
+                eventCallbacks[EV_Thread_Normalize] =
+                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecNormalize }
+                eventCallbacks[EV_Thread_VecLength] =
+                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecLength }
+                eventCallbacks[EV_Thread_VecDotProduct] =
+                    eventCallback_t2<idThread> { t: idThread, vec1: idEventArg<*>?, vec2: idEventArg<*>? -> idThread::Event_VecDotProduct }
+                eventCallbacks[EV_Thread_VecCrossProduct] =
+                    eventCallback_t2<idThread> { t: idThread, vec1: idEventArg<*>?, vec2: idEventArg<*>? -> idThread::Event_VecCrossProduct }
+                eventCallbacks[EV_Thread_VecToAngles] =
+                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecToAngles }
+                eventCallbacks[EV_Thread_OnSignal] =
+                    eventCallback_t3<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>?, f: idEventArg<*>? -> idThread::Event_OnSignal }
+                eventCallbacks[EV_Thread_ClearSignal] =
+                    eventCallback_t2<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>? -> idThread::Event_ClearSignalThread }
+                eventCallbacks[EV_Thread_SetCamera] =
+                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_SetCamera }
+                eventCallbacks[EV_Thread_FirstPerson] = eventCallback_t0<idThread> { idThread::Event_FirstPerson }
+                eventCallbacks[EV_Thread_Trace] =
+                    eventCallback_t6<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>?, mi: idEventArg<*>?, ma: idEventArg<*>?, c: idEventArg<*>?, p: idEventArg<*>? -> idThread::Event_Trace }
+                eventCallbacks[EV_Thread_TracePoint] =
+                    eventCallback_t4<idThread> { t: idThread, startA: idEventArg<*>?, endA: idEventArg<*>?, c: idEventArg<*>?, p: idEventArg<*>? -> idThread::Event_TracePoint }
+                eventCallbacks[EV_Thread_GetTraceFraction] =
+                    eventCallback_t0<idThread> { idThread::Event_GetTraceFraction }
+                eventCallbacks[EV_Thread_GetTraceEndPos] = eventCallback_t0<idThread> { idThread::Event_GetTraceEndPos }
+                eventCallbacks[EV_Thread_GetTraceNormal] = eventCallback_t0<idThread> { idThread::Event_GetTraceNormal }
+                eventCallbacks[EV_Thread_GetTraceEntity] = eventCallback_t0<idThread> { idThread::Event_GetTraceEntity }
+                eventCallbacks[EV_Thread_GetTraceJoint] = eventCallback_t0<idThread> { idThread::Event_GetTraceJoint }
+                eventCallbacks[EV_Thread_GetTraceBody] = eventCallback_t0<idThread> { idThread::Event_GetTraceBody }
+                eventCallbacks[EV_Thread_FadeIn] =
+                    eventCallback_t2<idThread> { t: idThread, colorA: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeIn }
+                eventCallbacks[EV_Thread_FadeOut] =
+                    eventCallback_t2<idThread> { t: idThread, colorA: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeOut }
+                eventCallbacks[EV_Thread_FadeTo] =
+                    eventCallback_t3<idThread> { t: idThread, colorA: idEventArg<*>?, alpha: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeTo }
+                eventCallbacks[Entity.EV_SetShaderParm] =
+                    eventCallback_t2<idThread> { t: idThread, parmnumA: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetShaderParm }
+                eventCallbacks[EV_Thread_StartMusic] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_StartMusic }
+                eventCallbacks[EV_Thread_Warning] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Warning }
+                eventCallbacks[EV_Thread_Error] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Error }
+                eventCallbacks[EV_Thread_StrLen] =
+                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_StrLen }
+                eventCallbacks[EV_Thread_StrLeft] =
+                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrLeft }
+                eventCallbacks[EV_Thread_StrRight] =
+                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrRight }
+                eventCallbacks[EV_Thread_StrSkip] =
+                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrSkip }
+                eventCallbacks[EV_Thread_StrMid] =
+                    eventCallback_t3<idThread> { t: idThread, stringA: idEventArg<*>?, startA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrMid }
+                eventCallbacks[EV_Thread_StrToFloat] =
+                    eventCallback_t1<idThread> { t: idThread, string: idEventArg<*>? -> idThread::Event_StrToFloat }
+                eventCallbacks[EV_Thread_RadiusDamage] =
+                    eventCallback_t6<idThread> { t: idThread, origin: idEventArg<*>?, inflictor: idEventArg<*>?, attacker: idEventArg<*>?, ignore: idEventArg<*>?, damageDefName: idEventArg<*>?, dmgPower: idEventArg<*>? -> idThread::Event_RadiusDamage }
+                eventCallbacks[EV_Thread_IsClient] = eventCallback_t0<idThread> { idThread::Event_IsClient }
+                eventCallbacks[EV_Thread_IsMultiplayer] = eventCallback_t0<idThread> { idThread::Event_IsMultiplayer }
+                eventCallbacks[EV_Thread_GetFrameTime] = eventCallback_t0<idThread> { idThread::Event_GetFrameTime }
+                eventCallbacks[EV_Thread_GetTicsPerSecond] =
+                    eventCallback_t0<idThread> { idThread::Event_GetTicsPerSecond }
+                eventCallbacks[EV_CacheSoundShader] =
+                    eventCallback_t1<idThread> { t: idThread, soundName: idEventArg<*>? -> idThread::Event_CacheSoundShader }
+                eventCallbacks[EV_Thread_DebugLine] =
+                    eventCallback_t4<idThread> { t: idThread, colorA: idEventArg<*>?, start: idEventArg<*>?, end: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugLine }
+                eventCallbacks[EV_Thread_DebugArrow] =
+                    eventCallback_t5<idThread> { t: idThread, colorA: idEventArg<*>?, start: idEventArg<*>?, end: idEventArg<*>?, size: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugArrow }
+                eventCallbacks[EV_Thread_DebugCircle] =
+                    eventCallback_t6<idThread> { t: idThread, colorA: idEventArg<*>?, origin: idEventArg<*>?, dir: idEventArg<*>?, radius: idEventArg<*>?, numSteps: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugCircle }
+                eventCallbacks[EV_Thread_DebugBounds] =
+                    eventCallback_t4<idThread> { t: idThread, colorA: idEventArg<*>?, mins: idEventArg<*>?, maxs: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugBounds }
+                eventCallbacks[EV_Thread_DrawText] =
+                    eventCallback_t6<idThread> { t: idThread, text: idEventArg<*>?, origin: idEventArg<*>?, scale: idEventArg<*>?, colorA: idEventArg<*>?, align: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DrawText }
+                eventCallbacks[EV_Thread_InfluenceActive] =
+                    eventCallback_t0<idThread> { idThread::Event_InfluenceActive }
+            }
+
+            private fun Event_DebugLine(
+                t: idThread,
+                colorA: idEventArg<idVec3>,
+                start: idEventArg<idVec3>,
+                end: idEventArg<idVec3>,
+                lifetime: idEventArg<Float>
+            ) {
+                val color = idVec3(colorA.value)
+                Game_local.gameRenderWorld.DebugLine(
+                    idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value,
+                    SEC2MS(lifetime.value).toInt()
+                )
+            }
+
+            private fun Event_DebugArrow(
+                t: idThread,
+                colorA: idEventArg<idVec3>,
+                start: idEventArg<idVec3>,
+                end: idEventArg<idVec3>,
+                size: idEventArg<Int>,
+                lifetime: idEventArg<Float>
+            ) {
+                val color = idVec3(colorA.value)
+                Game_local.gameRenderWorld.DebugArrow(
+                    idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value, size.value,
+                    SEC2MS(lifetime.value).toInt()
+                )
+            }
+
+            private fun Event_DebugCircle(
+                t: idThread,
+                colorA: idEventArg<idVec3>,
+                origin: idEventArg<idVec3>,
+                dir: idEventArg<idVec3>,
+                radius: idEventArg<Float>,
+                numSteps: idEventArg<Int>,
+                lifetime: idEventArg<Float>
+            ) {
+                val color = idVec3(colorA.value)
+                Game_local.gameRenderWorld.DebugCircle(
+                    idVec4(color.x, color.y, color.z, 0.0f), origin.value, dir.value, radius.value, numSteps.value,
+                    SEC2MS(lifetime.value).toInt()
+                )
+            }
+
+            private fun Event_DebugBounds(
+                t: idThread,
+                colorA: idEventArg<idVec3>,
+                mins: idEventArg<idVec3>,
+                maxs: idEventArg<idVec3>,
+                lifetime: idEventArg<Float>
+            ) {
+                val color = idVec3(colorA.value)
+                Game_local.gameRenderWorld.DebugBounds(
+                    idVec4(color.x, color.y, color.z, 0.0f), idBounds(mins.value, maxs.value), getVec3_origin(),
+                    SEC2MS(lifetime.value).toInt()
+                )
+            }
+
+            private fun Event_DrawText(
+                t: idThread,
+                text: idEventArg<String>,
+                origin: idEventArg<idVec3>,
+                scale: idEventArg<Float>,
+                colorA: idEventArg<idVec3>,
+                align: idEventArg<Int>,
+                lifetime: idEventArg<Float>
+            ) {
+                val color = idVec3(colorA.value)
+                Game_local.gameRenderWorld.DrawText(
+                    text.value,
+                    origin.value,
+                    scale.value,
+                    idVec4(color.x, color.y, color.z, 0.0f),
+                    gameLocal.GetLocalPlayer()!!.viewAngles.ToMat3(),
+                    align.value,
+                    SEC2MS(lifetime.value).toInt()
+                )
+            }
+
+            private fun Event_FadeIn(t: idThread, colorA: idEventArg<idVec3>, time: idEventArg<Float>) {
+                val fadeColor = idVec4()
+                val player: idPlayer?
+                val color = idVec3(colorA.value)
+                player = gameLocal.GetLocalPlayer()
+                if (player != null) {
+                    fadeColor.set(color[0], color[1], color[2], 0.0f)
+                    player.playerView.Fade(fadeColor, SEC2MS(time.value).toInt())
+                }
+            }
+
+            private fun Event_FadeOut(t: idThread, colorA: idEventArg<idVec3>, time: idEventArg<Float>) {
+                val fadeColor = idVec4()
+                val player: idPlayer?
+                val color = idVec3(colorA.value)
+                player = gameLocal.GetLocalPlayer()
+                if (player != null) {
+                    fadeColor.set(color[0], color[1], color[2], 1.0f)
+                    player.playerView.Fade(fadeColor, SEC2MS(time.value).toInt())
+                }
+            }
+
+            private fun Event_FadeTo(
+                t: idThread,
+                colorA: idEventArg<idVec3>,
+                alpha: idEventArg<Float>,
+                time: idEventArg<Float>
+            ) {
+                val fadeColor = idVec4()
+                val player: idPlayer?
+                val color = idVec3(colorA.value)
+                player = gameLocal.GetLocalPlayer()
+                if (player != null) {
+                    fadeColor.set(color[0], color[1], color[2], alpha.value)
+                    player.playerView.Fade(fadeColor, SEC2MS(time.value).toInt())
+                }
+            }
+
+            private fun Event_SetShaderParm(t: idThread, parmnumA: idEventArg<Int>, value: idEventArg<Float>) {
+                val parmnum = parmnumA.value
+                if (parmnum < 0 || parmnum >= RenderWorld.MAX_GLOBAL_SHADER_PARMS) {
+                    t.Error("shader parm index (%d) out of range", parmnum)
+                }
+                gameLocal.globalShaderParms[parmnum] = value.value
+            }
+
+            private fun Event_StartMusic(t: idThread, text: idEventArg<String>) {
+                Game_local.gameSoundWorld.PlayShaderDirectly(text.value)
+            }
+
+            private fun Event_Warning(t: idThread, text: idEventArg<String>) {
+                t.Warning("%s", text.value)
+            }
+
+            private fun Event_Error(t: idThread, text: idEventArg<String>) {
+                t.Error("%s", text.value)
+            }
+
+            private fun Event_StrLen(t: idThread, string: idEventArg<String>) {
+                val len: Int
+                len = string.value.length
+                ReturnInt(len)
+            }
+
+            private fun Event_StrLeft(t: idThread, stringA: idEventArg<String>, numA: idEventArg<Int>) {
+                val len: Int
+                val string = stringA.value
+                val num = numA.value
+                if (num < 0) {
+                    ReturnString("")
+                    return
+                }
+                len = string.length
+                if (len < num) {
+                    ReturnString(string)
+                    return
+                }
+                val result = idStr(string, 0, num)
+                ReturnString(result)
+            }
+
+            private fun Event_StrRight(t: idThread, stringA: idEventArg<String>, numA: idEventArg<Int>) {
+                val len: Int
+                val string = stringA.value
+                val num = numA.value
+                if (num < 0) {
+                    ReturnString("")
+                    return
+                }
+                len = string.length
+                if (len < num) {
+                    ReturnString(string)
+                    return
+                }
+                ReturnString(string + (len - num))
+            }
+
+            private fun Event_StrSkip(t: idThread, stringA: idEventArg<String>, numA: idEventArg<Int>) {
+                val len: Int
+                val string = stringA.value
+                val num = numA.value
+                if (num < 0) {
+                    ReturnString(string)
+                    return
+                }
+                len = string.length
+                if (len < num) {
+                    ReturnString("")
+                    return
+                }
+                ReturnString(string + num)
+            }
+
+            private fun Event_GetCosine(t: idThread, angle: idEventArg<Float>) {
+                ReturnFloat(Cos(DEG2RAD(angle.value)))
+            }
+
+            private fun Event_GetSquareRoot(t: idThread, theSquare: idEventArg<Float>) {
+                ReturnFloat(Sqrt(theSquare.value))
+            }
+
+            private fun Event_VecNormalize(t: idThread, vec: idEventArg<idVec3>) {
+                val n = idVec3(vec.value)
+                n.Normalize()
+                ReturnVector(n)
+            }
+
+            private fun Event_VecLength(t: idThread, vec: idEventArg<idVec3>) {
+                ReturnFloat(vec.value.Length())
+            }
+
+            private fun Event_VecDotProduct(t: idThread, vec1: idEventArg<idVec3>, vec2: idEventArg<idVec3>) {
+                ReturnFloat(vec1.value * vec2.value)
+            }
+
+            private fun Event_VecCrossProduct(t: idThread, vec1: idEventArg<idVec3>, vec2: idEventArg<idVec3>) {
+                ReturnVector(vec1.value.Cross(vec2.value))
+            }
+
+            private fun Event_VecToAngles(t: idThread, vec: idEventArg<idVec3>) {
+                val ang = vec.value.ToAngles()
+                ReturnVector(idVec3(ang[0], ang[1], ang[2]))
+            }
+
+            private fun Event_OnSignal(
+                t: idThread,
+                s: idEventArg<Int>,
+                e: idEventArg<idEntity>,
+                f: idEventArg<String>
+            ) {
+                val function: function_t?
+                val signal = s.value
+                val ent = e.value
+                val func = f.value
+                if (null == ent) {
+                    t.Error("Entity not found")
+                }
+                if (signal < 0 || signal >= etoi(signalNum_t.NUM_SIGNALS)) {
+                    t.Error("Signal out of range")
+                }
+                function = gameLocal.program.FindFunction(func)
+                if (null == function) {
+                    t.Error("Function '%s' not found", func)
+                }
+                ent.SetSignal(signal, t, function)
+            }
+
+            private fun Event_ClearSignalThread(t: idThread, s: idEventArg<Int>, e: idEventArg<idEntity>) {
+                val signal = s.value
+                val ent = e.value
+                if (null == ent) {
+                    t.Error("Entity not found")
+                }
+                if (signal < 0 || signal >= etoi(signalNum_t.NUM_SIGNALS)) {
+                    t.Error("Signal out of range")
+                }
+                ent.ClearSignalThread(signal, t)
+            }
+
+            private fun Event_SetCamera(t: idThread, e: idEventArg<idEntity>) {
+                val ent = e.value
+                if (null == ent) {
+                    t.Error("Entity not found")
+                    return
+                }
+                if (ent !is idCamera) {
+                    t.Error("Entity is not a camera")
+                    return
+                }
+                gameLocal.SetCamera(ent)
+            }
+
+            private fun Event_Trace(
+                t: idThread, s: idEventArg<idVec3>, e: idEventArg<idVec3>, mi: idEventArg<idVec3>,
+                ma: idEventArg<idVec3>, c: idEventArg<Int>, p: idEventArg<idEntity>
+            ) {
+                val start = idVec3(s.value)
+                val end = idVec3(e.value)
+                val mins = idVec3(mi.value)
+                val maxs = idVec3(ma.value)
+                val contents_mask = c.value
+                val passEntity = p.value
+                run {
+                    val trace = trace
+                    if (mins == getVec3_origin() && maxs == getVec3_origin()) {
+                        gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity)
+                    } else {
+                        gameLocal.clip.TraceBounds(
+                            trace,
+                            start,
+                            end,
+                            idBounds(mins, maxs),
+                            contents_mask,
+                            passEntity
+                        )
+                    }
+                    idThread.trace = trace
+                }
+                ReturnFloat(trace.fraction)
+            }
+
+            private fun Event_TracePoint(
+                t: idThread,
+                startA: idEventArg<idVec3>,
+                endA: idEventArg<idVec3>,
+                c: idEventArg<Int>,
+                p: idEventArg<idEntity>
+            ) {
+                val start = idVec3(startA.value)
+                val end = idVec3(endA.value)
+                val contents_mask = c.value
+                val passEntity = p.value
+                run {
+                    val trace = trace
+                    gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity)
+                    idThread.trace = trace
+                }
+                ReturnFloat(trace.fraction)
+            }
+
+            private fun Event_GetSine(t: idThread, angle: idEventArg<Float>) {
+                ReturnFloat(Sin(DEG2RAD(angle.value)))
             }
 
             private fun Event_SetThreadName(t: idThread, name: idEventArg<String>) {
@@ -797,8 +1201,8 @@ object Script_Thread {
             }
 
             //
-            // script callable Events
-            //
+// script callable Events
+//
             private fun Event_TerminateThread(t: idThread, num: idEventArg<Int>) {
                 val thread: idThread?
                 thread = GetThread(num.value)
@@ -813,7 +1217,7 @@ object Script_Thread {
                 val ent = e.value
                 if (ent != null && ent.RespondsTo(EV_Thread_SetCallback)) {
                     ent.ProcessEvent(EV_Thread_SetCallback)
-                    if (Game_local.gameLocal.program.GetReturnedInteger() != 0) {
+                    if (gameLocal.program.GetReturnedInteger() != 0) {
                         t.Pause()
                         t.waitingFor = ent.entityNumber
                     }
@@ -835,11 +1239,11 @@ object Script_Thread {
             }
 
             private fun Event_Print(t: idThread, text: idEventArg<String>) {
-                Game_local.gameLocal.Printf("%s", text.value)
+                gameLocal.Printf("%s", text.value)
             }
 
             private fun Event_PrintLn(t: idThread, text: idEventArg<String>) {
-                Game_local.gameLocal.Printf("%s\n", text.value)
+                gameLocal.Printf("%s\n", text.value)
             }
 
             private fun Event_Say(t: idThread, text: idEventArg<String>) {
@@ -850,15 +1254,15 @@ object Script_Thread {
                 assert(value.value != 0f)
             }
 
-            //
-            //        private static void Event_Trigger(idThread t, idEventArg<idEntity> e) {
-            //            idEntity ent = e.getValue();
-            //            if (ent != null) {
-            //                ent.Signal(SIG_TRIGGER);
-            //                ent.ProcessEvent(EV_Activate, gameLocal.GetLocalPlayer());
-            //                ent.TriggerGuis();
-            //            }
-            //        }
+            private fun Event_Trigger(t: idThread, e: idEventArg<idEntity>) {
+                val ent: idEntity = e.value
+                if (ent != null) {
+                    ent.Signal(signalNum_t.SIG_TRIGGER);
+                    ent.ProcessEvent(EV_Activate, gameLocal.GetLocalPlayer());
+                    ent.TriggerGuis();
+                }
+            }
+
             private fun Event_SetCvar(t: idThread, name: idEventArg<String>, value: idEventArg<String>) {
                 cvarSystem.SetCVarString(name.value, value.value)
             }
@@ -869,7 +1273,7 @@ object Script_Thread {
 
             private fun Event_Random(t: idThread, range: idEventArg<Float>) {
                 val result: Float
-                result = Game_local.gameLocal.random.RandomFloat()
+                result = gameLocal.random.RandomFloat()
                 ReturnFloat(range.value * result)
             }
 
@@ -886,22 +1290,23 @@ object Script_Thread {
                     if (entnum < 0 || entnum >= Game_local.MAX_GENTITIES) {
                         t.Error("Entity number in string out of range.")
                     }
-                    ReturnEntity(Game_local.gameLocal.entities[entnum])
+                    ReturnEntity(gameLocal.entities[entnum])
                 } else {
-                    ent = Game_local.gameLocal.FindEntity(name)
+                    ent = gameLocal.FindEntity(name)
                     ReturnEntity(ent)
                 }
             }
 
             //
-            //        private static void Event_Spawn(idThread t, final idEventArg<String> classname) {
-            //            idEntity[] ent = {null};
-            //
-            //            t.spawnArgs.Set("classname", classname.getValue());
-            //            gameLocal.SpawnEntityDef(t.spawnArgs, ent);
-            //            ReturnEntity(ent[0]);
-            //            t.spawnArgs.Clear();
-            //        }
+            private fun Event_Spawn(t: idThread, classname: idEventArg<String>) {
+                var ent: Array<idEntity?> = arrayOfNulls(1);
+
+                t.spawnArgs!!.Set("classname", classname.value);
+                gameLocal.SpawnEntityDef(t.spawnArgs!!, ent);
+                ReturnEntity(ent[0]);
+                t.spawnArgs!!.Clear();
+            }
+
             private fun Event_CopySpawnArgs(t: idThread, ent: idEventArg<idEntity>) {
                 t.spawnArgs!!.Copy(ent.value.spawnArgs)
             }
@@ -923,32 +1328,37 @@ object Script_Thread {
             }
 
             //
-            //        private static void Event_SpawnVector(idThread t, final idEventArg<String> key, final idEventArg<idVec3> d) {
-            //            final idVec3 result = new idVec3();
-            //            final idVec3 defaultvalue = new idVec3(d.getValue());
-            //
-            //            t.spawnArgs.GetVector(key.getValue(), String.format("%f %f %f", defaultvalue.x, defaultvalue.y, defaultvalue.z), result);
-            //            ReturnVector(result);
-            //        }
+            private fun Event_SpawnVector(t: idThread, key: idEventArg<String>, d: idEventArg<idVec3>) {
+                val result: idVec3 = idVec3();
+                val defaultvalue: idVec3 = idVec3(d.value);
+
+                t.spawnArgs!!.GetVector(
+                    key.value,
+                    String.format("%f %f %f", defaultvalue.x, defaultvalue.y, defaultvalue.z),
+                    result
+                );
+                ReturnVector(result);
+            }
+
             private fun Event_SetPersistantArg(t: idThread, key: idEventArg<String>, value: idEventArg<String>) {
-                Game_local.gameLocal.persistentLevelInfo.Set(key.value, value.value)
+                gameLocal.persistentLevelInfo.Set(key.value, value.value)
             }
 
             private fun Event_GetPersistantString(t: idThread, key: idEventArg<String>) {
                 val result = arrayOf<String>()
-                Game_local.gameLocal.persistentLevelInfo.GetString(key.value, "", result)
+                gameLocal.persistentLevelInfo.GetString(key.value, "", result)
                 ReturnString(result[0])
             }
 
             private fun Event_GetPersistantFloat(t: idThread, key: idEventArg<String>) {
                 val result = CFloat()
-                Game_local.gameLocal.persistentLevelInfo.GetFloat(key.value, "0", result)
+                gameLocal.persistentLevelInfo.GetFloat(key.value, "0", result)
                 ReturnFloat(result._val)
             }
 
             private fun Event_GetPersistantVector(t: idThread, key: idEventArg<String>) {
                 val result = idVec3()
-                Game_local.gameLocal.persistentLevelInfo.GetVector(key.value, "0 0 0", result)
+                gameLocal.persistentLevelInfo.GetVector(key.value, "0 0 0", result)
                 ReturnVector(result)
             }
 
@@ -958,267 +1368,16 @@ object Script_Thread {
 
             private fun Event_AngToRight(t: idThread, ang: idEventArg<idAngles>) {
                 val vec = idVec3()
-                ang.value.ToVectors(getVec3_zero(), vec)
+                ang.value.ToVectors(null, vec)
                 ReturnVector(vec)
             }
 
-            //        private static void Event_AngToForward(idThread t, idEventArg<idAngles> ang) {
-            //            ReturnVector(ang.getValue().ToForward());
-            //        }
-            //
-            //        private static void Event_AngToUp(idThread t, idEventArg<idAngles> ang) {
-            //            final idVec3 vec = new idVec3();
-            //
-            //            ang.getValue().ToVectors(null, null, vec);
-            //            ReturnVector(vec);
-            //        }
-            //
-            //        private static void Event_GetSine(idThread t, idEventArg<Float> angle) {
-            //            ReturnFloat(idMath.Sin(DEG2RAD(angle.getValue())));
-            //        }
-            //
-            //        private static void Event_GetCosine(idThread t, idEventArg<Float> angle) {
-            //            ReturnFloat(idMath.Cos(DEG2RAD(angle.getValue())));
-            //        }
-            //
-            //        private static void Event_GetSquareRoot(idThread t, idEventArg<Float> theSquare) {
-            //            ReturnFloat(idMath.Sqrt(theSquare.getValue()));
-            //        }
-            //
-            //        private static void Event_VecNormalize(idThread t, final idEventArg<idVec3> vec) {
-            //            final idVec3 n = new idVec3(vec.getValue());
-            //            n.Normalize();
-            //            ReturnVector(n);
-            //        }
-            //
-            //        private static void Event_VecLength(idThread t, final idEventArg<idVec3> vec) {
-            //            ReturnFloat(vec.getValue().Length());
-            //        }
-            //
-            //        private static void Event_VecDotProduct(idThread t, final idEventArg<idVec3> vec1, idEventArg<idVec3> vec2) {
-            //            ReturnFloat(vec1.getValue().oMultiply(vec2.getValue()));
-            //        }
-            //
-            //        private static void Event_VecCrossProduct(idThread t, final idEventArg<idVec3> vec1, final idEventArg<idVec3> vec2) {
-            //            ReturnVector(vec1.getValue().Cross(vec2.getValue()));
-            //        }
-            //
-            //        private static void Event_VecToAngles(idThread t, final idEventArg<idVec3> vec) {
-            //            idAngles ang = vec.getValue().ToAngles();
-            //            ReturnVector(new idVec3(ang.get(0), ang.get(1), ang.get(2)));
-            //        }
-            //
-            //        private static void Event_OnSignal(idThread t, idEventArg<Integer> s, idEventArg<idEntity> e, final idEventArg<String> f) {
-            //            function_t function;
-            //            int signal = s.getValue();
-            //            idEntity ent = e.getValue();
-            //            String func = f.getValue();
-            //
-            //            assert (func != null);
-            //
-            //            if (null == ent) {
-            //                t.Error("Entity not found");
-            //            }
-            //
-            //            if ((signal < 0) || (signal >= etoi(NUM_SIGNALS))) {
-            //                t.Error("Signal out of range");
-            //            }
-            //
-            //            function = gameLocal.program.FindFunction(func);
-            //            if (null == function) {
-            //                t.Error("Function '%s' not found", func);
-            //            }
-            //
-            //            ent.SetSignal(signal, t, function);
-            //        }
-            //
-            //        private static void Event_ClearSignalThread(idThread t, idEventArg<Integer> s, idEventArg<idEntity> e) {
-            //            int signal = s.getValue();
-            //            idEntity ent = e.getValue();
-            //
-            //            if (null == ent) {
-            //                t.Error("Entity not found");
-            //            }
-            //
-            //            if ((signal < 0) || (signal >= etoi(NUM_SIGNALS))) {
-            //                t.Error("Signal out of range");
-            //            }
-            //
-            //            ent.ClearSignalThread(signal, t);
-            //        }
-            //
-            //        private static void Event_SetCamera(idThread t, idEventArg<idEntity> e) {
-            //            idEntity ent = e.getValue();
-            //
-            //            if (null == ent) {
-            //                t.Error("Entity not found");
-            //                return;
-            //            }
-            //
-            //            if (!(ent instanceof idCamera)) {
-            //                t.Error("Entity is not a camera");
-            //                return;
-            //            }
-            //
-            //            gameLocal.SetCamera((idCamera) ent);
-            //        }
-            //
-            //        private static void Event_Trace(idThread t, final idEventArg<idVec3> s, final idEventArg<idVec3> e, final idEventArg<idVec3> mi,
-            //                                        final idEventArg<idVec3> ma, idEventArg<Integer> c, idEventArg<idEntity> p) {
-            //            final idVec3 start = new idVec3(s.getValue());
-            //            final idVec3 end = new idVec3(e.getValue());
-            //            final idVec3 mins = new idVec3(mi.getValue());
-            //            final idVec3 maxs = new idVec3(ma.getValue());
-            //            int contents_mask = c.getValue();
-            //            idEntity passEntity = p.getValue();
-            //
-            //            {
-            //                trace_s trace = idThread.trace;
-            //                if (mins.equals(getVec3_origin()) && maxs.equals(getVec3_origin())) {
-            //                    gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
-            //                } else {
-            //                    gameLocal.clip.TraceBounds(trace, start, end, new idBounds(mins, maxs), contents_mask, passEntity);
-            //                }
-            //                idThread.trace = trace;
-            //            }
-            //            ReturnFloat(trace.fraction);
-            //        }
-            //
-            //        private static void Event_TracePoint(idThread t, final idEventArg<idVec3> startA, final idEventArg<idVec3> endA, idEventArg<Integer> c, idEventArg<idEntity> p) {
-            //            final idVec3 start = new idVec3(startA.getValue());
-            //            final idVec3 end = new idVec3(endA.getValue());
-            //            int contents_mask = c.getValue();
-            //            idEntity passEntity = p.getValue();
-            //            {
-            //                trace_s trace = idThread.trace;
-            //                gameLocal.clip.TracePoint(trace, start, end, contents_mask, passEntity);
-            //                idThread.trace = trace;
-            //            }
-            //            ReturnFloat(trace.fraction);
-            //        }
-            //
-            //        private static void Event_FadeIn(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> time) {
-            //            idVec4 fadeColor = new idVec4();
-            //            idPlayer player;
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //
-            //            player = gameLocal.GetLocalPlayer();
-            //            if (player != null) {
-            //                fadeColor.Set(color.get(0), color.get(1), color.get(2), 0.0f);
-            //                player.playerView.Fade(fadeColor, (int) SEC2MS(time.getValue()));
-            //            }
-            //        }
-            //
-            //        private static void Event_FadeOut(idThread t, final idEventArg<idVec3> colorA, idEventArg<Float> time) {
-            //            idVec4 fadeColor = new idVec4();
-            //            idPlayer player;
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //
-            //            player = gameLocal.GetLocalPlayer();
-            //            if (player != null) {
-            //                fadeColor.Set(color.get(0), color.get(1), color.get(2), 1.0f);
-            //                player.playerView.Fade(fadeColor, (int) SEC2MS(time.getValue()));
-            //            }
-            //        }
-            //
-            //        private static void Event_FadeTo(idThread t, idEventArg<idVec3> colorA, idEventArg<Float> alpha, idEventArg<Float> time) {
-            //            idVec4 fadeColor = new idVec4();
-            //            idPlayer player;
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //
-            //            player = gameLocal.GetLocalPlayer();
-            //            if (player != null) {
-            //                fadeColor.Set(color.get(0), color.get(1), color.get(2), alpha.getValue());
-            //                player.playerView.Fade(fadeColor, (int) SEC2MS(time.getValue()));
-            //            }
-            //        }
-            //
-            //        private static void Event_SetShaderParm(idThread t, idEventArg<Integer> parmnumA, idEventArg<Float> value) {
-            //            int parmnum = parmnumA.getValue();
-            //
-            //            if ((parmnum < 0) || (parmnum >= MAX_GLOBAL_SHADER_PARMS)) {
-            //                t.Error("shader parm index (%d) out of range", parmnum);
-            //            }
-            //
-            //            gameLocal.globalShaderParms[parmnum] = value.getValue();
-            //        }
-            //
-            //        private static void Event_StartMusic(idThread t, final idEventArg<String> text) {
-            //            gameSoundWorld.PlayShaderDirectly(text.getValue());
-            //        }
-            //
-            //        private static void Event_Warning(idThread t, final idEventArg<String> text) {
-            //            t.Warning("%s", text.getValue());
-            //        }
-            //
-            //        private static void Event_Error(idThread t, final idEventArg<String> text) {
-            //            t.Error("%s", text.getValue());
-            //        }
-            //
-            //        private static void Event_StrLen(idThread t, final idEventArg<String> string) {
-            //            int len;
-            //
-            //            len = string.getValue().length();
-            //            idThread.ReturnInt(len);
-            //        }
-            //
-            //        private static void Event_StrLeft(idThread t, final idEventArg<String> stringA, idEventArg<Integer> numA) {
-            //            int len;
-            //            String string = stringA.getValue();
-            //            int num = numA.getValue();
-            //
-            //            if (num < 0) {
-            //                idThread.ReturnString("");
-            //                return;
-            //            }
-            //
-            //            len = string.length();
-            //            if (len < num) {
-            //                idThread.ReturnString(string);
-            //                return;
-            //            }
-            //
-            //            idStr result = new idStr(string, 0, num);
-            //            idThread.ReturnString(result);
-            //        }
-            //
-            //        private static void Event_StrRight(idThread t, final idEventArg<String> stringA, idEventArg<Integer> numA) {
-            //            int len;
-            //            String string = stringA.getValue();
-            //            int num = numA.getValue();
-            //
-            //            if (num < 0) {
-            //                idThread.ReturnString("");
-            //                return;
-            //            }
-            //
-            //            len = string.length();
-            //            if (len < num) {
-            //                idThread.ReturnString(string);
-            //                return;
-            //            }
-            //
-            //            idThread.ReturnString(string + (len - num));
-            //        }
-            //
-            //        private static void Event_StrSkip(idThread t, final idEventArg<String> stringA, idEventArg<Integer> numA) {
-            //            int len;
-            //            String string = stringA.getValue();
-            //            int num = numA.getValue();
-            //
-            //            if (num < 0) {
-            //                idThread.ReturnString(string);
-            //                return;
-            //            }
-            //
-            //            len = string.length();
-            //            if (len < num) {
-            //                idThread.ReturnString("");
-            //                return;
-            //            }
-            //
-            //            idThread.ReturnString(string + num);
-            //        }
+            private fun Event_AngToUp(t: idThread, ang: idEventArg<idAngles>) {
+                val vec = idVec3()
+                ang.value.ToVectors(null, null, vec)
+                ReturnVector(vec)
+            }
+
             private fun Event_StrMid(
                 t: idThread,
                 stringA: idEventArg<String>,
@@ -1262,7 +1421,7 @@ object Script_Thread {
                 damageDefName: idEventArg<String>,
                 dmgPower: idEventArg<Float>
             ) {
-                Game_local.gameLocal.RadiusDamage(
+                gameLocal.RadiusDamage(
                     origin.value,
                     inflictor.value,
                     attacker.value,
@@ -1277,31 +1436,6 @@ object Script_Thread {
                 DeclManager.declManager.FindSound(soundName.value)
             }
 
-            //
-            //        private static void Event_DebugLine(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> start, final idEventArg<idVec3> end, final idEventArg<Float> lifetime) {
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //            Game_local.gameRenderWorld.DebugLine(new idVec4(color.x, color.y, color.z, 0.0f), start.getValue(), end.getValue(), (int) SEC2MS(lifetime.getValue()));
-            //        }
-            //
-            //        private static void Event_DebugArrow(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> start, final idEventArg<idVec3> end, final idEventArg<Integer> size, final idEventArg<Float> lifetime) {
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //            gameRenderWorld.DebugArrow(new idVec4(color.x, color.y, color.z, 0.0f), start.getValue(), end.getValue(), size.getValue(), (int) SEC2MS(lifetime.getValue()));
-            //        }
-            //
-            //        private static void Event_DebugCircle(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> origin, final idEventArg<idVec3> dir, final idEventArg<Float> radius, final idEventArg<Integer> numSteps, final idEventArg<Float> lifetime) {
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //            gameRenderWorld.DebugCircle(new idVec4(color.x, color.y, color.z, 0.0f), origin.getValue(), dir.getValue(), radius.getValue(), numSteps.getValue(), (int) SEC2MS(lifetime.getValue()));
-            //        }
-            //
-            //        private static void Event_DebugBounds(idThread t, final idEventArg<idVec3> colorA, final idEventArg<idVec3> mins, final idEventArg<idVec3> maxs, final idEventArg<Float> lifetime) {
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //            gameRenderWorld.DebugBounds(new idVec4(color.x, color.y, color.z, 0.0f), new idBounds(mins.getValue(), maxs.getValue()), getVec3_origin(), (int) SEC2MS(lifetime.getValue()));
-            //        }
-            //
-            //        private static void Event_DrawText(idThread t, final idEventArg<String> text, final idEventArg<idVec3> origin, idEventArg<Float> scale, final idEventArg<idVec3> colorA, final idEventArg<Integer> align, final idEventArg<Float> lifetime) {
-            //            final idVec3 color = new idVec3(colorA.getValue());
-            //            gameRenderWorld.DrawText(text.getValue(), origin.getValue(), scale.getValue(), new idVec4(color.x, color.y, color.z, 0.0f), gameLocal.GetLocalPlayer().getViewAngles().ToMat3(), align.getValue(), (int) Math_h.INSTANCE.SEC2MS(lifetime.getValue()));
-            //        }
             fun GetThread(num: Int): idThread? {
                 var i: Int
                 val n: Int
@@ -1412,7 +1546,7 @@ object Script_Thread {
             }
 
             fun ReturnString(text: String?) {
-                Game_local.gameLocal.program.ReturnString(text)
+                gameLocal.program.ReturnString(text)
             }
 
             fun ReturnString(text: idStr) {
@@ -1420,13 +1554,13 @@ object Script_Thread {
             }
 
             fun ReturnFloat(value: Float) {
-                Game_local.gameLocal.program.ReturnFloat(value)
+                gameLocal.program.ReturnFloat(value)
             }
 
             fun ReturnInt(value: Int) {
                 // true integers aren't supported in the compiler,
                 // so int values are stored as floats
-                Game_local.gameLocal.program.ReturnFloat(value.toFloat())
+                gameLocal.program.ReturnFloat(value.toFloat())
             }
 
             fun ReturnInt(value: Boolean) {
@@ -1434,11 +1568,11 @@ object Script_Thread {
             }
 
             fun ReturnVector(vec: idVec3?) {
-                Game_local.gameLocal.program.ReturnVector(vec)
+                gameLocal.program.ReturnVector(vec)
             }
 
             fun ReturnEntity(ent: idEntity?) {
-                Game_local.gameLocal.program.ReturnEntity(ent)
+                gameLocal.program.ReturnEntity(ent)
             }
 
             fun delete(thread: idThread) {

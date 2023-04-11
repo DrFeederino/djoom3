@@ -276,7 +276,7 @@ object FX {
         fun Run(time: Int) {
             var ieff: Int
             var j: Int
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity>(1)
             var projectileDef: idDict?
             var projectile: idProjectile?
             if (TempDump.NOT(fxEffect)) {

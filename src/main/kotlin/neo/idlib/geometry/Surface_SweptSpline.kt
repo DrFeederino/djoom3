@@ -142,7 +142,7 @@ class Surface_SweptSpline {
                 }
                 i++
             }
-            indexes.SetNum(splineDiv * sweptSplineDiv * 2 * 3, false)
+            indexes.ensureCapacity(splineDiv * sweptSplineDiv * 2 * 3)
 
             // create indexes for the triangles
             offset = 0.also { i = it }

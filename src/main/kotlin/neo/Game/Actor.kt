@@ -519,7 +519,7 @@ object Actor {
         protected var walkIK: idIK_Walk
         override fun Spawn() {
             super.Spawn()
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity>(1)
             val jointName = idStr()
             val fovDegrees = CFloat()
             val rank = CInt()
@@ -564,7 +564,7 @@ object Actor {
                 if (TempDump.NOT(ent[0])) {
                     idGameLocal.Error("Couldn't spawn '%s' to attach to entity '%s'", kv.GetValue(), name)
                 } else {
-                    Attach(ent[0])
+                    Attach(ent[0]!!)
                 }
                 kv = spawnArgs.MatchPrefix("def_attach", kv)
             }

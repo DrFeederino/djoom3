@@ -41,7 +41,6 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector
-import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
 import kotlin.math.abs
 
@@ -638,8 +637,8 @@ object Mover {
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
                 if (renderEntity.gui[i] != null) {
-                    renderEntity.gui[i].SetStateString("movestate", state)
-                    renderEntity.gui[i].StateChanged(Game_local.gameLocal.time, true)
+                    renderEntity.gui[i]!!.SetStateString("movestate", state)
+                    renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time, true)
                 }
                 i++
             }
@@ -663,8 +662,8 @@ object Mover {
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j].SetStateString(key, `val`)
-                            ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time, true)
+                            ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
+                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -865,12 +864,12 @@ object Mover {
                 DIR_REL_DOWN -> vec.set(0f, 0f, -1f)
                 DIR_REL_LEFT -> {
                     physicsObj.GetLocalAngles(ang)
-                    ang.ToVectors(getVec3_origin(), vec)
+                    ang.ToVectors(null, vec)
                     vec.timesAssign(-1f)
                 }
                 DIR_REL_RIGHT -> {
                     physicsObj.GetLocalAngles(ang)
-                    ang.ToVectors(getVec3_origin(), vec)
+                    ang.ToVectors(null, vec)
                 }
                 DIR_REL_FORWARD -> {
                     physicsObj.GetLocalAngles(ang)
@@ -1690,8 +1689,8 @@ object Mover {
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j].SetStateString("floor", Str.va("%d", currentFloor))
-                            ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time, true)
+                            ent.GetRenderEntity().gui[j]!!.SetStateString("floor", Str.va("%d", currentFloor))
+                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -1715,8 +1714,8 @@ object Mover {
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j].SetStateString("floor", "")
-                            ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time, true)
+                            ent.GetRenderEntity().gui[j]!!.SetStateString("floor", "")
+                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -2659,8 +2658,8 @@ object Mover {
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                         if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j].SetStateString(key, `val`)
-                            ent.GetRenderEntity().gui[j].StateChanged(Game_local.gameLocal.time, true)
+                            ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
+                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()

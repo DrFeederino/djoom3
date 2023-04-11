@@ -4687,16 +4687,16 @@ object AI {
         }
 
         protected fun CreateProjectile(pos: idVec3, dir: idVec3): idProjectile? {
-            val ent = arrayListOf<idEntity>()
+            val ent = arrayOfNulls<idEntity>(1)
             var clsname: String?
             if (null == projectile.GetEntity()) {
                 Game_local.gameLocal.SpawnEntityDef(projectileDef!!, ent, false)
-                if (ent.isNullOrEmpty()) {
+                if (ent[0] == null) {
                     clsname = projectileDef!!.GetString("classname")
                     idGameLocal.Error("Could not spawn entityDef '%s'", clsname)
                 }
                 if (ent[0] !is idProjectile) {
-                    clsname = ent[0].GetClassname()
+                    clsname = ent[0]!!.GetClassname()
                     idGameLocal.Error("'%s' is not an idProjectile", clsname)
                 }
                 projectile.oSet(ent[0] as idProjectile?)

@@ -1384,7 +1384,7 @@ object tr_trisurf {
         val ind = ArrayList<indexSort_t>(tri.numIndexes) // R_StaticAlloc(tri.numIndexes);
         i = 0
         while (i < tri.numIndexes) {
-            ind[i] = indexSort_t()
+            ind.add(i, indexSort_t())
             ind[i].vertexNum = tri.indexes[i]
             ind[i].faceNum = i / 3
             i++
@@ -1435,7 +1435,7 @@ object tr_trisurf {
                     continue
                 }
                 maxArea = area
-                dt[vertNum] = dominantTri_s()
+                dt.add(vertNum, dominantTri_s())
                 if (i1 == vertNum) {
                     dt[vertNum].v2 = i2
                     dt[vertNum].v3 = i3

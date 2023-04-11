@@ -65,7 +65,7 @@ object Surface {
         protected val edgeIndexes: idList<Int> =
             idList() // 3 references to edges for each triangle, may be negative for reversed edge
         protected val edges: idList<surfaceEdge_t> = idList() // edges
-        protected val indexes: idList<Int> = idList() // 3 references to vertices for each triangle
+        protected var indexes: ArrayList<Int> = ArrayList() // 3 references to vertices for each triangle
         protected val verts: idList<idDrawVert> = idList() // vertices
 
         //
@@ -73,7 +73,7 @@ object Surface {
         constructor()
         constructor(surf: idSurface) {
             verts.set(surf.verts)
-            indexes.set(surf.indexes)
+            indexes = ArrayList(surf.indexes)
             edges.set(surf.edges)
             edgeIndexes.set(surf.edgeIndexes)
         }
@@ -86,9 +86,9 @@ object Surface {
             for (i in 0 until numVerts) {
                 this.verts[i] = verts!![i]
             }
-            this.indexes.SetNum(numIndexes)
+            this.indexes.ensureCapacity(numIndexes)
             //	memcpy( this.indexes.Ptr(), indexes, numIndexes * sizeof( indexes[0] ) );
-            System.arraycopy(indexes, 0, this.indexes.getList(), 0, numIndexes)
+            System.arraycopy(indexes, 0, this.indexes, 0, numIndexes)
             GenerateEdgeIndexes()
         }
 
@@ -104,11 +104,11 @@ object Surface {
             val m: Int
             val n: Int
             n = verts.Num()
-            m = indexes.Num()
+            m = indexes.size
             verts.Append(surf.verts) // merge verts where possible ?
-            indexes.Append(surf.indexes)
+            indexes.addAll(surf.indexes)
             i = m
-            while (i < indexes.Num()) {
+            while (i < indexes.size) {
                 indexes[i] += n
                 i++
             }
@@ -117,11 +117,11 @@ object Surface {
         }
 
         fun GetNumIndexes(): Int {
-            return indexes.Num()
+            return indexes.size
         }
 
         fun GetIndexes(): Array<Int> {
-            return indexes.getList()!!
+            return indexes.toTypedArray()
         }
 
         //public	int						GetNumVertices( void ) const { return verts.Num(); }
@@ -131,14 +131,14 @@ object Surface {
         //
         open fun Clear() {
             verts.Clear()
-            indexes.Clear()
+            indexes.clear()
             edges.Clear()
             edgeIndexes.Clear()
         }
 
         fun SwapTriangles(surf: idSurface) {
             verts.Swap(surf.verts)
-            indexes.Swap(surf.indexes)
+            indexes = surf.indexes
             edges.Swap(surf.edges)
             edgeIndexes.Swap(surf.edgeIndexes)
         }
@@ -271,8 +271,8 @@ object Surface {
             }
 
             // each edge is shared by at most two triangles, as such there can never be more indexes than twice the number of edges
-            surface[0].indexes.Resize((counts[Plane.SIDE_FRONT] + counts[Plane.SIDE_ON]) * 2 + numEdgeSplitVertexes * 4)
-            surface[1].indexes.Resize((counts[Plane.SIDE_BACK] + counts[Plane.SIDE_ON]) * 2 + numEdgeSplitVertexes * 4)
+            surface[0].indexes.ensureCapacity((counts[Plane.SIDE_FRONT] + counts[Plane.SIDE_ON]) * 2 + numEdgeSplitVertexes * 4)
+            surface[1].indexes.ensureCapacity((counts[Plane.SIDE_BACK] + counts[Plane.SIDE_ON]) * 2 + numEdgeSplitVertexes * 4)
 
             // allocate indexes to construct the triangle indexes for the front and back surface
             vertexRemap[0] = IntArray(verts.Num())
@@ -287,10 +287,10 @@ object Surface {
             vertexIndexNum[0][0] = vertexIndexNum[1][0]
             vertexIndexNum[1][1] = numEdgeSplitVertexes
             vertexIndexNum[0][1] = vertexIndexNum[1][1]
-            indexPtr[0] = surface[0].indexes.getList()!!
-            indexPtr[1] = surface[1].indexes.getList()!!
-            indexNum[0] = surface[0].indexes.Num()
-            indexNum[1] = surface[1].indexes.Num()
+            indexPtr[0] = surface[0].indexes.toTypedArray()
+            indexPtr[1] = surface[1].indexes.toTypedArray()
+            indexNum[0] = surface[0].indexes.size
+            indexNum[1] = surface[1].indexes.size
             maxOnPlaneEdges += 4 * numEdgeSplitVertexes
             // allocate one more in case no triangles are actually split which may happen for a disconnected surface
             onPlaneEdges[0] = IntArray(maxOnPlaneEdges + 1)
@@ -493,8 +493,8 @@ object Surface {
                 }
                 i += 3
             }
-            surface[0].indexes.SetNum(indexNum[0], false)
-            surface[1].indexes.SetNum(indexNum[1], false)
+            surface[0].indexes.ensureCapacity(indexNum[0])
+            surface[1].indexes.ensureCapacity(indexNum[1])
 
             // copy vertexes
             surface[0].verts.SetNum(vertexIndexNum[0][1], false)
@@ -546,7 +546,7 @@ object Surface {
             var numEdgeSplitVertexes: Int
             val v = idDrawVert()
             val newVerts = idList<idDrawVert>()
-            val newIndexes = idList<Int>()
+            val newIndexes = ArrayList<Int>()
             dists = FloatArray(verts.Num())
             sides = IntArray(verts.Num())
             counts[2] = 0
@@ -615,7 +615,7 @@ object Surface {
 
             // each edge is shared by at most two triangles, as such there can never be
             // more indexes than twice the number of edges
-            newIndexes.Resize((counts[Plane.SIDE_FRONT] shl 1) + (numEdgeSplitVertexes shl 2))
+            newIndexes.ensureCapacity((counts[Plane.SIDE_FRONT] shl 1) + (numEdgeSplitVertexes shl 2))
 
             // allocate indexes to construct the triangle indexes for the front and back surface
             vertexRemap = IntArray(verts.Num())
@@ -623,8 +623,8 @@ object Surface {
             vertexCopyIndex = IntArray(numEdgeSplitVertexes + verts.Num())
             vertexIndexNum[0] = 0
             vertexIndexNum[1] = numEdgeSplitVertexes
-            indexPtr = newIndexes.getList()!!
-            indexNum = newIndexes.Num()
+            indexPtr = newIndexes.toTypedArray()
+            indexNum = newIndexes.size
 
             // split surface triangles
             i = 0
@@ -774,7 +774,7 @@ object Surface {
                 }
                 i += 3
             }
-            newIndexes.SetNum(indexNum, false)
+            newIndexes.ensureCapacity(indexNum)
 
             // copy vertexes
             newVerts.SetNum(vertexIndexNum[1], false)
@@ -785,7 +785,7 @@ object Surface {
             }
 
             // copy back to this surface
-            indexes.set(newIndexes)
+            indexes = ArrayList(newIndexes)
             verts.set(newVerts)
             GenerateEdgeIndexes()
             return true
@@ -807,7 +807,7 @@ object Surface {
             var edgeNum: Int
             var index: Int
             numIslands = 0
-            numTris = indexes.Num() / 3
+            numTris = indexes.size / 3
             islandNum = IntArray(numTris)
             Arrays.fill(islandNum, -1, 0, numTris)
             queue = IntArray(numTris)
@@ -869,7 +869,7 @@ object Surface {
                 return false
             }
             i = 0
-            while (i < indexes.Num()) {
+            while (i < indexes.size) {
                 plane.FromPoints(
                     verts[indexes[i + 0]].xyz,
                     verts[indexes[i + 1]].xyz,
@@ -1052,8 +1052,8 @@ object Surface {
             val e = surfaceEdge_t.generateArray(3)
             vertexEdges = IntArray(verts.Num())
             Arrays.fill(vertexEdges, 0, verts.Num(), -1)
-            edgeChain = IntArray(indexes.Num())
-            edgeIndexes.SetNum(indexes.Num(), true)
+            edgeChain = IntArray(indexes.size)
+            edgeIndexes.SetNum(indexes.size, true)
             edges.Clear()
 
             // the first edge is a dummy
@@ -1063,8 +1063,8 @@ object Surface {
             e[0].verts[0] = e[0].verts[1]
             edges.Append(e[0])
             i = 0
-            while (i < indexes.Num()) {
-                index = indexes.getList()!! //index = indexes.Ptr() + i;
+            while (i < indexes.size) {
+                index = indexes.toTypedArray() //index = indexes.Ptr() + i;
                 // vertex numbers
                 i0 = index[i + 0]
                 i1 = index[i + 1]
