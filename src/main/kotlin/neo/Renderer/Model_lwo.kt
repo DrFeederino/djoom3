@@ -2349,7 +2349,7 @@ object Model_lwo {
                 buf.position(buf.position() + 2)
             }
             j -= 1
-            pp.surf = lwNode.getPosition(pp.surf, j) as lwSurface
+            pp.surf = lwNode.getPosition(pp.surf, j) as lwSurface?
             pp = plist.pol[p++]
             //                pv = plist.pol[0].v[v += nv];
             v += nv
@@ -2907,7 +2907,7 @@ object Model_lwo {
      default surface is created.
      ====================================================================== */
     fun lwResolvePolySurfaces(polygon: lwPolygonList, `object`: lwObject): Boolean {
-        var s: ArrayList<lwSurface>
+        val s: Array<lwSurface?>
         var st: lwSurface?
         var i: Int
         var index: Int
@@ -2916,7 +2916,7 @@ object Model_lwo {
         if (tlist.count == 0) {
             return true
         }
-        s = ArrayList<lwSurface>(tlist.count) // Mem_ClearedAlloc(tlist.count);
+        s = arrayOfNulls<lwSurface>(tlist.count) // Mem_ClearedAlloc(tlist.count);
         //        if (null == s) {
 //            return 0;
 //        }
@@ -2925,7 +2925,7 @@ object Model_lwo {
             st = surf
             while (st != null) {
                 if (st.name.isNotEmpty() && st.name == tlist.tag[i]) {
-                    s.add(i, st)
+                    s[i] = st
                     break
                 }
                 st = st.next
@@ -2938,16 +2938,16 @@ object Model_lwo {
             if (index < 0 || index > tlist.count) {
                 return false
             }
-            if (null == s.getOrNull(index)) {
-                s.add(index - 1, lwDefaultSurface())
+            if (null == s[index]) {
+                s[index - 1] = lwDefaultSurface()
                 if (null == s.getOrNull(index)) {
                     return false
                 }
-                s[index].name = "" //(String) Mem_ClearedAlloc(tlist.tag[ index].length() + 1);
+                s[index]!!.name = "" //(String) Mem_ClearedAlloc(tlist.tag[ index].length() + 1);
 //                if (s[index].name.isNotEmpty()) {
 //                    return false
 //                }
-                s[index].name = tlist.tag[index]
+                s[index]!!.name = tlist.tag[index]
                 surf = lwListAdd(surf, s[index])
                 `object`.nsurfs++
             }
@@ -2955,7 +2955,6 @@ object Model_lwo {
             polygon.pol[i].surf = s[index] //TODO:should this be an oSet() to preserve the refs?
             i++
         }
-        s.clear()
         return true
     }
 
@@ -2990,7 +2989,7 @@ object Model_lwo {
                     polygon.pol[j].getV(n).norm[k] = polygon.pol[j].norm[k]
                     k++
                 }
-                if (polygon.pol[j].surf.smooth <= 0) {
+                if (polygon.pol[j].surf!!.smooth <= 0) {
                     n++
                     continue
                 }
@@ -3007,7 +3006,7 @@ object Model_lwo {
                         continue
                     }
                     a = idMath.ACos(dot(polygon.pol[j].norm, polygon.pol[h].norm))
-                    if (a > polygon.pol[j].surf.smooth) {
+                    if (a > polygon.pol[j].surf!!.smooth) {
                         g++
                         continue
                     }
@@ -4679,7 +4678,7 @@ object Model_lwo {
                 = 0
         var smoothgrp // smoothing group
                 = 0
-        lateinit var surf: lwSurface
+        var surf: lwSurface? = null
         var type: Long = 0
         var v // array of vertex records
                 : ArrayList<lwPolVert> = ArrayList()

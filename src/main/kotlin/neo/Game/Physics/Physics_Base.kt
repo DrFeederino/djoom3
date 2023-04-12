@@ -287,7 +287,9 @@ class Physics_Base {
                 i++
             }
             if (!found) {
-                contactEntities.Alloc()!!.oSet(e)
+                val contactentityT = contactEntity_t()
+                contactEntities.Append(contactentityT)
+                contactentityT.oSet(e)
             }
         }
 

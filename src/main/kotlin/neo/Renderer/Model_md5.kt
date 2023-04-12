@@ -130,18 +130,20 @@ object Model_md5 {
             if (count < 0) {
                 parser.Error("Invalid size: %s", token.toString())
             }
+            val texCoordsSize = count
             texCoords.ensureCapacity(count)
             firstWeightForVertex.ensureCapacity(count)
             numWeightsForVertex.ensureCapacity(count)
             numWeights = 0
             maxweight = 0
             i = 0
-            while (i < texCoords.size) {
+            while (i < texCoordsSize) { // texCoords.size
                 parser.ExpectTokenString("vert")
                 parser.ParseInt()
-                parser.Parse1DMatrix(2, texCoords.set(i, idVec2()))
-                firstWeightForVertex[i] = parser.ParseInt()
-                numWeightsForVertex[i] = parser.ParseInt()
+                texCoords.add(i, idVec2())
+                parser.Parse1DMatrix(2, texCoords[i])
+                firstWeightForVertex.add(i, parser.ParseInt())
+                numWeightsForVertex.add(i, parser.ParseInt())
                 if (0 == numWeightsForVertex[i]) {
                     parser.Error("Vertex without any joint weights.")
                 }
@@ -166,9 +168,9 @@ object Model_md5 {
             while (i < count) {
                 parser.ExpectTokenString("tri")
                 parser.ParseInt()
-                tris[i * 3 + 0] = parser.ParseInt()
-                tris[i * 3 + 1] = parser.ParseInt()
-                tris[i * 3 + 2] = parser.ParseInt()
+                tris.add(i * 3 + 0, parser.ParseInt())
+                tris.add(i * 3 + 1, parser.ParseInt())
+                tris.add(i * 3 + 2, parser.ParseInt())
                 i++
             }
 
@@ -192,7 +194,7 @@ object Model_md5 {
                 if (jointnum < 0 || jointnum >= numJoints) {
                     parser.Error("Joint Index out of range(%d): %d", numJoints, jointnum)
                 }
-                tempWeights[i] = vertexWeight_s()
+                tempWeights.add(i, vertexWeight_s())
                 tempWeights[i].joint = jointnum
                 tempWeights[i].jointWeight = parser.ParseFloat()
                 parser.Parse1DMatrix(3, tempWeights[i].offset)
@@ -209,7 +211,7 @@ object Model_md5 {
                 num = firstWeightForVertex[i]
                 j = 0
                 while (j < numWeightsForVertex[i]) {
-                    scaledWeights[count] = idVec4()
+                    scaledWeights.add(count, idVec4())
                     scaledWeights[count]
                         .set(tempWeights[num].offset.times(tempWeights[num].jointWeight))
                     scaledWeights[count].w = tempWeights[num].jointWeight
@@ -243,7 +245,7 @@ object Model_md5 {
             val verts = ArrayList<idDrawVert>(texCoords.size)
             i = 0
             while (i < texCoords.size) {
-                verts[i] = idDrawVert()
+                verts.add(i, idDrawVert())
                 verts[i].Clear()
                 verts[i].st = texCoords[i]
                 i++
@@ -577,8 +579,9 @@ object Model_md5 {
             // parse num joints
             parser.ExpectTokenString("numJoints")
             num = parser.ParseInt()
+            val jointsSize = num
             joints.clear()
-            joints.ensureCapacity(num)
+            joints.ensureCapacity(num) //TODO: useless! Need to make sure it's actually sized for N elements
             defaultPose.clear()
             defaultPose.ensureCapacity(num)
             poseMat3 = Array<idJointMat>(num) { idJointMat() }
@@ -591,16 +594,18 @@ object Model_md5 {
             }
             meshes.clear()
             meshes.ensureCapacity(num)
-
+            val meshSize = num
             //
             // parse joints
             //
             parser.ExpectTokenString("joints")
             parser.ExpectTokenString("{")
             i = 0
-            while (i < joints.size) {
-                val pose = defaultPose.set(i, idJointQuat())
-                val joint = joints.set(i, idMD5Joint())
+            while (i < jointsSize) { //joint.size == jointsSize
+                defaultPose.add(i, idJointQuat())
+                val pose = defaultPose[i]
+                joints.add(i, idMD5Joint())
+                val joint = joints[i]
                 ParseJoint(parser, joint, pose)
                 //poseMat3[i] = idJointMat()
                 poseMat3[i].SetRotation(pose.q.ToMat3())
@@ -617,8 +622,9 @@ object Model_md5 {
             }
             parser.ExpectTokenString("}")
             i = 0
-            while (i < meshes.size) {
-                val mesh = meshes.set(i, idMD5Mesh())
+            while (i < meshSize) { // meshes.size == meshSize
+                meshes.add(i, idMD5Mesh())
+                val mesh = meshes[i]
                 parser.ExpectTokenString("mesh")
                 mesh.ParseMesh(parser, defaultPose.size, poseMat3)
                 i++

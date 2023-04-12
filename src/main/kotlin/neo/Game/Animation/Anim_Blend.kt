@@ -113,7 +113,7 @@ object Anim_Blend {
             anims = ArrayList(anims.size)
             i = 0
             while (i < numAnims) {
-                anims[i] = anim.anims[i]
+                anims.add(i, anim.anims[i])
                 anims[i].IncreaseRefs()
                 i++
             }
@@ -165,7 +165,7 @@ object Anim_Blend {
             name.set(animName)
             i = 0
             while (i < num) {
-                anims[i] = md5anims[i]
+                anims.add(i, md5anims[i])
                 anims[i].IncreaseRefs()
                 i++
             }
@@ -1823,7 +1823,7 @@ object Anim_Blend {
                 }
 
                 // add it to our list
-                md5anims[numAnims] = md5anim
+                md5anims.add(numAnims, md5anim)
                 numAnims++
             } while (src.CheckTokenString(","))
             if (0 == numAnims) {
@@ -4217,7 +4217,7 @@ object Anim_Blend {
             while (i < Anim.ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
-                    channels[i][j] = idAnimBlend()
+                    channels[i].add(j, idAnimBlend())
                     j++
                 }
                 i++

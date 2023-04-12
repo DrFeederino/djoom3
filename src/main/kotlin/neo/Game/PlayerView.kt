@@ -202,7 +202,7 @@ object PlayerView {
             dvFinishTime = Game_local.gameLocal.time - 99999
             kickFinishTime = Game_local.gameLocal.time - 99999
             for (i in 0 until MAX_SCREEN_BLOBS) {
-                screenBlobs[i] = screenBlob_t()
+                screenBlobs.add(i, screenBlob_t())
                 screenBlobs[i].finishTime = Game_local.gameLocal.time
             }
             fadeTime = 0

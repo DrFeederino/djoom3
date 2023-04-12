@@ -973,13 +973,13 @@ object AFEntity {
 
         protected fun InitSkeletonModel() {
             val modelName: String?
-            val modelDef: idDeclModelDef
+            val modelDef: idDeclModelDef?
             skeletonModel = null
             skeletonModelDefHandle = -1
             modelName = spawnArgs.GetString("model_gib")
             if (!modelName.isEmpty()) { //[0] != '\0' ) {
                 modelDef =
-                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false) as idDeclModelDef
+                    DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelName, false) as idDeclModelDef?
                 skeletonModel = if (modelDef != null) {
                     modelDef.ModelHandle()
                 } else {

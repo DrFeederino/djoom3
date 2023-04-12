@@ -960,7 +960,8 @@ class DeclAF {
         private fun ParseUniversalJoint(src: idLexer): Boolean {
             val token = idToken()
             val constraint: idDeclAF_Constraint // = new idDeclAF_Constraint;
-            constraint = constraints.Alloc()!!
+            constraint = idDeclAF_Constraint()
+            constraints.Append(constraint)
             constraint.SetDefault(this)
             if (0 == src.ExpectTokenType(Token.TT_STRING, 0, token)
                 || !src.ExpectTokenString("{")

@@ -2096,6 +2096,8 @@ object tr_trisurf {
         tri = srfTriangles_s() //memset( &tri, 0, sizeof( tri ) );
         tri.numVerts = numVerts
         R_AllocStaticTriSurfVerts(tri, tri.numVerts)
+        tri.verts =
+            verts; //TODO: Make sure it replaces the call to Simd.SIMDProcessor.Memcpy(tri.verts, verts, tri.numVerts)
         Simd.SIMDProcessor.Memcpy(tri.verts, verts, tri.numVerts)
         tri.numIndexes = numIndexes
         R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
