@@ -1139,7 +1139,7 @@ class RenderSystem_init {
 
         //============================================================================
         val cubeAxis: Array<idMat3> = Array<idMat3>(6) { idMat3() }
-        val r_rendererArgs: Array<String> = arrayOf("best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200")
+        val r_rendererArgs: Array<String?> = arrayOf("best", "arb", "arb2", "Cg", "exp", "nv10", "nv20", "r200", null)
         val r_vidModes: Array<vidmode_s> = arrayOf(
             vidmode_s("Mode  0: 320x240", 320, 240),
             vidmode_s("Mode  1: 400x300", 400, 300),
@@ -2267,7 +2267,7 @@ class RenderSystem_init {
                 idLib.common.Printf("Reloading %s\n", mt.material.GetName())
 
                 // reload the decl
-                mt.material.base.Reload()
+                mt.material.base!!.Reload()
 
                 // reload any images used by the decl
                 mt.material.ReloadImages(false)

@@ -39,16 +39,16 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
-import neo.idlib.containers.CBool
-import neo.idlib.containers.CFloat
-import neo.idlib.containers.CInt
+import neo.idlib.containers.*
 import neo.idlib.containers.LinkList.idLinkList
+import neo.idlib.containers.List
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
+import kotlin.collections.set
 import kotlin.math.ceil
 import kotlin.math.cos
 
@@ -147,7 +147,7 @@ object Actor {
             disabled = savefile.ReadBool()
         }
 
-        fun Init(owner: idActor, _animator: idAnimator, animchannel: Int) {
+        fun Init(owner: idActor?, _animator: idAnimator?, animchannel: Int) {
             assert(owner != null)
             assert(_animator != null)
             self = owner
@@ -293,7 +293,7 @@ object Actor {
 
     class copyJoints_t {
         var   /*jointHandle_t*/from: CInt = CInt()
-        var mod: jointModTransform_t = jointModTransform_t.JOINTMOD_NONE
+        var mod: jointModTransform_t = jointModTransform_t.values().get(0)
         var   /*jointHandle_t*/to: CInt = CInt()
     }
 
@@ -441,12 +441,7 @@ object Actor {
         protected val animPrefix: idStr
 
         //
-        protected var attachments: ArrayList<idAttachInfo> = ArrayList(1)
-        fun ArrayList<idAttachInfo>.Alloc(): idAttachInfo {
-            val idAttachInfo = idAttachInfo()
-            add(idAttachInfo)
-            return idAttachInfo
-        }
+        protected var attachments: List.idList<idAttachInfo> = List.idList(idAttachInfo::class.java)
 
         //
         // blinking
@@ -455,13 +450,13 @@ object Actor {
         protected var blink_min: Int
         protected var blink_time: Int
         protected var copyJoints // copied from the body animation to the head model
-                : ArrayList<copyJoints_t>
+                : List.idList<copyJoints_t>
 
         //
-        protected lateinit var damageGroups // body damage groups
-                : Array<idStr?>
-        protected lateinit var damageScale // damage scale per damage gruop
-                : Array<Float?>
+        protected var damageGroups // body damage groups
+                : idStrList = idStrList()
+        protected var damageScale // damage scale per damage gruop
+                : List.idList<Float> = List.idList()
 
         //
         protected var deltaViewAngles // delta angles relative to view input angles
@@ -610,7 +605,7 @@ object Actor {
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                         continue
                     }
-                    copyJoints.add(copyJoint)
+                    copyJoints.Append(copyJoint)
                     kv = spawnArgs.MatchPrefix("copy_joint", kv)
                 }
             }
@@ -677,23 +672,23 @@ object Actor {
             savefile.WriteInt(pain_debounce_time)
             savefile.WriteInt(pain_delay)
             savefile.WriteInt(pain_threshold)
-            savefile.WriteInt(damageGroups.size)
+            savefile.WriteInt(damageGroups.size())
             i = 0
-            while (i < damageGroups.size) {
-                savefile.WriteString(damageGroups[i]!!)
+            while (i < damageGroups.size()) {
+                savefile.WriteString(damageGroups[i])
                 i++
             }
-            savefile.WriteInt(damageScale.size)
+            savefile.WriteInt(damageScale.Num())
             i = 0
-            while (i < damageScale.size) {
-                savefile.WriteFloat(damageScale[i]!!)
+            while (i < damageScale.Num()) {
+                savefile.WriteFloat(damageScale[i])
                 i++
             }
             savefile.WriteBool(use_combat_bbox)
             head.Save(savefile)
-            savefile.WriteInt(copyJoints.size)
+            savefile.WriteInt(copyJoints.Num())
             i = 0
-            while (i < copyJoints.size) {
+            while (i < copyJoints.Num()) {
                 savefile.WriteInt(TempDump.etoi(copyJoints[i].mod))
                 savefile.WriteJoint(copyJoints[i].from._val)
                 savefile.WriteJoint(copyJoints[i].to._val)
@@ -719,9 +714,9 @@ object Actor {
             savefile.WriteBool(allowPain)
             savefile.WriteBool(allowEyeFocus)
             savefile.WriteInt(painTime)
-            savefile.WriteInt(attachments.size)
+            savefile.WriteInt(attachments.Num())
             i = 0
-            while (i < attachments.size) {
+            while (i < attachments.Num()) {
                 attachments[i].ent.Save(savefile)
                 savefile.WriteInt(attachments[i].channel)
                 i++
@@ -782,15 +777,15 @@ object Actor {
             pain_delay = savefile.ReadInt()
             pain_threshold = savefile.ReadInt()
             savefile.ReadInt(num)
-            //damageGroups.ensureCapacity(1)
-            damageGroups = arrayOfNulls(num._val)
+            damageGroups.SetGranularity(1)
+            damageGroups.setSize(num._val)
             i = 0
             while (i < num._val) {
-                savefile.ReadString(damageGroups[i]!!)
+                savefile.ReadString(damageGroups[i])
                 i++
             }
             savefile.ReadInt(num)
-            damageScale = arrayOfNulls(num._val)
+            damageScale.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 damageScale[i] = savefile.ReadFloat()
@@ -799,7 +794,7 @@ object Actor {
             use_combat_bbox = savefile.ReadBool()
             head.Restore(savefile)
             savefile.ReadInt(num)
-            copyJoints = ArrayList(num._val)
+            copyJoints.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 val `val` = CInt()
@@ -830,7 +825,7 @@ object Actor {
             savefile.ReadInt(num)
             i = 0
             while (i < num._val) {
-                val attach = attachments.Alloc()
+                val attach = attachments.Alloc()!!
                 attach.ent.Restore(savefile)
                 attach.channel = savefile.ReadInt()
                 i++
@@ -1263,31 +1258,35 @@ object Actor {
             var i: Int
             var arg: idKeyValue?
             val groupname = idStr()
-            val jointList = ArrayList<Int>()
+            val jointList = List.idList<Int>()
             var jointnum: Int
             var scale: Float
 
             // create damage zones
-            damageGroups = arrayOfNulls(animator.NumJoints())
+
+            // create damage zones
+            damageGroups.setSize(animator.NumJoints())
             arg = spawnArgs.MatchPrefix("damage_zone ", null)
             while (arg != null) {
                 groupname.set(arg.GetKey())
                 groupname.Strip("damage_zone ")
                 animator.GetJointList(arg.GetValue(), jointList)
                 i = 0
-                while (i < jointList.size) {
+                while (i < jointList.Num()) {
                     jointnum = jointList[i]
                     damageGroups[jointnum] = groupname
                     i++
                 }
-                jointList.clear()
+                jointList.Clear()
                 arg = spawnArgs.MatchPrefix("damage_zone ", arg)
             }
 
             // initilize the damage zones to normal damage
-            damageScale = arrayOfNulls(animator.NumJoints())
+
+            // initilize the damage zones to normal damage
+            damageScale.SetNum(animator.NumJoints())
             i = 0
-            while (i < damageScale.size) {
+            while (i < damageScale.Num()) {
                 damageScale[i] = 1.0f
                 i++
             }
@@ -1299,7 +1298,7 @@ object Actor {
                 groupname.set(arg.GetKey())
                 groupname.Strip("damage_scale ")
                 i = 0
-                while (i < damageScale.size) {
+                while (i < damageScale.Num()) {
                     if (groupname == damageGroups[i]) {
                         damageScale[i] = scale
                     }
@@ -1386,13 +1385,13 @@ object Actor {
         }
 
         fun GetDamageForLocation(damage: Int, location: Int): Int {
-            return if (location < 0 || location >= damageScale.size) {
+            return if (location < 0 || location >= damageScale.Num()) {
                 damage
-            } else ceil((damage * damageScale[location]!!).toDouble()).toInt()
+            } else ceil((damage * damageScale[location]).toDouble()).toInt()
         }
 
         fun GetDamageGroup(location: Int): String {
-            return if (location < 0 || location >= damageGroups.size) {
+            return if (location < 0 || location >= damageGroups.size()) {
                 ""
             } else damageGroups[location].toString()
         }
@@ -1706,7 +1705,7 @@ object Actor {
             val axis = idMat3()
             val   /*jointHandle_t*/joint: Int
             val jointName: String?
-            val attach = attachments.Alloc()
+            val attach = attachments.Alloc()!!
             val angleOffset: idAngles?
             val originOffset = idVec3()
             jointName = ent.spawnArgs.GetString("joint")
@@ -1894,7 +1893,7 @@ object Actor {
 
             // remove any attached entities
             i = 0
-            while (i < attachments.size) {
+            while (i < attachments.Num()) {
                 ent = attachments[i].ent.GetEntity()
                 if (ent != null && ent.spawnArgs.GetBool("remove")) {
                     ent.PostEventMS(EV_Remove, 0)
@@ -1918,13 +1917,13 @@ object Actor {
 
             // copy the animation from the body to the head
             i = 0
-            while (i < copyJoints.size) {
+            while (i < copyJoints.Num()) {
                 if (copyJoints[i].mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                     mat = headEnt.GetPhysics().GetAxis().Transpose()
                     GetJointWorldTransform(copyJoints[i].from._val, Game_local.gameLocal.time, pos, axis)
                     pos.minusAssign(headEnt.GetPhysics().GetOrigin())
                     headAnimator!!.SetJointPos(copyJoints[i].to._val, copyJoints[i].mod, pos.times(mat))
-                    headAnimator!!.SetJointAxis(
+                    headAnimator.SetJointAxis(
                         copyJoints[i].to._val,
                         copyJoints[i].mod,
                         axis.times(mat)
@@ -1937,7 +1936,7 @@ object Actor {
                         axis
                     )
                     headAnimator!!.SetJointPos(copyJoints[i].to._val, copyJoints[i].mod, pos)
-                    headAnimator!!.SetJointAxis(copyJoints[i].to._val, copyJoints[i].mod, axis)
+                    headAnimator.SetJointAxis(copyJoints[i].to._val, copyJoints[i].mod, axis)
                 }
                 i++
             }
@@ -2032,7 +2031,7 @@ object Actor {
                 // set the damage joint to be part of the head damage group
                 damageJoint = joint
                 i = 0
-                while (i < damageGroups.size) {
+                while (i < damageGroups.size()) {
                     val d = damageGroups[i]
                     if (d != null && d.toString() == "head") {
                         damageJoint =  /*(jointHandle_t)*/i
@@ -2054,7 +2053,7 @@ object Actor {
                 head.oSet(headEnt)
                 val origin = idVec3()
                 val axis = idMat3()
-                val attach = attachments.Alloc()
+                val attach = attachments.Alloc()!!
                 attach.channel = animator.GetChannelForJoint(joint)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
                 origin.set(renderEntity.origin.plus(origin.plus(modelOffset).times(renderEntity.axis)))
@@ -2079,7 +2078,7 @@ object Actor {
                 sound = spawnArgs.GetString(
                     Str.va(
                         "snd_footstep_%s",
-                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]
+                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]!!
                     )
                 )
             }
@@ -2109,7 +2108,7 @@ object Actor {
                 sound = spawnArgs.GetString(
                     Str.va(
                         "snd_footstep_%s",
-                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]
+                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]!!
                     )
                 )
             }
@@ -2808,7 +2807,7 @@ object Actor {
 
             // remove any attached entities
             i = 0
-            while (i < attachments.size) {
+            while (i < attachments.Num()) {
                 ent = attachments[i].ent.GetEntity()
                 ent?.PostEventMS(EV_Remove, 0)
                 i++
@@ -2831,7 +2830,7 @@ object Actor {
             pain_debounce_time = 0
             pain_delay = 0
             pain_threshold = 0
-            copyJoints = ArrayList()
+            copyJoints = List.idList()
             state = null
             idealState = null
             leftEyeJoint = Model.INVALID_JOINT
@@ -2854,7 +2853,6 @@ object Actor {
             blink_min = 0
             blink_max = 0
             finalBoss = false
-            attachments = ArrayList(1)
             enemyNode = idLinkList(this)
             enemyList = idLinkList(this)
         }

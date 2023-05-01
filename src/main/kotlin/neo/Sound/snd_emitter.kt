@@ -807,7 +807,7 @@ object snd_emitter {
                     val chan = channels[i]
                     if (chan.triggerState && chan.soundShader != null && chan.triggerChannel == channel) {
                         if (idSoundSystemLocal.s_showStartSound.GetInteger() != 0) {
-                            Common.common.Printf("(override %s)", chan.soundShader!!.base.GetName())
+                            Common.common.Printf("(override %s)", chan.soundShader!!.base!!.GetName())
                         }
                         chan.Stop()
 

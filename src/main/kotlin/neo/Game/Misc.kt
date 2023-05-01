@@ -49,6 +49,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List
 import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Extrapolate
@@ -454,7 +455,7 @@ object Misc {
                 val path = arrayOfNulls<idPathCorner?>(Game_local.MAX_GENTITIES)
                 num = 0
                 i = 0
-                while (i < source.targets.size) {
+                while (i < source.targets.Num()) {
                     ent = source.targets[i].GetEntity()
                     if (ent != null && ent !== ignore && ent is idPathCorner) {
                         path[num++] = ent as idPathCorner?
@@ -929,7 +930,7 @@ object Misc {
         private fun Event_FindTargets() {
             FindTargets()
             RemoveNullTargets()
-            if (targets.size != 0) {
+            if (targets.Num() != 0) {
                 forceField.Uniform(
                     targets[0].GetEntity()!!.GetPhysics().GetOrigin().minus(GetPhysics().GetOrigin())
                 )
@@ -1599,8 +1600,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1908,7 +1909,7 @@ object Misc {
                         .Transpose(),
                     1
                 )
-                for (i in 0 until targets.size) {
+                for (i in 0 until targets.Num()) {
                     if (targets[i].GetEntity() != null) {
                         Game_local.gameRenderWorld.DebugArrow(
                             Lib.Companion.colorBlue,
@@ -2196,12 +2197,12 @@ object Misc {
             var i: Int
             var targetEnt: idEntity?
             var targetBeam: idBeam?
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 return
             }
             targetBeam = null
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 targetEnt = targets[i].GetEntity()
                 if (targetEnt != null && targetEnt is idBeam) {
                     targetBeam = targetEnt
@@ -2851,9 +2852,9 @@ object Misc {
             }
         }
 
-        private val lastTargetPos: ArrayList<idVec3>
-        private val target: idEntityPtr<idActor?> = idEntityPtr()
-        private val targetTime: ArrayList<Int>
+        private val lastTargetPos: List.idList<idVec3>
+        private val target: idEntityPtr<idActor?>? = null
+        private val targetTime: List.idList<Int>
         private var end_time = 0
         private var max_wait: Int
         private var min_wait: Int
@@ -2886,15 +2887,15 @@ object Misc {
             savefile.WriteFloat(speed)
             savefile.WriteInt(min_wait)
             savefile.WriteInt(max_wait)
-            target.Save(savefile)
-            savefile.WriteInt(targetTime.size)
+            target!!.Save(savefile)
+            savefile.WriteInt(targetTime.Num())
             i = 0
-            while (i < targetTime.size) {
+            while (i < targetTime.Num()) {
                 savefile.WriteInt(targetTime[i])
                 i++
             }
             i = 0
-            while (i < lastTargetPos.size) {
+            while (i < lastTargetPos.Num()) {
                 savefile.WriteVec3(lastTargetPos[i])
                 i++
             }
@@ -2910,12 +2911,13 @@ object Misc {
             speed = savefile.ReadFloat()
             min_wait = savefile.ReadInt()
             max_wait = savefile.ReadInt()
-            target.Restore(savefile)
+            target!!.Restore(savefile)
+
             num = savefile.ReadInt()
-            targetTime.clear()
-            targetTime.ensureCapacity(num)
-            lastTargetPos.clear()
-            lastTargetPos.ensureCapacity(num)
+            targetTime.SetGranularity(1)
+            targetTime.SetNum(num)
+            lastTargetPos.SetGranularity(1)
+            lastTargetPos.SetNum(num)
             i = 0
             while (i < num) {
                 targetTime[i] = savefile.ReadInt()
@@ -2956,14 +2958,14 @@ object Misc {
                 BecomeInactive(thinkFlags and Entity.TH_THINK.inv())
                 return
             }
-            targetEnt = target.GetEntity()
+            targetEnt = target!!.GetEntity()
             if (null == targetEnt || targetEnt.health <= 0 || end_time != 0 && Game_local.gameLocal.time > end_time || Game_local.gameLocal.inCinematic) {
                 BecomeInactive(Entity.TH_THINK)
             }
             val toPos = targetEnt!!.GetEyePosition()
             num = 0
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
@@ -3034,7 +3036,7 @@ object Misc {
             }
         }
 
-        private fun Event_Activate(_activator: idEventArg<idEntity>) {
+        private fun Event_Activate(_activator: idEventArg<idEntity?>) {
             val activator = _activator.value
             var i: Int
             var time: Float
@@ -3045,26 +3047,26 @@ object Misc {
                 return
             }
             RemoveNullTargets()
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 return
             }
             if (null == activator || activator !is idActor) {
-                target.oSet(Game_local.gameLocal.GetLocalPlayer())
+                target!!.oSet(Game_local.gameLocal.GetLocalPlayer())
             } else {
-                target.oSet(activator as idActor?)
+                target!!.oSet(activator as idActor?)
             }
             end_time = (Game_local.gameLocal.time + Math_h.SEC2MS(spawnArgs.GetFloat("end_time", "0"))).toInt()
-            targetTime.ensureCapacity(targets.size)
-            lastTargetPos.ensureCapacity(targets.size)
+            targetTime.SetNum(targets.Num())
+            lastTargetPos.SetNum(targets.Num())
             val toPos = target.GetEntity()!!.GetEyePosition()
 
             // calculate the relative times of all the objects
             time = 0.0f
             i = 0
-            while (i < targetTime.size) {
+            while (i < targetTime.Num()) {
                 targetTime[i] = Math_h.SEC2MS(time).toInt()
                 lastTargetPos[i] = toPos
-                frac = 1.0f - i.toFloat() / targetTime.size.toFloat()
+                frac = 1.0f - i.toFloat() / targetTime.Num().toFloat()
                 time += (Game_local.gameLocal.random.RandomFloat() + 1.0f) * 0.5f * frac + 0.1f
                 i++
             }
@@ -3072,7 +3074,7 @@ object Misc {
             // scale up the times to fit within throw_time
             scale = throw_time / time
             i = 0
-            while (i < targetTime.size) {
+            while (i < targetTime.Num()) {
                 targetTime[i] = (Game_local.gameLocal.time + Math_h.SEC2MS(shake_time) + targetTime[i] * scale).toInt()
                 i++
             }
@@ -3099,8 +3101,8 @@ object Misc {
             min_wait = 0
             max_wait = 0
             fl.neverDormant = false
-            targetTime = ArrayList()
-            lastTargetPos = ArrayList()
+            targetTime = List.idList()
+            lastTargetPos = List.idList()
         }
     }
 }

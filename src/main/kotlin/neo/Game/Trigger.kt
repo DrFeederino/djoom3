@@ -73,7 +73,7 @@ object Trigger {
                         show = viewBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())
                         if (!show) {
                             i = 0
-                            while (i < ent.targets.size) {
+                            while (i < ent.targets.Num()) {
                                 target = ent.targets[i].GetEntity()
                                 if (target != null && viewBounds.IntersectsBounds(target.GetPhysics().GetAbsBounds())) {
                                     show = true
@@ -124,7 +124,7 @@ object Trigger {
                             }
                         }
                         i = 0
-                        while (i < ent.targets.size) {
+                        while (i < ent.targets.Num()) {
                             target = ent.targets[i].GetEntity()
                             if (target != null) {
                                 Game_local.gameRenderWorld.DebugArrow(

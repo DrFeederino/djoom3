@@ -12,6 +12,7 @@ import neo.Renderer.Model_ase.aseMaterial_t
 import neo.Renderer.Model_ase.aseMesh_t
 import neo.Renderer.Model_ase.aseModel_s
 import neo.Renderer.Model_ase.aseObject_t
+import neo.Renderer.Model_lwo.LWID_
 import neo.Renderer.Model_lwo.lwObject
 import neo.Renderer.Model_lwo.lwSurface
 import neo.Renderer.Model_ma.maMaterial_t
@@ -22,6 +23,7 @@ import neo.Renderer.RenderWorld.renderEntity_s
 import neo.Renderer.tr_local.demoCommand_t
 import neo.Renderer.tr_local.viewDef_s
 import neo.TempDump
+import neo.TempDump.NOT
 import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.Common
@@ -91,7 +93,7 @@ object Model_local {
      ===============================================================================
      */
     open class idRenderModelStatic// the inherited public interface
-        () : idRenderModel() {
+        : idRenderModel() {
         var surfaces: idList<modelSurface_s>
         protected val   /*ID_TIME_T*/timeStamp = LongArray(1)
         var bounds: idBounds
@@ -410,7 +412,7 @@ object Model_local {
             var totalVerts = 0
             val totalBytes: Int // = 0;
             totalBytes = Memory()
-            var closed: Char = 'C'
+            var closed = 'C'
             for (j in 0 until NumSurfaces()) {
                 val surf = Surface(j)
                 if (null == surf.geometry) {
@@ -639,13 +641,13 @@ object Model_local {
                     f.ReadVec3(tri.verts!![j]!!.tangents[0])
                     f.ReadVec3(tri.verts!![j]!!.tangents[1])
                     f.ReadUnsignedChar(color[0])
-                    tri.verts!![j]!!.color[0] = color[0][0].toByte()
+                    tri.verts!![j]!!.color[0] = color[0][0].code.toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts!![j]!!.color[1] = color[1][0].toByte()
+                    tri.verts!![j]!!.color[1] = color[1][0].code.toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts!![j]!!.color[2] = color[2][0].toByte()
+                    tri.verts!![j]!!.color[2] = color[2][0].code.toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts!![j]!!.color[3] = color[3][0].toByte()
+                    tri.verts!![j]!!.color[3] = color[3][0].code.toByte()
                     ++j
                 }
                 surf.geometry = tri
@@ -687,10 +689,10 @@ object Model_local {
                     f.WriteVec3(tri.verts!![j]!!.normal)
                     f.WriteVec3(tri.verts!![j]!!.tangents[0])
                     f.WriteVec3(tri.verts!![j]!!.tangents[1])
-                    f.WriteUnsignedChar(tri.verts!![j]!!.color[0].toChar())
-                    f.WriteUnsignedChar(tri.verts!![j]!!.color[1].toChar())
-                    f.WriteUnsignedChar(tri.verts!![j]!!.color[2].toChar())
-                    f.WriteUnsignedChar(tri.verts!![j]!!.color[3].toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[0].toInt().toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[1].toInt().toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[2].toInt().toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[3].toInt().toChar())
                     ++j
                 }
                 i++
@@ -967,7 +969,7 @@ object Model_local {
             if (null == ase) {
                 return false
             }
-            if (ase.objects.size < 1) {
+            if (ase.objects.Num() < 1) {
                 return false
             }
             timeStamp[0] = ase.timeStamp[0]
@@ -975,25 +977,25 @@ object Model_local {
             // the modeling programs can save out multiple surfaces with a common
             // material, but we would like to mege them tgether where possible
             // meaning that this.NumSurfaces() <= ase.objects.currentElements
-            mergeTo = IntArray(ase.objects.size)
+            mergeTo = IntArray(ase.objects.Num())
             surf.geometry = null
-            if (ase.materials.size == 0) {
+            if (ase.materials.Num() == 0) {
                 // if we don't have any materials, dump everything into a single surface
                 surf.shader = tr_local.tr.defaultMaterial
                 surf.id = 0
                 AddSurface(surf)
                 i = 0
-                while (i < ase.objects.size) {
+                while (i < ase.objects.Num()) {
                     mergeTo[i] = 0
                     i++
                 }
             } else if (!r_mergeModelSurfaces.GetBool()) {
                 // don't merge any
                 i = 0
-                while (i < ase.objects.size) {
+                while (i < ase.objects.Num()) {
                     mergeTo[i] = i
                     `object` = ase.objects[i]
-                    material = ase.materials[`object`.materialRef]
+                    material = ase.materials[`object`.materialRef]!!
                     surf.shader = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))
                     surf.id = NumSurfaces()
                     AddSurface(surf)
@@ -1002,9 +1004,9 @@ object Model_local {
             } else {
                 // search for material matches
                 i = 0
-                while (i < ase.objects.size) {
+                while (i < ase.objects.Num()) {
                     `object` = ase.objects[i]
-                    material = ase.materials[`object`.materialRef]
+                    material = ase.materials[`object`.materialRef]!!
                     im1 = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))!!
                     if (im1.IsDiscrete()) {
                         // flares, autosprites, etc
@@ -1037,10 +1039,10 @@ object Model_local {
 
             // build the surfaces
             objectNum = 0
-            while (objectNum < ase.objects.size) {
+            while (objectNum < ase.objects.Num()) {
                 `object` = ase.objects[objectNum]
                 mesh = `object`.mesh
-                material = ase.materials[`object`.materialRef]
+                material = ase.materials[`object`.materialRef]!!
                 im1 = DeclManager.declManager.FindMaterial(TempDump.ctos(material.name))
                 var normalsParsed = mesh.normalsParsed
 
@@ -1069,13 +1071,13 @@ object Model_local {
                     val expand = 2 * 32 * vertexEpsilon
                     val mins = idVec3()
                     val maxs = idVec3()
-                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes.toTypedArray(), mesh.numVertexes)
+                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes!!, mesh.numVertexes)
                     mins.minusAssign(idVec3(expand, expand, expand))
                     maxs.plusAssign(idVec3(expand, expand, expand))
                     vertexSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numVertexes) {
-                        vRemap[j] = vertexSubset.FindVector(mesh.vertexes.toTypedArray(), j, vertexEpsilon)
+                        vRemap[j] = vertexSubset.FindVector(mesh.vertexes!! as Array<Vector.idVec<*>>, j, vertexEpsilon)
                         j++
                     }
                 }
@@ -1092,13 +1094,14 @@ object Model_local {
                     val expand = 2 * 32 * texCoordEpsilon
                     val mins = idVec2()
                     val maxs = idVec2()
-                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes.toTypedArray(), mesh.numTVertexes)
+                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes!! as Array<idVec2>, mesh.numTVertexes)
                     mins.minusAssign(idVec2(expand, expand))
                     maxs.plusAssign(idVec2(expand, expand))
                     texCoordSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numTVertexes) {
-                        tvRemap[j] = texCoordSubset.FindVector(mesh.tvertexes.toTypedArray(), j, texCoordEpsilon)
+                        tvRemap[j] =
+                            texCoordSubset.FindVector(mesh.tvertexes!! as Array<Vector.idVec<*>>, j, texCoordEpsilon)
                         j++
                     }
                 }
@@ -1129,7 +1132,7 @@ object Model_local {
                 while (j < mesh.numFaces) {
                     k = 0
                     while (k < 3) {
-                        v = mesh.faces[j].vertexNum[k]
+                        v = mesh.faces!![j]!!.vertexNum[k]
                         if (v < 0 || v >= mesh.numVertexes) {
                             Common.common.Error("ConvertASEToModelSurfaces: bad vertex index in ASE file %s", name)
                         }
@@ -1139,7 +1142,7 @@ object Model_local {
 
                         // we may or may not have texcoords to compare
                         if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {
-                            tv = mesh.faces[j].tVertexNum[k]
+                            tv = mesh.faces!![j]!!.tVertexNum[k]
                             if (tv < 0 || tv >= mesh.numTVertexes) {
                                 Common.common.Error(
                                     "ConvertASEToModelSurfaces: bad tex coord index in ASE file %s",
@@ -1152,15 +1155,15 @@ object Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal.set(mesh.faces[j].vertexNormals[k])
+                            normal.set(mesh.faces!![j]!!.vertexNormals[k])
                         }
 
                         // we may or may not have colors to compare
                         if (mesh.colorsParsed) {
-                            color[0] = mesh.faces[j].vertexColors[k][0]
-                            color[1] = mesh.faces[j].vertexColors[k][1]
-                            color[2] = mesh.faces[j].vertexColors[k][2]
-                            color[3] = mesh.faces[j].vertexColors[k][3]
+                            color[0] = mesh.faces!![j]!!.vertexColors[k][0]
+                            color[1] = mesh.faces!![j]!!.vertexColors[k][1]
+                            color[2] = mesh.faces!![j]!!.vertexColors[k][2]
+                            color[3] = mesh.faces!![j]!!.vertexColors[k][3]
                         }
 
                         // find a matching vert
@@ -1220,7 +1223,7 @@ object Model_local {
                 }
 
                 // an ASE allows the texture coordinates to be scaled, translated, and rotated
-                if (ase.materials.size == 0) {
+                if (ase.materials.Num() == 0) {
                     vOffset = 0.0f
                     uOffset = vOffset
                     vTiling = 1.0f
@@ -1228,7 +1231,7 @@ object Model_local {
                     textureSin = 0.0f
                     textureCos = 1.0f
                 } else {
-                    material = ase.materials[`object`.materialRef]
+                    material = ase.materials[`object`.materialRef]!!
                     uOffset = -material.uOffset
                     vOffset = material.vOffset
                     uTiling = material.uTiling
@@ -1243,11 +1246,11 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts!![j]!!.Clear()
-                    tri.verts!![j]!!.xyz.set(mesh.vertexes[mv!!.v])
+                    tri.verts!![j]!!.xyz.set(mesh.vertexes!![mv!!.v])
                     tri.verts!![j]!!.normal.set(mv.normal)
                     System.arraycopy(mv.color, 0, mv.color.also { tri.verts!![j]!!.color = it }, 0, mv.color.size)
                     if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {
-                        val tv2 = mesh.tvertexes[mv.tv]
+                        val tv2 = mesh.tvertexes!![mv.tv]!!
                         val u = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
                         tri.verts!![j]!!.st[0] = u * textureCos + V * textureSin
@@ -1395,9 +1398,9 @@ object Model_local {
             // vertex texture coords
             numTVertexes = 0
             if (layer.nvmaps != 0) {
-                var vm = layer.vmap as Model_lwo.lwVMap?
+                var vm = layer.vmap
                 while (vm != null) {
-                    if (vm.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                    if (vm.type == LWID_('T', 'X', 'U', 'V').toLong()) {
                         numTVertexes += vm.nverts
                     }
                     vm = vm.next
@@ -1408,9 +1411,9 @@ object Model_local {
                     arrayListOf(* idVec2.generateArray(numTVertexes))
                 )
                 var offset = 0
-                var vm = layer.vmap as Model_lwo.lwVMap?
+                var vm = layer.vmap
                 while (vm != null) {
-                    if (vm.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                    if (vm.type == LWID_('T', 'X', 'U', 'V').toLong()) {
                         vm.offset = offset
                         k = 0
                         while (k < vm.nverts) {
@@ -1553,10 +1556,10 @@ object Model_local {
                         nvm = 0
                         while (nvm < pt.nvmaps) {
                             val vm = pt.vm!![nvm]
-                            if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                            if (vm.vmap.type == LWID_('T', 'X', 'U', 'V').toLong()) {
                                 tv = tvRemap[vm.index + vm.vmap.offset]
                             }
-                            if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
+                            if (vm.vmap.type == LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     color[chan] = (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
@@ -1568,10 +1571,10 @@ object Model_local {
                         nvm = 0
                         while (nvm < poly.getV(k)!!.nvmaps) {
                             val vm = poly.getV(k)!!.vm!![nvm]
-                            if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                            if (vm.vmap.type == LWID_('T', 'X', 'U', 'V').toLong()) {
                                 tv = tvRemap[vm.index + vm.vmap.offset]
                             }
-                            if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
+                            if (vm.vmap.type == LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     color[chan] = (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
@@ -1702,10 +1705,10 @@ object Model_local {
             var color: ByteArray
             val surf = modelSurface_s()
             var modelSurf: modelSurface_s?
-            if (TempDump.NOT(ma)) {
+            if (NOT(ma)) {
                 return false
             }
-            if (ma.objects.size < 1) {
+            if (ma.objects.Num() < 1) {
                 return false
             }
             timeStamp[0] = ma.timeStamp[0]
@@ -1713,27 +1716,27 @@ object Model_local {
             // the modeling programs can save out multiple surfaces with a common
             // material, but we would like to mege them tgether where possible
             // meaning that this.NumSurfaces() <= ma.objects.currentElements
-            mergeTo = IntArray(ma.objects.size)
+            mergeTo = IntArray(ma.objects.Num())
             surf.geometry = null
-            if (ma.materials.size == 0) {
+            if (ma.materials.Num() == 0) {
                 // if we don't have any materials, dump everything into a single surface
                 surf.shader = tr_local.tr.defaultMaterial
                 surf.id = 0
                 AddSurface(surf)
                 i = 0
-                while (i < ma.objects.size) {
+                while (i < ma.objects.Num()) {
                     mergeTo[i] = 0
                     i++
                 }
             } else if (!r_mergeModelSurfaces.GetBool()) {
                 // don't merge any
                 i = 0
-                while (i < ma.objects.size) {
+                while (i < ma.objects.Num()) {
                     mergeTo[i] = i
                     `object` = ma.objects[i]
                     if (`object`.materialRef >= 0) {
                         material = ma.materials[`object`.materialRef]
-                        surf.shader = DeclManager.declManager.FindMaterial(material.name)
+                        surf.shader = DeclManager.declManager.FindMaterial(material.name!!)
                     } else {
                         surf.shader = tr_local.tr.defaultMaterial
                     }
@@ -1744,11 +1747,11 @@ object Model_local {
             } else {
                 // search for material matches
                 i = 0
-                while (i < ma.objects.size) {
+                while (i < ma.objects.Num()) {
                     `object` = ma.objects[i]
                     if (`object`.materialRef >= 0) {
                         material = ma.materials[`object`.materialRef]
-                        im1 = DeclManager.declManager.FindMaterial(material.name)
+                        im1 = DeclManager.declManager.FindMaterial(material.name!!)
                     } else {
                         im1 = tr_local.tr.defaultMaterial
                     }
@@ -1783,12 +1786,12 @@ object Model_local {
 
             // build the surfaces
             objectNum = 0
-            while (objectNum < ma.objects.size) {
+            while (objectNum < ma.objects.Num()) {
                 `object` = ma.objects[objectNum]
                 mesh = `object`.mesh
                 if (`object`.materialRef >= 0) {
                     material = ma.materials[`object`.materialRef]
-                    im1 = DeclManager.declManager.FindMaterial(material.name)
+                    im1 = DeclManager.declManager.FindMaterial(material.name!!)
                 } else {
                     im1 = tr_local.tr.defaultMaterial
                 }
@@ -1819,13 +1822,13 @@ object Model_local {
                     val expand = 2 * 32 * vertexEpsilon
                     val mins = idVec3()
                     val maxs = idVec3()
-                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes.toTypedArray(), mesh.numVertexes)
+                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.vertexes!!, mesh.numVertexes)
                     mins.minusAssign(idVec3(expand, expand, expand))
                     maxs.plusAssign(idVec3(expand, expand, expand))
                     vertexSubset.Init(mins, maxs, 32, 1024)
                     j = 0
                     while (j < mesh.numVertexes) {
-                        vRemap[j] = vertexSubset.FindVector(mesh.vertexes as Array<Vector.idVec<*>>, j, vertexEpsilon)
+                        vRemap[j] = vertexSubset.FindVector(mesh.vertexes!! as Array<Vector.idVec<*>>, j, vertexEpsilon)
                         j++
                     }
                 }
@@ -1842,7 +1845,7 @@ object Model_local {
                     val expand = 2 * 32 * texCoordEpsilon
                     val mins = idVec2()
                     val maxs = idVec2()
-                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes.toTypedArray(), mesh.numTVertexes)
+                    Simd.SIMDProcessor.MinMax(mins, maxs, mesh.tvertexes!! as Array<idVec2>, mesh.numTVertexes)
                     mins.minusAssign(idVec2(expand, expand))
                     maxs.plusAssign(idVec2(expand, expand))
                     texCoordSubset.Init(mins, maxs, 32, 1024)
@@ -1882,7 +1885,7 @@ object Model_local {
                 while (j < mesh.numFaces) {
                     k = 0
                     while (k < 3) {
-                        v = mesh.faces[j].vertexNum[k]
+                        v = mesh.faces!![j]!!.vertexNum[k]
                         if (v < 0 || v >= mesh.numVertexes) {
                             Common.common.Error("ConvertMAToModelSurfaces: bad vertex index in MA file %s", name)
                         }
@@ -1892,7 +1895,7 @@ object Model_local {
 
                         // we may or may not have texcoords to compare
                         if (mesh.numTVertexes != 0) {
-                            tv = mesh.faces[j].tVertexNum[k]
+                            tv = mesh.faces!![j]!!.tVertexNum[k]
                             if (tv < 0 || tv >= mesh.numTVertexes) {
                                 Common.common.Error("ConvertMAToModelSurfaces: bad tex coord index in MA file %s", name)
                             }
@@ -1902,13 +1905,13 @@ object Model_local {
 
                         // we may or may not have normals to compare
                         if (normalsParsed) {
-                            normal.set(mesh.faces[j].vertexNormals[k])
+                            normal.set(mesh.faces!![j]!!.vertexNormals[k])
                         }
 
                         //BSM: Todo: Fix the vertex colors
                         // we may or may not have colors to compare
-                        if (mesh.faces[j].vertexColors[k] != -1 && mesh.faces[j].vertexColors[k] != -999) {
-                            val offset = mesh.faces[j].vertexColors[k] * 4
+                        if (mesh.faces!![j]!!.vertexColors[k] != -1 && mesh.faces!![j]!!.vertexColors[k] != -999) {
+                            val offset = mesh.faces!![j]!!.vertexColors[k] * 4
                             color = Arrays.copyOfRange(mesh.colors, offset, offset + 4)
                         }
 
@@ -1970,7 +1973,7 @@ object Model_local {
 
                 // an MA allows the texture coordinates to be scaled, translated, and rotated
                 //BSM: Todo: Does Maya support this and if so how
-                //if ( ase.materials.size == 0 ) {
+                //if ( ase.materials.Num() == 0 ) {
                 vOffset = 0.0f
                 uOffset = vOffset
                 vTiling = 1.0f
@@ -1993,11 +1996,11 @@ object Model_local {
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
                     tri.verts!![j]!!.Clear()
-                    tri.verts!![j]!!.xyz.set(mesh.vertexes[mv.v])
+                    tri.verts!![j]!!.xyz.set(mesh.vertexes!![mv.v])
                     tri.verts!![j]!!.normal.set(mv.normal)
                     tri.verts!![j]!!.color = mv.color
                     if (mesh.numTVertexes != 0) {
-                        val tv2 = mesh.tvertexes[mv.tv]
+                        val tv2 = mesh.tvertexes!![mv.tv]!!
                         val U = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
                         tri.verts!![j]!!.st[0] = U * textureCos + V * textureSin
@@ -2031,15 +2034,20 @@ object Model_local {
             var j: Int
             var k: Int
             val ase: aseModel_s
-            if (null == obj) {
+
+            if (NOT(obj)) {
                 return null
             }
 
             // NOTE: using new operator because aseModel_s contains idList class objects
+
+            // NOTE: using new operator because aseModel_s contains idList class objects
             ase = aseModel_s()
-            ase.timeStamp[0] = obj.timeStamp[0]
-            ase.objects.ensureCapacity(obj.nlayers)
+            ase.timeStamp[0] = obj!!.timeStamp[0]
+            ase.objects.Resize(obj.nlayers, obj.nlayers)
+
             var materialRef = 0
+
             var surf = obj.surf
             while (surf != null) {
                 val mat = aseMaterial_t() // Mem_ClearedAlloc(sizeof( * mat));
@@ -2049,18 +2057,18 @@ object Model_local {
                 mat.vOffset = 0f
                 mat.uOffset = mat.vOffset
                 mat.angle = mat.uOffset
-                ase.materials.add(mat)
-                val layer = obj.layer!!
+                ase.materials.Append(mat)
+                val layer = obj.layer
                 val `object` = aseObject_t() // Mem_ClearedAlloc(sizeof( * object));
                 `object`.materialRef = materialRef++
                 val mesh = `object`.mesh
-                ase.objects.add(`object`)
-                mesh.numFaces = layer.polygon.count
+                ase.objects.Append(`object`)
+                mesh.numFaces = layer!!.polygon.count
                 mesh.numTVFaces = mesh.numFaces
-                mesh.faces = ArrayList(mesh.numFaces) // Mem_Alloc(mesh.numFaces /* sizeof( mesh.faces[0] )*/);
+                mesh.faces = arrayOfNulls(mesh.numFaces) // Mem_Alloc(mesh.numFaces /* sizeof( mesh.faces[0] )*/);
                 mesh.numVertexes = layer.point.count
-                mesh.vertexes = ArrayList(arrayListOf(*idVec3.generateArray(mesh.numVertexes)))
-                // Mem_Alloc(mesh.numVertexes /* sizeof( mesh.vertexes[0] )*/);
+                mesh.vertexes =
+                    idVec3.generateArray(mesh.numVertexes) // Mem_Alloc(mesh.numVertexes /* sizeof( mesh.vertexes[0] )*/);
 
                 // vertex positions
                 if (layer.point.count <= 0) {
@@ -2068,18 +2076,18 @@ object Model_local {
                 }
                 j = 0
                 while (j < layer.point.count) {
-                    mesh.vertexes[j].x = layer.point.pt!![j]!!.pos[0]
-                    mesh.vertexes[j].y = layer.point.pt!![j]!!.pos[2]
-                    mesh.vertexes[j].z = layer.point.pt!![j]!!.pos[1]
+                    mesh.vertexes!![j].x = layer.point.pt!![j]!!.pos[0]
+                    mesh.vertexes!![j].y = layer.point.pt!![j]!!.pos[2]
+                    mesh.vertexes!![j].z = layer.point.pt!![j]!!.pos[1]
                     j++
                 }
 
                 // vertex texture coords
                 mesh.numTVertexes = 0
                 if (layer.nvmaps != 0) {
-                    var vm = layer.vmap as Model_lwo.lwVMap?
+                    var vm = layer.vmap
                     while (vm != null) {
-                        if (vm.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                        if (vm.type.toInt() == LWID_('T', 'X', 'U', 'V')) {
                             mesh.numTVertexes += vm.nverts
                         }
                         vm = vm.next
@@ -2087,16 +2095,16 @@ object Model_local {
                 }
                 if (mesh.numTVertexes != 0) {
                     mesh.tvertexes =
-                        ArrayList(mesh.numTVertexes) // Mem_Alloc(mesh.numTVertexes /* sizeof( mesh.tvertexes[0] )*/);
+                        arrayOfNulls(mesh.numTVertexes) // Mem_Alloc(mesh.numTVertexes /* sizeof( mesh.tvertexes[0] )*/);
                     var offset = 0
-                    var vm = layer.vmap as Model_lwo.lwVMap?
+                    var vm = layer.vmap
                     while (vm != null) {
-                        if (vm.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
+                        if (vm.type.toInt() == LWID_('T', 'X', 'U', 'V')) {
                             vm.offset = offset
                             k = 0
                             while (k < vm.nverts) {
-                                mesh.tvertexes[k + offset].x = vm.value!![k][0]
-                                mesh.tvertexes[k + offset].y = 1.0f - vm.value!![k][1] // invert the t
+                                mesh.tvertexes!![k + offset]!!.x = vm.value!![k][0]
+                                mesh.tvertexes!![k + offset]!!.y = 1.0f - vm.value!![k][1] // invert the t
                                 k++
                             }
                             offset += vm.nverts
@@ -2107,7 +2115,7 @@ object Model_local {
                     Common.common.Warning("ConvertLWOToASE: model '%s' has bad or missing uv data", fileName)
                     mesh.numTVertexes = 1
                     mesh.tvertexes =
-                        ArrayList(mesh.numTVertexes) // Mem_ClearedAlloc(mesh.numTVertexes /* sizeof( mesh.tvertexes[0] )*/);
+                        arrayOfNulls(mesh.numTVertexes) // Mem_ClearedAlloc(mesh.numTVertexes /* sizeof( mesh.tvertexes[0] )*/);
                 }
                 mesh.normalsParsed = true
                 mesh.colorsParsed = true // because we are falling back to the surface color
@@ -2129,22 +2137,22 @@ object Model_local {
                         j++
                         continue
                     }
-                    mesh.faces[faceIndex].faceNormal.x = poly.norm[0]
-                    mesh.faces[faceIndex].faceNormal.y = poly.norm[2]
-                    mesh.faces[faceIndex].faceNormal.z = poly.norm[1]
+                    mesh.faces!![faceIndex]!!.faceNormal.x = poly.norm[0]
+                    mesh.faces!![faceIndex]!!.faceNormal.y = poly.norm[2]
+                    mesh.faces!![faceIndex]!!.faceNormal.z = poly.norm[1]
                     k = 0
                     while (k < 3) {
-                        mesh.faces[faceIndex].vertexNum[k] = poly.getV(k)!!.index
-                        mesh.faces[faceIndex].vertexNormals[k].x = poly.getV(k)!!.norm[0]
-                        mesh.faces[faceIndex].vertexNormals[k].y = poly.getV(k)!!.norm[2]
-                        mesh.faces[faceIndex].vertexNormals[k].z = poly.getV(k)!!.norm[1]
+                        mesh.faces!![faceIndex]!!.vertexNum[k] = poly.getV(k)!!.index
+                        mesh.faces!![faceIndex]!!.vertexNormals[k].x = poly.getV(k)!!.norm[0]
+                        mesh.faces!![faceIndex]!!.vertexNormals[k].y = poly.getV(k)!!.norm[2]
+                        mesh.faces!![faceIndex]!!.vertexNormals[k].z = poly.getV(k)!!.norm[1]
 
                         // complete fallbacks
-                        mesh.faces[faceIndex].tVertexNum[k] = 0
-                        mesh.faces[faceIndex].vertexColors[k][0] = (surf.color.rgb[0] * 255).toInt().toByte()
-                        mesh.faces[faceIndex].vertexColors[k][1] = (surf.color.rgb[1] * 255).toInt().toByte()
-                        mesh.faces[faceIndex].vertexColors[k][2] = (surf.color.rgb[2] * 255).toInt().toByte()
-                        mesh.faces[faceIndex].vertexColors[k][3] = 255.toByte()
+                        mesh.faces!![faceIndex]!!.tVertexNum[k] = 0
+                        mesh.faces!![faceIndex]!!.vertexColors[k][0] = ((surf.color.rgb[0] * 255).toInt().toByte())
+                        mesh.faces!![faceIndex]!!.vertexColors[k][1] = ((surf.color.rgb[1] * 255).toInt().toByte())
+                        mesh.faces!![faceIndex]!!.vertexColors[k][2] = ((surf.color.rgb[2] * 255).toInt().toByte())
+                        mesh.faces!![faceIndex]!!.vertexColors[k][3] = 255.toByte()
 
                         // first set attributes from the vertex
                         val pt = layer.point.pt!![poly.getV(k)!!.index]!!
@@ -2152,13 +2160,13 @@ object Model_local {
                         nvm = 0
                         while (nvm < pt.nvmaps) {
                             val vm = pt.vm!![nvm]
-                            if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
-                                mesh.faces[faceIndex].tVertexNum[k] = vm.index + vm.vmap.offset
+                            if (vm.vmap.type.toInt() == LWID_('T', 'X', 'U', 'V')) {
+                                mesh.faces!![faceIndex]!!.tVertexNum[k] = vm.index + vm.vmap.offset
                             }
-                            if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
+                            if (vm.vmap.type.toInt() == LWID_('R', 'G', 'B', 'A')) {
                                 for (chan in 0..3) {
-                                    mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
+                                    mesh.faces!![faceIndex]!!.vertexColors[k][chan] =
+                                        ((255 * vm.vmap.value!![vm.index][chan]).toInt().toByte())
                                 }
                             }
                             nvm++
@@ -2168,13 +2176,13 @@ object Model_local {
                         nvm = 0
                         while (nvm < poly.getV(k)!!.nvmaps) {
                             val vm = poly.getV(k)!!.vm!![nvm]
-                            if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
-                                mesh.faces[faceIndex].tVertexNum[k] = vm.index + vm.vmap.offset
+                            if (vm.vmap.type.toInt() == LWID_('T', 'X', 'U', 'V')) {
+                                mesh.faces!![faceIndex]!!.tVertexNum[k] = vm.index + vm.vmap.offset
                             }
-                            if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
+                            if (vm.vmap.type.toInt() == LWID_('R', 'G', 'B', 'A')) {
                                 for (chan in 0..3) {
-                                    mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
+                                    mesh.faces!![faceIndex]!!.vertexColors[k][chan] =
+                                        ((255 * vm.vmap.value!![vm.index][chan]).toInt().toByte())
                                 }
                             }
                             nvm++
@@ -2187,15 +2195,16 @@ object Model_local {
                 mesh.numFaces = faceIndex
                 mesh.numTVFaces = faceIndex
                 val newFaces =
-                    kotlin.collections.ArrayList<aseFace_t>(mesh.numFaces) // Mem_Alloc(mesh.numFaces /* sizeof ( mesh.faces[0] ) */);
+                    arrayOfNulls<aseFace_t>(mesh.numFaces) // Mem_Alloc(mesh.numFaces /* sizeof ( mesh.faces[0] ) */);
                 //		memcpy( newFaces, mesh.faces, sizeof( mesh.faces[0] ) * mesh.numFaces );
                 for (i in 0 until mesh.numFaces) {
-                    newFaces[i] = mesh.faces[i]
+                    newFaces[i] = mesh.faces!![i]
                 }
                 //                Mem_Free(mesh.faces);
                 mesh.faces = newFaces
                 surf = surf.next
             }
+
             return ase
         }
 

@@ -589,7 +589,7 @@ object SaveGame {
             // create all the objects
             objects.SetNum(num._val + 1)
             //            memset(objects.Ptr(), 0, sizeof(objects[ 0]) * objects.Num());
-            Arrays.fill(objects.getList(), 0, objects.Num(), 0)
+            Arrays.fill(objects.getList(Array<idClass>::class.java), 0, objects.Num(), 0)
             i = 1
             while (i < objects.Num()) {
                 ReadString(className)

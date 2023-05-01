@@ -391,18 +391,18 @@ object Event {
                 evdef: idEventDef,
                 numargs: Int,
                 args: Array<out idEventArg<*>>,
-                //data: Array<idEventArg<*>> /*[ D_EVENT_MAXARGS ]*/
-            ): Array<idEventArg<*>> {
+                data: Array<idEventArg<*>?> /*[ D_EVENT_MAXARGS ]*/
+            ) {
                 var i: Int
                 val format: CharArray
                 format = evdef.GetArgFormat()!!.toCharArray()
-                val data: ArrayList<idEventArg<*>> = ArrayList()
                 if (numargs != evdef.GetNumArgs()) {
                     idGameLocal.Error(
                         "idEvent::CopyArgs : Wrong number of args for '%s' event.",
                         evdef.GetName()
                     )
                 }
+
                 i = 0
                 while (i < numargs) {
                     val arg = args[i]
@@ -413,11 +413,9 @@ object Event {
 //                        Game_local.idGameLocal.Error("idEvent::CopyArgs : Wrong type passed in for arg # %d on '%s' event.", i, evdef.GetName());
 //                    }
                     }
-                    data.add(i, arg)
+                    data[i] = arg
                     i++
                 }
-
-                return data.toTypedArray()
             }
 
             @JvmOverloads

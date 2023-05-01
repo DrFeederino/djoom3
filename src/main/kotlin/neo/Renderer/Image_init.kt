@@ -65,13 +65,14 @@ object Image_init {
      ================
      */
     const val RAMP_RANGE = 8f
-    val imageFilter: Array<String> = arrayOf(
+    val imageFilter: Array<String?> = arrayOf(
         "GL_LINEAR_MIPMAP_NEAREST",
         "GL_LINEAR_MIPMAP_LINEAR",
         "GL_NEAREST",
         "GL_LINEAR",
         "GL_NEAREST_MIPMAP_NEAREST",
-        "GL_NEAREST_MIPMAP_LINEAR"
+        "GL_NEAREST_MIPMAP_LINEAR",
+        null
     )
 
     fun ClassifyImage(name: String): Int {

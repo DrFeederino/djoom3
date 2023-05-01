@@ -6,6 +6,7 @@ import neo.Game.Actor.idActor
 import neo.Game.Animation.Anim.jointModTransform_t
 import neo.Game.Animation.Anim_Blend.idAnim
 import neo.Game.Animation.Anim_Blend.idAnimator
+import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.Game.refSound_t
 import neo.Game.GameSys.Class.*
@@ -302,7 +303,7 @@ object Entity {
             private fun Event_GetTarget(e: idEntity, index: idEventArg<Float>) {
                 val i: Int
                 i = index.value.toInt()
-                if (i < 0 || i >= e.targets.size) {
+                if (i < 0 || i >= e.targets.Num()) {
                     idThread.ReturnEntity(null)
                 } else {
                     idThread.ReturnEntity(e.targets[i].GetEntity())
@@ -317,14 +318,14 @@ object Entity {
                 var ignoreNum: Int
                 val ignore = ignor.value
                 e.RemoveNullTargets()
-                if (0 == e.targets.size) {
+                if (0 == e.targets.Num()) {
                     idThread.ReturnEntity(null)
                     return
                 }
                 ignoreNum = -1
-                if (ignore != null && !ignore.isEmpty() && e.targets.size > 1) {
+                if (ignore != null && !ignore.isEmpty() && e.targets.Num() > 1) {
                     i = 0
-                    while (i < e.targets.size) {
+                    while (i < e.targets.Num()) {
                         ent = e.targets[i].GetEntity()
                         if (ent != null && ent.name.toString() == ignore) {
                             ignoreNum = i
@@ -334,12 +335,12 @@ object Entity {
                     }
                 }
                 if (ignoreNum >= 0) {
-                    num = Game_local.gameLocal.random.RandomInt((e.targets.size - 1).toDouble())
+                    num = Game_local.gameLocal.random.RandomInt((e.targets.Num() - 1).toDouble())
                     if (num >= ignoreNum) {
                         num++
                     }
                 } else {
-                    num = Game_local.gameLocal.random.RandomInt(e.targets.size.toDouble())
+                    num = Game_local.gameLocal.random.RandomInt(e.targets.Num().toDouble())
                 }
                 ent = e.targets[num].GetEntity()
                 idThread.ReturnEntity(ent)
@@ -803,7 +804,7 @@ object Entity {
 
         //
         val targets // when this entity is activated these entities entity are activated
-                : kotlin.collections.ArrayList<idEntityPtr<idEntity>>
+                : idList<idEntityPtr<idEntity>>
         private val DBG_count = DBG_counter++
         private val PVSAreas: IntArray = IntArray(MAX_PVS_AREAS) // numbers of the renderer areas the entity covers
         var activeNode // for being linked into activeEntities list
@@ -900,7 +901,7 @@ object Entity {
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
-            return eventCallbacks[event]!!
+            return eventCallbacks[event]
         }
 
         override fun oSet(node: idEntity?): idEntity? {
@@ -1103,9 +1104,9 @@ object Entity {
             savefile.WriteBool(cinematic)
             savefile.WriteObject(cameraTarget!!)
             savefile.WriteInt(health)
-            savefile.WriteInt(targets.size)
+            savefile.WriteInt(targets.Num())
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 targets[i].Save(savefile)
                 i++
             }
@@ -1166,9 +1167,9 @@ object Entity {
             cinematic = savefile.ReadBool()
             savefile.ReadObject( /*reinterpret_cast<idClass*&>*/cameraTarget)
             health = savefile.ReadInt()
-            targets.clear()
+            targets.Clear()
             savefile.ReadInt(num)
-            targets.ensureCapacity(num._val)
+            targets.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 targets[i].Restore(savefile)
@@ -2782,7 +2783,7 @@ object Entity {
             var decal: String?
             var key: String?
             val def = Game_local.gameLocal.FindEntityDef(damageDefName, false) ?: return
-            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]
+            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]!!
 
             // start impact sound based on material type
             key = Str.va("snd_%s", materialType)
@@ -3012,7 +3013,7 @@ object Entity {
         fun Signal(_signalnum: signalNum_t) {
             var i: Int
             val num: Int
-            val sigs = kotlin.collections.ArrayList<signal_t>(MAX_SIGNAL_THREADS)
+            val sigs = arrayOfNulls<signal_t>(MAX_SIGNAL_THREADS)
             var thread: idThread?
             val signalnum = _signalnum.ordinal
             assert(signalnum >= 0 && signalnum < signalNum_t.NUM_SIGNALS.ordinal)
@@ -3035,9 +3036,9 @@ object Entity {
             signals!!.signal[signalnum].Clear()
             i = 0
             while (i < num) {
-                thread = idThread.GetThread(sigs[i].threadnum)
+                thread = idThread.GetThread(sigs[i]!!.threadnum)
                 if (thread != null) {
-                    thread.CallFunction(this, sigs[i].function!!, true)
+                    thread.CallFunction(this, sigs[i]!!.function, true)
                     thread.Execute()
                 }
                 i++
@@ -3201,7 +3202,7 @@ object Entity {
                         if (entityGui.HandleSingleGuiCommand(entityGui, src)) {
                             continue
                         }
-                        val c = entityGui.targets.size
+                        val c = entityGui.targets.Num()
                         var i: Int
                         i = 0
                         while (i < c) {
@@ -3249,7 +3250,7 @@ object Entity {
 
             // ensure that we don't target ourselves since that could cause an infinite loop when activating entities
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 if (targets[i].GetEntity() === this) {
                     idGameLocal.Error("Entity '%s' is targeting itself", name)
                 }
@@ -3259,10 +3260,10 @@ object Entity {
 
         fun RemoveNullTargets() {
             var i: Int
-            i = targets.size - 1
+            i = targets.Num() - 1
             while (i >= 0) {
                 if (TempDump.NOT(targets[i].GetEntity())) {
-                    targets.removeAt(i)
+                    targets.RemoveIndex(i)
                 }
                 i--
             }
@@ -3280,7 +3281,7 @@ object Entity {
             var i: Int
             var j: Int
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
@@ -3910,7 +3911,7 @@ object Entity {
         }
 
         private fun Event_NumTargets() {
-            idThread.ReturnFloat(targets.size.toFloat())
+            idThread.ReturnFloat(targets.Num().toFloat())
         }
 
         private fun Event_Unbind() {
@@ -4266,7 +4267,7 @@ object Entity {
         //        public static idEventFunc<idEntity>[] eventCallbacks;
         //
         init {
-            targets = ArrayList<idEntityPtr<idEntity>>()
+            targets = idList(idEntityPtr<idEntity>().javaClass)
             entityNumber = Game_local.ENTITYNUM_NONE
             entityDefNumber = -1
             spawnNode = idLinkList()
@@ -4635,7 +4636,7 @@ object Entity {
             var decal: String?
             var key: String?
             val def = Game_local.gameLocal.FindEntityDef(damageDefName, false) ?: return
-            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]
+            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]!!
 
             // start impact sound based on material type
             key = Str.va("snd_%s", materialType)
@@ -4690,7 +4691,7 @@ object Entity {
             if (type == surfTypes_t.SURFTYPE_NONE.ordinal) {
                 type = GetDefaultSurfaceType()
             }
-            val materialType = Game_local.gameLocal.sufaceTypeNames[type]
+            val materialType = Game_local.gameLocal.sufaceTypeNames[type]!!
 
             // start impact sound based on material type
             key = Str.va("snd_%s", materialType)

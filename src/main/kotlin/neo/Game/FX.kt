@@ -23,12 +23,12 @@ import neo.idlib.Dict_h.idDict
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector
 import neo.idlib.math.Vector.idVec3
-import kotlin.math.abs
 
 /**
  *
@@ -117,7 +117,7 @@ object FX {
             }
         }
 
-        protected val actions: ArrayList<idFXLocalAction>
+        protected val actions: List.idList<idFXLocalAction>
         protected var fxEffect // GetFX() should be called before using fxEffect as a pointer
                 : idDeclFX? = null
         protected var nextTriggerTime: Int
@@ -148,9 +148,9 @@ object FX {
             savefile.WriteInt(nextTriggerTime)
             savefile.WriteFX(fxEffect)
             savefile.WriteString(systemName)
-            savefile.WriteInt(actions.size)
+            savefile.WriteInt(actions.Num())
             i = 0
-            while (i < actions.size) {
+            while (i < actions.Num()) {
                 if (actions[i].lightDefHandle >= 0) {
                     savefile.WriteBool(true)
                     savefile.WriteRenderLight(actions[i].renderLight)
@@ -182,7 +182,7 @@ object FX {
             savefile.ReadFX(fxEffect!!)
             savefile.ReadString(systemName)
             savefile.ReadInt(num)
-            actions.ensureCapacity(num._val)
+            actions.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 savefile.ReadBool(hasObject)
@@ -251,9 +251,10 @@ object FX {
                 val localAction = idFXLocalAction()
 
 //		memset( &localAction, 0, sizeof( idFXLocalAction ) );
-                Array(abs(fxEffect!!.events.size) - actions.size) { localAction }
-                actions.addAll(Array(abs(fxEffect!!.events.size) - actions.size) { localAction })
-                for (i in 0 until fxEffect!!.events.size) {
+
+//		memset( &localAction, 0, sizeof( idFXLocalAction ) );
+                actions.AssureSize(fxEffect!!.events.Num(), localAction)
+                for (i in 0 until fxEffect!!.events.Num()) {
                     val fxaction = fxEffect!!.events[i]
                     val laction = actions[i]
                     if (fxaction.random1 != 0f || fxaction.random2 != 0f) {
@@ -283,7 +284,7 @@ object FX {
                 return
             }
             ieff = 0
-            while (ieff < fxEffect!!.events.size) {
+            while (ieff < fxEffect!!.events.Num()) {
                 val fxaction = fxEffect!!.events[ieff]
                 val laction = actions[ieff]
 
@@ -328,7 +329,7 @@ object FX {
                 }
                 if (fxaction.fire.Length() != 0) {
                     j = 0
-                    while (j < fxEffect!!.events.size) {
+                    while (j < fxEffect!!.events.Num()) {
                         if (fxEffect!!.events[j].name.Icmp(fxaction.fire) == 0) {
                             actions[j].delay = 0f
                         }
@@ -370,7 +371,7 @@ object FX {
                             }
                             if (fxaction.noshadows) {
                                 j = 0
-                                while (j < fxEffect!!.events.size) {
+                                while (j < fxEffect!!.events.Num()) {
                                     val laction2 = actions[j]
                                     if (laction2.modelDefHandle != -1) {
                                         laction2.renderEntity.noShadow = true
@@ -387,7 +388,7 @@ object FX {
                             val shader = DeclManager.declManager.FindSound(fxaction.data)
                             StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_ANY.ordinal, 0, false)
                             j = 0
-                            while (j < fxEffect!!.events.size) {
+                            while (j < fxEffect!!.events.Num()) {
                                 val laction2 = actions[j]
                                 if (laction2.lightDefHandle != -1) {
                                     laction2.renderLight.referenceSound = refSound.referenceSound
@@ -517,7 +518,7 @@ object FX {
                 return
             }
             started = time
-            for (i in 0 until fxEffect!!.events.size) {
+            for (i in 0 until fxEffect!!.events.Num()) {
                 val laction = actions[i]
                 laction.start = time
                 laction.soundStarted = false
@@ -538,7 +539,7 @@ object FX {
             if (TempDump.NOT(fxEffect)) {
                 return max
             }
-            for (i in 0 until fxEffect!!.events.size) {
+            for (i in 0 until fxEffect!!.events.Num()) {
                 val fxaction = fxEffect!!.events[i]
                 val d = ((fxaction.delay + fxaction.duration) * 1000.0f).toInt()
                 if (d > max) {
@@ -664,7 +665,7 @@ object FX {
             if (null == fxEffect) {
                 return
             }
-            for (i in 0 until fxEffect!!.events.size) {
+            for (i in 0 until fxEffect!!.events.Num()) {
                 val fxaction = fxEffect!!.events[i]
                 val laction = actions[i]
                 CleanUpSingleAction(fxaction, laction)
@@ -722,7 +723,7 @@ object FX {
             started = -1
             nextTriggerTime = -1
             fl.networkSync = true
-            actions = ArrayList()
+            actions = List.idList()
             systemName = idStr()
         }
     }

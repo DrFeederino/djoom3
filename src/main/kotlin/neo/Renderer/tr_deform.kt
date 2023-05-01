@@ -579,7 +579,6 @@ object tr_deform {
         newTri.numVerts = 16
         newTri.numIndexes = 18 * 3
         newTri.indexes = IntArray(newTri.numIndexes)
-        val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
 
         // find the plane
         plane.FromPoints(
@@ -614,10 +613,11 @@ object tr_deform {
             color = 255
         }
         j = 0
+        val ac = Array<idDrawVert>(newTri.numVerts) { idDrawVert() }
         while (j < newTri.numVerts) {
-            ac[j] = idDrawVert()
-            ac[j].color[2] = color.toByte()
-            ac[j].color[1] = ac[j].color[2]
+            //ac[j] = idDrawVert()
+            ac[j]!!.color[2] = color.toByte()
+            ac[j]!!.color[1] = ac[j].color[2]
             ac[j].color[0] = ac[j].color[1]
             ac[j].color[3] = 255.toByte()
             j++
@@ -721,7 +721,7 @@ object tr_deform {
 //}
 //        memcpy(newTri.indexes, triIndexes, sizeof(triIndexes));
         System.arraycopy(triIndexes, 0, newTri.indexes!!, 0, triIndexes.size)
-        R_FinishDeform(surf, newTri, ac.toTypedArray())
+        R_FinishDeform(surf, newTri, ac)
     }
 
     //=====================================================================================
@@ -870,7 +870,7 @@ object tr_deform {
         var k: Int
         val tri: srfTriangles_s?
         val newTri: srfTriangles_s
-        val islands = kotlin.collections.ArrayList<eyeIsland_t>(MAX_EYEBALL_ISLANDS)
+        val islands = Array<eyeIsland_t>(MAX_EYEBALL_ISLANDS) { eyeIsland_t() }
         var numIslands: Int
         val triUsed = BooleanArray(MAX_EYEBALL_ISLANDS * MAX_EYEBALL_TRIS)
         tri = surf.geo!!

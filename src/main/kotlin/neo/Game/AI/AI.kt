@@ -5563,7 +5563,7 @@ object AI {
                     continue
                 }
                 j = 0
-                while (j < targets.size) {
+                while (j < targets.Num()) {
                     targetEnt = targets[j].GetEntity()
                     if (null == targetEnt || targetEnt !is idCombatNode) {
                         j++
@@ -6036,7 +6036,7 @@ object AI {
             var bestDist: Float
             var bestNode: idCombatNode?
             val enemyEnt = enemy.GetEntity()
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 // no combat nodes
                 idThread.ReturnEntity(null)
                 return
@@ -6053,7 +6053,7 @@ object AI {
             val myPos = physicsObj.GetOrigin()
             bestDist = myPos.minus(lastVisibleEnemyPos).LengthSqr()
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 targetEnt = targets[i].GetEntity()
                 if (null == targetEnt || targetEnt !is idCombatNode) {
                     i++
@@ -6081,7 +6081,7 @@ object AI {
             val node: idCombatNode?
             val result: Boolean
             val enemyEnt = enemy.GetEntity()
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 // no combat nodes
                 idThread.ReturnInt(false)
                 return
@@ -6895,7 +6895,7 @@ object AI {
                 idThread.ReturnEntity(null)
                 return
             }
-            if (targets.size == 1) {
+            if (targets.Num() == 1) {
                 ent = targets[0].GetEntity()
                 if (ent != null && idStr.Cmp(ent.GetEntityDefName(), type.value) == 0) {
                     if (!EntityCanSeePos(enemyEnt, lastVisibleEnemyPos, ent.GetPhysics().GetOrigin())) {
@@ -6909,7 +6909,7 @@ object AI {
             bestEnt = null
             bestTime = idMath.INFINITY
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null && idStr.Cmp(ent.GetEntityDefName(), type.value.toString()) == 0) {
                     val destOrg = ent.GetPhysics().GetOrigin()
@@ -6934,7 +6934,7 @@ object AI {
             val ents = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             num = 0
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null && idStr.Cmp(ent.GetEntityDefName(), type.value.toString()) == 0) {
                     ents[num++] = ent

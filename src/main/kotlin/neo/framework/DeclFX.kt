@@ -7,6 +7,7 @@ import neo.idlib.Lib.idException
 import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.List.idList
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector
@@ -69,7 +70,7 @@ class DeclFX {
         //
         var soundStarted = false
         var trackOrigin = false
-        var type: fx_enum = fx_enum.FX_LIGHT
+        var type: fx_enum? = fx_enum.values()[0]
     }
 
     //
@@ -78,7 +79,7 @@ class DeclFX {
     class idDeclFX : idDecl() {
         //
         //
-        val events: ArrayList<idFXSingleAction> = ArrayList()
+        val events: idList<idFXSingleAction> = idList()
         val joint: idStr = idStr()
         override fun DefaultDefinition(): String {
             run {
@@ -115,7 +116,7 @@ class DeclFX {
                 if (0 == token.Icmp("{")) {
                     val action = idFXSingleAction()
                     ParseSingleFXAction(src, action)
-                    events.add(action)
+                    events.Append(action)
                     continue
                 }
             }
@@ -127,16 +128,16 @@ class DeclFX {
         }
 
         override fun FreeData() {
-            events.clear()
+            events.Clear()
         }
 
         @Throws(idException::class)
         override fun Print() {
             val list = this
             //            final fx_enum[] values = fx_enum.values();
-            Common.common.Printf("%d events\n", list.events.size)
-            for (i in 0 until list.events.size) {
-                when (list.events[i].type) {
+            Common.common.Printf("%d events\n", list.events.Num())
+            for (i in 0 until list.events.Num()) {
+                when (list.events[i].type!!) {
                     fx_enum.FX_LIGHT -> Common.common.Printf("FX_LIGHT %s\n", list.events[i].data.toString())
                     fx_enum.FX_PARTICLE -> Common.common.Printf("FX_PARTICLE %s\n", list.events[i].data.toString())
                     fx_enum.FX_MODEL -> Common.common.Printf("FX_MODEL %s\n", list.events[i].data.toString())
@@ -162,14 +163,14 @@ class DeclFX {
 
         @Throws(idException::class)
         override fun List() {
-            Common.common.Printf("%s, %d stages\n", GetName(), events.size)
+            Common.common.Printf("%s, %d stages\n", GetName(), events.Num())
         }
 
         //
         @Throws(idException::class)
         private fun ParseSingleFXAction(src: idLexer, FXAction: idFXSingleAction) {
             val token = idToken()
-            FXAction.type = fx_enum.FX_LIGHT
+            FXAction.type = null
             FXAction.sibling = -1
             FXAction.data.set("<none>")
             FXAction.name.set("<none>")
@@ -306,7 +307,7 @@ class DeclFX {
                 if (0 == token.Icmp("uselight")) {
                     src.ReadToken(token)
                     FXAction.data.set(token)
-                    for (i in 0 until events.size) {
+                    for (i in 0 until events.Num()) {
                         if (events[i].name.Icmp(FXAction.data.toString()) == 0) {
                             FXAction.sibling = i
                             FXAction.lightColor.set(events[i].lightColor)
@@ -349,7 +350,7 @@ class DeclFX {
                 if (0 == token.Icmp("useModel")) {
                     src.ReadToken(token)
                     FXAction.data.set(token)
-                    for (i in 0 until events.size) {
+                    for (i in 0 until events.Num()) {
                         if (events[i].name.Icmp(FXAction.data) == 0) {
                             FXAction.sibling = i
                         }

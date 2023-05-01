@@ -134,6 +134,7 @@ import neo.Sound.snd_system
 import neo.Sound.snd_world
 import neo.Sound.sound.idSoundWorld
 import neo.TempDump
+import neo.TempDump.etoi
 import neo.TempDump.void_callback
 import neo.Tools.Compilers.AAS.AASFileManager
 import neo.framework.*
@@ -160,14 +161,11 @@ import neo.idlib.MapFile.idMapFile
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Timer.idTimer
-import neo.idlib.containers.CBool
-import neo.idlib.containers.CFloat
-import neo.idlib.containers.CInt
+import neo.idlib.containers.*
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.LinkList.idLinkList
 import neo.idlib.containers.List.cmp_t
 import neo.idlib.containers.List.idList
-import neo.idlib.containers.idStrList
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.geometry.TraceModel.traceModelPoly_t
 import neo.idlib.geometry.Winding.idFixedWinding
@@ -337,8 +335,11 @@ class Game_local {
         private val aasNames: idStrList = idStrList()
 
         //
-        private val clientDeclRemap: Array<ArrayList<ArrayList<Int>>> =
-            Array(MAX_CLIENTS) { ArrayList(TempDump.etoi(declType_t.DECL_MAX_TYPES)) }
+        private val clientDeclRemap: Array<Array<idList<Int>?>> = Array(MAX_CLIENTS) {
+            arrayOfNulls(
+                etoi(declType_t.DECL_MAX_TYPES)
+            )
+        }
 
         //        private final idBlockAlloc<entityState_s> entityStateAllocator = new idBlockAlloc<>(256);
         //        private final idBlockAlloc<snapshot_s> snapshotAllocator = new idBlockAlloc<>(64);
@@ -347,7 +348,7 @@ class Game_local {
 
         //
         private val gravity: idVec3 = idVec3() // global gravity vector
-        private val initialSpots: ArrayList<idEntity> = ArrayList(MAX_GENTITIES)
+        private val initialSpots: StaticList.idStaticList<idEntity> = StaticList.idStaticList(MAX_GENTITIES)
 
         //
         private val lastAIAlertEntity: idEntityPtr<idActor?>
@@ -361,7 +362,7 @@ class Game_local {
             idDict() // spawn args used during entity spawning  FIXME: shouldn't be necessary anymore
 
         //
-        private val spawnSpots: ArrayList<spawnSpot_t> = ArrayList(MAX_GENTITIES)
+        private val spawnSpots: StaticList.idStaticList<spawnSpot_t> = StaticList.idStaticList(MAX_GENTITIES)
         var activeEntities: idLinkList<idEntity> = idLinkList() // all thinking entities (idEntity::thinkFlags != 0)
         var cinematicMaxSkipTime // time to end cinematic when skipping.  there's a possibility of an infinite loop if the map isn't set up right.
                 = 0
@@ -423,7 +424,7 @@ class Game_local {
         var num_entities // current number <= MAX_GENTITIES
                 = 0
         var persistentLevelInfo: idDict = idDict() // contains args that are kept around between levels
-        var persistentPlayerInfo: ArrayList<idDict> = ArrayList(MAX_CLIENTS)
+        var persistentPlayerInfo: Array<idDict> = Array(MAX_CLIENTS) { idDict() }
         var previousTime // time in msec of last frame
                 = 0
 
@@ -455,8 +456,8 @@ class Game_local {
         var spawnedEntities: idLinkList<idEntity> = idLinkList() // all spawned entities
 
         //
-        var sufaceTypeNames: ArrayList<String> =
-            ArrayList(Material.MAX_SURFACE_TYPES) // text names for surface types
+        var sufaceTypeNames: Array<String?> =
+            arrayOfNulls(Material.MAX_SURFACE_TYPES) // text names for surface types
         var testFx // for development testing of fx
                 : idEntityFx? = null
 
@@ -465,7 +466,7 @@ class Game_local {
                 : idTestModel? = null
         var time // in msec
                 = 0
-        var userInfo: ArrayList<idDict> = ArrayList(MAX_CLIENTS) // client specific settings
+        var userInfo: Array<idDict> = Array(MAX_CLIENTS) { idDict() } // client specific settings
         var usercmds = Array(MAX_CLIENTS) { usercmd_t() } // client input commands
 
         //
@@ -478,11 +479,11 @@ class Game_local {
         private var camera: idCamera? = null
 
         //
-        private var clientEntityStates: Array<ArrayList<entityState_s>> =
-            Array(MAX_CLIENTS) { ArrayList(MAX_GENTITIES) }
+        private var clientEntityStates: Array<Array<entityState_s?>> =
+            Array(MAX_CLIENTS) { arrayOfNulls(MAX_GENTITIES) }
         private var clientPVS: Array<IntArray> =
             Array(MAX_CLIENTS) { IntArray(ENTITY_PVS_SIZE) }
-        private var clientSnapshots: ArrayList<snapshot_s> = ArrayList(MAX_CLIENTS)
+        private var clientSnapshots: Array<snapshot_s?> = arrayOfNulls(MAX_CLIENTS)
         private var currentInitialSpot = 0
         private var gamestate // keeps track of whether we're spawning, shutting down, or normal gameplay
                 : gameState_t = gameState_t.GAMESTATE_UNINITIALIZED
@@ -518,7 +519,7 @@ class Game_local {
         private var playerPVS: pvsHandle_t = pvsHandle_t() // merged pvs of all players
 
         //
-        private val shakeSounds: ArrayList<idStr> = kotlin.collections.ArrayList()
+        private val shakeSounds: idStrList = idStrList()
 
         //
         private var spawnCount = 0
@@ -859,7 +860,7 @@ class Game_local {
             while (i < numClients) {
                 savegame.ReadDict(userInfo[i])
                 savegame.ReadUsercmd(usercmds[i])
-                savegame.ReadDict(persistentPlayerInfo[i])
+                savegame.ReadDict(persistentPlayerInfo[i]!!)
                 i++
             }
             i = 0
@@ -1026,7 +1027,7 @@ class Game_local {
                 i++
             }
             val threads: idList<idThread> = idThread.GetThreads()
-            for (thread in threads.getList()!!) {
+            for (thread in threads.getList(Array<idThread>::class.java)!!) {
                 savegame.AddObject(thread)
             }
 
@@ -1713,9 +1714,9 @@ class Game_local {
             // free entity states stored for this client
             i = 0
             while (i < MAX_GENTITIES) {
-                if (clientEntityStates[clientNum].size > i) {
+                if (clientEntityStates[clientNum][i] != null) {
 //                    entityStateAllocator.Free(clientEntityStates[ clientNum][ i]);
-                    clientEntityStates[clientNum].removeAt(i)
+                    clientEntityStates[clientNum][i] = null
                 }
                 i++
             }
@@ -2104,10 +2105,10 @@ class Game_local {
                     msg.ReadString(name, Lib.MAX_STRING_CHARS)
                     val decl = DeclManager.declManager.FindType(declType_t.values()[type], TempDump.ctos(name), false)
                     if (decl != null) {
-                        if (index >= clientDeclRemap[clientNum][type].size) {
-                            clientDeclRemap[clientNum][type].ensureCapacity(index + 1)
+                        if (index >= clientDeclRemap[clientNum][type]!!.Num()) {
+                            clientDeclRemap[clientNum][type]!!.AssureSize(index + 1, -1)
                         }
-                        clientDeclRemap[clientNum][type][index] = decl.Index()
+                        clientDeclRemap[clientNum][type]!![index] = decl.Index()
                     }
                 }
                 GAME_RELIABLE_MESSAGE_SPAWN_PLAYER -> {
@@ -3276,13 +3277,13 @@ class Game_local {
             return idEntityPtr
         }
 
-        fun GetTargets(args: idDict, list: ArrayList<idEntityPtr<idEntity>>, ref: String): Int {
+        fun GetTargets(args: idDict, list: idList<idEntityPtr<idEntity>>, ref: String): Int {
             var i: Int
             val num: Int
             val refLength: Int
             var arg: idKeyValue?
             var ent: idEntity?
-            list.clear()
+            list.Clear()
             refLength = ref.length
             num = args.GetNumKeyVals()
             i = 0
@@ -3291,13 +3292,13 @@ class Game_local {
                 if (arg.GetKey().Icmpn(ref, refLength) == 0) {
                     ent = FindEntity(arg.GetValue())
                     if (ent != null) {
-                        val entityPtr = list.Alloc()
+                        val entityPtr = list.Alloc()!!
                         entityPtr.oSet(ent)
                     }
                 }
                 i++
             }
-            return list.size
+            return list.Num()
         }
 
         /*
@@ -4056,7 +4057,7 @@ class Game_local {
             val pos = idVec3()
             var dist: Float
             var alone: Boolean
-            if (!isMultiplayer || TempDump.NOT(spawnSpots.size.toDouble())) {
+            if (!isMultiplayer || TempDump.NOT(spawnSpots.Num().toDouble())) {
                 spot.ent = FindEntityUsingDef(null, "info_player_start")
                 if (null == spot.ent) {
                     Error("No info_player_start on map.\n")
@@ -4066,8 +4067,8 @@ class Game_local {
             }
             if (player.spectating) {
                 // plain random spot, don't bother
-                return spawnSpots[random.RandomInt(spawnSpots.size.toDouble())].ent
-            } else if (player.useInitialSpawns && currentInitialSpot < initialSpots.size) {
+                return spawnSpots[random.RandomInt(spawnSpots.Num().toDouble())].ent
+            } else if (player.useInitialSpawns && currentInitialSpot < initialSpots.Num()) {
                 return initialSpots[currentInitialSpot++]
             } else {
                 // check if we are alone in map
@@ -4082,12 +4083,12 @@ class Game_local {
                 }
                 if (alone) {
                     // don't do distance-based
-                    return spawnSpots[random.RandomInt(spawnSpots.size.toDouble())].ent
+                    return spawnSpots[random.RandomInt(spawnSpots.Num().toDouble())].ent
                 }
 
                 // find the distance to the closest active player for each spawn spot
                 i = 0
-                while (i < spawnSpots.size) {
+                while (i < spawnSpots.Num()) {
                     pos.set(spawnSpots[i].ent!!.GetPhysics().GetOrigin())
                     spawnSpots[i].dist = 0x7fffffff
                     j = 0
@@ -4110,10 +4111,10 @@ class Game_local {
                 // sort the list
 //                qsort( /*( void * )*/spawnSpots.Ptr(), spawnSpots.Num(), sizeof(spawnSpot_t), /*( int (*)(const void *, const void *) )*/ sortSpawnPoints);
 
-                spawnSpots.sortWith(sortSpawnPoints())
+                spawnSpots.Ptr().sortWith(sortSpawnPoints())
 
                 // choose a random one in the top half
-                which = random.RandomInt((spawnSpots.size / 2).toDouble())
+                which = random.RandomInt((spawnSpots.Num() / 2).toDouble())
                 spot = spawnSpots[which]
             }
             return spot.ent
@@ -4191,7 +4192,7 @@ class Game_local {
             }
 
             // make sure the index is valid
-            if (clientDeclRemap[localClientNum][type.ordinal].size == 0) {
+            if (clientDeclRemap[localClientNum][type.ordinal]!!.Num() == 0) {
                 Error(
                     "client received decl index %d before %s decl remap was initialized",
                     index,
@@ -4199,7 +4200,7 @@ class Game_local {
                 )
                 return -1
             }
-            if (index >= clientDeclRemap[localClientNum][type.ordinal].size) {
+            if (index >= clientDeclRemap[localClientNum][type.ordinal]!!.Num()) {
                 Error(
                     "client received unmapped %s decl index %d from server",
                     DeclManager.declManager.GetDeclNameFromType(type),
@@ -4207,7 +4208,7 @@ class Game_local {
                 )
                 return -1
             }
-            if (clientDeclRemap[localClientNum][type.ordinal][index] == -1) {
+            if (clientDeclRemap[localClientNum][type.ordinal]!![index] == -1) {
                 Error(
                     "client received unmapped %s decl index %d from server",
                     DeclManager.declManager.GetDeclNameFromType(type),
@@ -4215,7 +4216,7 @@ class Game_local {
                 )
                 return -1
             }
-            return clientDeclRemap[localClientNum][type.ordinal][index]
+            return clientDeclRemap[localClientNum][type.ordinal]!![index]
         }
 
         fun SetGlobalMaterial(mat: Material.idMaterial?) {
@@ -4262,7 +4263,7 @@ class Game_local {
             i = 0
             while (i < MAX_CLIENTS) {
                 userInfo[i].Clear()
-                persistentPlayerInfo[i].Clear()
+                persistentPlayerInfo[i]!!.Clear()
                 i++
             }
             //	memset( usercmds, 0, sizeof( usercmds ) );
@@ -4338,14 +4339,14 @@ class Game_local {
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             for (a in 0 until MAX_CLIENTS) {
                 for (b in 0 until MAX_GENTITIES) {
-                    clientEntityStates[a].add(b, entityState_s())
+                    clientEntityStates[a][b] = entityState_s()
                 }
             }
             clientPVS =
                 Array(clientPVS.size) { IntArray(clientPVS[0].size) } //memset( clientPVS, 0, sizeof( clientPVS ) );
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
             for (c in 0 until MAX_CLIENTS) {
-                clientSnapshots.add(c, snapshot_s())
+                clientSnapshots[c] = snapshot_s()
             }
             eventQueue.Init()
             savedEventQueue.Init()
@@ -4686,7 +4687,7 @@ class Game_local {
             while (ent != null) {
                 totalBounds = ent.GetPhysics().GetAbsBounds()
                 i = 0
-                while (i < ent.targets.size) {
+                while (i < ent.targets.Num()) {
                     target = ent.targets[i].GetEntity()
                     if (target != null) {
                         totalBounds.AddBounds(target.GetPhysics().GetAbsBounds())
@@ -4739,7 +4740,7 @@ class Game_local {
                     )
                 }
                 i = 0
-                while (i < ent.targets.size) {
+                while (i < ent.targets.Num()) {
                     target = ent.targets[i].GetEntity()
                     if (target != null) {
                         gameRenderWorld.DebugArrow(
@@ -5530,7 +5531,7 @@ class Game_local {
             while (i < MAX_CLIENTS) {
                 type = 0
                 while (type < DeclManager.declManager.GetNumDeclTypes()) {
-                    clientDeclRemap[i].add(type, ArrayList())
+                    clientDeclRemap[i][type] = idList()
                     type++
                 }
                 i++
@@ -5538,11 +5539,11 @@ class Game_local {
 
 //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             clientEntityStates =
-                Array(clientEntityStates.size) { ArrayList(clientEntityStates[0].size) }
+                Array(clientEntityStates.size) { arrayOfNulls(clientEntityStates[0].size) }
             //	memset( clientPVS, 0, sizeof( clientPVS ) );
             clientPVS = Array(clientPVS.size) { IntArray(clientPVS[0].size) }
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            clientSnapshots = ArrayList(clientSnapshots.size)
+            clientSnapshots = arrayOfNulls(clientSnapshots.size)
             eventQueue.Init()
             savedEventQueue.Init()
             entityDefBits = -(idMath.BitsForInteger(DeclManager.declManager.GetNumDecls(declType_t.DECL_ENTITYDEF)) + 1)
@@ -5559,11 +5560,11 @@ class Game_local {
             savedEventQueue.Shutdown()
             //	memset( clientEntityStates, 0, sizeof( clientEntityStates ) );
             clientEntityStates =
-                Array(clientEntityStates.size) { ArrayList(clientEntityStates[0].size) }
+                Array(clientEntityStates.size) { arrayOfNulls(clientEntityStates[0].size) }
             //	memset( clientPVS, 0, sizeof( clientPVS ) );
             clientPVS = Array(clientPVS.size) { IntArray(clientPVS[0].size) }
             //	memset( clientSnapshots, 0, sizeof( clientSnapshots ) );
-            clientSnapshots = ArrayList(clientSnapshots.size)
+            clientSnapshots = arrayOfNulls(clientSnapshots.size)
         }
 
         private fun InitLocalClient(clientNum: Int) {
@@ -5587,8 +5588,8 @@ class Game_local {
                     continue
                 }
                 num = DeclManager.declManager.GetNumDecls(type)
-                clientDeclRemap[clientNum][type].clear()
-                clientDeclRemap[clientNum][type].ensureCapacity(num)
+                clientDeclRemap[clientNum][type]!!.Clear()
+                clientDeclRemap[clientNum][type]!!.AssureSize(num, -1)
 
                 // pre-initialize the remap with non-implicit decls, all non-implicit decls are always going
                 // to be in order and in sync between server and client because of the decl manager checksum
@@ -5599,7 +5600,7 @@ class Game_local {
                         // once the first implicit decl is found all remaining decls are considered implicit as well
                         break
                     }
-                    clientDeclRemap[clientNum][type][i] = i
+                    clientDeclRemap[clientNum][type]!![i] = i
                     i++
                 }
                 type++
@@ -5615,11 +5616,11 @@ class Game_local {
                 return
             }
             // increase size of list if required
-            if (index >= clientDeclRemap[clientNum][type.ordinal].size) {
-                clientDeclRemap[clientNum][type.ordinal].ensureCapacity(index + 1)
+            if (index >= clientDeclRemap[clientNum][type.ordinal]!!.Num()) {
+                clientDeclRemap[clientNum][type.ordinal]!!.AssureSize(index + 1, -1)
             }
             // if already remapped
-            if (clientDeclRemap[clientNum][type.ordinal][index] != -1) {
+            if (clientDeclRemap[clientNum][type.ordinal]!![index] != -1) {
                 return
             }
             val decl = DeclManager.declManager.DeclByIndex(type, index, false)
@@ -5633,7 +5634,7 @@ class Game_local {
             }
 
             // set the index at the server
-            clientDeclRemap[clientNum][type.ordinal][index] = index
+            clientDeclRemap[clientNum][type.ordinal]!![index] = index
 
             // write update to client
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
@@ -5894,34 +5895,34 @@ class Game_local {
             if (!isMultiplayer || isClient) {
                 return
             }
-            spawnSpots.clear()
-            initialSpots.clear()
+            spawnSpots.Clear()
+            initialSpots.Clear()
             spot.dist = 0
             spot.ent = FindEntityUsingDef(null, "info_player_deathmatch")
             while (spot.ent != null) {
-                spawnSpots.add(spot)
+                spawnSpots.Append(spot)
                 if (spot.ent!!.spawnArgs.GetBool("initial")) {
-                    initialSpots.add(spot.ent!!)
+                    initialSpots.Append(spot.ent!!)
                 }
                 spot.ent = FindEntityUsingDef(spot.ent, "info_player_deathmatch")
             }
-            if (0 == spawnSpots.size) {
+            if (0 == spawnSpots.Num()) {
                 Common.common.Warning("no info_player_deathmatch in map")
                 return
             }
-            Common.common.Printf("%d spawns (%d initials)\n", spawnSpots.size, initialSpots.size)
+            Common.common.Printf("%d spawns (%d initials)\n", spawnSpots.Num(), initialSpots.Num())
             // if there are no initial spots in the map, consider they can all be used as initial
-            if (0 == initialSpots.size) {
+            if (0 == initialSpots.Num()) {
                 Common.common.Warning("no info_player_deathmatch entities marked initial in map")
                 i = 0
-                while (i < spawnSpots.size) {
-                    initialSpots.add(spawnSpots[i].ent!!)
+                while (i < spawnSpots.Num()) {
+                    initialSpots.Append(spawnSpots[i].ent!!)
                     i++
                 }
             }
             i = 0
-            while (i < initialSpots.size) {
-                j = random.RandomInt(initialSpots.size.toDouble())
+            while (i < initialSpots.Num()) {
+                j = random.RandomInt(initialSpots.Num().toDouble())
                 ent = initialSpots[i]
                 initialSpots[i] = initialSpots[j]
                 initialSpots[j] = ent
@@ -5931,14 +5932,6 @@ class Game_local {
             currentInitialSpot = 0
         }
 
-        fun ArrayList<idStr>.addUnique(s: idStr): Int {
-            var index = indexOf(s)
-            if (index == -1) {
-                add(s)
-                index = indexOf(s)
-            }
-            return index
-        }
 
         private fun DumpOggSounds() {
             var i: Int
@@ -5995,13 +5988,13 @@ class Game_local {
                             }
                         }
                         k = 0
-                        while (k < shakeSounds.size) {
+                        while (k < shakeSounds.size()) {
                             if (shakeSounds[k].IcmpPath(soundName.toString()) == 0) {
                                 break
                             }
                             k++
                         }
-                        if (k < shakeSounds.size) {
+                        if (k < shakeSounds.size()) {
                             j++
                             continue
                         }
@@ -6020,7 +6013,7 @@ class Game_local {
             // list all the shake sounds
             totalSize = 0
             i = 0
-            while (i < shakeSounds.size) {
+            while (i < shakeSounds.size()) {
                 size = FileSystem_h.fileSystem.ReadFile(shakeSounds[i], null, null)
                 totalSize += size
                 shakeSounds[i].Replace("/", "\\")
@@ -6309,10 +6302,6 @@ class Game_local {
         }
 
         init {
-            for (u in 0 until MAX_CLIENTS) {
-                userInfo.add(idDict())
-                persistentPlayerInfo.add(idDict())
-            }
             lastGUIEnt = idEntityPtr()
             lastAIAlertEntity = idEntityPtr()
             Clear()

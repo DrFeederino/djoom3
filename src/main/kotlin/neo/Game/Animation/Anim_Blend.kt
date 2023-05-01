@@ -3,6 +3,8 @@ package neo.Game.Animation
 import neo.Game.AI.AI_Events
 import neo.Game.Actor
 import neo.Game.Animation.Anim.AFJointModType_t
+import neo.Game.Animation.Anim.ANIMCHANNEL_ALL
+import neo.Game.Animation.Anim.ANIM_NumAnimChannels
 import neo.Game.Animation.Anim.animFlags_t
 import neo.Game.Animation.Anim.frameBlend_t
 import neo.Game.Animation.Anim.frameCommandType_t
@@ -27,11 +29,14 @@ import neo.Game.Game_local.gameSoundChannel_t
 import neo.Game.Game_local.idGameLocal
 import neo.Game.Sound
 import neo.Renderer.Model
+import neo.Renderer.Model.INVALID_JOINT
 import neo.Renderer.Model.idMD5Joint
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld.renderEntity_s
 import neo.TempDump
+import neo.TempDump.indexOf
+import neo.TempDump.itoi
 import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem
@@ -49,9 +54,10 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token
 import neo.idlib.Text.Token.idToken
-import neo.idlib.containers.BinSearch
+import neo.idlib.containers.BinSearch.idBinSearch_GreaterEqual
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List
 import neo.idlib.geometry.JointTransform.idJointMat
 import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.math.Matrix.idMat3
@@ -60,7 +66,6 @@ import neo.idlib.math.Simd
 import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
-import java.util.function.Consumer
 
 /**
  *
@@ -87,9 +92,9 @@ object Anim_Blend {
      ==============================================================================================
      */
     class idAnim {
-        private val frameCommands: ArrayList<frameCommand_t> = ArrayList()
-        private val frameLookup: ArrayList<frameLookup_t> = ArrayList()
-        private var anims: ArrayList<idMD5Anim> = ArrayList(Anim.ANIM_MaxSyncedAnims)
+        private val frameCommands: List.idList<frameCommand_t> = List.idList(frameCommand_t().javaClass)
+        private val frameLookup: List.idList<frameLookup_t> = List.idList()
+        private var anims: Array<idMD5Anim?> = arrayOfNulls(Anim.ANIM_MaxSyncedAnims)
         private var flags: animFlags_t
         private var modelDef: idDeclModelDef?
         private val name: idStr = idStr()
@@ -111,35 +116,31 @@ object Anim_Blend {
             name.set(anim.name)
             realname.set(anim.realname)
             flags = anim.flags
-            anims = ArrayList(anims.size)
+            anims = arrayOfNulls(anims.size)
             i = 0
             while (i < numAnims) {
-                anims.add(i, anim.anims[i])
-                anims[i].IncreaseRefs()
+                anims[i] = anim.anims[i]
+                anims[i]!!.IncreaseRefs()
                 i++
             }
 
-            //frameLookup.SetNum(anim.frameLookup.Num());
-            if (anim.frameLookup.size > 0) {
+            frameLookup.SetNum(anim.frameLookup.Num())
+            if (frameLookup.Num() > 0) {
                 i = 0
-                while (i < anim.frameLookup.size) {
-                    val frameLookup_t = anim.frameLookup[i]
-                    // this is probably overkill, since it's an object creation, frameLookup is "empty"
-                    //if (i >= frameLookup.size()) {
-                    frameLookup.add(frameLookup_t)
+                while (i < frameLookup.MemoryUsed()) {
+                    val frameLookup_t: frameLookup_t = anim.frameLookup[i]
+                    frameLookup[i] = frameLookup_t
                     i++
                 }
             }
 
-            //frameCommands.SetNum(anim.frameCommands.Num());
+            frameCommands.SetNum(anim.frameCommands.Num())
             i = 0
-            while (i < frameCommands.size) {
-                if (i >= frameCommands.size) {
-                    frameCommands.add(anim.frameCommands[i])
-                } else {
-                    frameCommands[i] = anim.frameCommands[i]
+            while (i < frameCommands.Num()) {
+                frameCommands[i] = anim.frameCommands[i]
+                if (frameCommands[i].string != null) {
+                    frameCommands[i].string = idStr(anim.frameCommands[i].string!!)
                 }
-                frameCommands[i].string.set(idStr(anim.frameCommands[i].string))
                 i++
             }
         }
@@ -150,14 +151,14 @@ object Anim_Blend {
             sourceName: String,
             animName: String,
             num: Int,
-            md5anims: kotlin.collections.ArrayList<idMD5Anim> /*[ ANIM_MaxSyncedAnims ]*/
+            md5anims: ArrayList<idMD5Anim> /*[ ANIM_MaxSyncedAnims ]*/
         ) {
             var i: Int
             this.modelDef = modelDef
             i = 0
             while (i < numAnims) {
-                anims[i].DecreaseRefs()
-                anims.removeAt(i)
+                anims[i]!!.DecreaseRefs()
+                anims[i] = null
                 i++
             }
             assert(num > 0 && num <= Anim.ANIM_MaxSyncedAnims)
@@ -166,16 +167,23 @@ object Anim_Blend {
             name.set(animName)
             i = 0
             while (i < num) {
-                anims.add(i, md5anims[i])
-                anims[i].IncreaseRefs()
+                anims[i] = md5anims[i]
+                anims[i]!!.IncreaseRefs()
                 i++
             }
 
 //	memset( &flags, 0, sizeof( flags ) );
+
+//	memset( &flags, 0, sizeof( flags ) );
             flags = animFlags_t()
-            frameCommands.forEach(Consumer { frame: frameCommand_t -> frame.string.set("") })
-            frameLookup.clear()
-            frameCommands.clear()
+
+            i = 0
+            while (i < frameCommands.Num()) {
+                i++
+            }
+
+            frameLookup.Clear()
+            frameCommands.Clear()
         }
 
         fun Name(): String {
@@ -204,15 +212,17 @@ object Anim_Blend {
         }
 
         fun Length(): Int {
-            return if (anims.isNullOrEmpty()) {
+            return if (null == anims[0]) {
                 0
-            } else anims[0].Length()
+            } else anims[0]!!.Length()
+
         }
 
         fun NumFrames(): Int {
-            return if (anims.isNullOrEmpty()) {
+            return if (null == anims[0]) {
                 0
-            } else anims[0].NumFrames()
+            } else anims[0]!!.NumFrames()
+
         }
 
         fun NumAnims(): Int {
@@ -220,9 +230,10 @@ object Anim_Blend {
         }
 
         fun TotalMovementDelta(): idVec3 {
-            return if (anims.isNullOrEmpty()) {
+            return if (null == anims[0]) {
                 getVec3_zero()
-            } else anims[0].TotalMovementDelta()
+            } else anims[0]!!.TotalMovementDelta()
+
         }
 
         fun GetOrigin(offset: idVec3, animNum: Int, currentTime: Int, cyclecount: Int): Boolean {
@@ -230,7 +241,7 @@ object Anim_Blend {
                 offset.Zero()
                 return false
             }
-            anims[animNum].GetOrigin(offset, currentTime, cyclecount)
+            anims[animNum]!!.GetOrigin(offset, currentTime, cyclecount)
             return true
         }
 
@@ -239,7 +250,7 @@ object Anim_Blend {
                 rotation.set(0.0f, 0.0f, 0.0f, 1.0f)
                 return false
             }
-            anims[animNum].GetOriginRotation(rotation, currentTime, cyclecount)
+            anims[animNum]!!.GetOriginRotation(rotation, currentTime, cyclecount)
             return true
         }
 
@@ -247,7 +258,7 @@ object Anim_Blend {
             if (animNum > anims.size) {
                 return false
             }
-            anims[animNum].GetBounds(bounds, currentTime, cyclecount)
+            anims[animNum]!!.GetBounds(bounds, currentTime, cyclecount)
             return true
         }
 
@@ -270,7 +281,7 @@ object Anim_Blend {
             val jointInfo: jointInfo_t?
 
             // make sure we're within bounds
-            if (framenum < 1 || framenum > anims[0].NumFrames()) {
+            if (framenum < 1 || framenum > anims[0]!!.NumFrames()) {
                 return Str.va("Frame %d out of range", framenum)
             }
 
@@ -297,7 +308,7 @@ object Anim_Blend {
                     return "Unexpected end of line"
                 }
                 fc.type = frameCommandType_t.FC_SCRIPTFUNCTIONOBJECT
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "event") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -307,14 +318,14 @@ object Anim_Blend {
                 if (ev.GetNumArgs() != 0) {
                     return Str.va("Event '%s' has arguments", token)
                 }
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "sound_voice2") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
                 fc.type = frameCommandType_t.FC_SOUND_VOICE2
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -327,7 +338,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_VOICE
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -340,7 +351,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_BODY2
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -353,7 +364,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_BODY3
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -366,7 +377,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_BODY
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -379,7 +390,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_WEAPON
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -392,7 +403,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_GLOBAL
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -405,7 +416,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_ITEM
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -418,7 +429,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND_CHATTER
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -431,7 +442,7 @@ object Anim_Blend {
                 }
                 fc.type = frameCommandType_t.FC_SOUND
                 if (0 == token.Cmpn("snd_", 4)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 } else {
                     fc.soundShader = DeclManager.declManager.FindSound(token)
                     if (fc.soundShader!!.GetState() == declState_t.DS_DEFAULTED) {
@@ -459,19 +470,19 @@ object Anim_Blend {
                 if (TempDump.NOT(DeclManager.declManager.FindType(declType_t.DECL_FX, token))) {
                     return Str.va("fx '%s' not found", token)
                 }
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "trigger") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
                 fc.type = frameCommandType_t.FC_TRIGGER
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "triggerSmokeParticle") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
                 }
                 fc.type = frameCommandType_t.FC_TRIGGER_SMOKE_PARTICLE
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "melee") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -480,7 +491,7 @@ object Anim_Blend {
                 if (TempDump.NOT(Game_local.gameLocal.FindEntityDef(token.toString(), false))) {
                     return Str.va("Unknown entityDef '%s'", token)
                 }
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "direct_damage") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -489,7 +500,7 @@ object Anim_Blend {
                 if (TempDump.NOT(Game_local.gameLocal.FindEntityDef(token.toString(), false))) {
                     return Str.va("Unknown entityDef '%s'", token)
                 }
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "attack_begin") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -498,7 +509,7 @@ object Anim_Blend {
                 if (TempDump.NOT(Game_local.gameLocal.FindEntityDef(token.toString(), false))) {
                     return Str.va("Unknown entityDef '%s'", token)
                 }
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "attack_end") {
                 fc.type = frameCommandType_t.FC_ENDATTACK
             } else if (token.toString() == "muzzle_flash") {
@@ -509,10 +520,10 @@ object Anim_Blend {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_MUZZLEFLASH
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "muzzle_flash") {
                 fc.type = frameCommandType_t.FC_MUZZLEFLASH
-                fc.string.set("")
+                fc.string!!.set("")
             } else if (token.toString() == "create_missile") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -521,7 +532,7 @@ object Anim_Blend {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_CREATEMISSILE
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "launch_missile") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -530,7 +541,7 @@ object Anim_Blend {
                     return Str.va("Joint '%s' not found", token)
                 }
                 fc.type = frameCommandType_t.FC_LAUNCHMISSILE
-                fc.string.set(token)
+                fc.string!!.set(token)
             } else if (token.toString() == "fire_missile_at_target") {
                 if (!src.ReadTokenOnLine(token)) {
                     return "Unexpected end of line"
@@ -543,7 +554,7 @@ object Anim_Blend {
                     return "Unexpected end of line"
                 }
                 fc.type = frameCommandType_t.FC_FIREMISSILEATTARGET
-                fc.string.set(token)
+                fc.string!!.set(token)
                 fc.index = jointInfo.num
             } else if (token.toString() == "footstep") {
                 fc.type = frameCommandType_t.FC_FOOTSTEP
@@ -584,12 +595,12 @@ object Anim_Blend {
             } else if (token.toString() == "recordDemo") {
                 fc.type = frameCommandType_t.FC_RECORDDEMO
                 if (src.ReadTokenOnLine(token)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 }
             } else if (token.toString() == "aviGame") {
                 fc.type = frameCommandType_t.FC_AVIGAME
                 if (src.ReadTokenOnLine(token)) {
-                    fc.string.set(token)
+                    fc.string!!.set(token)
                 }
             } else {
                 println(String.format("didnt find anim token %s", token.toString()))
@@ -597,55 +608,52 @@ object Anim_Blend {
             }
 
             // check if we've initialized the frame lookup table
-            if (0 == frameLookup.size) {
-                frameLookup.clear() // just in cae?
-                // we haven't, so allocate the table and initialize it
-//                frameLookup.SetGranularity(1);
-//                frameLookup.SetNum(anims[0].NumFrames());
-                i = 0
-                while (i < anims[0].NumFrames()) {
+            if (0 == frameLookup.Num()) {
 
-                    // init with setting size as anims[0].NumFrames()!
-                    frameLookup.add(frameLookup_t())
+                // we haven't, so allocate the table and initialize it
+                frameLookup.SetGranularity(1)
+                frameLookup.SetNum(anims[0]!!.NumFrames())
+                i = 0
+                while (i < frameLookup.Num()) {
+                    frameLookup.set(i, frameLookup_t()).num = 0
+                    frameLookup[i].firstCommand = 0
                     i++
                 }
-                //frameLookup.trimToSize();
             }
 
             // allocate space for a new command
-            //frameCommands.Alloc();
+            frameCommands.Alloc()
 
             // calculate the index of the new command
             index = frameLookup[framenum].firstCommand + frameLookup[framenum].num
 
             // move all commands from our index onward up one to give us space for our new command
-            // size is the actual size of the list, not size + 1 like it is in idList
-            i = frameCommands.size
+            i = frameCommands.Num() - 1
             while (i > index) {
-                if (i >= frameCommands.size) {
-                    frameCommands.add(frameCommands[i - 1])
-                } else {
-                    frameCommands[i] = frameCommands[i - 1]
-                }
+                frameCommands[i] = frameCommands[i - 1]
                 i--
             }
 
             // fix the indices of any later frames to account for the inserted command
+
+            // fix the indices of any later frames to account for the inserted command
             i = framenum + 1
-            while (i < frameLookup.size) {
+            while (i < frameLookup.Num()) {
                 frameLookup[i].firstCommand++
                 i++
             }
 
             // store the new command
-            if (index >= frameCommands.size) {
-                frameCommands.add(fc)
-            } else {
-                frameCommands[index] = fc
-            }
+
+            // store the new command
+            frameCommands[index] = fc
+
+            // increase the number of commands on this frame
 
             // increase the number of commands on this frame
             frameLookup[framenum].num++
+
+            // return with no error
 
             // return with no error
             return null
@@ -656,7 +664,7 @@ object Anim_Blend {
             var end: Int
             var frame: Int
             val numframes: Int
-            numframes = anims[0].NumFrames()
+            numframes = anims[0]!!.NumFrames()
             frame = from
             while (frame != to) {
                 frame++
@@ -673,18 +681,18 @@ object Anim_Blend {
                         }
 
                         frameCommandType_t.FC_SCRIPTFUNCTIONOBJECT -> {
-                            Game_local.gameLocal.CallObjectFrameCommand(ent, command.string.toString())
+                            Game_local.gameLocal.CallObjectFrameCommand(ent, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_EVENTFUNCTION -> {
-                            val ev: Event.idEventDef = Event.idEventDef.FindEvent(command.string.toString())!!
+                            val ev: Event.idEventDef = Event.idEventDef.FindEvent(command.string!!.toString())!!
                             ent.ProcessEvent(ev)
                         }
 
                         frameCommandType_t.FC_SOUND -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ANY,
                                         0,
                                         false
@@ -708,7 +716,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_VOICE -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_VOICE,
                                         0,
                                         false
@@ -732,7 +740,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_VOICE2 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_VOICE2,
                                         0,
                                         false
@@ -756,7 +764,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_BODY -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY,
                                         0,
                                         false,
@@ -780,7 +788,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_BODY2 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY2,
                                         0,
                                         false
@@ -804,7 +812,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_BODY3 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_BODY3,
                                         0,
                                         false
@@ -828,7 +836,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_WEAPON -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_WEAPON,
                                         0,
                                         false
@@ -852,7 +860,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_GLOBAL -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ANY,
                                         Sound.SSF_GLOBAL,
                                         false
@@ -876,7 +884,7 @@ object Anim_Blend {
                         frameCommandType_t.FC_SOUND_ITEM -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
-                                        command.string.toString(),
+                                        command.string!!.toString(),
                                         gameSoundChannel_t.SND_CHANNEL_ITEM,
                                         0,
                                         false
@@ -901,7 +909,7 @@ object Anim_Blend {
                             if (ent.CanPlayChatterSounds()) {
                                 if (TempDump.NOT(command.soundShader)) {
                                     if (!ent.StartSound(
-                                            command.string.toString(),
+                                            command.string!!.toString(),
                                             gameSoundChannel_t.SND_CHANNEL_VOICE,
                                             0,
                                             false
@@ -925,7 +933,7 @@ object Anim_Blend {
 
                         frameCommandType_t.FC_FX -> {
                             idEntityFx.StartFx(
-                                command.string.toString(),
+                                command.string!!.toString(),
                                 getVec3_zero(),
                                 idMat3.getMat3_zero(),
                                 ent,
@@ -939,7 +947,7 @@ object Anim_Blend {
 
                         frameCommandType_t.FC_TRIGGER -> {
                             var target: idEntity?
-                            target = Game_local.gameLocal.FindEntity(command.string.toString())
+                            target = Game_local.gameLocal.FindEntity(command.string!!.toString())
                             if (target != null) {
                                 target.Signal(signalNum_t.SIG_TRIGGER)
                                 target.ProcessEvent(Entity.EV_Activate, ent)
@@ -953,19 +961,19 @@ object Anim_Blend {
                         }
 
                         frameCommandType_t.FC_TRIGGER_SMOKE_PARTICLE -> {
-                            ent.ProcessEvent(AI_Events.AI_TriggerParticles, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_TriggerParticles, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_MELEE -> {
-                            ent.ProcessEvent(AI_Events.AI_AttackMelee, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_AttackMelee, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_DIRECTDAMAGE -> {
-                            ent.ProcessEvent(AI_Events.AI_DirectDamage, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_DirectDamage, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_BEGINATTACK -> {
-                            ent.ProcessEvent(AI_Events.AI_BeginAttack, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_BeginAttack, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_ENDATTACK -> {
@@ -973,22 +981,22 @@ object Anim_Blend {
                         }
 
                         frameCommandType_t.FC_MUZZLEFLASH -> {
-                            ent.ProcessEvent(AI_Events.AI_MuzzleFlash, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_MuzzleFlash, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_CREATEMISSILE -> {
-                            ent.ProcessEvent(AI_Events.AI_CreateMissile, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_CreateMissile, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_LAUNCHMISSILE -> {
-                            ent.ProcessEvent(AI_Events.AI_AttackMissile, command.string.toString())
+                            ent.ProcessEvent(AI_Events.AI_AttackMissile, command.string!!.toString())
                         }
 
                         frameCommandType_t.FC_FIREMISSILEATTARGET -> {
                             ent.ProcessEvent(
                                 AI_Events.AI_FireMissileAtTarget,
                                 modelDef!!.GetJointName(command.index),
-                                command.string.toString()
+                                command.string!!.toString()
                             )
                         }
 
@@ -1049,10 +1057,10 @@ object Anim_Blend {
                         }
 
                         frameCommandType_t.FC_RECORDDEMO -> {
-                            if (!command.string.toString().isNullOrEmpty()) {
+                            if (command.string != null) {
                                 CmdSystem.cmdSystem.BufferCommandText(
                                     cmdExecution_t.CMD_EXEC_NOW,
-                                    Str.va("recordDemo %s", command.string)
+                                    Str.va("recordDemo %s", command.string!!)
                                 )
                             } else {
                                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "stoprecording")
@@ -1060,10 +1068,10 @@ object Anim_Blend {
                         }
 
                         frameCommandType_t.FC_AVIGAME -> {
-                            if (!command.string.toString().isNullOrEmpty()) {
+                            if (command.string != null) {
                                 CmdSystem.cmdSystem.BufferCommandText(
                                     cmdExecution_t.CMD_EXEC_NOW,
-                                    Str.va("aviGame %s", command.string)
+                                    Str.va("aviGame %s", command.string!!)
                                 )
                             } else {
                                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "aviGame")
@@ -1075,7 +1083,7 @@ object Anim_Blend {
         }
 
         fun HasFrameCommands(): Boolean {
-            return 0 != frameCommands.size
+            return 0 != frameCommands.Num()
         }
 
         // returns first frame (zero based) that command occurs.  returns -1 if not found.
@@ -1084,10 +1092,10 @@ object Anim_Blend {
             var index: Int
             val numframes: Int
             var end: Int
-            if (0 == frameCommands.size) {
+            if (0 == frameCommands.Num()) {
                 return -1
             }
-            numframes = anims[0].NumFrames()
+            numframes = anims[0]!!.NumFrames()
             frame = 0
             while (frame < numframes) {
                 end = frameLookup[frame].firstCommand + frameLookup[frame].num
@@ -1126,10 +1134,10 @@ object Anim_Blend {
      ==============================================================================================
      */
     class idDeclModelDef : idDecl {
-        private val anims: ArrayList<idAnim> = ArrayList()
-        private val channelJoints: ArrayList<ArrayList<Int>> = ArrayList<ArrayList<Int>>(Anim.ANIM_NumAnimChannels)
-        private val jointParents: ArrayList<Int> = ArrayList()
-        private val joints: ArrayList<jointInfo_t> = ArrayList()
+        private val anims: List.idList<idAnim> = List.idList()
+        private val channelJoints: Array<List.idList<Int>>
+        private val jointParents: List.idList<Int> = List.idList()
+        private val joints: List.idList<jointInfo_t> = List.idList()
         private val offset: idVec3 = idVec3()
         private var modelHandle: idRenderModel?
 
@@ -1142,9 +1150,7 @@ object Anim_Blend {
             modelHandle = null
             skin = null
             offset.Zero()
-            for (i in 0 until Anim.ANIM_NumAnimChannels) {
-                channelJoints.add(i, ArrayList())
-            }
+            channelJoints = Array(ANIM_NumAnimChannels) { List.idList() }
         }
 
         override fun DefaultDefinition(): String {
@@ -1158,14 +1164,14 @@ object Anim_Blend {
             val filename = idStr()
             val extension = idStr()
             var md5joint: Int
-            var md5joints: ArrayList<idMD5Joint>
+            var md5joints: Array<idMD5Joint>
             val src = idLexer()
             val token = idToken()
             val token2 = idToken()
             var jointnames: String
             var channel: Int
             var   /*jointHandle_t*/jointnum: Int
-            val jointList = ArrayList<Int>()
+            val jointList = List.idList<Int>()
             var numDefaultAnims: Int
             src.LoadMemory(text, textLength, GetFileName(), GetLineNum())
             src.SetFlags(DeclManager.DECL_LEXER_FLAGS)
@@ -1194,7 +1200,7 @@ object Anim_Blend {
                         return false
                     } else {
                         CopyDecl(copy)
-                        numDefaultAnims = anims.size
+                        numDefaultAnims = anims.Num()
                     }
                 } else if (token.toString() == "skin") {
                     if (!src.ReadToken(token2)) {
@@ -1240,37 +1246,26 @@ object Anim_Blend {
                     }
 
                     // set up the joint hierarchy
-                    //joints.SetGranularity(1);
-                    //joints.SetNum(num);
-                    //jointParents.SetNum(num);
-                    //channelJoints[0].SetNum(num);
-                    md5joints = arrayListOf(*modelHandle!!.GetJoints()!!)
+
+                    // set up the joint hierarchy
+                    joints.SetGranularity(1)
+                    joints.SetNum(num)
+                    jointParents.SetNum(num)
+                    channelJoints[0].SetNum(num)
+                    md5joints = modelHandle!!.GetJoints()!!
                     md5joint = 0 //md5joints;
+
                     i = 0
                     while (i < num) {
-                        val jointInfo_t = jointInfo_t()
-                        jointInfo_t.channel = Anim.ANIMCHANNEL_ALL
-                        if (i >= joints.size) {
-                            joints.add(jointInfo_t)
-                        } else {
-                            joints[i] = jointInfo_t
-                        }
+                        joints.set(i, jointInfo_t()).channel = ANIMCHANNEL_ALL
                         joints[i].num = i
                         if (md5joints[md5joint].parent != null) {
-                            joints[i].parentNum = md5joints.indexOf(md5joints[md5joint].parent)
+                            joints[i].parentNum = indexOf(md5joints[md5joint].parent, md5joints)
                         } else {
-                            joints[i].parentNum = Model.INVALID_JOINT
+                            joints[i].parentNum = INVALID_JOINT
                         }
-                        if (i >= jointParents.size) {
-                            jointParents.add(joints[i].parentNum)
-                        } else {
-                            jointParents[i] = joints[i].parentNum
-                        }
-                        if (i >= channelJoints[0].size) {
-                            channelJoints[0].add(i)
-                        } else {
-                            channelJoints[0][i] = i
-                        }
+                        jointParents[i] = joints[i].parentNum
+                        channelJoints[0][i] = i
                         i++
                         md5joint++
                     }
@@ -1283,10 +1278,10 @@ object Anim_Blend {
                     }
                     num = 0
                     i = 0
-                    while (i < anims.size) {
+                    while (i < anims.Num()) {
                         if (token2.toString() == anims[i].Name() || token2.toString() == anims[i].FullName()) {
 //					delete anims[ i ];
-                            anims.removeAt(i) // remove handles both delete and RemoveIndex
+                            anims.RemoveIndex(i) // remove handles both delete and RemoveIndex
                             if (i >= numDefaultAnims) {
                                 src.Warning(
                                     "Anim '%s' was not inherited.  Anim should be removed from the model def.",
@@ -1341,14 +1336,14 @@ object Anim_Blend {
                         MakeDefault()
                         return false
                     }
-                    i = Anim.ANIMCHANNEL_ALL + 1
-                    while (i < Anim.ANIM_NumAnimChannels) {
+                    i = ANIMCHANNEL_ALL + 1
+                    while (i < ANIM_NumAnimChannels) {
                         if (0 == idStr.Icmp(channelNames[i], token2.toString())) {
                             break
                         }
                         i++
                     }
-                    if (i >= Anim.ANIM_NumAnimChannels) {
+                    if (i >= ANIM_NumAnimChannels) {
                         src.Warning("Unknown channel '%s'", token2)
                         MakeDefault()
                         return false
@@ -1368,12 +1363,11 @@ object Anim_Blend {
                     }
                     GetJointList(jointnames, jointList)
 
-                    //channelJoints[channel].SetNum(jointList.Num());
-                    //channelJoints[channel].trimToSize();
+                    channelJoints[channel].SetNum(jointList.Num())
                     num = 0.also { i = it }
-                    while (i < jointList.size) {
+                    while (i < jointList.Num()) {
                         jointnum = jointList[i]
-                        if (joints[jointnum].channel != Anim.ANIMCHANNEL_ALL) {
+                        if (joints[jointnum].channel != ANIMCHANNEL_ALL) {
                             src.Warning(
                                 "Joint '%s' assigned to multiple channels",
                                 modelHandle!!.GetJointName(jointnum)
@@ -1382,16 +1376,14 @@ object Anim_Blend {
                             continue
                         }
                         joints[jointnum].channel = channel
-                        if (i >= channelJoints[channel].size) {
-                            num++
-                            channelJoints[channel].add(jointnum)
+                        if (i >= channelJoints[channel].Num()) {
+                            channelJoints[channel][num++] = jointnum
                         } else {
                             channelJoints[channel][num++] = jointnum
                         }
                         i++
                     }
-                    //channelJoints[channel].SetNum(num);
-                    //channelJoints[channel].trimToSize();
+                    channelJoints[channel].SetNum(num)
                 } else {
                     src.Warning("unknown token '%s'", token)
                     MakeDefault()
@@ -1400,20 +1392,22 @@ object Anim_Blend {
             }
 
             // shrink the anim list down to save space
-            //anims.SetGranularity(1);
-            // anims.trimToSize();
+
+            // shrink the anim list down to save space
+            anims.SetGranularity(1)
+            anims.SetNum(anims.Num())
             return true
         }
 
         override fun FreeData() {
-            anims.clear()
-            joints.clear()
-            jointParents.clear()
+            anims.DeleteContents(true)
+            joints.Clear()
+            jointParents.Clear()
             modelHandle = null
             skin = null
             offset.Zero()
-            for (i in 0 until Anim.ANIM_NumAnimChannels) {
-                channelJoints[i].clear()
+            for (i in 0 until ANIM_NumAnimChannels) {
+                channelJoints[i].Clear()
             }
         }
 
@@ -1460,7 +1454,7 @@ object Anim_Blend {
             pose = GetDefaultPose()!!
 
             // convert the joint quaternions to joint matrices
-            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(list, pose, joints.size)
+            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(list, pose, joints.Num())
 
             // check if we offset the model by the origin joint
             if (removeOriginOffset) {
@@ -1476,9 +1470,9 @@ object Anim_Blend {
             // transform the joint hierarchy
             Simd.SIMDProcessor.TransformJoints(
                 list,
-                jointParents.toIntArray(),
+                itoi(jointParents.getList(Array<Int>::class.java))!!,
                 1,
-                joints.size - 1
+                joints.Num() - 1
             )
             numJoints._val = num
             jointList[0] = list
@@ -1491,7 +1485,7 @@ object Anim_Blend {
             return modelHandle
         }
 
-        fun GetJointList(jointnames: String, jointList: ArrayList<Int>) {
+        fun GetJointList(jointnames: String, jointList: List.idList<Int>) {
             var jointname: String?
             var joint: jointInfo_t?
             var child: jointInfo_t?
@@ -1503,7 +1497,7 @@ object Anim_Blend {
             if (null == modelHandle || jointnames.isEmpty()) {
                 return
             }
-            jointList.clear()
+            jointList.Clear()
             num = modelHandle!!.NumJoints()
 
             // split on and skip whitespaces
@@ -1533,13 +1527,13 @@ object Anim_Blend {
                     continue
                 }
                 if (!subtract) {
-                    jointList.add(joint.num)
+                    jointList.AddUnique(joint.num)
                 } else {
-                    jointList.remove(joint.num)
+                    jointList.Remove(joint.num)
                 }
                 if (getChildren) {
                     // include all joint's children
-                    child_i = joints.indexOf(joint) + 1
+                    child_i = joints.Find(joint)!! + 1
                     i = joint.num + 1
                     while (i < num) {
 
@@ -1552,9 +1546,9 @@ object Anim_Blend {
                             break
                         }
                         if (!subtract) {
-                            jointList.add(child.num)
+                            jointList.AddUnique(child.num)
                         } else {
-                            jointList.remove(child.num)
+                            jointList.Remove(child.num)
                         }
                         i++
                         child_i++
@@ -1565,13 +1559,13 @@ object Anim_Blend {
 
         fun FindJoint(name: String): jointInfo_t? {
             var i: Int
-            val joint: ArrayList<idMD5Joint>
+            val joint: Array<idMD5Joint>
             if (null == modelHandle) {
                 return null
             }
-            joint = arrayListOf(*modelHandle!!.GetJoints()!!)
+            joint = modelHandle!!.GetJoints()!!
             i = 0
-            while (i < joints.size) {
+            while (i < joints.Num()) {
                 if (TempDump.NOT(joint[i].name.Icmp(name).toDouble())) {
                     return joints[i]
                 }
@@ -1581,11 +1575,11 @@ object Anim_Blend {
         }
 
         fun NumAnims(): Int {
-            return anims.size + 1
+            return anims.Num() + 1
         }
 
         fun GetAnim(index: Int): idAnim? {
-            return if (index < 1 || index > anims.size) {
+            return if (index < 1 || index > anims.Num()) {
                 null
             } else anims[index - 1]
         }
@@ -1602,7 +1596,7 @@ object Anim_Blend {
 
             // find a specific animation
             i = 0
-            while (i < anims.size) {
+            while (i < anims.Num()) {
                 if (name.startsWith(anims[i].FullName())) {
                     return i + 1 // makes no sense, we found it at i, but we return i + 1? is this because all idList entries are shifted by 1?
                     //return i;
@@ -1629,7 +1623,7 @@ object Anim_Blend {
             // find all animations with same name
             numAnims = 0
             i = 0
-            while (i < anims.size) {
+            while (i < anims.Num()) {
                 if (anims[i].Name() == name) {
                     animList[numAnims++] = i
                     if (numAnims >= MAX_ANIMS) {
@@ -1653,7 +1647,7 @@ object Anim_Blend {
 
             // find any animations with same name
             i = 0
-            while (i < anims.size) {
+            while (i < anims.Num()) {
                 if (anims[i].Name() == name) {
                     return true
                 }
@@ -1674,49 +1668,49 @@ object Anim_Blend {
             }
         }
 
-        fun Joints(): ArrayList<jointInfo_t> {
+        fun Joints(): List.idList<jointInfo_t> {
             return joints
         }
 
-        fun JointParents(): kotlin.collections.ArrayList<Int> {
+        fun JointParents(): List.idList<Int> {
             return jointParents
         }
 
         fun NumJoints(): Int {
-            return joints.size
+            return joints.Num()
         }
 
         fun GetJoint(jointHandle: Int): jointInfo_t {
-            if (jointHandle < 0 || jointHandle > joints.size) {
+            if (jointHandle < 0 || jointHandle > joints.Num()) {
                 idGameLocal.Error("idDeclModelDef::GetJoint : joint handle out of range")
             }
             return joints[jointHandle]
         }
 
         fun GetJointName(jointHandle: Int): String? {
-            val joint: kotlin.collections.ArrayList<idMD5Joint>
+            val joint: Array<idMD5Joint>
             if (null == modelHandle) {
                 return null
             }
-            if (jointHandle < 0 || jointHandle > joints.size) {
+            if (jointHandle < 0 || jointHandle > joints.Num()) {
                 idGameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range")
             }
-            joint = arrayListOf(*modelHandle!!.GetJoints()!!)
+            joint = modelHandle!!.GetJoints()!!
             return joint[jointHandle].name.toString()
         }
 
         fun NumJointsOnChannel(channel: Int): Int {
-            if (channel < 0 || channel >= Anim.ANIM_NumAnimChannels) {
+            if (channel < 0 || channel >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idDeclModelDef::NumJointsOnChannel : channel out of range")
             }
-            return channelJoints[channel].size
+            return channelJoints[channel].Num()
         }
 
-        fun GetChannelJoints(channel: Int): kotlin.collections.ArrayList<Int> {
-            if (channel < 0 || channel >= Anim.ANIM_NumAnimChannels) {
+        fun GetChannelJoints(channel: Int): Array<Int> {
+            if (channel < 0 || channel >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idDeclModelDef::GetChannelJoints : channel out of range")
             }
-            return channelJoints[channel]
+            return channelJoints[channel].getList(Array<Int>::class.java)!!
         }
 
         fun GetVisualOffset(): idVec3 {
@@ -1725,47 +1719,40 @@ object Anim_Blend {
 
         private fun CopyDecl(decl: idDeclModelDef) {
             var i: Int
+
             FreeData()
+
             offset.set(decl.offset)
             modelHandle = decl.modelHandle
             skin = decl.skin
 
-            //anims.SetNum(decl.anims.Num());
+            anims.SetNum(decl.anims.Num())
             i = 0
-            while (i < decl.anims.size) {
-                if (i >= anims.size) {
-                    anims.add(idAnim(this, decl.anims[i]))
-                } else {
-                    anims[i] = idAnim(this, decl.anims[i])
-                }
+            while (i < anims.Num()) {
+                anims[i] = idAnim(this, decl.anims[i])
                 i++
             }
 
-            //joints.SetNum(decl.joints.Num());
+            joints.SetNum(decl.joints.Num())
 //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
+            //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
             i = 0
-            while (i < decl.joints.size) {
-                if (i >= joints.size) {
-                    joints.add(decl.joints[i])
-                } else {
-                    joints[i] = decl.joints[i]
-                }
+            while (i < decl.joints.Num()) {
+                joints[i] = decl.joints[i]
                 i++
             }
-            //jointParents.SetNum(decl.jointParents.Num());
+            jointParents.SetNum(decl.jointParents.Num())
 //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
+            //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
             i = 0
-            while (i < decl.jointParents.size) {
-                if (i >= jointParents.size) {
-                    jointParents.add(decl.jointParents[i])
-                } else {
-                    jointParents[i] = decl.jointParents[i]
-                }
+            while (i < decl.jointParents.Num()) {
+                jointParents[i] = decl.jointParents[i]
                 i++
             }
+
             i = 0
-            while (i < Anim.ANIM_NumAnimChannels) {
-                channelJoints[i] = ArrayList(decl.channelJoints[i]) //idList's = is overloaded!
+            while (i < ANIM_NumAnimChannels) {
+                channelJoints[i] = decl.channelJoints[i]
                 i++
             }
         }
@@ -1774,7 +1761,7 @@ object Anim_Blend {
             var i: Int
             val len: Int
             val anim: idAnim?
-            val md5anims = kotlin.collections.ArrayList<idMD5Anim>(Anim.ANIM_MaxSyncedAnims)
+            val md5anims = ArrayList<idMD5Anim>(Anim.ANIM_MaxSyncedAnims)
             var md5anim: idMD5Anim?
             val alias = idStr()
             val realname = idToken()
@@ -1789,13 +1776,13 @@ object Anim_Blend {
             }
             alias.set(realname)
             i = 0
-            while (i < anims.size) {
+            while (i < anims.Num()) {
                 if (anims[i].FullName().equals(realname.toString(), ignoreCase = true)) {
                     break
                 }
                 i++
             }
-            if (i < anims.size && i >= numDefaultAnims) {
+            if (i < anims.Num() && i >= numDefaultAnims) {
                 src.Warning("Duplicate anim '%s'", realname)
                 MakeDefault()
                 return false
@@ -1805,7 +1792,7 @@ object Anim_Blend {
             } else {
                 // create the alias associated with this animation
                 anim = idAnim()
-                anims.add(anim)
+                anims.Append(anim)
             }
 
             // random anims end with a number.  find the numeric suffix of the animation.
@@ -2033,7 +2020,7 @@ object Anim_Blend {
             }
             val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
                     modelDef.GetModelName(),
@@ -2069,7 +2056,7 @@ object Anim_Blend {
             }
             val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
                     modelDef.GetModelName(),
@@ -2102,7 +2089,7 @@ object Anim_Blend {
             }
             val _anim = modelDef.GetAnim(_animNum) ?: return
             val md5anim = _anim.MD5Anim(0)!!
-            if (modelDef.Joints().size != md5anim.NumJoints()) {
+            if (modelDef.Joints().Num() != md5anim.NumJoints()) {
                 Game_local.gameLocal.Warning(
                     "Model '%s' has different # of joints than anim '%s'",
                     modelDef.GetModelName(),
@@ -2156,7 +2143,7 @@ object Anim_Blend {
                     blendWeight._val = 1.0f - weight
                 }
             }
-            jointFrame = if (channel == Anim.ANIMCHANNEL_ALL && 0f == blendWeight._val) {
+            jointFrame = if (channel == ANIMCHANNEL_ALL && 0f == blendWeight._val) {
                 // we don't need a temporary buffer, so just store it directly in the blend frame
                 blendFrame
             } else {
@@ -2248,7 +2235,7 @@ object Anim_Blend {
             }
             if (0f == blendWeight._val) {
                 blendWeight._val = weight
-                if (channel != Anim.ANIMCHANNEL_ALL) {
+                if (channel != ANIMCHANNEL_ALL) {
                     val index = modelDef!!.GetChannelJoints(channel)
                     val num = modelDef!!.NumJointsOnChannel(channel)
                     i = 0
@@ -2810,14 +2797,14 @@ object Anim_Blend {
      */
     class idAnimator {
         private val AFPoseBounds: idBounds
-        private var AFPoseJointFrame: ArrayList<idJointQuat> = ArrayList() //TODO: make sure it works as intended
-        private val AFPoseJointMods: ArrayList<idAFPoseJointMod>
-        private var AFPoseJoints: IntArray
+        private var AFPoseJointFrame: List.idList<idJointQuat> = List.idList(1)
+        private val AFPoseJointMods: List.idList<idAFPoseJointMod> = List.idList(1)
+        private var AFPoseJoints: List.idList<Int> = List.idList(1)
 
         //
-        private val channels: Array<ArrayList<idAnimBlend>> =
-            Array(Anim.ANIM_NumAnimChannels) { ArrayList<idAnimBlend>(Anim.ANIM_MaxAnimsPerChannel) }
-        private val jointMods: ArrayList<jointMod_t>
+        private val channels: Array<Array<idAnimBlend>> =
+            Array(ANIM_NumAnimChannels) { Array<idAnimBlend>(Anim.ANIM_MaxAnimsPerChannel) { idAnimBlend() } }
+        private val jointMods: List.idList<jointMod_t> = List.idList()
 
         //
         private var AFPoseBlendWeight = 0f
@@ -2842,7 +2829,7 @@ object Anim_Blend {
         fun  /*size_t*/Allocated(): Int {
             val   /*size_t*/size: Int
             size =
-                jointMods.size + numJoints._val + AFPoseJointMods.size + AFPoseJointFrame.size + AFPoseJoints.size
+                jointMods.Allocated() + numJoints._val + AFPoseJointMods.Allocated() + AFPoseJointFrame.Allocated() + AFPoseJoints.Allocated()
             return size
         }
 
@@ -2858,9 +2845,9 @@ object Anim_Blend {
             var j: Int
             savefile.WriteModelDef(modelDef)
             savefile.WriteObject(entity as Class.idClass)
-            savefile.WriteInt(jointMods.size)
+            savefile.WriteInt(jointMods.Num())
             i = 0
-            while (i < jointMods.size) {
+            while (i < jointMods.Num()) {
                 savefile.WriteInt(jointMods[i].jointnum)
                 savefile.WriteMat3(jointMods[i].mat)
                 savefile.WriteVec3(jointMods[i].pos)
@@ -2884,23 +2871,23 @@ object Anim_Blend {
             savefile.WriteBool(forceUpdate)
             savefile.WriteBounds(frameBounds)
             savefile.WriteFloat(AFPoseBlendWeight)
-            savefile.WriteInt(AFPoseJoints.size)
+            savefile.WriteInt(AFPoseJoints.Num())
             i = 0
-            while (i < AFPoseJoints.size) {
+            while (i < AFPoseJoints.Num()) {
                 savefile.WriteInt(AFPoseJoints[i])
                 i++
             }
-            savefile.WriteInt(AFPoseJointMods.size)
+            savefile.WriteInt(AFPoseJointMods.Num())
             i = 0
-            while (i < AFPoseJointMods.size) {
+            while (i < AFPoseJointMods.Num()) {
                 savefile.WriteInt(TempDump.etoi(AFPoseJointMods[i].mod))
                 savefile.WriteMat3(AFPoseJointMods[i].axis)
                 savefile.WriteVec3(AFPoseJointMods[i].origin)
                 i++
             }
-            savefile.WriteInt(AFPoseJointFrame.size)
+            savefile.WriteInt(AFPoseJointFrame.Num())
             i = 0
-            while (i < AFPoseJointFrame.size) {
+            while (i < AFPoseJointFrame.Num()) {
                 savefile.WriteFloat(AFPoseJointFrame[i].q.x)
                 savefile.WriteFloat(AFPoseJointFrame[i].q.y)
                 savefile.WriteFloat(AFPoseJointFrame[i].q.z)
@@ -2911,8 +2898,8 @@ object Anim_Blend {
             savefile.WriteBounds(AFPoseBounds)
             savefile.WriteInt(AFPoseTime)
             savefile.WriteBool(removeOriginOffset)
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
+            i = ANIMCHANNEL_ALL
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     channels[i][j].Save(savefile)
@@ -2936,14 +2923,10 @@ object Anim_Blend {
             savefile.ReadModelDef(modelDef!!)
             savefile.ReadObject( /*reinterpret_cast<idClass *&>*/entity)
             savefile.ReadInt(num)
-            //jointMods.SetNum(num._val);
+            jointMods.SetNum(num._val);
             i = 0
             while (i < num._val) {
-                if (i >= jointMods.size) {
-                    jointMods.add(jointMod_t())
-                } else {
-                    jointMods[i] = jointMod_t()
-                }
+                jointMods[i] = jointMod_t()
                 jointMods[i].jointnum = savefile.ReadInt()
                 savefile.ReadMat3(jointMods[i].mat)
                 savefile.ReadVec3(jointMods[i].pos)
@@ -2952,7 +2935,7 @@ object Anim_Blend {
                 i++
             }
             numJoints._val = (savefile.ReadInt())
-            joints = Array<idJointMat>(numJoints._val) { idJointMat() }
+            joints = Array(numJoints._val) { idJointMat() }
             i = 0
             while (i < numJoints._val) {
                 val data = joints!![i].ToFloatPtr()
@@ -2969,11 +2952,13 @@ object Anim_Blend {
             savefile.ReadBounds(frameBounds)
             AFPoseBlendWeight = savefile.ReadFloat()
             savefile.ReadInt(num)
-            //AFPoseJoints.SetGranularity(1);
-            //AFPoseJoints.SetNum(num._val);
+
+            AFPoseJoints.SetGranularity(1);
+            AFPoseJoints.SetNum(num._val);
+
             i = 0
             while (i < num._val) {
-                if (i >= AFPoseJoints.size) {
+                if (i >= AFPoseJoints.Num()) {
                     AFPoseJoints[i] = savefile.ReadInt()
                 } else {
                     AFPoseJoints[i] = savefile.ReadInt()
@@ -2981,8 +2966,8 @@ object Anim_Blend {
                 i++
             }
             savefile.ReadInt(num)
-            //AFPoseJointMods.SetGranularity(1);
-            //AFPoseJointMods.SetNum(num._val);
+            AFPoseJointMods.SetGranularity(1);
+            AFPoseJointMods.SetNum(num._val);
             i = 0
             while (i < num._val) {
                 AFPoseJointMods[i].mod = AFJointModType_t.values()[savefile.ReadInt()]
@@ -2991,8 +2976,9 @@ object Anim_Blend {
                 i++
             }
             savefile.ReadInt(num)
-            //AFPoseJointFrame.SetGranularity(1);
-            //AFPoseJointFrame.SetNum(num._val);
+            AFPoseJointFrame.SetGranularity(1);
+            AFPoseJointFrame.SetNum(num._val);
+
             i = 0
             while (i < num._val) {
                 AFPoseJointFrame[i].q.x = savefile.ReadFloat()
@@ -3005,8 +2991,8 @@ object Anim_Blend {
             savefile.ReadBounds(AFPoseBounds)
             AFPoseTime = savefile.ReadInt()
             removeOriginOffset = savefile.ReadBool()
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
+            i = ANIMCHANNEL_ALL
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     channels[i][j].Restore(savefile, modelDef)
@@ -3032,13 +3018,13 @@ object Anim_Blend {
             return removeOriginOffset
         }
 
-        fun GetJointList(jointnames: String, jointList: ArrayList<Int>) {
+        fun GetJointList(jointnames: String, jointList: List.idList<Int>) {
             if (modelDef != null) {
                 modelDef!!.GetJointList(jointnames, jointList)
             }
         }
 
-        fun GetJointList(jointnames: idStr, jointList: ArrayList<Int>) {
+        fun GetJointList(jointnames: idStr, jointList: List.idList<Int>) {
             GetJointList(jointnames.toString(), jointList)
         }
 
@@ -3073,14 +3059,14 @@ object Anim_Blend {
         fun ServiceAnims(fromtime: Int, totime: Int) {
             var i: Int
             var j: Int
-            val blend: Array<kotlin.collections.ArrayList<idAnimBlend>>
+            val blend: Array<Array<idAnimBlend>>
             if (null == modelDef) {
                 return
             }
             if (modelDef!!.ModelHandle() != null) {
                 blend = channels
                 i = 0
-                while (i < Anim.ANIM_NumAnimChannels) {
+                while (i < ANIM_NumAnimChannels) {
                     j = 0
                     while (j < Anim.ANIM_MaxAnimsPerChannel) {
                         blend[i][j].CallFrameCommands(entity, fromtime, totime)
@@ -3103,18 +3089,18 @@ object Anim_Blend {
         fun IsAnimating(currentTime: Int): Boolean {
             var i: Int
             var j: Int
-            val blend: Array<kotlin.collections.ArrayList<idAnimBlend>>
+            val blend: Array<Array<idAnimBlend>>
             if (null == modelDef || TempDump.NOT(modelDef!!.ModelHandle())) {
                 return false
             }
 
             // if animating with an articulated figure
-            if (AFPoseJoints.size != 0 && currentTime <= AFPoseTime) {
+            if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
                 return true
             }
             blend = channels
             i = 0
-            while (i < Anim.ANIM_NumAnimChannels) {
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     if (!blend[i][j].IsDone(currentTime)) {
@@ -3141,7 +3127,7 @@ object Anim_Blend {
             val num: Int
             var joint: jointInfo_t
             if (null == modelDef) {
-                return Model.INVALID_JOINT
+                return INVALID_JOINT
             }
             num = modelDef!!.NumJoints()
             if (0 == num) {
@@ -3194,8 +3180,8 @@ object Anim_Blend {
             modelDef!!.ModelHandle()!!.Reset()
 
             // set the modelDef on all channels
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
+            i = ANIMCHANNEL_ALL
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     channels[i][j].Reset(modelDef)
@@ -3234,8 +3220,8 @@ object Anim_Blend {
             val debugInfo: Boolean
             val baseBlend = CFloat()
             val blendWeight = CFloat()
-            var blend: kotlin.collections.ArrayList<idAnimBlend>
-            val jointParent: kotlin.collections.ArrayList<Int>
+            var blend: Array<idAnimBlend>
+            val jointParent: List.idList<Int>
             var jointMod: jointMod_t?
             val defaultPose: Array<idJointQuat>?
             if (Game_local.gameLocal.inCinematic && Game_local.gameLocal.skipCinematic) {
@@ -3268,9 +3254,9 @@ object Anim_Blend {
             }
 
             // init the joint buffer
-            if (AFPoseJoints.size != 0) {
+            if (AFPoseJoints.Num() != 0) {
                 // initialize with AF pose anim for the case where there are no other animations and no AF pose joint modifications
-                defaultPose = AFPoseJointFrame.toTypedArray()
+                defaultPose = AFPoseJointFrame.getList(Array<idJointQuat>::class.java)!!
             } else {
                 defaultPose = modelDef!!.GetDefaultPose()
             }
@@ -3278,7 +3264,7 @@ object Anim_Blend {
                 //gameLocal.Warning( "idAnimator::CreateFrame: no defaultPose on '%s'", modelDef!!.Name() );
                 return false
             }
-            numJoints = modelDef!!.Joints().size
+            numJoints = modelDef!!.Joints().Num()
             val jointFrame = Array<idJointQuat>(numJoints) { idJointQuat() }
             //SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
             for (index in 0 until numJoints) {
@@ -3288,12 +3274,12 @@ object Anim_Blend {
 
             // blend the all channel
             baseBlend._val = (0.0f)
-            blend = channels[Anim.ANIMCHANNEL_ALL]
-            j = Anim.ANIMCHANNEL_ALL
+            blend = channels[ANIMCHANNEL_ALL]
+            j = ANIMCHANNEL_ALL
             while (j < Anim.ANIM_MaxAnimsPerChannel) {
                 if (blend[j].BlendAnim(
                         currentTime,
-                        Anim.ANIMCHANNEL_ALL,
+                        ANIMCHANNEL_ALL,
                         numJoints,
                         jointFrame,
                         baseBlend,
@@ -3312,8 +3298,8 @@ object Anim_Blend {
 
             // only blend other channels if there's enough space to blend into
             if (baseBlend._val < 1.0f) {
-                i = Anim.ANIMCHANNEL_ALL + 1
-                while (i < Anim.ANIM_NumAnimChannels) {
+                i = ANIMCHANNEL_ALL + 1
+                while (i < ANIM_NumAnimChannels) {
                     if (0 == modelDef!!.NumJointsOnChannel(i)) {
                         i++
                         continue
@@ -3346,7 +3332,7 @@ object Anim_Blend {
                         }
                         j++
                     }
-                    if (debugInfo && 0 == AFPoseJoints.size && 0f == blendWeight._val) {
+                    if (debugInfo && 0 == AFPoseJoints.Num() && 0f == blendWeight._val) {
                         Game_local.gameLocal.Printf(
                             "%d: %s using default pose in model '%s'\n",
                             Game_local.gameLocal.time,
@@ -3389,7 +3375,7 @@ object Anim_Blend {
             if (BlendAFPose(jointFrame)) {
                 hasAnim = true
             }
-            if (!hasAnim && 0 == jointMods.size) {
+            if (!hasAnim && 0 == jointMods.Num()) {
                 // no animations were updated
                 return false
             }
@@ -3398,7 +3384,7 @@ object Anim_Blend {
             Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints!!, jointFrame, numJoints)
 
             // check if we need to modify the origin
-            if (jointMods.size != 0 && jointMods[0].jointnum == 0) {
+            if (jointMods.Num() != 0 && jointMods[0].jointnum == 0) {
                 jointMod = jointMods[0]
                 when (jointMod.transform_axis) {
                     jointModTransform_t.JOINTMOD_NONE -> {}
@@ -3434,11 +3420,16 @@ object Anim_Blend {
 
             // add in any joint modifications
             i = 1
-            while (j < jointMods.size) {
+            while (j < jointMods.Num()) {
                 jointMod = jointMods[j]
 
                 // transform any joints preceding the joint modifier
-                Simd.SIMDProcessor.TransformJoints(joints!!, jointParent.toIntArray(), i, jointMod.jointnum - 1)
+                Simd.SIMDProcessor.TransformJoints(
+                    joints!!,
+                    itoi(jointParent.getList(Array<Int>::class.java))!!,
+                    i,
+                    jointMod.jointnum - 1
+                )
                 i = jointMod.jointnum
                 parentNum = jointParent[i]
                 when (jointMod.transform_axis) {
@@ -3488,25 +3479,30 @@ object Anim_Blend {
             }
 
             // transform the rest of the hierarchy
-            Simd.SIMDProcessor.TransformJoints(joints!!, jointParent.toIntArray(), i, numJoints - 1)
+            Simd.SIMDProcessor.TransformJoints(
+                joints!!,
+                itoi(jointParent.getList(Array<Int>::class.java)!!)!!,
+                i,
+                numJoints - 1
+            )
             return true
         }
 
         fun FrameHasChanged(currentTime: Int): Boolean {
             var i: Int
             var j: Int
-            val blend: Array<kotlin.collections.ArrayList<idAnimBlend>>
+            val blend: Array<Array<idAnimBlend>>
             if (null == modelDef || null == modelDef!!.ModelHandle()) {
                 return false
             }
 
             // if animating with an articulated figure
-            if (AFPoseJoints.size != 0 && currentTime <= AFPoseTime) {
+            if (AFPoseJoints.Num() != 0 && currentTime <= AFPoseTime) {
                 return true
             }
             blend = channels
             i = 0
-            while (i < Anim.ANIM_NumAnimChannels) {
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     if (blend[i][j].FrameHasChanged(currentTime)) {
@@ -3521,7 +3517,7 @@ object Anim_Blend {
 
         fun GetDelta(fromtime: Int, totime: Int, delta: idVec3) {
             var i: Int
-            var blend: kotlin.collections.ArrayList<idAnimBlend>
+            var blend: Array<idAnimBlend>
             val blendWeight = CFloat()
             if (null == modelDef || null == modelDef!!.ModelHandle() || fromtime == totime) {
                 delta.Zero()
@@ -3529,7 +3525,7 @@ object Anim_Blend {
             }
             delta.Zero()
             blendWeight._val = (0.0f)
-            blend = channels[Anim.ANIMCHANNEL_ALL]
+            blend = channels[ANIMCHANNEL_ALL]
             i = 0
             while (i < Anim.ANIM_MaxAnimsPerChannel) {
                 blend[i].BlendDelta(fromtime, totime, delta, blendWeight)
@@ -3548,7 +3544,7 @@ object Anim_Blend {
 
         fun GetDeltaRotation(fromtime: Int, totime: Int, delta: idMat3): Boolean {
             var i: Int
-            var blend: kotlin.collections.ArrayList<idAnimBlend>
+            var blend: Array<idAnimBlend>
             val blendWeight = CFloat()
             val q = idQuat(0.0f, 0.0f, 0.0f, 1.0f)
             if (null == modelDef || null == modelDef!!.ModelHandle() || fromtime == totime) {
@@ -3556,7 +3552,7 @@ object Anim_Blend {
                 return false
             }
             blendWeight._val = (0.0f)
-            blend = channels[Anim.ANIMCHANNEL_ALL]
+            blend = channels[ANIMCHANNEL_ALL]
             i = 0
             while (i < Anim.ANIM_MaxAnimsPerChannel) {
                 blend[i].BlendDeltaRotation(fromtime, totime, q, blendWeight)
@@ -3582,7 +3578,7 @@ object Anim_Blend {
 
         fun GetOrigin(currentTime: Int, pos: idVec3) {
             var i: Int
-            var blend: kotlin.collections.ArrayList<idAnimBlend>
+            var blend: Array<idAnimBlend>
             val blendWeight = CFloat()
             if (null == modelDef || null == modelDef!!.ModelHandle()) {
                 pos.Zero()
@@ -3590,7 +3586,7 @@ object Anim_Blend {
             }
             pos.Zero()
             blendWeight._val = (0.0f)
-            blend = channels[Anim.ANIMCHANNEL_ALL]
+            blend = channels[ANIMCHANNEL_ALL]
             i = 0
             while (i < Anim.ANIM_MaxAnimsPerChannel) {
                 blend[i].BlendOrigin(currentTime, pos, blendWeight, removeOriginOffset)
@@ -3616,15 +3612,15 @@ object Anim_Blend {
             if (null == modelDef || null == modelDef!!.ModelHandle()) {
                 return false
             }
-            count = if (AFPoseJoints.size != 0) {
+            count = if (AFPoseJoints.Num() != 0) {
                 bounds.set(AFPoseBounds)
                 1
             } else {
                 bounds.Clear()
                 0
             }
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
+            i = ANIMCHANNEL_ALL
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     if (channels[i][j].AddBounds(currentTime, bounds, removeOriginOffset)) {
@@ -3669,7 +3665,7 @@ object Anim_Blend {
         }
 
         fun CurrentAnim(channelNum: Int): idAnimBlend {
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::CurrentAnim : channel out of range")
             }
             return channels[channelNum][0]
@@ -3677,8 +3673,8 @@ object Anim_Blend {
 
         fun Clear(channelNum: Int, currentTime: Int, cleartime: Int) {
             var i: Int
-            val blend: kotlin.collections.ArrayList<idAnimBlend>
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
+            val blend: Array<idAnimBlend>
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::Clear : channel out of range")
             }
             blend = channels[channelNum]
@@ -3691,7 +3687,7 @@ object Anim_Blend {
         }
 
         fun SetFrame(channelNum: Int, animNum: Int, frame: Int, currentTime: Int, blendTime: Int) {
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::SetFrame : channel out of range")
             }
             if (null == modelDef || null == modelDef!!.GetAnim(animNum)) {
@@ -3705,7 +3701,7 @@ object Anim_Blend {
         }
 
         fun CycleAnim(channelNum: Int, animNum: Int, currentTime: Int, blendTime: Int) {
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::CycleAnim : channel out of range")
             }
             if (null == modelDef || null == modelDef!!.GetAnim(animNum)) {
@@ -3719,7 +3715,7 @@ object Anim_Blend {
         }
 
         fun PlayAnim(channelNum: Int, animNum: Int, currentTime: Int, blendTime: Int) {
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels) {
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::PlayAnim : channel out of range")
             }
             if (null == modelDef || null == modelDef!!.GetAnim(animNum)) {
@@ -3735,7 +3731,7 @@ object Anim_Blend {
         // copies the current anim from fromChannelNum to channelNum.
         // the copied anim will have frame commands disabled to avoid executing them twice.
         fun SyncAnimChannels(channelNum: Int, fromChannelNum: Int, currentTime: Int, blendTime: Int) {
-            if (channelNum < 0 || channelNum >= Anim.ANIM_NumAnimChannels || fromChannelNum < 0 || fromChannelNum >= Anim.ANIM_NumAnimChannels) {
+            if (channelNum < 0 || channelNum >= ANIM_NumAnimChannels || fromChannelNum < 0 || fromChannelNum >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idAnimator::SyncToChannel : channel out of range")
             }
             val fromBlend = channels[fromChannelNum][0]
@@ -3767,7 +3763,7 @@ object Anim_Blend {
             }
             jointMod = null
             i = 0
-            while (i < jointMods.size) {
+            while (i < jointMods.Num()) {
                 if (jointMods[i].jointnum == jointnum) {
                     jointMod = jointMods[i]
                     break
@@ -3781,11 +3777,7 @@ object Anim_Blend {
                 jointMod.jointnum = jointnum
                 jointMod.mat.Identity()
                 jointMod.transform_axis = jointModTransform_t.JOINTMOD_NONE
-                if (i >= jointMods.size) {
-                    jointMods.add(jointMod)
-                } else {
-                    jointMods[i] = jointMod
-                }
+                jointMods.Insert(jointMod, i)
             }
             jointMod.pos.set(pos)
             jointMod.transform_pos = transform_type
@@ -3801,7 +3793,7 @@ object Anim_Blend {
             }
             jointMod = null
             i = 0
-            while (i < jointMods.size) {
+            while (i < jointMods.Num()) {
                 if (jointMods[i].jointnum == jointnum) {
                     jointMod = jointMods[i]
                     break
@@ -3815,11 +3807,7 @@ object Anim_Blend {
                 jointMod.jointnum = jointnum
                 jointMod.pos.Zero()
                 jointMod.transform_pos = jointModTransform_t.JOINTMOD_NONE
-                if (i >= jointMods.size) {
-                    jointMods.add(jointMod)
-                } else {
-                    jointMods[i] = jointMod
-                }
+                jointMods.Insert(jointMod, i)
             }
             jointMod.mat.set(mat)
             jointMod.transform_axis = transform_type
@@ -3833,10 +3821,12 @@ object Anim_Blend {
                 return
             }
             i = 0
-            while (i < jointMods.size) {
+            while (i < jointMods.Num()) {
                 if (jointMods[i].jointnum == jointnum) {
 //			delete jointMods[ i ];
-                    jointMods.removeAt(i)
+
+//			delete jointMods[ i ];
+                    jointMods.RemoveIndex(i)
                     ForceUpdate()
                     break
                 } else if (jointMods[i].jointnum > jointnum) {
@@ -3847,10 +3837,10 @@ object Anim_Blend {
         }
 
         fun ClearAllJoints() {
-            if (jointMods.size != 0) {
+            if (jointMods.Num() != 0) {
                 ForceUpdate()
             }
-            jointMods.clear()
+            jointMods.DeleteContents(true)
         }
 
         fun InitAFPose() {
@@ -3858,7 +3848,10 @@ object Anim_Blend {
                 return
             }
 
-            AFPoseJointFrame.clear()
+            AFPoseJoints.SetNum(modelDef!!.Joints().Num(), false)
+            AFPoseJoints.SetNum(0, false)
+            AFPoseJointMods.SetNum(modelDef!!.Joints().Num(), false)
+            AFPoseJointFrame.SetNum(modelDef!!.Joints().Num(), false)
         }
 
         fun SetAFPoseJointMod(   /*jointHandle_t*/jointNum: Int,
@@ -3866,21 +3859,20 @@ object Anim_Blend {
                                  axis: idMat3,
                                  origin: idVec3
         ) {
-            if (jointNum >= AFPoseJointMods.size) {
-                for (i in AFPoseJointMods.size..jointNum) {
-                    AFPoseJointMods.add(i, idAFPoseJointMod())
-                }
-                AFPoseJointMods.add(jointNum, idAFPoseJointMod())
-            } else {
-                AFPoseJointMods[jointNum] = idAFPoseJointMod()
-            }
+            AFPoseJointMods[jointNum] = idAFPoseJointMod()
             AFPoseJointMods[jointNum].mod = mod
-            AFPoseJointMods[jointNum].axis.set(axis)
+            AFPoseJointMods[jointNum].axis = axis
             AFPoseJointMods[jointNum].origin.set(origin)
-            val index =
-                BinSearch.idBinSearch_GreaterEqual<Int>(AFPoseJoints.toTypedArray(), AFPoseJoints.size, jointNum)
-            if (index >= AFPoseJoints.size || jointNum != AFPoseJoints[index]) {
-                AFPoseJoints[jointNum] = index
+
+            val ptr: Array<Int>? = AFPoseJoints.getList(Array<Int>::class.java)
+
+            if (ptr == null || ptr.size == 0) {
+                return
+            }
+
+            val index: Int = idBinSearch_GreaterEqual(ptr, AFPoseJoints.Num(), jointNum)
+            if (index >= AFPoseJoints.Num() || jointNum != AFPoseJoints[index]) {
+                AFPoseJoints.Insert(jointNum, index)
             }
         }
 
@@ -3891,12 +3883,12 @@ object Anim_Blend {
             var parentNum: Int
             var jointMod: Int
             var jointNum: Int
-            val jointParent: kotlin.collections.ArrayList<Int>
+            val jointParent: List.idList<Int>
             if (null == modelDef) {
                 return
             }
             val anim = modelDef!!.GetAnim(animNum) ?: return
-            numJoints = modelDef!!.Joints().size
+            numJoints = modelDef!!.Joints().Num()
             if (0 == numJoints) {
                 return
             }
@@ -3914,8 +3906,8 @@ object Anim_Blend {
             md5anim.GetSingleFrame(
                 0,
                 jointFrame,
-                modelDef!!.GetChannelJoints(Anim.ANIMCHANNEL_ALL).toIntArray(),
-                modelDef!!.NumJointsOnChannel(Anim.ANIMCHANNEL_ALL)
+                modelDef!!.GetChannelJoints(ANIMCHANNEL_ALL).toIntArray(),
+                modelDef!!.NumJointsOnChannel(ANIMCHANNEL_ALL)
             )
             if (removeOriginOffset) {
                 if (VELOCITY_MOVE) {
@@ -3930,7 +3922,7 @@ object Anim_Blend {
             Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints)
 
             // first joint is always root of entire hierarchy
-            j = if (AFPoseJoints.size != 0 && AFPoseJoints[0] == 0) {
+            j = if (AFPoseJoints.Num() != 0 && AFPoseJoints[0] == 0) {
                 when (AFPoseJointMods[0].mod) {
                     AFJointModType_t.AF_JOINTMOD_AXIS -> {
                         joints[0].SetRotation(AFPoseJointMods[0].axis)
@@ -3955,11 +3947,16 @@ object Anim_Blend {
 
             // transform the child joints
             i = 1
-            while (j < AFPoseJoints.size) {
+            while (j < AFPoseJoints.Num()) {
                 jointMod = AFPoseJoints[j]
 
                 // transform any joints preceding the joint modifier
-                Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, jointMod - 1)
+                Simd.SIMDProcessor.TransformJoints(
+                    joints,
+                    itoi(jointParent.getList(Array<Int>::class.java))!!,
+                    i,
+                    jointMod - 1
+                )
                 i = jointMod
                 parentNum = jointParent[i]
                 when (AFPoseJointMods[jointMod].mod) {
@@ -3985,22 +3982,36 @@ object Anim_Blend {
             }
 
             // transform the rest of the hierarchy
-            Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, numJoints - 1)
+            Simd.SIMDProcessor.TransformJoints(
+                joints,
+                itoi(jointParent.getList(Array<Int>::class.java))!!,
+                i,
+                numJoints - 1
+            )
 
             // untransform hierarchy
-            Simd.SIMDProcessor.UntransformJoints(joints, jointParent.toIntArray(), 1, numJoints - 1)
+            Simd.SIMDProcessor.UntransformJoints(
+                joints,
+                itoi(jointParent.getList(Array<Int>::class.java))!!,
+                1,
+                numJoints - 1
+            )
 
             // convert joint matrices back to joint quaternions
-            Simd.SIMDProcessor.ConvertJointMatsToJointQuats(AFPoseJointFrame.toTypedArray(), joints, numJoints)
+            Simd.SIMDProcessor.ConvertJointMatsToJointQuats(
+                AFPoseJointFrame.getList(Array<idJointQuat>::class.java)!!,
+                joints,
+                numJoints
+            )
 
             // find all modified joints and their parents
             val blendJoints = BooleanArray(numJoints) //memset( blendJoints, 0, numJoints * sizeof( bool ) );
 
             // mark all modified joints and their parents
             i = 0
-            while (i < AFPoseJoints.size) {
+            while (i < AFPoseJoints.Num()) {
                 jointNum = AFPoseJoints[i]
-                while (jointNum != Model.INVALID_JOINT) {
+                while (jointNum != INVALID_JOINT) {
                     blendJoints[jointNum] = true
                     jointNum = jointParent[jointNum]
                 }
@@ -4008,12 +4019,13 @@ object Anim_Blend {
             }
 
             // lock all parents of modified joints
-            //AFPoseJoints.SetNum(0, false);
-            AFPoseJoints = IntArray(AFPoseJoints.size)
+
+            // lock all parents of modified joints
+            AFPoseJoints.SetNum(0, false)
             i = 0
             while (i < numJoints) {
                 if (blendJoints[i]) {
-                    AFPoseJoints[i] = i
+                    AFPoseJoints.Append(i)
                 }
                 i++
             }
@@ -4027,26 +4039,25 @@ object Anim_Blend {
         }
 
         fun BlendAFPose(blendFrame: Array<idJointQuat>): Boolean {
-            if (0 == AFPoseJoints.size) {
+            if (0 == AFPoseJoints.Num()) {
                 return false
             }
             Simd.SIMDProcessor.BlendJoints(
                 blendFrame,
-                AFPoseJointFrame.toTypedArray(),
+                AFPoseJointFrame.getList(Array<idJointQuat>::class.java)!!,
                 AFPoseBlendWeight,
-                AFPoseJoints,
-                AFPoseJoints.size
+                itoi(AFPoseJoints.getList(Array<Int>::class.java))!!,
+                AFPoseJoints.Num()
             )
             return true
         }
 
         fun ClearAFPose() {
-            if (AFPoseJoints.size != 0) {
+            if (AFPoseJoints.Num() != 0) {
                 ForceUpdate()
             }
             AFPoseBlendWeight = 1.0f
-            //AFPoseJoints.SetNum(0, false);
-            AFPoseJoints = IntArray(0)
+            AFPoseJoints.SetNum(0, false)
             AFPoseBounds.Clear()
             AFPoseTime = 0
         }
@@ -4054,7 +4065,7 @@ object Anim_Blend {
         fun ClearAllAnims(currentTime: Int, cleartime: Int) {
             var i: Int
             i = 0
-            while (i < Anim.ANIM_NumAnimChannels) {
+            while (i < ANIM_NumAnimChannels) {
                 Clear(i, currentTime, cleartime)
                 i++
             }
@@ -4064,7 +4075,7 @@ object Anim_Blend {
 
         fun  /*jointHandle_t*/GetJointHandle(name: String): Int {
             return if (null == modelDef || null == modelDef!!.ModelHandle()) {
-                Model.INVALID_JOINT
+                INVALID_JOINT
             } else modelDef!!.ModelHandle()!!.GetJointHandle(name)
         }
 
@@ -4111,7 +4122,7 @@ object Anim_Blend {
                 return false
             }
             val modelJoints = modelDef!!.Joints()
-            if (jointHandle < 0 || jointHandle >= modelJoints.size) {
+            if (jointHandle < 0 || jointHandle >= modelJoints.Num()) {
                 return false
             }
 
@@ -4189,8 +4200,8 @@ object Anim_Blend {
             if (entity != null) {
                 entity!!.BecomeInactive(Entity.TH_ANIMATE)
             }
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
+            i = ANIMCHANNEL_ALL
+            while (i < ANIM_NumAnimChannels) {
                 j = 0
                 while (j < Anim.ANIM_MaxAnimsPerChannel) {
                     channels[i][j].Reset(null)
@@ -4198,7 +4209,7 @@ object Anim_Blend {
                 }
                 i++
             }
-            jointMods.clear()
+            jointMods.DeleteContents(true)
 
 //	Mem_Free16( joints );
             joints = null
@@ -4209,7 +4220,7 @@ object Anim_Blend {
 
         private fun PushAnims(channelNum: Int, currentTime: Int, blendTime: Int) {
             var i: Int
-            val channel: kotlin.collections.ArrayList<idAnimBlend>
+            val channel: Array<idAnimBlend>
             channel = channels[channelNum]
             if (0f == channel[0].GetWeight(currentTime) || channel[0].starttime == currentTime) {
                 return
@@ -4238,11 +4249,8 @@ object Anim_Blend {
 
         // ~idAnimator();
         init {
-            var i: Int
-            var j: Int
             modelDef = null
             entity = null
-            jointMods = ArrayList()
             numJoints = CInt()
             joints = null
             lastTransformTime = -1
@@ -4251,20 +4259,8 @@ object Anim_Blend {
             forceUpdate = false
             frameBounds = idBounds()
             frameBounds.Clear()
-            AFPoseJoints = IntArray(1)
-            AFPoseJointMods = ArrayList()
-            //AFPoseJointFrame = Array()
             AFPoseBounds = idBounds()
             ClearAFPose()
-            i = Anim.ANIMCHANNEL_ALL
-            while (i < Anim.ANIM_NumAnimChannels) {
-                j = 0
-                while (j < Anim.ANIM_MaxAnimsPerChannel) {
-                    channels[i].add(j, idAnimBlend())
-                    j++
-                }
-                i++
-            }
         }
     }
 }

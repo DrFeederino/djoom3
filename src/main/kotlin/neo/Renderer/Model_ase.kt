@@ -1,9 +1,12 @@
 package neo.Renderer
 
-import neo.TempDump
+import neo.TempDump.bbtocb
+import neo.TempDump.isNotNullOrEmpty
 import neo.framework.Common
 import neo.framework.FileSystem_h
+import neo.framework.FileSystem_h.fileSystem
 import neo.idlib.Text.Str.idStr
+import neo.idlib.containers.List
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import java.nio.ByteBuffer
@@ -45,71 +48,72 @@ object Model_ase {
         var obj: aseObject_t?
         var mesh: aseMesh_t?
         var material: aseMaterial_t
+
         if (null == ase) {
             return
         }
         i = 0
-        while (i < ase.objects.size) {
+        while (i < ase.objects.Num()) {
             obj = ase.objects[i]
             j = 0
-            while (j < obj.frames.size) {
-                mesh = obj.frames[j]
-                if (mesh.vertexes.isNotEmpty()) {
+            while (j < obj!!.frames.Num()) {
+                mesh = obj!!.frames[j]
+                if (mesh!!.vertexes != null) {
 //                    Mem_Free(mesh.vertexes);
-                    mesh.vertexes.clear()
+                    mesh!!.vertexes = null
                 }
-                if (mesh.tvertexes.isNotEmpty()) {
+                if (mesh!!.tvertexes != null) {
 //                    Mem_Free(mesh.tvertexes);
-                    mesh.tvertexes.clear()
+                    mesh!!.tvertexes = null
                 }
-                if (mesh.cvertexes.isNotEmpty()) {
+                if (mesh!!.cvertexes != null) {
 //                    Mem_Free(mesh.cvertexes);
-                    mesh.cvertexes.clear()
+                    mesh!!.cvertexes = null
                 }
-                if (mesh.faces.isNotEmpty()) {
+                if (mesh!!.faces != null) {
 //                    Mem_Free(mesh.faces);
-                    mesh.faces.clear()
+                    mesh!!.faces = null
                 }
                 //                Mem_Free(mesh);
                 mesh = null
                 j++
             }
-            obj.frames.clear()
+            obj!!.frames.Clear()
 
             // free the base nesh
-            mesh = obj.mesh
-            if (mesh.vertexes.isNotEmpty()) {
+            mesh = obj!!.mesh
+            if (mesh!!.vertexes != null) {
 //                Mem_Free(mesh.vertexes);
-                mesh.vertexes.clear()
+                mesh!!.vertexes = null
             }
-            if (mesh.tvertexes.isNotEmpty()) {
+            if (mesh!!.tvertexes != null) {
 //                Mem_Free(mesh.tvertexes);
-                mesh.tvertexes.clear()
+                mesh!!.tvertexes = null
             }
-            if (mesh.cvertexes.isNotEmpty()) {
+            if (mesh!!.cvertexes != null) {
 //                Mem_Free(mesh.cvertexes);
-                mesh.cvertexes.clear()
+                mesh!!.cvertexes = null
             }
-            if (mesh.faces.isNotEmpty()) {
+            if (mesh!!.faces != null) {
 //                Mem_Free(mesh.faces);
-                mesh.faces.clear()
+                mesh!!.faces = null
             }
             //            Mem_Free(obj);
             obj = null
             i++
         }
-        ase.objects.clear()
-        i = 0
-        while (i < ase.materials.size) {
+        ase.objects.Clear()
 
-//            material = ase.materials.oGet(i);
+        i = 0
+        while (i < ase.materials.Num()) {
+
+//            material = ase.materials.get(i);
 //            Mem_Free(material);
-            ase.materials.removeAt(i)
+            ase.materials.set(i, null)
             i++
         }
-        ase.materials.clear()
+        ase.materials.Clear()
 
-//	delete ase;
     }
 
     /*
@@ -208,14 +212,20 @@ object Model_ase {
 
     fun ASE_ParseGeomObject() {
         val `object`: aseObject_t
+
         VERBOSE("GEOMOBJECT")
 
 //        object = (aseObject_t *) Mem_Alloc(sizeof(aseObject_t));
 //        memset(object, 0, sizeof(aseObject_t));
+
+//        object = (aseObject_t *) Mem_Alloc(sizeof(aseObject_t));
+//        memset(object, 0, sizeof(aseObject_t));
         `object` = aseObject_t()
-        ase.model.objects.add(`object`)
+        ase.model.objects.Append(`object`)
         ase.currentObject = `object`
-        `object`.frames.ensureCapacity(32)
+
+        `object`.frames.Resize(32, 32)
+
         ASE_ParseBracedBlock(ASE_KeyGEOMOBJECT.getInstance())
     }
 
@@ -225,17 +235,27 @@ object Model_ase {
      =================
      */
     fun ASE_Parse(buffer: ByteBuffer, verbose: Boolean): aseModel_s {
+
         ase = ase_t() //memset( &ase, 0, sizeof( ase ) );
+
         ase.verbose = verbose
-        ase.buffer = TempDump.bbtocb(buffer) //.asCharBuffer();
+
+        ase.buffer = bbtocb(buffer) //.asCharBuffer();
+
         ase.len = ase.buffer!!.length //TODO:capacity?
+
         ase.curpos = 0 //ase.buffer;
+
         ase.currentObject = null
 
         // NOTE: using new operator because aseModel_t contains idList class objects
+
+        // NOTE: using new operator because aseModel_t contains idList class objects
         ase.model = aseModel_s() //memset(ase.model, 0, sizeof(aseModel_t));
-        ase.model.objects.ensureCapacity(32)
-        ase.model.materials.ensureCapacity(32)
+
+        ase.model.objects.Resize(32, 32)
+        ase.model.materials.Resize(32, 32)
+
         while (ASE_GetToken(false)) {
             when (ase.token) {
                 "*3DSMAX_ASCIIEXPORT", "*COMMENT" -> ASE_SkipRestOfLine()
@@ -244,18 +264,21 @@ object Model_ase {
                     ASE_GetToken(false) // group name
                     ASE_ParseBracedBlock(ASE_KeyGROUP.getInstance())
                 }
+
                 "*SHAPEOBJECT" -> ASE_SkipEnclosingBraces()
                 "*CAMERAOBJECT" -> ASE_SkipEnclosingBraces()
                 "*MATERIAL_LIST" -> {
                     VERBOSE("MATERIAL_LIST\n")
                     ASE_ParseBracedBlock(ASE_KeyMATERIAL_LIST.getInstance())
                 }
+
                 "*GEOMOBJECT" -> ASE_ParseGeomObject()
-                else -> if (TempDump.isNotNullOrEmpty(ase.token)) {
+                else -> if (isNotNullOrEmpty(ase.token)) {
                     Common.common.Printf("Unknown token '%s'\n", ase.token)
                 }
             }
         }
+
         return ase.model
     }
 
@@ -279,18 +302,18 @@ object Model_ase {
         var vertexColors: Array<ByteArray> = Array(3) { ByteArray(4) }
         val faceNormal: idVec3 = idVec3()
         var vertexNum: IntArray = IntArray(3)
-        val vertexNormals: Array<idVec3> = idVec3.Companion.generateArray(3)
+        val vertexNormals: Array<idVec3> = idVec3.generateArray(3)
     }
 
     class aseMesh_t {
         //
-        val transform: Array<idVec3> = idVec3.Companion.generateArray(4) // applied to normals
+        val transform: Array<idVec3> = idVec3.generateArray(4) // applied to normals
         private val DBG_count = DBG_counter++
 
         //
         var colorsParsed = false
-        var cvertexes: ArrayList<idVec3> = ArrayList()
-        var faces: ArrayList<aseFace_t> = ArrayList()
+        var cvertexes: Array<idVec3>? = null
+        var faces: Array<aseFace_t?>? = null
         var normalsParsed = false
         var numCVFaces = 0
         var numCVertexes = 0
@@ -299,8 +322,8 @@ object Model_ase {
         var numTVertexes = 0
         var numVertexes = 0
         var timeValue = 0
-        var tvertexes: ArrayList<idVec2> = ArrayList()
-        var vertexes: ArrayList<idVec3> = ArrayList()
+        var tvertexes: Array<idVec2?>? = null
+        var vertexes: Array<idVec3>? = null
 
         companion object {
             private var DBG_counter = 1
@@ -322,7 +345,7 @@ object Model_ase {
     }
 
     class aseObject_t {
-        val frames: ArrayList<aseMesh_t>
+        val frames: List.idList<aseMesh_t>
         var materialRef = 0
 
         //
@@ -334,19 +357,19 @@ object Model_ase {
         init {
             name = CharArray(128)
             mesh = aseMesh_t()
-            frames = ArrayList()
+            frames = List.idList()
         }
     }
 
     class aseModel_s {
         //	ID_TIME_T					timeStamp;
         val timeStamp: LongArray = longArrayOf(1)
-        val materials: ArrayList<aseMaterial_t>
-        val objects: ArrayList<aseObject_t>
+        val materials: List.idList<aseMaterial_t?>
+        val objects: List.idList<aseObject_t>
 
         init {
-            materials = ArrayList()
-            objects = ArrayList()
+            materials = List.idList()
+            objects = List.idList()
         }
     }
 
@@ -365,19 +388,20 @@ object Model_ase {
         lateinit var model: aseModel_s
 
         //        final char[] token = new char[1024];
-        var token: String = ""
+        lateinit var token: String
 
         //
         var verbose = false
     }
 
     abstract class ASE {
-        abstract fun run(token: String)
+        abstract fun run(token: String?)
     }
 
     class ASE_KeyMAP_DIFFUSE private constructor() : ASE() {
-        override fun run(token: String) {
-            val material: aseMaterial_t?
+        override fun run(token: String?) {
+            val material: aseMaterial_t
+
             when ("" + token) {
                 "*BITMAP" -> {
                     val qpath: idStr
@@ -391,38 +415,40 @@ object Model_ase {
                     matname = idStr(ase.token.substring(1))
                     // convert the 3DSMax material pathname to a qpath
                     matname.BackSlashesToSlashes()
-                    qpath = idStr(FileSystem_h.fileSystem.OSPathToRelativePath(matname.toString()))
-                    idStr.Companion.Copynz(
-                        ase.currentMaterial.name,
-                        qpath.toString(),
-                        ase.currentMaterial.name.size
-                    )
+                    qpath = idStr(fileSystem.OSPathToRelativePath(matname.toString()))
+                    idStr.Copynz(ase.currentMaterial.name, qpath.toString(), ase.currentMaterial.name.size)
                 }
+
                 "*UVW_U_OFFSET" -> {
-                    material = ase.model.materials[ase.model.materials.size - 1]
+                    material = ase.model.materials.get(ase.model.materials.Num() - 1)!!
                     ASE_GetToken(false)
                     material.uOffset = ase.token.toFloat()
                 }
+
                 "*UVW_V_OFFSET" -> {
-                    material = ase.model.materials[ase.model.materials.size - 1]
+                    material = ase.model.materials.get(ase.model.materials.Num() - 1)!!
                     ASE_GetToken(false)
                     material.vOffset = ase.token.toFloat()
                 }
+
                 "*UVW_U_TILING" -> {
-                    material = ase.model.materials[ase.model.materials.size - 1]
+                    material = ase.model.materials.get(ase.model.materials.Num() - 1)!!
                     ASE_GetToken(false)
                     material.uTiling = ase.token.toFloat()
                 }
+
                 "*UVW_V_TILING" -> {
-                    material = ase.model.materials[ase.model.materials.size - 1]
+                    material = ase.model.materials.get(ase.model.materials.Num() - 1)!!
                     ASE_GetToken(false)
                     material.vTiling = ase.token.toFloat()
                 }
+
                 "*UVW_ANGLE" -> {
-                    material = ase.model.materials[ase.model.materials.size - 1]
+                    material = ase.model.materials.get(ase.model.materials.Num() - 1)!!
                     ASE_GetToken(false)
                     material.angle = ase.token.toFloat()
                 }
+
                 else -> {}
             }
         }
@@ -436,7 +462,7 @@ object Model_ase {
     }
 
     class ASE_KeyMATERIAL private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             run {
                 if ("*MAP_DIFFUSE" == token) {
                     ASE_ParseBracedBlock(ASE_KeyMAP_DIFFUSE.getInstance())
@@ -454,19 +480,19 @@ object Model_ase {
     }
 
     class ASE_KeyMATERIAL_LIST private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             if ("*MATERIAL_COUNT" == token) {
                 ASE_GetToken(false)
                 VERBOSE("..num materials: %s\n", ase.token)
             } else if ("*MATERIAL" == token) {
-                VERBOSE("..material %d\n", ase.model.materials.size)
+                VERBOSE("..material %d\n", ase.model.materials.Num())
 
 //                ase.currentMaterial = (aseMaterial_t) Mem_Alloc(sizeof(aseMaterial_t));
 //                memset(ase.currentMaterial, 0, sizeof(aseMaterial_t));
                 ase.currentMaterial = aseMaterial_t()
                 ase.currentMaterial.uTiling = 1f
                 ase.currentMaterial.vTiling = 1f
-                ase.model.materials.add(ase.currentMaterial)
+                ase.model.materials.Append(ase.currentMaterial)
                 ASE_ParseBracedBlock(ASE_KeyMATERIAL.getInstance())
             }
         }
@@ -480,7 +506,7 @@ object Model_ase {
     }
 
     class ASE_KeyNODE_TM private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             var i: Int
             val j: Int
             j = when ("" + token) {
@@ -507,25 +533,24 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_VERTEX_LIST private constructor() : ASE() {
-        override fun run(token: String) {
-            run {
-                val pMesh: aseMesh_t = ASE_GetCurrentMesh()
-                if ("*MESH_VERTEX" == token) {
-                    ASE_GetToken(false) // skip number
-                    //pMesh.vertexes[ase.currentVertex] = new idVec3();
-                    ASE_GetToken(false)
-                    pMesh.vertexes[ase.currentVertex].x = ase.token.toFloat()
-                    ASE_GetToken(false)
-                    pMesh.vertexes[ase.currentVertex].y = ase.token.toFloat()
-                    ASE_GetToken(false)
-                    pMesh.vertexes[ase.currentVertex].z = ase.token.toFloat()
-                    ase.currentVertex++
-                    if (ase.currentVertex > pMesh.numVertexes) {
-                        Common.common.Error("ase.currentVertex >= pMesh.numVertexes")
-                    }
-                } else {
-                    Common.common.Error("Unknown token '%s' while parsing MESH_VERTEX_LIST", token)
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
+            if ("*MESH_VERTEX" == token) {
+                ASE_GetToken(false) // skip number
+                //pMesh.vertexes[ase.currentVertex] = new idVec3();
+                ASE_GetToken(false)
+                pMesh.vertexes!![ase.currentVertex].x = ase.token.toFloat()
+                ASE_GetToken(false)
+                pMesh.vertexes!![ase.currentVertex].y = ase.token.toFloat()
+                ASE_GetToken(false)
+                pMesh.vertexes!![ase.currentVertex].z = ase.token.toFloat()
+                ase.currentVertex++
+                if (ase.currentVertex > pMesh.numVertexes) {
+                    Common.common.Error("ase.currentVertex >= pMesh.numVertexes")
                 }
+            } else {
+                Common.common.Error("Unknown token '%s' while parsing MESH_VERTEX_LIST", token!!)
             }
         }
 
@@ -538,27 +563,28 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_FACE_LIST private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
             if ("*MESH_FACE" == token) {
                 ASE_GetToken(false) // skip face number
-                pMesh.faces.add(ase.currentFace, aseFace_t())
+                pMesh.faces!![ase.currentFace] = aseFace_t()
 
                 // we are flipping the order here to change the front/back facing
                 // from 3DS to our standard (clockwise facing out)
                 ASE_GetToken(false) // skip label
                 ASE_GetToken(false) // first vertex
-                pMesh.faces[ase.currentFace].vertexNum[0] = ase.token.toInt()
+                pMesh.faces!![ase.currentFace]!!.vertexNum[0] = ase.token.toInt()
                 ASE_GetToken(false) // skip label
                 ASE_GetToken(false) // second vertex
-                pMesh.faces[ase.currentFace].vertexNum[2] = ase.token.toInt()
+                pMesh.faces!![ase.currentFace]!!.vertexNum[2] = ase.token.toInt()
                 ASE_GetToken(false) // skip label
                 ASE_GetToken(false) // third vertex
-                pMesh.faces[ase.currentFace].vertexNum[1] = ase.token.toInt()
+                pMesh.faces!![ase.currentFace]!!.vertexNum[1] = ase.token.toInt()
                 ASE_GetToken(true)
 
                 // we could parse material id and smoothing groups here
-/*
+                /*
                  if ( ( p = strstr( ase.token, "*MESH_MTLID" ) ) != 0 )
                  {
                  p += strlen( "*MESH_MTLID" ) + 1;
@@ -570,7 +596,7 @@ object Model_ase {
                  }
                  */ase.currentFace++
             } else {
-                Common.common.Error("Unknown token '%s' while parsing MESH_FACE_LIST", token)
+                Common.common.Error("Unknown token '%s' while parsing MESH_FACE_LIST", token!!)
             }
         }
 
@@ -583,8 +609,9 @@ object Model_ase {
     }
 
     class ASE_KeyTFACE_LIST private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
             if ("*MESH_TFACE" == token) {
                 val a: Int
                 val b: Int
@@ -596,12 +623,12 @@ object Model_ase {
                 c = ase.token.toInt()
                 ASE_GetToken(false)
                 b = ase.token.toInt()
-                pMesh.faces[ase.currentFace].tVertexNum[0] = a
-                pMesh.faces[ase.currentFace].tVertexNum[1] = b
-                pMesh.faces[ase.currentFace].tVertexNum[2] = c
+                pMesh.faces!![ase.currentFace]!!.tVertexNum[0] = a
+                pMesh.faces!![ase.currentFace]!!.tVertexNum[1] = b
+                pMesh.faces!![ase.currentFace]!!.tVertexNum[2] = c
                 ase.currentFace++
             } else {
-                Common.common.Error("Unknown token '%s' in MESH_TFACE", token)
+                Common.common.Error("Unknown token '%s' in MESH_TFACE", token!!)
             }
         }
 
@@ -614,8 +641,9 @@ object Model_ase {
     }
 
     class ASE_KeyCFACE_LIST private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
             if ("*MESH_CFACE" == token) {
                 ASE_GetToken(false)
                 for (i in 0..2) {
@@ -623,16 +651,16 @@ object Model_ase {
                     val a = ase.token.toInt()
 
                     // we flip the vertex order to change the face direction to our style
-                    pMesh.faces[ase.currentFace].vertexColors[remap.get(i)][0] =
-                        (pMesh.cvertexes[a][0] * 255).toInt().toByte()
-                    pMesh.faces[ase.currentFace].vertexColors[remap.get(i)][1] =
-                        (pMesh.cvertexes[a][1] * 255).toInt().toByte()
-                    pMesh.faces[ase.currentFace].vertexColors[remap.get(i)][2] =
-                        (pMesh.cvertexes[a][2] * 255).toInt().toByte()
+                    pMesh.faces!![ase.currentFace]!!.vertexColors[remap[i]][0] =
+                        ((pMesh.cvertexes!![a][0] * 255).toInt().toByte())
+                    pMesh.faces!![ase.currentFace]!!.vertexColors[remap[i]][1] =
+                        ((pMesh.cvertexes!![a][1] * 255).toInt().toByte())
+                    pMesh.faces!![ase.currentFace]!!.vertexColors[remap[i]][2] =
+                        ((pMesh.cvertexes!![a][2] * 255).toInt().toByte())
                 }
                 ase.currentFace++
             } else {
-                Common.common.Error("Unknown token '%s' in MESH_CFACE", token)
+                Common.common.Error("Unknown token '%s' in MESH_CFACE", token!!)
             }
         }
 
@@ -646,15 +674,16 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_TVERTLIST private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
             if ("*MESH_TVERT" == token) {
 //		char u[80], v[80], w[80];
-                val u: String?
-                val v: String?
-                val w: String?
+                val u: String
+                val v: String
+                val w: String
                 ASE_GetToken(false)
-                pMesh.tvertexes.add(ase.currentVertex, idVec2())
+                pMesh.tvertexes!![ase.currentVertex] = idVec2()
                 ASE_GetToken(false)
                 //		strcpy( u, ase.token );
                 u = ase.token
@@ -664,15 +693,15 @@ object Model_ase {
                 ASE_GetToken(false)
                 //		strcpy( w, ase.token );
                 w = ase.token
-                pMesh.tvertexes[ase.currentVertex].x = u.toFloat()
+                pMesh.tvertexes!![ase.currentVertex]!!.x = u.toFloat()
                 // our OpenGL second texture axis is inverted from MAX's sense
-                pMesh.tvertexes[ase.currentVertex].y = 1.0f - v.toFloat()
+                pMesh.tvertexes!![ase.currentVertex]!!.y = 1.0f - v.toFloat()
                 ase.currentVertex++
                 if (ase.currentVertex > pMesh.numTVertexes) {
                     Common.common.Error("ase.currentVertex > pMesh.numTVertexes")
                 }
             } else {
-                Common.common.Error("Unknown token '%s' while parsing MESH_TVERTLIST", token)
+                Common.common.Error("Unknown token '%s' while parsing MESH_TVERTLIST", token!!)
             }
         }
 
@@ -685,28 +714,30 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_CVERTLIST private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
             pMesh.colorsParsed = true
+
             if ("*MESH_VERTCOL" == token) {
                 ASE_GetToken(false)
                 ASE_GetToken(false)
                 // atof can return 0.0 if it can't convert. Not really the case if java land
-                if (pMesh.cvertexes.isEmpty()) {
-                    pMesh.cvertexes.addAll(idVec3.Companion.generateArray(pMesh.numCVertexes))
+                if (pMesh.cvertexes == null) {
+                    pMesh.cvertexes = idVec3.generateArray(pMesh.numCVertexes)
                 }
                 //pMesh.cvertexes[ase.currentVertex] = new idVec3();
-                pMesh.cvertexes[ase.currentVertex][0] = atof(token)
+                pMesh.cvertexes!![ase.currentVertex][0] = atof(token)
                 ASE_GetToken(false)
-                pMesh.cvertexes[ase.currentVertex][1] = atof(token)
+                pMesh.cvertexes!![ase.currentVertex][1] = atof(token)
                 ASE_GetToken(false)
-                pMesh.cvertexes[ase.currentVertex][2] = atof(token)
+                pMesh.cvertexes!![ase.currentVertex][2] = atof(token)
                 ase.currentVertex++
                 if (ase.currentVertex > pMesh.numCVertexes) {
                     Common.common.Error("ase.currentVertex > pMesh.numCVertexes")
                 }
             } else {
-                Common.common.Error("Unknown token '%s' while parsing MESH_CVERTLIST", token)
+                Common.common.Error("Unknown token '%s' while parsing MESH_CVERTLIST", token!!)
             }
         }
 
@@ -719,11 +750,13 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_NORMALS private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
-            val f: aseFace_t?
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+            val f: aseFace_t
             val n = idVec3()
+
             pMesh.normalsParsed = true
+
             if ("*MESH_FACENORMAL" == token) {
                 val num: Int
                 ASE_GetToken(false)
@@ -731,7 +764,7 @@ object Model_ase {
                 if (num >= pMesh.numFaces || num < 0) {
                     Common.common.Error("MESH_NORMALS face index out of range: %d", num)
                 }
-                f = pMesh.faces[ase.currentFace]
+                f = pMesh.faces!![ase.currentFace]!!
                 if (num != ase.currentFace) {
                     Common.common.Error("MESH_NORMALS face index != currentFace")
                 }
@@ -757,7 +790,7 @@ object Model_ase {
                 if (num >= pMesh.numVertexes || num < 0) {
                     Common.common.Error("MESH_NORMALS vertex index out of range: %d", num)
                 }
-                f = pMesh.faces[ase.currentFace - 1]
+                f = pMesh.faces!![ase.currentFace - 1]!!
                 v = 0
                 while (v < 3) {
                     if (num == f.vertexNum[v]) {
@@ -793,35 +826,41 @@ object Model_ase {
     }
 
     class ASE_KeyMESH private constructor() : ASE() {
-        override fun run(token: String) {
-            val pMesh: aseMesh_t = ASE_GetCurrentMesh()
-            if (token.isNotEmpty()) {
+        override fun run(token: String?) {
+            val pMesh = ASE_GetCurrentMesh()
+
+            if (null != token) {
                 when (token) {
                     "*TIMEVALUE" -> {
                         ASE_GetToken(false)
                         pMesh.timeValue = ase.token.toInt()
                         VERBOSE(".....timevalue: %d\n", pMesh.timeValue)
                     }
+
                     "*MESH_NUMVERTEX" -> {
                         ASE_GetToken(false)
                         pMesh.numVertexes = ase.token.toInt()
                         VERBOSE(".....num vertexes: %d\n", pMesh.numVertexes)
                     }
+
                     "*MESH_NUMTVERTEX" -> {
                         ASE_GetToken(false)
                         pMesh.numTVertexes = ase.token.toInt()
                         VERBOSE(".....num tvertexes: %d\n", pMesh.numTVertexes)
                     }
+
                     "*MESH_NUMCVERTEX" -> {
                         ASE_GetToken(false)
                         pMesh.numCVertexes = ase.token.toInt()
                         VERBOSE(".....num cvertexes: %d\n", pMesh.numCVertexes)
                     }
+
                     "*MESH_NUMFACES" -> {
                         ASE_GetToken(false)
                         pMesh.numFaces = ase.token.toInt()
                         VERBOSE(".....num faces: %d\n", pMesh.numFaces)
                     }
+
                     "*MESH_NUMTVFACES" -> {
                         ASE_GetToken(false)
                         pMesh.numTVFaces = ase.token.toInt()
@@ -830,6 +869,7 @@ object Model_ase {
                             Common.common.Error("MESH_NUMTVFACES != MESH_NUMFACES")
                         }
                     }
+
                     "*MESH_NUMCVFACES" -> {
                         ASE_GetToken(false)
                         pMesh.numCVFaces = ase.token.toInt()
@@ -838,58 +878,55 @@ object Model_ase {
                             Common.common.Error("MESH_NUMCVFACES != MESH_NUMFACES")
                         }
                     }
+
                     "*MESH_VERTEX_LIST" -> {
-                        pMesh.vertexes = ArrayList(
-                            arrayListOf<idVec3>(
-                                *
-                                idVec3.Companion.generateArray(pMesh.numVertexes)
-                            )
-                        ) // Mem_Alloc(pMesh.numVertexes);
+                        pMesh.vertexes = idVec3.generateArray(pMesh.numVertexes) // Mem_Alloc(pMesh.numVertexes);
                         ase.currentVertex = 0
                         VERBOSE(".....parsing MESH_VERTEX_LIST\n")
                         ASE_ParseBracedBlock(ASE_KeyMESH_VERTEX_LIST.getInstance())
                     }
+
                     "*MESH_TVERTLIST" -> {
                         ase.currentVertex = 0
-                        pMesh.tvertexes = ArrayList<idVec2>(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
+                        pMesh.tvertexes = arrayOfNulls(pMesh.numTVertexes) // Mem_Alloc(pMesh.numTVertexes);
                         VERBOSE(".....parsing MESH_TVERTLIST\n")
                         ASE_ParseBracedBlock(ASE_KeyMESH_TVERTLIST.getInstance())
                     }
+
                     "*MESH_CVERTLIST" -> {
                         ase.currentVertex = 0
-                        pMesh.cvertexes = ArrayList(
-                            arrayListOf(
-                                *
-                                idVec3.Companion.generateArray(pMesh.numCVertexes)
-                            )
-                        ) // Mem_Alloc(pMesh.numCVertexes);
+                        pMesh.cvertexes = idVec3.generateArray(pMesh.numCVertexes) // Mem_Alloc(pMesh.numCVertexes);
                         VERBOSE(".....parsing MESH_CVERTLIST\n")
                         ASE_ParseBracedBlock(ASE_KeyMESH_CVERTLIST.getInstance())
                     }
+
                     "*MESH_FACE_LIST" -> {
-                        pMesh.faces = ArrayList<aseFace_t>(pMesh.numFaces) // Mem_Alloc(pMesh.numFaces);
+                        pMesh.faces = arrayOfNulls(pMesh.numFaces) // Mem_Alloc(pMesh.numFaces);
                         ase.currentFace = 0
                         VERBOSE(".....parsing MESH_FACE_LIST\n")
                         ASE_ParseBracedBlock(ASE_KeyMESH_FACE_LIST.getInstance())
                     }
+
                     "*MESH_TFACELIST" -> {
-                        if (pMesh.faces.isEmpty()) {
+                        if (null == pMesh.faces) {
                             Common.common.Error("*MESH_TFACELIST before *MESH_FACE_LIST")
                         }
                         ase.currentFace = 0
                         VERBOSE(".....parsing MESH_TFACE_LIST\n")
                         ASE_ParseBracedBlock(ASE_KeyTFACE_LIST.getInstance())
                     }
+
                     "*MESH_CFACELIST" -> {
-                        if (pMesh.faces.isEmpty()) { //TODO:check pointer position instead of entire array
+                        if (null == pMesh.faces) { //TODO:check pointer position instead of entire array
                             Common.common.Error("*MESH_CFACELIST before *MESH_FACE_LIST")
                         }
                         ase.currentFace = 0
                         VERBOSE(".....parsing MESH_CFACE_LIST\n")
                         ASE_ParseBracedBlock(ASE_KeyCFACE_LIST.getInstance())
                     }
+
                     "*MESH_NORMALS" -> {
-                        if (pMesh.faces.isEmpty()) {
+                        if (null == pMesh.faces) {
                             Common.common.Warning("*MESH_NORMALS before *MESH_FACE_LIST")
                         }
                         ase.currentFace = 0
@@ -909,8 +946,10 @@ object Model_ase {
     }
 
     class ASE_KeyMESH_ANIMATION private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             val mesh: aseMesh_t
+
+            // loads a single animation frame
 
             // loads a single animation frame
             if ("*MESH" == token) {
@@ -920,10 +959,10 @@ object Model_ase {
 //                memset(mesh, 0, sizeof(aseMesh_t));
                 mesh = aseMesh_t()
                 ase.currentMesh = mesh
-                ase.currentObject!!.frames.add(mesh)
+                ase.currentObject!!.frames.Append(mesh)
                 ASE_ParseBracedBlock(ASE_KeyMESH.getInstance())
             } else {
-                Common.common.Error("Unknown token '%s' while parsing MESH_ANIMATION", token)
+                Common.common.Error("Unknown token '%s' while parsing MESH_ANIMATION", token!!)
             }
         }
 
@@ -936,20 +975,21 @@ object Model_ase {
     }
 
     class ASE_KeyGEOMOBJECT private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             val `object`: aseObject_t?
             `object` = ase.currentObject
             when ("" + token) {
                 "*NODE_NAME" -> {
                     ASE_GetToken(true)
                     VERBOSE(" %s\n", ase.token)
-                    idStr.Companion.Copynz(`object`!!.name, ase.token, `object`.name.size)
+                    idStr.Copynz(`object`!!.name, ase.token, `object`.name.size)
                 }
+
                 "*NODE_PARENT" -> ASE_SkipRestOfLine()
                 "*NODE_TM", "*TM_ANIMATION" -> ASE_ParseBracedBlock(ASE_KeyNODE_TM.getInstance())
                 "*MESH" -> {
                     val transform: Array<idVec3> =
-                        idVec3.Companion.copyVec(ase.currentObject!!.mesh.transform) //copied from the bfg sources
+                        idVec3.copyVec(ase.currentObject!!.mesh.transform) //copied from the bfg sources
                     run {
                         ase.currentObject!!.mesh = aseMesh_t()
                         ase.currentMesh = ase.currentObject!!.mesh
@@ -982,7 +1022,7 @@ object Model_ase {
     }
 
     class ASE_KeyGROUP private constructor() : ASE() {
-        override fun run(token: String) {
+        override fun run(token: String?) {
             if ("*GEOMOBJECT" == token) {
                 ASE_ParseGeomObject()
             }

@@ -16,6 +16,7 @@ import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.FX.idTeleporter
 import neo.Game.GameSys.Class.eventCallback_t0
+import neo.Game.GameSys.Event.D_EVENT_MAXARGS
 import neo.Game.GameSys.Event.idEvent
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
@@ -1175,7 +1176,7 @@ class Class {
             //val data = Array<idEventArg<*>>(Event.D_EVENT_MAXARGS) { idEventArg() }
             assert(ev != null)
             assert(idEvent.initialized)
-
+            val data: Array<idEventArg<*>?> = arrayOfNulls(D_EVENT_MAXARGS)
             //TODO:same as PostEventArgs
 //            c = GetType();
 //            num = ev.GetEventNum();
@@ -1185,9 +1186,9 @@ class Class {
 //            }
 
 //            va_start(args, numargs);
-            val data = idEvent.CopyArgs(ev, numargs, args)
+            idEvent.CopyArgs(ev, numargs, args, data)
             //            va_end(args);
-            ProcessEventArgPtr(ev, data as Array<idEventArg<*>?>)
+            ProcessEventArgPtr(ev, data)
             return true
         }
 

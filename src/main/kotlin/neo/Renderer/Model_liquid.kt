@@ -154,7 +154,7 @@ object Model_liquid {
             scale_x = size_x / (verts_x - 1)
             scale_y = size_y / (verts_y - 1)
             pages.SetNum(2 * verts_x * verts_y)
-            page1 = pages.getList()
+            page1 = pages.getList(Array<Float>::class.java)!!
             page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.size)
 
             verts.SetNum(verts_x * verts_y)
@@ -194,7 +194,13 @@ object Model_liquid {
             // build the information that will be common to all animations of this mesh:
             // sil edge connectivity and normal / tangent generation information
             deformInfo =
-                tr_trisurf.R_BuildDeformInfo(verts.Num(), verts.getList() as Array<idDrawVert?>, tris.Num(), tris, true)
+                tr_trisurf.R_BuildDeformInfo(
+                    verts.Num(),
+                    verts.getList(Array<idDrawVert?>::class.java),
+                    tris.Num(),
+                    tris,
+                    true
+                )
             bounds.Clear()
             bounds.AddPoint(idVec3(0.0f, 0.0f, drop_height * -10.0f))
             bounds.AddPoint(idVec3((verts_x - 1) * scale_x, (verts_y - 1) * scale_y, drop_height * 10.0f))
@@ -267,7 +273,7 @@ object Model_liquid {
             nextDropTime = 0
             time = 0
             random.SetSeed(seed)
-            page1 = pages.getList()
+            page1 = pages.getList(Array<Float>::class.java)!!
             page2 = page1.copyOfRange(verts_x * verts_y, page1.size)
             i = 0
             y = 0

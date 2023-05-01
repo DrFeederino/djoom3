@@ -179,11 +179,11 @@ object CmdSystem {
         }
 
         //	template<final String *strings>
-        class ArgCompletion_String(private val listDeclStrings: Array<String>) : argCompletion_t() {
+        class ArgCompletion_String(private val listDeclStrings: Array<String?>) : argCompletion_t() {
             @Throws(idException::class)
             override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
                 for (decl in listDeclStrings) {
-                    callback.run(Str.va("%s %s", args.Argv(0), decl))
+                    callback.run(Str.va("%s %s", args.Argv(0), decl!!))
                 }
             }
         }

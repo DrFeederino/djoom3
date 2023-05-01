@@ -492,7 +492,7 @@ object Model_md5 {
             var totalVerts = 0
             var totalTris = 0
             var totalWeights = 0
-            for (mesh in meshes.getList()) {
+            for (mesh in meshes.getList(Array<idMD5Mesh>::class.java)!!) {
                 totalVerts += mesh.NumVerts()
                 totalTris += mesh.NumTris()
                 totalWeights += mesh.NumWeights()
@@ -515,7 +515,7 @@ object Model_md5 {
         override fun List() {
             var totalTris = 0
             var totalVerts = 0
-            for (mesh in meshes.getList()) {
+            for (mesh in meshes.getList(Array<idMD5Mesh>::class.java)!!) {
                 totalTris += mesh.numTris
                 totalVerts += mesh.NumVerts()
             }
@@ -665,12 +665,12 @@ object Model_md5 {
             //total += joints.MemoryUsed() + defaultPose.MemoryUsed() + meshes.MemoryUsed()
 
             // count up strings
-            for (joint in joints.getList()) {
+            for (joint in joints.getList(Array<idMD5Joint>::class.java)!!) {
                 total += joint.name.DynamicMemoryUsed()
             }
 
             // count up meshes
-            for (mesh in meshes.getList()) {
+            for (mesh in meshes.getList(Array<idMD5Mesh>::class.java)!!) {
                 total += idVec4.BYTES * mesh.texCoords.Num() + mesh.numWeights * idVec4.BYTES + Integer.BYTES * 2
 
                 // sum up deform info

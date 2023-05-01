@@ -65,9 +65,9 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Str.idStr.Companion.FindText
 import neo.idlib.Text.Token.idToken
-import neo.idlib.containers.CBool
-import neo.idlib.containers.CFloat
-import neo.idlib.containers.CInt
+import neo.idlib.containers.*
+import neo.idlib.containers.List
+import neo.idlib.containers.List.idList
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
@@ -84,6 +84,7 @@ import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.collections.set
 import kotlin.experimental.and
 import kotlin.math.*
 
@@ -251,12 +252,12 @@ object Player {
         //
         var deplete_armor = 0
         var deplete_rate = 0f
-        var emails: ArrayList<String>
-        val items: ArrayList<idDict>
+        var emails: idStrList
+        val items: List.idList<idDict>
         var lastGiveTime = 0
 
         //
-        val levelTriggers: ArrayList<idLevelTriggerInfo>
+        val levelTriggers: List.idList<idLevelTriggerInfo>
         var maxHealth = 0
         var maxarmor = 0
         var nextArmorDepleteTime = 0
@@ -264,12 +265,12 @@ object Player {
 
         //
         var nextItemPickup = 0
-        val objectiveNames: ArrayList<idObjectiveInfo> = ArrayList()
+        val objectiveNames: List.idList<idObjectiveInfo> = List.idList()
         var onePickupTime = 0
         var pdaOpened = false
-        var pdaSecurity: ArrayList<String>
-        var pdas: ArrayList<String>
-        val pickupItemNames: ArrayList<idItemInfo> = ArrayList()
+        var pdaSecurity: idStrList
+        var pdas: idStrList
+        val pickupItemNames = idList(idItemInfo::class.java)
         var powerups = 0
         var selAudio = 0
         var selEMail = 0
@@ -278,7 +279,7 @@ object Player {
         var selPDA = 0
         var selVideo = 0
         var turkeyScore = false
-        var videos: ArrayList<String>
+        var videos: idStrList
         var weaponPulse = false
         var weapons = 0
 
@@ -312,9 +313,9 @@ object Player {
                 savefile.WriteInt(powerupEndTime[i])
                 i++
             }
-            savefile.WriteInt(items.size)
+            savefile.WriteInt(items.Num())
             i = 0
-            while (i < items.size) {
+            while (i < items.Num()) {
                 savefile.WriteDict(items[i])
                 i++
             }
@@ -328,51 +329,51 @@ object Player {
             savefile.WriteInt(selAudio)
             savefile.WriteBool(pdaOpened)
             savefile.WriteBool(turkeyScore)
-            savefile.WriteInt(pdas.size)
+            savefile.WriteInt(pdas.size())
             i = 0
-            while (i < pdas.size) {
+            while (i < pdas.size()) {
                 savefile.WriteString(pdas[i])
                 i++
             }
-            savefile.WriteInt(pdaSecurity.size)
+            savefile.WriteInt(pdaSecurity.size())
             i = 0
-            while (i < pdaSecurity.size) {
+            while (i < pdaSecurity.size()) {
                 savefile.WriteString(pdaSecurity[i])
                 i++
             }
-            savefile.WriteInt(videos.size)
+            savefile.WriteInt(videos.size())
             i = 0
-            while (i < videos.size) {
+            while (i < videos.size()) {
                 savefile.WriteString(videos[i])
                 i++
             }
-            savefile.WriteInt(emails.size)
+            savefile.WriteInt(emails.size())
             i = 0
-            while (i < emails.size) {
+            while (i < emails.size()) {
                 savefile.WriteString(emails[i])
                 i++
             }
             savefile.WriteInt(nextItemPickup)
             savefile.WriteInt(nextItemNum)
             savefile.WriteInt(onePickupTime)
-            savefile.WriteInt(pickupItemNames.size)
+            savefile.WriteInt(pickupItemNames.Num())
             i = 0
-            while (i < pickupItemNames.size) {
+            while (i < pickupItemNames.Num()) {
                 savefile.WriteString(pickupItemNames[i].icon)
                 savefile.WriteString(pickupItemNames[i].name)
                 i++
             }
-            savefile.WriteInt(objectiveNames.size)
+            savefile.WriteInt(objectiveNames.Num())
             i = 0
-            while (i < objectiveNames.size) {
+            while (i < objectiveNames.Num()) {
                 savefile.WriteString(objectiveNames[i].screenshot)
                 savefile.WriteString(objectiveNames[i].text)
                 savefile.WriteString(objectiveNames[i].title)
                 i++
             }
-            savefile.WriteInt(levelTriggers.size)
+            savefile.WriteInt(levelTriggers.Num())
             i = 0
-            while (i < levelTriggers.size) {
+            while (i < levelTriggers.Num()) {
                 savefile.WriteString(levelTriggers[i].levelName)
                 savefile.WriteString(levelTriggers[i].triggerName)
                 i++
@@ -417,7 +418,7 @@ object Player {
             while (i < num) {
                 val itemdict = idDict()
                 savefile.ReadDict(itemdict)
-                items.add(itemdict)
+                items.Append(itemdict)
                 i++
             }
 
@@ -479,7 +480,7 @@ object Player {
                 val info = idItemInfo()
                 savefile.ReadString(info.icon)
                 savefile.ReadString(info.name)
-                pickupItemNames.add(info)
+                pickupItemNames.Append(info)
                 i++
             }
             num = savefile.ReadInt()
@@ -489,7 +490,7 @@ object Player {
                 savefile.ReadString(obj.screenshot)
                 savefile.ReadString(obj.text)
                 savefile.ReadString(obj.title)
-                objectiveNames.add(obj)
+                objectiveNames.Append(obj)
                 i++
             }
             num = savefile.ReadInt()
@@ -498,7 +499,7 @@ object Player {
                 val lti = idLevelTriggerInfo()
                 savefile.ReadString(lti.levelName)
                 savefile.ReadString(lti.triggerName)
-                levelTriggers.add(lti)
+                levelTriggers.Append(lti)
                 i++
             }
             ammoPulse = savefile.ReadBool()
@@ -525,7 +526,7 @@ object Player {
             // set to -1 so that the gun knows to have a full clip the first time we get it and at the start of the level
 //	memset( clip, -1, sizeof( clip ) );
             Arrays.fill(clip, -1)
-            items.clear()
+            items.DeleteContents(true)
             //	memset(pdasViewed, 0, 4 * sizeof( pdasViewed[0] ) );
             Arrays.fill(pdasViewed, 0)
             pdas.clear()
@@ -537,14 +538,18 @@ object Player {
             selAudio = 0
             pdaOpened = false
             turkeyScore = false
-            levelTriggers.clear()
+
+            levelTriggers.Clear()
+
             nextItemPickup = 0
             nextItemNum = 1
             onePickupTime = 0
-            pickupItemNames.clear()
-            objectiveNames.clear()
+            pickupItemNames.Clear()
+            objectiveNames.Clear()
+
             ammoPredictTime = 0
             lastGiveTime = 0
+
             ammoPulse = false
             weaponPulse = false
             armorPulse = false
@@ -603,7 +608,7 @@ object Player {
             // items
             num = 0
             i = 0
-            while (i < items.size) {
+            while (i < items.Num()) {
                 item = items[i]
 
                 // copy all keys with "inv_"
@@ -635,36 +640,36 @@ object Player {
 
             // pdas
             i = 0
-            while (i < pdas.size) {
+            while (i < pdas.size()) {
                 key = String.format("pda_%d", i)
                 dict.Set(key, pdas[i])
                 i++
             }
-            dict.SetInt("pdas", pdas.size)
+            dict.SetInt("pdas", pdas.size())
 
             // video cds
             i = 0
-            while (i < videos.size) {
+            while (i < videos.size()) {
                 key = String.format("video_%d", i)
                 dict.Set(key, videos[i])
                 i++
             }
-            dict.SetInt("videos", videos.size)
+            dict.SetInt("videos", videos.size())
 
             // emails
             i = 0
-            while (i < emails.size) {
+            while (i < emails.size()) {
                 key = String.format("email_%d", i)
                 dict.Set(key, emails[i])
                 i++
             }
-            dict.SetInt("emails", emails.size)
+            dict.SetInt("emails", emails.size())
 
             // weapons
             dict.SetInt("weapon_bits", weapons)
-            dict.SetInt("levelTriggers", levelTriggers.size)
+            dict.SetInt("levelTriggers", levelTriggers.Num())
             i = 0
-            while (i < levelTriggers.size) {
+            while (i < levelTriggers.Num()) {
                 key = String.format("levelTrigger_Level_%d", i)
                 dict.Set(key, levelTriggers[i].levelName)
                 key = String.format("levelTrigger_Trigger_%d", i)
@@ -704,7 +709,7 @@ object Player {
 
             // items
             num = dict.GetInt("items")
-            items.ensureCapacity(num)
+            items.SetNum(num)
             i = 0
             while (i < num) {
                 item = idDict()
@@ -735,7 +740,7 @@ object Player {
 
             // pdas
             num = dict.GetInt("pdas")
-            pdas.ensureCapacity(num)
+            pdas.setSize(num)
             i = 0
             while (i < num) {
                 itemname = String.format("pda_%d", i)
@@ -745,7 +750,7 @@ object Player {
 
             // videos
             num = dict.GetInt("videos")
-            videos.ensureCapacity(num)
+            videos.setSize(num)
             i = 0
             while (i < num) {
                 itemname = String.format("video_%d", i)
@@ -755,7 +760,7 @@ object Player {
 
             // emails
             num = dict.GetInt("emails")
-            emails.ensureCapacity(num)
+            emails.setSize(num)
             i = 0
             while (i < num) {
                 itemname = String.format("email_%d", i)
@@ -782,7 +787,7 @@ object Player {
                 lti.levelName.set(dict.GetString(itemname))
                 itemname = String.format("levelTrigger_Trigger_%d", i)
                 lti.triggerName.set(dict.GetString(itemname))
-                levelTriggers.add(lti)
+                levelTriggers.Append(lti)
                 i++
             }
         }
@@ -805,7 +810,7 @@ object Player {
             var tookWeapon: Boolean
             val amount: Int
             var info: idItemInfo
-            val name: String
+            val name: String?
             if (0 == idStr.Icmpn(statname, "ammo_", 5)) {
                 i = AmmoIndexForAmmoClass(statname)
                 max = MaxAmmoForAmmoClass(owner, statname)
@@ -820,7 +825,7 @@ object Player {
                     }
                     ammoPulse = true
                     name = AmmoPickupNameForIndex(i)
-                    if (name != null && !name.isEmpty()) {
+                    if (name != null && name.isNotEmpty()) {
                         AddPickupName(name, "")
                     }
                 }
@@ -1003,7 +1008,7 @@ object Player {
             return AmmoIndexForAmmoClass(decl.dict.GetString("ammoType"))
         }
 
-        fun AmmoPickupNameForIndex(ammonum: Int): String {
+        fun AmmoPickupNameForIndex(ammonum: Int): String? {
             return idWeapon.GetAmmoPickupNameForNum(ammonum)
         }
 
@@ -1015,9 +1020,9 @@ object Player {
 
         fun AddPickupName(name: String, icon: String) {
             val num: Int
-            num = pickupItemNames.size
+            num = pickupItemNames.Num()
             if (num == 0 || pickupItemNames[num - 1].name.Icmp(name) != 0) {
-                val info = pickupItemNames.Alloc()
+                val info = pickupItemNames.Alloc()!!
                 if (idStr.Cmpn(name, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
                     info.name = idStr(Common.common.GetLanguageDict().GetString(name))
                 } else {
@@ -1076,12 +1081,12 @@ object Player {
         }
 
         init {
-            items = ArrayList()
-            pdas = ArrayList()
-            pdaSecurity = ArrayList()
-            videos = ArrayList()
-            emails = ArrayList()
-            levelTriggers = ArrayList()
+            items = idList()
+            pdas = idStrList()
+            pdaSecurity = idStrList()
+            videos = idStrList()
+            emails = idStrList()
+            levelTriggers = idList()
             Clear()
         }
     }
@@ -1194,7 +1199,7 @@ object Player {
 
         //
         private val aasLocation // for AI tracking the player
-                : kotlin.collections.ArrayList<aasLocation_t>
+                : idList<aasLocation_t>
         private val baseSkinName: idStr
         private val centerView: idInterpolate<Float>
         private val gibsDir: idVec3
@@ -1605,8 +1610,8 @@ object Player {
             }
             if (GetPDA() != null) {
                 // Add any emails from the inventory
-                for (i in 0 until inventory.emails.size) {
-                    GetPDA()!!.AddEmail(inventory.emails[i])
+                for (i in 0 until inventory.emails.size()) {
+                    GetPDA()!!.AddEmail(inventory.emails[i].toString())
                 }
                 GetPDA()!!.SetSecurity(Common.common.GetLanguageDict().GetString("#str_00066"))
             }
@@ -1625,7 +1630,7 @@ object Player {
             }
             tipUp = false
             objectiveUp = false
-            if (inventory.levelTriggers.size != 0) {
+            if (inventory.levelTriggers.Num() != 0) {
                 PostEventMS(EV_Player_LevelTrigger, 0)
             }
             inventory.pdaOpened = false
@@ -1938,9 +1943,9 @@ object Player {
             savefile.WriteJoint(chestJoint)
             savefile.WriteJoint(headJoint)
             savefile.WriteStaticObject(physicsObj)
-            savefile.WriteInt(aasLocation.size)
+            savefile.WriteInt(aasLocation.Num())
             i = 0
-            while (i < aasLocation.size) {
+            while (i < aasLocation.Num()) {
                 savefile.WriteInt(aasLocation[i].areaNum)
                 savefile.WriteVec3(aasLocation[i].pos)
                 i++
@@ -2066,8 +2071,8 @@ object Player {
             inventory.Restore(savefile)
             weapon.Restore(savefile)
             i = 0
-            while (i < inventory.emails.size) {
-                GetPDA()!!.AddEmail(inventory.emails[i])
+            while (i < inventory.emails.size()) {
+                GetPDA()!!.AddEmail(inventory.emails[i].toString())
                 i++
             }
             savefile.ReadUserInterface(hud!!)
@@ -2130,8 +2135,8 @@ object Player {
             savefile.ReadStaticObject(physicsObj)
             RestorePhysics(physicsObj)
             savefile.ReadInt(num)
-            aasLocation.clear()
-            aasLocation.ensureCapacity(num._val)
+            aasLocation.SetGranularity(1)
+            aasLocation.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 aasLocation[i].areaNum = savefile.ReadInt()
@@ -2729,12 +2734,12 @@ object Player {
             }
         }
 
-        fun SetLevelTrigger(levelName: String, triggerName: String) {
-            if (levelName != null && !levelName.isEmpty() && triggerName != null && !triggerName.isEmpty()) {
+        fun SetLevelTrigger(levelName: String?, triggerName: String?) {
+            if (levelName != null && levelName.isNotEmpty() && triggerName != null && triggerName.isNotEmpty()) {
                 val lti = idLevelTriggerInfo()
                 lti.levelName.set(levelName)
                 lti.triggerName.set(triggerName)
-                inventory.levelTriggers.add(lti)
+                inventory.levelTriggers.Append(lti)
             }
         }
 
@@ -3001,7 +3006,7 @@ object Player {
             var i: Int
             if (aas != null) {
                 i = 0
-                while (i < aasLocation.size) {
+                while (i < aasLocation.Num()) {
                     if (aas === Game_local.gameLocal.GetAAS(i)) {
                         areaNum._val = (aasLocation[i].areaNum)
                         pos.set(aasLocation[i].pos)
@@ -3897,7 +3902,7 @@ object Player {
             }
             item.GetAttributes(attr)
             gave = false
-            numPickup = inventory.pickupItemNames.size
+            numPickup = inventory.pickupItemNames.Num()
             i = 0
             while (i < attr.GetNumKeyVals()) {
                 arg = attr.GetKeyVal(i)!!
@@ -3916,7 +3921,7 @@ object Player {
             }
 
             // display the pickup feedback on the hud
-            if (gave && numPickup == inventory.pickupItemNames.size) {
+            if (gave && numPickup == inventory.pickupItemNames.Num()) {
                 inventory.AddPickupName(item.spawnArgs.GetString("inv_name"), item.spawnArgs.GetString("inv_icon"))
             }
             return gave
@@ -3956,7 +3961,7 @@ object Player {
             if (Game_local.gameLocal.isMultiplayer && spectating) {
                 return false
             }
-            inventory.items.add(idDict(item))
+            inventory.items.Append(idDict(item))
             val info = idItemInfo()
             val itemName = item.GetString("inv_name")
             if (idStr.Cmpn(itemName, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
@@ -3965,7 +3970,7 @@ object Player {
                 info.name.set(itemName)
             }
             info.icon.set(item.GetString("inv_icon"))
-            inventory.pickupItemNames.add(info)
+            inventory.pickupItemNames.Append(info)
             if (hud != null) {
                 hud!!.SetStateString("itemicon", info.icon.toString())
                 hud!!.HandleNamedEvent("invPickup")
@@ -3974,7 +3979,7 @@ object Player {
         }
 
         fun RemoveInventoryItem(item: idDict) {
-            inventory.items.remove(item)
+            inventory.items.Remove(item)
             //	delete item;
         }
 
@@ -3992,7 +3997,7 @@ object Player {
         }
 
         fun FindInventoryItem(name: String): idDict? {
-            for (i in 0 until inventory.items.size) {
+            for (i in 0 until inventory.items.Num()) {
                 val iname = inventory.items[i].GetString("inv_name")
                 if (iname != null && iname.isNotEmpty()) {
                     if (idStr.Icmp(name, iname) == 0) {
@@ -4050,7 +4055,7 @@ object Player {
                     ) //TODO:!= null and !usEmpty, check that this combination isn't the wrong way around anywhere. null== instead of !=null
                     hud!!.HandleNamedEvent("pdaPickup")
                 }
-                if (inventory.pdas.size == 1) {
+                if (inventory.pdas.size() == 1) {
                     GetPDA()!!.RemoveAddedEmailsAndVideos()
                     if (!objectiveSystemOpen) {
                         TogglePDA()
@@ -4058,7 +4063,7 @@ object Player {
                     objectiveSystem!!.HandleNamedEvent("showPDATip")
                     //ShowTip( spawnArgs.GetString( "text_infoTitle" ), spawnArgs.GetString( "text_firstPDA" ), true );
                 }
-                if (inventory.pdas.size > 1 && pda.GetNumVideos() > 0 && hud != null) {
+                if (inventory.pdas.size() > 1 && pda.GetNumVideos() > 0 && hud != null) {
                     hud!!.HandleNamedEvent("videoPickup")
                 }
             }
@@ -4073,14 +4078,14 @@ object Player {
                 val info = idItemInfo()
                 info.name.set(item.GetString("inv_name"))
                 info.icon.set(item.GetString("inv_icon"))
-                inventory.pickupItemNames.add(info)
+                inventory.pickupItemNames.Append(info)
             }
             if (hud != null) {
                 hud!!.HandleNamedEvent("videoPickup")
             }
         }
 
-        fun GiveEmail(emailName: String) {
+        fun GiveEmail(emailName: String?) {
             if (emailName == null || emailName.isEmpty()) {
                 return
             }
@@ -4104,7 +4109,7 @@ object Player {
             info.title = idStr(title)
             info.text = idStr(text)
             info.screenshot = idStr(screenshot)
-            inventory.objectiveNames.add(info)
+            inventory.objectiveNames.Append(info)
             ShowObjective("newObjective")
             if (hud != null) {
                 hud!!.HandleNamedEvent("newObjective")
@@ -4112,10 +4117,10 @@ object Player {
         }
 
         fun CompleteObjective(title: String) {
-            val c = inventory.objectiveNames.size
+            val c = inventory.objectiveNames.Num()
             for (i in 0 until c) {
                 if (idStr.Icmp(inventory.objectiveNames[i].title.toString(), title) == 0) {
-                    inventory.objectiveNames.removeAt(i)
+                    inventory.objectiveNames.RemoveIndex(i)
                     break
                 }
             }
@@ -4430,7 +4435,7 @@ object Player {
                         return
                     }
                     idealWeapon = previousWeapon
-                } else if (weapon_pda >= 0 && num == weapon_pda && inventory.pdas.size == 0) {
+                } else if (weapon_pda >= 0 && num == weapon_pda && inventory.pdas.size() == 0) {
                     ShowTip(spawnArgs.GetString("text_infoTitle"), spawnArgs.GetString("text_noPDA"), true)
                     return
                 } else {
@@ -5045,14 +5050,14 @@ object Player {
             if (objectiveSystem == null) {
                 return
             }
-            if (inventory.pdas.size == 0) {
+            if (inventory.pdas.size() == 0) {
                 ShowTip(spawnArgs.GetString("text_infoTitle"), spawnArgs.GetString("text_noPDA"), true)
                 return
             }
             assert(hud != null)
             if (!objectiveSystemOpen) {
                 var j: Int
-                val c = inventory.items.size
+                val c = inventory.items.Num()
                 objectiveSystem!!.SetStateInt("inv_count", c)
                 j = 0
                 while (j < MAX_INVENTORY_ITEMS) {
@@ -5134,7 +5139,7 @@ object Player {
             if (entityNumber != Game_local.gameLocal.localClientNum) {
                 return
             }
-            val c = inventory.pickupItemNames.size
+            val c = inventory.pickupItemNames.Num()
             if (c > 0) {
                 if (Game_local.gameLocal.time > inventory.nextItemPickup) {
                     if (inventory.nextItemPickup != 0 && Game_local.gameLocal.time - inventory.nextItemPickup > 2000) {
@@ -5152,7 +5157,7 @@ object Player {
                             inventory.pickupItemNames[0].icon.toString()
                         )
                         hud!!.HandleNamedEvent(Str.va("itemPickup%d", inventory.nextItemNum++))
-                        inventory.pickupItemNames.removeAt(0)
+                        inventory.pickupItemNames.RemoveIndex(0)
                         if (inventory.nextItemNum == 1) {
                             inventory.onePickupTime = Game_local.gameLocal.time
                         } else if (inventory.nextItemNum > 5) {
@@ -5204,7 +5209,7 @@ object Player {
         }
 
         fun GetPDA(): idDeclPDA? {
-            return if (inventory.pdas.size != 0) {
+            return if (inventory.pdas.size() != 0) {
                 DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas[0]) as idDeclPDA
             } else {
                 null
@@ -5212,7 +5217,7 @@ object Player {
         }
 
         fun GetVideo(index: Int): idDeclVideo? {
-            return if (index >= 0 && index < inventory.videos.size) {
+            return if (index >= 0 && index < inventory.videos.size()) {
                 DeclManager.declManager.FindType(
                     declType_t.DECL_VIDEO,
                     inventory.videos[index],
@@ -6929,10 +6934,10 @@ object Player {
             val origin = idVec3()
             GetFloorPos(64.0f, origin)
             num = Game_local.gameLocal.NumAAS()
-            aasLocation.clear()
-            aasLocation.ensureCapacity(num)
+            aasLocation.SetGranularity(1)
+            aasLocation.SetNum(num)
             i = 0
-            while (i < aasLocation.size) {
+            while (i < aasLocation.Num()) {
                 aasLocation[i] = aasLocation_t()
                 aasLocation[i].areaNum = 0
                 aasLocation[i].pos.set(origin)
@@ -6959,7 +6964,7 @@ object Player {
                 return
             }
             i = 0
-            while (i < aasLocation.size) {
+            while (i < aasLocation.Num()) {
                 aas = Game_local.gameLocal.GetAAS(i)
                 if (null == aas) {
                     i++
@@ -7391,9 +7396,9 @@ object Player {
                         // new activation
                         // going to see if we have anything in inventory a gui might be interested in
                         // need to enumerate inventory items
-                        focusUI!!.SetStateInt("inv_count", inventory.items.size)
+                        focusUI!!.SetStateInt("inv_count", inventory.items.Num())
                         j = 0
-                        while (j < inventory.items.size) {
+                        while (j < inventory.items.Num()) {
                             val item = inventory.items[j]
                             val iname = item.GetString("inv_name")
                             val iicon = item.GetString("inv_icon")
@@ -7409,7 +7414,7 @@ object Player {
                             j++
                         }
                         j = 0
-                        while (j < inventory.pdaSecurity.size) {
+                        while (j < inventory.pdaSecurity.size()) {
                             val p = inventory.pdaSecurity[j].toString()
                             if (TempDump.isNotNullOrEmpty(p)) {
                                 focusUI!!.SetStateInt(p, 1)
@@ -7515,7 +7520,7 @@ object Player {
                 objectiveSystem!!.SetStateInt("listPDAAudio_sel_0", 0)
             }
             if (currentPDA > 0) {
-                currentPDA = inventory.pdas.size - currentPDA
+                currentPDA = inventory.pdas.size() - currentPDA
             }
 
             // Mark in the bit array that this pda has been read
@@ -7545,14 +7550,14 @@ object Player {
                 j++
             }
             j = 0
-            while (j < inventory.pdas.size) {
+            while (j < inventory.pdas.size()) {
                 val pda =
                     DeclManager.declManager.FindType(declType_t.DECL_PDA, inventory.pdas[j], false) as idDeclPDA?
                 if (pda == null) {
                     j++
                     continue
                 }
-                var index = inventory.pdas.size - j
+                var index = inventory.pdas.size() - j
                 if (j == 0) {
                     // Special case for the first PDA
                     index = 0
@@ -7591,7 +7596,7 @@ object Player {
                         AddGuiPDAData(declType_t.DECL_VIDEO, "listPDAVideo", pda, objectiveSystem)
                         sel = objectiveSystem!!.State().GetInt("listPDAVideo_sel_0", "0")
                         var vid: idDeclVideo? = null
-                        if (sel >= 0 && sel < inventory.videos.size) {
+                        if (sel >= 0 && sel < inventory.videos.size()) {
                             vid = DeclManager.declManager.FindType(
                                 declType_t.DECL_VIDEO,
                                 inventory.videos[sel],
@@ -7709,7 +7714,7 @@ object Player {
                 }
                 return c
             } else if (dataType == declType_t.DECL_VIDEO) {
-                c = inventory.videos.size
+                c = inventory.videos.size()
                 i = 0
                 while (i < c) {
                     val video = GetVideo(i)
@@ -7734,7 +7739,7 @@ object Player {
             objectiveSystem!!.SetStateString("objective1", "")
             objectiveSystem!!.SetStateString("objective2", "")
             objectiveSystem!!.SetStateString("objective3", "")
-            for (i in 0 until inventory.objectiveNames.size) {
+            for (i in 0 until inventory.objectiveNames.Num()) {
                 objectiveSystem!!.SetStateString(Str.va("objective%d", i + 1), "1")
                 objectiveSystem!!.SetStateString(
                     Str.va("objectivetitle%d", i + 1),
@@ -7931,7 +7936,7 @@ object Player {
             val mapName = idStr(Game_local.gameLocal.GetMapName())
             mapName.StripPath()
             mapName.StripFileExtension()
-            for (i in inventory.levelTriggers.size - 1 downTo 0) {
+            for (i in inventory.levelTriggers.Num() - 1 downTo 0) {
                 if (idStr.Icmp(mapName, inventory.levelTriggers[i].levelName) == 0) {
                     val ent = Game_local.gameLocal.FindEntity(inventory.levelTriggers[i].triggerName)!!
                     ent.PostEventMS(Entity.EV_Activate, 1f, this)
@@ -8006,7 +8011,7 @@ object Player {
             firstPersonViewAxis = idMat3.getMat3_identity()
             dragEntity = idDragEntity()
             physicsObj = idPhysics_Player()
-            aasLocation = ArrayList()
+            aasLocation = idList()
             hipJoint = Model.INVALID_JOINT
             chestJoint = Model.INVALID_JOINT
             headJoint = Model.INVALID_JOINT

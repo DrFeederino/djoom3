@@ -4,6 +4,7 @@ import neo.framework.DeclManager.idDecl
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.List
 import neo.idlib.math.Math_h.idMath
 
 /**
@@ -21,7 +22,7 @@ class DeclTable {
     class idDeclTable : idDecl() {
         private var clamp = false
         private var snap = false
-        private val values: ArrayList<Float> = ArrayList()
+        private val values: List.idList<Float> = List.idList()
 
         //
         //
@@ -39,7 +40,7 @@ class DeclTable {
             src.SkipUntilString("{")
             snap = false
             clamp = false
-            values.clear()
+            values.Clear()
             while (true) {
                 if (!src.ReadToken(token)) {
                     break
@@ -60,7 +61,9 @@ class DeclTable {
                             MakeDefault()
                             return false
                         }
-                        values.add(v)
+
+                        values.Append(v)
+
                         src.ReadToken(token)
                         if (token.toString() == "}") {
                             break
@@ -81,22 +84,22 @@ class DeclTable {
 
             // copy the 0 element to the end, so lerping doesn't
             // need to worry about the wrap case
-            val `val`: Float = values.getOrNull(0) ?: 0f // template bug requires this to not be in the Append()?
-            values.add(`val`)
+            val `val`: Float = values[0] // template bug requires this to not be in the Append()?
+            values.Append(`val`)
             return true
         }
 
         override fun FreeData() {
             snap = false
             clamp = false
-            values.clear()
+            values.Clear()
         }
 
         fun TableLookup(index: Float): Float {
             var index = index
             var iIndex: Int
             val iFrac: Float
-            val domain = values.size - 1
+            val domain = values.Num() - 1
             if (domain <= 1) {
                 return 1.0f
             }

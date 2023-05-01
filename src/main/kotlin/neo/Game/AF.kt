@@ -200,7 +200,7 @@ object AF {
                 )
                 return false
             }
-            if (file.bodies.Num() == 0 || file.bodies[0].jointName.toString() != "origin") {
+            if (file.bodies.Num() == 0 || file.bodies[0]!!.jointName.toString() != "origin") {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no body which modifies the origin joint.",
                     name.toString(), ent.name.toString(), ent.GetPhysics().GetOrigin().ToString(0)
@@ -999,7 +999,7 @@ object AF {
             val centerOfMass = idVec3()
             val origin = idVec3()
             val bounds = idBounds()
-            val jointList = ArrayList<Int>()
+            val jointList = idList<Int>()
             origin.set(fb.origin.ToVec3())
             axis = fb.angles.ToMat3()
             bounds[0] = fb.v1.ToVec3()
@@ -1094,7 +1094,7 @@ object AF {
             // update table to find the nearest articulated figure body for a joint of the skeletal model
             animator!!.GetJointList(fb.containedJoints.toString(), jointList)
             i = 0
-            while (i < jointList.size) {
+            while (i < jointList.Num()) {
                 if (jointBody[jointList[i]] != -1) {
                     /*jointHandle_t*/
                     Game_local.gameLocal.Warning(

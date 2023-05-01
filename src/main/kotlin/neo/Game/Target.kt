@@ -96,7 +96,7 @@ object Target {
             var i: Int
             var ent: idEntity?
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 ent?.PostEventMS(EV_Remove, 0)
                 i++
@@ -139,7 +139,7 @@ object Target {
             var i: Int
             var ent: idEntity?
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 ent?.Show()
                 i++
@@ -184,7 +184,7 @@ object Target {
             var ent: idEntity?
             damage = spawnArgs.GetString("def_damage", "damage_generic")
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 ent?.Damage(this, this, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
                 i++
@@ -410,7 +410,7 @@ object Target {
             // set the color on the targets
             if (spawnArgs.GetVector("_color", "1 1 1", color)) {
                 i = 0
-                while (i < targets.size) {
+                while (i < targets.Num()) {
                     ent = targets[i].GetEntity()
                     ent?.SetColor(color[0], color[1], color[2])
                     i++
@@ -422,7 +422,7 @@ object Target {
             while (parmnum < Material.MAX_ENTITY_SHADER_PARMS) {
                 if (spawnArgs.GetFloat(Str.va("shaderParm%d", parmnum), "0", value)) {
                     i = 0
-                    while (i < targets.size) {
+                    while (i < targets.Num()) {
                         ent = targets[i].GetEntity()
                         ent?.SetShaderParm(parmnum, value._val)
                         i++
@@ -473,7 +473,7 @@ object Target {
             val time: Float
             time = -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null) {
                     ent.SetShaderParm(RenderWorld.SHADERPARM_TIMEOFFSET, time)
@@ -547,7 +547,7 @@ object Target {
 
                 // set the color on the targets
                 i = 0
-                while (i < targets.size) {
+                while (i < targets.Num()) {
                     ent = targets[i].GetEntity()
                     ent?.SetColor(color)
                     i++
@@ -560,7 +560,7 @@ object Target {
         private fun Event_Activate(activator: idEventArg<idEntity>) {
             var ent: idEntity?
             var i: Int
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 return
             }
 
@@ -570,7 +570,7 @@ object Target {
 
 //	ent = this;
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null) {
                     ent.GetColor(fadeFrom)
@@ -624,13 +624,13 @@ object Target {
             var light: idLight?
             var i: Int
             val time: Float
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 return
             }
             time = spawnArgs.GetFloat("fadetime")
             //	ent = this;
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
@@ -680,13 +680,13 @@ object Target {
             var light: idLight?
             var i: Int
             val time: Float
-            if (0 == targets.size) {
+            if (0 == targets.Num()) {
                 return
             }
             time = spawnArgs.GetFloat("fadetime")
             //	ent = this;
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (null == ent) {
                     i++
@@ -844,7 +844,7 @@ object Target {
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity>) {
-            for (i in 0 until targets.size) {
+            for (i in 0 until targets.Num()) {
                 val ent = targets[i].GetEntity()
                 ent?.SetModel(spawnArgs.GetString("newmodel"))
             }
@@ -1290,7 +1290,7 @@ object Target {
                 lights = sounds
             }
             if (targetsOnly) {
-                listedEntities = targets.size
+                listedEntities = targets.Num()
                 i = 0
                 while (i < listedEntities) {
                     entityList[i] = targets[i].GetEntity()!!
@@ -1428,7 +1428,7 @@ object Target {
             var kv: idKeyValue?
             var n: Int
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null) {
                     kv = spawnArgs.MatchPrefix("keyval")
@@ -1608,7 +1608,7 @@ object Target {
             val lock: Int
             lock = spawnArgs.GetInt("locked", "1")
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null && ent is idDoor) {
                     if (ent.IsLocked() != 0) {
@@ -1658,7 +1658,7 @@ object Target {
             var thread: idThread
             funcName = spawnArgs.GetString("call")
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
                 if (ent != null && ent.scriptObject.HasObject()) {
                     func = ent.scriptObject.GetFunction(funcName)

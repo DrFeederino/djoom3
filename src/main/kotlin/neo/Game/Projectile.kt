@@ -45,6 +45,7 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
@@ -114,7 +115,7 @@ object Projectile {
                 }
 
                 // get material type name
-                typeName = Game_local.gameLocal.sufaceTypeNames[materialType.ordinal]
+                typeName = Game_local.gameLocal.sufaceTypeNames[materialType.ordinal]!!
 
                 // play impact sound
                 sound = projectileDef.GetString(Str.va("snd_%s", typeName))
@@ -1657,7 +1658,7 @@ object Projectile {
             }
         }
 
-        private val beamTargets: ArrayList<beamTarget_t>
+        private val beamTargets: List.idList<beamTarget_t>
         private val damageFreq: idStr
         private var nextDamageTime: Int
         private var secondModel: renderEntity_s
@@ -1673,9 +1674,9 @@ object Projectile {
 
         override fun Save(savefile: idSaveGame) {
             var i: Int
-            savefile.WriteInt(beamTargets.size)
+            savefile.WriteInt(beamTargets.Num())
             i = 0
-            while (i < beamTargets.size) {
+            while (i < beamTargets.Num()) {
                 beamTargets[i].target.Save(savefile)
                 savefile.WriteRenderEntity(beamTargets[i].renderEntity)
                 savefile.WriteInt(beamTargets[i].modelDefHandle)
@@ -1691,7 +1692,7 @@ object Projectile {
             var i: Int
             val num = CInt()
             savefile.ReadInt(num)
-            beamTargets.ensureCapacity(num._val)
+            beamTargets.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 beamTargets[i].target.Restore(savefile)
@@ -1714,7 +1715,7 @@ object Projectile {
 
         override fun Spawn() {
             super.Spawn()
-            beamTargets.clear()
+            beamTargets.Clear()
             secondModel = renderEntity_s() //memset( &secondModel, 0, sizeof( secondModel ) );
             secondModelDefHandle = -1
             val temp = spawnArgs.GetString("model_two")
@@ -1739,7 +1740,7 @@ object Projectile {
             if (state == projectileState_t.LAUNCHED) {
 
                 // update beam targets
-                for (i in 0 until beamTargets.size) {
+                for (i in 0 until beamTargets.Num()) {
                     if (beamTargets[i].target.GetEntity() == null) {
                         continue
                     }
@@ -1899,7 +1900,7 @@ object Projectile {
                 bt.renderEntity.customSkin = DeclManager.declManager.FindSkin(skin)
                 bt.target.oSet(ent)
                 bt.modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(bt.renderEntity)
-                beamTargets.add(bt)
+                beamTargets.Append(bt)
             }
             if (numListedEntities != 0) {
                 StartSound("snd_beam", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
@@ -1927,7 +1928,7 @@ object Projectile {
             beamWidth = spawnArgs.GetFloat("beam_WidthExplode")
             damage = spawnArgs.GetString("def_damage")
             i = 0
-            while (i < beamTargets.size) {
+            while (i < beamTargets.Num()) {
                 if (beamTargets[i].target.GetEntity() == null || ownerEnt == null) {
                     i++
                     continue
@@ -1988,7 +1989,7 @@ object Projectile {
         }
 
         private fun FreeBeams() {
-            for (i in 0 until beamTargets.size) {
+            for (i in 0 until beamTargets.Num()) {
                 if (beamTargets[i].modelDefHandle >= 0) {
                     Game_local.gameRenderWorld.FreeEntityDef(beamTargets[i].modelDefHandle)
                     beamTargets[i].modelDefHandle = -1
@@ -2010,7 +2011,7 @@ object Projectile {
         //
         //
         init {
-            beamTargets = ArrayList()
+            beamTargets = List.idList()
             secondModel = renderEntity_s()
             secondModelDefHandle = -1
             nextDamageTime = 0

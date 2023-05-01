@@ -222,7 +222,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // try to load a .ASE or .LWO model and convert it to a collision model
             models!![numModels] = LoadRenderModel(modelName)
-            if (models!!.size < numModels) {
+            if (models!![numModels] != null) {
                 numModels++
                 return numModels - 1
             }
@@ -7760,7 +7760,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
                 i = 1
                 while (CollisionModel_debug.cm_contentsNameByIndex[i] != null) {
-                    if (token.Icmp(CollisionModel_debug.cm_contentsNameByIndex[i]) == 0) {
+                    if (token.Icmp(
+                            CollisionModel_debug.cm_contentsNameByIndex[i]!!
+                        ) == 0
+                    ) {
                         contents = contents or CollisionModel_debug.cm_contentsFlagByIndex[i]
                         break
                     }
@@ -7789,7 +7792,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         length,
                         contentsString,
                         Lib.MAX_STRING_CHARS - length,
-                        CollisionModel_debug.cm_contentsNameByIndex[i]
+                        CollisionModel_debug.cm_contentsNameByIndex[i]!!
                     )
                 }
                 i++

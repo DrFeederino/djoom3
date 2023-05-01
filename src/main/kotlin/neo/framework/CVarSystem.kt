@@ -223,7 +223,7 @@ object CVarSystem {
         protected var valueMin // minimum value
                 = 0f
         protected var valueStrings // valid value strings
-                : Array<String>? = null
+                : Array<String?>? = null
 
         //
         //
@@ -270,7 +270,7 @@ object CVarSystem {
             Init(name, value, flags, description, valueMin, valueMax, null, valueCompletion)
         }
 
-        constructor(name: String, value: String, flags: Int, description: String, valueStrings: Array<String>?) {
+        constructor(name: String, value: String, flags: Int, description: String, valueStrings: Array<String?>?) {
             Init(name, value, flags, description, 1f, -1f, valueStrings, null)
         }
 
@@ -279,7 +279,7 @@ object CVarSystem {
             value: String,
             flags: Int,
             description: String,
-            valueStrings: Array<String>,
+            valueStrings: Array<String?>,
             valueCompletion: CmdSystem.argCompletion_t
         ) {
             Init(name, value, flags, description, 1f, -1f, valueStrings, valueCompletion)
@@ -342,7 +342,7 @@ object CVarSystem {
             return internalVar!!.valueMax
         }
 
-        fun GetValueStrings(): Array<String>? {
+        fun GetValueStrings(): Array<String?>? {
             return valueStrings
         }
 
@@ -417,7 +417,7 @@ object CVarSystem {
             description: String,
             valueMin: Float,
             valueMax: Float,
-            valueStrings: Array<String>?,
+            valueStrings: Array<String?>?,
             valueCompletion: CmdSystem.argCompletion_t?
         ) {
             this.name = name
@@ -604,7 +604,7 @@ object CVarSystem {
 
         //	// virtual					~idInternalCVar( void );
         //
-        fun CopyValueStrings(strings: Array<String>?): Array<String>? {
+        fun CopyValueStrings(strings: Array<String?>?): Array<String?>? {
 //	int i, totalLength;
 //	const char **ptr;
 //	char *str;
@@ -733,7 +733,7 @@ object CVarSystem {
                     integerValue = 0
                     var i = 0
                     while (valueStrings!![i] != null) {
-                        if (valueString.Icmp(valueStrings!![i]) == 0) {
+                        if (valueString.Icmp(valueStrings!![i]!!) == 0) {
                             integerValue = i
                             break
                         }
@@ -1535,9 +1535,9 @@ object CVarSystem {
                                 var j = 0
                                 while (cvar.GetValueStrings()!![j] != null) {
                                     if (j != 0) {
-                                        idLib.common.Printf(Str.S_COLOR_WHITE + ", %s", cvar.GetValueStrings()!![j])
+                                        idLib.common.Printf(Str.S_COLOR_WHITE + ", %s", cvar.GetValueStrings()!![j]!!)
                                     } else {
-                                        idLib.common.Printf(Str.S_COLOR_WHITE + "%s", cvar.GetValueStrings()!![j])
+                                        idLib.common.Printf(Str.S_COLOR_WHITE + "%s", cvar.GetValueStrings()!![j]!!)
                                     }
                                     j++
                                 }

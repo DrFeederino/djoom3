@@ -19,6 +19,7 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CFloat
+import neo.idlib.containers.List
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Quat.idCQuat
 import neo.idlib.math.Quat.idQuat
@@ -181,7 +182,7 @@ object Camera {
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks.get(event)!!
+            return eventCallbacks[event]!!
         }
     }
 
@@ -229,8 +230,8 @@ object Camera {
         }
 
         private val activator: idEntityPtr<idEntity>
-        private val camera: ArrayList<cameraFrame_t>
-        private val cameraCuts: ArrayList<Int>
+        private val camera: List.idList<cameraFrame_t> = List.idList()
+        private val cameraCuts: List.idList<Int> = List.idList()
         private var cycle: Int
         private var frameRate: Int
         private val offset: idVec3
@@ -286,7 +287,7 @@ object Camera {
             if (null == view) {
                 return
             }
-            if (camera.size == 0) {
+            if (camera.Num() == 0) {
                 // we most likely are in the middle of a restore
                 // FIXME: it would be better to fix it so this doesn't get called during a restore
                 return
@@ -305,7 +306,7 @@ object Camera {
             realFrame = frame
             cut = 0
             i = 0
-            while (i < cameraCuts.size) {
+            while (i < cameraCuts.Num()) {
                 if (frame < cameraCuts[i]) {
                     break
                 }
@@ -320,7 +321,7 @@ object Camera {
                 var prevCut: Int
                 prevCut = 0
                 i = 0
-                while (i < cameraCuts.size) {
+                while (i < cameraCuts.Num()) {
                     if (prevFrame < cameraCuts[i]) {
                         break
                     }
@@ -335,17 +336,17 @@ object Camera {
 
             // clamp to the first frame.  also check if this is a one frame anim.  one frame anims would end immediately,
             // but since they're mainly used for static cams anyway, just stay on it infinitely.
-            if (frame < 0 || camera.size < 2) {
+            if (frame < 0 || camera.Num() < 2) {
                 view.viewaxis.set(camera[0].q.ToQuat().ToMat3())
                 view.vieworg.set(camera[0].t.plus(offset))
                 view.fov_x = camera[0].fov
-            } else if (frame > camera.size - 2) {
+            } else if (frame > camera.Num() - 2) {
                 if (cycle > 0) {
                     cycle--
                 }
                 if (cycle != 0) {
                     // advance start time so that we loop
-                    starttime += (camera.size - cameraCuts.size) * 1000 / frameRate
+                    starttime += (camera.Num() - cameraCuts.Num()) * 1000 / frameRate
                     GetViewParms(view)
                     return
                 }
@@ -356,7 +357,7 @@ object Camera {
                     return
                 } else {
                     // just use our last frame
-                    camFrame = camera[camera.size - 1]
+                    camFrame = camera[camera.Num() - 1]
                     view.viewaxis.set(camFrame.q.ToQuat().ToMat3())
                     view.vieworg.set(camFrame.t.plus(offset))
                     view.fov_x = camFrame.fov
@@ -404,7 +405,7 @@ object Camera {
             // }
 // }
             if (SysCvar.g_showcamerainfo.GetBool()) {
-                Game_local.gameLocal.Printf("^5Frame: ^7%d/%d\n\n\n", realFrame + 1, camera.size - cameraCuts.size)
+                Game_local.gameLocal.Printf("^5Frame: ^7%d/%d\n\n\n", realFrame + 1, camera.Num() - cameraCuts.Num())
             }
         }
 
@@ -449,7 +450,7 @@ object Camera {
                 if (!Game_local.gameLocal.skipCinematic) {
                     return
                 }
-                if (camera.size < 2) {
+                if (camera.Num() < 2) {
                     // 1 frame anims never end
                     return
                 }
@@ -460,13 +461,13 @@ object Camera {
                     frameTime = (Game_local.gameLocal.time - starttime) * frameRate
                     frame = frameTime / 1000
                 }
-                if (frame > camera.size + cameraCuts.size - 2) {
+                if (frame > camera.Num() + cameraCuts.Num() - 2) {
                     if (cycle > 0) {
                         cycle--
                     }
                     if (cycle != 0) {
                         // advance start time so that we loop
-                        starttime += (camera.size - cameraCuts.size) * 1000 / frameRate
+                        starttime += (camera.Num() - cameraCuts.Num()) * 1000 / frameRate
                     } else {
                         Stop()
                     }
@@ -496,10 +497,12 @@ object Camera {
             if (!parser.LoadFile(filename)) {
                 idGameLocal.Error("Unable to load '%s' on '%s'", filename, name)
             }
-            cameraCuts.clear()
-            cameraCuts.ensureCapacity(1)
-            camera.clear()
-            camera.ensureCapacity(1)
+
+            cameraCuts.Clear()
+            cameraCuts.SetGranularity(1)
+            camera.Clear()
+            camera.SetGranularity(1)
+
             parser.ExpectTokenString(Model.MD5_VERSION_STRING)
             version = parser.ParseInt()
             if (version != Model.MD5_VERSION) {
@@ -534,7 +537,7 @@ object Camera {
             // parse the camera cuts
             parser.ExpectTokenString("cuts")
             parser.ExpectTokenString("{")
-            cameraCuts.ensureCapacity(numCuts)
+            cameraCuts.SetNum(numCuts)
             i = 0
             while (i < numCuts) {
                 cameraCuts[i] = parser.ParseInt()
@@ -548,14 +551,14 @@ object Camera {
             // parse the camera frames
             parser.ExpectTokenString("camera")
             parser.ExpectTokenString("{")
-            camera.ensureCapacity(numFrames)
+            camera.SetNum(numFrames)
             i = 0
             while (i < numFrames) {
                 val cam = cameraFrame_t()
                 parser.Parse1DMatrix(3, cam.t)
                 parser.Parse1DMatrix(3, cam.q)
                 cam.fov = parser.ParseFloat()
-                camera.add(i, cam)
+                camera[i] = cam
                 i++
             }
             parser.ExpectTokenString("}")
@@ -636,7 +639,7 @@ object Camera {
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks.get(event)!!
+            return eventCallbacks[event]!!
         }
 
         //
@@ -646,8 +649,6 @@ object Camera {
             frameRate = 0
             starttime = 0
             cycle = 1
-            cameraCuts = ArrayList()
-            camera = ArrayList()
             activator = idEntityPtr(null)
         }
     }

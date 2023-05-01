@@ -2536,7 +2536,7 @@ object RenderWorld_local {
                 check = ps
                 while (check != null) {
                     firstPortalStack = check
-                    if (check.p === p) {
+                    if (check.p == p) {
                         break // don't recursively enter a stack
                     }
                     check = check.next

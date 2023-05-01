@@ -240,6 +240,25 @@ object TempDump {
     }
 
     /**
+     * @return -1 if **v1** not in **vList**.
+     */
+    fun indexOf(v1: Any?, vList: Array<*>?): Int {
+        var i: Int
+        if (v1 != null && vList != null) {
+            i = 0
+            while (i < vList.size) {
+                if (vList[i] == v1) {
+                    return i
+                }
+                i++
+            }
+        }
+
+        //we should NEVER get here!
+        return -1
+    }
+
+    /**
      * Byte TO Int
      */
     fun btoi(b: ByteBuffer): Int {

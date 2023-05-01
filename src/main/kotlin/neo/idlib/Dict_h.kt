@@ -20,6 +20,8 @@ import neo.idlib.containers.List.idList
 import neo.idlib.containers.StrPool.idPoolStr
 import neo.idlib.containers.StrPool.idStrPool
 import neo.idlib.hashing.CRC32
+import neo.idlib.hashing.CRC32.Companion.CRC32_FinishChecksum
+import neo.idlib.hashing.CRC32.Companion.CRC32_InitChecksum
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Random.idRandom
@@ -109,10 +111,10 @@ class Dict_h {
     open class idDict {
         private val DBG_count = DBG_counter++
         private val argHash: idHashIndex = idHashIndex()
-        private var args: ArrayList<idKeyValue> = ArrayList()
+        private var args: idList<idKeyValue> = idList()
 
         constructor() {
-            args.ensureCapacity(16)
+            args.SetGranularity(16)
             argHash.SetGranularity(16)
             argHash.Clear(128, 16)
         }
@@ -125,13 +127,13 @@ class Dict_h {
 
         // set the granularity for the index
         fun SetGranularity(granularity: Int) {
-            args.ensureCapacity(granularity)
+            args.SetGranularity(granularity)
             argHash.SetGranularity(granularity)
         }
 
         // set hash size
         fun SetHashSize(hashSize: Int) {
-            if (args.size == 0) {
+            if (args.Num() == 0) {
                 argHash.Clear(hashSize, 16)
             }
         }
@@ -152,10 +154,10 @@ class Dict_h {
                 return this
             }
             Clear()
-            args = ArrayList(other.args)
+            args.set(other.args)
             argHash.set(other.argHash)
             i = 0
-            while (i < args.size) {
+            while (i < args.Num()) {
                 args[i].key = globalKeys.CopyString(args[i].key)
                 args[i].value = globalValues.CopyString(args[i].value)
                 i++
@@ -182,9 +184,9 @@ class Dict_h {
             if (this === other) {
                 return
             }
-            n = other.args.size
-            if (args.size != 0) {
-                found = IntArray(other.args.size)
+            n = other.args.Num()
+            if (args.Num() != 0) {
+                found = IntArray(other.args.Num())
                 i = 0
                 while (i < n) {
                     found[i] = FindKeyIndex(other.args[i].GetKey().toString() + "")
@@ -203,8 +205,7 @@ class Dict_h {
                 } else {
                     kv.key = globalKeys.CopyString(other.args[i].key)
                     kv.value = globalValues.CopyString(other.args[i].value)
-                    args.add(kv)
-                    argHash.Add(argHash.GenerateKey(kv.GetKey().toString() + "", false), args.indexOf(kv))
+                    argHash.Add(argHash.GenerateKey(kv.GetKey().toString() + "", false), args.Append(kv))
                 }
                 i++
             }
@@ -225,24 +226,24 @@ class Dict_h {
             if (this === other) {
                 return
             }
-            if (other.args.size != 0 && other.args[0].key.GetPool() !== globalKeys) {
+            if (other.args.Num() != 0 && other.args[0].key.GetPool() !== globalKeys) {
                 Common.common.FatalError("idDict::TransferKeyValues: can't transfer values across a DLL boundary")
                 return
             }
             Clear()
-            n = other.args.size
-            args.ensureCapacity(n)
+            n = other.args.Num()
+            args.SetNum(n)
             try {
                 i = 0
                 while (i < n) {
-                    args.add(i, other.args[i]) // TODO:check if clone() was necessary
+                    args.set(i, other.args[i]) // TODO:check if clone() was necessary
                     i++
                 }
             } catch (ex: CloneNotSupportedException) {
                 throw idException(ex)
             }
             argHash.set(other.argHash)
-            other.args.clear()
+            other.args.Clear()
             other.argHash.Free()
         }
 
@@ -277,7 +278,7 @@ class Dict_h {
         // copy key/value pairs from other dict not present in this dict
         @Throws(idException::class)
         fun SetDefaults(dict: idDict) {
-            val n = dict.args.size
+            val n = dict.args.Num()
             for (i in 0 until n) {
                 val def = dict.args[i]
                 val kv = FindKey(def.GetKey().toString() + "") //TODO:override toString?
@@ -285,8 +286,7 @@ class Dict_h {
                 if (null == kv) {
                     newkv.key = globalKeys.CopyString(def.key)
                     newkv.value = globalValues.CopyString(def.value)
-                    args.add(newkv)
-                    argHash.Add(argHash.GenerateKey(newkv.GetKey().toString() + "", false), args.indexOf(newkv))
+                    argHash.Add(argHash.GenerateKey(newkv.GetKey().toString() + "", false), args.Append(newkv))
                 }
             }
         }
@@ -295,12 +295,12 @@ class Dict_h {
         fun Clear() {
             var i: Int
             i = 0
-            while (i < args.size) {
+            while (i < args.Num()) {
                 globalKeys.FreeString(args[i].key)
                 globalValues.FreeString(args[i].value)
                 i++
             }
-            args.clear()
+            args.Clear()
             argHash.Free()
         }
 
@@ -309,7 +309,7 @@ class Dict_h {
         fun Print() {
             var i: Int
             val n: Int
-            n = args.size
+            n = args.Num()
             i = 0
             while (i < n) {
                 idLib.common.Printf("%s = %s\n", args[i].GetKey().toString(), args[i].GetValue().toString())
@@ -320,9 +320,9 @@ class Dict_h {
         open fun Allocated(): Long {
             var i: Int
             var size: Long
-            size = (args.size * Integer.BYTES + argHash.Allocated()).toLong()
+            size = (args.Num() * Integer.BYTES + argHash.Allocated()).toLong()
             i = 0
-            while (i < args.size) {
+            while (i < args.Num()) {
                 size += args[i].Size()
                 i++
             }
@@ -362,8 +362,7 @@ class Dict_h {
             } else {
                 kv.key = globalKeys.AllocString(key)
                 kv.value = globalValues.AllocString(value)
-                args.add(kv)
-                argHash.Add(argHash.GenerateKey("" + kv.GetKey(), false), args.indexOf(kv))
+                argHash.Add(argHash.GenerateKey("" + kv.GetKey(), false), args.Append(kv))
             }
         }
 
@@ -613,11 +612,11 @@ class Dict_h {
         }
 
         fun GetNumKeyVals(): Int {
-            return args.size
+            return args.Num()
         }
 
         fun GetKeyVal(index: Int): idKeyValue? {
-            return if (index >= 0 && index < args.size) {
+            return if (index >= 0 && index < args.Num()) {
                 args[index]
             } else null
         }
@@ -679,7 +678,7 @@ class Dict_h {
                 if (args[i].GetKey().Icmp(key) == 0) {
                     globalKeys.FreeString(args[i].key)
                     globalValues.FreeString(args[i].value)
-                    args.removeAt(i)
+                    args.RemoveIndex(i)
                     argHash.RemoveIndex(hash, i)
                     break
                 }
@@ -707,14 +706,14 @@ class Dict_h {
             len = prefix.length
             start = -1
             if (lastMatch != null) {
-                start = args.indexOf(lastMatch)
+                start = args.FindIndex(lastMatch)
                 assert(start >= 0)
                 if (start < 1) {
                     start = 0
                 }
             }
             i = start + 1
-            while (i < args.size) {
+            while (i < args.Num()) {
                 if (0 == args[i].GetKey().Icmpn(prefix, len)) {
                     return args[i]
                 }
@@ -742,9 +741,9 @@ class Dict_h {
 
         @Throws(idException::class)
         fun WriteToFileHandle(f: idFile) {
-            val c: Int = Lib.LittleLong(args.size)
+            val c: Int = Lib.LittleLong(args.Num())
             f.WriteInt(c) //, sizeof(c));
-            for (i in 0 until args.size) {    // don't loop on the swapped count use the original
+            for (i in 0 until args.Num()) {    // don't loop on the swapped count use the original
                 WriteString(args[i].GetKey().toString(), f)
                 WriteString(args[i].GetValue().toString(), f)
             }
@@ -772,18 +771,21 @@ class Dict_h {
             val ret = LongArray(1)
             var i: Int
             val n: Int
-            val sorted: kotlin.collections.ArrayList<idKeyValue> = ArrayList(args)
-            sorted.sortWith(KeyCompare())
-            CRC32.CRC32_InitChecksum(ret)
-            for (keyValue in sorted) {
+            val sorted: idList<idKeyValue> = idList(args)
+            sorted.Sort(KeyCompare())
+            n = sorted.Num()
+            CRC32_InitChecksum(ret)
+            i = 0
+            while (i < n) {
+                CRC32.CRC32_UpdateChecksum(ret, sorted.get(i).GetKey().c_str(), sorted.get(i).GetKey().Length())
                 CRC32.CRC32_UpdateChecksum(
-                    ret, keyValue.GetKey().toString().toCharArray(), keyValue.GetKey().Length()
+                    ret,
+                    sorted.get(i).GetValue().c_str(),
+                    sorted.get(i).GetValue().Length()
                 )
-                CRC32.CRC32_UpdateChecksum(
-                    ret, keyValue.GetValue().toString().toCharArray(), keyValue.GetValue().Length()
-                )
+                i++
             }
-            CRC32.CRC32_FinishChecksum(ret)
+            CRC32_FinishChecksum(ret)
             return ret[0]
         }
 

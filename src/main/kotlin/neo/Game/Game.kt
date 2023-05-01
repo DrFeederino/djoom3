@@ -947,7 +947,7 @@ object Game {
             val modelDef: idDeclModelDef?
             val MD5anim: idMD5Anim?
             var MD5joint: idMD5Joint
-            val MD5joints: ArrayList<idMD5Joint>
+            val MD5joints: Array<idMD5Joint>?
             val numMD5joints: Int
             val originalJoints: Array<idJointMat?>
             var parentNum: Int
@@ -998,7 +998,7 @@ object Game {
                 return null
             }
             MD5anim = anim.MD5Anim(0)
-            MD5joints = arrayListOf(*md5.GetJoints()!!)
+            MD5joints = md5.GetJoints()
             numMD5joints = md5.NumJoints()
 
             // setup a render entity
@@ -1114,7 +1114,7 @@ object Game {
                 }
                 jointNum = 0
                 while (jointNum < numMD5joints) {
-                    if (MD5joints[jointNum].name.Icmp(fb.jointName) == 0) {
+                    if (MD5joints!![jointNum].name.Icmp(fb.jointName) == 0) {
                         break
                     }
                     jointNum++
@@ -1133,7 +1133,7 @@ object Game {
             // apply joint modifications to the skeleton
             i = 1
             while (i < numMD5joints) {
-                MD5joint = MD5joints[i]
+                MD5joint = MD5joints!![i]
                 parentNum = MD5joints.indexOf(MD5joint.parent)
                 val parentAxis = originalJoints[parentNum]!!.ToMat3()
                 val localm = originalJoints[i]!!.ToMat3().times(parentAxis.Transpose())

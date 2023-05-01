@@ -985,10 +985,11 @@ class SysCvar {
          All game cvars should be defined here.
 
          */
-        val si_gameTypeArgs: Array<String> = arrayOf("singleplayer", "deathmatch", "Tourney", "Team DM", "Last Man")
+        val si_gameTypeArgs: Array<String?> =
+            arrayOf("singleplayer", "deathmatch", "Tourney", "Team DM", "Last Man", null)
         val si_gameType: idCVar = idCVar(
             "si_gameType",
-            si_gameTypeArgs[0],
+            si_gameTypeArgs[0]!!,
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_SERVERINFO or CVarSystem.CVAR_ARCHIVE,
             "game type - singleplayer, deathmatch, Tourney, Team DM or Last Man",
             si_gameTypeArgs,
@@ -1097,16 +1098,17 @@ class SysCvar {
         )
 
         //
-        val ui_skinArgs: Array<String> = arrayOf(
+        val ui_skinArgs: Array<String?> = arrayOf(
             "skins/characters/player/marine_mp",
             "skins/characters/player/marine_mp_red",
             "skins/characters/player/marine_mp_blue",
             "skins/characters/player/marine_mp_green",
-            "skins/characters/player/marine_mp_yellow"
+            "skins/characters/player/marine_mp_yellow",
+            null
         )
         val ui_skin: idCVar = idCVar(
             "ui_skin",
-            ui_skinArgs[0],
+            ui_skinArgs[0]!!,
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_USERINFO or CVarSystem.CVAR_ARCHIVE,
             "player skin",
             ui_skinArgs,
@@ -1121,26 +1123,26 @@ class SysCvar {
         //
         val g_version: idCVar =
             idCVar("g_version", gameVersion.string, CVarSystem.CVAR_GAME or CVarSystem.CVAR_ROM, "game version")
-        val si_readyArgs: Array<String> = arrayOf("Not Ready", "Ready")
+        val si_readyArgs: Array<String?> = arrayOf("Not Ready", "Ready", null)
         val ui_ready: idCVar = idCVar(
             "ui_ready",
-            si_readyArgs[0],
+            si_readyArgs[0]!!,
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_USERINFO,
             "player is ready to start playing",
             ArgCompletion_String(si_readyArgs)
         )
-        val si_spectateArgs: Array<String> = arrayOf("Play", "Spectate")
+        val si_spectateArgs: Array<String?> = arrayOf("Play", "Spectate", null)
         val ui_spectate: idCVar = idCVar(
             "ui_spectate",
-            si_spectateArgs[0],
+            si_spectateArgs[0]!!,
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_USERINFO,
             "play or spectate",
             ArgCompletion_String(si_spectateArgs)
         )
-        val ui_teamArgs: Array<String> = arrayOf("Red", "Blue")
+        val ui_teamArgs: Array<String?> = arrayOf("Red", "Blue", null)
         val ui_team: idCVar = idCVar(
             "ui_team",
-            ui_teamArgs[0],
+            ui_teamArgs[0]!!,
             CVarSystem.CVAR_GAME or CVarSystem.CVAR_USERINFO or CVarSystem.CVAR_ARCHIVE,
             "player team",
             ui_teamArgs,

@@ -3672,7 +3672,7 @@ object FileSystem_h {
 
             // print the current search paths
             Path_f.getInstance().run(CmdArgs.idCmdArgs())
-            idLib.common.Printf("file syastem initialized.\n")
+            idLib.common.Printf("file system initialized.\n")
             idLib.common.Printf("--------------------------------------\n")
         }
 
@@ -4569,7 +4569,7 @@ object FileSystem_h {
             //
             private val fs_debug: idCVar = idCVar(
                 "fs_debug",
-                "0",
+                "1",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER,
                 "",
                 0f,

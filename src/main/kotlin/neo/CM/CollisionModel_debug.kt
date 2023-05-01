@@ -37,7 +37,7 @@ class CollisionModel_debug {
             Material.CONTENTS_FLASHLIGHT_TRIGGER,  // 14
             0
         )
-        val cm_contentsNameByIndex: Array<String> = arrayOf(
+        val cm_contentsNameByIndex: Array<String?> = arrayOf(
             "none",  // 0
             "solid",  // 1
             "opaque",  // 2
@@ -53,7 +53,7 @@ class CollisionModel_debug {
             "aas_solid",  // 12
             "aas_obstacle",  // 13
             "flashlight_trigger",  // 14
-            //null
+            null
         )
         val cm_debugCollision: idCVar =
             idCVar(

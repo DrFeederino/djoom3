@@ -3839,7 +3839,7 @@ class Image {
             )
             var image_filter: idCVar = idCVar(
                 "image_filter",
-                Image_init.imageFilter[1],
+                Image_init.imageFilter[1]!!,
                 CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
                 "changes texture filtering on mipmapped images",
                 Image_init.imageFilter,

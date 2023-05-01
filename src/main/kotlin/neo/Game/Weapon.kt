@@ -2795,7 +2795,7 @@ object Weapon {
                             if (type == surfTypes_t.SURFTYPE_NONE) {
                                 type = surfTypes_t.values()[GetDefaultSurfaceType()]
                             }
-                            val materialType = Game_local.gameLocal.sufaceTypeNames[type.ordinal]
+                            val materialType = Game_local.gameLocal.sufaceTypeNames[type.ordinal]!!
 
                             // start impact sound based on material type
                             hitSound = meleeDef!!.dict.GetString(Str.va("snd_%s", materialType))

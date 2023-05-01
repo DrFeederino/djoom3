@@ -60,7 +60,7 @@ class AAS_local {
 
         // routing data
         private var areaCacheIndex // for each area in each cluster the travel times to all other areas in the cluster
-                : Array<Array<idRoutingCache>>? = null
+                : Array<Array<idRoutingCache?>>? = null
         private var areaCacheIndexSize // number of area cache entries
                 = 0
         private var areaTravelTimes // travel times through the areas
@@ -78,7 +78,7 @@ class AAS_local {
         private var numAreaTravelTimes // number of area travel times
                 = 0
         private var portalCacheIndex // for each area in the world the travel times from each portal
-                : Array<idRoutingCache>? = null
+                : Array<idRoutingCache?>? = null
         private var portalCacheIndexSize // number of portal cache entries
                 = 0
         private var portalUpdate // memory used to update the portal routing cache
@@ -1528,7 +1528,7 @@ class AAS_local {
             while (i < file!!.GetCluster(clusterNum).numReachableAreas) {
                 cache = areaCacheIndex!![clusterNum][i]
                 while (cache != null) {
-                    areaCacheIndex!![clusterNum][i] = cache.next!!
+                    areaCacheIndex!![clusterNum][i] = cache.next
                     UnlinkCache(cache)
                     cache = areaCacheIndex!![clusterNum][i]
                 }
@@ -1543,7 +1543,7 @@ class AAS_local {
             while (i < file!!.GetNumAreas()) {
                 cache = portalCacheIndex!![i]
                 while (cache != null) {
-                    portalCacheIndex!![i] = cache.next!!
+                    portalCacheIndex!![i] = cache.next
                     UnlinkCache(cache)
                     cache = portalCacheIndex!![i]
                 }
@@ -1989,7 +1989,7 @@ class AAS_local {
                 cache.prev = null
                 cache.next = portalCacheIndex!![areaNum]
                 if (portalCacheIndex!![areaNum] != null) {
-                    portalCacheIndex!![areaNum].prev = cache
+                    portalCacheIndex!![areaNum]!!.prev = cache
                 }
                 portalCacheIndex!![areaNum] = cache
                 UpdatePortalRoutingCache(cache)

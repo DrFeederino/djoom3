@@ -794,7 +794,7 @@ class DeviceContext {
         fun FindFont(name: String): Int {
             val c = fonts.Num()
             for (i in 0 until c) {
-                if (idStr.Icmp(name, fonts[i].name) == 0) {
+                if (idStr.Icmp(name, fonts[i]!!.name) == 0) {
                     return i
                 }
             }
@@ -804,8 +804,8 @@ class DeviceContext {
             fileName.Replace("fonts", Str.va("fonts/%s", fontLang))
             val fontInfo = fontInfoEx_t()
             val index = fonts.Append(fontInfo)
-            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index])) {
-                fonts[index].name =
+            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index]!!)) {
+                fonts[index]!!.name =
                     name //idStr.Copynz(fonts.oGet(index).name, name, fonts.oGet(index).name.length());
                 index
             } else {
@@ -1338,7 +1338,7 @@ class DeviceContext {
             var d2 = 0
 
             //
-            private val fonts: idList<fontInfoEx_t> = idList()
+            private val fonts: idList<fontInfoEx_t?> = idList()
         }
 
         init {

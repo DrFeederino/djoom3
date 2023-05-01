@@ -32,6 +32,8 @@ import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List.idList
+import neo.idlib.containers.idStrList
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
@@ -267,8 +269,8 @@ object Mover {
         }
 
         //
-        private val guiTargets: ArrayList<idEntityPtr<idEntity>> =
-            ArrayList<idEntityPtr<idEntity>>()
+        private val guiTargets: idList<idEntityPtr<idEntity>> =
+            idList(idEntityPtr<idEntity>().javaClass)
         protected var move: moveState_t
 
         //
@@ -395,9 +397,9 @@ object Mover {
             if (areaPortal > 0) {
                 savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
             }
-            savefile.WriteInt(guiTargets.size)
+            savefile.WriteInt(guiTargets.Num())
             i = 0
-            while (i < guiTargets.size) {
+            while (i < guiTargets.Num()) {
                 guiTargets[i].Save(savefile)
                 i++
             }
@@ -455,9 +457,9 @@ object Mover {
                 savefile.ReadInt(portalState)
                 Game_local.gameLocal.SetPortalState(areaPortal, portalState._val)
             }
-            guiTargets.clear()
+            guiTargets.Clear()
             savefile.ReadInt(num)
-            guiTargets.ensureCapacity(num._val)
+            guiTargets.SetNum(num._val)
             i = 0
             while (i < num._val) {
                 guiTargets[i].Restore(savefile)
@@ -631,7 +633,7 @@ object Mover {
 
         protected fun SetGuiStates(state: String) {
             var i: Int
-            if (guiTargets.size != 0) {
+            if (guiTargets.Num() != 0) {
                 SetGuiState("movestate", state)
             }
             i = 0
@@ -657,7 +659,7 @@ object Mover {
          */
         protected fun SetGuiState(key: String, `val`: String) {
             Game_local.gameLocal.Printf("Setting %s to %s\n", key, `val`)
-            for (i in 0 until guiTargets.size) {
+            for (i in 0 until guiTargets.Num()) {
                 val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
@@ -1541,7 +1543,7 @@ object Mover {
 
         private var controlsDisabled: Boolean
         private var currentFloor: Int
-        private val floorInfo: ArrayList<floorInfo_s>
+        private val floorInfo: idList<floorInfo_s>
         private var lastFloor: Int
         private var lastTouchTime: Int
         private var pendingFloor: Int
@@ -1568,7 +1570,7 @@ object Mover {
                 fi.floor = str.toString().toInt()
                 fi.door = idStr(spawnArgs.GetString(Str.va("floorDoor_%d", fi.floor)))
                 fi.pos.set(spawnArgs.GetVector(kv.GetKey().toString()))
-                floorInfo.add(fi)
+                floorInfo.Append(fi)
                 kv = spawnArgs.MatchPrefix("floorPos_", kv)
             }
             lastTouchTime = 0
@@ -1581,9 +1583,9 @@ object Mover {
         override fun Save(savefile: idSaveGame) {
             var i: Int
             savefile.WriteInt(TempDump.etoi(state))
-            savefile.WriteInt(floorInfo.size)
+            savefile.WriteInt(floorInfo.Num())
             i = 0
-            while (i < floorInfo.size) {
+            while (i < floorInfo.Num()) {
                 savefile.WriteVec3(floorInfo[i].pos)
                 savefile.WriteString(floorInfo[i].door.toString())
                 savefile.WriteInt(floorInfo[i].floor)
@@ -1609,7 +1611,7 @@ object Mover {
                 savefile.ReadVec3(floor.pos)
                 savefile.ReadString(floor.door)
                 floor.floor = savefile.ReadInt()
-                floorInfo.add(floor)
+                floorInfo.Append(floor)
                 i++
             }
             currentFloor = savefile.ReadInt()
@@ -1672,7 +1674,7 @@ object Mover {
         }
 
         fun GetFloorInfo(floor: Int): floorInfo_s? {
-            for (i in 0 until floorInfo.size) {
+            for (i in 0 until floorInfo.Num()) {
                 if (floorInfo[i].floor == floor) {
                     return floorInfo[i]
                 }
@@ -1782,7 +1784,7 @@ object Mover {
                     doorEnt.spawnArgs.Set("snd_close", "")
                     doorEnt.spawnArgs.Set("snd_opened", "")
                 }
-                for (i in 0 until floorInfo.size) {
+                for (i in 0 until floorInfo.Num()) {
                     val door = GetDoor(floorInfo[i].door.toString())
                     door?.SetCompanion(doorEnt)
                 }
@@ -1824,7 +1826,7 @@ object Mover {
         private fun CloseAllDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Close()
-            for (i in 0 until floorInfo.size) {
+            for (i in 0 until floorInfo.Num()) {
                 door = GetDoor(floorInfo[i].door.toString())
                 door?.Close()
             }
@@ -1833,7 +1835,7 @@ object Mover {
         private fun DisableAllDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(false)
-            for (i in 0 until floorInfo.size) {
+            for (i in 0 until floorInfo.Num()) {
                 door = GetDoor(floorInfo[i].door.toString())
                 door?.Enable(false)
             }
@@ -1842,7 +1844,7 @@ object Mover {
         private fun EnableProperDoors() {
             var door = GetDoor(spawnArgs.GetString("innerdoor"))
             door?.Enable(true)
-            for (i in 0 until floorInfo.size) {
+            for (i in 0 until floorInfo.Num()) {
                 if (floorInfo[i].floor == currentFloor) {
                     door = GetDoor(floorInfo[i].door.toString())
                     if (door != null) {
@@ -1895,7 +1897,7 @@ object Mover {
 
         init {
             state = elevatorState_t.INIT
-            floorInfo = ArrayList()
+            floorInfo = idList()
             currentFloor = 0
             pendingFloor = 0
             lastFloor = 0
@@ -1984,12 +1986,12 @@ object Mover {
         protected var   /*qhandle_t*/areaPortal // 0 = no portal
                 : Int
         protected var blocked: Boolean
-        protected var buddies: ArrayList<idStr> = ArrayList()
+        protected var buddies: idStrList
         protected var damage: Float
         protected var decelTime: Int
         protected var duration: Int
         protected var enabled: Boolean
-        protected val guiTargets: ArrayList<idEntityPtr<idEntity>>
+        protected val guiTargets: idList<idEntityPtr<idEntity>>
         protected var moveMaster: idMover_Binary?
         protected var move_thread: Int
         protected var moverState: moverState_t = moverState_t.MOVER_1TO2
@@ -2135,9 +2137,9 @@ object Mover {
             savefile.WriteBool(enabled)
             savefile.WriteInt(move_thread)
             savefile.WriteInt(updateStatus)
-            savefile.WriteInt(buddies.size)
+            savefile.WriteInt(buddies.size())
             i = 0
-            while (i < buddies.size) {
+            while (i < buddies.size()) {
                 savefile.WriteString(buddies[i])
                 i++
             }
@@ -2147,9 +2149,9 @@ object Mover {
                 savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
             }
             savefile.WriteBool(blocked)
-            savefile.WriteInt(guiTargets.size)
+            savefile.WriteInt(guiTargets.Num())
             i = 0
-            while (i < guiTargets.size) {
+            while (i < guiTargets.Num()) {
                 guiTargets[i].Save(savefile)
                 i++
             }
@@ -2196,9 +2198,9 @@ object Mover {
                 Game_local.gameLocal.SetPortalState(areaPortal, portalState)
             }
             blocked = savefile.ReadBool()
-            guiTargets.clear()
+            guiTargets.Clear()
             num = savefile.ReadInt()
-            guiTargets.ensureCapacity(num)
+            guiTargets.SetNum(num)
             i = 0
             while (i < num) {
                 guiTargets[i].Restore(savefile)
@@ -2417,12 +2419,12 @@ object Mover {
         }
 
         fun SetGuiStates(state: String) {
-            if (guiTargets.size != 0) {
+            if (guiTargets.Num() != 0) {
                 SetGuiState("movestate", state)
             }
             var mb = activateChain
             while (mb != null) {
-                if (mb.guiTargets.size != 0) {
+                if (mb.guiTargets.Num() != 0) {
                     mb.SetGuiState("movestate", state)
                 }
                 mb = mb.activateChain
@@ -2433,7 +2435,7 @@ object Mover {
             var i: Int
             val c: Int
             if (updateStatus == 2) {
-                c = buddies.size
+                c = buddies.size()
                 i = 0
                 while (i < c) {
                     val buddy = Game_local.gameLocal.FindEntity(buddies[i])
@@ -2653,7 +2655,7 @@ object Mover {
         protected fun SetGuiState(key: String, `val`: String) {
             var i: Int
             i = 0
-            while (i < guiTargets.size) {
+            while (i < guiTargets.Num()) {
                 val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
@@ -2804,7 +2806,7 @@ object Mover {
         }
 
         protected fun Event_InitGuiTargets() {
-            if (guiTargets.size != 0) {
+            if (guiTargets.Num() != 0) {
                 SetGuiState("movestate", guiBinaryMoverStates[moverState_t.MOVER_POS1.ordinal])
             }
         }
@@ -2841,12 +2843,13 @@ object Mover {
             enabled = false
             move_thread = 0
             updateStatus = 0
-            buddies = ArrayList()
+            buddies = idStrList()
             physicsObj = idPhysics_Parametric()
             areaPortal = 0
             blocked = false
             fl.networkSync = true
-            guiTargets = ArrayList()
+            guiTargets =
+                idList(idEntityPtr<idEntity>().javaClass)
         }
     }
 

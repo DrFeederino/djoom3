@@ -117,9 +117,9 @@ class sys_local {
 
         override fun DLL_GetFileName(baseName: String, dllName: Array<String>, maxLength: Int) {
             if (BuildDefines._WIN32) {
-                idStr.Companion.snPrintf(dllName, maxLength, "%s" + sys_public.CPUSTRING + ".dll", baseName)
+                idStr.snPrintf(dllName, maxLength, "%s" + sys_public.CPUSTRING + ".dll", baseName)
             } else if (BuildDefines.__linux__) {
-                idStr.Companion.snPrintf(dllName, maxLength, "%s" + sys_public.CPUSTRING + ".so", baseName)
+                idStr.snPrintf(dllName, maxLength, "%s" + sys_public.CPUSTRING + ".so", baseName)
                 // #elif defined( MACOS_X )
                 // idStr::snPrintf( dllName, maxLength, "%s" ".dylib", baseName );
             } else {
@@ -206,17 +206,17 @@ class sys_local {
         var timeString //= new char[MAX_STRING_CHARS];
                 : String? = null
         var sysLocal: idSysLocal = idSysLocal()
-        val sysLanguageNames: Array<String> = arrayOf(
+        val sysLanguageNames: Array<String?> = arrayOf(
             "english", "spanish", "italian", "german", "french", "russian",
-            "polish", "korean", "japanese", "chinese"
+            "polish", "korean", "japanese", "chinese", null
         )
         val sys_lang: idCVar = idCVar(
             "sys_lang",
             "english",
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
             "",
-            Companion.sysLanguageNames,
-            ArgCompletion_String(Companion.sysLanguageNames)
+            sysLanguageNames,
+            ArgCompletion_String(sysLanguageNames)
         )
 
         fun Sys_TimeStampToStr(   /*ID_TIME_T*/timeStamp: Long): String {

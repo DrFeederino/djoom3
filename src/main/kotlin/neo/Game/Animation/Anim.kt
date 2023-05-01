@@ -15,6 +15,7 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.HashIndex.idHashIndex
+import neo.idlib.containers.List
 import neo.idlib.containers.idStrList
 import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.math.Matrix.idMat3
@@ -119,8 +120,8 @@ object Anim {
 
         // union {
         var soundShader: idSoundShader? = null
-        val string: idStr = idStr()
-        var type: frameCommandType_t = frameCommandType_t.FC_SCRIPTFUNCTION // };
+        var string: idStr = idStr()
+        var type: frameCommandType_t = frameCommandType_t.values()[0] // };
     }
 
     class animFlags_t {
@@ -142,10 +143,10 @@ object Anim {
      ==============================================================================================
      */
     class idMD5Anim {
-        private val baseFrame: ArrayList<idJointQuat>
-        private val bounds: ArrayList<idBounds> = ArrayList()
-        private val componentFrames: ArrayList<Float>
-        private val jointInfo: ArrayList<jointAnimInfo_t> = ArrayList()
+        private val baseFrame: List.idList<idJointQuat>
+        private val bounds: List.idList<idBounds> = List.idList()
+        private val componentFrames: List.idList<Float>
+        private val jointInfo: List.idList<jointAnimInfo_t> = List.idList()
         private val name: idStr
         private val totaldelta: idVec3
         private var animLength = 0
@@ -163,10 +164,10 @@ object Anim {
             animLength = 0
             name.set("")
             totaldelta.Zero()
-            jointInfo.clear()
-            bounds.clear()
-            componentFrames.clear()
-            baseFrame.clear()
+
+            jointInfo.Clear()
+            bounds.Clear()
+            componentFrames.Clear()
         }
 
         fun Reload(): Boolean {
@@ -176,7 +177,7 @@ object Anim {
         }
 
         fun  /*size_t*/Allocated(): Int {
-            return bounds.size + jointInfo.size + componentFrames.size + name.Allocated()
+            return bounds.Allocated() + jointInfo.Allocated() + componentFrames.Allocated() + name.Allocated()
         }
 
         @Throws(idException::class)
@@ -232,19 +233,16 @@ object Anim {
             }
 
             // parse the hierarchy
-//            jointInfo.SetGranularity(1);
-//            jointInfo.SetNum(numJoints);
+
+            // parse the hierarchy
+            jointInfo.SetGranularity(1)
+            jointInfo.SetNum(numJoints)
             parser.ExpectTokenString("hierarchy")
             parser.ExpectTokenString("{")
             i = 0
             while (i < numJoints) {
                 parser.ReadToken(token)
-                val joint = jointAnimInfo_t() //jointInfo[ i ].nameIndex = animationLib.JointIndex( token );
-                if (i >= jointInfo.size) {
-                    jointInfo.add(i, joint)
-                } else {
-                    jointInfo[i] = joint
-                }
+                val joint: jointAnimInfo_t = jointInfo.set(i, jointAnimInfo_t())
                 joint.nameIndex = Game_local.animationLib.JointIndex(token.toString())
 
                 // parse parent num
@@ -272,18 +270,15 @@ object Anim {
             parser.ExpectTokenString("}")
 
             // parse bounds
+
+            // parse bounds
             parser.ExpectTokenString("bounds")
             parser.ExpectTokenString("{")
-            //            bounds.SetGranularity(1);
-//            bounds.SetNum(numFrames);
+            bounds.SetGranularity(1)
+            bounds.SetNum(numFrames)
             i = 0
             while (i < numFrames) {
-                val bound = idBounds()
-                if (i >= bounds.size) {
-                    bounds.add(i, bound)
-                } else {
-                    bounds[i] = bound
-                }
+                val bound: idBounds = bounds.set(i, idBounds())
                 parser.Parse1DMatrix(3, bound[0])
                 parser.Parse1DMatrix(3, bound[1])
                 i++
@@ -291,29 +286,29 @@ object Anim {
             parser.ExpectTokenString("}")
 
             // parse base frame
-//            baseFrame.SetGranularity(1);
-//            baseFrame.SetNum(numJoints);
+
+            // parse base frame
+            baseFrame.SetGranularity(1)
+            baseFrame.SetNum(numJoints)
             parser.ExpectTokenString("baseframe")
             parser.ExpectTokenString("{")
             i = 0
             while (i < numJoints) {
                 val q = idCQuat()
-                val frame = idJointQuat()
-                if (i >= baseFrame.size) {
-                    baseFrame.add(i, frame)
-                } else {
-                    baseFrame[i] = frame
-                }
+                val frame: idJointQuat = baseFrame.set(i, idJointQuat())
                 parser.Parse1DMatrix(3, frame.t)
                 parser.Parse1DMatrix(3, q)
-                baseFrame[i].q.set(q.ToQuat())
+                frame.q.set(q.ToQuat())
                 i++
             }
             parser.ExpectTokenString("}")
 
             // parse frames
-//            componentFrames.SetGranularity(1);
-//            componentFrames.SetNum(numAnimatedComponents * numFrames);
+
+            // parse frames
+            componentFrames.SetGranularity(1)
+            componentFrames.SetNum(numAnimatedComponents * numFrames)
+
             var c_ptr = 0
             i = 0
             while (i < numFrames) {
@@ -325,11 +320,7 @@ object Anim {
                 parser.ExpectTokenString("{")
                 j = 0
                 while (j < numAnimatedComponents) {
-                    if (c_ptr >= componentFrames.size) {
-                        componentFrames.add(c_ptr, parser.ParseFloat())
-                    } else {
-                        componentFrames[c_ptr] = parser.ParseFloat()
-                    }
+                    componentFrames[c_ptr] = parser.ParseFloat()
                     j++
                     c_ptr++
                 }
@@ -339,11 +330,14 @@ object Anim {
 
 
             // get total move delta
+
+
+            // get total move delta
             if (0 == numAnimatedComponents) {
                 totaldelta.Zero()
             } else {
                 c_ptr = jointInfo[0].firstComponent
-                if (jointInfo[0].animBits and ANIM_TX != 0) {
+                if (jointInfo[0].animBits and ANIM_TX !== 0) {
                     i = 0
                     while (i < numFrames) {
                         val index = c_ptr + numAnimatedComponents * i
@@ -355,7 +349,7 @@ object Anim {
                 } else {
                     totaldelta.x = 0.0f
                 }
-                if (jointInfo[0].animBits and ANIM_TY != 0) {
+                if (jointInfo[0].animBits and ANIM_TY !== 0) {
                     i = 0
                     while (i < numFrames) {
                         val index = c_ptr + numAnimatedComponents * i
@@ -367,7 +361,7 @@ object Anim {
                 } else {
                     totaldelta.y = 0.0f
                 }
-                if (jointInfo[0].animBits and ANIM_TZ != 0) {
+                if (jointInfo[0].animBits and ANIM_TZ !== 0) {
                     i = 0
                     while (i < numFrames) {
                         val index = c_ptr + numAnimatedComponents * i
@@ -380,6 +374,8 @@ object Anim {
                 }
             }
             baseFrame[0].t.Zero()
+
+            // we don't count last frame because it would cause a 1 frame pause at the end
 
             // we don't count last frame because it would cause a 1 frame pause at the end
             animLength = ((numFrames - 1) * 1000 + frameRate - 1) / frameRate
@@ -408,12 +404,12 @@ object Anim {
         fun CheckModelHierarchy(model: idRenderModel) {
             var jointNum: Int
             var parent: Int
-            if (jointInfo.size != model.NumJoints()) {
+            if (jointInfo.Num() != model.NumJoints()) {
                 idGameLocal.Error("Model '%s' has different # of joints than anim '%s'", model.Name(), name)
             }
             val modelJoints = model.GetJoints()
             var i: Int = 0
-            while (i < jointInfo.size) {
+            while (i < jointInfo.Num()) {
                 jointNum = jointInfo[i].nameIndex
                 if (modelJoints!![i].name.toString() != Game_local.animationLib.JointName(jointNum)) {
                     idGameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name)
@@ -451,20 +447,27 @@ object Anim {
             var blendPtr: idJointQuat
 
             // copy the baseframe
-            System.arraycopy(baseFrame.toTypedArray(), 0, joints, 0, baseFrame.size)
+
+            // copy the baseframe
+            Simd.SIMDProcessor.Memcpy(
+                joints,
+                baseFrame.getList(Array<idJointQuat>::class.java)!!,
+                baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/
+            )
+
             if (0 == numAnimatedComponents) {
                 // just use the base frame
                 return
             }
-            val blendJoints: Array<idJointQuat> = Array(baseFrame.size) { idJointQuat() }
-            val lerpIndex: IntArray = IntArray(baseFrame.size)
+            val blendJoints: Array<idJointQuat> = Array(baseFrame.Num()) { idJointQuat() }
+            val lerpIndex: IntArray = IntArray(baseFrame.Num())
             var numLerpJoints: Int = 0
 
 //	frame1 = componentFrames.Ptr()   ;
 //	frame2 = componentFrames.Ptr();
             val f1_ptr: Int = frame.frame1 * numAnimatedComponents
             val f2_ptr: Int = frame.frame2 * numAnimatedComponents
-            val jointframe2: Array<Float> = componentFrames.toTypedArray()
+            val jointframe2: Array<Float> = componentFrames.getList(Array<Float>::class.java)!!
             jointframe1 = jointframe2
             var i: Int = 0
             while (i < numIndexes) {
@@ -626,8 +629,11 @@ object Anim {
             var infoPtr: jointAnimInfo_t
 
             // copy the baseframe
-            //SIMDProcessor.Memcpy(joints, baseFrame, baseFrame.size() /* sizeof( baseFrame[ 0 ] )*/);
-            System.arraycopy(baseFrame.toTypedArray(), 0, joints, 0, baseFrame.size)
+            Simd.SIMDProcessor.Memcpy(
+                joints,
+                baseFrame.getList(Array<idJointQuat>::class.java)!!,
+                baseFrame.Num() /* sizeof( baseFrame[ 0 ] )*/
+            );
             if (framenum == 0 || 0 == numAnimatedComponents) {
                 // just use the base frame
                 return
@@ -642,7 +648,7 @@ object Anim {
                 infoPtr = jointInfo[j]
                 animBits = infoPtr.animBits
                 if (animBits != 0) {
-                    jointframe = componentFrames.toTypedArray()
+                    jointframe = componentFrames.getList(Array<Float>::class.java)!!
                     jf_ptr = f_ptr + infoPtr.firstComponent
                     if (animBits and (ANIM_TX or ANIM_TY or ANIM_TZ) != 0) {
                         if (animBits and ANIM_TX != 0) {
@@ -754,9 +760,9 @@ object Anim {
                 return
             }
             ConvertTimeToFrame(time, cyclecount, frame)
-            val componentPtr1 = componentFrames.toTypedArray()
+            val componentPtr1 = componentFrames.getList(Array<Float>::class.java)!!
             var c1_ptr: Int = numAnimatedComponents * frame.frame1 + jointInfo[0].firstComponent
-            val componentPtr2 = componentFrames.toTypedArray()
+            val componentPtr2 = componentFrames.getList(Array<Float>::class.java)!!
             var c2_ptr: Int = numAnimatedComponents * frame.frame2 + jointInfo[0].firstComponent
             if (jointInfo[0].animBits and ANIM_TX != 0) {
                 offset.x = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp
@@ -785,9 +791,9 @@ object Anim {
                 return
             }
             ConvertTimeToFrame(time, cyclecount, frame)
-            val jointframe1 = componentFrames.toTypedArray()
+            val jointframe1 = componentFrames.getList(Array<Float>::class.java)!!
             var j1_ptr: Int = numAnimatedComponents * frame.frame1 + jointInfo[0].firstComponent
-            val jointframe2 = componentFrames.toTypedArray()
+            val jointframe2 = componentFrames.getList(Array<Float>::class.java)!!
             var j2_ptr: Int = numAnimatedComponents * frame.frame2 + jointInfo[0].firstComponent
             if (animBits and ANIM_TX != 0) {
                 j1_ptr++
@@ -890,9 +896,9 @@ object Anim {
             // origin position
             offset.set(baseFrame[0].t)
             if (jointInfo[0].animBits and (ANIM_TX or ANIM_TY or ANIM_TZ) != 0) {
-                val componentPtr1 = componentFrames.toTypedArray()
+                val componentPtr1 = componentFrames.getList(Array<Float>::class.java)!!
                 c1_ptr = numAnimatedComponents * frame.frame1 + jointInfo[0].firstComponent
-                val componentPtr2 = componentFrames.toTypedArray()
+                val componentPtr2 = componentFrames.getList(Array<Float>::class.java)!!
                 c2_ptr = numAnimatedComponents * frame.frame2 + jointInfo[0].firstComponent
                 if (jointInfo[0].animBits and ANIM_TX != 0) {
                     offset.x = componentPtr1[c1_ptr] * frame.frontlerp + componentPtr2[c2_ptr] * frame.backlerp
@@ -914,8 +920,8 @@ object Anim {
         //
         //
         init {
-            baseFrame = ArrayList()
-            componentFrames = ArrayList()
+            baseFrame = List.idList()
+            componentFrames = List.idList()
             name = idStr()
             totaldelta = idVec3()
         }
@@ -923,7 +929,7 @@ object Anim {
 
     class idAFPoseJointMod {
         val origin: idVec3
-        val axis: idMat3
+        var axis: idMat3
         var mod: AFJointModType_t = AFJointModType_t.AF_JOINTMOD_AXIS
 
         //

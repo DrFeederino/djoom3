@@ -163,7 +163,7 @@ object MapFile {
     }
 
     class idMapBrush : idMapPrimitive() {
-        protected val sides: ArrayList<idMapBrushSide>
+        protected val sides: idList<idMapBrushSide>
         protected var numSides = 0
         fun Write(fp: idFile, primitiveNum: Int, origin: idVec3): Boolean {
             var i: Int
@@ -205,12 +205,11 @@ object MapFile {
         }
 
         fun GetNumSides(): Int {
-            return sides.size
+            return sides.Num()
         }
 
         fun AddSide(side: idMapBrushSide): Int {
-            sides.add(side)
-            return sides.indexOf(side)
+            return sides.Append(side)
         }
 
         fun GetSide(i: Int): idMapBrushSide {
@@ -433,12 +432,13 @@ object MapFile {
         //
         init {
             type = TYPE_BRUSH
-            sides = ArrayList(8)
+            sides = idList()
+            sides.Resize(8, 4)
         }
     }
 
     class idMapPatch : idMapPrimitive {
-        protected val verts: ArrayList<idDrawVert> = ArrayList() // vertices
+        protected val verts: idList<idDrawVert> = idList() // vertices
         protected var expanded // true if vertices are spaced out
                 = false
         protected var explicitSubdivisions = false
@@ -482,10 +482,7 @@ object MapFile {
             width = height
             maxWidth = maxPatchWidth
             maxHeight = maxPatchHeight
-            //verts.ensureCapacity(maxWidth * maxHeight)
-            for (i in 0 until maxWidth * maxHeight) {
-                verts.add(idDrawVert())
-            }
+            verts.SetNum(maxWidth * maxHeight)
             expanded = false
         }
 
@@ -607,7 +604,7 @@ object MapFile {
             }
             width = patchWidth
             height = patchHeight
-            verts.ensureCapacity(width * height)
+            verts.SetNum(width * height, false)
         }
 
         companion object {
@@ -679,8 +676,9 @@ object MapFile {
                         }
 
 //                    vert = patch.oGet(i * patch.GetWidth() + j);
-                        patch.verts.add(i * patch.GetWidth() + j, idDrawVert())
-                        vert = patch.verts[i * patch.GetWidth() + j]
+
+//                    vert = patch.oGet(i * patch.GetWidth() + j);
+                        vert = patch.verts.set(i * patch.GetWidth() + j, idDrawVert())
                         vert.xyz[0] = v[0] - origin[0]
                         vert.xyz[1] = v[1] - origin[1]
                         vert.xyz[2] = v[2] - origin[2]

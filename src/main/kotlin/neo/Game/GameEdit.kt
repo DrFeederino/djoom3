@@ -31,6 +31,7 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.List
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Vector.idVec3
@@ -403,12 +404,12 @@ object GameEdit {
 
     class idEditEntities {
         private var nextSelectTime: Int
-        private val selectableEntityClasses: ArrayList<selectedTypeInfo_s>
-        private val selectedEntities: ArrayList<idEntity>
+        private val selectableEntityClasses: List.idList<selectedTypeInfo_s>
+        private val selectedEntities: List.idList<idEntity>
         fun SelectEntity(origin: idVec3, dir: idVec3, skip: idEntity?): Boolean {
             val end = idVec3()
             var ent: idEntity?
-            if (0 == SysCvar.g_editEntityMode.GetInteger() || selectableEntityClasses.size == 0) {
+            if (0 == SysCvar.g_editEntityMode.GetInteger() || selectableEntityClasses.Num() == 0) {
                 return false
             }
             if (Game_local.gameLocal.time < nextSelectTime) {
@@ -417,7 +418,7 @@ object GameEdit {
             nextSelectTime = Game_local.gameLocal.time + 300
             end.set(origin.plus(dir.times(4096.0f)))
             ent = null
-            for (i in 0 until selectableEntityClasses.size) {
+            for (i in 0 until selectableEntityClasses.Num()) {
                 ent = Game_local.gameLocal.FindTraceEntity(origin, end, selectableEntityClasses[i].typeInfo!!, skip)
                 if (ent != null) {
                     break
@@ -437,25 +438,25 @@ object GameEdit {
 
         fun AddSelectedEntity(ent: idEntity) {
             ent.fl.selected = true
-            selectedEntities.addUnique(ent)
+            selectedEntities.AddUnique(ent)
         }
 
         fun RemoveSelectedEntity(ent: idEntity?) {
-            if (selectedEntities.indexOf(ent) !== -1) {
-                selectedEntities.remove(ent)
+            if (selectedEntities.Find(ent) !== Integer.valueOf(0)) {
+                selectedEntities.Remove(ent!!)
             }
         }
 
         fun ClearSelectedEntities() {
             var i: Int
             val count: Int
-            count = selectedEntities.size
+            count = selectedEntities.Num()
             i = 0
             while (i < count) {
                 selectedEntities[i].fl.selected = false
                 i++
             }
-            selectedEntities.clear()
+            selectedEntities.Clear()
         }
 
         fun DisplayEntities() {
@@ -463,46 +464,46 @@ object GameEdit {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer())) {
                 return
             }
-            selectableEntityClasses.clear()
+            selectableEntityClasses.Clear()
             val sit = selectedTypeInfo_s()
             when (SysCvar.g_editEntityMode.GetInteger()) {
                 1 -> {
                     sit.typeInfo = idLight::class.java
                     sit.textKey.set("texture")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 2 -> {
                     sit.typeInfo = idSound::class.java
                     sit.textKey.set("s_shader")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                     sit.typeInfo = idLight::class.java
                     sit.textKey.set("texture")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 3 -> {
                     sit.typeInfo = idAFEntity_Base::class.java
                     sit.textKey.set("articulatedFigure")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 4 -> {
                     sit.typeInfo = idFuncEmitter::class.java
                     sit.textKey.set("model")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 5 -> {
                     sit.typeInfo = idAI::class.java
                     sit.textKey.set("name")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 6 -> {
                     sit.typeInfo = idEntity::class.java
                     sit.textKey.set("name")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 7 -> {
                     sit.typeInfo = idEntity::class.java
                     sit.textKey.set("model")
-                    selectableEntityClasses.add(sit)
+                    selectableEntityClasses.Append(sit)
                 }
                 else -> return
             }
@@ -531,7 +532,7 @@ object GameEdit {
                         drawArrows = true
                     }
                     val ss = DeclManager.declManager.FindSound(ent.spawnArgs.GetString(textKey.toString()))!!
-                    if (ss.HasDefaultSound() || ss.base.GetState() == declState_t.DS_DEFAULTED) {
+                    if (ss.HasDefaultSound() || ss.base!!.GetState() == declState_t.DS_DEFAULTED) {
                         color.set(1.0f, 0.0f, 1.0f, 1.0f)
                     }
                 } else if (ent.GetType() == idFuncEmitter::class.java) {
@@ -624,7 +625,7 @@ object GameEdit {
             color: idVec4? = null /* = NULL*/,
             text: idStr? = null /*= NULL*/
         ): Boolean {
-            for (i in 0 until selectableEntityClasses.size) {
+            for (i in 0 until selectableEntityClasses.Num()) {
                 if (ent.GetType() == selectableEntityClasses[i].typeInfo) {
                     text?.set(selectableEntityClasses[i].textKey)
                     if (color != null) {
@@ -647,8 +648,8 @@ object GameEdit {
         //
         //
         init {
-            selectableEntityClasses = ArrayList()
-            selectedEntities = ArrayList()
+            selectableEntityClasses = List.idList()
+            selectedEntities = List.idList()
             nextSelectTime = 0
         }
     }

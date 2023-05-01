@@ -831,7 +831,7 @@ object Light {
                 return
             }
             i = 0
-            while (i < targets.size) {
+            while (i < targets.Num()) {
                 targetEnt = targets[i].GetEntity()
                 if (targetEnt != null && targetEnt is idLight) {
                     val light = targetEnt

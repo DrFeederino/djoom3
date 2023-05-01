@@ -37,6 +37,7 @@ import neo.idlib.Dict_h.idKeyValue
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.containers.List
 import neo.idlib.math.Angles
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Extrapolate
@@ -100,7 +101,7 @@ class Anim_Testmodel {
         private var animTime = 0
 
         //
-        private val copyJoints: ArrayList<copyJoints_t> = ArrayList()
+        private val copyJoints: List.idList<copyJoints_t> = List.idList()
         private val customAnim: idAnim? = null
         private var frame = 0
         private val head: idEntityPtr<idEntity?>? = null
@@ -200,7 +201,7 @@ class Anim_Testmodel {
                             kv = spawnArgs.MatchPrefix("copy_joint", kv)
                             continue
                         }
-                        copyJoints.add(copyJoint)
+                        copyJoints.Append(copyJoint)
                         kv = spawnArgs.MatchPrefix("copy_joint", kv)
                     }
                 }
@@ -662,7 +663,7 @@ class Anim_Testmodel {
                 if (headAnimator != null) {
                     // copy the animation from the body to the head
                     i = 0
-                    while (i < copyJoints.size) {
+                    while (i < copyJoints.Num()) {
                         if (copyJoints[i].mod == jointModTransform_t.JOINTMOD_WORLD_OVERRIDE) {
                             val mat = head!!.GetEntity()!!.GetPhysics().GetAxis().Transpose()
                             GetJointWorldTransform(

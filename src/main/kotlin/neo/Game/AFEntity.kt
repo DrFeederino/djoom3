@@ -49,6 +49,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List.idList
 import neo.idlib.geometry.JointTransform.idJointMat
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Math_h
@@ -119,10 +120,10 @@ object AFEntity {
     open class idMultiModelAF : idEntity() {
         //        public CLASS_PROTOTYPE(idMultiModelAF );//TODO:include this?
         protected var physicsObj: idPhysics_AF = idPhysics_AF()
-        private val modelDefHandles: ArrayList<Int> = ArrayList()
+        private val modelDefHandles: idList<Int> = idList()
 
         //
-        private val modelHandles: ArrayList<idRenderModel> = ArrayList()
+        private val modelHandles: idList<idRenderModel?> = idList()
 
         //
         //
@@ -146,7 +147,7 @@ object AFEntity {
             }
             BecomeInactive(Entity.TH_UPDATEVISUALS)
             i = 0
-            while (i < modelHandles.size) {
+            while (i < modelHandles.Num()) {
                 if (null == modelHandles[i]) {
                     i++
                     continue
@@ -167,9 +168,9 @@ object AFEntity {
         }
 
         protected fun SetModelForId(id: Int, modelName: String) {
-            modelHandles.ensureCapacity(id + 1)
-            modelDefHandles.ensureCapacity(id + 1)
-            modelHandles[id] = ModelManager.renderModelManager.FindModel(modelName)!!
+            modelHandles.AssureSize(id + 1, null)
+            modelDefHandles.AssureSize(id + 1, -1)
+            modelHandles[id] = ModelManager.renderModelManager.FindModel(modelName)
         }
 
         override fun CreateInstance(): idClass {
@@ -1282,8 +1283,8 @@ object AFEntity {
             if (combatModel != null) {
                 combatModel!!.Unlink()
             }
-            headEnt = head.GetEntity() as idAFAttachment?
-            headEnt!!.UnlinkCombat()
+            headEnt = head.GetEntity()
+            headEnt?.UnlinkCombat()
         }
 
         override fun Gib(dir: idVec3, damageDefName: String) {
@@ -1437,7 +1438,7 @@ object AFEntity {
      ===============================================================================
      */
     class idAFEntity_VehicleSimple : idAFEntity_Vehicle() {
-        protected val suspension: ArrayList<idAFConstraint_Suspension> = ArrayList<idAFConstraint_Suspension>(4)
+        protected val suspension: Array<idAFConstraint_Suspension?> = arrayOfNulls(4)
         protected val wheelAngles: FloatArray = FloatArray(4)
 
         //
@@ -1475,21 +1476,21 @@ object AFEntity {
                 GetAnimator().GetJointTransform(wheelJoints[i], 0, origin, axis)
                 origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
                 suspension[i] = idAFConstraint_Suspension()
-                suspension[i].Setup(
+                suspension[i]!!.Setup(
                     Str.va("suspension%d", i),
                     af.GetPhysics().GetBody(0),
                     origin,
                     af.GetPhysics().GetAxis(0),
                     wheelModel
                 )
-                suspension[i].SetSuspension(
+                suspension[i]!!.SetSuspension(
                     SysCvar.g_vehicleSuspensionUp.GetFloat(),
                     SysCvar.g_vehicleSuspensionDown.GetFloat(),
                     SysCvar.g_vehicleSuspensionKCompress.GetFloat(),
                     SysCvar.g_vehicleSuspensionDamping.GetFloat(),
                     SysCvar.g_vehicleTireFriction.GetFloat()
                 )
-                af.GetPhysics().AddConstraint(suspension[i])
+                af.GetPhysics().AddConstraint(suspension[i]!!)
                 i++
             }
 
@@ -1524,26 +1525,26 @@ object AFEntity {
 
 
                     // front wheel drive
-                    suspension[i].EnableMotor(velocity != 0f)
-                    suspension[i].SetMotorVelocity(velocity)
-                    suspension[i].SetMotorForce(force)
+                    suspension[i]!!.EnableMotor(velocity != 0f)
+                    suspension[i]!!.SetMotorVelocity(velocity)
+                    suspension[i]!!.SetMotorForce(force)
 
                     // update the wheel steering
-                    suspension[i].SetSteerAngle(steerAngle)
+                    suspension[i]!!.SetSteerAngle(steerAngle)
                     i++
                 }
 
                 // adjust wheel velocity for better steering because there are no differentials between the wheels
                 if (steerAngle < 0) {
-                    suspension[0].SetMotorVelocity(velocity * 0.5f)
+                    suspension[0]!!.SetMotorVelocity(velocity * 0.5f)
                 } else if (steerAngle > 0) {
-                    suspension[1].SetMotorVelocity(velocity * 0.5f)
+                    suspension[1]!!.SetMotorVelocity(velocity * 0.5f)
                 }
 
                 // update suspension with latest cvar settings
                 i = 0
                 while (i < 4) {
-                    suspension[i].SetSuspension(
+                    suspension[i]!!.SetSuspension(
                         SysCvar.g_vehicleSuspensionUp.GetFloat(),
                         SysCvar.g_vehicleSuspensionDown.GetFloat(),
                         SysCvar.g_vehicleSuspensionKCompress.GetFloat(),
@@ -1560,7 +1561,7 @@ object AFEntity {
                 i = 0
                 while (i < 4) {
                     val body = af.GetPhysics().GetBody(0)
-                    origin.set(suspension[i].GetWheelOrigin())
+                    origin.set(suspension[i]!!.GetWheelOrigin())
                     velocity = body!!.GetPointVelocity(origin).times(body.GetWorldAxis()[0])
                     wheelAngles[i] += velocity * Math_h.MS2SEC(idGameLocal.msec.toFloat()) / wheelRadius
 
@@ -1630,11 +1631,6 @@ object AFEntity {
 
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSimple );
-        init {
-            var i: Int
-            i = 0
-            suspension.clear()
-        }
     }
 
     /*
@@ -1643,13 +1639,13 @@ object AFEntity {
      ===============================================================================
      */
     class idAFEntity_VehicleFourWheels : idAFEntity_Vehicle() {
-        protected val steering: ArrayList<idAFConstraint_Hinge> = ArrayList<idAFConstraint_Hinge>(2)
+        protected val steering: Array<idAFConstraint_Hinge?> = arrayOfNulls(2)
 
         //
         //
         protected val wheelAngles: FloatArray = FloatArray(4)
         protected val wheelJoints: IntArray = IntArray(4)
-        protected val wheels: ArrayList<idAFBody> = ArrayList<idAFBody>(4)
+        protected val wheels: Array<idAFBody?> = arrayOfNulls(4)
         override fun Spawn() {
             super.Spawn()
             var i: Int
@@ -1658,13 +1654,13 @@ object AFEntity {
             var steeringHingeName: String?
             i = 0
             while (i < 4) {
-                wheelBodyName = spawnArgs.GetString(wheelBodyKeys.get(i), "")
+                wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "")
                 //		if ( !wheelBodyName[0] ) {
                 if (wheelBodyName.isEmpty()) {
                     idGameLocal.Error(
                         "idAFEntity_VehicleFourWheels '%s' no '%s' specified",
                         name,
-                        wheelBodyKeys.get(i)
+                        wheelBodyKeys[i]
                     )
                 }
                 wheels[i] = af.GetPhysics().GetBody(wheelBodyName)!!
@@ -1675,13 +1671,13 @@ object AFEntity {
                         wheelBodyName
                     )
                 }
-                wheelJointName = spawnArgs.GetString(wheelJointKeys.get(i), "")
+                wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")
                 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
                     idGameLocal.Error(
                         "idAFEntity_VehicleFourWheels '%s' no '%s' specified",
                         name,
-                        wheelJointKeys.get(i)
+                        wheelJointKeys[i]
                     )
                 }
                 wheelJoints[i] = animator.GetJointHandle(wheelJointName)
@@ -1696,13 +1692,13 @@ object AFEntity {
             }
             i = 0
             while (i < 2) {
-                steeringHingeName = spawnArgs.GetString(steeringHingeKeys.get(i), "")
+                steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "")
                 //		if ( !steeringHingeName[0] ) {
                 if (steeringHingeName.isEmpty()) {
                     idGameLocal.Error(
                         "idAFEntity_VehicleFourWheels '%s' no '%s' specified",
                         name,
-                        steeringHingeKeys.get(i)
+                        steeringHingeKeys[i]
                     )
                 }
                 steering[i] = af.GetPhysics().GetConstraint(steeringHingeName) as idAFConstraint_Hinge
@@ -1743,24 +1739,24 @@ object AFEntity {
                 // update the wheel motor force
                 i = 0
                 while (i < 2) {
-                    wheels[2 + i].SetContactMotorVelocity(velocity)
-                    wheels[2 + i].SetContactMotorForce(force)
+                    wheels[2 + i]!!.SetContactMotorVelocity(velocity)
+                    wheels[2 + i]!!.SetContactMotorForce(force)
                     i++
                 }
 
                 // adjust wheel velocity for better steering because there are no differentials between the wheels
                 if (steerAngle < 0) {
-                    wheels[2].SetContactMotorVelocity(velocity * 0.5f)
+                    wheels[2]!!.SetContactMotorVelocity(velocity * 0.5f)
                 } else if (steerAngle > 0) {
-                    wheels[3].SetContactMotorVelocity(velocity * 0.5f)
+                    wheels[3]!!.SetContactMotorVelocity(velocity * 0.5f)
                 }
 
                 // update the wheel steering
-                steering[0].SetSteerAngle(steerAngle)
-                steering[1].SetSteerAngle(steerAngle)
+                steering[0]!!.SetSteerAngle(steerAngle)
+                steering[1]!!.SetSteerAngle(steerAngle)
                 i = 0
                 while (i < 2) {
-                    steering[i].SetSteerSpeed(3.0f)
+                    steering[i]!!.SetSteerSpeed(3.0f)
                     i++
                 }
 
@@ -1777,13 +1773,13 @@ object AFEntity {
                 i = 0
                 while (i < 4) {
                     if (force == 0f) {
-                        velocity = wheels[i].GetLinearVelocity().times(wheels[i].GetWorldAxis()[0])
+                        velocity = wheels[i]!!.GetLinearVelocity().times(wheels[i]!!.GetWorldAxis()[0])
                     }
                     wheelAngles[i] += velocity * Math_h.MS2SEC(idGameLocal.msec.toFloat()) / wheelRadius
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(RAD2DEG(wheelAngles[i]))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels[i].GetWorldAxis().times(axis.Transpose())[2])
+                    rotation.SetVec(wheels[i]!!.GetWorldAxis().times(axis.Transpose())[2])
                     animator.SetJointAxis(wheelJoints[i], jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -1795,7 +1791,7 @@ object AFEntity {
                     i = 0
                     while (i < 4) {
                         numContacts =
-                            af.GetPhysics().GetBodyContactConstraints(wheels[i].GetClipModel()!!.GetId(), contacts, 2)
+                            af.GetPhysics().GetBodyContactConstraints(wheels[i]!!.GetClipModel()!!.GetId(), contacts, 2)
                         for (j in 0 until numContacts) {
                             Game_local.gameLocal.smokeParticles!!.EmitSmoke(
                                 dustSmoke,
@@ -1840,13 +1836,11 @@ object AFEntity {
         init {
             var i: Int
             i = 0
-            wheels.clear()
             while (i < 4) {
                 wheelJoints[i] = Model.INVALID_JOINT
                 wheelAngles[i] = 0f
                 i++
             }
-            steering.clear()
         }
     }
 
@@ -1856,13 +1850,13 @@ object AFEntity {
      ===============================================================================
      */
     class idAFEntity_VehicleSixWheels : idAFEntity_Vehicle() {
-        private val steering: ArrayList<idAFConstraint_Hinge> = ArrayList<idAFConstraint_Hinge>(4)
+        private val steering: Array<idAFConstraint_Hinge?> = arrayOfNulls(4)
 
         //
         //
         private val wheelAngles: FloatArray = FloatArray(6)
         private val wheelJoints: IntArray = IntArray(6)
-        private val wheels: ArrayList<idAFBody> = ArrayList<idAFBody>(6)
+        private val wheels: Array<idAFBody?> = arrayOfNulls(6)
         override fun Spawn() {
             super.Spawn()
             var i: Int
@@ -1956,8 +1950,8 @@ object AFEntity {
                 // update the wheel motor force
                 i = 0
                 while (i < 6) {
-                    wheels[i].SetContactMotorVelocity(velocity)
-                    wheels[i].SetContactMotorForce(force)
+                    wheels[i]!!.SetContactMotorVelocity(velocity)
+                    wheels[i]!!.SetContactMotorForce(force)
                     i++
                 }
 
@@ -1965,25 +1959,25 @@ object AFEntity {
                 if (steerAngle < 0) {
                     i = 0
                     while (i < 3) {
-                        wheels[i shl 1].SetContactMotorVelocity(velocity * 0.5f)
+                        wheels[i shl 1]!!.SetContactMotorVelocity(velocity * 0.5f)
                         i++
                     }
                 } else if (steerAngle > 0) {
                     i = 0
                     while (i < 3) {
-                        wheels[1 + (i shl 1)].SetContactMotorVelocity(velocity * 0.5f)
+                        wheels[1 + (i shl 1)]!!.SetContactMotorVelocity(velocity * 0.5f)
                         i++
                     }
                 }
 
                 // update the wheel steering
-                steering[0].SetSteerAngle(steerAngle)
-                steering[1].SetSteerAngle(steerAngle)
-                steering[2].SetSteerAngle(-steerAngle)
-                steering[3].SetSteerAngle(-steerAngle)
+                steering[0]!!.SetSteerAngle(steerAngle)
+                steering[1]!!.SetSteerAngle(steerAngle)
+                steering[2]!!.SetSteerAngle(-steerAngle)
+                steering[3]!!.SetSteerAngle(-steerAngle)
                 i = 0
                 while (i < 4) {
-                    steering[i].SetSteerSpeed(3.0f)
+                    steering[i]!!.SetSteerSpeed(3.0f)
                     i++
                 }
 
@@ -2000,13 +1994,13 @@ object AFEntity {
                 i = 0
                 while (i < 6) {
                     if (force == 0f) {
-                        velocity = wheels[i].GetLinearVelocity().times(wheels[i].GetWorldAxis()[0])
+                        velocity = wheels[i]!!.GetLinearVelocity().times(wheels[i]!!.GetWorldAxis()[0])
                     }
                     wheelAngles[i] += velocity * Math_h.MS2SEC(idGameLocal.msec.toFloat()) / wheelRadius
                     // give the wheel joint an additional rotation about the wheel axis
                     rotation.SetAngle(RAD2DEG(wheelAngles[i]))
                     axis = af.GetPhysics().GetAxis(0)
-                    rotation.SetVec(wheels[i].GetWorldAxis().times(axis.Transpose())[2])
+                    rotation.SetVec(wheels[i]!!.GetWorldAxis().times(axis.Transpose())[2])
                     animator.SetJointAxis(wheelJoints[i], jointModTransform_t.JOINTMOD_WORLD, rotation.ToMat3())
                     i++
                 }
@@ -2018,7 +2012,7 @@ object AFEntity {
                     i = 0
                     while (i < 6) {
                         numContacts =
-                            af.GetPhysics().GetBodyContactConstraints(wheels[i].GetClipModel()!!.GetId(), contacts, 2)
+                            af.GetPhysics().GetBodyContactConstraints(wheels[i]!!.GetClipModel()!!.GetId(), contacts, 2)
                         for (j in 0 until numContacts) {
                             Game_local.gameLocal.smokeParticles!!.EmitSmoke(
                                 dustSmoke,
@@ -2067,15 +2061,17 @@ object AFEntity {
         // public:
         // CLASS_PROTOTYPE( idAFEntity_VehicleSixWheels );
         init {
-            var i: Int
-            i = 0
-            wheels.clear()
+            var i: Int = 0
             while (i < 6) {
+                wheels[i] = null
                 wheelJoints[i] = Model.INVALID_JOINT
                 wheelAngles[i] = 0f
                 i++
             }
-            steering.clear()
+            steering[0] = null
+            steering[1] = null
+            steering[2] = null
+            steering[3] = null
         }
     }
 
@@ -2138,7 +2134,7 @@ object AFEntity {
 
         private fun InitSteamRenderEntity() {
             val temp: String?
-            val modelDef: idDeclModelDef
+            val modelDef: idDeclModelDef?
 
 //	memset( steamRenderEntity, 0, sizeof( steamRenderEntity ) );
             steamRenderEntity = renderEntity_s()
@@ -2150,7 +2146,8 @@ object AFEntity {
             if (!temp.isEmpty()) { // != '\0' ) {
 //		if ( !strstr( temp, "." ) ) {
                 if (!temp.contains(".")) {
-                    modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false) as idDeclModelDef
+                    modelDef =
+                        DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false) as idDeclModelDef?
                     if (modelDef != null) {
                         steamRenderEntity.hModel = modelDef.ModelHandle()
                     }
@@ -2205,7 +2202,7 @@ object AFEntity {
 
         //
         //
-        private val fingers = ArrayList<idAFConstraint_Hinge>(4)
+        private val fingers = arrayOfNulls<idAFConstraint_Hinge?>(4)
         override fun Spawn() {
             super.Spawn()
             var i: Int
@@ -2233,7 +2230,7 @@ object AFEntity {
             var i: Int
             i = 0
             while (i < 4) {
-                fingers[i].Save(savefile)
+                fingers[i]!!.Save(savefile)
                 i++
             }
         }
@@ -2245,7 +2242,7 @@ object AFEntity {
             i = 0
             while (i < 4) {
                 fingers[i] = af.GetPhysics().GetConstraint(clawConstraintNames[i]) as idAFConstraint_Hinge
-                fingers[i].Restore(savefile)
+                fingers[i]!!.Restore(savefile)
                 i++
             }
             SetCombatModel()
@@ -2256,8 +2253,8 @@ object AFEntity {
             var i: Int
             i = 0
             while (i < 4) {
-                fingers[i].SetSteerAngle(angle.value)
-                fingers[i].SetSteerSpeed(0.5f)
+                fingers[i]!!.SetSteerAngle(angle.value)
+                fingers[i]!!.SetSteerSpeed(0.5f)
                 i++
             }
             af.GetPhysics().Activate()
@@ -2267,7 +2264,7 @@ object AFEntity {
             var i: Int
             i = 0
             while (i < 4) {
-                fingers[i].SetSteerAngle(fingers[i].GetAngle())
+                fingers[i]!!.SetSteerAngle(fingers[i]!!.GetAngle())
                 i++
             }
         }
@@ -2277,7 +2274,10 @@ object AFEntity {
         }
 
         init {
-            fingers.clear()
+            fingers[0] = null
+            fingers[1] = null
+            fingers[2] = null
+            fingers[3] = null
         }
     }
 
@@ -2294,8 +2294,8 @@ object AFEntity {
      ================
      */
     class jointTransformData_t {
-        var ent: renderEntity_s = renderEntity_s()
-        var joints: ArrayList<idMD5Joint> = ArrayList()
+        var ent: renderEntity_s? = null
+        var joints: Array<idMD5Joint>? = null
     }
 
     internal class GetJointTransform private constructor() : getJointTransform_t() {
@@ -2320,13 +2320,13 @@ object AFEntity {
             //        jointTransformData_t *data = reinterpret_cast<jointTransformData_t *>(model);
             val data = model as jointTransformData_t
             i = 0
-            while (i < data.ent.numJoints) {
-                if (data.joints[i].name.Icmp(jointName) == 0) {
+            while (i < data.ent!!.numJoints) {
+                if (data.joints!![i]!!.name.Icmp(jointName) == 0) {
                     break
                 }
                 i++
             }
-            if (i >= data.ent.numJoints) {
+            if (i >= data.ent!!.numJoints) {
                 return false
             }
             origin.set(frame[i].ToVec3())

@@ -889,7 +889,7 @@ object MultiplayerGame {
                             var isMP = false
                             var igt = gameType_t.GAME_SP.ordinal + 1
                             while (SysCvar.si_gameTypeArgs[igt] != null) {
-                                if (dict.GetBool(SysCvar.si_gameTypeArgs[igt])) {
+                                if (dict.GetBool(SysCvar.si_gameTypeArgs[igt]!!)) {
                                     isMP = true
                                     break
                                 }
@@ -1841,7 +1841,7 @@ object MultiplayerGame {
             }
             i = 0
             while (SysCvar.ui_skinArgs[i] != null) {
-                DeclManager.declManager.FindSkin(SysCvar.ui_skinArgs[i], false)
+                DeclManager.declManager.FindSkin(SysCvar.ui_skinArgs[i]!!, false)
                 i++
             }
             // MP game sounds

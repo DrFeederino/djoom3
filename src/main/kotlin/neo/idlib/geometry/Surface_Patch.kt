@@ -717,7 +717,7 @@ class Surface_Patch {
             var v3: Int
             var v4: Int
             var index: Int
-            indexes.ensureCapacity((width - 1) * (height - 1) * 2 * 3)
+            indexes.SetNum((width - 1) * (height - 1) * 2 * 3, false)
             index = 0
             i = 0
             while (i < width - 1) {
