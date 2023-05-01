@@ -10,6 +10,7 @@ import neo.framework.Common
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
+import neo.idlib.geometry.JointTransform
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Vector
@@ -166,7 +167,7 @@ class RenderWindow {
                         worldEntity.hModel,
                         modelAnim,
                         worldEntity.numJoints,
-                        worldEntity.joints.toTypedArray(),
+                        worldEntity.joints,
                         animLength - (animEndTime - time),
                         Vector.getVec3_origin(),
                         false
@@ -216,7 +217,7 @@ class RenderWindow {
             }
             if (animName.Length() != 0 && animClass.Length() != 0) {
                 worldEntity.numJoints = worldEntity.hModel!!.NumJoints()
-                worldEntity.joints = ArrayList(worldEntity.numJoints)
+                worldEntity.joints = Array(worldEntity.numJoints) { JointTransform.idJointMat() }
                 modelAnim = GameEdit.gameEdit.ANIM_GetAnimFromEntityDef(animClass.toString(), animName.toString())
                 if (modelAnim != null) {
                     animLength = GameEdit.gameEdit.ANIM_GetLength(modelAnim)

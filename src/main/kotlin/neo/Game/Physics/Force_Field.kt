@@ -142,7 +142,7 @@ class Force_Field {
             val torque = idVec3()
             val angularVelocity = idVec3()
             var cm: idClipModel
-            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             assert(clipModel != null)
             bounds.FromTransformedBounds(clipModel!!.GetBounds(), clipModel!!.GetOrigin(), clipModel!!.GetAxis())
             numClipModels =

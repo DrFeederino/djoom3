@@ -1116,7 +1116,7 @@ object Trigger {
             var i: Int
             val bounds = idBounds()
             var cm: idClipModel
-            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             if (clipModel == null || scriptFunction == null) {
                 return
             }
@@ -1125,7 +1125,7 @@ object Trigger {
                 Game_local.gameLocal.clip.ClipModelsTouchingBounds(bounds, -1, clipModelList, Game_local.MAX_GENTITIES)
             i = 0
             while (i < numClipModels) {
-                cm = clipModelList[i]
+                cm = clipModelList[i]!!
                 if (!cm.IsTraceModel()) {
                     i++
                     continue

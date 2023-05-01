@@ -35,7 +35,7 @@ class DeviceContext {
         private var activeFont: fontInfoEx_t? = null
 
         //
-        private val clipRects: ArrayList<idRectangle> = ArrayList()
+        private val clipRects: idList<idRectangle> = idList()
 
         //
         private lateinit var cursor: CURSOR
@@ -125,8 +125,8 @@ class DeviceContext {
 
         fun Shutdown() {
             fontName.Clear()
-            clipRects.clear()
-            fonts.clear()
+            clipRects.Clear()
+            fonts.Clear()
             Clear()
         }
 
@@ -792,7 +792,7 @@ class DeviceContext {
         }
 
         fun FindFont(name: String): Int {
-            val c = fonts.size
+            val c = fonts.Num()
             for (i in 0 until c) {
                 if (idStr.Icmp(name, fonts[i].name) == 0) {
                     return i
@@ -803,8 +803,7 @@ class DeviceContext {
             val fileName = idStr(name)
             fileName.Replace("fonts", Str.va("fonts/%s", fontLang))
             val fontInfo = fontInfoEx_t()
-            fonts.add(fontInfo)
-            val index = fonts.indexOf(fontInfo)
+            val index = fonts.Append(fontInfo)
             return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index])) {
                 fonts[index].name =
                     name //idStr.Copynz(fonts.oGet(index).name, name, fonts.oGet(index).name.length());
@@ -816,7 +815,8 @@ class DeviceContext {
         }
 
         fun SetupFonts() {
-            fonts.add(fontInfoEx_t())
+            fonts.SetGranularity(1)
+
             fontLang.set(idLib.cvarSystem.GetCVarString("sys_lang"))
             val font = fontLang.toString()
 
@@ -1035,12 +1035,12 @@ class DeviceContext {
             s2: FloatArray? = null,
             t2: FloatArray? = null
         ): Boolean {
-            if (enableClipping == false || clipRects.size == 0) {
+            if (enableClipping == false || clipRects.Num() == 0) {
                 return false
             }
-            var c = clipRects.size
+            var c = clipRects.Num()
             while (--c > 0) {
-                val clipRect = clipRects[c]
+                val clipRect = clipRects[c]!!
                 val ox = x[0]
                 val oy = y[0]
                 val ow = w[0]
@@ -1108,16 +1108,16 @@ class DeviceContext {
         }
 
         fun PushClipRect(x: Float, y: Float, w: Float, h: Float) {
-            clipRects.add(idRectangle(x, y, w, h))
+            clipRects.Append(idRectangle(x, y, w, h))
         }
 
         fun PushClipRect(r: idRectangle) {
-            clipRects.add(r)
+            clipRects.Append(r)
         }
 
         fun PopClipRect() {
-            if (clipRects.size != 0) {
-                clipRects.removeAt(clipRects.size - 1)
+            if (clipRects.Num() != 0) {
+                clipRects.RemoveIndex(clipRects.Num() - 1)
             }
         }
 
@@ -1126,10 +1126,10 @@ class DeviceContext {
         }
 
         fun SetFont(num: Int) {
-            activeFont = if (num >= 0 && num < fonts.size) {
+            activeFont = if (num >= 0 && num < fonts.Num()) {
                 fonts[num]
             } else {
-                fonts.getOrNull(0)
+                fonts[0]
             }
         }
 
@@ -1338,7 +1338,7 @@ class DeviceContext {
             var d2 = 0
 
             //
-            private val fonts: ArrayList<fontInfoEx_t> = ArrayList()
+            private val fonts: idList<fontInfoEx_t> = idList()
         }
 
         init {

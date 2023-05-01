@@ -376,7 +376,7 @@ object SmokeParticles {
                     g.age = g.frac * stage.particleLife
                     tri.numVerts += stage.CreateParticle(
                         g,
-                        Arrays.copyOfRange(tri.verts.toTypedArray(), tri.numVerts, tri.verts.size)
+                        Arrays.copyOfRange(tri.verts, tri.numVerts, tri.verts!!.size)
                     )
                     last = smoke
                     smoke = next
@@ -398,12 +398,12 @@ object SmokeParticles {
                     var indexes = 0
                     var i = 0
                     while (i < tri.numVerts) {
-                        tri.indexes[indexes + 0] = i
-                        tri.indexes[indexes + 1] = i + 2
-                        tri.indexes[indexes + 2] = i + 3
-                        tri.indexes[indexes + 3] = i
-                        tri.indexes[indexes + 4] = i + 3
-                        tri.indexes[indexes + 5] = i + 1
+                        tri.indexes!![indexes + 0] = i
+                        tri.indexes!![indexes + 1] = i + 2
+                        tri.indexes!![indexes + 2] = i + 3
+                        tri.indexes!![indexes + 3] = i
+                        tri.indexes!![indexes + 4] = i + 3
+                        tri.indexes!![indexes + 5] = i + 1
                         indexes += 6
                         i += 4
                     }

@@ -117,8 +117,7 @@ object Model_prt {
                     surf = staticModel.surfaces.get(surfaceNum._val)
                     tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry!!)
                 } else {
-                    surf = modelSurface_s()
-                    staticModel.surfaces.add(surf)
+                    surf = staticModel.surfaces.Alloc()!!
                     surf.id = stageNum
                     surf.shader = stage.material
                     surf.geometry = srfTriangles_s() //R_AllocStaticTriSurf();
@@ -177,14 +176,14 @@ object Model_prt {
                     g.age = g.frac * stage.particleLife
 
                     // if the particle doesn't get drawn because it is faded out or beyond a kill region, don't increment the verts
-                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange(verts.toTypedArray(), numVerts, verts.size))
+                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange(verts, numVerts, verts!!.size))
                 }
                 assert(numVerts and 3 == 0 && numVerts <= 4 * count)
 
                 // build the indexes
                 var numIndexes = 0
                 /*glIndex_t*/
-                val indexes = surf.geometry!!.indexes
+                val indexes = surf.geometry!!.indexes!!
                 var i = 0
                 while (i < numVerts) {
                     indexes[numIndexes + 0] = i

@@ -366,7 +366,7 @@ object Script_Interpreter {
                 i++
             }
             popParms = argsize
-            eventEntity!!.ProcessEventArgPtr(evdef, ArrayList<idEventArg<*>>(listOf(*data)))
+            eventEntity!!.ProcessEventArgPtr(evdef, data)
             if (null == multiFrameEvent) {
                 if (popParms != 0) {
                     PopParms(popParms)
@@ -444,7 +444,7 @@ object Script_Interpreter {
 
 //            throw new TODO_Exception();
             popParms = argsize
-            thread!!.ProcessEventArgPtr(evdef, ArrayList<idEventArg<*>>(listOf(*data)))
+            thread!!.ProcessEventArgPtr(evdef, data)
             if (popParms != 0) {
                 PopParms(popParms)
             }

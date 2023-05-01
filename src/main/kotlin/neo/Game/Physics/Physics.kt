@@ -67,6 +67,10 @@ object Physics {
 
     abstract class idPhysics : idClass() {
         protected val DBG_count = DBG_counter++
+        override fun _deconstructor() {
+            super._deconstructor()
+        }
+
 
         // Must not be virtual
         override fun Save(savefile: idSaveGame) {}

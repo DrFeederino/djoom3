@@ -657,7 +657,7 @@ object tritjunction {
                     }
                     var j = 0
                     while (j < tri.numVerts) {
-                        val v = idVec3(tri.verts[j].xyz.times(axis).plus(origin))
+                        val v = idVec3(tri.verts!![j]!!.xyz.times(axis).plus(origin))
                         GetHashVert(v)
                         j += 3
                     }

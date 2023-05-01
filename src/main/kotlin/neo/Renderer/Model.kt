@@ -124,9 +124,9 @@ object Model {
         val DBG_count = DBG_counter++
         val bounds: idBounds = idBounds() // for culling
         var facePlanes // [numIndexes/3] plane equations
-                : ArrayList<idPlane> = ArrayList()
+                : Array<idPlane>? = null
         var indexes // indexes, allocated with special allocator
-                : IntArray = IntArray(0)
+                : IntArray? = null
         var numIndexes // for shadows, this has both front and rear end caps and silhouette planes
                 = 0
         var numShadowIndexesNoCaps // shadow volumes with the front and rear caps omitted
@@ -140,13 +140,13 @@ object Model {
         var shadowCapPlaneBits // bits 0-5 are set when that plane of the interacting light has triangles
                 = 0
         var shadowVertexes // these will be copied to shadowCache when it is going to be drawn.
-                : ArrayList<shadowCache_s> = ArrayList()
+                : Array<shadowCache_s>? = null
         var silIndexes // indexes changed to be the first vertex with same XYZ, ignoring normal and texcoords
-                : IntArray = IntArray(0)
+                : IntArray? = null
         var tangentsCalculated // set when the vertex tangents have been calculated
                 = false
         var verts // vertices, allocated with special allocator
-                : ArrayList<idDrawVert> = ArrayList()
+                : Array<idDrawVert?>? = null
         var ambientCache // idDrawVert
                 : vertCache_s? = null
         var ambientSurface // for light interactions, point back at the original surface that generated
@@ -156,9 +156,9 @@ object Model {
         var deformedSurface // if true, indexes, silIndexes, mirrorVerts, and silEdges are
                 = false
         var dominantTris // [numVerts] for deformed surface fast tangent calculation
-                : ArrayList<dominantTri_s> = ArrayList()
+                : Array<dominantTri_s?>? = null
         var dupVerts // pairs of the number of the first vertex and the number of the duplicate vertex
-                : IntArray = IntArray(0)
+                : IntArray? = null
         var facePlanesCalculated // set when the face planes have been calculated
                 = false
         var generateNormals // create normals from geometry, instead of using explicit ones
@@ -176,7 +176,7 @@ object Model {
 
         // these are NULL when vertex programs are available
         var mirroredVerts // tri->mirroredVerts[0] is the mirror of tri->numVerts - tri->numMirroredVerts + 0
-                : IntArray = IntArray(0)
+                : IntArray? = null
 
         // the interaction, which we will get the ambientCache from
         var nextDeferredFree // chain of tris to free next frame
@@ -192,7 +192,7 @@ object Model {
         var shadowCache // shadowCache_t
                 : vertCache_s? = null
         var silEdges // silhouette edges
-                : ArrayList<silEdge_t> = ArrayList()
+                : Array<silEdge_t>? = null
 
         override fun toString(): String {
             return "srfTriangles_s{" +
@@ -380,7 +380,7 @@ object Model {
         abstract fun NumJoints(): Int
 
         // Returns the MD5 joints or NULL if the model is not an MD5
-        abstract fun GetJoints(): ArrayList<idMD5Joint>
+        abstract fun GetJoints(): Array<idMD5Joint>?
 
         // Returns the handle for the joint with the given name.
         abstract /*jointHandle_t*/  fun GetJointHandle(name: String): Int
@@ -389,7 +389,7 @@ object Model {
         abstract fun GetJointName(jointHandle_t: Int): String
 
         // Returns the default animation pose or NULL if the model is not an MD5.
-        abstract fun GetDefaultPose(): ArrayList<idJointQuat>
+        abstract fun GetDefaultPose(): Array<idJointQuat>?
 
         // Returns number of the joint nearest to the given triangle.
         abstract fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int

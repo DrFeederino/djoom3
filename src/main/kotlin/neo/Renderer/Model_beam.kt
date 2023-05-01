@@ -69,24 +69,24 @@ object Model_beam {
                 tri = tr_trisurf.R_AllocStaticTriSurf()
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, 4)
                 tr_trisurf.R_AllocStaticTriSurfIndexes(tri, 6)
-                tri.verts[0].Clear()
-                tri.verts[0].st[0] = 0f
-                tri.verts[0].st[1] = 0f
-                tri.verts[1].Clear()
-                tri.verts[1].st[0] = 0f
-                tri.verts[1].st[1] = 1f
-                tri.verts[2].Clear()
-                tri.verts[2].st[0] = 1f
-                tri.verts[2].st[1] = 0f
-                tri.verts[3].Clear()
-                tri.verts[3].st[0] = 1f
-                tri.verts[3].st[1] = 1f
-                tri.indexes[0] = 0
-                tri.indexes[1] = 2
-                tri.indexes[2] = 1
-                tri.indexes[3] = 2
-                tri.indexes[4] = 3
-                tri.indexes[5] = 1
+                tri.verts!![0]!!.Clear()
+                tri.verts!![0]!!.st[0] = 0f
+                tri.verts!![0]!!.st[1] = 0f
+                tri.verts!![1]!!.Clear()
+                tri.verts!![1]!!.st[0] = 0f
+                tri.verts!![1]!!.st[1] = 1f
+                tri.verts!![2]!!.Clear()
+                tri.verts!![2]!!.st[0] = 1f
+                tri.verts!![2]!!.st[1] = 0f
+                tri.verts!![3]!!.Clear()
+                tri.verts!![3]!!.st[0] = 1f
+                tri.verts!![3]!!.st[1] = 1f
+                tri.indexes!![0] = 0
+                tri.indexes!![1] = 2
+                tri.indexes!![2] = 1
+                tri.indexes!![3] = 2
+                tri.indexes!![4] = 3
+                tri.indexes!![5] = 1
                 tri.numVerts = 4
                 tri.numIndexes = 6
                 surf.geometry = tri
@@ -117,26 +117,26 @@ object Model_beam {
             val green = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] * 255.0f).toByte()
             val blue = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] * 255.0f).toByte()
             val alpha = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] * 255.0f).toByte()
-            tri.verts[0].xyz.set(minor)
-            tri.verts[0].color[0] = red
-            tri.verts[0].color[1] = green
-            tri.verts[0].color[2] = blue
-            tri.verts[0].color[3] = alpha
-            tri.verts[1].xyz.set(minor.unaryMinus())
-            tri.verts[1].color[0] = red
-            tri.verts[1].color[1] = green
-            tri.verts[1].color[2] = blue
-            tri.verts[1].color[3] = alpha
-            tri.verts[2].xyz.set(localTarget.plus(minor))
-            tri.verts[2].color[0] = red
-            tri.verts[2].color[1] = green
-            tri.verts[2].color[2] = blue
-            tri.verts[2].color[3] = alpha
-            tri.verts[3].xyz.set(localTarget.minus(minor))
-            tri.verts[3].color[0] = red
-            tri.verts[3].color[1] = green
-            tri.verts[3].color[2] = blue
-            tri.verts[3].color[3] = alpha
+            tri.verts!![0]!!.xyz.set(minor)
+            tri.verts!![0]!!.color[0] = red
+            tri.verts!![0]!!.color[1] = green
+            tri.verts!![0]!!.color[2] = blue
+            tri.verts!![0]!!.color[3] = alpha
+            tri.verts!![1]!!.xyz.set(minor.unaryMinus())
+            tri.verts!![1]!!.color[0] = red
+            tri.verts!![1]!!.color[1] = green
+            tri.verts!![1]!!.color[2] = blue
+            tri.verts!![1]!!.color[3] = alpha
+            tri.verts!![2]!!.xyz.set(localTarget.plus(minor))
+            tri.verts!![2]!!.color[0] = red
+            tri.verts!![2]!!.color[1] = green
+            tri.verts!![2]!!.color[2] = blue
+            tri.verts!![2]!!.color[3] = alpha
+            tri.verts!![3]!!.xyz.set(localTarget.minus(minor))
+            tri.verts!![3]!!.color[0] = red
+            tri.verts!![3]!!.color[1] = green
+            tri.verts!![3]!!.color[2] = blue
+            tri.verts!![3]!!.color[3] = alpha
             tr_trisurf.R_BoundTriSurf(tri)
             staticModel.bounds = idBounds(tri.bounds)
             return staticModel

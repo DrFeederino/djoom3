@@ -245,23 +245,22 @@ object Event {
 
      ***********************************************************************/
     class idEvent {
-        private var data: ArrayList<idEventArg<*>> = ArrayList()
+        private var data: Array<idEventArg<*>?>? = null
 
         //
         private val eventNode: idLinkList<idEvent> = idLinkList()
-        private lateinit var eventdef: idEventDef
-        private lateinit var `object`: idClass
+        private var eventdef: idEventDef? = null
+        private var `object`: idClass? = null
         private var time = 0
-        private lateinit var typeinfo: java.lang.Class<*>
+        private var typeinfo: java.lang.Class<*>? = null
         fun Free() {
 //            if (data != null) {
 //                eventDataAllocator.Free(data);
-            data.clear()
             //            }
-            //eventdef
+            eventdef = null
             time = 0
-            //`object` = null
-            //typeinfo = null
+            `object` = null
+            typeinfo = null
             eventNode.SetOwner(this)
             eventNode.AddToEnd(FreeEvents)
         }
@@ -289,7 +288,7 @@ object Event {
             }
         }
 
-        fun GetData(): ArrayList<*> {
+        fun GetData(): Array<*>? {
             return data
         }
 
@@ -325,10 +324,12 @@ object Event {
                 if (size != 0) {
 //		ev.data = eventDataAllocator.Alloc( size );
 //		memset( ev.data, 0, size );
-                    ev.data.clear()
-                    args.forEach { arg -> ev.data.add(arg!!) }
+
+//		ev.data = eventDataAllocator.Alloc( size );
+//		memset( ev.data, 0, size );
+                    ev.data = args.clone() as Array<idEventArg<*>?>
                 } else {
-                    ev.data.clear()
+                    ev.data = null
                 }
                 format = evdef.GetArgFormat()
                 //            for (i = 0; i < numargs; i++) {
@@ -460,7 +461,7 @@ object Event {
             fun ServiceEvents() {
                 var event: idEvent?
                 var num: Int
-                val args = ArrayList<idEventArg<*>>(D_EVENT_MAXARGS)
+                val args: Array<idEventArg<*>?> = arrayOfNulls(D_EVENT_MAXARGS)
                 var offset: Int
                 var i: Int
                 var numargs: Int
@@ -471,21 +472,21 @@ object Event {
                 var materialName: String
                 num = 0
                 while (!EventQueue.IsListEmpty()) {
-                    event = EventQueue.Next()!!
+                    event = EventQueue.Next()
                     assert(event != null)
-                    if (event.time > Game_local.gameLocal.time) {
+                    if (event!!.time > Game_local.gameLocal.time) {
                         break
                     }
 
                     // copy the data into the local args array and set up pointers
-                    ev = event.eventdef
+                    ev = event.eventdef!!
                     formatspec = ev.GetArgFormat()!!
                     numargs = ev.GetNumArgs()
                     i = 0
                     while (i < numargs) {
                         when (formatspec[i]) {
                             D_EVENT_INTEGER, D_EVENT_FLOAT, D_EVENT_VECTOR, D_EVENT_STRING, D_EVENT_ENTITY, D_EVENT_ENTITY_NULL, D_EVENT_TRACE -> args[i] =
-                                event.data[i]
+                                event.data!![i]
                             else -> idGameLocal.Error(
                                 "idEvent::ServiceEvents : Invalid arg format '%s' string for '%s' event.",
                                 formatspec,
@@ -500,7 +501,7 @@ object Event {
                     // is deleted, the event won't be freed twice
                     event.eventNode.Remove()
                     assert(event.`object` != null)
-                    event.`object`.ProcessEventArgPtr(ev, args)
+                    event.`object`!!.ProcessEventArgPtr(ev, args)
 
 // #if 0
                     // // event functions may never leave return values on the FPU stack
@@ -571,17 +572,17 @@ object Event {
                 event = EventQueue.Next()
                 while (event != null) {
                     savefile.WriteInt(event.time)
-                    savefile.WriteString(event.eventdef.GetName())
-                    savefile.WriteString(event.typeinfo.getSimpleName())
-                    savefile.WriteObject(event.`object`)
-                    savefile.WriteInt(event.eventdef.GetArgSize())
-                    format = event.eventdef.GetArgFormat()
+                    savefile.WriteString(event.eventdef!!.GetName())
+                    savefile.WriteString(event.typeinfo!!.getSimpleName())
+                    savefile.WriteObject(event.`object`!!)
+                    savefile.WriteInt(event.eventdef!!.GetArgSize())
+                    format = event.eventdef!!.GetArgFormat()
                     i = 0
                     size = 0
-                    while (i < event.eventdef.GetNumArgs()) {
+                    while (i < event.eventdef!!.GetNumArgs()) {
                         ++i
                     }
-                    assert(size == event.eventdef.GetArgSize())
+                    assert(size == event.eventdef!!.GetArgSize())
                     event = event.eventNode.Next()
                 }
             }
@@ -622,58 +623,61 @@ object Event {
                         savefile.Error(
                             "idEvent::Restore: unknown class '%s' on event '%s'",
                             name.toString(),
-                            event.eventdef.GetName()
+                            event.eventdef!!.GetName()
                         )
                     }
                     savefile.ReadObject(event.`object`)
 
                     // read the args
                     savefile.ReadInt(argsize)
-                    if (argsize._val != event.eventdef.GetArgSize()) {
+                    if (argsize._val != event.eventdef!!.GetArgSize()) {
                         savefile.Error(
                             "idEvent::Restore: arg size (%d) doesn't match saved arg size(%d) on event '%s'",
-                            event.eventdef.GetArgSize(),
+                            event.eventdef!!.GetArgSize(),
                             argsize._val,
-                            event.eventdef.GetName()
+                            event.eventdef!!.GetName()
                         )
                     }
                     if (argsize._val != 0) {
-                        event.data = ArrayList(argsize._val) //eventDataAllocator.Alloc(argsize[0]);
-                        format = event.eventdef.GetArgFormat()!!
+                        event.data = arrayOfNulls(argsize._val) //eventDataAllocator.Alloc(argsize[0]);
+                        format = event.eventdef!!.GetArgFormat()
                         assert(format != null)
                         j = 0
                         size = 0
-                        while (j < event.eventdef.GetNumArgs()) {
-                            when (format[j]) {
+                        while (j < event.eventdef!!.GetNumArgs()) {
+                            when (format!![j]) {
                                 D_EVENT_FLOAT -> {
-                                    event.data[j] = idEventArg<Any?>(D_EVENT_FLOAT.code, savefile.ReadFloat())
+                                    event.data!![j] = idEventArg<Any?>(D_EVENT_FLOAT.code, savefile.ReadFloat())
                                     size += java.lang.Float.BYTES
                                 }
-                                D_EVENT_INTEGER -> event.data[j] =
+
+                                D_EVENT_INTEGER -> event.data!![j] =
                                     idEventArg<Any?>(D_EVENT_INTEGER.code, savefile.ReadInt())
-                                D_EVENT_ENTITY -> event.data[j] =
+
+                                D_EVENT_ENTITY -> event.data!![j] =
                                     idEventArg<Any?>(D_EVENT_ENTITY.code, savefile.ReadInt())
+
                                 D_EVENT_ENTITY_NULL -> {
-                                    event.data[j] = idEventArg<Any?>(D_EVENT_ENTITY_NULL.code, savefile.ReadInt())
+                                    event.data!![j] = idEventArg<Any?>(D_EVENT_ENTITY_NULL.code, savefile.ReadInt())
                                     size += Integer.BYTES
                                 }
                                 D_EVENT_VECTOR -> {
                                     val buffer = idVec3()
                                     savefile.ReadVec3(buffer)
                                     buffer.Write()
-                                    event.data[j] = idEventArg<Any?>(D_EVENT_VECTOR.code, buffer)
+                                    event.data!![j] = idEventArg<Any?>(D_EVENT_VECTOR.code, buffer)
                                     size += idVec3.BYTES
                                 }
                                 D_EVENT_TRACE -> {
                                     val readBool = savefile.ReadBool()
-                                    event.data[j] = idEventArg<Any?>(D_EVENT_TRACE.code, if (readBool) 1 else 0)
+                                    event.data!![j] = idEventArg<Any?>(D_EVENT_TRACE.code, if (readBool) 1 else 0)
                                     size++
                                     //						if ( *reinterpret_cast<bool *>( dataPtr ) ) {
                                     if (readBool) {
                                         size += SERiAL.BYTES
                                         val t = trace_s()
                                         RestoreTrace(savefile, t)
-                                        event.data[j] = idEventArg<Any?>(D_EVENT_TRACE.code, t)
+                                        event.data!![j] = idEventArg<Any?>(D_EVENT_TRACE.code, t)
                                         if (t.c.material != null) {
                                             size += Script_Program.MAX_STRING_LEN
                                             savefile.Read(str, Script_Program.MAX_STRING_LEN)
@@ -684,9 +688,9 @@ object Event {
                             }
                             ++j
                         }
-                        assert(size == event.eventdef.GetArgSize())
+                        assert(size == event.eventdef!!.GetArgSize())
                     } else {
-                        event.data.clear()
+                        event.data = null
                     }
                     i++
                 }

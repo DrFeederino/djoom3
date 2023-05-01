@@ -19,6 +19,7 @@ import neo.idlib.Text.Lexer
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
+import neo.idlib.containers.List.idList
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
@@ -55,11 +56,11 @@ object Model_liquid {
         private var drop_height = 4f
         private var drop_radius = 4
         private var liquid_type = 0
-        private var page1: kotlin.collections.ArrayList<Float> = ArrayList()
-        private var page2: ArrayList<Float> = ArrayList()
+        private lateinit var page1: Array<Float>
+        private lateinit var page2: Array<Float>
 
         //
-        private val pages: ArrayList<Float> = ArrayList()
+        private val pages: idList<Float> = idList()
 
         //
         private val random: idRandom = idRandom()
@@ -73,7 +74,7 @@ object Model_liquid {
         private var update_tics: Int
 
         //
-        private val verts: ArrayList<idDrawVert> = ArrayList()
+        private val verts: idList<idDrawVert> = idList()
         private var verts_x = 32
         private var verts_y = 32
 
@@ -84,7 +85,7 @@ object Model_liquid {
             var y: Int
             val token = idToken()
             val parser = idParser(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_NOSTRINGESCAPECHARS)
-            val tris = kotlin.collections.ArrayList<Int>()
+            val tris = idList<Int>()
             var size_x: Float
             var size_y: Float
             var rate: Float
@@ -152,10 +153,11 @@ object Model_liquid {
             }
             scale_x = size_x / (verts_x - 1)
             scale_y = size_y / (verts_y - 1)
-            pages.ensureCapacity(2 * verts_x * verts_y)
-            page1 = pages
-            page2 = ArrayList(arrayListOf(*Arrays.copyOfRange(page1.toTypedArray(), verts_x * verts_y, page1.size)))
-            verts.ensureCapacity(verts_x * verts_y)
+            pages.SetNum(2 * verts_x * verts_y)
+            page1 = pages.getList()
+            page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.size)
+
+            verts.SetNum(verts_x * verts_y)
             i = 0
             y = 0
             while (y < verts_y) {
@@ -171,7 +173,7 @@ object Model_liquid {
                 }
                 y++
             }
-            tris.ensureCapacity((verts_x - 1) * (verts_y - 1) * 6)
+            tris.SetNum((verts_x - 1) * (verts_y - 1) * 6)
             i = 0
             y = 0
             while (y < verts_y - 1) {
@@ -191,7 +193,8 @@ object Model_liquid {
 
             // build the information that will be common to all animations of this mesh:
             // sil edge connectivity and normal / tangent generation information
-            deformInfo = tr_trisurf.R_BuildDeformInfo(verts.size, verts, tris.size, tris, true)
+            deformInfo =
+                tr_trisurf.R_BuildDeformInfo(verts.Num(), verts.getList() as Array<idDrawVert?>, tris.Num(), tris, true)
             bounds.Clear()
             bounds.AddPoint(idVec3(0.0f, 0.0f, drop_height * -10.0f))
             bounds.AddPoint(idVec3((verts_x - 1) * scale_x, (verts_y - 1) * scale_y, drop_height * 10.0f))
@@ -258,14 +261,14 @@ object Model_liquid {
             var i: Int
             var x: Int
             var y: Int
-            if (pages.size < 2 * verts_x * verts_y) {
+            if (pages.Num() < 2 * verts_x * verts_y) {
                 return
             }
             nextDropTime = 0
             time = 0
             random.SetSeed(seed)
-            page1 = pages
-            page2 = ArrayList(arrayListOf(*Arrays.copyOfRange(page1.toTypedArray(), verts_x * verts_y, page1.size)))
+            page1 = pages.getList()
+            page2 = page1.copyOfRange(verts_x * verts_y, page1.size)
             i = 0
             y = 0
             while (y < verts_y) {
@@ -338,7 +341,7 @@ object Model_liquid {
             inv_lerp = 1.0f - lerp
             vert = verts[0]
             i = 0
-            while (i < verts.size) {
+            while (i < verts.Num()) {
                 vert.xyz.z = page1[i] * lerp + page2[i] * inv_lerp
                 vert = verts[++i]
             }
@@ -362,13 +365,13 @@ object Model_liquid {
             tri.dominantTris = deformInfo.dominantTris
             tri.numVerts = deformInfo.numOutputVerts
             tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
-            Simd.SIMDProcessor.Memcpy(tri.verts, verts, deformInfo.numSourceVerts)
+            Simd.SIMDProcessor.Memcpy(tri.verts!!, verts, deformInfo.numSourceVerts)
 
             // replicate the mirror seam vertexes
             base = deformInfo.numOutputVerts - deformInfo.numMirroredVerts
             i = 0
             while (i < deformInfo.numMirroredVerts) {
-                tri.verts[base + i] = tri.verts[deformInfo.mirroredVerts[i]]
+                tri.verts!![base + i] = tri.verts!![deformInfo.mirroredVerts!![i]]
                 i++
             }
             tr_trisurf.R_BoundTriSurf(tri)
@@ -386,7 +389,7 @@ object Model_liquid {
             return surf
         }
 
-        private fun WaterDrop(x: Int, y: Int, page: kotlin.collections.ArrayList<Float>) {
+        private fun WaterDrop(x: Int, y: Int, page: Array<Float>) {
             var x = x
             var y = y
             var cx: Int
@@ -438,7 +441,7 @@ object Model_liquid {
             }
         }
 
-        fun ArrayList<Float>.swap(anotherList: kotlin.collections.ArrayList<Float>) {
+        fun Array<Float>.swap(anotherList: Array<Float>) {
             val length = size
             val c = FloatArray(length)
             System.arraycopy(this, 0, c, 0, length)
@@ -453,7 +456,6 @@ object Model_liquid {
             var p1: Int
             var value: Float
             time += update_tics
-            page1
             page1.swap(page2)
             if (time > nextDropTime) {
                 WaterDrop(-1, -1, page2)

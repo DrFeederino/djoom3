@@ -411,7 +411,7 @@ object tr_lightrun {
         }
         i = 0
         while (i < tri.numVerts) {
-            points[i].set(tri.verts[i].xyz)
+            points[i].set(tri.verts!![i]!!.xyz)
             i++
         }
         if (RenderSystem_init.r_showUpdates.GetBool() && (tri.bounds[1, 0] - tri.bounds[0, 0] > 1024
@@ -532,7 +532,7 @@ object tr_lightrun {
                     prt = prt.next
                     continue
                 }
-                if (tr_lightrun.WindingCompletelyInsideLight(prt.w, ldef)) {
+                if (tr_lightrun.WindingCompletelyInsideLight(prt.w!!, ldef)) {
                     dp.fogLight = ldef
                     dp.nextFoggedPortal = ldef.foggedPortals
                     ldef.foggedPortals = dp
@@ -596,9 +596,9 @@ object tr_lightrun {
         // demo playback needs to free the joints, while normal play
         // leaves them in the control of the game
         if (Session.Companion.session.readDemo != null) {
-            if (def.parms.joints.isNotEmpty()) {
+            if (def.parms.joints != null) {
 //			Mem_Free16( def.parms.joints );
-                def.parms.joints.clear()
+                def.parms.joints = null
             }
             if (def.parms.callbackData != null) {
 //			Mem_Free( def.parms.callbackData );
@@ -717,10 +717,10 @@ object tr_lightrun {
         var def: idRenderEntityLocal?
         var light: idRenderLightLocal?
         j = 0
-        while (j < tr_local.tr.worlds.size) {
+        while (j < tr_local.tr.worlds.Num()) {
             rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.size) {
+            while (i < rw.entityDefs.Num()) {
                 def = rw.entityDefs[i]
                 if (null == def) {
                     i++
@@ -730,7 +730,7 @@ object tr_lightrun {
                 i++
             }
             i = 0
-            while (i < rw.lightDefs.size) {
+            while (i < rw.lightDefs.Num()) {
                 light = rw.lightDefs[i]
                 if (null == light) {
                     i++
@@ -754,10 +754,10 @@ object tr_lightrun {
         var rw: idRenderWorldLocal?
         var def: idRenderEntityLocal?
         j = 0
-        while (j < tr_local.tr.worlds.size) {
+        while (j < tr_local.tr.worlds.Num()) {
             rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.size) {
+            while (i < rw.entityDefs.Num()) {
                 def = rw.entityDefs[i]
                 if (null == def) {
                     i++
@@ -793,10 +793,10 @@ object tr_lightrun {
         // a particular view
         tr_local.tr.viewDef = null
         j = 0
-        while (j < tr_local.tr.worlds.size) {
+        while (j < tr_local.tr.worlds.Num()) {
             rw = tr_local.tr.worlds[j]
             i = 0
-            while (i < rw.entityDefs.size) {
+            while (i < rw.entityDefs.Num()) {
                 def = rw.entityDefs[i]
                 if (null == def) {
                     i++
@@ -805,14 +805,14 @@ object tr_lightrun {
                 // the world model entities are put specifically in a single
                 // area, instead of just pushing their bounds into the tree
                 if (i < rw.numPortalAreas) {
-                    rw.AddEntityRefToArea(def, rw.portalAreas[i])
+                    rw.AddEntityRefToArea(def, rw.portalAreas!![i]!!)
                 } else {
                     tr_lightrun.R_CreateEntityRefs(def)
                 }
                 i++
             }
             i = 0
-            while (i < rw.lightDefs.size) {
+            while (i < rw.lightDefs.Num()) {
                 light = rw.lightDefs[i]
                 if (null == light) {
                     i++
@@ -860,7 +860,7 @@ object tr_lightrun {
             }
             var count = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld!!.lightDefs.size) {
+            while (i < tr_local.tr.primaryWorld!!.lightDefs.Num()) {
                 var light: idRenderLightLocal?
                 light = tr_local.tr.primaryWorld!!.lightDefs[i]
                 if (light != null) {

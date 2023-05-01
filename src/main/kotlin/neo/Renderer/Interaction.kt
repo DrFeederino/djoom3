@@ -19,6 +19,7 @@ import neo.idlib.BV.Box.idBox
 import neo.idlib.BV.Frustum.idFrustum
 import neo.idlib.CmdArgs
 import neo.idlib.Lib
+import neo.idlib.geometry.DrawVert
 import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
@@ -99,7 +100,7 @@ object Interaction {
         val planeSide = FloatArray(numFaces)
 
         // exact geometric cull against face
-        Simd.SIMDProcessor.Dot(planeSide, localLightOrigin, tri.facePlanes.toTypedArray(), numFaces)
+        Simd.SIMDProcessor.Dot(planeSide, localLightOrigin, tri.facePlanes!!, numFaces)
         Simd.SIMDProcessor.CmpGE(cullInfo.facing!!, planeSide, 0.0f, numFaces)
         cullInfo.facing!![numFaces] = 1 // for dangling edges to reference
     }
@@ -159,7 +160,12 @@ object Interaction {
                 i++
                 continue
             }
-            Simd.SIMDProcessor.Dot(planeSide, cullInfo.localClipPlanes[i], tri.verts.toTypedArray(), tri.numVerts)
+            Simd.SIMDProcessor.Dot(
+                planeSide,
+                cullInfo.localClipPlanes[i],
+                tri.verts!! as Array<DrawVert.idDrawVert>,
+                tri.numVerts
+            )
             Simd.SIMDProcessor.CmpLT(
                 cullInfo.cullBits!!,
                 i.toByte(),
@@ -380,7 +386,7 @@ object Interaction {
                 tr_trisurf.R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes)
 
                 // back face cull the individual triangles
-                indexes = newTri.indexes
+                indexes = newTri.indexes!!
                 val facing = cullInfo.facing
                 faceNum = 0.also { i = it }
                 while (i < tri.numIndexes) {
@@ -390,16 +396,22 @@ object Interaction {
                         faceNum++
                         continue
                     }
-                    indexes[numIndexes + 0] = tri.indexes[i + 0]
-                    indexes[numIndexes + 1] = tri.indexes[i + 1]
-                    indexes[numIndexes + 2] = tri.indexes[i + 2]
+                    indexes[numIndexes + 0] = tri.indexes!![i + 0]
+                    indexes[numIndexes + 1] = tri.indexes!![i + 1]
+                    indexes[numIndexes + 2] = tri.indexes!![i + 2]
                     numIndexes += 3
                     i += 3
                     faceNum++
                 }
 
                 // get bounds for the surface
-                Simd.SIMDProcessor.MinMax(bounds[0], bounds[1], tri.verts.toTypedArray(), indexes, numIndexes)
+                Simd.SIMDProcessor.MinMax(
+                    bounds[0],
+                    bounds[1],
+                    tri.verts!! as Array<DrawVert.idDrawVert>,
+                    indexes,
+                    numIndexes
+                )
 
                 // decrease the size of the memory block to the size of the number of used indexes
                 tr_trisurf.R_ResizeStaticTriSurfIndexes(newTri, numIndexes)
@@ -411,7 +423,7 @@ object Interaction {
             tr_trisurf.R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes)
 
             // cull individual triangles
-            indexes = newTri.indexes
+            indexes = newTri.indexes!!
             val facing = cullInfo.facing
             val cullBits = cullInfo.cullBits!!
             faceNum = 0.also { i = it }
@@ -431,9 +443,9 @@ object Interaction {
                         continue
                     }
                 }
-                i1 = tri.indexes[i + 0]
-                i2 = tri.indexes[i + 1]
-                i3 = tri.indexes[i + 2]
+                i1 = tri.indexes!![i + 0]
+                i2 = tri.indexes!![i + 1]
+                i3 = tri.indexes!![i + 2]
 
                 // fast cull outside the frustum
                 // if all three points are off one plane side, it definately isn't visible
@@ -449,9 +461,9 @@ object Interaction {
                     if (cullBits[i1] and cullBits[i2] and cullBits[i3] != 0.toByte()) {
                         val cull: Int = (cullBits[i1] or cullBits[i2] or cullBits[i3]).toInt()
                         if (!R_ClipTriangleToLight(
-                                tri.verts[i1].xyz,
-                                tri.verts[i2].xyz,
-                                tri.verts[i3].xyz,
+                                tri.verts!![i1]!!.xyz,
+                                tri.verts!![i2]!!.xyz,
+                                tri.verts!![i3]!!.xyz,
                                 cull,
                                 cullInfo.localClipPlanes
                             )
@@ -473,7 +485,13 @@ object Interaction {
             }
 
             // get bounds for the surface
-            Simd.SIMDProcessor.MinMax(bounds[0], bounds[1], tri.verts.toTypedArray(), indexes, numIndexes)
+            Simd.SIMDProcessor.MinMax(
+                bounds[0],
+                bounds[1],
+                tri.verts!! as Array<DrawVert.idDrawVert>,
+                indexes,
+                numIndexes
+            )
 
             // decrease the size of the memory block to the size of the number of used indexes
             tr_trisurf.R_ResizeStaticTriSurfIndexes(newTri, numIndexes)
@@ -579,10 +597,10 @@ object Interaction {
         //
         // so we can check ambientViewCount before adding lightTris, and get
         // at the shared vertex and possibly shadowVertex caches
-        var ambientTris: srfTriangles_s = srfTriangles_s()
+        var ambientTris: srfTriangles_s? = null
 
         //
-        var cullInfo: srfCullInfo_t
+        var cullInfo: srfCullInfo_t = srfCullInfo_t()
         var expCulled // only for the experimental shadow buffer renderer
                 = 0
 
@@ -591,7 +609,7 @@ object Interaction {
         var lightTris: srfTriangles_s? = null
 
         //
-        var shader: idMaterial = idMaterial()
+        var shader: idMaterial? = null
 
         //
         // shadow volume triangle surface
@@ -603,11 +621,6 @@ object Interaction {
             }
         }
 
-        //
-        //
-        init {
-            cullInfo = srfCullInfo_t()
-        }
     }
 
     class areaNumRef_s {
@@ -649,14 +662,14 @@ object Interaction {
         // if there is a whole-entity optimized shadow hull, it will
         // be present as a surfaceInteraction_t with a NULL ambientTris, but
         // possibly having a shader to specify the shadow sorting order
-        var surfaces: ArrayList<surfaceInteraction_t> = ArrayList()
+        var surfaces: Array<surfaceInteraction_t>? = null
 
         //
         private var dynamicModelFrameCount // so we can tell if a callback model animated
                 = 0
         private var frustumAreas // numbers of the areas the frustum touches
-                : areaNumRef_s?
-        private var frustumState: frustumStates = frustumStates.FRUSTUM_UNINITIALIZED
+                : areaNumRef_s? = null
+        private var frustumState: frustumStates = frustumStates.values()[0]
 
         /*
          ===============
@@ -671,12 +684,12 @@ object Interaction {
 
             // clear the table pointer
             val renderWorld = lightDef.world!!
-            if (renderWorld.interactionTable.isNotEmpty()) {
+            if (renderWorld.interactionTable != null) {
                 val index = lightDef.index * renderWorld.interactionTableWidth + entityDef!!.index
-                if (renderWorld.interactionTable[index] !== this) {
+                if (renderWorld.interactionTable!![index] !== this) {
                     Common.common.Error("idInteraction::UnlinkAndFree: interactionTable wasn't set")
                 }
-                renderWorld.interactionTable.removeAt(index)
+                renderWorld.interactionTable!![index] = null
             }
             Unlink()
             FreeSurfaces()
@@ -704,9 +717,9 @@ object Interaction {
          */
         // free the interaction surfaces
         fun FreeSurfaces() {
-            if (surfaces.isNotEmpty()) {
+            if (surfaces != null) {
                 for (i in 0 until numSurfaces) {
-                    val sint = surfaces[i]
+                    val sint = surfaces!![i]!!
                     if (sint.lightTris != null) {
                         if (sint.lightTris !== LIGHT_TRIS_DEFERRED) {
                             tr_trisurf.R_FreeStaticTriSurf(sint.lightTris)
@@ -721,11 +734,11 @@ object Interaction {
                             sint.shadowTris = null
                         }
                     }
-                    R_FreeInteractionCullInfo(sint.cullInfo)
+                    R_FreeInteractionCullInfo(sint.cullInfo!!)
                 }
 
 //                R_StaticFree(this.surfaces);
-                surfaces.clear()
+                surfaces = null
             }
             numSurfaces = -1
         }
@@ -794,7 +807,7 @@ object Interaction {
         fun MemoryUsed(): Int {
             var total = 0
             for (i in 0 until numSurfaces) {
-                val inter = surfaces[i]
+                val inter = surfaces!![i]!!
                 total += tr_trisurf.R_TriSurfMemory(inter.lightTris)
                 total += tr_trisurf.R_TriSurfMemory(inter.shadowTris)
             }
@@ -882,17 +895,17 @@ object Interaction {
 
             // for each surface of this entity / light interaction
             for (i in 0 until numSurfaces) {
-                val sint = surfaces[i]
+                val sint = surfaces!![i]
 
                 // see if the base surface is visible, we may still need to add shadows even if empty
-                if (!lightScissorsEmpty && sint.ambientTris != null && sint.ambientTris.ambientViewCount == tr_local.tr.viewCount) {
+                if (!lightScissorsEmpty && sint.ambientTris != null && sint.ambientTris!!.ambientViewCount == tr_local.tr.viewCount) {
 
                     // make sure we have created this interaction, which may have been deferred
                     // on a previous use that only needed the shadow
                     if (sint.lightTris === LIGHT_TRIS_DEFERRED) {
                         sint.lightTris = R_CreateLightTris(
                             vEntity.entityDef!!,
-                            sint.ambientTris,
+                            sint.ambientTris!!,
                             vLight.lightDef,
                             sint.shader,
                             sint.cullInfo
@@ -914,9 +927,9 @@ object Interaction {
                         ) {
 
                             // make sure the original surface has its ambient cache created
-                            val tri = sint.ambientTris
+                            val tri = sint.ambientTris!!
                             if (TempDump.NOT(tri.ambientCache)) {
-                                if (!tr_light.R_CreateAmbientCache(tri, sint.shader.ReceivesLighting())) {
+                                if (!tr_light.R_CreateAmbientCache(tri, sint.shader!!.ReceivesLighting())) {
                                     // skip if we were out of vertex memory
                                     continue
                                 }
@@ -942,7 +955,7 @@ object Interaction {
                             }
                             if (TempDump.NOT(lightTris.indexCache) && RenderSystem_init.r_useIndexBuffers.GetBool()) {
                                 lightTris.indexCache = VertexCache.vertexCache.Alloc(
-                                    lightTris.indexes,
+                                    lightTris.indexes!!,
                                     lightTris.numIndexes * Integer.BYTES,
                                     true
                                 )
@@ -952,13 +965,13 @@ object Interaction {
                             }
 
                             // add the surface to the light list
-                            val shader: Array<idMaterial> = arrayOf(sint.shader)
-                            RenderWorld.R_GlobalShaderOverride(shader as Array<idMaterial?>)
+                            val shader: Array<idMaterial?> = arrayOf(sint.shader)
+                            RenderWorld.R_GlobalShaderOverride(shader)
                             sint.shader = shader[0]
 
                             // there will only be localSurfaces if the light casts shadows and
                             // there are surfaces with NOSELFSHADOW
-                            if (sint.shader.Coverage() == materialCoverage_t.MC_TRANSLUCENT) {
+                            if (sint.shader!!.Coverage() == materialCoverage_t.MC_TRANSLUCENT) {
                                 tr_light.R_LinkLightSurf(
                                     vLight.translucentInteractions,
                                     lightTris,
@@ -968,7 +981,7 @@ object Interaction {
                                     lightScissor,
                                     false
                                 )
-                            } else if (!lightDef.parms.noShadows && sint.shader.TestMaterialFlag(Material.MF_NOSELFSHADOW)) {
+                            } else if (!lightDef.parms.noShadows && sint.shader!!.TestMaterialFlag(Material.MF_NOSELFSHADOW)) {
                                 tr_light.R_LinkLightSurf(
                                     vLight.localInteractions,
                                     lightTris,
@@ -1030,19 +1043,19 @@ object Interaction {
                     // copy the shadow vertexes to the vertex cache if they have been purged
                     // if we are using shared shadowVertexes and letting a vertex program fix them up,
                     // get the shadowCache from the parent ambient surface
-                    if (shadowTris.shadowVertexes.isNullOrEmpty()) {
+                    if (shadowTris.shadowVertexes != null) {
                         // the data may have been purged, so get the latest from the "home position"
-                        shadowTris.shadowCache = sint.ambientTris.shadowCache
+                        shadowTris.shadowCache = sint.ambientTris!!.shadowCache
                     }
 
                     // if we have been purged, re-upload the shadowVertexes
                     if (shadowTris.shadowCache == null) {
-                        if (shadowTris.shadowVertexes.isNotEmpty()) {
+                        if (shadowTris.shadowVertexes != null) {
                             // each interaction has unique vertexes
                             tr_light.R_CreatePrivateShadowCache(shadowTris)
                         } else {
-                            tr_light.R_CreateVertexProgramShadowCache(sint.ambientTris)
-                            shadowTris.shadowCache = sint.ambientTris.shadowCache
+                            tr_light.R_CreateVertexProgramShadowCache(sint.ambientTris!!)
+                            shadowTris.shadowCache = sint.ambientTris!!.shadowCache
                         }
                         // if we are out of vertex cache space, skip the interaction
                         if (TempDump.NOT(shadowTris.shadowCache)) {
@@ -1054,7 +1067,7 @@ object Interaction {
                     VertexCache.vertexCache.Touch(shadowTris.shadowCache)
                     if (TempDump.NOT(shadowTris.indexCache) && RenderSystem_init.r_useIndexBuffers.GetBool()) {
                         shadowTris.indexCache = VertexCache.vertexCache.Alloc(
-                            shadowTris.indexes,
+                            shadowTris.indexes!!,
                             shadowTris.numIndexes * Integer.BYTES,
                             true
                         )
@@ -1063,11 +1076,11 @@ object Interaction {
 
                     // see if we can avoid using the shadow volume caps
                     val inside = R_PotentiallyInsideInfiniteShadow(
-                        sint.ambientTris,
+                        sint.ambientTris!!,
                         localViewOrigin,
                         localLightOrigin
                     )
-                    if (sint.shader.TestMaterialFlag(Material.MF_NOSELFSHADOW)) {
+                    if (sint.shader!!.TestMaterialFlag(Material.MF_NOSELFSHADOW)) {
                         tr_light.R_LinkLightSurf(
                             vLight.localShadows,
                             shadowTris,
@@ -1135,8 +1148,7 @@ object Interaction {
             // create slots for each of the model's surfaces
             //
             numSurfaces = model.NumSurfaces()
-            surfaces.clear()
-            surfaces.addAll(surfaceInteraction_t.generateArray(numSurfaces))
+            surfaces = surfaceInteraction_t.generateArray(numSurfaces)
             interactionGenerated = false
 
             // check each surface in the model
@@ -1165,7 +1177,7 @@ object Interaction {
                 if (tr_main.R_CullLocalBox(tri.bounds, entityDef!!.modelMatrix, 6, lightDef.frustum)) {
                     continue
                 }
-                val sint = surfaces[c]
+                val sint = surfaces!![c]
                 sint.shader = shader
 
                 // save the ambient tri pointer so we can reject lightTri interactions
@@ -1191,7 +1203,7 @@ object Interaction {
                 }
 
                 // if the interaction has shadows and this surface casts a shadow
-                if (HasShadows() && shader.SurfaceCastsShadow() && tri.silEdges.isNotEmpty()) {
+                if (HasShadows() && shader.SurfaceCastsShadow() && tri.silEdges != null) {
 
                     // if the light has an optimized shadow volume, don't create shadows for any models that are part of the base areas
                     if (lightDef.parms.prelightModel == null || !model.IsStaticWorldModel() || !RenderSystem_init.r_useOptimizedShadows.GetBool()) {
@@ -1346,7 +1358,7 @@ object Interaction {
                 portalRect.Clear()
                 area = frustumAreas
                 while (area != null) {
-                    portalRect.Union(entityDef!!.world!!.GetAreaScreenRect(area.areaNum))
+                    portalRect.Union(entityDef!!.world!!.GetAreaScreenRect(area.areaNum)!!)
                     area = area.next
                 }
                 portalRect.Intersect(lightDef.viewLight!!.scissorRect)
@@ -1419,7 +1431,7 @@ object Interaction {
                 interaction.lightDef = lDef
                 interaction.entityDef = eDef
                 interaction.numSurfaces = -1 // not checked yet
-                interaction.surfaces.clear()
+                interaction.surfaces = null
                 interaction.frustumState = frustumStates.FRUSTUM_UNINITIALIZED
                 interaction.frustumAreas = null
 
@@ -1444,12 +1456,12 @@ object Interaction {
                 }
 
                 // update the interaction table
-                if (renderWorld.interactionTable.isNotEmpty()) {
+                if (renderWorld.interactionTable != null) {
                     val index = lDef.index * renderWorld.interactionTableWidth + eDef.index
-                    if (renderWorld.interactionTable[index] != null) {
+                    if (renderWorld.interactionTable!![index] != null) {
                         Common.common.Error("idInteraction::AllocAndLink: non null table entry")
                     }
-                    renderWorld.interactionTable[index] = interaction
+                    renderWorld.interactionTable!![index] = interaction
                 }
                 return interaction
             }
@@ -1484,7 +1496,7 @@ object Interaction {
             var shadowTris = 0
             var shadowTriVerts = 0
             var shadowTriIndexes = 0
-            for (i in 0 until tr_local.tr.primaryWorld!!.entityDefs.size) {
+            for (i in 0 until tr_local.tr.primaryWorld!!.entityDefs.Num()) {
                 val def = tr_local.tr.primaryWorld!!.entityDefs[i]
                 if (null == def) {
                     continue
@@ -1508,7 +1520,7 @@ object Interaction {
                         continue
                     }
                     for (j in 0 until inter.numSurfaces) {
-                        val srf = inter.surfaces[j]
+                        val srf = inter.surfaces!![j]
                         if (srf.lightTris != null && srf.lightTris !== LIGHT_TRIS_DEFERRED) {
                             lightTris++
                             lightTriVerts += srf.lightTris!!.numVerts

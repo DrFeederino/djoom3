@@ -1844,7 +1844,7 @@ object Session_local {
         fun GetAutoSaveName(mapName: String): String {
             var mapName = mapName
             val mapDecl = DeclManager.declManager.FindType(declType_t.DECL_MAPDEF, mapName, false)
-            val mapDef = mapDecl as idDeclEntityDef
+            val mapDef = mapDecl as idDeclEntityDef?
             if (mapDef != null) {
                 mapName = Common.common.GetLanguageDict().GetString(mapDef.dict.GetString("name", mapName))
             }
@@ -2915,7 +2915,7 @@ object Session_local {
         fun SetBytesNeededForMapLoad(mapName: String, bytesNeeded: Int) {
             val mapDecl =  /*const_cast<idDecl *>*/
                 DeclManager.declManager.FindType(declType_t.DECL_MAPDEF, mapName, false)
-            val mapDef = mapDecl as idDeclEntityDef
+            val mapDef = mapDecl as idDeclEntityDef?
             if (Common.com_updateLoadSize.GetBool() && mapDef != null) {
                 // we assume that if com_updateLoadSize is true then the file is writable
                 mapDef.dict.SetInt(Str.va("size%d", Common.com_machineSpec.GetInteger()), bytesNeeded)

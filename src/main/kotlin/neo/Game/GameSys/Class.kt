@@ -603,7 +603,7 @@ class Class {
 
         // virtual						~idClass();
         protected open fun _deconstructor() {
-            CancelEvents(this as idEventDef)
+            idEvent.CancelEvents(this)
         }
 
         open fun Spawn() {}
@@ -1058,7 +1058,7 @@ class Class {
             )
         }
 
-        fun ProcessEventArgPtr(ev: idEventDef, data: ArrayList<idEventArg<*>>): Boolean {
+        fun ProcessEventArgPtr(ev: idEventDef?, data: Array<idEventArg<*>?>): Boolean {
             val num: Int
             val callback: eventCallback_t<*>?
             assert(ev != null)
@@ -1074,7 +1074,7 @@ class Class {
                     name
                 )
             }
-            num = ev.GetEventNum()
+            num = ev!!.GetEventNum()
             callback = getEventCallBack(ev) //callback = c.eventMap[num];
             if (callback == null) {
                 // we don't respond to this event, so ignore it
@@ -1085,7 +1085,7 @@ class Class {
                 0, 1, 2, 3, 4, 5, 6, 7, 8 -> ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_8_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ], data[ 7 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                    callback.run { data.toTypedArray() }
+                    callback.run { data }
                 else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev.GetName())
             }
 
@@ -1093,7 +1093,7 @@ class Class {
             return true
         }
 
-        fun CancelEvents(ev: idEventDef) {
+        fun CancelEvents(ev: idEventDef?) {
             idEvent.CancelEvents(this, ev)
         }
 
@@ -1187,7 +1187,7 @@ class Class {
 //            va_start(args, numargs);
             val data = idEvent.CopyArgs(ev, numargs, args)
             //            va_end(args);
-            ProcessEventArgPtr(ev, arrayListOf(*data))
+            ProcessEventArgPtr(ev, data as Array<idEventArg<*>?>)
             return true
         }
 

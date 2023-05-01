@@ -315,7 +315,7 @@ object renderbump {
         bounds.Clear()
         i = 0
         while (i < highMesh.numVerts) {
-            bounds.AddPoint(highMesh.verts[i].xyz)
+            bounds.AddPoint(highMesh.verts!![i]!!.xyz)
             i++
         }
         hash.bounds.set(bounds)
@@ -358,7 +358,7 @@ object renderbump {
             triBounds.Clear()
             j = 0
             while (j < 3) {
-                triBounds.AddPoint(highMesh.verts[highMesh.indexes[i + j]].xyz)
+                triBounds.AddPoint(highMesh.verts!![highMesh.indexes!![i + j]]!!.xyz)
                 j++
             }
             j = 0
@@ -425,10 +425,10 @@ object renderbump {
         val baseArea: Float
         val bary = FloatArray(3)
         val testVert = idVec3()
-        v[0].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 0]].xyz)
-        v[1].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 1]].xyz)
-        v[2].set(highMesh.verts[highMesh.indexes[faceNum * 3 + 2]].xyz)
-        plane.set(highMesh.facePlanes[faceNum])
+        v[0].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 0]]!!.xyz)
+        v[1].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 1]]!!.xyz)
+        v[2].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 2]]!!.xyz)
+        plane.set(highMesh.facePlanes!![faceNum])
 
         // only test against planes facing the same direction as our normal
         d = plane.Normal().times(normal)
@@ -488,7 +488,7 @@ object renderbump {
         sampledNormal.set(Vector.getVec3_origin())
         j = 0
         while (j < 3) {
-            sampledNormal.plusAssign(highMesh.verts[highMesh.indexes[faceNum * 3 + j]].normal.times(bary[j]))
+            sampledNormal.plusAssign(highMesh.verts!![highMesh.indexes!![faceNum * 3 + j]]!!.normal.times(bary[j]))
             j++
         }
         sampledNormal.Normalize()
@@ -500,7 +500,7 @@ object renderbump {
             var color = 0.0f
             j = 0
             while (j < 3) {
-                color += bary[j] * highMesh.verts[highMesh.indexes[faceNum * 3 + j]].color[i]
+                color += bary[j] * highMesh.verts!![highMesh.indexes!![faceNum * 3 + j]]!!.color[i]
                 j++
             }
             sampledColor[i] = color.toInt().toByte()
@@ -676,12 +676,12 @@ object renderbump {
         // this is a brain-dead rasterizer, but compared to the ray trace,
         // nothing we do here is going to matter performance-wise
         // adjust for resolution and texel centers
-        verts[0][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st[0] * rbs[0].width - 0.5f
-        verts[1][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st[0] * rbs[0].width - 0.5f
-        verts[2][0] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st[0] * rbs[0].width - 0.5f
-        verts[0][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 0]].st[1] * rbs[0].width - 0.5f
-        verts[1][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 1]].st[1] * rbs[0].width - 0.5f
-        verts[2][1] = lowMesh.verts[lowMesh.indexes[lowFaceNum * 3 + 2]].st[1] * rbs[0].width - 0.5f
+        verts[0][0] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 0]]!!.st[0] * rbs[0].width - 0.5f
+        verts[1][0] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 1]]!!.st[0] * rbs[0].width - 0.5f
+        verts[2][0] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 2]]!!.st[0] * rbs[0].width - 0.5f
+        verts[0][1] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 0]]!!.st[1] * rbs[0].width - 0.5f
+        verts[1][1] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 1]]!!.st[1] * rbs[0].width - 0.5f
+        verts[2][1] = lowMesh.verts!![lowMesh.indexes!![lowFaceNum * 3 + 2]]!!.st[1] * rbs[0].width - 0.5f
 
         // find the texcoord bounding box
         bounds[0][0] = 99999f
@@ -810,14 +810,14 @@ object renderbump {
                 k = 0
                 while (k < 3) {
                     var index: Int
-                    index = lowMesh.indexes[lowFaceNum * 3 + k]
-                    point.plusAssign(lowMesh.verts[index].xyz.times(bary[k]))
+                    index = lowMesh.indexes!![lowFaceNum * 3 + k]
+                    point.plusAssign(lowMesh.verts!![index]!!.xyz.times(bary[k]))
 
                     // traceNormal will differ from normal if the surface uses unsmoothedTangents
                     traceNormal.plusAssign(lowMeshNormals[index].times(bary[k]))
-                    normal.plusAssign(lowMesh.verts[index].normal.times(bary[k]))
-                    tangents[0].plusAssign(lowMesh.verts[index].tangents[0].times(bary[k]))
-                    tangents[1].plusAssign(lowMesh.verts[index].tangents[1].times(bary[k]))
+                    normal.plusAssign(lowMesh.verts!![index]!!.normal.times(bary[k]))
+                    tangents[0].plusAssign(lowMesh.verts!![index]!!.tangents[0].times(bary[k]))
+                    tangents[1].plusAssign(lowMesh.verts!![index]!!.tangents[1].times(bary[k]))
                     k++
                 }
 
@@ -926,12 +926,12 @@ object renderbump {
 //            memcpy(verts + numVerts, tri.verts, tri.numVerts * sizeof(tri.verts[0]));
             i = 0
             while (i < tri.numVerts) {
-                verts[i] = idDrawVert(tri.verts[i])
+                verts!![i] = idDrawVert(tri.verts!![i]!!)
                 i++
             }
             j = 0
             while (j < tri.numIndexes) {
-                indexes[numIndexes + j] = numVerts + tri.indexes[j]
+                indexes!![numIndexes + j] = numVerts + tri.indexes!![j]
                 j++
             }
             newTri.bounds.AddBounds(tri.bounds)
@@ -1000,8 +1000,8 @@ object renderbump {
 //        }
 //        // normalize and replicate from silIndexes to all indexes
 //        for (i = 0; i < lowMesh.numIndexes; i++) {
-//            lowMeshNormals[lowMesh.indexes[i]] = lowMeshNormals[lowMesh.silIndexes[i]];//TODO: create shuffle function that moves
-//            lowMeshNormals[lowMesh.indexes[i]].Normalize();
+//            lowMeshNormals[lowMesh.indexes!![i]] = lowMeshNormals[lowMesh.silIndexes[i]];//TODO: create shuffle function that moves
+//            lowMeshNormals[lowMesh.indexes!![i]].Normalize();
 //        }
 //
 //        // rasterize each low poly face
@@ -1558,9 +1558,9 @@ object renderbump {
                                 while (k < 3) {
                                     var v: Int
                                     var a: FloatArray
-                                    v = mesh.indexes[j + k]
-                                    qgl.qglColor3ubv(mesh.verts[v].color)
-                                    a = mesh.verts[v].xyz.ToFloatPtr()
+                                    v = mesh.indexes!![j + k]
+                                    qgl.qglColor3ubv(mesh.verts!![v]!!.color)
+                                    a = mesh.verts!![v]!!.xyz.ToFloatPtr()
                                     qgl.qglVertex3f(a[0] + xOff, a[2] + yOff, a[1])
                                     k++
                                 }
@@ -1580,12 +1580,12 @@ object renderbump {
                                     var v1: Int
                                     var v2: Int
                                     var v3: Int
-                                    v1 = mesh.indexes[j + 0]
-                                    v2 = mesh.indexes[j + 1]
-                                    v3 = mesh.indexes[j + 2]
-                                    a2.set(mesh.verts[v1].xyz)
-                                    b2.set(mesh.verts[v2].xyz)
-                                    c2.set(mesh.verts[v3].xyz)
+                                    v1 = mesh.indexes!![j + 0]
+                                    v2 = mesh.indexes!![j + 1]
+                                    v3 = mesh.indexes!![j + 2]
+                                    a2.set(mesh.verts!![v1]!!.xyz)
+                                    b2.set(mesh.verts!![v2]!!.xyz)
+                                    c2.set(mesh.verts!![v3]!!.xyz)
                                     plane.FromPoints(a2, b2, c2)
 
                                     // NULLNORMAL is used by the artists to force an area to reflect no
@@ -1612,8 +1612,8 @@ object renderbump {
                                         var v: Int
                                         var n: FloatArray
                                         var a: FloatArray
-                                        v = mesh.indexes[j + k]
-                                        n = mesh.verts[v].normal.ToFloatPtr()
+                                        v = mesh.indexes!![j + k]
+                                        n = mesh.verts!![v]!!.normal.ToFloatPtr()
 
                                         // NULLNORMAL is used by the artists to force an area to reflect no
                                         // light at all
@@ -1623,7 +1623,7 @@ object renderbump {
                                             // we are going to flip the normal Z direction
                                             qgl.qglColor3f(0.5f + 0.5f * n[0], 0.5f - 0.5f * n[2], 0.5f - 0.5f * n[1])
                                         }
-                                        a = mesh.verts[v].xyz.ToFloatPtr()
+                                        a = mesh.verts!![v]!!.xyz.ToFloatPtr()
                                         qgl.qglVertex3f(a[0] + xOff, a[2] + yOff, a[1])
                                         k++
                                     }

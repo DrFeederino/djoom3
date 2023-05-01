@@ -96,7 +96,7 @@ object PlayerIcon {
             renderEnt.hModel = ModelManager.renderModelManager.FindModel("_sprite")
             renderEnt.callback = null
             renderEnt.numJoints = 0
-            renderEnt.joints.clear()
+            renderEnt.joints = null
             renderEnt.customSkin = null
             renderEnt.noShadow = true
             renderEnt.noSelfShadow = true

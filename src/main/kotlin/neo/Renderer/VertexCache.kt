@@ -50,7 +50,7 @@ object VertexCache {
 
         //                                 // to round up and minimum fragment sizes
         var tag // a tag of 0 is a free block
-                : vertBlockTag_t = vertBlockTag_t.TAG_FREE
+                : vertBlockTag_t? = null
         var user // will be set to zero when purged
                 : vertCache_s? = null
         var   /*GLuint*/ vao = 0
@@ -367,11 +367,11 @@ object VertexCache {
             return Alloc(data, size, null, indexBuffer)
         }
 
-        fun Alloc(data: Array<idDrawVert>, size: Int, buffer: vertCache_s?): vertCache_s {
+        fun Alloc(data: Array<idDrawVert?>, size: Int, buffer: vertCache_s?): vertCache_s {
             return Alloc(DrawVert.toByteBuffer(data), size, buffer, false)
         }
 
-        fun Alloc(data: Array<idDrawVert>, size: Int): vertCache_s {
+        fun Alloc(data: Array<idDrawVert?>, size: Int): vertCache_s {
             return Alloc(DrawVert.toByteBuffer(data), size, null)
         }
 
@@ -516,8 +516,8 @@ object VertexCache {
             return block
         }
 
-        fun AllocFrameTempIdDrawVert(data: ArrayList<idDrawVert>, size: Int): vertCache_s {
-            return AllocFrameTemp(DrawVert.toByteBuffer(data.toTypedArray()), size)
+        fun AllocFrameTempIdDrawVert(data: Array<idDrawVert?>, size: Int): vertCache_s {
+            return AllocFrameTemp(DrawVert.toByteBuffer(data), size)
         }
 
         fun AllocFrameTempIdVec3(data: ArrayList<idVec3>, size: Int): vertCache_s {

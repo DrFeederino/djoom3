@@ -20,6 +20,7 @@ import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.HashIndex.idHashIndex
+import neo.idlib.containers.List.idList
 import neo.sys.win_shared
 
 /**
@@ -110,7 +111,7 @@ object ModelManager {
         private val hash: idHashIndex
         private var insideLevelLoad // don't actually load now
                 : Boolean
-        private val models: ArrayList<idRenderModel>
+        private val models: idList<idRenderModel>
         private var spriteModel: idRenderModel?
         private val trailModel: idRenderModel?
 
@@ -167,7 +168,7 @@ object ModelManager {
         }
 
         override fun Shutdown() {
-            models.clear()
+            models.Clear()
             hash.Free()
         }
 
@@ -213,14 +214,13 @@ object ModelManager {
         }
 
         override fun AddModel(model: idRenderModel) {
-            models.add(model)
-            hash.Add(hash.GenerateKey(model.Name(), false), models.indexOf(model))
+            hash.Add(hash.GenerateKey(model.Name(), false), models.Append(model))
         }
 
         override fun RemoveModel(model: idRenderModel) {
-            val index = models.indexOf(model)
+            val index = models.FindIndex(model)
             hash.RemoveIndex(hash.GenerateKey(model.Name(), false), index)
-            models.removeAt(index)
+            models.RemoveIndex(index)
         }
 
         override fun ReloadModels(forceAll: Boolean) {
@@ -232,8 +232,8 @@ object ModelManager {
             tr_lightrun.R_FreeDerivedData()
 
             // skip the default model at index 0
-            for (i in 1 until models.size) {
-                val model = models.get(i)
+            for (i in 1 until models.Num()) {
+                val model = models[i]
 
                 // we may want to allow world model reloading in the future, but we don't now
                 if (!model.IsReloadable()) {
@@ -257,15 +257,15 @@ object ModelManager {
         }
 
         override fun FreeModelVertexCaches() {
-            for (i in 0 until models.size) {
-                val model = models.get(i)
+            for (i in 0 until models.Num()) {
+                val model = models[i]
                 model.FreeVertexCache()
             }
         }
 
         override fun WritePrecacheCommands(f: idFile) {
-            for (i in 0 until models.size) {
-                val model = models.get(i)
+            for (i in 0 until models.Num()) {
+                val model = models[i]
                 if (!model.IsReloadable()) {
                     continue
                 }
@@ -279,8 +279,8 @@ object ModelManager {
 
         override fun BeginLevelLoad() {
             insideLevelLoad = true
-            for (i in 0 until models.size) {
-                val model = models.get(i)
+            for (i in 0 until models.Num()) {
+                val model = models[i]
                 if (Common.com_purgeAll.GetBool() && model.IsReloadable()) {
                     tr_lightrun.R_CheckForEntityDefsUsingModel(model)
                     model.PurgeModel()
@@ -301,8 +301,8 @@ object ModelManager {
             var loadCount = 0
 
             // purge any models not touched
-            for (i in 0 until models.size) {
-                val model = models.get(i)
+            for (i in 0 until models.Num()) {
+                val model = models[i]
                 if (!model.IsLevelLoadReferenced() && model.IsLoaded() && model.IsReloadable()) {
 
 //			common.Printf( "purging %s\n", model.Name() );
@@ -320,8 +320,8 @@ object ModelManager {
             tr_trisurf.R_PurgeTriSurfData(tr_local.frameData)
 
             // load any new ones
-            for (i in 0 until models.size) {
-                val model = models.get(i)
+            for (i in 0 until models.Num()) {
+                val model = models[i]
                 if (model.IsLevelLoadReferenced() && !model.IsLoaded() && model.IsReloadable()) {
                     loadCount++
                     model.LoadModel()
@@ -353,18 +353,18 @@ object ModelManager {
             }
 
             // sort first
-            sortIndex = IntArray(localModelManager.models.size)
+            sortIndex = IntArray(localModelManager.models.Num())
             i = 0
-            while (i < localModelManager.models.size) {
+            while (i < localModelManager.models.Num()) {
                 sortIndex[i] = i
                 i++
             }
             i = 0
-            while (i < localModelManager.models.size - 1) {
+            while (i < localModelManager.models.Num() - 1) {
                 j = i + 1
-                while (j < localModelManager.models.size) {
-                    if (localModelManager.models.get(sortIndex[i])
-                            .Memory() < localModelManager.models.get(sortIndex[j]).Memory()
+                while (j < localModelManager.models.Num()) {
+                    if (localModelManager.models[sortIndex[i]]
+                            .Memory() < localModelManager.models[sortIndex[j]].Memory()
                     ) {
                         val temp = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
@@ -377,8 +377,8 @@ object ModelManager {
 
             // print next
             i = 0
-            while (i < localModelManager.models.size) {
-                val model = localModelManager.models.get(sortIndex[i])
+            while (i < localModelManager.models.Num()) {
+                val model = localModelManager.models[sortIndex[i]]
                 var mem: Int
                 if (!model.IsLoaded()) {
                     i++
@@ -409,7 +409,7 @@ object ModelManager {
             val key = hash.GenerateKey(modelName, false)
             var i = hash.First(key)
             while (i != -1) {
-                val model = models.get(i)
+                val model = models[i]
                 if (canonical.Icmp(model.Name()) == 0) {
                     if (!model.IsLoaded()) {
                         // reload it if it was purged
@@ -518,8 +518,8 @@ object ModelManager {
                 var inUse = 0
                 Common.common.Printf(" mem   srf verts tris\n")
                 Common.common.Printf(" ---   --- ----- ----\n")
-                for (i in 0 until localModelManager.models.size) {
-                    val model = localModelManager.models.get(i)
+                for (i in 0 until localModelManager.models.Num()) {
+                    val model = localModelManager.models[i]
                     if (!model.IsLoaded()) {
                         continue
                     }
@@ -592,7 +592,7 @@ object ModelManager {
         //
         //
         init {
-            models = ArrayList()
+            models = idList()
             hash = idHashIndex()
             defaultModel = null
             beamModel = null

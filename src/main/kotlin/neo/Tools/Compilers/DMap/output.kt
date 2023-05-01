@@ -202,19 +202,19 @@ object output {
                 // search for a match
                 j = 0
                 while (j < numVerts) {
-                    if (MatchVert(uTri.verts[j], dv)) {
+                    if (MatchVert(uTri.verts!![j]!!, dv)) {
                         break
                     }
                     j++
                 }
                 if (j == numVerts) {
                     numVerts++
-                    uTri.verts[j].xyz.set(dv.xyz)
-                    uTri.verts[j].normal.set(dv.normal)
-                    uTri.verts[j].st[0] = dv.st[0]
-                    uTri.verts[j].st[1] = dv.st[1]
+                    uTri.verts!![j]!!.xyz.set(dv.xyz)
+                    uTri.verts!![j]!!.normal.set(dv.normal)
+                    uTri.verts!![j]!!.st[0] = dv.st[0]
+                    uTri.verts!![j]!!.st[1] = dv.st[1]
                 }
-                uTri.indexes[numIndexes++] = j
+                uTri.indexes!![numIndexes++] = j
                 i++
             }
             step = step.next
@@ -262,7 +262,7 @@ object output {
         while (i < uTris.numVerts) {
             val vec = FloatArray(8)
             val dv: idDrawVert
-            dv = uTris.verts[i]
+            dv = uTris.verts!![i]!!
             vec[0] = dv.xyz[0]
             vec[1] = dv.xyz[1]
             vec[2] = dv.xyz[2]
@@ -286,7 +286,7 @@ object output {
         col = 0
         i = 0
         while (i < uTris.numIndexes) {
-            procFile!!.WriteFloatString("%d ", uTris.indexes[i])
+            procFile!!.WriteFloatString("%d ", uTris.indexes!![i])
             if (++col == 18) {
                 col = 0
                 procFile!!.WriteFloatString("\n")
@@ -323,7 +323,7 @@ object output {
         col = 0
         i = 0
         while (i < tri.numVerts) {
-            Write1DMatrix(procFile!!, 3, tri.shadowVertexes[i].xyz.ToFloatPtr())
+            Write1DMatrix(procFile!!, 3, tri.shadowVertexes!![i].xyz.ToFloatPtr())
             if (++col == 5) {
                 col = 0
                 procFile!!.WriteFloatString("\n")
@@ -338,7 +338,7 @@ object output {
         col = 0
         i = 0
         while (i < tri.numIndexes) {
-            procFile!!.WriteFloatString("%d ", tri.indexes[i])
+            procFile!!.WriteFloatString("%d ", tri.indexes!![i])
             if (++col == 18) {
                 col = 0
                 procFile!!.WriteFloatString("\n")

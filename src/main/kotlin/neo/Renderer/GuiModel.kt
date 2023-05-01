@@ -25,7 +25,7 @@ class GuiModel {
         val color: FloatArray = FloatArray(4)
         var firstIndex = 0
         var firstVert = 0
-        var material: Material.idMaterial? = null
+        var material: idMaterial? = null
         var numIndexes = 0
         var numVerts = 0
     }
@@ -38,7 +38,7 @@ class GuiModel {
         //
         private val surfaces: idList<guiModelSurface_t>
         private val verts: idList<idDrawVert>
-        private lateinit var surf: guiModelSurface_t
+        private var surf: guiModelSurface_t? = null
 
         /*
          ================
@@ -69,10 +69,10 @@ class GuiModel {
                 demo.WriteVec3(verts[j].normal)
                 demo.WriteVec3(verts[j].tangents[0])
                 demo.WriteVec3(verts[j].tangents[1])
-                demo.WriteUnsignedChar(verts[j].color[0] as Char)
-                demo.WriteUnsignedChar(verts[j].color[1] as Char)
-                demo.WriteUnsignedChar(verts[j].color[2] as Char)
-                demo.WriteUnsignedChar(verts[j].color[3] as Char)
+                demo.WriteUnsignedChar(verts[j].color[0].toChar())
+                demo.WriteUnsignedChar(verts[j].color[1].toChar())
+                demo.WriteUnsignedChar(verts[j].color[2].toChar())
+                demo.WriteUnsignedChar(verts[j].color[3].toChar())
                 j++
             }
             i = indexes.Num()
@@ -119,13 +119,13 @@ class GuiModel {
                 demo.ReadVec3(verts[j].tangents[0])
                 demo.ReadVec3(verts[j].tangents[1])
                 demo.ReadUnsignedChar(color)
-                verts[j].color[0] = color[0] as Byte
+                verts[j].color[0] = color[0].toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[1] = color[0] as Byte
+                verts[j].color[1] = color[0].toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[2] = color[0] as Byte
+                verts[j].color[2] = color[0].toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[3] = color[0] as Byte
+                verts[j].color[3] = color[0].toByte()
                 j++
             }
             i._val = (indexes.Num())
@@ -225,7 +225,7 @@ class GuiModel {
             viewDef.worldSpace.modelViewMatrix[15] = 1.0f
             viewDef.maxDrawSurfs = surfaces.Num()
             viewDef.drawSurfs =
-                drawSurf_s.Companion.generateArray(viewDef.maxDrawSurfs) ///*(drawSurf_t **)*/ R_FrameAlloc(viewDef.maxDrawSurfs * sizeof(viewDef.drawSurfs[0]));
+                drawSurf_s.generateArray(viewDef.maxDrawSurfs) ///*(drawSurf_t **)*/ R_FrameAlloc(viewDef.maxDrawSurfs * sizeof(viewDef.drawSurfs[0]));
             viewDef.numDrawSurfs = 0
             val oldViewDef = tr_local.tr.viewDef
             tr_local.tr.viewDef = viewDef
@@ -249,10 +249,10 @@ class GuiModel {
             if (!tr_local.glConfig.isInitialized) {
                 return
             }
-            if (r == surf.color[0] && g == surf.color[1] && b == surf.color[2] && a == surf.color[3]) {
+            if (r == surf!!.color[0] && g == surf!!.color[1] && b == surf!!.color[2] && a == surf!!.color[3]) {
                 return  // no change
             }
-            if (surf.numVerts != 0) {
+            if (surf!!.numVerts != 0) {
 //                if (bla) {
 //                }
 //                TempDump.printCallStack(setColorTotal + "");
@@ -262,14 +262,14 @@ class GuiModel {
             }
 
             // change the parms
-            surf.color[0] = r
-            surf.color[1] = g
-            surf.color[2] = b
-            surf.color[3] = a
+            surf!!.color[0] = r
+            surf!!.color[1] = g
+            surf!!.color[2] = b
+            surf!!.color[3] = a
         }
 
         fun DrawStretchPic(
-            dVerts: Array<idDrawVert>,
+            dVerts: Array<idDrawVert>?,
             dIndexes: IntArray?,
             vertCount: Int,
             indexCount: Int,
@@ -285,7 +285,7 @@ class GuiModel {
             if (!tr_local.glConfig.isInitialized) {
                 return
             }
-            if (!(dVerts.isNotEmpty() && dIndexes != null && vertCount != 0 && indexCount != 0 && hShader != null)) {
+            if (!(dVerts != null && dIndexes != null && vertCount != 0 && indexCount != 0 && hShader != null)) {
                 return
             }
 
@@ -293,15 +293,15 @@ class GuiModel {
 //                    if (bla) {
 //                    }
 //            System.out.printf("%s\n%s\n\n", hShader, surf.material);
-            if (hShader !== surf.material) {
-                if (surf.numVerts != 0) {
+            if (hShader !== surf!!.material) {
+                if (surf!!.numVerts != 0) {
                     AdvanceSurf()
                     //                    if (bla) {
 //                    System.out.printf("~~ %d %d\n", Window.idWindow.bla1, Window.idWindow.bla2);
 //                    }
                 }
                 hShader.EnsureNotPurged() // in case it was a gui item started before a level change
-                surf.material = hShader
+                surf!!.material = hShader
                 //                TempDump.printCallStack(bla4 + "");
             }
 
@@ -384,13 +384,13 @@ class GuiModel {
                         dv.tangents[1].set(0f, 1f, 0f)
                         j++
                     }
-                    surf.numVerts += w.GetNumPoints()
+                    surf!!.numVerts += w.GetNumPoints()
                     j = 2
                     while (j < w.GetNumPoints()) {
-                        indexes.Append(numVerts - surf.firstVert)
-                        indexes.Append(numVerts + j - 1 - surf.firstVert)
-                        indexes.Append(numVerts + j - surf.firstVert)
-                        surf.numIndexes += 3
+                        indexes.Append(numVerts - surf!!.firstVert)
+                        indexes.Append(numVerts + j - 1 - surf!!.firstVert)
+                        indexes.Append(numVerts + j - surf!!.firstVert)
+                        surf!!.numIndexes += 3
                         j++
                     }
                     i += 3
@@ -402,10 +402,10 @@ class GuiModel {
                 val numIndexes = indexes.Num()
                 verts.AssureSize(numVerts + vertCount)
                 indexes.AssureSize(numIndexes + indexCount)
-                surf.numVerts += vertCount
-                surf.numIndexes += indexCount
+                surf!!.numVerts += vertCount
+                surf!!.numIndexes += indexCount
                 for (i in 0 until indexCount) {
-                    indexes[numIndexes + i] = numVerts + dIndexes[i] - surf.firstVert
+                    indexes[numIndexes + i] = numVerts + dIndexes[i] - surf!!.firstVert
                 }
 
                 //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
@@ -620,24 +620,24 @@ class GuiModel {
             tempVerts[2].tangents[1][2] = 0f
 
             // break the current surface if we are changing to a new material
-            if (material !== surf.material) {
-                if (surf.numVerts != 0) {
+            if (material !== surf!!.material) {
+                if (surf!!.numVerts != 0) {
                     AdvanceSurf()
                     if (bla) {
                         bla4++
                     }
                 }
                 /*const_cast<idMaterial *>*/material.EnsureNotPurged() // in case it was a gui item started before a level change
-                surf.material = material
+                surf!!.material = material
             }
             val numVerts = verts.Num()
             val numIndexes = indexes.Num()
             verts.AssureSize(numVerts + vertCount)
             indexes.AssureSize(numIndexes + indexCount)
-            surf.numVerts += vertCount
-            surf.numIndexes += indexCount
+            surf!!.numVerts += vertCount
+            surf!!.numIndexes += indexCount
             for (i in 0 until indexCount) {
-                indexes[numIndexes + i] = numVerts + tempIndexes[i] - surf.firstVert
+                indexes[numIndexes + i] = numVerts + tempIndexes[i] - surf!!.firstVert
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
@@ -650,11 +650,11 @@ class GuiModel {
         private fun AdvanceSurf() {
             val s = guiModelSurface_t()
             if (surfaces.Num() != 0) {
-                s.color[0] = surf.color[0]
-                s.color[1] = surf.color[1]
-                s.color[2] = surf.color[2]
-                s.color[3] = surf.color[3]
-                s.material = surf.material
+                s.color[0] = surf!!.color[0]
+                s.color[1] = surf!!.color[1]
+                s.color[2] = surf!!.color[2]
+                s.color[3] = surf!!.color[3]
+                s.material = surf!!.material
             } else {
                 s.color[0] = 1f
                 s.color[1] = 1f
@@ -689,7 +689,7 @@ class GuiModel {
 
             // copy verts and indexes
             tri = srfTriangles_s() ///*(srfTriangles_s *)*/ R_ClearedFrameAlloc(sizeof(tri));
-            tri.numIndexes = surf!!.numIndexes
+            tri.numIndexes = surf.numIndexes
             tri.numVerts = surf.numVerts //TODO:see if we can get rid of these single element arrays. EDIT:done.
             tri.indexes =
                 IntArray(tri.numIndexes) ///*(glIndex_t *)*/ R_FrameAlloc(tri.numIndexes * sizeof(tri.indexes[0]));
@@ -698,7 +698,7 @@ class GuiModel {
                 var s = surf.firstIndex
                 var d = 0
                 while (d < tri.numIndexes) {
-                    tri.indexes[d] = indexes[s]
+                    tri.indexes!![d] = indexes[s]
                     s++
                     d++
                 }
@@ -708,19 +708,19 @@ class GuiModel {
             // but some things, like deforms and recursive
             // guis, need to access the verts in cpu space, not just through the vertex range
             tri.verts =
-                ArrayList(tri.numVerts) ///*(idDrawVert *)*/ R_FrameAlloc(tri.numVerts * sizeof(tri.verts[0]));
+                arrayOfNulls(tri.numVerts) ///*(idDrawVert *)*/ R_FrameAlloc(tri.numVerts * sizeof(tri.verts[0]));
             //            memcpy(tri.verts,  & verts[surf.firstVert], tri.numVerts * sizeof(tri.verts[0]));
             var s = surf.firstVert
             var d = 0
             while (d < tri.numVerts) {
-                tri.verts.add(d, idDrawVert(verts[s]))
+                tri.verts!![d] = idDrawVert(verts[s])
                 s++
                 d++
             }
 
             // move the verts to the vertex cache
             tri.ambientCache =
-                VertexCache.vertexCache.AllocFrameTempIdDrawVert(tri.verts, tri.numVerts * idDrawVert.Companion.BYTES)
+                VertexCache.vertexCache.AllocFrameTempIdDrawVert(tri.verts!!, tri.numVerts * idDrawVert.BYTES)
 
             // if we are out of vertex cache, don't create the surface
             if (TempDump.NOT(tri.ambientCache)) {

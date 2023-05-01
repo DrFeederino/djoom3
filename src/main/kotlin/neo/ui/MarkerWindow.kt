@@ -2,7 +2,8 @@ package neo.ui
 
 import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
-import neo.TempDump
+import neo.TempDump.itob
+import neo.TempDump.wrapToNativeBuffer
 import neo.framework.DeclManager
 import neo.framework.FileSystem_h.idFileList
 import neo.framework.KeyInput
@@ -295,8 +296,9 @@ class MarkerWindow {
                         i++
                     }
                     val stage = background!!.GetStage(0)
-                    stage.texture?.image?.get(0)
-                        ?.UploadScratch(TempDump.wrapToNativeBuffer(TempDump.itob(imageBuff!!))!!, 512, 64)
+                    if (stage != null) { //TODO: check the wrapToNativeBuffer below.
+                        stage.texture.image[0]!!.UploadScratch(wrapToNativeBuffer(itob(imageBuff!!))!!, 512, 64)
+                    }
                     //                    Mem_Free(imageBuff);
                     imageBuff = null
                 }

@@ -175,7 +175,7 @@ object AF {
             val modelDef: idDeclModelDef?
             val model: idRenderModel?
             val numJoints: Int
-            val joints: kotlin.collections.ArrayList<idJointMat>
+            val joints: Array<idJointMat>
             assert(ent != null)
             self = ent
             physicsObj.SetSelf(self!!)
@@ -242,19 +242,19 @@ object AF {
 
             // create the animation frame used to setup the articulated figure
             numJoints = animator!!.NumJoints()
-            joints = ArrayList<idJointMat>(numJoints)
+            joints = Array<idJointMat>(numJoints) { idJointMat() }
             GameEdit.gameEdit.ANIM_CreateAnimFrame(
                 model,
                 animator!!.GetAnim(modifiedAnim)!!.MD5Anim(0),
                 numJoints,
-                joints.toTypedArray(),
+                joints,
                 1,
                 animator!!.ModelDef()!!.GetVisualOffset(),
                 animator!!.RemoveOrigin()
             )
 
             // set all vector positions from model joints
-            file.Finish(GetJointTransform.INSTANCE, joints.toTypedArray(), animator!!)
+            file.Finish(GetJointTransform.INSTANCE, joints, animator!!)
 
             // initialize articulated figure physics
             physicsObj.SetGravity(Game_local.gameLocal.GetGravity())
@@ -321,7 +321,7 @@ object AF {
             // load bodies from the file
             i = 0
             while (i < file.bodies.Num()) {
-                LoadBody(file.bodies[i], joints.toTypedArray())
+                LoadBody(file.bodies[i], joints)
                 i++
             }
 
@@ -489,8 +489,8 @@ object AF {
             var j: Int
             val numClipModels: Int
             var body: idAFBody?
-            var cm: idClipModel
-            val clipModels = kotlin.collections.ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            var cm: idClipModel?
+            val clipModels = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             var numTouching: Int
             if (!IsLoaded()) {
                 return 0
@@ -508,7 +508,7 @@ object AF {
                 j = 0
                 while (j < numClipModels) {
                     cm = clipModels[j]
-                    if (TempDump.NOT(cm) || cm.GetEntity() == self) {
+                    if (cm == null || cm.GetEntity() == self) {
                         j++
                         continue
                     }
@@ -534,7 +534,7 @@ object AF {
                         touchList[numTouching].touchedClipModel = cm
                         touchList[numTouching].touchedEnt = cm.GetEntity()!!
                         numTouching++
-                        clipModels.removeAt(j)
+                        clipModels[j] = null
                     }
                     j++
                 }

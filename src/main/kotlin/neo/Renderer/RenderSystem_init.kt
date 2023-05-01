@@ -49,6 +49,7 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.*
 import java.nio.ByteBuffer
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -209,11 +210,11 @@ class RenderSystem_init {
             draw_arb2.R_ARB2_Init()
             CmdSystem.cmdSystem.AddCommand(
                 "reloadARBprograms",
-                R_ReloadARBPrograms_f.getInstance(),
+                R_ReloadARBPrograms_f.instance,
                 CmdSystem.CMD_FL_RENDERER,
                 "reloads ARB programs"
             )
-            R_ReloadARBPrograms_f.getInstance().run(CmdArgs.idCmdArgs())
+            R_ReloadARBPrograms_f.instance.run(CmdArgs.idCmdArgs())
 
             // allocate the vertex array range or vertex objects
             VertexCache.vertexCache.Init()
@@ -1970,8 +1971,8 @@ class RenderSystem_init {
             override fun run(args: CmdArgs.idCmdArgs) {
                 var i: Int
                 val count: Int
-                val list: ArrayList<idMaterial> = ArrayList()
                 count = DeclManager.declManager.GetNumDecls(declType_t.DECL_MATERIAL)
+                val list: Array<idMaterial?> = arrayOfNulls(count)
                 i = 0
                 while (i < count) {
                     list[i] = DeclManager.declManager.DeclByIndex(declType_t.DECL_MATERIAL, i, false) as idMaterial
@@ -1979,12 +1980,14 @@ class RenderSystem_init {
                 }
 
 //            qsort(list, count, sizeof(list[0]), new R_QsortSurfaceAreas());
-                list.sortWith(R_QsortSurfaceAreas())
+
+//            qsort(list, count, sizeof(list[0]), new R_QsortSurfaceAreas());
+                Arrays.sort(list, R_QsortSurfaceAreas())
 
                 // skip over ones with 0 area
                 i = 0
                 while (i < count) {
-                    if (list[i].GetSurfaceArea() > 0) {
+                    if (list[i]!!.GetSurfaceArea() > 0) {
                         break
                     }
                     i++
@@ -1992,8 +1995,8 @@ class RenderSystem_init {
                 while (i < count) {
 
                     // report size in "editor blocks"
-                    val blocks: Int = (list[i].GetSurfaceArea() / 4096.0).toInt()
-                    idLib.common.Printf("%7i %s\n", blocks, list[i].GetName())
+                    val blocks: Int = (list[i]!!.GetSurfaceArea() / 4096.0).toInt()
+                    idLib.common.Printf("%7i %s\n", blocks, list[i]!!.GetName())
                     i++
                 }
             }
@@ -2285,16 +2288,16 @@ class RenderSystem_init {
 
          ==============================================================================
          */
-        internal class R_QsortSurfaceAreas : cmp_t<idMaterial> {
-            override fun compare(a: idMaterial, b: idMaterial): Int {
+        internal class R_QsortSurfaceAreas : cmp_t<idMaterial?> {
+            override fun compare(a: idMaterial?, b: idMaterial?): Int {
                 val ac: Float
                 val bc: Float
-                ac = if (!a.EverReferenced()) {
+                ac = if (!a!!.EverReferenced()) {
                     0f
                 } else {
                     a.GetSurfaceArea()
                 }
-                bc = if (!b.EverReferenced()) {
+                bc = if (!b!!.EverReferenced()) {
                     0f
                 } else {
                     b.GetSurfaceArea()

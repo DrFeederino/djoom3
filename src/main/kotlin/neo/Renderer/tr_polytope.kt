@@ -77,15 +77,15 @@ object tr_polytope {
             }
             j = 0
             while (j < w.GetNumPoints()) {
-                tri.verts[tri.numVerts + j].Clear()
-                tri.verts[tri.numVerts + j].xyz.set(w[j].ToVec3())
+                tri.verts!![tri.numVerts + j]!!.Clear()
+                tri.verts!![tri.numVerts + j]!!.xyz.set(w[j].ToVec3())
                 j++
             }
             j = 1
             while (j < w.GetNumPoints() - 1) {
-                tri.indexes[tri.numIndexes + 0] = tri.numVerts
-                tri.indexes[tri.numIndexes + 1] = tri.numVerts + j
-                tri.indexes[tri.numIndexes + 2] = tri.numVerts + j + 1
+                tri.indexes!![tri.numIndexes + 0] = tri.numVerts
+                tri.indexes!![tri.numIndexes + 1] = tri.numVerts + j
+                tri.indexes!![tri.numIndexes + 2] = tri.numVerts + j + 1
                 tri.numIndexes += 3
                 j++
             }

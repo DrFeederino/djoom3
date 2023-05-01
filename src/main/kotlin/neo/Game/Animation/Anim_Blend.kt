@@ -103,6 +103,7 @@ object Anim_Blend {
             numAnims = 0
             flags = animFlags_t()
         }
+
         constructor(modelDef: idDeclModelDef?, anim: idAnim) {
             var i: Int
             this.modelDef = modelDef
@@ -670,13 +671,16 @@ object Anim_Blend {
                         frameCommandType_t.FC_SCRIPTFUNCTION -> {
                             Game_local.gameLocal.CallFrameCommand(ent, command.function!!)
                         }
+
                         frameCommandType_t.FC_SCRIPTFUNCTIONOBJECT -> {
                             Game_local.gameLocal.CallObjectFrameCommand(ent, command.string.toString())
                         }
+
                         frameCommandType_t.FC_EVENTFUNCTION -> {
                             val ev: Event.idEventDef = Event.idEventDef.FindEvent(command.string.toString())!!
                             ent.ProcessEvent(ev)
                         }
+
                         frameCommandType_t.FC_SOUND -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -700,6 +704,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_VOICE -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -723,6 +728,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_VOICE2 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -746,6 +752,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_BODY -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -769,6 +776,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_BODY2 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -792,6 +800,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_BODY3 -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -815,6 +824,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_WEAPON -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -838,6 +848,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_GLOBAL -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -861,6 +872,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_ITEM -> {
                             if (TempDump.NOT(command.soundShader)) {
                                 if (!ent.StartSound(
@@ -884,6 +896,7 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_SOUND_CHATTER -> {
                             if (ent.CanPlayChatterSounds()) {
                                 if (TempDump.NOT(command.soundShader)) {
@@ -909,6 +922,7 @@ object Anim_Blend {
                                 }
                             }
                         }
+
                         frameCommandType_t.FC_FX -> {
                             idEntityFx.StartFx(
                                 command.string.toString(),
@@ -918,9 +932,11 @@ object Anim_Blend {
                                 true
                             )
                         }
+
                         frameCommandType_t.FC_SKIN -> {
                             ent.SetSkin(command.skin)
                         }
+
                         frameCommandType_t.FC_TRIGGER -> {
                             var target: idEntity?
                             target = Game_local.gameLocal.FindEntity(command.string.toString())
@@ -935,30 +951,39 @@ object Anim_Blend {
                                 )
                             }
                         }
+
                         frameCommandType_t.FC_TRIGGER_SMOKE_PARTICLE -> {
                             ent.ProcessEvent(AI_Events.AI_TriggerParticles, command.string.toString())
                         }
+
                         frameCommandType_t.FC_MELEE -> {
                             ent.ProcessEvent(AI_Events.AI_AttackMelee, command.string.toString())
                         }
+
                         frameCommandType_t.FC_DIRECTDAMAGE -> {
                             ent.ProcessEvent(AI_Events.AI_DirectDamage, command.string.toString())
                         }
+
                         frameCommandType_t.FC_BEGINATTACK -> {
                             ent.ProcessEvent(AI_Events.AI_BeginAttack, command.string.toString())
                         }
+
                         frameCommandType_t.FC_ENDATTACK -> {
                             ent.ProcessEvent(AI_Events.AI_EndAttack)
                         }
+
                         frameCommandType_t.FC_MUZZLEFLASH -> {
                             ent.ProcessEvent(AI_Events.AI_MuzzleFlash, command.string.toString())
                         }
+
                         frameCommandType_t.FC_CREATEMISSILE -> {
                             ent.ProcessEvent(AI_Events.AI_CreateMissile, command.string.toString())
                         }
+
                         frameCommandType_t.FC_LAUNCHMISSILE -> {
                             ent.ProcessEvent(AI_Events.AI_AttackMissile, command.string.toString())
                         }
+
                         frameCommandType_t.FC_FIREMISSILEATTARGET -> {
                             ent.ProcessEvent(
                                 AI_Events.AI_FireMissileAtTarget,
@@ -966,48 +991,63 @@ object Anim_Blend {
                                 command.string.toString()
                             )
                         }
+
                         frameCommandType_t.FC_FOOTSTEP -> {
                             ent.ProcessEvent(Actor.EV_Footstep)
                         }
+
                         frameCommandType_t.FC_LEFTFOOT -> {
                             ent.ProcessEvent(Actor.EV_FootstepLeft)
                         }
+
                         frameCommandType_t.FC_RIGHTFOOT -> {
                             ent.ProcessEvent(Actor.EV_FootstepRight)
                         }
+
                         frameCommandType_t.FC_ENABLE_EYE_FOCUS -> {
                             ent.ProcessEvent(Actor.AI_EnableEyeFocus)
                         }
+
                         frameCommandType_t.FC_DISABLE_EYE_FOCUS -> {
                             ent.ProcessEvent(Actor.AI_DisableEyeFocus)
                         }
+
                         frameCommandType_t.FC_DISABLE_GRAVITY -> {
                             ent.ProcessEvent(AI_Events.AI_DisableGravity)
                         }
+
                         frameCommandType_t.FC_ENABLE_GRAVITY -> {
                             ent.ProcessEvent(AI_Events.AI_EnableGravity)
                         }
+
                         frameCommandType_t.FC_JUMP -> {
                             ent.ProcessEvent(AI_Events.AI_JumpFrame)
                         }
+
                         frameCommandType_t.FC_ENABLE_CLIP -> {
                             ent.ProcessEvent(AI_Events.AI_EnableClip)
                         }
+
                         frameCommandType_t.FC_DISABLE_CLIP -> {
                             ent.ProcessEvent(AI_Events.AI_DisableClip)
                         }
+
                         frameCommandType_t.FC_ENABLE_WALK_IK -> {
                             ent.ProcessEvent(Actor.EV_EnableWalkIK)
                         }
+
                         frameCommandType_t.FC_DISABLE_WALK_IK -> {
                             ent.ProcessEvent(Actor.EV_DisableWalkIK)
                         }
+
                         frameCommandType_t.FC_ENABLE_LEG_IK -> {
                             ent.ProcessEvent(Actor.EV_EnableLegIK, command.index)
                         }
+
                         frameCommandType_t.FC_DISABLE_LEG_IK -> {
                             ent.ProcessEvent(Actor.EV_DisableLegIK, command.index)
                         }
+
                         frameCommandType_t.FC_RECORDDEMO -> {
                             if (!command.string.toString().isNullOrEmpty()) {
                                 CmdSystem.cmdSystem.BufferCommandText(
@@ -1018,6 +1058,7 @@ object Anim_Blend {
                                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "stoprecording")
                             }
                         }
+
                         frameCommandType_t.FC_AVIGAME -> {
                             if (!command.string.toString().isNullOrEmpty()) {
                                 CmdSystem.cmdSystem.BufferCommandText(
@@ -1203,7 +1244,7 @@ object Anim_Blend {
                     //joints.SetNum(num);
                     //jointParents.SetNum(num);
                     //channelJoints[0].SetNum(num);
-                    md5joints = modelHandle!!.GetJoints()
+                    md5joints = arrayListOf(*modelHandle!!.GetJoints()!!)
                     md5joint = 0 //md5joints;
                     i = 0
                     while (i < num) {
@@ -1386,26 +1427,26 @@ object Anim_Blend {
             return skin
         }
 
-        fun GetDefaultPose(): ArrayList<idJointQuat>? {
+        fun GetDefaultPose(): Array<idJointQuat>? {
             return if (modelHandle == null) null else modelHandle!!.GetDefaultPose()
         }
 
         fun SetupJoints(
             numJoints: CInt,
-            jointList: ArrayList<idJointMat>,
+            jointList: Array<Array<idJointMat>?>,
             frameBounds: idBounds,
             removeOriginOffset: Boolean
-        ): kotlin.collections.ArrayList<idJointMat> {
+        ) {
             val num: Int
-            val pose: ArrayList<idJointQuat>
-            val list: kotlin.collections.ArrayList<idJointMat>
+            val pose: Array<idJointQuat>?
+            val list: Array<idJointMat>
             if (null == modelHandle || modelHandle!!.IsDefaultModel()) {
 //                Mem_Free16(jointList);
-                for (i in 0 until jointList.size) {
-                    jointList.removeAt(i)
-                }
+
+//                Mem_Free16(jointList);
+                jointList[0] = null
                 frameBounds.Clear()
-                return arrayListOf()
+                return
             }
 
             // get the number of joints
@@ -1415,7 +1456,7 @@ object Anim_Blend {
             }
 
             // set up initial pose for model (with no pose, model is just a jumbled mess)
-            list = arrayListOf(*Array(num) { idJointMat() })
+            list = Array(num) { idJointMat() }
             pose = GetDefaultPose()!!
 
             // convert the joint quaternions to joint matrices
@@ -1440,11 +1481,10 @@ object Anim_Blend {
                 joints.size - 1
             )
             numJoints._val = num
-
+            jointList[0] = list
 
             // get the bounds of the default pose
             frameBounds.set(modelHandle!!.Bounds(null))
-            return list
         }
 
         fun ModelHandle(): idRenderModel? {
@@ -1529,7 +1569,7 @@ object Anim_Blend {
             if (null == modelHandle) {
                 return null
             }
-            joint = modelHandle!!.GetJoints()
+            joint = arrayListOf(*modelHandle!!.GetJoints()!!)
             i = 0
             while (i < joints.size) {
                 if (TempDump.NOT(joint[i].name.Icmp(name).toDouble())) {
@@ -1661,7 +1701,7 @@ object Anim_Blend {
             if (jointHandle < 0 || jointHandle > joints.size) {
                 idGameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range")
             }
-            joint = modelHandle!!.GetJoints()
+            joint = arrayListOf(*modelHandle!!.GetJoints()!!)
             return joint[jointHandle].name.toString()
         }
 
@@ -2087,7 +2127,7 @@ object Anim_Blend {
             currentTime: Int,
             channel: Int,
             numJoints: Int,
-            blendFrame: kotlin.collections.ArrayList<idJointQuat>,
+            blendFrame: Array<idJointQuat>,
             blendWeight: CFloat,
             removeOriginOffset: Boolean,
             overrideBlend: Boolean,
@@ -2097,10 +2137,10 @@ object Anim_Blend {
             var lerp: Float
             var mixWeight: Float
             var md5anim: idMD5Anim
-            var ptr: kotlin.collections.ArrayList<idJointQuat>
+            var ptr: Array<idJointQuat>
             val frametime = frameBlend_t()
-            val jointFrame: kotlin.collections.ArrayList<idJointQuat>
-            val mixFrame: kotlin.collections.ArrayList<idJointQuat>
+            val jointFrame: Array<idJointQuat>
+            val mixFrame: Array<idJointQuat>
             val numAnims: Int
             val time: Int
             val anim = Anim() ?: return false
@@ -2121,7 +2161,7 @@ object Anim_Blend {
                 blendFrame
             } else {
                 // allocate a temporary buffer to copy the joints from
-                ArrayList<idJointQuat>(numJoints)
+                Array<idJointQuat>(numJoints) { idJointQuat() }
             }
             time = AnimTime(currentTime)
             numAnims = anim.NumAnims()
@@ -2148,7 +2188,7 @@ object Anim_Blend {
                 // need to mix the multipoint anim together first
                 //
                 // allocate a temporary buffer to copy the joints to
-                mixFrame = kotlin.collections.ArrayList<idJointQuat>(numJoints)
+                mixFrame = Array(numJoints) { idJointQuat() }
                 if (0 == frame) {
                     anim.MD5Anim(0)!!.ConvertTimeToFrame(time, cycle, frametime)
                 }
@@ -2177,7 +2217,7 @@ object Anim_Blend {
                         }
 
                         // only blend after the first anim is mixed in
-                        if (ptr != jointFrame) {
+                        if (!ptr.contentEquals(jointFrame)) {
                             Simd.SIMDProcessor.BlendJoints(
                                 jointFrame,
                                 ptr,
@@ -2770,9 +2810,9 @@ object Anim_Blend {
      */
     class idAnimator {
         private val AFPoseBounds: idBounds
-        private val AFPoseJointFrame: ArrayList<idJointQuat>
+        private var AFPoseJointFrame: ArrayList<idJointQuat> = ArrayList() //TODO: make sure it works as intended
         private val AFPoseJointMods: ArrayList<idAFPoseJointMod>
-        private val AFPoseJoints: ArrayList<Int>
+        private var AFPoseJoints: IntArray
 
         //
         private val channels: Array<ArrayList<idAnimBlend>> =
@@ -2787,13 +2827,13 @@ object Anim_Blend {
 
         //
         private val frameBounds: idBounds
-        private var joints: ArrayList<idJointMat>
+        private var joints: Array<idJointMat>? = null
 
         //
         private var lastTransformTime // mutable because the value is updated in CreateFrame
                 : Int
         private var modelDef: idDeclModelDef?
-        private val numJoints: CInt
+        private var numJoints: CInt
         private var removeOriginOffset: Boolean
 
         //
@@ -2831,7 +2871,7 @@ object Anim_Blend {
             savefile.WriteInt(numJoints._val)
             i = 0
             while (i < numJoints._val) {
-                val data = joints[i].ToFloatPtr()
+                val data = joints!![i].ToFloatPtr()
                 j = 0
                 while (j < 12) {
                     savefile.WriteFloat(data[j])
@@ -2912,10 +2952,10 @@ object Anim_Blend {
                 i++
             }
             numJoints._val = (savefile.ReadInt())
-            joints = ArrayList<idJointMat>(numJoints._val)
+            joints = Array<idJointMat>(numJoints._val) { idJointMat() }
             i = 0
             while (i < numJoints._val) {
-                val data = joints[i].ToFloatPtr()
+                val data = joints!![i].ToFloatPtr()
                 j = 0
                 while (j < 12) {
                     data[j] = savefile.ReadFloat()
@@ -2934,7 +2974,7 @@ object Anim_Blend {
             i = 0
             while (i < num._val) {
                 if (i >= AFPoseJoints.size) {
-                    AFPoseJoints.add(savefile.ReadInt())
+                    AFPoseJoints[i] = savefile.ReadInt()
                 } else {
                     AFPoseJoints[i] = savefile.ReadInt()
                 }
@@ -3125,7 +3165,7 @@ object Anim_Blend {
         fun SetModel(modelname: String): idRenderModel? {
             var i: Int
             var j: Int
-            //int[] numJoints = {0};
+            var numJoints: CInt = CInt();
             FreeData()
 
             // check if we're just clearing the model
@@ -3144,7 +3184,13 @@ object Anim_Blend {
 
             // make sure model hasn't been purged
             modelDef!!.Touch()
-            joints = modelDef!!.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset)
+
+            val joints = arrayOf<Array<idJointMat>?>(null)
+            modelDef!!.SetupJoints(numJoints, joints, frameBounds, removeOriginOffset)
+            this.joints = joints[0]
+            this.numJoints = numJoints
+
+
             modelDef!!.ModelHandle()!!.Reset()
 
             // set the modelDef on all channels
@@ -3191,7 +3237,7 @@ object Anim_Blend {
             var blend: kotlin.collections.ArrayList<idAnimBlend>
             val jointParent: kotlin.collections.ArrayList<Int>
             var jointMod: jointMod_t?
-            val defaultPose: ArrayList<idJointQuat>?
+            val defaultPose: Array<idJointQuat>?
             if (Game_local.gameLocal.inCinematic && Game_local.gameLocal.skipCinematic) {
                 return false
             }
@@ -3224,7 +3270,7 @@ object Anim_Blend {
             // init the joint buffer
             if (AFPoseJoints.size != 0) {
                 // initialize with AF pose anim for the case where there are no other animations and no AF pose joint modifications
-                defaultPose = AFPoseJointFrame
+                defaultPose = AFPoseJointFrame.toTypedArray()
             } else {
                 defaultPose = modelDef!!.GetDefaultPose()
             }
@@ -3233,7 +3279,7 @@ object Anim_Blend {
                 return false
             }
             numJoints = modelDef!!.Joints().size
-            val jointFrame = kotlin.collections.ArrayList<idJointQuat>(numJoints)
+            val jointFrame = Array<idJointQuat>(numJoints) { idJointQuat() }
             //SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
             for (index in 0 until numJoints) {
                 jointFrame[index] = defaultPose[index]
@@ -3349,26 +3395,29 @@ object Anim_Blend {
             }
 
             // convert the joint quaternions to rotation matrices
-            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints)
+            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints!!, jointFrame, numJoints)
 
             // check if we need to modify the origin
             if (jointMods.size != 0 && jointMods[0].jointnum == 0) {
                 jointMod = jointMods[0]
                 when (jointMod.transform_axis) {
                     jointModTransform_t.JOINTMOD_NONE -> {}
-                    jointModTransform_t.JOINTMOD_LOCAL -> joints[0]
-                        .SetRotation(jointMod.mat.times(joints[0].ToMat3()))
-                    jointModTransform_t.JOINTMOD_WORLD -> joints[0]
-                        .SetRotation(joints[0].ToMat3().times(jointMod.mat))
-                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints[0].SetRotation(
+                    jointModTransform_t.JOINTMOD_LOCAL -> joints!![0]
+                        .SetRotation(jointMod.mat.times(joints!![0].ToMat3()))
+
+                    jointModTransform_t.JOINTMOD_WORLD -> joints!![0]
+                        .SetRotation(joints!![0].ToMat3().times(jointMod.mat))
+
+                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints!![0].SetRotation(
                         jointMod.mat
                     )
                 }
                 when (jointMod.transform_pos) {
                     jointModTransform_t.JOINTMOD_NONE -> {}
-                    jointModTransform_t.JOINTMOD_LOCAL -> joints[0]
-                        .SetTranslation(joints[0].ToVec3().plus(jointMod.pos))
-                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE, jointModTransform_t.JOINTMOD_WORLD, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints[0].SetTranslation(
+                    jointModTransform_t.JOINTMOD_LOCAL -> joints!![0]
+                        .SetTranslation(joints!![0].ToVec3().plus(jointMod.pos))
+
+                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE, jointModTransform_t.JOINTMOD_WORLD, jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints!![0].SetTranslation(
                         jointMod.pos
                     )
                 }
@@ -3378,7 +3427,7 @@ object Anim_Blend {
             }
 
             // add in the model offset
-            joints[0].SetTranslation(joints[0].ToVec3().plus(modelDef!!.GetVisualOffset()))
+            joints!![0].SetTranslation(joints!![0].ToVec3().plus(modelDef!!.GetVisualOffset()))
 
             // pointer to joint info
             jointParent = modelDef!!.JointParents()
@@ -3389,49 +3438,57 @@ object Anim_Blend {
                 jointMod = jointMods[j]
 
                 // transform any joints preceding the joint modifier
-                Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, jointMod.jointnum - 1)
+                Simd.SIMDProcessor.TransformJoints(joints!!, jointParent.toIntArray(), i, jointMod.jointnum - 1)
                 i = jointMod.jointnum
                 parentNum = jointParent[i]
                 when (jointMod.transform_axis) {
-                    jointModTransform_t.JOINTMOD_NONE -> joints[i]
-                        .SetRotation(joints[i].ToMat3().times(joints[parentNum].ToMat3()))
-                    jointModTransform_t.JOINTMOD_LOCAL -> joints[i].SetRotation(
+                    jointModTransform_t.JOINTMOD_NONE -> joints!![i]
+                        .SetRotation(joints!![i].ToMat3().times(joints!![parentNum].ToMat3()))
+
+                    jointModTransform_t.JOINTMOD_LOCAL -> joints!![i].SetRotation(
                         jointMod.mat.times(
-                            joints[i].ToMat3().times(joints[parentNum].ToMat3())
+                            joints!![i].ToMat3().times(joints!![parentNum].ToMat3())
                         )
                     )
-                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints[i]
-                        .SetRotation(jointMod.mat.times(joints[parentNum].ToMat3()))
-                    jointModTransform_t.JOINTMOD_WORLD -> joints[i].SetRotation(
-                        joints[i].ToMat3().times(joints[parentNum].ToMat3()).times(jointMod.mat)
+
+                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints!![i]
+                        .SetRotation(jointMod.mat.times(joints!![parentNum].ToMat3()))
+
+                    jointModTransform_t.JOINTMOD_WORLD -> joints!![i].SetRotation(
+                        joints!![i].ToMat3().times(joints!![parentNum].ToMat3()).times(jointMod.mat)
                     )
-                    jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints[i].SetRotation(jointMod.mat)
+
+                    jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints!![i].SetRotation(jointMod.mat)
                 }
                 when (jointMod.transform_pos) {
-                    jointModTransform_t.JOINTMOD_NONE -> joints[i].SetTranslation(
-                        joints[parentNum].ToVec3()
-                            .plus(joints[i].ToVec3().times(joints[parentNum].ToMat3()))
+                    jointModTransform_t.JOINTMOD_NONE -> joints!![i].SetTranslation(
+                        joints!![parentNum].ToVec3()
+                            .plus(joints!![i].ToVec3().times(joints!![parentNum].ToMat3()))
                     )
-                    jointModTransform_t.JOINTMOD_LOCAL -> joints[i].SetTranslation(
-                        joints[parentNum].ToVec3().plus(joints[i].ToVec3().plus(jointMod.pos))
-                            .times(joints[parentNum].ToMat3())
+
+                    jointModTransform_t.JOINTMOD_LOCAL -> joints!![i].SetTranslation(
+                        joints!![parentNum].ToVec3().plus(joints!![i].ToVec3().plus(jointMod.pos))
+                            .times(joints!![parentNum].ToMat3())
                     )
-                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints[i].SetTranslation(
-                        joints[parentNum].ToVec3().plus(jointMod.pos.times(joints[parentNum].ToMat3()))
+
+                    jointModTransform_t.JOINTMOD_LOCAL_OVERRIDE -> joints!![i].SetTranslation(
+                        joints!![parentNum].ToVec3().plus(jointMod.pos.times(joints!![parentNum].ToMat3()))
                     )
-                    jointModTransform_t.JOINTMOD_WORLD ->                         //joints[i].SetTranslation(joints[parentNum].ToVec3().plus(joints[i].ToVec3().times(joints[parentNum].ToMat3())).plus(jointMod.pos));
-                        joints[i].SetTranslation(
-                            joints[parentNum].ToVec3().plus(joints[i].ToVec3())
-                                .times(joints[parentNum].ToMat3()).plus(jointMod.pos)
+
+                    jointModTransform_t.JOINTMOD_WORLD ->                         //joints!![i].SetTranslation(joints!![parentNum].ToVec3().plus(joints!![i].ToVec3().times(joints!![parentNum].ToMat3())).plus(jointMod.pos));
+                        joints!![i].SetTranslation(
+                            joints!![parentNum].ToVec3().plus(joints!![i].ToVec3())
+                                .times(joints!![parentNum].ToMat3()).plus(jointMod.pos)
                         )
-                    jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints[i].SetTranslation(jointMod.pos)
+
+                    jointModTransform_t.JOINTMOD_WORLD_OVERRIDE -> joints!![i].SetTranslation(jointMod.pos)
                 }
                 j++
                 i++
             }
 
             // transform the rest of the hierarchy
-            Simd.SIMDProcessor.TransformJoints(joints, jointParent.toIntArray(), i, numJoints - 1)
+            Simd.SIMDProcessor.TransformJoints(joints!!, jointParent.toIntArray(), i, numJoints - 1)
             return true
         }
 
@@ -3801,27 +3858,13 @@ object Anim_Blend {
                 return
             }
 
-            //AFPoseJoints.SetNum(modelDef!!.Joints().size(), false);
-            //AFPoseJoints.SetNum(0, false);
-//            AFPoseJoints.clear();
-//            AFPoseJoints.trimToSize();
-//            AFPoseJoints.addAll(new ArrayList<>(modelDef!!.Joints().size()));
-//            //AFPoseJointFrame.clear();
-////            for (int i = 0; i < modelDef!!.Joints().size(); i++) {
-////                AFPoseJoints.add(i, -1);
-////                AFPoseJointFrame.add(i, new idJointQuat());
-////            }
-//            AFPoseJointFrame.clear();
-//            AFPoseJointFrame.trimToSize();
-//            AFPoseJointFrame.addAll(new ArrayList<>(modelDef!!.Joints().size()));
-            //AFPoseJointMods.SetNum(modelDef!!.Joints().size(), false);
-            //AFPoseJointFrame.SetNum(modelDef!!.Joints().size(), false);
+            AFPoseJointFrame.clear()
         }
 
         fun SetAFPoseJointMod(   /*jointHandle_t*/jointNum: Int,
-                                                  mod: AFJointModType_t,
-                                                  axis: idMat3,
-                                                  origin: idVec3
+                                 mod: AFJointModType_t,
+                                 axis: idMat3,
+                                 origin: idVec3
         ) {
             if (jointNum >= AFPoseJointMods.size) {
                 for (i in AFPoseJointMods.size..jointNum) {
@@ -3835,13 +3878,9 @@ object Anim_Blend {
             AFPoseJointMods[jointNum].axis.set(axis)
             AFPoseJointMods[jointNum].origin.set(origin)
             val index =
-                BinSearch.idBinSearch_GreaterEqual<Any?>(AFPoseJoints.toTypedArray(), AFPoseJoints.size, jointNum)
+                BinSearch.idBinSearch_GreaterEqual<Int>(AFPoseJoints.toTypedArray(), AFPoseJoints.size, jointNum)
             if (index >= AFPoseJoints.size || jointNum != AFPoseJoints[index]) {
-                if (index >= AFPoseJoints.size) {
-                    AFPoseJoints.add(index)
-                } else {
-                    AFPoseJoints[jointNum] = index
-                }
+                AFPoseJoints[jointNum] = index
             }
         }
 
@@ -3871,7 +3910,7 @@ object Anim_Blend {
                 )
                 return
             }
-            val jointFrame = ArrayList<idJointQuat>(numJoints)
+            val jointFrame = Array<idJointQuat>(numJoints) { idJointQuat() }
             md5anim.GetSingleFrame(
                 0,
                 jointFrame,
@@ -3885,7 +3924,7 @@ object Anim_Blend {
                     jointFrame[0].t.Zero()
                 }
             }
-            val joints = arrayListOf<idJointMat>(* Array(numJoints) { idJointMat() })
+            val joints = Array(numJoints) { idJointMat() }
 
             // convert the joint quaternions to joint matrices
             Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints, jointFrame, numJoints)
@@ -3896,9 +3935,11 @@ object Anim_Blend {
                     AFJointModType_t.AF_JOINTMOD_AXIS -> {
                         joints[0].SetRotation(AFPoseJointMods[0].axis)
                     }
+
                     AFJointModType_t.AF_JOINTMOD_ORIGIN -> {
                         joints[0].SetTranslation(AFPoseJointMods[0].origin)
                     }
+
                     AFJointModType_t.AF_JOINTMOD_BOTH -> {
                         joints[0].SetRotation(AFPoseJointMods[0].axis)
                         joints[0].SetTranslation(AFPoseJointMods[0].origin)
@@ -3928,10 +3969,12 @@ object Anim_Blend {
                             joints[parentNum].ToVec3().plus(joints[i].ToVec3().times(joints[parentNum].ToMat3()))
                         )
                     }
+
                     AFJointModType_t.AF_JOINTMOD_ORIGIN -> {
                         joints[i].SetRotation(joints[i].ToMat3().times(joints[parentNum].ToMat3()))
                         joints[i].SetTranslation(AFPoseJointMods[jointMod].origin)
                     }
+
                     AFJointModType_t.AF_JOINTMOD_BOTH -> {
                         joints[i].SetRotation(AFPoseJointMods[jointMod].axis)
                         joints[i].SetTranslation(AFPoseJointMods[jointMod].origin)
@@ -3948,7 +3991,7 @@ object Anim_Blend {
             Simd.SIMDProcessor.UntransformJoints(joints, jointParent.toIntArray(), 1, numJoints - 1)
 
             // convert joint matrices back to joint quaternions
-            Simd.SIMDProcessor.ConvertJointMatsToJointQuats(AFPoseJointFrame, joints, numJoints)
+            Simd.SIMDProcessor.ConvertJointMatsToJointQuats(AFPoseJointFrame.toTypedArray(), joints, numJoints)
 
             // find all modified joints and their parents
             val blendJoints = BooleanArray(numJoints) //memset( blendJoints, 0, numJoints * sizeof( bool ) );
@@ -3966,11 +4009,11 @@ object Anim_Blend {
 
             // lock all parents of modified joints
             //AFPoseJoints.SetNum(0, false);
-            AFPoseJoints.clear()
+            AFPoseJoints = IntArray(AFPoseJoints.size)
             i = 0
             while (i < numJoints) {
                 if (blendJoints[i]) {
-                    AFPoseJoints.add(i)
+                    AFPoseJoints[i] = i
                 }
                 i++
             }
@@ -3983,15 +4026,15 @@ object Anim_Blend {
             AFPoseBlendWeight = blendWeight
         }
 
-        fun BlendAFPose(blendFrame: kotlin.collections.ArrayList<idJointQuat>): Boolean {
+        fun BlendAFPose(blendFrame: Array<idJointQuat>): Boolean {
             if (0 == AFPoseJoints.size) {
                 return false
             }
             Simd.SIMDProcessor.BlendJoints(
                 blendFrame,
-                AFPoseJointFrame,
+                AFPoseJointFrame.toTypedArray(),
                 AFPoseBlendWeight,
-                AFPoseJoints.toIntArray(),
+                AFPoseJoints,
                 AFPoseJoints.size
             )
             return true
@@ -4003,7 +4046,7 @@ object Anim_Blend {
             }
             AFPoseBlendWeight = 1.0f
             //AFPoseJoints.SetNum(0, false);
-            AFPoseJoints.clear()
+            AFPoseJoints = IntArray(0)
             AFPoseBounds.Clear()
             AFPoseTime = 0
         }
@@ -4046,23 +4089,23 @@ object Anim_Blend {
         }
 
         fun GetJointTransform(   /*jointHandle_t*/jointHandle: Int,
-                                                  currentTime: Int,
-                                                  offset: idVec3,
-                                                  axis: idMat3
+                                 currentTime: Int,
+                                 offset: idVec3,
+                                 axis: idMat3
         ): Boolean {
             if (null == modelDef || jointHandle < 0 || jointHandle >= modelDef!!.NumJoints()) {
                 return false
             }
             CreateFrame(currentTime, false)
-            offset.set(joints[jointHandle].ToVec3())
-            axis.set(joints[jointHandle].ToMat3())
+            offset.set(joints!![jointHandle].ToVec3())
+            axis.set(joints!![jointHandle].ToMat3())
             return true
         }
 
         fun GetJointLocalTransform(   /*jointHandle_t*/jointHandle: Int,
-                                                       currentTime: Int,
-                                                       offset: idVec3,
-                                                       axis: idMat3
+                                      currentTime: Int,
+                                      offset: idVec3,
+                                      axis: idMat3
         ): Boolean {
             if (null == modelDef) {
                 return false
@@ -4075,12 +4118,12 @@ object Anim_Blend {
             // FIXME: overkill
             CreateFrame(currentTime, false)
             if (jointHandle == 0) {
-                offset.set(joints[jointHandle].ToVec3())
-                axis.set(joints[jointHandle].ToMat3())
+                offset.set(joints!![jointHandle].ToVec3())
+                axis.set(joints!![jointHandle].ToMat3())
                 return true
             }
-            val m = idJointMat(joints[jointHandle])
-            m.oDivSet(joints[modelJoints[jointHandle].parentNum])
+            val m = idJointMat(joints!![jointHandle])
+            m.oDivSet(joints!![modelJoints[jointHandle].parentNum])
             offset.set(m.ToVec3())
             axis.set(m.ToMat3())
             return true
@@ -4158,7 +4201,7 @@ object Anim_Blend {
             jointMods.clear()
 
 //	Mem_Free16( joints );
-            joints.clear()
+            joints = null
             numJoints._val = 0
             modelDef = null
             ForceUpdate()
@@ -4201,16 +4244,16 @@ object Anim_Blend {
             entity = null
             jointMods = ArrayList()
             numJoints = CInt()
-            joints = ArrayList()
+            joints = null
             lastTransformTime = -1
             stoppedAnimatingUpdate = false
             removeOriginOffset = false
             forceUpdate = false
             frameBounds = idBounds()
             frameBounds.Clear()
-            AFPoseJoints = ArrayList()
+            AFPoseJoints = IntArray(1)
             AFPoseJointMods = ArrayList()
-            AFPoseJointFrame = ArrayList()
+            //AFPoseJointFrame = Array()
             AFPoseBounds = idBounds()
             ClearAFPose()
             i = Anim.ANIMCHANNEL_ALL

@@ -6,6 +6,7 @@ import neo.Renderer.tr_local.localTrace_t
 import neo.framework.Common
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Timer.idTimer
+import neo.idlib.geometry.DrawVert
 import neo.idlib.math.Math_h
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd
@@ -60,7 +61,14 @@ object tr_trace {
 
         // catagorize each point against the four planes
         cullBits = ByteArray(tri.numVerts)
-        Simd.SIMDProcessor.TracePointCull(cullBits, totalOr, radius, planes, tri.verts.toTypedArray(), tri.numVerts)
+        Simd.SIMDProcessor.TracePointCull(
+            cullBits,
+            totalOr,
+            radius,
+            planes,
+            tri.verts!! as Array<DrawVert.idDrawVert>,
+            tri.numVerts
+        )
 
         // if we don't have points on both sides of both the ray planes, no intersection
         if (totalOr[0].toInt() xor (totalOr[0].toInt() shr 4) and 3 != 0) {
@@ -80,7 +88,7 @@ object tr_trace {
         c_intersect = 0
         radiusSqr = Math_h.Square(radius)
         startDir.set(end.minus(start))
-        if (tri.facePlanes.isEmpty() || !tri.facePlanesCalculated) {
+        if (null == tri.facePlanes || !tri.facePlanesCalculated) {
             tr_trisurf.R_DeriveFacePlanes(tri)
         }
         i = 0
@@ -99,9 +107,9 @@ object tr_trace {
             var triOr: Byte
 
             // get sidedness info for the triangle
-            triOr = cullBits[tri.indexes[i + 0]]
-            triOr = triOr or cullBits[tri.indexes[i + 1]]
-            triOr = triOr or cullBits[tri.indexes[i + 2]]
+            triOr = cullBits[tri.indexes!![i + 0]]
+            triOr = triOr or cullBits[tri.indexes!![i + 1]]
+            triOr = triOr or cullBits[tri.indexes!![i + 2]]
 
             // if we don't have points on both sides of both the ray planes, no intersection
             if (triOr.toInt() xor (triOr.toInt() shr 4) and 3 != 0) {
@@ -117,7 +125,7 @@ object tr_trace {
                 continue
             }
             c_testPlanes++
-            plane = tri.facePlanes[j]
+            plane = tri.facePlanes!![j]
             d1 = plane.Distance(start)
             d2 = plane.Distance(end)
             if (d1 <= d2) {
@@ -153,8 +161,8 @@ object tr_trace {
 
             // see if the point is within the three edges
             // if radius > 0 the triangle is expanded with a circle in the triangle plane
-            dir[0].set(tri.verts[tri.indexes[i + 0]].xyz.minus(point))
-            dir[1].set(tri.verts[tri.indexes[i + 1]].xyz.minus(point))
+            dir[0].set(tri.verts!![tri.indexes!![i + 0]]!!.xyz.minus(point))
+            dir[1].set(tri.verts!![tri.indexes!![i + 1]]!!.xyz.minus(point))
             cross.set(dir[0].Cross(dir[1]))
             d = plane.Normal().times(cross)
             if (d > 0.0f) {
@@ -163,7 +171,7 @@ object tr_trace {
                     j++
                     continue
                 }
-                edge.set(tri.verts[tri.indexes[i + 0]].xyz.minus(tri.verts[tri.indexes[i + 1]].xyz))
+                edge.set(tri.verts!![tri.indexes!![i + 0]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 1]]!!.xyz))
                 edgeLengthSqr = edge.LengthSqr()
                 if (cross.LengthSqr() > edgeLengthSqr * radiusSqr) {
                     i += 3
@@ -172,7 +180,7 @@ object tr_trace {
                 }
                 d = dir[0].times(edge)
                 if (d < 0.0f) {
-                    edge.set(tri.verts[tri.indexes[i + 0]].xyz.minus(tri.verts[tri.indexes[i + 2]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 0]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 2]]!!.xyz))
                     d = dir[0].times(edge)
                     if (d < 0.0f) {
                         if (dir[0].LengthSqr() > radiusSqr) {
@@ -182,7 +190,7 @@ object tr_trace {
                         }
                     }
                 } else if (d > edgeLengthSqr) {
-                    edge.set(tri.verts[tri.indexes[i + 1]].xyz.minus(tri.verts[tri.indexes[i + 2]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 1]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 2]]!!.xyz))
                     d = dir[1].times(edge)
                     if (d < 0.0f) {
                         if (dir[1].LengthSqr() > radiusSqr) {
@@ -193,7 +201,7 @@ object tr_trace {
                     }
                 }
             }
-            dir[2].set(tri.verts[tri.indexes[i + 2]].xyz.minus(point))
+            dir[2].set(tri.verts!![tri.indexes!![i + 2]]!!.xyz.minus(point))
             cross.set(dir[1].Cross(dir[2]))
             d = plane.Normal().times(cross)
             if (d > 0.0f) {
@@ -202,7 +210,7 @@ object tr_trace {
                     j++
                     continue
                 }
-                edge.set(tri.verts[tri.indexes[i + 1]].xyz.minus(tri.verts[tri.indexes[i + 2]].xyz))
+                edge.set(tri.verts!![tri.indexes!![i + 1]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 2]]!!.xyz))
                 edgeLengthSqr = edge.LengthSqr()
                 if (cross.LengthSqr() > edgeLengthSqr * radiusSqr) {
                     i += 3
@@ -211,7 +219,7 @@ object tr_trace {
                 }
                 d = dir[1].times(edge)
                 if (d < 0.0f) {
-                    edge.set(tri.verts[tri.indexes[i + 1]].xyz.minus(tri.verts[tri.indexes[i + 0]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 1]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 0]]!!.xyz))
                     d = dir[1].times(edge)
                     if (d < 0.0f) {
                         if (dir[1].LengthSqr() > radiusSqr) {
@@ -221,7 +229,7 @@ object tr_trace {
                         }
                     }
                 } else if (d > edgeLengthSqr) {
-                    edge.set(tri.verts[tri.indexes[i + 2]].xyz.minus(tri.verts[tri.indexes[i + 0]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 2]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 0]]!!.xyz))
                     d = dir[2].times(edge)
                     if (d < 0.0f) {
                         if (dir[2].LengthSqr() > radiusSqr) {
@@ -240,7 +248,7 @@ object tr_trace {
                     j++
                     continue
                 }
-                edge.set(tri.verts[tri.indexes[i + 2]].xyz.minus(tri.verts[tri.indexes[i + 0]].xyz))
+                edge.set(tri.verts!![tri.indexes!![i + 2]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 0]]!!.xyz))
                 edgeLengthSqr = edge.LengthSqr()
                 if (cross.LengthSqr() > edgeLengthSqr * radiusSqr) {
                     i += 3
@@ -249,7 +257,7 @@ object tr_trace {
                 }
                 d = dir[2].times(edge)
                 if (d < 0.0f) {
-                    edge.set(tri.verts[tri.indexes[i + 2]].xyz.minus(tri.verts[tri.indexes[i + 1]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 2]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 1]]!!.xyz))
                     d = dir[2].times(edge)
                     if (d < 0.0f) {
                         if (dir[2].LengthSqr() > radiusSqr) {
@@ -259,7 +267,7 @@ object tr_trace {
                         }
                     }
                 } else if (d > edgeLengthSqr) {
-                    edge.set(tri.verts[tri.indexes[i + 0]].xyz.minus(tri.verts[tri.indexes[i + 1]].xyz))
+                    edge.set(tri.verts!![tri.indexes!![i + 0]]!!.xyz.minus(tri.verts!![tri.indexes!![i + 1]]!!.xyz))
                     d = dir[0].times(edge)
                     if (d < 0.0f) {
                         if (dir[0].LengthSqr() > radiusSqr) {
@@ -276,9 +284,9 @@ object tr_trace {
             hit.fraction = f
             hit.normal.set(plane.Normal())
             hit.point.set(point)
-            hit.indexes[0] = tri.indexes[i]
-            hit.indexes[1] = tri.indexes[i + 1]
-            hit.indexes[2] = tri.indexes[i + 2]
+            hit.indexes[0] = tri.indexes!![i]
+            hit.indexes[1] = tri.indexes!![i + 1]
+            hit.indexes[2] = tri.indexes!![i + 2]
             i += 3
             j++
         }
@@ -307,9 +315,9 @@ object tr_trace {
         i = 0
         while (i < tri.numIndexes) {
             val p /*[3]*/ = arrayOf(
-                tri.verts[tri.indexes[i + 0]].xyz,
-                tri.verts[tri.indexes[i + 1]].xyz,
-                tri.verts[tri.indexes[i + 2]].xyz
+                tri.verts!![tri.indexes!![i + 0]]!!.xyz,
+                tri.verts!![tri.indexes!![i + 1]]!!.xyz,
+                tri.verts!![tri.indexes!![i + 2]]!!.xyz
             )
             dir[0].set(p[0].minus(p[1]))
             dir[1].set(p[1].minus(p[2]))
@@ -361,7 +369,7 @@ object tr_trace {
      */
     fun RB_ShowTrace(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
-        var tri: srfTriangles_s
+        var tri: srfTriangles_s?
         var surf: drawSurf_s?
         val start = idVec3()
         val end = idVec3()
@@ -385,7 +393,7 @@ object tr_trace {
         // check and draw the surfaces
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
         tr_backend.GL_TexEnv(GL11.GL_MODULATE)
-        Image.globalImages.whiteImage.Bind()
+        Image.globalImages.whiteImage!!.Bind()
 
         // find how many are ambient
         i = 0
@@ -396,21 +404,21 @@ object tr_trace {
                 i++
                 continue
             }
-            if (tri == null || tri.verts.isEmpty()) {
+            if (tri == null || tri.verts == null) {
                 i++
                 continue
             }
 
             // transform the points into local space
-            tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, start, localStart)
-            tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, end, localEnd)
+            tr_main.R_GlobalPointToLocal(surf.space!!.modelMatrix, start, localStart)
+            tr_main.R_GlobalPointToLocal(surf.space!!.modelMatrix, end, localEnd)
 
             // check the bounding box
             if (!tri.bounds.Expand(radius).LineIntersection(localStart, localEnd)) {
                 i++
                 continue
             }
-            qgl.qglLoadMatrixf(surf.space.modelViewMatrix)
+            qgl.qglLoadMatrixf(surf.space!!.modelViewMatrix)
 
             // highlight the surface
             tr_backend.GL_State(tr_local.GLS_SRCBLEND_SRC_ALPHA or tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA)

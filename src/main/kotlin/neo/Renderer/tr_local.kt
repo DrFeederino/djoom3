@@ -33,6 +33,7 @@ import neo.idlib.BV.Frustum.idFrustum
 import neo.idlib.Lib
 import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.containers.List.idList
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Math_h.idMath
@@ -264,6 +265,15 @@ object tr_local {
         //
         constructor() {}
 
+        constructor(other: idScreenRect) {
+            x1 = other.x1
+            y1 = other.y1
+            x2 = other.x2
+            y2 = other.y2
+            zmin = other.zmin
+            zmax = other.zmax
+        }
+
         // clear to backwards values
         fun Clear() {
             y1 = 32000
@@ -383,20 +393,20 @@ object tr_local {
                 = 0
         var dynamicTexCoords // float * in vertex cache memory
                 : vertCache_s? = null
-        var geo: srfTriangles_s = srfTriangles_s()
+        var geo: srfTriangles_s? = null
         var material // may be NULL for shadow volumes
-                : Material.idMaterial? = null
+                : idMaterial? = null
         var nextOnLight // viewLight chains
                 : drawSurf_s? = null
         lateinit var scissorRect // for scissor clipping, local inside renderView viewport
                 : idScreenRect
         var shaderRegisters // evaluated and adjusted for referenceShaders
-                : FloatArray = FloatArray(0)
+                : FloatArray? = null
 
         // specular directions for non vertex program cards, skybox texcoords, etc
         var sort // material->sort, modified by gui / entity sort offsets
                 = 0f
-        lateinit var space: viewEntity_s
+        var space: viewEntity_s? = null
 
         companion object {
             private var DBG_counter = 0
@@ -464,7 +474,7 @@ object tr_local {
         abstract fun GetIndex(): Int
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane>? /*[2]*/, material: Material.idMaterial?)
+        abstract fun ProjectOverlay(localTextureAxis: Array<idPlane>? /*[2]*/, material: idMaterial?)
         abstract fun RemoveDecals()
     }
 
@@ -499,7 +509,7 @@ object tr_local {
         var foggedPortals: doublePortal_s?
         var frustumTris // triangulated frustumWindings[]
                 : srfTriangles_s?
-        var frustumWindings: Array<idWinding?> = kotlin.arrayOfNulls(6) // used for culling
+        var frustumWindings: Array<idWinding?> = arrayOfNulls(6) // used for culling
         var index // in world lightdefs
                 : Int
         var lastInteraction: idInteraction?
@@ -515,7 +525,7 @@ object tr_local {
 
         //
         var lightShader // guaranteed to be valid, even if parms.shader isn't
-                : Material.idMaterial?
+                : idMaterial?
 
         //                                                      // first added, so the prelight model is not valid
         //
@@ -530,7 +540,7 @@ object tr_local {
         //
         var references // each area the light is present in will have a lightRef
                 : areaReference_s?
-        var shadowFrustums: Array<shadowFrustum_t> = Array(6) { shadowFrustum_t() }
+        var shadowFrustums: Array<shadowFrustum_t?> = arrayOfNulls(6)
 
         //
         var viewCount // if == tr.viewCount, the light is on the viewDef->viewLights list
@@ -673,7 +683,7 @@ object tr_local {
         }
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        override fun ProjectOverlay(localTextureAxis: Array<idPlane>?, material: Material.idMaterial?) {
+        override fun ProjectOverlay(localTextureAxis: Array<idPlane>?, material: idMaterial?) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
@@ -738,7 +748,7 @@ object tr_local {
         // back end should NOT reference the lightDef, because it can change when running SMP
         var lightDef: idRenderLightLocal = idRenderLightLocal()
         var lightShader // light shader used by backend
-                : Material.idMaterial = Material.idMaterial()
+                : idMaterial = idMaterial()
         var next: viewLight_s? = null
 
         //
@@ -820,7 +830,7 @@ object tr_local {
     class viewDef_s {
         // specified in the call to DrawScene()
         val clipPlanes // in world space, the positive side
-                : kotlin.collections.ArrayList<idPlane>
+                : ArrayList<idPlane>
         val frustum: Array<idPlane>
 
         //
@@ -1185,16 +1195,11 @@ object tr_local {
      ** but may read fields that aren't dynamically modified
      ** by the frontend.
      */
-    class idRenderSystemLocal : idRenderSystem {
-        constructor() {
-            ambientLightVector = idVec4()
-            worlds = ArrayList()
-            Clear()
-        }
+    class idRenderSystemLocal() : idRenderSystem() {
 
         private var origWidth: Int = 0
         private var origHeight: Int = 0
-        val worlds: kotlin.collections.ArrayList<idRenderWorldLocal>
+        val worlds: idList<idRenderWorldLocal> = idList()
         var DBG_viewCount // incremented every view (twice a scene if subviewed)
                 = 0
 
@@ -1218,7 +1223,7 @@ object tr_local {
 
         // many console commands need to know which world they should operate on
         //
-        var defaultMaterial: Material.idMaterial? = null
+        var defaultMaterial: idMaterial? = null
         var demoGuiModel: idGuiModel? = null
 
         //
@@ -1309,7 +1314,7 @@ object tr_local {
             backEndRendererMaxLight = 1.0f
             ambientLightVector.Zero()
             sortOffset = 0f
-            worlds.clear()
+            worlds.Clear()
             primaryWorld = null
             //            memset(primaryRenderView, 0, sizeof(primaryRenderView));
             primaryRenderView = renderView_s()
@@ -1531,7 +1536,7 @@ object tr_local {
         override fun AllocRenderWorld(): idRenderWorld {
             val rw: idRenderWorldLocal
             rw = idRenderWorldLocal()
-            worlds.add(rw)
+            worlds.Append(rw)
             return rw
         }
 
@@ -1539,7 +1544,7 @@ object tr_local {
             if (primaryWorld === rw) {
                 primaryWorld = null
             }
-            worlds.remove(rw as idRenderWorldLocal)
+            worlds.Remove(rw as idRenderWorldLocal)
             //	delete rw;
         }
 
@@ -2483,6 +2488,10 @@ object tr_local {
         // virtual void			GetCardCaps( bool &oldCard, bool &nv10or20 );
         // virtual bool			UploadImage( const char *imageName, const byte *data, int width, int height );
         // internal functions
+        init {
+            ambientLightVector = idVec4()
+            Clear()
+        }
     }
 
     //optimizedShadow_t SuperOptimizeOccluders( idVec4 *verts, glIndex_t *indexes, int numIndexes,
@@ -2499,8 +2508,7 @@ object tr_local {
      ============================================================
      */
     class optimizedShadow_t {
-        var indexes // caller should free
-                : kotlin.collections.ArrayList<Int> = ArrayList()
+        var indexes: IntArray? = null
 
         //
         // indexes must be sorted frontCap, rearCap, silPlanes so the caps can be removed
@@ -2511,17 +2519,17 @@ object tr_local {
         var numVerts = 0
         var totalIndexes = 0
         var verts // includes both front and back projections, caller should free
-                : ArrayList<idVec3> = ArrayList()
+                : Array<idVec3>? = null
     }
 
     // deformable meshes precalculate as much as possible from a base frame, then generate
     // complete srfTriangles_t from just a new set of vertexes
     class deformInfo_s {
         //
-        var dominantTris: ArrayList<dominantTri_s> = ArrayList()
-        var dupVerts: IntArray = IntArray(0)
-        var   /*glIndex_t */indexes: IntArray = IntArray(0)
-        var mirroredVerts: IntArray = IntArray(0)
+        var dominantTris: Array<dominantTri_s?>? = null
+        var dupVerts: IntArray? = null
+        var   /*glIndex_t */indexes: IntArray? = null
+        var mirroredVerts: IntArray? = null
 
         //
         var numDupVerts = 0
@@ -2540,10 +2548,10 @@ object tr_local {
         //
         var numSilEdges = 0
         var numSourceVerts = 0
-        var silEdges: ArrayList<silEdge_t> = ArrayList()
+        var silEdges: Array<silEdge_t>? = null
 
         //
-        var   /*glIndex_t */silIndexes: IntArray = IntArray(0)
+        var   /*glIndex_t */silIndexes: IntArray? = null
 
         companion object {
             const val BYTES = Integer.BYTES * 11

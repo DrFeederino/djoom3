@@ -415,7 +415,7 @@ object Anim {
             var i: Int = 0
             while (i < jointInfo.size) {
                 jointNum = jointInfo[i].nameIndex
-                if (modelJoints[i].name.toString() != Game_local.animationLib.JointName(jointNum)) {
+                if (modelJoints!![i].name.toString() != Game_local.animationLib.JointName(jointNum)) {
                     idGameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name)
                 }
                 parent = if (modelJoints[i].parent != null) {
@@ -436,7 +436,7 @@ object Anim {
 
         fun GetInterpolatedFrame(
             frame: frameBlend_t,
-            joints: ArrayList<idJointQuat>,
+            joints: Array<idJointQuat>,
             index: IntArray,
             numIndexes: Int
         ) {
@@ -456,7 +456,7 @@ object Anim {
                 // just use the base frame
                 return
             }
-            val blendJoints: ArrayList<idJointQuat> = arrayListOf(* Array(baseFrame.size) { idJointQuat() })
+            val blendJoints: Array<idJointQuat> = Array(baseFrame.size) { idJointQuat() }
             val lerpIndex: IntArray = IntArray(baseFrame.size)
             var numLerpJoints: Int = 0
 
@@ -617,7 +617,7 @@ object Anim {
             }
         }
 
-        fun GetSingleFrame(framenum: Int, joints: ArrayList<idJointQuat>, index: IntArray, numIndexes: Int) {
+        fun GetSingleFrame(framenum: Int, joints: Array<idJointQuat>, index: IntArray, numIndexes: Int) {
             //	float				[]frame;
             var jointframe: Array<Float>
             var jf_ptr: Int

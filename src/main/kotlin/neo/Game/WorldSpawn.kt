@@ -119,8 +119,8 @@ class WorldSpawn {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 }

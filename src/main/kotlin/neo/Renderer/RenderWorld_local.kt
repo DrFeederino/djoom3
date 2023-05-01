@@ -12,26 +12,40 @@ import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.ModelDecal.decalProjectionInfo_s
 import neo.Renderer.ModelDecal.idRenderModelDecal
+import neo.Renderer.ModelManager.renderModelManager
 import neo.Renderer.ModelOverlay.idRenderModelOverlay
 import neo.Renderer.RenderWorld.*
 import neo.Renderer.RenderWorld_demo.demoHeader_t
 import neo.Renderer.RenderWorld_portals.portalStack_s
+import neo.Renderer.tr_light.R_IssueEntityDefCallback
+import neo.Renderer.tr_lightrun.R_ClearEntityDefDynamicModel
+import neo.Renderer.tr_lightrun.R_CreateEntityRefs
+import neo.Renderer.tr_lightrun.R_CreateLightDefFogPortals
+import neo.Renderer.tr_lightrun.R_CreateLightRefs
+import neo.Renderer.tr_lightrun.R_DeriveLightData
+import neo.Renderer.tr_lightrun.R_FreeEntityDefDerivedData
+import neo.Renderer.tr_lightrun.R_FreeLightDefDerivedData
 import neo.Renderer.tr_lightrun.R_RegenerateWorld_f
 import neo.Renderer.tr_local.areaReference_s
 import neo.Renderer.tr_local.demoCommand_t
+import neo.Renderer.tr_local.glConfig
 import neo.Renderer.tr_local.idRenderEntityLocal
 import neo.Renderer.tr_local.idRenderLightLocal
 import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.localTrace_t
+import neo.Renderer.tr_local.tr
 import neo.Renderer.tr_local.viewDef_s
 import neo.Renderer.tr_local.viewEntity_s
 import neo.Renderer.tr_local.viewLight_s
+import neo.Renderer.tr_main.R_AxisToModelMatrix
 import neo.Renderer.tr_rendertools.RB_AddDebugText
 import neo.TempDump
 import neo.TempDump.Atomics.*
+import neo.TempDump.NOT
 import neo.framework.*
 import neo.framework.DemoFile.demoSystem_t
 import neo.framework.DemoFile.idDemoFile
+import neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.BV.Box.idBox
 import neo.idlib.BV.Frustum.idFrustum
@@ -46,6 +60,8 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List.idList
+import neo.idlib.geometry.JointTransform
 import neo.idlib.geometry.Winding.idFixedWinding
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Math_h
@@ -56,6 +72,7 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.sys.win_shared
+import neo.sys.win_shared.Sys_Milliseconds
 import neo.ui.UserInterface
 import org.lwjgl.opengl.GL11
 import java.nio.ByteBuffer
@@ -75,14 +92,14 @@ object RenderWorld_local {
     const val WRITE_GUIS = false
 
     class portal_s {
-        var doublePortal: doublePortal_s = doublePortal_s()
+        var doublePortal: doublePortal_s? = null
         var intoArea // area this portal leads to
                 = 0
         var next // next portal of the area
                 : portal_s? = null
         val plane: idPlane = idPlane() // view must be on the positive side of the plane to cross
         var w // winding points have counter clockwise ordering seen this area
-                : idWinding = idWinding()
+                : idWinding? = null
     }
 
     class doublePortal_s {
@@ -95,7 +112,7 @@ object RenderWorld_local {
         // fog volume over each portal.
         var fogLight: idRenderLightLocal? = null
         var nextFoggedPortal: doublePortal_s? = null
-        var portals: ArrayList<portal_s> = ArrayList<portal_s>(2)
+        var portals: Array<portal_s?> = arrayOfNulls<portal_s>(2)
     }
 
     class portalArea_s {
@@ -107,7 +124,7 @@ object RenderWorld_local {
         var lightRefs // head/tail of doubly linked list, may change
                 : areaReference_s = areaReference_s()
         var portals // never changes after load
-                : portal_s = portal_s()
+                : portal_s? = null
 
         // not separated by a portal with the apropriate PS_BLOCK_* blockingBits
         var viewCount // set by R_FindViewLightsAndEntities
@@ -131,45 +148,22 @@ object RenderWorld_local {
 
     class idRenderWorldLocal : idRenderWorld() {
         //
-        var areaNodes: ArrayList<areaNode_t> = ArrayList()
+        var areaNodes: Array<areaNode_t?>? = null
 
         //
-        var areaScreenRect: ArrayList<idScreenRect> = ArrayList()
+        var areaScreenRect: Array<idScreenRect?>? = null
         var connectedAreaNum // incremented every time a door portal state changes
                 = 0
 
         //
-        var doublePortals: ArrayList<doublePortal_s> = ArrayList()
+        var doublePortals: Array<doublePortal_s?>? = null
 
         //
-        val entityDefs: ArrayList<idRenderEntityLocal?> = ArrayList()
-
-        @JvmName("FindNullidRenderEntityLocal?")
-        fun ArrayList<idRenderEntityLocal?>.FindNull(): Int {
-            var i = 0
-            while (i != size) {
-                if (get(i) == null) {
-                    return i
-                }
-                i++
-            }
-            return -1
-        }
-
-        fun ArrayList<idRenderLightLocal?>.FindNull(): Int {
-            var i = 0
-            while (i != size) {
-                if (get(i) == null) {
-                    return i
-                }
-                i++
-            }
-            return -1
-        }
+        val entityDefs: idList<idRenderEntityLocal?> = idList()
 
         //
         //
-        var generateAllInteractionsCalled: Boolean
+        var generateAllInteractionsCalled: Boolean = false
 
         //
         //        public final idBlockAlloc<areaReference_s> areaReferenceAllocator = new idBlockAlloc<>(1024);
@@ -180,29 +174,29 @@ object RenderWorld_local {
         // cache access, because the table is accessed by light in idRenderWorldLocal::CreateLightDefInteractions()
         // Growing this table is time consuming, so we add a pad value to the number
         // of entityDefs and lightDefs
-        var interactionTable: ArrayList<idInteraction>
+        var interactionTable: Array<idInteraction?>? = null
         var interactionTableHeight // lightDefs
-                : Int
+                : Int = 0
         var interactionTableWidth // entityDefs
-                : Int
-        val lightDefs: ArrayList<idRenderLightLocal?> = ArrayList()
+                : Int = 0
+        val lightDefs = idList<idRenderLightLocal?>()
 
         //
         //
         //
-        val localModels: ArrayList<idRenderModel> = ArrayList()
+        val localModels: idList<idRenderModel?> = idList()
 
         // virtual					~idRenderWorldLocal();
         var mapName // ie: maps/tim_dm2.proc, written to demoFile
                 : idStr = idStr()
         var   /*ID_TIME_T*/mapTimeStamp // for fast reloads of the same level
-                : LongArray
-        var numAreaNodes: Int
-        var numInterAreaPortals: Int
-        var numPortalAreas: Int
+                : LongArray = longArrayOf(FILE_NOT_FOUND_TIMESTAMP.toLong())
+        var numAreaNodes: Int = 0
+        var numInterAreaPortals: Int = 0
+        var numPortalAreas: Int = 0
 
         //
-        var portalAreas: ArrayList<portalArea_s> = ArrayList()
+        var portalAreas: Array<portalArea_s?>? = null
 
         /*
          ==============
@@ -213,17 +207,16 @@ object RenderWorld_local {
          ==============
          */
         var c_callbackUpdate = 0
-        override fun AddEntityDef(re: renderEntity_s): Int {
+        override fun AddEntityDef(re: renderEntity_s?): Int {
             // try and reuse a free spot
             var entityHandle = entityDefs.FindNull()
             if (entityHandle == -1) {
-                entityDefs.add(null as idRenderEntityLocal?)
-                entityHandle = entityDefs.size // this probably should work
-                if (interactionTable.isNotEmpty() && entityDefs.size > interactionTableWidth) {
+                entityHandle = entityDefs.Append((null as idRenderEntityLocal?))
+                if (interactionTable != null && entityDefs.Num() > interactionTableWidth) {
                     ResizeInteractionTable()
                 }
             }
-            UpdateEntityDef(entityHandle, re)
+            UpdateEntityDef(entityHandle, re!!)
             return entityHandle
         }
 
@@ -231,25 +224,24 @@ object RenderWorld_local {
             if (RenderSystem_init.r_skipUpdates.GetBool()) {
                 return
             }
-            tr_local.tr.pc.c_entityUpdates++
-            if (null == re.hModel && null == re.callback) {
+            tr.pc.c_entityUpdates++
+            if (NOT(re.hModel) && NOT(re.callback)) {
                 Common.common.Error("idRenderWorld::UpdateEntityDef: NULL hModel")
-                throw RuntimeException("idRenderWorld::UpdateEntityDef: NULL hModel")
             }
 
             // create new slots if needed
             if (entityHandle < 0 || entityHandle > LUDICROUS_INDEX) {
                 Common.common.Error("idRenderWorld::UpdateEntityDef: index = %d", entityHandle)
             }
-            while (entityHandle >= entityDefs.size) {
-                entityDefs.add(null as idRenderEntityLocal?)
+            while (entityHandle >= entityDefs.Num()) {
+                entityDefs.Append(null as idRenderEntityLocal?)
             }
-            var def = entityDefs[entityHandle]
+            var def: idRenderEntityLocal? = entityDefs[entityHandle]
             if (def != null) {
                 if (0 == re.forceUpdate) {
 
                     // check for exact match (OPTIMIZE: check through pointers more)
-                    if (!re.joints.isNullOrEmpty() && TempDump.NOT(re.callbackData) && TempDump.NOT(def.dynamicModel) && re == def.parms) {
+                    if (NOT(re.joints) && NOT(re.callbackData) && NOT(def.dynamicModel) && re == def.parms) {
                         return
                     }
 
@@ -265,7 +257,7 @@ object RenderWorld_local {
                         if (boundsMatch && originMatch && axisMatch && modelMatch) {
                             // only clear the dynamic model and interaction surfaces if they exist
                             c_callbackUpdate++
-                            tr_lightrun.R_ClearEntityDefDynamicModel(def)
+                            R_ClearEntityDefDynamicModel(def)
                             def.parms = renderEntity_s(re)
                             return
                         }
@@ -274,9 +266,9 @@ object RenderWorld_local {
 
                 // save any decals if the model is the same, allowing marks to move with entities
                 if (def.parms.hModel === re.hModel) {
-                    tr_lightrun.R_FreeEntityDefDerivedData(def, true, true)
+                    R_FreeEntityDefDerivedData(def, true, true)
                 } else {
-                    tr_lightrun.R_FreeEntityDefDerivedData(def, false, false)
+                    R_FreeEntityDefDerivedData(def, false, false)
                 }
             } else {
                 // creating a new one
@@ -287,8 +279,8 @@ object RenderWorld_local {
             }
             def.parms = renderEntity_s(re)
             //        TempDump.printCallStack("~~~~~~~~~~~~~~~~~" );
-            tr_main.R_AxisToModelMatrix(def.parms.axis, def.parms.origin, def.modelMatrix)
-            def.lastModifiedFrameNum = tr_local.tr.frameCount
+            R_AxisToModelMatrix(def.parms.axis, def.parms.origin, def.modelMatrix)
+            def.lastModifiedFrameNum = tr.frameCount
             if (Session.session.writeDemo != null && def.archived) {
                 WriteFreeEntity(entityHandle)
                 def.archived = false
@@ -296,12 +288,12 @@ object RenderWorld_local {
 
             // optionally immediately issue any callbacks
             if (!RenderSystem_init.r_useEntityCallbacks.GetBool() && def.parms.callback != null) {
-                tr_light.R_IssueEntityDefCallback(def)
+                R_IssueEntityDefCallback(def)
             }
 
             // based on the model bounds, add references in each area
             // that may contain the updated surface
-            tr_lightrun.R_CreateEntityRefs(def)
+            R_CreateEntityRefs(def)
         }
 
         /*
@@ -314,8 +306,8 @@ object RenderWorld_local {
          */
         override fun FreeEntityDef(entityHandle: Int) {
             val def: idRenderEntityLocal?
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
-                Common.common.Printf("idRenderWorld::FreeEntityDef: handle %d > %d\n", entityHandle, entityDefs.size)
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
+                Common.common.Printf("idRenderWorld::FreeEntityDef: handle %d > %d\n", entityHandle, entityDefs.Num())
                 return
             }
             def = entityDefs[entityHandle]
@@ -336,16 +328,16 @@ object RenderWorld_local {
             def.parms.gui[0] = null
 
 //	delete def;
-            entityDefs.removeAt(entityHandle)
+            entityDefs[entityHandle] = null
         }
 
         override fun GetRenderEntity(entityHandle: Int): renderEntity_s? {
             val def: idRenderEntityLocal?
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Printf(
                     "idRenderWorld::GetRenderEntity: invalid handle %d [0, %d]\n",
                     entityHandle,
-                    entityDefs.size
+                    entityDefs.Num()
                 )
                 return null
             }
@@ -357,17 +349,16 @@ object RenderWorld_local {
             return def.parms
         }
 
-        override fun AddLightDef(rlight: renderLight_s): Int {
+        override fun AddLightDef(rlight: renderLight_s?): Int {
             // try and reuse a free spot
             var lightHandle = lightDefs.FindNull()
             if (lightHandle == -1) {
-                lightDefs.add(null as idRenderLightLocal?)
-                lightHandle = lightDefs.size
-                if (interactionTable.isNotEmpty() && lightDefs.size > interactionTableHeight) {
+                lightHandle = lightDefs.Append(null as idRenderLightLocal?)
+                if (interactionTable != null && lightDefs.Num() > interactionTableHeight) {
                     ResizeInteractionTable()
                 }
             }
-            UpdateLightDef(lightHandle, rlight)
+            UpdateLightDef(lightHandle, rlight!!)
             return lightHandle
         }
 
@@ -385,37 +376,39 @@ object RenderWorld_local {
             if (RenderSystem_init.r_skipUpdates.GetBool()) {
                 return
             }
-            tr_local.tr.pc.c_lightUpdates++
+            tr.pc.c_lightUpdates++
 
             // create new slots if needed
             if (lightHandle < 0 || lightHandle > LUDICROUS_INDEX) {
                 Common.common.Error("idRenderWorld::UpdateLightDef: index = %d", lightHandle)
             }
-            //TODO: check if deferring like this actually make sense for ArrayList<T>
-//            while (lightHandle >= lightDefs.size) {
-//                lightDefs.add(null as idRenderLightLocal?)
-//            }
+            while (lightHandle >= lightDefs.Num()) {
+                lightDefs.Append(null as idRenderLightLocal?)
+            }
             var justUpdate = false
-            var light = lightDefs.getOrNull(lightHandle)
+            var light: idRenderLightLocal? = lightDefs[lightHandle]
             if (light != null) {
                 // if the shape of the light stays the same, we don't need to dump
                 // any of our derived data, because shader parms are calculated every frame
-                if (rlight.axis == light.parms.axis && rlight.end == light.parms.end && rlight.lightCenter == light.parms.lightCenter && rlight.lightRadius == light.parms.lightRadius && rlight.noShadows == light.parms.noShadows && rlight.origin == light.parms.origin && rlight.parallel == light.parms.parallel && rlight.pointLight == light.parms.pointLight && rlight.right == light.parms.right && rlight.start == light.parms.start && rlight.target == light.parms.target && rlight.up == light.parms.up && rlight.shader === light.lightShader && rlight.prelightModel === light.parms.prelightModel) {
+                if (((rlight.axis == light.parms.axis && rlight.end == light.parms.end
+                            && rlight.lightCenter == light.parms.lightCenter && rlight.lightRadius == light.parms.lightRadius && rlight.noShadows == light.parms.noShadows) && rlight.origin == light.parms.origin && rlight.parallel == light.parms.parallel && rlight.pointLight == light.parms.pointLight && rlight.right == light.parms.right && rlight.start == light.parms.start
+                            && rlight.target == light.parms.target && rlight.up == light.parms.up && rlight.shader === light.lightShader) && rlight.prelightModel === light.parms.prelightModel
+                ) {
                     justUpdate = true
                 } else {
                     // if we are updating shadows, the prelight model is no longer valid
                     light.lightHasMoved = true
-                    tr_lightrun.R_FreeLightDefDerivedData(light)
+                    R_FreeLightDefDerivedData(light)
                 }
             } else {
                 // create a new one
                 light = idRenderLightLocal()
-                lightDefs.add(lightHandle, light)
+                lightDefs[lightHandle] = light
                 light.world = this
                 light.index = lightHandle
             }
-            light.parms = rlight
-            light.lastModifiedFrameNum = tr_local.tr.frameCount
+            light.parms = renderLight_s(rlight)
+            light.lastModifiedFrameNum = tr.frameCount
             if (Session.session.writeDemo != null && light.archived) {
                 WriteFreeLight(lightHandle)
                 light.archived = false
@@ -424,9 +417,9 @@ object RenderWorld_local {
                 light.parms.prelightModel = null
             }
             if (!justUpdate) {
-                tr_lightrun.R_DeriveLightData(light)
-                tr_lightrun.R_CreateLightRefs(light)
-                tr_lightrun.R_CreateLightDefFogPortals(light)
+                R_DeriveLightData(light)
+                R_CreateLightRefs(light)
+                R_CreateLightDefFogPortals(light)
             }
         }
 
@@ -440,11 +433,11 @@ object RenderWorld_local {
          */
         override fun FreeLightDef(lightHandle: Int) {
             val light: idRenderLightLocal?
-            if (lightHandle < 0 || lightHandle >= lightDefs.size) {
+            if (lightHandle < 0 || lightHandle >= lightDefs.Num()) {
                 Common.common.Printf(
                     "idRenderWorld::FreeLightDef: invalid handle %d [0, %d]\n",
                     lightHandle,
-                    lightDefs.size
+                    lightDefs.Num()
                 )
                 return
             }
@@ -459,13 +452,13 @@ object RenderWorld_local {
             }
 
             //delete light;
-            lightDefs.removeAt(lightHandle)
+            lightDefs[lightHandle] = null
         }
 
         override fun GetRenderLight(lightHandle: Int): renderLight_s? {
             val def: idRenderLightLocal?
-            if (lightHandle < 0 || lightHandle >= lightDefs.size) {
-                Common.common.Printf("idRenderWorld::GetRenderLight: handle %d > %d\n", lightHandle, lightDefs.size)
+            if (lightHandle < 0 || lightHandle >= lightDefs.Num()) {
+                Common.common.Printf("idRenderWorld::GetRenderLight: handle %d > %d\n", lightHandle, lightDefs.Num())
                 return null
             }
             def = lightDefs[lightHandle]
@@ -479,9 +472,9 @@ object RenderWorld_local {
         override fun CheckAreaForPortalSky(areaNum: Int): Boolean {
             var ref: areaReference_s
             assert(areaNum >= 0 && areaNum < numPortalAreas)
-            ref = portalAreas[areaNum].entityRefs!!.areaNext!!
+            ref = portalAreas!![areaNum]!!.entityRefs.areaNext!!
             while (ref.entity != null) {
-                assert(ref.area === portalAreas[areaNum])
+                assert(ref.area === portalAreas!![areaNum])
                 if (ref.entity != null && ref.entity!!.needsPortalSky) {
                     return true
                 }
@@ -503,51 +496,63 @@ object RenderWorld_local {
          ===================
          */
         override fun GenerateAllInteractions() {
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
-            val start = win_shared.Sys_Milliseconds()
+
+            val start: Int = Sys_Milliseconds()
+
             generateAllInteractionsCalled = false
 
             // watch how much memory we allocate
-            tr_local.tr.staticAllocCount = 0
+
+            // watch how much memory we allocate
+            tr.staticAllocCount = 0
 
             // let idRenderWorldLocal::CreateLightDefInteractions() know that it shouldn't
             // try and do any view specific optimizations
-            tr_local.tr.viewDef = null
-            for (i in 0 until lightDefs.size) {
-                val ldef = lightDefs[i]
+
+            // let idRenderWorldLocal::CreateLightDefInteractions() know that it shouldn't
+            // try and do any view specific optimizations
+            tr.viewDef = null
+
+            for (i in 0 until lightDefs.Num()) {
+                val ldef: idRenderLightLocal? = lightDefs[i]
                 if (null == ldef) {
                     continue
                 }
                 CreateLightDefInteractions(ldef)
             }
-            val end = win_shared.Sys_Milliseconds()
+
+            val end: Int = Sys_Milliseconds()
             val msec = end - start
+
             Common.common.Printf(
                 "idRenderWorld::GenerateAllInteractions, msec = %d, staticAllocCount = %d.\n",
                 msec,
-                tr_local.tr.staticAllocCount
+                tr.staticAllocCount
             )
 
             // build the interaction table
+
+            // build the interaction table
             if (RenderSystem_init.r_useInteractionTable.GetBool()) {
-                interactionTableWidth = entityDefs.size + 100
-                interactionTableHeight = lightDefs.size + 100
+                interactionTableWidth = entityDefs.Num() + 100
+                interactionTableHeight = lightDefs.Num() + 100
                 val size = interactionTableWidth * interactionTableHeight //* sizeof(interactionTable);
-                interactionTable = ArrayList<idInteraction>(size) // R_ClearedStaticAlloc(size);
+                interactionTable = arrayOfNulls(size) // R_ClearedStaticAlloc(size);
                 var count = 0
-                for (i in 0 until lightDefs.size) {
-                    val ldef = lightDefs[i]
+                for (i in 0 until lightDefs.Num()) {
+                    val ldef: idRenderLightLocal? = lightDefs[i]
                     if (null == ldef) {
                         continue
                     }
                     var inter: idInteraction?
                     inter = ldef.firstInteraction
                     while (inter != null) {
-                        val edef = inter.entityDef!!
-                        val index = ldef.index * interactionTableWidth + edef.index
-                        interactionTable[index] = inter
+                        val edef = inter.entityDef
+                        val index = ldef.index * interactionTableWidth + edef!!.index
+                        interactionTable!![index] = inter
                         count++
                         inter = inter.lightNext
                     }
@@ -555,6 +560,8 @@ object RenderWorld_local {
                 Common.common.Printf("interactionTable size: %d bytes\n", size)
                 Common.common.Printf("%d interaction take %d bytes\n", count, count /* sizeof(idInteraction)*/)
             }
+
+            // entities flagged as noDynamicInteractions will no longer make any
 
             // entities flagged as noDynamicInteractions will no longer make any
             generateAllInteractionsCalled = true
@@ -600,10 +607,10 @@ object RenderWorld_local {
             // check all areas for models
             i = 0
             while (i < numAreas) {
-                area = portalAreas[areas[i]]
+                area = portalAreas!![areas[i]]!!
 
                 // check all models in this area
-                ref = area.entityRefs!!.areaNext!!
+                ref = area.entityRefs.areaNext!!
                 while (ref !== area.entityRefs) {
                     def = ref.entity!!
 
@@ -655,7 +662,7 @@ object RenderWorld_local {
         ) {
             val info = decalProjectionInfo_s()
             val localInfo = decalProjectionInfo_s()
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
@@ -697,7 +704,7 @@ object RenderWorld_local {
         }
 
         override fun ProjectOverlay(entityHandle: Int, localTextureAxis: Array<idPlane>, material: idMaterial?) {
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
@@ -718,7 +725,7 @@ object RenderWorld_local {
         }
 
         override fun RemoveDecals(entityHandle: Int) {
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Error("idRenderWorld::ProjectOverlay: index = %d", entityHandle)
                 return
             }
@@ -828,11 +835,11 @@ object RenderWorld_local {
                 // now write delete commands for any modified-but-not-visible entities, and
                 // add the renderView command to the demo
                 if (Session.session.writeDemo != null) {
-                    WriteRenderView(renderView!!)
+                    WriteRenderView(renderView)
                 }
 
 //                if (false) {
-//                    for (int i = 0; i < entityDefs.size; i++) {
+//                    for (int i = 0; i < entityDefs.Num(); i++) {
 //                        idRenderEntityLocal def = entityDefs.get(i);
 //                        if (!def) {
 //                            continue;
@@ -868,12 +875,13 @@ object RenderWorld_local {
             var node: areaNode_t
             var nodeNum: Int
             var d: Float
-            if (areaNodes.isEmpty()) {
+
+            if (null == areaNodes) {
                 return -1
             }
-            node = areaNodes[0]
+            node = areaNodes!![0]!!
             while (true) {
-                d = node.plane.Normal().times(point) + node.plane[3]
+                d = node.plane.Normal() * point + node.plane[3]
                 nodeNum = if (d > 0) {
                     node.children[0]
                 } else {
@@ -889,7 +897,7 @@ object RenderWorld_local {
                     }
                     return nodeNum
                 }
-                node = areaNodes[nodeNum]
+                node = areaNodes!![nodeNum]!!
             }
 
 //            return -1;
@@ -905,14 +913,14 @@ object RenderWorld_local {
          */
         override fun BoundsInAreas(bounds: idBounds, areas: IntArray, maxAreas: Int): Int {
             val numAreas = IntArray(1)
-            assert(areas.isNotEmpty())
+            assert(areas != null)
             assert(
                 bounds[0][0] <= bounds[1][0] && bounds[0][1] <= bounds[1][1] && bounds[0][2] <= bounds[1][2]
             )
             assert(
                 bounds[1][0] - bounds[0][0] < 1e4f && bounds[1][1] - bounds[0][1] < 1e4f && bounds[1][2] - bounds[0][2] < 1e4f
             )
-            if (areaNodes.isEmpty()) {
+            if (areaNodes == null) {
                 return 0
             }
             BoundsInAreas_r(0, bounds, areas, numAreas, maxAreas)
@@ -926,7 +934,7 @@ object RenderWorld_local {
             if (areaNum >= numPortalAreas || areaNum < 0) {
                 Common.common.Error("idRenderWorld::NumPortalsInArea: bad areanum %d", areaNum)
             }
-            area = portalAreas[areaNum]
+            area = portalAreas!![areaNum]!!
             count = 0
             portal = area.portals
             while (portal != null) {
@@ -944,7 +952,7 @@ object RenderWorld_local {
             if (areaNum > numPortalAreas) {
                 Common.common.Error("idRenderWorld::GetPortal: areaNum > numAreas")
             }
-            area = portalAreas[areaNum]
+            area = portalAreas!![areaNum]!!
             count = 0
             portal = area.portals
             while (portal != null) {
@@ -952,8 +960,8 @@ object RenderWorld_local {
                     ret.areas[0] = areaNum
                     ret.areas[1] = portal.intoArea
                     ret.w = portal.w
-                    ret.blockingBits = portal.doublePortal.blockingBits
-                    ret.portalHandle = doublePortals.indexOf(portal.doublePortal) + 1
+                    ret.blockingBits = portal.doublePortal!!.blockingBits
+                    ret.portalHandle = doublePortals!!.indexOf(portal.doublePortal) + 1
                     return ret
                 }
                 count++
@@ -988,7 +996,7 @@ object RenderWorld_local {
             pt.y = -1f
             pt.x = pt.y
             pt.guiId = 0
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
                 Common.common.Printf("idRenderWorld::GuiTrace: invalid handle %d\n", entityHandle)
                 return pt
             }
@@ -1062,7 +1070,7 @@ object RenderWorld_local {
             val localEnd = idVec3()
             var shader: idMaterial?
             trace.fraction = 1.0f
-            if (entityHandle < 0 || entityHandle >= entityDefs.size) {
+            if (entityHandle < 0 || entityHandle >= entityDefs.Num()) {
 //		common.Error( "idRenderWorld::ModelTrace: index = %i", entityHandle );
                 return false
             }
@@ -1173,10 +1181,10 @@ object RenderWorld_local {
             // check all areas for models
             i = 0
             while (i < numAreas) {
-                area = portalAreas[areas[i]]
+                area = portalAreas!![areas[i]]!!
 
                 // check all models in this area
-                ref = area.entityRefs!!.areaNext!!
+                ref = area.entityRefs.areaNext!!
                 while (ref !== area.entityRefs) {
                     def = ref!!.entity!!
                     model = def.parms.hModel
@@ -1297,7 +1305,7 @@ object RenderWorld_local {
 //            memset(results, 0, sizeof(modelTrace_t));
             results.clear()
             results.fraction = 1.0f
-            if (areaNodes.isNotEmpty()) {
+            if (areaNodes != null) {
                 RecurseProcBSP_r(results, -1, 0, 0.0f, 1.0f, start, end)
                 return results.fraction < 1.0f
             }
@@ -1694,20 +1702,20 @@ object RenderWorld_local {
                 while (j < tri.numVerts) {
                     val vec = FloatArray(8)
                     src.Parse1DMatrix(8, vec)
-                    tri.verts[j].xyz[0] = vec[0]
-                    tri.verts[j].xyz[1] = vec[1]
-                    tri.verts[j].xyz[2] = vec[2]
-                    tri.verts[j].st[0] = vec[3]
-                    tri.verts[j].st[1] = vec[4]
-                    tri.verts[j].normal[0] = vec[5]
-                    tri.verts[j].normal[1] = vec[6]
-                    tri.verts[j].normal[2] = vec[7]
+                    tri.verts!![j]!!.xyz[0] = vec[0]
+                    tri.verts!![j]!!.xyz[1] = vec[1]
+                    tri.verts!![j]!!.xyz[2] = vec[2]
+                    tri.verts!![j]!!.st[0] = vec[3]
+                    tri.verts!![j]!!.st[1] = vec[4]
+                    tri.verts!![j]!!.normal[0] = vec[5]
+                    tri.verts!![j]!!.normal[1] = vec[6]
+                    tri.verts!![j]!!.normal[2] = vec[7]
                     j++
                 }
                 tr_trisurf.R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
                 j = 0
                 while (j < tri.numIndexes) {
-                    tri.indexes[j] = src.ParseInt()
+                    tri.indexes!![j] = src.ParseInt()
                     j++
                 }
                 src.ExpectTokenString("}")
@@ -1744,25 +1752,23 @@ object RenderWorld_local {
             tri.shadowCapPlaneBits = src.ParseInt()
             tr_trisurf.R_AllocStaticTriSurfShadowVerts(tri, tri.numVerts)
             tri.bounds.Clear()
-            tri.shadowVertexes = ArrayList(
-                arrayListOf(* shadowCache_s.generateArray(tri.numVerts))
-            )
+            tri.shadowVertexes = shadowCache_s.generateArray(tri.numVerts)
             j = 0
             while (j < tri.numVerts) {
                 val vec = FloatArray(8)
                 src.Parse1DMatrix(3, vec)
-                tri.shadowVertexes[j].xyz[0] = vec[0]
-                tri.shadowVertexes[j].xyz[1] = vec[1]
-                tri.shadowVertexes[j].xyz[2] = vec[2]
-                tri.shadowVertexes[j].xyz[3] = 1f // no homogenous value
-                tri.bounds.AddPoint(tri.shadowVertexes[j].xyz.ToVec3())
+                tri.shadowVertexes!![j].xyz[0] = vec[0]
+                tri.shadowVertexes!![j].xyz[1] = vec[1]
+                tri.shadowVertexes!![j].xyz[2] = vec[2]
+                tri.shadowVertexes!![j].xyz[3] = 1f // no homogenous value
+                tri.bounds.AddPoint(tri.shadowVertexes!![j].xyz.ToVec3())
                 val a = 0
                 j++
             }
             tr_trisurf.R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
             j = 0
             while (j < tri.numIndexes) {
-                tri.indexes[j] = src.ParseInt()
+                tri.indexes!![j] = src.ParseInt()
                 j++
             }
 
@@ -1780,11 +1786,11 @@ object RenderWorld_local {
             connectedAreaNum = 0
             i = 0
             while (i < numPortalAreas) {
-                portalAreas[i].areaNum = i
-                portalAreas[i].lightRefs!!.areaPrev = portalAreas[i].lightRefs
-                portalAreas[i].lightRefs!!.areaNext = portalAreas[i].lightRefs!!.areaPrev
-                portalAreas[i].entityRefs!!.areaPrev = portalAreas[i].entityRefs
-                portalAreas[i].entityRefs!!.areaNext = portalAreas[i].entityRefs!!.areaPrev
+                portalAreas!![i]!!.areaNum = i
+                portalAreas!![i]!!.lightRefs.areaPrev = portalAreas!![i]!!.lightRefs
+                portalAreas!![i]!!.lightRefs.areaNext = portalAreas!![i]!!.lightRefs.areaPrev
+                portalAreas!![i]!!.entityRefs.areaPrev = portalAreas!![i]!!.entityRefs
+                portalAreas!![i]!!.entityRefs.areaNext = portalAreas!![i]!!.entityRefs.areaPrev
                 i++
             }
         }
@@ -1799,8 +1805,8 @@ object RenderWorld_local {
                 src.Error("R_ParseInterAreaPortals: bad numPortalAreas")
                 return
             }
-            portalAreas = ArrayList(arrayListOf(*portalArea_s.generateArray(numPortalAreas)))
-            areaScreenRect = ArrayList(arrayListOf(*idScreenRect.generateArray(numPortalAreas)))
+            portalAreas = portalArea_s.generateArray(numPortalAreas) as Array<portalArea_s?>
+            areaScreenRect = idScreenRect.generateArray(numPortalAreas) as Array<idScreenRect?>
 
             // set the doubly linked lists
             SetupAreaRefs()
@@ -1809,7 +1815,7 @@ object RenderWorld_local {
                 src.Error("R_ParseInterAreaPortals: bad numInterAreaPortals")
                 return
             }
-            doublePortals = ArrayList(arrayListOf(*Array(numInterAreaPortals) { doublePortal_s() }))
+            doublePortals = Array(numInterAreaPortals) { doublePortal_s() }
             i = 0
             while (i < numInterAreaPortals) {
                 var numPoints: Int
@@ -1834,22 +1840,22 @@ object RenderWorld_local {
                 // add the portal to a1
                 p = portal_s() // R_ClearedStaticAlloc(sizeof(p));
                 p.intoArea = a2
-                p.doublePortal = doublePortals[i]
+                p.doublePortal = doublePortals!![i]
                 p.w = w
-                p.w.GetPlane(p.plane)
-                p.next = portalAreas[a1].portals
-                portalAreas[a1].portals = p
-                doublePortals[i].portals.add(0, p)
+                p.w!!.GetPlane(p.plane)
+                p.next = portalAreas!![a1]!!.portals
+                portalAreas!![a1]!!.portals = p
+                doublePortals!![i]!!.portals[0] = p
 
                 // reverse it for a2
                 p = portal_s() // R_ClearedStaticAlloc(sizeof(p));
                 p.intoArea = a1
-                p.doublePortal = doublePortals[i]
+                p.doublePortal = doublePortals!![i]
                 p.w = w.Reverse()
-                p.w.GetPlane(p.plane)
-                p.next = portalAreas[a2].portals
-                portalAreas[a2].portals = p
-                doublePortals[i].portals.add(1, p)
+                p.w!!.GetPlane(p.plane)
+                p.next = portalAreas!![a2]!!.portals
+                portalAreas!![a2]!!.portals = p
+                doublePortals!![i]!!.portals[1] = p
                 i++
             }
             src.ExpectTokenString("}")
@@ -1862,9 +1868,9 @@ object RenderWorld_local {
             if (numAreaNodes < 0) {
                 src.Error("R_ParseNodes: bad numAreaNodes")
             }
-            areaNodes = ArrayList(arrayListOf(*TempDump.allocArray(areaNode_t::class.java, numAreaNodes)))
-            for (node in areaNodes) {
-                src.Parse1DMatrix(4, node.plane)
+            areaNodes = Array(numAreaNodes) { areaNode_t() }
+            for (node in areaNodes!!) {
+                src.Parse1DMatrix(4, node!!.plane)
                 node.children[0] = src.ParseInt()
                 node.children[1] = src.ParseInt()
             }
@@ -1877,7 +1883,7 @@ object RenderWorld_local {
                 if (node.children[i] <= 0) {
                     nums[i] = -1 - node.children[i]
                 } else {
-                    nums[i] = CommonChildrenArea_r(areaNodes[node.children[i]])
+                    nums[i] = CommonChildrenArea_r(areaNodes!![node.children[i]]!!)
                 }
             }
 
@@ -1910,7 +1916,7 @@ object RenderWorld_local {
                 var area: portalArea_s?
                 var portal: portal_s?
                 var nextPortal: portal_s?
-                area = portalAreas[i]
+                area = portalAreas!![i]!!
                 portal = area.portals
                 while (portal != null) {
                     //TODO:linkage?
@@ -1921,39 +1927,44 @@ object RenderWorld_local {
                 }
 
                 // there shouldn't be any remaining lightRefs or entityRefs
-                if (area.lightRefs!!.areaNext !== area.lightRefs) {
+                if (area.lightRefs.areaNext !== area.lightRefs) {
                     Common.common.Error("FreeWorld: unexpected remaining lightRefs")
                 }
-                if (area.entityRefs!!.areaNext !== area.entityRefs) {
+                if (area.entityRefs.areaNext !== area.entityRefs) {
                     Common.common.Error("FreeWorld: unexpected remaining entityRefs")
                 }
                 i++
             }
-            if (portalAreas.isNotEmpty()) {
+            if (portalAreas != null) {
 //                R_StaticFree(portalAreas);
-                portalAreas.clear()
+                portalAreas = null
                 numPortalAreas = 0
                 //                R_StaticFree(areaScreenRect);
-                areaScreenRect.clear()
+                areaScreenRect = null
             }
-            if (doublePortals.isNotEmpty()) {
+
+            if (doublePortals != null) {
 //                R_StaticFree(doublePortals);
-                doublePortals.clear()
+                doublePortals = null
                 numInterAreaPortals = 0
             }
-            if (areaNodes.isNotEmpty()) {
+
+            if (areaNodes != null) {
 //                R_StaticFree(areaNodes);
-                areaNodes.clear()
+                areaNodes = null
             }
 
             // free all the inline idRenderModels
+            // free all the inline idRenderModels
+
+            // free all the inline idRenderModels
             i = 0
-            while (i < localModels.size) {
-                ModelManager.renderModelManager.RemoveModel(localModels[i])
-                localModels.removeAt(i)
+            while (i < localModels.Num()) {
+                renderModelManager.RemoveModel(localModels[i]!!)
+                localModels.RemoveIndex(i)
                 i++
             }
-            localModels.clear()
+            localModels.Clear()
 
 //            areaReferenceAllocator.Shutdown();
 //            interactionAllocator.Shutdown();
@@ -1970,23 +1981,23 @@ object RenderWorld_local {
          */
         fun ClearWorld() {
             numPortalAreas = 1
-            portalAreas = ArrayList(
-                arrayListOf(*portalArea_s.generateArray(1))
-            )
-            areaScreenRect = ArrayList(
-                arrayListOf(*idScreenRect.generateArray(1))
-            )
+            portalAreas = portalArea_s.generateArray(1) as Array<portalArea_s?>
+            areaScreenRect = idScreenRect.generateArray(1) as Array<idScreenRect?>
+
             SetupAreaRefs()
 
             // even though we only have a single area, create a node
             // that has both children pointing at it so we don't need to
             //
-            areaNodes = ArrayList(
-                arrayListOf(areaNode_t())
-            ) // R_ClearedStaticAlloc(sizeof(areaNodes[0]));
-            areaNodes[0].plane[3] = 1f
-            areaNodes[0].children[0] = -1
-            areaNodes[0].children[1] = -1
+
+            // even though we only have a single area, create a node
+            // that has both children pointing at it so we don't need to
+            //
+            areaNodes = arrayOf(areaNode_t()) // R_ClearedStaticAlloc(sizeof(areaNodes[0]));
+
+            areaNodes!![0]!!.plane[3] = 1f
+            areaNodes!![0]!!.children[0] = -1
+            areaNodes!![0]!!.children[1] = -1
         }
 
         /*
@@ -1998,32 +2009,38 @@ object RenderWorld_local {
          */
         fun FreeDefs() {
             var i: Int
+
             generateAllInteractionsCalled = false
-            if (interactionTable.isNotEmpty()) {
+
+            if (interactionTable != null) {
 //                R_StaticFree(interactionTable);
-                interactionTable.clear()
+                interactionTable = null
             }
 
             // free all lightDefs
+
+            // free all lightDefs
             i = 0
-            while (i < lightDefs.size) {
+            while (i < lightDefs.Num()) {
                 var light: idRenderLightLocal?
-                light = lightDefs[i]
+                light = lightDefs.get(i)
                 if (light != null && light.world == this) {
                     FreeLightDef(i)
-                    lightDefs[i] = null
+                    lightDefs.set(i, null)
                 }
                 i++
             }
 
             // free all entityDefs
+
+            // free all entityDefs
             i = 0
-            while (i < entityDefs.size) {
+            while (i < entityDefs.Num()) {
                 var mod: idRenderEntityLocal?
-                mod = entityDefs[i]
+                mod = entityDefs.get(i)
                 if (mod != null && mod.world == this) {
                     FreeEntityDef(i)
-                    entityDefs[i] = null
+                    entityDefs.set(i, null)
                 }
                 i++
             }
@@ -2032,8 +2049,8 @@ object RenderWorld_local {
         fun TouchWorldModels() {
             var i: Int
             i = 0
-            while (i < localModels.size) {
-                ModelManager.renderModelManager.CheckModel(localModels[i].Name())
+            while (i < localModels.Num()) {
+                ModelManager.renderModelManager.CheckModel(localModels[i]!!.Name())
                 i++
             }
         }
@@ -2053,8 +2070,7 @@ object RenderWorld_local {
                 // try and reuse a free spot
                 index = entityDefs.FindNull()
                 if (index == -1) {
-                    entityDefs.add(def)
-                    index = entityDefs.size
+                    index = entityDefs.Append(def)
                 } else {
                     entityDefs[index] = def
                 }
@@ -2066,7 +2082,7 @@ object RenderWorld_local {
                 }
                 val hModel = def.parms.hModel
                 for (j in 0 until hModel!!.NumSurfaces()) {
-                    val surf = hModel!!.Surface(j)
+                    val surf = hModel.Surface(j)
                     if ("textures/smf/portal_sky" == surf.shader!!.GetName()) {
                         def.needsPortalSky = true
                     }
@@ -2083,7 +2099,7 @@ object RenderWorld_local {
                 def.parms.shaderParms[2] = def.parms.shaderParms[3]
                 def.parms.shaderParms[1] = def.parms.shaderParms[2]
                 def.parms.shaderParms[0] = def.parms.shaderParms[1]
-                AddEntityRefToArea(def, portalAreas[i])
+                AddEntityRefToArea(def, portalAreas!![i]!!)
                 i++
             }
         }
@@ -2097,7 +2113,7 @@ object RenderWorld_local {
             // all portals start off open
             i = 0
             while (i < numInterAreaPortals) {
-                doublePortals[i].blockingBits = portalConnection_t.PS_BLOCK_NONE.ordinal
+                doublePortals!![i]!!.blockingBits = portalConnection_t.PS_BLOCK_NONE.ordinal
                 i++
             }
 
@@ -2107,7 +2123,7 @@ object RenderWorld_local {
                 j = 0
                 while (j < RenderWorld.NUM_PORTAL_ATTRIBUTES) {
                     connectedAreaNum++
-                    FloodConnectedAreas(portalAreas[i], j)
+                    FloodConnectedAreas(portalAreas!![i]!!, j)
                     j++
                 }
                 i++
@@ -2193,7 +2209,9 @@ object RenderWorld_local {
                     ModelManager.renderModelManager.AddModel(lastModel)
 
                     // save it in the list to free when clearing this map
-                    localModels.add(lastModel)
+
+                    // save it in the list to free when clearing this map
+                    localModels.Append(lastModel)
                     continue
                 }
                 if (token.toString() == "shadowModel") {
@@ -2203,7 +2221,9 @@ object RenderWorld_local {
                     ModelManager.renderModelManager.AddModel(lastModel)
 
                     // save it in the list to free when clearing this map
-                    localModels.add(lastModel)
+
+                    // save it in the list to free when clearing this map
+                    localModels.Append(lastModel)
                     continue
                 }
                 if (token.toString() == "interAreaPortals") {
@@ -2224,7 +2244,7 @@ object RenderWorld_local {
             }
 
             // find the points where we can early-our of reference pushing into the BSP tree
-            CommonChildrenArea_r(areaNodes[0])
+            CommonChildrenArea_r(areaNodes!![0]!!)
             AddWorldModelEntities()
             ClearPortalStates()
 
@@ -2260,8 +2280,8 @@ object RenderWorld_local {
             val w: idWinding?
             var i: Int
             val forward = idPlane()
-            ldef = p.doublePortal.fogLight
-            if (null == (ldef)) {
+            ldef = p.doublePortal!!.fogLight
+            if (null == ldef) {
                 return false
             }
 
@@ -2275,7 +2295,7 @@ object RenderWorld_local {
                 tr_local.tr.viewDef!!,
                 ldef.parms.referenceSound
             )
-            val stage: shaderStage_t = lightShader.GetStage(0)
+            val stage: shaderStage_t = lightShader.GetStage(0)!!
             val alpha = regs[stage.color.registers[3]]
 
             // if they left the default value on, set a fog distance of 500
@@ -2292,7 +2312,7 @@ object RenderWorld_local {
             forward[3] = a * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[14]
             w = p.w
             i = 0
-            while (i < w.GetNumPoints()) {
+            while (i < w!!.GetNumPoints()) {
                 var d: Float
                 d = forward.Distance(w[i].ToVec3())
                 if (d < 0.5f) {
@@ -2315,14 +2335,14 @@ object RenderWorld_local {
             val v2 = idVec3()
             var addPlanes: Int
             var w: idFixedWinding // we won't overflow because MAX_PORTAL_PLANES = 20
-            area = portalAreas[areaNum]
+            area = portalAreas!![areaNum]!!
 
             // cull models and lights to the current collection of planes
             AddAreaRefs(areaNum, ps)
-            if (areaScreenRect[areaNum].IsEmpty()) {
-                areaScreenRect[areaNum] = ps.rect
+            if (areaScreenRect!![areaNum]!!.IsEmpty()) {
+                areaScreenRect!![areaNum] = ps.rect
             } else {
-                areaScreenRect[areaNum].Union(ps.rect)
+                areaScreenRect!![areaNum]!!.Union(ps.rect)
             }
 
             // go through all the portals
@@ -2330,7 +2350,7 @@ object RenderWorld_local {
             while (p != null) {
 
                 // an enclosing door may have sealed the portal off
-                if (p.doublePortal.blockingBits and portalConnection_t.PS_BLOCK_VIEW.ordinal != 0) {
+                if (p.doublePortal!!.blockingBits and portalConnection_t.PS_BLOCK_VIEW.ordinal != 0) {
                     p = p.next
                     continue
                 }
@@ -2370,7 +2390,7 @@ object RenderWorld_local {
                 }
 
                 // clip the portal winding to all of the planes
-                w = idFixedWinding(p.w)
+                w = idFixedWinding(p.w!!)
                 j = 0
                 while (j < ps.numPortalPlanes) {
                     if (!w.ClipInPlace(ps.portalPlanes[j].unaryMinus(), 0f)) {
@@ -2460,7 +2480,7 @@ object RenderWorld_local {
             if (tr_local.tr.viewDef!!.areaNum < 0) {
                 i = 0
                 while (i < numPortalAreas) {
-                    areaScreenRect[i] = tr_local.tr.viewDef!!.scissor
+                    areaScreenRect!![i] = tr_local.tr.viewDef!!.scissor
                     i++
                 }
 
@@ -2473,7 +2493,7 @@ object RenderWorld_local {
             } else {
                 i = 0
                 while (i < numPortalAreas) {
-                    areaScreenRect[i].Clear()
+                    areaScreenRect!![i]!!.Clear()
                     i++
                 }
 
@@ -2495,7 +2515,7 @@ object RenderWorld_local {
             val v2 = idVec3()
             var addPlanes: Int
             var w: idFixedWinding // we won't overflow because MAX_PORTAL_PLANES = 20
-            area = portalAreas[areaNum]
+            area = portalAreas!![areaNum]!!
 
             // add an areaRef
             AddLightRefToArea(light, area)
@@ -2539,7 +2559,7 @@ object RenderWorld_local {
                 }
 
                 // clip the portal winding to all of the planes
-                w = idFixedWinding(p.w)
+                w = idFixedWinding(p.w!!)
                 j = 0
                 while (j < ps.numPortalPlanes) {
                     if (!w.ClipInPlace(ps.portalPlanes[j].unaryMinus(), 0f)) {
@@ -2642,7 +2662,7 @@ object RenderWorld_local {
             val portalArea: portalArea_s?
             val newBounds = idBounds()
             var a: areaNumRef_s?
-            portalArea = portalAreas[areaNum]
+            portalArea = portalAreas!![areaNum]!!
 
             // go through all the portals
             p = portalArea.portals
@@ -2675,7 +2695,7 @@ object RenderWorld_local {
                 }
 
                 // get the bounds for the portal winding projected in the frustum
-                frustum.ProjectionBounds(p.w, newBounds)
+                frustum.ProjectionBounds(p.w!!, newBounds)
                 newBounds.IntersectSelf(bounds)
                 if (newBounds[0][0] > newBounds[1][0] || newBounds[0][1] > newBounds[1][1] || newBounds[0][2] > newBounds[1][2]
                 ) {
@@ -2755,8 +2775,8 @@ object RenderWorld_local {
             val area: portalArea_s?
             var vEnt: viewEntity_s?
             //            idBounds b;
-            area = portalAreas[areaNum]
-            ref = area.entityRefs!!.areaNext!!
+            area = portalAreas!![areaNum]!!
+            ref = area.entityRefs.areaNext!!
             while (ref !== area.entityRefs) {
                 entity = ref.entity!!
 
@@ -2864,7 +2884,7 @@ object RenderWorld_local {
                 while (i < ps.numPortalPlanes - 1) {
                     j = 0
                     while (j < tri.numVerts) {
-                        d = ps.portalPlanes[i].Distance(tri.verts[j].xyz)
+                        d = ps.portalPlanes[i].Distance(tri.verts!![j]!!.xyz)
                         if (d < 0.0f) {
                             break // point is inside this plane
                         }
@@ -2887,8 +2907,8 @@ object RenderWorld_local {
             var light: idRenderLightLocal
             var vLight: viewLight_s?
             DEBUG_AddAreaLightRefs++
-            area = portalAreas[areaNum]
-            lref = area.lightRefs!!.areaNext!!
+            area = portalAreas!![areaNum]!!
+            lref = area.lightRefs.areaNext!!
             while (lref !== area.lightRefs) {
                 light = lref.light!!
 
@@ -2933,7 +2953,7 @@ object RenderWorld_local {
         fun AddAreaRefs(areaNum: Int, ps: portalStack_s) {
             // mark the viewCount, so r_showPortals can display the
             // considered portals
-            portalAreas[areaNum].viewCount = tr_local.tr.viewCount
+            portalAreas!![areaNum]!!.viewCount = tr_local.tr.viewCount
 
             // add the models and lights, using more precise culling to the planes
             AddAreaEntityRefs(areaNum, ps)
@@ -2949,10 +2969,10 @@ object RenderWorld_local {
             tr_local.tr.viewDef!!.connectedAreas[areaNum] = true
 
             // flood through all non-blocked portals
-            area = portalAreas[areaNum]
+            area = portalAreas!![areaNum]!!
             portal = area.portals
             while (portal != null) {
-                if (0 == portal.doublePortal.blockingBits and portalConnection_t.PS_BLOCK_VIEW.ordinal) {
+                if (0 == portal.doublePortal!!.blockingBits and portalConnection_t.PS_BLOCK_VIEW.ordinal) {
                     BuildConnectedAreas_r(portal.intoArea)
                 }
                 portal = portal.next
@@ -3054,11 +3074,11 @@ object RenderWorld_local {
             var w: idWinding?
             i = 0
             while (i < numInterAreaPortals) {
-                portal = doublePortals[i]
-                w = portal.portals[0].w
+                portal = doublePortals!![i]!!
+                w = portal.portals[0]!!.w
                 wb.Clear()
                 j = 0
-                while (j < w.GetNumPoints()) {
+                while (j < w!!.GetNumPoints()) {
                     wb.AddPoint(w[j].ToVec3())
                     j++
                 }
@@ -3086,18 +3106,18 @@ object RenderWorld_local {
             if (portal < 1 || portal > numInterAreaPortals) {
                 Common.common.Error("SetPortalState: bad portal number %d", portal)
             }
-            val old = doublePortals[portal - 1].blockingBits
+            val old = doublePortals!![portal - 1]!!.blockingBits
             if (old == blockTypes) {
                 return
             }
-            doublePortals[portal - 1].blockingBits = blockTypes
+            doublePortals!![portal - 1]!!.blockingBits = blockTypes
 
             // leave the connectedAreaGroup the same on one side,
             // then flood fill from the other side with a new number for each changed attribute
             for (i in 0 until RenderWorld.NUM_PORTAL_ATTRIBUTES) {
                 if (old xor blockTypes and (1 shl i) != 0) {
                     connectedAreaNum++
-                    FloodConnectedAreas(portalAreas[doublePortals[portal - 1].portals[1].intoArea], i)
+                    FloodConnectedAreas(portalAreas!![doublePortals!![portal - 1]!!.portals[1]!!.intoArea]!!, i)
                 }
             }
             if (Session.session.writeDemo != null) {
@@ -3115,7 +3135,7 @@ object RenderWorld_local {
             if (portal < 1 || portal > numInterAreaPortals) {
                 Common.common.Error("GetPortalState: bad portal number %d", portal)
             }
-            return doublePortals[portal - 1].blockingBits
+            return doublePortals!![portal - 1]!!.blockingBits
         }
 
         override fun AreasAreConnected(areaNum1: Int, areaNum2: Int, connection: portalConnection_t): Boolean {
@@ -3137,7 +3157,7 @@ object RenderWorld_local {
                     connection.ordinal
                 )
             }
-            return portalAreas[areaNum1].connectedAreaNum[attribute] == portalAreas[areaNum2].connectedAreaNum[attribute]
+            return portalAreas!![areaNum1]!!.connectedAreaNum[attribute] == portalAreas!![areaNum2]!!.connectedAreaNum[attribute]
         }
 
         fun FloodConnectedAreas(area: portalArea_s, portalAttributeIndex: Int) {
@@ -3147,15 +3167,15 @@ object RenderWorld_local {
             area.connectedAreaNum[portalAttributeIndex] = connectedAreaNum
             var p = area.portals as portal_s?
             while (p != null) {
-                if (0 == p.doublePortal.blockingBits and (1 shl portalAttributeIndex)) {
-                    FloodConnectedAreas(portalAreas[p.intoArea], portalAttributeIndex)
+                if (0 == p.doublePortal!!.blockingBits and (1 shl portalAttributeIndex)) {
+                    FloodConnectedAreas(portalAreas!![p.intoArea]!!, portalAttributeIndex)
                 }
                 p = p.next
             }
         }
 
-        fun GetAreaScreenRect(areaNum: Int): idScreenRect {
-            return areaScreenRect[areaNum]
+        fun GetAreaScreenRect(areaNum: Int): idScreenRect? {
+            return areaScreenRect!![areaNum]
         }
 
         /*
@@ -3175,7 +3195,7 @@ object RenderWorld_local {
             // flood out through portals, setting area viewCount
             i = 0
             while (i < numPortalAreas) {
-                area = portalAreas[i]
+                area = portalAreas!![i]!!
                 if (area.viewCount != tr_local.tr.viewCount) {
                     i++
                     continue
@@ -3187,7 +3207,7 @@ object RenderWorld_local {
                         p = p.next
                         continue
                     }
-                    if (portalAreas[p.intoArea].viewCount != tr_local.tr.viewCount) {
+                    if (portalAreas!![p.intoArea]!!.viewCount != tr_local.tr.viewCount) {
                         // red = can't see
                         qgl.qglColor3f(1f, 0f, 0f)
                     } else {
@@ -3218,22 +3238,22 @@ object RenderWorld_local {
             // write the door portal state
             i = 0
             while (i < numInterAreaPortals) {
-                if (doublePortals[i].blockingBits != 0) {
-                    SetPortalState(i + 1, doublePortals[i].blockingBits)
+                if (doublePortals!![i]!!.blockingBits != 0) {
+                    SetPortalState(i + 1, doublePortals!![i]!!.blockingBits)
                 }
                 i++
             }
 
             // clear the archive counter on all defs
             i = 0
-            while (i < lightDefs.size) {
+            while (i < lightDefs.Num()) {
                 if (lightDefs[i] != null) {
                     lightDefs[i]!!.archived = false
                 }
                 i++
             }
             i = 0
-            while (i < entityDefs.size) {
+            while (i < entityDefs.Num()) {
                 if (entityDefs[i] != null) {
                     entityDefs[i]!!.archived = false
                 }
@@ -3274,7 +3294,7 @@ object RenderWorld_local {
                     while (i < 256) {
                         val c = shortArrayOf(0)
                         readDemo.ReadChar(c)
-                        header.mapname[i] = c[0] as Char
+                        header.mapname[i] = c[0].toChar()
                         i++
                     }
                     // the internal version value got replaced by DS_VERSION at toplevel
@@ -3380,7 +3400,7 @@ object RenderWorld_local {
                     ModelManager.renderModelManager.AddModel(model)
 
                     // save it in the list to free when clearing this map
-                    localModels.add(model)
+                    localModels.Append(model)
                     if (RenderSystem_init.r_showDemo.GetBool()) {
                         Common.common.Printf("DC_DEFINE_MODEL\n")
                     }
@@ -3419,7 +3439,7 @@ object RenderWorld_local {
             Session.session.writeDemo!!.WriteInt(header.sizeofRenderEntity._val)
             Session.session.writeDemo!!.WriteInt(header.sizeofRenderLight._val)
             for (i in 0..255) {
-                Session.session.writeDemo!!.WriteChar(header.mapname[i] as Short)
+                Session.session.writeDemo!!.WriteChar(header.mapname[i].toShort())
             }
             if (RenderSystem_init.r_showDemo.GetBool()) {
                 Common.common.Printf("write DC_DELETE_LIGHTDEF: %s\n", mapName)
@@ -3628,7 +3648,7 @@ object RenderWorld_local {
             Session.session.writeDemo!!.Write(ent.remoteRenderView!!)
             Session.session.writeDemo!!.WriteInt(ent.numJoints)
             //            session.writeDemo!!.WriteInt((int) ent.joints);
-            for (joint in ent.joints) { //TODO: double check if writing individual floats is equavalent to the int cast above.
+            for (joint in ent.joints!!) { //TODO: double check if writing individual floats is equavalent to the int cast above.
                 val mat = joint.ToFloatPtr()
                 val buffer = ByteBuffer.allocate(mat.size * 4)
                 buffer.asFloatBuffer().put(mat)
@@ -3661,7 +3681,7 @@ object RenderWorld_local {
             }
             if (ent.numJoints != 0) {
                 for (i in 0 until ent.numJoints) {
-                    val data = ent.joints[i].ToFloatPtr()
+                    val data = ent.joints!![i].ToFloatPtr()
                     for (j in 0..11) {
                         Session.session.writeDemo!!.WriteFloat(data[j])
                     }
@@ -3742,14 +3762,14 @@ object RenderWorld_local {
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
 
 //                session.readDemo!!.ReadInt((int) shadow.gui[i]);
-                Session.session.readDemo!!.Read(shadow.gui[i])
+                Session.session.readDemo!!.Read(shadow.gui[i]!!)
                 i++
             }
             //            session.readDemo!!.ReadInt((int) shadow.remoteRenderView);
             Session.session.readDemo!!.Read(shadow.remoteRenderView!!)
             Session.session.readDemo!!.ReadInt(shadow.numJoints)
             //            session.readDemo!!.ReadInt((int) shadow.joints);
-            for (joint in shadow.joints) { //TODO: double check if writing individual floats is equavalent to the int cast above.
+            for (joint in shadow.joints!!) { //TODO: double check if writing individual floats is equavalent to the int cast above.
                 val mat = joint.ToFloatPtr()
                 val buffer = ByteBuffer.allocate(mat.size * 4)
                 buffer.asFloatBuffer().put(mat)
@@ -3789,10 +3809,11 @@ object RenderWorld_local {
                 shadow.referenceSound = Session.session.sw.EmitterForIndex(index._val)
             }
             if (shadow.numJoints._val != 0) {
-                shadow.joints = ArrayList(shadow.numJoints._val) //Mem_Alloc16(ent.numJoints);
+                shadow.joints =
+                    Array(shadow.numJoints._val) { JointTransform.idJointMat() } //Mem_Alloc16(ent.numJoints);
                 i = 0
                 while (i < shadow.numJoints._val) {
-                    val data = shadow.joints[i].ToFloatPtr()
+                    val data = shadow.joints!![i].ToFloatPtr()
                     for (j in 0..11) {
                         val d = CFloat()
                         Session.session.readDemo!!.ReadFloat(d)
@@ -3817,7 +3838,7 @@ object RenderWorld_local {
                 if (shadow.gui.getOrNull(i) != null) {
                     shadow.gui[i] = UserInterface.uiManager.Alloc()
                     if (WRITE_GUIS) {
-                        shadow.gui[i].ReadFromDemoFile(Session.session.readDemo!!)
+                        shadow.gui[i]!!.ReadFromDemoFile(Session.session.readDemo!!)
                     }
                 }
                 i++
@@ -3904,7 +3925,7 @@ object RenderWorld_local {
             // we may want to resize this in the future if it turns out to be common
             Common.common.Printf("idRenderWorldLocal::ResizeInteractionTable: overflowed interactionTableWidth, dumping\n")
             //            R_StaticFree(interactionTable);
-            interactionTable.clear()
+            interactionTable = null
         }
 
         fun AddEntityRefToArea(def: idRenderEntityLocal?, area: portalArea_s) {
@@ -3924,7 +3945,7 @@ object RenderWorld_local {
             // link to end of area list
             ref.area = area
             ref.areaNext = area.entityRefs
-            ref.areaPrev = area.entityRefs!!.areaPrev
+            ref.areaPrev = area.entityRefs.areaPrev
             ref.areaNext!!.areaPrev = ref
             ref.areaPrev!!.areaNext = ref
         }
@@ -3941,10 +3962,10 @@ object RenderWorld_local {
             tr_local.tr.pc.c_lightReferences++
 
             // doubly linked list so we can free them easily later
-            area.lightRefs!!.areaNext!!.areaPrev = lref
-            lref.areaNext = area.lightRefs!!.areaNext
+            area.lightRefs.areaNext!!.areaPrev = lref
+            lref.areaNext = area.lightRefs.areaNext
             lref.areaPrev = area.lightRefs
-            area.lightRefs!!.areaNext = lref
+            area.lightRefs.areaNext = lref
         }
 
         fun RecurseProcBSP_r(
@@ -3975,12 +3996,12 @@ object RenderWorld_local {
                 if (parentNodeNum != -1) {
                     results.fraction = p1f
                     results.point.set(p1)
-                    node = areaNodes[parentNodeNum]
+                    node = areaNodes!![parentNodeNum]!!
                     results.normal.set(node.plane.Normal())
                     return
                 }
             }
-            node = areaNodes[nodeNum]
+            node = areaNodes!![nodeNum]!!
 
             // distance from plane for trace start and end
             t1 = node.plane.Normal().times(p1) + node.plane[3]
@@ -4023,7 +4044,7 @@ object RenderWorld_local {
                     }
                     return
                 }
-                node = areaNodes[nodeNum]
+                node = areaNodes!![nodeNum]!!
                 side = bounds.PlaneSide(node.plane)
                 nodeNum = if (side == Plane.PLANESIDE_FRONT) {
                     node.children[0]
@@ -4050,7 +4071,7 @@ object RenderWorld_local {
             var i: Int
             var def: idRenderEntityLocal?
             i = 0
-            while (i < entityDefs.size) {
+            while (i < entityDefs.Num()) {
                 def = entityDefs[i]
                 if (null == def) {
                     i++
@@ -4095,7 +4116,7 @@ object RenderWorld_local {
             if (nodeNum < 0) {
                 val area: portalArea_s?
                 val areaNum = -1 - nodeNum
-                area = portalAreas[areaNum]
+                area = portalAreas!![areaNum]!!
                 if (area.viewCount == tr_local.tr.viewCount) {
                     return  // already added a reference here
                 }
@@ -4104,7 +4125,7 @@ object RenderWorld_local {
                 light?.let { AddLightRefToArea(it, area) }
                 return
             }
-            node = areaNodes[nodeNum]
+            node = areaNodes!![nodeNum]!!
 
             // if we know that all possible children nodes only touch an area
             // we have already marked, we can early out
@@ -4115,7 +4136,7 @@ object RenderWorld_local {
                 // yet, because the test volume may yet wind up being in the
                 // solid part, which would cause bounds slightly poked into
                 // a wall to show up in the next room
-                if (portalAreas[node.commonChildrenArea].viewCount == tr_local.tr.viewCount) {
+                if (portalAreas!![node.commonChildrenArea]!!.viewCount == tr_local.tr.viewCount) {
                     return
                 }
             }
@@ -4191,11 +4212,10 @@ object RenderWorld_local {
 //		}	
 //	}
 //}else
-            run {
                 i = 0
                 while (i < numPoints) {
                     var d: Float
-                    d = points.get(i).times(node.plane.Normal()) + node.plane[3]
+                    d = points[i].times(node.plane.Normal()) + node.plane[3]
                     if (d >= 0.0f) {
                         front = true
                     } else if (d <= 0.0f) {
@@ -4206,7 +4226,6 @@ object RenderWorld_local {
                     }
                     i++
                 }
-            }
             if (front) {
                 nodeNum = node.children[0]
                 if (nodeNum != 0) {    // 0 = solid
@@ -4232,7 +4251,7 @@ object RenderWorld_local {
             var lr: Float
             val mid = idVec3()
             val dir = idVec3()
-            if (areaNodes.isEmpty()) {
+            if (areaNodes == null) {
                 return
             }
 
@@ -4302,7 +4321,7 @@ object RenderWorld_local {
                 area = lRef.area!!
 
                 // check all the models in this area
-                eRef = area.entityRefs!!.areaNext
+                eRef = area.entityRefs.areaNext
                 while (eRef != null && eRef !== area.entityRefs) {
                     eDef = eRef.entity!!
 
@@ -4342,11 +4361,11 @@ object RenderWorld_local {
 
                     // if any of the edef's interaction match this light, we don't
                     // need to consider it. 
-                    if (RenderSystem_init.r_useInteractionTable.GetBool() && interactionTable.isNotEmpty()) {
+                    if (RenderSystem_init.r_useInteractionTable.GetBool() && interactionTable != null) {
                         // allocating these tables may take several megs on big maps, but it saves 3% to 5% of
                         // the CPU time.  The table is updated at interaction::AllocAndLink() and interaction::UnlinkAndFree()
                         val index = lDef.index * interactionTableWidth + eDef.index
-                        inter = interactionTable.getOrNull(index)
+                        inter = interactionTable!![index]
                         if (index == 441291) {
                             val x = 0
                         }
@@ -4422,15 +4441,17 @@ object RenderWorld_local {
         }
 
         companion object {
-            val playerMaterialExcludeList: Array<String> = arrayOf(
-                "muzzlesmokepuff"
+            val playerMaterialExcludeList: Array<String?> = arrayOf(
+                "muzzlesmokepuff",
+                null
             )
 
             // FIXME: _D3XP added those.
-            val playerModelExcludeList: Array<String> = arrayOf(
+            val playerModelExcludeList: Array<String?> = arrayOf(
                 "models/md5/characters/player/d3xp_spplayer.md5mesh",
                 "models/md5/characters/player/head/d3xp_head.md5mesh",
-                "models/md5/weapons/pistol_world/worldpistol.md5mesh"
+                "models/md5/weapons/pistol_world/worldpistol.md5mesh",
+                null
             )
             private val arrowCos: FloatArray = FloatArray(40)
             private val arrowSin: FloatArray = FloatArray(40)
@@ -4459,19 +4480,5 @@ object RenderWorld_local {
             private var lastPrintedAreaNum = 0
         }
 
-        init {
-            mapName = idStr() //.Clear();
-            mapTimeStamp = longArrayOf(FileSystem_h.FILE_NOT_FOUND_TIMESTAMP.toLong())
-            generateAllInteractionsCalled = false
-            areaNodes = ArrayList()
-            numAreaNodes = 0
-            portalAreas = ArrayList()
-            numPortalAreas = 0
-            doublePortals = ArrayList()
-            numInterAreaPortals = 0
-            interactionTable = ArrayList()
-            interactionTableWidth = 0
-            interactionTableHeight = 0
-        }
     }
 }

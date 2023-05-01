@@ -13,7 +13,7 @@ import kotlin.math.abs
  *
  */
 object DrawVert {
-    fun toByteBuffer(verts: Array<idDrawVert>): ByteBuffer {
+    fun toByteBuffer(verts: Array<idDrawVert?>): ByteBuffer {
         val data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.size)
         for (vert in verts) {
             if (vert != null) {

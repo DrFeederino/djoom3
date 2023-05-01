@@ -667,8 +667,8 @@ object Item {
                 val ent = Game_local.gameLocal.FindEntity(camName[0])
                 if (ent != null && ent.cameraTarget != null) {
                     val view = ent.cameraTarget!!.GetRenderView()
-                    view.width = RenderSystem.SCREEN_WIDTH
-                    view.height = RenderSystem.SCREEN_HEIGHT
+                    view!!.width = RenderSystem.SCREEN_WIDTH
+                    view!!.height = RenderSystem.SCREEN_HEIGHT
                     // draw a view to a texture
                     RenderSystem.renderSystem.CropRenderSize(256, 256, true)
                     Game_local.gameRenderWorld.RenderScene(view)

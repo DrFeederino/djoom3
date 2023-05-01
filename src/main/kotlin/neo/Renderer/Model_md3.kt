@@ -468,7 +468,7 @@ object Model_md3 {
                 for (triangle in surface.triangles) {
 //                triangles = (int[]) ((byte[]) surface + surface.ofsTriangles);
                     while ( /*j = 0*/j < indexes) {
-                        tri.indexes[j] = triangle.indexes[j]
+                        tri.indexes!![j] = triangle.indexes[j]
                         j++
                     }
                     tri.numIndexes += indexes
@@ -478,7 +478,7 @@ object Model_md3 {
                 for (texCoords in surface.verts) {
 //                texCoords = (float[]) ((byte[]) surface + surface.ofsSt);
                     while ( /*j = 0*/j < numVerts) {
-                        val stri = tri.verts[j]
+                        val stri = tri.verts!![j]!!
                         stri.st[0] = texCoords.st[j * 2 + 0]
                         stri.st[1] = texCoords.st[j * 2 + 1]
                         j++
@@ -536,7 +536,7 @@ object Model_md3 {
                 //
                 vertNum = 0
                 while (vertNum < numVerts) {
-                    val outvert = tri.verts[tri.numVerts]
+                    val outvert = tri.verts!![tri.numVerts]!!
                     outvert.xyz.x = newXyz.xyz[0] * newXyzScale
                     outvert.xyz.y = newXyz.xyz[1] * newXyzScale
                     outvert.xyz.z = newXyz.xyz[2] * newXyzScale
@@ -553,7 +553,7 @@ object Model_md3 {
                 oldXyzScale = (MD3_XYZ_SCALE * backlerp).toFloat()
                 vertNum = 0
                 while (vertNum < numVerts) {
-                    val outvert = tri.verts[tri.numVerts]
+                    val outvert = tri.verts!![tri.numVerts]!!
 
                     // interpolate the xyz
                     outvert.xyz.x = oldXyz.xyz[0] * oldXyzScale + newXyz.xyz[0] * newXyzScale

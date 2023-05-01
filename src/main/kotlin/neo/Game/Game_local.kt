@@ -3430,7 +3430,7 @@ class Game_local {
             val num: Int
             var hit: idEntity
             var cm: idClipModel
-            val clipModels = kotlin.collections.ArrayList<idClipModel>(MAX_GENTITIES)
+            val clipModels = arrayOfNulls<idClipModel>(MAX_GENTITIES)
             val phys: idPhysics?
             phys = ent.GetPhysics()
             if (0 == phys.GetNumClipModels()) {
@@ -3444,7 +3444,7 @@ class Game_local {
             )
             i = 0
             while (i < num) {
-                cm = clipModels[i]
+                cm = clipModels[i]!!
 
                 // don't check render entities
                 if (cm.IsRenderModel()) {
@@ -3614,7 +3614,7 @@ class Game_local {
             var i: Int
             val numListedClipModels: Int
             var clipModel: idClipModel
-            val clipModelList = ArrayList<idClipModel>(MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(MAX_GENTITIES)
             val dir = idVec3()
             val bounds: idBounds
             val result = modelTrace_s()
@@ -3635,7 +3635,7 @@ class Game_local {
             // apply impact to all the clip models through their associated physics objects
             i = 0
             while (i < numListedClipModels) {
-                clipModel = clipModelList[i]
+                clipModel = clipModelList[i]!!
 
                 // never push render models
                 if (clipModel.IsRenderModel()) {

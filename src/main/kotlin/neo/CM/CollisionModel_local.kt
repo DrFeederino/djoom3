@@ -962,7 +962,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
         // returns the contents the trm is stuck in or 0 if the trm is in free space
         override fun Contents(
-            start: idVec3, trm: idTraceModel, trmAxis: idMat3,
+            start: idVec3, trm: idTraceModel?, trmAxis: idMat3,
             contentMask: Int, model: Int, modelOrigin: idVec3, modelAxis: idMat3
         ): Int {
             val results = trace_s()
@@ -7062,9 +7062,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 j = 0
                 while (j < surf.geometry!!.numIndexes) {
                     w.Clear()
-                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j + 2]].xyz)
-                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j + 1]].xyz)
-                    w.plusAssign(surf.geometry!!.verts[surf.geometry!!.indexes[j]].xyz)
+                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j + 2]]!!.xyz)
+                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j + 1]]!!.xyz)
+                    w.plusAssign(surf.geometry!!.verts!![surf.geometry!!.indexes!![j]]!!.xyz)
                     w.GetPlane(plane)
                     plane.set(plane.unaryMinus())
                     PolygonFromWinding(model, w, plane, surf.shader!!, 1)

@@ -899,7 +899,7 @@ object Entity {
             return this.javaClass
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks[event]!!
         }
 
@@ -1290,7 +1290,7 @@ object Entity {
          */
         // clients generate views based on all the player specific options,
         // cameras have custom code, and everything else just uses the axis orientation
-        open fun GetRenderView(): renderView_s {
+        open fun GetRenderView(): renderView_s? {
             val rv = renderView_s()
             //	memset( renderView, 0, sizeof( *renderView ) );
             rv.vieworg.set(GetPhysics().GetOrigin())
@@ -1492,7 +1492,7 @@ object Entity {
             }
             renderEntity.callback = null
             renderEntity.numJoints = 0
-            renderEntity.joints.clear()
+            renderEntity.joints = null
             if (renderEntity.hModel != null) {
                 renderEntity.bounds.set(renderEntity.hModel!!.Bounds(renderEntity))
             } else {
@@ -3325,7 +3325,7 @@ object Entity {
             val numClipModels: Int
             var numEntities: Int
             var cm: idClipModel
-            val clipModels = kotlin.collections.ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModels = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             var ent: idEntity?
             val trace = trace_s() //memset( &trace, 0, sizeof( trace ) );
             trace.endpos.set(GetPhysics().GetOrigin())
@@ -3339,7 +3339,7 @@ object Entity {
             numEntities = 0
             i = 0
             while (i < numClipModels) {
-                cm = clipModels[i]
+                cm = clipModels[i]!!
 
                 // don't touch it if we're the owner
                 if (cm.GetOwner() === this) {
@@ -3988,7 +3988,7 @@ object Entity {
                                 parentAnimator.ModelHandle(),
                                 anim!!.MD5Anim(0),
                                 parent.renderEntity.numJoints,
-                                frame.toTypedArray(),
+                                frame,
                                 0,
                                 parentAnimator.ModelDef()!!.GetVisualOffset(),
                                 parentAnimator.RemoveOrigin()
@@ -4682,8 +4682,8 @@ object Entity {
             val origin = idVec3()
             val dir = idVec3()
             val axis: idMat3
-            axis = renderEntity.joints[jointNum].ToMat3().times(renderEntity.axis)
-            origin.set(renderEntity.origin.plus(renderEntity.joints[jointNum].ToVec3().times(renderEntity.axis)))
+            axis = renderEntity.joints!![jointNum]!!.ToMat3().times(renderEntity.axis)
+            origin.set(renderEntity.origin.plus(renderEntity.joints!![jointNum]!!.ToVec3().times(renderEntity.axis)))
             origin.set(origin.plus(localOrigin.times(axis)))
             dir.set(localDir.times(axis))
             var type: Int = collisionMaterial!!.GetSurfaceType().ordinal

@@ -363,7 +363,7 @@ object AI_pathing {
         var box: idBox
         var obEnt: idEntity
         var clipModel: idClipModel
-        val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+        val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
 
         numObstacles = 0
 
@@ -389,7 +389,7 @@ object AI_pathing {
         )
         i = 0
         while (i < numListedClipModels && numObstacles < MAX_OBSTACLES) {
-            clipModel = clipModelList[i]
+            clipModel = clipModelList[i]!!
             obEnt = clipModel.GetEntity()!!
             if (!clipModel.IsTraceModel()) {
                 i++

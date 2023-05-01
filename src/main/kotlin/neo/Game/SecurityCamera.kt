@@ -247,8 +247,8 @@ object SecurityCamera {
             Present()
         }
 
-        override fun GetRenderView(): renderView_s {
-            val rv = super.GetRenderView()
+        override fun GetRenderView(): renderView_s? {
+            val rv = super.GetRenderView()!!
             rv.fov_x = scanFov
             rv.fov_y = scanFov
             rv.viewaxis.set(GetAxis().ToAngles().ToMat3())

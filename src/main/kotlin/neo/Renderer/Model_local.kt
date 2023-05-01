@@ -33,8 +33,8 @@ import neo.idlib.Lib
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List.idList
 import neo.idlib.containers.VectorSet.idVectorSubset
-import neo.idlib.geometry.DrawVert
 import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Math_h.idMath
@@ -57,32 +57,28 @@ object Model_local {
      ================
      */
     fun AddCubeFace(tri: srfTriangles_s, v1: idVec3, v2: idVec3, v3: idVec3, v4: idVec3) {
-        tri.verts.add(DrawVert.idDrawVert())
-        tri.verts.add(DrawVert.idDrawVert())
-        tri.verts.add(DrawVert.idDrawVert())
-        tri.verts.add(DrawVert.idDrawVert())
-        tri.verts[tri.numVerts + 0].Clear()
-        tri.verts[tri.numVerts + 0].xyz.set(v1.times(8f))
-        tri.verts[tri.numVerts + 0].st[0] = 0f
-        tri.verts[tri.numVerts + 0].st[1] = 0f
-        tri.verts[tri.numVerts + 1].Clear()
-        tri.verts[tri.numVerts + 1].xyz.set(v2.times(8f))
-        tri.verts[tri.numVerts + 1].st[0] = 1f
-        tri.verts[tri.numVerts + 1].st[1] = 0f
-        tri.verts[tri.numVerts + 2].Clear()
-        tri.verts[tri.numVerts + 2].xyz.set(v3.times(8f))
-        tri.verts[tri.numVerts + 2].st[0] = 1f
-        tri.verts[tri.numVerts + 2].st[1] = 1f
-        tri.verts[tri.numVerts + 3].Clear()
-        tri.verts[tri.numVerts + 3].xyz.set(v4.times(8f))
-        tri.verts[tri.numVerts + 3].st[0] = 0f
-        tri.verts[tri.numVerts + 3].st[1] = 1f
-        tri.indexes[tri.numIndexes + 0] = tri.numVerts + 0
-        tri.indexes[tri.numIndexes + 1] = tri.numVerts + 1
-        tri.indexes[tri.numIndexes + 2] = tri.numVerts + 2
-        tri.indexes[tri.numIndexes + 3] = tri.numVerts + 0
-        tri.indexes[tri.numIndexes + 4] = tri.numVerts + 2
-        tri.indexes[tri.numIndexes + 5] = tri.numVerts + 3
+        tri.verts!![tri.numVerts + 0]!!.Clear()
+        tri.verts!![tri.numVerts + 0]!!.xyz.set(v1.times(8f))
+        tri.verts!![tri.numVerts + 0]!!.st[0] = 0f
+        tri.verts!![tri.numVerts + 0]!!.st[1] = 0f
+        tri.verts!![tri.numVerts + 1]!!.Clear()
+        tri.verts!![tri.numVerts + 1]!!.xyz.set(v2.times(8f))
+        tri.verts!![tri.numVerts + 1]!!.st[0] = 1f
+        tri.verts!![tri.numVerts + 1]!!.st[1] = 0f
+        tri.verts!![tri.numVerts + 2]!!.Clear()
+        tri.verts!![tri.numVerts + 2]!!.xyz.set(v3.times(8f))
+        tri.verts!![tri.numVerts + 2]!!.st[0] = 1f
+        tri.verts!![tri.numVerts + 2]!!.st[1] = 1f
+        tri.verts!![tri.numVerts + 3]!!.Clear()
+        tri.verts!![tri.numVerts + 3]!!.xyz.set(v4.times(8f))
+        tri.verts!![tri.numVerts + 3]!!.st[0] = 0f
+        tri.verts!![tri.numVerts + 3]!!.st[1] = 1f
+        tri.indexes!![tri.numIndexes + 0] = tri.numVerts + 0
+        tri.indexes!![tri.numIndexes + 1] = tri.numVerts + 1
+        tri.indexes!![tri.numIndexes + 2] = tri.numVerts + 2
+        tri.indexes!![tri.numIndexes + 3] = tri.numVerts + 0
+        tri.indexes!![tri.numIndexes + 4] = tri.numVerts + 2
+        tri.indexes!![tri.numIndexes + 5] = tri.numVerts + 3
         tri.numVerts += 4
         tri.numIndexes += 6
     }
@@ -94,32 +90,50 @@ object Model_local {
 
      ===============================================================================
      */
-    open class idRenderModelStatic : idRenderModel() {
-        val surfaces: ArrayList<modelSurface_s>
-        protected val   /*ID_TIME_T*/timeStamp: LongArray = LongArray(1)
-        var bounds: idBounds = idBounds()
-        var overlaysAdded: Int
-        protected var defaulted: Boolean
-        protected var fastLoad // don't generate tangents and shadow data
-                : Boolean
-        protected var isStaticWorldModel: Boolean
-        protected var lastArchivedFrame: Int
+    open class idRenderModelStatic// the inherited public interface
+        () : idRenderModel() {
+        var surfaces: idList<modelSurface_s>
+        protected val   /*ID_TIME_T*/timeStamp = LongArray(1)
+        var bounds: idBounds
+        var overlaysAdded = 0
+        protected var defaulted = false
+        protected var fastLoad = false // don't generate tangents and shadow data
+
+        protected var isStaticWorldModel = false
+        protected var lastArchivedFrame = 0
 
         //
         //
-        protected var lastModifiedFrame: Int
-        protected var levelLoadReferenced // for determining if it needs to be freed
-                : Boolean
+        protected var lastModifiedFrame = 0
+        protected var levelLoadReferenced = false // for determining if it needs to be freed
 
         //
         //
         //
-        protected var name: idStr = idStr()
-        protected var purged // eventually we will have dynamic reloading
-                : Boolean
-        protected var reloadable // if not, reloadModels won't check timestamp
-                : Boolean
-        protected var shadowHull: srfTriangles_s?
+        protected var name: idStr
+        protected var purged = false // eventually we will have dynamic reloading
+
+        protected var reloadable = false // if not, reloadModels won't check timestamp
+
+        protected var shadowHull: srfTriangles_s? = null
+
+        init {
+            surfaces = idList(modelSurface_s::class.java)
+            name = idStr("<undefined>")
+            bounds = idBounds()
+            bounds.Clear()
+            lastModifiedFrame = 0
+            lastArchivedFrame = 0
+            overlaysAdded = 0
+            shadowHull = null
+            isStaticWorldModel = false
+            defaulted = false
+            purged = false
+            fastLoad = false
+            reloadable = true
+            levelLoadReferenced = false
+            timeStamp[0] = 0
+        }
 
         @Throws(idException::class)
         override fun InitFromFile(fileName: String) {
@@ -167,14 +181,14 @@ object Model_local {
             var i: Int
             var surf: modelSurface_s?
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 surf = surfaces[i]
                 if (surf.geometry != null) {
                     tr_trisurf.R_FreeStaticTriSurf(surf.geometry)
                 }
                 i++
             }
-            surfaces.clear()
+            surfaces.Clear()
             purged = true
         }
 
@@ -197,7 +211,7 @@ object Model_local {
         }
 
         override fun TouchData() {
-            for (i in 0 until surfaces.size) {
+            for (i in 0 until surfaces.Num()) {
                 val surf = surfaces[i]
 
                 // re-find the material to make sure it gets added to the
@@ -220,7 +234,7 @@ object Model_local {
         }
 
         override fun AddSurface(surface: modelSurface_s) {
-            surfaces.add(surface)
+            surfaces.Append(surface)
             //surfaces.addClone(surface);
             if (surface.geometry != null) {
                 bounds.timesAssign(surface.geometry!!.bounds)
@@ -236,7 +250,7 @@ object Model_local {
 
             // make sure we don't have a huge bounds even if we don't finish everything
             bounds.Zero()
-            if (surfaces.size == 0) {
+            if (surfaces.Num() == 0) {
                 return
             }
 
@@ -244,7 +258,7 @@ object Model_local {
             if (fastLoad) {
                 bounds.Zero()
                 i = 0
-                while (i < surfaces.size) {
+                while (i < surfaces.Num()) {
                     val surf = surfaces[i]
                     tr_trisurf.R_BoundTriSurf(surf.geometry!!)
                     bounds.AddBounds(surf.geometry!!.bounds)
@@ -258,7 +272,7 @@ object Model_local {
             totalIndexes = 0
 
             // decide if we are going to merge all the surfaces into one shadower
-            val numOriginalSurfaces = surfaces.size
+            val numOriginalSurfaces = surfaces.Num()
 
             // make sure there aren't any NULL shaders or geometry
             i = 0
@@ -298,7 +312,7 @@ object Model_local {
 
             // clean the surfaces
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 val surf = surfaces[i]
                 tr_trisurf.R_CleanupTriangles(
                     surf.geometry!!,
@@ -315,14 +329,14 @@ object Model_local {
 
             // add up the total surface area for development information
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 val surf = surfaces[i]
                 val tri = surf.geometry!!
                 var j = 0
                 while (j < tri.numIndexes) {
                     val area: Float = idWinding.TriangleArea(
-                        tri.verts[tri.indexes[j]].xyz,
-                        tri.verts[tri.indexes[j + 1]].xyz, tri.verts[tri.indexes[j + 2]].xyz
+                        tri.verts!![tri.indexes!![j]]!!.xyz,
+                        tri.verts!![tri.indexes!![j + 1]]!!.xyz, tri.verts!![tri.indexes!![j + 2]]!!.xyz
                     )
                     surf.shader!!.AddToSurfaceArea(area)
                     j += 3
@@ -331,12 +345,12 @@ object Model_local {
             }
 
             // calculate the bounds
-            if (surfaces.size == 0) {
+            if (surfaces.Num() == 0) {
                 bounds.Zero()
             } else {
                 bounds.Clear()
                 i = 0
-                while (i < surfaces.size) {
+                while (i < surfaces.Num()) {
                     val surf = surfaces[i]
 
                     // if the surface has a deformation, increase the bounds
@@ -373,7 +387,7 @@ object Model_local {
          ==============
          */
         override fun FreeVertexCache() {
-            for (j in 0 until surfaces.size) {
+            for (j in 0 until surfaces.Num()) {
                 val tri = surfaces[j].geometry ?: continue
                 if (tri.ambientCache != null) {
                     VertexCache.vertexCache.Free(tri.ambientCache)
@@ -502,11 +516,11 @@ object Model_local {
         }
 
         override fun NumSurfaces(): Int {
-            return surfaces.size
+            return surfaces.Num()
         }
 
         override fun NumBaseSurfaces(): Int {
-            return surfaces.size - overlaysAdded
+            return surfaces.Num() - overlaysAdded
         }
 
         override fun Surface(surfaceNum: Int): modelSurface_s {
@@ -562,8 +576,8 @@ object Model_local {
             return 0
         }
 
-        override fun GetJoints(): kotlin.collections.ArrayList<idMD5Joint> {
-            return emptyList<idMD5Joint>() as ArrayList<idMD5Joint>
+        override fun GetJoints(): Array<idMD5Joint>? {
+            return null
         }
 
         override fun GetJointHandle(name: String): Int {
@@ -574,8 +588,8 @@ object Model_local {
             return ""
         }
 
-        override fun GetDefaultPose(): ArrayList<idJointQuat> {
-            return ArrayList<idJointQuat>()
+        override fun GetDefaultPose(): Array<idJointQuat>? {
+            return null
         }
 
         override fun NearestJoint(surfaceNum: Int, a: Int, c: Int, b: Int): Int {
@@ -610,7 +624,7 @@ object Model_local {
                 j = 0
                 while (j < tri.numIndexes) {
                     f.ReadInt(index)
-                    tri.indexes[j] = index._val
+                    tri.indexes!![j] = index._val
                     ++j
                 }
                 f.ReadInt(vert)
@@ -619,19 +633,19 @@ object Model_local {
                 j = 0
                 while (j < tri.numVerts) {
                     val color = Array<CharArray>(4) { CharArray(1) }
-                    f.ReadVec3(tri.verts[j].xyz)
-                    f.ReadVec2(tri.verts[j].st)
-                    f.ReadVec3(tri.verts[j].normal)
-                    f.ReadVec3(tri.verts[j].tangents[0])
-                    f.ReadVec3(tri.verts[j].tangents[1])
+                    f.ReadVec3(tri.verts!![j]!!.xyz)
+                    f.ReadVec2(tri.verts!![j]!!.st)
+                    f.ReadVec3(tri.verts!![j]!!.normal)
+                    f.ReadVec3(tri.verts!![j]!!.tangents[0])
+                    f.ReadVec3(tri.verts!![j]!!.tangents[1])
                     f.ReadUnsignedChar(color[0])
-                    tri.verts[j].color[0] = color[0][0].code as Byte
+                    tri.verts!![j]!!.color[0] = color[0][0].toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts[j].color[1] = color[1][0].code as Byte
+                    tri.verts!![j]!!.color[1] = color[1][0].toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts[j].color[2] = color[2][0].code as Byte
+                    tri.verts!![j]!!.color[2] = color[2][0].toByte()
                     f.ReadUnsignedChar(color[0])
-                    tri.verts[j].color[3] = color[3][0].code as Byte
+                    tri.verts!![j]!!.color[3] = color[3][0].toByte()
                     ++j
                 }
                 surf.geometry = tri
@@ -652,31 +666,31 @@ object Model_local {
             f.WriteHashString(Name())
             var i: Int
             var j: Int
-            val iData = surfaces.size
+            val iData = surfaces.Num()
             f.WriteInt(iData)
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 val surf = surfaces[i]
                 f.WriteHashString(surf.shader!!.GetName())
                 val tri = surf.geometry!!
                 f.WriteInt(tri.numIndexes)
                 j = 0
                 while (j < tri.numIndexes) {
-                    f.WriteInt(tri.indexes[j])
+                    f.WriteInt(tri.indexes!![j])
                     ++j
                 }
                 f.WriteInt(tri.numVerts)
                 j = 0
                 while (j < tri.numVerts) {
-                    f.WriteVec3(tri.verts[j].xyz)
-                    f.WriteVec2(tri.verts[j].st)
-                    f.WriteVec3(tri.verts[j].normal)
-                    f.WriteVec3(tri.verts[j].tangents[0])
-                    f.WriteVec3(tri.verts[j].tangents[1])
-                    f.WriteUnsignedChar(tri.verts[j].color[0] as Char)
-                    f.WriteUnsignedChar(tri.verts[j].color[1] as Char)
-                    f.WriteUnsignedChar(tri.verts[j].color[2] as Char)
-                    f.WriteUnsignedChar(tri.verts[j].color[3] as Char)
+                    f.WriteVec3(tri.verts!![j]!!.xyz)
+                    f.WriteVec2(tri.verts!![j]!!.st)
+                    f.WriteVec3(tri.verts!![j]!!.normal)
+                    f.WriteVec3(tri.verts!![j]!!.tangents[0])
+                    f.WriteVec3(tri.verts!![j]!!.tangents[1])
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[0].toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[1].toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[2].toChar())
+                    f.WriteUnsignedChar(tri.verts!![j]!!.color[3].toChar())
                     ++j
                 }
                 i++
@@ -865,32 +879,32 @@ object Model_local {
             for (i in 0 until height) {
                 for (j in 0 until width) {
                     val v = i * width + j
-                    tri.verts[v].Clear()
-                    tri.verts[v].xyz[0] = (j * 10).toFloat() // each sample is 10 meters
-                    tri.verts[v].xyz[1] = (-i * 10).toFloat()
-                    tri.verts[v].xyz[2] = data[(minY + i) * size + minX + j] // height is in meters
-                    tri.verts[v].st[0] = j.toFloat() / (width - 1)
-                    tri.verts[v].st[1] = 1.0f - i.toFloat() / (height - 1)
+                    tri.verts!![v]!!.Clear()
+                    tri.verts!![v]!!.xyz[0] = (j * 10).toFloat() // each sample is 10 meters
+                    tri.verts!![v]!!.xyz[1] = (-i * 10).toFloat()
+                    tri.verts!![v]!!.xyz[2] = data[(minY + i) * size + minX + j] // height is in meters
+                    tri.verts!![v]!!.st[0] = j.toFloat() / (width - 1)
+                    tri.verts!![v]!!.st[1] = 1.0f - i.toFloat() / (height - 1)
                 }
             }
             for (i in 0 until height - 1) {
                 for (j in 0 until width - 1) {
                     val v = (i * (width - 1) + j) * 6
                     //if (false){
-//			tri.indexes[ v + 0 ] = i * width + j;
-//			tri.indexes[ v + 1 ] = (i+1) * width + j;
-//			tri.indexes[ v + 2 ] = (i+1) * width + j + 1;
-//			tri.indexes[ v + 3 ] = i * width + j;
-//			tri.indexes[ v + 4 ] = (i+1) * width + j + 1;
-//			tri.indexes[ v + 5 ] = i * width + j + 1;
+//			tri.indexes!![ v + 0 ] = i * width + j;
+//			tri.indexes!![ v + 1 ] = (i+1) * width + j;
+//			tri.indexes!![ v + 2 ] = (i+1) * width + j + 1;
+//			tri.indexes!![ v + 3 ] = i * width + j;
+//			tri.indexes!![ v + 4 ] = (i+1) * width + j + 1;
+//			tri.indexes!![ v + 5 ] = i * width + j + 1;
 //}else
                     run {
-                        tri.indexes[v + 0] = i * width + j
-                        tri.indexes[v + 1] = i * width + j + 1
-                        tri.indexes[v + 2] = (i + 1) * width + j + 1
-                        tri.indexes[v + 3] = i * width + j
-                        tri.indexes[v + 4] = (i + 1) * width + j + 1
-                        tri.indexes[v + 5] = (i + 1) * width + j
+                        tri.indexes!![v + 0] = i * width + j
+                        tri.indexes!![v + 1] = i * width + j + 1
+                        tri.indexes!![v + 2] = (i + 1) * width + j + 1
+                        tri.indexes!![v + 3] = i * width + j
+                        tri.indexes!![v + 4] = (i + 1) * width + j + 1
+                        tri.indexes!![v + 5] = (i + 1) * width + j
                     }
                 }
             }
@@ -1190,7 +1204,7 @@ object Model_local {
                             }
                             tri.numVerts++
                         }
-                        tri.indexes[tri.numIndexes] = mv.index
+                        tri.indexes!![tri.numIndexes] = mv.index
                         tri.numIndexes++
                         k++
                     }
@@ -1228,16 +1242,16 @@ object Model_local {
                 j = 0
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
-                    tri.verts[j].Clear()
-                    tri.verts[j].xyz.set(mesh.vertexes[mv!!.v])
-                    tri.verts[j].normal.set(mv.normal)
-                    System.arraycopy(mv.color, 0, mv.color.also { tri.verts[j].color = it }, 0, mv.color.size)
+                    tri.verts!![j]!!.Clear()
+                    tri.verts!![j]!!.xyz.set(mesh.vertexes[mv!!.v])
+                    tri.verts!![j]!!.normal.set(mv.normal)
+                    System.arraycopy(mv.color, 0, mv.color.also { tri.verts!![j]!!.color = it }, 0, mv.color.size)
                     if (mesh.numTVFaces == mesh.numFaces && mesh.numTVertexes != 0) {
                         val tv2 = mesh.tvertexes[mv.tv]
                         val u = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
-                        tri.verts[j].st[0] = u * textureCos + V * textureSin
-                        tri.verts[j].st[1] = u * -textureSin + V * textureCos
+                        tri.verts!![j]!!.st[0] = u * textureCos + V * textureSin
+                        tri.verts!![j]!!.st[1] = u * -textureSin + V * textureCos
                     }
                     j++
                 }
@@ -1313,7 +1327,7 @@ object Model_local {
                 while (lwoSurf != null) {
                     surf = modelSurface_s()
                     mergeTo[i] = i
-                    surf.shader = DeclManager.declManager.FindMaterial(lwoSurf.name)
+                    surf.shader = DeclManager.declManager.FindMaterial(lwoSurf.name!!)
                     surf.id = NumSurfaces()
                     AddSurface(surf)
                     lwoSurf = lwoSurf.next
@@ -1325,7 +1339,7 @@ object Model_local {
                 i = 0
                 while (lwoSurf != null) {
                     surf = modelSurface_s()
-                    im1 = DeclManager.declManager.FindMaterial(lwoSurf.name)!!
+                    im1 = DeclManager.declManager.FindMaterial(lwoSurf.name!!)!!
                     if (im1.IsDiscrete()) {
                         // flares, autosprites, etc
                         j = NumSurfaces()
@@ -1357,7 +1371,7 @@ object Model_local {
             val texCoordSubset = idVectorSubset<idVec2>(2)
 
             // we only ever use the first layer
-            val layer = lwo.layer
+            val layer = lwo.layer!!
 
             // vertex positions
             if (layer.point.count <= 0) {
@@ -1370,9 +1384,9 @@ object Model_local {
             while (j < layer.point.count) {
                 vList[j].set(
                     idVec3(
-                        layer.point.pt[j].pos[0],
-                        layer.point.pt[j].pos[2],
-                        layer.point.pt[j].pos[1]
+                        layer.point.pt!![j]!!.pos[0],
+                        layer.point.pt!![j]!!.pos[2],
+                        layer.point.pt!![j]!!.pos[1]
                     )
                 )
                 j++
@@ -1400,8 +1414,8 @@ object Model_local {
                         vm.offset = offset
                         k = 0
                         while (k < vm.nverts) {
-                            tvList[k + offset].x = vm.`val`[k][0]
-                            tvList[k + offset].y = 1.0f - vm.`val`[k][1] // invert the t
+                            tvList[k + offset].x = vm.value!![k][0]
+                            tvList[k + offset].y = 1.0f - vm.value!![k][1] // invert the t
                             k++
                         }
                         offset += vm.nverts
@@ -1471,7 +1485,7 @@ object Model_local {
             lwoSurf = lwo.surf
             i = 0
             while (lwoSurf != null) {
-                im1 = DeclManager.declManager.FindMaterial(lwoSurf.name)
+                im1 = DeclManager.declManager.FindMaterial(lwoSurf.name!!)
                 var normalsParsed = true
 
                 // completely ignore any explict normals on surfaces with a renderbump command
@@ -1505,7 +1519,7 @@ object Model_local {
                 }
                 j = 0
                 while (j < layer.polygon.count) {
-                    val poly = layer.polygon.pol[j]
+                    val poly = layer.polygon.pol!![j]!!
                     if (poly.surf != lwoSurf) {
                         j++
                         continue
@@ -1520,10 +1534,10 @@ object Model_local {
                     }
                     k = 0
                     while (k < 3) {
-                        v = vRemap[poly.getV(k).index]
-                        normal.x = poly.getV(k).norm[0]
-                        normal.y = poly.getV(k).norm[2]
-                        normal.z = poly.getV(k).norm[1]
+                        v = vRemap[poly.getV(k)!!.index]
+                        normal.x = poly.getV(k)!!.norm[0]
+                        normal.y = poly.getV(k)!!.norm[2]
+                        normal.z = poly.getV(k)!!.norm[1]
 
                         // LWO models aren't all that pretty when it comes down to the floating point values they store
                         normal.FixDegenerateNormal()
@@ -1534,17 +1548,17 @@ object Model_local {
                         color[3] = 255.toByte()
 
                         // first set attributes from the vertex
-                        val pt = layer.point.pt[poly.getV(k).index]
+                        val pt = layer.point.pt!![poly.getV(k)!!.index]!!
                         var nvm: Int
                         nvm = 0
                         while (nvm < pt.nvmaps) {
-                            val vm = pt.vm[nvm]
+                            val vm = pt.vm!![nvm]
                             if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
                                 tv = tvRemap[vm.index + vm.vmap.offset]
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
-                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
+                                    color[chan] = (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -1552,14 +1566,14 @@ object Model_local {
 
                         // then override with polygon attributes
                         nvm = 0
-                        while (nvm < poly.getV(k).nvmaps) {
-                            val vm = poly.getV(k).vm[nvm]
+                        while (nvm < poly.getV(k)!!.nvmaps) {
+                            val vm = poly.getV(k)!!.vm!![nvm]
                             if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
                                 tv = tvRemap[vm.index + vm.vmap.offset]
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
-                                    color[chan] = (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
+                                    color[chan] = (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -1606,7 +1620,7 @@ object Model_local {
                             }
                             tri.numVerts++
                         }
-                        tri.indexes[tri.numIndexes] = mv.index
+                        tri.indexes!![tri.numIndexes] = mv.index
                         tri.numIndexes++
                         k++
                     }
@@ -1626,11 +1640,11 @@ object Model_local {
                 j = 0
                 while (j < tri.numVerts) {
                     mv = mvTable[j]!!
-                    tri.verts[j].Clear()
-                    tri.verts[j].xyz.set(vList[mv.v])
-                    tri.verts[j].st = tvList[mv.tv]
-                    tri.verts[j].normal.set(mv.normal)
-                    tri.verts[j].color = mv.color
+                    tri.verts!![j]!!.Clear()
+                    tri.verts!![j]!!.xyz.set(vList[mv.v])
+                    tri.verts!![j]!!.st = tvList[mv.tv]
+                    tri.verts!![j]!!.normal.set(mv.normal)
+                    tri.verts!![j]!!.color = mv.color
                     j++
                 }
                 //
@@ -1771,7 +1785,7 @@ object Model_local {
             objectNum = 0
             while (objectNum < ma.objects.size) {
                 `object` = ma.objects[objectNum]
-                mesh = `object`.mesh!!
+                mesh = `object`.mesh
                 if (`object`.materialRef >= 0) {
                     material = ma.materials[`object`.materialRef]
                     im1 = DeclManager.declManager.FindMaterial(material.name)
@@ -1939,7 +1953,7 @@ object Model_local {
                             }
                             tri.numVerts++
                         }
-                        tri.indexes[tri.numIndexes] = mv.index
+                        tri.indexes!![tri.numIndexes] = mv.index
                         tri.numIndexes++
                         k++
                     }
@@ -1978,16 +1992,16 @@ object Model_local {
                 j = 0
                 while (j < tri.numVerts) {
                     mv = mvTable[j]
-                    tri.verts[j].Clear()
-                    tri.verts[j].xyz.set(mesh.vertexes[mv.v])
-                    tri.verts[j].normal.set(mv.normal)
-                    tri.verts[j].color = mv.color
+                    tri.verts!![j]!!.Clear()
+                    tri.verts!![j]!!.xyz.set(mesh.vertexes[mv.v])
+                    tri.verts!![j]!!.normal.set(mv.normal)
+                    tri.verts!![j]!!.color = mv.color
                     if (mesh.numTVertexes != 0) {
                         val tv2 = mesh.tvertexes[mv.tv]
                         val U = tv2.x * uTiling + uOffset
                         val V = tv2.y * vTiling + vOffset
-                        tri.verts[j].st[0] = U * textureCos + V * textureSin
-                        tri.verts[j].st[1] = U * -textureSin + V * textureCos
+                        tri.verts!![j]!!.st[0] = U * textureCos + V * textureSin
+                        tri.verts!![j]!!.st[1] = U * -textureSin + V * textureCos
                     }
                     j++
                 }
@@ -2029,14 +2043,14 @@ object Model_local {
             var surf = obj.surf
             while (surf != null) {
                 val mat = aseMaterial_t() // Mem_ClearedAlloc(sizeof( * mat));
-                System.arraycopy(surf.name.toCharArray(), 0, mat.name, 0, surf.name.length)
+                System.arraycopy(surf.name!!.toCharArray(), 0, mat.name, 0, surf.name!!.length)
                 mat.vTiling = 1f
                 mat.uTiling = mat.vTiling
                 mat.vOffset = 0f
                 mat.uOffset = mat.vOffset
                 mat.angle = mat.uOffset
                 ase.materials.add(mat)
-                val layer = obj.layer
+                val layer = obj.layer!!
                 val `object` = aseObject_t() // Mem_ClearedAlloc(sizeof( * object));
                 `object`.materialRef = materialRef++
                 val mesh = `object`.mesh
@@ -2054,9 +2068,9 @@ object Model_local {
                 }
                 j = 0
                 while (j < layer.point.count) {
-                    mesh.vertexes[j].x = layer.point.pt[j].pos[0]
-                    mesh.vertexes[j].y = layer.point.pt[j].pos[2]
-                    mesh.vertexes[j].z = layer.point.pt[j].pos[1]
+                    mesh.vertexes[j].x = layer.point.pt!![j]!!.pos[0]
+                    mesh.vertexes[j].y = layer.point.pt!![j]!!.pos[2]
+                    mesh.vertexes[j].z = layer.point.pt!![j]!!.pos[1]
                     j++
                 }
 
@@ -2081,8 +2095,8 @@ object Model_local {
                             vm.offset = offset
                             k = 0
                             while (k < vm.nverts) {
-                                mesh.tvertexes[k + offset].x = vm.`val`[k][0]
-                                mesh.tvertexes[k + offset].y = 1.0f - vm.`val`[k][1] // invert the t
+                                mesh.tvertexes[k + offset].x = vm.value!![k][0]
+                                mesh.tvertexes[k + offset].y = 1.0f - vm.value!![k][1] // invert the t
                                 k++
                             }
                             offset += vm.nverts
@@ -2102,7 +2116,7 @@ object Model_local {
                 var faceIndex = 0
                 j = 0
                 while (j < layer.polygon.count) {
-                    val poly = layer.polygon.pol[j]
+                    val poly = layer.polygon.pol!![j]!!
                     if (poly.surf !== surf) {
                         j++
                         continue
@@ -2120,10 +2134,10 @@ object Model_local {
                     mesh.faces[faceIndex].faceNormal.z = poly.norm[1]
                     k = 0
                     while (k < 3) {
-                        mesh.faces[faceIndex].vertexNum[k] = poly.getV(k).index
-                        mesh.faces[faceIndex].vertexNormals[k].x = poly.getV(k).norm[0]
-                        mesh.faces[faceIndex].vertexNormals[k].y = poly.getV(k).norm[2]
-                        mesh.faces[faceIndex].vertexNormals[k].z = poly.getV(k).norm[1]
+                        mesh.faces[faceIndex].vertexNum[k] = poly.getV(k)!!.index
+                        mesh.faces[faceIndex].vertexNormals[k].x = poly.getV(k)!!.norm[0]
+                        mesh.faces[faceIndex].vertexNormals[k].y = poly.getV(k)!!.norm[2]
+                        mesh.faces[faceIndex].vertexNormals[k].z = poly.getV(k)!!.norm[1]
 
                         // complete fallbacks
                         mesh.faces[faceIndex].tVertexNum[k] = 0
@@ -2133,18 +2147,18 @@ object Model_local {
                         mesh.faces[faceIndex].vertexColors[k][3] = 255.toByte()
 
                         // first set attributes from the vertex
-                        val pt = layer.point.pt[poly.getV(k).index]
+                        val pt = layer.point.pt!![poly.getV(k)!!.index]!!
                         var nvm: Int
                         nvm = 0
                         while (nvm < pt.nvmaps) {
-                            val vm = pt.vm[nvm]
+                            val vm = pt.vm!![nvm]
                             if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
                                 mesh.faces[faceIndex].tVertexNum[k] = vm.index + vm.vmap.offset
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
+                                        (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -2152,15 +2166,15 @@ object Model_local {
 
                         // then override with polygon attributes
                         nvm = 0
-                        while (nvm < poly.getV(k).nvmaps) {
-                            val vm = poly.getV(k).vm[nvm]
+                        while (nvm < poly.getV(k)!!.nvmaps) {
+                            val vm = poly.getV(k)!!.vm!![nvm]
                             if (vm.vmap.type == Model_lwo.LWID_('T', 'X', 'U', 'V').toLong()) {
                                 mesh.faces[faceIndex].tVertexNum[k] = vm.index + vm.vmap.offset
                             }
                             if (vm.vmap.type == Model_lwo.LWID_('R', 'G', 'B', 'A').toLong()) {
                                 for (chan in 0..3) {
                                     mesh.faces[faceIndex].vertexColors[k][chan] =
-                                        (255 * vm.vmap.`val`[vm.index][chan]).toInt().toByte()
+                                        (255 * vm.vmap.value!![vm.index][chan]).toInt().toByte()
                                 }
                             }
                             nvm++
@@ -2188,10 +2202,10 @@ object Model_local {
         fun DeleteSurfaceWithId(id: Int): Boolean {
             var i: Int
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 if (surfaces[i].id == id) {
                     tr_trisurf.R_FreeStaticTriSurf(surfaces[i].geometry)
-                    surfaces.removeAt(i)
+                    surfaces.RemoveIndex(i)
                     return true
                 }
                 i++
@@ -2202,10 +2216,10 @@ object Model_local {
         fun DeleteSurfacesWithNegativeId() {
             var i: Int
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 if (surfaces[i].id < 0) {
                     tr_trisurf.R_FreeStaticTriSurf(surfaces[i].geometry)
-                    surfaces.removeAt(i)
+                    surfaces.RemoveIndex(i)
                     i--
                 }
                 i++
@@ -2215,7 +2229,7 @@ object Model_local {
         fun FindSurfaceWithId(id: Int, surfaceNum: CInt): Boolean {
             var i: Int
             i = 0
-            while (i < surfaces.size) {
+            while (i < surfaces.Num()) {
                 if (surfaces[i].id == id) {
                     surfaceNum._val = (i)
                     return true
@@ -2321,21 +2335,6 @@ object Model_local {
         }
 
         // the inherited public interface
-        init {
-            surfaces = kotlin.collections.ArrayList()
-            name = idStr("<undefined>")
-            idBounds().also { bounds = it }.Clear()
-            lastModifiedFrame = 0
-            lastArchivedFrame = 0
-            overlaysAdded = 0
-            shadowHull = null
-            isStaticWorldModel = false
-            defaulted = false
-            purged = false
-            fastLoad = false
-            reloadable = true
-            levelLoadReferenced = false
-            timeStamp[0] = 0
-        }
+
     }
 }

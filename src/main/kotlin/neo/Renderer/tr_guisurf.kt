@@ -56,7 +56,7 @@ object tr_guisurf {
         while (i < tri.numVerts) {
             j = 0
             while (j < 2) {
-                v = tri.verts[i].st[j]
+                v = tri.verts!![i]!!.st[j]
                 if (v < bounds[0][j]) {
                     bounds[0][j] = v
                 }
@@ -75,9 +75,9 @@ object tr_guisurf {
         boundsOrg[1] = floor((bounds[0][1] + bounds[1][1]) * 0.5).toFloat()
 
         // determine the world S and T vectors from the first drawSurf triangle
-        a = tri.verts[tri.indexes[0]]
-        b = tri.verts[tri.indexes[1]]
-        c = tri.verts[tri.indexes[2]]
+        a = tri.verts!![tri.indexes!![0]]!!
+        b = tri.verts!![tri.indexes!![1]]!!
+        c = tri.verts!![tri.indexes!![2]]!!
         Vector.VectorSubtract(b.xyz, a.xyz, d0)
         d0[3] = b.st[0] - a.st[0]
         d0[4] = b.st[1] - a.st[1]
@@ -133,7 +133,7 @@ object tr_guisurf {
         tr_local.tr.pc.c_guiSurfs++
 
         // create the new matrix to draw on this surface
-        tr_guisurf.R_SurfaceToTextureAxis(drawSurf.geo, origin, axis)
+        tr_guisurf.R_SurfaceToTextureAxis(drawSurf.geo!!, origin, axis)
         val guiModelMatrix = FloatArray(16)
         val modelMatrix = FloatArray(16)
         guiModelMatrix[0] = axis[0][0] / 640.0f
@@ -153,7 +153,7 @@ object tr_guisurf {
         guiModelMatrix[11] = 0f
         guiModelMatrix[15] = 1f
         tr_main.myGlMultMatrix(
-            guiModelMatrix, drawSurf.space.modelMatrix,
+            guiModelMatrix, drawSurf.space!!.modelMatrix,
             modelMatrix
         )
         tr_local.tr.guiRecursionLevel++
@@ -161,7 +161,7 @@ object tr_guisurf {
         // call the gui, which will call the 2D drawing functions
         tr_local.tr.guiModel.Clear()
         gui.Redraw(tr_local.tr.viewDef!!.renderView.time)
-        tr_local.tr.guiModel.EmitToCurrentView(modelMatrix, drawSurf.space.weaponDepthHack)
+        tr_local.tr.guiModel.EmitToCurrentView(modelMatrix, drawSurf.space!!.weaponDepthHack)
         tr_local.tr.guiModel.Clear()
         tr_local.tr.guiRecursionLevel--
     }

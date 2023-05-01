@@ -212,7 +212,7 @@ class RenderWorld {
         var hModel // this can only be null if callback is set
                 : idRenderModel? = null
         var joints // array of joints that will modify vertices.
-                : ArrayList<idJointMat> = ArrayList()
+                : Array<idJointMat>? = null
 
         // NULL if non-deformable model.  NOT freed by renderer
         //
@@ -329,8 +329,7 @@ class RenderWorld {
             referenceSound = shadow.referenceSound
             remoteRenderView = shadow.remoteRenderView
             numJoints = shadow.numJoints._val
-            joints.clear()
-            joints.addAll(shadow.joints)
+            joints = shadow.joints
             modelDepthHack = shadow.modelDepthHack._val
             noSelfShadow = shadow.noSelfShadow._val
             noShadow = shadow.noShadow._val
@@ -394,7 +393,7 @@ class RenderWorld {
             hash = 71 * hash + gui.contentDeepHashCode()
             hash = 71 * hash + Objects.hashCode(remoteRenderView)
             hash = 71 * hash + numJoints
-            hash = 71 * hash + joints.toTypedArray().contentDeepHashCode()
+            hash = 71 * hash + joints.contentDeepHashCode()
             hash = 71 * hash + java.lang.Float.floatToIntBits(modelDepthHack)
             hash = 71 * hash + if (noSelfShadow) 1 else 0
             hash = 71 * hash + if (noShadow) 1 else 0
@@ -474,7 +473,7 @@ class RenderWorld {
             if (numJoints != other.numJoints) {
                 return false
             }
-            if (!joints.toTypedArray().contentDeepEquals(other.joints.toTypedArray())) {
+            if (!joints.contentDeepEquals(other.joints)) {
                 return false
             }
             if (java.lang.Float.floatToIntBits(modelDepthHack) != java.lang.Float.floatToIntBits(other.modelDepthHack)) {
@@ -526,7 +525,7 @@ class RenderWorld {
         // if non-zero, the light will only show up in the specific view
         // which can allow player gun gui lights and such to not effect everyone
         var allowLightInViewID = 0
-        val axis: idMat3 = idMat3() // rotation vectors, must be unit length
+        var axis: idMat3 = idMat3() // rotation vectors, must be unit length
 
         //
         // muzzle flash lights will not cast shadows from player and weapon world models
@@ -567,6 +566,37 @@ class RenderWorld {
         var suppressLightInViewID = 0
 
         constructor()
+
+        constructor(other: renderLight_s) {
+            axis = idMat3(other.axis)
+            origin.set(other.origin)
+
+            suppressLightInViewID = other.suppressLightInViewID
+
+            allowLightInViewID = other.allowLightInViewID
+
+            noShadows = other.noShadows
+            noSpecular = other.noSpecular
+
+            pointLight = other.pointLight
+            parallel = other.parallel
+            lightRadius.set(other.lightRadius)
+            lightCenter.set(other.lightCenter)
+
+            target.set(other.target)
+            right.set(other.right)
+            up.set(other.up)
+            start.set(other.start)
+            end.set(other.end)
+
+            prelightModel = other.prelightModel
+
+            lightId = other.lightId
+
+            shader = other.shader
+            System.arraycopy(other.shaderParms, 0, shaderParms, 0, other.shaderParms.size)
+            referenceSound = other.referenceSound
+        }
 
         fun clear() { //TODO:hardcoded values
             val temp = renderLight_s()
@@ -707,7 +737,7 @@ class RenderWorld {
                 = 0
         var   /*qhandle_t */portalHandle = 0
         var w // winding points have counter clockwise ordering seen from areas[0]
-                : idWinding = idWinding()
+                : idWinding? = null
     }
 
     // guiPoint_t is returned by idRenderWorld::GuiTrace()
@@ -752,11 +782,11 @@ class RenderWorld {
         // entityDefs and lightDefs are added to a given world to determine
         // what will be drawn for a rendered scene.  Most update work is defered
         // until it is determined that it is actually needed for a given view.
-        abstract fun AddEntityDef(re: renderEntity_s): Int
+        abstract fun AddEntityDef(re: renderEntity_s?): Int
         abstract fun UpdateEntityDef(entityHandle: Int, re: renderEntity_s)
         abstract fun FreeEntityDef(entityHandle: Int)
         abstract fun GetRenderEntity(entityHandle: Int): renderEntity_s?
-        abstract fun AddLightDef(rlight: renderLight_s): Int
+        abstract fun AddLightDef(rlight: renderLight_s?): Int
         abstract fun UpdateLightDef(lightHandle: Int, rlight: renderLight_s)
         abstract fun FreeLightDef(lightHandle: Int)
         abstract fun GetRenderLight(lightHandle: Int): renderLight_s?
@@ -1082,7 +1112,7 @@ class RenderWorld {
             var totalRef = 0
             var totalIntr = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld!!.lightDefs.size) {
+            while (i < tr_local.tr.primaryWorld!!.lightDefs.Num()) {
                 ldef = tr_local.tr.primaryWorld!!.lightDefs[i]
                 if (null == ldef) {
                     idLib.common.Printf("%4d: FREED\n", i)
@@ -1138,7 +1168,7 @@ class RenderWorld {
             var totalRef = 0
             var totalIntr = 0
             i = 0
-            while (i < tr_local.tr.primaryWorld!!.entityDefs!!.size) {
+            while (i < tr_local.tr.primaryWorld!!.entityDefs!!.Num()) {
                 mdef = tr_local.tr.primaryWorld!!.entityDefs[i]
                 if (null == mdef) {
                     idLib.common.Printf("%4d: FREED\n", i)

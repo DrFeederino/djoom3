@@ -42,6 +42,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CInt
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
+import neo.idlib.containers.idStrList
 import neo.idlib.hashing.MD4.MD4_BlockChecksum
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Vector.idVec3
@@ -2820,7 +2821,7 @@ class Image {
         lateinit var currentRenderImage // for SS_POST_PROCESS shaders
                 : idImage
         var ddsHash: idHashIndex = idHashIndex()
-        var ddsList: ArrayList<String> = ArrayList()
+        var ddsList: idStrList = idStrList()
 
         //
         // built-in images
@@ -2867,8 +2868,8 @@ class Image {
         /*GLenum*/  var textureMinFilter = 0
         var totalCachedImageSize // for determining when something should be purged
                 = 0
-        lateinit var whiteImage // full of 0xff
-                : idImage
+        var whiteImage // full of 0xff
+                : idImage? = null
 
         @Throws(idException::class)
         fun Init() {
@@ -3451,7 +3452,7 @@ class Image {
             batchFile = FileSystem_h.fileSystem.OpenFileWrite(if (removeDups) "makedds2.bat" else "makedds.bat")
             if (batchFile != null) {
                 var i: Int
-                val ddsNum = ddsList.size
+                val ddsNum = ddsList.size()
                 i = 0
                 while (i < ddsNum) {
                     batchFile.WriteFloatString("%s", ddsList[i].toString())

@@ -958,8 +958,8 @@ object Player {
             return idWeapon.GetAmmoNumForName(ammo_classname)
         }
 
-        fun MaxAmmoForAmmoClass(owner: idPlayer, ammo_classname: String): Int {
-            return owner.spawnArgs.GetInt(Str.va("max_%s", ammo_classname), "0")
+        fun MaxAmmoForAmmoClass(owner: idPlayer, ammo_classname: String?): Int {
+            return owner.spawnArgs.GetInt(Str.va("max_%s", ammo_classname!!), "0")
         }
 
         /*
@@ -3448,8 +3448,8 @@ object Player {
          Returns the renderView that was calculated for this tic
          ==================
          */
-        override fun GetRenderView(): renderView_s {
-            return renderView!!
+        override fun GetRenderView(): renderView_s? {
+            return renderView
         }
 
         /*
@@ -4896,8 +4896,8 @@ object Player {
                     if (mat != null) {
                         val c: Int = mat.GetNumStages()
                         for (i in 0 until c) {
-                            val stage: shaderStage_t = mat.GetStage(i)
-                            if (stage != null && stage.texture.cinematic.getOrNull(0) != null) {
+                            val stage: shaderStage_t? = mat.GetStage(i)
+                            if (stage != null && stage.texture.cinematic[0] != null) {
                                 stage.texture.cinematic[0]!!.ResetTime(Game_local.gameLocal.time)
                             }
                         }
@@ -7227,7 +7227,7 @@ object Player {
          ================
          */
         private fun UpdateFocus() {
-            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             var clip: idClipModel
             val listedClipModels: Int
             val oldFocus: idEntity?
@@ -7294,7 +7294,7 @@ object Player {
             // gui within range along the trace
             i = 0
             while (i < listedClipModels) {
-                clip = clipModelList[i]
+                clip = clipModelList[i]!!
                 ent = clip.GetEntity()!!
                 if (ent.IsHidden()) {
                     i++

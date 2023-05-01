@@ -70,9 +70,9 @@ object tr_subview {
         val v1: idDrawVert?
         val v2: idDrawVert?
         val v3: idDrawVert?
-        v1 = tri.verts[tri.indexes[0]]
-        v2 = tri.verts[tri.indexes[1]]
-        v3 = tri.verts[tri.indexes[2]]
+        v1 = tri.verts!![tri.indexes!![0]]!!
+        v2 = tri.verts!![tri.indexes!![1]]!!
+        v3 = tri.verts!![tri.indexes!![2]]!!
         plane.FromPoints(v1.xyz, v2.xyz, v3.xyz)
     }
 
@@ -100,7 +100,7 @@ object tr_subview {
         var pointAnd: Int
         val localView = idVec3()
         val w = idFixedWinding()
-        tri = drawSurf.geo
+        tri = drawSurf.geo!!
         pointOr = 0
         pointAnd = 0.inv()
 
@@ -112,7 +112,7 @@ object tr_subview {
 //		int j;
             var pointFlags: Int
             tr_main.R_TransformModelToClip(
-                tri.verts[i].xyz, drawSurf.space.modelViewMatrix,
+                tri.verts!![i]!!.xyz, drawSurf.space!!.modelViewMatrix,
                 tr_local.tr.viewDef!!.projectionMatrix, eye, clip
             )
             pointFlags = 0
@@ -137,7 +137,7 @@ object tr_subview {
 
         // backface and frustum cull
         numTriangles = tri.numIndexes / 3
-        tr_main.R_GlobalPointToLocal(drawSurf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localView)
+        tr_main.R_GlobalPointToLocal(drawSurf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localView)
         i = 0
         while (i < tri.numIndexes) {
             val dir = idVec3()
@@ -145,9 +145,9 @@ object tr_subview {
             var dot: Float
             val d1 = idVec3()
             val d2 = idVec3()
-            val v1 = tri.verts[tri.indexes[i]].xyz
-            val v2 = tri.verts[tri.indexes[i + 1]].xyz
-            val v3 = tri.verts[tri.indexes[i + 2]].xyz
+            val v1 = tri.verts!![tri.indexes!![i]]!!.xyz
+            val v2 = tri.verts!![tri.indexes!![i + 1]]!!.xyz
+            val v3 = tri.verts!![tri.indexes!![i + 2]]!!.xyz
 
             // this is a hack, because R_GlobalPointToLocal doesn't work with the non-normalized
             // axis that we get from the gui view transform.  It doesn't hurt anything, because
@@ -167,9 +167,9 @@ object tr_subview {
 
             // now find the exact screen bounds of the clipped triangle
             w.SetNumPoints(3)
-            w[0] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v1)
-            w[1] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v2)
-            w[2] = tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, v3)
+            w[0] = tr_main.R_LocalPointToGlobal(drawSurf.space!!.modelMatrix, v1)
+            w[1] = tr_main.R_LocalPointToGlobal(drawSurf.space!!.modelMatrix, v2)
+            w[2] = tr_main.R_LocalPointToGlobal(drawSurf.space!!.modelMatrix, v3)
             w[2].t = 0.0f
             w[2].s = w[2].t
             w[1].t = w[2].s
@@ -216,8 +216,8 @@ object tr_subview {
         parms.isMirror = true
 
         // create plane axis for the portal we are seeing
-        R_PlaneForSurface(drawSurf.geo, originalPlane)
-        tr_main.R_LocalPlaneToGlobal(drawSurf.space.modelMatrix, originalPlane, plane)
+        R_PlaneForSurface(drawSurf.geo!!, originalPlane)
+        tr_main.R_LocalPlaneToGlobal(drawSurf.space!!.modelMatrix, originalPlane, plane)
         surface.origin.set(plane.Normal().times(-plane[3]))
         surface.axis[0] = plane.Normal()
         surface.axis[0].NormalVectors(surface.axis[1], surface.axis[2])
@@ -249,9 +249,9 @@ object tr_subview {
         )
 
         // make the view origin 16 units away from the center of the surface
-        val viewOrigin = idVec3(drawSurf.geo.bounds[0].plus(drawSurf.geo.bounds[1]).times(0.5f))
+        val viewOrigin = idVec3(drawSurf.geo!!.bounds[0].plus(drawSurf.geo!!.bounds[1]).times(0.5f))
         viewOrigin.plusAssign(originalPlane.Normal().times(16f))
-        parms.initialViewAreaOrigin.set(tr_main.R_LocalPointToGlobal(drawSurf.space.modelMatrix, viewOrigin))
+        parms.initialViewAreaOrigin.set(tr_main.R_LocalPointToGlobal(drawSurf.space!!.modelMatrix, viewOrigin))
 
         // set the mirror clip plane
         parms.numClipPlanes = 1
@@ -294,7 +294,7 @@ object tr_subview {
         }
 
         // if the entity doesn't have a remoteRenderView, do nothing
-        if (null == surf.space.entityDef.parms.remoteRenderView) {
+        if (null == surf.space!!.entityDef.parms.remoteRenderView) {
             return
         }
 
@@ -303,7 +303,7 @@ object tr_subview {
         parms = tr_local.tr.viewDef!!
         parms.isSubview = true
         parms.isMirror = false
-        parms.renderView = surf.space.entityDef.parms.remoteRenderView!!
+        parms.renderView = surf.space!!.entityDef.parms.remoteRenderView!!
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.initialViewAreaOrigin.set(parms.renderView.vieworg)
         tr_local.tr.CropRenderSize(stage.width, stage.height, true)
@@ -442,7 +442,7 @@ object tr_subview {
         // already seeing through
         parms = tr_local.tr.viewDef
         while (parms != null) {
-            if (parms.subviewSurface != null && parms.subviewSurface!!.geo === drawSurf.geo && parms.subviewSurface!!.space.entityDef === drawSurf.space.entityDef) {
+            if (parms.subviewSurface != null && parms.subviewSurface!!.geo === drawSurf.geo && parms.subviewSurface!!.space!!.entityDef === drawSurf.space!!.entityDef) {
                 break
             }
             parms = parms.superView
@@ -470,7 +470,7 @@ object tr_subview {
         // see what kind of subview we are making
         if (shader.GetSort() != Material.SS_SUBVIEW.toFloat()) {
             for (i in 0 until shader.GetNumStages()) {
-                val stage: shaderStage_t = shader.GetStage(i)
+                val stage: shaderStage_t = shader.GetStage(i)!!
                 when (stage.texture.dynamic) {
                     dynamicidImage_t.DI_REMOTE_RENDER -> R_RemoteRender(drawSurf, stage.texture)
                     dynamicidImage_t.DI_MIRROR_RENDER -> R_MirrorRender(

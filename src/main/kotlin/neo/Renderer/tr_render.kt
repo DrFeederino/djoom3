@@ -95,8 +95,8 @@ object tr_render {
         }
         qgl.qglBegin(GL11.GL_TRIANGLES)
         for (i in 0 until tri.numIndexes) {
-            qgl.qglTexCoord2fv(tri.verts[tri.indexes[i]].st.ToFloatPtr())
-            qgl.qglVertex3fv(tri.verts[tri.indexes[i]].xyz.ToFloatPtr())
+            qgl.qglTexCoord2fv(tri.verts!![tri.indexes!![i]]!!.st.ToFloatPtr())
+            qgl.qglVertex3fv(tri.verts!![tri.indexes!![i]]!!.xyz.ToFloatPtr())
         }
         qgl.qglEnd()
     }
@@ -129,7 +129,7 @@ object tr_render {
                 VertexCache.vertexCache.UnbindIndex()
             }
             //            if(tri.DBG_count!=11)
-            qgl.qglDrawElements(GL11.GL_TRIANGLES, count, Model.GL_INDEX_TYPE /*GL_UNSIGNED_INT*/, tri.indexes)
+            qgl.qglDrawElements(GL11.GL_TRIANGLES, count, Model.GL_INDEX_TYPE /*GL_UNSIGNED_INT*/, tri.indexes!!)
         }
     }
 
@@ -160,7 +160,7 @@ object tr_render {
                 GL11.GL_TRIANGLES,
                 if (RenderSystem_init.r_singleTriangle.GetBool()) 3 else numIndexes,
                 Model.GL_INDEX_TYPE,
-                tri.indexes
+                tri.indexes!!
             )
         }
     }
@@ -249,13 +249,13 @@ object tr_render {
 
             // change the matrix if needed
             if (drawSurf.space !== tr_local.backEnd.currentSpace) {
-                qgl.qglLoadMatrixf(drawSurf.space.modelViewMatrix)
+                qgl.qglLoadMatrixf(drawSurf.space!!.modelViewMatrix)
             }
-            if (drawSurf.space.weaponDepthHack) {
+            if (drawSurf.space!!.weaponDepthHack) {
                 RB_EnterWeaponDepthHack()
             }
-            if (drawSurf.space.modelDepthHack != 0.0f) {
-                RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
+            if (drawSurf.space!!.modelDepthHack != 0.0f) {
+                RB_EnterModelDepthHack(drawSurf.space!!.modelDepthHack)
             }
 
             // change the scissor if needed
@@ -271,7 +271,7 @@ object tr_render {
 
             // render it
             triFunc_.run(drawSurf)
-            if (drawSurf.space.weaponDepthHack || drawSurf.space.modelDepthHack != 0.0f) {
+            if (drawSurf.space!!.weaponDepthHack || drawSurf.space!!.modelDepthHack != 0.0f) {
                 RB_LeaveDepthHack()
             }
             tr_local.backEnd.currentSpace = drawSurf.space
@@ -288,13 +288,13 @@ object tr_render {
 
             // change the matrix if needed
             if (drawSurf.space !== tr_local.backEnd.currentSpace) {
-                qgl.qglLoadMatrixf(drawSurf.space.modelViewMatrix)
+                qgl.qglLoadMatrixf(drawSurf.space!!.modelViewMatrix)
             }
-            if (drawSurf.space.weaponDepthHack) {
+            if (drawSurf.space!!.weaponDepthHack) {
                 RB_EnterWeaponDepthHack()
             }
-            if (drawSurf.space.modelDepthHack != 0f) {
-                RB_EnterModelDepthHack(drawSurf.space.modelDepthHack)
+            if (drawSurf.space!!.modelDepthHack != 0f) {
+                RB_EnterModelDepthHack(drawSurf.space!!.modelDepthHack)
             }
 
             // change the scissor if needed
@@ -310,7 +310,7 @@ object tr_render {
 
             // render it
             triFunc_.run(drawSurf)
-            if (drawSurf.space.weaponDepthHack || drawSurf.space.modelDepthHack != 0.0f) {
+            if (drawSurf.space!!.weaponDepthHack || drawSurf.space!!.modelDepthHack != 0.0f) {
                 RB_LeaveDepthHack()
             }
             tr_local.backEnd.currentSpace = drawSurf.space
@@ -424,7 +424,7 @@ object tr_render {
         // texgens
         if (texture.texgen == texgen_t.TG_DIFFUSE_CUBE) {
             val vert =
-                idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) //TODO:figure out how to work these damn casts.
+                idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) //TODO:figure out how to work these damn casts.
             qgl.qglTexCoordPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, vert.normal.ToFloatPtr())
         }
         if (texture.texgen == texgen_t.TG_SKYBOX_CUBE || texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
@@ -439,7 +439,7 @@ object tr_render {
             qgl.qglTexGenf(GL11.GL_R, GL11.GL_TEXTURE_GEN_MODE, GL13.GL_REFLECTION_MAP /*_EXT*/.toFloat())
             qgl.qglEnableClientState(GL11.GL_NORMAL_ARRAY)
             val vert =
-                idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) // {//TODO:figure out how to work these damn casts.
+                idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) // {//TODO:figure out how to work these damn casts.
             qgl.qglNormalPointer(GL11.GL_FLOAT, idDrawVert.BYTES, vert.normalOffset().toLong())
             qgl.qglMatrixMode(GL11.GL_TEXTURE)
             val mat = FloatArray(16)
@@ -462,7 +462,7 @@ object tr_render {
     fun RB_FinishStageTexture(texture: textureStage_t, surf: drawSurf_s) {
         if (texture.texgen == texgen_t.TG_DIFFUSE_CUBE || texture.texgen == texgen_t.TG_SKYBOX_CUBE || texture.texgen == texgen_t.TG_WOBBLESKY_CUBE) {
             val vert =
-                idDrawVert(VertexCache.vertexCache.Position(surf.geo.ambientCache)) // {//TODO:figure out how to work these damn casts.
+                idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) // {//TODO:figure out how to work these damn casts.
             qgl.qglTexCoordPointer(
                 2,
                 GL11.GL_FLOAT,
@@ -534,7 +534,7 @@ object tr_render {
             numStages = shader.GetNumStages()
             i = 0
             while (i < numStages) {
-                stage = shader.GetStage(i)
+                stage = shader.GetStage(i)!!
                 j = 0
                 while (j < 3) {
                     val v = RenderSystem_init.r_lightScale.GetFloat() * vLight.shaderRegisters[stage.color.registers[j]]
@@ -702,7 +702,7 @@ object tr_render {
         val lightShader: idMaterial = vLight.lightShader
         val lightRegs = vLight.shaderRegisters
         val inter = drawInteraction_t()
-        if (RenderSystem_init.r_skipInteractions.GetBool() || TempDump.NOT(surf.geo) || TempDump.NOT(surf.geo.ambientCache)) {
+        if (RenderSystem_init.r_skipInteractions.GetBool() || TempDump.NOT(surf.geo) || TempDump.NOT(surf.geo!!.ambientCache)) {
             return
         }
         if (tr_local.tr.logFile != null) {
@@ -716,7 +716,7 @@ object tr_render {
         // change the matrix and light projection vectors if needed
         if (surf.space !== tr_local.backEnd.currentSpace) {
             tr_local.backEnd.currentSpace = surf.space
-            qgl.qglLoadMatrixf(surf.space.modelViewMatrix)
+            qgl.qglLoadMatrixf(surf.space!!.modelViewMatrix)
         }
 
         // change the scissor if needed
@@ -731,17 +731,17 @@ object tr_render {
         }
 
         // hack depth range if needed
-        if (surf.space.weaponDepthHack) {
+        if (surf.space!!.weaponDepthHack) {
             RB_EnterWeaponDepthHack()
         }
-        if (surf.space.modelDepthHack != 0f) {
-            RB_EnterModelDepthHack(surf.space.modelDepthHack)
+        if (surf.space!!.modelDepthHack != 0f) {
+            RB_EnterModelDepthHack(surf.space!!.modelDepthHack)
         }
         inter.surf = surf
         inter.lightFalloffImage = vLight.falloffImage
-        tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, vLight.globalLightOrigin, inter.localLightOrigin)
+        tr_main.R_GlobalPointToLocal(surf.space!!.modelMatrix, vLight.globalLightOrigin, inter.localLightOrigin)
         tr_main.R_GlobalPointToLocal(
-            surf.space.modelMatrix,
+            surf.space!!.modelMatrix,
             tr_local.backEnd.viewDef!!.renderView.vieworg,
             inter.localViewOrigin
         )
@@ -753,13 +753,13 @@ object tr_render {
         val lightProject: Array<idPlane> = idPlane.generateArray(4)
         for (i in 0..3) {
             tr_main.R_GlobalPlaneToLocal(
-                surf.space.modelMatrix,
+                surf.space!!.modelMatrix,
                 tr_local.backEnd.vLight.lightProject[i],
                 lightProject[i]
             )
         }
         for (lightStageNum in 0 until lightShader.GetNumStages()) {
-            val lightStage: shaderStage_t = lightShader.GetStage(lightStageNum)
+            val lightStage: shaderStage_t = lightShader.GetStage(lightStageNum)!!
 
             // ignore stages that fail the condition
             if (0 == lightRegs[lightStage.conditionRegister].toInt()) {
@@ -794,13 +794,13 @@ object tr_render {
 
             // go through the individual stages
             for (surfaceStageNum in 0 until surfaceShader.GetNumStages()) {
-                val surfaceStage: shaderStage_t = surfaceShader.GetStage(surfaceStageNum)
+                val surfaceStage: shaderStage_t = surfaceShader.GetStage(surfaceStageNum)!!
                 when (surfaceStage.lighting) {
                     stageLighting_t.SL_AMBIENT -> {}
                     stageLighting_t.SL_BUMP -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
+                        if (0 == surfaceRegs!![surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         // draw any previous interaction
@@ -809,14 +809,14 @@ object tr_render {
                         inter.specularImage = null
                         run {
                             val bumpImage = arrayOfNulls<idImage>(1)
-                            R_SetDrawInteraction(surfaceStage, surfaceRegs, bumpImage, inter.bumpMatrix, null)
+                            R_SetDrawInteraction(surfaceStage, surfaceRegs!!, bumpImage, inter.bumpMatrix, null)
                             inter.bumpImage = bumpImage[0]
                         }
                     }
                     stageLighting_t.SL_DIFFUSE -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
+                        if (0 == surfaceRegs!![surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         if (inter.diffuseImage != null) {
@@ -842,7 +842,7 @@ object tr_render {
                     stageLighting_t.SL_SPECULAR -> {
 
                         // ignore stage that fails the condition
-                        if (0 == surfaceRegs[surfaceStage.conditionRegister].toInt()) {
+                        if (0 == surfaceRegs!![surfaceStage.conditionRegister].toInt()) {
                             break
                         }
                         if (inter.specularImage != null) {
@@ -873,7 +873,7 @@ object tr_render {
         }
 
         // unhack depth range if needed
-        if (surf.space.weaponDepthHack || surf.space.modelDepthHack != 0.0f) {
+        if (surf.space!!.weaponDepthHack || surf.space!!.modelDepthHack != 0.0f) {
             RB_LeaveDepthHack()
         }
     }
@@ -938,7 +938,7 @@ object tr_render {
      */
     class RB_T_RenderTriangleSurface private constructor() : triFunc() {
         override fun run(surf: drawSurf_s) {
-            RB_RenderTriangleSurface(surf.geo)
+            RB_RenderTriangleSurface(surf.geo!!)
         }
 
         companion object {

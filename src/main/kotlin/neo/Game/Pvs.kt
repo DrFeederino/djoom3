@@ -454,15 +454,15 @@ object Pvs {
                 i = 0
                 while (i < n) {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
-                    numPoints = portal.w.GetNumPoints()
-                    portal.w.GetPlane(plane)
+                    numPoints = portal.w!!.GetNumPoints()
+                    portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w[k].ToVec3().plus(offset),
-                            portal.w[(k + 1) % numPoints].ToVec3().plus(offset)
+                            portal.w!![k].ToVec3().plus(offset),
+                            portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
                         )
                         k++
                     }
@@ -515,15 +515,15 @@ object Pvs {
                 i = 0
                 while (i < n) {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
-                    numPoints = portal.w.GetNumPoints()
-                    portal.w.GetPlane(plane)
+                    numPoints = portal.w!!.GetNumPoints()
+                    portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w[k].ToVec3().plus(offset),
-                            portal.w[(k + 1) % numPoints].ToVec3().plus(offset)
+                            portal.w!![k].ToVec3().plus(offset),
+                            portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
                         )
                         k++
                     }
@@ -570,15 +570,15 @@ object Pvs {
                 i = 0
                 while (i < n) {
                     portal = Game_local.gameRenderWorld.GetPortal(j, i)
-                    numPoints = portal.w.GetNumPoints()
-                    portal.w.GetPlane(plane)
+                    numPoints = portal.w!!.GetNumPoints()
+                    portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
                         Game_local.gameRenderWorld.DebugLine(
                             color,
-                            portal.w[k].ToVec3().plus(offset),
-                            portal.w[(k + 1) % numPoints].ToVec3().plus(offset)
+                            portal.w!![k].ToVec3().plus(offset),
+                            portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
                         )
                         k++
                     }
@@ -660,7 +660,7 @@ object Pvs {
                     p = pvsPortal_t()
                     pvsPortals.add(cp++, p)
                     // the winding goes counter clockwise seen from this area
-                    p.w = portal.w.Copy()
+                    p.w = portal.w!!.Copy()
                     p.areaNum = portal.areas[1] // area[1] is always the area the portal leads to
                     p.vis = ByteArray(portalVisBytes)
                     p.mightSee = ByteArray(portalVisBytes)

@@ -638,12 +638,6 @@ object qgl {
         GL14.glColorPointer(size, type, stride, pointer)
     }
 
-    @Deprecated("")
-    fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Any) {
-        DEBUG_printName("glColorPointer")
-        throw UnsupportedOperationException("Not supported yet.")
-    }
-
     fun qglCopyPixels(x: Int, y: Int, width: Int, height: Int, type: Int) {
         DEBUG_printName("glCopyPixels")
         GL14.glCopyPixels(x, y, width, height, type)

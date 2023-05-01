@@ -42,8 +42,8 @@ object Camera {
      */
     abstract class idCamera : idEntity() {
         //public	ABSTRACT_PROTOTYPE( idCamera );
-        abstract fun GetViewParms(view: renderView_s)
-        override fun GetRenderView(): renderView_s {
+        abstract fun GetViewParms(view: renderView_s?)
+        override fun GetRenderView(): renderView_s? {
             val rv = super.GetRenderView()
             GetViewParms(rv)
             return rv
@@ -112,7 +112,7 @@ object Camera {
             UpdateChangeableSpawnArgs(null)
         }
 
-        override fun GetViewParms(view: renderView_s) {
+        override fun GetViewParms(view: renderView_s?) {
             assert(view != null)
             val dir = idVec3()
             val ent: idEntity?
@@ -121,7 +121,7 @@ object Camera {
             } else {
                 this
             }
-            view.vieworg.set(ent!!.GetPhysics().GetOrigin())
+            view!!.vieworg.set(ent!!.GetPhysics().GetOrigin())
             if (attachedView != null) {
                 dir.set(attachedView!!.GetPhysics().GetOrigin().minus(view.vieworg))
                 dir.Normalize()
@@ -129,13 +129,11 @@ object Camera {
             } else {
                 view.viewaxis.set(idMat3(ent.GetPhysics().GetAxis()))
             }
-            run {
-                val fov_x = CFloat(view.fov_x)
-                val fov_y = CFloat(view.fov_y)
-                Game_local.gameLocal.CalcFov(fov, fov_x, fov_y)
-                view.fov_x = fov_x._val
-                view.fov_y = fov_y._val
-            }
+            val fov_x = CFloat(view.fov_x)
+            val fov_y = CFloat(view.fov_y)
+            Game_local.gameLocal.CalcFov(fov, fov_x, fov_y)
+            view.fov_x = fov_x._val
+            view.fov_y = fov_y._val
         }
 
         override fun Stop() {
@@ -272,7 +270,7 @@ object Camera {
             LoadAnim()
         }
 
-        override fun GetViewParms(view: renderView_s) {
+        override fun GetViewParms(view: renderView_s?) {
             val realFrame: Int
             var frame: Int
             val frameTime: Int

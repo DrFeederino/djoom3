@@ -153,7 +153,7 @@ object CollisionModel {
         // Returns the contents touched by the trace model or 0 if the trace model is in free space.
         abstract fun Contents(
             start: idVec3,
-            trm: idTraceModel, trmAxis: idMat3, contentMask: Int,
+            trm: idTraceModel?, trmAxis: idMat3, contentMask: Int,
             model: Int, modelOrigin: idVec3, modelAxis: idMat3
         ): Int
 

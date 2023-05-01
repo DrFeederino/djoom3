@@ -678,7 +678,7 @@ object BrittleFracture {
                 tangents = plane.Normal().times(axis).ToMat3()
                 j = 2
                 while (j < winding.GetNumPoints()) {
-                    v = tris.verts[tris.numVerts++]
+                    v = tris.verts!![tris.numVerts++]!!
                     v.Clear()
                     v.xyz.set(origin.plus(winding[0].ToVec3().times(axis)))
                     v.st[0] = winding[0].s
@@ -687,7 +687,7 @@ object BrittleFracture {
                     v.tangents[0] = tangents[1]
                     v.tangents[1] = tangents[2]
                     v.SetColor(packedColor)
-                    v = tris.verts[tris.numVerts++]
+                    v = tris.verts!![tris.numVerts++]!!
                     v.Clear()
                     v.xyz.set(origin.plus(winding[j - 1].ToVec3().times(axis)))
                     v.st[0] = winding[j - 1].s
@@ -696,7 +696,7 @@ object BrittleFracture {
                     v.tangents[0] = tangents[1]
                     v.tangents[1] = tangents[2]
                     v.SetColor(packedColor)
-                    v = tris.verts[tris.numVerts++]
+                    v = tris.verts!![tris.numVerts++]!!
                     v.Clear()
                     v.xyz.set(origin.plus(winding[j].ToVec3().times(axis)))
                     v.st[0] = winding[j].s
@@ -705,13 +705,13 @@ object BrittleFracture {
                     v.tangents[0] = tangents[1]
                     v.tangents[1] = tangents[2]
                     v.SetColor(packedColor)
-                    tris.indexes[tris.numIndexes++] = tris.numVerts - 3
-                    tris.indexes[tris.numIndexes++] = tris.numVerts - 2
-                    tris.indexes[tris.numIndexes++] = tris.numVerts - 1
+                    tris.indexes!![tris.numIndexes++] = tris.numVerts - 3
+                    tris.indexes!![tris.numIndexes++] = tris.numVerts - 2
+                    tris.indexes!![tris.numIndexes++] = tris.numVerts - 1
                     if (material!!.ShouldCreateBackSides()) {
-                        tris.indexes[tris.numIndexes++] = tris.numVerts - 2
-                        tris.indexes[tris.numIndexes++] = tris.numVerts - 3
-                        tris.indexes[tris.numIndexes++] = tris.numVerts - 1
+                        tris.indexes!![tris.numIndexes++] = tris.numVerts - 2
+                        tris.indexes!![tris.numIndexes++] = tris.numVerts - 3
+                        tris.indexes!![tris.numIndexes++] = tris.numVerts - 1
                     }
                     j++
                 }
@@ -720,7 +720,7 @@ object BrittleFracture {
                     val decalWinding: idWinding = shards[i].decals[k]
                     j = 2
                     while (j < decalWinding.GetNumPoints()) {
-                        v = decalTris.verts[decalTris.numVerts++]
+                        v = decalTris.verts!![decalTris.numVerts++]!!
                         v.Clear()
                         v.xyz.set(origin.plus(decalWinding[0].ToVec3().times(axis)))
                         v.st[0] = decalWinding[0].s
@@ -729,7 +729,7 @@ object BrittleFracture {
                         v.tangents[0] = tangents[1]
                         v.tangents[1] = tangents[2]
                         v.SetColor(packedColor)
-                        v = decalTris.verts[decalTris.numVerts++]
+                        v = decalTris.verts!![decalTris.numVerts++]!!
                         v.Clear()
                         v.xyz.set(origin.plus(decalWinding[j - 1].ToVec3().times(axis)))
                         v.st[0] = decalWinding[j - 1].s
@@ -738,7 +738,7 @@ object BrittleFracture {
                         v.tangents[0] = tangents[1]
                         v.tangents[1] = tangents[2]
                         v.SetColor(packedColor)
-                        v = decalTris.verts[decalTris.numVerts++]
+                        v = decalTris.verts!![decalTris.numVerts++]!!
                         v.Clear()
                         v.xyz.set(origin.plus(decalWinding[j].ToVec3().times(axis)))
                         v.st[0] = decalWinding[j].s
@@ -747,13 +747,13 @@ object BrittleFracture {
                         v.tangents[0] = tangents[1]
                         v.tangents[1] = tangents[2]
                         v.SetColor(packedColor)
-                        decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 3
-                        decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 2
-                        decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 1
+                        decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 3
+                        decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 2
+                        decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 1
                         if (decalMaterial!!.ShouldCreateBackSides()) {
-                            decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 2
-                            decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 3
-                            decalTris.indexes[decalTris.numIndexes++] = decalTris.numVerts - 1
+                            decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 2
+                            decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 3
+                            decalTris.indexes!![decalTris.numIndexes++] = decalTris.numVerts - 1
                         }
                         j++
                     }
@@ -763,11 +763,11 @@ object BrittleFracture {
             }
             tris.tangentsCalculated = true
             decalTris.tangentsCalculated = true
-            Simd.SIMDProcessor.MinMax(tris.bounds[0], tris.bounds[1], tris.verts.toTypedArray(), tris.numVerts)
+            Simd.SIMDProcessor.MinMax(tris.bounds[0], tris.bounds[1], tris.verts!! as Array<idDrawVert>, tris.numVerts)
             Simd.SIMDProcessor.MinMax(
                 decalTris.bounds[0],
                 decalTris.bounds[1],
-                decalTris.verts.toTypedArray(),
+                decalTris.verts!! as Array<idDrawVert>,
                 decalTris.numVerts
             )
 
@@ -1097,7 +1097,7 @@ object BrittleFracture {
                     w.Clear()
                     k = 0
                     while (k < 3) {
-                        v = surf.geometry!!.verts[surf.geometry!!.indexes[j + 2 - k]]
+                        v = surf.geometry!!.verts!![surf.geometry!!.indexes!![j + 2 - k]]!!
                         w.AddPoint(v.xyz)
                         w[k].s = v.st[0]
                         w[k].t = v.st[1]

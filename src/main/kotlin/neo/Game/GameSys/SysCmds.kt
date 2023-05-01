@@ -562,7 +562,7 @@ object SysCmds {
                 i = 0
                 while (i < Weapon.AMMO_NUMTYPES) {
                     player.inventory.ammo[i] =
-                        player.inventory.MaxAmmoForAmmoClass(player, idWeapon.GetAmmoNameForNum(i)!!)
+                        player.inventory.MaxAmmoForAmmoClass(player, idWeapon.GetAmmoNameForNum(i))
                     i++
                 }
                 if (!give_all) {
@@ -2708,7 +2708,7 @@ object SysCmds {
             }
             assert(geom.facePlanes != null)
             modelMatrix = idMat4(renderEnt.axis, renderEnt.origin)
-            normal.set(geom.facePlanes[0].Normal().times(renderEnt.axis))
+            normal.set(geom.facePlanes!![0].Normal().times(renderEnt.axis))
             center.set(geom.bounds.GetCenter().times(modelMatrix))
             origin.set(center.plus(normal.times(32.0f)))
             origin.z -= player.EyeHeight()

@@ -441,7 +441,7 @@ object Actor {
         protected val animPrefix: idStr
 
         //
-        protected val attachments: ArrayList<idAttachInfo> = ArrayList()
+        protected var attachments: ArrayList<idAttachInfo> = ArrayList(1)
         fun ArrayList<idAttachInfo>.Alloc(): idAttachInfo {
             val idAttachInfo = idAttachInfo()
             add(idAttachInfo)
@@ -454,14 +454,14 @@ object Actor {
         protected var blink_max: Int
         protected var blink_min: Int
         protected var blink_time: Int
-        protected val copyJoints // copied from the body animation to the head model
+        protected var copyJoints // copied from the body animation to the head model
                 : ArrayList<copyJoints_t>
 
         //
-        protected var damageGroups // body damage groups
-                : ArrayList<idStr>
-        protected val damageScale // damage scale per damage gruop
-                : ArrayList<Float>
+        protected lateinit var damageGroups // body damage groups
+                : Array<idStr?>
+        protected lateinit var damageScale // damage scale per damage gruop
+                : Array<Float?>
 
         //
         protected var deltaViewAngles // delta angles relative to view input angles
@@ -680,13 +680,13 @@ object Actor {
             savefile.WriteInt(damageGroups.size)
             i = 0
             while (i < damageGroups.size) {
-                savefile.WriteString(damageGroups[i])
+                savefile.WriteString(damageGroups[i]!!)
                 i++
             }
             savefile.WriteInt(damageScale.size)
             i = 0
             while (i < damageScale.size) {
-                savefile.WriteFloat(damageScale[i])
+                savefile.WriteFloat(damageScale[i]!!)
                 i++
             }
             savefile.WriteBool(use_combat_bbox)
@@ -782,15 +782,15 @@ object Actor {
             pain_delay = savefile.ReadInt()
             pain_threshold = savefile.ReadInt()
             savefile.ReadInt(num)
-            damageGroups.ensureCapacity(1)
-            damageGroups.ensureCapacity(num._val)
+            //damageGroups.ensureCapacity(1)
+            damageGroups = arrayOfNulls(num._val)
             i = 0
             while (i < num._val) {
-                savefile.ReadString(damageGroups[i])
+                savefile.ReadString(damageGroups[i]!!)
                 i++
             }
             savefile.ReadInt(num)
-            damageScale.ensureCapacity(num._val)
+            damageScale = arrayOfNulls(num._val)
             i = 0
             while (i < num._val) {
                 damageScale[i] = savefile.ReadFloat()
@@ -799,7 +799,7 @@ object Actor {
             use_combat_bbox = savefile.ReadBool()
             head.Restore(savefile)
             savefile.ReadInt(num)
-            copyJoints.ensureCapacity(num._val)
+            copyJoints = ArrayList(num._val)
             i = 0
             while (i < num._val) {
                 val `val` = CInt()
@@ -1268,7 +1268,7 @@ object Actor {
             var scale: Float
 
             // create damage zones
-            damageGroups.ensureCapacity(animator.NumJoints())
+            damageGroups = arrayOfNulls(animator.NumJoints())
             arg = spawnArgs.MatchPrefix("damage_zone ", null)
             while (arg != null) {
                 groupname.set(arg.GetKey())
@@ -1285,7 +1285,7 @@ object Actor {
             }
 
             // initilize the damage zones to normal damage
-            damageScale.ensureCapacity(animator.NumJoints())
+            damageScale = arrayOfNulls(animator.NumJoints())
             i = 0
             while (i < damageScale.size) {
                 damageScale[i] = 1.0f
@@ -1388,7 +1388,7 @@ object Actor {
         fun GetDamageForLocation(damage: Int, location: Int): Int {
             return if (location < 0 || location >= damageScale.size) {
                 damage
-            } else ceil((damage * damageScale[location]).toDouble()).toInt()
+            } else ceil((damage * damageScale[location]!!).toDouble()).toInt()
         }
 
         fun GetDamageGroup(location: Int): String {
@@ -1743,9 +1743,9 @@ object Actor {
             }
         }
 
-        override fun GetRenderView(): renderView_s {
+        override fun GetRenderView(): renderView_s? {
             val rv = super.GetRenderView() //TODO:super.super....
-            rv.viewaxis.set(idMat3(viewAxis))
+            rv!!.viewaxis.set(idMat3(viewAxis))
             rv.vieworg.set(GetEyePosition())
             return rv
         }
@@ -2842,8 +2842,6 @@ object Actor {
             painTime = 0
             allowPain = false
             allowEyeFocus = false
-            damageGroups = ArrayList()
-            damageScale = ArrayList()
             waitState = idStr()
             headAnim = idAnimState()
             torsoAnim = idAnimState()
@@ -2856,7 +2854,7 @@ object Actor {
             blink_min = 0
             blink_max = 0
             finalBoss = false
-            attachments.ensureCapacity(1)
+            attachments = ArrayList(1)
             enemyNode = idLinkList(this)
             enemyList = idLinkList(this)
         }

@@ -1894,7 +1894,7 @@ object Projectile {
                 bt.renderEntity.hModel = ModelManager.renderModelManager.FindModel("_beam")
                 bt.renderEntity.callback = null
                 bt.renderEntity.numJoints = 0
-                bt.renderEntity.joints.clear()
+                bt.renderEntity.joints = null
                 bt.renderEntity.bounds.Clear()
                 bt.renderEntity.customSkin = DeclManager.declManager.FindSkin(skin)
                 bt.target.oSet(ent)

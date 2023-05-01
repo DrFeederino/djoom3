@@ -50,6 +50,7 @@ object Simd_Generic {
 
      ===============================================================================
      */
+    @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
     internal class idSIMD_Generic : idSIMDProcessor() {
         private val NSKIP1_0 = 1 shl 3 or (0 and 7)
         private val NSKIP2_0 = 2 shl 3 or (0 and 7)
@@ -486,18 +487,22 @@ object Simd_Generic {
                     dot._val = (0.0f)
                     return
                 }
+
                 1 -> {
                     dot._val = (src1[0] * src2[0])
                     return
                 }
+
                 2 -> {
                     dot._val = (src1[0] * src2[0] + src1[1] * src2[1])
                     return
                 }
+
                 3 -> {
                     dot._val = (src1[0] * src2[0] + src1[1] * src2[1] + src1[2] * src2[2])
                     return
                 }
+
                 else -> {
                     var s0: Double = (src1[0] * src2[0]).toDouble()
                     var s1: Double = (src1[1] * src2[1]).toDouble()
@@ -525,6 +530,7 @@ object Simd_Generic {
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         6 -> {
                             s1 += (src1[i + 5] * src2[i + 5]).toDouble()
                             s2 += (src1[i + 4] * src2[i + 4]).toDouble()
@@ -533,6 +539,7 @@ object Simd_Generic {
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         5 -> {
                             s2 += (src1[i + 4] * src2[i + 4]).toDouble()
                             s3 += (src1[i + 3] * src2[i + 3]).toDouble()
@@ -540,21 +547,25 @@ object Simd_Generic {
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         4 -> {
                             s3 += (src1[i + 3] * src2[i + 3]).toDouble()
                             s0 += (src1[i + 2] * src2[i + 2]).toDouble()
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         3 -> {
                             s0 += (src1[i + 2] * src2[i + 2]).toDouble()
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         2 -> {
                             s1 += (src1[i + 1] * src2[i + 1]).toDouble()
                             s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         }
+
                         1 -> s2 += (src1[i + 0] * src2[i + 0]).toDouble()
                         0 -> {}
                     }
@@ -930,6 +941,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numRows) {
@@ -938,6 +950,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numRows) {
@@ -946,6 +959,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numRows) {
@@ -955,6 +969,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numRows) {
@@ -964,6 +979,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numRows) {
@@ -973,6 +989,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numColumns = mat.GetNumColumns()
                     i = 0
@@ -1010,6 +1027,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numRows) {
@@ -1018,6 +1036,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numRows) {
@@ -1026,6 +1045,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numRows) {
@@ -1034,6 +1054,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numRows) {
@@ -1042,6 +1063,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numRows) {
@@ -1050,6 +1072,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numColumns = mat.GetNumColumns()
                     i = 0
@@ -1087,6 +1110,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numRows) {
@@ -1095,6 +1119,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numRows) {
@@ -1103,6 +1128,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numRows) {
@@ -1111,6 +1137,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numRows) {
@@ -1119,6 +1146,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numRows) {
@@ -1127,6 +1155,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numColumns = mat.GetNumColumns()
                     i = 0
@@ -1165,6 +1194,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1173,6 +1203,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1182,6 +1213,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1191,6 +1223,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1200,6 +1233,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1209,6 +1243,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numRows = mat.GetNumRows()
                     i = 0
@@ -1247,6 +1282,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1255,6 +1291,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1263,6 +1300,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1271,6 +1309,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1279,6 +1318,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1287,6 +1327,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numRows = mat.GetNumRows()
                     i = 0
@@ -1324,6 +1365,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1332,6 +1374,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1340,6 +1383,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1348,6 +1392,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1356,6 +1401,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     i = 0
                     while (i < numColumns) {
@@ -1364,6 +1410,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     val numRows = mat.GetNumRows()
                     i = 0
@@ -1440,6 +1487,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     if (l == 6) {
                         i = 0
@@ -1476,6 +1524,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     if (l == 6) {
                         i = 0
@@ -1512,6 +1561,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     if (l == 6) {
                         i = 0
@@ -1548,6 +1598,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     if (l == 6) {
                         i = 0
@@ -1584,6 +1635,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     when (k) {
                         1 -> {
@@ -1593,6 +1645,7 @@ object Simd_Generic {
                                 return
                             }
                         }
+
                         2 -> {
                             if (l == 2) {        // 2x6 * 6x2
                                 i = 0
@@ -1610,6 +1663,7 @@ object Simd_Generic {
                                 return
                             }
                         }
+
                         3 -> {
                             if (l == 3) {        // 3x6 * 6x3
                                 i = 0
@@ -1627,6 +1681,7 @@ object Simd_Generic {
                                 return
                             }
                         }
+
                         4 -> {
                             run {
                                 if (l == 4) {        // 4x6 * 6x4
@@ -1676,6 +1731,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     2 -> {
                                         // 6x6 * 6x2
                                         i = 0
@@ -1692,6 +1748,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     3 -> {
                                         // 6x6 * 6x3
                                         i = 0
@@ -1708,6 +1765,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     4 -> {
                                         // 6x6 * 6x4
                                         i = 0
@@ -1724,6 +1782,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     5 -> {
                                         // 6x6 * 6x5
                                         i = 0
@@ -1740,6 +1799,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     6 -> {
                                         // 6x6 * 6x6
                                         i = 0
@@ -1756,12 +1816,14 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     else -> {
                                         return
                                     }
                                 }
                             }
                         }
+
                         5 -> {
                             run {
                                 if (l == 5) {
@@ -1793,6 +1855,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     2 -> {
                                         i = 0
                                         while (i < 6) {
@@ -1808,6 +1871,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     3 -> {
                                         i = 0
                                         while (i < 6) {
@@ -1823,6 +1887,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     4 -> {
                                         i = 0
                                         while (i < 6) {
@@ -1838,6 +1903,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     5 -> {
                                         i = 0
                                         while (i < 6) {
@@ -1853,6 +1919,7 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     6 -> {
                                         i = 0
                                         while (i < 6) {
@@ -1868,10 +1935,12 @@ object Simd_Generic {
                                         }
                                         return
                                     }
+
                                     else -> return
                                 }
                             }
                         }
+
                         6 -> {
                             when (l) {
                                 1 -> {
@@ -1885,6 +1954,7 @@ object Simd_Generic {
                                     }
                                     return
                                 }
+
                                 2 -> {
                                     i = 0
                                     while (i < 6) {
@@ -1900,6 +1970,7 @@ object Simd_Generic {
                                     }
                                     return
                                 }
+
                                 3 -> {
                                     i = 0
                                     while (i < 6) {
@@ -1915,6 +1986,7 @@ object Simd_Generic {
                                     }
                                     return
                                 }
+
                                 4 -> {
                                     i = 0
                                     while (i < 6) {
@@ -1930,6 +2002,7 @@ object Simd_Generic {
                                     }
                                     return
                                 }
+
                                 5 -> {
                                     i = 0
                                     while (i < 6) {
@@ -1945,6 +2018,7 @@ object Simd_Generic {
                                     }
                                     return
                                 }
+
                                 6 -> {
                                     i = 0
                                     while (i < 6) {
@@ -1977,6 +2051,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     i = 0
                     while (i < k) {
@@ -2050,6 +2125,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 2 -> {
                     if (k == 6 && l == 2) {            // 2x6 * 2x2
                         i = 0
@@ -2077,6 +2153,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 3 -> {
                     if (k == 6 && l == 3) {            // 3x6 * 3x3
                         i = 0
@@ -2106,6 +2183,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 4 -> {
                     if (k == 6 && l == 4) {            // 4x6 * 4x4
                         i = 0
@@ -2137,6 +2215,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 5 -> {
                     if (k == 6 && l == 5) {            // 5x6 * 5x5
                         i = 0
@@ -2170,6 +2249,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 6 -> {
                     if (l == 6) {
                         when (k) {
@@ -2184,6 +2264,7 @@ object Simd_Generic {
                                 }
                                 return
                             }
+
                             2 -> {
                                 i = 0
                                 while (i < 2) {
@@ -2200,6 +2281,7 @@ object Simd_Generic {
                                 }
                                 return
                             }
+
                             3 -> {
                                 i = 0
                                 while (i < 3) {
@@ -2216,6 +2298,7 @@ object Simd_Generic {
                                 }
                                 return
                             }
+
                             4 -> {
                                 i = 0
                                 while (i < 4) {
@@ -2232,6 +2315,7 @@ object Simd_Generic {
                                 }
                                 return
                             }
+
                             5 -> {
                                 i = 0
                                 while (i < 5) {
@@ -2248,6 +2332,7 @@ object Simd_Generic {
                                 }
                                 return
                             }
+
                             6 -> {
                                 i = 0
                                 while (i < 6) {
@@ -2280,6 +2365,7 @@ object Simd_Generic {
                         i++
                     }
                 }
+
                 else -> {
                     i = 0
                     while (i < k) {
@@ -2340,30 +2426,36 @@ object Simd_Generic {
                         x[0] = b[0]
                         return
                     }
+
                     NSKIP2_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         return
                     }
+
                     NSKIP2_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         return
                     }
+
                     NSKIP3_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
+
                     NSKIP3_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
+
                     NSKIP3_2 -> {
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         return
                     }
+
                     NSKIP4_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
@@ -2372,6 +2464,7 @@ object Simd_Generic {
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
+
                     NSKIP4_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
@@ -2379,17 +2472,20 @@ object Simd_Generic {
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
+
                     NSKIP4_2 -> {
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         x[3] =
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
+
                     NSKIP4_3 -> {
                         x[3] =
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                         return
                     }
+
                     NSKIP5_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
@@ -2400,6 +2496,7 @@ object Simd_Generic {
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
+
                     NSKIP5_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
@@ -2409,6 +2506,7 @@ object Simd_Generic {
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
+
                     NSKIP5_2 -> {
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         x[3] =
@@ -2417,6 +2515,7 @@ object Simd_Generic {
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
+
                     NSKIP5_3 -> {
                         x[3] =
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
@@ -2424,11 +2523,13 @@ object Simd_Generic {
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
+
                     NSKIP5_4 -> {
                         x[4] =
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
                         return
                     }
+
                     NSKIP6_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
@@ -2441,6 +2542,7 @@ object Simd_Generic {
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP6_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
@@ -2452,6 +2554,7 @@ object Simd_Generic {
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP6_2 -> {
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         x[3] =
@@ -2462,6 +2565,7 @@ object Simd_Generic {
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP6_3 -> {
                         x[3] =
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
@@ -2471,6 +2575,7 @@ object Simd_Generic {
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP6_4 -> {
                         x[4] =
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
@@ -2478,11 +2583,13 @@ object Simd_Generic {
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP6_5 -> {
                         x[5] =
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
                         return
                     }
+
                     NSKIP7_0 -> {
                         x[0] = b[0]
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
@@ -2497,6 +2604,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_1 -> {
                         x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
@@ -2510,6 +2618,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_2 -> {
                         x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                         x[3] =
@@ -2522,6 +2631,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_3 -> {
                         x[3] =
                             b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
@@ -2533,6 +2643,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_4 -> {
                         x[4] =
                             b[4] - lptr[4 * nc + 0] * x[0] - lptr[4 * nc + 1] * x[1] - lptr[4 * nc + 2] * x[2] - lptr[4 * nc + 3] * x[3]
@@ -2542,6 +2653,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_5 -> {
                         x[5] =
                             b[5] - lptr[5 * nc + 0] * x[0] - lptr[5 * nc + 1] * x[1] - lptr[5 * nc + 2] * x[2] - lptr[5 * nc + 3] * x[3] - lptr[5 * nc + 4] * x[4]
@@ -2549,6 +2661,7 @@ object Simd_Generic {
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
                         return
                     }
+
                     NSKIP7_6 -> {
                         x[6] =
                             b[6] - lptr[6 * nc + 0] * x[0] - lptr[6 * nc + 1] * x[1] - lptr[6 * nc + 2] * x[2] - lptr[6 * nc + 3] * x[3] - lptr[6 * nc + 4] * x[4] - lptr[6 * nc + 5] * x[5]
@@ -2566,6 +2679,7 @@ object Simd_Generic {
                         b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
+
                 1 -> {
                     x[1] = b[1] - lptr[1 * nc + 0] * x[0]
                     x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
@@ -2573,12 +2687,14 @@ object Simd_Generic {
                         b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
+
                 2 -> {
                     x[2] = b[2] - lptr[2 * nc + 0] * x[0] - lptr[2 * nc + 1] * x[1]
                     x[3] =
                         b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
                     skip = 4
                 }
+
                 3 -> {
                     x[3] =
                         b[3] - lptr[3 * nc + 0] * x[0] - lptr[3 * nc + 1] * x[1] - lptr[3 * nc + 2] * x[2]
@@ -2621,6 +2737,7 @@ object Simd_Generic {
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     6 -> {
                         s1 += (lptr[lIndex + j + 5] * x[j + 5]).toDouble()
                         s2 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
@@ -2629,6 +2746,7 @@ object Simd_Generic {
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     5 -> {
                         s2 += (lptr[lIndex + j + 4] * x[j + 4]).toDouble()
                         s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
@@ -2636,21 +2754,25 @@ object Simd_Generic {
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     4 -> {
                         s3 += (lptr[lIndex + j + 3] * x[j + 3]).toDouble()
                         s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     3 -> {
                         s0 += (lptr[lIndex + j + 2] * x[j + 2]).toDouble()
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     2 -> {
                         s1 += (lptr[lIndex + j + 1] * x[j + 1]).toDouble()
                         s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     }
+
                     1 -> s2 += (lptr[lIndex + j + 0] * x[j + 0]).toDouble()
                     0 -> {}
                 }
@@ -2705,17 +2827,20 @@ object Simd_Generic {
                         x[0] = b[0]
                         return
                     }
+
                     2 -> {
                         x[1] = b[1]
                         x[0] = b[0] - lptr[1 * nc + 0] * x[1]
                         return
                     }
+
                     3 -> {
                         x[2] = b[2]
                         x[1] = b[1] - lptr[2 * nc + 1] * x[2]
                         x[0] = b[0] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
+
                     4 -> {
                         x[3] = b[3]
                         x[2] = b[2] - lptr[3 * nc + 2] * x[3]
@@ -2724,6 +2849,7 @@ object Simd_Generic {
                             b[0] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
+
                     5 -> {
                         x[4] = b[4]
                         x[3] = b[3] - lptr[4 * nc + 3] * x[4]
@@ -2734,6 +2860,7 @@ object Simd_Generic {
                             b[0] - lptr[4 * nc + 0] * x[4] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
+
                     6 -> {
                         x[5] = b[5]
                         x[4] = b[4] - lptr[5 * nc + 4] * x[5]
@@ -2746,6 +2873,7 @@ object Simd_Generic {
                             b[0] - lptr[5 * nc + 0] * x[5] - lptr[4 * nc + 0] * x[4] - lptr[3 * nc + 0] * x[3] - lptr[2 * nc + 0] * x[2] - lptr[1 * nc + 0] * x[1]
                         return
                     }
+
                     7 -> {
                         x[6] = b[6]
                         x[5] = b[5] - lptr[6 * nc + 5] * x[6]
@@ -2994,16 +3122,19 @@ object Simd_Generic {
                         v[k + 0] = diag[k + 0] * mptr[k + 0]
                         s2 += v[k + 0] * mptr[k + 0]
                     }
+
                     2 -> {
                         v[k + 1] = diag[k + 1] * mptr[k + 1]
                         s1 += v[k + 1] * mptr[k + 1]
                         v[k + 0] = diag[k + 0] * mptr[k + 0]
                         s2 += v[k + 0] * mptr[k + 0]
                     }
+
                     1 -> {
                         v[k + 0] = diag[k + 0] * mptr[k + 0]
                         s2 += v[k + 0] * mptr[k + 0]
                     }
+
                     0 -> {}
                 }
                 sum = s3
@@ -3050,6 +3181,7 @@ object Simd_Generic {
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         6 -> {
                             s1 += mptr[mIndex + k + 5] * v[k + 5]
                             s2 += mptr[mIndex + k + 4] * v[k + 4]
@@ -3058,6 +3190,7 @@ object Simd_Generic {
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         5 -> {
                             s2 += mptr[mIndex + k + 4] * v[k + 4]
                             s3 += mptr[mIndex + k + 3] * v[k + 3]
@@ -3065,21 +3198,25 @@ object Simd_Generic {
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         4 -> {
                             s3 += mptr[mIndex + k + 3] * v[k + 3]
                             s0 += mptr[mIndex + k + 2] * v[k + 2]
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         3 -> {
                             s0 += mptr[mIndex + k + 2] * v[k + 2]
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         2 -> {
                             s1 += mptr[mIndex + k + 1] * v[k + 1]
                             s2 += mptr[mIndex + k + 0] * v[k + 0]
                         }
+
                         1 -> s2 += mptr[mIndex + k + 0] * v[k + 0]
                         0 -> {}
                     }
@@ -3153,50 +3290,34 @@ object Simd_Generic {
             var i: Int = 0
             while (i < numJoints) {
                 val j = index[i]
-                joints[j].q.Slerp(joints[j].q, blendJoints[j].q, lerp)
-                joints[j].t.Lerp(joints[j].t, blendJoints[j].t, lerp)
-                i++
-            }
-        }
-
-        override fun BlendJoints(
-            joints: ArrayList<idJointQuat>,
-            blendJoints: ArrayList<idJointQuat>,
-            lerp: Float,
-            index: IntArray,
-            numJoints: Int
-        ) {
-            var i: Int = 0
-            while (i < numJoints) {
-                val j = index[i]
-                joints[j].q.Slerp(joints[j].q, blendJoints[j].q, lerp)
-                joints[j].t.Lerp(joints[j].t, blendJoints[j].t, lerp)
+                joints!![j]!!.q.Slerp(joints[j]!!.q, blendJoints!![j]!!.q, lerp)
+                joints[j]!!.t.Lerp(joints[j]!!.t, blendJoints[j]!!.t, lerp)
                 i++
             }
         }
 
         override fun ConvertJointQuatsToJointMats(
-            jointMats: kotlin.collections.ArrayList<idJointMat>,
-            jointQuats: ArrayList<idJointQuat>,
+            jointMats: Array<idJointMat>,
+            jointQuats: Array<idJointQuat>,
             numJoints: Int
         ) {
             var i: Int = 0
             while (i < numJoints) {
-                jointMats[i].SetRotation(jointQuats[i].q.ToMat3())
-                jointMats[i].SetTranslation(jointQuats[i].t)
+                jointMats!![i]!!.SetRotation(jointQuats!![i]!!.q.ToMat3())
+                jointMats[i]!!.SetTranslation(jointQuats[i]!!.t)
                 i++
             }
         }
 
         override fun ConvertJointMatsToJointQuats(
-            jointQuats: ArrayList<idJointQuat>,
-            jointMats: kotlin.collections.ArrayList<idJointMat>,
+            jointQuats: Array<idJointQuat>,
+            jointMats: Array<idJointMat>,
             numJoints: Int
         ) {
             var i: Int = 0
             while (i < numJoints) {
                 if (i >= jointQuats.size) {
-                    jointQuats.add(i, jointMats[i].ToJointQuat())
+                    jointQuats[i] = jointMats[i].ToJointQuat()
                 } else {
                     jointQuats[i] = jointMats[i].ToJointQuat()
                 }
@@ -3205,7 +3326,7 @@ object Simd_Generic {
         }
 
         override fun TransformJoints(
-            jointMats: kotlin.collections.ArrayList<idJointMat>,
+            jointMats: Array<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
@@ -3219,7 +3340,7 @@ object Simd_Generic {
         }
 
         override fun UntransformJoints(
-            jointMats: kotlin.collections.ArrayList<idJointMat>,
+            jointMats: Array<idJointMat>,
             parents: IntArray,
             firstJoint: Int,
             lastJoint: Int
@@ -3547,6 +3668,7 @@ object Simd_Generic {
             dominantTris: Array<dominantTri_s>,
             numVerts: Int
         ) {
+            assert(dominantTris.size <= numVerts)
             for (i in 0 until numVerts) {
                 val b: idDrawVert
                 val c: idDrawVert

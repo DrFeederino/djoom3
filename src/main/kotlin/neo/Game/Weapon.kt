@@ -1244,7 +1244,7 @@ object Weapon {
                 renderEntity.customSkin = null
                 renderEntity.callback = null
                 renderEntity.numJoints = 0
-                renderEntity.joints = ArrayList()
+                renderEntity.joints = null
             }
 
             // hide the model until an animation is played

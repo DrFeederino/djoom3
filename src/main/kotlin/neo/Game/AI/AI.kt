@@ -3354,7 +3354,7 @@ object AI {
             val clipBounds: idBounds
             var obEnt: idEntity
             var clipModel: idClipModel
-            val clipModelList = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             val clipmask: Int
             val org = idVec3()
             val forceVec = idVec3()
@@ -3376,7 +3376,7 @@ object AI {
             )
             i = 0
             while (i < numListedClipModels) {
-                clipModel = clipModelList[i]
+                clipModel = clipModelList[i]!!
                 obEnt = clipModel.GetEntity()!!
                 if (obEnt === alwaysKick) {
                     // we'll kick this one outside the loop
@@ -5841,7 +5841,7 @@ object AI {
             val num: Int
             var hit: idEntity
             var cm: idClipModel
-            val clipModels = ArrayList<idClipModel>(Game_local.MAX_GENTITIES)
+            val clipModels = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)
             num = Game_local.gameLocal.clip.ClipModelsTouchingBounds(
                 physicsObj.GetAbsBounds(),
                 Game_local.MASK_MONSTERSOLID,
@@ -5850,7 +5850,7 @@ object AI {
             )
             i = 0
             while (i < num) {
-                cm = clipModels[i]
+                cm = clipModels[i]!!
 
                 // don't check render entities
                 if (cm.IsRenderModel()) {

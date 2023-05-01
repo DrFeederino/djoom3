@@ -860,9 +860,9 @@ object TempDump {
             var forceUpdate: CInt = CInt()
 
             //
-            var gui: ArrayList<idUserInterface> = ArrayList<idUserInterface>(RenderWorld.MAX_RENDERENTITY_GUI)
+            var gui: Array<idUserInterface?> = arrayOfNulls(RenderWorld.MAX_RENDERENTITY_GUI)
             var hModel: idRenderModel? = null
-            var joints: ArrayList<idJointMat> = ArrayList()
+            var joints: Array<idJointMat>? = null
 
             //
             var modelDepthHack: CFloat = CFloat()

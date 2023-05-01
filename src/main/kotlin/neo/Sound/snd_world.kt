@@ -1067,8 +1067,8 @@ class snd_world {
                 val gui: Material.idMaterial? =
                     DeclManager.declManager.FindMaterial("guis/assets/soundmeter/audiobg", false)
                 if (gui != null) {
-                    val foo: shaderStage_t = gui.GetStage(0)
-                    if (TempDump.NOT(foo.texture!!.cinematic[0])) {
+                    val foo: shaderStage_t = gui.GetStage(0)!!
+                    if (TempDump.NOT(foo.texture.cinematic[0])) {
                         foo.texture.cinematic[0] = idSndWindow()
                     }
                 }
@@ -1842,21 +1842,21 @@ class snd_world {
 // #if 1
                 val source = idVec3()
                 val pl = idPlane()
-                re.w.GetPlane(pl)
+                re.w!!.GetPlane(pl)
                 val scale = CFloat()
                 val dir = idVec3(listenerQU.minus(soundOrigin))
                 if (!pl.RayIntersection(soundOrigin, dir, scale)) {
-                    source.set(re.w.GetCenter())
+                    source.set(re.w!!.GetCenter())
                 } else {
                     source.set(soundOrigin + (dir * scale._val))
 
                     // if this point isn't inside the portal edges, slide it in
-                    for (i in 0 until re.w.GetNumPoints()) {
-                        val j = (i + 1) % re.w.GetNumPoints()
-                        val edgeDir = idVec3(re.w[j].ToVec3().minus(re.w[i].ToVec3()))
+                    for (i in 0 until re.w!!.GetNumPoints()) {
+                        val j = (i + 1) % re.w!!.GetNumPoints()
+                        val edgeDir = idVec3(re.w!![j].ToVec3().minus(re.w!![i].ToVec3()))
                         val edgeNormal = idVec3()
                         edgeNormal.Cross(pl.Normal(), edgeDir)
-                        val fromVert = idVec3(source.minus(re.w[j].ToVec3()))
+                        val fromVert = idVec3(source.minus(re.w!![j].ToVec3()))
                         var d = edgeNormal.times(fromVert)
                         if (d > 0) {
                             // move it in

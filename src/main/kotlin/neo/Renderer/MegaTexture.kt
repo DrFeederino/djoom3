@@ -573,7 +573,7 @@ object MegaTexture {
                 return
             }
             currentTriMapping = tri
-            if (tri.verts.isEmpty()) {
+            if (null == tri.verts) {
                 return
             }
             var origin: idDrawVert = idDrawVert()
@@ -585,7 +585,7 @@ object MegaTexture {
             axis[1].st[0] = 1f
             axis[1].st[1] = 0f
             for (i in 0 until tri.numVerts) {
-                val v = tri.verts[i]
+                val v = tri.verts!![i]!!
                 if (v.st[0] <= origin.st[0] && v.st[1] <= origin.st[1]) {
                     origin = v
                 }
@@ -621,7 +621,7 @@ object MegaTexture {
             for (i in 0..6) {
                 tr_backend.GL_SelectTexture(1 + i)
                 if (i >= numLevels) {
-                    Image.globalImages.whiteImage.Bind()
+                    Image.globalImages.whiteImage!!.Bind()
                     qgl.qglProgramLocalParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, i, parms)
                 } else {
                     val level = levels[numLevels - 1 - i]
@@ -629,7 +629,7 @@ object MegaTexture {
                         if (i and 1 == 1) {
                             Image.globalImages.blackImage.Bind()
                         } else {
-                            Image.globalImages.whiteImage.Bind()
+                            Image.globalImages.whiteImage!!.Bind()
                         }
                     } else {
                         level.image.Bind()

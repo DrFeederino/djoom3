@@ -65,7 +65,7 @@ object ModelDecal {
         private var nextDecal: idRenderModelDecal?
         private val tri: srfTriangles_s
         private val vertDepthFade: FloatArray = FloatArray(MAX_DECAL_VERTS)
-        private val verts: ArrayList<idDrawVert> = ArrayList<idDrawVert>(MAX_DECAL_VERTS)
+        private val verts: Array<idDrawVert?> = arrayOfNulls(MAX_DECAL_VERTS)
 
         // Creates a deal on the given model.
         fun CreateDecal(model: idRenderModel, localInfo: decalProjectionInfo_s) {
@@ -97,7 +97,7 @@ object ModelDecal {
                 Simd.SIMDProcessor.DecalPointCull(
                     cullBits,
                     localInfo.boundingPlanes,
-                    stri.verts.toTypedArray(),
+                    stri.verts as Array<idDrawVert>,
                     stri.numVerts
                 )
 
@@ -105,9 +105,9 @@ object ModelDecal {
                 var triNum = 0
                 var index = 0
                 while (index < stri.numIndexes) {
-                    val v1 = stri.indexes[index + 0]
-                    val v2 = stri.indexes[index + 1]
-                    val v3 = stri.indexes[index + 2]
+                    val v1 = stri.indexes!![index + 0]
+                    val v2 = stri.indexes!![index + 1]
+                    val v3 = stri.indexes!![index + 2]
 
                     // skip triangles completely off one side
                     if (cullBits[v1] and cullBits[v2] and cullBits[v3] != 0.toByte()) {
@@ -117,8 +117,8 @@ object ModelDecal {
                     }
 
                     // skip back facing triangles
-                    if (stri.facePlanes.isNotEmpty() && stri.facePlanesCalculated
-                        && stri.facePlanes[triNum].Normal().times(
+                    if (stri.facePlanes != null && stri.facePlanesCalculated
+                        && stri.facePlanes!![triNum].Normal().times(
                             localInfo.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 2].Normal()
                         ) < -0.1f
                     ) {
@@ -132,7 +132,7 @@ object ModelDecal {
                     fw.SetNumPoints(3)
                     if (localInfo.parallel) {
                         for (j in 0..2) {
-                            fw[j].set(stri.verts[stri.indexes[index + j]].xyz)
+                            fw[j].set(stri.verts!![stri.indexes!![index + j]]!!.xyz)
                             fw[j].s = localInfo.textureAxis[0].Distance(fw[j].ToVec3())
                             fw[j].t = localInfo.textureAxis[1].Distance(fw[j].ToVec3())
                         }
@@ -140,7 +140,7 @@ object ModelDecal {
                         for (j in 0..2) {
                             val dir = idVec3()
                             val scale = CFloat()
-                            fw[j].set(stri.verts[stri.indexes[index + j]].xyz)
+                            fw[j].set(stri.verts!![stri.indexes!![index + j]]!!.xyz)
                             dir.set(fw[j].ToVec3().minus(localInfo.projectionOrigin))
                             localInfo.boundingPlanes[NUM_DECAL_BOUNDING_PLANES - 1]
                                 .RayIntersection(fw[j].ToVec3(), dir, scale)
@@ -209,7 +209,7 @@ object ModelDecal {
                 f = deltaTime.toFloat() / decalInfo.fadeTime
                 j = 0
                 while (j < 3) {
-                    val ind = tri.indexes[i + j]
+                    val ind = tri.indexes!![i + j]
                     for (k in 0..3) {
                         val fcolor = decalInfo.start[k] + (decalInfo.end[k] - decalInfo.start[k]) * f
                         var icolor = idMath.FtoiFast(fcolor * vertDepthFade[ind] * 255.0f)
@@ -218,7 +218,7 @@ object ModelDecal {
                         } else if (icolor > 255) {
                             icolor = 255
                         }
-                        tri.verts[ind].color[k] = icolor.toByte()
+                        tri.verts!![ind]!!.color[k] = icolor.toByte()
                     }
                     j++
                 }
@@ -233,7 +233,7 @@ object ModelDecal {
 
             // copy the current vertexes to temp vertex cache
             newTri.ambientCache =
-                VertexCache.vertexCache.AllocFrameTempIdDrawVert(tri.verts, tri.numVerts * idDrawVert.BYTES)
+                VertexCache.vertexCache.AllocFrameTempIdDrawVert(tri.verts!!, tri.numVerts * idDrawVert.BYTES)
 
             // create the drawsurf
             tr_light.R_AddDrawSurf(newTri, space, space.entityDef.parms, material!!, space.scissorRect)
@@ -286,9 +286,9 @@ object ModelDecal {
                     }
                     fade = 1.0f - fade
                     vertDepthFade[tri.numVerts + i] = fade
-                    tri.verts[tri.numVerts + i].xyz.set(w[i].ToVec3())
-                    tri.verts[tri.numVerts + i].st[0] = w[i].s
-                    tri.verts[tri.numVerts + i].st[1] = w[i].t
+                    tri.verts!![tri.numVerts + i]!!.xyz.set(w[i].ToVec3())
+                    tri.verts!![tri.numVerts + i]!!.st[0] = w[i].s
+                    tri.verts!![tri.numVerts + i]!!.st[1] = w[i].t
                     for (k in 0..3) {
                         var icolor = idMath.FtoiFast(decalInfo.start[k] * fade * 255.0f)
                         if (icolor < 0) {
@@ -296,15 +296,15 @@ object ModelDecal {
                         } else if (icolor > 255) {
                             icolor = 255
                         }
-                        tri.verts[tri.numVerts + i].color[k] = icolor.toByte()
+                        tri.verts!![tri.numVerts + i]!!.color[k] = icolor.toByte()
                     }
                     i++
                 }
                 i = 2
                 while (i < w.GetNumPoints()) {
-                    tri.indexes[tri.numIndexes + 0] = tri.numVerts
-                    tri.indexes[tri.numIndexes + 1] = tri.numVerts + i - 1
-                    tri.indexes[tri.numIndexes + 2] = tri.numVerts + i
+                    tri.indexes!![tri.numIndexes + 0] = tri.numVerts
+                    tri.indexes!![tri.numIndexes + 1] = tri.numVerts + i - 1
+                    tri.indexes!![tri.numIndexes + 2] = tri.numVerts + i
                     indexStartTime[tri.numIndexes + 2] = startTime
                     indexStartTime[tri.numIndexes + 1] = indexStartTime[tri.numIndexes + 2]
                     indexStartTime[tri.numIndexes] = indexStartTime[tri.numIndexes + 1]
@@ -523,7 +523,7 @@ object ModelDecal {
                         if (newNumIndexes != i) {
                             j = 0
                             while (j < 3) {
-                                decals.tri.indexes[newNumIndexes + j] = decals.tri.indexes[i + j]
+                                decals.tri.indexes!![newNumIndexes + j] = decals.tri.indexes!![i + j]
                                 decals.indexStartTime[newNumIndexes + j] = decals.indexStartTime[i + j]
                                 j++
                             }
@@ -545,7 +545,7 @@ object ModelDecal {
                 Arrays.fill(inUse, 0)
                 i = 0
                 while (i < decals.tri.numIndexes) {
-                    inUse[decals.tri.indexes[i]] = 1
+                    inUse[decals.tri.indexes!![i]] = 1
                     i++
                 }
                 newNumVerts = 0
@@ -555,7 +555,7 @@ object ModelDecal {
                         i++
                         continue
                     }
-                    decals.tri.verts[newNumVerts] = decals.tri.verts[i]
+                    decals.tri.verts!![newNumVerts] = decals.tri.verts!![i]
                     decals.vertDepthFade[newNumVerts] = decals.vertDepthFade[i]
                     inUse[i] = newNumVerts
                     newNumVerts++
@@ -564,7 +564,7 @@ object ModelDecal {
                 decals.tri.numVerts = newNumVerts
                 i = 0
                 while (i < decals.tri.numIndexes) {
-                    decals.tri.indexes[i] = inUse[decals.tri.indexes[i]]
+                    decals.tri.indexes!![i] = inUse[decals.tri.indexes!![i]]
                     i++
                 }
                 return decals

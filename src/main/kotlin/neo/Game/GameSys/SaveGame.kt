@@ -949,7 +949,7 @@ object SaveGame {
 
             // idEntity will restore "cameraTarget", which will be used in idEntity::Present to restore the remoteRenderView
             renderEntity.remoteRenderView = null
-            renderEntity.joints = ArrayList()
+            renderEntity.joints = null
             renderEntity.numJoints = 0
             renderEntity.modelDepthHack = ReadFloat()
             renderEntity.noSelfShadow = ReadBool()

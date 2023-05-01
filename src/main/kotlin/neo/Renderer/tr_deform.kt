@@ -72,10 +72,10 @@ object tr_deform {
      idDrawVert *ac = (idDrawVert *)_alloca16( newTri.numVerts * sizeof( idDrawVert ) );
 
      // find the plane
-     plane.FromPoints( tri.verts[tri.indexes[0]].xyz, tri.verts[tri.indexes[1]].xyz, tri.verts[tri.indexes[2]].xyz );
+     plane.FromPoints( tri.verts!![tri.indexes!![0]].xyz, tri.verts!![tri.indexes!![1]].xyz, tri.verts!![tri.indexes!![2]].xyz );
 
      // if viewer is behind the plane, draw nothing
-     R_GlobalPointToLocal( surf.space.modelMatrix, tr.viewDef.renderView.vieworg, localViewer );
+     R_GlobalPointToLocal( surf.space!!.modelMatrix, tr.viewDef.renderView.vieworg, localViewer );
      float distFromPlane = localViewer * plane.Normal() + plane[3];
      if ( distFromPlane <= 0 ) {
      newTri.numIndexes = 0;
@@ -84,9 +84,9 @@ object tr_deform {
      }
 
      idVec3	center;
-     center = tri.verts[0].xyz;
+     center = tri.verts!![0].xyz;
      for ( j = 1 ; j < tri.numVerts ; j++ ) {
-     center += tri.verts[j].xyz;
+     center += tri.verts!![j].xyz;
      }
      center *= 1.0/tri.numVerts;
 
@@ -123,7 +123,7 @@ object tr_deform {
      idVec3 centroid, toeye, forward, up, left;
      centroid.Set( 0, 0, 0 );
      for ( int i = 0; i < 4; i++ ) {
-     centroid += tri.verts[ indexes[i] ].xyz;
+     centroid += tri.verts!![ indexes[i] ].xyz;
      }
      centroid /= 4;
 
@@ -245,12 +245,12 @@ object tr_deform {
         // FIXME: this doesn't work, because the deformed surface is just the
         // ambient one, and there isn't an opportunity to generate light interactions
         if (drawSurf.material!!.ReceivesLighting()) {
-            newTri.verts.addAll(ac)
+            newTri.verts = ac as Array<idDrawVert?>
             tr_trisurf.R_DeriveTangents(newTri, false)
-            newTri.verts.clear()
+            newTri.verts = null
         }
         newTri.ambientCache = VertexCache.vertexCache.AllocFrameTempIdDrawVert(
-            arrayListOf(*ac),
+            ac as Array<idDrawVert?>,
             newTri.numVerts * idDrawVert.Companion.BYTES
         )
         // if we are out of vertex cache, leave it the way it is
@@ -279,7 +279,7 @@ object tr_deform {
         val upDir = idVec3()
         val tri: srfTriangles_s?
         val newTri: srfTriangles_s
-        tri = surf.geo
+        tri = surf.geo!!
         if (tri.numVerts and 3 != 0) {
             Common.common.Warning("R_AutospriteDeform: shader had odd vertex count")
             return
@@ -288,8 +288,8 @@ object tr_deform {
             Common.common.Warning("R_AutospriteDeform: autosprite had odd index count")
             return
         }
-        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[1], leftDir)
-        tr_main.R_GlobalVectorToLocal(surf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[2], upDir)
+        tr_main.R_GlobalVectorToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[1], leftDir)
+        tr_main.R_GlobalVectorToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[2], upDir)
         if (tr_local.tr.viewDef!!.isMirror) {
             leftDir.set(getVec3_origin().minus(leftDir))
         }
@@ -305,10 +305,10 @@ object tr_deform {
         while (i < tri.numVerts) {
 
             // find the midpoint
-            v = tri.verts[i]
-            val v1 = tri.verts[i + 1]
-            val v2 = tri.verts[i + 2]
-            val v3 = tri.verts[i + 3]
+            v = tri.verts!![i]!!
+            val v1 = tri.verts!![i + 1]!!
+            val v2 = tri.verts!![i + 2]!!
+            val v3 = tri.verts!![i + 3]!!
             mid[0] = 0.25f * (v.xyz[0] + v1.xyz[0] + v2.xyz[0] + v3.xyz[0])
             mid[1] = 0.25f * (v.xyz[1] + v1.xyz[1] + v2.xyz[1] + v3.xyz[1])
             mid[2] = 0.25f * (v.xyz[2] + v1.xyz[2] + v2.xyz[2] + v3.xyz[2])
@@ -328,12 +328,12 @@ object tr_deform {
             ac[i + 3].xyz.set(mid.plus(left.minus(up)))
             ac[i + 3].st[0] = 0f
             ac[i + 3].st[1] = 1f
-            newTri.indexes[6 * (i shr 2) + 0] = i
-            newTri.indexes[6 * (i shr 2) + 1] = i + 1
-            newTri.indexes[6 * (i shr 2) + 2] = i + 2
-            newTri.indexes[6 * (i shr 2) + 3] = i
-            newTri.indexes[6 * (i shr 2) + 4] = i + 2
-            newTri.indexes[6 * (i shr 2) + 5] = i + 3
+            newTri.indexes!![6 * (i shr 2) + 0] = i
+            newTri.indexes!![6 * (i shr 2) + 1] = i + 1
+            newTri.indexes!![6 * (i shr 2) + 2] = i + 2
+            newTri.indexes!![6 * (i shr 2) + 3] = i
+            newTri.indexes!![6 * (i shr 2) + 4] = i + 2
+            newTri.indexes!![6 * (i shr 2) + 5] = i + 3
             i += 4
         }
         R_FinishDeform(surf, newTri, ac)
@@ -344,7 +344,7 @@ object tr_deform {
         var j: Int
         var indexes: Int
         val tri: srfTriangles_s?
-        tri = surf.geo
+        tri = surf.geo!!
         if (tri.numVerts and 3 != 0) {
             Common.common.Error("R_AutospriteDeform: shader had odd vertex count")
         }
@@ -355,7 +355,7 @@ object tr_deform {
         // we need the view direction to project the minor axis of the tube
         // as the view changes
         val localView = idVec3()
-        tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localView)
+        tr_main.R_GlobalPointToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localView)
 
         // this srfTriangles_t and all its indexes and caches are in frame
         // memory, and will be automatically disposed of
@@ -364,12 +364,12 @@ object tr_deform {
         newTri.numIndexes = tri.numIndexes
         newTri.indexes = IntArray(newTri.numIndexes) // R_FrameAlloc(newTri.numIndexes);
         System.arraycopy(
-            tri.indexes,
+            tri.indexes!!,
             0,
             newTri.indexes,
             0,
             newTri.numIndexes
-        ) //memcpy( newTri.indexes, tri.indexes, newTri.numIndexes * sizeof( newTri.indexes[0] ) );
+        ) //memcpy( newTri.indexes, tri.indexes!!, newTri.numIndexes * sizeof( newTri.indexes[0] ) );
         val ac = Array(newTri.numVerts) { idDrawVert() } //memset( ac, 0, sizeof( idDrawVert ) * newTri.numVerts );
 
         // this is a lot of work for two triangles...
@@ -394,9 +394,9 @@ object tr_deform {
             j = 0
             while (j < 6) {
                 var l: Float
-                v1 = tri.verts[tri.indexes[i + edgeVerts[j][0]]]
-                v2 = tri.verts[tri.indexes[i + edgeVerts[j][1]]]
-                l = v1.xyz.minus(v2.xyz).Length()
+                v1 = tri.verts!![tri.indexes!![i + edgeVerts[j][0]]]
+                v2 = tri.verts!![tri.indexes!![i + edgeVerts[j][1]]]
+                l = v1!!.xyz.minus(v2!!.xyz).Length()
                 if (l < lengths[0]) {
                     nums[1] = nums[0]
                     lengths[1] = lengths[0]
@@ -413,11 +413,11 @@ object tr_deform {
             // will give us the major axis in object coordinates
             j = 0
             while (j < 2) {
-                v1 = tri.verts[tri.indexes[i + edgeVerts[nums[j]][0]]]
-                v2 = tri.verts[tri.indexes[i + edgeVerts[nums[j]][1]]]
+                v1 = tri.verts!![tri.indexes!![i + edgeVerts[nums[j]][0]]]
+                v2 = tri.verts!![tri.indexes!![i + edgeVerts[nums[j]][1]]]
                 mid[j].set(
                     idVec3(
-                        0.5f * (v1.xyz[0] + v2.xyz[0]),
+                        0.5f * (v1!!.xyz[0] + v2!!.xyz[0]),
                         0.5f * (v1.xyz[1] + v2.xyz[1]),
                         0.5f * (v1.xyz[2] + v2.xyz[2])
                     )
@@ -432,14 +432,14 @@ object tr_deform {
             j = 0
             while (j < 2) {
                 var l: Float
-                val i1 = tri.indexes[i + edgeVerts[nums[j]][0]]
-                val i2 = tri.indexes[i + edgeVerts[nums[j]][1]]
-                ac[i1] = tri.verts[i1]
+                val i1 = tri.indexes!![i + edgeVerts[nums[j]][0]]
+                val i2 = tri.indexes!![i + edgeVerts[nums[j]][1]]
+                ac[i1] = tri.verts!![i1]!!
                 val av1 = ac[i1]
-                ac[i2] = tri.verts[i2]
+                ac[i2] = tri.verts!![i2]!!
                 val av2 = ac[i2]
-                //                av1 = tri.verts[i1];
-//                av2 = tri.verts[i2];
+                //                av1 = tri.verts!![i1];
+//                av2 = tri.verts!![i2];
                 l = 0.5f * lengths[j]
 
                 // cross this with the view direction to get minor axis
@@ -469,7 +469,7 @@ object tr_deform {
         var j: Int
         var k: Int
         var l: Int
-        indexes[0] = tri.indexes[0]
+        indexes[0] = tri.indexes!![0]
         var numIndexes = 1
         val numTris = tri.numIndexes / 3
         do {
@@ -479,11 +479,11 @@ object tr_deform {
             while (i < numTris) {
                 j = 0
                 while (j < 3) {
-                    if (tri.indexes[i * 3 + j] != indexes[numIndexes - 1]) {
+                    if (tri.indexes!![i * 3 + j] != indexes[numIndexes - 1]) {
                         j++
                         continue
                     }
-                    val next = tri.indexes[i * 3 + (j + 1) % 3]
+                    val next = tri.indexes!![i * 3 + (j + 1) % 3]
 
                     // make sure it isn't already used
                     if (numIndexes == 1) {
@@ -516,12 +516,12 @@ object tr_deform {
                         while (l < 3) {
                             var a: Int
                             var b: Int
-                            a = tri.indexes[k * 3 + l]
+                            a = tri.indexes!![k * 3 + l]
                             if (a != next) {
                                 l++
                                 continue
                             }
-                            b = tri.indexes[k * 3 + (l + 1) % 3]
+                            b = tri.indexes!![k * 3 + (l + 1) % 3]
                             if (b != indexes[numIndexes - 1]) {
                                 l++
                                 continue
@@ -566,7 +566,7 @@ object tr_deform {
         val dot: Float
         val localViewer = idVec3()
         var j: Int
-        tri = surf.geo
+        tri = surf.geo!!
         if (tri.numVerts != 4 || tri.numIndexes != 6) {
             //FIXME: temp hack for flares on tripleted models
             Common.common.Warning("R_FlareDeform: not a single quad")
@@ -582,10 +582,14 @@ object tr_deform {
         val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
 
         // find the plane
-        plane.FromPoints(tri.verts[tri.indexes[0]].xyz, tri.verts[tri.indexes[1]].xyz, tri.verts[tri.indexes[2]].xyz)
+        plane.FromPoints(
+            tri.verts!![tri.indexes!![0]]!!.xyz,
+            tri.verts!![tri.indexes!![1]]!!.xyz,
+            tri.verts!![tri.indexes!![2]]!!.xyz
+        )
 
         // if viewer is behind the plane, draw nothing
-        tr_main.R_GlobalPointToLocal(surf.space.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localViewer)
+        tr_main.R_GlobalPointToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.vieworg, localViewer)
         val distFromPlane = localViewer.times(plane.Normal()) + plane[3]
         if (distFromPlane <= 0) {
             newTri.numIndexes = 0
@@ -593,10 +597,10 @@ object tr_deform {
             return
         }
         val center = idVec3()
-        center.set(tri.verts[0].xyz)
+        center.set(tri.verts!![0]!!.xyz)
         j = 1
         while (j < tri.numVerts) {
-            center.plusAssign(tri.verts[j].xyz)
+            center.plusAssign(tri.verts!![j]!!.xyz)
             j++
         }
         center.timesAssign(1.0f / tri.numVerts)
@@ -619,7 +623,7 @@ object tr_deform {
             j++
         }
         val spread =
-            surf.shaderRegisters[surf.material!!.GetDeformRegister(0)] * RenderSystem_init.r_flareSize.GetFloat()
+            surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)] * RenderSystem_init.r_flareSize.GetFloat()
         val edgeDir: Array<Array<idVec3>> = idVec3.Companion.generateArray(4, 3)
         val   /*glIndex_t*/indexes = IntArray(MAX_TRI_WINDING_INDEXES)
         val numIndexes = R_WindingFromTriangles(tri, indexes)
@@ -632,16 +636,16 @@ object tr_deform {
         // calculate vector directions
         i = 0
         while (i < 4) {
-            ac[i].xyz.set(tri.verts[indexes[i]].xyz)
+            ac[i].xyz.set(tri.verts!![indexes[i]]!!.xyz)
             ac[i].st[0] = ac[i].st.set(1, 0.5f)
-            val toEye = idVec3(tri.verts[indexes[i]].xyz.minus(localViewer))
+            val toEye = idVec3(tri.verts!![indexes[i]]!!.xyz.minus(localViewer))
             toEye.Normalize()
-            val d1 = idVec3(tri.verts[indexes[(i + 1) % 4]].xyz.minus(localViewer))
+            val d1 = idVec3(tri.verts!![indexes[(i + 1) % 4]]!!.xyz.minus(localViewer))
             d1.Normalize()
             edgeDir[i][1].Cross(toEye, d1)
             edgeDir[i][1].Normalize()
             edgeDir[i][1].set(getVec3_origin().minus(edgeDir[i][1]))
-            val d2 = idVec3(tri.verts[indexes[(i + 3) % 4]].xyz.minus(localViewer))
+            val d2 = idVec3(tri.verts!![indexes[(i + 3) % 4]]!!.xyz.minus(localViewer))
             d2.Normalize()
             edgeDir[i][0].Cross(toEye, d2)
             edgeDir[i][0].Normalize()
@@ -651,40 +655,40 @@ object tr_deform {
         }
 
         // build all the points
-        ac[4].xyz.set(tri.verts[indexes[0]].xyz.plus(edgeDir[0][0].times(spread)))
+        ac[4].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][0].times(spread)))
         ac[4].st[0] = 0f
         ac[4].st[1] = 0.5f
-        ac[5].xyz.set(tri.verts[indexes[0]].xyz.plus(edgeDir[0][2].times(spread)))
+        ac[5].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][2].times(spread)))
         ac[5].st[0] = 0f
         ac[5].st[1] = 0f
-        ac[6].xyz.set(tri.verts[indexes[0]].xyz.plus(edgeDir[0][1].times(spread)))
+        ac[6].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][1].times(spread)))
         ac[6].st[0] = 0.5f
         ac[6].st[1] = 0f
-        ac[7].xyz.set(tri.verts[indexes[1]].xyz.plus(edgeDir[1][0].times(spread)))
+        ac[7].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][0].times(spread)))
         ac[7].st[0] = 0.5f
         ac[7].st[1] = 0f
-        ac[8].xyz.set(tri.verts[indexes[1]].xyz.plus(edgeDir[1][2].times(spread)))
+        ac[8].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][2].times(spread)))
         ac[8].st[0] = 1f
         ac[8].st[1] = 0f
-        ac[9].xyz.set(tri.verts[indexes[1]].xyz.plus(edgeDir[1][1].times(spread)))
+        ac[9].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][1].times(spread)))
         ac[9].st[0] = 1f
         ac[9].st[1] = 0.5f
-        ac[10].xyz.set(tri.verts[indexes[2]].xyz.plus(edgeDir[2][0].times(spread)))
+        ac[10].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][0].times(spread)))
         ac[10].st[0] = 1f
         ac[10].st[1] = 0.5f
-        ac[11].xyz.set(tri.verts[indexes[2]].xyz.plus(edgeDir[2][2].times(spread)))
+        ac[11].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][2].times(spread)))
         ac[11].st[0] = 1f
         ac[11].st[1] = 1f
-        ac[12].xyz.set(tri.verts[indexes[2]].xyz.plus(edgeDir[2][1].times(spread)))
+        ac[12].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][1].times(spread)))
         ac[12].st[0] = 0.5f
         ac[12].st[1] = 1f
-        ac[13].xyz.set(tri.verts[indexes[3]].xyz.plus(edgeDir[3][0].times(spread)))
+        ac[13].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][0].times(spread)))
         ac[13].st[0] = 0.5f
         ac[13].st[1] = 1f
-        ac[14].xyz.set(tri.verts[indexes[3]].xyz.plus(edgeDir[3][2].times(spread)))
+        ac[14].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][2].times(spread)))
         ac[14].st[0] = 0f
         ac[14].st[1] = 1f
-        ac[15].xyz.set(tri.verts[indexes[3]].xyz.plus(edgeDir[3][1].times(spread)))
+        ac[15].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][1].times(spread)))
         ac[15].st[0] = 0f
         ac[15].st[1] = 0.5f
         i = 4
@@ -716,7 +720,7 @@ object tr_deform {
 //	};
 //}
 //        memcpy(newTri.indexes, triIndexes, sizeof(triIndexes));
-        System.arraycopy(triIndexes, 0, newTri.indexes, 0, triIndexes.size)
+        System.arraycopy(triIndexes, 0, newTri.indexes!!, 0, triIndexes.size)
         R_FinishDeform(surf, newTri, ac.toTypedArray())
     }
 
@@ -732,20 +736,20 @@ object tr_deform {
         var i: Int
         val tri: srfTriangles_s?
         val newTri: srfTriangles_s
-        tri = surf.geo
+        tri = surf.geo!!
 
         // this srfTriangles_t and all its indexes and caches are in frame
         // memory, and will be automatically disposed of
         newTri = srfTriangles_s() // R_ClearedFrameAlloc(sizeof(newTri));
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
-        newTri.indexes = tri.indexes
+        newTri.indexes = tri.indexes!!
         val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
-        val dist = surf.shaderRegisters[surf.material!!.GetDeformRegister(0)]
+        val dist = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
         i = 0
         while (i < tri.numVerts) {
-            ac[i] = tri.verts[i]
-            ac[i].xyz.set(tri.verts[i].xyz.plus(tri.verts[i].normal.times(dist)))
+            ac[i] = tri.verts!![i]!!
+            ac[i].xyz.set(tri.verts!![i]!!.xyz.plus(tri.verts!![i]!!.normal.times(dist)))
             i++
         }
         R_FinishDeform(surf, newTri, ac.toTypedArray())
@@ -763,19 +767,19 @@ object tr_deform {
         var i: Int
         val tri: srfTriangles_s?
         val newTri: srfTriangles_s
-        tri = surf.geo
+        tri = surf.geo!!
 
         // this srfTriangles_t and all its indexes and caches are in frame
         // memory, and will be automatically disposed of
         newTri = srfTriangles_s() // R_ClearedFrameAlloc(sizeof(newTri));
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
-        newTri.indexes = tri.indexes
-        val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
-        val dist = surf.shaderRegisters[surf.material!!.GetDeformRegister(0)]
+        newTri.indexes = tri.indexes!!
+        val ac = ArrayList<idDrawVert>(newTri.numVerts)
+        val dist = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
         i = 0
         while (i < tri.numVerts) {
-            ac[i] = tri.verts[i]
+            ac[i] = tri.verts!![i]!!
             ac[i].xyz.plusAssign(0, dist)
             i++
         }
@@ -793,27 +797,27 @@ object tr_deform {
         var i: Int
         val tri: srfTriangles_s?
         val newTri: srfTriangles_s
-        tri = surf.geo
+        tri = surf.geo!!
 
         // this srfTriangles_t and all its indexes and caches are in frame
         // memory, and will be automatically disposed of
         newTri = srfTriangles_s() // R_ClearedFrameAlloc(sizeof(newTri));
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
-        newTri.indexes = tri.indexes
+        newTri.indexes = tri.indexes!!
         val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
         val table = surf.material!!.GetDeformDecl() as idDeclTable
-        val range = surf.shaderRegisters[surf.material!!.GetDeformRegister(0)]
-        val timeOfs = surf.shaderRegisters[surf.material!!.GetDeformRegister(1)]
-        val domain = surf.shaderRegisters[surf.material!!.GetDeformRegister(2)]
+        val range = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
+        val timeOfs = surf.shaderRegisters!![surf.material!!.GetDeformRegister(1)]
+        val domain = surf.shaderRegisters!![surf.material!!.GetDeformRegister(2)]
         val tOfs = 0.5f
         i = 0
         while (i < tri.numVerts) {
             var f =
-                tri.verts[i].xyz[0] * 0.003f + tri.verts[i].xyz[1] * 0.007f + tri.verts[i].xyz[2] * 0.011f
+                tri.verts!![i]!!.xyz[0] * 0.003f + tri.verts!![i]!!.xyz[1] * 0.007f + tri.verts!![i]!!.xyz[2] * 0.011f
             f = timeOfs + domain * f
             f += timeOfs
-            ac[i] = tri.verts[i]
+            ac[i] = tri.verts!![i]!!
             ac[i].st.plusAssign(0, range * table.TableLookup(f))
             ac[i].st.plusAssign(1, range * table.TableLookup(f + tOfs))
             i++
@@ -835,18 +839,18 @@ object tr_deform {
         island.numTris++
 
         // recurse into all neighbors
-        a = tri.indexes[triangleNum * 3]
-        b = tri.indexes[triangleNum * 3 + 1]
-        c = tri.indexes[triangleNum * 3 + 2]
-        island.bounds.AddPoint(tri.verts[a].xyz)
-        island.bounds.AddPoint(tri.verts[b].xyz)
-        island.bounds.AddPoint(tri.verts[c].xyz)
+        a = tri.indexes!![triangleNum * 3]
+        b = tri.indexes!![triangleNum * 3 + 1]
+        c = tri.indexes!![triangleNum * 3 + 2]
+        island.bounds.AddPoint(tri.verts!![a]!!.xyz)
+        island.bounds.AddPoint(tri.verts!![b]!!.xyz)
+        island.bounds.AddPoint(tri.verts!![c]!!.xyz)
         val numTri = tri.numIndexes / 3
         for (i in 0 until numTri) {
             if (usedList[i]) {
                 continue
             }
-            if (tri.indexes[i * 3 + 0] == a || tri.indexes[i * 3 + 1] == a || tri.indexes[i * 3 + 2] == a || tri.indexes[i * 3 + 0] == b || tri.indexes[i * 3 + 1] == b || tri.indexes[i * 3 + 2] == b || tri.indexes[i * 3 + 0] == c || tri.indexes[i * 3 + 1] == c || tri.indexes[i * 3 + 2] == c) {
+            if (tri.indexes!![i * 3 + 0] == a || tri.indexes!![i * 3 + 1] == a || tri.indexes!![i * 3 + 2] == a || tri.indexes!![i * 3 + 0] == b || tri.indexes!![i * 3 + 1] == b || tri.indexes!![i * 3 + 2] == b || tri.indexes!![i * 3 + 0] == c || tri.indexes!![i * 3 + 1] == c || tri.indexes!![i * 3 + 2] == c) {
                 AddTriangleToIsland_r(tri, i, usedList, island)
             }
         }
@@ -869,7 +873,7 @@ object tr_deform {
         val islands = kotlin.collections.ArrayList<eyeIsland_t>(MAX_EYEBALL_ISLANDS)
         var numIslands: Int
         val triUsed = BooleanArray(MAX_EYEBALL_ISLANDS * MAX_EYEBALL_TRIS)
-        tri = surf.geo
+        tri = surf.geo!!
 
         // separate all the triangles into islands
         val numTri = tri.numIndexes / 3
@@ -960,9 +964,9 @@ object tr_deform {
             // determine the projection directions based on the origin island triangle
             val dir = idVec3(focus.minus(origin))
             dir.Normalize()
-            val p1 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 0]].xyz
-            val p2 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 1]].xyz
-            val p3 = tri.verts[tri.indexes[islands[originIsland].tris[0] + 2]].xyz
+            val p1 = tri.verts!![tri.indexes!![islands[originIsland].tris[0] + 0]]!!.xyz
+            val p2 = tri.verts!![tri.indexes!![islands[originIsland].tris[0] + 1]]!!.xyz
+            val p3 = tri.verts!![tri.indexes!![islands[originIsland].tris[0] + 2]]!!.xyz
             val v1 = idVec3(p2.minus(p1))
             v1.Normalize()
             val v2 = idVec3(p3.minus(p1))
@@ -985,10 +989,10 @@ object tr_deform {
                 k = 0
                 while (k < 3) {
                     var index = islands[i].tris[j] * 3
-                    index = tri.indexes[index + k]
-                    newTri.indexes[newTri.numIndexes++] = index
-                    ac[index].xyz.set(tri.verts[index].xyz)
-                    val local = idVec3(tri.verts[index].xyz.minus(origin))
+                    index = tri.indexes!![index + k]
+                    newTri.indexes!![newTri.numIndexes++] = index
+                    ac[index].xyz.set(tri.verts!![index]!!.xyz)
+                    val local = idVec3(tri.verts!![index]!!.xyz.minus(origin))
                     ac[index].st[0] = 0.5f + local.times(texVec[0])
                     ac[index].st[1] = 0.5f + local.times(texVec[1])
                     k++
@@ -1009,7 +1013,7 @@ object tr_deform {
      =====================
      */
     fun R_ParticleDeform(surf: drawSurf_s, useArea: Boolean) {
-        val renderEntity = surf.space.entityDef.parms
+        val renderEntity = surf.space!!.entityDef.parms
         val viewDef = tr_local.tr.viewDef
         val particleSystem = surf.material!!.GetDeformDecl() as idDeclParticle
         if (RenderSystem_init.r_skipParticles.GetBool()) {
@@ -1026,20 +1030,20 @@ object tr_deform {
         //
         // calculate the area of all the triangles
         //
-        val numSourceTris = surf.geo.numIndexes / 3
+        val numSourceTris = surf.geo!!.numIndexes / 3
         var totalArea = 0f
-        var sourceTriAreas: ArrayList<Float> = ArrayList()
-        val srcTri = surf.geo
+        var sourceTriAreas: FloatArray? = null
+        val srcTri = surf.geo!!
         if (useArea) {
-            sourceTriAreas = kotlin.collections.ArrayList<Float>(numSourceTris)
+            sourceTriAreas = FloatArray(numSourceTris)
             var triNum = 0
             var i = 0
             while (i < srcTri.numIndexes) {
                 var area: Float
                 area = idWinding.Companion.TriangleArea(
-                    srcTri.verts[srcTri.indexes[i]].xyz,
-                    srcTri.verts[srcTri.indexes[i + 1]].xyz,
-                    srcTri.verts[srcTri.indexes[i + 2]].xyz
+                    srcTri.verts!![srcTri.indexes!![i]]!!.xyz,
+                    srcTri.verts!![srcTri.indexes!![i + 1]]!!.xyz,
+                    srcTri.verts!![srcTri.indexes!![i + 2]]!!.xyz
                 )
                 sourceTriAreas[triNum] = totalArea
                 totalArea += area
@@ -1080,7 +1084,7 @@ object tr_deform {
                 tri = srfTriangles_s() // R_ClearedFrameAlloc(sizeof(tri));
                 tri.numVerts = 4 * count
                 tri.numIndexes = 6 * count
-                tri.verts = ArrayList(tri.numVerts) // R_FrameAlloc(tri.numVerts);
+                tri.verts = arrayOfNulls(tri.numVerts) // R_FrameAlloc(tri.numVerts);
                 tri.indexes = IntArray(tri.numIndexes) // R_FrameAlloc(tri.numIndexes);
 
                 // just always draw the particles
@@ -1146,16 +1150,16 @@ object tr_deform {
                     if (useArea) {
                         // select a triangle based on an even area distribution
                         pointTri = BinSearch.idBinSearch_LessEqual(
-                            sourceTriAreas.toTypedArray(),
+                            sourceTriAreas!!.toTypedArray(),
                             numSourceTris,
                             g.random.RandomFloat() * totalArea
                         )
                     }
 
                     // now pick a random point inside pointTri
-                    val v1 = srcTri.verts[srcTri.indexes[pointTri * 3 + 0]]
-                    val v2 = srcTri.verts[srcTri.indexes[pointTri * 3 + 1]]
-                    val v3 = srcTri.verts[srcTri.indexes[pointTri * 3 + 2]]
+                    val v1 = srcTri.verts!![srcTri.indexes!![pointTri * 3 + 0]]!!
+                    val v2 = srcTri.verts!![srcTri.indexes!![pointTri * 3 + 1]]!!
+                    val v3 = srcTri.verts!![srcTri.indexes!![pointTri * 3 + 2]]!!
                     var f1 = g.random.RandomFloat()
                     var f2 = g.random.RandomFloat()
                     var f3 = g.random.RandomFloat()
@@ -1180,7 +1184,7 @@ object tr_deform {
 
                     tri.numVerts += stage.CreateParticle(
                         g,
-                        tri.verts.toTypedArray().copyOfRange(tri.numVerts, tri.verts.size)
+                        tri.verts!!.copyOfRange(tri.numVerts, tri.verts!!.size) as Array<idDrawVert>
                     )
                 }
                 if (tri.numVerts > 0) {
@@ -1188,24 +1192,24 @@ object tr_deform {
                     var indexes = 0
                     var i = 0
                     while (i < tri.numVerts) {
-                        tri.indexes[indexes + 0] = i
-                        tri.indexes[indexes + 1] = i + 2
-                        tri.indexes[indexes + 2] = i + 3
-                        tri.indexes[indexes + 3] = i
-                        tri.indexes[indexes + 4] = i + 3
-                        tri.indexes[indexes + 5] = i + 1
+                        tri.indexes!![indexes + 0] = i
+                        tri.indexes!![indexes + 1] = i + 2
+                        tri.indexes!![indexes + 2] = i + 3
+                        tri.indexes!![indexes + 3] = i
+                        tri.indexes!![indexes + 4] = i + 3
+                        tri.indexes!![indexes + 5] = i + 1
                         indexes += 6
                         i += 4
                     }
                     tri.numIndexes = indexes
                     tri.ambientCache =
                         VertexCache.vertexCache.AllocFrameTempIdDrawVert(
-                            tri.verts,
+                            tri.verts!!,
                             tri.numVerts * idDrawVert.Companion.BYTES
                         )
                     if (tri.ambientCache != null) {
                         // add the drawsurf
-                        tr_light.R_AddDrawSurf(tri, surf.space, renderEntity, stage.material!!, surf.scissorRect)
+                        tr_light.R_AddDrawSurf(tri, surf.space!!, renderEntity, stage.material!!, surf.scissorRect)
                     }
                 }
             }

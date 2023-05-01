@@ -263,7 +263,8 @@ object List {
         operator fun set(index: Int, value: T): T {
             assert(index >= 0)
             assert(index < num)
-            return list!!.set(index, value) as T
+            list!![index] = value
+            return list!![index]
         }
 
         //
@@ -485,8 +486,8 @@ object List {
          ================
          */
         @Deprecated("")
-        fun getList(): Array<T>? {                                        // returns a pointer to the list
-            return list
+        fun getList(): Array<T> {                                        // returns a pointer to the list
+            return list!!
         }
 
         fun <T> getList(type: Class<out Array<T>>): Array<T>? {
@@ -628,7 +629,7 @@ object List {
          Searches for the specified data in the list and returns it's index.  Returns -1 if the data is not found.
          ================
          */
-        fun FindIndex(obj: T): Int {                // find the index for the given element
+        fun FindIndex(obj: T?): Int {                // find the index for the given element
             var i: Int
             i = 0
             while (i < num) {
@@ -649,7 +650,7 @@ object List {
          Searches for the specified data in the list and returns it's address. Returns NULL if the data is not found.
          ================
          */
-        fun Find(obj: T): Int? {                        // find pointer to the given element
+        fun Find(obj: T?): Int? {                        // find pointer to the given element
             val i: Int
             i = FindIndex(obj)
             return if (i >= 0) {

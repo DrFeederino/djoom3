@@ -640,10 +640,10 @@ object usurface {
                     var j = 0
                     while (j < tri2!!.numIndexes) {
                         for (k in 0..2) {
-                            val v = idVec3(tri2.verts[tri2.indexes[j + k]].xyz)
+                            val v = idVec3(tri2.verts!![tri2.indexes!![j + k]]!!.xyz)
                             mapTri.v[k].xyz.set(v.times(axis).plus(origin))
-                            mapTri.v[k].normal.set(tri2.verts[tri2.indexes[j + k]].normal.times(axis))
-                            mapTri.v[k].st.set(tri2.verts[tri2.indexes[j + k]].st)
+                            mapTri.v[k].normal.set(tri2.verts!![tri2.indexes!![j + k]]!!.normal.times(axis))
+                            mapTri.v[k].st.set(tri2.verts!![tri2.indexes!![j + k]]!!.st)
                         }
                         AddMapTriToAreas(mapTri, e)
                         j += 3

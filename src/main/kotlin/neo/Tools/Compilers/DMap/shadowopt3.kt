@@ -96,11 +96,11 @@ object shadowopt3 {
 
     //
     const val MAX_SIL_EDGES = MAX_SHADOW_TRIS * 3
-    var silEdges: Array<shadowOptEdge_s> = Array(MAX_SIL_EDGES) { shadowOptEdge_s() }
+    var silEdges: Array<shadowOptEdge_s?> = kotlin.arrayOfNulls(MAX_SIL_EDGES)
 
     //
     const val MAX_SIL_QUADS = MAX_SHADOW_TRIS * 3
-    var silQuads: Array<silQuad_s> = Array(MAX_SIL_QUADS) { silQuad_s() }
+    var silQuads: Array<silQuad_s?> = kotlin.arrayOfNulls(MAX_SIL_QUADS)
 
     //
     var EDGE_PLANE_EPSILON = 0.1f
@@ -127,12 +127,12 @@ object shadowopt3 {
     var numUniquedBeforeProjection = 0
 
     //
-    var outputTris: Array<shadowTri_t> = Array(MAX_SHADOW_TRIS) { shadowTri_t() }
+    var outputTris: Array<shadowTri_t?> = kotlin.arrayOfNulls(MAX_SHADOW_TRIS)
 
     //
-    var ret: optimizedShadow_t = optimizedShadow_t()
-    var silPlanes: Array<silPlane_t> = Array(numSilEdges) { silPlane_t() }
-    var uniqued: Array<idVec3> = idVec3.generateArray(numUniqued)
+    var ret: optimizedShadow_t? = null
+    var silPlanes: Array<silPlane_t>? = null
+    var uniqued: Array<idVec3>? = null
 
     /*
      =================
@@ -321,7 +321,7 @@ object shadowopt3 {
                 // the entire triangle is visible
                 numComplete++
                 outputTris[oldOutput] = tris[i]
-                val out: shadowTri_t = outputTris[oldOutput]
+                val out: shadowTri_t = outputTris[oldOutput]!!
                 numOutputTris = oldOutput + 1
             } else {
                 numFragmented++
@@ -331,7 +331,7 @@ object shadowopt3 {
                 // triangle if it produced any fragments
                 if (dmap.dmapGlobals.shadowOptLevel == shadowOptLevel_t.SO_CULL_OCCLUDED) {
                     outputTris[oldOutput] = tris[i]
-                    val out: shadowTri_t = outputTris[oldOutput] //TODO:useless
+                    val out: shadowTri_t = outputTris[oldOutput]!! //TODO:useless
                     numOutputTris = oldOutput + 1
                 }
             }
@@ -356,7 +356,7 @@ object shadowopt3 {
         var checkGroup: optimizeGroup_s?
         i = 0
         while (i < numOutputTris) {
-            val tri: shadowTri_t = outputTris[i]
+            val tri: shadowTri_t = outputTris[i]!!
             val planeNum = tri.planeNum
 
             // add it to an optimize group
@@ -390,7 +390,7 @@ object shadowopt3 {
         while (checkGroup != null) {
             var mtri = checkGroup.triList
             while (mtri != null) {
-                val tri: shadowTri_t = outputTris[numOutputTris]
+                val tri: shadowTri_t = outputTris[numOutputTris]!!
                 numOutputTris++
                 tri.v[0].set(mtri.v[0].xyz)
                 tri.v[1].set(mtri.v[1].xyz)
@@ -422,9 +422,9 @@ object shadowopt3 {
         numSilEdges = 0
         i = 0
         while (i < numOutputTris) {
-            val a = outputTris[i].index[0]
-            val b = outputTris[i].index[1]
-            val c = outputTris[i].index[2]
+            val a = outputTris[i]!!.index[0]
+            val b = outputTris[i]!!.index[1]
+            val c = outputTris[i]!!.index[2]
             if (a == b || a == c || b == c) {
                 i++
                 continue  // degenerate
@@ -433,8 +433,8 @@ object shadowopt3 {
             while (j < 3) {
                 var v1: Int
                 var v2: Int
-                v1 = outputTris[i].index[j]
-                v2 = outputTris[i].index[(j + 1) % 3]
+                v1 = outputTris[i]!!.index[j]
+                v2 = outputTris[i]!!.index[(j + 1) % 3]
                 if (v1 == v2) {
                     j++
                     continue  // degenerate
@@ -475,8 +475,8 @@ object shadowopt3 {
             if (numSilEdges == MAX_SIL_EDGES) {
                 Common.common.Error("numSilEdges == MAX_SIL_EDGES")
             }
-            silEdges[numSilEdges].index[0] = v1
-            silEdges[numSilEdges].index[1] = v2
+            silEdges[numSilEdges]!!.index[0] = v1
+            silEdges[numSilEdges]!!.index[1] = v2
             numSilEdges++
             i++
         }
@@ -496,34 +496,34 @@ object shadowopt3 {
         // identify the silPlanes
         numSilPlanes = 0
         for (i in 0 until numSilEdges) {
-            if (silEdges[i].index[0] == silEdges[i].index[1]) {
+            if (silEdges[i]!!.index[0] == silEdges[i]!!.index[1]) {
                 continue  // degenerate
             }
-            val v1 = uniqued[silEdges[i].index[0]]
-            val v2 = uniqued[silEdges[i].index[1]]
+            val v1 = uniqued!![silEdges[i]!!.index[0]]
+            val v2 = uniqued!![silEdges[i]!!.index[1]]
 
             // search for an existing plane
             var j: Int
             j = 0
             while (j < numSilPlanes) {
-                val d = v1.times(silPlanes[j].normal)
-                val d2 = v2.times(silPlanes[j].normal)
+                val d = v1.times(silPlanes!![j].normal)
+                val d2 = v2.times(silPlanes!![j].normal)
                 if (abs(d) < EDGE_PLANE_EPSILON
                     && abs(d2) < EDGE_PLANE_EPSILON
                 ) {
-                    silEdges[i].nextEdge = silPlanes[j].edges
-                    silPlanes[j].edges = silEdges[i]
+                    silEdges[i]!!.nextEdge = silPlanes!![j].edges
+                    silPlanes!![j].edges = silEdges[i]
                     break
                 }
                 j++
             }
             if (j == numSilPlanes) {
                 // create a new silPlane
-                silPlanes[j].normal.Cross(v2, v1)
-                silPlanes[j].normal.Normalize()
-                silEdges[i].nextEdge = null
-                silPlanes[j].edges = silEdges[i]
-                silPlanes[j].fragmentedQuads = null
+                silPlanes!![j].normal.Cross(v2, v1)
+                silPlanes!![j].normal.Normalize()
+                silEdges[i]!!.nextEdge = null
+                silPlanes!![j].edges = silEdges[i]
+                silPlanes!![j].fragmentedQuads = null
                 numSilPlanes++
             }
         }
@@ -540,7 +540,7 @@ object shadowopt3 {
             Common.common.Error("numSilQuads == MAX_SIL_QUADS")
         }
         silQuads[numSilQuads] = quad
-        silQuads[numSilQuads].nextQuad = silPlane.fragmentedQuads
+        silQuads[numSilQuads]!!.nextQuad = silPlane.fragmentedQuads
         silPlane.fragmentedQuads = silQuads[numSilQuads]
         numSilQuads++
     }
@@ -599,7 +599,7 @@ object shadowopt3 {
             // make planes through both points of check
             for (i in 0..1) {
                 val plane = idVec3()
-                plane.Cross(uniqued[check.index[i]], silPlane.normal)
+                plane.Cross(uniqued!![check.index[i]], silPlane.normal)
                 plane.Normalize()
                 if (plane.Length() < 0.9) {
                     continue
@@ -607,13 +607,13 @@ object shadowopt3 {
 
                 // if the other point on check isn't on the negative side of the plane,
                 // flip the plane
-                if (uniqued[check.index[1 xor i]].times(plane) > 0) {
+                if (uniqued!![check.index[1 xor i]].times(plane) > 0) {
                     plane.set(-plane)
                 }
-                val d1 = uniqued[quad.nearV[0]].times(plane)
-                val d2 = uniqued[quad.nearV[1]].times(plane)
-                val d3 = uniqued[quad.farV[0]].times(plane)
-                val d4 = uniqued[quad.farV[1]].times(plane)
+                val d1 = uniqued!![quad.nearV[0]].times(plane)
+                val d2 = uniqued!![quad.nearV[1]].times(plane)
+                val d3 = uniqued!![quad.farV[0]].times(plane)
+                val d4 = uniqued!![quad.farV[1]].times(plane)
 
                 // it is better to conservatively NOT split the quad, which, at worst,
                 // will leave some extra overdraw
@@ -631,13 +631,13 @@ object shadowopt3 {
 
                     // finding uniques may be causing problems here
                     val nearMid = idVec3(
-                        uniqued[quad.nearV[0]].times(1 - f)
-                            .plus(uniqued[quad.nearV[1]].times(f))
+                        uniqued!![quad.nearV[0]].times(1 - f)
+                            .plus(uniqued!![quad.nearV[1]].times(f))
                     )
                     val nearMidIndex = FindUniqueVert(nearMid)
                     val farMid = idVec3(
-                        uniqued[quad.farV[0]].times(1 - f)
-                            .plus(uniqued[quad.farV[1]].times(f))
+                        uniqued!![quad.farV[0]].times(1 - f)
+                            .plus(uniqued!![quad.farV[1]].times(f))
                     )
                     val farMidIndex = FindUniqueVert(farMid)
                     if (d1 > EDGE_PLANE_EPSILON) {
@@ -658,15 +658,15 @@ object shadowopt3 {
 
             // make a plane through the line of check
             val separate = idPlane()
-            val dir = idVec3(uniqued[check.index[1]].minus(uniqued[check.index[0]]))
+            val dir = idVec3(uniqued!![check.index[1]].minus(uniqued!![check.index[0]]))
             separate.Normal().Cross(dir, silPlane.normal)
             separate.Normal().Normalize()
-            separate[3] = -uniqued[check.index[1]].times(separate.Normal())
+            separate[3] = -uniqued!![check.index[1]].times(separate.Normal())
 
             // this may miss a needed separation when the quad would be
             // clipped into a triangle and a quad
-            var d1 = separate.Distance(uniqued[quad.nearV[0]])
-            var d2 = separate.Distance(uniqued[quad.farV[0]])
+            var d1 = separate.Distance(uniqued!![quad.nearV[0]])
+            var d2 = separate.Distance(uniqued!![quad.farV[0]])
             if (d1 < EDGE_PLANE_EPSILON && d2 < EDGE_PLANE_EPSILON
                 || d1 > -EDGE_PLANE_EPSILON && d2 > -EDGE_PLANE_EPSILON
             ) {
@@ -677,20 +677,20 @@ object shadowopt3 {
             // split the quad at this plane
             var f = d1 / (d1 - d2)
             val mid0 = idVec3(
-                uniqued[quad.nearV[0]].times(1 - f)
-                    .plus(uniqued[quad.farV[0]].times(f))
+                uniqued!![quad.nearV[0]].times(1 - f)
+                    .plus(uniqued!![quad.farV[0]].times(f))
             )
             val mid0Index = FindUniqueVert(mid0)
-            d1 = separate.Distance(uniqued[quad.nearV[1]])
-            d2 = separate.Distance(uniqued[quad.farV[1]])
+            d1 = separate.Distance(uniqued!![quad.nearV[1]])
+            d2 = separate.Distance(uniqued!![quad.farV[1]])
             f = d1 / (d1 - d2)
             if (f < 0 || f > 1) {
                 check = check.nextEdge
                 continue
             }
             val mid1 = idVec3(
-                uniqued[quad.nearV[1]].times(1 - f)
-                    .plus(uniqued[quad.farV[1]].times(f))
+                uniqued!![quad.nearV[1]].times(1 - f)
+                    .plus(uniqued!![quad.farV[1]].times(f))
             )
             val mid1Index = FindUniqueVert(mid1)
             quad.nearV[0] = mid0Index
@@ -715,7 +715,7 @@ object shadowopt3 {
 
         // fragment overlapping edges
         for (i in 0 until numSilPlanes) {
-            val sil: silPlane_t = silPlanes[i]
+            val sil: silPlane_t = silPlanes!![i]
             var e1 = sil.edges
             while (e1 != null) {
                 val quad = silQuad_s()
@@ -745,7 +745,7 @@ object shadowopt3 {
         var mtri: mapTri_s?
         i = 0
         while (i < numSilPlanes) {
-            val sil: silPlane_t = silPlanes[i]
+            val sil: silPlane_t = silPlanes!![i]
 
             // prepare for optimizing the sil quads on each side of the sil plane
             val groups = Array(2) { optimizeGroup_s() }
@@ -781,9 +781,9 @@ object shadowopt3 {
                     val v2 = idVec3()
                     val normal = idVec3()
                     mtri = mapTri_s() // Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz.set(uniqued[f1.nearV[0]])
-                    mtri.v[1].xyz.set(uniqued[f1.nearV[1]])
-                    mtri.v[2].xyz.set(uniqued[f1.farV[1]])
+                    mtri.v[0].xyz.set(uniqued!![f1.nearV[0]])
+                    mtri.v[1].xyz.set(uniqued!![f1.nearV[1]])
+                    mtri.v[2].xyz.set(uniqued!![f1.farV[1]])
                     v1.set(mtri.v[1].xyz.minus(mtri.v[0].xyz))
                     v2.set(mtri.v[2].xyz.minus(mtri.v[0].xyz))
                     normal.Cross(v2, v1)
@@ -795,25 +795,25 @@ object shadowopt3 {
                     mtri.next = gr.triList
                     gr.triList = mtri
                     mtri = mapTri_s() // Mem_ClearedAlloc(sizeof(mtri));
-                    mtri.v[0].xyz.set(uniqued[f1.farV[0]])
-                    mtri.v[1].xyz.set(uniqued[f1.nearV[0]])
-                    mtri.v[2].xyz.set(uniqued[f1.farV[1]])
+                    mtri.v[0].xyz.set(uniqued!![f1.farV[0]])
+                    mtri.v[1].xyz.set(uniqued!![f1.nearV[0]])
+                    mtri.v[2].xyz.set(uniqued!![f1.farV[1]])
                     mtri.next = gr.triList
                     gr.triList = mtri
 
 //#if 0
 //				// emit a sil quad all the way to the projection plane
-//				int index = ret.totalIndexes;
+//				int index = ret!!.totalIndexes;
 //				if ( index + 6 > maxRetIndexes ) {
 //					common.Error( "maxRetIndexes exceeded" );
 //				}
-//				ret.indexes[index+0] = f1.nearV[0];
-//				ret.indexes[index+1] = f1.nearV[1];
-//				ret.indexes[index+2] = f1.farV[1];
-//				ret.indexes[index+3] = f1.farV[0];
-//				ret.indexes[index+4] = f1.nearV[0];
-//				ret.indexes[index+5] = f1.farV[1];
-//				ret.totalIndexes += 6;
+//				ret!!.indexes[index+0] = f1.nearV[0];
+//				ret!!.indexes[index+1] = f1.nearV[1];
+//				ret!!.indexes[index+2] = f1.farV[1];
+//				ret!!.indexes[index+3] = f1.farV[0];
+//				ret!!.indexes[index+4] = f1.nearV[0];
+//				ret!!.indexes[index+5] = f1.farV[1];
+//				ret!!.totalIndexes += 6;
 //#endif
                 }
                 f1 = f1.nextQuad
@@ -834,11 +834,11 @@ object shadowopt3 {
                 while (mtri != null) {
                     k = 0
                     while (k < 3) {
-                        if (ret.totalIndexes == maxRetIndexes) {
+                        if (ret!!.totalIndexes == maxRetIndexes) {
                             Common.common.Error("maxRetIndexes exceeded")
                         }
-                        ret.indexes[ret.totalIndexes] = FindUniqueVert(mtri.v[k].xyz)
-                        ret.totalIndexes++
+                        ret!!.indexes!![ret!!.totalIndexes] = FindUniqueVert(mtri.v[k].xyz)
+                        ret!!.totalIndexes++
                         k++
                     }
                     mtri = mtri.next
@@ -850,7 +850,7 @@ object shadowopt3 {
         }
 
         // we don't need the silPlane grouping anymore
-        silPlanes = emptyArray() //Mem_Free(silPlanes);
+        silPlanes = null //Mem_Free(silPlanes);
     }
 
     //==================================================================================
@@ -863,16 +863,16 @@ object shadowopt3 {
         var i: Int
         i = 0
         while (i < numSilEdges) {
-            val v1 = silEdges[i].index[0]
-            val v2 = silEdges[i].index[1]
-            val index = ret.totalIndexes
-            ret.indexes[index + 0] = v1
-            ret.indexes[index + 1] = v2
-            ret.indexes[index + 2] = v2 + numUniquedBeforeProjection
-            ret.indexes[index + 3] = v1 + numUniquedBeforeProjection
-            ret.indexes[index + 4] = v1
-            ret.indexes[index + 5] = v2 + numUniquedBeforeProjection
-            ret.totalIndexes += 6
+            val v1 = silEdges[i]!!.index[0]
+            val v2 = silEdges[i]!!.index[1]
+            val index = ret!!.totalIndexes
+            ret!!.indexes!![index + 0] = v1
+            ret!!.indexes!![index + 1] = v2
+            ret!!.indexes!![index + 2] = v2 + numUniquedBeforeProjection
+            ret!!.indexes!![index + 3] = v1 + numUniquedBeforeProjection
+            ret!!.indexes!![index + 4] = v1
+            ret!!.indexes!![index + 5] = v2 + numUniquedBeforeProjection
+            ret!!.totalIndexes += 6
             i++
         }
     }
@@ -887,7 +887,7 @@ object shadowopt3 {
         var k: Int
         k = 0
         while (k < numUniqued) {
-            val check = uniqued[k]
+            val check = uniqued!![k]
             if (abs(v[0] - check[0]) < UNIQUE_EPSILON && abs(v[1] - check[1]) < UNIQUE_EPSILON && abs(
                     v[2] - check[2]
                 ) < UNIQUE_EPSILON
@@ -899,7 +899,7 @@ object shadowopt3 {
         if (numUniqued == maxUniqued) {
             Common.common.Error("FindUniqueVert: numUniqued == maxUniqued")
         }
-        uniqued[numUniqued] = v
+        uniqued!![numUniqued] = v
         numUniqued++
         return k
     }
@@ -926,7 +926,7 @@ object shadowopt3 {
         while (i < numOutputTris) {
             j = 0
             while (j < 3) {
-                outputTris[i].index[j] = FindUniqueVert(outputTris[i].v[j])
+                outputTris[i]!!.index[j] = FindUniqueVert(outputTris[i]!!.v[j])
                 j++
             }
             i++
@@ -950,7 +950,7 @@ object shadowopt3 {
         // but I don't want to change R_LightProjectionMatrix righ tnow...
         for (i in 0 until numUniqued) {
             // put the vert back in global space, instead of light centered space
-            val `in` = idVec3(uniqued[i].plus(projectionOrigin))
+            val `in` = idVec3(uniqued!![i].plus(projectionOrigin))
 
             // project to far plane
             var w: Float
@@ -961,7 +961,7 @@ object shadowopt3 {
             out.x = (`in`.times(mat[0].ToVec3()) + mat[0][3]) * oow
             out.y = (`in`.times(mat[1].ToVec3()) + mat[1][3]) * oow
             out.z = (`in`.times(mat[2].ToVec3()) + mat[2][3]) * oow
-            uniqued[numUniqued + i] = out.minus(projectionOrigin)
+            uniqued!![numUniqued + i] = out.minus(projectionOrigin)
         }
         numUniqued *= 2
     }
@@ -1010,31 +1010,31 @@ object shadowopt3 {
         }
 
         // indexes for face and projection caps
-        ret.numFrontCapIndexes = numOutputTris * 3
-        ret.numRearCapIndexes = numOutputTris * 3
+        ret!!.numFrontCapIndexes = numOutputTris * 3
+        ret!!.numRearCapIndexes = numOutputTris * 3
         if (TempDump.etoi(dmap.dmapGlobals.shadowOptLevel) >= TempDump.etoi(shadowOptLevel_t.SO_CLIP_SILS)) {
-            ret.numSilPlaneIndexes = numSilQuads * 12 // this is the worst case with clipping
+            ret!!.numSilPlaneIndexes = numSilQuads * 12 // this is the worst case with clipping
         } else {
-            ret.numSilPlaneIndexes = numSilEdges * 6 // this is the worst case with clipping
+            ret!!.numSilPlaneIndexes = numSilEdges * 6 // this is the worst case with clipping
         }
-        ret.totalIndexes = 0
+        ret!!.totalIndexes = 0
         maxRetIndexes =
-            ret.numFrontCapIndexes + ret.numRearCapIndexes + ret.numSilPlaneIndexes
-        ret.indexes = ArrayList(maxRetIndexes) // Mem_Alloc(maxRetIndexes);
+            ret!!.numFrontCapIndexes + ret!!.numRearCapIndexes + ret!!.numSilPlaneIndexes
+        ret!!.indexes = IntArray(maxRetIndexes) // Mem_Alloc(maxRetIndexes);
         for (i in 0 until numOutputTris) {
             // flip the indexes so the surface triangle faces outside the shadow volume
-            ret.indexes[i * 3 + 0] = outputTris[i].index[2]
-            ret.indexes[i * 3 + 1] = outputTris[i].index[1]
-            ret.indexes[i * 3 + 2] = outputTris[i].index[0]
-            ret.indexes[(numOutputTris + i) * 3 + 0] =
-                numUniquedBeforeProjection + outputTris[i].index[0]
-            ret.indexes[(numOutputTris + i) * 3 + 1] =
-                numUniquedBeforeProjection + outputTris[i].index[1]
-            ret.indexes[(numOutputTris + i) * 3 + 2] =
-                numUniquedBeforeProjection + outputTris[i].index[2]
+            ret!!.indexes!![i * 3 + 0] = outputTris[i]!!.index[2]
+            ret!!.indexes!![i * 3 + 1] = outputTris[i]!!.index[1]
+            ret!!.indexes!![i * 3 + 2] = outputTris[i]!!.index[0]
+            ret!!.indexes!![(numOutputTris + i) * 3 + 0] =
+                numUniquedBeforeProjection + outputTris[i]!!.index[0]
+            ret!!.indexes!![(numOutputTris + i) * 3 + 1] =
+                numUniquedBeforeProjection + outputTris[i]!!.index[1]
+            ret!!.indexes!![(numOutputTris + i) * 3 + 2] =
+                numUniquedBeforeProjection + outputTris[i]!!.index[2]
         }
         // emit the sil planes
-        ret.totalIndexes = ret.numFrontCapIndexes + ret.numRearCapIndexes
+        ret!!.totalIndexes = ret!!.numFrontCapIndexes + ret!!.numRearCapIndexes
         if (TempDump.etoi(dmap.dmapGlobals.shadowOptLevel) >= TempDump.etoi(shadowOptLevel_t.SO_CLIP_SILS)) {
             // re-optimize the sil planes, cutting
             EmitFragmentedSilQuads()
@@ -1045,22 +1045,20 @@ object shadowopt3 {
 
         // we have all the verts now
         // create twice the uniqued verts
-        ret.numVerts = numUniqued
-        val newVerts = kotlin.collections.ArrayList<idVec3>()
-        newVerts.addAll(idVec3.generateArray(ret.numVerts))
-        ret.verts = newVerts // Mem_Alloc(ret.numVerts);
+        ret!!.numVerts = numUniqued
+        ret!!.verts = idVec3.generateArray(ret!!.numVerts) // Mem_Alloc(ret!!.numVerts);
         for (i in 0 until numUniqued) {
             // put the vert back in global space, instead of light centered space
-            ret.verts[i].set(uniqued[i].plus(projectionOrigin))
+            ret!!.verts!![i].set(uniqued!![i].plus(projectionOrigin))
         }
 
         // set the final index count
-        ret.numSilPlaneIndexes =
-            ret.totalIndexes - (ret.numFrontCapIndexes + ret.numRearCapIndexes)
+        ret!!.numSilPlaneIndexes =
+            ret!!.totalIndexes - (ret!!.numFrontCapIndexes + ret!!.numRearCapIndexes)
 
         // free out local data
-        uniqued = emptyArray() //Mem_Free(uniqued);
-        return ret
+        uniqued = null //Mem_Free(uniqued);
+        return ret!!
     }
 
     /*
@@ -1079,12 +1077,12 @@ object shadowopt3 {
         c_removed = 0
         i = 0
         while (i < tri.numIndexes) {
-            a = tri.indexes[i]
-            b = tri.indexes[i + 1]
-            c = tri.indexes[i + 2]
+            a = tri.indexes!![i]
+            b = tri.indexes!![i + 1]
+            c = tri.indexes!![i + 2]
             if (a == b || a == c || b == c) {
                 c_removed++
-                //			memmove( tri.indexes + i, tri.indexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.indexes[0] ) );
+                //			memmove( tri.indexes + i, tri.indexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.indexes!![0] ) );
                 System.arraycopy(tri.indexes, i + 3, tri.indexes, i, tri.numIndexes - i - 3)
                 tri.numIndexes -= 3
                 if (i < tri.numShadowIndexesNoCaps) {
@@ -1124,26 +1122,26 @@ object shadowopt3 {
         val remap = IntArray(tri.numVerts)
         i = 0
         while (i < tri.numIndexes) {
-            if (tri.indexes[i] > tri.numVerts || tri.indexes[i] < 0) {
+            if (tri.indexes!![i] > tri.numVerts || tri.indexes!![i] < 0) {
                 Common.common.Error("CleanupOptimizedShadowTris: index out of range")
             }
             i++
         }
         i = 0
         while (i < tri.numVerts) {
-            remap[i] = FindUniqueVert(tri.shadowVertexes[i].xyz.ToVec3())
+            remap[i] = FindUniqueVert(tri.shadowVertexes!![i].xyz.ToVec3())
             i++
         }
         tri.numVerts = numUniqued
         i = 0
         while (i < tri.numVerts) {
-            tri.shadowVertexes[i].xyz.set(uniqued[i])
-            tri.shadowVertexes[i].xyz[3] = 1f
+            tri.shadowVertexes!![i].xyz.set(uniqued!![i])
+            tri.shadowVertexes!![i].xyz[3] = 1f
             i++
         }
         i = 0
         while (i < tri.numIndexes) {
-            tri.indexes[i] = remap[tri.indexes[i]]
+            tri.indexes!![i] = remap[tri.indexes!![i]]
             i++
         }
 
@@ -1158,7 +1156,7 @@ object shadowopt3 {
                 // if there is a reversed quad match, we can throw both of them out
                 // this is not a robust check, it relies on the exact ordering of
                 // quad indexes
-                if (tri.indexes[i2 + 0] == tri.indexes[j + 1] && tri.indexes[i2 + 1] == tri.indexes[j + 0] && tri.indexes[i2 + 2] == tri.indexes[j + 3] && tri.indexes[i2 + 3] == tri.indexes[j + 5] && tri.indexes[i2 + 4] == tri.indexes[j + 1] && tri.indexes[i2 + 5] == tri.indexes[j + 3]) {
+                if (tri.indexes!![i2 + 0] == tri.indexes!![j + 1] && tri.indexes!![i2 + 1] == tri.indexes!![j + 0] && tri.indexes!![i2 + 2] == tri.indexes!![j + 3] && tri.indexes!![i2 + 3] == tri.indexes!![j + 5] && tri.indexes!![i2 + 4] == tri.indexes!![j + 1] && tri.indexes!![i2 + 5] == tri.indexes!![j + 3]) {
                     break
                 }
                 j += 6
@@ -1171,13 +1169,13 @@ object shadowopt3 {
             // remove first quad
             k = i2 + 6
             while (k < j) {
-                tri.indexes[k - 6] = tri.indexes[k]
+                tri.indexes!![k - 6] = tri.indexes!![k]
                 k++
             }
             // remove second quad
             k = j + 6
             while (k < tri.numIndexes) {
-                tri.indexes[k - 12] = tri.indexes[k]
+                tri.indexes!![k - 12] = tri.indexes!![k]
                 k++
             }
             numSilIndexes -= 12
