@@ -2072,7 +2072,7 @@ object MultiplayerGame {
             var i: Int
             var j: Int
             var k: Int
-            val players = ArrayList<idPlayer>(Game_local.MAX_CLIENTS)
+            val players = arrayOfNulls<idPlayer>(Game_local.MAX_CLIENTS)
             var ent: idEntity?
             var player: idPlayer?
 
@@ -2104,20 +2104,20 @@ object MultiplayerGame {
                 while (j < numRankedPlayers) {
                     var insert = false
                     if (Game_local.gameLocal.gameType == gameType_t.GAME_TDM) {
-                        if (player.team != players[j].team) {
-                            if (playerState[i].teamFragCount > playerState[players[j].entityNumber].teamFragCount) {
+                        if (player.team != players[j]!!.team) {
+                            if (playerState[i].teamFragCount > playerState[players[j]!!.entityNumber].teamFragCount) {
                                 // team scores
                                 insert = true
-                            } else if (playerState[i].teamFragCount == playerState[players[j].entityNumber].teamFragCount && player.team < players[j].team) {
+                            } else if (playerState[i].teamFragCount == playerState[players[j]!!.entityNumber].teamFragCount && player.team < players[j]!!.team) {
                                 // at equal scores, sort by team number
                                 insert = true
                             }
-                        } else if (playerState[i].fragCount > playerState[players[j].entityNumber].fragCount) {
+                        } else if (playerState[i].fragCount > playerState[players[j]!!.entityNumber].fragCount) {
                             // in the same team, sort by frag count
                             insert = true
                         }
                     } else {
-                        insert = playerState[i].fragCount > playerState[players[j].entityNumber].fragCount
+                        insert = playerState[i].fragCount > playerState[players[j]!!.entityNumber].fragCount
                     }
                     if (insert) {
                         k = numRankedPlayers

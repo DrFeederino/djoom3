@@ -182,7 +182,7 @@ object Target {
             var i: Int
             val damage: String?
             var ent: idEntity?
-            damage = spawnArgs.GetString("def_damage", "damage_generic")
+            damage = spawnArgs.GetString("def_damage", "damage_generic")!!
             i = 0
             while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
@@ -1208,7 +1208,7 @@ object Target {
                 }
                 light = ent
                 if (!light.spawnArgs.GetBool("leave_demonic_mat")) {
-                    val texture = light.spawnArgs.GetString("texture", "lights/squarelight1")
+                    val texture = light.spawnArgs.GetString("texture", "lights/squarelight1")!!
                     light.SetShader(texture)
                 }
                 color.set(light.spawnArgs.GetVector("_color"))
@@ -1271,7 +1271,8 @@ object Target {
         private fun Event_GatherEntities() {
             var i: Int
             val listedEntities: Int
-            val entityList = ArrayList<idEntity>(Game_local.MAX_GENTITIES)
+            val entityList = arrayOfNulls<idEntity>(Game_local.MAX_GENTITIES)
+
             val demonicOnly = spawnArgs.GetBool("effect_demonic")
             var lights = spawnArgs.GetBool("effect_lights")
             var sounds = spawnArgs.GetBool("effect_sounds")
@@ -1279,9 +1280,11 @@ object Target {
             var models = spawnArgs.GetBool("effect_models")
             var vision = spawnArgs.GetBool("effect_vision")
             val targetsOnly = spawnArgs.GetBool("targetsOnly")
+
             lightList.Clear()
             guiList.Clear()
             soundList.Clear()
+
             if (spawnArgs.GetBool("effect_all")) {
                 vision = true
                 models = vision
@@ -1301,7 +1304,7 @@ object Target {
                 listedEntities = Game_local.gameLocal.EntitiesWithinRadius(
                     GetPhysics().GetOrigin(),
                     radius,
-                    entityList.toTypedArray(),
+                    entityList,
                     Game_local.MAX_GENTITIES
                 )
             }
@@ -1568,7 +1571,7 @@ object Target {
             if (player != null && player.objectiveSystem != null) {
                 player.objectiveSystem!!.SetStateString(
                     "missionobjective",
-                    spawnArgs.GetString("text", Common.common.GetLanguageDict().GetString("#str_04253"))
+                    spawnArgs.GetString("text", Common.common.GetLanguageDict().GetString("#str_04253"))!!
                 )
             }
         }

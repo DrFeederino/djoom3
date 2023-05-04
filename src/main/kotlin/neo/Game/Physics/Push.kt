@@ -78,7 +78,7 @@ object Push {
             var listedEntities: Int
             var res: Int
             var check: idEntity
-            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
+            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val bounds: idBounds
             val pushBounds = idBounds()
             val clipMove = idVec3()
@@ -126,7 +126,7 @@ object Push {
                 // disable to be pushed entities for collision detection
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i].GetPhysics().DisableClip()
+                    entityList[i]!!.GetPhysics().DisableClip()
                     i++
                 }
                 Game_local.gameLocal.clip.Translation(
@@ -142,7 +142,7 @@ object Push {
                 // enable to be pushed entities for collision detection
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i].GetPhysics().EnableClip()
+                    entityList[i]!!.GetPhysics().EnableClip()
                     i++
                 }
                 if (results.fraction == 0.0f) {
@@ -167,7 +167,7 @@ object Push {
             // try to push the entities
             i = 0
             while (i < listedEntities) {
-                check = entityList[i]
+                check = entityList[i]!!
                 val physics = check.GetPhysics()
 
                 // disable the entity for collision detection
@@ -286,7 +286,7 @@ object Push {
             var listedEntities: Int
             var res: Int
             var check: idEntity
-            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
+            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val bounds: idBounds
             val pushBounds = idBounds()
             val clipRotation: idRotation
@@ -329,7 +329,7 @@ object Push {
                 // disable to be pushed entities for collision detection
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i].GetPhysics().DisableClip()
+                    entityList[i]!!.GetPhysics().DisableClip()
                     i++
                 }
                 Game_local.gameLocal.clip.Rotation(
@@ -345,7 +345,7 @@ object Push {
                 // enable to be pushed entities for collision detection
                 i = 0
                 while (i < listedEntities) {
-                    entityList[i].GetPhysics().EnableClip()
+                    entityList[i]!!.GetPhysics().EnableClip()
                     i++
                 }
                 if (results.fraction == 0.0f) {
@@ -370,7 +370,7 @@ object Push {
             // try to push all the entities
             i = 0
             while (i < listedEntities) {
-                check = entityList[i]
+                check = entityList[i]!!
                 val physics = check.GetPhysics()
 
                 // disable the entity for collision detection
@@ -959,7 +959,7 @@ object Push {
         }
 
         private fun DiscardEntities(
-            entityList: Array<idEntity>,
+            entityList: Array<idEntity?>,
             numEntities: Int,
             flags: Int,
             pusher: idEntity
@@ -971,7 +971,7 @@ object Push {
             // remove all entities we cannot or should not push from the list
             num = 0.also { i = it }
             while (i < numEntities) {
-                check = entityList[i]
+                check = entityList[i]!!
 
                 // if the physics object is not pushable
                 if (!check.GetPhysics().IsPushable()) {

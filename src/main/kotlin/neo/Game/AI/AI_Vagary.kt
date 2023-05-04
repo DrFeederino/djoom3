@@ -2,10 +2,7 @@ package neo.Game.AI
 
 import neo.Game.AI.AI.idAI
 import neo.Game.Entity.idEntity
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t2
-import neo.Game.GameSys.Class.eventCallback_t5
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local
@@ -64,20 +61,20 @@ class AI_Vagary {
             speed: idEventArg<Float>, minDist: idEventArg<Float>, offset: idEventArg<Float>
         ) {
             var ent: idEntity
-            val entityList = Array(Game_local.MAX_GENTITIES) { idEntity() }
+            val entityList = kotlin.arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val numListedEntities: Int
             var i: Int
             var index: Int
             var dist: Float
             val vel = idVec3()
-            val offsetVec = idVec3(0f, 0f, offset.value!!)
+            val offsetVec = idVec3(0f, 0f, offset.value)
             val enemyEnt: idEntity? = enemy.GetEntity()
             if (null == enemyEnt) {
                 idThread.ReturnEntity(null)
             }
             val enemyEyePos = lastVisibleEnemyPos + lastVisibleEnemyEyeOffset
             val myBounds = physicsObj.GetAbsBounds()
-            val checkBounds = idBounds(mins.value!!, maxs.value!!)
+            val checkBounds = idBounds(mins.value, maxs.value)
             checkBounds.TranslateSelf(physicsObj.GetOrigin())
             numListedEntities =
                 Game_local.gameLocal.clip.EntitiesTouchingBounds(checkBounds, -1, entityList, Game_local.MAX_GENTITIES)
@@ -87,7 +84,7 @@ class AI_Vagary {
                 if (index >= numListedEntities) {
                     index = 0
                 }
-                ent = entityList[index]
+                ent = entityList[index]!!
                 if (ent !is idMoveable) {
                     i++
                     index++
@@ -102,7 +99,7 @@ class AI_Vagary {
                 val entPhys = ent.GetPhysics()
                 val entOrg = entPhys.GetOrigin()
                 dist = entOrg.minus(enemyEyePos).LengthFast()
-                if (dist < minDist.value!!) {
+                if (dist < minDist.value) {
                     i++
                     index++
                     continue
@@ -117,7 +114,7 @@ class AI_Vagary {
                 if (PredictTrajectory(
                         entPhys.GetOrigin() + offsetVec,
                         enemyEyePos,
-                        speed.value!!,
+                        speed.value,
                         entPhys.GetGravity(),
                         entPhys.GetClipModel()!!,
                         entPhys.GetClipMask(),
@@ -138,8 +135,8 @@ class AI_Vagary {
         }
 
         private fun Event_ThrowObjectAtEnemy(_ent: idEventArg<idEntity>, _speed: idEventArg<Float>) {
-            val ent = _ent.value!!
-            val speed: Float = _speed.value!!
+            val ent = _ent.value
+            val speed: Float = _speed.value
             val vel = idVec3()
             val enemyEnt: idEntity?
             val entPhys: idPhysics?

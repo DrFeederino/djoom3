@@ -200,7 +200,7 @@ object AF {
                 )
                 return false
             }
-            if (file.bodies.Num() == 0 || file.bodies[0]!!.jointName.toString() != "origin") {
+            if (file.bodies.Num() == 0 || file.bodies[0].jointName.toString() != "origin") {
                 Game_local.gameLocal.Warning(
                     "idAF::Load: articulated figure '%s' for entity '%s' at (%s) has no body which modifies the origin joint.",
                     name.toString(), ent.name.toString(), ent.GetPhysics().GetOrigin().ToString(0)

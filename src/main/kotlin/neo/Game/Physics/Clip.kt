@@ -1547,7 +1547,7 @@ object Clip {
         fun EntitiesTouchingBounds(
             bounds: idBounds,
             contentMask: Int,
-            entityList: Array<idEntity>,
+            entityList: Array<idEntity?>,
             maxCount: Int
         ): Int {
             val clipModelList = arrayOfNulls<idClipModel>(Game_local.MAX_GENTITIES)

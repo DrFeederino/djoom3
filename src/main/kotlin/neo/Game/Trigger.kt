@@ -174,7 +174,7 @@ object Trigger {
         override fun Spawn() {
             super.Spawn()
             GetPhysics().SetContents(Material.CONTENTS_TRIGGER)
-            val funcname = spawnArgs.GetString("call", "")
+            val funcname = spawnArgs.GetString("call", "")!!
             if (funcname.length != 0) {
                 scriptFunction = Game_local.gameLocal.program.FindFunction(funcname)
                 if (scriptFunction == null) {
@@ -983,7 +983,7 @@ object Trigger {
             val other = _other.value
             val damage: String
             if (on && Game_local.gameLocal.time >= nextTime) {
-                damage = spawnArgs.GetString("def_damage", "damage_painTrigger")
+                damage = spawnArgs.GetString("def_damage", "damage_painTrigger")!!
                 other.Damage(null, null, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
                 ActivateTargets(other)
                 CallScript()

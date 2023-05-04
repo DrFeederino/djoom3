@@ -15,17 +15,96 @@ import neo.idlib.math.Vector.idVec4
  *
  */
 object tr_shadowbounds {
-    private val lut: Array<polyhedron> = Array<polyhedron>(64) { polyhedron() }
-    private val p: polyhedron = polyhedron()
+    private val lut: Array<polyhedron?> = arrayOfNulls(64)
+    private val p: polyhedron? = null
+
+    open class MyArray<T> {
+        var s = 0
+        var v // = (T[]) new Object[N];
+                : Array<T?>? = null
+
+        //
+        private val N: Int
+
+        constructor() {
+            N = -1
+        }
+
+        constructor(N: Int) //: s(0)
+        {
+            this.N = N
+            v = arrayOfNulls<Any>(N) as Array<T?>
+        }
+
+        constructor(N: Int, cpy: MyArray<T>) //: s(cpy.s)
+        {
+            this.N = N
+            v = arrayOfNulls<Any>(N) as Array<T?>
+            for (i in 0 until s) {
+                v!![i] = cpy.v!![i]
+            }
+        }
+
+        fun push_back(i: T) {
+            v!![s] = i
+            s++
+            //if(s > max_size)
+            //	max_size = int(s);
+        }
+
+        operator fun get(index: Int): T? {
+            return v!![index]
+        }
+
+        operator fun set(index: Int, value: T): T {
+            return value.also { v!![index] = it }
+        }
+
+        //	const T & operator[](int i) const {
+        //		return v[i];
+        //	}
+        fun size(): Int {
+            return s
+        }
+
+        fun empty() {
+            s = 0
+        } //	static int max_size;
+    }
+//int MySegments::max_size = 0;
+
+    //int MySegments::max_size = 0;
+    class MyArrayInt : MyArray<Int?>() {
+        private val N = 4
+    }
+
+    class MyArrayVec4 : MyArray<idVec4?>() {
+        private val N = 16
+    }
+
+    class poly {
+        var ni: MyArrayInt? = null
+        var plane: idVec4? = null
+        var vi: MyArrayInt? = null
+    }
+
+    class MyArrayPoly : MyArray<poly?>() {
+        private val N = 9
+    }
+
+    class MyArrayEdge : MyArray<edge?>() {
+        private val N = 15
+    }
 
     //int MyArrayInt::max_size = 0;
-    fun four_ints(a: Int, b: Int, c: Int, d: Int): IntArray {
-        val vi = ArrayList<Int>()
-        vi.add(a)
-        vi.add(b)
-        vi.add(c)
-        vi.add(d)
-        return vi.toIntArray()
+    //int MyArrayInt::max_size = 0;
+    fun four_ints(a: Int, b: Int, c: Int, d: Int): MyArrayInt? {
+        val vi = MyArrayInt()
+        vi.push_back(a)
+        vi.push_back(b)
+        vi.push_back(c)
+        vi.push_back(d)
+        return vi
     }
 
     //int MyArrayVec4::max_size = 0;
@@ -83,15 +162,27 @@ object tr_shadowbounds {
 //       | /      \ |
 //       0----------1
 //
-        if (p.e.size == 0) {
-            p.v.add(idVec4(-1, -1, 1, 1))
-            p.v.add(idVec4(1, -1, 1, 1))
-            p.v.add(idVec4(1, 1, 1, 1))
-            p.v.add(idVec4(-1, 1, 1, 1))
-            p.v.add(idVec4(-1, -1, -1, 1))
-            p.v.add(idVec4(1, -1, -1, 1))
-            p.v.add(idVec4(1, 1, -1, 1))
-            p.v.add(idVec4(-1, 1, -1, 1))
+
+
+//       3----------2
+//       |\        /|
+//       | \      / |
+//       |   7--6   |
+//       |   |  |   |
+//       |   4--5   |
+//       |  /    \  |
+//       | /      \ |
+//       0----------1
+//
+        if (p!!.e.size() == 0) {
+            p.v.push_back(idVec4(-1, -1, 1, 1))
+            p.v.push_back(idVec4(1, -1, 1, 1))
+            p.v.push_back(idVec4(1, 1, 1, 1))
+            p.v.push_back(idVec4(-1, 1, 1, 1))
+            p.v.push_back(idVec4(-1, -1, -1, 1))
+            p.v.push_back(idVec4(1, -1, -1, 1))
+            p.v.push_back(idVec4(1, 1, -1, 1))
+            p.v.push_back(idVec4(-1, 1, -1, 1))
             p.add_quad(0, 1, 2, 3)
             p.add_quad(7, 6, 5, 4)
             p.add_quad(1, 0, 4, 5)
@@ -100,20 +191,24 @@ object tr_shadowbounds {
             p.add_quad(0, 3, 7, 4)
             p.compute_neighbors()
             p.recompute_planes()
-            p.v.clear() // no need to copy this data since it'll be replaced
+            p.v.empty() // no need to copy this data since it'll be replaced
         }
+
         val p2 = polyhedron(p)
+
         val min = idVec3(b[0])
         val max = idVec3(b[1])
-        p2.v.clear()
-        p2.v.add(idVec4(min.x, min.y, max.z, 1f))
-        p2.v.add(idVec4(max.x, min.y, max.z, 1f))
-        p2.v.add(idVec4(max.x, max.y, max.z, 1f))
-        p2.v.add(idVec4(min.x, max.y, max.z, 1f))
-        p2.v.add(idVec4(min.x, min.y, min.z, 1f))
-        p2.v.add(idVec4(max.x, min.y, min.z, 1f))
-        p2.v.add(idVec4(max.x, max.y, min.z, 1f))
-        p2.v.add(idVec4(min.x, max.y, min.z, 1f))
+
+        p2.v.empty()
+        p2.v.push_back(idVec4(min.x, min.y, max.z, 1f))
+        p2.v.push_back(idVec4(max.x, min.y, max.z, 1f))
+        p2.v.push_back(idVec4(max.x, max.y, max.z, 1f))
+        p2.v.push_back(idVec4(min.x, max.y, max.z, 1f))
+        p2.v.push_back(idVec4(min.x, min.y, min.z, 1f))
+        p2.v.push_back(idVec4(max.x, min.y, min.z, 1f))
+        p2.v.push_back(idVec4(max.x, max.y, min.z, 1f))
+        p2.v.push_back(idVec4(min.x, max.y, min.z, 1f))
+
         p2.recompute_planes()
         return p2
     }
@@ -121,59 +216,59 @@ object tr_shadowbounds {
     fun make_sv(oc: polyhedron, light: idVec4): polyhedron {
         var index = 0
         for (i in 0..5) {
-            if (oc.p[i].plane.times(light) > 0) {
+            if (oc.p[i]!!.plane!!.times(light) > 0) {
                 index = index or (1 shl i)
             }
         }
-        if (lut[index].e.size == 0) {
+        if (lut[index]!!.e.size() == 0) {
             lut[index] = oc
-            val ph: polyhedron = lut[index]
-            val V = ph.v.size
+            val ph: polyhedron = lut[index]!!
+            val V = ph.v.size()
             for (j in 0 until V) {
-                val proj = idVec3(homogeneous_difference(light, ph.v[j]))
-                ph.v.add(idVec4(proj.x, proj.y, proj.z, 0f))
+                val proj = idVec3(homogeneous_difference(light, ph.v[j]!!))
+                ph.v.push_back(idVec4(proj.x, proj.y, proj.z, 0f))
             }
-            ph.p.clear()
-            for (i in 0 until oc.p.size) {
-                if (oc.p[i].plane.times(light) > 0) {
-                    ph.p.add(oc.p[i])
+            ph.p.empty()
+            for (i in 0 until oc.p.size()) {
+                if (oc.p[i]!!.plane!!.times(light) > 0) {
+                    ph.p.push_back(oc.p[i])
                 }
             }
-            if (ph.p.size == 0) {
+            if (ph.p.size() == 0) {
                 return polyhedron().also { lut[index] = it }
             }
             ph.compute_neighbors()
-            val vpg = ArrayList<poly>()
-            val I = ph.p.size
+            val vpg = MyArrayPoly()
+            val I = ph.p.size()
             for (i in 0 until I) {
-                val vi = ph.p[i].vi
-                val ni = ph.p[i].ni
-                val S = vi.size
+                val vi = ph.p[i]!!.vi
+                val ni = ph.p[i]!!.ni
+                val S = vi!!.size()
                 for (j in 0 until S) {
-                    if (ni[j] == -1) {
+                    if (ni!![j] == -1) {
                         val pg = poly()
-                        val a: Int = vi[(j + 1) % S]
-                        val b: Int = vi[j]
+                        val a: Int = vi[(j + 1) % S]!!
+                        val b: Int = vi[j]!!
                         pg.vi = four_ints(a, b, b + V, a + V)
                         pg.ni = four_ints(-1, -1, -1, -1)
-                        vpg.add(pg)
+                        vpg.push_back(pg)
                     }
                 }
             }
-            for (i in 0 until vpg.size) {
-                ph.p.add(vpg.get(i))
+            for (i in 0 until vpg.size()) {
+                ph.p.push_back(vpg[i])
             }
             ph.compute_neighbors()
-            ph.v.clear() // no need to copy this data since it'll be replaced
+            ph.v.empty() // no need to copy this data since it'll be replaced
         }
-        val ph2: polyhedron = lut[index]
+        val ph2: polyhedron = lut[index]!!
 
         // initalize vertices
         ph2.v = oc.v
-        val V = ph2.v.size
+        val V = ph2.v.size()
         for (j in 0 until V) {
-            val proj = idVec3(homogeneous_difference(light, ph2.v[j]))
-            ph2.v.add(idVec4(proj.x, proj.y, proj.z, 0f))
+            val proj = idVec3(homogeneous_difference(light, ph2.v[j]!!))
+            ph2.v.push_back(idVec4(proj.x, proj.y, proj.z, 0f))
         }
 
         // need to compute planes for the shadow volume (sv)
@@ -182,29 +277,29 @@ object tr_shadowbounds {
     }
 
     //int MyArrayEdge::max_size = 0;
-    fun polyhedron_edges(a: polyhedron, e: ArrayList<idVec4>) {
-        e.clear()
-        if (a.e.size == 0 && a.p.size != 0) {
+    fun polyhedron_edges(a: polyhedron, e: MySegments) {
+        e.empty()
+        if (a.e.size() == 0 && a.p.size() != 0) {
             a.compute_neighbors()
         }
-        for (i in 0 until a.e.size) {
-            e.add(a.v[a.e[i].vi[0]])
-            e.add(a.v[a.e[i].vi[1]])
+        for (i in 0 until a.e.size()) {
+            e.push_back(a.v[a.e[i]!!.vi[0]]!!)
+            e.push_back(a.v[a.e[i]!!.vi[1]]!!)
         }
     }
 
     // clip the segments of e by the planes of polyhedron a.
-    fun clip_segments(ph: polyhedron, `is`: ArrayList<idVec4>, os: ArrayList<idVec4>) {
+    fun clip_segments(ph: polyhedron, `is`: MySegments, os: MySegments) {
         val p = ph.p
         var i = 0
-        while (i < `is`.size) {
-            var a = `is`[i]
-            var b = `is`[i + 1]
+        while (i < `is`.size()) {
+            var a = `is`[i]!!
+            var b = `is`[i + 1]!!
             var c: idVec4
             var discard = false
-            for (j in 0 until p.size) {
-                val da = a.times(p[j].plane)
-                val db = b.times(p[j].plane)
+            for (j in 0 until p.size()) {
+                val da = a.times(p[j]!!.plane!!)
+                val db = b.times(p[j]!!.plane!!)
                 val rdw = 1 / (da - db)
                 var code = 0
                 if (da > 0) {
@@ -231,8 +326,8 @@ object tr_shadowbounds {
                 }
             }
             if (!discard) {
-                os.add(a)
-                os.add(b)
+                os.push_back(a)
+                os.push_back(b)
             }
             i += 2
         }
@@ -252,19 +347,23 @@ object tr_shadowbounds {
     }
 
     fun draw_polyhedron(viewDef: viewDef_s, p: polyhedron, color: idVec4) {
-        for (i in 0 until p.e.size) {
+        for (i in 0 until p.e.size()) {
             viewDef.renderWorld!!.DebugLine(
                 color,
-                v4to3(p.v[p.e[i].vi[0]]),
-                v4to3(p.v[p.e[i].vi[1]])
+                v4to3(p.v[p.e[i]!!.vi[0]]!!),
+                v4to3(p.v[p.e[i]!!.vi[1]]!!)
             )
         }
     }
 
-    fun draw_segments(viewDef: viewDef_s, s: ArrayList<idVec4>, color: idVec4) {
+    class MySegments : MyArray<idVec4?>() {
+        private val N = 36
+    }
+
+    fun draw_segments(viewDef: viewDef_s, s: MySegments, color: idVec4) {
         var i = 0
-        while (i < s.size) {
-            viewDef.renderWorld!!.DebugLine(color, v4to3(s.get(i)), v4to3(s.get(i + 1)))
+        while (i < s.size()) {
+            viewDef.renderWorld!!.DebugLine(color, v4to3(s[i]!!), v4to3(s[i + 1]!!))
             i += 2
         }
     }
@@ -327,8 +426,8 @@ object tr_shadowbounds {
 
         // generate shadow volume "polyhedron"
         val sv: polyhedron = make_sv(vol, lightpos)
-        val in_segs = ArrayList<idVec4>(36)
-        val out_segs = ArrayList<idVec4>(36)
+        val in_segs = MySegments()
+        val out_segs = MySegments()
 
         // get shadow volume edges
         polyhedron_edges(sv, in_segs)
@@ -346,11 +445,11 @@ object tr_shadowbounds {
         }
         val outbounds = idBounds()
         outbounds.Clear()
-        for (i in 0 until out_segs.size) {
+        for (i in 0 until out_segs.size()) {
             val v = idVec4()
-            world_to_hclip(viewDef, out_segs[i], v)
+            world_to_hclip(viewDef, out_segs[i]!!, v)
             if (v.w <= 0.0f) {
-                return lightDef.viewLight!!.scissorRect!!
+                return lightDef.viewLight!!.scissorRect
             }
             val rv = idVec3(v.x, v.y, v.z)
             rv.divAssign(v.w)
@@ -380,7 +479,7 @@ object tr_shadowbounds {
         rect.y1 = (outbounds[0].y * h2 + h2 + y).toInt()
         rect.y2 = (outbounds[1].y * h2 + h2 + y).toInt()
         rect.Expand()
-        rect.Intersect(lightDef.viewLight!!.scissorRect!!)
+        rect.Intersect(lightDef.viewLight!!.scissorRect)
 
         // debug //
         if (RenderSystem_init.r_useInteractionScissors.GetInteger() == -2 && !rect.IsEmpty()) {
@@ -389,21 +488,15 @@ object tr_shadowbounds {
         return rect
     }
 
-    class poly {
-        var ni: IntArray = IntArray(4)
-        var plane: idVec4 = idVec4()
-        var vi: IntArray = IntArray(4)
-    }
-
     class edge {
         var pi: IntArray = IntArray(2)
         var vi: IntArray = IntArray(2)
     }
 
     class polyhedron {
-        var e: ArrayList<edge> = ArrayList(15)
-        var p: ArrayList<poly> = ArrayList(9)
-        var v: ArrayList<idVec4> = ArrayList(16)
+        var e: MyArrayEdge = MyArrayEdge()
+        var p: MyArrayPoly = MyArrayPoly()
+        var v: MyArrayVec4 = MyArrayVec4()
 
         constructor() {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
@@ -417,53 +510,53 @@ object tr_shadowbounds {
             val pg = poly()
             pg.vi = four_ints(va, vb, vc, vd)
             pg.ni = four_ints(-1, -1, -1, -1)
-            pg.plane = compute_homogeneous_plane(v[va], v[vb], v[vc])
-            p.add(pg)
+            pg.plane = compute_homogeneous_plane(v[va]!!, v[vb]!!, v[vc]!!)
+            p.push_back(pg)
         }
 
         fun discard_neighbor_info() {
-            for (i in 0 until p.size) {
-                val ni = p[i].ni
-                for (j in 0 until ni.size) {
+            for (i in 0 until p.size()) {
+                val ni = p[i]!!.ni!!
+                for (j in 0 until ni.size()) {
                     ni.set(j, -1)
                 }
             }
         }
 
         fun compute_neighbors() {
-            e.clear()
+            e.empty()
             discard_neighbor_info()
             var found: Boolean
-            val P = p.size
+            val P = p.size()
             // for each polygon
             for (i in 0 until P - 1) {
-                val vi = p[i].vi
-                val ni = p[i].ni
-                val Si = vi.size
+                val vi = p[i]!!.vi
+                val ni = p[i]!!.ni
+                val Si = vi!!.size()
 
                 // for each edge of that polygon
                 for (ii in 0 until Si) {
                     val ii1 = (ii + 1) % Si
 
                     // continue if we've already found this neighbor
-                    if (ni[ii] != -1) {
+                    if (ni!![ii] != -1) {
                         continue
                     }
                     found = false
                     // check all remaining polygons
                     for (j in i + 1 until P) {
-                        val vj = p[j].vi
-                        val nj = p[j].ni
-                        val Sj = vj.size
+                        val vj = p[j]!!.vi
+                        val nj = p[j]!!.ni
+                        val Sj = vj!!.size()
                         for (jj in 0 until Sj) {
                             val jj1 = (jj + 1) % Sj
                             if (vi[ii] === vj[jj1] && vi[ii1] === vj[jj]) {
                                 val ed = edge()
-                                ed.vi[0] = vi[ii]
-                                ed.vi[1] = vi[ii1]
+                                ed.vi[0] = vi[ii]!!
+                                ed.vi[1] = vi[ii1]!!
                                 ed.pi[0] = i
                                 ed.pi[1] = j
-                                e.add(ed)
+                                e.push_back(ed)
                                 ni.set(ii, j)
                                 ni.set(jj, i)
                                 found = true
@@ -482,18 +575,18 @@ object tr_shadowbounds {
 
         fun recompute_planes() {
             // for each polygon
-            for (i in 0 until p.size) {
-                p[i].plane = compute_homogeneous_plane(
-                    v[p[i].vi[0]],
-                    v[p[i].vi[1]],
-                    v[p[i].vi[2]]
+            for (i in 0 until p.size()) {
+                p[i]!!.plane = compute_homogeneous_plane(
+                    v[p[i]!!.vi!![0]!!]!!,
+                    v[p[i]!!.vi!![1]!!]!!,
+                    v[p[i]!!.vi!![2]!!]!!
                 )
             }
         }
 
         fun transform(m: idMat4) {
-            for (i in 0 until v.size) {
-                v.set(i, m.times(v[i]))
+            for (i in 0 until v.size()) {
+                v[i] = m.times(v[i]!!)
             }
             recompute_planes()
         }

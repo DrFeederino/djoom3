@@ -55,7 +55,7 @@ object PlayerView {
     }
 
     class idPlayerView {
-        private val screenBlobs: ArrayList<screenBlob_t> = ArrayList<screenBlob_t>(MAX_SCREEN_BLOBS)
+        private val screenBlobs: Array<screenBlob_t?> = arrayOfNulls<screenBlob_t>(MAX_SCREEN_BLOBS)
         private val armorMaterial // armor damage view effect
                 : Material.idMaterial?
         private val berserkMaterial // berserk effect
@@ -111,7 +111,7 @@ object PlayerView {
         fun Save(savefile: idSaveGame) {
             var i: Int
             var blob: screenBlob_t
-            blob = screenBlobs[0]
+            blob = screenBlobs[0]!!
             i = 0
             while (i < MAX_SCREEN_BLOBS) {
                 savefile.WriteMaterial(blob.material)
@@ -126,7 +126,7 @@ object PlayerView {
                 savefile.WriteInt(blob.finishTime)
                 savefile.WriteInt(blob.startFadeTime)
                 savefile.WriteFloat(blob.driftAmount)
-                blob = screenBlobs[++i]
+                blob = screenBlobs[++i]!!
             }
             savefile.WriteInt(dvFinishTime)
             savefile.WriteMaterial(dvMaterial)
@@ -155,7 +155,7 @@ object PlayerView {
             var blob: screenBlob_t
 
 //            blob = screenBlobs[ 0];
-            blob = screenBlobs[0.also { i = it }]
+            blob = screenBlobs[0.also { i = it }]!!
             while (i < MAX_SCREEN_BLOBS) {
                 savefile.ReadMaterial(blob.material!!)
                 blob.x = savefile.ReadFloat()
@@ -169,7 +169,7 @@ object PlayerView {
                 blob.finishTime = savefile.ReadInt()
                 blob.startFadeTime = savefile.ReadInt()
                 blob.driftAmount = savefile.ReadFloat()
-                blob = screenBlobs[++i]
+                blob = screenBlobs[++i]!!
             }
             dvFinishTime = savefile.ReadInt()
             savefile.ReadMaterial(dvMaterial!!)
@@ -202,8 +202,8 @@ object PlayerView {
             dvFinishTime = Game_local.gameLocal.time - 99999
             kickFinishTime = Game_local.gameLocal.time - 99999
             for (i in 0 until MAX_SCREEN_BLOBS) {
-                screenBlobs.add(i, screenBlob_t())
-                screenBlobs[i].finishTime = Game_local.gameLocal.time
+                screenBlobs[i] = screenBlob_t()
+                screenBlobs[i]!!.finishTime = Game_local.gameLocal.time
             }
             fadeTime = 0
             bfgVision = false
@@ -518,7 +518,7 @@ object PlayerView {
             // draw screen blobs
             if (!SysCvar.pm_thirdPerson.GetBool() && !SysCvar.g_skipViewEffects.GetBool()) {
                 for (i in 0 until MAX_SCREEN_BLOBS) {
-                    val blob = screenBlobs[i]
+                    val blob = screenBlobs[i]!!
                     if (blob.finishTime <= Game_local.gameLocal.time) {
                         continue
                     }
@@ -777,10 +777,10 @@ object PlayerView {
         }
 
         private fun GetScreenBlob(): screenBlob_t {
-            var oldest = screenBlobs[0]
+            var oldest = screenBlobs[0]!!
             for (i in 1 until MAX_SCREEN_BLOBS) {
-                if (screenBlobs[i].finishTime < oldest.finishTime) {
-                    oldest = screenBlobs[i]
+                if (screenBlobs[i]!!.finishTime < oldest.finishTime) {
+                    oldest = screenBlobs[i]!!
                 }
             }
             return oldest

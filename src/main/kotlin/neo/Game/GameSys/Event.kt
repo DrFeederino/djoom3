@@ -120,17 +120,17 @@ object Event {
         }
 
         companion object {
-            private val eventDefList: ArrayList<idEventDef> = ArrayList(MAX_EVENTS)
+            private val eventDefList: Array<idEventDef?> = arrayOfNulls(MAX_EVENTS)
             private var numEventDefs = 0
             fun NumEventCommands(): Int {
                 return numEventDefs
             }
 
-            fun GetEventCommand(eventnum: Int): idEventDef {
+            fun GetEventCommand(eventnum: Int): idEventDef? {
                 return eventDefList[eventnum]
             }
 
-            fun FindEvent(name: String): idEventDef? {
+            fun FindEvent(name: String?): idEventDef? {
                 var ev: idEventDef
                 val num: Int
                 var i: Int
@@ -138,7 +138,7 @@ object Event {
                 num = numEventDefs
                 i = 0
                 while (i < num) {
-                    ev = eventDefList[i]
+                    ev = eventDefList[i]!!
                     if (name == ev.name) {
                         return ev
                     }
@@ -208,7 +208,7 @@ object Event {
             eventnum = numEventDefs
             i = 0
             while (i < eventnum) {
-                ev = eventDefList[i]
+                ev = eventDefList[i]!!
                 if (command == ev.name) {
                     if (formatSpec != ev.formatspec) {
                         eventError = true
@@ -234,7 +234,7 @@ object Event {
                 eventError = true
                 eventErrorMsg = String.format("numEventDefs >= MAX_EVENTS")
             }
-            eventDefList.add(numEventDefs, ev)
+            eventDefList[numEventDefs] = ev
             numEventDefs++
         }
     }

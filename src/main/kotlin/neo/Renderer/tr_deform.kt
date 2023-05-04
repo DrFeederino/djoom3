@@ -233,7 +233,7 @@ object tr_deform {
      to it that would try to be freed later.  Create the ambientCache immediately.
      =================
      */
-    fun R_FinishDeform(drawSurf: drawSurf_s, newTri: srfTriangles_s?, ac: Array<idDrawVert>) {
+    fun R_FinishDeform(drawSurf: drawSurf_s, newTri: srfTriangles_s?, ac: Array<idDrawVert?>) {
         if (null == newTri) {
             return
         }
@@ -245,12 +245,12 @@ object tr_deform {
         // FIXME: this doesn't work, because the deformed surface is just the
         // ambient one, and there isn't an opportunity to generate light interactions
         if (drawSurf.material!!.ReceivesLighting()) {
-            newTri.verts = ac as Array<idDrawVert?>
+            newTri.verts = ac
             tr_trisurf.R_DeriveTangents(newTri, false)
             newTri.verts = null
         }
         newTri.ambientCache = VertexCache.vertexCache.AllocFrameTempIdDrawVert(
-            ac as Array<idDrawVert?>,
+            ac,
             newTri.numVerts * idDrawVert.Companion.BYTES
         )
         // if we are out of vertex cache, leave it the way it is
@@ -336,7 +336,7 @@ object tr_deform {
             newTri.indexes!![6 * (i shr 2) + 5] = i + 3
             i += 4
         }
-        R_FinishDeform(surf, newTri, ac)
+        R_FinishDeform(surf, newTri, ac as Array<idDrawVert?>)
     }
 
     fun R_TubeDeform(surf: drawSurf_s) {
@@ -458,7 +458,7 @@ object tr_deform {
             i += 4
             indexes += 6
         }
-        R_FinishDeform(surf, newTri, ac)
+        R_FinishDeform(surf, newTri, ac as Array<idDrawVert?>)
     }
 
     fun R_WindingFromTriangles(
@@ -613,13 +613,13 @@ object tr_deform {
             color = 255
         }
         j = 0
-        val ac = Array<idDrawVert>(newTri.numVerts) { idDrawVert() }
+        val ac = arrayOfNulls<idDrawVert>(newTri.numVerts)
         while (j < newTri.numVerts) {
-            //ac[j] = idDrawVert()
+            ac[j] = idDrawVert()
             ac[j]!!.color[2] = color.toByte()
-            ac[j]!!.color[1] = ac[j].color[2]
-            ac[j].color[0] = ac[j].color[1]
-            ac[j].color[3] = 255.toByte()
+            ac[j]!!.color[1] = ac[j]!!.color[2]
+            ac[j]!!.color[0] = ac[j]!!.color[1]
+            ac[j]!!.color[3] = 255.toByte()
             j++
         }
         val spread =
@@ -636,8 +636,8 @@ object tr_deform {
         // calculate vector directions
         i = 0
         while (i < 4) {
-            ac[i].xyz.set(tri.verts!![indexes[i]]!!.xyz)
-            ac[i].st[0] = ac[i].st.set(1, 0.5f)
+            ac[i]!!.xyz.set(tri.verts!![indexes[i]]!!.xyz)
+            ac[i]!!.st[0] = ac[i]!!.st.set(1, 0.5f)
             val toEye = idVec3(tri.verts!![indexes[i]]!!.xyz.minus(localViewer))
             toEye.Normalize()
             val d1 = idVec3(tri.verts!![indexes[(i + 1) % 4]]!!.xyz.minus(localViewer))
@@ -655,55 +655,55 @@ object tr_deform {
         }
 
         // build all the points
-        ac[4].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][0].times(spread)))
-        ac[4].st[0] = 0f
-        ac[4].st[1] = 0.5f
-        ac[5].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][2].times(spread)))
-        ac[5].st[0] = 0f
-        ac[5].st[1] = 0f
-        ac[6].xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][1].times(spread)))
-        ac[6].st[0] = 0.5f
-        ac[6].st[1] = 0f
-        ac[7].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][0].times(spread)))
-        ac[7].st[0] = 0.5f
-        ac[7].st[1] = 0f
-        ac[8].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][2].times(spread)))
-        ac[8].st[0] = 1f
-        ac[8].st[1] = 0f
-        ac[9].xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][1].times(spread)))
-        ac[9].st[0] = 1f
-        ac[9].st[1] = 0.5f
-        ac[10].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][0].times(spread)))
-        ac[10].st[0] = 1f
-        ac[10].st[1] = 0.5f
-        ac[11].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][2].times(spread)))
-        ac[11].st[0] = 1f
-        ac[11].st[1] = 1f
-        ac[12].xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][1].times(spread)))
-        ac[12].st[0] = 0.5f
-        ac[12].st[1] = 1f
-        ac[13].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][0].times(spread)))
-        ac[13].st[0] = 0.5f
-        ac[13].st[1] = 1f
-        ac[14].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][2].times(spread)))
-        ac[14].st[0] = 0f
-        ac[14].st[1] = 1f
-        ac[15].xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][1].times(spread)))
-        ac[15].st[0] = 0f
-        ac[15].st[1] = 0.5f
+        ac[4]!!.xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][0].times(spread)))
+        ac[4]!!.st[0] = 0f
+        ac[4]!!.st[1] = 0.5f
+        ac[5]!!.xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][2].times(spread)))
+        ac[5]!!.st[0] = 0f
+        ac[5]!!.st[1] = 0f
+        ac[6]!!.xyz.set(tri.verts!![indexes[0]]!!.xyz.plus(edgeDir[0][1].times(spread)))
+        ac[6]!!.st[0] = 0.5f
+        ac[6]!!.st[1] = 0f
+        ac[7]!!.xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][0].times(spread)))
+        ac[7]!!.st[0] = 0.5f
+        ac[7]!!.st[1] = 0f
+        ac[8]!!.xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][2].times(spread)))
+        ac[8]!!.st[0] = 1f
+        ac[8]!!.st[1] = 0f
+        ac[9]!!.xyz.set(tri.verts!![indexes[1]]!!.xyz.plus(edgeDir[1][1].times(spread)))
+        ac[9]!!.st[0] = 1f
+        ac[9]!!.st[1] = 0.5f
+        ac[10]!!.xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][0].times(spread)))
+        ac[10]!!.st[0] = 1f
+        ac[10]!!.st[1] = 0.5f
+        ac[11]!!.xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][2].times(spread)))
+        ac[11]!!.st[0] = 1f
+        ac[11]!!.st[1] = 1f
+        ac[12]!!.xyz.set(tri.verts!![indexes[2]]!!.xyz.plus(edgeDir[2][1].times(spread)))
+        ac[12]!!.st[0] = 0.5f
+        ac[12]!!.st[1] = 1f
+        ac[13]!!.xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][0].times(spread)))
+        ac[13]!!.st[0] = 0.5f
+        ac[13]!!.st[1] = 1f
+        ac[14]!!.xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][2].times(spread)))
+        ac[14]!!.st[0] = 0f
+        ac[14]!!.st[1] = 1f
+        ac[15]!!.xyz.set(tri.verts!![indexes[3]]!!.xyz.plus(edgeDir[3][1].times(spread)))
+        ac[15]!!.st[0] = 0f
+        ac[15]!!.st[1] = 0.5f
         i = 4
         while (i < 16) {
-            dir.set(ac[i].xyz.minus(localViewer))
+            dir.set(ac[i]!!.xyz.minus(localViewer))
             val len = dir.Normalize()
             val ang = dir.times(plane.Normal())
 
 //		ac[i].xyz -= dir * spread * 2;
             val newLen = -(distFromPlane / ang)
             if (newLen > 0 && newLen < len) {
-                ac[i].xyz.set(localViewer.plus(dir.times(newLen)))
+                ac[i]!!.xyz.set(localViewer.plus(dir.times(newLen)))
             }
-            ac[i].st[0] = 0f
-            ac[i].st[1] = 0.5f
+            ac[i]!!.st[0] = 0f
+            ac[i]!!.st[1] = 0.5f
             i++
         }
 
@@ -744,15 +744,15 @@ object tr_deform {
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
         newTri.indexes = tri.indexes!!
-        val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
+        val ac = arrayOfNulls<idDrawVert>(newTri.numVerts)
         val dist = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
         i = 0
         while (i < tri.numVerts) {
-            ac[i] = tri.verts!![i]!!
-            ac[i].xyz.set(tri.verts!![i]!!.xyz.plus(tri.verts!![i]!!.normal.times(dist)))
+            ac[i] = tri.verts!![i]
+            ac[i]!!.xyz.set(tri.verts!![i]!!.xyz.plus(tri.verts!![i]!!.normal.times(dist)))
             i++
         }
-        R_FinishDeform(surf, newTri, ac.toTypedArray())
+        R_FinishDeform(surf, newTri, ac)
     }
 
     //=====================================================================================
@@ -775,15 +775,15 @@ object tr_deform {
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
         newTri.indexes = tri.indexes!!
-        val ac = ArrayList<idDrawVert>(newTri.numVerts)
+        val ac = arrayOfNulls<idDrawVert>(newTri.numVerts)
         val dist = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
         i = 0
         while (i < tri.numVerts) {
             ac[i] = tri.verts!![i]!!
-            ac[i].xyz.plusAssign(0, dist)
+            ac[i]!!.xyz.plusAssign(0, dist)
             i++
         }
-        R_FinishDeform(surf, newTri, ac.toTypedArray())
+        R_FinishDeform(surf, newTri, ac)
     }
 
     /*
@@ -805,7 +805,7 @@ object tr_deform {
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
         newTri.indexes = tri.indexes!!
-        val ac = kotlin.collections.ArrayList<idDrawVert>(newTri.numVerts)
+        val ac = arrayOfNulls<idDrawVert>(newTri.numVerts)
         val table = surf.material!!.GetDeformDecl() as idDeclTable
         val range = surf.shaderRegisters!![surf.material!!.GetDeformRegister(0)]
         val timeOfs = surf.shaderRegisters!![surf.material!!.GetDeformRegister(1)]
@@ -818,11 +818,11 @@ object tr_deform {
             f = timeOfs + domain * f
             f += timeOfs
             ac[i] = tri.verts!![i]!!
-            ac[i].st.plusAssign(0, range * table.TableLookup(f))
-            ac[i].st.plusAssign(1, range * table.TableLookup(f + tOfs))
+            ac[i]!!.st.plusAssign(0, range * table.TableLookup(f))
+            ac[i]!!.st.plusAssign(1, range * table.TableLookup(f + tOfs))
             i++
         }
-        R_FinishDeform(surf, newTri, ac.toTypedArray())
+        R_FinishDeform(surf, newTri, ac)
     }
 
     fun AddTriangleToIsland_r(tri: srfTriangles_s, triangleNum: Int, usedList: BooleanArray, island: eyeIsland_t) {
@@ -1001,7 +1001,7 @@ object tr_deform {
             }
             i++
         }
-        R_FinishDeform(surf, newTri, ac)
+        R_FinishDeform(surf, newTri, ac as Array<idDrawVert?>)
     }
 
     //==========================================================================================

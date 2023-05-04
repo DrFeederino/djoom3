@@ -116,6 +116,11 @@ object tr_turboshadow {
         sil = 0
         i = tri.numSilEdges
         while (i > 0) {
+//            if (tri.silEdges!![sil].p1 >= facing.size || tri.silEdges!![sil].p2 >= facing.size) {
+//                i--
+//                sil++
+//                continue
+//            }
             val f1: Int = facing[tri.silEdges!![sil].p1].toInt()
             val f2: Int = facing[tri.silEdges!![sil].p2].toInt()
             if (0 == f1 xor f2) {

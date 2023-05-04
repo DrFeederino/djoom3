@@ -641,7 +641,7 @@ object Projectile {
             }
 
             // just get rid of the projectile when it hits a player in noclip
-            if (ent is idPlayer && (ent as idPlayer).noclip) {
+            if (ent is idPlayer && ent.noclip) {
                 PostEventMS(EV_Remove, 0)
                 return true
             }
@@ -1827,8 +1827,8 @@ object Projectile {
             // which will cut down on hitting monsters not actively fighting
             // but saves on the traces making sure they are visible
             // damage is not applied until the projectile explodes
-            var ent: idEntity
-            val entityList = ArrayList<idEntity>(Game_local.MAX_GENTITIES)
+            var ent: idEntity?
+            val entityList = arrayOfNulls<idEntity>(Game_local.MAX_GENTITIES)
             val numListedEntities: Int
             val bounds: idBounds
             val damagePoint = idVec3()
@@ -1865,13 +1865,13 @@ object Projectile {
             numListedEntities = Game_local.gameLocal.clip.EntitiesTouchingBounds(
                 bounds,
                 Material.CONTENTS_BODY,
-                entityList.toTypedArray(),
+                entityList,
                 Game_local.MAX_GENTITIES
             )
             for (e in 0 until numListedEntities) {
                 ent = entityList[e]
                 assert(ent != null)
-                if (ent === this || ent === owner.GetEntity() || ent.IsHidden() || !ent.IsActive() || !ent.fl.takedamage || ent.health <= 0 || ent !is idActor) {
+                if (ent === this || ent === owner.GetEntity() || ent!!.IsHidden() || !ent.IsActive() || !ent.fl.takedamage || ent.health <= 0 || ent !is idActor) {
                     continue
                 }
                 if (!ent.CanDamage(GetPhysics().GetOrigin(), damagePoint)) {

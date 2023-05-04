@@ -71,7 +71,6 @@ import neo.idlib.math.Plane
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
-import neo.sys.win_shared
 import neo.sys.win_shared.Sys_Milliseconds
 import neo.ui.UserInterface
 import org.lwjgl.opengl.GL11
@@ -315,7 +314,7 @@ object RenderWorld_local {
                 Common.common.Printf("idRenderWorld::FreeEntityDef: handle %d is NULL\n", entityHandle)
                 return
             }
-            tr_lightrun.R_FreeEntityDefDerivedData(def, false, false)
+            R_FreeEntityDefDerivedData(def, false, false)
             if (Session.session.writeDemo != null && def.archived) {
                 WriteFreeEntity(entityHandle)
             }
@@ -446,7 +445,7 @@ object RenderWorld_local {
                 Common.common.Printf("idRenderWorld::FreeLightDef: handle %d is NULL\n", lightHandle)
                 return
             }
-            tr_lightrun.R_FreeLightDefDerivedData(light)
+            R_FreeLightDefDerivedData(light)
             if (Session.session.writeDemo != null && light.archived) {
                 WriteFreeLight(lightHandle)
             }
@@ -745,7 +744,7 @@ object RenderWorld_local {
          ====================
          */
         override fun SetRenderView(renderView: renderView_s) {
-            tr_local.tr.primaryRenderView = renderView
+            tr.primaryRenderView = renderView
         }
 
         /*
@@ -762,7 +761,7 @@ object RenderWorld_local {
         override fun RenderScene(renderView: renderView_s?) {
             if (!BuildDefines.ID_DEDICATED) {
                 val copy: renderView_s
-                if (!tr_local.glConfig.isInitialized) {
+                if (!glConfig.isInitialized) {
                     return
                 }
 
@@ -780,20 +779,20 @@ object RenderWorld_local {
                 }
 
                 // close any gui drawing
-                tr_local.tr.guiModel.EmitFullScreen()
-                tr_local.tr.guiModel.Clear()
-                val startTime = win_shared.Sys_Milliseconds()
+                tr.guiModel.EmitFullScreen()
+                tr.guiModel.Clear()
+                val startTime = Sys_Milliseconds()
 
                 // setup view parms for the initial view
                 //
                 val parms = viewDef_s() // R_ClearedFrameAlloc(sizeof(parms));
                 parms.renderView = renderView
-                if (tr_local.tr.takingScreenshot) {
+                if (tr.takingScreenshot) {
                     parms.renderView.forceUpdate = true
                 }
 
                 // set up viewport, adjusted for resolution and OpenGL style 0 at the bottom
-                tr_local.tr.RenderViewToViewport(parms.renderView, parms.viewport)
+                tr.RenderViewToViewport(parms.renderView, parms.viewport)
 
                 // the scissor bounds may be shrunk in subviews even if
                 // the viewport stays the same
@@ -809,7 +808,7 @@ object RenderWorld_local {
 
                 // use this time for any subsequent 2D rendering, so damage blobs/etc
                 // can use level time
-                tr_local.tr.frameShaderTime = parms.floatTime
+                tr.frameShaderTime = parms.floatTime
 
                 // see if the view needs to reverse the culling sense in mirrors
                 // or environment cube sides
@@ -822,9 +821,9 @@ object RenderWorld_local {
                 }
 
                 // save this world for use by some console commands
-                tr_local.tr.primaryWorld = this
-                tr_local.tr.primaryRenderView = renderView
-                tr_local.tr.primaryView = parms
+                tr.primaryWorld = this
+                tr.primaryRenderView = renderView
+                tr.primaryView = parms
 
                 // rendering this view may cause other views to be rendered
                 // for mirrors / portals / shadows / environment maps
@@ -851,11 +850,11 @@ object RenderWorld_local {
 //                        }
 //                    }
 //                }
-                val endTime = win_shared.Sys_Milliseconds()
-                tr_local.tr.pc.frontEndMsec += endTime - startTime
+                val endTime = Sys_Milliseconds()
+                tr.pc.frontEndMsec += endTime - startTime
 
                 // prepare for any 2D drawing after this
-                tr_local.tr.guiModel.Clear()
+                tr.guiModel.Clear()
             }
         }
 
@@ -1082,7 +1081,7 @@ object RenderWorld_local {
             }
 
             // transform the points into local space
-            tr_main.R_AxisToModelMatrix(refEnt.axis, refEnt.origin, modelMatrix)
+            R_AxisToModelMatrix(refEnt.axis, refEnt.origin, modelMatrix)
             tr_main.R_GlobalPointToLocal(modelMatrix, start, localStart)
             tr_main.R_GlobalPointToLocal(modelMatrix, end, localEnd)
 
@@ -1272,7 +1271,7 @@ object RenderWorld_local {
                         numSurfaces++
 
                         // transform the points into local space
-                        tr_main.R_AxisToModelMatrix(def.parms.axis, def.parms.origin, modelMatrix)
+                        R_AxisToModelMatrix(def.parms.axis, def.parms.origin, modelMatrix)
                         tr_main.R_GlobalPointToLocal(modelMatrix, start, localStart)
                         tr_main.R_GlobalPointToLocal(modelMatrix, end, localEnd)
                         localTrace = tr_trace.R_LocalTrace(localStart, localEnd, radius, surf.geometry!!)
@@ -1681,7 +1680,7 @@ object RenderWorld_local {
 
             // parse the name
             src.ExpectAnyToken(token)
-            model = ModelManager.renderModelManager.AllocModel()
+            model = renderModelManager.AllocModel()
             model.InitEmpty(token.toString())
             val numSurfaces = src.ParseInt()
             if (numSurfaces < 0) {
@@ -1740,9 +1739,9 @@ object RenderWorld_local {
 
             // parse the name
             src.ExpectAnyToken(token)
-            model = ModelManager.renderModelManager.AllocModel()
+            model = renderModelManager.AllocModel()
             model.InitEmpty(token.toString())
-            surf.shader = tr_local.tr.defaultMaterial
+            surf.shader = tr.defaultMaterial
             tri = tr_trisurf.R_AllocStaticTriSurf()
             surf.geometry = tri
             tri.numVerts = src.ParseInt()
@@ -2050,7 +2049,7 @@ object RenderWorld_local {
             var i: Int
             i = 0
             while (i < localModels.Num()) {
-                ModelManager.renderModelManager.CheckModel(localModels[i]!!.Name())
+                renderModelManager.CheckModel(localModels[i]!!.Name())
                 i++
             }
         }
@@ -2076,7 +2075,7 @@ object RenderWorld_local {
                 }
                 def.index = index
                 def.world = this
-                def.parms.hModel = ModelManager.renderModelManager.FindModel(Str.va("_area%d", i))
+                def.parms.hModel = renderModelManager.FindModel(Str.va("_area%d", i))
                 if (def.parms.hModel!!.IsDefaultModel() || !def.parms.hModel!!.IsStaticWorldModel()) {
                     Common.common.Error("idRenderWorldLocal::InitFromMap: bad area model lookup")
                 }
@@ -2091,7 +2090,7 @@ object RenderWorld_local {
                 def.parms.axis.set(0, 0, 1f)
                 def.parms.axis.set(1, 1, 1f)
                 def.parms.axis.set(2, 2, 1f)
-                tr_main.R_AxisToModelMatrix(def.parms.axis, def.parms.origin, def.modelMatrix)
+                R_AxisToModelMatrix(def.parms.axis, def.parms.origin, def.modelMatrix)
 
                 // in case an explicit shader is used on the world, we don't
                 // want it to have a 0 alpha or color
@@ -2162,7 +2161,7 @@ object RenderWorld_local {
             val currentTimeStamp = LongArray(1)
             FileSystem_h.fileSystem.ReadFile(filename.toString(), null, currentTimeStamp)
             if (mapName.toString() == name) {
-                if (currentTimeStamp[0] != FileSystem_h.FILE_NOT_FOUND_TIMESTAMP.toLong() && currentTimeStamp[0] == mapTimeStamp[0]
+                if (currentTimeStamp[0] != FILE_NOT_FOUND_TIMESTAMP.toLong() && currentTimeStamp[0] == mapTimeStamp[0]
                 ) {
                     Common.common.Printf("idRenderWorldLocal::InitFromMap: retaining existing map\n")
                     FreeDefs()
@@ -2206,7 +2205,7 @@ object RenderWorld_local {
                     lastModel = ParseModel(src)
 
                     // add it to the model manager list
-                    ModelManager.renderModelManager.AddModel(lastModel)
+                    renderModelManager.AddModel(lastModel)
 
                     // save it in the list to free when clearing this map
 
@@ -2218,7 +2217,7 @@ object RenderWorld_local {
                     lastModel = ParseShadowModel(src)
 
                     // add it to the model manager list
-                    ModelManager.renderModelManager.AddModel(lastModel)
+                    renderModelManager.AddModel(lastModel)
 
                     // save it in the list to free when clearing this map
 
@@ -2265,9 +2264,9 @@ object RenderWorld_local {
                 v.set(tr_main.R_LocalPointToGlobal(space.modelMatrix, w[i].ToVec3()))
                 tr_main.R_GlobalToNormalizedDeviceCoordinates(v, ndc)
                 windowX =
-                    0.5f * (1.0f + ndc[0]) * (tr_local.tr.viewDef!!.viewport.x2 - tr_local.tr.viewDef!!.viewport.x1)
+                    0.5f * (1.0f + ndc[0]) * (tr.viewDef!!.viewport.x2 - tr.viewDef!!.viewport.x1)
                 windowY =
-                    0.5f * (1.0f + ndc[1]) * (tr_local.tr.viewDef!!.viewport.y2 - tr_local.tr.viewDef!!.viewport.y1)
+                    0.5f * (1.0f + ndc[1]) * (tr.viewDef!!.viewport.y2 - tr.viewDef!!.viewport.y1)
                 r.AddPoint(windowX, windowY)
                 i++
             }
@@ -2292,7 +2291,7 @@ object RenderWorld_local {
             lightShader.EvaluateRegisters(
                 regs,
                 ldef.parms.shaderParms,
-                tr_local.tr.viewDef!!,
+                tr.viewDef!!,
                 ldef.parms.referenceSound
             )
             val stage: shaderStage_t = lightShader.GetStage(0)!!
@@ -2306,10 +2305,10 @@ object RenderWorld_local {
                 // otherwise, distance = alpha color
                 -0.5f / alpha
             }
-            forward[0] = a * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[2]
-            forward[1] = a * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[6]
-            forward[2] = a * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[10]
-            forward[3] = a * tr_local.tr.viewDef!!.worldSpace.modelViewMatrix[14]
+            forward[0] = a * tr.viewDef!!.worldSpace.modelViewMatrix[2]
+            forward[1] = a * tr.viewDef!!.worldSpace.modelViewMatrix[6]
+            forward[2] = a * tr.viewDef!!.worldSpace.modelViewMatrix[10]
+            forward[3] = a * tr.viewDef!!.worldSpace.modelViewMatrix[14]
             w = p.w
             i = 0
             while (i < w!!.GetNumPoints()) {
@@ -2415,7 +2414,7 @@ object RenderWorld_local {
 
                 // find the screen pixel bounding box of the remaining portal
                 // so we can scissor things outside it
-                newStack.rect = ScreenRectFromWinding(w, tr_local.tr.identitySpace)
+                newStack.rect = ScreenRectFromWinding(w, tr.identitySpace)
 
                 // slop might have spread it a pixel outside, so trim it back
                 newStack.rect.Intersect(ps.rect)
@@ -2476,11 +2475,11 @@ object RenderWorld_local {
                 i++
             }
             ps.numPortalPlanes = numPlanes
-            ps.rect = tr_local.tr.viewDef!!.scissor
-            if (tr_local.tr.viewDef!!.areaNum < 0) {
+            ps.rect = tr.viewDef!!.scissor
+            if (tr.viewDef!!.areaNum < 0) {
                 i = 0
                 while (i < numPortalAreas) {
-                    areaScreenRect!![i] = tr_local.tr.viewDef!!.scissor
+                    areaScreenRect!![i] = tr.viewDef!!.scissor
                     i++
                 }
 
@@ -2498,7 +2497,7 @@ object RenderWorld_local {
                 }
 
                 // flood out through portals, setting area viewCount
-                FloodViewThroughArea_r(origin, tr_local.tr.viewDef!!.areaNum, ps)
+                FloodViewThroughArea_r(origin, tr.viewDef!!.areaNum, ps)
             }
         }
 
@@ -2787,15 +2786,15 @@ object RenderWorld_local {
                 }
 
                 // remove decals that are completely faded away
-                tr_lightrun.R_FreeEntityDefFadedDecals(entity, tr_local.tr.viewDef!!.renderView.time)
+                tr_lightrun.R_FreeEntityDefFadedDecals(entity, tr.viewDef!!.renderView.time)
 
                 // check for completely suppressing the model
                 if (!RenderSystem_init.r_skipSuppress.GetBool()) {
-                    if (entity.parms.suppressSurfaceInViewID != 0 && entity.parms.suppressSurfaceInViewID == tr_local.tr.viewDef!!.renderView.viewID) {
+                    if (entity.parms.suppressSurfaceInViewID != 0 && entity.parms.suppressSurfaceInViewID == tr.viewDef!!.renderView.viewID) {
                         ref = ref.areaNext!!
                         continue
                     }
-                    if (entity.parms.allowSurfaceInViewID != 0 && entity.parms.allowSurfaceInViewID != tr_local.tr.viewDef!!.renderView.viewID) {
+                    if (entity.parms.allowSurfaceInViewID != 0 && entity.parms.allowSurfaceInViewID != tr.viewDef!!.renderView.viewID) {
                         ref = ref.areaNext!!
                         continue
                     }
@@ -2842,7 +2841,7 @@ object RenderWorld_local {
                     // so the planes that have the view origin on the negative
                     // side will be the "back" faces of the light, which must have
                     // some fragment inside the portalStack to be visible
-                    if (light.frustum[i].Distance(tr_local.tr.viewDef!!.renderView.vieworg) >= 0) {
+                    if (light.frustum[i].Distance(tr.viewDef!!.renderView.vieworg) >= 0) {
                         i++
                         continue
                     }
@@ -2892,7 +2891,7 @@ object RenderWorld_local {
                     }
                     if (j == tri.numVerts) {
                         // all points were outside one of the planes
-                        tr_local.tr.pc.c_box_cull_out++
+                        tr.pc.c_box_cull_out++
                         return true
                     }
                     i++
@@ -2921,7 +2920,7 @@ object RenderWorld_local {
                 // check for being closed off behind a door
                 // a light that doesn't cast shadows will still light even if it is behind a door
                 if (RenderSystem_init.r_useLightCulling.GetInteger() >= 3 && !light.parms.noShadows && light.lightShader!!.LightCastsShadows()
-                    && light.areaNum != -1 && !tr_local.tr.viewDef!!.connectedAreas[light.areaNum]
+                    && light.areaNum != -1 && !tr.viewDef!!.connectedAreas!![light.areaNum]
                 ) {
                     lref = lref.areaNext!!
                     continue
@@ -2953,7 +2952,7 @@ object RenderWorld_local {
         fun AddAreaRefs(areaNum: Int, ps: portalStack_s) {
             // mark the viewCount, so r_showPortals can display the
             // considered portals
-            portalAreas!![areaNum]!!.viewCount = tr_local.tr.viewCount
+            portalAreas!![areaNum]!!.viewCount = tr.viewCount
 
             // add the models and lights, using more precise culling to the planes
             AddAreaEntityRefs(areaNum, ps)
@@ -2963,10 +2962,10 @@ object RenderWorld_local {
         fun BuildConnectedAreas_r(areaNum: Int) {
             val area: portalArea_s?
             var portal: portal_s?
-            if (tr_local.tr.viewDef!!.connectedAreas[areaNum]) {
+            if (tr.viewDef!!.connectedAreas!![areaNum]) {
                 return
             }
-            tr_local.tr.viewDef!!.connectedAreas[areaNum] = true
+            tr.viewDef!!.connectedAreas!![areaNum] = true
 
             // flood through all non-blocked portals
             area = portalAreas!![areaNum]!!
@@ -2988,32 +2987,32 @@ object RenderWorld_local {
          */
         fun BuildConnectedAreas() {
             var i: Int
-            tr_local.tr.viewDef!!.connectedAreas = BooleanArray(numPortalAreas)
+            tr.viewDef!!.connectedAreas = BooleanArray(numPortalAreas)
 
             // if we are outside the world, we can see all areas
-            if (tr_local.tr.viewDef!!.areaNum == -1) {
-                Arrays.fill(tr_local.tr.viewDef!!.connectedAreas, true)
+            if (tr.viewDef!!.areaNum == -1) {
+                Arrays.fill(tr.viewDef!!.connectedAreas, true)
                 return
             }
 
             // start with none visible, and flood fill from the current area
 //            memset(tr.viewDef!!.connectedAreas, 0, numPortalAreas);
-            tr_local.tr.viewDef!!.connectedAreas = BooleanArray(numPortalAreas)
-            BuildConnectedAreas_r(tr_local.tr.viewDef!!.areaNum)
+            tr.viewDef!!.connectedAreas = BooleanArray(numPortalAreas)
+            BuildConnectedAreas_r(tr.viewDef!!.areaNum)
         }
 
         fun FindViewLightsAndEntities() {
             // clear the visible lightDef and entityDef lists
-            tr_local.tr.viewDef!!.viewLights = null
-            tr_local.tr.viewDef!!.viewEntitys = null
-            tr_local.tr.viewDef!!.numViewEntitys = 0
+            tr.viewDef!!.viewLights = null
+            tr.viewDef!!.viewEntitys = null
+            tr.viewDef!!.numViewEntitys = 0
 
             // find the area to start the portal flooding in
             if (!RenderSystem_init.r_usePortals.GetBool()) {
                 // debug tool to force no portal culling
-                tr_local.tr.viewDef!!.areaNum = -1
+                tr.viewDef!!.areaNum = -1
             } else {
-                tr_local.tr.viewDef!!.areaNum = PointInArea(tr_local.tr.viewDef!!.initialViewAreaOrigin)
+                tr.viewDef!!.areaNum = PointInArea(tr.viewDef!!.initialViewAreaOrigin)
             }
 
             // determine all possible connected areas for
@@ -3022,35 +3021,35 @@ object RenderWorld_local {
 
             // bump the view count, invalidating all
             // visible areas
-            tr_local.tr.viewCount++
+            tr.viewCount++
             //            System.out.println("tr.viewCount::FindViewLightsAndEntities");
-            tr_local.tr.DBG_viewCount++
+            tr.DBG_viewCount++
 
             // flow through all the portals and add models / lights
             if (RenderSystem_init.r_singleArea.GetBool()) {
                 // if debugging, only mark this area
                 // if we are outside the world, don't draw anything
-                if (tr_local.tr.viewDef!!.areaNum >= 0) {
+                if (tr.viewDef!!.areaNum >= 0) {
                     val ps = portalStack_s()
                     var i: Int
-                    if (tr_local.tr.viewDef!!.areaNum != lastPrintedAreaNum) {
-                        lastPrintedAreaNum = tr_local.tr.viewDef!!.areaNum
-                        Common.common.Printf("entering portal area %d\n", tr_local.tr.viewDef!!.areaNum)
+                    if (tr.viewDef!!.areaNum != lastPrintedAreaNum) {
+                        lastPrintedAreaNum = tr.viewDef!!.areaNum
+                        Common.common.Printf("entering portal area %d\n", tr.viewDef!!.areaNum)
                     }
                     i = 0
                     while (i < 5) {
-                        ps.portalPlanes[i] = idPlane(tr_local.tr.viewDef!!.frustum[i])
+                        ps.portalPlanes[i] = idPlane(tr.viewDef!!.frustum[i])
                         i++
                     }
                     ps.numPortalPlanes = 5
-                    ps.rect = tr_local.tr.viewDef!!.scissor
-                    AddAreaRefs(tr_local.tr.viewDef!!.areaNum, ps)
+                    ps.rect = tr.viewDef!!.scissor
+                    AddAreaRefs(tr.viewDef!!.areaNum, ps)
                 }
             } else {
                 // note that the center of projection for flowing through portals may
                 // be a different point than initialViewAreaOrigin for subviews that
                 // may have the viewOrigin in a solid/invalid area
-                FlowViewThroughPortals(tr_local.tr.viewDef!!.renderView.vieworg, 5, tr_local.tr.viewDef!!.frustum)
+                FlowViewThroughPortals(tr.viewDef!!.renderView.vieworg, 5, tr.viewDef!!.frustum)
             }
         }
 
@@ -3196,7 +3195,7 @@ object RenderWorld_local {
             i = 0
             while (i < numPortalAreas) {
                 area = portalAreas!![i]!!
-                if (area.viewCount != tr_local.tr.viewCount) {
+                if (area.viewCount != tr.viewCount) {
                     i++
                     continue
                 }
@@ -3207,7 +3206,7 @@ object RenderWorld_local {
                         p = p.next
                         continue
                     }
-                    if (portalAreas!![p.intoArea]!!.viewCount != tr_local.tr.viewCount) {
+                    if (portalAreas!![p.intoArea]!!.viewCount != tr.viewCount) {
                         // red = can't see
                         qgl.qglColor3f(1f, 0f, 0f)
                     } else {
@@ -3391,13 +3390,13 @@ object RenderWorld_local {
                     if (RenderSystem_init.r_showDemo.GetBool()) {
                         Common.common.Printf("DC_GUI_MODEL\n")
                     }
-                    tr_local.tr.demoGuiModel!!.ReadFromDemo(readDemo)
+                    tr.demoGuiModel!!.ReadFromDemo(readDemo)
                 }
                 demoCommand_t.DC_DEFINE_MODEL -> {
-                    val model = ModelManager.renderModelManager.AllocModel()
+                    val model = renderModelManager.AllocModel()
                     model.ReadFromDemoFile(Session.session.readDemo!!)
                     // add to model manager, so we can find it
-                    ModelManager.renderModelManager.AddModel(model)
+                    renderModelManager.AddModel(model)
 
                     // save it in the list to free when clearing this map
                     localModels.Append(model)
@@ -3797,7 +3796,7 @@ object RenderWorld_local {
             }
             if (shadow.hModel != null) {
                 shadow.hModel =
-                    ModelManager.renderModelManager.FindModel(Session.session.readDemo!!.ReadHashString())
+                    renderModelManager.FindModel(Session.session.readDemo!!.ReadHashString())
             }
             if (shadow.referenceShader != null) {
                 shadow.referenceShader =
@@ -3900,7 +3899,7 @@ object RenderWorld_local {
             Session.session.readDemo!!.Read(shadow.referenceSound!!)
             if (shadow.prelightModel != null) {
                 shadow.prelightModel =
-                    ModelManager.renderModelManager.FindModel(Session.session.readDemo!!.ReadHashString())
+                    renderModelManager.FindModel(Session.session.readDemo!!.ReadHashString())
             }
             if (shadow.shader != null) {
                 shadow.shader =
@@ -3935,7 +3934,7 @@ object RenderWorld_local {
                 throw RuntimeException("idRenderWorldLocal::AddEntityRefToArea: NULL def")
             }
             ref = areaReference_s() //areaReferenceAllocator.Alloc();
-            tr_local.tr.pc.c_entityReferences++
+            tr.pc.c_entityReferences++
             ref.entity = def
 
             // link to entityDef
@@ -3959,7 +3958,7 @@ object RenderWorld_local {
             lref.area = area
             lref.ownerNext = light.references
             light.references = lref
-            tr_local.tr.pc.c_lightReferences++
+            tr.pc.c_lightReferences++
 
             // doubly linked list so we can free them easily later
             area.lightRefs.areaNext!!.areaPrev = lref
@@ -4117,10 +4116,10 @@ object RenderWorld_local {
                 val area: portalArea_s?
                 val areaNum = -1 - nodeNum
                 area = portalAreas!![areaNum]!!
-                if (area.viewCount == tr_local.tr.viewCount) {
+                if (area.viewCount == tr.viewCount) {
                     return  // already added a reference here
                 }
-                area.viewCount = tr_local.tr.viewCount
+                area.viewCount = tr.viewCount
                 def?.let { AddEntityRefToArea(it, area) }
                 light?.let { AddLightRefToArea(it, area) }
                 return
@@ -4136,7 +4135,7 @@ object RenderWorld_local {
                 // yet, because the test volume may yet wind up being in the
                 // solid part, which would cause bounds slightly poked into
                 // a wall to show up in the next room
-                if (portalAreas!![node.commonChildrenArea]!!.viewCount == tr_local.tr.viewCount) {
+                if (portalAreas!![node.commonChildrenArea]!!.viewCount == tr.viewCount) {
                     return
                 }
             }
@@ -4329,7 +4328,7 @@ object RenderWorld_local {
                     // but we don't want to instantiate dynamic models yet, so we can't check that on
                     // most things
                     // if the entity isn't viewed
-                    if (tr_local.tr.viewDef != null && eDef.viewCount != tr_local.tr.viewCount) {
+                    if (tr.viewDef != null && eDef.viewCount != tr.viewCount) {
                         // if the light doesn't cast shadows, skip
                         if (!lDef.lightShader!!.LightCastsShadows()) {
                             eRef = eRef.areaNext
@@ -4338,7 +4337,7 @@ object RenderWorld_local {
                         }
                         // if we are suppressing its shadow in this view, skip
                         if (!RenderSystem_init.r_skipSuppress.GetBool()) {
-                            if (eDef.parms.suppressShadowInViewID != 0 && eDef.parms.suppressShadowInViewID == tr_local.tr.viewDef!!.renderView.viewID) {
+                            if (eDef.parms.suppressShadowInViewID != 0 && eDef.parms.suppressShadowInViewID == tr.viewDef!!.renderView.viewID) {
                                 eRef = eRef.areaNext
                                 j++
                                 continue
@@ -4415,10 +4414,10 @@ object RenderWorld_local {
                     // trying to avoid creating a viewEntity if it hasn't been already
                     val modelMatrix = FloatArray(16)
                     var m: FloatArray?
-                    m = if (eDef.viewCount == tr_local.tr.viewCount) {
+                    m = if (eDef.viewCount == tr.viewCount) {
                         eDef.viewEntity!!.modelMatrix
                     } else {
-                        tr_main.R_AxisToModelMatrix(eDef.parms.axis, eDef.parms.origin, modelMatrix)
+                        R_AxisToModelMatrix(eDef.parms.axis, eDef.parms.origin, modelMatrix)
                         modelMatrix
                     }
                     if (tr_main.R_CullLocalBox(eDef.referenceBounds, m, 6, lDef.frustum)) {

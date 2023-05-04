@@ -2020,7 +2020,7 @@ object Actor {
             if (Game_local.gameLocal.isClient) {
                 return
             }
-            headModel = spawnArgs.GetString("def_head", "")
+            headModel = spawnArgs.GetString("def_head", "")!!
             if (!headModel.isEmpty()) {
                 jointName = spawnArgs.GetString("head_joint")
                 joint = animator.GetJointHandle(jointName)

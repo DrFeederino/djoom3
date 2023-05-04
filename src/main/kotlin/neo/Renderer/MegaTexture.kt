@@ -86,10 +86,10 @@ object MegaTexture {
 
     internal class idTextureLevel {
         //
-        var image: idImage = idImage()
-        var mega: idMegaTexture = idMegaTexture()
-        var tileMap: Array<ArrayList<idTextureTile>> =
-            Array(TILE_PER_LEVEL) { ArrayList<idTextureTile>(TILE_PER_LEVEL) }
+        var image: idImage? = null
+        var mega: idMegaTexture? = null
+        var tileMap: Array<Array<idTextureTile?>> =
+            Array(TILE_PER_LEVEL) { arrayOfNulls<idTextureTile>(TILE_PER_LEVEL) }
 
         //
         var tileOffset = 0
@@ -153,7 +153,7 @@ object MegaTexture {
          ====================
          */
         fun UpdateTile(localX: Int, localY: Int, globalX: Int, globalY: Int) {
-            val tile = tileMap[localX][localY]
+            val tile = tileMap[localX][localY]!!
             if (tile.x == globalX && tile.y == globalY) {
                 return
             }
@@ -170,10 +170,10 @@ object MegaTexture {
                 // extract the data from the full image (FIXME: background load from disk)
                 val tileNum = tileOffset + tile.y * tilesWide + tile.x
                 val tileSize = TILE_SIZE * TILE_SIZE * 4
-                mega.fileHandle!!.Seek((tileNum * tileSize).toLong(), fsOrigin_t.FS_SEEK_SET)
+                mega!!.fileHandle!!.Seek((tileNum * tileSize).toLong(), fsOrigin_t.FS_SEEK_SET)
                 //		memset( data, 128, sizeof( data ) );
                 Arrays.fill(data.array(), 128.toByte())
-                mega.fileHandle!!.Read(data, tileSize)
+                mega!!.fileHandle!!.Read(data, tileSize)
             }
             if (idMegaTexture.r_showMegaTextureLabels.GetBool()) {
                 // put a color marker in it
@@ -253,8 +253,8 @@ object MegaTexture {
         fun Invalidate() {
             for (x in 0 until TILE_PER_LEVEL) {
                 for (y in 0 until TILE_PER_LEVEL) {
-                    tileMap[x][y].y = -99999
-                    tileMap[x][y].x = tileMap[x][y].y
+                    tileMap[x][y]!!.y = -99999
+                    tileMap[x][y]!!.x = tileMap[x][y]!!.y
                 }
             }
         }
@@ -482,8 +482,8 @@ object MegaTexture {
             }
         }
 
-        private val levels: ArrayList<idTextureLevel> =
-            ArrayList<idTextureLevel>(MAX_LEVELS) // 0 is the highest resolution
+        private val levels: Array<idTextureLevel?> =
+            arrayOfNulls<idTextureLevel>(MAX_LEVELS) // 0 is the highest resolution
 
         //
         private val localViewToTextureCenter: Array<FloatArray> = Array(2) { FloatArray(4) }
@@ -527,7 +527,7 @@ object MegaTexture {
 
 //	memset( levels, 0, sizeof( levels ) );
             while (true) {
-                val level = levels[numLevels]
+                val level = levels[numLevels]!!
                 level.mega = this
                 level.tileOffset = tileOffset
                 level.tilesWide = width
@@ -544,7 +544,7 @@ object MegaTexture {
                 for (i in 0..3) {
                     fillColor.setColor(i, colors[numLevels + 1][i])
                 }
-                levels[numLevels].image = Image.globalImages.ImageFromFunction(str, R_EmptyLevelImage.getInstance())
+                levels[numLevels]!!.image = Image.globalImages.ImageFromFunction(str, R_EmptyLevelImage.getInstance())
                 numLevels++
                 if (width <= TILE_PER_LEVEL && height <= TILE_PER_LEVEL) {
                     break
@@ -624,7 +624,7 @@ object MegaTexture {
                     Image.globalImages.whiteImage!!.Bind()
                     qgl.qglProgramLocalParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, i, parms)
                 } else {
-                    val level = levels[numLevels - 1 - i]
+                    val level = levels[numLevels - 1 - i]!!
                     if (r_showMegaTexture.GetBool()) {
                         if (i and 1 == 1) {
                             Image.globalImages.blackImage.Bind()
@@ -632,7 +632,7 @@ object MegaTexture {
                             Image.globalImages.whiteImage!!.Bind()
                         }
                     } else {
-                        level.image.Bind()
+                        level.image!!.Bind()
                     }
                     qgl.qglProgramLocalParameter4fvARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, i, level.parms)
                 }
@@ -672,7 +672,7 @@ object MegaTexture {
                 r_showMegaTextureLabels.ClearModified()
                 currentViewOrigin[0] = viewOrigin[0] + 0.1f // force a change
                 for (i in 0 until numLevels) {
-                    levels[i].Invalidate()
+                    levels[i]!!.Invalidate()
                 }
             }
             if (viewOrigin === currentViewOrigin) {
@@ -691,7 +691,7 @@ object MegaTexture {
                     viewOrigin[0] * localViewToTextureCenter[i][0] + viewOrigin[1] * localViewToTextureCenter[i][1] + viewOrigin[2] * localViewToTextureCenter[i][2] + localViewToTextureCenter[i][3]
             }
             for (i in 0 until numLevels) {
-                levels[i].UpdateForCenter(texCenter)
+                levels[i]!!.UpdateForCenter(texCenter)
             }
         }
 

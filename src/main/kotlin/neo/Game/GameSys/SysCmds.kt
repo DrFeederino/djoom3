@@ -148,7 +148,7 @@ object SysCmds {
             player =
                 if (Game_local.gameLocal.localClientNum >= 0) Game_local.gameLocal.entities[Game_local.gameLocal.localClientNum] as idPlayer else null
             if (player != null) {
-                name = player.GetUserInfo().GetString("ui_name", "player")
+                name = player.GetUserInfo().GetString("ui_name", "player")!!
             }
         } else {
             name = "server"
@@ -2666,13 +2666,13 @@ object SysCmds {
                     ent.spawnNode.Next()
                 }
                 while (ent != null) {
-                    if (!ent.spawnArgs.GetString("gui", "").isNullOrEmpty()) {
+                    if (ent.spawnArgs.GetString("gui", null) != null) {
                         break
                     }
-                    if (!ent.spawnArgs.GetString("gui2", "").isNullOrEmpty()) {
+                    if (ent.spawnArgs.GetString("gui2", null) != null) {
                         break
                     }
-                    if (!ent.spawnArgs.GetString("gui3", "").isNullOrEmpty()) {
+                    if (ent.spawnArgs.GetString("gui3", null) != null) {
                         break
                     }
 

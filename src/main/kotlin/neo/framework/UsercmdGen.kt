@@ -402,7 +402,7 @@ object UsercmdGen {
     }
 
     class idUsercmdGenLocal : idUsercmdGen() {
-        private val buffered: Array<usercmd_t> = Array(MAX_BUFFERED_USERCMD) { usercmd_t() }
+        private val buffered: Array<usercmd_t?> = arrayOfNulls(MAX_BUFFERED_USERCMD)
         private val buttonState: IntArray = IntArray(TempDump.etoi(usercmdButton_t.UB_MAX_BUTTONS))
         private val joystickAxis: IntArray =
             IntArray(TempDump.etoi(joystickAxis_t.MAX_JOYSTICK_AXIS)) // set by joystick events
@@ -499,7 +499,7 @@ object UsercmdGen {
                 // async code to overflow the buffers
                 //common.Printf( "warning: idUsercmdGenLocal::TicCmd ticNumber <= com_ticNumber - MAX_BUFFERED_USERCMD\n" );
             }
-            return buffered[ticNumber and MAX_BUFFERED_USERCMD - 1]
+            return buffered[ticNumber and MAX_BUFFERED_USERCMD - 1]!!
         }
 
         override fun InhibitUsercmd(subsystem: inhibit_t, inhibit: Boolean) {

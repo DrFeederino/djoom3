@@ -154,7 +154,7 @@ class Anim_Testmodel {
             spawnArgs.GetVector("offsetModel", "0 0 0", modelOffset)
 
             // add the head model if it has one
-            headModel = spawnArgs.GetString("def_head", "")
+            headModel = spawnArgs.GetString("def_head", "")!!
             if (TempDump.isNotNullOrEmpty(headModel)) {
                 jointName.set(spawnArgs.GetString("head_joint"))
                 joint = animator.GetJointHandle(jointName.toString())

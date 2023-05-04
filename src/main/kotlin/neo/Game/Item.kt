@@ -34,6 +34,7 @@ import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
 import neo.idlib.containers.CFloat
 import neo.idlib.containers.CInt
+import neo.idlib.containers.List
 import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
@@ -599,7 +600,7 @@ object Item {
             if (player != null) {
 
                 //Pickup( player );
-                if (spawnArgs.GetString("inv_objective") != "") {
+                if (spawnArgs.GetString("inv_objective", null) != null) {
                     if ( /*player &&*/player.hud != null) {
                         val shotName = idStr(Game_local.gameLocal.GetMapName())
                         shotName.StripFileExtension()
@@ -753,7 +754,7 @@ object Item {
          where <X> is an aribtrary string.
          ================
          */
-            fun DropItems(ent: idAnimatedEntity, type: String, list: ArrayList<idEntity>?) {
+            fun DropItems(ent: idAnimatedEntity, type: String, list: List.idList<idEntity>?) {
                 var kv: idKeyValue?
                 val skinName: String?
                 var c: String
@@ -811,7 +812,7 @@ object Item {
                         origin.plusAssign(ent.spawnArgs.GetVector(key2, "0 0 0"))
                         item = DropItem(kv.GetValue().toString(), origin, axis, getVec3_origin(), 0, 0)
                         if (list != null && item != null) {
-                            list.add(item)
+                            list.Append(item)
                         }
                     }
                     kv = ent.spawnArgs.MatchPrefix(Str.va("def_drop%sItem", type), kv)
@@ -819,7 +820,7 @@ object Item {
 
                 // change the skin to hide all items
                 skinName = ent.spawnArgs.GetString(Str.va("skin_drop%s", type))
-                if (!skinName.isEmpty()) {
+                if (skinName.isNotEmpty()) {
                     skin = DeclManager.declManager.FindSkin(skinName)
                     ent.SetSkin(skin)
                 }
@@ -1174,12 +1175,12 @@ object Item {
             val player = Game_local.gameLocal.GetLocalPlayer()
             if (player != null) {
                 RemoveItem(player)
-                if (spawnArgs.GetString("inv_objective") != "") {
+                if (spawnArgs.GetString("inv_objective", null) != null) {
                     if (player.hud != null) {
                         player.hud!!.SetStateString("objective", "2")
-                        player.hud!!.SetStateString("objectivetext", spawnArgs.GetString("objectivetext"))
-                        player.hud!!.SetStateString("objectivetitle", spawnArgs.GetString("objectivetitle"))
-                        player.CompleteObjective(spawnArgs.GetString("objectivetitle"))
+                        player.hud!!.SetStateString("objectivetext", spawnArgs.GetString("objectivetext")!!)
+                        player.hud!!.SetStateString("objectivetitle", spawnArgs.GetString("objectivetitle")!!)
+                        player.CompleteObjective(spawnArgs.GetString("objectivetitle")!!)
                         PostEventMS(EV_GetPlayerPos, 2000)
                     }
                 }

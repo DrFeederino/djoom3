@@ -3271,11 +3271,6 @@ class Game_local {
             return false
         }
 
-        fun ArrayList<idEntityPtr<idEntity>>.Alloc(): idEntityPtr<idEntity> {
-            val idEntityPtr = idEntityPtr<idEntity>()
-            add(idEntityPtr)
-            return idEntityPtr
-        }
 
         fun GetTargets(args: idDict, list: idList<idEntityPtr<idEntity>>, ref: String): Int {
             var i: Int
@@ -3401,7 +3396,7 @@ class Game_local {
             return null
         }
 
-        fun EntitiesWithinRadius(org: idVec3, radius: Float, entityList: Array<idEntity>, maxCount: Int): Int {
+        fun EntitiesWithinRadius(org: idVec3, radius: Float, entityList: Array<idEntity?>, maxCount: Int): Int {
             var ent: idEntity?
             val bo = idBounds(org)
             var entCount = 0
@@ -3493,8 +3488,8 @@ class Game_local {
             var damageScale: Float
             val attackerDamageScale = CFloat()
             val attackerPushScale = CFloat()
-            var ent: idEntity
-            val entityList = kotlin.collections.ArrayList<idEntity>(MAX_GENTITIES)
+            var ent: idEntity?
+            val entityList = arrayOfNulls<idEntity?>(MAX_GENTITIES)
             val numListedEntities: Int
             val bounds: idBounds
             val v = idVec3()
@@ -3521,7 +3516,7 @@ class Game_local {
             bounds = idBounds(origin).Expand(radius._val.toFloat())
 
             // get all entities touching the bounds
-            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList.toTypedArray(), MAX_GENTITIES)
+            numListedEntities = clip.EntitiesTouchingBounds(bounds, -1, entityList, MAX_GENTITIES)
             if (inflictor != null && inflictor is idAFAttachment) {
                 inflictor = (inflictor as idAFAttachment).GetBody()
             }
@@ -3537,7 +3532,7 @@ class Game_local {
             while (e < numListedEntities) {
                 ent = entityList[e]
                 assert(ent != null)
-                if (!ent.fl.takedamage) {
+                if (!ent!!.fl.takedamage) {
                     e++
                     continue
                 }

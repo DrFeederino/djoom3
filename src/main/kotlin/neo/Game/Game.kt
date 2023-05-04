@@ -408,7 +408,7 @@ object Game {
             renderLight.noShadows = args.GetBool("noshadows", "0")
             renderLight.noSpecular = args.GetBool("nospecular", "0")
             renderLight.parallel = args.GetBool("parallel", "0")
-            texture = args.GetString("texture", "lights/squarelight1")
+            texture = args.GetString("texture", "lights/squarelight1")!!
             // allow this to be NULL
             renderLight.shader = DeclManager.declManager.FindMaterial(texture, false)
         }
@@ -675,7 +675,7 @@ object Game {
         ) {
             var i: Int
             val frame = frameBlend_t()
-            val md5joints: kotlin.collections.ArrayList<idMD5Joint>
+            val md5joints: Array<idMD5Joint>
             val index: IntArray
             if (null == model || model.IsDefaultModel() || null == anim) {
                 return
@@ -729,13 +729,13 @@ object Game {
 
             // first joint is always root of entire hierarchy
             if (remove_origin_offset) {
-                joints!![0].SetTranslation(offset)
+                joints[0].SetTranslation(offset)
             } else {
-                joints!![0].SetTranslation(joints[0].ToVec3().plus(offset))
+                joints[0].SetTranslation(joints[0].ToVec3().plus(offset))
             }
 
             // transform the children
-            md5joints = arrayListOf(*model.GetJoints()!!)
+            md5joints = model.GetJoints()!!
             i = 1
             while (i < numJoints) {
                 joints[i].timesAssign(joints[md5joints.indexOf(md5joints[i].parent)])
@@ -797,7 +797,7 @@ object Game {
             if (null == md5anim) {
                 return null
             }
-            temp = args.GetString("skin", "")
+            temp = args.GetString("skin", "")!!
             if (TempDump.isNotNullOrEmpty(temp)) {
                 ent.customSkin = DeclManager.declManager.FindSkin(temp)
             }
@@ -931,10 +931,10 @@ object Game {
             val ent: renderEntity_s
             val origin = idVec3()
             var axis: idMat3 = idMat3()
-            val bodyAxis: ArrayList<idMat3>
-            val newBodyAxis: ArrayList<idMat3>
-            val modifiedAxis: ArrayList<idMat3>
-            val jointMod: ArrayList<declAFJointMod_t>
+            val bodyAxis: Array<idMat3?>
+            val newBodyAxis: Array<idMat3?>
+            val modifiedAxis: Array<idMat3?>
+            val jointMod: Array<declAFJointMod_t?>
             val angles = idAngles()
             val defArgs: idDict?
             var arg: idKeyValue?
@@ -1021,9 +1021,9 @@ object Game {
 
             // buffers to store the initial origin and axis for each body
             val bodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
-            bodyAxis = ArrayList<idMat3>(af.bodies.Num())
+            bodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
             val newBodyOrigin: Array<idVec3> = idVec3.generateArray(af.bodies.Num())
-            newBodyAxis = ArrayList<idMat3>(af.bodies.Num())
+            newBodyAxis = arrayOfNulls<idMat3>(af.bodies.Num())
 
             // finish the AF positions
             data.ent = ent
@@ -1077,7 +1077,7 @@ object Game {
                 angles.yaw = sscanf.nextFloat()
                 angles.roll = sscanf.nextFloat()
                 if (fb.jointName.Icmp("origin") == 0) {
-                    meshAxis = bodyAxis[i].Transpose().times(angles.ToMat3())
+                    meshAxis = bodyAxis[i]!!.Transpose().times(angles.ToMat3())
                     meshOrigin.set(origin.minus(bodyOrigin[i].times(meshAxis)))
                     poseIsSet[0] = true
                 } else {
@@ -1096,12 +1096,12 @@ object Game {
             }
             // buffer to store the joint mods
             jointMod =
-                ArrayList<declAFJointMod_t>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
+                arrayOfNulls<declAFJointMod_t>(numMD5joints) //memset(jointMod, -1, numMD5joints * sizeof(declAFJointMod_t));
             val modifiedOrigin: Array<idVec3> =
                 idVec3.generateArray(numMD5joints) //memset(modifiedOrigin, 0, numMD5joints * sizeof(idVec3));
-            modifiedAxis = ArrayList<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
+            modifiedAxis = arrayOfNulls<idMat3>(numMD5joints) //memset(modifiedAxis, 0, numMD5joints * sizeof(idMat3));
             for (m in 0 until modifiedAxis.size) {
-                modifiedAxis.add(m, idMat3())
+                modifiedAxis[m] = idMat3()
             }
 
             // get all the joint modifications
@@ -1122,8 +1122,8 @@ object Game {
                 if (jointNum >= 0 && jointNum < ent.numJoints) {
                     jointMod[jointNum] = fb.jointMod
                     modifiedAxis[jointNum] =
-                        bodyAxis[i].times(originalJoints[jointNum]!!.ToMat3().Transpose()).Transpose()
-                            .times(newBodyAxis[i].times(meshAxis.Transpose()))
+                        bodyAxis[i]!!.times(originalJoints[jointNum]!!.ToMat3().Transpose()).Transpose()
+                            .times(newBodyAxis[i]!!.times(meshAxis.Transpose()))
                     // FIXME: calculate correct modifiedOrigin
                     modifiedOrigin[jointNum].set(originalJoints[jointNum]!!.ToVec3())
                 }
@@ -1143,24 +1143,24 @@ object Game {
                 )
                 when (jointMod[i]) {
                     declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN -> {
-                        ent.joints!![i]!!.SetRotation(localm.times(ent.joints!![parentNum]!!.ToMat3()))
-                        ent.joints!![i]!!.SetTranslation(modifiedOrigin[i])
+                        ent.joints!![i].SetRotation(localm.times(ent.joints!![parentNum].ToMat3()))
+                        ent.joints!![i].SetTranslation(modifiedOrigin[i])
                     }
 
                     declAFJointMod_t.DECLAF_JOINTMOD_AXIS -> {
-                        ent.joints!![i]!!.SetRotation(modifiedAxis[i])
-                        ent.joints!![i]!!.SetTranslation(
-                            ent.joints!![parentNum]!!.ToVec3().plus(localt.times(ent.joints!![parentNum]!!.ToMat3()))
+                        ent.joints!![i].SetRotation(modifiedAxis[i]!!)
+                        ent.joints!![i].SetTranslation(
+                            ent.joints!![parentNum].ToVec3().plus(localt.times(ent.joints!![parentNum].ToMat3()))
                         )
                     }
                     declAFJointMod_t.DECLAF_JOINTMOD_BOTH -> {
-                        ent.joints!![i]!!.SetRotation(modifiedAxis[i])
-                        ent.joints!![i]!!.SetTranslation(modifiedOrigin[i])
+                        ent.joints!![i].SetRotation(modifiedAxis[i]!!)
+                        ent.joints!![i].SetTranslation(modifiedOrigin[i])
                     }
                     else -> {
-                        ent.joints!![i]!!.SetRotation(localm.times(ent.joints!![parentNum]!!.ToMat3()))
-                        ent.joints!![i]!!.SetTranslation(
-                            ent.joints!![parentNum]!!.ToVec3().plus(localt.times(ent.joints!![parentNum]!!.ToMat3()))
+                        ent.joints!![i].SetRotation(localm.times(ent.joints!![parentNum].ToMat3()))
+                        ent.joints!![i].SetTranslation(
+                            ent.joints!![parentNum].ToVec3().plus(localt.times(ent.joints!![parentNum].ToMat3()))
                         )
                     }
                 }

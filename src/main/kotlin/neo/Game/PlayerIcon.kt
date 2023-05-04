@@ -110,7 +110,7 @@ object PlayerIcon {
 
         fun CreateIcon(player: idPlayer, type: playerIconType_t, origin: idVec3, axis: idMat3): Boolean {
             assert(type != playerIconType_t.ICON_NONE)
-            val mtr = player.spawnArgs.GetString(PlayerIcon.iconKeys[TempDump.etoi(type)], "_default")
+            val mtr = player.spawnArgs.GetString(PlayerIcon.iconKeys[TempDump.etoi(type)], "_default")!!
             return CreateIcon(player, type, mtr, origin, axis)
         }
 

@@ -744,7 +744,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("pda_%d", i)
-                pdas[i] = dict.GetString(itemname, "default")
+                pdas[i] = dict.GetString(itemname, "default")!!
                 i++
             }
 
@@ -754,7 +754,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("video_%d", i)
-                videos[i] = dict.GetString(itemname, "default")
+                videos[i] = dict.GetString(itemname, "default")!!
                 i++
             }
 
@@ -764,7 +764,7 @@ object Player {
             i = 0
             while (i < num) {
                 itemname = String.format("email_%d", i)
-                emails[i] = dict.GetString(itemname, "default")
+                emails[i] = dict.GetString(itemname, "default")!!
                 i++
             }
 
@@ -964,7 +964,7 @@ object Player {
         }
 
         fun MaxAmmoForAmmoClass(owner: idPlayer, ammo_classname: String?): Int {
-            return owner.spawnArgs.GetInt(Str.va("max_%s", ammo_classname!!), "0")
+            return owner.spawnArgs.GetInt(Str.va("max_%s", ammo_classname), "0")
         }
 
         /*
@@ -1010,12 +1010,6 @@ object Player {
 
         fun AmmoPickupNameForIndex(ammonum: Int): String? {
             return idWeapon.GetAmmoPickupNameForNum(ammonum)
-        }
-
-        fun kotlin.collections.ArrayList<idItemInfo>.Alloc(): idItemInfo {
-            val idItemInfo = idItemInfo()
-            add(idItemInfo)
-            return idItemInfo
         }
 
         fun AddPickupName(name: String, icon: String) {
@@ -2386,17 +2380,17 @@ object Player {
                 SetSkin(skin)
                 renderEntity.shaderParms[6] = 0f
             }
-            value[0] = spawnArgs.GetString("bone_hips", "")
+            value[0] = spawnArgs.GetString("bone_hips", "")!!
             hipJoint = animator.GetJointHandle(value[0])
             if (hipJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_hips' on '%s'", value[0], name)
             }
-            value[0] = spawnArgs.GetString("bone_chest", "")
+            value[0] = spawnArgs.GetString("bone_chest", "")!!
             chestJoint = animator.GetJointHandle(value[0])
             if (chestJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_chest' on '%s'", value[0], name)
             }
-            value[0] = spawnArgs.GetString("bone_head", "")
+            value[0] = spawnArgs.GetString("bone_head", "")!!
             headJoint = animator.GetJointHandle(value[0])
             if (headJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_head' on '%s'", value[0], name)
@@ -4010,13 +4004,6 @@ object Player {
 
         fun FindInventoryItem(name: idStr): idDict? {
             return FindInventoryItem(name.toString())
-        }
-
-        fun ArrayList<String>.addUnique(str: String): Int {
-            if (indexOf(str) == -1) {
-                add(str)
-            }
-            return indexOf(str)
         }
 
         fun GivePDA(pdaName: idStr, item: idDict?) {
@@ -7467,7 +7454,7 @@ object Player {
             }
             if (oldChar !== focusCharacter && hud != null) {
                 if (focusCharacter != null) {
-                    hud!!.SetStateString("npc", focusCharacter!!.spawnArgs.GetString("npc_name", "Joe"))
+                    hud!!.SetStateString("npc", focusCharacter!!.spawnArgs.GetString("npc_name", "Joe")!!)
                     hud!!.HandleNamedEvent("showNPC")
                     // HideTip();
                     // HideObjective();

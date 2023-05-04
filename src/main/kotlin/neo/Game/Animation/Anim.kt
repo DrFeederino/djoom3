@@ -4,6 +4,7 @@ import neo.Game.Game_local
 import neo.Game.Game_local.idGameLocal
 import neo.Game.Script.Script_Program.function_t
 import neo.Renderer.Model
+import neo.Renderer.Model.MD5_ANIM_EXT
 import neo.Renderer.Model.idRenderModel
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
@@ -15,6 +16,8 @@ import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.HashIndex.idHashIndex
+import neo.idlib.containers.HashTable
+import neo.idlib.containers.HashTable.idHashTable
 import neo.idlib.containers.List
 import neo.idlib.containers.idStrList
 import neo.idlib.geometry.JointTransform.idJointQuat
@@ -143,7 +146,7 @@ object Anim {
      ==============================================================================================
      */
     class idMD5Anim {
-        private val baseFrame: List.idList<idJointQuat>
+        private val baseFrame: List.idList<idJointQuat> = List.idList()
         private val bounds: List.idList<idBounds> = List.idList()
         private val componentFrames: List.idList<Float>
         private val jointInfo: List.idList<jointAnimInfo_t> = List.idList()
@@ -408,7 +411,7 @@ object Anim {
                 idGameLocal.Error("Model '%s' has different # of joints than anim '%s'", model.Name(), name)
             }
             val modelJoints = model.GetJoints()
-            var i: Int = 0
+            var i = 0
             while (i < jointInfo.Num()) {
                 jointNum = jointInfo[i].nameIndex
                 if (modelJoints!![i].name.toString() != Game_local.animationLib.JointName(jointNum)) {
@@ -460,8 +463,8 @@ object Anim {
                 return
             }
             val blendJoints: Array<idJointQuat> = Array(baseFrame.Num()) { idJointQuat() }
-            val lerpIndex: IntArray = IntArray(baseFrame.Num())
-            var numLerpJoints: Int = 0
+            val lerpIndex = IntArray(baseFrame.Num())
+            var numLerpJoints = 0
 
 //	frame1 = componentFrames.Ptr()   ;
 //	frame2 = componentFrames.Ptr();
@@ -493,6 +496,7 @@ object Anim {
                             jf1_ptr++
                             jf2_ptr++
                         }
+
                         ANIM_TY -> {
                             jointPtr.t.y = jointframe1[jf1_ptr + 0]
                             blendPtr.t.y = jointframe2[jf2_ptr + 0]
@@ -501,6 +505,7 @@ object Anim {
                             jf1_ptr++
                             jf2_ptr++
                         }
+
                         ANIM_TZ -> {
                             jointPtr.t.z = jointframe1[jf1_ptr + 0]
                             blendPtr.t.z = jointframe2[jf2_ptr + 0]
@@ -509,6 +514,7 @@ object Anim {
                             jf1_ptr++
                             jf2_ptr++
                         }
+
                         ANIM_TX or ANIM_TY -> {
                             jointPtr.t.x = jointframe1[jf1_ptr + 0]
                             jointPtr.t.y = jointframe1[jf1_ptr + 1]
@@ -518,6 +524,7 @@ object Anim {
                             jf1_ptr += 2
                             jf2_ptr += 2
                         }
+
                         ANIM_TX or ANIM_TZ -> {
                             jointPtr.t.x = jointframe1[jf1_ptr + 0]
                             jointPtr.t.z = jointframe1[jf1_ptr + 1]
@@ -527,6 +534,7 @@ object Anim {
                             jf1_ptr += 2
                             jf2_ptr += 2
                         }
+
                         ANIM_TY or ANIM_TZ -> {
                             jointPtr.t.y = jointframe1[jf1_ptr + 0]
                             jointPtr.t.z = jointframe1[jf1_ptr + 1]
@@ -536,6 +544,7 @@ object Anim {
                             jf1_ptr += 2
                             jf2_ptr += 2
                         }
+
                         ANIM_TX or ANIM_TY or ANIM_TZ -> {
                             jointPtr.t.x = jointframe1[jf1_ptr + 0]
                             jointPtr.t.y = jointframe1[jf1_ptr + 1]
@@ -557,6 +566,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QY -> {
                             jointPtr.q.y = jointframe1[jf1_ptr + 0]
                             blendPtr.q.y = jointframe2[jf2_ptr + 0]
@@ -565,6 +575,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QZ -> {
                             jointPtr.q.z = jointframe1[jf1_ptr + 0]
                             blendPtr.q.z = jointframe2[jf2_ptr + 0]
@@ -573,6 +584,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QX or ANIM_QY -> {
                             jointPtr.q.x = jointframe1[jf1_ptr + 0]
                             jointPtr.q.y = jointframe1[jf1_ptr + 1]
@@ -582,6 +594,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QX or ANIM_QZ -> {
                             jointPtr.q.x = jointframe1[jf1_ptr + 0]
                             jointPtr.q.z = jointframe1[jf1_ptr + 1]
@@ -591,6 +604,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QY or ANIM_QZ -> {
                             jointPtr.q.y = jointframe1[jf1_ptr + 0]
                             jointPtr.q.z = jointframe1[jf1_ptr + 1]
@@ -600,6 +614,7 @@ object Anim {
                             jointPtr.q.w = jointPtr.q.CalcW()
                             blendPtr.q.w = blendPtr.q.CalcW()
                         }
+
                         ANIM_QX or ANIM_QY or ANIM_QZ -> {
                             jointPtr.q.x = jointframe1[jf1_ptr + 0]
                             jointPtr.q.y = jointframe1[jf1_ptr + 1]
@@ -820,6 +835,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QY -> {
                     q1.y = jointframe1[j1_ptr + 0]
                     q2.y = jointframe2[j2_ptr + 0]
@@ -830,6 +846,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QZ -> {
                     q1.z = jointframe1[j1_ptr + 0]
                     q2.z = jointframe2[j2_ptr + 0]
@@ -840,6 +857,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QX or ANIM_QY -> {
                     q1.x = jointframe1[j1_ptr + 0]
                     q1.y = jointframe1[j1_ptr + 1]
@@ -850,6 +868,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QX or ANIM_QZ -> {
                     q1.x = jointframe1[j1_ptr + 0]
                     q1.z = jointframe1[j1_ptr + 1]
@@ -860,6 +879,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QY or ANIM_QZ -> {
                     q1.y = jointframe1[j1_ptr + 0]
                     q1.z = jointframe1[j1_ptr + 1]
@@ -870,6 +890,7 @@ object Anim {
                     q1.w = q1.CalcW()
                     q2.w = q2.CalcW()
                 }
+
                 ANIM_QX or ANIM_QY or ANIM_QZ -> {
                     q1.x = jointframe1[j1_ptr + 0]
                     q1.y = jointframe1[j1_ptr + 1]
@@ -920,7 +941,6 @@ object Anim {
         //
         //
         init {
-            baseFrame = List.idList()
             componentFrames = List.idList()
             name = idStr()
             totaldelta = idVec3()
@@ -929,13 +949,12 @@ object Anim {
 
     class idAFPoseJointMod {
         val origin: idVec3
-        var axis: idMat3
+        var axis: idMat3 = idMat3.getMat3_identity()
         var mod: AFJointModType_t = AFJointModType_t.AF_JOINTMOD_AXIS
 
         //
         //
         init {
-            axis = idMat3.getMat3_identity()
             origin = idVec3()
         }
     }
@@ -948,12 +967,12 @@ object Anim {
      ==============================================================================================
      */
     class idAnimManager {
-        private val animations: HashMap<String, idMD5Anim>
+        private val animations: HashTable.idHashTable<idMD5Anim> = idHashTable()
         private val jointnames: idStrList
         private val jointnamesHash: idHashIndex
 
         fun Shutdown() {
-            animations.clear()
+            animations.DeleteContents()
             jointnames.clear()
             jointnamesHash.Free()
         }
@@ -962,32 +981,41 @@ object Anim {
             val animPtr = arrayOf<idMD5Anim?>(null)
             var anim: idMD5Anim?
 
+
             // see if it has been asked for before
-            anim = animations[name]
-            if (anim == null) {
+
+            // see if it has been asked for before
+            if (animations.Get(name, animPtr)) {
+                anim = animPtr[0]
+            } else {
                 val extension = idStr()
                 val filename = idStr(name)
                 filename.ExtractFileExtension(extension)
-                if (extension.toString() != Model.MD5_ANIM_EXT) {
+                if (!extension.equals(MD5_ANIM_EXT)) {
                     return null
                 }
                 anim = idMD5Anim()
                 if (!anim.LoadAnim(filename)) {
                     Game_local.gameLocal.Warning("Couldn't load anim: '%s'", filename)
+                    //                    delete anim;
                     anim = null
                 }
-                animations[filename.toString()] = anim!!
+                animations.Set(filename.toString(), anim)
             }
+
             return anim
         }
 
         fun ReloadAnims() {
             var animptr: idMD5Anim
             var i: Int = 0
-            val animValues: Array<idMD5Anim> = animations.values.toTypedArray()
-            while (i < animations.values.size) {
-                animptr = animValues[i]
-                animptr.Reload()
+
+            i = 0
+            while (i < animations.Num()) {
+                animptr = animations.GetIndex(i)
+                if (animptr != null) { // && *animptr ) {
+                    animptr.Reload()
+                }
                 i++
             }
         }
@@ -999,9 +1027,11 @@ object Anim {
             var num: Int = 0
             var   /*size_t*/size: Int = 0
             var i: Int = 0
-            val animValues: Array<idMD5Anim> = animations.values.toTypedArray()
-            while (i < animations.values.size) {
-                animptr = animValues[i]
+            num = 0
+            size = 0
+            i = 0
+            while (i < animations.Num()) {
+                animptr = animations.GetIndex(i)
                 if (animptr != null) { // && *animptr ) {//TODO:check this locl shit
                     anim = animptr
                     s = 0
@@ -1011,12 +1041,14 @@ object Anim {
                 }
                 i++
             }
-            var   /*size_t*/namesize: Int = jointnames.sizeStrings() + jointnamesHash.Size()
+
+            var namesize: Int = jointnames.sizeStrings() + jointnamesHash.Size()
             i = 0
             while (i < jointnames.size()) {
                 namesize += jointnames[i].Size()
                 i++
             }
+
             Game_local.gameLocal.Printf("\n%d memory used in %d anims\n", size, num)
             Game_local.gameLocal.Printf("%d memory used in %d joint names\n", namesize, jointnames.size())
         }
@@ -1044,19 +1076,23 @@ object Anim {
         //        public void ClearAnimsInUse();
         //
         fun FlushUnusedAnims() {
-            var animptr: idMD5Anim
-            val removeAnims = ArrayList<idMD5Anim>()
+            var animptr: idMD5Anim?
+            val removeAnims = List.idList<idMD5Anim>()
             var i: Int = 0
-            animations.values.forEach { anim ->
-                run {
-                    if (anim.NumRefs() <= 0) {
-                        removeAnims.add(anim)
+            i = 0
+            while (i < animations.Num()) {
+                animptr = animations.GetIndex(i)
+                if (animptr != null) { //&& *animptr ) {
+                    if (animptr.NumRefs() <= 0) {
+                        removeAnims.Append(animptr)
                     }
                 }
+                i++
             }
+
             i = 0
-            while (i < removeAnims.size) {
-                animations.remove(removeAnims[i].Name())
+            while (i < removeAnims.Num()) {
+                animations.Remove(removeAnims[i].Name())
                 i++
             }
         }
@@ -1067,7 +1103,6 @@ object Anim {
         }
 
         init {
-            animations = HashMap()
             jointnames = idStrList()
             jointnamesHash = idHashIndex()
         }

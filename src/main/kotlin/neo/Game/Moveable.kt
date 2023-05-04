@@ -183,7 +183,7 @@ object Moveable {
             fxCollide = idStr(spawnArgs.GetString("fx_collide"))
             nextCollideFxTime = 0
             fl.takedamage = true
-            damage = idStr(spawnArgs.GetString("def_damage", ""))
+            damage = idStr(spawnArgs.GetString("def_damage", "")!!)
             canDamage = !spawnArgs.GetBool("damageWhenActive")
             minDamageVelocity = spawnArgs.GetFloat("minDamageVelocity", "100")
             maxDamageVelocity = spawnArgs.GetFloat("maxDamageVelocity", "200")

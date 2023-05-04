@@ -1084,7 +1084,7 @@ object AsyncServer {
                 }
                 Common.common.Printf(
                     "client %2d: %s, ping = %d, rate = %d\n", i,
-                    Session.sessLocal.mapSpawnData.userInfo[i].GetString("ui_name", "Player"),
+                    Session.sessLocal.mapSpawnData.userInfo[i].GetString("ui_name", "Player")!!,
                     client.clientPing, client.channel.GetMaxOutgoingRate()
                 )
                 i++

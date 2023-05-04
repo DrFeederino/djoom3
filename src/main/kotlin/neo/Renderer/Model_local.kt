@@ -634,7 +634,7 @@ object Model_local {
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
                 j = 0
                 while (j < tri.numVerts) {
-                    val color = Array<CharArray>(4) { CharArray(1) }
+                    val color = Array(4) { CharArray(1) }
                     f.ReadVec3(tri.verts!![j]!!.xyz)
                     f.ReadVec2(tri.verts!![j]!!.st)
                     f.ReadVec3(tri.verts!![j]!!.normal)
@@ -1109,10 +1109,10 @@ object Model_local {
                 // we need to find out how many unique vertex / texcoord combinations
                 // there are, because ASE tracks them separately but we need them unified
                 // the maximum possible number of combined vertexes is the number of indexes
-                mvTable = arrayOfNulls<matchVert_s>(mesh.numFaces * 3)
+                mvTable = arrayOfNulls(mesh.numFaces * 3)
 
                 // we will have a hash chain based on the xyz values
-                mvHash = arrayOfNulls<matchVert_s>(mesh.numVertexes)
+                mvHash = arrayOfNulls(mesh.numVertexes)
 
                 // allocate triangle surface
                 tri = tr_trisurf.R_AllocStaticTriSurf()
@@ -1292,7 +1292,7 @@ object Model_local {
             var v: Int
             var tv: Int
             val vRemap: IntArray
-            val tvList: kotlin.collections.ArrayList<idVec2>
+            val tvList: Array<idVec2?>
             val tvRemap: IntArray
             var mvTable: Array<matchVert_s?> // all of the match verts
             var mvHash: Array<matchVert_s?> // points inside mvTable for each xyz index
@@ -1407,9 +1407,7 @@ object Model_local {
                 }
             }
             if (numTVertexes != 0) {
-                tvList = ArrayList(
-                    arrayListOf(* idVec2.generateArray(numTVertexes))
-                )
+                tvList = idVec2.generateArray(numTVertexes) as Array<idVec2?>
                 var offset = 0
                 var vm = layer.vmap
                 while (vm != null) {
@@ -1417,8 +1415,8 @@ object Model_local {
                         vm.offset = offset
                         k = 0
                         while (k < vm.nverts) {
-                            tvList[k + offset].x = vm.value!![k][0]
-                            tvList[k + offset].y = 1.0f - vm.value!![k][1] // invert the t
+                            tvList[k + offset]!!.x = vm.value!![k][0]
+                            tvList[k + offset]!!.y = 1.0f - vm.value!![k][1] // invert the t
                             k++
                         }
                         offset += vm.nverts
@@ -1428,8 +1426,8 @@ object Model_local {
             } else {
                 Common.common.Warning("ConvertLWOToModelSurfaces: model '%s' has bad or missing uv data", name)
                 numTVertexes = 1
-                tvList = ArrayList<idVec2>(numTVertexes) // Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
-                tvList.add(0, idVec2())
+                tvList = arrayOfNulls(numTVertexes) // Mem_ClearedAlloc(numTVertexes /* sizeof( tvList[0] )*/);
+                tvList[0] = idVec2()
             }
 
             // It seems like the tools our artists are using often generate
@@ -1473,13 +1471,13 @@ object Model_local {
                 val expand = 2 * 32 * texCoordEpsilon
                 val mins = idVec2()
                 val maxs = idVec2()
-                Simd.SIMDProcessor.MinMax(mins, maxs, tvList.toTypedArray(), numTVertexes)
+                Simd.SIMDProcessor.MinMax(mins, maxs, tvList as Array<idVec2>, numTVertexes)
                 mins.minusAssign(idVec2(expand, expand))
                 maxs.plusAssign(idVec2(expand, expand))
                 texCoordSubset.Init(mins, maxs, 32, 1024)
                 j = 0
                 while (j < numTVertexes) {
-                    tvRemap[j] = texCoordSubset.FindVector(tvList.toTypedArray(), j, texCoordEpsilon)
+                    tvRemap[j] = texCoordSubset.FindVector(tvList as Array<Vector.idVec<*>>, j, texCoordEpsilon)
                     j++
                 }
             }
@@ -1645,7 +1643,7 @@ object Model_local {
                     mv = mvTable[j]!!
                     tri.verts!![j]!!.Clear()
                     tri.verts!![j]!!.xyz.set(vList[mv.v])
-                    tri.verts!![j]!!.st = tvList[mv.tv]
+                    tri.verts!![j]!!.st = tvList[mv.tv]!!
                     tri.verts!![j]!!.normal.set(mv.normal)
                     tri.verts!![j]!!.color = mv.color
                     j++
@@ -1690,8 +1688,8 @@ object Model_local {
             var tv: Int
             var vRemap: IntArray
             var tvRemap: IntArray
-            var mvTable: kotlin.collections.ArrayList<matchVert_s> // all of the match verts
-            var mvHash: ArrayList<matchVert_s> // points inside mvTable for each xyz index
+            var mvTable: Array<matchVert_s?> // all of the match verts
+            var mvHash: Array<matchVert_s?> // points inside mvTable for each xyz index
             var lastmv: matchVert_s?
             var mv: matchVert_s?
             val normal = idVec3()
@@ -1861,11 +1859,11 @@ object Model_local {
                 // there are, because MA tracks them separately but we need them unified
                 // the maximum possible number of combined vertexes is the number of indexes
                 mvTable =
-                    ArrayList<matchVert_s>(mesh.numFaces * 3) // R_ClearedStaticAlloc(mesh.numFaces * 3 /* sizeof( mvTable[0] )*/);
+                    arrayOfNulls(mesh.numFaces * 3) // R_ClearedStaticAlloc(mesh.numFaces * 3 /* sizeof( mvTable[0] )*/);
 
                 // we will have a hash chain based on the xyz values
                 mvHash =
-                    ArrayList<matchVert_s>(mesh.numFaces) // R_ClearedStaticAlloc(mesh.numVertexes /* sizeof( mvHash[0] )*/);
+                    arrayOfNulls(mesh.numFaces) // R_ClearedStaticAlloc(mesh.numVertexes /* sizeof( mvHash[0] )*/);
 
                 // allocate triangle surface
                 tri = tr_trisurf.R_AllocStaticTriSurf()
@@ -1943,7 +1941,7 @@ object Model_local {
                         if (null == mv) {
                             // allocate a new match vert and link to hash chain
                             mvTable[tri.numVerts] = matchVert_s(tri.numVerts)
-                            mv = mvTable[tri.numVerts]
+                            mv = mvTable[tri.numVerts]!!
                             mv.v = v
                             mv.tv = tv
                             mv.normal.set(normal)
@@ -1994,7 +1992,7 @@ object Model_local {
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
                 j = 0
                 while (j < tri.numVerts) {
-                    mv = mvTable[j]
+                    mv = mvTable[j]!!
                     tri.verts!![j]!!.Clear()
                     tri.verts!![j]!!.xyz.set(mesh.vertexes!![mv.v])
                     tri.verts!![j]!!.normal.set(mv.normal)

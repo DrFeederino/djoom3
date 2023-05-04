@@ -48,6 +48,7 @@ import org.lwjgl.opengl.GL11
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.math.floor
@@ -813,6 +814,16 @@ object tr_local {
 //            TempDump.printCallStack("--------------"+DBG_COUNT);
         }
 
+        constructor(v: viewEntity_s) {
+            next = v.next
+            entityDef = v.entityDef
+            scissorRect = idScreenRect(v.scissorRect)
+            weaponDepthHack = v.weaponDepthHack
+            modelDepthHack = v.modelDepthHack
+            System.arraycopy(v.modelMatrix, 0, modelMatrix, 0, 16)
+            System.arraycopy(v.modelViewMatrix, 0, modelViewMatrix, 0, 16)
+        }
+
         fun memSetZero() {
             next = viewEntity_s()
             entityDef = idRenderEntityLocal()
@@ -830,7 +841,7 @@ object tr_local {
     class viewDef_s {
         // specified in the call to DrawScene()
         val clipPlanes // in world space, the positive side
-                : ArrayList<idPlane>
+                : Array<idPlane?>
         val frustum: Array<idPlane>
 
         //
@@ -841,7 +852,7 @@ object tr_local {
                 = 0
 
         //
-        var connectedAreas: BooleanArray = BooleanArray(0)
+        var connectedAreas: BooleanArray? = null
 
         //
         // drawSurfs are the visible surfaces of the viewEntities, sorted
@@ -915,11 +926,45 @@ object tr_local {
         constructor() {
             renderView = renderView_s()
             worldSpace = viewEntity_s()
-            clipPlanes = ArrayList<idPlane>(MAX_CLIP_PLANES)
+            clipPlanes = arrayOfNulls(MAX_CLIP_PLANES)
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
             frustum = idPlane.generateArray(5)
+        }
+
+        constructor(v: viewDef_s) {
+            renderView = renderView_s(v.renderView)
+            System.arraycopy(v.projectionMatrix, 0, projectionMatrix, 0, 16)
+            worldSpace = viewEntity_s(v.worldSpace)
+            renderWorld = v.renderWorld
+            floatTime = v.floatTime
+            initialViewAreaOrigin.set(v.initialViewAreaOrigin)
+            isSubview = v.isSubview
+            isMirror = v.isMirror
+            isXraySubview = v.isXraySubview
+            isEditor = v.isEditor
+            numClipPlanes = v.numClipPlanes
+            clipPlanes = arrayOfNulls(MAX_CLIP_PLANES)
+            for (i in 0 until MAX_CLIP_PLANES) {
+                if (v.clipPlanes[i] != null) clipPlanes[i]!!.set(v.clipPlanes[i]!!)
+            }
+            viewport = idScreenRect(v.viewport)
+            scissor = idScreenRect(v.scissor)
+            superView = v.superView
+            subviewSurface = v.subviewSurface
+            drawSurfs = v.drawSurfs
+            numDrawSurfs = v.numDrawSurfs
+            maxDrawSurfs = v.maxDrawSurfs
+            viewLights = v.viewLights
+            viewEntitys = v.viewEntitys
+            frustum = Array(v.frustum.size) { idPlane() }
+            viewFrustum = idFrustum(v.viewFrustum)
+            areaNum = v.areaNum
+            if (v.connectedAreas != null) {
+                connectedAreas = BooleanArray(v.connectedAreas!!.size)
+                System.arraycopy(v.connectedAreas, 0, connectedAreas, 0, v.connectedAreas!!.size)
+            }
         }
 
     }

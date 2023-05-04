@@ -486,7 +486,7 @@ object BrittleFracture {
                 if (damageDefName != null) {
                     damageDef = Game_local.gameLocal.FindEntityDef(damageDefName, false)
                     if (damageDef != null) {
-                        sndShader = DeclManager.declManager.FindSound(damageDef.dict.GetString("snd_shatter", ""))
+                        sndShader = DeclManager.declManager.FindSound(damageDef.dict.GetString("snd_shatter", "")!!)
                     }
                 }
                 if (sndShader != null) {
@@ -932,13 +932,13 @@ object BrittleFracture {
             var queueEnd: Int
             var curShard: shard_s
             var nextShard: shard_s?
-            val queue: ArrayList<shard_s>
+            val queue: Array<shard_s?>
             var touchesEdge: Boolean
             val dir = idVec3()
             dir.set(impulse)
             dir.Normalize()
             numIslands = 0
-            queue = ArrayList(shards.Num())
+            queue = arrayOfNulls(shards.Num())
             i = 0
             while (i < shards.Num()) {
                 shards[i]!!.islandNum = 0
@@ -959,7 +959,7 @@ object BrittleFracture {
                 queue[0] = shards[i]!!
                 shards[i]!!.islandNum = numIslands + 1
                 touchesEdge = shards[i]!!.atEdge
-                curShard = queue[queueStart]
+                curShard = queue[queueStart]!!
                 while (queueStart < queueEnd) {
                     j = 0
                     while (j < curShard.neighbours.Num()) {
@@ -979,7 +979,7 @@ object BrittleFracture {
                         }
                         j++
                     }
-                    curShard = queue[++queueStart]
+                    curShard = queue[++queueStart]!!
                 }
                 numIslands++
 
@@ -987,7 +987,7 @@ object BrittleFracture {
                 if (!touchesEdge) {
                     j = 0
                     while (j < queueEnd) {
-                        DropShard(queue[j], point, dir, 0.0f, time)
+                        DropShard(queue[j]!!, point, dir, 0.0f, time)
                         j++
                     }
                 }

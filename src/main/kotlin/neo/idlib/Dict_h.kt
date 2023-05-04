@@ -409,27 +409,33 @@ class Dict_h {
         // these return default values of 0.0, 0 and false
         @JvmOverloads
         @Throws(idException::class)
-        fun GetString(key: String?, defaultString: String = ""): String {
+        fun GetString(key: String?, defaultString: String?): String? {
             val kv = FindKey(key)
             return kv?.GetValue()?.toString() ?: defaultString
         }
 
         @JvmOverloads
         @Throws(idException::class)
+        fun GetString(key: String?): String {
+            return GetString(key, "")!!
+        }
+
+        @JvmOverloads
+        @Throws(idException::class)
         fun GetFloat(key: String?, defaultString: String = "0" /*= "0"*/): Float {
-            return TempDump.atof(GetString(key, defaultString))
+            return TempDump.atof(GetString(key, defaultString)!!)
         }
 
         @JvmOverloads
         @Throws(idException::class)
         fun GetInt(key: String, defaultString: String = "0"): Int {
-            return TempDump.atoi(GetString(key, defaultString))
+            return TempDump.atoi(GetString(key, defaultString)!!)
         }
 
         @JvmOverloads
         @Throws(idException::class)
         fun GetBool(key: String, defaultString: String = "0"): Boolean {
-            return TempDump.atob(GetString(key, defaultString))
+            return TempDump.atob(GetString(key, defaultString)!!)
         }
 
         @JvmOverloads
@@ -723,10 +729,10 @@ class Dict_h {
         }
 
         // randomly chooses one of the key/value pairs with the given key prefix and returns it's value
-        fun RandomPrefix(prefix: String, random: idRandom): String {
+        fun RandomPrefix(prefix: String, random: idRandom): String? {
             var count: Int
             val MAX_RANDOM_KEYS = 2048
-            val list = ArrayList<String>(MAX_RANDOM_KEYS)
+            val list = arrayOfNulls<String>(MAX_RANDOM_KEYS)
             var kv: idKeyValue?
 
 //            list[0] = "";

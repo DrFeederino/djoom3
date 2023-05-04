@@ -93,9 +93,9 @@ object Model_md3 {
 
         //
         //	char		name[MAX_MD3PATH];	// polyset name
-        var name // polyset name
-                : String = ""
-        lateinit var normals: ArrayList<md3XyzNormal_t>
+        lateinit var name // polyset name
+                : String
+        lateinit var normals: Array<md3XyzNormal_t?>
         var numFrames // all surfaces in a model should have the same
                 = 0
 
@@ -119,14 +119,14 @@ object Model_md3 {
                 = 0
 
         //
-        lateinit var shaders: ArrayList<md3Shader_t>
+        lateinit var shaders: Array<md3Shader_t?>
 
         //
         //
-        lateinit var triangles: ArrayList<md3Triangle_t>
+        lateinit var triangles: Array<md3Triangle_t?>
 
         //
-        lateinit var verts: ArrayList<md3St_t>
+        lateinit var verts: Array<md3St_t?>
     }
 
     internal class md3Shader_t {
@@ -155,7 +155,7 @@ object Model_md3 {
 
         //
         //
-        lateinit var frames: ArrayList<md3Frame_s>
+        lateinit var frames: Array<md3Frame_s?>
         var ident = 0
 
         //
@@ -182,8 +182,8 @@ object Model_md3 {
                 = 0
         var ofsTags // numFrames * numTags
                 = 0
-        lateinit var surfaces: ArrayList<md3Surface_s>
-        lateinit var tags: ArrayList<md3Tag_s>
+        lateinit var surfaces: Array<md3Surface_s?>
+        lateinit var tags: Array<md3Tag_s?>
         var version = 0
         override fun AllocBuffer(): ByteBuffer {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
@@ -271,7 +271,7 @@ object Model_md3 {
 
             // swap all the frames
 //            frame = (md3Frame_s) ((byte[]) md3[md3!!.ofsFrames]);
-            md3!!.frames = ArrayList<md3Frame_s>(md3!!.numFrames)
+            md3!!.frames = arrayOfNulls<md3Frame_s>(md3!!.numFrames)
             i = 0
             while (i < md3!!.numFrames) {
                 frame = md3Frame_s()
@@ -289,7 +289,7 @@ object Model_md3 {
 
             // swap all the tags
 //                tag = (md3Tag_s) ((byte[]) md3[md3!!.ofsTags]);
-            md3!!.tags = ArrayList<md3Tag_s>(md3!!.numTags * md3!!.numFrames)
+            md3!!.tags = arrayOfNulls<md3Tag_s>(md3!!.numTags * md3!!.numFrames)
             i = 0
             while (i < md3!!.numTags * md3!!.numFrames) {
                 tag = md3Tag_s()
@@ -307,7 +307,7 @@ object Model_md3 {
 
             // swap all the surfaces
 //                surf = (md3Surface_s) ((byte[]) md3[md3!!.ofsSurfaces]);
-            md3!!.surfaces = ArrayList<md3Surface_s>(md3!!.numSurfaces)
+            md3!!.surfaces = arrayOfNulls<md3Surface_s>(md3!!.numSurfaces)
             i = 0
             while (i < md3!!.numSurfaces) {
                 surf = md3Surface_s()
@@ -354,7 +354,7 @@ object Model_md3 {
 
                 // register the shaders
 //                    shader = (md3Shader_s) ((byte[]) surf[surf.ofsShaders]);
-                surf.shaders = ArrayList<md3Shader_t>(surf.numShaders)
+                surf.shaders = arrayOfNulls<md3Shader_t>(surf.numShaders)
                 j = 0
                 while (j < surf.numShaders) {
                     shader = md3Shader_t()
@@ -367,7 +367,7 @@ object Model_md3 {
 
                 // swap all the triangles
 //                    tri = (md3Triangle_t) ((byte[]) surf[surf.ofsTriangles]);
-                surf.triangles = ArrayList<md3Triangle_t>(surf.numTriangles)
+                surf.triangles = arrayOfNulls<md3Triangle_t>(surf.numTriangles)
                 j = 0
                 while (j < surf.numTriangles) {
                     tri = md3Triangle_t()
@@ -380,7 +380,7 @@ object Model_md3 {
 
                 // swap all the ST
 //                    st = (md3St_t) ((byte[]) surf + surf.ofsSt);
-                surf.verts = ArrayList<md3St_t>(surf.numVerts)
+                surf.verts = arrayOfNulls<md3St_t>(surf.numVerts)
                 j = 0
                 while (j < surf.numVerts) {
                     st = md3St_t()
@@ -392,7 +392,7 @@ object Model_md3 {
 
                 // swap all the XyzNormals
 //                    xyz = (md3XyzNormal_t) ((byte[]) surf + surf.ofsXyzNormals);
-                surf.normals = ArrayList<md3XyzNormal_t>(surf.numVerts * surf.numFrames)
+                surf.normals = arrayOfNulls<md3XyzNormal_t>(surf.numVerts * surf.numFrames)
                 j = 0
                 while (j < surf.numVerts * surf.numFrames) {
                     xyz = md3XyzNormal_t()
@@ -443,7 +443,7 @@ object Model_md3 {
             staticModel.bounds.Clear()
 
 //            surface = (md3Surface_t) ((byte[]) md3[ md3!!.ofsSurfaces]);
-            surface = md3!!.surfaces[0]
+            surface = md3!!.surfaces[0]!!
 
             // TODO: these need set by an entity
             frame =
@@ -460,7 +460,7 @@ object Model_md3 {
                 surf.geometry = tri
 
 //                md3Shader_t shaders = (md3Shader_t) ((byte[]) surface[surface.ofsShaders]);
-                val shaders = surface.shaders[0]
+                val shaders = surface.shaders[0]!!
                 surf.shader = shaders.shader
                 LerpMeshVertexes(tri, surface, backlerp, frame, oldframe)
                 indexes = surface.numTriangles * 3
@@ -468,7 +468,7 @@ object Model_md3 {
                 for (triangle in surface.triangles) {
 //                triangles = (int[]) ((byte[]) surface + surface.ofsTriangles);
                     while ( /*j = 0*/j < indexes) {
-                        tri.indexes!![j] = triangle.indexes[j]
+                        tri.indexes!![j] = triangle!!.indexes[j]
                         j++
                     }
                     tri.numIndexes += indexes
@@ -479,7 +479,7 @@ object Model_md3 {
 //                texCoords = (float[]) ((byte[]) surface + surface.ofsSt);
                     while ( /*j = 0*/j < numVerts) {
                         val stri = tri.verts!![j]!!
-                        stri.st[0] = texCoords.st[j * 2 + 0]
+                        stri.st[0] = texCoords!!.st[j * 2 + 0]
                         stri.st[1] = texCoords.st[j * 2 + 1]
                         j++
                     }
@@ -490,7 +490,7 @@ object Model_md3 {
                 staticModel.bounds.AddPoint(surf.geometry!!.bounds[1])
 
                 // find the next surface
-                surface = md3!!.surfaces[++i]
+                surface = md3!!.surfaces[++i]!!
             }
             return staticModel
         }
@@ -506,7 +506,7 @@ object Model_md3 {
             }
 
 //            md3Frame_s frame = (md3Frame_t) ((byte[]) md3 + md3!!.ofsFrames);
-            val frame = md3!!.frames[0]
+            val frame = md3!!.frames[0]!!
             ret.AddPoint(frame.bounds[0])
             ret.AddPoint(frame.bounds[1])
             return ret
@@ -527,7 +527,7 @@ object Model_md3 {
             val numVerts: Int
 
 //            newXyz = (short[]) ((byte[]) surf + surf.ofsXyzNormals) + (frame * surf.numVerts * 4);
-            newXyz = surf.normals[frame]
+            newXyz = surf.normals[frame]!!
             newXyzScale = (MD3_XYZ_SCALE * (1.0 - backlerp)).toFloat()
             numVerts = surf.numVerts
             if (backlerp == 0f) {
@@ -541,7 +541,7 @@ object Model_md3 {
                     outvert.xyz.y = newXyz.xyz[1] * newXyzScale
                     outvert.xyz.z = newXyz.xyz[2] * newXyzScale
                     tri.numVerts++
-                    newXyz = surf.normals[++frame]
+                    newXyz = surf.normals[++frame]!!
                     vertNum++
                 }
             } else {
@@ -549,7 +549,7 @@ object Model_md3 {
                 // interpolate and copy the vertexes
                 //
 //                oldXyz = (short[]) ((byte[]) surf + surf.ofsXyzNormals) + (oldframe * surf.numVerts * 4);
-                oldXyz = surf.normals[oldframe]
+                oldXyz = surf.normals[oldframe]!!
                 oldXyzScale = (MD3_XYZ_SCALE * backlerp).toFloat()
                 vertNum = 0
                 while (vertNum < numVerts) {
@@ -561,8 +561,8 @@ object Model_md3 {
                     outvert.xyz.z = oldXyz.xyz[2] * oldXyzScale + newXyz.xyz[2] * newXyzScale
                     tri.numVerts++
                     vertNum++
-                    oldXyz = surf.normals[++oldframe]
-                    newXyz = surf.normals[++frame]
+                    oldXyz = surf.normals[++oldframe]!!
+                    newXyz = surf.normals[++frame]!!
                 }
             }
         }

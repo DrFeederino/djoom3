@@ -151,7 +151,7 @@ object Anim_Blend {
             sourceName: String,
             animName: String,
             num: Int,
-            md5anims: ArrayList<idMD5Anim> /*[ ANIM_MaxSyncedAnims ]*/
+            md5anims: Array<idMD5Anim?> /*[ ANIM_MaxSyncedAnims ]*/
         ) {
             var i: Int
             this.modelDef = modelDef
@@ -1501,7 +1501,7 @@ object Anim_Blend {
             num = modelHandle!!.NumJoints()
 
             // split on and skip whitespaces
-            for (name in jointnames.split("\\s+").toTypedArray()) {
+            for (name in jointnames.split(regex = "\\s+".toRegex()).dropLastWhile { it.isEmpty() }) {
                 // copy joint name
                 jointname = name
                 if (jointname.startsWith("-")) {
@@ -1761,7 +1761,7 @@ object Anim_Blend {
             var i: Int
             val len: Int
             val anim: idAnim?
-            val md5anims = ArrayList<idMD5Anim>(Anim.ANIM_MaxSyncedAnims)
+            val md5anims = arrayOfNulls<idMD5Anim>(Anim.ANIM_MaxSyncedAnims)
             var md5anim: idMD5Anim?
             val alias = idStr()
             val realname = idToken()
@@ -1833,11 +1833,11 @@ object Anim_Blend {
                 md5anim.CheckModelHierarchy(modelHandle!!)
                 if (numAnims > 0) {
                     // make sure it's the same length as the other anims
-                    if (md5anim.Length() != md5anims[0].Length()) {
+                    if (md5anim.Length() != md5anims[0]!!.Length()) {
                         src.Warning(
                             "Anim '%s' does not match length of anim '%s'",
                             md5anim.Name(),
-                            md5anims[0].Name()
+                            md5anims[0]!!.Name()
                         )
                         MakeDefault()
                         return false
@@ -1850,7 +1850,7 @@ object Anim_Blend {
                 }
 
                 // add it to our list
-                md5anims.add(numAnims, md5anim)
+                md5anims[numAnims] = md5anim
                 numAnims++
             } while (src.CheckTokenString(","))
             if (0 == numAnims) {

@@ -210,7 +210,7 @@ object tr_subview {
         val plane = idPlane()
 
         // copy the viewport size from the original
-        parms = tr_local.tr.viewDef!! //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
+        parms = viewDef_s(tr_local.tr.viewDef!!) //        parms = (viewDef_s) R_FrameAlloc(sizeof(parms));
         parms.renderView.viewID = 0 // clear to allow player bodies to show up, and suppress view weapons
         parms.isSubview = true
         parms.isMirror = true
@@ -256,8 +256,8 @@ object tr_subview {
         // set the mirror clip plane
         parms.numClipPlanes = 1
         parms.clipPlanes[0] = idPlane()
-        parms.clipPlanes[0].set(camera.axis[0].unaryMinus())
-        parms.clipPlanes[0][3] = -camera.origin.times(parms.clipPlanes[0].Normal())
+        parms.clipPlanes[0]!!.set(camera.axis[0].unaryMinus())
+        parms.clipPlanes[0]!![3] = -camera.origin.times(parms.clipPlanes[0]!!.Normal())
         return parms
     }
 

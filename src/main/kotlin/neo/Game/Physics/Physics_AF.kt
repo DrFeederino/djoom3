@@ -5134,7 +5134,7 @@ object Physics_AF {
         }
 
         // get all the contact constraints acting on the body
-        fun GetBodyContactConstraints(id: Int, contacts: ArrayList<idAFConstraint_Contact>, maxContacts: Int): Int {
+        fun GetBodyContactConstraints(id: Int, contacts: Array<idAFConstraint_Contact?>, maxContacts: Int): Int {
             var i: Int
             var numContacts: Int
             val body: idAFBody?

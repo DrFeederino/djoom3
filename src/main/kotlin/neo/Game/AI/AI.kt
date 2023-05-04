@@ -44,6 +44,7 @@ import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.renderLight_s
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
+import neo.TempDump.isNotNullOrEmpty
 import neo.Tools.Compilers.AAS.AASFile
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.DeclManager
@@ -1824,7 +1825,7 @@ object AI {
             projectile_height_to_distance_ratio = spawnArgs.GetFloat("projectile_height_to_distance_ratio", "1")
             turnRate = spawnArgs.GetFloat("turn_rate", "360")
             spawnArgs.GetBool("talks", "0", talks)
-            talk_state = if (spawnArgs.GetString("npc_name", "") != "") {
+            talk_state = if (spawnArgs.GetString("npc_name", null) != null) {
                 if (talks._val) {
                     talkState_t.TALK_OK
                 } else {
@@ -2363,18 +2364,18 @@ object AI {
             if (IsHidden()) {
                 snd = null
             } else if (enemy.GetEntity() != null) {
-                snd = spawnArgs.GetString("snd_chatter_combat")
+                snd = spawnArgs.GetString("snd_chatter_combat", null)
                 chat_min = Math_h.SEC2MS(spawnArgs.GetFloat("chatter_combat_min", "5")).toInt()
                 chat_max = Math_h.SEC2MS(spawnArgs.GetFloat("chatter_combat_max", "10")).toInt()
-            } else if (!spawnArgs.GetBool("no_idle_chatter")) {
-                snd = spawnArgs.GetString("snd_chatter")
+            } else if (!spawnArgs.GetBool("no_idle_chatter", "0")) {
+                snd = spawnArgs.GetString("snd_chatter", null)
                 chat_min = Math_h.SEC2MS(spawnArgs.GetFloat("chatter_min", "5")).toInt()
                 chat_max = Math_h.SEC2MS(spawnArgs.GetFloat("chatter_max", "10")).toInt()
             } else {
                 snd = null
             }
-            if (snd != null && snd.isNullOrEmpty()) {
-                chat_snd = DeclManager.declManager.FindSound(snd)
+            if (isNotNullOrEmpty(snd)) {
+                chat_snd = DeclManager.declManager.FindSound(snd!!)
 
                 // set the next chat time
                 chat_time =
@@ -7157,7 +7158,7 @@ object AI {
 
         protected fun Event_FindActorsInBounds(mins: idEventArg<idVec3>, maxs: idEventArg<idVec3>) {
             var ent: idEntity
-            val entityList = Array<idEntity>(Game_local.MAX_GENTITIES) { idEntity() }
+            val entityList = arrayOfNulls<idEntity?>(Game_local.MAX_GENTITIES)
             val numListedEntities: Int
             var i: Int
             numListedEntities = Game_local.gameLocal.clip.EntitiesTouchingBounds(
@@ -7168,7 +7169,7 @@ object AI {
             )
             i = 0
             while (i < numListedEntities) {
-                ent = entityList[i]
+                ent = entityList[i]!!
                 if (ent != this && !ent.IsHidden() && ent.health > 0 && ent is idActor) {
                     idThread.ReturnEntity(ent)
                     return

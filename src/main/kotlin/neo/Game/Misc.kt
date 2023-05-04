@@ -1037,7 +1037,7 @@ object Misc {
             val wait = CFloat()
             val joint: String?
             val num_anims2 = CInt()
-            joint = spawnArgs.GetString("sound_bone", "origin")
+            joint = spawnArgs.GetString("sound_bone", "origin")!!
             soundJoint = animator.GetJointHandle(joint)
             if (soundJoint == Model.INVALID_JOINT) {
                 Game_local.gameLocal.Warning(

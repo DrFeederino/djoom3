@@ -1335,7 +1335,11 @@ object draw_common {
             if (tr_local.backEnd.viewDef!!.numClipPlanes != 0 && surf.space !== tr_local.backEnd.currentSpace) {
                 tr_backend.GL_SelectTexture(1)
                 val plane = idPlane()
-                tr_main.R_GlobalPlaneToLocal(surf.space!!.modelMatrix, tr_local.backEnd.viewDef!!.clipPlanes[0], plane)
+                tr_main.R_GlobalPlaneToLocal(
+                    surf.space!!.modelMatrix,
+                    tr_local.backEnd.viewDef!!.clipPlanes[0]!!,
+                    plane
+                )
                 plane.plusAssign(3, 0.5f) // the notch is in the middle
                 qgl.qglTexGenfv(GL14.GL_S, GL14.GL_OBJECT_PLANE, plane.ToFloatPtr())
                 tr_backend.GL_SelectTexture(0)

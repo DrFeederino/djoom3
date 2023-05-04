@@ -3016,7 +3016,7 @@ class Common {
                             var list = listHash[className]
                             if (list != null) {
                                 for (k in 0 until list.size()) {
-                                    val `val` = ent.epairs.GetString(list[k].toString(), "")
+                                    val `val` = ent.epairs.GetString(list[k].toString(), "")!!
                                     if ( /*static*/className == "info_location" && list[k].toString() == "location") {
                                         hasLocation = true
                                     }
@@ -3031,7 +3031,7 @@ class Common {
                             list = listHash["all"]
                             if (list != null) {
                                 for (k in 0 until list.size()) {
-                                    val `val` = ent.epairs.GetString(list[k].toString(), "")
+                                    val `val` = ent.epairs.GetString(list[k].toString(), "")!!
                                     if (TempDump.isNotNullOrEmpty(`val`) && TestMapVal(`val`)) {
                                         val out = Str.va("%s,%s,%s\r\n", `val`, list[k], file)
                                         localizeFile.WriteString(out)

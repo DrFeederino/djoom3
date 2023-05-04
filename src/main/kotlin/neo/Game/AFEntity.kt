@@ -493,7 +493,7 @@ object AFEntity {
             private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
 
             // virtual					~idAFEntity_Base( void );
-            fun DropAFs(ent: idEntity, type: String, list: ArrayList<idEntity>?) {
+            fun DropAFs(ent: idEntity, type: String, list: idList<idEntity>?) {
                 var kv: idKeyValue?
                 val skinName: String?
                 val newEnt = arrayOfNulls<idEntity>(1)
@@ -511,14 +511,14 @@ object AFEntity {
                         af.GetPhysics().SetOrigin(ent.GetPhysics().GetOrigin())
                         af.GetPhysics().SetAxis(ent.GetPhysics().GetAxis())
                         af.af.SetupPose(ent, Game_local.gameLocal.time)
-                        list?.add(af)
+                        list?.Append(af)
                     }
                     kv = ent.spawnArgs.MatchPrefix(Str.va("def_drop%sAF", type), kv)
                 }
 
                 // change the skin to hide all the dropped articulated figures
                 skinName = ent.spawnArgs.GetString(Str.va("skin_drop%s", type))
-                if (!skinName.isEmpty()) {
+                if (skinName.isNotEmpty()) {
                     skin = DeclManager.declManager.FindSkin(skinName)
                     ent.SetSkin(skin)
                 }
@@ -897,7 +897,7 @@ object AFEntity {
             val gibNonSolid: Boolean
             val entityCenter = idVec3()
             val velocity = idVec3()
-            val list = ArrayList<idEntity>()
+            val list = idList<idEntity>()
             assert(!Game_local.gameLocal.isClient)
             val damageDef = Game_local.gameLocal.FindEntityDefDict(damageDefName)
             if (null == damageDef) {
@@ -915,7 +915,7 @@ object AFEntity {
             entityCenter.set(GetPhysics().GetAbsBounds().GetCenter())
             gibNonSolid = damageDef.GetBool("gibNonSolid")
             i = 0
-            while (i < list.size) {
+            while (i < list.Num()) {
                 if (gibNonSolid) {
                     list[i].GetPhysics().SetContents(0)
                     list[i].GetPhysics().SetClipMask(0)
@@ -1208,7 +1208,7 @@ object AFEntity {
             val   /*jointHandle_t*/joint: Int
             val origin = idVec3()
             val axis = idMat3()
-            headModel = spawnArgs.GetString("def_head", "")
+            headModel = spawnArgs.GetString("def_head", "")!!
             if (!headModel.isEmpty()) { //[ 0 ] ) {
                 jointName = spawnArgs.GetString("head_joint")
                 joint = animator.GetJointHandle(jointName)
@@ -1354,8 +1354,8 @@ object AFEntity {
         protected var wheelRadius: Float
         override fun Spawn() {
             super.Spawn()
-            val eyesJointName = spawnArgs.GetString("eyesJoint", "eyes")
-            val steeringWheelJointName = spawnArgs.GetString("steeringWheelJoint", "steeringWheel")
+            val eyesJointName = spawnArgs.GetString("eyesJoint", "eyes")!!
+            val steeringWheelJointName = spawnArgs.GetString("steeringWheelJoint", "steeringWheel")!!
             val wheel = CFloat()
             val steer = CFloat()
             LoadAF()
@@ -1379,7 +1379,7 @@ object AFEntity {
             steerSpeed = steer._val
             player = null
             steerAngle = 0f
-            val smokeName = spawnArgs.GetString("smoke_vehicle_dust", "muzzlesmoke")
+            val smokeName = spawnArgs.GetString("smoke_vehicle_dust", "muzzlesmoke")!!
             if (!smokeName.isEmpty()) { // != '\0' ) {
                 dustSmoke = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
             }
@@ -1456,7 +1456,7 @@ object AFEntity {
             wheelModel = idClipModel(trm)
             i = 0
             while (i < 4) {
-                val wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")
+                val wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")!!
                 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
                     idGameLocal.Error(
@@ -1654,7 +1654,7 @@ object AFEntity {
             var steeringHingeName: String?
             i = 0
             while (i < 4) {
-                wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "")
+                wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "")!!
                 //		if ( !wheelBodyName[0] ) {
                 if (wheelBodyName.isEmpty()) {
                     idGameLocal.Error(
@@ -1671,7 +1671,7 @@ object AFEntity {
                         wheelBodyName
                     )
                 }
-                wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")
+                wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")!!
                 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
                     idGameLocal.Error(
@@ -1692,7 +1692,7 @@ object AFEntity {
             }
             i = 0
             while (i < 2) {
-                steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "")
+                steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "")!!
                 //		if ( !steeringHingeName[0] ) {
                 if (steeringHingeName.isEmpty()) {
                     idGameLocal.Error(
@@ -1787,7 +1787,7 @@ object AFEntity {
                 // spawn dust particle effects
                 if (force != 0f && 0 == Game_local.gameLocal.framenum and 7) {
                     var numContacts: Int
-                    val contacts = kotlin.collections.ArrayList<idAFConstraint_Contact>(2)
+                    val contacts = arrayOfNulls<idAFConstraint_Contact>(2)
                     i = 0
                     while (i < 4) {
                         numContacts =
@@ -1797,8 +1797,8 @@ object AFEntity {
                                 dustSmoke,
                                 Game_local.gameLocal.time,
                                 Game_local.gameLocal.random.RandomFloat(),
-                                contacts[j].GetContact().point,
-                                contacts[j].GetContact().normal.ToMat3()
+                                contacts[j]!!.GetContact().point,
+                                contacts[j]!!.GetContact().normal.ToMat3()
                             )
                         }
                         i++
@@ -1865,7 +1865,7 @@ object AFEntity {
             var steeringHingeName: String?
             i = 0
             while (i < 6) {
-                wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "")
+                wheelBodyName = spawnArgs.GetString(wheelBodyKeys[i], "")!!
                 //		if ( !wheelBodyName[0] ) {
                 if (wheelBodyName.isEmpty()) {
                     idGameLocal.Error(
@@ -1882,7 +1882,7 @@ object AFEntity {
                         wheelBodyName
                     )
                 }
-                wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")
+                wheelJointName = spawnArgs.GetString(wheelJointKeys[i], "")!!
                 //		if ( !wheelJointName[0] ) {
                 if (wheelJointName.isEmpty()) {
                     idGameLocal.Error(
@@ -1903,7 +1903,7 @@ object AFEntity {
             }
             i = 0
             while (i < 4) {
-                steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "")
+                steeringHingeName = spawnArgs.GetString(steeringHingeKeys[i], "")!!
                 //		if ( !steeringHingeName[0] ) {
                 if (steeringHingeName.isEmpty()) {
                     idGameLocal.Error(
@@ -2008,7 +2008,7 @@ object AFEntity {
                 // spawn dust particle effects
                 if (force != 0f && 0 == Game_local.gameLocal.framenum and 7) {
                     var numContacts: Int
-                    val contacts = kotlin.collections.ArrayList<idAFConstraint_Contact>(2)
+                    val contacts = arrayOfNulls<idAFConstraint_Contact>(2)
                     i = 0
                     while (i < 6) {
                         numContacts =
@@ -2018,8 +2018,8 @@ object AFEntity {
                                 dustSmoke,
                                 Game_local.gameLocal.time,
                                 Game_local.gameLocal.random.RandomFloat(),
-                                contacts[j].GetContact().point,
-                                contacts[j].GetContact().normal.ToMat3()
+                                contacts[j]!!.GetContact().point,
+                                contacts[j]!!.GetContact().normal.ToMat3()
                             )
                         }
                         i++
@@ -2098,7 +2098,7 @@ object AFEntity {
             SetCombatModel()
             SetPhysics(af.GetPhysics())
             fl.takedamage = true
-            steamBodyName = spawnArgs.GetString("steamBody", "")
+            steamBodyName = spawnArgs.GetString("steamBody", "")!!
             steamForce = spawnArgs.GetFloat("steamForce", "2000")
             steamUpForce = spawnArgs.GetFloat("steamUpForce", "10")
             steamDir.set(af.GetPhysics().GetAxis(steamBody)[2]) //[2];

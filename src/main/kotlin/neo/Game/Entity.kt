@@ -1032,7 +1032,7 @@ object Entity {
             if (false) {
                 if (!Game_local.gameLocal.isClient) {
                     // common.DPrintf( "NET: DBG %s - %s is synced: %s\n", spawnArgs.GetString( "classname", "" ), GetType().classname, fl.networkSync ? "true" : "false" );
-                    if (spawnArgs.GetString("classname", "")[0] == '\u0000' && !fl.networkSync) {
+                    if (spawnArgs.GetString("classname", "")!![0] == '\u0000' && !fl.networkSync) {
                         idLib.common.DPrintf(
                             "NET: WRN %s entity, no classname, and no networkSync?\n",
                             GetType().javaClass.name
@@ -1045,7 +1045,7 @@ object Entity {
             temp[0] = spawnArgs.GetString(
                 "name",
                 Str.va("%s_%s_%d", GetClassname(), spawnArgs.GetString("classname"), entityNumber)
-            )
+            )!!
             SetName(temp[0])
 
             // if we have targets, wait until all entities are spawned to get them
@@ -2802,11 +2802,11 @@ object Entity {
             if (SysCvar.g_decals.GetBool()) {
                 // place a wound overlay on the model
                 key = Str.va("mtr_wound_%s", materialType)
-                decal = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)
+                decal = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)!!
                 if (decal.isEmpty()) { // == '\0' ) {
                     decal = def.dict.RandomPrefix(key, Game_local.gameLocal.random)
                 }
-                if (!decal.isEmpty()) { // != '\0' ) {
+                if (!decal!!.isEmpty()) { // != '\0' ) {
                     val dir = idVec3(velocity)
                     dir.Normalize()
                     ProjectOverlay(collision.c.point, dir, 20.0f, decal)

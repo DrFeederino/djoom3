@@ -81,7 +81,7 @@ object Str {
      ============
      */
     //    @Deprecated
-    fun va(fmt: String, vararg args: Any): String {
+    fun va(fmt: String, vararg args: Any?): String {
 //////	va_list argptr;
 ////        char[] argptr;
 ////        int index = 0;

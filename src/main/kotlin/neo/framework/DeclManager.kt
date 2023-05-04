@@ -2279,7 +2279,6 @@ class DeclManager {
         }
 
         init {
-            //declTypes = ArrayList(32)
             declFolders = List.idList()
             loadedFiles = List.idList()
             hashTables = Array(TempDump.etoi(declType_t.DECL_MAX_TYPES)) { idHashIndex() }

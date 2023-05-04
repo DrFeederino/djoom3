@@ -4131,7 +4131,7 @@ object Session_local {
                             val person = guiTakeNotes!!.State().GetInt(Str.va("person_sel_%d", i))
                             workName = idStr("$fileName/")
                             workName.plusAssign(
-                                guiTakeNotes!!.State().GetString(Str.va("person_item_%d", person), "Nobody")
+                                guiTakeNotes!!.State().GetString(Str.va("person_item_%d", person), "Nobody")!!
                             )
                             fileList.add(workName)
                             i++

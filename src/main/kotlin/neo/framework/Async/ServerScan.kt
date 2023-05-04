@@ -474,7 +474,7 @@ class ServerScan {
 
         @Throws(idException::class)
         private fun GUIAdd(id: Int, server: networkServer_t) {
-            var name = server.serverInfo.GetString("si_name", Licensee.GAME_NAME + " Server")
+            var name = server.serverInfo.GetString("si_name", Licensee.GAME_NAME + " Server")!!
             var d3xp = false
             var mod = false
             if (0 == idStr.Icmp(server.serverInfo.GetString("fs_game"), "d3xp")

@@ -2,6 +2,7 @@ package neo.Renderer
 
 import neo.Renderer.Image.*
 import neo.Renderer.Image_files.R_WriteTGA
+import neo.Renderer.Image_init.IMAGE_CLASSIFICATION.IC_COUNT
 import neo.Renderer.Material.textureFilter_t
 import neo.Renderer.Material.textureRepeat_t
 import neo.TempDump
@@ -242,28 +243,28 @@ object Image_init {
             var overSized = false
             if (args.Argc() == 1) {
             } else if (args.Argc() == 2) {
-                if (idStr.Companion.Icmp(args.Argv(1), "uncompressed") == 0) {
+                if (idStr.Icmp(args.Argv(1), "uncompressed") == 0) {
                     uncompressedOnly = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "sorted") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "sorted") == 0) {
                     sorted = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "partial") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "partial") == 0) {
                     partial = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "unloaded") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "unloaded") == 0) {
                     unloaded = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "cached") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "cached") == 0) {
                     cached = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "uncached") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "uncached") == 0) {
                     uncached = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "tagged") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "tagged") == 0) {
                     matchTag = 1
-                } else if (idStr.Companion.Icmp(args.Argv(1), "duplicated") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "duplicated") == 0) {
                     duplicated = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "touched") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "touched") == 0) {
                     touched = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "classify") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "classify") == 0) {
                     byClassification = true
                     sorted = true
-                } else if (idStr.Companion.Icmp(args.Argv(1), "oversized") == 0) {
+                } else if (idStr.Icmp(args.Argv(1), "oversized") == 0) {
                     byClassification = true
                     sorted = true
                     overSized = true
@@ -282,7 +283,9 @@ object Image_init {
             totalSize = 0
 
 //	sortedImage_t	[]sortedArray = (sortedImage_t *)alloca( sizeof( sortedImage_t ) * globalImages.images.Num() );
-            val sortedArray = kotlin.collections.ArrayList<sortedImage_t>(Image.globalImages.images.Num())
+
+//	sortedImage_t	[]sortedArray = (sortedImage_t *)alloca( sizeof( sortedImage_t ) * globalImages.images.Num() );
+            val sortedArray = arrayOfNulls<sortedImage_t>(Image.globalImages.images.Num())
             i = 0
             while (i < Image.globalImages.images.Num()) {
                 image = Image.globalImages.images[i]
@@ -298,7 +301,7 @@ object Image_init {
                     i++
                     continue
                 }
-                if (unloaded && image.texNum != idImage.Companion.TEXTURE_NOT_LOADED) {
+                if (unloaded && image.texNum != idImage.TEXTURE_NOT_LOADED) {
                     i++
                     continue
                 }
@@ -306,11 +309,11 @@ object Image_init {
                     i++
                     continue
                 }
-                if (cached && (null == image.partialImage || image.texNum == idImage.Companion.TEXTURE_NOT_LOADED)) {
+                if (cached && (null == image.partialImage || image.texNum == idImage.TEXTURE_NOT_LOADED)) {
                     i++
                     continue
                 }
-                if (uncached && (null == image.partialImage || image.texNum != idImage.Companion.TEXTURE_NOT_LOADED)) {
+                if (uncached && (null == image.partialImage || image.texNum != idImage.TEXTURE_NOT_LOADED)) {
                     i++
                     continue
                 }
@@ -320,7 +323,7 @@ object Image_init {
 //			int j;
                     j = i + 1
                     while (j < Image.globalImages.images.Num()) {
-                        if (idStr.Companion.Icmp(image.imgName, Image.globalImages.images[j].imgName) == 0) {
+                        if (idStr.Icmp(image.imgName, Image.globalImages.images[j].imgName) == 0) {
                             break
                         }
                         j++
@@ -340,8 +343,8 @@ object Image_init {
                     image.bindCount = 0
                 }
                 if (sorted) {
-                    sortedArray[count].image = image
-                    sortedArray[count].size = image.StorageSize()
+                    sortedArray[count]!!.image = image
+                    sortedArray[count]!!.size = image.StorageSize()
                 } else {
                     idLib.common.Printf("%4d:", i)
                     image.Print()
@@ -351,14 +354,14 @@ object Image_init {
                 i++
             }
             if (sorted) {
-                sortedArray.sortWith(R_QsortImageSizes())
+                Arrays.sort(sortedArray, 0, count, R_QsortImageSizes())
                 //qsort(sortedArray, count, sizeof(sortedImage_t), R_QsortImageSizes);
                 partialSize = 0
                 i = 0
                 while (i < count) {
                     idLib.common.Printf("%4d:", i)
-                    sortedArray[i].image!!.Print()
-                    partialSize += sortedArray[i].image!!.StorageSize()
+                    sortedArray[i]!!.image!!.Print()
+                    partialSize += sortedArray[i]!!.image!!.StorageSize()
                     if ((i + 1) % 10 == 0) {
                         idLib.common.Printf(
                             "-------- %5.1f of %5.1f megs --------\n",
@@ -372,24 +375,24 @@ object Image_init {
             idLib.common.Printf(" %d images (%d total)\n", count, Image.globalImages.images.Num())
             idLib.common.Printf(" %5.1f total megabytes of images\n\n\n", totalSize / (1024 * 1024.0))
             if (byClassification) {
-                val classifications: ArrayList<idList<Int>> = ArrayList<idList<Int>>(IMAGE_CLASSIFICATION.IC_COUNT)
+                val classifications: Array<idList<Int>> = Array<idList<Int>>(IC_COUNT) { idList() }
                 i = 0
                 while (i < count) {
-                    val cl = ClassifyImage(sortedArray[i].image!!.imgName.toString())
+                    val cl = ClassifyImage(sortedArray[i]!!.image!!.imgName.toString())
                     classifications[cl].Append(i)
                     i++
                 }
                 i = 0
                 while (i < IMAGE_CLASSIFICATION.IC_COUNT) {
                     partialSize = 0
-                    val overSizedList = kotlin.collections.ArrayList<Int>()
+                    val overSizedList = idList<Int>()
                     j = 0
                     while (j < classifications[i].Num()) {
-                        partialSize += sortedArray[classifications[i][j]].image!!.StorageSize()
+                        partialSize += sortedArray[classifications[i][j]]!!.image!!.StorageSize()
                         if (overSized) {
-                            if (sortedArray[classifications[i][j]].image!!.uploadWidth._val > IC_Info[i].maxWidth && sortedArray[classifications[i][j]].image!!.uploadHeight._val > IC_Info[i].maxHeight
+                            if (sortedArray[classifications[i][j]]!!.image!!.uploadWidth._val > IC_Info[i].maxWidth && sortedArray[classifications[i][j]]!!.image!!.uploadHeight._val > IC_Info[i].maxHeight
                             ) {
-                                overSizedList.add(classifications[i][j])
+                                overSizedList.Append(classifications[i][j])
                             }
                         }
                         j++
@@ -400,12 +403,12 @@ object Image_init {
                         classifications[i].Num(),
                         partialSize / (1024 * 1024.0)
                     )
-                    if (overSized && overSizedList.size != 0) {
+                    if (overSized && overSizedList.Num() != 0) {
                         idLib.common.Printf("  The following images may be oversized\n")
                         j = 0
-                        while (j < overSizedList.size) {
+                        while (j < overSizedList.Num()) {
                             idLib.common.Printf("    ")
-                            sortedArray[overSizedList[j]].image!!.Print()
+                            sortedArray[overSizedList[j]]!!.image!!.Print()
                             idLib.common.Printf("\n")
                             j++
                         }
@@ -532,9 +535,9 @@ object Image_init {
             all = false
             checkPrecompressed = false // if we are doing this as a vid_restart, look for precompressed like normal
             if (args.Argc() == 2) {
-                if (0 == idStr.Companion.Icmp(args.Argv(1), "all")) {
+                if (0 == idStr.Icmp(args.Argv(1), "all")) {
                     all = true
-                } else if (0 == idStr.Companion.Icmp(args.Argv(1), "reload")) {
+                } else if (0 == idStr.Icmp(args.Argv(1), "reload")) {
                     all = true
                     checkPrecompressed = true
                 } else {
@@ -749,15 +752,15 @@ object Image_init {
 
     internal class R_WhiteImage private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
-            val data = ByteBuffer.allocate(idImage.Companion.DEFAULT_SIZE * idImage.Companion.DEFAULT_SIZE * 4)
+            val data = ByteBuffer.allocate(idImage.DEFAULT_SIZE * idImage.DEFAULT_SIZE * 4)
 
             // solid white texture
 //	memset( data, 255, sizeof( data ) );
             Arrays.fill(data.array(), 255.toByte())
             image.GenerateImage(
                 data,
-                idImage.Companion.DEFAULT_SIZE,
-                idImage.Companion.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
                 textureFilter_t.TF_DEFAULT,
                 false,
                 textureRepeat_t.TR_REPEAT,
@@ -775,14 +778,14 @@ object Image_init {
 
     internal class R_BlackImage private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
-            val data = ByteBuffer.allocate(idImage.Companion.DEFAULT_SIZE * idImage.Companion.DEFAULT_SIZE * 4)
+            val data = ByteBuffer.allocate(idImage.DEFAULT_SIZE * idImage.DEFAULT_SIZE * 4)
 
             // solid black texture
 //	memset( data, 0, sizeof( data ) );
             image.GenerateImage(
                 data,
-                idImage.Companion.DEFAULT_SIZE,
-                idImage.Companion.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
                 textureFilter_t.TF_DEFAULT,
                 false,
                 textureRepeat_t.TR_REPEAT,
@@ -867,7 +870,7 @@ object Image_init {
 
     internal class R_RGBA8Image private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
-            val data = ByteBuffer.allocate(idImage.Companion.DEFAULT_SIZE * idImage.Companion.DEFAULT_SIZE * 4)
+            val data = ByteBuffer.allocate(idImage.DEFAULT_SIZE * idImage.DEFAULT_SIZE * 4)
 
 //	memset( data, 0, sizeof( data ) );
             data.put(0, 16.toByte())
@@ -876,8 +879,8 @@ object Image_init {
             data.put(3, 96.toByte())
             image.GenerateImage(
                 data,
-                idImage.Companion.DEFAULT_SIZE,
-                idImage.Companion.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
                 textureFilter_t.TF_DEFAULT,
                 false,
                 textureRepeat_t.TR_REPEAT,
@@ -895,7 +898,7 @@ object Image_init {
 
     internal class R_RGB8Image private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
-            val data = ByteBuffer.allocate(idImage.Companion.DEFAULT_SIZE * idImage.Companion.DEFAULT_SIZE * 4)
+            val data = ByteBuffer.allocate(idImage.DEFAULT_SIZE * idImage.DEFAULT_SIZE * 4)
 
 //	memset( data, 0, sizeof( data ) );
             data.put(0, 16.toByte())
@@ -904,8 +907,8 @@ object Image_init {
             data.put(3, 255.toByte())
             image.GenerateImage(
                 data,
-                idImage.Companion.DEFAULT_SIZE,
-                idImage.Companion.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
+                idImage.DEFAULT_SIZE,
                 textureFilter_t.TF_DEFAULT,
                 false,
                 textureRepeat_t.TR_REPEAT,
@@ -955,13 +958,13 @@ object Image_init {
 
     internal class R_FlatNormalImage private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
-            val data = Array<Array<ByteArray>>(idImage.Companion.DEFAULT_SIZE) {
-                Array(idImage.Companion.DEFAULT_SIZE) {
+            val data = Array<Array<ByteArray>>(idImage.DEFAULT_SIZE) {
+                Array(idImage.DEFAULT_SIZE) {
                     ByteArray(4)
                 }
             }
             var i: Int
-            val red = if (idImageManager.Companion.image_useNormalCompression.GetInteger() == 1) 0 else 3
+            val red = if (idImageManager.image_useNormalCompression.GetInteger() == 1) 0 else 3
             val alpha = if (red == 0) 3 else 0
             // flat normal map for default bunp mapping
             i = 0
@@ -994,13 +997,13 @@ object Image_init {
     internal class R_AmbientNormalImage private constructor() : GeneratorFunction() {
         override fun run(image: idImage) {
 //            final byte[][][] data = new byte[DEFAULT_SIZE][DEFAULT_SIZE][4];
-            val data = ByteArray(idImage.Companion.DEFAULT_SIZE)
+            val data = ByteArray(idImage.DEFAULT_SIZE)
             var i: Int
-            val red = if (idImageManager.Companion.image_useNormalCompression.GetInteger() == 1) 0 else 3
+            val red = if (idImageManager.image_useNormalCompression.GetInteger() == 1) 0 else 3
             val alpha = if (red == 0) 3 else 0
             // flat normal map for default bunp mapping
             i = 0
-            while (i < idImage.Companion.DEFAULT_SIZE) {
+            while (i < idImage.DEFAULT_SIZE) {
                 data[i + red] = (255 * tr_local.tr.ambientLightVector[0]).toInt().toByte()
                 data[i + 1] = (255 * tr_local.tr.ambientLightVector[1]).toInt().toByte()
                 data[i + 2] = (255 * tr_local.tr.ambientLightVector[2]).toInt().toByte()
@@ -1296,14 +1299,14 @@ object Image_init {
 
      =======================
      */
-    internal class R_QsortImageSizes : cmp_t<sortedImage_t> {
-        override fun compare(ea: sortedImage_t, eb: sortedImage_t): Int {
-            if (ea.size > eb.size) {
+    internal class R_QsortImageSizes : cmp_t<sortedImage_t?> {
+        override fun compare(ea: sortedImage_t?, eb: sortedImage_t?): Int {
+            if (ea!!.size > eb!!.size) {
                 return -1
             }
             return if (ea.size < eb.size) {
                 1
-            } else idStr.Companion.Icmp(ea.image.imgName, eb.image.imgName)
+            } else idStr.Icmp(ea.image.imgName, eb.image.imgName)
         }
     }
 }

@@ -214,7 +214,7 @@ class UserInterfaceLocal {
 
         // Gets a gui state variable
         override fun GetStateString(varName: String, defaultString: String /*= ""*/): String {
-            return state.GetString(varName, defaultString)
+            return state.GetString(varName, defaultString)!!
         }
 
         fun GetStateBool(varName: String, defaultString: String /*= "0"*/): Boolean {

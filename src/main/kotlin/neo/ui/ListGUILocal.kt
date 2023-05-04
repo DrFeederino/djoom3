@@ -87,7 +87,7 @@ class ListGUILocal {
                 idStr.snPrintf(
                     s as Array<String>,
                     size,
-                    m_pGUI!!.State().GetString(Str.va("%s_item_%d", m_name, sel), "")
+                    m_pGUI!!.State().GetString(Str.va("%s_item_%d", m_name, sel), "")!!
                 )
             }
             // don't let overflow

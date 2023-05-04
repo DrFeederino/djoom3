@@ -235,7 +235,7 @@ object tr_light {
             texCoords[i].set(verts!![i]!!.xyz.minus(localViewOrigin))
             i++
         }
-        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec3(arrayListOf(* texCoords), numVerts)
+        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec3(texCoords, numVerts)
     }
 
     // this needs to be greater than the dist from origin to corner of near clip plane
@@ -308,7 +308,7 @@ object tr_light {
             texCoords[i].set(tr_main.R_LocalPointToGlobal(transform, v))
             i++
         }
-        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec3(arrayListOf(*texCoords), numVerts)
+        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec3(texCoords, numVerts)
     }
 
     /*
@@ -328,11 +328,10 @@ object tr_light {
 
         // FIXME: change to 3 component?
         val size = tri!!.numVerts // * sizeof( idVec4 );
-        val texCoords = ArrayList<idVec4>()
-        texCoords.addAll(idVec4.generateArray(size))
+        val texCoords = arrayOfNulls<idVec4>(size)
         if (true) {
             Simd.SIMDProcessor.CreateSpecularTextureCoords(
-                texCoords.toTypedArray(), localLightOrigin, localViewOrigin,
+                texCoords as Array<idVec4>, localLightOrigin, localViewOrigin,
                 tri.verts as Array<idDrawVert>, tri.numVerts, tri.indexes!!, tri.numIndexes
             )
         } else {
@@ -373,7 +372,7 @@ object tr_light {
 //		texCoords[i][3] = 1;
 //	}
         }
-        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec4(texCoords, size)
+        surf.dynamicTexCoords = VertexCache.vertexCache.AllocFrameTempIdVec4(texCoords as Array<idVec4>, size)
     }
 
     fun R_SetEntityDefViewEntity(def: idRenderEntityLocal): viewEntity_s? {

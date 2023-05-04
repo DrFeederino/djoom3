@@ -3419,13 +3419,6 @@ class Image {
             ddsHash.Free()
         }
 
-        fun java.util.ArrayList<String>.addUnique(str: String): Int {
-            if (indexOf(str) == -1) {
-                add(str)
-            }
-            return indexOf(str)
-        }
-
         @JvmOverloads
         fun FinishBuild(removeDups: Boolean = false /*= false */) {
             val batchFile: idFile?

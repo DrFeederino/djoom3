@@ -394,14 +394,6 @@ object GameEdit {
         var   /*idTypeInfo*/typeInfo: Class<*>? = null
     }
 
-    fun ArrayList<idEntity>.addUnique(el: idEntity): Int {
-        if (indexOf(el) == -1) {
-            add(el)
-        }
-
-        return indexOf(el)
-    }
-
     class idEditEntities {
         private var nextSelectTime: Int
         private val selectableEntityClasses: List.idList<selectedTypeInfo_s>
