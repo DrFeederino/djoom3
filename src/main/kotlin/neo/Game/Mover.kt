@@ -173,98 +173,134 @@ object Mover {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_FindGuiTargets] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_FindGuiTargets }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_FindGuiTargets() }
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_SetCallback }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_SetCallback() }
                 eventCallbacks[EV_TeamBlocked] =
-                    eventCallback_t2<idMover> { obj: Any?, blockedPart: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
-                        idMover::Event_TeamBlocked
+                    eventCallback_t2<idMover> { obj: idMover, blockedPart: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        obj.Event_TeamBlocked(
+                            blockedPart as idEventArg<idEntity>,
+                            blockingEntity as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[EV_PartBlocked] =
-                    eventCallback_t1<idMover> { obj: Any?, blockingEntity: idEventArg<*>? ->
-                        idMover::Event_PartBlocked
+                    eventCallback_t1<idMover> { obj: idMover, blockingEntity: idEventArg<*>? ->
+                        obj.Event_PartBlocked(blockingEntity as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_ReachedPos] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_UpdateMove }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_UpdateMove() }
                 eventCallbacks[EV_ReachedAng] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_UpdateRotation }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_UpdateRotation() }
                 eventCallbacks[EV_PostRestore] =
-                    eventCallback_t5<idMover> { obj: Any?, start: idEventArg<*>?, total: idEventArg<*>?, accel: idEventArg<*>?,
+                    eventCallback_t5<idMover> { obj: idMover, start: idEventArg<*>?, total: idEventArg<*>?, accel: idEventArg<*>?,
                                                 decel: idEventArg<*>?, useSplineAng: idEventArg<*>? ->
-                        idMover::Event_PostRestore
+                        obj.Event_PostRestore(
+                            start as idEventArg<Int>,
+                            total as idEventArg<Int>,
+                            accel as idEventArg<Int>,
+                            decel as idEventArg<Int>,
+                            useSplineAng as idEventArg<Int>
+                        )
                     }
                 eventCallbacks[EV_StopMoving] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopMoving }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_StopMoving() }
                 eventCallbacks[EV_StopRotating] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopRotating }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_StopRotating() }
                 eventCallbacks[EV_Speed] =
-                    eventCallback_t1<idMover> { obj: Any?, speed: idEventArg<*>? -> idMover::Event_SetMoveSpeed }
+                    eventCallback_t1<idMover> { obj: idMover, speed: idEventArg<*>? -> obj.Event_SetMoveSpeed(speed as idEventArg<Float>) }
                 eventCallbacks[EV_Time] =
-                    eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? -> idMover::Event_SetMoveTime }
-                eventCallbacks[EV_AccelTime] = eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? ->
-                    idMover::Event_SetAccellerationTime
+                    eventCallback_t1<idMover> { obj: idMover, time: idEventArg<*>? -> obj.Event_SetMoveTime(time as idEventArg<Float>) }
+                eventCallbacks[EV_AccelTime] = eventCallback_t1<idMover> { obj: idMover, time: idEventArg<*>? ->
+                    obj.Event_SetAccellerationTime(time as idEventArg<Float>)
                 }
-                eventCallbacks[EV_DecelTime] = eventCallback_t1<idMover> { obj: Any?, time: idEventArg<*>? ->
-                    idMover::Event_SetDecelerationTime
+                eventCallbacks[EV_DecelTime] = eventCallback_t1<idMover> { obj: idMover, time: idEventArg<*>? ->
+                    obj.Event_SetDecelerationTime(time as idEventArg<Float>)
                 }
                 eventCallbacks[EV_MoveTo] =
-                    eventCallback_t1<idMover> { obj: Any?, ent: idEventArg<*>? -> idMover::Event_MoveTo }
+                    eventCallback_t1<idMover> { obj: idMover, ent: idEventArg<*>? -> obj.Event_MoveTo(ent as idEventArg<idEntity>) }
                 eventCallbacks[EV_MoveToPos] =
-                    eventCallback_t1<idMover> { obj: Any?, pos: idEventArg<*>? -> idMover::Event_MoveToPos }
+                    eventCallback_t1<idMover> { obj: idMover, pos: idEventArg<*>? -> obj.Event_MoveToPos(pos as idEventArg<idVec3>) }
                 eventCallbacks[EV_Move] =
-                    eventCallback_t2<idMover> { obj: Any?, angle: idEventArg<*>?, distance: idEventArg<*>? -> idMover::Event_MoveDir }
+                    eventCallback_t2<idMover> { obj: idMover, angle: idEventArg<*>?, distance: idEventArg<*>? ->
+                        obj.Event_MoveDir(
+                            angle as idEventArg<Float>,
+                            distance as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[EV_MoveAccelerateTo] =
-                    eventCallback_t2<idMover> { obj: Any?, speed: idEventArg<*>?, time: idEventArg<*>? ->
-                        idMover::Event_MoveAccelerateTo
+                    eventCallback_t2<idMover> { obj: idMover, speed: idEventArg<*>?, time: idEventArg<*>? ->
+                        obj.Event_MoveAccelerateTo(speed as idEventArg<Float>, time as idEventArg<Float>)
                     }
                 eventCallbacks[EV_MoveDecelerateTo] =
-                    eventCallback_t2<idMover> { obj: Any?, speed: idEventArg<*>?, time: idEventArg<*>? ->
-                        idMover::Event_MoveDecelerateTo
+                    eventCallback_t2<idMover> { obj: idMover, speed: idEventArg<*>?, time: idEventArg<*>? ->
+                        obj.Event_MoveDecelerateTo(speed as idEventArg<Float>, time as idEventArg<Float>)
                     }
                 eventCallbacks[EV_RotateDownTo] =
-                    eventCallback_t2<idMover> { obj: Any?, _axis: idEventArg<*>?, angle: idEventArg<*>? -> idMover::Event_RotateDownTo }
+                    eventCallback_t2<idMover> { obj: idMover, _axis: idEventArg<*>?, angle: idEventArg<*>? ->
+                        obj.Event_RotateDownTo(
+                            _axis as idEventArg<Int>,
+                            angle as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[EV_RotateUpTo] =
-                    eventCallback_t2<idMover> { obj: Any?, _axis: idEventArg<*>?, angle: idEventArg<*>? -> idMover::Event_RotateUpTo }
+                    eventCallback_t2<idMover> { obj: idMover, _axis: idEventArg<*>?, angle: idEventArg<*>? ->
+                        obj.Event_RotateUpTo(
+                            _axis as idEventArg<Int>,
+                            angle as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[EV_RotateTo] =
-                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_RotateTo }
+                    eventCallback_t1<idMover> { obj: idMover, angles: idEventArg<*>? -> obj.Event_RotateTo(angles as idEventArg<idAngles>) }
                 eventCallbacks[EV_Rotate] =
-                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_Rotate }
+                    eventCallback_t1<idMover> { obj: idMover, angles: idEventArg<*>? -> obj.Event_Rotate(angles as idEventArg<idVec3>) }
                 eventCallbacks[EV_RotateOnce] =
-                    eventCallback_t1<idMover> { obj: Any?, angles: idEventArg<*>? -> idMover::Event_RotateOnce }
+                    eventCallback_t1<idMover> { obj: idMover, angles: idEventArg<*>? -> obj.Event_RotateOnce(angles as idEventArg<idVec3>) }
                 eventCallbacks[EV_Bob] =
-                    eventCallback_t3<idMover> { obj: Any?, speed: idEventArg<*>?, phase: idEventArg<*>?, depth: idEventArg<*>? -> idMover::Event_Bob }
+                    eventCallback_t3<idMover> { obj: idMover, speed: idEventArg<*>?, phase: idEventArg<*>?, depth: idEventArg<*>? ->
+                        obj.Event_Bob(
+                            speed as idEventArg<Float>,
+                            phase as idEventArg<Float>,
+                            depth as idEventArg<idVec3>
+                        )
+                    }
                 eventCallbacks[EV_Sway] =
-                    eventCallback_t3<idMover> { obj: Any?, speed: idEventArg<*>?, phase: idEventArg<*>?, _depth: idEventArg<*>? -> idMover::Event_Sway }
+                    eventCallback_t3<idMover> { obj: idMover, speed: idEventArg<*>?, phase: idEventArg<*>?, _depth: idEventArg<*>? ->
+                        obj.Event_Sway(
+                            speed as idEventArg<Float>,
+                            phase as idEventArg<Float>,
+                            _depth as idEventArg<idVec3>
+                        )
+                    }
                 eventCallbacks[EV_Mover_OpenPortal] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_OpenPortal }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_OpenPortal() }
                 eventCallbacks[EV_Mover_ClosePortal] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_ClosePortal }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_ClosePortal() }
                 eventCallbacks[EV_AccelSound] =
-                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetAccelSound }
+                    eventCallback_t1<idMover> { obj: idMover, sound: idEventArg<*>? -> obj.Event_SetAccelSound(sound as idEventArg<String?>?) }
                 eventCallbacks[EV_DecelSound] =
-                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetDecelSound }
+                    eventCallback_t1<idMover> { obj: idMover, sound: idEventArg<*>? -> obj.Event_SetDecelSound(sound as idEventArg<String?>?) }
                 eventCallbacks[EV_MoveSound] =
-                    eventCallback_t1<idMover> { obj: Any?, sound: idEventArg<*>? -> idMover::Event_SetMoveSound }
+                    eventCallback_t1<idMover> { obj: idMover, sound: idEventArg<*>? -> obj.Event_SetMoveSound(sound as idEventArg<String?>?) }
                 eventCallbacks[EV_Mover_InitGuiTargets] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_InitGuiTargets }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_InitGuiTargets() }
                 eventCallbacks[EV_EnableSplineAngles] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_EnableSplineAngles }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_EnableSplineAngles() }
                 eventCallbacks[EV_DisableSplineAngles] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_DisableSplineAngles }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_DisableSplineAngles() }
                 eventCallbacks[EV_RemoveInitialSplineAngles] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_RemoveInitialSplineAngles }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_RemoveInitialSplineAngles() }
                 eventCallbacks[EV_StartSpline] =
-                    eventCallback_t1<idMover> { obj: Any?, _splineEntity: idEventArg<*>? ->
-                        idMover::Event_StartSpline
+                    eventCallback_t1<idMover> { obj: idMover, _splineEntity: idEventArg<*>? ->
+                        obj.Event_StartSpline(_splineEntity as idEventArg<idEntity?>)
                     }
                 eventCallbacks[EV_StopSpline] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_StopSpline }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_StopSpline() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idMover> { obj: Any?, activator: idEventArg<*>? -> idMover::Event_Activate }
+                    eventCallback_t1<idMover> { obj: idMover, activator: idEventArg<*>? -> obj.Event_Activate(activator as idEventArg<idEntity>) }
                 eventCallbacks[EV_IsMoving] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_IsMoving }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_IsMoving() }
                 eventCallbacks[EV_IsRotating] =
-                    eventCallback_t0<idMover> { obj: Any? -> idMover::Event_IsRotating }
+                    eventCallback_t0<idMover> { obj: idMover -> obj.Event_IsRotating() }
             }
         }
 
@@ -1424,8 +1460,8 @@ object Mover {
             idThread.ReturnInt(physicsObj.GetAngularExtrapolationType() != Extrapolate.EXTRAPOLATION_NONE)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1521,23 +1557,31 @@ object Mover {
             init {
                 eventCallbacks.putAll(idMover.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idElevator> { obj: Any?, activator: idEventArg<*>? ->
-                        idElevator::Event_Activate
+                    eventCallback_t1<idElevator> { obj: idElevator, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_TeamBlocked] =
-                    eventCallback_t2<idElevator> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
-                        idElevator::Event_TeamBlocked
+                    eventCallback_t2<idElevator> { obj: idElevator, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        obj.Event_TeamBlocked(
+                            blockedEntity as idEventArg<idEntity>,
+                            blockingEntity as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[EV_PartBlocked] =
-                    eventCallback_t1<idElevator> { obj: Any?, blockingEntity: idEventArg<*>? ->
-                        idElevator::Event_PartBlocked
+                    eventCallback_t1<idElevator> { obj: idElevator, blockingEntity: idEventArg<*>? ->
+                        obj.Event_PartBlocked(blockingEntity as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_PostArrival] =
-                    eventCallback_t0<idElevator> { obj: Any? -> idElevator::Event_PostFloorArrival }
+                    eventCallback_t0<idElevator> { obj: idElevator -> obj.Event_PostFloorArrival() }
                 eventCallbacks[EV_GotoFloor] =
-                    eventCallback_t1<idElevator> { obj: Any?, floor: idEventArg<*>? -> idElevator::Event_GotoFloor }
+                    eventCallback_t1<idElevator> { obj: idElevator, floor: idEventArg<*>? -> obj.Event_GotoFloor(floor as idEventArg<Int>) }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idElevator> { obj: Any?, other: idEventArg<*>?, trace: idEventArg<*>? -> idElevator::Event_Touch }
+                    eventCallback_t2<idElevator> { obj: idElevator, other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
             }
         }
 
@@ -1887,8 +1931,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         enum class elevatorState_t {
@@ -1952,31 +1996,31 @@ object Mover {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_FindGuiTargets] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_FindGuiTargets }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_FindGuiTargets() }
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_SetCallback }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_SetCallback() }
                 eventCallbacks[EV_Mover_ReturnToPos1] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_ReturnToPos1 }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_ReturnToPos1() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idMover_Binary> { obj: Any?, activator: idEventArg<*>? ->
-                        idMover_Binary::Event_Use_BinaryMover
+                    eventCallback_t1<idMover_Binary> { obj: idMover_Binary, activator: idEventArg<*>? ->
+                        obj.Event_Use_BinaryMover(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_ReachedPos] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Reached_BinaryMover }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_Reached_BinaryMover() }
                 eventCallbacks[EV_Mover_MatchTeam] =
-                    eventCallback_t2<idMover_Binary> { obj: Any?, newstate: idEventArg<*>?, time: idEventArg<*>? ->
-                        idMover_Binary::Event_MatchActivateTeam
+                    eventCallback_t2<idMover_Binary> { obj: idMover_Binary, newstate: idEventArg<*>?, time: idEventArg<*>? ->
+                        obj.Event_MatchActivateTeam(newstate as idEventArg<moverState_t>, time as idEventArg<Int>)
                     }
                 eventCallbacks[EV_Mover_Enable] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Enable }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_Enable() }
                 eventCallbacks[EV_Mover_Disable] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_Disable }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_Disable() }
                 eventCallbacks[EV_Mover_OpenPortal] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_OpenPortal }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_OpenPortal() }
                 eventCallbacks[EV_Mover_ClosePortal] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_ClosePortal }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_ClosePortal() }
                 eventCallbacks[EV_Mover_InitGuiTargets] =
-                    eventCallback_t0<idMover_Binary> { obj: Any? -> idMover_Binary::Event_InitGuiTargets }
+                    eventCallback_t0<idMover_Binary> { obj: idMover_Binary -> obj.Event_InitGuiTargets() }
             }
         }
 
@@ -2815,8 +2859,8 @@ object Mover {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -2875,43 +2919,51 @@ object Mover {
             init {
                 eventCallbacks.putAll(idMover_Binary.getEventCallBacks())
                 eventCallbacks[EV_TeamBlocked] =
-                    eventCallback_t2<idDoor> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
-                        idDoor::Event_TeamBlocked
+                    eventCallback_t2<idDoor> { obj: idDoor, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        obj.Event_TeamBlocked(
+                            blockedEntity as idEventArg<idEntity>,
+                            blockingEntity as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[EV_PartBlocked] =
-                    eventCallback_t1<idDoor> { obj: Any?, blockingEntity: idEventArg<*>? ->
-                        idDoor::Event_PartBlocked
+                    eventCallback_t1<idDoor> { obj: idDoor, blockingEntity: idEventArg<*>? ->
+                        obj.Event_PartBlocked(blockingEntity as idEventArg<idEntity>)
                     }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idDoor> { obj: Any?, _other: idEventArg<*>?, _trace: idEventArg<*>? -> idDoor::Event_Touch }
+                    eventCallback_t2<idDoor> { obj: idDoor, _other: idEventArg<*>?, _trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity>,
+                            _trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idDoor> { obj: Any?, activator: idEventArg<*>? -> idDoor::Event_Activate }
+                    eventCallback_t1<idDoor> { obj: idDoor, activator: idEventArg<*>? -> obj.Event_Activate(activator as idEventArg<idEntity>) }
                 eventCallbacks[EV_Door_StartOpen] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_StartOpen }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_StartOpen() }
                 eventCallbacks[EV_Door_SpawnDoorTrigger] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_SpawnDoorTrigger }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_SpawnDoorTrigger() }
                 eventCallbacks[EV_Door_SpawnSoundTrigger] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_SpawnSoundTrigger }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_SpawnSoundTrigger() }
                 eventCallbacks[EV_Door_Open] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Open }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_Open() }
                 eventCallbacks[EV_Door_Close] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Close }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_Close() }
                 eventCallbacks[EV_Door_Lock] =
-                    eventCallback_t1<idDoor> { obj: Any?, f: idEventArg<*>? -> idDoor::Event_Lock }
+                    eventCallback_t1<idDoor> { obj: idDoor, f: idEventArg<*>? -> obj.Event_Lock(f as idEventArg<Int>) }
                 eventCallbacks[EV_Door_IsOpen] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_IsOpen }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_IsOpen() }
                 eventCallbacks[EV_Door_IsLocked] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Locked }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_Locked() }
                 eventCallbacks[EV_ReachedPos] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_Reached_BinaryMover }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_Reached_BinaryMover() }
                 eventCallbacks[Player.EV_SpectatorTouch] =
-                    eventCallback_t2<idDoor> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? ->
-                        idDoor::Event_SpectatorTouch
+                    eventCallback_t2<idDoor> { obj: idDoor, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_SpectatorTouch(_other as idEventArg<idEntity>, trace as idEventArg<trace_s>)
                     }
                 eventCallbacks[EV_Mover_OpenPortal] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_OpenPortal }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_OpenPortal() }
                 eventCallbacks[EV_Mover_ClosePortal] =
-                    eventCallback_t0<idDoor> { obj: Any? -> idDoor::Event_ClosePortal }
+                    eventCallback_t0<idDoor> { obj: idDoor -> obj.Event_ClosePortal() }
             }
         }
 
@@ -3625,8 +3677,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -3668,14 +3720,22 @@ object Mover {
             init {
                 eventCallbacks.putAll(idMover_Binary.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idPlat> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idPlat::Event_Touch }
+                    eventCallback_t2<idPlat> { obj: idPlat, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[EV_TeamBlocked] =
-                    eventCallback_t2<idPlat> { obj: Any?, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
-                        idPlat::Event_TeamBlocked
+                    eventCallback_t2<idPlat> { obj: idPlat, blockedEntity: idEventArg<*>?, blockingEntity: idEventArg<*>? ->
+                        obj.Event_TeamBlocked(
+                            blockedEntity as idEventArg<idEntity>,
+                            blockingEntity as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[EV_PartBlocked] =
-                    eventCallback_t1<idPlat> { obj: Any?, blockingEntity: idEventArg<*>? ->
-                        idPlat::Event_PartBlocked
+                    eventCallback_t1<idPlat> { obj: idPlat, blockingEntity: idEventArg<*>? ->
+                        obj.Event_PartBlocked(blockingEntity as idEventArg<idEntity>)
                     }
             }
         }
@@ -3830,8 +3890,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -3869,13 +3929,16 @@ object Mover {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_TeamBlocked] =
-                    eventCallback_t2<idMover_Periodic> { obj: Any?, blockedEntity: idEventArg<*>?,
+                    eventCallback_t2<idMover_Periodic> { obj: idMover_Periodic, blockedEntity: idEventArg<*>?,
                                                          blockingEntity: idEventArg<*>? ->
-                        idMover_Periodic::Event_TeamBlocked
+                        obj.Event_TeamBlocked(
+                            blockedEntity as idEventArg<idEntity>,
+                            blockingEntity as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[EV_PartBlocked] =
-                    eventCallback_t1<idMover_Periodic> { obj: Any?, blockingEntity: idEventArg<*>? ->
-                        idMover_Periodic::Event_PartBlocked
+                    eventCallback_t1<idMover_Periodic> { obj: idMover_Periodic, blockingEntity: idEventArg<*>? ->
+                        obj.Event_PartBlocked(blockingEntity as idEventArg<idEntity>)
                     }
             }
         }
@@ -3946,8 +4009,8 @@ object Mover {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -3977,7 +4040,11 @@ object Mover {
             init {
                 eventCallbacks.putAll(idMover_Periodic.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idRotater> { obj: Any?, activator: idEventArg<*>? -> idRotater::Event_Activate }
+                    eventCallback_t1<idRotater> { obj: idRotater, activator: idEventArg<*>? ->
+                        obj.Event_Activate(
+                            activator as idEventArg<idEntity>
+                        )
+                    }
             }
         }
 
@@ -4056,8 +4123,8 @@ object Mover {
             )
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -4196,7 +4263,7 @@ object Mover {
             init {
                 eventCallbacks.putAll(idMover_Periodic.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idRiser> { obj: Any?, activator: idEventArg<*>? -> idRiser::Event_Activate }
+                    eventCallback_t1<idRiser> { obj: idRiser, activator: idEventArg<*>? -> obj.Event_Activate(activator as idEventArg<idEntity>) }
             }
         }
 
@@ -4248,8 +4315,8 @@ object Mover {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 }

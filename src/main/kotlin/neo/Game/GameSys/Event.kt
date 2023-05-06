@@ -390,7 +390,7 @@ object Event {
             fun CopyArgs(
                 evdef: idEventDef,
                 numargs: Int,
-                args: Array<out idEventArg<*>>,
+                args: Array<out idEventArg<*>?>,
                 data: Array<idEventArg<*>?> /*[ D_EVENT_MAXARGS ]*/
             ) {
                 var i: Int
@@ -405,7 +405,7 @@ object Event {
 
                 i = 0
                 while (i < numargs) {
-                    val arg = args[i]
+                    val arg = args[i]!!
                     if (format[i].code != arg.type) {
                         arg.type = D_EVENT_STRING.code // try to force the string type
                         // when NULL is passed in for an entity, it gets cast as an integer 0, so don't give an error when it happens

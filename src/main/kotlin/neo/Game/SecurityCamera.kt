@@ -67,15 +67,15 @@ object SecurityCamera {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_SecurityCam_ReverseSweep] =
-                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_ReverseSweep }
+                    eventCallback_t0<idSecurityCamera> { obj: idSecurityCamera -> obj.Event_ReverseSweep() }
                 eventCallbacks[EV_SecurityCam_ContinueSweep] =
-                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_ContinueSweep }
+                    eventCallback_t0<idSecurityCamera> { obj: idSecurityCamera -> obj.Event_ContinueSweep() }
                 eventCallbacks[EV_SecurityCam_Pause] =
-                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_Pause }
+                    eventCallback_t0<idSecurityCamera> { obj: idSecurityCamera -> obj.Event_Pause() }
                 eventCallbacks[EV_SecurityCam_Alert] =
-                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_Alert }
+                    eventCallback_t0<idSecurityCamera> { obj: idSecurityCamera -> obj.Event_Alert() }
                 eventCallbacks[EV_SecurityCam_AddLight] =
-                    eventCallback_t0<idSecurityCamera> { obj: Any? -> idSecurityCamera::Event_AddLight }
+                    eventCallback_t0<idSecurityCamera> { obj: idSecurityCamera -> obj.Event_AddLight() }
             }
         }
 
@@ -523,8 +523,8 @@ object SecurityCamera {
             spotLight.UpdateVisuals()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         init {

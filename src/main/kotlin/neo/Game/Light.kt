@@ -72,41 +72,62 @@ object Light {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[EV_Light_SetShader] =
-                    eventCallback_t1<idLight> { obj: Any?, shadername: idEventArg<*>? -> idLight::Event_SetShader }
+                    eventCallback_t1<idLight> { obj: idLight, shadername: idEventArg<*>? ->
+                        obj.Event_SetShader(
+                            shadername as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[EV_Light_GetLightParm] =
-                    eventCallback_t1<idLight> { obj: Any?, _parmnum: idEventArg<*>? ->
-                        idLight::Event_GetLightParm
+                    eventCallback_t1<idLight> { obj: idLight, _parmnum: idEventArg<*>? ->
+                        obj.Event_GetLightParm(_parmnum as idEventArg<Int>)
                     }
                 eventCallbacks[EV_Light_SetLightParm] =
-                    eventCallback_t2<idLight> { obj: Any?, parmnum: idEventArg<*>?, value: idEventArg<*>? -> idLight::Event_SetLightParm }
+                    eventCallback_t2<idLight> { obj: idLight, parmnum: idEventArg<*>?, value: idEventArg<*>? ->
+                        obj.Event_SetLightParm(
+                            parmnum as idEventArg<Int>,
+                            value as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[EV_Light_SetLightParms] =
-                    eventCallback_t4<idLight> { obj: Any?, parm0: idEventArg<*>?,
+                    eventCallback_t4<idLight> { obj: idLight, parm0: idEventArg<*>?,
                                                 parm1: idEventArg<*>?,
                                                 parm2: idEventArg<*>?,
                                                 parm3: idEventArg<*>? ->
-                        idLight::Event_SetLightParms
+                        obj.Event_SetLightParms(
+                            parm0 as idEventArg<Float>,
+                            parm1 as idEventArg<Float>,
+                            parm2 as idEventArg<Float>,
+                            parm3 as idEventArg<Float>
+                        )
                     }
                 eventCallbacks[EV_Light_SetRadiusXYZ] =
-                    eventCallback_t3<idLight> { obj: Any?, x: idEventArg<*>?, y: idEventArg<*>?, z: idEventArg<*>? -> idLight::Event_SetRadiusXYZ }
+                    eventCallback_t3<idLight> { obj: idLight, x: idEventArg<*>?, y: idEventArg<*>?, z: idEventArg<*>? ->
+                        obj.Event_SetRadiusXYZ(
+                            x as idEventArg<Float>,
+                            y as idEventArg<Float>,
+                            z as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[EV_Light_SetRadius] =
-                    eventCallback_t1<idLight> { obj: Any?, radius: idEventArg<*>? -> idLight::Event_SetRadius }
+                    eventCallback_t1<idLight> { obj: idLight, radius: idEventArg<*>? -> obj.Event_SetRadius(radius as idEventArg<Float>) }
                 eventCallbacks[Entity.EV_Hide] =
-                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Hide }
+                    eventCallback_t0<idLight> { obj: idLight -> obj.Event_Hide() }
                 eventCallbacks[Entity.EV_Show] =
-                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Show }
+                    eventCallback_t0<idLight> { obj: idLight -> obj.Event_Show() }
                 eventCallbacks[EV_Light_On] =
-                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_On }
+                    eventCallback_t0<idLight> { obj: idLight -> obj.Event_On() }
                 eventCallbacks[EV_Light_Off] =
-                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_Off }
-                eventCallbacks[Entity.EV_Activate] = eventCallback_t1<idLight> { obj: Any?, activator: idEventArg<*>? ->
-                    idLight::Event_ToggleOnOff
-                }
+                    eventCallback_t0<idLight> { obj: idLight -> obj.Event_Off() }
+                eventCallbacks[Entity.EV_Activate] =
+                    eventCallback_t1<idLight> { obj: idLight, activator: idEventArg<*>? ->
+                        obj.Event_ToggleOnOff(activator as idEventArg<idEntity>)
+                    }
                 eventCallbacks[Entity.EV_PostSpawn] =
-                    eventCallback_t0<idLight> { obj: Any? -> idLight::Event_SetSoundHandles }
+                    eventCallback_t0<idLight> { obj: idLight -> obj.Event_SetSoundHandles() }
                 eventCallbacks[EV_Light_FadeOut] =
-                    eventCallback_t1<idLight> { obj: Any?, time: idEventArg<*>? -> idLight::Event_FadeOut }
+                    eventCallback_t1<idLight> { obj: idLight, time: idEventArg<*>? -> obj.Event_FadeOut(time as idEventArg<Float>) }
                 eventCallbacks[EV_Light_FadeIn] =
-                    eventCallback_t1<idLight> { obj: Any?, time: idEventArg<*>? -> idLight::Event_FadeIn }
+                    eventCallback_t1<idLight> { obj: idLight, time: idEventArg<*>? -> obj.Event_FadeIn(time as idEventArg<Float>) }
             }
         }
 
@@ -862,8 +883,8 @@ object Light {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         override fun _deconstructor() {

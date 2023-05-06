@@ -164,9 +164,9 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_Enable] =
-                    eventCallback_t0<idTrigger> { obj: Any? -> idTrigger::Event_Enable }
+                    eventCallback_t0 { obj: idTrigger -> obj.Event_Enable() }
                 eventCallbacks[EV_Disable] =
-                    eventCallback_t0<idTrigger> { obj: Any? -> idTrigger::Event_Disable }
+                    eventCallback_t0 { obj: idTrigger -> obj.Event_Disable() }
             }
         }
 
@@ -259,8 +259,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -284,14 +284,19 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_Multi> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idTrigger_Multi::Event_Touch }
+                    eventCallback_t2 { obj: idTrigger_Multi, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity?>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Multi> { obj: Any?, _activator: idEventArg<*>? ->
-                        idTrigger_Multi::Event_Trigger
+                    eventCallback_t1 { obj: idTrigger_Multi, _activator: idEventArg<*>? ->
+                        obj.Event_Trigger(_activator as idEventArg<idEntity?>)
                     }
                 eventCallbacks[EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_Multi> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Multi::Event_TriggerAction
+                    eventCallback_t1 { obj: idTrigger_Multi, activator: idEventArg<*>? ->
+                        obj.Event_TriggerAction(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -395,7 +400,7 @@ object Trigger {
             triggerWithSelf = savefile.ReadBool()
         }
 
-        private fun CheckFacing(activator: idEntity): Boolean {
+        private fun CheckFacing(activator: idEntity?): Boolean {
             if (spawnArgs.GetBool("facing")) {
                 if (activator !is idPlayer) {
                     return true
@@ -408,7 +413,7 @@ object Trigger {
             return true
         }
 
-        private fun TriggerAction(activator: idEntity) {
+        private fun TriggerAction(activator: idEntity?) {
             ActivateTargets(if (triggerWithSelf) this else activator)
             CallScript()
             if (wait >= 0) {
@@ -422,7 +427,7 @@ object Trigger {
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity?>) {
             TriggerAction(activator.value)
         }
 
@@ -436,7 +441,7 @@ object Trigger {
          so wait for the delay time before firing
          ================
          */
-        private fun Event_Trigger(_activator: idEventArg<idEntity>) {
+        private fun Event_Trigger(_activator: idEventArg<idEntity?>) {
             val activator = _activator.value
             if (nextTriggerTime > Game_local.gameLocal.time) {
                 // can't retrigger until the wait is over
@@ -467,7 +472,7 @@ object Trigger {
             }
         }
 
-        private fun Event_Touch(_other: idEventArg<idEntity>, trace: idEventArg<trace_s>) {
+        private fun Event_Touch(_other: idEventArg<idEntity?>, trace: idEventArg<trace_s>) {
             val other = _other.value
             if (triggerFirst) {
                 return
@@ -513,8 +518,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -538,16 +543,16 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_EntityName> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? ->
-                        idTrigger_EntityName::Event_Touch
+                    eventCallback_t2<idTrigger_EntityName> { obj: idTrigger_EntityName, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(_other as idEventArg<idEntity>, trace as idEventArg<trace_s>)
                     }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_EntityName> { obj: Any?, _activator: idEventArg<*>? ->
-                        idTrigger_EntityName::Event_Trigger
+                    eventCallback_t1<idTrigger_EntityName> { obj: idTrigger_EntityName, _activator: idEventArg<*>? ->
+                        obj.Event_Trigger(_activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_EntityName> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_EntityName::Event_TriggerAction
+                    eventCallback_t1<idTrigger_EntityName> { obj: idTrigger_EntityName, activator: idEventArg<*>? ->
+                        obj.Event_TriggerAction(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -616,7 +621,7 @@ object Trigger {
             }
         }
 
-        private fun TriggerAction(activator: idEntity) {
+        private fun TriggerAction(activator: idEntity?) {
             ActivateTargets(activator)
             CallScript()
             if (wait >= 0) {
@@ -630,13 +635,13 @@ object Trigger {
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity?>) {
             TriggerAction(activator.value)
         }
 
         /*
          ================
-         idTrigger_EntityName::Event_Trigger
+         obj.Event_Trigger
 
          the trigger was just activated
          activated should be the entity that originated the activation sequence (ie. the original target)
@@ -697,8 +702,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -722,10 +727,10 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[EV_Timer] =
-                    eventCallback_t0<idTrigger_Timer> { obj: Any? -> idTrigger_Timer::Event_Timer }
+                    eventCallback_t0<idTrigger_Timer> { obj: idTrigger_Timer -> obj.Event_Timer() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Timer> { obj: Any?, _activator: idEventArg<*>? ->
-                        idTrigger_Timer::Event_Use
+                    eventCallback_t1<idTrigger_Timer> { obj: idTrigger_Timer, _activator: idEventArg<*>? ->
+                        obj.Event_Use(_activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -812,7 +817,7 @@ object Trigger {
             val activator = _activator.value
             // if on, turn it off
             if (on) {
-                if (offName.Length() != 0 && offName.Icmp(activator.GetName()) != 0) {
+                if (offName.Length() != 0 && offName.Icmp(activator!!.GetName()) != 0) {
                     return
                 }
                 on = false
@@ -831,8 +836,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -856,12 +861,12 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Count> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Count::Event_Trigger
+                    eventCallback_t1<idTrigger_Count> { obj: idTrigger_Count, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(activator as idEventArg<idEntity?>)
                     }
                 eventCallbacks[EV_TriggerAction] =
-                    eventCallback_t1<idTrigger_Count> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Count::Event_TriggerAction
+                    eventCallback_t1<idTrigger_Count> { obj: idTrigger_Count, activator: idEventArg<*>? ->
+                        obj.Event_TriggerAction(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -888,7 +893,7 @@ object Trigger {
             count = 0
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity>) {
+        private fun Event_Trigger(activator: idEventArg<idEntity?>) {
             // goal of -1 means trigger has been exhausted
             if (goal >= 0) {
                 count++
@@ -903,7 +908,7 @@ object Trigger {
             }
         }
 
-        private fun Event_TriggerAction(activator: idEventArg<idEntity>) {
+        private fun Event_TriggerAction(activator: idEventArg<idEntity?>) {
             ActivateTargets(activator.value)
             CallScript()
             if (goal == -1) {
@@ -915,8 +920,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -940,10 +945,15 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idTrigger_Hurt> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idTrigger_Hurt::Event_Touch }
+                    eventCallback_t2<idTrigger_Hurt> { obj: idTrigger_Hurt, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Hurt> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Hurt::Event_Toggle
+                    eventCallback_t1<idTrigger_Hurt> { obj: idTrigger_Hurt, activator: idEventArg<*>? ->
+                        obj.Event_Toggle(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -991,7 +1001,7 @@ object Trigger {
             }
         }
 
-        private fun Event_Toggle(activator: idEventArg<idEntity>) {
+        private fun Event_Toggle(activator: idEventArg<idEntity?>) {
             on = !on
         }
 
@@ -999,8 +1009,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1022,13 +1032,13 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Fade> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Fade::Event_Trigger
+                    eventCallback_t1<idTrigger_Fade> { obj: idTrigger_Fade, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(activator as idEventArg<idEntity?>)
                     }
             }
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity>) {
+        private fun Event_Trigger(activator: idEventArg<idEntity?>) {
             val fadeColor: idVec4
             val fadeTime: Int
             val player: idPlayer?
@@ -1045,8 +1055,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1070,8 +1080,8 @@ object Trigger {
             init {
                 eventCallbacks.putAll(idTrigger.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTrigger_Touch> { obj: Any?, activator: idEventArg<*>? ->
-                        idTrigger_Touch::Event_Trigger
+                    eventCallback_t1<idTrigger_Touch> { obj: idTrigger_Touch, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1153,7 +1163,7 @@ object Trigger {
             }
         }
 
-        private fun Event_Trigger(activator: idEventArg<idEntity>) {
+        private fun Event_Trigger(activator: idEventArg<idEntity?>) {
             if (thinkFlags and Entity.TH_THINK != 0) {
                 BecomeInactive(Entity.TH_THINK)
             } else {
@@ -1165,8 +1175,8 @@ object Trigger {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 }

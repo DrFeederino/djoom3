@@ -40,18 +40,21 @@ class AI_Vagary {
 
             init {
                 eventCallbacks.putAll(idAI.getEventCallBacks())
-                eventCallbacks[AI_Vagary_ChooseObjectToThrow] = eventCallback_t5<idAI_Vagary> { obj: Any?,
-                                                                                                mins: idEventArg<*>?,
-                                                                                                maxs: idEventArg<*>?,
-                                                                                                speed: idEventArg<*>?,
-                                                                                                minDist: idEventArg<*>?,
-                                                                                                offset: idEventArg<*>? ->
-                    idAI_Vagary::Event_ChooseObjectToThrow
+                eventCallbacks[AI_Vagary_ChooseObjectToThrow] = eventCallback_t5 { obj: idAI_Vagary,
+                                                                                   mins: idEventArg<*>?,
+                                                                                   maxs: idEventArg<*>?,
+                                                                                   speed: idEventArg<*>?,
+                                                                                   minDist: idEventArg<*>?,
+                                                                                   offset: idEventArg<*>? ->
+                    obj.Event_ChooseObjectToThrow(
+                        mins as idEventArg<idVec3>, maxs as idEventArg<idVec3>, speed as idEventArg<Float>,
+                        minDist as idEventArg<Float>, offset as idEventArg<Float>
+                    )
                 }
-                eventCallbacks[AI_Vagary_ThrowObjectAtEnemy] = eventCallback_t2<idAI_Vagary> { obj: Any?,
-                                                                                               _ent: idEventArg<*>?,
-                                                                                               _speed: idEventArg<*>? ->
-                    idAI_Vagary::Event_ThrowObjectAtEnemy
+                eventCallbacks[AI_Vagary_ThrowObjectAtEnemy] = eventCallback_t2 { obj: idAI_Vagary,
+                                                                                  _ent: idEventArg<*>?,
+                                                                                  _speed: idEventArg<*>? ->
+                    obj.Event_ThrowObjectAtEnemy(_ent as idEventArg<idEntity>, _speed as idEventArg<Float>)
                 }
             }
         }
@@ -167,8 +170,8 @@ class AI_Vagary {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
     }

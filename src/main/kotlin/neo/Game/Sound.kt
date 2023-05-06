@@ -1,11 +1,7 @@
 package neo.Game
 
 import neo.Game.Entity.idEntity
-import neo.Game.GameSys.Class.eventCallback_t
-import neo.Game.GameSys.Class.eventCallback_t0
-import neo.Game.GameSys.Class.eventCallback_t1
-import neo.Game.GameSys.Class.idClass
-import neo.Game.GameSys.Class.idEventArg
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.idEventDef
 import neo.Game.GameSys.SaveGame.idRestoreGame
 import neo.Game.GameSys.SaveGame.idSaveGame
@@ -89,14 +85,14 @@ object Sound {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idSound> { obj: Any?, activator: idEventArg<*>? -> idSound::Event_Trigger }
-                eventCallback_t1<idSound> { obj: Any?, activator: idEventArg<*>? -> idSound::Event_Trigger }
+                    eventCallback_t1<idSound> { obj: idSound, activator: idEventArg<*>? -> obj.Event_Trigger(activator as idEventArg<idEntity>) }
+                eventCallback_t1<idSound> { obj: idSound, activator: idEventArg<*>? -> obj.Event_Trigger(activator as idEventArg<idEntity>) }
                 eventCallbacks[EV_Speaker_On] =
-                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_On }
+                    eventCallback_t0<idSound> { obj: idSound -> obj.Event_On() }
                 eventCallbacks[EV_Speaker_Off] =
-                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_Off }
+                    eventCallback_t0<idSound> { obj: idSound -> obj.Event_Off() }
                 eventCallbacks[EV_Speaker_Timer] =
-                    eventCallback_t0<idSound> { obj: Any? -> idSound::Event_Timer }
+                    eventCallback_t0<idSound> { obj: idSound -> obj.Event_Timer() }
             }
         }
 
@@ -226,7 +222,7 @@ object Sound {
 
         /*
          ================
-         idSound::Event_Trigger
+         obj.Event_Trigger
 
          this will toggle the idle idSound on and off
          ================
@@ -292,8 +288,8 @@ object Sound {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //	CLASS_PROTOTYPE( idSound );

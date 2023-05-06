@@ -409,10 +409,7 @@ class GuiModel {
                 }
 
                 //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
-                for (i in 0 until vertCount) {
-                    verts[i + numVerts] = idDrawVert(dVerts[i])
-                }
-                //                }
+                System.arraycopy(dVerts, 0, verts.getList(), numVerts, vertCount)
             }
         }
 
@@ -641,9 +638,7 @@ class GuiModel {
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
-            for (i in 0 until vertCount) {
-                verts[i] = idDrawVert(tempVerts[i])
-            }
+            System.arraycopy(tempVerts, 0, verts, 0, vertCount)
         }
 
         //---------------------------
@@ -694,29 +689,19 @@ class GuiModel {
             tri.indexes =
                 IntArray(tri.numIndexes) ///*(glIndex_t *)*/ R_FrameAlloc(tri.numIndexes * sizeof(tri.indexes[0]));
             //            memcpy(tri.indexes, indexes[surf.firstIndex], tri.numIndexes * sizeof(tri.indexes[0]));
-            run {
-                var s = surf.firstIndex
-                var d = 0
-                while (d < tri.numIndexes) {
-                    tri.indexes!![d] = indexes[s]
-                    s++
-                    d++
-                }
-            }
+            System.arraycopy(
+                indexes.getList(Array<Int>::class.java)!!.toIntArray(),
+                surf.firstIndex,
+                tri.indexes,
+                0,
+                tri.numIndexes
+            )
 
             // we might be able to avoid copying these and just let them reference the list vars
             // but some things, like deforms and recursive
             // guis, need to access the verts in cpu space, not just through the vertex range
-            tri.verts =
-                arrayOfNulls(tri.numVerts) ///*(idDrawVert *)*/ R_FrameAlloc(tri.numVerts * sizeof(tri.verts[0]));
-            //            memcpy(tri.verts,  & verts[surf.firstVert], tri.numVerts * sizeof(tri.verts[0]));
-            var s = surf.firstVert
-            var d = 0
-            while (d < tri.numVerts) {
-                tri.verts!![d] = idDrawVert(verts[s])
-                s++
-                d++
-            }
+            tri.verts = arrayOfNulls(tri.numVerts)
+            System.arraycopy(verts.getList(), surf.firstVert, tri.verts, 0, tri.numVerts)
 
             // move the verts to the vertex cache
             tri.ambientCache =
@@ -729,10 +714,7 @@ class GuiModel {
             val renderEntity: renderEntity_s
             renderEntity = renderEntity_s() //memset( & renderEntity, 0, sizeof(renderEntity));
             //            memcpy(renderEntity.shaderParms, surf.color, sizeof(surf.color));
-            renderEntity.shaderParms[0] = surf.color[0]
-            renderEntity.shaderParms[1] = surf.color[1]
-            renderEntity.shaderParms[2] = surf.color[2]
-            renderEntity.shaderParms[3] = surf.color[3]
+            System.arraycopy(surf.color, 0, renderEntity.shaderParms, 0, 4)
             val guiSpace = viewEntity_s() ///*(viewEntity_t *)*/ R_ClearedFrameAlloc(sizeof( * guiSpace));
             //            memcpy(guiSpace.modelMatrix, modelMatrix, sizeof(guiSpace.modelMatrix));
             System.arraycopy(modelMatrix, 0, guiSpace.modelMatrix, 0, guiSpace.modelMatrix.size)

@@ -705,16 +705,12 @@ object Material {
                 //		memcpy( stages, pd!!.parseStages, numStages * sizeof( stages!![0] ) );
                 DEBUG_Parse++
                 //                System.out.printf("%d-->%s\n", DEBUG_Parse, text);
-                for (a in 0 until numStages) {
-                    stages!![a] = pd!!.parseStages[a]
-                }
+                System.arraycopy(pd!!.parseStages, 0, stages!!, 0, numStages)
             }
             if (numOps != 0) {
                 ops = arrayOfNulls(numOps) // R_StaticAlloc(numOps * sizeof( ops[0] )
                 //		memcpy( ops, pd!!.shaderOps, numOps * sizeof( ops[0] ) );
-                for (a in 0 until numOps) {
-                    ops!![a] = pd!!.shaderOps[a]
-                }
+                System.arraycopy(pd!!.shaderOps, 0, ops, 0, numOps)
             }
             if (numRegisters != 0) {
                 expressionRegisters =

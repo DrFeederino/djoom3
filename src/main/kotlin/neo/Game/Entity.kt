@@ -6,7 +6,6 @@ import neo.Game.Actor.idActor
 import neo.Game.Animation.Anim.jointModTransform_t
 import neo.Game.Animation.Anim_Blend.idAnim
 import neo.Game.Animation.Anim_Blend.idAnimator
-import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.Game.refSound_t
 import neo.Game.GameSys.Class.*
@@ -55,8 +54,8 @@ import neo.idlib.Dict_h.idKeyValue
 import neo.idlib.Lib
 import neo.idlib.Lib.idLib
 import neo.idlib.Text.Lexer.idLexer
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.va
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CFloat
@@ -71,7 +70,6 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
-import neo.idlib.math.Vector
 import neo.idlib.math.Vector.getVec3_origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
@@ -311,7 +309,7 @@ object Entity {
             }
 
             //
-            private fun Event_RandomTarget(e: idEntity, ignor: idEventArg<String>) {
+            private fun Event_RandomTarget(e: idEntity, ignor: idEventArg<String?>) {
                 var num: Int
                 var ent: idEntity?
                 var i: Int
@@ -462,8 +460,8 @@ object Entity {
                 }
             }
 
-            private fun Event_SetWorldOrigin(e: idEntity, org: idEventArg<Vector.idVec3>) {
-                val neworg = Vector.idVec3(e.GetLocalCoordinates(org.value))
+            private fun Event_SetWorldOrigin(e: idEntity, org: idEventArg<idVec3>) {
+                val neworg = idVec3(e.GetLocalCoordinates(org.value))
                 e.SetOrigin(neworg)
             }
 
@@ -514,7 +512,7 @@ object Entity {
             private fun Event_SetGuiFloat(e: idEntity, key: idEventArg<String>, f: idEventArg<Float>) {
                 for (i in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
                     if (e.renderEntity.gui[i] != null) {
-                        e.renderEntity.gui[i]!!.SetStateString(key.value, Str.va("%f", f.value))
+                        e.renderEntity.gui[i]!!.SetStateString(key.value, va("%f", f.value))
                         e.renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time)
                     }
                 }
@@ -585,12 +583,12 @@ object Entity {
                 idThread.ReturnEntity(ent)
             }
 
-            private fun Event_DistanceTo(e: idEntity, ent: idEventArg<idEntity>) {
+            private fun Event_DistanceTo(e: idEntity, ent: idEventArg<idEntity?>) {
                 if (null == ent.value) {
                     // just say it's really far away
                     idThread.ReturnFloat(Lib.MAX_WORLD_SIZE.toFloat())
                 } else {
-                    val dist = e.GetPhysics().GetOrigin().minus(ent.value.GetPhysics().GetOrigin()).LengthFast()
+                    val dist = e.GetPhysics().GetOrigin().minus(ent.value!!.GetPhysics().GetOrigin()).LengthFast()
                     idThread.ReturnFloat(dist)
                 }
             }
@@ -607,197 +605,218 @@ object Entity {
             init {
                 eventCallbacks.putAll(idClass.getEventCallBacks())
                 eventCallbacks[EV_GetName] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetName }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetName() }
                 eventCallbacks[EV_SetName] =
-                    eventCallback_t1<idEntity> { e: Any?, newName: idEventArg<*>? -> idEntity::Event_SetName }
+                    eventCallback_t1<idEntity> { e: idEntity, newName: idEventArg<*>? ->
+                        Event_SetName(
+                            e,
+                            newName as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[EV_FindTargets] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_FindTargets }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_FindTargets() }
                 eventCallbacks[EV_ActivateTargets] =
-                    eventCallback_t1<idEntity> { e: Any?, activator: idEventArg<*>? ->
-                        idEntity::Event_ActivateTargets
+                    eventCallback_t1<idEntity> { e: idEntity, activator: idEventArg<*>? ->
+                        Event_ActivateTargets(e, activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_NumTargets] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_NumTargets }
-                eventCallbacks[EV_GetTarget] = eventCallback_t1<idEntity> { e: Any?, index: idEventArg<*>? ->
-                    idEntity::Event_GetTarget
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_NumTargets() }
+                eventCallbacks[EV_GetTarget] = eventCallback_t1<idEntity> { e: idEntity, index: idEventArg<*>? ->
+                    Event_GetTarget(e, index as idEventArg<Float>)
                 }
-                eventCallbacks[EV_RandomTarget] = eventCallback_t1<idEntity> { e: Any?, ignor: idEventArg<*>? ->
-                    idEntity::Event_RandomTarget
+                eventCallbacks[EV_RandomTarget] = eventCallback_t1<idEntity> { e: idEntity, ignor: idEventArg<*>? ->
+                    Event_RandomTarget(e, ignor as idEventArg<String?>)
                 }
-                eventCallbacks[EV_BindToJoint] = eventCallback_t3<idEntity> { e: Any?,
+                eventCallbacks[EV_BindToJoint] = eventCallback_t3<idEntity> { e: idEntity,
                                                                               master: idEventArg<*>?,
                                                                               jointname: idEventArg<*>?,
                                                                               orientated: idEventArg<*>? ->
-                    idEntity::Event_BindToJoint
+                    Event_BindToJoint(
+                        e,
+                        master as idEventArg<idEntity>,
+                        jointname as idEventArg<String>,
+                        orientated as idEventArg<Float>
+                    )
                 }
                 eventCallbacks[EV_RemoveBinds] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_RemoveBinds }
-                eventCallbacks[EV_Bind] = eventCallback_t1<idEntity> { e: Any?, master: idEventArg<*>? ->
-                    idEntity::Event_Bind
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_RemoveBinds() }
+                eventCallbacks[EV_Bind] = eventCallback_t1<idEntity> { e: idEntity, master: idEventArg<*>? ->
+                    Event_Bind(e, master as idEventArg<idEntity>)
                 }
-                eventCallbacks[EV_BindPosition] = eventCallback_t1<idEntity> { e: Any?, master: idEventArg<*>? ->
-                    idEntity::Event_BindPosition
+                eventCallbacks[EV_BindPosition] = eventCallback_t1<idEntity> { e: idEntity, master: idEventArg<*>? ->
+                    Event_BindPosition(e, master as idEventArg<idEntity>)
                 }
                 eventCallbacks[EV_Unbind] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_Unbind }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_Unbind() }
                 eventCallbacks[EV_SpawnBind] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_SpawnBind }
-                eventCallbacks[EV_SetOwner] = eventCallback_t1<idEntity> { e: Any?, owner: idEventArg<*>? ->
-                    idEntity::Event_SetOwner
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_SpawnBind() }
+                eventCallbacks[EV_SetOwner] = eventCallback_t1<idEntity> { e: idEntity, owner: idEventArg<*>? ->
+                    Event_SetOwner(e, owner as idEventArg<idEntity>)
                 }
-                eventCallbacks[EV_SetModel] = eventCallback_t1<idEntity> { e: Any?, modelname: idEventArg<*>? ->
-                    idEntity::Event_SetModel
+                eventCallbacks[EV_SetModel] = eventCallback_t1<idEntity> { e: idEntity, modelname: idEventArg<*>? ->
+                    Event_SetModel(e, modelname as idEventArg<String>)
                 }
-                eventCallbacks[EV_SetSkin] = eventCallback_t1<idEntity> { e: Any?, skinname: idEventArg<*>? ->
-                    idEntity::Event_SetSkin
+                eventCallbacks[EV_SetSkin] = eventCallback_t1<idEntity> { e: idEntity, skinname: idEventArg<*>? ->
+                    Event_SetSkin(e, skinname as idEventArg<String>)
                 }
-                eventCallbacks[EV_GetShaderParm] = eventCallback_t1<idEntity> { e: Any?, parm: idEventArg<*>? ->
-                    idEntity::Event_GetShaderParm
+                eventCallbacks[EV_GetShaderParm] = eventCallback_t1<idEntity> { e: idEntity, parm: idEventArg<*>? ->
+                    Event_GetShaderParm(e, parm as idEventArg<Int>)
                 }
                 eventCallbacks[EV_SetShaderParm] =
-                    eventCallback_t2<idEntity> { e: Any?, parmnum: idEventArg<*>?, value: idEventArg<*>? ->
-                        idEntity::Event_SetShaderParm
+                    eventCallback_t2<idEntity> { e: idEntity, parmnum: idEventArg<*>?, value: idEventArg<*>? ->
+                        Event_SetShaderParm(e, parmnum as idEventArg<Int>, value as idEventArg<Float>)
                     }
-                eventCallbacks[EV_SetShaderParms] = eventCallback_t4<idEntity> { e: Any?, parm0: idEventArg<*>?,
+                eventCallbacks[EV_SetShaderParms] = eventCallback_t4<idEntity> { e: idEntity, parm0: idEventArg<*>?,
                                                                                  parm1: idEventArg<*>?,
                                                                                  parm2: idEventArg<*>?,
                                                                                  parm3: idEventArg<*>? ->
-                    idEntity::Event_SetShaderParms
+                    Event_SetShaderParms(
+                        e,
+                        parm0 as idEventArg<Float>,
+                        parm1 as idEventArg<Float>,
+                        parm2 as idEventArg<Float>,
+                        parm3 as idEventArg<Float>
+                    )
                 }
-                eventCallbacks[EV_SetColor] = eventCallback_t3<idEntity> { e: Any?, red: idEventArg<*>?,
+                eventCallbacks[EV_SetColor] = eventCallback_t3<idEntity> { e: idEntity, red: idEventArg<*>?,
                                                                            green: idEventArg<*>?,
                                                                            blue: idEventArg<*>? ->
-                    idEntity::Event_SetColor
+                    Event_SetColor(e, red as idEventArg<Float>, green as idEventArg<Float>, blue as idEventArg<Float>)
                 }
                 eventCallbacks[EV_GetColor] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetColor }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetColor() }
                 eventCallbacks[EV_IsHidden] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_IsHidden }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_IsHidden() }
                 eventCallbacks[EV_Hide] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_Hide }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_Hide() }
                 eventCallbacks[EV_Show] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_Show }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_Show() }
                 eventCallbacks[EV_CacheSoundShader] =
-                    eventCallback_t1<idEntity> { e: Any?, soundName: idEventArg<*>? ->
-                        idEntity::Event_CacheSoundShader
+                    eventCallback_t1<idEntity> { e: idEntity, soundName: idEventArg<*>? ->
+                        Event_CacheSoundShader(e, soundName as idEventArg<String>)
                     }
                 eventCallbacks[EV_StartSoundShader] =
-                    eventCallback_t2<idEntity> { e: Any?, soundName: idEventArg<*>?,
+                    eventCallback_t2<idEntity> { e: idEntity, soundName: idEventArg<*>?,
                                                  channel: idEventArg<*>? ->
-                        idEntity::Event_StartSoundShader
+                        Event_StartSoundShader(e, soundName as idEventArg<String>, channel as idEventArg<Int>)
                     }
-                eventCallbacks[EV_StartSound] = eventCallback_t3<idEntity> { e: Any?, soundName: idEventArg<*>?,
+                eventCallbacks[EV_StartSound] = eventCallback_t3<idEntity> { e: idEntity, soundName: idEventArg<*>?,
                                                                              channel: idEventArg<*>?,
                                                                              netSync: idEventArg<*>? ->
-                    idEntity::Event_StartSound
+                    Event_StartSound(
+                        e,
+                        soundName as idEventArg<String>,
+                        channel as idEventArg<Int>,
+                        netSync as idEventArg<Int>
+                    )
                 }
                 eventCallbacks[EV_StopSound] =
-                    eventCallback_t2<idEntity> { e: Any?, channel: idEventArg<*>?, netSync: idEventArg<*>? ->
-                        idEntity::Event_StopSound
+                    eventCallback_t2<idEntity> { e: idEntity, channel: idEventArg<*>?, netSync: idEventArg<*>? ->
+                        Event_StopSound(e, channel as idEventArg<Int>, netSync as idEventArg<Int>)
                     }
-                eventCallbacks[EV_FadeSound] = eventCallback_t3<idEntity> { e: Any?, channel: idEventArg<*>?,
+                eventCallbacks[EV_FadeSound] = eventCallback_t3<idEntity> { e: idEntity, channel: idEventArg<*>?,
                                                                             to: idEventArg<*>?,
                                                                             over: idEventArg<*>? ->
-                    idEntity::Event_FadeSound
+                    Event_FadeSound(e, channel as idEventArg<Int>, to as idEventArg<Float>, over as idEventArg<Float>)
                 }
                 eventCallbacks[EV_GetWorldOrigin] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetWorldOrigin }
-                eventCallbacks[EV_SetWorldOrigin] = eventCallback_t1<idEntity> { e: Any?, org: idEventArg<*>? ->
-                    idEntity::Event_SetWorldOrigin
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetWorldOrigin() }
+                eventCallbacks[EV_SetWorldOrigin] = eventCallback_t1<idEntity> { e: idEntity, org: idEventArg<*>? ->
+                    Event_SetWorldOrigin(e, org as idEventArg<idVec3>)
                 }
                 eventCallbacks[EV_GetOrigin] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetOrigin }
-                eventCallbacks[EV_SetOrigin] = eventCallback_t1<idEntity> { e: Any?, org: idEventArg<*>? ->
-                    idEntity::Event_SetOrigin
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetOrigin() }
+                eventCallbacks[EV_SetOrigin] = eventCallback_t1<idEntity> { e: idEntity, org: idEventArg<*>? ->
+                    Event_SetOrigin(e, org as idEventArg<idVec3>)
                 }
                 eventCallbacks[EV_GetAngles] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetAngles }
-                eventCallbacks[EV_SetAngles] = eventCallback_t1<idEntity> { e: Any?, eventArg: idEventArg<*>? ->
-                    idEntity::Event_SetAngles
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetAngles() }
+                eventCallbacks[EV_SetAngles] = eventCallback_t1<idEntity> { e: idEntity, eventArg: idEventArg<*>? ->
+                    Event_SetAngles(e, eventArg as idEventArg<idVec3>)
                 }
                 eventCallbacks[EV_GetLinearVelocity] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetLinearVelocity }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetLinearVelocity() }
                 eventCallbacks[EV_SetLinearVelocity] =
-                    eventCallback_t1<idEntity> { e: Any?, velocity: idEventArg<*>? ->
-                        idEntity::Event_SetLinearVelocity
+                    eventCallback_t1<idEntity> { e: idEntity, velocity: idEventArg<*>? ->
+                        Event_SetLinearVelocity(e, velocity as idEventArg<idVec3>)
                     }
                 eventCallbacks[EV_GetAngularVelocity] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetAngularVelocity }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetAngularVelocity() }
                 eventCallbacks[EV_SetAngularVelocity] =
-                    eventCallback_t1<idEntity> { e: Any?, velocity: idEventArg<*>? ->
-                        idEntity::Event_SetAngularVelocity
+                    eventCallback_t1<idEntity> { e: idEntity, velocity: idEventArg<*>? ->
+                        Event_SetAngularVelocity(e, velocity as idEventArg<idVec3>)
                     }
                 eventCallbacks[EV_GetSize] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetSize }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetSize() }
                 eventCallbacks[EV_SetSize] =
-                    eventCallback_t2<idEntity> { e: Any?, mins: idEventArg<*>?, maxs: idEventArg<*>? ->
-                        idEntity::Event_SetSize
+                    eventCallback_t2<idEntity> { e: idEntity, mins: idEventArg<*>?, maxs: idEventArg<*>? ->
+                        Event_SetSize(e, mins as idEventArg<idVec3>, maxs as idEventArg<idVec3>)
                     }
                 eventCallbacks[EV_GetMins] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetMins }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetMins() }
                 eventCallbacks[EV_GetMaxs] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_GetMaxs }
-                eventCallbacks[EV_Touches] = eventCallback_t1<idEntity> { e: Any?, ent: idEventArg<*>? ->
-                    idEntity::Event_Touches
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_GetMaxs() }
+                eventCallbacks[EV_Touches] = eventCallback_t1<idEntity> { e: idEntity, ent: idEventArg<*>? ->
+                    Event_Touches(e, ent as idEventArg<idEntity>)
                 }
                 eventCallbacks[EV_SetGuiParm] =
-                    eventCallback_t2<idEntity> { e: Any?, k: idEventArg<*>?, v: idEventArg<*>? ->
-                        idEntity::Event_SetGuiParm
+                    eventCallback_t2<idEntity> { e: idEntity, k: idEventArg<*>?, v: idEventArg<*>? ->
+                        Event_SetGuiParm(e, k as idEventArg<String>, v as idEventArg<String>)
                     }
                 eventCallbacks[EV_SetGuiFloat] =
-                    eventCallback_t2<idEntity> { e: Any?, key: idEventArg<*>?, f: idEventArg<*>? ->
-                        idEntity::Event_SetGuiFloat
+                    eventCallback_t2<idEntity> { e: idEntity, key: idEventArg<*>?, f: idEventArg<*>? ->
+                        Event_SetGuiFloat(e, key as idEventArg<String>, f as idEventArg<Float>)
                     }
                 eventCallbacks[EV_GetNextKey] =
-                    eventCallback_t2<idEntity> { e: Any?, prefix: idEventArg<*>?, lastMatch: idEventArg<*>? ->
-                        idEntity::Event_GetNextKey
+                    eventCallback_t2<idEntity> { e: idEntity, prefix: idEventArg<*>?, lastMatch: idEventArg<*>? ->
+                        Event_GetNextKey(e, prefix as idEventArg<String>, lastMatch as idEventArg<String>)
                     }
                 eventCallbacks[EV_SetKey] =
-                    eventCallback_t2<idEntity> { e: Any?, key: idEventArg<*>?, value: idEventArg<*>? ->
-                        idEntity::Event_SetKey
+                    eventCallback_t2<idEntity> { e: idEntity, key: idEventArg<*>?, value: idEventArg<*>? ->
+                        Event_SetKey(e, key as idEventArg<String>, value as idEventArg<String>)
                     }
-                eventCallbacks[EV_GetKey] = eventCallback_t1<idEntity> { e: Any?, key: idEventArg<*>? ->
-                    idEntity::Event_GetKey
+                eventCallbacks[EV_GetKey] = eventCallback_t1<idEntity> { e: idEntity, key: idEventArg<*>? ->
+                    Event_GetKey(e, key as idEventArg<String>)
                 }
-                eventCallbacks[EV_GetIntKey] = eventCallback_t1<idEntity> { e: Any?, key: idEventArg<*>? ->
-                    idEntity::Event_GetIntKey
+                eventCallbacks[EV_GetIntKey] = eventCallback_t1<idEntity> { e: idEntity, key: idEventArg<*>? ->
+                    Event_GetIntKey(e, key as idEventArg<String>)
                 }
-                eventCallbacks[EV_GetFloatKey] = eventCallback_t1<idEntity> { e: Any?, key: idEventArg<*>? ->
-                    idEntity::Event_GetFloatKey
+                eventCallbacks[EV_GetFloatKey] = eventCallback_t1<idEntity> { e: idEntity, key: idEventArg<*>? ->
+                    Event_GetFloatKey(e, key as idEventArg<String>)
                 }
-                eventCallbacks[EV_GetVectorKey] = eventCallback_t1<idEntity> { e: Any?, key: idEventArg<*>? ->
-                    idEntity::Event_GetVectorKey
+                eventCallbacks[EV_GetVectorKey] = eventCallback_t1<idEntity> { e: idEntity, key: idEventArg<*>? ->
+                    Event_GetVectorKey(e, key as idEventArg<String>)
                 }
-                eventCallbacks[EV_GetEntityKey] = eventCallback_t1<idEntity> { e: Any?, key: idEventArg<*>? ->
-                    idEntity::Event_GetEntityKey
+                eventCallbacks[EV_GetEntityKey] = eventCallback_t1<idEntity> { e: idEntity, key: idEventArg<*>? ->
+                    Event_GetEntityKey(e, key as idEventArg<String>)
                 }
                 eventCallbacks[EV_RestorePosition] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_RestorePosition }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_RestorePosition() }
                 eventCallbacks[EV_UpdateCameraTarget] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_UpdateCameraTarget }
-                eventCallbacks[EV_DistanceTo] = eventCallback_t1<idEntity> { e: Any?, ent: idEventArg<*>? ->
-                    idEntity::Event_DistanceTo
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_UpdateCameraTarget() }
+                eventCallbacks[EV_DistanceTo] = eventCallback_t1<idEntity> { e: idEntity, ent: idEventArg<*>? ->
+                    Event_DistanceTo(e, ent as idEventArg<idEntity?>)
                 }
                 eventCallbacks[EV_DistanceToPoint] =
-                    eventCallback_t1<idEntity> { e: Any?, point: idEventArg<*>? ->
-                        idEntity::Event_DistanceToPoint
+                    eventCallback_t1<idEntity> { e: idEntity, point: idEventArg<*>? ->
+                        Event_DistanceToPoint(e, point as idEventArg<idVec3>)
                     }
-                eventCallbacks[EV_StartFx] = eventCallback_t1<idEntity> { e: Any?, fx: idEventArg<*>? ->
-                    idEntity::Event_StartFx
+                eventCallbacks[EV_StartFx] = eventCallback_t1<idEntity> { e: idEntity, fx: idEventArg<*>? ->
+                    Event_StartFx(e, fx as idEventArg<String>)
                 }
                 eventCallbacks[Script_Thread.EV_Thread_WaitFrame] =
-                    eventCallback_t0<idEntity> { obj: Any? -> idEntity::Event_WaitFrame }
+                    eventCallback_t0<idEntity> { obj: idEntity -> obj.Event_WaitFrame() }
                 eventCallbacks[Script_Thread.EV_Thread_Wait] =
-                    eventCallback_t1<idEntity> { obj: Any?, time: idEventArg<*>? -> idEntity::Event_Wait }
+                    eventCallback_t1<idEntity> { obj: idEntity, time: idEventArg<*>? -> obj.Event_Wait(time as idEventArg<Float>) }
                 eventCallbacks[EV_HasFunction] =
-                    eventCallback_t1<idEntity> { obj: Any?, name: idEventArg<*>? -> idEntity::Event_HasFunction }
+                    eventCallback_t1<idEntity> { obj: idEntity, name: idEventArg<*>? -> obj.Event_HasFunction(name as idEventArg<String>) }
                 eventCallbacks[EV_CallFunction] =
-                    eventCallback_t1<idEntity> { obj: Any?, _funcName: idEventArg<*>? ->
-                        idEntity::Event_CallFunction
+                    eventCallback_t1<idEntity> { obj: idEntity, _funcName: idEventArg<*>? ->
+                        obj.Event_CallFunction(_funcName as idEventArg<String>)
                     }
                 eventCallbacks[EV_SetNeverDormant] =
-                    eventCallback_t1<idEntity> { obj: Any?, enable: idEventArg<*>? ->
-                        idEntity::Event_SetNeverDormant
+                    eventCallback_t1<idEntity> { obj: idEntity, enable: idEventArg<*>? ->
+                        obj.Event_SetNeverDormant(enable as idEventArg<Int>)
                     }
             }
         }
@@ -883,7 +902,7 @@ object Entity {
                 : Int
 
         // set by default. Triggers are static.
-        private var physics: idPhysics = idPhysics_Static() // physics used for this entity
+        private var physics: idPhysics = defaultPhysicsObj // physics used for this entity
 
         //
         private var signals: signalList_t?
@@ -965,12 +984,12 @@ object Entity {
             FreeModelDef()
             FreeSoundEmitter(false)
             Game_local.gameLocal.UnregisterEntity(this)
-            idClass.delete(teamChain)
-            idClass.delete(teamMaster)
-            idClass.delete(bindMaster)
-            idClass.delete(physics)
-            if (physics !== defaultPhysicsObj) idClass.delete(defaultPhysicsObj)
-            idClass.delete(cameraTarget)
+            delete(teamChain)
+            delete(teamMaster)
+            delete(bindMaster)
+            delete(physics)
+            if (physics !== defaultPhysicsObj) delete(defaultPhysicsObj)
+            delete(cameraTarget)
             super._deconstructor()
         }
 
@@ -1044,7 +1063,7 @@ object Entity {
             // every object will have a unique name
             temp[0] = spawnArgs.GetString(
                 "name",
-                Str.va("%s_%s_%d", GetClassname(), spawnArgs.GetString("classname"), entityNumber)
+                va("%s_%s_%d", GetClassname(), spawnArgs.GetString("classname"), entityNumber)
             )!!
             SetName(temp[0])
 
@@ -2783,10 +2802,10 @@ object Entity {
             var decal: String?
             var key: String?
             val def = Game_local.gameLocal.FindEntityDef(damageDefName, false) ?: return
-            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]!!
+            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]
 
             // start impact sound based on material type
-            key = Str.va("snd_%s", materialType)
+            key = va("snd_%s", materialType)
             sound = spawnArgs.GetString(key)
             if (sound.isEmpty()) { // == '\0' ) {
                 sound = def.dict.GetString(key)
@@ -2801,7 +2820,7 @@ object Entity {
             }
             if (SysCvar.g_decals.GetBool()) {
                 // place a wound overlay on the model
-                key = Str.va("mtr_wound_%s", materialType)
+                key = va("mtr_wound_%s", materialType)
                 decal = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)!!
                 if (decal.isEmpty()) { // == '\0' ) {
                     decal = def.dict.RandomPrefix(key, Game_local.gameLocal.random)
@@ -3038,7 +3057,7 @@ object Entity {
             while (i < num) {
                 thread = idThread.GetThread(sigs[i]!!.threadnum)
                 if (thread != null) {
-                    thread.CallFunction(this, sigs[i]!!.function, true)
+                    thread.CallFunction(this, sigs[i]!!.function!!, true)
                     thread.Execute()
                 }
                 i++
@@ -4336,7 +4355,7 @@ object Entity {
             //							// ~idAnimatedEntity();
             /*
          ================
-         idAnimatedEntity::Event_GetJointHandle
+         Event_GetJointHandle
 
          looks up the number of the specified joint.  returns INVALID_JOINT if the joint is not found.
          ================
@@ -4350,7 +4369,7 @@ object Entity {
 
             /*
          ================
-         idAnimatedEntity::Event_ClearJoint
+         Event_ClearJoint
 
          removes any custom transforms on the specified joint
          ================
@@ -4361,7 +4380,7 @@ object Entity {
 
             /*
          ================
-         idAnimatedEntity::Event_SetJointPos
+         Event_SetJointPos
 
          modifies the position of the joint based on the transform type
          ================
@@ -4377,7 +4396,7 @@ object Entity {
 
             /*
          ================
-         idAnimatedEntity::Event_SetJointAngle
+         Event_SetJointAngle
 
          modifies the orientation of the joint based on the transform type
          ================
@@ -4395,7 +4414,7 @@ object Entity {
 
             /*
          ================
-         idAnimatedEntity::Event_GetJointPos
+         Event_GetJointPos
 
          returns the position of the joint in worldspace
          ================
@@ -4411,7 +4430,7 @@ object Entity {
 
             /*
          ================
-         idAnimatedEntity::Event_GetJointAngle
+         Event_GetJointAngle
 
          returns the orientation of the joint in worldspace
          ================
@@ -4434,34 +4453,44 @@ object Entity {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_GetJointHandle] =
-                    eventCallback_t1<idAnimatedEntity> { e: Any?, jointname: idEventArg<*>? ->
-                        idAnimatedEntity::Event_GetJointHandle
+                    eventCallback_t1<idAnimatedEntity> { e: idAnimatedEntity, jointname: idEventArg<*>? ->
+                        Event_GetJointHandle(e, jointname as idEventArg<String>)
                     }
                 eventCallbacks[EV_ClearAllJoints] =
-                    eventCallback_t0<idAnimatedEntity> { obj: Any? -> idAnimatedEntity::Event_ClearAllJoints }
+                    eventCallback_t0<idAnimatedEntity> { obj: idAnimatedEntity -> obj.Event_ClearAllJoints() }
                 eventCallbacks[EV_ClearJoint] =
-                    eventCallback_t1<idAnimatedEntity> { e: Any?, jointnum: idEventArg<*>? ->
-                        idAnimatedEntity::Event_ClearJoint
+                    eventCallback_t1<idAnimatedEntity> { e: idAnimatedEntity, jointnum: idEventArg<*>? ->
+                        Event_ClearJoint(e, jointnum as idEventArg<Int>)
                     }
                 eventCallbacks[EV_SetJointPos] =
-                    eventCallback_t3<idAnimatedEntity> { e: Any?, jointnum: idEventArg<*>?,
+                    eventCallback_t3<idAnimatedEntity> { e: idAnimatedEntity, jointnum: idEventArg<*>?,
                                                          transform_type: idEventArg<*>?,
                                                          pos: idEventArg<*>? ->
-                        idAnimatedEntity::Event_SetJointPos
+                        Event_SetJointPos(
+                            e,
+                            jointnum as idEventArg<Int>,
+                            transform_type as idEventArg<jointModTransform_t>,
+                            pos as idEventArg<idVec3>
+                        )
                     }
                 eventCallbacks[EV_SetJointAngle] =
-                    eventCallback_t3<idAnimatedEntity> { e: Any?, jointnum: idEventArg<*>?,
+                    eventCallback_t3<idAnimatedEntity> { e: idAnimatedEntity, jointnum: idEventArg<*>?,
                                                          transform_type: idEventArg<*>?,
                                                          angles: idEventArg<*>? ->
-                        idAnimatedEntity::Event_SetJointAngle
+                        Event_SetJointAngle(
+                            e,
+                            jointnum as idEventArg<Int>,
+                            transform_type as idEventArg<Int>,
+                            angles as idEventArg<idVec3>
+                        )
                     }
                 eventCallbacks[EV_GetJointPos] =
-                    eventCallback_t1<idAnimatedEntity> { e: Any?, jointnum: idEventArg<*>? ->
-                        idAnimatedEntity::Event_GetJointPos
+                    eventCallback_t1<idAnimatedEntity> { e: idAnimatedEntity, jointnum: idEventArg<*>? ->
+                        Event_GetJointPos(e, jointnum as idEventArg<Int>)
                     }
                 eventCallbacks[EV_GetJointAngle] =
-                    eventCallback_t1<idAnimatedEntity> { e: Any?, jointnum: idEventArg<*>? ->
-                        idAnimatedEntity::Event_GetJointAngle
+                    eventCallback_t1<idAnimatedEntity> { e: idAnimatedEntity, jointnum: idEventArg<*>? ->
+                        Event_GetJointAngle(e, jointnum as idEventArg<Int>)
                     }
             }
         }
@@ -4473,7 +4502,7 @@ object Entity {
 
         /*
          ================
-         idAnimatedEntity::Save
+         Save
 
          archives object for save game file
          ================
@@ -4487,7 +4516,7 @@ object Entity {
 
         /*
          ================
-         idAnimatedEntity::Restore
+         Restore
 
          unarchives object from save game file
          ================
@@ -4636,10 +4665,10 @@ object Entity {
             var decal: String?
             var key: String?
             val def = Game_local.gameLocal.FindEntityDef(damageDefName, false) ?: return
-            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]!!
+            val materialType = Game_local.gameLocal.sufaceTypeNames[collision.c.material!!.GetSurfaceType().ordinal]
 
             // start impact sound based on material type
-            key = Str.va("snd_%s", materialType)
+            key = va("snd_%s", materialType)
             sound = spawnArgs.GetString(key)
             if (sound == null || sound.isEmpty()) { // == '\0' ) {
                 sound = def.dict.GetString(key)
@@ -4654,7 +4683,7 @@ object Entity {
             }
             if (SysCvar.g_decals.GetBool()) {
                 // place a wound overlay on the model
-                key = Str.va("mtr_wound_%s", materialType)
+                key = va("mtr_wound_%s", materialType)
                 decal = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)
                 if (decal == null || decal.isEmpty()) { // == '\0' ) {
                     decal = def.dict.RandomPrefix(key, Game_local.gameLocal.random)
@@ -4691,10 +4720,10 @@ object Entity {
             if (type == surfTypes_t.SURFTYPE_NONE.ordinal) {
                 type = GetDefaultSurfaceType()
             }
-            val materialType = Game_local.gameLocal.sufaceTypeNames[type]!!
+            val materialType = Game_local.gameLocal.sufaceTypeNames[type]
 
             // start impact sound based on material type
-            key = Str.va("snd_%s", materialType)
+            key = va("snd_%s", materialType)
             sound = spawnArgs.GetString(key)
             if (sound == null || sound.isEmpty()) { // == '\0' ) {
                 sound = def.dict.GetString(key)
@@ -4709,7 +4738,7 @@ object Entity {
             }
 
             // blood splats are thrown onto nearby surfaces
-            key = Str.va("mtr_splat_%s", materialType)
+            key = va("mtr_splat_%s", materialType)
             splat = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)
             if (splat == null || splat.isEmpty()) { // == '\0' ) {
                 splat = def.dict.RandomPrefix(key, Game_local.gameLocal.random)
@@ -4721,7 +4750,7 @@ object Entity {
             // can't see wounds on the player model in single player mode
             if (this !is idPlayer && !Game_local.gameLocal.isMultiplayer) {
                 // place a wound overlay on the model
-                key = Str.va("mtr_wound_%s", materialType)
+                key = va("mtr_wound_%s", materialType)
                 decal = spawnArgs.RandomPrefix(key, Game_local.gameLocal.random)
                 if (decal == null || decal.isEmpty()) { // == '\0' ) {
                     decal = def.dict.RandomPrefix(key, Game_local.gameLocal.random)
@@ -4732,7 +4761,7 @@ object Entity {
             }
 
             // a blood spurting wound is added
-            key = Str.va("smoke_wound_%s", materialType)
+            key = va("smoke_wound_%s", materialType)
             bleed = spawnArgs.GetString(key)
             if (bleed == null || bleed.isEmpty()) { // == '\0' ) {
                 bleed = def.dict.GetString(key)
@@ -4831,7 +4860,7 @@ object Entity {
 
         /*
          ================
-         idAnimatedEntity::Event_ClearAllJoints
+         Event_ClearAllJoints
 
          removes any custom transforms on all joints
          ================
@@ -4883,7 +4912,7 @@ object Entity {
             return super.ServerReceiveEvent(event, time, msg)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
             return eventCallbacks.get(event)!!
         }
 

@@ -690,7 +690,7 @@ object Winding {
             }
             if (point < numPoints - 1) {
 //		memmove(&p[point], &p[point+1], (numPoints - point - 1) * sizeof(p[0]) );
-                p[point] = idVec5(p[point + 1])
+                p[point] = p[point + 1]
             }
             numPoints--
         }
@@ -986,9 +986,7 @@ object Winding {
             }
             numPoints = numHullPoints
             //	memcpy( p, hullPoints, numHullPoints * sizeof(idVec5) );
-            for (i in 0 until numHullPoints) {
-                p[i] = idVec5(hullPoints[i])
-            }
+            System.arraycopy(hullPoints, 0, p, 0, numHullPoints)
         }
 
         // tries to merge 'this' with the given winding, returns NULL if merge fails, both 'this' and 'w' stay intact
@@ -1556,9 +1554,7 @@ object Winding {
             p = idVec5.generateArray(n)
             if (oldP.isNotEmpty() && keep) {
 //			memcpy( p, oldP, numPoints * sizeof(p[0]) );
-                for (i in 0 until numPoints) {
-                    p[i].set(oldP[i])
-                }
+                System.arraycopy(oldP, 0, p, 0, numPoints)
             }
             allocedSize = n
             return true

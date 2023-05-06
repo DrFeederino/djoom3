@@ -531,8 +531,8 @@ object AFEntity {
             init {
                 eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks())
                 eventCallbacks[EV_SetConstraintPosition] =
-                    eventCallback_t2<idAFEntity_Base> { obj: Any?, name: idEventArg<*>?, pos: idEventArg<*>? ->
-                        idAFEntity_Base::Event_SetConstraintPosition
+                    eventCallback_t2<idAFEntity_Base> { obj: idAFEntity_Base, name: idEventArg<*>?, pos: idEventArg<*>? ->
+                        obj.Event_SetConstraintPosition(name as idEventArg<String>, pos as idEventArg<idVec3>)
                     }
             }
         }
@@ -786,8 +786,8 @@ object AFEntity {
             af.SetConstraintPosition(name.value, pos.value)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -815,11 +815,11 @@ object AFEntity {
             init {
                 eventCallbacks.putAll(idAFEntity_Base.getEventCallBacks())
                 eventCallbacks[EV_Gib] =
-                    eventCallback_t1<idAFEntity_Gibbable> { obj: Any?, damageDefName: idEventArg<*>? ->
-                        idAFEntity_Gibbable::Event_Gib
+                    eventCallback_t1<idAFEntity_Gibbable> { obj: idAFEntity_Gibbable, damageDefName: idEventArg<*>? ->
+                        obj.Event_Gib(damageDefName as idEventArg<String>)
                     }
                 eventCallbacks[EV_Gibbed] =
-                    eventCallback_t0<idAFEntity_Gibbable> { obj: Any? -> idAFEntity_Gibbable::Event_Remove }
+                    eventCallback_t0<idAFEntity_Gibbable> { obj: idAFEntity_Gibbable -> obj.Event_Remove() }
             }
         }
 
@@ -1020,8 +1020,8 @@ object AFEntity {
             return super.UpdateAnimationControllers()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         override fun _deconstructor() {
@@ -1060,8 +1060,8 @@ object AFEntity {
             init {
                 eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idAFEntity_Generic> { obj: Any?, activator: idEventArg<*>? ->
-                        idAFEntity_Generic::Event_Activate
+                    eventCallback_t1<idAFEntity_Generic> { obj: idAFEntity_Generic, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1100,7 +1100,7 @@ object AFEntity {
             keepRunningPhysics._val = true
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity>) {
+        private fun Event_Activate(activator: idEventArg<idEntity?>) {
             var delay: Float
             val init_velocity = idVec3()
             val init_avelocity = idVec3()
@@ -1123,8 +1123,8 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1152,12 +1152,12 @@ object AFEntity {
             init {
                 eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks())
                 eventCallbacks[EV_Gib] =
-                    eventCallback_t1<idAFEntity_WithAttachedHead> { obj: Any?, damageDefName: idEventArg<*>? ->
-                        idAFEntity_WithAttachedHead::Event_Gib
+                    eventCallback_t1<idAFEntity_WithAttachedHead> { obj: idAFEntity_WithAttachedHead, damageDefName: idEventArg<*>? ->
+                        obj.Event_Gib(damageDefName as idEventArg<String>)
                     }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idAFEntity_WithAttachedHead> { obj: Any?, activator: idEventArg<*>? ->
-                        idAFEntity_WithAttachedHead::Event_Activate
+                    eventCallback_t1<idAFEntity_WithAttachedHead> { obj: idAFEntity_WithAttachedHead, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1302,7 +1302,7 @@ object AFEntity {
             Gib(idVec3(0, 0, 1), damageDefName.value)
         }
 
-        private fun Event_Activate(activator: idEventArg<idEntity>) {
+        private fun Event_Activate(activator: idEventArg<idEntity?>) {
             var delay: Float
             val init_velocity = idVec3()
             val init_avelocity = idVec3()
@@ -1325,8 +1325,8 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -2192,11 +2192,11 @@ object AFEntity {
             init {
                 eventCallbacks.putAll(idAFEntity_Base.getEventCallBacks())
                 eventCallbacks[EV_SetFingerAngle] =
-                    eventCallback_t1<idAFEntity_ClawFourFingers> { obj: Any?, angle: idEventArg<*>? ->
-                        idAFEntity_ClawFourFingers::Event_SetFingerAngle
+                    eventCallback_t1<idAFEntity_ClawFourFingers> { obj: idAFEntity_ClawFourFingers, angle: idEventArg<*>? ->
+                        obj.Event_SetFingerAngle(angle as idEventArg<Float>)
                     }
                 eventCallbacks[EV_StopFingers] =
-                    eventCallback_t0<idAFEntity_ClawFourFingers> { obj: Any? -> idAFEntity_ClawFourFingers::Event_StopFingers }
+                    eventCallback_t0<idAFEntity_ClawFourFingers> { obj: idAFEntity_ClawFourFingers -> obj.Event_StopFingers() }
             }
         }
 
@@ -2269,8 +2269,8 @@ object AFEntity {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         init {

@@ -44,6 +44,7 @@ import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.renderLight_s
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
+import neo.TempDump.btoi
 import neo.TempDump.isNotNullOrEmpty
 import neo.Tools.Compilers.AAS.AASFile
 import neo.framework.CmdSystem.cmdFunction_t
@@ -454,7 +455,7 @@ object AI {
             // ~idAI();
             /*
          ============
-         idAI::FindPathAroundObstacles
+         obj.FindPathAroundObstacles
 
          Finds a path around dynamic obstacles using a path tree with clockwise and counter clockwise edge walks.
          ============
@@ -582,7 +583,7 @@ object AI {
 
             /*
          ============
-         idAI::PredictPath
+         obj.PredictPath
 
          Can also be used when there is no AAS file available however ledges are not detected.
          // Predicts movement, returns true if a stop event was triggered.
@@ -884,7 +885,7 @@ object AI {
 
             /*
          =====================
-         idAI::PredictTrajectory
+         obj.PredictTrajectory
 
          returns true if there is a collision free trajectory for the clip model
          aimDir is set to the ideal aim direction in order to hit the target
@@ -1033,341 +1034,378 @@ object AI {
 
             init {
                 eventCallbacks.putAll(idActor.getEventCallBacks())
-                eventCallbacks[Entity.EV_Activate] = eventCallback_t1<idAI> { obj: Any?, activator: idEventArg<*>? ->
-                    idAI::Event_Activate
+                eventCallbacks[Entity.EV_Activate] = eventCallback_t1<idAI> { obj: idAI, activator: idEventArg<*>? ->
+                    obj.Event_Activate(activator as idEventArg<idEntity?>)
                 }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idAI> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idAI::Event_Touch }
+                    eventCallback_t2<idAI> { obj: idAI, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s?>
+                        )
+                    }
                 eventCallbacks[AI_Events.AI_FindEnemy] =
-                    eventCallback_t1<idAI> { obj: Any?, useFOV: idEventArg<*>? -> idAI::Event_FindEnemy }
+                    eventCallback_t1<idAI> { obj: idAI, useFOV: idEventArg<*>? -> obj.Event_FindEnemy(useFOV as idEventArg<Int>) }
                 eventCallbacks[AI_Events.AI_FindEnemyAI] =
-                    eventCallback_t1<idAI> { obj: Any?, useFOV: idEventArg<*>? -> idAI::Event_FindEnemyAI }
+                    eventCallback_t1<idAI> { obj: idAI, useFOV: idEventArg<*>? -> obj.Event_FindEnemyAI(useFOV as idEventArg<Int>) }
                 eventCallbacks[AI_Events.AI_FindEnemyInCombatNodes] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_FindEnemyInCombatNodes }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_FindEnemyInCombatNodes() }
                 eventCallbacks[AI_Events.AI_ClosestReachableEnemyOfEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, _team_mate: idEventArg<*>? ->
-                        idAI::Event_ClosestReachableEnemyOfEntity
+                    eventCallback_t1<idAI> { obj: idAI, _team_mate: idEventArg<*>? ->
+                        obj.Event_ClosestReachableEnemyOfEntity(_team_mate as idEventArg<idEntity?>)
                     }
                 eventCallbacks[AI_Events.AI_HeardSound] =
-                    eventCallback_t1<idAI> { obj: Any?, ignore_team: idEventArg<*>? ->
-                        idAI::Event_HeardSound
+                    eventCallback_t1<idAI> { obj: idAI, ignore_team: idEventArg<*>? ->
+                        obj.Event_HeardSound(ignore_team as idEventArg<Int>)
                     }
                 eventCallbacks[AI_Events.AI_SetEnemy] =
-                    eventCallback_t1<idAI> { obj: Any?, _ent: idEventArg<*>? -> idAI::Event_SetEnemy }
+                    eventCallback_t1<idAI> { obj: idAI, _ent: idEventArg<*>? -> obj.Event_SetEnemy(_ent as idEventArg<idEntity?>) }
                 eventCallbacks[AI_Events.AI_ClearEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_ClearEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_ClearEnemy() }
                 eventCallbacks[AI_Events.AI_MuzzleFlash] =
-                    eventCallback_t1<idAI> { obj: Any?, jointname: idEventArg<*>? ->
-                        idAI::Event_MuzzleFlash
+                    eventCallback_t1<idAI> { obj: idAI, jointname: idEventArg<*>? ->
+                        obj.Event_MuzzleFlash(jointname as idEventArg<String?>)
                     }
                 eventCallbacks[AI_Events.AI_CreateMissile] =
-                    eventCallback_t1<idAI> { obj: Any?, _jointname: idEventArg<*>? ->
-                        idAI::Event_CreateMissile
+                    eventCallback_t1<idAI> { obj: idAI, _jointname: idEventArg<*>? ->
+                        obj.Event_CreateMissile(_jointname as idEventArg<String?>)
                     }
                 eventCallbacks[AI_Events.AI_AttackMissile] =
-                    eventCallback_t1<idAI> { obj: Any?, jointname: idEventArg<*>? ->
-                        idAI::Event_AttackMissile
+                    eventCallback_t1<idAI> { obj: idAI, jointname: idEventArg<*>? ->
+                        obj.Event_AttackMissile(jointname as idEventArg<String?>)
                     }
                 eventCallbacks[AI_Events.AI_FireMissileAtTarget] =
-                    eventCallback_t2<idAI> { obj: Any?, jointname: idEventArg<*>?, targetname: idEventArg<*>? ->
-                        idAI::Event_FireMissileAtTarget
+                    eventCallback_t2<idAI> { obj: idAI, jointname: idEventArg<*>?, targetname: idEventArg<*>? ->
+                        obj.Event_FireMissileAtTarget(jointname as idEventArg<String>, targetname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_LaunchMissile] =
-                    eventCallback_t2<idAI> { obj: Any?, _muzzle: idEventArg<*>?, _ang: idEventArg<*>? ->
-                        idAI::Event_LaunchMissile
+                    eventCallback_t2<idAI> { obj: idAI, _muzzle: idEventArg<*>?, _ang: idEventArg<*>? ->
+                        obj.Event_LaunchMissile(_muzzle as idEventArg<idVec3>, _ang as idEventArg<idAngles>)
                     }
                 eventCallbacks[AI_Events.AI_AttackMelee] =
-                    eventCallback_t1<idAI> { obj: Any?, meleeDefName: idEventArg<*>? ->
-                        idAI::Event_AttackMelee
+                    eventCallback_t1<idAI> { obj: idAI, meleeDefName: idEventArg<*>? ->
+                        obj.Event_AttackMelee(meleeDefName as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_DirectDamage] =
-                    eventCallback_t2<idAI> { obj: Any?, damageTarget: idEventArg<*>?, damageDefName: idEventArg<*>? ->
-                        idAI::Event_DirectDamage
+                    eventCallback_t2<idAI> { obj: idAI, damageTarget: idEventArg<*>?, damageDefName: idEventArg<*>? ->
+                        obj.Event_DirectDamage(
+                            damageTarget as idEventArg<idEntity>,
+                            damageDefName as idEventArg<String>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_RadiusDamageFromJoint] =
-                    eventCallback_t2<idAI> { obj: Any?, jointname: idEventArg<*>?, damageDefName: idEventArg<*>? ->
-                        idAI::Event_RadiusDamageFromJoint
+                    eventCallback_t2<idAI> { obj: idAI, jointname: idEventArg<*>?, damageDefName: idEventArg<*>? ->
+                        obj.Event_RadiusDamageFromJoint(
+                            jointname as idEventArg<String>,
+                            damageDefName as idEventArg<String>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_BeginAttack] =
-                    eventCallback_t1<idAI> { obj: Any?, name: idEventArg<*>? -> idAI::Event_BeginAttack }
+                    eventCallback_t1<idAI> { obj: idAI, name: idEventArg<*>? -> obj.Event_BeginAttack(name as idEventArg<String>) }
                 eventCallbacks[AI_Events.AI_EndAttack] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EndAttack }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EndAttack() }
                 eventCallbacks[AI_Events.AI_MeleeAttackToJoint] =
-                    eventCallback_t2<idAI> { obj: Any?, jointname: idEventArg<*>?, meleeDefName: idEventArg<*>? ->
-                        idAI::Event_MeleeAttackToJoint
+                    eventCallback_t2<idAI> { obj: idAI, jointname: idEventArg<*>?, meleeDefName: idEventArg<*>? ->
+                        obj.Event_MeleeAttackToJoint(
+                            jointname as idEventArg<String>,
+                            meleeDefName as idEventArg<String>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_RandomPath] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_RandomPath }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_RandomPath() }
                 eventCallbacks[AI_Events.AI_CanBecomeSolid] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_CanBecomeSolid }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_CanBecomeSolid() }
                 eventCallbacks[AI_Events.AI_BecomeSolid] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_BecomeSolid }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_BecomeSolid() }
                 eventCallbacks[Moveable.EV_BecomeNonSolid] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_BecomeNonSolid }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_BecomeNonSolid() }
                 eventCallbacks[AI_Events.AI_BecomeRagdoll] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_BecomeRagdoll }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_BecomeRagdoll() }
                 eventCallbacks[AI_Events.AI_StopRagdoll] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_StopRagdoll }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_StopRagdoll() }
                 eventCallbacks[AI_Events.AI_SetHealth] =
-                    eventCallback_t1<idAI> { obj: Any?, newHealth: idEventArg<*>? -> idAI::Event_SetHealth }
+                    eventCallback_t1<idAI> { obj: idAI, newHealth: idEventArg<*>? -> obj.Event_SetHealth(newHealth as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_GetHealth] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetHealth }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetHealth() }
                 eventCallbacks[AI_Events.AI_AllowDamage] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_AllowDamage }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_AllowDamage() }
                 eventCallbacks[AI_Events.AI_IgnoreDamage] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_IgnoreDamage }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_IgnoreDamage() }
                 eventCallbacks[AI_Events.AI_GetCurrentYaw] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetCurrentYaw }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetCurrentYaw() }
                 eventCallbacks[AI_Events.AI_TurnTo] =
-                    eventCallback_t1<idAI> { obj: Any?, angle: idEventArg<*>? -> idAI::Event_TurnTo }
+                    eventCallback_t1<idAI> { obj: idAI, angle: idEventArg<*>? -> obj.Event_TurnTo(angle as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_TurnToPos] =
-                    eventCallback_t1<idAI> { obj: Any?, pos: idEventArg<*>? -> idAI::Event_TurnToPos }
+                    eventCallback_t1<idAI> { obj: idAI, pos: idEventArg<*>? -> obj.Event_TurnToPos(pos as idEventArg<idVec3>) }
                 eventCallbacks[AI_Events.AI_TurnToEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? -> idAI::Event_TurnToEntity }
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? -> obj.Event_TurnToEntity(ent as idEventArg<idEntity>) }
                 eventCallbacks[AI_Events.AI_MoveStatus] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_MoveStatus }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_MoveStatus() }
                 eventCallbacks[AI_Events.AI_StopMove] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_StopMove }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_StopMove() }
                 eventCallbacks[AI_Events.AI_MoveToCover] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_MoveToCover }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_MoveToCover() }
                 eventCallbacks[AI_Events.AI_MoveToEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_MoveToEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_MoveToEnemy() }
                 eventCallbacks[AI_Events.AI_MoveToEnemyHeight] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_MoveToEnemyHeight }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_MoveToEnemyHeight() }
                 eventCallbacks[AI_Events.AI_MoveOutOfRange] =
-                    eventCallback_t2<idAI> { obj: Any?, entity: idEventArg<*>?, range: idEventArg<*>? ->
-                        idAI::Event_MoveOutOfRange
+                    eventCallback_t2<idAI> { obj: idAI, entity: idEventArg<*>?, range: idEventArg<*>? ->
+                        obj.Event_MoveOutOfRange(entity as idEventArg<idEntity>, range as idEventArg<Float>)
                     }
                 eventCallbacks[AI_Events.AI_MoveToAttackPosition] =
-                    eventCallback_t2<idAI> { obj: Any?, entity: idEventArg<*>?, attack_anim: idEventArg<*>? ->
-                        idAI::Event_MoveToAttackPosition
+                    eventCallback_t2<idAI> { obj: idAI, entity: idEventArg<*>?, attack_anim: idEventArg<*>? ->
+                        obj.Event_MoveToAttackPosition(
+                            entity as idEventArg<idEntity>,
+                            attack_anim as idEventArg<String>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_Wander] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_Wander }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_Wander() }
                 eventCallbacks[AI_Events.AI_MoveToEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? -> idAI::Event_MoveToEntity }
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? -> obj.Event_MoveToEntity(ent as idEventArg<idEntity>) }
                 eventCallbacks[AI_Events.AI_MoveToPosition] =
-                    eventCallback_t1<idAI> { obj: Any?, pos: idEventArg<*>? -> idAI::Event_MoveToPosition }
+                    eventCallback_t1<idAI> { obj: idAI, pos: idEventArg<*>? -> obj.Event_MoveToPosition(pos as idEventArg<idVec3>) }
                 eventCallbacks[AI_Events.AI_SlideTo] =
-                    eventCallback_t2<idAI> { obj: Any?, pos: idEventArg<*>?, time: idEventArg<*>? -> idAI::Event_SlideTo }
+                    eventCallback_t2<idAI> { obj: idAI, pos: idEventArg<*>?, time: idEventArg<*>? ->
+                        obj.Event_SlideTo(
+                            pos as idEventArg<idVec3>,
+                            time as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[AI_Events.AI_FacingIdeal] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_FacingIdeal }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_FacingIdeal() }
                 eventCallbacks[AI_Events.AI_FaceEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_FaceEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_FaceEnemy() }
                 eventCallbacks[AI_Events.AI_FaceEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? -> idAI::Event_FaceEntity }
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? -> obj.Event_FaceEntity(ent as idEventArg<idEntity>) }
                 eventCallbacks[AI_Events.AI_WaitAction] =
-                    eventCallback_t1<idAI> { obj: Any?, waitForState: idEventArg<*>? ->
-                        idAI::Event_WaitAction
+                    eventCallback_t1<idAI> { obj: idAI, waitForState: idEventArg<*>? ->
+                        obj.Event_WaitAction(waitForState as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_GetCombatNode] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetCombatNode }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetCombatNode() }
                 eventCallbacks[AI_Events.AI_EnemyInCombatCone] =
-                    eventCallback_t2<idAI> { obj: Any?, _ent: idEventArg<*>?, use_current_enemy_location: idEventArg<*>? ->
-                        idAI::Event_EnemyInCombatCone
+                    eventCallback_t2<idAI> { obj: idAI, _ent: idEventArg<*>?, use_current_enemy_location: idEventArg<*>? ->
+                        obj.Event_EnemyInCombatCone(
+                            _ent as idEventArg<idEntity>,
+                            use_current_enemy_location as idEventArg<Int>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_WaitMove] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_WaitMove }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_WaitMove() }
                 eventCallbacks[AI_Events.AI_GetJumpVelocity] =
-                    eventCallback_t3<idAI> { obj: Any?, _pos: idEventArg<*>?, _speed: idEventArg<*>?,
+                    eventCallback_t3<idAI> { obj: idAI, _pos: idEventArg<*>?, _speed: idEventArg<*>?,
                                              _max_height: idEventArg<*>? ->
-                        idAI::Event_GetJumpVelocity
+                        obj.Event_GetJumpVelocity(
+                            _pos as idEventArg<idVec3>,
+                            _speed as idEventArg<Float>,
+                            _max_height as idEventArg<Float>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_EntityInAttackCone] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? ->
-                        idAI::Event_EntityInAttackCone
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? ->
+                        obj.Event_EntityInAttackCone(ent as idEventArg<idEntity>)
                     }
                 eventCallbacks[AI_Events.AI_CanSeeEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? -> idAI::Event_CanSeeEntity }
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? -> obj.Event_CanSeeEntity(ent as idEventArg<idEntity>) }
                 eventCallbacks[AI_Events.AI_SetTalkTarget] =
-                    eventCallback_t1<idAI> { obj: Any?, _target: idEventArg<*>? ->
-                        idAI::Event_SetTalkTarget
+                    eventCallback_t1<idAI> { obj: idAI, _target: idEventArg<*>? ->
+                        obj.Event_SetTalkTarget(_target as idEventArg<idEntity?>)
                     }
                 eventCallbacks[AI_Events.AI_GetTalkTarget] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetTalkTarget }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetTalkTarget() }
                 eventCallbacks[AI_Events.AI_SetTalkState] =
-                    eventCallback_t1<idAI> { obj: Any?, _state: idEventArg<*>? -> idAI::Event_SetTalkState }
+                    eventCallback_t1<idAI> { obj: idAI, _state: idEventArg<*>? -> obj.Event_SetTalkState(_state as idEventArg<Int>) }
                 eventCallbacks[AI_Events.AI_EnemyRange] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnemyRange }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnemyRange() }
                 eventCallbacks[AI_Events.AI_EnemyRange2D] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnemyRange2D }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnemyRange2D() }
                 eventCallbacks[AI_Events.AI_GetEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetEnemy() }
                 eventCallbacks[AI_Events.AI_GetEnemyPos] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetEnemyPos }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetEnemyPos() }
                 eventCallbacks[AI_Events.AI_GetEnemyEyePos] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetEnemyEyePos }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetEnemyEyePos() }
                 eventCallbacks[AI_Events.AI_PredictEnemyPos] =
-                    eventCallback_t1<idAI> { obj: Any?, time: idEventArg<*>? -> idAI::Event_PredictEnemyPos }
+                    eventCallback_t1<idAI> { obj: idAI, time: idEventArg<*>? -> obj.Event_PredictEnemyPos(time as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_CanHitEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_CanHitEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_CanHitEnemy() }
                 eventCallbacks[AI_Events.AI_CanHitEnemyFromAnim] =
-                    eventCallback_t1<idAI> { obj: Any?, animname: idEventArg<*>? ->
-                        idAI::Event_CanHitEnemyFromAnim
+                    eventCallback_t1<idAI> { obj: idAI, animname: idEventArg<*>? ->
+                        obj.Event_CanHitEnemyFromAnim(animname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_CanHitEnemyFromJoint] =
-                    eventCallback_t1<idAI> { obj: Any?, jointname: idEventArg<*>? ->
-                        idAI::Event_CanHitEnemyFromJoint
+                    eventCallback_t1<idAI> { obj: idAI, jointname: idEventArg<*>? ->
+                        obj.Event_CanHitEnemyFromJoint(jointname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_EnemyPositionValid] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnemyPositionValid }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnemyPositionValid() }
                 eventCallbacks[AI_Events.AI_ChargeAttack] =
-                    eventCallback_t1<idAI> { obj: Any?, damageDef: idEventArg<*>? ->
-                        idAI::Event_ChargeAttack
+                    eventCallback_t1<idAI> { obj: idAI, damageDef: idEventArg<*>? ->
+                        obj.Event_ChargeAttack(damageDef as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_TestChargeAttack] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_TestChargeAttack }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_TestChargeAttack() }
                 eventCallbacks[AI_Events.AI_TestAnimMoveTowardEnemy] =
-                    eventCallback_t1<idAI> { obj: Any?, animname: idEventArg<*>? ->
-                        idAI::Event_TestAnimMoveTowardEnemy
+                    eventCallback_t1<idAI> { obj: idAI, animname: idEventArg<*>? ->
+                        obj.Event_TestAnimMoveTowardEnemy(animname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_TestAnimMove] =
-                    eventCallback_t1<idAI> { obj: Any?, animname: idEventArg<*>? ->
-                        idAI::Event_TestAnimMove
+                    eventCallback_t1<idAI> { obj: idAI, animname: idEventArg<*>? ->
+                        obj.Event_TestAnimMove(animname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_TestMoveToPosition] =
-                    eventCallback_t1<idAI> { obj: Any?, _position: idEventArg<*>? ->
-                        idAI::Event_TestMoveToPosition
+                    eventCallback_t1<idAI> { obj: idAI, _position: idEventArg<*>? ->
+                        obj.Event_TestMoveToPosition(_position as idEventArg<idVec3>)
                     }
                 eventCallbacks[AI_Events.AI_TestMeleeAttack] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_TestMeleeAttack }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_TestMeleeAttack() }
                 eventCallbacks[AI_Events.AI_TestAnimAttack] =
-                    eventCallback_t1<idAI> { obj: Any?, animname: idEventArg<*>? ->
-                        idAI::Event_TestAnimAttack
+                    eventCallback_t1<idAI> { obj: idAI, animname: idEventArg<*>? ->
+                        obj.Event_TestAnimAttack(animname as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_Shrivel] =
-                    eventCallback_t1<idAI> { obj: Any?, shrivel_time: idEventArg<*>? -> idAI::Event_Shrivel }
+                    eventCallback_t1<idAI> { obj: idAI, shrivel_time: idEventArg<*>? -> obj.Event_Shrivel(shrivel_time as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_Burn] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_Burn }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_Burn() }
                 eventCallbacks[AI_Events.AI_PreBurn] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_PreBurn }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_PreBurn() }
                 eventCallbacks[AI_Events.AI_SetSmokeVisibility] =
-                    eventCallback_t2<idAI> { obj: Any?, _num: idEventArg<*>?, on: idEventArg<*>? ->
-                        idAI::Event_SetSmokeVisibility
+                    eventCallback_t2<idAI> { obj: idAI, _num: idEventArg<*>?, on: idEventArg<*>? ->
+                        obj.Event_SetSmokeVisibility(_num as idEventArg<Int>, on as idEventArg<Int>)
                     }
                 eventCallbacks[AI_Events.AI_NumSmokeEmitters] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_NumSmokeEmitters }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_NumSmokeEmitters() }
                 eventCallbacks[AI_Events.AI_ClearBurn] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_ClearBurn }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_ClearBurn() }
                 eventCallbacks[AI_Events.AI_StopThinking] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_StopThinking }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_StopThinking() }
                 eventCallbacks[AI_Events.AI_GetTurnDelta] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetTurnDelta }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetTurnDelta() }
                 eventCallbacks[AI_Events.AI_GetMoveType] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetMoveType }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetMoveType() }
                 eventCallbacks[AI_Events.AI_SetMoveType] =
-                    eventCallback_t1<idAI> { obj: Any?, _moveType: idEventArg<*>? ->
-                        idAI::Event_SetMoveType
+                    eventCallback_t1<idAI> { obj: idAI, _moveType: idEventArg<*>? ->
+                        obj.Event_SetMoveType(_moveType as idEventArg<Int>)
                     }
                 eventCallbacks[AI_Events.AI_SaveMove] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_SaveMove }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_SaveMove() }
                 eventCallbacks[AI_Events.AI_RestoreMove] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_RestoreMove }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_RestoreMove() }
                 eventCallbacks[AI_Events.AI_AllowMovement] =
-                    eventCallback_t1<idAI> { obj: Any?, flag: idEventArg<*>? -> idAI::Event_AllowMovement }
+                    eventCallback_t1<idAI> { obj: idAI, flag: idEventArg<*>? -> obj.Event_AllowMovement(flag as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_JumpFrame] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_JumpFrame }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_JumpFrame() }
                 eventCallbacks[AI_Events.AI_EnableClip] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnableClip }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnableClip() }
                 eventCallbacks[AI_Events.AI_DisableClip] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_DisableClip }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_DisableClip() }
                 eventCallbacks[AI_Events.AI_EnableGravity] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnableGravity }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnableGravity() }
                 eventCallbacks[AI_Events.AI_DisableGravity] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_DisableGravity }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_DisableGravity() }
                 eventCallbacks[AI_Events.AI_EnableAFPush] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_EnableAFPush }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_EnableAFPush() }
                 eventCallbacks[AI_Events.AI_DisableAFPush] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_DisableAFPush }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_DisableAFPush() }
                 eventCallbacks[AI_Events.AI_SetFlySpeed] =
-                    eventCallback_t1<idAI> { obj: Any?, speed: idEventArg<*>? -> idAI::Event_SetFlySpeed }
+                    eventCallback_t1<idAI> { obj: idAI, speed: idEventArg<*>? -> obj.Event_SetFlySpeed(speed as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_SetFlyOffset] =
-                    eventCallback_t1<idAI> { obj: Any?, offset: idEventArg<*>? -> idAI::Event_SetFlyOffset }
+                    eventCallback_t1<idAI> { obj: idAI, offset: idEventArg<*>? -> obj.Event_SetFlyOffset(offset as idEventArg<Int>) }
                 eventCallbacks[AI_Events.AI_ClearFlyOffset] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_ClearFlyOffset }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_ClearFlyOffset() }
                 eventCallbacks[AI_Events.AI_GetClosestHiddenTarget] =
-                    eventCallback_t1<idAI> { obj: Any?, type: idEventArg<*>? ->
-                        idAI::Event_GetClosestHiddenTarget
+                    eventCallback_t1<idAI> { obj: idAI, type: idEventArg<*>? ->
+                        obj.Event_GetClosestHiddenTarget(type as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_GetRandomTarget] =
-                    eventCallback_t1<idAI> { obj: Any?, type: idEventArg<*>? -> idAI::Event_GetRandomTarget }
+                    eventCallback_t1<idAI> { obj: idAI, type: idEventArg<*>? -> obj.Event_GetRandomTarget(type as idEventArg<String>) }
                 eventCallbacks[AI_Events.AI_TravelDistanceToPoint] =
-                    eventCallback_t1<idAI> { obj: Any?, pos: idEventArg<*>? ->
-                        idAI::Event_TravelDistanceToPoint
+                    eventCallback_t1<idAI> { obj: idAI, pos: idEventArg<*>? ->
+                        obj.Event_TravelDistanceToPoint(pos as idEventArg<idVec3>)
                     }
                 eventCallbacks[AI_Events.AI_TravelDistanceToEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, ent: idEventArg<*>? ->
-                        idAI::Event_TravelDistanceToEntity
+                    eventCallback_t1<idAI> { obj: idAI, ent: idEventArg<*>? ->
+                        obj.Event_TravelDistanceToEntity(ent as idEventArg<idEntity>)
                     }
                 eventCallbacks[AI_Events.AI_TravelDistanceBetweenPoints] =
-                    eventCallback_t2<idAI> { obj: Any?, source: idEventArg<*>?, dest: idEventArg<*>? ->
-                        idAI::Event_TravelDistanceBetweenPoints
+                    eventCallback_t2<idAI> { obj: idAI, source: idEventArg<*>?, dest: idEventArg<*>? ->
+                        obj.Event_TravelDistanceBetweenPoints(source as idEventArg<idVec3>, dest as idEventArg<idVec3>)
                     }
                 eventCallbacks[AI_Events.AI_TravelDistanceBetweenEntities] =
-                    eventCallback_t2<idAI> { obj: Any?, source: idEventArg<*>?, dest: idEventArg<*>? ->
-                        idAI::Event_TravelDistanceBetweenEntities
+                    eventCallback_t2<idAI> { obj: idAI, source: idEventArg<*>?, dest: idEventArg<*>? ->
+                        obj.Event_TravelDistanceBetweenEntities(
+                            source as idEventArg<idEntity>,
+                            dest as idEventArg<idEntity>
+                        )
                     }
                 eventCallbacks[AI_Events.AI_LookAtEntity] =
-                    eventCallback_t2<idAI> { obj: Any?, _ent: idEventArg<*>?, duration: idEventArg<*>? -> idAI::Event_LookAtEntity }
+                    eventCallback_t2<idAI> { obj: idAI, _ent: idEventArg<*>?, duration: idEventArg<*>? ->
+                        obj.Event_LookAtEntity(
+                            _ent as idEventArg<idEntity>,
+                            duration as idEventArg<Float>
+                        )
+                    }
                 eventCallbacks[AI_Events.AI_LookAtEnemy] =
-                    eventCallback_t1<idAI> { obj: Any?, duration: idEventArg<*>? -> idAI::Event_LookAtEnemy }
+                    eventCallback_t1<idAI> { obj: idAI, duration: idEventArg<*>? -> obj.Event_LookAtEnemy(duration as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_SetJointMod] =
-                    eventCallback_t1<idAI> { obj: Any?, allow: idEventArg<*>? -> idAI::Event_SetJointMod }
+                    eventCallback_t1<idAI> { obj: idAI, allow: idEventArg<*>? -> obj.Event_SetJointMod(allow as idEventArg<Int>) }
                 eventCallbacks[AI_Events.AI_ThrowMoveable] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_ThrowMoveable }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_ThrowMoveable() }
                 eventCallbacks[AI_Events.AI_ThrowAF] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_ThrowAF }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_ThrowAF() }
                 eventCallbacks[Entity.EV_GetAngles] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetAngles }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetAngles() }
                 eventCallbacks[Entity.EV_SetAngles] =
-                    eventCallback_t1<idAI> { obj: Any?, ang: idEventArg<*>? -> idAI::Event_SetAngles }
+                    eventCallback_t1<idAI> { obj: idAI, ang: idEventArg<*>? -> obj.Event_SetAngles(ang as idEventArg<idAngles>) }
                 eventCallbacks[AI_Events.AI_RealKill] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_RealKill }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_RealKill() }
                 eventCallbacks[AI_Events.AI_Kill] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_Kill }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_Kill() }
                 eventCallbacks[AI_Events.AI_WakeOnFlashlight] =
-                    eventCallback_t1<idAI> { obj: Any?, enable: idEventArg<*>? ->
-                        idAI::Event_WakeOnFlashlight
+                    eventCallback_t1<idAI> { obj: idAI, enable: idEventArg<*>? ->
+                        obj.Event_WakeOnFlashlight(enable as idEventArg<Int>)
                     }
                 eventCallbacks[AI_Events.AI_LocateEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_LocateEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_LocateEnemy() }
                 eventCallbacks[AI_Events.AI_KickObstacles] =
-                    eventCallback_t2<idAI> { obj: Any?, kickEnt: idEventArg<*>?, force: idEventArg<*>? ->
-                        idAI::Event_KickObstacles
+                    eventCallback_t2<idAI> { obj: idAI, kickEnt: idEventArg<*>?, force: idEventArg<*>? ->
+                        obj.Event_KickObstacles(kickEnt as idEventArg<idEntity>, force as idEventArg<Float>)
                     }
                 eventCallbacks[AI_Events.AI_GetObstacle] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetObstacle }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetObstacle() }
                 eventCallbacks[AI_Events.AI_PushPointIntoAAS] =
-                    eventCallback_t1<idAI> { obj: Any?, _pos: idEventArg<*>? ->
-                        idAI::Event_PushPointIntoAAS
+                    eventCallback_t1<idAI> { obj: idAI, _pos: idEventArg<*>? ->
+                        obj.Event_PushPointIntoAAS(_pos as idEventArg<idVec3>)
                     }
                 eventCallbacks[AI_Events.AI_GetTurnRate] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_GetTurnRate }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_GetTurnRate() }
                 eventCallbacks[AI_Events.AI_SetTurnRate] =
-                    eventCallback_t1<idAI> { obj: Any?, rate: idEventArg<*>? -> idAI::Event_SetTurnRate }
+                    eventCallback_t1<idAI> { obj: idAI, rate: idEventArg<*>? -> obj.Event_SetTurnRate(rate as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_AnimTurn] =
-                    eventCallback_t1<idAI> { obj: Any?, angles: idEventArg<*>? -> idAI::Event_AnimTurn }
+                    eventCallback_t1<idAI> { obj: idAI, angles: idEventArg<*>? -> obj.Event_AnimTurn(angles as idEventArg<Float>) }
                 eventCallbacks[AI_Events.AI_AllowHiddenMovement] =
-                    eventCallback_t1<idAI> { obj: Any?, enable: idEventArg<*>? ->
-                        idAI::Event_AllowHiddenMovement
+                    eventCallback_t1<idAI> { obj: idAI, enable: idEventArg<*>? ->
+                        obj.Event_AllowHiddenMovement(enable as idEventArg<Int>)
                     }
                 eventCallbacks[AI_Events.AI_TriggerParticles] =
-                    eventCallback_t1<idAI> { obj: Any?, jointName: idEventArg<*>? ->
-                        idAI::Event_TriggerParticles
+                    eventCallback_t1<idAI> { obj: idAI, jointName: idEventArg<*>? ->
+                        obj.Event_TriggerParticles(jointName as idEventArg<String>)
                     }
                 eventCallbacks[AI_Events.AI_FindActorsInBounds] =
-                    eventCallback_t2<idAI> { obj: Any?, mins: idEventArg<*>?, maxs: idEventArg<*>? ->
-                        idAI::Event_FindActorsInBounds
+                    eventCallback_t2<idAI> { obj: idAI, mins: idEventArg<*>?, maxs: idEventArg<*>? ->
+                        obj.Event_FindActorsInBounds(mins as idEventArg<idVec3>, maxs as idEventArg<idVec3>)
                     }
                 eventCallbacks[AI_Events.AI_CanReachPosition] =
-                    eventCallback_t1<idAI> { obj: Any?, pos: idEventArg<*>? -> idAI::Event_CanReachPosition }
+                    eventCallback_t1<idAI> { obj: idAI, pos: idEventArg<*>? -> obj.Event_CanReachPosition(pos as idEventArg<idVec3>) }
                 eventCallbacks[AI_Events.AI_CanReachEntity] =
-                    eventCallback_t1<idAI> { obj: Any?, _ent: idEventArg<*>? -> idAI::Event_CanReachEntity }
+                    eventCallback_t1<idAI> { obj: idAI, _ent: idEventArg<*>? -> obj.Event_CanReachEntity(_ent as idEventArg<idEntity>) }
                 eventCallbacks[AI_Events.AI_CanReachEnemy] =
-                    eventCallback_t0<idAI> { obj: Any? -> idAI::Event_CanReachEnemy }
+                    eventCallback_t0<idAI> { obj: idAI -> obj.Event_CanReachEnemy() }
                 eventCallbacks[AI_Events.AI_GetReachableEntityPosition] =
-                    eventCallback_t1<idAI> { obj: Any?, _ent: idEventArg<*>? ->
-                        idAI::Event_GetReachableEntityPosition
+                    eventCallback_t1<idAI> { obj: idAI, _ent: idEventArg<*>? ->
+                        obj.Event_GetReachableEntityPosition(_ent as idEventArg<idEntity>)
                     }
             }
         }
@@ -2109,7 +2147,7 @@ object AI {
 
         /*
          ================
-         idAI::DormantBegin
+         obj.DormantBegin
 
          called when entity becomes dormant
          ================
@@ -2131,7 +2169,7 @@ object AI {
 
         /*
          ================
-         idAI::DormantEnd
+         obj.DormantEnd
 
          called when entity wakes from being dormant
          ================
@@ -2248,7 +2286,7 @@ object AI {
 
         /*
          =====================
-         idAI::Activate
+         obj.Activate
 
          Notifies the script that a monster has been activated by a trigger or flashlight
          =====================
@@ -2342,7 +2380,7 @@ object AI {
 
         /*
          ================
-         idAI::CanPlayChatterSounds
+         obj.CanPlayChatterSounds
 
          Used for playing chatter sounds on monsters.
          ================
@@ -2465,7 +2503,7 @@ object AI {
 
         /*
          ===================
-         idAI::CalculateAttackOffsets
+         obj.CalculateAttackOffsets
 
          calculate joint positions on attack frames so we can do proper "can hit" tests
          ===================
@@ -3430,7 +3468,7 @@ object AI {
 
         /*
          =====================
-         idAI::TravelDistance
+         obj.TravelDistance
 
          Returns the approximate travel distance from one position to the goal, or if no AAS, the straight line distance.
 
@@ -3733,7 +3771,7 @@ object AI {
 
         /*
          =====================
-         idAI::FaceEnemy
+         obj.FaceEnemy
 
          Continually face the enemy's last known position.  MoveDone is always true in this case.
          =====================
@@ -3759,7 +3797,7 @@ object AI {
 
         /*
          =====================
-         idAI::FaceEntity
+         obj.FaceEntity
 
          Continually face the entity position.  MoveDone is always true in this case.
          =====================
@@ -4714,7 +4752,7 @@ object AI {
         }
 
         protected fun LaunchProjectile(
-            jointname: String,
+            jointname: String?,
             target: idEntity?,
             clampToAttackCone: Boolean
         ): idProjectile? {
@@ -4843,11 +4881,11 @@ object AI {
 
         /*
          ================
-         idAI::DamageFeedback
+         obj.DamageFeedback
 
          callback function for when another entity received damage from this entity.  damage can be adjusted and returned to the caller.
 
-         FIXME: This gets called when we call idPlayer::CalcDamagePoints from idAI::AttackMelee, which then checks for a saving throw,
+         FIXME: This gets called when we call idPlayer::CalcDamagePoints from obj.AttackMelee, which then checks for a saving throw,
          possibly forcing a miss.  This is harmless behavior ATM, but is not intuitive.
          ================
          */
@@ -4862,7 +4900,7 @@ object AI {
 
         /*
          =====================
-         idAI::DirectDamage
+         obj.DirectDamage
 
          Causes direct damage to an entity
 
@@ -4949,7 +4987,7 @@ object AI {
 
         /*
          =====================
-         idAI::AttackMelee
+         obj.AttackMelee
 
          jointname allows the endpoint to be exactly specified in the model,
          as for the commando tentacle.  If not specified, it will be set to
@@ -5081,7 +5119,7 @@ object AI {
         }
 
         // special effects
-        protected fun GetMuzzle(jointname: String, muzzle: idVec3, axis: idMat3) {
+        protected fun GetMuzzle(jointname: String?, muzzle: idVec3, axis: idMat3) {
             val   /*jointHandle_t*/joint: Int
             if (!TempDump.isNotNullOrEmpty(jointname)) {
                 muzzle.set(
@@ -5089,7 +5127,7 @@ object AI {
                 )
                 muzzle.minusAssign(physicsObj.GetGravityNormal().times(physicsObj.GetBounds()[1].z * 0.5f))
             } else {
-                joint = animator.GetJointHandle(jointname)
+                joint = animator.GetJointHandle(jointname!!)
                 if (joint == Model.INVALID_JOINT) {
                     idGameLocal.Error("Unknown joint '%s' on %s", jointname, GetEntityDefName())
                 }
@@ -5462,7 +5500,7 @@ object AI {
         //
         // ai/ai_events.cpp
         //
-        protected fun Event_Activate(activator: idEventArg<idEntity>) {
+        protected fun Event_Activate(activator: idEventArg<idEntity?>) {
             Activate(activator.value)
         }
 
@@ -5582,7 +5620,7 @@ object AI {
             idThread.ReturnEntity(null)
         }
 
-        protected fun Event_ClosestReachableEnemyOfEntity(_team_mate: idEventArg<idEntity>) {
+        protected fun Event_ClosestReachableEnemyOfEntity(_team_mate: idEventArg<idEntity?>) {
             val team_mate = _team_mate.value
             val actor: idActor?
             var ent: idActor?
@@ -5594,7 +5632,7 @@ object AI {
             var enemyAreaNum: Int
             val path = AAS.aasPath_s()
             if (team_mate !is idActor) {
-                idGameLocal.Error("Entity '%s' is not an AI character or player", team_mate.GetName())
+                idGameLocal.Error("Entity '%s' is not an AI character or player", team_mate!!.GetName())
             }
             actor = team_mate as idActor
             val origin = physicsObj.GetOrigin()
@@ -5640,7 +5678,7 @@ object AI {
             idThread.ReturnEntity(null)
         }
 
-        protected fun Event_SetEnemy(_ent: idEventArg<idEntity>) {
+        protected fun Event_SetEnemy(_ent: idEventArg<idEntity?>) {
             val ent = _ent.value
             if (null == ent) {
                 ClearEnemy()
@@ -5655,14 +5693,14 @@ object AI {
             ClearEnemy()
         }
 
-        protected fun Event_MuzzleFlash(jointname: idEventArg<String>) {
+        protected fun Event_MuzzleFlash(jointname: idEventArg<String?>) {
             val muzzle = idVec3()
             val axis = idMat3()
             GetMuzzle(jointname.value, muzzle, axis)
             TriggerWeaponEffects(muzzle)
         }
 
-        protected fun Event_CreateMissile(_jointname: idEventArg<String>) {
+        protected fun Event_CreateMissile(_jointname: idEventArg<String?>) {
             val jointname = _jointname.value
             val muzzle = idVec3()
             val axis = idMat3()
@@ -5676,13 +5714,13 @@ object AI {
                 if (!TempDump.isNotNullOrEmpty(jointname)) {
                     projectile.GetEntity()!!.Bind(this, true)
                 } else {
-                    projectile.GetEntity()!!.BindToJoint(this, jointname, true)
+                    projectile.GetEntity()!!.BindToJoint(this, jointname!!, true)
                 }
             }
             idThread.ReturnEntity(projectile.GetEntity())
         }
 
-        protected fun Event_AttackMissile(jointname: idEventArg<String>) {
+        protected fun Event_AttackMissile(jointname: idEventArg<String?>) {
             val proj: idProjectile?
             proj = LaunchProjectile(jointname.value, enemy.GetEntity(), true)
             idThread.ReturnEntity(proj)
@@ -6195,7 +6233,7 @@ object AI {
             idThread.ReturnInt(cansee)
         }
 
-        protected fun Event_SetTalkTarget(_target: idEventArg<idEntity>) {
+        protected fun Event_SetTalkTarget(_target: idEventArg<idEntity?>) {
             val target = _target.value
             if (target != null && target !is idActor) {
                 idGameLocal.Error(
@@ -6203,7 +6241,7 @@ object AI {
                     target.GetName()
                 )
             }
-            talkTarget.oSet(target as idActor)
+            talkTarget.oSet(target as idActor?)
             if (target != null) {
                 AI_TALK.underscore(true)
             } else {
@@ -7288,8 +7326,8 @@ object AI {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         override fun _deconstructor() {
@@ -7331,7 +7369,7 @@ object AI {
                         check.GetEntityDefName(),
                         check.name,
                         statename,
-                        check.allowMove
+                        btoi(check.allowMove)
                     )
                     count++
                     e++
@@ -7525,10 +7563,10 @@ object AI {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_CombatNode_MarkUsed] =
-                    eventCallback_t0<idCombatNode> { obj: Any? -> idCombatNode::Event_MarkUsed }
+                    eventCallback_t0<idCombatNode> { obj: idCombatNode -> obj.Event_MarkUsed() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idCombatNode> { obj: Any?, activator: idEventArg<*>? ->
-                        idCombatNode::Event_Activate
+                    eventCallback_t1<idCombatNode> { obj: idCombatNode, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -7629,8 +7667,8 @@ object AI {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //

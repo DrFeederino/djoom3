@@ -196,7 +196,7 @@ object Misc {
 
             /*
          ===============
-         idPlayerStart::Event_TeleportStage
+         p.Event_TeleportStage
 
          FIXME: add functionality to fx system ( could be done with player scripting too )
          ================
@@ -204,7 +204,7 @@ object Misc {
             private fun Event_TeleportStage(p: idPlayerStart, _player: idEventArg<idEntity?>) {
                 val player: idPlayer?
                 if (_player.value !is idPlayer) {
-                    Common.common.Warning("idPlayerStart::Event_TeleportStage: entity is not an idPlayer\n")
+                    Common.common.Warning("p.Event_TeleportStage: entity is not an idPlayer\n")
                     return
                 }
                 player = _player.value as idPlayer
@@ -242,12 +242,12 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idPlayerStart> { p: Any?, activator: idEventArg<*>? ->
-                        idPlayerStart::Event_TeleportPlayer
+                    eventCallback_t1<idPlayerStart> { p: idPlayerStart, activator: idEventArg<*>? ->
+                        Event_TeleportPlayer(p, activator as idEventArg<idEntity?>)
                     }
                 eventCallbacks[Misc.EV_TeleportStage] =
-                    eventCallback_t1<idPlayerStart> { p: Any?, _player: idEventArg<*>? ->
-                        idPlayerStart::Event_TeleportStage
+                    eventCallback_t1<idPlayerStart> { p: idPlayerStart, _player: idEventArg<*>? ->
+                        Event_TeleportStage(p, _player as idEventArg<idEntity?>)
                     }
             }
         }
@@ -326,8 +326,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -364,7 +364,7 @@ object Misc {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
                     eventCallback_t1<idActivator> { a: idActivator, activator: idEventArg<*>? ->
-                        idActivator::Event_Activate
+                        Event_Activate(a as idActivator, activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -409,8 +409,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -479,7 +479,7 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[AI_Events.AI_RandomPath] =
-                    eventCallback_t0<idPathCorner> { obj: Any? -> idPathCorner::Event_RandomPath }
+                    eventCallback_t0<idPathCorner> { obj: idPathCorner -> obj.Event_RandomPath() }
             }
         }
 
@@ -493,8 +493,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -513,11 +513,11 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idDamagable> { d: Any?, activator: idEventArg<*>? ->
-                        idDamagable::Event_BecomeBroken
+                    eventCallback_t1<idDamagable> { d: idDamagable, activator: idEventArg<*>? ->
+                        Event_BecomeBroken(d, activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Misc.EV_RestoreDamagable] =
-                    eventCallback_t0<idDamagable> { obj: Any? -> idDamagable::Event_RestoreDamagable }
+                    eventCallback_t0<idDamagable> { obj: idDamagable -> obj.Event_RestoreDamagable() }
             }
         }
 
@@ -624,8 +624,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -688,8 +688,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idExplodable> { e: Any?, activator: idEventArg<*>? ->
-                        idExplodable::Event_Explode
+                    eventCallback_t1<idExplodable> { e: idExplodable, activator: idEventArg<*>? ->
+                        Event_Explode(e, activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -703,8 +703,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -729,7 +729,7 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_PostSpawn] =
-                    eventCallback_t0<idSpring> { obj: Any? -> idSpring::Event_LinkSpring }
+                    eventCallback_t0<idSpring> { obj: idSpring -> obj.Event_LinkSpring() }
             }
         }
 
@@ -825,8 +825,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -844,13 +844,13 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idForceField> { obj: Any?, activator: idEventArg<*>? ->
-                        idForceField::Event_Activate
+                    eventCallback_t1<idForceField> { obj: idForceField, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Misc.EV_Toggle] =
-                    eventCallback_t0<idForceField> { obj: Any? -> idForceField::Event_Toggle }
+                    eventCallback_t0<idForceField> { obj: idForceField -> obj.Event_Toggle() }
                 eventCallbacks[Entity.EV_FindTargets] =
-                    eventCallback_t0<idForceField> { obj: Any? -> idForceField::Event_FindTargets }
+                    eventCallback_t0<idForceField> { obj: idForceField -> obj.Event_FindTargets() }
             }
         }
 
@@ -941,8 +941,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -959,34 +959,46 @@ object Misc {
             init {
                 eventCallbacks.putAll(idAFEntity_Gibbable.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idAnimated> { obj: Any?, _activator: idEventArg<*>? ->
-                        idAnimated::Event_Activate
+                    eventCallback_t1<idAnimated> { obj: idAnimated, _activator: idEventArg<*>? ->
+                        obj.Event_Activate(_activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Misc.EV_Animated_Start] =
-                    eventCallback_t0<idAnimated> { obj: Any? -> idAnimated::Event_Start }
+                    eventCallback_t0<idAnimated> { obj: idAnimated -> obj.Event_Start() }
                 eventCallbacks[Misc.EV_StartRagdoll] =
-                    eventCallback_t0<idAnimated> { obj: Any? -> idAnimated::Event_StartRagdoll }
+                    eventCallback_t0<idAnimated> { obj: idAnimated -> obj.Event_StartRagdoll() }
                 eventCallbacks[Misc.EV_AnimDone] =
-                    eventCallback_t1<idAnimated> { obj: Any?, animIndex: idEventArg<*>? ->
-                        idAnimated::Event_AnimDone
+                    eventCallback_t1<idAnimated> { obj: idAnimated, animIndex: idEventArg<*>? ->
+                        obj.Event_AnimDone(animIndex as idEventArg<Int>)
                     }
                 eventCallbacks[Actor.EV_Footstep] =
-                    eventCallback_t0<idAnimated> { obj: Any? -> idAnimated::Event_Footstep }
+                    eventCallback_t0<idAnimated> { obj: idAnimated -> obj.Event_Footstep() }
                 eventCallbacks[Actor.EV_FootstepLeft] =
-                    eventCallback_t0<idAnimated> { obj: Any? -> idAnimated::Event_Footstep }
+                    eventCallback_t0<idAnimated> { obj: idAnimated -> obj.Event_Footstep() }
                 eventCallbacks[Actor.EV_FootstepRight] =
-                    eventCallback_t0<idAnimated> { obj: Any? -> idAnimated::Event_Footstep }
+                    eventCallback_t0<idAnimated> { obj: idAnimated -> obj.Event_Footstep() }
                 eventCallbacks[Misc.EV_LaunchMissiles] =
-                    eventCallback_t6<idAnimated> { obj: Any?, projectilename: idEventArg<*>?, sound: idEventArg<*>?, launchjoint: idEventArg<*>?,
+                    eventCallback_t6<idAnimated> { obj: idAnimated, projectilename: idEventArg<*>?, sound: idEventArg<*>?, launchjoint: idEventArg<*>?,
                                                    targetjoint: idEventArg<*>?, numshots: idEventArg<*>?, framedelay: idEventArg<*>? ->
-                        idAnimated::Event_LaunchMissiles
+                        obj.Event_LaunchMissiles(
+                            projectilename as idEventArg<String>,
+                            sound as idEventArg<String>,
+                            launchjoint as idEventArg<String>,
+                            targetjoint as idEventArg<String>,
+                            numshots as idEventArg<Int>,
+                            framedelay as idEventArg<Int>
+                        )
                     }
                 eventCallbacks[Misc.EV_LaunchMissilesUpdate] =
-                    eventCallback_t4<idAnimated> { obj: Any?, launchjoint: idEventArg<*>?,
+                    eventCallback_t4<idAnimated> { obj: idAnimated, launchjoint: idEventArg<*>?,
                                                    targetjoint: idEventArg<*>?,
                                                    numshots: idEventArg<*>?,
                                                    framedelay: idEventArg<*>? ->
-                        idAnimated::Event_LaunchMissilesUpdate
+                        obj.Event_LaunchMissilesUpdate(
+                            launchjoint as idEventArg<Int>,
+                            targetjoint as idEventArg<Int>,
+                            numshots as idEventArg<Int>,
+                            framedelay as idEventArg<Int>
+                        )
                     }
             }
         }
@@ -1372,8 +1384,8 @@ object Misc {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1408,8 +1420,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idStaticEntity> { obj: Any?, activator: idEventArg<*>? ->
-                        idStaticEntity::Event_Activate
+                    eventCallback_t1<idStaticEntity> { obj: idStaticEntity, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1633,8 +1645,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idStaticEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncEmitter> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncEmitter::Event_Activate
+                    eventCallback_t1<idFuncEmitter> { obj: idFuncEmitter, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1688,8 +1700,8 @@ object Misc {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1719,8 +1731,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncSmoke> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncSmoke::Event_Activate
+                    eventCallback_t1<idFuncSmoke> { obj: idFuncSmoke, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1803,8 +1815,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1819,11 +1831,11 @@ object Misc {
             init {
                 eventCallbacks.putAll(idFuncEmitter.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncSplat> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncSplat::Event_Activate
+                    eventCallback_t1<idFuncSplat> { obj: idFuncSplat, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Misc.EV_Splat] =
-                    eventCallback_t0<idFuncSplat> { obj: Any? -> idFuncSplat::Event_Splat }
+                    eventCallback_t0<idFuncSplat> { obj: idFuncSplat -> obj.Event_Splat() }
             }
         }
 
@@ -1856,8 +1868,8 @@ object Misc {
             StartSound("snd_splat", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2006,8 +2018,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idVacuumSeparatorEntity> { obj: Any?, activator: idEventArg<*>? ->
-                        idVacuumSeparatorEntity::Event_Activate
+                    eventCallback_t1<idVacuumSeparatorEntity> { obj: idVacuumSeparatorEntity, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2058,8 +2070,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2105,9 +2117,9 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_PostSpawn] =
-                    eventCallback_t0<idBeam> { obj: Any? -> idBeam::Event_MatchTarget }
+                    eventCallback_t0<idBeam> { obj: idBeam -> obj.Event_MatchTarget() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idBeam> { obj: Any?, activator: idEventArg<*>? -> idBeam::Event_Activate }
+                    eventCallback_t1<idBeam> { obj: idBeam, activator: idEventArg<*>? -> obj.Event_Activate(activator as idEventArg<idEntity>) }
             }
         }
 
@@ -2263,7 +2275,12 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idLiquid> { obj: Any?, other: idEventArg<*>?, trace: idEventArg<*>? -> idLiquid::Event_Touch }
+                    eventCallback_t2<idLiquid> { obj: idLiquid, other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s?>
+                        )
+                    }
             }
         }
 
@@ -2292,8 +2309,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2315,7 +2332,11 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idShaking> { obj: Any?, activator: idEventArg<*>? -> idShaking::Event_Activate }
+                    eventCallback_t1<idShaking> { obj: idShaking, activator: idEventArg<*>? ->
+                        obj.Event_Activate(
+                            activator as idEventArg<idEntity>
+                        )
+                    }
             }
         }
 
@@ -2386,8 +2407,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -2418,8 +2439,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idEarthQuake> { obj: Any?, _activator: idEventArg<*>? ->
-                        idEarthQuake::Event_Activate
+                    eventCallback_t1<idEarthQuake> { obj: idEarthQuake, _activator: idEventArg<*>? ->
+                        obj.Event_Activate(_activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2536,8 +2557,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2559,8 +2580,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncPortal> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncPortal::Event_Activate
+                    eventCallback_t1<idFuncPortal> { obj: idFuncPortal, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2607,8 +2628,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -2639,8 +2660,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncAASPortal> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncAASPortal::Event_Activate
+                    eventCallback_t1<idFuncAASPortal> { obj: idFuncAASPortal, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2674,8 +2695,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2697,8 +2718,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncAASObstacle> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncAASObstacle::Event_Activate
+                    eventCallback_t1<idFuncAASObstacle> { obj: idFuncAASObstacle, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2740,8 +2761,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -2764,12 +2785,12 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idFuncRadioChatter> { obj: Any?, activator: idEventArg<*>? ->
-                        idFuncRadioChatter::Event_Activate
+                    eventCallback_t1<idFuncRadioChatter> { obj: idFuncRadioChatter, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Misc.EV_ResetRadioHud] =
-                    eventCallback_t1<idFuncRadioChatter> { obj: Any?, _activator: idEventArg<*>? ->
-                        idFuncRadioChatter::Event_ResetRadioHud
+                    eventCallback_t1<idFuncRadioChatter> { obj: idFuncRadioChatter, _activator: idEventArg<*>? ->
+                        obj.Event_ResetRadioHud(_activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -2823,8 +2844,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2846,8 +2867,8 @@ object Misc {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idPhantomObjects> { obj: Any?, _activator: idEventArg<*>? ->
-                        idPhantomObjects::Event_Activate
+                    eventCallback_t1<idPhantomObjects> { obj: idPhantomObjects, _activator: idEventArg<*>? ->
+                        obj.Event_Activate(_activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -3089,8 +3110,8 @@ object Misc {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //

@@ -21,7 +21,6 @@ import neo.Game.Physics.Clip.CLIPMODEL_ID_TO_JOINT_HANDLE
 import neo.Game.Player.idPlayer
 import neo.Game.Script.Script_Interpreter.idInterpreter
 import neo.Game.Script.Script_Program.function_t
-import neo.Game.Script.Script_Thread.idThread
 import neo.Renderer.RenderWorld
 import neo.TempDump.btoi
 import neo.TempDump.etoi
@@ -169,7 +168,7 @@ object Script_Thread {
             }
         }
 
-        constructor(self: idEntity?, func: function_t?) {
+        constructor(self: idEntity?, func: function_t) {
             assert(self != null)
             Init()
             SetThreadName(self!!.name.toString())
@@ -184,10 +183,10 @@ object Script_Thread {
             }
         }
 
-        constructor(func: function_t?) {
+        constructor(func: function_t) {
             assert(func != null)
             Init()
-            SetThreadName(func!!.Name())
+            SetThreadName(func.Name())
             interpreter.EnterFunction(func, false)
             if (SysCvar.g_debugScript.GetBool()) {
                 gameLocal.Printf(
@@ -199,7 +198,7 @@ object Script_Thread {
             }
         }
 
-        constructor(source: idInterpreter, func: function_t?, args: Int) {
+        constructor(source: idInterpreter, func: function_t, args: Int) {
             Init()
             interpreter.ThreadCall(source, func, args)
             if (SysCvar.g_debugScript.GetBool()) {
@@ -212,7 +211,7 @@ object Script_Thread {
             }
         }
 
-        constructor(source: idInterpreter, self: idEntity?, func: function_t?, args: Int) {
+        constructor(source: idInterpreter, self: idEntity?, func: function_t, args: Int) {
             assert(self != null)
             Init()
             SetThreadName(self!!.name.toString())
@@ -444,7 +443,7 @@ object Script_Thread {
          NOTE: If this is called from within a event called by this thread, the function arguments will be invalid after calling this function.
          ================
          */
-        fun CallFunction(func: function_t?, clearStack: Boolean) {
+        fun CallFunction(func: function_t, clearStack: Boolean) {
             ClearWaitFor()
             interpreter.EnterFunction(func, clearStack)
         }
@@ -456,7 +455,7 @@ object Script_Thread {
          NOTE: If this is called from within a event called by this thread, the function arguments will be invalid after calling this function.
          ================
          */
-        fun CallFunction(self: idEntity?, func: function_t?, clearStack: Boolean) {
+        fun CallFunction(self: idEntity?, func: function_t, clearStack: Boolean) {
             assert(self != null)
             ClearWaitFor()
             interpreter.EnterObjectFunction(self, func, clearStack)
@@ -515,8 +514,8 @@ object Script_Thread {
             return javaClass
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         fun set(get: idClass?) {
@@ -727,149 +726,436 @@ object Script_Thread {
             init {
                 eventCallbacks.putAll(getEventCallBacks())
                 eventCallbacks.putAll(getEventCallBacks())
-                eventCallbacks[EV_Thread_Execute] = eventCallback_t0<idThread> { idThread::Event_Execute }
-                eventCallbacks[EV_Thread_TerminateThread] =
-                    eventCallback_t1<idThread> { t: idThread, num: idEventArg<*>? -> idThread::Event_TerminateThread }
-                eventCallbacks[EV_Thread_Pause] = eventCallback_t0<idThread> { idThread::Event_Pause }
+                eventCallbacks[EV_Thread_Execute] = eventCallback_t0 { obj: idThread -> obj.Event_Execute() }
+                eventCallbacks[EV_Thread_TerminateThread] = eventCallback_t1 { t: idThread, num: idEventArg<*> ->
+                    Event_TerminateThread(
+                        t,
+                        num as idEventArg<Int>
+                    )
+                }
+                eventCallbacks[EV_Thread_Pause] = (eventCallback_t0 { obj: idThread -> obj.Event_Pause() })
                 eventCallbacks[EV_Thread_Wait] =
-                    eventCallback_t1<idThread> { t: idThread, time: idEventArg<*>? -> idThread::Event_Wait }
-                eventCallbacks[EV_Thread_WaitFrame] = eventCallback_t0<idThread> { idThread::Event_WaitFrame }
-                eventCallbacks[EV_Thread_WaitFor] =
-                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_WaitFor }
+                    (eventCallback_t1 { t: idThread, time: idEventArg<*> -> Event_Wait(t, time as idEventArg<Float>) })
+                eventCallbacks[EV_Thread_WaitFrame] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_WaitFrame() })
+                eventCallbacks[EV_Thread_WaitFor] = (eventCallback_t1 { t: idThread, e: idEventArg<*> ->
+                    Event_WaitFor(
+                        t,
+                        e as idEventArg<idEntity>
+                    )
+                })
                 eventCallbacks[EV_Thread_WaitForThread] =
-                    eventCallback_t1<idThread> { t: idThread, num: idEventArg<*>? -> idThread::Event_WaitForThread }
+                    (eventCallback_t1 { t: idThread, num: idEventArg<*> ->
+                        Event_WaitForThread(
+                            t,
+                            num as idEventArg<Int>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Print] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Print }
+                    (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                        Event_Print(
+                            t,
+                            text as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_PrintLn] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_PrintLn }
-                eventCallbacks[EV_Thread_Say] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Say }
+                    (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                        Event_PrintLn(
+                            t, text as idEventArg<String>
+                        )
+                    })
+                eventCallbacks[EV_Thread_Say] = (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                    Event_Say(
+                        t,
+                        text as idEventArg<String>
+                    )
+                })
                 eventCallbacks[EV_Thread_Assert] =
-                    eventCallback_t1<idThread> { t: idThread, value: idEventArg<*>? -> idThread::Event_Assert }
-                eventCallbacks[EV_Thread_Trigger] =
-                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_Trigger }
+                    (eventCallback_t1 { t: idThread, value: idEventArg<*> ->
+                        Event_Assert(
+                            t,
+                            value as idEventArg<Float>
+                        )
+                    })
+                eventCallbacks[EV_Thread_Trigger] = (eventCallback_t1 { t: idThread, e: idEventArg<*> ->
+                    Event_Trigger(
+                        t,
+                        e as idEventArg<idEntity>
+                    )
+                })
                 eventCallbacks[EV_Thread_SetCvar] =
-                    eventCallback_t2<idThread> { t: idThread, name: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetCvar }
+                    (eventCallback_t2 { t: idThread, name: idEventArg<*>, value: idEventArg<*> ->
+                        Event_SetCvar(
+                            t, name as idEventArg<String>, value as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetCvar] =
-                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_GetCvar }
+                    (eventCallback_t1 { t: idThread, name: idEventArg<*> ->
+                        Event_GetCvar(
+                            t, name as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Random] =
-                    eventCallback_t1<idThread> { t: idThread, range: idEventArg<*>? -> idThread::Event_Random }
-                eventCallbacks[EV_Thread_GetTime] = eventCallback_t0<idThread> { idThread::Event_GetTime }
+                    (eventCallback_t1 { t: idThread, range: idEventArg<*> ->
+                        Event_Random(
+                            t,
+                            range as idEventArg<Float>
+                        )
+                    })
+                eventCallbacks[EV_Thread_GetTime] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTime() })
                 eventCallbacks[EV_Thread_KillThread] =
-                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_KillThread }
+                    (eventCallback_t1 { t: idThread, name: idEventArg<*> ->
+                        Event_KillThread(
+                            t, name as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SetThreadName] =
-                    eventCallback_t1<idThread> { t: idThread, name: idEventArg<*>? -> idThread::Event_SetThreadName }
+                    (eventCallback_t1 { t: idThread, name: idEventArg<*> ->
+                        Event_SetThreadName(
+                            t, name as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetEntity] =
-                    eventCallback_t1<idThread> { t: idThread, n: idEventArg<*>? -> idThread::Event_GetEntity }
+                    (eventCallback_t1 { t: idThread, n: idEventArg<*> ->
+                        Event_GetEntity(
+                            t,
+                            n as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Spawn] =
-                    eventCallback_t1<idThread> { t: idThread, classname: idEventArg<*>? -> idThread::Event_Spawn }
+                    (eventCallback_t1 { t: idThread, classname: idEventArg<*> ->
+                        Event_Spawn(
+                            t, classname as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_CopySpawnArgs] =
-                    eventCallback_t1<idThread> { t: idThread, ent: idEventArg<*>? -> idThread::Event_CopySpawnArgs }
+                    (eventCallback_t1 { t: idThread, ent: idEventArg<*> ->
+                        Event_CopySpawnArgs(
+                            t, ent as idEventArg<idEntity>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SetSpawnArg] =
-                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetSpawnArg }
+                    (eventCallback_t2 { t: idThread, key: idEventArg<*>, value: idEventArg<*> ->
+                        Event_SetSpawnArg(
+                            t, key as idEventArg<String>, value as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SpawnString] =
-                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, defaultvalue: idEventArg<*>? -> idThread::Event_SpawnString }
+                    (eventCallback_t2 { t: idThread, key: idEventArg<*>, defaultvalue: idEventArg<*> ->
+                        Event_SpawnString(
+                            t, key as idEventArg<String>, defaultvalue as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SpawnFloat] =
-                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, defaultvalue: idEventArg<*>? -> idThread::Event_SpawnFloat }
+                    (eventCallback_t2 { t: idThread, key: idEventArg<*>, defaultvalue: idEventArg<*> ->
+                        Event_SpawnFloat(
+                            t, key as idEventArg<String>, defaultvalue as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SpawnVector] =
-                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, d: idEventArg<*>? -> idThread::Event_SpawnVector }
+                    (eventCallback_t2 { t: idThread, key: idEventArg<*>, d: idEventArg<*> ->
+                        Event_SpawnVector(
+                            t, key as idEventArg<String>, d as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_ClearPersistantArgs] =
-                    eventCallback_t0<idThread> { idThread::Event_ClearPersistantArgs }
+                    (eventCallback_t0 { obj: idThread -> obj.Event_ClearPersistantArgs() })
                 eventCallbacks[EV_Thread_SetPersistantArg] =
-                    eventCallback_t2<idThread> { t: idThread, key: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetPersistantArg }
+                    (eventCallback_t2 { t: idThread, key: idEventArg<*>, value: idEventArg<*> ->
+                        Event_SetPersistantArg(
+                            t, key as idEventArg<String>, value as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetPersistantString] =
-                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantString }
+                    (eventCallback_t1 { t: idThread, key: idEventArg<*> ->
+                        Event_GetPersistantString(
+                            t, key as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetPersistantFloat] =
-                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantFloat }
+                    (eventCallback_t1 { t: idThread, key: idEventArg<*> ->
+                        Event_GetPersistantFloat(
+                            t, key as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetPersistantVector] =
-                    eventCallback_t1<idThread> { t: idThread, key: idEventArg<*>? -> idThread::Event_GetPersistantVector }
+                    (eventCallback_t1 { t: idThread, key: idEventArg<*> ->
+                        Event_GetPersistantVector(
+                            t, key as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_AngToForward] =
-                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToForward }
+                    (eventCallback_t1 { t: idThread, ang: idEventArg<*> ->
+                        Event_AngToForward(
+                            t,
+                            ang as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_AngToRight] =
-                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToRight }
+                    (eventCallback_t1 { t: idThread, ang: idEventArg<*> ->
+                        Event_AngToRight(
+                            t,
+                            ang as idEventArg<idAngles>
+                        )
+                    })
                 eventCallbacks[EV_Thread_AngToUp] =
-                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_AngToUp }
+                    (eventCallback_t1 { t: idThread, ang: idEventArg<*> ->
+                        Event_AngToUp(
+                            t,
+                            ang as idEventArg<idAngles>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Sine] =
-                    eventCallback_t1<idThread> { t: idThread, ang: idEventArg<*>? -> idThread::Event_GetSine }
+                    (eventCallback_t1 { t: idThread, angle: idEventArg<*> ->
+                        Event_GetSine(
+                            t, angle as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Cosine] =
-                    eventCallback_t1<idThread> { t: idThread, angle: idEventArg<*>? -> idThread::Event_GetCosine }
+                    (eventCallback_t1 { t: idThread, angle: idEventArg<*> ->
+                        Event_GetCosine(
+                            t, angle as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SquareRoot] =
-                    eventCallback_t1<idThread> { t: idThread, theSquare: idEventArg<*>? -> idThread::Event_GetSquareRoot }
+                    (eventCallback_t1 { t: idThread, theSquare: idEventArg<*> ->
+                        Event_GetSquareRoot(
+                            t, theSquare as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Normalize] =
-                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecNormalize }
+                    (eventCallback_t1 { t: idThread, vec: idEventArg<*> ->
+                        Event_VecNormalize(
+                            t,
+                            vec as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_VecLength] =
-                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecLength }
+                    (eventCallback_t1 { t: idThread, vec: idEventArg<*> ->
+                        Event_VecLength(
+                            t,
+                            vec as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_VecDotProduct] =
-                    eventCallback_t2<idThread> { t: idThread, vec1: idEventArg<*>?, vec2: idEventArg<*>? -> idThread::Event_VecDotProduct }
+                    (eventCallback_t2 { t: idThread, vec1: idEventArg<*>, vec2: idEventArg<*> ->
+                        Event_VecDotProduct(
+                            t, vec1 as idEventArg<idVec3>, vec2 as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_VecCrossProduct] =
-                    eventCallback_t2<idThread> { t: idThread, vec1: idEventArg<*>?, vec2: idEventArg<*>? -> idThread::Event_VecCrossProduct }
+                    (eventCallback_t2 { t: idThread, vec1: idEventArg<*>, vec2: idEventArg<*> ->
+                        Event_VecCrossProduct(
+                            t, vec1 as idEventArg<idVec3>, vec2 as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_VecToAngles] =
-                    eventCallback_t1<idThread> { t: idThread, vec: idEventArg<*>? -> idThread::Event_VecToAngles }
+                    (eventCallback_t1 { t: idThread, vec: idEventArg<*> ->
+                        Event_VecToAngles(
+                            t,
+                            vec as idEventArg<idVec3>
+                        )
+                    })
                 eventCallbacks[EV_Thread_OnSignal] =
-                    eventCallback_t3<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>?, f: idEventArg<*>? -> idThread::Event_OnSignal }
+                    (eventCallback_t3 { t: idThread, s: idEventArg<*>, e: idEventArg<*>, f: idEventArg<*> ->
+                        Event_OnSignal(
+                            t, s as idEventArg<Int>, e as idEventArg<idEntity>, f as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_ClearSignal] =
-                    eventCallback_t2<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>? -> idThread::Event_ClearSignalThread }
+                    (eventCallback_t2 { t: idThread, s: idEventArg<*>, e: idEventArg<*> ->
+                        Event_ClearSignalThread(
+                            t, s as idEventArg<Int>, e as idEventArg<idEntity>
+                        )
+                    })
                 eventCallbacks[EV_Thread_SetCamera] =
-                    eventCallback_t1<idThread> { t: idThread, e: idEventArg<*>? -> idThread::Event_SetCamera }
-                eventCallbacks[EV_Thread_FirstPerson] = eventCallback_t0<idThread> { idThread::Event_FirstPerson }
+                    (eventCallback_t1 { t: idThread, e: idEventArg<*> ->
+                        Event_SetCamera(
+                            t,
+                            e as idEventArg<idEntity>
+                        )
+                    })
+                eventCallbacks[EV_Thread_FirstPerson] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_FirstPerson() })
                 eventCallbacks[EV_Thread_Trace] =
-                    eventCallback_t6<idThread> { t: idThread, s: idEventArg<*>?, e: idEventArg<*>?, mi: idEventArg<*>?, ma: idEventArg<*>?, c: idEventArg<*>?, p: idEventArg<*>? -> idThread::Event_Trace }
+                    (eventCallback_t6 { t: idThread, s: idEventArg<*>, e: idEventArg<*>, mi: idEventArg<*>, ma: idEventArg<*>, c: idEventArg<*>, p: idEventArg<*> ->
+                        Event_Trace(
+                            t, s as idEventArg<idVec3>, e as idEventArg<idVec3>, mi as idEventArg<idVec3>,
+                            ma as idEventArg<idVec3>, c as idEventArg<Int>, p as idEventArg<idEntity>
+                        )
+                    })
                 eventCallbacks[EV_Thread_TracePoint] =
-                    eventCallback_t4<idThread> { t: idThread, startA: idEventArg<*>?, endA: idEventArg<*>?, c: idEventArg<*>?, p: idEventArg<*>? -> idThread::Event_TracePoint }
+                    (eventCallback_t4 { t: idThread, startA: idEventArg<*>, endA: idEventArg<*>, c: idEventArg<*>, p: idEventArg<*> ->
+                        Event_TracePoint(
+                            t,
+                            startA as idEventArg<idVec3>,
+                            endA as idEventArg<idVec3>,
+                            c as idEventArg<Int>,
+                            p as idEventArg<idEntity>
+                        )
+                    })
                 eventCallbacks[EV_Thread_GetTraceFraction] =
-                    eventCallback_t0<idThread> { idThread::Event_GetTraceFraction }
-                eventCallbacks[EV_Thread_GetTraceEndPos] = eventCallback_t0<idThread> { idThread::Event_GetTraceEndPos }
-                eventCallbacks[EV_Thread_GetTraceNormal] = eventCallback_t0<idThread> { idThread::Event_GetTraceNormal }
-                eventCallbacks[EV_Thread_GetTraceEntity] = eventCallback_t0<idThread> { idThread::Event_GetTraceEntity }
-                eventCallbacks[EV_Thread_GetTraceJoint] = eventCallback_t0<idThread> { idThread::Event_GetTraceJoint }
-                eventCallbacks[EV_Thread_GetTraceBody] = eventCallback_t0<idThread> { idThread::Event_GetTraceBody }
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceFraction() })
+                eventCallbacks[EV_Thread_GetTraceEndPos] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceEndPos() })
+                eventCallbacks[EV_Thread_GetTraceNormal] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceNormal() })
+                eventCallbacks[EV_Thread_GetTraceEntity] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceEntity() })
+                eventCallbacks[EV_Thread_GetTraceJoint] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceJoint() })
+                eventCallbacks[EV_Thread_GetTraceBody] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTraceBody() })
                 eventCallbacks[EV_Thread_FadeIn] =
-                    eventCallback_t2<idThread> { t: idThread, colorA: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeIn }
+                    (eventCallback_t2 { t: idThread, colorA: idEventArg<*>, time: idEventArg<*> ->
+                        Event_FadeIn(
+                            t, colorA as idEventArg<idVec3>, time as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_FadeOut] =
-                    eventCallback_t2<idThread> { t: idThread, colorA: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeOut }
+                    (eventCallback_t2 { t: idThread, colorA: idEventArg<*>, time: idEventArg<*> ->
+                        Event_FadeOut(
+                            t, colorA as idEventArg<idVec3>, time as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_FadeTo] =
-                    eventCallback_t3<idThread> { t: idThread, colorA: idEventArg<*>?, alpha: idEventArg<*>?, time: idEventArg<*>? -> idThread::Event_FadeTo }
+                    (eventCallback_t3 { t: idThread, colorA: idEventArg<*>, alpha: idEventArg<*>, time: idEventArg<*> ->
+                        Event_FadeTo(
+                            t, colorA as idEventArg<idVec3>, alpha as idEventArg<Float>, time as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[Entity.EV_SetShaderParm] =
-                    eventCallback_t2<idThread> { t: idThread, parmnumA: idEventArg<*>?, value: idEventArg<*>? -> idThread::Event_SetShaderParm }
+                    (eventCallback_t2 { t: idThread, parmnumA: idEventArg<*>, value: idEventArg<*> ->
+                        Event_SetShaderParm(
+                            t, parmnumA as idEventArg<Int>, value as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StartMusic] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_StartMusic }
+                    (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                        Event_StartMusic(
+                            t, text as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Warning] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Warning }
+                    (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                        Event_Warning(
+                            t, text as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_Error] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_Error }
+                    (eventCallback_t1 { t: idThread, text: idEventArg<*> ->
+                        Event_Error(
+                            t,
+                            text as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrLen] =
-                    eventCallback_t1<idThread> { t: idThread, text: idEventArg<*>? -> idThread::Event_StrLen }
+                    (eventCallback_t1 { t: idThread, string: idEventArg<*> ->
+                        Event_StrLen(
+                            t, string as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrLeft] =
-                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrLeft }
+                    (eventCallback_t2 { t: idThread, stringA: idEventArg<*>, numA: idEventArg<*> ->
+                        Event_StrLeft(
+                            t, stringA as idEventArg<String>, numA as idEventArg<Int>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrRight] =
-                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrRight }
+                    (eventCallback_t2 { t: idThread, stringA: idEventArg<*>, numA: idEventArg<*> ->
+                        Event_StrRight(
+                            t, stringA as idEventArg<String>, numA as idEventArg<Int>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrSkip] =
-                    eventCallback_t2<idThread> { t: idThread, stringA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrSkip }
+                    (eventCallback_t2 { t: idThread, stringA: idEventArg<*>, numA: idEventArg<*> ->
+                        Event_StrSkip(
+                            t, stringA as idEventArg<String>, numA as idEventArg<Int>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrMid] =
-                    eventCallback_t3<idThread> { t: idThread, stringA: idEventArg<*>?, startA: idEventArg<*>?, numA: idEventArg<*>? -> idThread::Event_StrMid }
+                    (eventCallback_t3 { t: idThread, stringA: idEventArg<*>, startA: idEventArg<*>, numA: idEventArg<*> ->
+                        Event_StrMid(
+                            t, stringA as idEventArg<String>, startA as idEventArg<Int>, numA as idEventArg<Int>
+                        )
+                    })
                 eventCallbacks[EV_Thread_StrToFloat] =
-                    eventCallback_t1<idThread> { t: idThread, string: idEventArg<*>? -> idThread::Event_StrToFloat }
+                    (eventCallback_t1 { t: idThread, string: idEventArg<*> ->
+                        Event_StrToFloat(
+                            t, string as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_RadiusDamage] =
-                    eventCallback_t6<idThread> { t: idThread, origin: idEventArg<*>?, inflictor: idEventArg<*>?, attacker: idEventArg<*>?, ignore: idEventArg<*>?, damageDefName: idEventArg<*>?, dmgPower: idEventArg<*>? -> idThread::Event_RadiusDamage }
-                eventCallbacks[EV_Thread_IsClient] = eventCallback_t0<idThread> { idThread::Event_IsClient }
-                eventCallbacks[EV_Thread_IsMultiplayer] = eventCallback_t0<idThread> { idThread::Event_IsMultiplayer }
-                eventCallbacks[EV_Thread_GetFrameTime] = eventCallback_t0<idThread> { idThread::Event_GetFrameTime }
+                    (eventCallback_t6 { t: idThread, origin: idEventArg<*>, inflictor: idEventArg<*>, attacker: idEventArg<*>, ignore: idEventArg<*>, damageDefName: idEventArg<*>, dmgPower: idEventArg<*> ->
+                        Event_RadiusDamage(
+                            t, origin as idEventArg<idVec3>,
+                            inflictor as idEventArg<idEntity>,
+                            attacker as idEventArg<idEntity>, ignore as idEventArg<idEntity>,
+                            damageDefName as idEventArg<String>, dmgPower as idEventArg<Float>
+                        )
+                    })
+                eventCallbacks[EV_Thread_IsClient] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_IsClient() })
+                eventCallbacks[EV_Thread_IsMultiplayer] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_IsMultiplayer() })
+                eventCallbacks[EV_Thread_GetFrameTime] =
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetFrameTime() })
                 eventCallbacks[EV_Thread_GetTicsPerSecond] =
-                    eventCallback_t0<idThread> { idThread::Event_GetTicsPerSecond }
+                    (eventCallback_t0 { obj: idThread -> obj.Event_GetTicsPerSecond() })
                 eventCallbacks[EV_CacheSoundShader] =
-                    eventCallback_t1<idThread> { t: idThread, soundName: idEventArg<*>? -> idThread::Event_CacheSoundShader }
+                    (eventCallback_t1 { t: idThread, soundName: idEventArg<*> ->
+                        Event_CacheSoundShader(
+                            t, soundName as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Thread_DebugLine] =
-                    eventCallback_t4<idThread> { t: idThread, colorA: idEventArg<*>?, start: idEventArg<*>?, end: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugLine }
+                    (eventCallback_t4 { t: idThread, colorA: idEventArg<*>, start: idEventArg<*>, end: idEventArg<*>, lifetime: idEventArg<*> ->
+                        Event_DebugLine(
+                            t,
+                            colorA as idEventArg<idVec3>,
+                            start as idEventArg<idVec3>, end as idEventArg<idVec3>, lifetime as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_DebugArrow] =
-                    eventCallback_t5<idThread> { t: idThread, colorA: idEventArg<*>?, start: idEventArg<*>?, end: idEventArg<*>?, size: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugArrow }
+                    (eventCallback_t5 { t: idThread, colorA: idEventArg<*>, start: idEventArg<*>, end: idEventArg<*>, size: idEventArg<*>, lifetime: idEventArg<*> ->
+                        Event_DebugArrow(
+                            t, colorA as idEventArg<idVec3>, start as idEventArg<idVec3>, end as idEventArg<idVec3>,
+                            size as idEventArg<Int>, lifetime as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_DebugCircle] =
-                    eventCallback_t6<idThread> { t: idThread, colorA: idEventArg<*>?, origin: idEventArg<*>?, dir: idEventArg<*>?, radius: idEventArg<*>?, numSteps: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugCircle }
+                    (eventCallback_t6 { t: idThread, colorA: idEventArg<*>, origin: idEventArg<*>, dir: idEventArg<*>, radius: idEventArg<*>, numSteps: idEventArg<*>, lifetime: idEventArg<*> ->
+                        Event_DebugCircle(
+                            t, colorA as idEventArg<idVec3>, origin as idEventArg<idVec3>,
+                            dir as idEventArg<idVec3>, radius as idEventArg<Float>,
+                            numSteps as idEventArg<Int>, lifetime as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_DebugBounds] =
-                    eventCallback_t4<idThread> { t: idThread, colorA: idEventArg<*>?, mins: idEventArg<*>?, maxs: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DebugBounds }
+                    (eventCallback_t4 { t: idThread, colorA: idEventArg<*>, mins: idEventArg<*>, maxs: idEventArg<*>, lifetime: idEventArg<*> ->
+                        Event_DebugBounds(
+                            t,
+                            colorA as idEventArg<idVec3>,
+                            mins as idEventArg<idVec3>,
+                            maxs as idEventArg<idVec3>,
+                            lifetime as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_DrawText] =
-                    eventCallback_t6<idThread> { t: idThread, text: idEventArg<*>?, origin: idEventArg<*>?, scale: idEventArg<*>?, colorA: idEventArg<*>?, align: idEventArg<*>?, lifetime: idEventArg<*>? -> idThread::Event_DrawText }
+                    (eventCallback_t6 { t: idThread, text: idEventArg<*>, origin: idEventArg<*>, scale: idEventArg<*>, colorA: idEventArg<*>, align: idEventArg<*>, lifetime: idEventArg<*> ->
+                        Event_DrawText(
+                            t,
+                            text as idEventArg<String>,
+                            origin as idEventArg<idVec3>,
+                            scale as idEventArg<Float>,
+                            colorA as idEventArg<idVec3>,
+                            align as idEventArg<Int>,
+                            lifetime as idEventArg<Float>
+                        )
+                    })
                 eventCallbacks[EV_Thread_InfluenceActive] =
-                    eventCallback_t0<idThread> { idThread::Event_InfluenceActive }
+                    (eventCallback_t0 { obj: idThread -> obj.Event_InfluenceActive() })
             }
 
             private fun Event_DebugLine(

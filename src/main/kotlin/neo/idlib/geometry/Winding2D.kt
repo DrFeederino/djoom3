@@ -393,11 +393,8 @@ object Winding2D {
             }
             numPoints = newNumPoints
             //	memcpy( p, newPoints, newNumPoints * sizeof(idVec2) );
-            i = 0
-            while (i < newNumPoints) {
-                p[i].set(newPoints[i])
-                i++
-            }
+            System.arraycopy(newNumPoints, 0, p, 0, newNumPoints)
+
             return true
         }
 
@@ -406,9 +403,7 @@ object Winding2D {
             w = idWinding2D()
             w.numPoints = numPoints
             //	memcpy( w->p, p, numPoints * sizeof( p[0] ) );
-            for (i in 0 until numPoints) {
-                w.p[i].set(p[i])
-            }
+            System.arraycopy(p, 0, w.p, 0, numPoints)
             return w
         }
 

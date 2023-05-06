@@ -1115,7 +1115,7 @@ object Script_Program {
             return 0
         }
 
-        fun SetFunction(func: function_t?) {
+        fun SetFunction(func: function_t) {
             assert(typeDef != null)
             initialized = initialized_t.initializedConstant
             assert(typeDef!!.Type() == ev_function)

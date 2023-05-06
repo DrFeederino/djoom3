@@ -115,7 +115,7 @@ object Projectile {
                 }
 
                 // get material type name
-                typeName = Game_local.gameLocal.sufaceTypeNames[materialType.ordinal]!!
+                typeName = Game_local.gameLocal.sufaceTypeNames[materialType.ordinal]
 
                 // play impact sound
                 sound = projectileDef.GetString(Str.va("snd_%s", typeName))
@@ -204,17 +204,22 @@ object Projectile {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_Explode] =
-                    eventCallback_t0<idProjectile> { obj: Any? -> idProjectile::Event_Explode }
+                    eventCallback_t0<idProjectile> { obj: idProjectile -> obj.Event_Explode() }
                 eventCallbacks[EV_Fizzle] =
-                    eventCallback_t0<idProjectile> { obj: Any? -> idProjectile::Event_Fizzle }
+                    eventCallback_t0<idProjectile> { obj: idProjectile -> obj.Event_Fizzle() }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idProjectile> { obj: Any?, other: idEventArg<*>?, trace: idEventArg<*>? -> idProjectile::Event_Touch }
+                    eventCallback_t2<idProjectile> { obj: idProjectile, other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[EV_RadiusDamage] =
-                    eventCallback_t1<idProjectile> { obj: Any?, ignore: idEventArg<*>? ->
-                        idProjectile::Event_RadiusDamage
+                    eventCallback_t1<idProjectile> { obj: idProjectile, ignore: idEventArg<*>? ->
+                        obj.Event_RadiusDamage(ignore as idEventArg<idEntity?>)
                     }
                 eventCallbacks[EV_GetProjectileState] =
-                    eventCallback_t0<idProjectile> { obj: Any? -> idProjectile::Event_GetProjectileState }
+                    eventCallback_t0<idProjectile> { obj: idProjectile -> obj.Event_GetProjectileState() }
             }
         }
 
@@ -1170,8 +1175,8 @@ object Projectile {
             idThread.ReturnInt(TempDump.etoi(state))
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         enum class projectileState_t {
@@ -1654,7 +1659,7 @@ object Projectile {
             init {
                 eventCallbacks.putAll(idProjectile.getEventCallBacks())
                 eventCallbacks[EV_RemoveBeams] =
-                    eventCallback_t0<idBFGProjectile> { obj: Any? -> idBFGProjectile::Event_RemoveBeams }
+                    eventCallback_t0<idBFGProjectile> { obj: idBFGProjectile -> obj.Event_RemoveBeams() }
             }
         }
 
@@ -2004,8 +2009,8 @@ object Projectile {
             UpdateVisuals()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         } //        private void ApplyDamage();
 
         //
@@ -2037,9 +2042,9 @@ object Projectile {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_Explode] =
-                    eventCallback_t0<idDebris> { obj: Any? -> idDebris::Event_Explode }
+                    eventCallback_t0<idDebris> { obj: idDebris -> obj.Event_Explode() }
                 eventCallbacks[EV_Fizzle] =
-                    eventCallback_t0<idDebris> { obj: Any? -> idDebris::Event_Fizzle }
+                    eventCallback_t0<idDebris> { obj: idDebris -> obj.Event_Fizzle() }
             }
         }
 
@@ -2312,8 +2317,8 @@ object Projectile {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         init {

@@ -13,7 +13,6 @@ import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
-import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
@@ -924,11 +923,7 @@ object renderbump {
             val tri = surf.geometry!!
 
 //            memcpy(verts + numVerts, tri.verts, tri.numVerts * sizeof(tri.verts[0]));
-            i = 0
-            while (i < tri.numVerts) {
-                verts!![i] = idDrawVert(tri.verts!![i]!!)
-                i++
-            }
+            System.arraycopy(tri.verts, 0, verts, 0, tri.numVerts)
             j = 0
             while (j < tri.numIndexes) {
                 indexes!![numIndexes + j] = numVerts + tri.indexes!![j]

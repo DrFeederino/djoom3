@@ -2,6 +2,7 @@ package neo.Game
 
 import neo.CM.CollisionModel
 import neo.CM.CollisionModel.trace_s
+import neo.Game.AFEntity.EV_Gibbed
 import neo.Game.AFEntity.idAFAttachment
 import neo.Game.AFEntity.idAFEntity_Vehicle
 import neo.Game.AI.AAS.idAAS
@@ -1134,44 +1135,39 @@ object Player {
 
             init {
                 eventCallbacks.putAll(idActor.getEventCallBacks())
-                eventCallbacks[EV_Player_GetButtons] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetButtons }
-                eventCallbacks[EV_Player_GetMove] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetMove }
+                eventCallbacks[EV_Player_GetButtons] = (eventCallback_t0 { obj: idPlayer -> obj.Event_GetButtons() })
+                eventCallbacks[EV_Player_GetMove] = (eventCallback_t0 { obj: idPlayer -> obj.Event_GetMove() })
                 eventCallbacks[EV_Player_GetViewAngles] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetViewAngles }
-                eventCallbacks[EV_Player_StopFxFov] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_StopFxFov }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_GetViewAngles() })
+                eventCallbacks[EV_Player_StopFxFov] = (eventCallback_t0 { obj: idPlayer -> obj.Event_StopFxFov() })
                 eventCallbacks[EV_Player_EnableWeapon] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_EnableWeapon }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_EnableWeapon() })
                 eventCallbacks[EV_Player_DisableWeapon] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_DisableWeapon }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_DisableWeapon() })
                 eventCallbacks[EV_Player_GetCurrentWeapon] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetCurrentWeapon }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_GetCurrentWeapon() })
                 eventCallbacks[EV_Player_GetPreviousWeapon] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetPreviousWeapon }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_GetPreviousWeapon() })
                 eventCallbacks[EV_Player_SelectWeapon] =
-                    eventCallback_t1<idPlayer> { obj: Any?, weaponName: idEventArg<*> ->
-                        idPlayer::Event_SelectWeapon
-                    }
+                    (eventCallback_t1 { obj: idPlayer, weaponName: idEventArg<*> ->
+                        obj.Event_SelectWeapon(
+                            weaponName as idEventArg<String>
+                        )
+                    })
                 eventCallbacks[EV_Player_GetWeaponEntity] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetWeaponEntity }
-                eventCallbacks[EV_Player_OpenPDA] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_OpenPDA }
-                eventCallbacks[EV_Player_InPDA] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_InPDA }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_GetWeaponEntity() })
+                eventCallbacks[EV_Player_OpenPDA] = (eventCallback_t0 { obj: idPlayer -> obj.Event_OpenPDA() })
+                eventCallbacks[EV_Player_InPDA] = (eventCallback_t0 { obj: idPlayer -> obj.Event_InPDA() })
                 eventCallbacks[EV_Player_ExitTeleporter] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_ExitTeleporter }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_ExitTeleporter() })
                 eventCallbacks[EV_Player_StopAudioLog] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_StopAudioLog }
-                eventCallbacks[EV_Player_HideTip] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_HideTip }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_StopAudioLog() })
+                eventCallbacks[EV_Player_HideTip] = (eventCallback_t0 { obj: idPlayer -> obj.Event_HideTip() })
                 eventCallbacks[EV_Player_LevelTrigger] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_LevelTrigger }
-                eventCallbacks[AFEntity.EV_Gibbed] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_Gibbed }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_LevelTrigger() })
+                eventCallbacks[EV_Gibbed] = (eventCallback_t0 { obj: idPlayer -> obj.Event_Gibbed() })
                 eventCallbacks[EV_Player_GetIdealWeapon] =
-                    eventCallback_t0<idPlayer> { obj: Any? -> idPlayer::Event_GetIdealWeapon }
+                    (eventCallback_t0 { obj: idPlayer -> obj.Event_GetIdealWeapon() })
             }
         }
 
@@ -5312,10 +5308,10 @@ object Player {
                         weapstate++
                     }
                 }
-                hud!!.SetStateInt(hudWeap, weapstate)
+                hud.SetStateInt(hudWeap, weapstate)
             }
             if (flashWeapon) {
-                hud!!.HandleNamedEvent("weaponChange")
+                hud.HandleNamedEvent("weaponChange")
             }
         }
 
@@ -7497,14 +7493,14 @@ object Player {
             }
             val objectiveSystem = objectiveSystem!!
             assert(hud != null)
-            var currentPDA = objectiveSystem!!.State().GetInt("listPDA_sel_0", "0")
+            var currentPDA = objectiveSystem.State().GetInt("listPDA_sel_0", "0")
             if (currentPDA == -1) {
                 currentPDA = 0
             }
             if (updatePDASel) {
-                objectiveSystem!!.SetStateInt("listPDAVideo_sel_0", 0)
-                objectiveSystem!!.SetStateInt("listPDAEmail_sel_0", 0)
-                objectiveSystem!!.SetStateInt("listPDAAudio_sel_0", 0)
+                objectiveSystem.SetStateInt("listPDAVideo_sel_0", 0)
+                objectiveSystem.SetStateInt("listPDAEmail_sel_0", 0)
+                objectiveSystem.SetStateInt("listPDAAudio_sel_0", 0)
             }
             if (currentPDA > 0) {
                 currentPDA = inventory.pdas.size() - currentPDA
@@ -7525,15 +7521,15 @@ object Player {
             var wave: String
             j = 0
             while (j < MAX_PDAS) {
-                objectiveSystem!!.SetStateString(Str.va("listPDA_item_%d", j), "")
+                objectiveSystem.SetStateString(Str.va("listPDA_item_%d", j), "")
                 j++
             }
             j = 0
             while (j < MAX_PDA_ITEMS) {
-                objectiveSystem!!.SetStateString(Str.va("listPDAVideo_item_%d", j), "")
-                objectiveSystem!!.SetStateString(Str.va("listPDAAudio_item_%d", j), "")
-                objectiveSystem!!.SetStateString(Str.va("listPDAEmail_item_%d", j), "")
-                objectiveSystem!!.SetStateString(Str.va("listPDASecurity_item_%d", j), "")
+                objectiveSystem.SetStateString(Str.va("listPDAVideo_item_%d", j), "")
+                objectiveSystem.SetStateString(Str.va("listPDAAudio_item_%d", j), "")
+                objectiveSystem.SetStateString(Str.va("listPDAEmail_item_%d", j), "")
+                objectiveSystem.SetStateString(Str.va("listPDASecurity_item_%d", j), "")
                 j++
             }
             j = 0
@@ -7551,37 +7547,37 @@ object Player {
                 }
                 if (j != currentPDA && j < 128 && inventory.pdasViewed[j shr 5] and (1 shl (j and 31)) != 0) {
                     // This pda has been read already, mark in gray
-                    objectiveSystem!!.SetStateString(
+                    objectiveSystem.SetStateString(
                         Str.va("listPDA_item_%d", index),
                         Str.va(Str.S_COLOR_GRAY, "%s", pda.GetPdaName())
                     )
                 } else {
                     // This pda has not been read yet
-                    objectiveSystem!!.SetStateString(Str.va("listPDA_item_%d", index), pda.GetPdaName())
+                    objectiveSystem.SetStateString(Str.va("listPDA_item_%d", index), pda.GetPdaName())
                 }
                 var security = pda.GetSecurity()
                 if (j == currentPDA || currentPDA == 0 && security.isNotEmpty()) {
                     if (security.isEmpty()) {
                         security = Common.common.GetLanguageDict().GetString("#str_00066")
                     }
-                    objectiveSystem!!.SetStateString("PDASecurityClearance", security)
+                    objectiveSystem.SetStateString("PDASecurityClearance", security)
                 }
                 if (j == currentPDA) {
-                    objectiveSystem!!.SetStateString("pda_icon", pda.GetIcon())
-                    objectiveSystem!!.SetStateString("pda_id", pda.GetID())
-                    objectiveSystem!!.SetStateString("pda_title", pda.GetTitle())
+                    objectiveSystem.SetStateString("pda_icon", pda.GetIcon())
+                    objectiveSystem.SetStateString("pda_id", pda.GetID())
+                    objectiveSystem.SetStateString("pda_title", pda.GetTitle())
                     if (j == 0) {
                         // Selected, personal pda
                         // Add videos
                         if (updatePDASel || !inventory.pdaOpened) {
-                            objectiveSystem!!.HandleNamedEvent("playerPDAActive")
-                            objectiveSystem!!.SetStateString("pda_personal", "1")
+                            objectiveSystem.HandleNamedEvent("playerPDAActive")
+                            objectiveSystem.SetStateString("pda_personal", "1")
                             inventory.pdaOpened = true
                         }
-                        objectiveSystem!!.SetStateString("pda_location", hud!!.State().GetString("location"))
-                        objectiveSystem!!.SetStateString("pda_name", CVarSystem.cvarSystem.GetCVarString("ui_name"))
+                        objectiveSystem.SetStateString("pda_location", hud!!.State().GetString("location"))
+                        objectiveSystem.SetStateString("pda_name", CVarSystem.cvarSystem.GetCVarString("ui_name"))
                         AddGuiPDAData(declType_t.DECL_VIDEO, "listPDAVideo", pda, objectiveSystem)
-                        sel = objectiveSystem!!.State().GetInt("listPDAVideo_sel_0", "0")
+                        sel = objectiveSystem.State().GetInt("listPDAVideo_sel_0", "0")
                         var vid: idDeclVideo? = null
                         if (sel >= 0 && sel < inventory.videos.size()) {
                             vid = DeclManager.declManager.FindType(
@@ -7593,43 +7589,43 @@ object Player {
                         if (vid != null) {
                             pdaVideo.set(vid.GetRoq())
                             pdaVideoWave.set(vid.GetWave())
-                            objectiveSystem!!.SetStateString("PDAVideoTitle", vid.GetVideoName())
-                            objectiveSystem!!.SetStateString("PDAVideoVid", vid.GetRoq())
-                            objectiveSystem!!.SetStateString("PDAVideoIcon", vid.GetPreview())
-                            objectiveSystem!!.SetStateString("PDAVideoInfo", vid.GetInfo())
+                            objectiveSystem.SetStateString("PDAVideoTitle", vid.GetVideoName())
+                            objectiveSystem.SetStateString("PDAVideoVid", vid.GetRoq())
+                            objectiveSystem.SetStateString("PDAVideoIcon", vid.GetPreview())
+                            objectiveSystem.SetStateString("PDAVideoInfo", vid.GetInfo())
                         } else {
                             //FIXME: need to precache these in the player def
-                            objectiveSystem!!.SetStateString("PDAVideoVid", "sound/vo/video/welcome.tga")
-                            objectiveSystem!!.SetStateString("PDAVideoIcon", "sound/vo/video/welcome.tga")
-                            objectiveSystem!!.SetStateString("PDAVideoTitle", "")
-                            objectiveSystem!!.SetStateString("PDAVideoInfo", "")
+                            objectiveSystem.SetStateString("PDAVideoVid", "sound/vo/video/welcome.tga")
+                            objectiveSystem.SetStateString("PDAVideoIcon", "sound/vo/video/welcome.tga")
+                            objectiveSystem.SetStateString("PDAVideoTitle", "")
+                            objectiveSystem.SetStateString("PDAVideoInfo", "")
                         }
                     } else {
                         // Selected, non-personal pda
                         // Add audio logs
                         if (updatePDASel) {
-                            objectiveSystem!!.HandleNamedEvent("playerPDANotActive")
-                            objectiveSystem!!.SetStateString("pda_personal", "0")
+                            objectiveSystem.HandleNamedEvent("playerPDANotActive")
+                            objectiveSystem.SetStateString("pda_personal", "0")
                             inventory.pdaOpened = true
                         }
-                        objectiveSystem!!.SetStateString("pda_location", pda.GetPost())
-                        objectiveSystem!!.SetStateString("pda_name", pda.GetFullName())
+                        objectiveSystem.SetStateString("pda_location", pda.GetPost())
+                        objectiveSystem.SetStateString("pda_name", pda.GetFullName())
                         val audioCount = AddGuiPDAData(declType_t.DECL_AUDIO, "listPDAAudio", pda, objectiveSystem)
-                        objectiveSystem!!.SetStateInt("audioLogCount", audioCount)
-                        sel = objectiveSystem!!.State().GetInt("listPDAAudio_sel_0", "0")
+                        objectiveSystem.SetStateInt("audioLogCount", audioCount)
+                        sel = objectiveSystem.State().GetInt("listPDAAudio_sel_0", "0")
                         var aud: idDeclAudio? = null
                         if (sel >= 0) {
                             aud = pda.GetAudioByIndex(sel)
                         }
                         if (aud != null) {
                             pdaAudio.set(aud.GetWave())
-                            objectiveSystem!!.SetStateString("PDAAudioTitle", aud.GetAudioName())
-                            objectiveSystem!!.SetStateString("PDAAudioIcon", aud.GetPreview())
-                            objectiveSystem!!.SetStateString("PDAAudioInfo", aud.GetInfo())
+                            objectiveSystem.SetStateString("PDAAudioTitle", aud.GetAudioName())
+                            objectiveSystem.SetStateString("PDAAudioIcon", aud.GetPreview())
+                            objectiveSystem.SetStateString("PDAAudioInfo", aud.GetInfo())
                         } else {
-                            objectiveSystem!!.SetStateString("PDAAudioIcon", "sound/vo/video/welcome.tga")
-                            objectiveSystem!!.SetStateString("PDAAutioTitle", "")
-                            objectiveSystem!!.SetStateString("PDAAudioInfo", "")
+                            objectiveSystem.SetStateString("PDAAudioIcon", "sound/vo/video/welcome.tga")
+                            objectiveSystem.SetStateString("PDAAutioTitle", "")
+                            objectiveSystem.SetStateString("PDAAudioInfo", "")
                         }
                     }
                     // add emails
@@ -7638,22 +7634,22 @@ object Player {
                     val numEmails = pda.GetNumEmails()
                     if (numEmails > 0) {
                         AddGuiPDAData(declType_t.DECL_EMAIL, "listPDAEmail", pda, objectiveSystem)
-                        sel = objectiveSystem!!.State().GetInt("listPDAEmail_sel_0", "-1")
+                        sel = objectiveSystem.State().GetInt("listPDAEmail_sel_0", "-1")
                         if (sel >= 0 && sel < numEmails) {
                             val email = pda.GetEmailByIndex(sel)!!
                             name = email.GetSubject()
                             data = email.GetBody()
                         }
                     }
-                    objectiveSystem!!.SetStateString("PDAEmailTitle", name)
-                    objectiveSystem!!.SetStateString("PDAEmailText", data)
+                    objectiveSystem.SetStateString("PDAEmailTitle", name)
+                    objectiveSystem.SetStateString("PDAEmailText", data)
                 }
                 j++
             }
-            if (objectiveSystem!!.State().GetInt("listPDA_sel_0", "-1") == -1) {
-                objectiveSystem!!.SetStateInt("listPDA_sel_0", 0)
+            if (objectiveSystem.State().GetInt("listPDA_sel_0", "-1") == -1) {
+                objectiveSystem.SetStateInt("listPDA_sel_0", 0)
             }
-            objectiveSystem!!.StateChanged(Game_local.gameLocal.time)
+            objectiveSystem.StateChanged(Game_local.gameLocal.time)
         }
 
         //
@@ -7723,25 +7719,25 @@ object Player {
                 return
             }
             val objectiveSystem = objectiveSystem!!
-            objectiveSystem!!.SetStateString("objective1", "")
-            objectiveSystem!!.SetStateString("objective2", "")
-            objectiveSystem!!.SetStateString("objective3", "")
+            objectiveSystem.SetStateString("objective1", "")
+            objectiveSystem.SetStateString("objective2", "")
+            objectiveSystem.SetStateString("objective3", "")
             for (i in 0 until inventory.objectiveNames.Num()) {
-                objectiveSystem!!.SetStateString(Str.va("objective%d", i + 1), "1")
-                objectiveSystem!!.SetStateString(
+                objectiveSystem.SetStateString(Str.va("objective%d", i + 1), "1")
+                objectiveSystem.SetStateString(
                     Str.va("objectivetitle%d", i + 1),
                     inventory.objectiveNames[i].title.toString()
                 )
-                objectiveSystem!!.SetStateString(
+                objectiveSystem.SetStateString(
                     Str.va("objectivetext%d", i + 1),
                     inventory.objectiveNames[i].text.toString()
                 )
-                objectiveSystem!!.SetStateString(
+                objectiveSystem.SetStateString(
                     Str.va("objectiveshot%d", i + 1),
                     inventory.objectiveNames[i].screenshot.toString()
                 )
             }
-            objectiveSystem!!.StateChanged(Game_local.gameLocal.time)
+            objectiveSystem.StateChanged(Game_local.gameLocal.time)
         }
 
         private fun UseVehicle() {
@@ -7942,8 +7938,8 @@ object Player {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //

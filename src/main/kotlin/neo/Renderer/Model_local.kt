@@ -2195,9 +2195,7 @@ object Model_local {
                 val newFaces =
                     arrayOfNulls<aseFace_t>(mesh.numFaces) // Mem_Alloc(mesh.numFaces /* sizeof ( mesh.faces[0] ) */);
                 //		memcpy( newFaces, mesh.faces, sizeof( mesh.faces[0] ) * mesh.numFaces );
-                for (i in 0 until mesh.numFaces) {
-                    newFaces[i] = mesh.faces!![i]
-                }
+                System.arraycopy(mesh.faces, 0, newFaces, 0, mesh.numFaces)
                 //                Mem_Free(mesh.faces);
                 mesh.faces = newFaces
                 surf = surf.next

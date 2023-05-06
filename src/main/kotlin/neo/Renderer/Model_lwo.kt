@@ -2583,11 +2583,7 @@ object Model_lwo {
         }
         if (oldpt != null) {
 //            memcpy(point.pt, oldpt, point.offset * sizeof(lwPoint));
-            i = 0
-            while (i < point.offset) {
-                point.pt!![i] = oldpt[i]
-                i++
-            }
+            System.arraycopy(oldpt, 0, point.pt, 0, point.offset)
             //            Mem_Free(oldpt);
             oldpt = null
         }
@@ -2675,11 +2671,7 @@ object Model_lwo {
 //        }
         if (oldpol != null) {
 //            memcpy(plist.pol, oldpol, plist.offset);
-            i = 0
-            while (i < plist.offset) {
-                plist.pol!![i] = oldpol[i]
-                i++
-            }
+            System.arraycopy(oldpol, 0, plist.pol, 0, plist.offset)
             //            Mem_Free(oldpol);
             oldpol = null
         }

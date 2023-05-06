@@ -73,11 +73,11 @@ object Camera {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idCameraView> { obj: Any?, activator: idEventArg<*>? ->
-                        idCameraView::Event_Activate
+                    eventCallback_t1 { obj: idCameraView, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_Camera_SetAttachments] =
-                    eventCallback_t0<idCameraView> { obj: Any? -> idCameraView::Event_SetAttachments }
+                    eventCallback_t0 { obj: idCameraView -> obj.Event_SetAttachments() }
             }
         }
 
@@ -162,15 +162,15 @@ object Camera {
         }
 
         protected fun Event_SetAttachments() {
-            val attachedTo = if (attachedTo == null) arrayOf() else arrayOf(attachedTo) as Array<idEntity>
-            val attachedView = if (attachedView == null) arrayOf() else arrayOf(attachedTo) as Array<idEntity>
+            val attachedTo = arrayOf(attachedTo)
+            val attachedView = arrayOf(attachedView)
             SetAttachment(attachedTo, "attachedTo")
             SetAttachment(attachedView, "attachedView")
             this.attachedTo = attachedTo[0]
             this.attachedView = attachedView[0]
         }
 
-        protected fun SetAttachment(e: Array<idEntity>, p: String) {
+        protected fun SetAttachment(e: Array<idEntity?>, p: String) {
             val cam = spawnArgs.GetString(p)
             if (!cam.isEmpty()) {
                 e[0] = Game_local.gameLocal.FindEntity(cam)!!
@@ -181,8 +181,8 @@ object Camera {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -217,14 +217,14 @@ object Camera {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Script_Thread.EV_Thread_SetCallback] =
-                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_SetCallback }
+                    eventCallback_t0<idCameraAnim> { obj: idCameraAnim -> obj.Event_SetCallback() }
                 eventCallbacks[EV_Camera_Stop] =
-                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_Stop }
+                    eventCallback_t0<idCameraAnim> { obj: idCameraAnim -> obj.Event_Stop() }
                 eventCallbacks[EV_Camera_Start] =
-                    eventCallback_t0<idCameraAnim> { obj: Any? -> idCameraAnim::Event_Start }
+                    eventCallback_t0<idCameraAnim> { obj: idCameraAnim -> obj.Event_Start() }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idCameraAnim> { obj: Any?, _activator: idEventArg<*>? ->
-                        idCameraAnim::Event_Activate
+                    eventCallback_t1<idCameraAnim> { obj: idCameraAnim, _activator: idEventArg<*>? ->
+                        obj.Event_Activate(_activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -446,7 +446,7 @@ object Camera {
             val frame: Int
             val frameTime: Int
             if (thinkFlags and Entity.TH_THINK != 0) {
-                // check if we're done in the Think function when the cinematic is being skipped (idCameraAnim::GetViewParms isn't called when skipping cinematics).
+                // check if we're done in the Think function when the cinematic is being skipped (obj.GetViewParms isn't called when skipping cinematics).
                 if (!Game_local.gameLocal.skipCinematic) {
                     return
                 }
@@ -638,8 +638,8 @@ object Camera {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //

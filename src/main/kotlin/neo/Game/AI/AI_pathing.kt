@@ -536,8 +536,7 @@ object AI_pathing {
                 obstacle.entity = null
 
 //			memcpy( lastVerts, verts, sizeof( lastVerts ) );
-                lastVerts[0] = verts[0]
-                lastVerts[1] = verts[1]
+                System.arraycopy(verts, 0, lastVerts, 0, lastVerts.size)
                 lastEdgeNormal = edgeNormal
                 i++
             }

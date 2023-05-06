@@ -1734,27 +1734,14 @@ object Anim_Blend {
             }
 
             joints.SetNum(decl.joints.Num())
-//            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
-            //            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
-            i = 0
-            while (i < decl.joints.Num()) {
-                joints[i] = decl.joints[i]
-                i++
-            }
             jointParents.SetNum(decl.jointParents.Num())
-//            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
-            //            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
-            i = 0
-            while (i < decl.jointParents.Num()) {
-                jointParents[i] = decl.jointParents[i]
-                i++
-            }
 
-            i = 0
-            while (i < ANIM_NumAnimChannels) {
-                channelJoints[i] = decl.channelJoints[i]
-                i++
-            }
+//            memcpy(joints.Ptr(), decl.joints.Ptr(), decl.joints.Num() * sizeof(joints[0]));
+//            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
+//            memcpy(jointParents.Ptr(), decl.jointParents.Ptr(), decl.jointParents.Num() * sizeof(jointParents[0]));
+            System.arraycopy(decl.joints.getList(), 0, joints.getList(), 0, decl.joints.Num())
+            System.arraycopy(decl.jointParents.getList(), 0, jointParents.getList(), 0, decl.jointParents.Num())
+            System.arraycopy(decl.channelJoints, 0, channelJoints, 0, ANIM_NumAnimChannels)
         }
 
         private fun ParseAnim(src: idLexer, numDefaultAnims: Int): Boolean {
@@ -3267,9 +3254,7 @@ object Anim_Blend {
             numJoints = modelDef!!.Joints().Num()
             val jointFrame = Array<idJointQuat>(numJoints) { idJointQuat() }
             //SIMDProcessor.Memcpy(jointFrame, defaultPose, numJoints /* sizeof( jointFrame[0] )*/);
-            for (index in 0 until numJoints) {
-                jointFrame[index] = defaultPose[index]
-            }
+            System.arraycopy(defaultPose, 0, jointFrame, 0, numJoints)
             hasAnim = false
 
             // blend the all channel

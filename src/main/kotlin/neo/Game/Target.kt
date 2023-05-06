@@ -86,8 +86,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Remove> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_Remove::Event_Activate
+                    eventCallback_t1<idTarget_Remove> { obj: idTarget_Remove, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -106,8 +106,8 @@ object Target {
             PostEventMS(EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -129,8 +129,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Show> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_Show::Event_Activate
+                    eventCallback_t1<idTarget_Show> { obj: idTarget_Show, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -149,8 +149,8 @@ object Target {
             PostEventMS(EV_Remove, 0)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -172,8 +172,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Damage> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_Damage::Event_Activate
+                    eventCallback_t1<idTarget_Damage> { obj: idTarget_Damage, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -191,8 +191,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -214,8 +214,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SessionCommand> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SessionCommand::Event_Activate
+                    eventCallback_t1<idTarget_SessionCommand> { obj: idTarget_SessionCommand, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -224,8 +224,8 @@ object Target {
             Game_local.gameLocal.sessionCommand.set(spawnArgs.GetString("command"))
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -248,8 +248,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EndLevel> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_EndLevel::Event_Activate
+                    eventCallback_t1<idTarget_EndLevel> { obj: idTarget_EndLevel, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -281,8 +281,8 @@ object Target {
             Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0])
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -304,8 +304,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_WaitForButton> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_WaitForButton::Event_Activate
+                    eventCallback_t1<idTarget_WaitForButton> { obj: idTarget_WaitForButton, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -334,8 +334,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -357,8 +357,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetGlobalShaderTime> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetGlobalShaderTime::Event_Activate
+                    eventCallback_t1<idTarget_SetGlobalShaderTime> { obj: idTarget_SetGlobalShaderTime, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -371,8 +371,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -394,8 +394,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetShaderParm> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetShaderParm::Event_Activate
+                    eventCallback_t1<idTarget_SetShaderParm> { obj: idTarget_SetShaderParm, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -438,8 +438,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -461,8 +461,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetShaderTime> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetShaderTime::Event_Activate
+                    eventCallback_t1<idTarget_SetShaderTime> { obj: idTarget_SetShaderTime, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -485,8 +485,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -508,8 +508,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_FadeEntity> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_FadeEntity::Event_Activate
+                    eventCallback_t1<idTarget_FadeEntity> { obj: idTarget_FadeEntity, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -582,8 +582,8 @@ object Target {
             fadeEnd = (Game_local.gameLocal.time + Math_h.SEC2MS(spawnArgs.GetFloat("fadetime"))).toInt()
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -613,8 +613,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LightFadeIn> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_LightFadeIn::Event_Activate
+                    eventCallback_t1<idTarget_LightFadeIn> { obj: idTarget_LightFadeIn, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -646,8 +646,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -669,8 +669,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LightFadeOut> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_LightFadeOut::Event_Activate
+                    eventCallback_t1<idTarget_LightFadeOut> { obj: idTarget_LightFadeOut, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -702,8 +702,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -726,8 +726,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Give> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_Give::Event_Activate
+                    eventCallback_t1<idTarget_Give> { obj: idTarget_Give, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -763,8 +763,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -786,8 +786,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_GiveEmail> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_GiveEmail::Event_Activate
+                    eventCallback_t1<idTarget_GiveEmail> { obj: idTarget_GiveEmail, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -802,8 +802,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -825,8 +825,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetModel> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetModel::Event_Activate
+                    eventCallback_t1<idTarget_SetModel> { obj: idTarget_SetModel, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -850,8 +850,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -873,20 +873,20 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetInfluence> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetInfluence::Event_Activate
+                    eventCallback_t1<idTarget_SetInfluence> { obj: idTarget_SetInfluence, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_RestoreInfluence] =
-                    eventCallback_t0<idTarget_SetInfluence> { obj: Any? -> idTarget_SetInfluence::Event_RestoreInfluence }
+                    eventCallback_t0<idTarget_SetInfluence> { obj: idTarget_SetInfluence -> obj.Event_RestoreInfluence() }
                 eventCallbacks[EV_GatherEntities] =
-                    eventCallback_t0<idTarget_SetInfluence> { obj: Any? -> idTarget_SetInfluence::Event_GatherEntities }
+                    eventCallback_t0<idTarget_SetInfluence> { obj: idTarget_SetInfluence -> obj.Event_GatherEntities() }
                 eventCallbacks[EV_Flash] =
-                    eventCallback_t2<idTarget_SetInfluence> { obj: Any?, _flash: idEventArg<*>?, _out: idEventArg<*>? ->
-                        idTarget_SetInfluence::Event_Flash
+                    eventCallback_t2<idTarget_SetInfluence> { obj: idTarget_SetInfluence, _flash: idEventArg<*>?, _out: idEventArg<*>? ->
+                        obj.Event_Flash(_flash as idEventArg<Float>, _out as idEventArg<Int>)
                     }
                 eventCallbacks[EV_ClearFlash] =
-                    eventCallback_t1<idTarget_SetInfluence> { obj: Any?, flash: idEventArg<*>? ->
-                        idTarget_SetInfluence::Event_ClearFlash
+                    eventCallback_t1<idTarget_SetInfluence> { obj: idTarget_SetInfluence, flash: idEventArg<*>? ->
+                        obj.Event_ClearFlash(flash as idEventArg<Float>)
                     }
             }
         }
@@ -1379,8 +1379,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1417,8 +1417,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetKeyVal> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetKeyVal::Event_Activate
+                    eventCallback_t1<idTarget_SetKeyVal> { obj: idTarget_SetKeyVal, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1460,8 +1460,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1486,8 +1486,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetFov> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetFov::Event_Activate
+                    eventCallback_t1<idTarget_SetFov> { obj: idTarget_SetFov, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1537,8 +1537,8 @@ object Target {
             BecomeActive(Entity.TH_THINK)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1560,8 +1560,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_SetPrimaryObjective> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_SetPrimaryObjective::Event_Activate
+                    eventCallback_t1<idTarget_SetPrimaryObjective> { obj: idTarget_SetPrimaryObjective, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1576,8 +1576,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1599,8 +1599,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LockDoor> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_LockDoor::Event_Activate
+                    eventCallback_t1<idTarget_LockDoor> { obj: idTarget_LockDoor, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1624,8 +1624,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1647,8 +1647,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_CallObjectFunction> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_CallObjectFunction::Event_Activate
+                    eventCallback_t1<idTarget_CallObjectFunction> { obj: idTarget_CallObjectFunction, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1698,8 +1698,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1721,8 +1721,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EnableLevelWeapons> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_EnableLevelWeapons::Event_Activate
+                    eventCallback_t1<idTarget_EnableLevelWeapons> { obj: idTarget_EnableLevelWeapons, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1754,8 +1754,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1777,13 +1777,13 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_Tip> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_Tip::Event_Activate
+                    eventCallback_t1<idTarget_Tip> { obj: idTarget_Tip, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_TipOff] =
-                    eventCallback_t0<idTarget_Tip> { obj: Any? -> idTarget_Tip::Event_TipOff }
+                    eventCallback_t0<idTarget_Tip> { obj: idTarget_Tip -> obj.Event_TipOff() }
                 eventCallbacks[EV_GetPlayerPos] =
-                    eventCallback_t0<idTarget_Tip> { obj: Any? -> idTarget_Tip::Event_GetPlayerPos }
+                    eventCallback_t0<idTarget_Tip> { obj: idTarget_Tip -> obj.Event_GetPlayerPos() }
             }
         }
 
@@ -1828,8 +1828,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1851,8 +1851,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_GiveSecurity> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_GiveSecurity::Event_Activate
+                    eventCallback_t1<idTarget_GiveSecurity> { obj: idTarget_GiveSecurity, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1862,8 +1862,8 @@ object Target {
             player?.GiveSecurity(spawnArgs.GetString("text_security"))
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1885,8 +1885,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_RemoveWeapons> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_RemoveWeapons::Event_Activate
+                    eventCallback_t1<idTarget_RemoveWeapons> { obj: idTarget_RemoveWeapons, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1905,8 +1905,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1928,8 +1928,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_LevelTrigger> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_LevelTrigger::Event_Activate
+                    eventCallback_t1<idTarget_LevelTrigger> { obj: idTarget_LevelTrigger, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity?>)
                     }
             }
         }
@@ -1943,8 +1943,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1966,8 +1966,8 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_EnableStamina> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_EnableStamina::Event_Activate
+                    eventCallback_t1<idTarget_EnableStamina> { obj: idTarget_EnableStamina, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1985,8 +1985,8 @@ object Target {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -2008,11 +2008,11 @@ object Target {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTarget_FadeSoundClass> { obj: Any?, activator: idEventArg<*>? ->
-                        idTarget_FadeSoundClass::Event_Activate
+                    eventCallback_t1<idTarget_FadeSoundClass> { obj: idTarget_FadeSoundClass, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_RestoreVolume] =
-                    eventCallback_t0<idTarget_FadeSoundClass> { obj: Any? -> idTarget_FadeSoundClass::Event_RestoreVolume }
+                    eventCallback_t0<idTarget_FadeSoundClass> { obj: idTarget_FadeSoundClass -> obj.Event_RestoreVolume() }
             }
         }
 
@@ -2042,8 +2042,8 @@ object Target {
             Game_local.gameSoundWorld.FadeSoundClasses(0, fadeDB, fadeTime)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 }

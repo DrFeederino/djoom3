@@ -111,9 +111,13 @@ object FX {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idEntityFx> { obj: Any?, activator: idEventArg<*>? -> idEntityFx::Event_Trigger }
+                    eventCallback_t1<idEntityFx> { obj: idEntityFx, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(
+                            activator as idEventArg<idEntity>
+                        )
+                    }
                 eventCallbacks[FX.EV_Fx_KillFx] =
-                    eventCallback_t0<idEntityFx> { obj: Any? -> idEntityFx::Event_ClearFx }
+                    eventCallback_t0<idEntityFx> { obj: idEntityFx -> obj.Event_ClearFx() }
             }
         }
 
@@ -712,8 +716,8 @@ object FX {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -746,8 +750,8 @@ object FX {
             init {
                 eventCallbacks.putAll(idEntity.Companion.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idTeleporter> { obj: Any?, activator: idEventArg<*>? ->
-                        idTeleporter::Event_DoAction
+                    eventCallback_t1<idTeleporter> { obj: idTeleporter, activator: idEventArg<*>? ->
+                        obj.Event_DoAction(activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -760,8 +764,8 @@ object FX {
             activator.value.Teleport(GetPhysics().GetOrigin(), a, null)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 }

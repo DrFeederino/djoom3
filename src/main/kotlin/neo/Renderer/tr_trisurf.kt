@@ -563,9 +563,7 @@ object tr_trisurf {
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
         //	memcpy( newTri.verts, tri.verts, tri.numVerts * sizeof( newTri.verts[0] ) );
-        for (i in 0 until tri.numVerts) {
-            newTri.verts!![i] = idDrawVert(tri.verts!![i]!!)
-        }
+        System.arraycopy(tri.verts, 0, newTri.verts, 0, tri.numVerts)
         //	memcpy( newTri.indexes, tri.indexes, tri.numIndexes * sizeof( newTri.indexes[0] ) );
         System.arraycopy(tri.indexes, 0, newTri.indexes, 0, tri.numIndexes)
         return newTri
@@ -1280,7 +1278,7 @@ object tr_trisurf {
         while (i < tri.numVerts) {
             j = tVerts[i].negativeRemap
             if (j != 0) {
-                tri.verts!![j] = idDrawVert(tri.verts!![i]!!)
+                tri.verts!![j] = tri.verts!![i]
                 tri.mirroredVerts!![numMirror] = i
                 numMirror++
             }
@@ -1914,13 +1912,7 @@ object tr_trisurf {
         while (i < numSurfaces) {
             tri = surfaces[i]
             //		memcpy( newTri.verts + totalVerts, tri.verts, tri.numVerts * sizeof( *tri.verts ) );
-            var k = 0
-            var tv = totalVerts
-            while (k < tri.numVerts) {
-                newTri.verts!![tv] = idDrawVert(tri.verts!![k]!!)
-                k++
-                tv++
-            }
+            System.arraycopy(tri.verts, 0, newTri.verts, totalVerts, tri.numVerts)
             j = 0
             while (j < tri.numIndexes) {
                 newTri.indexes!![totalIndexes + j] = totalVerts + tri.indexes!![j]
@@ -2214,10 +2206,7 @@ object tr_trisurf {
     private fun Resize(verts: Array<idDrawVert>, totalVerts: Int): Array<idDrawVert?> {
         val newVerts = arrayOfNulls<idDrawVert>(totalVerts)
 
-
-        for (i in verts.indices) {
-            newVerts[i] = idDrawVert(verts[i])
-        }
+        System.arraycopy(verts, 0, newVerts, 0, verts.size)
 
         return newVerts
     }

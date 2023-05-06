@@ -42,9 +42,9 @@ class WorldSpawn {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_Remove] =
-                    eventCallback_t0<idWorldspawn> { obj: Any? -> idWorldspawn::Event_Remove }
+                    eventCallback_t0<idWorldspawn> { obj: idWorldspawn -> obj.Event_Remove() }
                 eventCallbacks[EV_SafeRemove] =
-                    eventCallback_t0<idWorldspawn> { obj: Any? -> idWorldspawn::Event_Remove }
+                    eventCallback_t0<idWorldspawn> { obj: idWorldspawn -> obj.Event_Remove() }
             }
         }
 

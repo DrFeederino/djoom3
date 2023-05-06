@@ -233,98 +233,123 @@ object Weapon {
             init {
                 eventCallbacks.putAll(idAnimatedEntity.getEventCallBacks())
                 eventCallbacks[EV_Weapon_Clear] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_Clear }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_Clear() }
                 eventCallbacks[EV_Weapon_GetOwner] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_GetOwner }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_GetOwner() }
                 eventCallbacks[EV_Weapon_State] =
-                    eventCallback_t2<idWeapon> { obj: Any?, _statename: idEventArg<*>?, blendFrames: idEventArg<*>? ->
-                        idWeapon::Event_WeaponState
+                    eventCallback_t2<idWeapon> { obj: idWeapon, _statename: idEventArg<*>, blendFrames: idEventArg<*> ->
+                        obj.Event_WeaponState(_statename as idEventArg<String?>, blendFrames as idEventArg<Int>)
                     }
                 eventCallbacks[EV_Weapon_WeaponReady] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponReady }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponReady() }
                 eventCallbacks[EV_Weapon_WeaponOutOfAmmo] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponOutOfAmmo }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponOutOfAmmo() }
                 eventCallbacks[EV_Weapon_WeaponReloading] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponReloading }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponReloading() }
                 eventCallbacks[EV_Weapon_WeaponHolstered] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponHolstered }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponHolstered() }
                 eventCallbacks[EV_Weapon_WeaponRising] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponRising }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponRising() }
                 eventCallbacks[EV_Weapon_WeaponLowering] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_WeaponLowering }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_WeaponLowering() }
                 eventCallbacks[EV_Weapon_UseAmmo] =
-                    eventCallback_t1<idWeapon> { obj: Any?, _amount: idEventArg<*>? -> idWeapon::Event_UseAmmo }
+                    eventCallback_t1<idWeapon> { obj: idWeapon, _amount: idEventArg<*>? -> obj.Event_UseAmmo(_amount as idEventArg<Int>) }
                 eventCallbacks[EV_Weapon_AddToClip] =
-                    eventCallback_t1<idWeapon> { obj: Any?, amount: idEventArg<*>? -> idWeapon::Event_AddToClip }
+                    eventCallback_t1<idWeapon> { obj: idWeapon, amount: idEventArg<*>? -> obj.Event_AddToClip(amount as idEventArg<Int>) }
                 eventCallbacks[EV_Weapon_AmmoInClip] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_AmmoInClip }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_AmmoInClip() }
                 eventCallbacks[EV_Weapon_AmmoAvailable] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_AmmoAvailable }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_AmmoAvailable() }
                 eventCallbacks[EV_Weapon_TotalAmmoCount] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_TotalAmmoCount }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_TotalAmmoCount() }
                 eventCallbacks[EV_Weapon_ClipSize] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_ClipSize }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_ClipSize() }
                 eventCallbacks[Actor.AI_PlayAnim] =
-                    eventCallback_t2<idWeapon> { obj: Any?, _channel: idEventArg<*>?, _animname: idEventArg<*>? -> idWeapon::Event_PlayAnim }
+                    eventCallback_t2<idWeapon> { obj: idWeapon, _channel: idEventArg<*>?, _animname: idEventArg<*>? ->
+                        obj.Event_PlayAnim(
+                            _channel as idEventArg<Int>,
+                            _animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[Actor.AI_PlayCycle] =
-                    eventCallback_t2<idWeapon> { obj: Any?, _channel: idEventArg<*>?, _animname: idEventArg<*>? -> idWeapon::Event_PlayCycle }
+                    eventCallback_t2<idWeapon> { obj: idWeapon, _channel: idEventArg<*>?, _animname: idEventArg<*>? ->
+                        obj.Event_PlayCycle(
+                            _channel as idEventArg<Int>,
+                            _animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[Actor.AI_SetBlendFrames] =
-                    eventCallback_t2<idWeapon> { obj: Any?, channel: idEventArg<*>?, blendFrames: idEventArg<*>? ->
-                        idWeapon::Event_SetBlendFrames
+                    eventCallback_t2<idWeapon> { obj: idWeapon, channel: idEventArg<*>?, blendFrames: idEventArg<*>? ->
+                        obj.Event_SetBlendFrames(channel as idEventArg<Int>, blendFrames as idEventArg<Int>)
                     }
                 eventCallbacks[Actor.AI_GetBlendFrames] =
-                    eventCallback_t1<idWeapon> { obj: Any?, channel: idEventArg<*>? ->
-                        idWeapon::Event_GetBlendFrames
+                    eventCallback_t1<idWeapon> { obj: idWeapon, channel: idEventArg<*>? ->
+                        obj.Event_GetBlendFrames(channel as idEventArg<Int>)
                     }
                 eventCallbacks[Actor.AI_AnimDone] =
-                    eventCallback_t2<idWeapon> { obj: Any?, channel: idEventArg<*>?, blendFrames: idEventArg<*>? -> idWeapon::Event_AnimDone }
+                    eventCallback_t2<idWeapon> { obj: idWeapon, channel: idEventArg<*>?, blendFrames: idEventArg<*>? ->
+                        obj.Event_AnimDone(
+                            channel as idEventArg<Int>,
+                            blendFrames as idEventArg<Int>
+                        )
+                    }
                 eventCallbacks[EV_Weapon_Next] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_Next }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_Next() }
                 eventCallbacks[Entity.EV_SetSkin] =
-                    eventCallback_t1<idWeapon> { obj: Any?, _skinname: idEventArg<*>? -> idWeapon::Event_SetSkin }
+                    eventCallback_t1<idWeapon> { obj: idWeapon, _skinname: idEventArg<*>? -> obj.Event_SetSkin(_skinname as idEventArg<String?>) }
                 eventCallbacks[EV_Weapon_Flashlight] =
-                    eventCallback_t1<idWeapon> { obj: Any?, enable: idEventArg<*>? -> idWeapon::Event_Flashlight }
+                    eventCallback_t1<idWeapon> { obj: idWeapon, enable: idEventArg<*>? -> obj.Event_Flashlight(enable as idEventArg<Int>) }
                 eventCallbacks[Light.EV_Light_GetLightParm] =
-                    eventCallback_t1<idWeapon> { obj: Any?, _parmnum: idEventArg<*>? ->
-                        idWeapon::Event_GetLightParm
+                    eventCallback_t1<idWeapon> { obj: idWeapon, _parmnum: idEventArg<*>? ->
+                        obj.Event_GetLightParm(_parmnum as idEventArg<Int>)
                     }
                 eventCallbacks[Light.EV_Light_SetLightParm] =
-                    eventCallback_t2<idWeapon> { obj: Any?, _parmnum: idEventArg<*>?, _value: idEventArg<*>? ->
-                        idWeapon::Event_SetLightParm
+                    eventCallback_t2<idWeapon> { obj: idWeapon, _parmnum: idEventArg<*>?, _value: idEventArg<*>? ->
+                        obj.Event_SetLightParm(_parmnum as idEventArg<Int>, _value as idEventArg<Float>)
                     }
                 eventCallbacks[Light.EV_Light_SetLightParms] =
-                    eventCallback_t4<idWeapon> { obj: Any?,
+                    eventCallback_t4<idWeapon> { obj: idWeapon,
                                                  parm0: idEventArg<*>?,
                                                  parm1: idEventArg<*>?,
                                                  parm2: idEventArg<*>?,
                                                  parm3: idEventArg<*>? ->
-                        idWeapon::Event_SetLightParms
+                        obj.Event_SetLightParms(
+                            parm0 as idEventArg<Float>,
+                            parm1 as idEventArg<Float>,
+                            parm2 as idEventArg<Float>,
+                            parm3 as idEventArg<Float>
+                        )
                     }
                 eventCallbacks[EV_Weapon_LaunchProjectiles] =
-                    eventCallback_t5<idWeapon> { obj: Any?, _num_projectiles: idEventArg<*>?, _spread: idEventArg<*>?,
+                    eventCallback_t5<idWeapon> { obj: idWeapon, _num_projectiles: idEventArg<*>?, _spread: idEventArg<*>?,
                                                  fuseOffset: idEventArg<*>?,
                                                  launchPower: idEventArg<*>?,
                                                  _dmgPower: idEventArg<*>? ->
-                        idWeapon::Event_LaunchProjectiles
+                        obj.Event_LaunchProjectiles(
+                            _num_projectiles as idEventArg<Int>, _spread as idEventArg<Float>,
+                            fuseOffset as idEventArg<Float>,
+                            launchPower as idEventArg<Float>,
+                            _dmgPower as idEventArg<Float>
+                        )
                     }
                 eventCallbacks[EV_Weapon_CreateProjectile] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_CreateProjectile }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_CreateProjectile() }
                 eventCallbacks[EV_Weapon_EjectBrass] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_EjectBrass }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_EjectBrass() }
                 eventCallbacks[EV_Weapon_Melee] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_Melee }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_Melee() }
                 eventCallbacks[EV_Weapon_GetWorldModel] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_GetWorldModel }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_GetWorldModel() }
                 eventCallbacks[EV_Weapon_AllowDrop] =
-                    eventCallback_t1<idWeapon> { obj: Any?, allow: idEventArg<*>? -> idWeapon::Event_AllowDrop }
+                    eventCallback_t1<idWeapon> { obj: idWeapon, allow: idEventArg<*>? -> obj.Event_AllowDrop(allow as idEventArg<Int>) }
                 eventCallbacks[EV_Weapon_AutoReload] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_AutoReload }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_AutoReload() }
                 eventCallbacks[EV_Weapon_NetReload] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_NetReload }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_NetReload() }
                 eventCallbacks[EV_Weapon_IsInvisible] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_IsInvisible }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_IsInvisible() }
                 eventCallbacks[EV_Weapon_NetEndReload] =
-                    eventCallback_t0<idWeapon> { obj: Any? -> idWeapon::Event_NetEndReload }
+                    eventCallback_t0<idWeapon> { obj: idWeapon -> obj.Event_NetEndReload() }
             }
         }
 
@@ -2194,7 +2219,7 @@ object Weapon {
         //
         //        private void Event_SetWeaponStatus(float newStatus);
         //
-        private fun Event_WeaponState(_statename: idEventArg<String>, blendFrames: idEventArg<Int>) {
+        private fun Event_WeaponState(_statename: idEventArg<String?>, blendFrames: idEventArg<Int>) {
             val statename = _statename.value
             val func: function_t?
             func = scriptObject.GetFunction(statename)
@@ -2795,7 +2820,7 @@ object Weapon {
                             if (type == surfTypes_t.SURFTYPE_NONE) {
                                 type = surfTypes_t.values()[GetDefaultSurfaceType()]
                             }
-                            val materialType = Game_local.gameLocal.sufaceTypeNames[type.ordinal]!!
+                            val materialType = Game_local.gameLocal.sufaceTypeNames[type.ordinal]
 
                             // start impact sound based on material type
                             hitSound = meleeDef!!.dict.GetString(Str.va("snd_%s", materialType))
@@ -2883,8 +2908,8 @@ object Weapon {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         /* **********************************************************************

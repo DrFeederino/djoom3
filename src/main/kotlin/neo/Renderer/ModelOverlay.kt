@@ -187,11 +187,7 @@ object ModelOverlay {
                 s.surfaceId = surf.id
                 s.verts = arrayOfNulls(numVerts) // Mem_Alloc(numVerts);
                 //                memcpy(s.verts, overlayVerts, numVerts * sizeof(s.verts[0]));
-                i = 0
-                while (i < numVerts) {
-                    s.verts!![i] = overlayVerts[i]
-                    i++
-                }
+                System.arraycopy(overlayVerts, 0, s.verts, 0, numVerts)
                 s.numVerts = numVerts
                 s.indexes = IntArray(numIndexes) ///*(glIndex_t *)*/Mem_Alloc(numIndexes);
                 //                memcpy(s.indexes, overlayIndexes, numIndexes * sizeof(s.indexes[0]));

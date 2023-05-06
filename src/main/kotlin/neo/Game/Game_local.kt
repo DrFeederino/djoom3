@@ -2266,9 +2266,7 @@ class Game_local {
 
             // set the user commands for this frame
 //            memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
-            for (i in 0 until numClients) {
-                usercmds[i] = clientCmds[i]
-            }
+            System.arraycopy(clientCmds, 0, usercmds, 0, numClients)
 
             // run prediction on all entities from the last snapshot
             ent = snapshotEntities.Next()
@@ -3014,7 +3012,7 @@ class Game_local {
             }
         }
 
-        fun RequirementMet(activator: idEntity, requires: idStr, removeItem: Int): Boolean {
+        fun RequirementMet(activator: idEntity?, requires: idStr, removeItem: Int): Boolean {
             if (requires.Length() != 0) {
                 if (activator is idPlayer) {
                     val player = activator

@@ -98,18 +98,18 @@ object Moveable {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idMoveable> { obj: Any?, activator: idEventArg<*>? ->
-                        idMoveable::Event_Activate
+                    eventCallback_t1<idMoveable> { obj: idMoveable, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_BecomeNonSolid] =
-                    eventCallback_t0<idMoveable> { obj: Any? -> idMoveable::Event_BecomeNonSolid }
+                    eventCallback_t0<idMoveable> { obj: idMoveable -> obj.Event_BecomeNonSolid() }
                 eventCallbacks[EV_SetOwnerFromSpawnArgs] =
-                    eventCallback_t0<idMoveable> { obj: Any? -> idMoveable::Event_SetOwnerFromSpawnArgs }
+                    eventCallback_t0<idMoveable> { obj: idMoveable -> obj.Event_SetOwnerFromSpawnArgs() }
                 eventCallbacks[EV_IsAtRest] =
-                    eventCallback_t0<idMoveable> { obj: Any? -> idMoveable::Event_IsAtRest }
+                    eventCallback_t0<idMoveable> { obj: idMoveable -> obj.Event_IsAtRest() }
                 eventCallbacks[EV_EnableDamage] =
-                    eventCallback_t1<idMoveable> { obj: Any?, enable: idEventArg<*>? ->
-                        idMoveable::Event_EnableDamage
+                    eventCallback_t1<idMoveable> { obj: idMoveable, enable: idEventArg<*>? ->
+                        obj.Event_EnableDamage(enable as idEventArg<Float>)
                     }
             }
         }
@@ -497,8 +497,8 @@ object Moveable {
             super.Damage(inflictor, attacker, dir, damageDefName, damageScale, location)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -707,15 +707,15 @@ object Moveable {
             init {
                 eventCallbacks.putAll(idMoveable.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idExplodingBarrel> { obj: Any?, activator: idEventArg<*>? ->
-                        idExplodingBarrel::Event_Activate
+                    eventCallback_t1<idExplodingBarrel> { obj: idExplodingBarrel, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_Respawn] =
-                    eventCallback_t0<idExplodingBarrel> { obj: Any? -> idExplodingBarrel::Event_Respawn }
+                    eventCallback_t0<idExplodingBarrel> { obj: idExplodingBarrel -> obj.Event_Respawn() }
                 eventCallbacks[Projectile.EV_Explode] =
-                    eventCallback_t0<idExplodingBarrel> { obj: Any? -> idExplodingBarrel::Event_Explode }
+                    eventCallback_t0<idExplodingBarrel> { obj: idExplodingBarrel -> obj.Event_Explode() }
                 eventCallbacks[EV_TriggerTargets] =
-                    eventCallback_t0<idExplodingBarrel> { obj: Any? -> idExplodingBarrel::Event_TriggerTargets }
+                    eventCallback_t0<idExplodingBarrel> { obj: idExplodingBarrel -> obj.Event_TriggerTargets() }
             }
         }
 
@@ -1088,8 +1088,8 @@ object Moveable {
             ActivateTargets(this)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         enum class explode_state_t {

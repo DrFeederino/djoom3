@@ -10,12 +10,12 @@ import neo.Game.AI.AI_Vagary.idAI_Vagary
 import neo.Game.BrittleFracture.idBrittleFracture
 import neo.Game.Camera.idCameraAnim
 import neo.Game.Camera.idCameraView
-import neo.Game.Entity
+import neo.Game.Entity.EV_Activate
 import neo.Game.Entity.idAnimatedEntity
 import neo.Game.Entity.idEntity
 import neo.Game.FX.idEntityFx
 import neo.Game.FX.idTeleporter
-import neo.Game.GameSys.Class.eventCallback_t0
+import neo.Game.GameSys.Class.*
 import neo.Game.GameSys.Event.D_EVENT_MAXARGS
 import neo.Game.GameSys.Event.idEvent
 import neo.Game.GameSys.Event.idEventDef
@@ -133,57 +133,57 @@ class Class {
     }
 
 
-    fun interface eventCallback_t<T : idClass> {
-        open fun accept(t: T, vararg args: idEventArg<*>)
+    fun interface eventCallback_t<out T : idClass> {
+        open fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>)
     }
 
-    fun interface eventCallback_t0<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t0<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t)
         }
 
-        open fun accept(e: T)
+        open fun accept(e: @UnsafeVariance T)
     }
 
-    fun interface eventCallback_t1<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t1<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0])
         }
 
-        open fun accept(t: T, a: idEventArg<*>)
+        open fun accept(t: @UnsafeVariance T, a: idEventArg<*>)
     }
 
-    fun interface eventCallback_t2<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t2<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1])
         }
 
-        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>)
+        open fun accept(t: @UnsafeVariance T, a: idEventArg<*>, b: idEventArg<*>)
     }
 
-    fun interface eventCallback_t3<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t3<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2])
         }
 
-        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>)
+        fun accept(t: @UnsafeVariance T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>)
     }
 
-    fun interface eventCallback_t4<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t4<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3])
         }
 
-        open fun accept(t: T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>, d: idEventArg<*>)
+        open fun accept(t: @UnsafeVariance T, a: idEventArg<*>, b: idEventArg<*>, c: idEventArg<*>, d: idEventArg<*>)
     }
 
-    fun interface eventCallback_t5<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t5<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3], args[4])
         }
 
         open fun accept(
-            t: T,
+            t: @UnsafeVariance T,
             a: idEventArg<*>,
             b: idEventArg<*>,
             c: idEventArg<*>,
@@ -192,13 +192,13 @@ class Class {
         )
     }
 
-    fun interface eventCallback_t6<T : idClass> : eventCallback_t<T> {
-        override fun accept(t: T, vararg args: idEventArg<*>) {
+    fun interface eventCallback_t6<out T : idClass> : eventCallback_t<T> {
+        override fun accept(t: @UnsafeVariance T, vararg args: idEventArg<*>) {
             accept(t, args[0], args[1], args[2], args[3], args[4], args[5])
         }
 
         open fun accept(
-            t: T,
+            t: @UnsafeVariance T,
             a: idEventArg<*>,
             b: idEventArg<*>,
             c: idEventArg<*>,
@@ -338,8 +338,8 @@ class Class {
         companion object {
             private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = run {
                 val map = HashMap<idEventDef, eventCallback_t<*>>()
-                map[EV_Remove] = eventCallback_t0 { obj: Any? -> idClass::Event_Remove }
-                map[EV_SafeRemove] = eventCallback_t0 { obj: Any? -> idClass::Event_SafeRemove }
+                map[EV_Remove] = (eventCallback_t0 { obj: idClass -> obj.Event_Remove() })
+                map[EV_SafeRemove] = eventCallback_t0 { obj: idClass -> obj.Event_SafeRemove() }
                 map
             }
 
@@ -1062,10 +1062,12 @@ class Class {
         fun ProcessEventArgPtr(ev: idEventDef?, data: Array<idEventArg<*>?>): Boolean {
             val num: Int
             val callback: eventCallback_t<*>?
+
             assert(ev != null)
             assert(idEvent.initialized)
-            if (SysCvar.g_debugTriggers.GetBool() && ev === Entity.EV_Activate && this is idEntity) {
-                val name: String?
+
+            if (SysCvar.g_debugTriggers.GetBool() && ev === EV_Activate && this is idEntity) {
+                val name: String
                 name =
                     if (data[0] != null && data[0]!!.value as idClass? is idEntity) (data[0]!!.value as idEntity).GetName() else "NULL"
                 Game_local.gameLocal.Printf(
@@ -1075,20 +1077,45 @@ class Class {
                     name
                 )
             }
+
             num = ev!!.GetEventNum()
-            callback = getEventCallBack(ev) //callback = c.eventMap[num];
+            callback = getEventCallBack(ev!!) //callback = c.eventMap[num];
+
             if (callback == null) {
                 // we don't respond to this event, so ignore it
                 return false
             }
-            assert(Event.D_EVENT_MAXARGS == 8)
-            when (ev.GetNumArgs()) {
+
+////
+//// #if !CPU_EASYARGS
+//// /*
+//// on ppc architecture, floats are passed in a seperate set of registers
+//// the function prototypes must have matching float declaration
+//// http://developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/2rt_powerpc_abi/chapter_9_section_5.html
+//// */
+//            // switch( ev.GetFormatspecIndex() ) {
+//            // case 1 << D_EVENT_MAXARGS :
+//            // ( this.*callback )();
+//            //
+//// // generated file - see CREATE_EVENT_CODE
+//// #include "Callbacks.cpp"
+//            // default:
+//            // gameLocal.Warning( "Invalid formatspec on event '%s'", ev.GetName() );
+//            //
+//            // }
+//// #else
+            assert(D_EVENT_MAXARGS == 8)
+
+            when (ev!!.GetNumArgs()) {
                 0, 1, 2, 3, 4, 5, 6, 7, 8 -> ////		typedef void ( idClass.*eventCallback_8_t )( const int, const int, const int, const int, const int, const int, const int, const int );
 ////		( this.*( eventCallback_8_t )callback )( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ], data[ 4 ], data[ 5 ], data[ 6 ], data[ 7 ] );
 //                    callback.run(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                    callback.run { data }
-                else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev.GetName())
+                    callback.accept(this, *data as Array<out idEventArg<*>>)
+
+                else -> Game_local.gameLocal.Warning("Invalid formatspec on event '%s'", ev!!.GetName())
             }
+
+// #endif
 
 // #endif
             return true
@@ -1170,7 +1197,7 @@ class Class {
             return true
         }
 
-        private fun ProcessEventArgs(ev: idEventDef, numargs: Int, vararg args: idEventArg<*>): Boolean {
+        private fun ProcessEventArgs(ev: idEventDef, numargs: Int, vararg args: idEventArg<*>?): Boolean {
             var c: idTypeInfo
             var num: Int
             //val data = Array<idEventArg<*>>(Event.D_EVENT_MAXARGS) { idEventArg() }

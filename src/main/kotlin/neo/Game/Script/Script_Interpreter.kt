@@ -270,7 +270,7 @@ object Script_Interpreter {
             }
         }
 
-        private fun CallEvent(func: function_t?, argsize: Int) {
+        private fun CallEvent(func: function_t, argsize: Int) {
             var i: Int
             var j: Int
             val `var` = varEval_s()
@@ -558,7 +558,7 @@ object Script_Interpreter {
                     ), currentFunction!!.Name()
                 )
             }
-            i = top
+            i = top - 1
             while (i >= 0) {
                 f = callStack[i]!!.f
                 if (NOT(f)) {
@@ -593,8 +593,8 @@ object Script_Interpreter {
          Aborts the currently executing function
          ============
          */
-        fun Error(fmt: String?, vararg objects: Any?) { // id_attribute((format(printf,2,3)));
-            val text = String.format(fmt!!, *objects)
+        fun Error(fmt: String, vararg objects: Any?) { // id_attribute((format(printf,2,3)));
+            val text = String.format(fmt, objects)
             StackTrace()
             if (instructionPointer >= 0 && instructionPointer < Game_local.gameLocal.program.NumStatements()) {
                 val line = Game_local.gameLocal.program.GetStatement(instructionPointer)
@@ -697,7 +697,7 @@ object Script_Interpreter {
          Copys the args from the calling thread's stack
          ====================
          */
-        fun ThreadCall(source: idInterpreter, func: function_t?, args: Int) {
+        fun ThreadCall(source: idInterpreter, func: function_t, args: Int) {
             Reset()
 
 //	memcpy( localstack, &source.localstack[ source.localstackUsed - args ], args );
@@ -718,7 +718,7 @@ object Script_Interpreter {
          NOTE: If this is called from within a event called by this interpreter, the function arguments will be invalid after calling this function.
          ====================
          */
-        fun EnterFunction(func: function_t?, clearStack: Boolean) {
+        fun EnterFunction(func: function_t, clearStack: Boolean) {
             val c: Int
             val stack: prstack_s?
             if (clearStack) {
@@ -793,7 +793,7 @@ object Script_Interpreter {
          NOTE: If this is called from within a event called by this interpreter, the function arguments will be invalid after calling this function.
          ================
          */
-        fun EnterObjectFunction(self: idEntity?, func: function_t?, clearStack: Boolean) {
+        fun EnterObjectFunction(self: idEntity?, func: function_t, clearStack: Boolean) {
             if (clearStack) {
                 Reset()
             }
@@ -838,7 +838,7 @@ object Script_Interpreter {
                 when (st.op) {
                     Script_Compiler.OP_RETURN -> LeaveFunction(st.a)
                     Script_Compiler.OP_THREAD -> {
-                        newThread = idThread(this, st.a!!.value!!.functionPtr, st.b!!.value!!.argSize)
+                        newThread = idThread(this, st.a!!.value!!.functionPtr!!, st.b!!.value!!.argSize)
                         newThread.Start()
 
                         // return the thread number to the script
@@ -864,13 +864,13 @@ object Script_Interpreter {
                         PopParms(st.c!!.value!!.argSize)
                     }
 
-                    Script_Compiler.OP_CALL -> EnterFunction(st.a!!.value!!.functionPtr, false)
-                    Script_Compiler.OP_EVENTCALL -> CallEvent(st.a!!.value!!.functionPtr, st.b!!.value!!.argSize)
+                    Script_Compiler.OP_CALL -> EnterFunction(st.a!!.value!!.functionPtr!!, false)
+                    Script_Compiler.OP_EVENTCALL -> CallEvent(st.a!!.value!!.functionPtr!!, st.b!!.value!!.argSize)
                     Script_Compiler.OP_OBJECTCALL -> {
                         var_a = GetVariable(st.a)
                         obj = GetScriptObject(var_a!!.entityNumberPtr)
                         if (obj != null) {
-                            func = obj.GetTypeDef().GetFunction(st.b!!.value!!.virtualFunction)
+                            func = obj.GetTypeDef().GetFunction(st.b!!.value!!.virtualFunction)!!
                             EnterFunction(func, false)
                         } else {
                             // return a 'safe' value

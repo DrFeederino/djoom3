@@ -82,10 +82,7 @@ object Surface {
             assert(verts != null && indexes != null && numVerts > 0 && numIndexes > 0)
             this.verts.SetNum(numVerts)
             //	memcpy( this.verts.Ptr(), verts, numVerts * sizeof( verts[0] ) );
-            //System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
-            for (i in 0 until numVerts) {
-                this.verts[i] = verts!![i]
-            }
+            System.arraycopy(verts, 0, this.verts.getList(), 0, numVerts);
             this.indexes.SetNum(numIndexes)
             //	memcpy( this.indexes.Ptr(), indexes, numIndexes * sizeof( indexes[0] ) );
             System.arraycopy(indexes, 0, this.indexes, 0, numIndexes)

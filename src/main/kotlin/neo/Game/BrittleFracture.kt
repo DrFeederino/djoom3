@@ -99,12 +99,12 @@ object BrittleFracture {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idBrittleFracture> { obj: Any?, activator: idEventArg<*>? ->
-                        idBrittleFracture::Event_Activate
+                    eventCallback_t1<idBrittleFracture> { obj: idBrittleFracture, activator: idEventArg<*>? ->
+                        obj.Event_Activate(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idBrittleFracture> { obj: Any?, _other: idEventArg<*>?, _trace: idEventArg<*>? ->
-                        idBrittleFracture::Event_Touch
+                    eventCallback_t2<idBrittleFracture> { obj: idBrittleFracture, _other: idEventArg<*>?, _trace: idEventArg<*>? ->
+                        obj.Event_Touch(_other as idEventArg<idEntity>, _trace as idEventArg<trace_s>)
                     }
             }
         }
@@ -1239,8 +1239,8 @@ object BrittleFracture {
             Shatter(point, impulse, Game_local.gameLocal.time)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         // virtual						~idBrittleFracture( void );

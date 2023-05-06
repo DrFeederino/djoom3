@@ -166,7 +166,7 @@ object Actor {
             thread = null
         }
 
-        fun SetState(statename: String, blendFrames: Int) {
+        fun SetState(statename: String?, blendFrames: Int) {
             val func: function_t?
             func = self!!.scriptObject.GetFunction(statename)
             if (null == func) {
@@ -319,104 +319,182 @@ object Actor {
             init {
                 eventCallbacks.putAll(idAFEntity_Gibbable.getEventCallBacks())
                 eventCallbacks[AI_EnableEyeFocus] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnableEyeFocus }
+                    eventCallback_t0 { obj: idActor -> obj.Event_EnableEyeFocus() }
                 eventCallbacks[AI_DisableEyeFocus] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisableEyeFocus }
+                    eventCallback_t0 { obj: idActor -> obj.Event_DisableEyeFocus() }
                 eventCallbacks[EV_Footstep] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                    eventCallback_t0 { obj: idActor -> obj.Event_Footstep() }
                 eventCallbacks[EV_FootstepLeft] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                    eventCallback_t0 { obj: idActor -> obj.Event_Footstep() }
                 eventCallbacks[EV_FootstepRight] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_Footstep }
+                    eventCallback_t0 { obj: idActor -> obj.Event_Footstep() }
                 eventCallbacks[EV_EnableWalkIK] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnableWalkIK }
+                    eventCallback_t0 { obj: idActor -> obj.Event_EnableWalkIK() }
                 eventCallbacks[EV_DisableWalkIK] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisableWalkIK }
+                    eventCallback_t0 { obj: idActor -> obj.Event_DisableWalkIK() }
                 eventCallbacks[EV_EnableLegIK] =
-                    eventCallback_t1<idActor> { obj: Any?, num: idEventArg<*>? -> idActor::Event_EnableLegIK }
+                    eventCallback_t1 { obj: idActor, num: idEventArg<*>? -> obj.Event_EnableLegIK(num as idEventArg<Int>) }
                 eventCallbacks[EV_DisableLegIK] =
-                    eventCallback_t1<idActor> { obj: Any?, num: idEventArg<*>? -> idActor::Event_DisableLegIK }
+                    eventCallback_t1 { obj: idActor, num: idEventArg<*>? -> obj.Event_DisableLegIK(num as idEventArg<Int>) }
                 eventCallbacks[AI_PreventPain] =
-                    eventCallback_t1<idActor> { obj: Any?, duration: idEventArg<*>? -> idActor::Event_PreventPain }
+                    eventCallback_t1 { obj: idActor, duration: idEventArg<*>? -> obj.Event_PreventPain(duration as idEventArg<Float>) }
                 eventCallbacks[AI_DisablePain] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_DisablePain }
+                    eventCallback_t0 { obj: idActor -> obj.Event_DisablePain() }
                 eventCallbacks[AI_EnablePain] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_EnablePain }
+                    eventCallback_t0 { obj: idActor -> obj.Event_EnablePain() }
                 eventCallbacks[AI_GetPainAnim] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetPainAnim }
+                    eventCallback_t0 { obj: idActor -> obj.Event_GetPainAnim() }
                 eventCallbacks[AI_SetAnimPrefix] =
-                    eventCallback_t1<idActor> { obj: Any?, prefix: idEventArg<*>? -> idActor::Event_SetAnimPrefix }
+                    eventCallback_t1 { obj: idActor, prefix: idEventArg<*>? -> obj.Event_SetAnimPrefix(prefix as idEventArg<String?>) }
                 eventCallbacks[AI_StopAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, frames: idEventArg<*> -> idActor::Event_StopAnim }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>?, frames: idEventArg<*> ->
+                        obj.Event_StopAnim(
+                            channel as idEventArg<Int>,
+                            frames as idEventArg<Int>
+                        )
+                    }
                 eventCallbacks[AI_PlayAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_PlayAnim }
+                    eventCallback_t2 { obj: idActor, _channel: idEventArg<*>?, _animName: idEventArg<*> ->
+                        obj.Event_PlayAnim(
+                            _channel as idEventArg<Int>,
+                            _animName as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_PlayCycle] =
-                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_PlayCycle }
+                    eventCallback_t2 { obj: idActor, _channel: idEventArg<*>?, _animName: idEventArg<*> ->
+                        obj.Event_PlayCycle(
+                            _channel as idEventArg<Int>,
+                            _animName as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_IdleAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>?, _animName: idEventArg<*> -> idActor::Event_IdleAnim }
+                    eventCallback_t2 { obj: idActor, _channel: idEventArg<*>?, _animName: idEventArg<*> ->
+                        obj.Event_IdleAnim(
+                            _channel as idEventArg<Int>,
+                            _animName as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_SetSyncedAnimWeight] =
-                    eventCallback_t3<idActor> { obj: Any?, _channel: idEventArg<*>,
-                                                _anim: idEventArg<*>,
-                                                _weight: idEventArg<*> ->
-                        idActor::Event_SetSyncedAnimWeight
+                    eventCallback_t3 { obj: idActor, _channel: idEventArg<*>,
+                                       _anim: idEventArg<*>,
+                                       _weight: idEventArg<*> ->
+                        obj.Event_SetSyncedAnimWeight(
+                            _channel as idEventArg<Int>,
+                            _anim as idEventArg<Int>,
+                            _weight as idEventArg<Float>
+                        )
                     }
                 eventCallbacks[AI_SetBlendFrames] =
-                    eventCallback_t2<idActor> { obj: Any?, _channel: idEventArg<*>, _blendFrames: idEventArg<*> ->
-                        idActor::Event_SetBlendFrames
+                    eventCallback_t2 { obj: idActor, _channel: idEventArg<*>, _blendFrames: idEventArg<*> ->
+                        obj.Event_SetBlendFrames(_channel as idEventArg<Int>, _blendFrames as idEventArg<Int>)
                     }
                 eventCallbacks[AI_GetBlendFrames] =
-                    eventCallback_t1<idActor> { obj: Any?, _channel: idEventArg<*> ->
-                        idActor::Event_GetBlendFrames
+                    eventCallback_t1 { obj: idActor, _channel: idEventArg<*>? ->
+                        obj.Event_GetBlendFrames(_channel as idEventArg<Int>)
                     }
                 eventCallbacks[AI_AnimState] =
-                    eventCallback_t3<idActor> { obj: Any?, channel: idEventArg<*>,
-                                                statename: idEventArg<*>,
-                                                blendFrames: idEventArg<*> ->
-                        idActor::Event_AnimState
+                    eventCallback_t3 { obj: idActor, channel: idEventArg<*>,
+                                       statename: idEventArg<*>,
+                                       blendFrames: idEventArg<*> ->
+                        obj.Event_AnimState(
+                            channel as idEventArg<Int>,
+                            statename as idEventArg<String?>,
+                            blendFrames as idEventArg<Int>
+                        )
                     }
                 eventCallbacks[AI_GetAnimState] =
-                    eventCallback_t1<idActor> { obj: Any?, channel: idEventArg<*>? -> idActor::Event_GetAnimState }
+                    eventCallback_t1 { obj: idActor, channel: idEventArg<*>? -> obj.Event_GetAnimState(channel as idEventArg<Int>) }
                 eventCallbacks[AI_InAnimState] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, statename: idEventArg<*> -> idActor::Event_InAnimState }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, statename: idEventArg<*> ->
+                        obj.Event_InAnimState(
+                            channel as idEventArg<Int>,
+                            statename as idEventArg<String?>
+                        )
+                    }
                 eventCallbacks[AI_FinishAction] =
-                    eventCallback_t1<idActor> { obj: Any?, actionname: idEventArg<*>? ->
-                        idActor::Event_FinishAction
+                    eventCallback_t1 { obj: idActor, actionname: idEventArg<*>? ->
+                        obj.Event_FinishAction(actionname as idEventArg<String?>)
                     }
                 eventCallbacks[AI_AnimDone] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, _blendFrames: idEventArg<*> -> idActor::Event_AnimDone }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, _blendFrames: idEventArg<*> ->
+                        obj.Event_AnimDone(
+                            channel as idEventArg<Int>,
+                            _blendFrames as idEventArg<Int>
+                        )
+                    }
                 eventCallbacks[AI_OverrideAnim] =
-                    eventCallback_t1<idActor> { obj: Any?, channel: idEventArg<*>? -> idActor::Event_OverrideAnim }
+                    eventCallback_t1 { obj: idActor, channel: idEventArg<*>? -> obj.Event_OverrideAnim(channel as idEventArg<Int>) }
                 eventCallbacks[AI_EnableAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, _blendFrames: idEventArg<*> -> idActor::Event_EnableAnim }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, _blendFrames: idEventArg<*> ->
+                        obj.Event_EnableAnim(
+                            channel as idEventArg<Int>,
+                            _blendFrames as idEventArg<Int>
+                        )
+                    }
                 eventCallbacks[AI_HasAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animName: idEventArg<*> -> idActor::Event_HasAnim }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, animName: idEventArg<*> ->
+                        obj.Event_HasAnim(
+                            channel as idEventArg<Int>,
+                            animName as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_CheckAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animname: idEventArg<*> -> idActor::Event_CheckAnim }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, animname: idEventArg<*> ->
+                        obj.Event_CheckAnim(
+                            channel as idEventArg<Int>,
+                            animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_ChooseAnim] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, animname: idEventArg<*> -> idActor::Event_ChooseAnim }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, animname: idEventArg<*> ->
+                        obj.Event_ChooseAnim(
+                            channel as idEventArg<Int>,
+                            animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_AnimLength] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, animname: idEventArg<*> -> idActor::Event_AnimLength }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>?, animname: idEventArg<*> ->
+                        obj.Event_AnimLength(
+                            channel as idEventArg<Int>,
+                            animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_AnimDistance] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>?, animname: idEventArg<*> -> idActor::Event_AnimDistance }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>?, animname: idEventArg<*> ->
+                        obj.Event_AnimDistance(
+                            channel as idEventArg<Int>,
+                            animname as idEventArg<String>
+                        )
+                    }
                 eventCallbacks[AI_HasEnemies] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_HasEnemies }
+                    eventCallback_t0 { obj: idActor -> obj.Event_HasEnemies() }
                 eventCallbacks[AI_NextEnemy] =
-                    eventCallback_t1<idActor> { obj: Any?, _ent: idEventArg<*>? -> idActor::Event_NextEnemy }
+                    eventCallback_t1 { obj: idActor, _ent: idEventArg<*>? -> obj.Event_NextEnemy(_ent as idEventArg<idEntity?>) }
                 eventCallbacks[AI_ClosestEnemyToPoint] =
-                    eventCallback_t1<idActor> { obj: Any?, pos: idEventArg<*>? ->
-                        idActor::Event_ClosestEnemyToPoint
+                    eventCallback_t1 { obj: idActor, pos: idEventArg<*>? ->
+                        obj.Event_ClosestEnemyToPoint(pos as idEventArg<idVec3>)
                     }
                 eventCallbacks[Entity.EV_StopSound] =
-                    eventCallback_t2<idActor> { obj: Any?, channel: idEventArg<*>, netSync: idEventArg<*> -> idActor::Event_StopSound }
+                    eventCallback_t2 { obj: idActor, channel: idEventArg<*>, netSync: idEventArg<*> ->
+                        obj.Event_StopSound(
+                            channel as idEventArg<Int>,
+                            netSync as idEventArg<Int>
+                        )
+                    }
                 eventCallbacks[AI_SetNextState] =
-                    eventCallback_t1<idActor> { obj: Any?, name: idEventArg<*>? -> idActor::Event_SetNextState }
-                eventCallbacks[AI_SetState] =
-                    eventCallback_t1<idActor> { obj: Any?, name: idEventArg<*>? -> idActor::Event_SetState }
+                    eventCallback_t1 { obj: idActor, name: idEventArg<*>? -> obj.Event_SetNextState(name as idEventArg<String?>) }
+                eventCallbacks[AI_SetState] = eventCallback_t1 { obj: idActor, name: idEventArg<*> ->
+                    obj.Event_SetState(
+                        name as idEventArg<String?>
+                    )
+                }
+
                 eventCallbacks[AI_GetState] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetState }
+                    eventCallback_t0 { obj: idActor -> obj.Event_GetState() }
                 eventCallbacks[AI_GetHead] =
-                    eventCallback_t0<idActor> { obj: Any? -> idActor::Event_GetHead }
+                    eventCallback_t0 { obj: idActor -> obj.Event_GetHead() }
             }
+
         }
 
         var enemyList // list of characters that have targeted the player as their enemy
@@ -648,7 +726,7 @@ object Actor {
 
         /*
          ================
-         idActor::Save
+         obj.Save
 
          archive object for savegame file
          ================
@@ -747,7 +825,7 @@ object Actor {
 
         /*
          ================
-         idActor::Restore
+         obj.Restore
 
          unarchives object from save game file
          ================
@@ -1032,7 +1110,7 @@ object Actor {
 
         /*
          ================
-         idActor::ShouldConstructScriptObjectAtSpawn
+         obj.ShouldConstructScriptObjectAtSpawn
 
          Called during idEntity::Spawn to see if it should construct the script object or not.
          Overridden by subclasses that need to spawn the script object themselves.
@@ -1044,7 +1122,7 @@ object Actor {
 
         /*
          ================
-         idActor::ConstructScriptObject
+         obj.ConstructScriptObject
 
          Called during idEntity::Spawn.  Calls the constructor on the script object.
          Can be overridden by subclasses when a thread doesn't need to be allocated.
@@ -1102,7 +1180,7 @@ object Actor {
             // this loop limits them in case we've entered an infinite loop.
             i = 0
             while (i < 20) {
-                if (idealState !== state) {
+                if (idealState != state) {
                     SetState(idealState)
                 }
 
@@ -1117,11 +1195,11 @@ object Actor {
                 i++
             }
             if (i == 20) {
-                scriptThread!!.Warning("idActor::UpdateScript: exited loop to prevent lockup")
+                scriptThread!!.Warning("obj.UpdateScript: exited loop to prevent lockup")
             }
         }
 
-        fun GetScriptFunction(funcname: String): function_t {
+        fun GetScriptFunction(funcname: String?): function_t {
             val func: function_t?
             func = scriptObject.GetFunction(funcname)
             if (null == func) {
@@ -1132,7 +1210,7 @@ object Actor {
 
         fun SetState(newState: function_t?) {
             if (null == newState) {
-                idGameLocal.Error("idActor::SetState: Null state")
+                idGameLocal.Error("obj.SetState: Null state")
                 return
             }
             if (SysCvar.ai_debugScript.GetInteger() == entityNumber) {
@@ -1231,7 +1309,7 @@ object Actor {
 
         /*
          =====================
-         idActor::GetAIAimTargets
+         obj.GetAIAimTargets
 
          Returns positions for the AI to aim at.
          =====================
@@ -1249,7 +1327,7 @@ object Actor {
         // damage
         /*
          =====================
-         idActor::SetupDamageGroups
+         obj.SetupDamageGroups
 
          FIXME: only store group names once and store an index for each joint
          =====================
@@ -1310,7 +1388,7 @@ object Actor {
 
         /*
          ============
-         idActor::Damage
+         obj.Damage
 
          this		entity that is being damaged
          inflictor	entity that is causing the damage
@@ -1784,7 +1862,7 @@ object Actor {
             legsAnim.UpdateState()
         }
 
-        fun SetAnimState(channel: Int, statename: String, blendFrames: Int) {
+        fun SetAnimState(channel: Int, statename: String?, blendFrames: Int) {
             val func: function_t?
             func = scriptObject.GetFunction(statename)
             if (null == func) {
@@ -1806,13 +1884,15 @@ object Actor {
                     allowPain = true
                     allowEyeFocus = true
                 }
+
                 Anim.ANIMCHANNEL_LEGS -> {
                     legsAnim.SetState(statename, blendFrames)
                     torsoAnim.Enable(blendFrames)
                     allowPain = true
                     allowEyeFocus = true
                 }
-                else -> idGameLocal.Error("idActor::SetAnimState: Unknown anim group")
+
+                else -> idGameLocal.Error("obj.SetAnimState: Unknown anim group")
             }
         }
 
@@ -1822,24 +1902,27 @@ object Actor {
                 Anim.ANIMCHANNEL_TORSO -> torsoAnim.state
                 Anim.ANIMCHANNEL_LEGS -> legsAnim.state
                 else -> {
-                    idGameLocal.Error("idActor::GetAnimState: Unknown anim group")
-                    throw RuntimeException("idActor::GetAnimState: Unknown anim group")
+                    idGameLocal.Error("obj.GetAnimState: Unknown anim group")
+                    throw RuntimeException("obj.GetAnimState: Unknown anim group")
                 }
             }
         }
 
-        fun InAnimState(channel: Int, stateName: String): Boolean {
+        fun InAnimState(channel: Int, stateName: String?): Boolean {
             when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> if (headAnim.state.toString() == stateName) {
                     return true
                 }
+
                 Anim.ANIMCHANNEL_TORSO -> if (torsoAnim.state.toString() == stateName) {
                     return true
                 }
+
                 Anim.ANIMCHANNEL_LEGS -> if (legsAnim.state.toString() == stateName) {
                     return true
                 }
-                else -> idGameLocal.Error("idActor::InAnimState: Unknown anim group")
+
+                else -> idGameLocal.Error("obj.InAnimState: Unknown anim group")
             }
             return false
         }
@@ -2078,7 +2161,7 @@ object Actor {
                 sound = spawnArgs.GetString(
                     Str.va(
                         "snd_footstep_%s",
-                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]!!
+                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]
                     )
                 )
             }
@@ -2108,7 +2191,7 @@ object Actor {
                 sound = spawnArgs.GetString(
                     Str.va(
                         "snd_footstep_%s",
-                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]!!
+                        Game_local.gameLocal.sufaceTypeNames[TempDump.etoi(material.GetSurfaceType())]
                     )
                 )
             }
@@ -2155,7 +2238,7 @@ object Actor {
             walkIK.DisableLeg(num.value)
         }
 
-        private fun Event_SetAnimPrefix(prefix: idEventArg<String>) {
+        private fun Event_SetAnimPrefix(prefix: idEventArg<String?>) {
             animPrefix.set(prefix.value)
         }
 
@@ -2601,7 +2684,7 @@ object Actor {
 
         private fun Event_AnimState(
             channel: idEventArg<Int>,
-            statename: idEventArg<String>,
+            statename: idEventArg<String?>,
             blendFrames: idEventArg<Int>
         ) {
             SetAnimState(channel.value, statename.value, blendFrames.value)
@@ -2613,13 +2696,13 @@ object Actor {
             idThread.ReturnString(state)
         }
 
-        private fun Event_InAnimState(channel: idEventArg<Int>, statename: idEventArg<String>) {
+        private fun Event_InAnimState(channel: idEventArg<Int>, statename: idEventArg<String?>) {
             val instate: Boolean
             instate = InAnimState(channel.value, statename.value)
             idThread.ReturnInt(instate)
         }
 
-        private fun Event_FinishAction(actionname: idEventArg<String>) {
+        private fun Event_FinishAction(actionname: idEventArg<String?>) {
             if (waitState.toString() == actionname.value) {
                 SetWaitState("")
             }
@@ -2761,14 +2844,14 @@ object Actor {
             StopSound(channel.value, netSync.value != 0)
         }
 
-        private fun Event_SetNextState(name: idEventArg<String>) {
+        private fun Event_SetNextState(name: idEventArg<String?>) {
             idealState = GetScriptFunction(name.value)
             if (idealState === state) {
                 state = null
             }
         }
 
-        private fun Event_SetState(name: idEventArg<String>) {
+        private fun Event_SetState(name: idEventArg<String?>) {
             idealState = GetScriptFunction(name.value)
             if (idealState === state) {
                 state = null
@@ -2788,8 +2871,8 @@ object Actor {
             idThread.ReturnEntity(head.GetEntity())
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         override fun _deconstructor() {

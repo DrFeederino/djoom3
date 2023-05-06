@@ -83,15 +83,20 @@ object Item {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[EV_DropToFloor] =
-                    eventCallback_t0<idItem> { obj: Any? -> idItem::Event_DropToFloor }
+                    eventCallback_t0<idItem> { obj: idItem -> obj.Event_DropToFloor() }
                 eventCallbacks[Entity.EV_Touch] =
-                    eventCallback_t2<idItem> { obj: Any?, _other: idEventArg<*>?, trace: idEventArg<*>? -> idItem::Event_Touch }
+                    eventCallback_t2<idItem> { obj: idItem, _other: idEventArg<*>?, trace: idEventArg<*>? ->
+                        obj.Event_Touch(
+                            _other as idEventArg<idEntity>,
+                            trace as idEventArg<trace_s>
+                        )
+                    }
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idItem> { obj: Any?, _activator: idEventArg<*>? -> idItem::Event_Trigger }
+                    eventCallback_t1<idItem> { obj: idItem, _activator: idEventArg<*>? -> obj.Event_Trigger(_activator as idEventArg<idEntity>) }
                 eventCallbacks[EV_RespawnItem] =
-                    eventCallback_t0<idItem> { obj: Any? -> idItem::Event_Respawn }
+                    eventCallback_t0<idItem> { obj: idItem -> obj.Event_Respawn() }
                 eventCallbacks[EV_RespawnFx] =
-                    eventCallback_t0<idItem> { obj: Any? -> idItem::Event_RespawnFx }
+                    eventCallback_t0<idItem> { obj: idItem -> obj.Event_RespawnFx() }
             }
         }
 
@@ -455,8 +460,8 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         class ModelCallback private constructor() : deferredEntityCallback_t() {
@@ -469,7 +474,7 @@ object Item {
                 }
                 ent = Game_local.gameLocal.entities[e.entityNum] as idItem
                 if (null == ent) {
-                    idGameLocal.Error("idItem::ModelCallback: callback with NULL game entity")
+                    idGameLocal.Error("obj.ModelCallback: callback with NULL game entity")
                 }
                 return ent.UpdateRenderEntity(e, v)
             }
@@ -567,15 +572,15 @@ object Item {
             init {
                 eventCallbacks.putAll(idItem.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idObjective> { obj: Any?, activator: idEventArg<*>? ->
-                        idObjective::Event_Trigger
+                    eventCallback_t1<idObjective> { obj: idObjective, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_HideObjective] =
-                    eventCallback_t1<idObjective> { obj: Any?, e: idEventArg<*>? -> idObjective::Event_HideObjective }
+                    eventCallback_t1<idObjective> { obj: idObjective, e: idEventArg<*>? -> obj.Event_HideObjective(e as idEventArg<idEntity>) }
                 eventCallbacks[EV_GetPlayerPos] =
-                    eventCallback_t0<idObjective> { obj: Any? -> idObjective::Event_GetPlayerPos }
+                    eventCallback_t0<idObjective> { obj: idObjective -> obj.Event_GetPlayerPos() }
                 eventCallbacks[EV_CamShot] =
-                    eventCallback_t0<idObjective> { obj: Any? -> idObjective::Event_CamShot }
+                    eventCallback_t0<idObjective> { obj: idObjective -> obj.Event_CamShot() }
             }
         }
 
@@ -679,8 +684,8 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -871,10 +876,10 @@ object Item {
             init {
                 eventCallbacks.putAll(idItem.getEventCallBacks())
                 eventCallbacks[EV_DropToFloor] =
-                    eventCallback_t0<idMoveableItem> { obj: Any? -> idMoveableItem::Event_DropToFloor }
+                    eventCallback_t0<idMoveableItem> { obj: idMoveableItem -> obj.Event_DropToFloor() }
                 eventCallbacks[AFEntity.EV_Gib] =
-                    eventCallback_t1<idMoveableItem> { obj: Any?, damageDefName: idEventArg<*>? ->
-                        idMoveableItem::Event_Gib
+                    eventCallback_t1<idMoveableItem> { obj: idMoveableItem, damageDefName: idEventArg<*>? ->
+                        obj.Event_Gib(damageDefName as idEventArg<String>)
                     }
             }
         }
@@ -1040,8 +1045,8 @@ object Item {
             Gib(idVec3(0, 0, 1), damageDefName.value)
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
         //
@@ -1095,8 +1100,8 @@ object Item {
             init {
                 eventCallbacks.putAll(idEntity.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idItemRemover> { obj: Any?, _activator: idEventArg<*>? ->
-                        idItemRemover::Event_Trigger
+                    eventCallback_t1<idItemRemover> { obj: idItemRemover, _activator: idEventArg<*>? ->
+                        obj.Event_Trigger(_activator as idEventArg<idEntity>)
                     }
             }
         }
@@ -1118,8 +1123,8 @@ object Item {
             throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
     }
 
@@ -1141,15 +1146,15 @@ object Item {
             init {
                 eventCallbacks.putAll(idItemRemover.getEventCallBacks())
                 eventCallbacks[Entity.EV_Activate] =
-                    eventCallback_t1<idObjectiveComplete> { obj: Any?, activator: idEventArg<*>? ->
-                        idObjectiveComplete::Event_Trigger
+                    eventCallback_t1<idObjectiveComplete> { obj: idObjectiveComplete, activator: idEventArg<*>? ->
+                        obj.Event_Trigger(activator as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_HideObjective] =
-                    eventCallback_t1<idObjectiveComplete> { obj: Any?, e: idEventArg<*>? ->
-                        idObjectiveComplete::Event_HideObjective
+                    eventCallback_t1<idObjectiveComplete> { obj: idObjectiveComplete, e: idEventArg<*>? ->
+                        obj.Event_HideObjective(e as idEventArg<idEntity>)
                     }
                 eventCallbacks[EV_GetPlayerPos] =
-                    eventCallback_t0<idObjectiveComplete> { obj: Any? -> idObjectiveComplete::Event_GetPlayerPos }
+                    eventCallback_t0<idObjectiveComplete> { obj: idObjectiveComplete -> obj.Event_GetPlayerPos() }
             }
         }
 
@@ -1209,8 +1214,8 @@ object Item {
             }
         }
 
-        override fun getEventCallBack(event: idEventDef): eventCallback_t<*> {
-            return eventCallbacks[event]!!
+        override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
+            return eventCallbacks[event]
         }
 
     }

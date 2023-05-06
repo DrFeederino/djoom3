@@ -332,10 +332,7 @@ object Simd {
         @Deprecated("")
         abstract fun  /*VPCALL*/Memcpy(dst: Array<Any>, src: Array<Any>, count: Int)
         fun  /*VPCALL*/Memcpy(dst: Array<idAnimBlend>, src: Array<idAnimBlend>, count: Int) {
-            //System.arraycopy(src, 0, dst, 0, count);
-            for (i in 0 until count) {
-                dst[i] = src[i]
-            }
+            System.arraycopy(src, 0, dst, 0, count);
         }
 
         fun  /*VPCALL*/Memcpy(dst: Array<idDrawVert>, src: Array<idDrawVert>, count: Int) {
@@ -350,9 +347,7 @@ object Simd {
         }
 
         fun  /*VPCALL*/Memcpy(dst: Array<shadowCache_s>, src: Array<idVec4>, count: Int) {
-            for (i in 0 until count) {
-                dst[i].xyz = src[i]
-            }
+            System.arraycopy(src, 0, src, 0, count)
         }
 
         fun  /*VPCALL*/Memcpy(dst: Array<shadowCache_s>, src: Array<shadowCache_s>, count: Int) {
