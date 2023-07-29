@@ -129,7 +129,7 @@ object GameSSDWindow {
     class SSDCrossHair  //
     {
         //	};
-        private var crosshairMaterial: Array<idMaterial> = Array(CROSSHAIR_COUNT) { idMaterial() }
+        private var crosshairMaterial: Array<idMaterial?> = kotlin.arrayOfNulls(CROSSHAIR_COUNT)
         private var crosshairWidth = 0f
         private var crosshairHeight = 0f
         private var currentCrosshair = 0
@@ -357,7 +357,7 @@ object GameSSDWindow {
                 y,
                 persize.x,
                 persize.y,
-                material!!,
+                material,
                 matColor,
                 1.0f,
                 1.0f,

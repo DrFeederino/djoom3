@@ -149,7 +149,7 @@ object GameBustOutWindow {
                     position.y,
                     width,
                     height,
-                    material!!,
+                    material,
                     color,
                     1.0f,
                     1.0f,

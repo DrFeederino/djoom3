@@ -374,8 +374,6 @@ object Material {
     class idMaterial// we put this here instead of in CommonInit, because
     // we don't want it cleared when a material is purged
         : idDecl(), SERiAL {
-        var isNil = false
-
         //
         //
         private val deformRegisters: IntArray = IntArray(4) // numeric parameter for deforms

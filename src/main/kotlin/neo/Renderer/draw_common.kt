@@ -961,7 +961,7 @@ object draw_common {
      mode to the framebuffer, instead of interacting with the surface texture
      =====================
      */
-    fun RB_BlendLight(drawSurfs: drawSurf_s, drawSurfs2: drawSurf_s) {
+    fun RB_BlendLight(drawSurfs: drawSurf_s?, drawSurfs2: drawSurf_s?) {
         val lightShader: idMaterial?
         var stage: shaderStage_t
         var i: Int
@@ -990,7 +990,7 @@ object draw_common {
         qgl.qglEnable(GL14.GL_TEXTURE_GEN_T)
         qgl.qglEnable(GL14.GL_TEXTURE_GEN_Q)
         i = 0
-        while (i < lightShader.GetNumStages()) {
+        while (i < lightShader!!.GetNumStages()) {
             stage = lightShader.GetStage(i)!!
             if (0f == regs[stage.conditionRegister]) {
                 i++
@@ -1040,7 +1040,7 @@ object draw_common {
      RB_FogPass
      ==================
      */
-    fun RB_FogPass(drawSurfs: drawSurf_s, drawSurfs2: drawSurf_s) {
+    fun RB_FogPass(drawSurfs: drawSurf_s?, drawSurfs2: drawSurf_s?) {
         val frustumTris: srfTriangles_s
         val ds = drawSurf_s() //memset( &ds, 0, sizeof( ds ) );
         val lightShader: idMaterial?
@@ -1063,7 +1063,7 @@ object draw_common {
         lightShader = tr_local.backEnd.vLight.lightShader
         regs = tr_local.backEnd.vLight.shaderRegisters
         // assume fog shaders have only a single stage
-        stage = lightShader.GetStage(0)!!
+        stage = lightShader!!.GetStage(0)!!
         tr_local.backEnd.lightColor[0] = regs[stage.color.registers[0]]
         tr_local.backEnd.lightColor[1] = regs[stage.color.registers[1]]
         tr_local.backEnd.lightColor[2] = regs[stage.color.registers[2]]
@@ -1155,7 +1155,7 @@ object draw_common {
         vLight = tr_local.backEnd.viewDef!!.viewLights
         while (vLight != null) {
             tr_local.backEnd.vLight = vLight
-            if (!vLight.lightShader.IsFogLight() && !vLight.lightShader.IsBlendLight()) {
+            if (!vLight.lightShader!!.IsFogLight() && !vLight.lightShader!!.IsBlendLight()) {
                 vLight = vLight.next
                 continue
             }
@@ -1184,10 +1184,10 @@ object draw_common {
 //			qglStencilOp( GL_KEEP, GL_KEEP, GL_INCR );
 //		}
 //}
-            if (vLight.lightShader.IsFogLight()) {
-                RB_FogPass(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
-            } else if (vLight.lightShader.IsBlendLight()) {
-                RB_BlendLight(vLight.globalInteractions[0]!!, vLight.localInteractions[0]!!)
+            if (vLight.lightShader!!.IsFogLight()) {
+                RB_FogPass(vLight.globalInteractions[0], vLight.localInteractions[0])
+            } else if (vLight.lightShader!!.IsBlendLight()) {
+                RB_BlendLight(vLight.globalInteractions[0], vLight.localInteractions[0])
             }
             qgl.qglDisable(GL14.GL_STENCIL_TEST)
             vLight = vLight.next

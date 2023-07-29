@@ -138,7 +138,7 @@ class GameBearShootWindow {
                     position.y,
                     width,
                     height,
-                    material!!,
+                    material,
                     entColor,
                     1.0f,
                     1.0f,

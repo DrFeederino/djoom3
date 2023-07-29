@@ -238,7 +238,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
          ================
          */
         // sets up a trace model for collision with other trace models
-        override fun SetupTrmModel(trm: idTraceModel, material: idMaterial): Int {
+        override fun SetupTrmModel(trm: idTraceModel, material: Array<idMaterial?>): Int {
             var j: Int
             val vertex: Array<cm_vertex_s>?
             val edge: Array<cm_edge_s>?
@@ -247,8 +247,8 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val trmPoly: Array<traceModelPoly_t>
             assert(models != null)
             // probably not the best fix for null pointer assignment?
-            if (material.isNil) { // material == null
-                material.oSet(trmMaterial) // material = trmMaterial <- modification of input parameter by pointer, oof
+            if (material[0] == null) { // material == null
+                material[0] = trmMaterial // material = trmMaterial <- modification of input parameter by pointer, oof
             }
             model = models?.get(MAX_SUBMODELS)!!
             model.node?.brushes = null
@@ -291,7 +291,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 poly.plane.SetNormal(trmPoly[i].normal)
                 poly.plane.SetDist(trmPoly[i].dist)
                 poly.bounds.set(trmPoly[i].bounds)
-                poly.material = material
+                poly.material = material[0]
                 // link polygon at node
                 trmPolygons[i]?.next = model.node!!.polygons
                 model.node!!.polygons = trmPolygons[i]
@@ -6571,7 +6571,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val brush: cm_brush_s?
             val planes: Array<idPlane> = idPlane.generateArray(mapBrush.GetNumSides())
             val w = idFixedWinding()
-            var material: idMaterial = idMaterial() // check if works
+            var material: idMaterial? = null
             contents = 0
             bounds.Clear()
             i = 0

@@ -75,7 +75,8 @@ object tr_turboshadow {
             indexes = tri.indexes
             val modifyFacing = cullInfo.facing!!
             val cullBits = cullInfo.cullBits!!
-            j = 0.also { i = it }
+            j = 0
+            i = 0
             while (i < tri.numIndexes) {
                 if (0 == modifyFacing[j].toInt()) {
                     val i1 = indexes!![i + 0]
@@ -116,11 +117,12 @@ object tr_turboshadow {
         sil = 0
         i = tri.numSilEdges
         while (i > 0) {
-//            if (tri.silEdges!![sil].p1 >= facing.size || tri.silEdges!![sil].p2 >= facing.size) {
-//                i--
-//                sil++
-//                continue
-//            }
+            if (tri.silEdges!![sil].p1 >= facing.size || tri.silEdges!![sil].p2 >= facing.size) {
+                i--
+                sil++
+                continue
+            }
+
             val f1: Int = facing[tri.silEdges!![sil].p1].toInt()
             val f2: Int = facing[tri.silEdges!![sil].p2].toInt()
             if (0 == f1 xor f2) {
@@ -233,7 +235,8 @@ object tr_turboshadow {
             indexes = tri.indexes!!
             val modifyFacing = cullInfo.facing!!
             val cullBits = cullInfo.cullBits!!
-            j = 0.also { i = it }
+            j = 0
+            i = 0
             while (i < tri.numIndexes) {
                 if (0 == modifyFacing[j].toInt()) {
                     val i1 = indexes[i + 0]

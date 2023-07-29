@@ -4569,7 +4569,7 @@ object FileSystem_h {
             //
             private val fs_debug: idCVar = idCVar(
                 "fs_debug",
-                "1",
+                "0",
                 CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_INTEGER,
                 "",
                 0f,

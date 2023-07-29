@@ -30,8 +30,8 @@ import neo.ui.Rectangle.idRegion
 class DeviceContext {
 
     class idDeviceContext {
-        private val cursorImages: Array<idMaterial> = Array(CURSOR.CURSOR_COUNT.ordinal) { idMaterial() }
-        private val scrollBarImages: Array<idMaterial> = Array(SCROLLBAR.SCROLLBAR_COUNT.ordinal) { idMaterial() }
+        private val cursorImages: Array<idMaterial?> = kotlin.arrayOfNulls(CURSOR.CURSOR_COUNT.ordinal)
+        private val scrollBarImages: Array<idMaterial?> = arrayOfNulls(SCROLLBAR.SCROLLBAR_COUNT.ordinal)
         private var activeFont: fontInfoEx_t? = null
 
         //
@@ -67,7 +67,7 @@ class DeviceContext {
         //
         private var vidHeight = 0f
         private var vidWidth = 0f
-        private var whiteImage: idMaterial = idMaterial()
+        private var whiteImage: idMaterial? = null
         private var xScale = 0f
         private var yScale = 0f
 
@@ -75,7 +75,7 @@ class DeviceContext {
             xScale = 0f
             SetSize(VIRTUAL_WIDTH.toFloat(), VIRTUAL_HEIGHT.toFloat())
             whiteImage = DeclManager.declManager.FindMaterial("guis/assets/white.tga")!!
-            whiteImage.SetSort(Material.SS_GUI.toFloat())
+            whiteImage!!.SetSort(Material.SS_GUI.toFloat())
             mbcs = false
             SetupFonts()
             activeFont = fonts[0]
@@ -106,15 +106,15 @@ class DeviceContext {
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")!!
             scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal] =
                 DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")!!
-            cursorImages[CURSOR.CURSOR_ARROW.ordinal].SetSort(Material.SS_GUI.toFloat())
-            cursorImages[CURSOR.CURSOR_HAND.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal].SetSort(Material.SS_GUI.toFloat())
-            scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal].SetSort(Material.SS_GUI.toFloat())
+            cursorImages[CURSOR.CURSOR_ARROW.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            cursorImages[CURSOR.CURSOR_HAND.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
+            scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
             cursor = CURSOR.CURSOR_ARROW
             enableClipping = true
             overStrikeMode = true
@@ -162,7 +162,7 @@ class DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial,
+            mat: idMaterial?,
             color: idVec4,
             scaleX: Float /*= 1.0f*/,
             scaleY: Float /*= 1.0f*/
@@ -438,7 +438,7 @@ class DeviceContext {
             t0: Float,
             s1: Float,
             t1: Float,
-            shader: idMaterial
+            shader: idMaterial?
         ) {
             val verts = arrayOf(idDrawVert(), idDrawVert(), idDrawVert(), idDrawVert())
             val indexes = IntArray(6)
@@ -527,7 +527,7 @@ class DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial,
+            mat: idMaterial?,
             color: idVec4,
             scalex: Float /*= 1.0*/,
             scaley: Float /*= 1.0*/,
@@ -587,7 +587,7 @@ class DeviceContext {
             t0: Float,
             s1: Float,
             t1: Float,
-            shader: idMaterial,
+            shader: idMaterial?,
             angle: Float /*= 0.0f*/
         ) {
             val verts = Array(4) { idDrawVert() }
@@ -1193,12 +1193,15 @@ class DeviceContext {
                 if (limit > 0 && len > limit) {
                     len = limit
                 }
-                while (s_i < len && text[s_i].also { s = it }.code != 0 && count < len) {
+                s = text[s_i]
+                while (s_i < len && s.code != 0 && count < len) {
+                    s = text[s_i]
                     if (s.code < RenderSystem.GLYPH_START || s.code > RenderSystem.GLYPH_END) {
                         s_i++
                         continue
                     }
-                    glyph = useFont!!.glyphs[text[s_i].also { s = it }.code]
+                    s = text[s_i]
+                    glyph = useFont!!.glyphs[s.code]
 
                     //
                     // int yadj = Assets.textFont.glyphs[text[i]].bottom +

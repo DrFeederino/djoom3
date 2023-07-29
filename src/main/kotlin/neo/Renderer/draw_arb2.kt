@@ -182,7 +182,7 @@ object draw_arb2 {
 
         // texture 0 is the normalization cube map for the vector towards the light
         GL_SelectTextureNoClient(0)
-        if (backEnd.vLight.lightShader.IsAmbientLight()) {
+        if (backEnd.vLight.lightShader!!.IsAmbientLight()) {
             Image.globalImages.ambientNormalMap.Bind()
         } else {
             Image.globalImages.normalCubeMapImage.Bind()
@@ -252,7 +252,7 @@ object draw_arb2 {
      */
     fun RB_ARB2_DrawInteractions() {
         var vLight: viewLight_s?
-        var lightShader: idMaterial
+        var lightShader: idMaterial?
         GL_SelectTexture(0)
         qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
 
@@ -264,11 +264,11 @@ object draw_arb2 {
             backEnd.vLight = vLight
 
             // do fogging later
-            if (vLight.lightShader.IsFogLight()) {
+            if (vLight.lightShader!!.IsFogLight()) {
                 vLight = vLight.next
                 continue
             }
-            if (vLight.lightShader.IsBlendLight()) {
+            if (vLight.lightShader!!.IsBlendLight()) {
                 vLight = vLight.next
                 continue
             }

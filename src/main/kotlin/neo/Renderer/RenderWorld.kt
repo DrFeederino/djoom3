@@ -752,13 +752,13 @@ class RenderWorld {
     // modelTrace_t is for tracing vs. visual geometry
     class modelTrace_s {
         var entity // render entity that was hit
-                : renderEntity_s = renderEntity_s()
+                : renderEntity_s? = null
         var fraction // fraction of trace completed
                 = 0f
         var jointNumber // md5 joint nearest to the hit triangle
                 = 0
         var material // material of hit surface
-                : idMaterial = idMaterial()
+                : idMaterial? = null
         val normal: idVec3 = idVec3() // hit triangle normal vector in global space
         val point: idVec3 = idVec3() // end point of trace in global space
         fun clear() {

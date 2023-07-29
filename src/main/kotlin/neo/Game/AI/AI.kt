@@ -2658,7 +2658,7 @@ object AI {
             val origin = physicsObj.GetOrigin()
             obstacle = null
             AI_OBSTACLE_IN_PATH.underscore(false)
-            foundPath = FindPathAroundObstacles(physicsObj, aas, enemy.GetEntity()!!, origin, goalPos, path)
+            foundPath = FindPathAroundObstacles(physicsObj, aas, enemy.GetEntity(), origin, goalPos, path)
             if (SysCvar.ai_showObstacleAvoidance.GetBool()) {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.colorBlue,

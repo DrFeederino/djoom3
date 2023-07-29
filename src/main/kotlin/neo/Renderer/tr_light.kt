@@ -1593,7 +1593,7 @@ object tr_light {
             while (vLight != null) {
                 var surf: drawSurf_s?
                 val surfRect = idScreenRect()
-                if (!vLight.lightShader.LightCastsShadows()) {
+                if (!vLight.lightShader!!.LightCastsShadows()) {
                     vLight = vLight.next
                     continue
                 }

@@ -2264,13 +2264,13 @@ class RenderSystem_init {
                 if (!tr_local.tr.primaryWorld!!.Trace(mt, start, end, 0.0f, false)) {
                     return
                 }
-                idLib.common.Printf("Reloading %s\n", mt.material.GetName())
+                idLib.common.Printf("Reloading %s\n", mt.material!!.GetName())
 
                 // reload the decl
-                mt.material.base!!.Reload()
+                mt.material!!.base!!.Reload()
 
                 // reload any images used by the decl
-                mt.material.ReloadImages(false)
+                mt.material!!.ReloadImages(false)
             }
 
             companion object {
@@ -2318,32 +2318,32 @@ class RenderSystem_init {
         r_inhibitFragmentProgram = idCVar(
             "r_inhibitFragmentProgram",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "ignore the fragment program extension"
         )
-        r_glDriver = idCVar("r_glDriver", "", CVarSystem.CVAR_RENDERER, "\"opengl32\", etc.")
+        r_glDriver = idCVar("r_glDriver", "", CVAR_RENDERER, "\"opengl32\", etc.")
         r_useLightPortalFlow = idCVar(
             "r_useLightPortalFlow",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use a more precise area reference determination"
         )
         r_multiSamples = idCVar(
             "r_multiSamples",
-            "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            "2",
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "number of antialiasing samples"
         )
         r_mode = idCVar(
             "r_mode",
             "3",
-            CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_ARCHIVE or CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "video mode number"
         )
         r_displayRefresh = idCVar(
             "r_displayRefresh",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_NOCHEAT,
             "optional display refresh rate option for vid mode",
             0.0f,
             200.0f
@@ -2351,115 +2351,115 @@ class RenderSystem_init {
         r_fullscreen = idCVar(
             "r_fullscreen",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVAR_BOOL,
             "0 = windowed, 1 = full screen"
         )
         r_customWidth = idCVar(
             "r_customWidth",
             "720",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "custom screen width. set r_mode to -1 to activate"
         )
         r_customHeight = idCVar(
             "r_customHeight",
             "486",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "custom screen height. set r_mode to -1 to activate"
         )
         r_singleTriangle = idCVar(
             "r_singleTriangle",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "only draw a single triangle per primitive"
         )
         r_checkBounds = idCVar(
             "r_checkBounds",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "compare all surface bounds with precalculated ones"
         )
         r_useNV20MonoLights = idCVar(
             "r_useNV20MonoLights",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "use pass optimization for mono lights"
         )
         r_useConstantMaterials = idCVar(
             "r_useConstantMaterials",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use pre-calculated material registers if possible"
         )
         r_useTripleTextureARB = idCVar(
             "r_useTripleTextureARB",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "cards with 3+ texture units do a two pass instead of three pass"
         )
         r_useSilRemap = idCVar(
             "r_useSilRemap",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "consider verts with the same XYZ, but different ST the same for shadows"
         )
         r_useNodeCommonChildren = idCVar(
             "r_useNodeCommonChildren",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "stop pushing reference bounds early when possible"
         )
         r_useShadowProjectedCull = idCVar(
             "r_useShadowProjectedCull",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "discard triangles outside light volume before shadowing"
         )
         r_useShadowVertexProgram = idCVar(
             "r_useShadowVertexProgram",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "do the shadow projection in the vertex program on capable cards"
         )
         r_useShadowSurfaceScissor = idCVar(
             "r_useShadowSurfaceScissor",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "scissor shadows by the scissor rect of the interaction surfaces"
         )
         r_useInteractionTable = idCVar(
             "r_useInteractionTable",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "create a full entityDefs * lightDefs table to make finding interactions faster"
         )
         r_useTurboShadow = idCVar(
             "r_useTurboShadow",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use the infinite projection with W technique for dynamic shadows"
         )
         r_useTwoSidedStencil = idCVar(
             "r_useTwoSidedStencil",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "do stencil shadows in one pass with different ops on each side"
         )
         r_useDeferredTangents = idCVar(
             "r_useDeferredTangents",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "defer tangents calculations after deform"
         )
         r_useCachedDynamicModels = idCVar(
             "r_useCachedDynamicModels",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "cache snapshots of dynamic models"
         )
         r_useVertexBuffers = idCVar(
             "r_useVertexBuffers",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "use ARB_vertex_buffer_object for vertexes",
             0f,
             1f,
@@ -2468,7 +2468,7 @@ class RenderSystem_init {
         r_useIndexBuffers = idCVar(
             "r_useIndexBuffers",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "use ARB_vertex_buffer_object for indexes",
             0f,
             1f,
@@ -2477,41 +2477,41 @@ class RenderSystem_init {
         r_useStateCaching = idCVar(
             "r_useStateCaching",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "avoid redundant state changes in GL_*=new idCVar() calls"
         )
         r_useInfiniteFarZ = idCVar(
             "r_useInfiniteFarZ",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use the no-far-clip-plane trick"
         )
         r_znear = idCVar(
             "r_znear",
             "3",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "near Z clip plane distance",
             0.001f,
             200.0f
         )
         r_ignoreGLErrors =
-            idCVar("r_ignoreGLErrors", "1", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "ignore GL errors")
+            idCVar("r_ignoreGLErrors", "1", CVAR_RENDERER or CVAR_BOOL, "ignore GL errors")
         r_finish = idCVar(
             "r_finish",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "force a call to glFinish=new idCVar() every frame"
         )
         r_swapInterval = idCVar(
             "r_swapInterval",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "changes wglSwapIntarval"
         )
         r_gamma = idCVar(
             "r_gamma",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
             "changes gamma tables",
             0.5f,
             3.0f
@@ -2525,7 +2525,7 @@ class RenderSystem_init {
         r_brightness = idCVar(
             "r_brightness",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_FLOAT,
             "changes gamma tables",
             0.5f,
             2.0f
@@ -2533,7 +2533,7 @@ class RenderSystem_init {
         r_renderer = idCVar(
             "r_renderer",
             "best",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_ARCHIVE,
             "hardware specific renderer path to use",
             r_rendererArgs,
             ArgCompletion_String(r_rendererArgs)
@@ -2541,131 +2541,131 @@ class RenderSystem_init {
         r_jitter = idCVar(
             "r_jitter",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "randomly subpixel jitter the projection matrix"
         )
         r_skipSuppress = idCVar(
             "r_skipSuppress",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "ignore the per-view suppressions"
         )
         r_skipPostProcess = idCVar(
             "r_skipPostProcess",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "skip all post-process renderings"
         )
         r_skipLightScale = idCVar(
             "r_skipLightScale",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "don't do any post-interaction light scaling, makes things dim on low-dynamic range cards"
         )
         r_skipInteractions = idCVar(
             "r_skipInteractions",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "skip all light/surface interaction drawing"
         )
         r_skipDynamicTextures = idCVar(
             "r_skipDynamicTextures",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "don't dynamically create textures"
         )
         r_skipCopyTexture = idCVar(
             "r_skipCopyTexture",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "do all rendering, but don't actually copyTexSubImage2D"
         )
         r_skipBackEnd =
-            idCVar("r_skipBackEnd", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "don't draw anything")
+            idCVar("r_skipBackEnd", "0", CVAR_RENDERER or CVAR_BOOL, "don't draw anything")
         r_skipRender = idCVar(
             "r_skipRender",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "skip 3D rendering, but pass 2D"
         )
         r_skipRenderContext = idCVar(
             "r_skipRenderContext",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "NULL the rendering context during backend 3D rendering"
         )
         r_skipTranslucent = idCVar(
             "r_skipTranslucent",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "skip the translucent interaction rendering"
         )
         r_skipAmbient = idCVar(
             "r_skipAmbient",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "bypasses all non-interaction drawing"
         )
         r_skipNewAmbient = idCVar(
             "r_skipNewAmbient",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_BOOL or CVAR_ARCHIVE,
             "bypasses all vertex/fragment program ambient drawing"
         )
         r_skipBlendLights =
-            idCVar("r_skipBlendLights", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "skip all blend lights")
+            idCVar("r_skipBlendLights", "0", CVAR_RENDERER or CVAR_BOOL, "skip all blend lights")
         r_skipFogLights =
-            idCVar("r_skipFogLights", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "skip all fog lights")
+            idCVar("r_skipFogLights", "0", CVAR_RENDERER or CVAR_BOOL, "skip all fog lights")
         r_skipDeforms = idCVar(
             "r_skipDeforms",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "leave all deform materials in their original state"
         )
         r_skipFrontEnd = idCVar(
             "r_skipFrontEnd",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "bypasses all front end work, but 2D gui rendering still draws"
         )
         r_skipUpdates = idCVar(
             "r_skipUpdates",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = don't accept any entity or light updates, making everything static"
         )
         r_skipOverlays =
-            idCVar("r_skipOverlays", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "skip overlay surfaces")
+            idCVar("r_skipOverlays", "0", CVAR_RENDERER or CVAR_BOOL, "skip overlay surfaces")
         r_skipSpecular = idCVar(
             "r_skipSpecular",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_CHEAT or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_BOOL or CVarSystem.CVAR_CHEAT or CVAR_ARCHIVE,
             "use black for specular1"
         )
         r_skipBump = idCVar(
             "r_skipBump",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_BOOL or CVAR_ARCHIVE,
             "uses a flat surface instead of the bump map"
         )
         r_skipDiffuse =
-            idCVar("r_skipDiffuse", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "use black for diffuse")
+            idCVar("r_skipDiffuse", "0", CVAR_RENDERER or CVAR_BOOL, "use black for diffuse")
         r_skipROQ =
-            idCVar("r_skipROQ", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "skip ROQ decoding")
+            idCVar("r_skipROQ", "0", CVAR_RENDERER or CVAR_BOOL, "skip ROQ decoding")
         r_ignore =
-            idCVar("r_ignore", "0", CVarSystem.CVAR_RENDERER, "used for random debugging without defining new vars")
+            idCVar("r_ignore", "0", CVAR_RENDERER, "used for random debugging without defining new vars")
         r_ignore2 =
-            idCVar("r_ignore2", "0", CVarSystem.CVAR_RENDERER, "used for random debugging without defining new vars")
+            idCVar("r_ignore2", "0", CVAR_RENDERER, "used for random debugging without defining new vars")
         r_usePreciseTriangleInteractions = idCVar(
             "r_usePreciseTriangleInteractions",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = do winding clipping to determine if each ambiguous tri should be lit"
         )
         r_useCulling = idCVar(
             "r_useCulling",
-            "2",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            "1",
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "0 = none, 1 = sphere, 2 = sphere + box",
             0f,
             2f,
@@ -2674,7 +2674,7 @@ class RenderSystem_init {
         r_useLightCulling = idCVar(
             "r_useLightCulling",
             "3",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "0 = none, 1 = box, 2 = exact clip of polyhedron faces, 3 = also areas",
             0f,
             3f,
@@ -2683,36 +2683,36 @@ class RenderSystem_init {
         r_useLightScissors = idCVar(
             "r_useLightScissors",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = use custom scissor rectangle for each light"
         )
         r_useClippedLightScissors = idCVar(
             "r_useClippedLightScissors",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "0 = full screen when near clipped, 1 = exact when near clipped, 2 = exact always",
             0f,
             2f,
             ArgCompletion_Integer(0, 2)
         )
         r_useEntityCulling =
-            idCVar("r_useEntityCulling", "1", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "0 = none, 1 = box")
+            idCVar("r_useEntityCulling", "1", CVAR_RENDERER or CVAR_BOOL, "0 = none, 1 = box")
         r_useEntityScissors = idCVar(
             "r_useEntityScissors",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = use custom scissor rectangle for each entity"
         )
         r_useInteractionCulling = idCVar(
             "r_useInteractionCulling",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = cull interactions"
         )
         r_useInteractionScissors = idCVar(
             "r_useInteractionScissors",
             "2",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = use a custom scissor rectangle for each shadow interaction, 2 = also crop using portal scissors",
             -2f,
             2f,
@@ -2721,63 +2721,63 @@ class RenderSystem_init {
         r_useShadowCulling = idCVar(
             "r_useShadowCulling",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "try to cull shadows from partially visible lights"
         )
         r_useFrustumFarDistance = idCVar(
             "r_useFrustumFarDistance",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "if != 0 force the view frustum far distance to this distance"
         )
         r_logFile = idCVar(
             "r_logFile",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "number of frames to emit GL logs"
         )
         r_clear = idCVar(
             "r_clear",
             "2",
-            CVarSystem.CVAR_RENDERER,
+            CVAR_RENDERER,
             "force screen clear every frame, 1 = purple, 2 = black, 'r g b' = custom"
         )
         r_offsetFactor =
-            idCVar("r_offsetfactor", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT, "polygon offset parameter")
+            idCVar("r_offsetfactor", "0", CVAR_RENDERER or CVarSystem.CVAR_FLOAT, "polygon offset parameter")
         r_offsetUnits = idCVar(
             "r_offsetunits",
             "-600",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "polygon offset parameter"
         )
         r_shadowPolygonOffset = idCVar(
             "r_shadowPolygonOffset",
             "-1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "bias value added to depth test for stencil shadow drawing"
         )
         r_shadowPolygonFactor = idCVar(
             "r_shadowPolygonFactor",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "scale value for stencil shadow drawing"
         )
         r_frontBuffer = idCVar(
             "r_frontBuffer",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draw to front buffer for debugging"
         )
         r_skipSubviews = idCVar(
             "r_skipSubviews",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = don't render any gui elements on surfaces"
         )
         r_skipGuiShaders = idCVar(
             "r_skipGuiShaders",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = skip all gui elements on surfaces, 2 = skip drawing but still handle events, 3 = draw but skip events",
             0f,
             3f,
@@ -2786,7 +2786,7 @@ class RenderSystem_init {
         r_skipParticles = idCVar(
             "r_skipParticles",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = skip all particle systems",
             0f,
             1f,
@@ -2795,25 +2795,25 @@ class RenderSystem_init {
         r_subviewOnly = idCVar(
             "r_subviewOnly",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "1 = don't render main view, allowing subviews to be debugged"
         )
         r_shadows = idCVar(
             "r_shadows",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_BOOL or CVAR_ARCHIVE,
             "enable shadows"
         )
         r_testARBProgram = idCVar(
             "r_testARBProgram",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "experiment with vertex/fragment programs"
         )
         r_testGamma = idCVar(
             "r_testGamma",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "if > 0 draw a grid pattern to test gamma levels",
             0f,
             195f
@@ -2821,37 +2821,37 @@ class RenderSystem_init {
         r_testGammaBias = idCVar(
             "r_testGammaBias",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "if > 0 draw a grid pattern to test gamma levels"
         )
         r_testStepGamma = idCVar(
             "r_testStepGamma",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "if > 0 draw a grid pattern to test gamma levels"
         )
         r_lightScale = idCVar(
             "r_lightScale",
             "2",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "all light intensities are multiplied by this"
         )
         r_lightSourceRadius = idCVar(
             "r_lightSourceRadius",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "for soft-shadow sampling"
         )
         r_flareSize = idCVar(
             "r_flareSize",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "scale the flare deforms from the material def"
         )
         r_useExternalShadows = idCVar(
             "r_useExternalShadows",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = skip drawing caps when outside the light volume, 2 = force to no caps for testing",
             0f,
             2f,
@@ -2860,85 +2860,85 @@ class RenderSystem_init {
         r_useOptimizedShadows = idCVar(
             "r_useOptimizedShadows",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use the dmap generated static shadow volumes"
         )
         r_useScissor = idCVar(
             "r_useScissor",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "scissor clip as portals and lights are processed"
         )
         r_useCombinerDisplayLists = idCVar(
             "r_useCombinerDisplayLists",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL or CVarSystem.CVAR_NOCHEAT,
+            CVAR_RENDERER or CVAR_BOOL or CVarSystem.CVAR_NOCHEAT,
             "put all nvidia register combiner programming in display lists"
         )
         r_useDepthBoundsTest = idCVar(
             "r_useDepthBoundsTest",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "use depth bounds test to reduce shadow fill"
         )
         r_screenFraction = idCVar(
             "r_screenFraction",
             "100",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "for testing fill rate, the resolution of the entire screen can be changed"
         )
         r_demonstrateBug = idCVar(
             "r_demonstrateBug",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "used during development to show IHV's their problems"
         )
         r_usePortals = idCVar(
             "r_usePortals",
-            "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            "0",
+            CVAR_RENDERER or CVAR_BOOL,
             " 1 = use portals to perform area culling, otherwise draw everything"
         )
         r_singleLight = idCVar(
             "r_singleLight",
             "-1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "suppress all but one light"
         )
         r_singleEntity = idCVar(
             "r_singleEntity",
             "-1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "suppress all but one entity"
         )
         r_singleSurface = idCVar(
             "r_singleSurface",
             "-1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "suppress all but one surface on each entity"
         )
         r_singleArea = idCVar(
             "r_singleArea",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "only draw the portal area the view is actually in"
         )
         r_forceLoadImages = idCVar(
             "r_forceLoadImages",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVAR_BOOL,
             "draw all images to screen after registration"
         )
         r_orderIndexes = idCVar(
             "r_orderIndexes",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "perform index reorganization to optimize vertex use"
         )
         r_lightAllBackFaces = idCVar(
             "r_lightAllBackFaces",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "light all the back faces, even when they would be shadowed"
         )
 
@@ -2946,74 +2946,74 @@ class RenderSystem_init {
         r_showPortals = idCVar(
             "r_showPortals",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draw portal outlines in color based on passed / not passed"
         )
         r_showUnsmoothedTangents = idCVar(
             "r_showUnsmoothedTangents",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "if 1, put all nvidia register combiner programming in display lists"
         )
         r_showSilhouette = idCVar(
             "r_showSilhouette",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "highlight edges that are casting shadow planes"
         )
         r_showVertexColor = idCVar(
             "r_showVertexColor",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draws all triangles with the solid vertex color"
         )
         r_showUpdates = idCVar(
             "r_showUpdates",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report entity and light updates and ref counts"
         )
         r_showDemo = idCVar(
             "r_showDemo",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report reads and writes to the demo file"
         )
         r_showDynamic = idCVar(
             "r_showDynamic",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report stats on dynamic surface generation"
         )
         r_showLightScale = idCVar(
             "r_showLightScale",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report the scale factor applied to drawing for overbrights"
         )
         r_showDefs = idCVar(
             "r_showDefs",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report the number of modeDefs and lightDefs in view"
         )
         r_showTrace = idCVar(
             "r_showTrace",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "show the intersection of an eye trace with the world",
             ArgCompletion_Integer(0, 2)
         )
         r_showIntensity = idCVar(
             "r_showIntensity",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draw the screen colors based on intensity, red = 0, green = 128, blue = 255"
         )
         r_showImages = idCVar(
             "r_showImages",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = show all images instead of rendering, 2 = show in proportional size",
             0f,
             2f,
@@ -3022,13 +3022,13 @@ class RenderSystem_init {
         r_showSmp = idCVar(
             "r_showSmp",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "show which end (front or back) is blocking"
         )
         r_showLights = idCVar(
             "r_showLights",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = just print volumes numbers, highlighting ones covering the view, 2 = also draw planes of each volume, 3 = also draw edges of each volume",
             0f,
             3f,
@@ -3037,7 +3037,7 @@ class RenderSystem_init {
         r_showShadows = idCVar(
             "r_showShadows",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = visualize the stencil shadow volumes, 2 = draw filled in",
             0f,
             3f,
@@ -3046,7 +3046,7 @@ class RenderSystem_init {
         r_showShadowCount = idCVar(
             "r_showShadowCount",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "colors screen based on shadow volume depth complexity, >= 2 = print overdraw count based on stencil index values, 3 = only show turboshadows, 4 = only show static shadows",
             0f,
             4f,
@@ -3055,19 +3055,19 @@ class RenderSystem_init {
         r_showLightScissors = idCVar(
             "r_showLightScissors",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "show light scissor rectangles"
         )
         r_showEntityScissors = idCVar(
             "r_showEntityScissors",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "show entity scissor rectangles"
         )
         r_showInteractionFrustums = idCVar(
             "r_showInteractionFrustums",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = show a frustum for each interaction, 2 = also draw lines to light origin, 3 = also draw entity bbox",
             0f,
             3f,
@@ -3076,7 +3076,7 @@ class RenderSystem_init {
         r_showInteractionScissors = idCVar(
             "r_showInteractionScissors",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = show screen rectangle which contains the interaction frustum, 2 = also draw construction lines",
             0f,
             2f,
@@ -3085,7 +3085,7 @@ class RenderSystem_init {
         r_showLightCount = idCVar(
             "r_showLightCount",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = colors surfaces based on light count, 2 = also count everything through walls, 3 = also print overdraw",
             0f,
             3f,
@@ -3094,13 +3094,13 @@ class RenderSystem_init {
         r_showViewEntitys = idCVar(
             "r_showViewEntitys",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = displays the bounding boxes of all view models, 2 = print index numbers"
         )
         r_showTris = idCVar(
             "r_showTris",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "enables wireframe rendering of the world, 1 = only draw visible ones, 2 = draw all front facing, 3 = draw all",
             0f,
             3f,
@@ -3109,59 +3109,59 @@ class RenderSystem_init {
         r_showSurfaceInfo = idCVar(
             "r_showSurfaceInfo",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "show surface material name under crosshair"
         )
         r_showNormals =
-            idCVar("r_showNormals", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT, "draws wireframe normals")
+            idCVar("r_showNormals", "0", CVAR_RENDERER or CVarSystem.CVAR_FLOAT, "draws wireframe normals")
         r_showMemory = idCVar(
             "r_showMemory",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "print frame memory utilization"
         )
         r_showCull = idCVar(
             "r_showCull",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report sphere and box culling stats"
         )
         r_showInteractions = idCVar(
             "r_showInteractions",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report interaction generation activity"
         )
         r_showDepth = idCVar(
             "r_showDepth",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "display the contents of the depth buffer and the depth range"
         )
         r_showSurfaces = idCVar(
             "r_showSurfaces",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "report surface/light/shadow counts"
         )
         r_showPrimitives = idCVar(
             "r_showPrimitives",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "report drawsurf/index/vertex counts"
         )
         r_showEdges =
-            idCVar("r_showEdges", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "draw the sil edges")
+            idCVar("r_showEdges", "0", CVAR_RENDERER or CVAR_BOOL, "draw the sil edges")
         r_showTexturePolarity = idCVar(
             "r_showTexturePolarity",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "shade triangles by texture area polarity"
         )
         r_showTangentSpace = idCVar(
             "r_showTangentSpace",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "shade triangles by tangent space, 1 = use 1st tangent vector, 2 = use 2nd tangent vector, 3 = use normal vector",
             0f,
             3f,
@@ -3170,21 +3170,21 @@ class RenderSystem_init {
         r_showDominantTri = idCVar(
             "r_showDominantTri",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draw lines from vertexes to center of dominant triangles"
         )
         r_showAlloc =
-            idCVar("r_showAlloc", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL, "report alloc/free counts")
+            idCVar("r_showAlloc", "0", CVAR_RENDERER or CVAR_BOOL, "report alloc/free counts")
         r_showTextureVectors = idCVar(
             "r_showTextureVectors",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             " if > 0 draw each triangles texture =new idCVar(tangent) vectors"
         )
         r_showOverDraw = idCVar(
             "r_showOverDraw",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "1 = geometry overdraw, 2 = light interaction overdraw, 3 = geometry and light interaction overdraw",
             0f,
             3f,
@@ -3193,19 +3193,19 @@ class RenderSystem_init {
         r_lockSurfaces = idCVar(
             "r_lockSurfaces",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "allow moving the view point without changing the composition of the scene, including culling"
         )
         r_useEntityCallbacks = idCVar(
             "r_useEntityCallbacks",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "if 0, issue the callback immediately at update time, rather than defering"
         )
         r_showSkel = idCVar(
             "r_showSkel",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVarSystem.CVAR_INTEGER,
             "draw the skeleton when model animates, 1 = draw model with skeleton, 2 = draw skeleton only",
             0f,
             2f,
@@ -3214,39 +3214,39 @@ class RenderSystem_init {
         r_jointNameScale = idCVar(
             "r_jointNameScale",
             "0.02",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "size of joint names when r_showskel is set to 1"
         )
         r_jointNameOffset = idCVar(
             "r_jointNameOffset",
             "0.5",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
+            CVAR_RENDERER or CVarSystem.CVAR_FLOAT,
             "offset of joint names when r_showskel is set to 1"
         )
         r_cgVertexProfile = idCVar(
             "r_cgVertexProfile",
             "best",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE,
+            CVAR_RENDERER or CVAR_ARCHIVE,
             "arbvp1, vp20, vp30"
         )
         r_cgFragmentProfile =
-            idCVar("r_cgFragmentProfile", "best", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE, "arbfp1, fp30")
+            idCVar("r_cgFragmentProfile", "best", CVAR_RENDERER or CVAR_ARCHIVE, "arbfp1, fp30")
         r_debugLineDepthTest = idCVar(
             "r_debugLineDepthTest",
             "0",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVAR_BOOL,
             "perform depth test on debug lines"
         )
         r_debugLineWidth = idCVar(
             "r_debugLineWidth",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVAR_BOOL,
             "width of debug lines"
         )
         r_debugArrowStep = idCVar(
             "r_debugArrowStep",
             "120",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
+            CVAR_RENDERER or CVAR_ARCHIVE or CVarSystem.CVAR_INTEGER,
             "step size of arrow cone line rotation in degrees",
             0f,
             120f
@@ -3254,17 +3254,17 @@ class RenderSystem_init {
         r_debugPolygonFilled = idCVar(
             "r_debugPolygonFilled",
             "1",
-            CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_BOOL,
+            CVAR_RENDERER or CVAR_BOOL,
             "draw a filled polygon"
         )
         r_materialOverride = idCVar(
             "r_materialOverride",
             "",
-            CVarSystem.CVAR_RENDERER,
+            CVAR_RENDERER,
             "overrides all materials",
             ArgCompletion_Decl(declType_t.DECL_MATERIAL)
         )
         r_debugRenderToTexture =
-            idCVar("r_debugRenderToTexture", "0", CVarSystem.CVAR_RENDERER or CVarSystem.CVAR_INTEGER, "")
+            idCVar("r_debugRenderToTexture", "0", CVAR_RENDERER or CVarSystem.CVAR_INTEGER, "")
     }
 }

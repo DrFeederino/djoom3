@@ -48,7 +48,6 @@ import org.lwjgl.opengl.GL11
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.math.floor
@@ -749,7 +748,7 @@ object tr_local {
         // back end should NOT reference the lightDef, because it can change when running SMP
         var lightDef: idRenderLightLocal = idRenderLightLocal()
         var lightShader // light shader used by backend
-                : idMaterial = idMaterial()
+                : idMaterial? = null
         var next: viewLight_s? = null
 
         //

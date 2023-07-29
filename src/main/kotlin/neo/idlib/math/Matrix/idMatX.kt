@@ -1072,14 +1072,19 @@ class idMatX {
             1 -> mat[0]
             2 -> //			return reinterpret_cast<const idMat2 *>(mat)->Determinant();
                 mat[0] + mat[3]
+
             3 -> //			return reinterpret_cast<const idMat3 *>(mat)->Determinant();
                 mat[0] + mat[4] + mat[8]
+
             4 -> //			return reinterpret_cast<const idMat4 *>(mat)->Determinant();
                 mat[0] + mat[5] + mat[10] + mat[15]
+
             5 -> //			return reinterpret_cast<const idMat5 *>(mat)->Determinant();
                 mat[0] + mat[6] + mat[12] + mat[18] + mat[24]
+
             6 -> //			return reinterpret_cast<const idMat6 *>(mat)->Determinant();
                 mat[0] + mat[7] + mat[14] + mat[21] + mat[28] + mat[35]
+
             else -> DeterminantGeneric()
         }
         //            return 0.0f;
@@ -1129,6 +1134,7 @@ class idMatX {
                 mat[0] = 1.0f / mat[0]
                 true
             }
+
             2 -> {
                 val mat2 = idMat2(
                     mat[0], mat[1],
@@ -1138,6 +1144,7 @@ class idMatX {
                 mat = mat2.reinterpret_cast()
                 result
             }
+
             3 -> {
                 val mat3 = idMat3(
                     mat[0], mat[1], mat[2],
@@ -1148,6 +1155,7 @@ class idMatX {
                 mat = mat3.reinterpret_cast()
                 result
             }
+
             4 -> {
                 val mat4 = idMat4(
                     mat[0], mat[1], mat[2], mat[3],
@@ -1159,6 +1167,7 @@ class idMatX {
                 mat = mat4.reinterpret_cast()
                 result
             }
+
             5 -> {
                 val mat5 = idMat5(
                     idVec5(mat[0], mat[1], mat[2], mat[3], mat[4]),
@@ -1171,6 +1180,7 @@ class idMatX {
                 mat = mat5.reinterpret_cast()
                 result
             }
+
             6 -> {
                 val mat6 = idMat6(
                     idVec6(mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]),
@@ -1184,6 +1194,7 @@ class idMatX {
                 mat = mat6.reinterpret_cast()
                 result
             }
+
             else -> InverseSelfGeneric()
         }
     }
@@ -1208,6 +1219,7 @@ class idMatX {
                 mat[0] = 1.0f / mat[0]
                 true
             }
+
             2 -> {
                 val mat2 = idMat2(
                     mat[0], mat[1],
@@ -1217,6 +1229,7 @@ class idMatX {
                 mat = mat2.reinterpret_cast()
                 result
             }
+
             3 -> {
                 val mat3 = idMat3(
                     mat[0], mat[1], mat[2],
@@ -1227,6 +1240,7 @@ class idMatX {
                 mat = mat3.reinterpret_cast()
                 result
             }
+
             4 -> {
                 val mat4 = idMat4(
                     mat[0], mat[1], mat[2], mat[3],
@@ -1238,6 +1252,7 @@ class idMatX {
                 mat = mat4.reinterpret_cast()
                 result
             }
+
             5 -> {
                 val mat5 = idMat5(
                     idVec5(mat[0], mat[1], mat[2], mat[3], mat[4]),
@@ -1250,6 +1265,7 @@ class idMatX {
                 mat = mat5.reinterpret_cast()
                 result
             }
+
             6 -> {
                 val mat6 = idMat6(
                     idVec6(mat[0], mat[1], mat[2], mat[3], mat[4], mat[5]),
@@ -1263,6 +1279,7 @@ class idMatX {
                 mat = mat6.reinterpret_cast()
                 result
             }
+
             else -> InverseSelfGeneric()
         }
         //            return false;
@@ -1286,7 +1303,8 @@ class idMatX {
             if (d == 0.0) {
                 return false
             }
-            this[i, i] = (1.0f / d.also { d = it }).toFloat()
+            d = 1.0f / d
+            this[i, i] = d.toFloat()
             //                System.out.println("2:" + d);
             j = 0
             while (j < i) {
@@ -1311,17 +1329,21 @@ class idMatX {
      * in-place inversion of the upper triangular matrix ============
      */
     fun UpperTriangularInverse(): Boolean { // in-place inversion, returns false if determinant is zero
+        // in-place inversion, returns false if determinant is zero
+        var i: Int
         var j: Int
         var k: Int
         var d: Double
         var sum: Double
-        var i: Int = numRows - 1
+
+        i = numRows - 1
         while (i >= 0) {
             d = this[i, i].toDouble()
             if (d == 0.0) {
                 return false
             }
-            this[i, i] = (1.0f / d.also { d = it }).toFloat()
+            d = 1.0f / d
+            this[i, i] = d.toFloat()
             j = numRows - 1
             while (j > i) {
                 sum = 0.0
@@ -2458,7 +2480,8 @@ class idMatX {
         if (index != null) {
 
             // find the pivot row
-            p = 0.also { i = it }
+            p = 0
+            i = 0
             while (i < numRows) {
                 if (index[i] == r) {
                     p = i
@@ -3462,7 +3485,8 @@ class idMatX {
             if (newDiagSqr <= 0.0f) {
                 return false
             }
-            this[i, i] = idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat()
+            newDiag = idMath.Sqrt(newDiagSqr)
+            this[i, i] = newDiag.toFloat()
             alpha /= newDiagSqr
             beta = p * alpha
             alpha *= diagSqr
@@ -3634,7 +3658,8 @@ class idMatX {
             if (newDiagSqr <= 0.0f) {
                 return false
             }
-            this[i, i] = idMath.Sqrt(newDiagSqr).also { newDiag = it }.toFloat()
+            newDiag = idMath.Sqrt(newDiagSqr)
+            this[i, i] = newDiag.toFloat()
             alpha2 /= newDiagSqr
             beta2 = p2 * alpha2
             alpha2 *= diagSqr
@@ -3922,7 +3947,8 @@ class idMatX {
         while (i < numColumns) {
             p = y[i]
             diag = this[i, i]
-            this[i, i] = (diag + alpha * p * p.also { newDiag = it })
+            newDiag = diag + alpha * p * p
+            this[i, i] = newDiag
             if (newDiag == 0.0f) {
                 return false
             }
@@ -4163,7 +4189,8 @@ class idMatX {
         sum = v.p[numRows - 1]
         i = 0
         while (i < numRows - 1) {
-            this[numRows - 1, i] = x[i] / this[i, i].also { d = it }
+            d = x[i] / this[i, i]
+            this[numRows - 1, i] = d
             sum -= d * x[i]
             i++
         }
@@ -4508,7 +4535,8 @@ class idMatX {
         var j: Int
         var k: Int
         var min: Float
-        i = 0.also { j = it }
+        i = 0
+        j = 0
         while (i <= numRows - 2) {
             j = i
             min = eigenValues.p[j]
@@ -4533,7 +4561,8 @@ class idMatX {
         var j: Int
         var k: Int
         var max: Float
-        i = 0.also { j = it }
+        i = 0
+        j = 0
         while (i <= numRows - 2) {
             j = i
             max = eigenValues.p[j]
@@ -5734,7 +5763,8 @@ class idMatX {
     }
 
     operator fun set(row: Int, column: Int, value: Float): Float {
-        return value.also { mat[column + row * numColumns] = it }
+        mat[column + (row * numColumns)] = value
+        return mat[column + (row * numColumns)]
     }
 
     @Deprecated("")

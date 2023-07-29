@@ -22,7 +22,7 @@ object Licensee {
     const val EDITOR_DEFAULT_PROJECT: String = "doom.qe4"
     const val EDITOR_REGISTRY_KEY: String = "DOOMRadiant"
     const val EDITOR_WINDOWTEXT: String = "DOOMEdit"
-    const val ENGINE_VERSION: String = "DOOM 1.3.1" // printed in console
+    const val ENGINE_VERSION: String = "dhewm3 1.5.3-kotlin" // printed in console
 
     /*
      ===============================================================================
@@ -31,7 +31,7 @@ object Licensee {
 
      ===============================================================================
      */
-    const val GAME_NAME: String = "DOOM 3" // appears on window titles and errors
+    const val GAME_NAME: String = "dhewm 3" // appears on window titles and errors
     const val IDNET_HOST: String = "idnet.ua-corp.com"
     const val IDNET_MASTER_PORT = 27650
     const val LINUX_DEFAULT_PATH: String = "/usr/local/games/doom3"

@@ -1683,7 +1683,6 @@ object Simd_Generic {
                         }
 
                         4 -> {
-                            run {
                                 if (l == 4) {        // 4x6 * 6x4
                                     i = 0
                                     while (i < 4) {
@@ -1699,8 +1698,6 @@ object Simd_Generic {
                                     }
                                     return
                                 }
-                            }
-                            run {
                                 if (l == 5) {        // 5x6 * 6x5
                                     i = 0
                                     while (i < 5) {
@@ -1716,8 +1713,6 @@ object Simd_Generic {
                                     }
                                     return
                                 }
-                            }
-                            run {
                                 when (l) {
                                     1 -> {
                                         // 6x6 * 6x1
@@ -1821,11 +1816,9 @@ object Simd_Generic {
                                         return
                                     }
                                 }
-                            }
                         }
 
                         5 -> {
-                            run {
                                 if (l == 5) {
                                     i = 0
                                     while (i < 5) {
@@ -1841,8 +1834,6 @@ object Simd_Generic {
                                     }
                                     return
                                 }
-                            }
-                            run {
                                 when (l) {
                                     1 -> {
                                         i = 0
@@ -1938,7 +1929,6 @@ object Simd_Generic {
 
                                     else -> return
                                 }
-                            }
                         }
 
                         6 -> {
@@ -3013,7 +3003,8 @@ object Simd_Generic {
                 return false
             }
             diag[0] = sum
-            invDiag.p[0] = 1.0f / sum.also { d = it }
+            d = 1.0f / sum
+            invDiag.p[0] = d
             if (n <= 1) {
                 return true
             }
@@ -3363,7 +3354,8 @@ object Simd_Generic {
         ) {
             var i: Int
             val jointsPtr = jmtobb(joints)
-            var j: Int = 0.also { i = it }
+            var j: Int = 0
+            i = 0
             while (i < numVerts) {
                 val v = idVec3()
                 v.set(toIdJointMat(jointsPtr, index[j * 2 + 0]) * weights[j])
@@ -3470,8 +3462,10 @@ object Simd_Generic {
                 var d0: Float
                 var d1: Float
                 val v = verts[i].xyz
-                texCoords[i][0] = planes[0].Distance(v).also { d0 = it }
-                texCoords[i][1] = planes[1].Distance(v).also { d1 = it }
+                d0 = planes[0].Distance(v)
+                texCoords[i][0] = d0
+                d1 = planes[1].Distance(v)
+                texCoords[i][1] = d1
                 bits = Math_h.FLOATSIGNBITSET(d0) shl 0
                 d0 = 1.0f - d0
                 bits = bits or (Math_h.FLOATSIGNBITSET(d1) shl 1)
@@ -3499,7 +3493,8 @@ object Simd_Generic {
         ) {
             var i: Int
             var planePtr: Int
-            i = 0.also { planePtr = it }
+            i = 0
+            planePtr = 0
             while (i < numIndexes) {
                 val d0 = FloatArray(3)
                 val d1 = FloatArray(3)
@@ -3553,7 +3548,8 @@ object Simd_Generic {
             var planesPtr: Int
             val used = BooleanArray(numVerts)
             //	memset( used, 0, numVerts * sizeof( used[0] ) );
-            i = 0.also { planesPtr = it }
+            i = 0
+            planesPtr = 0
             while (i < numIndexes) {
                 var a: idDrawVert
                 var b: idDrawVert

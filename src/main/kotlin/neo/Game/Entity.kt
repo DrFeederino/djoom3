@@ -3085,7 +3085,7 @@ object Entity {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
-                if (renderEntity.gui.isNotEmpty()) {
+                if (renderEntity.gui[i] != null) {
                     renderEntity.gui[i]!!.Trigger(Game_local.gameLocal.time)
                 }
                 i++

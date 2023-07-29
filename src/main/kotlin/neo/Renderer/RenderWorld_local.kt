@@ -16,6 +16,7 @@ import neo.Renderer.ModelManager.renderModelManager
 import neo.Renderer.ModelOverlay.idRenderModelOverlay
 import neo.Renderer.RenderWorld.*
 import neo.Renderer.RenderWorld_demo.demoHeader_t
+import neo.Renderer.RenderWorld_portals.MAX_PORTAL_PLANES
 import neo.Renderer.RenderWorld_portals.portalStack_s
 import neo.Renderer.tr_light.R_IssueEntityDefCallback
 import neo.Renderer.tr_lightrun.R_ClearEntityDefDynamicModel
@@ -2022,10 +2023,10 @@ object RenderWorld_local {
             i = 0
             while (i < lightDefs.Num()) {
                 var light: idRenderLightLocal?
-                light = lightDefs.get(i)
+                light = lightDefs[i]
                 if (light != null && light.world == this) {
                     FreeLightDef(i)
-                    lightDefs.set(i, null)
+                    lightDefs[i] = null
                 }
                 i++
             }
@@ -2036,10 +2037,10 @@ object RenderWorld_local {
             i = 0
             while (i < entityDefs.Num()) {
                 var mod: idRenderEntityLocal?
-                mod = entityDefs.get(i)
+                mod = entityDefs[i]
                 if (mod != null && mod.world == this) {
                     FreeEntityDef(i)
-                    entityDefs.set(i, null)
+                    entityDefs[i] = null
                 }
                 i++
             }
@@ -2504,9 +2505,9 @@ object RenderWorld_local {
         fun FloodLightThroughArea_r(light: idRenderLightLocal, areaNum: Int, ps: portalStack_s) {
             var p: portal_s?
             var d: Float
-            val area: portalArea_s?
+            val area: portalArea_s
             var check: portalStack_s?
-            var firstPortalStack: portalStack_s = portalStack_s()
+            var firstPortalStack = portalStack_s()
             var newStack = portalStack_s()
             var i: Int
             var j: Int
@@ -2549,7 +2550,7 @@ object RenderWorld_local {
                 // it, which tends to give epsilon problems that make the area vanish
                 if (d < 1.0f) {
                     // go through this portal
-                    newStack = ps
+                    newStack = portalStack_s(ps)
                     newStack.p = p
                     newStack.next = ps
                     FloodLightThroughArea_r(light, p.intoArea, newStack)
@@ -2591,8 +2592,8 @@ object RenderWorld_local {
                 // generate a set of clipping planes that will further restrict
                 // the visible view beyond just the scissor rect
                 addPlanes = w.GetNumPoints()
-                if (addPlanes > RenderWorld_portals.MAX_PORTAL_PLANES) {
-                    addPlanes = RenderWorld_portals.MAX_PORTAL_PLANES
+                if (addPlanes > MAX_PORTAL_PLANES) {
+                    addPlanes = MAX_PORTAL_PLANES
                 }
                 newStack.numPortalPlanes = 0
                 i = 0
@@ -2601,8 +2602,8 @@ object RenderWorld_local {
                     if (j == w.GetNumPoints()) {
                         j = 0
                     }
-                    v1.set(light.globalLightOrigin.minus(w[i].ToVec3()))
-                    v2.set(light.globalLightOrigin.minus(w[j].ToVec3()))
+                    v1.set(light.globalLightOrigin - w[i].ToVec3())
+                    v2.set(light.globalLightOrigin - w[j].ToVec3())
                     newStack.portalPlanes[newStack.numPortalPlanes].Normal().Cross(v2, v1)
 
                     // if it is degenerate, skip the plane

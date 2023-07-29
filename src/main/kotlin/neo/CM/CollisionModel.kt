@@ -113,7 +113,7 @@ object CollisionModel {
         }
 
         // Sets up a trace model for collision with other trace models.
-        abstract fun SetupTrmModel(trm: idTraceModel, material: idMaterial): Int
+        abstract fun SetupTrmModel(trm: idTraceModel, material: Array<idMaterial?>): Int
 
         // Creates a trace model from a collision model, returns true if successful.
         abstract fun TrmFromModel(modelName: Str.idStr, trm: idTraceModel): Boolean

@@ -150,7 +150,7 @@ object Clip {
         var id // id for entities that use multiple clip models
                 = 0
         var material // material for trace models
-                : Material.idMaterial = Material.idMaterial()
+                : Material.idMaterial? = null
         var owner // owner of the entity that owns this clip model
                 : idEntity? = null
         var renderModelHandle // render model def handle
@@ -281,7 +281,7 @@ object Clip {
             savefile.ReadMat3(axis)
             savefile.ReadBounds(bounds)
             savefile.ReadBounds(absBounds)
-            savefile.ReadMaterial(material)
+            savefile.ReadMaterial(material!!)
             contents = savefile.ReadInt()
             savefile.ReadString(collisionModelName)
             collisionModelHandle = if (collisionModelName.Length() != 0) {
@@ -406,7 +406,7 @@ object Clip {
             material = m
         }
 
-        fun GetMaterial(): Material.idMaterial {
+        fun GetMaterial(): Material.idMaterial? {
             return material
         }
 
@@ -483,7 +483,10 @@ object Clip {
             return if (collisionModelHandle != 0) {
                 collisionModelHandle
             } else if (traceModelIndex != -1) {
-                CollisionModel_local.collisionModelManager.SetupTrmModel(GetCachedTraceModel(traceModelIndex), material)
+                CollisionModel_local.collisionModelManager.SetupTrmModel(
+                    GetCachedTraceModel(traceModelIndex),
+                    arrayOf(material)
+                )
             } else {
                 // this happens in multiplayer on the combat models
                 Game_local.gameLocal.Warning(
@@ -526,7 +529,7 @@ object Clip {
             axis.Identity()
             bounds.Zero()
             absBounds.Zero()
-            material = Material.idMaterial()
+            material = null
             contents = Material.CONTENTS_BODY
             collisionModelHandle = 0
             renderModelHandle = -1
@@ -1489,7 +1492,7 @@ object Clip {
                 } else if (clipModel.traceModelIndex != -1) {
                     CollisionModel_local.collisionModelManager.SetupTrmModel(
                         idClipModel.GetCachedTraceModel(clipModel.traceModelIndex),
-                        clipModel.material
+                        arrayOf(clipModel.material)
                     )
                 } else {
                     clipModel.collisionModelHandle

@@ -1438,12 +1438,12 @@ class Image {
                 textureType_t.TT_RECT -> Common.common.Printf("R")
                 else -> Common.common.Printf("<BAD TYPE:%d>", type)
             }
-            Common.common.Printf("%4d %4d ", uploadWidth, uploadHeight)
+            Common.common.Printf("%4d %4d ", uploadWidth._val, uploadHeight._val)
             when (filter) {
                 textureFilter_t.TF_DEFAULT -> Common.common.Printf("dflt ")
                 textureFilter_t.TF_LINEAR -> Common.common.Printf("linr ")
                 textureFilter_t.TF_NEAREST -> Common.common.Printf("nrst ")
-                else -> Common.common.Printf("<BAD FILTER:%d>", filter)
+                else -> Common.common.Printf("<BAD FILTER:%d>", filter.ordinal)
             }
             when (internalFormat) {
                 GL11.GL_INTENSITY8, 1 -> Common.common.Printf("I     ")
@@ -1472,7 +1472,7 @@ class Image {
                 textureRepeat_t.TR_CLAMP_TO_ZERO -> Common.common.Printf("zero ")
                 textureRepeat_t.TR_CLAMP_TO_ZERO_ALPHA -> Common.common.Printf("azro ")
                 textureRepeat_t.TR_CLAMP -> Common.common.Printf("clmp ")
-                else -> Common.common.Printf("<BAD REPEAT:%d>", repeat)
+                else -> Common.common.Printf("<BAD REPEAT:%d>", repeat.ordinal)
             }
             Common.common.Printf("%4dk ", StorageSize() / 1024)
             Common.common.Printf(" %s\n", imgName.toString())

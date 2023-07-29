@@ -90,7 +90,8 @@ object GuiScript {
             // all parms are read as idWinStr's but will be fixed up later 
             // to be proper types
             while (true) {
-                if (!src.ReadToken(idToken().also { token = it })) {
+                token = idToken()
+                if (!src.ReadToken(token)) {
                     src.Error("Unexpected end of file")
                     return false
                 }

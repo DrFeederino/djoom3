@@ -40,6 +40,9 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.openal.AL10
 import java.nio.ByteBuffer
 import java.nio.FloatBuffer
+import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.min
 
 /**
  *
@@ -1357,7 +1360,7 @@ class snd_world {
                     if (global || omni) {
                         AL10.alSourcei(chan.openalSource, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE)
                         AL10.alSource3f(chan.openalSource, AL10.AL_POSITION, 0.0f, 0.0f, 0.0f)
-                        AL10.alSourcef(chan.openalSource, AL10.AL_GAIN, Math.min(volume, 1.0f))
+                        AL10.alSourcef(chan.openalSource, AL10.AL_GAIN, min(volume, 1.0f))
                     } else {
                         AL10.alSourcei(chan.openalSource, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE)
                         AL10.alSource3f(
@@ -1367,7 +1370,7 @@ class snd_world {
                             spatializedOriginInMeters.z,
                             -spatializedOriginInMeters.x
                         )
-                        AL10.alSourcef(chan.openalSource, AL10.AL_GAIN, Math.min(volume, 1.0f))
+                        AL10.alSourcef(chan.openalSource, AL10.AL_GAIN, min(volume, 1.0f))
                     }
                     AL10.alSourcei(
                         chan.openalSource,
@@ -1967,7 +1970,7 @@ class snd_world {
                         j++
                     }
                 } else {
-                    var offset = Math.abs(localTime - localTriggerTimes) // offset in samples
+                    var offset = abs(localTime - localTriggerTimes) // offset in samples
                     val size =
                         if (looping) chan.soundShader!!.entries[0]!!.LengthIn44kHzSamples() else chan.leadinSample!!.LengthIn44kHzSamples()
                     val plitudeData =
@@ -2029,7 +2032,7 @@ class snd_world {
                 i++
             }
             val sout: Float
-            sout = (Math.atan(((high - low) / 32767.0f).toDouble()) / Math_h.DEG2RAD(45f)).toFloat()
+            sout = (atan(((high - low) / 32767.0f).toDouble()) / Math_h.DEG2RAD(45f)).toFloat()
             return sout
         }
 

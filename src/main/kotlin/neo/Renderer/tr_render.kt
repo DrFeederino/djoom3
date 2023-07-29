@@ -279,7 +279,7 @@ object tr_render {
         }
     }
 
-    fun RB_RenderDrawSurfChainWithFunction(drawSurfs: drawSurf_s, triFunc_: triFunc) {
+    fun RB_RenderDrawSurfChainWithFunction(drawSurfs: drawSurf_s?, triFunc_: triFunc) {
         var drawSurf: drawSurf_s?
         DBG_RB_RenderDrawSurfChainWithFunction++
         tr_local.backEnd.currentSpace = null
@@ -531,7 +531,7 @@ object tr_render {
                 continue
             }
             shader = vLight.lightShader
-            numStages = shader.GetNumStages()
+            numStages = shader!!.GetNumStages()
             i = 0
             while (i < numStages) {
                 stage = shader.GetStage(i)!!
@@ -699,7 +699,7 @@ object tr_render {
         val surfaceShader: idMaterial = surf.material!!
         val surfaceRegs = surf.shaderRegisters
         val vLight = tr_local.backEnd.vLight
-        val lightShader: idMaterial = vLight.lightShader
+        val lightShader: idMaterial? = vLight.lightShader
         val lightRegs = vLight.shaderRegisters
         val inter = drawInteraction_t()
         if (RenderSystem_init.r_skipInteractions.GetBool() || TempDump.NOT(surf.geo) || TempDump.NOT(surf.geo!!.ambientCache)) {
@@ -708,7 +708,7 @@ object tr_render {
         if (tr_local.tr.logFile != null) {
             tr_backend.RB_LogComment(
                 "---------- RB_CreateSingleDrawInteractions %s on %s ----------\n",
-                lightShader.GetName(),
+                lightShader!!.GetName(),
                 surfaceShader.GetName()
             )
         }
@@ -747,7 +747,7 @@ object tr_render {
         )
         inter.localLightOrigin[3] = 0f
         inter.localViewOrigin[3] = 1f
-        inter.ambientLight = TempDump.btoi(lightShader.IsAmbientLight())
+        inter.ambientLight = TempDump.btoi(lightShader!!.IsAmbientLight())
 
         // the base projections may be modified by texture matrix on light stages
         val lightProject: Array<idPlane> = idPlane.generateArray(4)

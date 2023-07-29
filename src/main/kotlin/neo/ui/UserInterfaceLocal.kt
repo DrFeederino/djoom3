@@ -2,6 +2,7 @@ package neo.ui
 
 import neo.Renderer.Material.idMaterial
 import neo.Renderer.RenderSystem_init
+import neo.Renderer.tr_local
 import neo.framework.Common
 import neo.framework.DeclManager
 import neo.framework.DeclManager.declType_t
@@ -21,6 +22,8 @@ import neo.idlib.containers.List.idList
 import neo.idlib.math.Vector.idVec4
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
+import neo.ui.DeviceContext.Companion.VIRTUAL_HEIGHT
+import neo.ui.DeviceContext.Companion.VIRTUAL_WIDTH
 import neo.ui.DeviceContext.idDeviceContext
 import neo.ui.ListGUI.idListGUI
 import neo.ui.ListGUILocal.idListGUILocal
@@ -148,14 +151,14 @@ class UserInterfaceLocal {
                 return ret
             }
             if (event.evType == sysEventType_t.SE_MOUSE) {
-                cursorX += event.evValue.toFloat()
-                cursorY += event.evValue2.toFloat()
-                if (cursorX < 0) {
-                    cursorX = 0f
+                var w: Float = tr_local.tr.GetScreenWidth().toFloat()
+                var h: Float = tr_local.tr.GetScreenHeight().toFloat()
+                if (w <= 0.0f || h <= 0.0f) {
+                    w = VIRTUAL_WIDTH.toFloat()
+                    h = VIRTUAL_HEIGHT.toFloat()
                 }
-                if (cursorY < 0) {
-                    cursorY = 0f
-                }
+                cursorX += event.evValue.toFloat() * (VIRTUAL_WIDTH / w)
+                cursorY += event.evValue2.toFloat() * (VIRTUAL_HEIGHT / h)
             }
             return if (desktop != null) {
                 desktop.HandleEvent(event, updateVisuals)

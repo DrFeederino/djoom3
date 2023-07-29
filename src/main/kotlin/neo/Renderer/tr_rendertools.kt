@@ -337,7 +337,7 @@ object tr_rendertools {
             vLight = vLight.next
         }
         val newDrawSurfs: Array<drawSurf_s> =
-            drawSurf_s.Companion.generateArray(numDrawSurfs + interactions) // R_FrameAlloc(numDrawSurfs + interactions);
+            drawSurf_s.generateArray(numDrawSurfs + interactions) // R_FrameAlloc(numDrawSurfs + interactions);
         i = 0
         while (i < numDrawSurfs) {
             surf = drawSurfs[i]
@@ -554,7 +554,7 @@ object tr_rendertools {
                     }
                     val ac =
                         idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) //TODO:figure out how to work these damn casts.
-                    qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.Companion.BYTES, ac.xyzOffset().toLong())
+                    qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, ac.xyzOffset().toLong())
                     tr_render.RB_DrawElementsWithCounters(surf.geo!!)
                     surf = surf.nextOnLight
                 }
@@ -600,7 +600,7 @@ object tr_rendertools {
         tr_render.RB_RenderDrawSurfListWithFunction(
             tr_local.backEnd.viewDef!!.drawSurfs,
             tr_local.backEnd.viewDef!!.numDrawSurfs,
-            RB_T_RenderTriangleSurface.Companion.INSTANCE
+            RB_T_RenderTriangleSurface.INSTANCE
         )
 
         //
@@ -621,7 +621,7 @@ object tr_rendertools {
                         qgl.qglVertexPointer(
                             3,
                             GL11.GL_FLOAT,
-                            shadowCache_s.Companion.BYTES,
+                            shadowCache_s.BYTES,
                             VertexCache.vertexCache.Position(shadow).int.toLong()
                         )
                     }
@@ -708,7 +708,7 @@ object tr_rendertools {
                     }
                     val cache =
                         VertexCache.vertexCache.Position(tri.shadowCache) //TODO:figure out how to work these damn casts.
-                    qgl.qglVertexPointer(4, GL11.GL_FLOAT, shadowCache_s.Companion.BYTES /*sizeof(cache)*/, cache)
+                    qgl.qglVertexPointer(4, GL11.GL_FLOAT, shadowCache_s.BYTES /*sizeof(cache)*/, cache)
                     tr_render.RB_DrawElementsWithCounters(tri)
                     surf = surf.nextOnLight
                 }
@@ -794,7 +794,7 @@ object tr_rendertools {
         tr_render.RB_RenderDrawSurfListWithFunction(
             drawSurfs,
             numDrawSurfs,
-            RB_T_RenderTriangleSurface.Companion.INSTANCE
+            RB_T_RenderTriangleSurface.INSTANCE
         )
         qgl.qglEnable(GL11.GL_DEPTH_TEST)
         qgl.qglDisable(GL11.GL_POLYGON_OFFSET_LINE)
@@ -837,18 +837,18 @@ object tr_rendertools {
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE)
         qgl.qglPolygonOffset(-1f, -2f)
         qgl.qglEnable(GL11.GL_POLYGON_OFFSET_LINE)
-        val trans: Array<idVec3> = idVec3.Companion.generateArray(3)
+        val trans: Array<idVec3> = idVec3.generateArray(3)
         val matrix = FloatArray(16)
 
         // transform the object verts into global space
-        tr_main.R_AxisToModelMatrix(mt.entity.axis, mt.entity.origin, matrix)
+        tr_main.R_AxisToModelMatrix(mt.entity!!.axis, mt.entity!!.origin, matrix)
         tr_local.tr.primaryWorld!!.DrawText(
-            mt.entity.hModel!!.Name(), mt.point.plus(tr_local.tr.primaryView!!.renderView.viewaxis[2].times(12f)),
-            0.35f, idDeviceContext.Companion.colorRed, tr_local.tr.primaryView!!.renderView.viewaxis
+            mt.entity!!.hModel!!.Name(), mt.point.plus(tr_local.tr.primaryView!!.renderView.viewaxis[2].times(12f)),
+            0.35f, idDeviceContext.colorRed, tr_local.tr.primaryView!!.renderView.viewaxis
         )
         tr_local.tr.primaryWorld!!.DrawText(
-            mt.material.GetName(), mt.point,
-            0.35f, idDeviceContext.Companion.colorBlue, tr_local.tr.primaryView!!.renderView.viewaxis
+            mt.material!!.GetName(), mt.point,
+            0.35f, idDeviceContext.colorBlue, tr_local.tr.primaryView!!.renderView.viewaxis
         )
         qgl.qglEnable(GL11.GL_DEPTH_TEST)
         qgl.qglDisable(GL11.GL_POLYGON_OFFSET_LINE)
@@ -1237,7 +1237,7 @@ object tr_rendertools {
                         Str.va("%d", j),
                         pos,
                         0.01f,
-                        idDeviceContext.Companion.colorWhite,
+                        idDeviceContext.colorWhite,
                         tr_local.backEnd.viewDef!!.renderView.viewaxis,
                         1
                     )
@@ -1260,7 +1260,7 @@ object tr_rendertools {
                         Str.va("%d", j / 3),
                         pos,
                         0.01f,
-                        Lib.Companion.colorCyan,
+                        Lib.colorCyan,
                         tr_local.backEnd.viewDef!!.renderView.viewaxis,
                         1
                     )
@@ -1388,7 +1388,7 @@ object tr_rendertools {
                 val d0 = FloatArray(5)
                 val d1 = FloatArray(5)
                 val mid = idVec3()
-                val tangents: Array<idVec3> = idVec3.Companion.generateArray(2)
+                val tangents: Array<idVec3> = idVec3.generateArray(2)
                 a = tri.verts!![tri.indexes!![j + 0]]!!
                 b = tri.verts!![tri.indexes!![j + 1]]!!
                 c = tri.verts!![tri.indexes!![j + 2]]!!

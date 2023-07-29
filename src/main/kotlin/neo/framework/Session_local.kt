@@ -1897,7 +1897,7 @@ object Session_local {
                 gamename.set(gamename.toString().substring(0, 6))
                 assert(gamename.toString() == Licensee.GAME_NAME)
                 // if this isn't a savegame for the correct game, abort loadgame
-                if (gamename.toString() != Licensee.GAME_NAME) {
+                if (!Licensee.GAME_NAME.contains(gamename.toString())) {
                     Common.common.Warning("Attempted to load an invalid savegame: %s", `in`.toString())
                     loadingSaveGame = false
                     FileSystem_h.fileSystem.CloseFile(savegameFile!!)
@@ -3339,6 +3339,8 @@ object Session_local {
                     }
                     Session.sessLocal.SaveGame(saveGameName)
                     SetSaveGameGuiVars()
+                    // DG: select item 0 => select savegame just created (should be on top as it's newest)
+                    guiActive!!.SetStateInt("loadgame_sel_0", 0)
                     guiActive!!.StateChanged(Common.com_frameTime)
                 }
                 return true
